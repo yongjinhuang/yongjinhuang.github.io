@@ -7,14 +7,6 @@ import Link from 'next/link';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 import { CustomCursor } from '@/components/CustomCursor';
-import { Poppins } from 'next/font/google';
-
-const poppins = Poppins({
-  weight: ['300', '400', '500', '600', '700', '800'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-poppins',
-});
 
 interface Props {
   children: React.ReactNode;
@@ -24,7 +16,7 @@ interface Props {
 export default function LangLayout({ children, params }: Props) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <div className={`min-h-screen relative ${poppins.variable}`}>
+      <div className="min-h-screen relative">
         {/* Animated Background */}
         <AnimatedBackground />
 

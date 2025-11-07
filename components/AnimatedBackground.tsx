@@ -12,7 +12,7 @@ export function AnimatedBackground() {
 
       orbsRef.current.forEach((orb, index) => {
         if (orb) {
-          const speed = (index + 1) * 30;
+          const speed = (index + 1) * 15; // Reduced from 30 to 15
           const x = (mouseX - 0.5) * speed;
           const y = (mouseY - 0.5) * speed;
           orb.style.transform = `translate(${x}px, ${y}px)`;
@@ -31,7 +31,7 @@ export function AnimatedBackground() {
         ref={(el) => {
           if (el) orbsRef.current[0] = el;
         }}
-        className="absolute w-[500px] h-[500px] rounded-full blur-[100px] opacity-20 dark:opacity-30 -top-[200px] -left-[200px]"
+        className="absolute w-[500px] h-[500px] rounded-full blur-[100px] opacity-20 dark:opacity-30 -top-[200px] -left-[200px] transition-transform duration-1000 ease-out"
         style={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           animation: 'float 20s infinite ease-in-out',
@@ -43,7 +43,7 @@ export function AnimatedBackground() {
         ref={(el) => {
           if (el) orbsRef.current[1] = el;
         }}
-        className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-20 dark:opacity-30 -bottom-[150px] -right-[150px]"
+        className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-20 dark:opacity-30 -bottom-[150px] -right-[150px] transition-transform duration-1000 ease-out"
         style={{
           background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
           animation: 'float 20s infinite ease-in-out 5s',
@@ -55,7 +55,7 @@ export function AnimatedBackground() {
         ref={(el) => {
           if (el) orbsRef.current[2] = el;
         }}
-        className="absolute w-[600px] h-[600px] rounded-full blur-[100px] opacity-20 dark:opacity-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        className="absolute w-[600px] h-[600px] rounded-full blur-[100px] opacity-20 dark:opacity-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-1000 ease-out"
         style={{
           background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
           animation: 'float 20s infinite ease-in-out 10s',
