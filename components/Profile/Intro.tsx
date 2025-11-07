@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { FaDownload, FaGithub, FaLinkedin, FaArrowRight } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { SiLeetcode } from 'react-icons/si';
@@ -30,7 +29,7 @@ interface LinksProp {
 
 export function Intro({
   resumeFile,
-  resumePrompt,
+  // resumePrompt,
   title,
   introduction,
   links,

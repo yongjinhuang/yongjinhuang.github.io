@@ -25,7 +25,7 @@ export default async function Home({ params }: Props) {
         {/* Profile Section */}
         <Intro
           resumeFile={t.intro.resumeFile}
-          resumePrompt={t.intro.resumePrompt}
+          // resumePrompt={t.intro.resumePrompt}
           title={t.intro.title}
           introduction={t.intro.introduction}
           links={t.intro.links}
