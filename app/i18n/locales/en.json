@@ -22,6 +22,14 @@
     "resumeFile": "/en/resume.pdf/",
     "resumePrompt": " 😄 See My Resume",
     "title": "About Me",
+    "greeting": "Hello, I'm",
+    "name": {
+      "first": "Yongjin",
+      "last": "Huang"
+    },
+    "tagline": "Software Developer | Full-Stack Engineer",
+    "viewResume": "View Resume",
+    "hireMe": "Hire Me",
     "introduction": "I'm Yongjin Huang, a software developer with a passion for coding and technology. In my free time, you can find me listening to hip-hop music, watching entertainment videos, playing video games, and of course, coding.",
     "links": {
       "github": "https://github.com/YongjinHuang",
@@ -31,6 +39,7 @@
   },
   "skills": {
     "title": "Skills",
+    "tagline": "My Expertise",
     "languages": {
       "title": "Programming Languages",
       "value": ["Golang", "Python", "TypeScript", "Java", "SQL"]
@@ -46,6 +55,7 @@
   },
   "experience": {
     "title": "Work Experience",
+    "tagline": "My Journey",
     "current": "Current",
     "company": {
       "wilddata": {
@@ -111,6 +121,7 @@
   },
   "details": {
     "title": "Details",
+    "tagline": "Get To Know",
     "email": {
       "label": "Email",
       "value": "keep_straight_up@foxmail.com"
@@ -130,6 +141,7 @@
   },
   "education": {
     "title": "Education",
+    "tagline": "Academic Background",
     "university": "Sun Yat-sen University",
     "major": "Software Engineering",
     "period": "Aug 2013 - June 2017"

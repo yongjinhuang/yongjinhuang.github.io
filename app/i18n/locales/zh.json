@@ -22,6 +22,14 @@
     "resumeFile": "/zh/resume.pdf/",
     "resumePrompt": " 😄 查看我的简历",
     "title": "关于我",
+    "greeting": "你好，我是",
+    "name": {
+      "first": "勇进",
+      "last": "黄"
+    },
+    "tagline": "软件开发工程师 | 全栈工程师",
+    "viewResume": "查看简历",
+    "hireMe": "联系我",
     "introduction": "我是黄勇进，一名热爱编程和技术的软件开发工程师。在空闲时间，我喜欢听嘻哈音乐、看娱乐视频、玩电子游戏，当然还有编程。",
     "links": {
       "github": "https://github.com/YongjinHuang",
@@ -31,6 +39,7 @@
   },
   "skills": {
     "title": "技能特长",
+    "tagline": "我的专长",
     "languages": {
       "title": "编程语言",
       "value": ["Golang", "Python", "TypeScript", "Java", "SQL"]
@@ -46,6 +55,7 @@
   },
   "experience": {
     "title": "工作经验",
+    "tagline": "我的历程",
     "current": "现在",
     "company": {
       "wilddata": {
@@ -111,6 +121,7 @@
   },
   "details": {
     "title": "联系方式",
+    "tagline": "了解更多",
     "address": {
       "label": "地址",
       "value": "深圳，中国"
@@ -130,6 +141,7 @@
   },
   "education": {
     "title": "教育",
+    "tagline": "学术背景",
     "university": "中山大学",
     "major": "软件工程",
     "period": "2013 年 8 月 - 2017 年 6 月"

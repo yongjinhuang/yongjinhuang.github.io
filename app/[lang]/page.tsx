@@ -12,8 +12,7 @@ interface Props {
 }
 
 const Divider = () => (
-  // Between sections in your page.tsx
-  <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent my-8"></div>
+  <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent my-8 md:my-12"></div>
 );
 
 export default async function Home({ params }: Props) {
@@ -22,8 +21,7 @@ export default async function Home({ params }: Props) {
 
   return (
     <PageTransition>
-      {' '}
-      <div className="max-w-3xl mx-auto space-y-12">
+      <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
         {/* Profile Section */}
         <Intro
           resumeFile={t.intro.resumeFile}
@@ -31,18 +29,24 @@ export default async function Home({ params }: Props) {
           title={t.intro.title}
           introduction={t.intro.introduction}
           links={t.intro.links}
+          greeting={t.intro.greeting}
+          name={t.intro.name}
+          tagline={t.intro.tagline}
+          viewResume={t.intro.viewResume}
+          hireMe={t.intro.hireMe}
         />
 
         {/* Details Section */}
         <Details t={t} />
         <Divider />
 
-        {/* Skills and Education Section in a grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Skills and Education Section - Full width on mobile, side by side on large screens */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           <Education t={t} />
           <Skills t={t} />
         </div>
         <Divider />
+
         {/* Experience Section */}
         <Experience t={t} />
       </div>

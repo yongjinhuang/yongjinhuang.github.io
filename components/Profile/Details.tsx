@@ -28,32 +28,39 @@ export function Details({ t }: DetailsProps) {
   ];
 
   return (
-    <section id="details" className="py-8">
-      <motion.h2
+    <section id="details" className="py-12">
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="text-2xl font-bold text-[#0A2463] dark:text-gray-100 mb-8 relative"
+        className="text-center mb-12"
       >
-        {t.details.title}
-        <span className="absolute -bottom-2 left-0 w-16 h-1 bg-[#4A6FA5] dark:bg-gray-400 rounded"></span>
-      </motion.h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <span className="text-cyan-400 text-sm font-semibold uppercase tracking-wider block mb-2">
+          {t.details.tagline}
+        </span>
+        <h2 className="text-3xl md:text-4xl font-bold gradient-text">
+          {t.details.title}
+        </h2>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {details.map((item, index) => (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             key={index}
-            className="flex flex-col p-5 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-l-4 border-[#4A6FA5] dark:border-gray-600"
+            className="glass-card p-5 hover:scale-105 transition-transform duration-300"
           >
             <div className="flex items-center mb-3">
-              {item.icon}
-              <dt className="text-[#4A6FA5] dark:text-gray-400 text-sm font-medium ml-2">
+              <div className="text-cyan-400">{item.icon}</div>
+              <dt className="text-gray-700 dark:text-gray-300 text-sm font-semibold ml-2">
                 {item.label}
               </dt>
             </div>
-            <dd className="text-gray-700 dark:text-gray-300 font-medium break-words">
+            <dd className="text-gray-800 dark:text-gray-100 font-medium break-words text-sm md:text-base">
               {item.value}
             </dd>
           </motion.div>
