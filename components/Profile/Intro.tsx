@@ -10,7 +10,7 @@ interface IntroProps {
   title: string;
   introduction: string;
   resumeFile: string;
-  resumePrompt: string;
+  // resumePrompt: string;
   links: LinksProp;
   greeting?: string;
   name?: {
