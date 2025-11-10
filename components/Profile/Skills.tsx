@@ -162,7 +162,7 @@ export function Skills({ t }: SkillsProps) {
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                   whileHover={{ scale: 1.05, y: -3 }}
                   key={lang}
-                  className={`skill-tag px-3 py-1.5 md:px-4 md:py-2 bg-gray-100 dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full text-xs md:text-sm font-medium text-gray-700 dark:text-gray-200 transition-all duration-300 cursor-pointer ${colors.hover} ${colors.border} hover:shadow-lg ${colors.shadow} hover:text-white`}
+                  className={`skill-tag px-3 py-1.5 md:px-4 md:py-2 bg-gray-100 dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full text-xs md:text-sm font-medium text-gray-700 dark:text-white transition-all duration-300 cursor-pointer ${colors.hover} ${colors.border} hover:shadow-lg ${colors.shadow} hover:text-white`}
                 >
                   {lang}
                 </motion.span>
@@ -195,7 +195,7 @@ export function Skills({ t }: SkillsProps) {
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                     whileHover={{ scale: 1.05, y: -3 }}
                     key={framework}
-                    className={`skill-tag px-3 py-1.5 md:px-4 md:py-2 bg-gray-100 dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full text-xs md:text-sm font-medium text-gray-700 dark:text-gray-200 transition-all duration-300 cursor-pointer ${colors.hover} ${colors.border} hover:shadow-lg ${colors.shadow} hover:text-white`}
+                    className={`skill-tag px-3 py-1.5 md:px-4 md:py-2 bg-gray-100 dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full text-xs md:text-sm font-medium text-gray-700 dark:text-white transition-all duration-300 cursor-pointer ${colors.hover} ${colors.border} hover:shadow-lg ${colors.shadow} hover:text-white`}
                   >
                     {framework}
                   </motion.span>
@@ -228,7 +228,7 @@ export function Skills({ t }: SkillsProps) {
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                   whileHover={{ scale: 1.05, y: -3 }}
                   key={tool}
-                  className={`skill-tag px-3 py-1.5 md:px-4 md:py-2 bg-gray-100 dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full text-xs md:text-sm font-medium text-gray-700 dark:text-gray-200 transition-all duration-300 cursor-pointer ${colors.hover} ${colors.border} hover:shadow-lg ${colors.shadow} hover:text-white`}
+                  className={`skill-tag px-3 py-1.5 md:px-4 md:py-2 bg-gray-100 dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full text-xs md:text-sm font-medium text-gray-700 dark:text-white transition-all duration-300 cursor-pointer ${colors.hover} ${colors.border} hover:shadow-lg ${colors.shadow} hover:text-white`}
                 >
                   {tool}
                 </motion.span>

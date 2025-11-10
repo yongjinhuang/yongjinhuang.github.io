@@ -1,7 +1,7 @@
 import { ThemeProvider } from 'next-themes';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageSelector from '@/components/LanguageSelector';
-import { Locale } from '../i18n/settings';
+import { Locale, getTranslations } from '../i18n/settings';
 import { Footer } from '@/components/Footer';
 import Link from 'next/link';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -13,7 +13,10 @@ interface Props {
   params: Promise<{ lang: Locale }>;
 }
 
-export default function LangLayout({ children, params }: Props) {
+export default async function LangLayout({ children, params }: Props) {
+  const { lang } = await params;
+  const t = await getTranslations(lang);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <div className="min-h-screen relative">
@@ -40,7 +43,7 @@ export default function LangLayout({ children, params }: Props) {
               <div className="flex items-center space-x-6">
                 <Link href="#skills" className="relative group hidden sm:block">
                   <span className="text-gray-800 dark:text-gray-100 font-medium hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] transition-all duration-300">
-                    Skills
+                    {t.nav.skills}
                   </span>
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#667eea] to-[#764ba2] group-hover:w-full transition-all duration-300"></span>
                 </Link>
@@ -49,18 +52,7 @@ export default function LangLayout({ children, params }: Props) {
                   className="relative group hidden sm:block"
                 >
                   <span className="text-gray-800 dark:text-gray-100 font-medium hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] transition-all duration-300">
-                    Experience
-                  </span>
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#667eea] to-[#764ba2] group-hover:w-full transition-all duration-300"></span>
-                </Link>
-                <Link
-                  href="https://yongjinhuang.github.io/blog"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative group"
-                >
-                  <span className="text-gray-800 dark:text-gray-100 font-medium hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] transition-all duration-300">
-                    Blog
+                    {t.nav.experience}
                   </span>
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#667eea] to-[#764ba2] group-hover:w-full transition-all duration-300"></span>
                 </Link>

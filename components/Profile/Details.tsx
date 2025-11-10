@@ -11,19 +11,19 @@ export function Details({ t }: DetailsProps) {
   const details = [
     {
       ...t.details.phone,
-      icon: <FiPhone className="text-[#4A6FA5] dark:text-gray-400" />,
+      icon: <FiPhone className="text-cyan-500 dark:text-cyan-400" />,
     },
     {
       ...t.details.wechat,
-      icon: <FiMessageSquare className="text-[#4A6FA5] dark:text-gray-400" />,
+      icon: <FiMessageSquare className="text-cyan-500 dark:text-cyan-400" />,
     },
     {
       ...t.details.address,
-      icon: <FiMapPin className="text-[#4A6FA5] dark:text-gray-400" />,
+      icon: <FiMapPin className="text-cyan-500 dark:text-cyan-400" />,
     },
     {
       ...t.details.email,
-      icon: <FiMail className="text-[#4A6FA5] dark:text-gray-400" />,
+      icon: <FiMail className="text-cyan-500 dark:text-cyan-400" />,
     },
   ];
 
@@ -56,11 +56,11 @@ export function Details({ t }: DetailsProps) {
           >
             <div className="flex items-center mb-3">
               <div className="text-cyan-400">{item.icon}</div>
-              <dt className="text-gray-700 dark:text-gray-300 text-sm font-semibold ml-2">
+              <dt className="text-gray-700 dark:text-gray-100 text-sm font-semibold ml-2">
                 {item.label}
               </dt>
             </div>
-            <dd className="text-gray-800 dark:text-gray-100 font-medium break-words text-sm md:text-base">
+            <dd className="text-gray-800 dark:text-white font-medium break-words text-sm md:text-base">
               {item.value}
             </dd>
           </motion.div>

@@ -108,7 +108,7 @@ export function Experience({ t }: ExperienceProps) {
                           {experience.name}
                         </a>
                       </h3>
-                      <p className="text-gray-700 dark:text-gray-300 font-medium mt-1">
+                      <p className="text-gray-700 dark:text-gray-100 font-medium mt-1">
                         {experience.position}
                       </p>
                     </div>
@@ -116,7 +116,7 @@ export function Experience({ t }: ExperienceProps) {
 
                   {/* Date and Tech Stack */}
                   <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <div className="inline-flex items-center gap-2 text-cyan-400 font-semibold">
+                    <div className="inline-flex items-center gap-2 text-cyan-400 dark:text-cyan-300 font-semibold">
                       <FaCalendarAlt className="text-sm" />
                       <span className="text-sm">{experience.period}</span>
                     </div>
@@ -127,7 +127,7 @@ export function Experience({ t }: ExperienceProps) {
                     {experience.techStack.split(',').map((tech, techIndex) => (
                       <span
                         key={techIndex}
-                        className="px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#4facfe] hover:to-[#00f2fe] hover:text-white hover:border-cyan-400 transition-all duration-300"
+                        className="px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/20 rounded-full text-gray-700 dark:text-gray-100 hover:bg-gradient-to-r hover:from-[#4facfe] hover:to-[#00f2fe] hover:text-white hover:border-cyan-400 transition-all duration-300"
                       >
                         {tech.trim()}
                       </span>
@@ -144,7 +144,7 @@ export function Experience({ t }: ExperienceProps) {
                           viewport={{ once: true }}
                           transition={{ duration: 0.3, delay: respIndex * 0.1 }}
                           key={respIndex}
-                          className="flex items-start gap-3 text-gray-700 dark:text-gray-300"
+                          className="flex items-start gap-3 text-gray-700 dark:text-gray-100"
                         >
                           <FaCheckCircle className="text-green-400 mt-1 flex-shrink-0" />
                           <div className="flex-1">

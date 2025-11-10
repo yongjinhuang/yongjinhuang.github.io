@@ -67,7 +67,7 @@ export function Intro({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-lg md:text-xl text-gray-600 dark:text-gray-400 block mb-4"
+            className="text-lg md:text-xl text-gray-600 dark:text-gray-300 block mb-4"
           >
             {greeting}
           </motion.span>
@@ -86,7 +86,7 @@ export function Intro({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-lg sm:text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 min-h-[40px]"
+            className="text-lg sm:text-xl md:text-2xl text-gray-700 dark:text-gray-100 mb-8 min-h-[40px]"
           >
             <span className="inline-block">{typedText}</span>
             <span className="animate-[blink_1s_infinite] ml-1">|</span>
@@ -176,7 +176,7 @@ export function Intro({
               </svg>
             </div>
             <h2 className="text-2xl font-bold mb-4 gradient-text">{title}</h2>
-            <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+            <p className="text-gray-700 dark:text-gray-100 text-lg leading-relaxed">
               {introduction}
             </p>
           </div>
@@ -193,7 +193,7 @@ export function Intro({
             <div className="w-[30px] h-[50px] border-2 border-gray-400 dark:border-gray-600 rounded-full relative mx-auto mb-2">
               <div className="w-1 h-2 bg-gray-400 dark:bg-gray-600 rounded-full absolute top-2 left-1/2 -translate-x-1/2 animate-[scroll_2s_infinite]" />
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Scroll Down
             </p>
           </div>

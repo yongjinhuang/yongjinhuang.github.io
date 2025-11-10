@@ -41,10 +41,10 @@ export function Education({ t }: EducationProps) {
             <h3 className="text-xl md:text-2xl font-bold gradient-text">
               {t.education.university}
             </h3>
-            <p className="text-gray-700 dark:text-gray-300 font-medium text-base md:text-lg">
+            <p className="text-gray-700 dark:text-gray-100 font-medium text-base md:text-lg">
               {t.education.major}
             </p>
-            <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm md:text-base">
+            <div className="flex items-center text-gray-600 dark:text-gray-300 text-sm md:text-base">
               <FaCalendarAlt className="mr-2 text-cyan-400" />
               <span>{t.education.period}</span>
             </div>
