@@ -1,7 +1,15 @@
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { i18n } from './i18n/settings';
 
 export default function Home() {
-  // Redirect to the default locale
-  redirect(`/${i18n.defaultLocale}`);
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace(`/${i18n.defaultLocale}`);
+  }, [router]);
+
+  return null;
 }

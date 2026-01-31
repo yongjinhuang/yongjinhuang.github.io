@@ -18,7 +18,12 @@ export default async function LangLayout({ children, params }: Props) {
   const t = await getTranslations(lang);
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem
+      disableTransitionOnChange
+    >
       <div className="min-h-screen relative">
         {/* Animated Background */}
         <AnimatedBackground />

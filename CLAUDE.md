@@ -53,12 +53,12 @@ The app uses a custom i18n implementation with locale-based routing:
 - **Default Locale**: `en`
 - **Translation Files**: `app/i18n/locales/{locale}.json`
 - **Route Structure**: `/[lang]/...` - all pages are nested under language parameter
-- **Middleware**: Redirects root requests to default locale (middleware.ts:5-20)
+- **Root Redirect**: Client-side redirect from `/` to `/en` (app/page.tsx)
 - **Translation Loading**: Async function `getTranslations(locale)` in app/i18n/settings.ts with fallback to English
 
 Key files:
 
-- `middleware.ts` - Handles locale detection and redirection
+- `app/page.tsx` - Client-side redirect to default locale (middleware not compatible with static export)
 - `app/i18n/settings.ts` - i18n configuration and translation loader
 - `app/i18n/locales/` - Translation JSON files
 - `app/[lang]/` - Locale-specific pages
