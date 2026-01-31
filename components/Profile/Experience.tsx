@@ -49,7 +49,7 @@ export function Experience({ t }: ExperienceProps) {
       {/* Timeline */}
       <div className="relative max-w-5xl mx-auto">
         {/* Vertical Timeline Line */}
-        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-[3px] bg-accent/50 dark:bg-accent/30 md:-translate-x-1/2" />
+        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-[4px] bg-accent/95 dark:bg-accent/60 rounded-full shadow-[0_0_16px_rgba(251,191,36,0.45)] dark:shadow-[0_0_12px_rgba(251,191,36,0.25)] md:-translate-x-1/2" />
 
         <div className="space-y-12 md:space-y-16">
           {experiences.map((experience, index) => (
