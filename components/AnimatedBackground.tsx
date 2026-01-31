@@ -1,66 +1,43 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-
 export function AnimatedBackground() {
-  const orbsRef = useRef<HTMLDivElement[]>([]);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const mouseX = e.clientX / window.innerWidth;
-      const mouseY = e.clientY / window.innerHeight;
-
-      orbsRef.current.forEach((orb, index) => {
-        if (orb) {
-          const speed = (index + 1) * 15; // Reduced from 30 to 15
-          const x = (mouseX - 0.5) * speed;
-          const y = (mouseY - 0.5) * speed;
-          orb.style.transform = `translate(${x}px, ${y}px)`;
-        }
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
   return (
-    <div className="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
-      {/* Gradient Orb 1 */}
+    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      {/* Subtle Warm Gradient Background */}
       <div
-        ref={(el) => {
-          if (el) orbsRef.current[0] = el;
-        }}
-        className="absolute w-[500px] h-[500px] rounded-full blur-[100px] opacity-20 dark:opacity-30 -top-[200px] -left-[200px] transition-transform duration-1000 ease-out"
+        className="absolute inset-0 opacity-15 dark:opacity-25"
         style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          animation: 'float 20s infinite ease-in-out',
+          background: `
+            radial-gradient(ellipse 80% 50% at 20% 40%, rgba(251, 191, 36, 0.2), transparent),
+            radial-gradient(ellipse 60% 40% at 80% 60%, rgba(217, 119, 6, 0.15), transparent)
+          `,
+          backgroundSize: '200% 200%',
+          animation: 'mesh-gradient 15s ease infinite',
         }}
       />
 
-      {/* Gradient Orb 2 */}
+      {/* Large Subtle Blob - Amber (Top Left) */}
       <div
-        ref={(el) => {
-          if (el) orbsRef.current[1] = el;
-        }}
-        className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-20 dark:opacity-30 -bottom-[150px] -right-[150px] transition-transform duration-1000 ease-out"
+        className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[120px] opacity-10 dark:opacity-20"
         style={{
-          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-          animation: 'float 20s infinite ease-in-out 5s',
+          background:
+            'radial-gradient(circle, rgba(251, 191, 36, 0.6) 0%, transparent 70%)',
+          animation: 'float 20s ease-in-out infinite',
         }}
       />
 
-      {/* Gradient Orb 3 */}
+      {/* Large Subtle Blob - Amber (Bottom Right) */}
       <div
-        ref={(el) => {
-          if (el) orbsRef.current[2] = el;
-        }}
-        className="absolute w-[600px] h-[600px] rounded-full blur-[100px] opacity-20 dark:opacity-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-1000 ease-out"
+        className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full blur-[120px] opacity-10 dark:opacity-15"
         style={{
-          background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-          animation: 'float 20s infinite ease-in-out 10s',
+          background:
+            'radial-gradient(circle, rgba(217, 119, 6, 0.5) 0%, transparent 70%)',
+          animation: 'float 20s ease-in-out infinite 5s',
         }}
       />
+
+      {/* Subtle Grid Overlay */}
+      <div className="absolute inset-0 grid-pattern opacity-20 dark:opacity-40" />
     </div>
   );
 }

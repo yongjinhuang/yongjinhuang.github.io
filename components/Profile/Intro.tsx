@@ -10,7 +10,6 @@ interface IntroProps {
   title: string;
   introduction: string;
   resumeFile: string;
-  // resumePrompt: string;
   links: LinksProp;
   greeting?: string;
   name?: {
@@ -29,7 +28,6 @@ interface LinksProp {
 
 export function Intro({
   resumeFile,
-  // resumePrompt,
   title,
   introduction,
   links,
@@ -39,10 +37,17 @@ export function Intro({
   viewResume = 'View Resume',
   hireMe = 'Get In Touch',
 }: IntroProps) {
+  const [mounted, setMounted] = useState(false);
   const [typedText, setTypedText] = useState('');
   const fullText = tagline;
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     let index = 0;
     const timer = setInterval(() => {
       if (index <= fullText.length) {
@@ -54,7 +59,7 @@ export function Intro({
     }, 100);
 
     return () => clearInterval(timer);
-  }, [fullText]);
+  }, [fullText, mounted]);
 
   return (
     <section
@@ -63,56 +68,66 @@ export function Intro({
     >
       <div className="w-full max-w-6xl mx-auto px-4">
         <div className="text-center mb-8 md:mb-12">
+          {/* Greeting */}
           <motion.span
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-lg md:text-xl text-gray-600 dark:text-gray-300 block mb-4"
+            className="text-lg md:text-xl text-gray-600 dark:text-gray-400 block mb-4"
           >
             {greeting}
           </motion.span>
 
+          {/* Name - Extra Large with Subtle Hover Effect */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6"
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black mb-6 tracking-tight"
           >
-            <span className="gradient-text">{name.first}</span>{' '}
-            <span className="gradient-text">{name.last}</span>
+            <span className="inline-block text-gray-900 dark:text-white hover:text-amber-600 dark:hover:text-accent transition-all duration-300 cursor-default">
+              {name.first}
+            </span>{' '}
+            <span className="inline-block text-gray-900 dark:text-white hover:text-amber-600 dark:hover:text-accent transition-all duration-300 cursor-default">
+              {name.last}
+            </span>
           </motion.h1>
 
+          {/* Tagline with Typing Animation + Cursor */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-lg sm:text-xl md:text-2xl text-gray-700 dark:text-gray-100 mb-8 min-h-[40px]"
+            className="text-lg sm:text-xl md:text-2xl text-gray-700 dark:text-gray-100 mb-8 min-h-[40px] font-medium"
+            suppressHydrationWarning
           >
-            <span className="inline-block">{typedText}</span>
-            <span className="animate-[blink_1s_infinite] ml-1">|</span>
+            <span className="inline-block" suppressHydrationWarning>
+              {mounted ? typedText : ''}
+            </span>
+            <span className="inline-block w-[3px] h-6 md:h-7 bg-accent ml-1 animate-[blink_1s_infinite]" />
           </motion.p>
 
+          {/* Buttons - Brutal Style */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex justify-center gap-3 md:gap-4 flex-wrap mb-6 md:mb-8"
+            className="flex justify-center gap-3 md:gap-4 flex-wrap mb-8"
           >
             <Link
               href="#experience"
-              className="group btn-primary inline-flex items-center gap-2 px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold text-sm md:text-base text-white shadow-lg transition-all duration-300 hover:-translate-y-1 relative overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              }}
+              className="brutal-btn brutal-btn-accent px-6 py-3 md:px-8 md:py-4 text-sm md:text-base inline-flex items-center gap-2 group"
             >
-              <span className="relative z-10">{hireMe}</span>
-              <FaArrowRight className="relative z-10 group-hover:translate-x-1 transition-transform" />
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+              <span>{hireMe}</span>
+              <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
             </Link>
 
             <Link
               href={resumeFile}
-              className="group inline-flex items-center gap-2 px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold text-sm md:text-base bg-white dark:bg-white/5 backdrop-blur-lg border-2 border-purple-300 dark:border-white/20 text-purple-700 dark:text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-purple-50 dark:hover:bg-white/10 hover:border-purple-400"
+              className="brutal-btn px-6 py-3 md:px-8 md:py-4 text-sm md:text-base bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 inline-flex items-center gap-2 group"
+              style={{
+                boxShadow: '4px 4px 0 rgba(0,0,0,0.8)',
+              }}
               download
             >
               <FaDownload className="group-hover:animate-bounce" />
@@ -120,81 +135,56 @@ export function Intro({
             </Link>
           </motion.div>
 
+          {/* Social Icons - Square Brutal Cards */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex justify-center gap-4 md:gap-6"
+            className="flex justify-center gap-3 md:gap-4"
           >
-            <motion.a
-              whileHover={{ scale: 1.2, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              href={links.leetcode}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white dark:bg-white/5 backdrop-blur-lg border-2 border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:text-white hover:border-transparent transition-all duration-300"
-            >
-              <SiLeetcode className="text-lg md:text-xl" />
-            </motion.a>
-            <motion.a
-              whileHover={{ scale: 1.2, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              href={links.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white dark:bg-white/5 backdrop-blur-lg border-2 border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:text-white hover:border-transparent transition-all duration-300"
-            >
-              <FaGithub className="text-lg md:text-xl" />
-            </motion.a>
-            <motion.a
-              whileHover={{ scale: 1.2, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              href={links.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white dark:bg-white/5 backdrop-blur-lg border-2 border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:text-white hover:border-transparent transition-all duration-300"
-            >
-              <FaLinkedin className="text-lg md:text-xl" />
-            </motion.a>
+            {[
+              { icon: SiLeetcode, href: links.leetcode },
+              { icon: FaGithub, href: links.github },
+              { icon: FaLinkedin, href: links.linkedin },
+            ].map(({ icon: Icon, href }, index) => (
+              <motion.a
+                key={index}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:border-accent hover:text-accent hover:shadow-[0_0_15px_rgba(251,191,36,0.3)] transition-all duration-300"
+              >
+                <Icon className="text-xl md:text-2xl" />
+              </motion.a>
+            ))}
           </motion.div>
         </div>
 
+        {/* About Me Card - Brutal Style with Gradient Border Animation */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1 }}
           className="max-w-3xl mx-auto"
         >
-          <div className="glass-card p-6 md:p-8 text-center">
-            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-full flex items-center justify-center bg-gradient-to-r from-[#667eea] to-[#764ba2] animate-[pulse_2s_infinite]">
+          <div className="glass-card p-6 md:p-8 text-center group hover:border-accent">
+            {/* Icon Container */}
+            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 flex items-center justify-center bg-accent border-3 border-black shadow-[4px_4px_0_#000] group-hover:shadow-[6px_6px_0_#000] transition-all duration-300">
               <svg
-                className="w-10 h-10 text-white"
+                className="w-10 h-10 text-black"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
                 <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold mb-4 gradient-text">{title}</h2>
-            <p className="text-gray-700 dark:text-gray-100 text-lg leading-relaxed">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 gradient-text">
+              {title}
+            </h2>
+            <p className="text-gray-700 dark:text-gray-100 text-base md:text-lg leading-relaxed">
               {introduction}
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1.5 }}
-          className="text-center mt-16"
-        >
-          <div className="inline-block">
-            <div className="w-[30px] h-[50px] border-2 border-gray-400 dark:border-gray-600 rounded-full relative mx-auto mb-2">
-              <div className="w-1 h-2 bg-gray-400 dark:bg-gray-600 rounded-full absolute top-2 left-1/2 -translate-x-1/2 animate-[scroll_2s_infinite]" />
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Scroll Down
             </p>
           </div>
         </motion.div>

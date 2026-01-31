@@ -38,7 +38,7 @@ export default function LanguageSelector() {
         <button
           key={locale}
           onClick={() => handleLanguageChange(locale)}
-          className="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-cyan-400 transition-colors"
+          className="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-amber-600 dark:hover:text-accent transition-colors"
         >
           {locale.toUpperCase()}
         </button>

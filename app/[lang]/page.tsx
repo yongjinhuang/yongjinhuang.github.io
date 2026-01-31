@@ -25,7 +25,6 @@ export default async function Home({ params }: Props) {
         {/* Profile Section */}
         <Intro
           resumeFile={t.intro.resumeFile}
-          // resumePrompt={t.intro.resumePrompt}
           title={t.intro.title}
           introduction={t.intro.introduction}
           links={t.intro.links}
@@ -40,11 +39,12 @@ export default async function Home({ params }: Props) {
         <Details t={t} />
         <Divider />
 
-        {/* Skills and Education Section - Full width on mobile, side by side on large screens */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          <Education t={t} />
-          <Skills t={t} />
-        </div>
+        {/* Education Section */}
+        <Education t={t} />
+        <Divider />
+
+        {/* Skills Section - Full Width */}
+        <Skills t={t} />
         <Divider />
 
         {/* Experience Section */}

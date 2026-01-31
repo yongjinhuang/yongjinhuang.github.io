@@ -3,24 +3,8 @@
     "skills": "技能",
     "experience": "工作经验"
   },
-  "contact": {
-    "title": "联系方式",
-    "address": {
-      "label": "地址",
-      "value": "深圳，中国"
-    },
-    "phone": {
-      "label": "电话",
-      "value": "18826234610"
-    },
-    "wechat": {
-      "label": "微信",
-      "value": "CallMeYoungGene"
-    }
-  },
   "intro": {
     "resumeFile": "/zh/resume.pdf/",
-    "resumePrompt": " 😄 查看我的简历",
     "title": "关于我",
     "greeting": "你好，我是",
     "name": {
@@ -56,13 +40,11 @@
   "experience": {
     "title": "工作经验",
     "tagline": "我的历程",
-    "current": "现在",
     "company": {
       "wilddata": {
         "linkUrl": "https://www.wilddata.cn",
         "logoUrl": "/logo/wilddata.png",
         "name": "数野科技",
-        "project": "超能文献",
         "position": "(兼职)软件开发工程师",
         "period": "2024 年 4 月 - 至今",
         "techStack": "Java / Spring Boot, Typescript / Next.js",
@@ -78,7 +60,6 @@
         "logoUrl": "/logo/tarro.webp",
         "name": "Tarro",
         "position": "软件开发工程师",
-        "project": "Restaurants POS",
         "period": "2023 年 4 月 - 2024 年 4 月",
         "techStack": "Golang / Gin, Typescript / React",
         "responsibilities": [
@@ -94,7 +75,6 @@
         "position": "高级软件开发工程师",
         "period": "2019 年 8 月 - 2023 年 3 月",
         "techStack": "Python / Django, Golang / Gin, Typescript / React",
-        "project": "计费平台",
         "responsibilities": [
           "设计并实现计费平台可扩展的技术解决方案，提高系统效率和可维护性",
           "负责项目执行、风险管理和资源优化，确保按时交付项目",
@@ -110,7 +90,6 @@
         "name": "华为技术有限公司",
         "position": "软件开发工程师",
         "period": "2017 年 7 月 - 2019 年 9 月",
-        "project": "Huawei Devcloud CodeHub",
         "responsibilities": [
           "设计、开发并上线 `CodeHubEdge` 中间件，实现第三方服务集成",
           "编写、优化并维护代码仓库相关业务代码，提高操作（创建仓库、提交等）效率 30%",

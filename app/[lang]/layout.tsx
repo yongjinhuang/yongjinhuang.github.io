@@ -18,7 +18,7 @@ export default async function LangLayout({ children, params }: Props) {
   const t = await getTranslations(lang);
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <div className="min-h-screen relative">
         {/* Animated Background */}
         <AnimatedBackground />
@@ -26,43 +26,52 @@ export default async function LangLayout({ children, params }: Props) {
         {/* Custom Cursor */}
         <CustomCursor />
 
-        {/* Glassmorphism Navbar */}
+        {/* Neo-Brutalism Navbar */}
         <nav className="fixed w-full top-0 z-50 transition-all duration-300">
-          <div className="glass-card mx-4 mt-4 rounded-full shadow-lg">
-            <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-              <div className="flex items-center space-x-4">
-                <Link
-                  href="/"
-                  className="font-bold text-2xl gradient-text hover:scale-110 transition-transform duration-300"
-                >
-                  YH
-                </Link>
-                <LanguageSelector />
-              </div>
+          <div className="mx-4 mt-4">
+            <div className="glass-card px-4 py-3 md:px-6 md:py-4">
+              <div className="container mx-auto flex justify-between items-center">
+                {/* Logo + Language */}
+                <div className="flex items-center gap-3 md:gap-4">
+                  <Link
+                    href="/"
+                    className="brutal-btn brutal-btn-accent px-3 py-1 md:px-4 md:py-2 text-lg md:text-xl font-black tracking-tight hover:scale-105 transition-transform"
+                  >
+                    YH
+                  </Link>
+                  <LanguageSelector />
+                </div>
 
-              <div className="flex items-center space-x-6">
-                <Link href="#skills" className="relative group hidden sm:block">
-                  <span className="text-gray-800 dark:text-gray-100 font-medium hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] transition-all duration-300">
-                    {t.nav.skills}
-                  </span>
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#667eea] to-[#764ba2] group-hover:w-full transition-all duration-300"></span>
-                </Link>
-                <Link
-                  href="#experience"
-                  className="relative group hidden sm:block"
-                >
-                  <span className="text-gray-800 dark:text-gray-100 font-medium hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] transition-all duration-300">
-                    {t.nav.experience}
-                  </span>
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#667eea] to-[#764ba2] group-hover:w-full transition-all duration-300"></span>
-                </Link>
-                <ThemeToggle />
+                {/* Nav Links + Theme Toggle */}
+                <div className="flex items-center gap-4 md:gap-6">
+                  <Link
+                    href="#skills"
+                    className="relative group hidden sm:block"
+                  >
+                    <span className="text-gray-800 dark:text-gray-100 font-semibold hover:text-accent transition-colors duration-300">
+                      {t.nav.skills}
+                    </span>
+                    <span className="absolute -bottom-1 left-0 w-0 h-[3px] bg-accent group-hover:w-full transition-all duration-300" />
+                  </Link>
+                  <Link
+                    href="#experience"
+                    className="relative group hidden sm:block"
+                  >
+                    <span className="text-gray-800 dark:text-gray-100 font-semibold hover:text-accent transition-colors duration-300">
+                      {t.nav.experience}
+                    </span>
+                    <span className="absolute -bottom-1 left-0 w-0 h-[3px] bg-accent group-hover:w-full transition-all duration-300" />
+                  </Link>
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </div>
         </nav>
 
-        <main className="container mx-auto px-4 pt-32 pb-16">{children}</main>
+        <main className="container mx-auto px-4 pt-28 md:pt-32 pb-16">
+          {children}
+        </main>
         <Footer params={params} />
         <ScrollToTop />
       </div>
