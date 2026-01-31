@@ -1,3 +1,5 @@
+import type { Translations } from '@/types';
+
 export const i18n = {
   defaultLocale: 'en',
   locales: ['en', 'zh'],
@@ -5,15 +7,13 @@ export const i18n = {
 
 export type Locale = (typeof i18n)['locales'][number];
 
-export async function getTranslations(locale: Locale) {
+export async function getTranslations(locale: Locale): Promise<Translations> {
   try {
-    // Make the import path explicit
     const translations = await import(`./locales/${locale}.json`);
-    return translations.default;
+    return translations.default as Translations;
   } catch (error) {
     console.error(`Error loading translations for ${locale}:`, error);
-    // Fallback to English if translation fails
     const fallback = await import('./locales/en.json');
-    return fallback.default;
+    return fallback.default as Translations;
   }
 }

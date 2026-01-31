@@ -1,19 +1,17 @@
-import { Locale } from '@/app/i18n/settings';
-import { getTranslations } from '../i18n/settings';
-import { Skills } from '@/components/Profile/Skills';
-import { Experience } from '@/components/Profile/Experience';
-import { Details } from '@/components/Profile/Details';
-import { Intro } from '@/components/Profile/Intro';
-import { Education } from '@/components/Profile/Education';
+import { Locale, getTranslations } from '@/app/i18n/settings';
 import { PageTransition } from '@/components/PageTransition';
+import { Divider } from '@/components/ui';
+import {
+  Intro,
+  Details,
+  Education,
+  Skills,
+  Experience,
+} from '@/components/sections';
 
 interface Props {
   params: Promise<{ lang: Locale }>;
 }
-
-const Divider = () => (
-  <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent my-8 md:my-12"></div>
-);
 
 export default async function Home({ params }: Props) {
   const { lang } = await params;
@@ -22,33 +20,14 @@ export default async function Home({ params }: Props) {
   return (
     <PageTransition>
       <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
-        {/* Profile Section */}
-        <Intro
-          resumeFile={t.intro.resumeFile}
-          title={t.intro.title}
-          introduction={t.intro.introduction}
-          links={t.intro.links}
-          greeting={t.intro.greeting}
-          name={t.intro.name}
-          tagline={t.intro.tagline}
-          viewResume={t.intro.viewResume}
-          hireMe={t.intro.hireMe}
-        />
-
-        {/* Details Section */}
-        <Details t={t} />
+        <Intro intro={t.intro} />
+        <Details details={t.details} />
         <Divider />
-
-        {/* Education Section */}
-        <Education t={t} />
+        <Education education={t.education} />
         <Divider />
-
-        {/* Skills Section - Full Width */}
-        <Skills t={t} />
+        <Skills skills={t.skills} />
         <Divider />
-
-        {/* Experience Section */}
-        <Experience t={t} />
+        <Experience experience={t.experience} />
       </div>
     </PageTransition>
   );

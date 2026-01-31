@@ -72,16 +72,29 @@ Two-level layout system:
 
 ### Component Organization
 
-- **Profile Components** (`components/Profile/`) - Modular sections:
+The codebase uses a clean component architecture with separation of concerns:
 
+- **UI Components** (`components/ui/`) - Reusable primitives:
+  - `Card.tsx` - Glass card with hover effects
+  - `Button.tsx` - Brutal-style buttons with variants
+  - `IconButton.tsx` - Circular icon buttons for social links
+  - `IconContainer.tsx` - Styled icon wrappers
+  - `SectionHeader.tsx` - Consistent section headers with tagline/title
+  - `Divider.tsx` - Section divider component
+  - `SkillTag.tsx` - Animated skill tags
+
+- **Section Components** (`components/sections/`) - Page sections:
   - `Intro.tsx` - Hero/introduction section
-  - `Details.tsx` - Personal details
-  - `Experience.tsx` - Work experience
+  - `Details.tsx` - Personal contact details
+  - `Experience.tsx` - Work experience timeline
   - `Education.tsx` - Educational background
-  - `Skills.tsx` - Technical skills
+  - `Skills.tsx` - Technical skills grid
 
-- **UI Components** (`components/`) - Standalone utilities:
-  - `AnimatedBackground.tsx` - Canvas-based particle animation
+- **Layout Components** (`components/layout/`) - Layout primitives:
+  - `Navbar.tsx` - Navigation bar with theme toggle and language selector
+
+- **Utility Components** (`components/`) - Standalone utilities:
+  - `AnimatedBackground.tsx` - CSS-based animated background
   - `CustomCursor.tsx` - Custom cursor with hover effects
   - `ThemeToggle.tsx` - Dark/light mode switcher
   - `LanguageSelector.tsx` - Language switcher (en/zh)
@@ -89,13 +102,32 @@ Two-level layout system:
   - `ScrollToTop.tsx` - Scroll-to-top button
   - `Footer.tsx` - Footer component
 
+### Type System
+
+- **Translation Types** (`types/translations.ts`) - Strongly-typed i18n
+  - All translation keys are typed, eliminating `any` usage
+  - Types are exported from `@/types` for easy import
+
+### Utility Functions
+
+- **Utils** (`lib/utils.ts`) - Shared utilities
+  - `cn()` - Class name utility using `clsx` and `tailwind-merge`
+
+### Design System
+
+- **Design Tokens** (`lib/design-system.ts`) - Centralized design tokens
+  - Colors, shadows, animations, keyframes, spacing
+  - Used by both Tailwind config and components
+
 ### Styling System
 
-- **CSS Framework**: Tailwind CSS
-- **Custom CSS**: `app/globals.css` defines CSS variables for gradients, colors, shadows
+- **CSS Framework**: Tailwind CSS with custom plugin
+- **Design Tokens**: `lib/design-system.ts` defines colors, shadows, animations
+- **Custom CSS**: `app/globals.css` defines CSS variables and utility classes
 - **Theme Variables**: Supports both light and dark modes with custom color palettes
 - **Font**: Poppins (self-hosted in public/fonts/, loaded via app/globals.css)
 - **Animation Library**: Framer Motion for animations
+- **Class Merging**: Uses `clsx` + `tailwind-merge` via `cn()` utility
 
 ### Docker Support
 
@@ -115,6 +147,8 @@ Note: The Dockerfile appears to be for standard Next.js server deployment, but t
 - **@heroicons/react** - Hero icons
 - **react-markdown** - Markdown rendering
 - **gh-pages** - GitHub Pages deployment utility
+- **clsx** - Conditional class name construction
+- **tailwind-merge** - Merge Tailwind classes without conflicts
 
 ## Development Notes
 
