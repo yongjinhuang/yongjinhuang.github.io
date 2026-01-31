@@ -62,10 +62,7 @@ export function Intro({
   }, [fullText, mounted]);
 
   return (
-    <section
-      id="intro"
-      className="min-h-[70vh] flex items-center py-8 md:py-12"
-    >
+    <section id="intro" className="py-12">
       <div className="w-full max-w-6xl mx-auto px-4">
         <div className="text-center mb-8 md:mb-12">
           {/* Greeting */}
@@ -154,7 +151,7 @@ export function Intro({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:border-accent hover:text-accent hover:shadow-[0_0_15px_rgba(251,191,36,0.3)] transition-all duration-300"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:border-accent hover:text-accent hover:shadow-[0_0_15px_rgba(251,191,36,0.3)] transition-all duration-300"
               >
                 <Icon className="text-xl md:text-2xl" />
               </motion.a>
@@ -171,7 +168,7 @@ export function Intro({
         >
           <div className="glass-card p-6 md:p-8 text-center group hover:border-accent">
             {/* Icon Container */}
-            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 flex items-center justify-center bg-accent border-3 border-black shadow-[4px_4px_0_#000] group-hover:shadow-[6px_6px_0_#000] transition-all duration-300">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full mx-auto mb-4 md:mb-6 flex items-center justify-center bg-accent border-3 border-black shadow-[4px_4px_0_#000] group-hover:shadow-[6px_6px_0_#000] transition-all duration-300">
               <svg
                 className="w-10 h-10 text-black"
                 fill="currentColor"

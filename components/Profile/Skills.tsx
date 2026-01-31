@@ -42,7 +42,7 @@ export function Skills({ t }: SkillsProps) {
   ];
 
   return (
-    <section className="py-16" id="skills">
+    <section className="py-12" id="skills">
       {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -75,7 +75,7 @@ export function Skills({ t }: SkillsProps) {
           >
             {/* Category Header */}
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 flex items-center justify-center bg-accent/10 border-2 border-accent/30 group-hover:bg-accent/20 group-hover:border-accent transition-all duration-300">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-accent/10 border-2 border-accent/30 group-hover:bg-accent/20 group-hover:border-accent transition-all duration-300">
                 <category.icon className="text-accent text-xl" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">

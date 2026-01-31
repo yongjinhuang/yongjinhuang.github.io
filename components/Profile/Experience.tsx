@@ -29,7 +29,7 @@ export function Experience({ t }: ExperienceProps) {
   ];
 
   return (
-    <section id="experience" className="py-16">
+    <section id="experience" className="py-12">
       {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -87,7 +87,7 @@ export function Experience({ t }: ExperienceProps) {
                   {/* Header */}
                   <div className="flex items-start gap-4 mb-4">
                     {/* Logo */}
-                    <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 bg-white border-2 border-gray-200 dark:border-white/10 overflow-hidden group-hover:border-accent transition-colors duration-300">
+                    <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white border-2 border-gray-200 dark:border-white/10 overflow-hidden group-hover:border-accent transition-colors duration-300">
                       <Image
                         width={56}
                         height={56}

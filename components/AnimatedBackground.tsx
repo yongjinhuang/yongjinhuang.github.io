@@ -1,12 +1,33 @@
 'use client';
 
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+
 export function AnimatedBackground() {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return <div className="fixed inset-0 -z-10" />;
+  }
+
+  const isDark = resolvedTheme === 'dark';
+
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+    <div
+      key={resolvedTheme}
+      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none transition-opacity duration-300"
+    >
       {/* Subtle Warm Gradient Background */}
       <div
-        className="absolute inset-0 opacity-15 dark:opacity-25"
+        className="absolute inset-0"
         style={{
+          opacity: isDark ? 0.25 : 0.15,
           background: `
             radial-gradient(ellipse 80% 50% at 20% 40%, rgba(251, 191, 36, 0.2), transparent),
             radial-gradient(ellipse 60% 40% at 80% 60%, rgba(217, 119, 6, 0.15), transparent)
@@ -18,8 +39,9 @@ export function AnimatedBackground() {
 
       {/* Large Subtle Blob - Amber (Top Left) */}
       <div
-        className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[120px] opacity-10 dark:opacity-20"
+        className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[120px]"
         style={{
+          opacity: isDark ? 0.2 : 0.1,
           background:
             'radial-gradient(circle, rgba(251, 191, 36, 0.6) 0%, transparent 70%)',
           animation: 'float 20s ease-in-out infinite',
@@ -28,8 +50,9 @@ export function AnimatedBackground() {
 
       {/* Large Subtle Blob - Amber (Bottom Right) */}
       <div
-        className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full blur-[120px] opacity-10 dark:opacity-15"
+        className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full blur-[120px]"
         style={{
+          opacity: isDark ? 0.15 : 0.1,
           background:
             'radial-gradient(circle, rgba(217, 119, 6, 0.5) 0%, transparent 70%)',
           animation: 'float 20s ease-in-out infinite 5s',
@@ -37,7 +60,10 @@ export function AnimatedBackground() {
       />
 
       {/* Subtle Grid Overlay */}
-      <div className="absolute inset-0 grid-pattern opacity-20 dark:opacity-40" />
+      <div
+        className="absolute inset-0 grid-pattern"
+        style={{ opacity: isDark ? 0.4 : 0.2 }}
+      />
     </div>
   );
 }

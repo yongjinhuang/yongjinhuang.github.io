@@ -38,7 +38,7 @@ export function Education({ t }: EducationProps) {
           <div className="flex flex-col sm:flex-row items-start gap-5">
             {/* Icon Container */}
             <div className="flex-shrink-0">
-              <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-accent/10 border-2 border-accent/30 group-hover:bg-accent/20 group-hover:border-accent transition-all duration-300">
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center bg-accent/10 border-2 border-accent/30 group-hover:bg-accent/20 group-hover:border-accent transition-all duration-300">
                 <FaGraduationCap className="text-accent text-2xl md:text-3xl" />
               </div>
             </div>

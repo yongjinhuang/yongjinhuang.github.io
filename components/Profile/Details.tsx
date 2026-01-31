@@ -78,7 +78,7 @@ export function Details({ t }: DetailsProps) {
             >
               <div className="flex items-start gap-4">
                 {/* Icon */}
-                <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center border-2 border-gray-300 dark:border-white/20 bg-white dark:bg-surface-dark group-hover:border-accent group-hover:shadow-[0_0_15px_rgba(251,191,36,0.3)] transition-all duration-300">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 flex items-center justify-center border-2 border-gray-300 dark:border-white/20 bg-white dark:bg-surface-dark group-hover:border-accent group-hover:shadow-[0_0_15px_rgba(251,191,36,0.3)] transition-all duration-300">
                   <Icon className="text-lg md:text-xl text-gray-600 dark:text-gray-300 group-hover:text-accent transition-colors duration-300" />
                 </div>
 
