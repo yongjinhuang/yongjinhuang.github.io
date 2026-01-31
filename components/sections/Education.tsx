@@ -1,8 +1,8 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { FaGraduationCap } from 'react-icons/fa';
-import { SectionHeader, Card, IconContainer } from '@/components/ui';
+import { SectionHeader, Card } from '@/components/ui';
 import type { EducationTranslations } from '@/types';
 
 interface EducationProps {
@@ -23,13 +23,15 @@ export function Education({ education }: EducationProps) {
       >
         <Card>
           <div className="flex flex-col sm:flex-row items-start gap-5">
-            <IconContainer
-              size="lg"
-              variant="accent"
-              icon={
-                <FaGraduationCap className="text-accent text-2xl md:text-3xl" />
-              }
-            />
+            <div className="flex-shrink-0">
+              <Image
+                src="/logo/school.png"
+                alt="School logo"
+                width={80}
+                height={80}
+                className="rounded-lg"
+              />
+            </div>
 
             <div className="flex-1 space-y-3">
               <h3 className="text-xl md:text-2xl font-black gradient-text">
