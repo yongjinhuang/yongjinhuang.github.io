@@ -46,7 +46,7 @@
         "linkUrl": "https://www.wilddata.cn",
         "logoUrl": "/logo/wilddata.png",
         "name": "WildData",
-        "position": "(Part-time) Software Engineer",
+        "position": "Software Engineer",
         "period": "April 2024 - Present",
         "responsibilities": [
           "Designed and maintained CI/CD pipelines using [Tencent Cloud](https://cloud.tencent.com/) and [Coding](https://coding.net/), improving deployment efficiency by 100%",
