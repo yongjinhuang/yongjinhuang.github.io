@@ -47,12 +47,14 @@
         "name": "数野科技",
         "position": "技术合伙人",
         "period": "2024 年 4 月 - 至今",
-        "techStack": "Java / Spring Boot, Typescript / Next.js",
+        "techStack": "Java 21 / Spring Boot 3, MySQL, MongoDB, Redis, Kafka, K8s",
         "responsibilities": [
-          "作为 5% 股东加入，参与技术开发与业务增长",
-          "搭建 [腾讯云](https://cloud.tencent.com/) + [Coding](https://coding.net/) CI/CD 流水线，部署效率提升 100%",
-          "开发 [超能文献](https://suppr.wilddata.cn/) 后端：微信公众号对接、积分系统、文献检索与摘要、文档翻译、支付处理",
-          "负责 HTTPS 证书、Nginx 配置和网站管理，搭建容器化部署服务",
+          "作为 5% 股东加入，主导技术开发与业务增长",
+          "构建 [超能文献](https://suppr.wilddata.cn/)，AI 学术研究平台，采用 API/Consumer 分离架构部署于 K8s，支持独立扩缩容",
+          "开发三大核心 AI 服务：LLM 文献检索、多语言文件翻译、深度研究报告生成，使用 Kafka 异步处理 + SSE + Redis pub/sub 实时推送",
+          "设计三阶段积分系统（冻结→扣减→回滚），实现微信支付/支付宝幂等回调",
+          "管理[腾讯云](https://cloud.tencent.com/)基础设施：TKE K8s 集群、EdgeOne WAF/CDN/SSL、CLB 负载均衡，以及 Docker Compose 自建 MySQL/Redis/MongoDB/Kafka",
+          "搭建 CI/CD 流水线：Jenkins + Docker 多阶段构建 + Helm + Orbit CD K8s 滚动更新，部署效率提升 100%",
           "开发 `Wilddata Payment Module`，新应用支付接入时间缩短 200%"
         ]
       },

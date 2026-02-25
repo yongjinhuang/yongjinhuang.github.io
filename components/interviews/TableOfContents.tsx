@@ -15,26 +15,40 @@ interface TableOfContentsProps {
 }
 
 function parseTocItems(markdown: string): readonly TocItem[] {
-  const headingRegex = /^(#{1,4})\s+(.+)$/gm;
+  const lines = markdown.split('\n');
   const items: TocItem[] = [];
-  let match;
+  let inCodeBlock = false;
 
-  while ((match = headingRegex.exec(markdown)) !== null) {
-    const text = match[2]
-      .replace(/\*\*(.+?)\*\*/g, '$1')
-      .replace(/`(.+?)`/g, '$1');
-    items.push({
-      level: match[1].length,
-      text,
-      slug: slugify(text),
-    });
+  for (const line of lines) {
+    if (line.trimStart().startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+    if (inCodeBlock) continue;
+
+    const match = /^(#{1,4})\s+(.+)$/.exec(line);
+    if (match) {
+      const text = match[2]
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/`(.+?)`/g, '$1');
+      items.push({
+        level: match[1].length,
+        text,
+        slug: slugify(text),
+      });
+    }
   }
 
   return items;
 }
 
 export function TableOfContents({ content }: TableOfContentsProps) {
-  const items = useMemo(() => parseTocItems(content), [content]);
+  const items = useMemo(() => {
+    const allItems = parseTocItems(content);
+    if (allItems.length === 0) return allItems;
+    const topLevel = Math.min(...allItems.map((i) => i.level));
+    return allItems.filter((i) => i.level <= topLevel + 1);
+  }, [content]);
   const [activeSlug, setActiveSlug] = useState<string>('');
 
   useEffect(() => {
@@ -76,31 +90,29 @@ export function TableOfContents({ content }: TableOfContentsProps) {
   };
 
   return (
-    <aside className="hidden xl:block w-56 2xl:w-64 shrink-0">
-      <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-accent mb-3">
-          On this page
-        </h3>
-        <nav className="space-y-0.5 border-l-2 border-gray-200 dark:border-white/10">
-          {items.map((item, index) => (
-            <button
-              key={`${item.slug}-${index}`}
-              onClick={() => handleClick(item.slug)}
-              className={cn(
-                'block w-full text-left text-xs leading-relaxed py-1 transition-all duration-200 border-l-2 -ml-[2px]',
-                activeSlug === item.slug
-                  ? 'border-accent text-accent font-medium'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-accent hover:border-accent/50'
-              )}
-              style={{
-                paddingLeft: `${(item.level - minLevel) * 12 + 12}px`,
-              }}
-            >
-              <span className="line-clamp-2">{item.text}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
-    </aside>
+    <div className="max-h-[calc(100vh-8rem)] overflow-y-auto">
+      <h3 className="text-sm font-bold uppercase tracking-wider text-accent mb-3">
+        On this page
+      </h3>
+      <nav className="space-y-0.5 border-l-2 border-gray-200 dark:border-white/10">
+        {items.map((item, index) => (
+          <button
+            key={`${item.slug}-${index}`}
+            onClick={() => handleClick(item.slug)}
+            className={cn(
+              'block w-full text-left text-xs leading-relaxed py-1 transition-all duration-200 border-l-2 -ml-[2px]',
+              activeSlug === item.slug
+                ? 'border-accent text-accent font-medium'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-accent hover:border-accent/50'
+            )}
+            style={{
+              paddingLeft: `${(item.level - minLevel) * 12 + 12}px`,
+            }}
+          >
+            <span className="line-clamp-2">{item.text}</span>
+          </button>
+        ))}
+      </nav>
+    </div>
   );
 }

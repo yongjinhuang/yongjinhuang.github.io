@@ -8,9 +8,7 @@ export default function InterviewsPage() {
 
   return (
     <PageTransition>
-      <div className="max-w-7xl mx-auto">
-        <InterviewViewer files={files} />
-      </div>
+      <InterviewViewer files={files} />
     </PageTransition>
   );
 }

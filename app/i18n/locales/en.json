@@ -42,18 +42,20 @@
     "tagline": "My Journey",
     "company": {
       "wilddata": {
-        "techStack": "Java / Spring Boot, Typescript / Next.js",
+        "techStack": "Java 21 / Spring Boot 3, MySQL, MongoDB, Redis, Kafka, K8s",
         "linkUrl": "https://www.wilddata.cn",
         "logoUrl": "/logo/wilddata.png",
         "name": "WildData",
         "position": "Technical Partner",
         "period": "April 2024 - Present",
         "responsibilities": [
-          "Joined as a 5% shareholder, contributing to both technical development and business growth",
-          "Built CI/CD pipelines with [Tencent Cloud](https://cloud.tencent.com/) and [Coding](https://coding.net/), doubling deployment efficiency",
-          "Developed backend for [Suppr](https://suppr.wilddata.cn/): WeChat integration, points system, literature search & summarization, document translation, and payments",
-          "Managed HTTPS certificates, NGINX, and websites. Built containerized deployment service for better scalability",
-          "Built Wilddata Payment Module, cutting new app payment integration time by 200%"
+          "Joined as a 5% shareholder, driving technical development and business growth",
+          "Built [Suppr](https://suppr.wilddata.cn/), an AI-powered research platform with API/Consumer profile split on K8s for independent scaling",
+          "Developed three core AI services: LLM-based literature search, multi-language file translation, and deep research report generation, using Kafka for async processing and SSE + Redis pub/sub for real-time streaming",
+          "Designed a three-stage point system (freeze → consume → rollback) with idempotent payment callbacks for WeChat Pay / Alipay",
+          "Managed [Tencent Cloud](https://cloud.tencent.com/) infrastructure: TKE K8s cluster, EdgeOne WAF/CDN/SSL, CLB load balancer, and self-hosted MySQL/Redis/MongoDB/Kafka via Docker Compose",
+          "Built CI/CD pipeline with Jenkins, Docker multi-stage builds, and Helm-based K8s rolling updates via Orbit CD, doubling deployment efficiency",
+          "Developed Wilddata Payment Module, cutting new app integration time by 200%"
         ]
       },
       "tarro": {
