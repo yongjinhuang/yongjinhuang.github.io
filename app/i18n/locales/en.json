@@ -46,13 +46,13 @@
         "linkUrl": "https://www.wilddata.cn",
         "logoUrl": "/logo/wilddata.png",
         "name": "WildData",
-        "position": "Software Engineer",
+        "position": "Software Engineer & Shareholder (5%)",
         "period": "April 2024 - Present",
         "responsibilities": [
-          "Designed and maintained CI/CD pipelines using [Tencent Cloud](https://cloud.tencent.com/) and [Coding](https://coding.net/), improving deployment efficiency by 100%",
-          "Developed and integrated backend features for the [Suppr](https://suppr.wilddata.cn/) project, including WeChat official account integration, points management, literature search, literature summarization, document translation, and payment processing, enhancing system functionality and user experience",
-          "Maintained backend projects by handling HTTPS certificates, configuring NGINX, and managing websites. Built a containerized deployment service for applications, improving scalability and efficiency.",
-          "Developed the Wilddata Payment Module, streamlining payment integration for new applications and reducing onboarding time by 200%"
+          "Built CI/CD pipelines with [Tencent Cloud](https://cloud.tencent.com/) and [Coding](https://coding.net/), doubling deployment efficiency",
+          "Developed backend for [Suppr](https://suppr.wilddata.cn/): WeChat integration, points system, literature search & summarization, document translation, and payments",
+          "Managed HTTPS certificates, NGINX, and websites. Built containerized deployment service for better scalability",
+          "Built Wilddata Payment Module, cutting new app payment integration time by 200%"
         ]
       },
       "tarro": {
@@ -63,9 +63,9 @@
         "position": "Software Engineer",
         "period": "Apr 2023 - Apr 2024",
         "responsibilities": [
-          "Defined and implemented RESTful APIs for POS ordering, enabling seamless integration with frontend systems.",
-          "Developed and optimized printing logic for POS receipts, making it more customizable, reducing print errors by 50% and improving efficiency.",
-          "Migrated legacy menu data to a new POS system, ensuring seamless transition and reducing retrieval time by 30%"
+          "Built RESTful APIs for POS ordering with seamless frontend integration",
+          "Optimized POS receipt printing logic, reducing errors by 50%",
+          "Migrated legacy menu data to new POS system, reducing retrieval time by 30%"
         ]
       },
       "shopee": {
@@ -76,11 +76,11 @@
         "position": "Senior Software Engineer",
         "period": "Aug 2019 - Mar 2023",
         "responsibilities": [
-          "Designed and implemented scalable technical solutions of the billing platform, improving system efficiency and maintainability.",
-          "Led project execution, managed risks, and ensured on-time delivery by optimizing resource allocation.",
-          "Led weekly code review sessions, improving code quality and reducing deployment defects by 30%.",
-          "Optimized billing API performance, reducing DB connections from 4k to 1k and increasing QPS from 2k to 5k.",
-          "Delivered 5 technical presentations on software architecture and performance optimization."
+          "Designed scalable billing platform solutions, improving efficiency and maintainability",
+          "Led project execution with risk management and resource optimization",
+          "Led weekly code reviews, reducing deployment defects by 30%",
+          "Optimized billing API: reduced DB connections from 4k to 1k, increased QPS from 2k to 5k",
+          "Delivered 5 tech talks on architecture and performance optimization"
         ]
       },
       "huawei": {
@@ -91,9 +91,9 @@
         "position": "Software Engineer",
         "period": "Jul 2017 - Aug 2019",
         "responsibilities": [
-          "Designed, developed, and launched CodeHubEdge middleware, enabling third-party service integration.",
-          "Wrote, optimized, and maintained repository operation code, improving the efficiency of operations (Create repositories, submit a commit, etc) by 30%.",
-          "Read GitLab source code and blogs during the job and output a series of [GitLab-related blog posts](https://juejin.cn/post/6844903860033552391)."
+          "Built and launched CodeHubEdge middleware for third-party service integration",
+          "Optimized repository operations (create, commit, etc.), improving efficiency by 30%",
+          "Studied GitLab source code and published [technical blog posts](https://juejin.cn/post/6844903860033552391)"
         ]
       }
     }
