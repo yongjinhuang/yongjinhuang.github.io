@@ -1,0 +1,2847 @@
+1:"$Sreact.fragment"
+2:I[5244,[],""]
+3:I[3866,[],""]
+5:I[6556,["760","static/chunks/f7333993-562d951955f1593f.js","448","static/chunks/448-d671b33df2a05d3a.js","902","static/chunks/902-be8e18aad95d2a88.js","675","static/chunks/675-ee1f0cb60d5d1329.js","724","static/chunks/app/%5Blang%5D/interviews/page-23d43f5b92a6442c.js"],"PageTransition"]
+6:I[3507,["760","static/chunks/f7333993-562d951955f1593f.js","448","static/chunks/448-d671b33df2a05d3a.js","902","static/chunks/902-be8e18aad95d2a88.js","675","static/chunks/675-ee1f0cb60d5d1329.js","724","static/chunks/app/%5Blang%5D/interviews/page-23d43f5b92a6442c.js"],"InterviewViewer"]
+d:I[6213,[],"OutletBoundary"]
+f:I[6213,[],"MetadataBoundary"]
+11:I[6213,[],"ViewportBoundary"]
+13:I[4835,[],""]
+:HL["/_next/static/css/caa5c89c9b2edfcc.css","style"]
+:HL["/_next/static/css/5eacd01f773eed7f.css","style"]
+7:T5972,# Cloud Services Daily Operations Guide
+
+A practical guide for the Suppr team on how each cloud service is used day-to-day.
+
+---
+
+## 1. Xinnet (DNS)
+
+**What it does**: Manages all `*.wilddata.cn` DNS records.
+
+**When you touch it**:
+
+- Adding a new subdomain (e.g., `newservice.wilddata.cn`)
+- Changing where a subdomain points (e.g., migrating to a new CLB)
+
+**How to use**:
+
+1. Log in to Xinnet console
+2. Navigate to domain management → `wilddata.cn`
+3. Add/edit DNS records:
+   - **A record**: Points subdomain to an IP (e.g., CLB IP)
+   - **CNAME record**: Points subdomain to another domain (e.g., EdgeOne CNAME for CDN)
+4. TTL: Use 600s (10 min) for records you might change; 3600s (1 hour) for stable ones
+
+**Common tasks**:
+| Task | Record Type | Example |
+|------|------------|---------|
+| New subdomain → CLB | A | `newapp.wilddata.cn → <CLB IP>` |
+| New subdomain → EdgeOne | CNAME | `newapp.wilddata.cn → <EdgeOne CNAME>` |
+| Verify domain ownership | TXT | `_acme-challenge.wilddata.cn → <verification string>` |
+
+**Gotcha**: DNS changes can take up to the TTL duration to propagate. If you just changed a record and it's not working, wait for the old TTL to expire.
+
+---
+
+## 2. EdgeOne (WAF + CDN + SSL)
+
+**What it does**: Sits in front of the entire `*.wilddata.cn` domain. Provides three functions:
+
+1. **WAF** — Blocks malicious traffic before it reaches your servers
+2. **CDN** — Caches page-level responses at edge nodes close to users
+3. **SSL** — Auto-provisions and renews HTTPS certificates for all subdomains
+
+**When you touch it**:
+
+- A new attack pattern is hitting the site
+- You need to purge cached pages after a deployment
+- Adding a new subdomain that needs protection
+- Debugging why a page shows stale content
+
+**How to use**:
+
+### Adding a new subdomain
+
+1. Log in to EdgeOne console
+2. Go to Site → Domain Management
+3. Add the new subdomain
+4. EdgeOne provides a CNAME — add this to Xinnet DNS
+5. SSL certificate is auto-provisioned (no manual cert needed)
+
+### Blocking an attack
+
+1. Go to Security → WAF Rules
+2. Create a custom rule:
+   - Match condition: IP range, User-Agent pattern, request path, etc.
+   - Action: Block / Challenge / Rate Limit
+3. For emergency blocking, use the IP blocklist for immediate effect
+
+### Purging cache
+
+1. Go to Cache → Purge
+2. Choose scope:
+   - **URL purge**: Specific page (e.g., `https://suppr.wilddata.cn/some-page`)
+   - **Prefix purge**: All pages under a path (e.g., `https://suppr.wilddata.cn/share/*`)
+   - **Full purge**: Everything (use sparingly — causes origin traffic spike)
+3. Cache usually clears within 30 seconds
+
+### Checking traffic / attacks
+
+1. Go to Analytics → Traffic Analysis for request volume, bandwidth, status codes
+2. Go to Security → Security Analytics for blocked attacks, top attacker IPs
+3. Useful filters: Time range, domain, attack type
+
+**Gotcha**: If a user reports seeing old content after a deployment, it's likely cached by EdgeOne. Purge the specific URL first before investigating further.
+
+---
+
+## 3. Tencent CDN (Static Assets)
+
+**What it does**: Serves `/_next/static/*` files (JS bundles, CSS, fonts) from a **dedicated CDN domain**, separate from EdgeOne. The Next.js frontend (`suppr-fed`) sets `assetPrefix` to this CDN domain.
+
+**When you touch it**:
+
+- Rarely — Next.js static assets are immutable (content-hashed filenames), so cache invalidation is almost never needed
+- If you change the CDN domain or need to debug asset loading failures
+
+**How to use**:
+
+### Checking CDN status
+
+1. Log in to Tencent CDN console
+2. Go to Domain Management → select the CDN domain
+3. Check: Origin server configuration, cache rules, HTTPS settings
+
+### Cache rules (should already be set)
+
+```
+/_next/static/*  →  Cache-Control: max-age=31536000 (1 year)
+```
+
+Since filenames contain content hashes (e.g., `main-abc123.js`), a 1-year TTL is safe. New deploys generate new filenames, so old cached files simply stop being requested.
+
+### Debugging asset loading
+
+1. Open browser DevTools → Network tab
+2. Check if `/_next/static/*` requests are hitting the CDN domain
+3. Check response headers: `X-Cache: HIT` means CDN served it; `MISS` means it went to origin
+4. If assets fail to load, check CDN origin configuration points to the correct K8s service
+
+**Gotcha**: After changing `assetPrefix` in `next.config.ts`, you must rebuild and redeploy `suppr-fed`. The prefix is baked into the HTML at build time.
+
+---
+
+## 4. CLB (Cloud Load Balancer)
+
+**What it does**: Single entry point for all K8s traffic. Routes requests by subdomain to the NGINX Ingress Controller inside TKE.
+
+**When you touch it**:
+
+- Adding a new subdomain that needs to reach K8s
+- Debugging connectivity issues (requests not reaching pods)
+- Checking listener health and connection counts
+
+**How to use**:
+
+### Viewing current configuration
+
+1. Log in to Tencent Cloud → CLB console
+2. Find the CLB instance
+3. Check **Listeners**: Each listener maps a port + protocol to a backend (K8s node)
+4. Check **Health status**: Green = healthy, Red = backend unreachable
+
+### Adding a new subdomain route
+
+The CLB itself doesn't route by subdomain — it forwards all traffic to the NGINX Ingress Controller, which does the routing. So to add a new subdomain:
+
+1. **DNS**: Add the subdomain in Xinnet pointing to CLB IP (or EdgeOne CNAME)
+2. **EdgeOne**: Add the subdomain if it needs WAF protection
+3. **Ingress**: Create a K8s Ingress resource for the new subdomain (see TKE section)
+4. CLB doesn't need changes unless you need a new port/protocol
+
+### Monitoring
+
+- Check **Active connections** — if approaching the limit, consider upgrading CLB tier
+- Check **Bandwidth** — spikes may indicate an attack (should be caught by EdgeOne first)
+
+**Gotcha**: The CLB handles ALL subdomains and ALL environments on a single instance. Be careful with configuration changes — a mistake affects everything.
+
+---
+
+## 5. TKE (Tencent Kubernetes Engine)
+
+**What it does**: Hosts all stateless services (backend, consumer, frontend, API gateway, payment, gotenberg). Environments are separated by K8s namespaces.
+
+**When you touch it**:
+
+- Deploying new versions (via Orbit CD, but sometimes manual kubectl)
+- Scaling replicas up/down
+- Debugging pod crashes or restarts
+- Checking logs and resource usage
+
+**How to use**:
+
+### Checking pod status
+
+```bash
+# All pods in production
+kubectl get pods -n production
+
+# Detailed info on a specific pod
+kubectl describe pod <pod-name> -n production
+
+# Check why a pod is restarting
+kubectl logs <pod-name> -n production --previous
+```
+
+### Scaling
+
+```bash
+# Scale backend to 10 replicas
+kubectl scale deployment suppr-backend -n production --replicas=10
+
+# Scale consumer (be careful — affects Kafka partition assignment)
+kubectl scale deployment suppr-consumer -n production --replicas=2
+```
+
+Note: Scaling via `kubectl` is temporary. For permanent changes, update the Helm values file and redeploy.
+
+### Deploying via Orbit CD
+
+1. Jenkins builds and pushes the Docker image
+2. Go to Coding.net → CD → Orbit
+3. Select the application (e.g., `helm-suppr-backend`)
+4. Select the environment (test or production)
+5. Select the version (image tag)
+6. Click Deploy → rolling update begins
+7. Monitor: `kubectl rollout status deployment/suppr-backend -n production`
+
+### Deploying manually (emergency)
+
+```bash
+# Update image directly (bypasses Helm)
+kubectl set image deployment/suppr-backend suppr-backend=<registry>/<image>:<tag> -n production
+
+# Watch rollout
+kubectl rollout status deployment/suppr-backend -n production
+
+# Rollback if something goes wrong
+kubectl rollout undo deployment/suppr-backend -n production
+```
+
+### Adding a new Ingress route
+
+```yaml
+# Example: Route new-service.wilddata.cn to a K8s service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: new-service-ingress
+  namespace: production
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - host: new-service.wilddata.cn
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: new-service
+                port:
+                  number: 8080
+```
+
+### Checking resource usage
+
+```bash
+# CPU and memory per pod
+kubectl top pods -n production
+
+# Per node
+kubectl top nodes
+```
+
+### Common debugging
+
+| Symptom                         | Check                                                                   |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| Pod stuck in `CrashLoopBackOff` | `kubectl logs <pod> -n production --previous`                           |
+| Pod stuck in `Pending`          | `kubectl describe pod <pod>` — usually node affinity or resource limits |
+| Pod stuck in `ImagePullBackOff` | Image pull secret expired or image tag doesn't exist                    |
+| 502 errors from Ingress         | Pod not ready — check readiness probe and logs                          |
+| Slow responses                  | `kubectl top pods` — check if CPU/memory is maxed out                   |
+
+**Gotcha**: Node affinity currently pins pods to 2 specific nodes. If a node is down, pods won't reschedule elsewhere.
+
+---
+
+## 6. COS (Cloud Object Storage)
+
+**What it does**: Stores user-uploaded files, translated documents, avatars, and shared images. Two types of buckets: private (signed URLs) and public (open read access).
+
+**When you touch it**:
+
+- Checking if a file exists or debugging upload failures
+- Cleaning up orphaned files
+- Managing bucket permissions or lifecycle rules
+
+**How to use**:
+
+### Browsing files
+
+1. Log in to Tencent COS console
+2. Select the bucket (private or public)
+3. Browse the file tree or search by path/prefix
+4. Click a file to see metadata (size, type, upload time, URL)
+
+### Generating a signed URL (for debugging)
+
+1. Find the file in the console
+2. Click "Get Temporary URL"
+3. Set expiration (default: 1 hour)
+4. Copy the URL — this is what the backend generates for users via the MinIO SDK
+
+### File lifecycle
+
+- Private files: Signed URLs expire after 24 hours (configured in backend)
+- Public files: Accessible permanently via public URL
+- No automatic cleanup rules currently — orphaned files accumulate
+
+### Using COSCMD (CLI tool)
+
+```bash
+# Install
+pip install coscmd
+
+# Configure (use your COS credentials)
+coscmd config -a <SecretId> -s <SecretKey> -b <bucket> -r ap-shanghai
+
+# List files
+coscmd list /production/
+
+# Download a file
+coscmd download /production/path/to/file.pdf ./local-file.pdf
+
+# Upload a file
+coscmd upload ./local-file.pdf /production/path/to/file.pdf
+
+# Delete a file
+coscmd delete /production/path/to/file.pdf
+```
+
+**Gotcha**: The backend uses MinIO SDK (S3-compatible) to talk to COS. If COS API changes or credentials rotate, update the Helm values for `OSS_ACCESS_KEY_ID` / `OSS_ACCESS_KEY_SECRET`.
+
+---
+
+## 7. Tencent Cloud Log Service (CLS)
+
+**What it does**: Collects stdout/stderr from all K8s pods. Enables centralized log search without `kubectl logs`.
+
+**When you touch it**:
+
+- Debugging production issues
+- Searching logs across multiple pods/services
+- Checking error frequency over time
+
+**How to use**:
+
+### Searching logs
+
+1. Log in to CLS console
+2. Select the log topic (mapped to K8s namespace)
+3. Use the search bar with query syntax:
+
+```
+# Find errors in suppr-backend
+container_name:suppr-backend AND level:ERROR
+
+# Search by user ID
+uid:abc123-def456
+
+# Search by session ID
+fileTranslationSessionId:xyz789
+
+# Find slow operations (logs with "took" keyword)
+"took" AND "ms"
+
+# Time range: Use the time picker (last 1h, 6h, 24h, custom)
+```
+
+### Common queries
+
+| Scenario                 | Query                                                           |
+| ------------------------ | --------------------------------------------------------------- |
+| All errors in last hour  | `level:ERROR` (set time to 1h)                                  |
+| Translation failures     | `"Translation failed"` or `FileTranslateTaskConsumer AND ERROR` |
+| Payment callback issues  | `WechatPayController AND ERROR`                                 |
+| Point rollback events    | `"rollbackPointRecord"`                                         |
+| Specific user's activity | `uid:<user-id>`                                                 |
+| OOM or memory issues     | `"OutOfMemoryError"` or `"heap"`                                |
+
+### Exporting logs
+
+1. Run your search query
+2. Click Export → CSV or JSON
+3. Useful for sharing with the AI services team when debugging cross-service issues
+
+**Gotcha**: Logs are plain text (not JSON structured). Complex queries may require regex. Consider switching to structured JSON logging for better queryability (see OPERATIONS_ANALYSIS.md section 11.8).
+
+---
+
+## 8. SSL Certificates
+
+**What it does**: EdgeOne handles SSL auto-renewal for all `*.wilddata.cn` subdomains. No manual certificate management needed.
+
+**When you touch it**:
+
+- Almost never — EdgeOne auto-renews certificates
+- Only if adding a domain outside `*.wilddata.cn`
+
+**How to verify SSL is working**:
+
+```bash
+# Check certificate details for a domain
+curl -vI https://suppr.wilddata.cn 2>&1 | grep -E "subject:|expire"
+
+# Or use openssl
+echo | openssl s_client -servername suppr.wilddata.cn -connect suppr.wilddata.cn:443 2>/dev/null | openssl x509 -noout -dates
+```
+
+**If SSL breaks on a subdomain**:
+
+1. Check EdgeOne console → Domain Management → ensure the subdomain is added
+2. Check DNS → ensure the subdomain CNAME points to EdgeOne (not directly to CLB)
+3. EdgeOne auto-provisions certs — if missing, remove and re-add the domain
+
+---
+
+## 9. Lightweight Servers (Stateful Services)
+
+**What it does**: Hosts MySQL, Redis, MongoDB, and Kafka via Docker Compose. Also hosts Jenkins and Strapi.
+
+**When you touch it**:
+
+- Database maintenance (slow queries, disk space, connections)
+- Restarting a crashed service
+- Checking disk usage (especially MongoDB at 60GB)
+
+**How to use**:
+
+### SSH into a server
+
+```bash
+ssh root@<server-ip>
+```
+
+### Checking service status
+
+```bash
+# List all running containers
+docker ps
+
+# Check a specific service's logs
+docker logs <container-name> --tail 100 -f
+
+# Check disk usage (critical for MongoDB server)
+df -h
+
+# Check memory usage
+free -h
+
+# Check Docker disk usage
+docker system df
+```
+
+### Restarting a service
+
+```bash
+# Navigate to the docker-compose directory
+cd /path/to/docker-compose/
+
+# Restart a specific service
+docker compose restart mysql
+
+# Restart everything
+docker compose down && docker compose up -d
+
+# If a container is stuck
+docker kill <container-name> && docker compose up -d
+```
+
+### MySQL operations
+
+```bash
+# Connect to MySQL
+docker exec -it <mysql-container> mysql -u root -p
+
+# Check slow queries
+SHOW PROCESSLIST;
+
+# Check database size
+SELECT table_schema AS 'Database',
+  ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
+FROM information_schema.tables
+GROUP BY table_schema;
+
+# Manual backup
+docker exec <mysql-container> mysqldump --single-transaction suppr_db | gzip > backup_$(date +%Y%m%d).sql.gz
+```
+
+### Redis operations
+
+```bash
+# Connect to Redis
+docker exec -it <redis-container> redis-cli -a <password>
+
+# Check memory usage
+INFO memory
+
+# Check connected clients
+INFO clients
+
+# Check key count
+DBSIZE
+
+# Find large keys (careful in production)
+redis-cli --bigkeys
+```
+
+### MongoDB operations
+
+```bash
+# Connect to MongoDB
+docker exec -it <mongo-container> mongosh -u <user> -p <password>
+
+# Check database size
+use suppr_db
+db.stats()
+
+# Check collection sizes
+db.getCollectionNames().forEach(function(c) {
+  var stats = db.getCollection(c).stats();
+  print(c + ": " + (stats.size / 1024 / 1024 / 1024).toFixed(2) + " GB, " + stats.count + " docs");
+})
+
+# Check current operations (find slow queries)
+db.currentOp({"secs_running": {$gt: 5}})
+```
+
+### Kafka operations
+
+```bash
+# List topics
+docker exec -it <kafka-container> kafka-topics.sh --list --bootstrap-server localhost:9092
+
+# Check consumer group lag
+docker exec -it <kafka-container> kafka-consumer-groups.sh \
+  --bootstrap-server localhost:9092 \
+  --group suppr-backend-group-prod \
+  --describe
+
+# Check topic partition details
+docker exec -it <kafka-container> kafka-topics.sh \
+  --describe --topic file-translate-tasks-production \
+  --bootstrap-server localhost:9092
+```
+
+### Disk space emergency (MongoDB server)
+
+```bash
+# Check what's using space
+du -sh /var/lib/docker/volumes/*
+
+# If MongoDB data dir is full:
+# 1. Check if there are old logs to clean
+docker logs <mongo-container> --since 720h > /dev/null  # Check log size
+
+# 2. Compact a collection (reclaims space from deleted docs)
+# In mongosh:
+db.runCommand({ compact: "large_collection_name" })
+
+# 3. As last resort: add a bigger cloud disk and migrate Docker volume
+```
+
+**Gotcha**: The docker-compose files are NOT in any repository. If you need to rebuild a server, you'll need to reconstruct the configuration. Priority: persist these files to Git (see OPERATIONS_ANALYSIS.md section 11.6).
+
+---
+
+## 10. Coding.net + Jenkins (CI/CD)
+
+**What it does**: Coding.net hosts the Git repositories. Jenkins builds Docker images. Orbit CD deploys to K8s.
+
+**When you touch it**:
+
+- Every deployment
+- When builds fail
+- When adding a new service to the pipeline
+
+**How to use**:
+
+### Triggering a build
+
+1. Push code to the target branch on coding.net
+2. Coding.net webhook automatically triggers Jenkins
+3. Monitor the build on Jenkins UI
+
+### Checking build status
+
+1. SSH into the Jenkins server or open Jenkins web UI
+2. Navigate to the project → Build History
+3. Click on the build number → Console Output for full logs
+4. Common failure reasons:
+   - Maven dependency download failed (network issue)
+   - Test failure (check test output)
+   - Docker push failed (registry credentials expired)
+
+### Deploying to an environment
+
+1. After Jenkins build succeeds, go to Coding.net → CD → Orbit
+2. Select application and environment
+3. Click deploy
+4. Verify: `kubectl get pods -n <namespace> -w` (watch pods rolling)
+
+### Adding a new service to CI/CD
+
+1. **Coding.net**: Create a new repository for the service
+2. **Jenkins**: Create a new pipeline job pointing to the repo
+3. **Docker**: Add a Dockerfile to the repo
+4. **Helm**: Create a new `helm-<service>` chart with values per environment
+5. **Orbit CD**: Add `.orbit/` configuration to the Helm chart
+6. **Permissions**: Set role-based access on the Helm repo
+
+### Rotating registry credentials
+
+If K8s can't pull images (`ImagePullBackOff`):
+
+```bash
+# Delete old secret
+kubectl delete secret coding-registry-cred -n production
+
+# Create new secret
+kubectl create secret docker-registry coding-registry-cred \
+  --docker-server=<registry-host> \
+  --docker-username=<username> \
+  --docker-password=<token> \
+  -n production
+```
+
+**Gotcha**: Jenkins runs on a single lightweight server with no backup. If Jenkins dies, you lose all build history and job configurations. Consider periodically backing up Jenkins home directory (`/var/jenkins_home`) to COS.
+
+---
+
+## 11. Quick Reference: "Something Is Down"
+
+### The site is completely unreachable
+
+1. Check DNS: `dig suppr.wilddata.cn` — does it resolve?
+2. Check EdgeOne: Is the domain active? Any global rules blocking all traffic?
+3. Check CLB: Is the load balancer healthy in Tencent console?
+4. Check TKE: `kubectl get nodes` — are worker nodes ready?
+
+### API returns 502/504
+
+1. Check pods: `kubectl get pods -n production` — any restarts or CrashLoopBackOff?
+2. Check logs: `kubectl logs <pod> -n production --tail 50`
+3. Check DB: SSH into production server → `docker ps` → is MySQL/Redis running?
+4. Check Ingress: `kubectl describe ingress -n production`
+
+### File translation is stuck
+
+1. Check consumer pods: `kubectl get pods -n production | grep consumer`
+2. Check Kafka lag: Use Kafka CLI to check consumer group lag
+3. Check Redis: Is the active task counter stuck? (`file_translation:active_tasks:<uid>`)
+4. Check translation service: Is it healthy? (pods in `ai-core-*` namespace)
+5. Check CLS logs: Search for the session ID
+
+### Users report stale content
+
+1. Purge EdgeOne cache for the specific URL
+2. Check if it's a static asset (`/_next/static/*`) — these have 1-year TTL but content-hashed names, so new deploys should automatically serve new URLs
+3. If the issue persists, check if the deployment actually rolled out: `kubectl rollout status deployment/suppr-fed -n production`
+
+### A lightweight server is down
+
+1. Check Tencent Cloud console → Lighthouse → server status
+2. If the server is running but services are down:
+   ```bash
+   ssh root@<server-ip>
+   docker ps -a  # Check for exited containers
+   docker compose up -d  # Restart everything
+   ```
+3. If the server is unreachable, restart it from Tencent console
+4. After restart, verify all Docker containers came back up
+
+### Jenkins build failed
+
+1. Check Jenkins console output for the specific build
+2. Common fixes:
+   - Network issue → retry the build
+   - Out of disk → clean up old Docker images: `docker system prune -a`
+   - Maven/npm cache corrupted → clear `.m2` or `node_modules` cache
+
+---
+
+## 12. Service Dependency Map
+
+When something is down, use this to understand the blast radius:
+
+```
+suppr-backend (API) depends on:
+  ├── MySQL (user data, orders, points, sessions)
+  ├── Redis (JWT validation, pub/sub, locks, counters)
+  ├── MongoDB (academic articles, link caches)
+  ├── Kafka (sends translation/research tasks)
+  ├── COS (file storage and retrieval)
+  ├── paper-search [External] (document search)
+  ├── translation-service [External] (file translation)
+  ├── deep-research [External] (research reports)
+  └── gotenberg (PDF conversion)
+
+suppr-consumer depends on:
+  ├── MySQL (session status updates, point operations)
+  ├── Redis (active task counters, stop signals, pub/sub)
+  ├── Kafka (receives translation/research tasks)
+  ├── COS (upload translated files)
+  ├── translation-service [External] (does the actual translation)
+  └── deep-research [External] (does the actual research)
+
+suppr-fed (frontend) depends on:
+  ├── suppr-backend (API calls)
+  └── Tencent CDN (static asset delivery)
+
+suppr-api (public API) depends on:
+  ├── suppr-backend (proxies requests)
+  └── Redis (rate limiting)
+
+wilddata-module-pay depends on:
+  ├── MySQL (order and payment records)
+  └── Redis (notification locks)
+```
+
+If MySQL is down → everything is down.
+If Redis is down → auth fails, SSE breaks, but read-only pages may still work.
+If Kafka is down → new translations/research won't start, but existing API requests still work.
+If an External AI service is down → only that specific feature is affected.
+8:T7cc8,# Suppr Operations & Infrastructure Analysis
+
+## 1. Infrastructure Topology
+
+### 1.1 Cloud Provider: Tencent Cloud (Region: ap-nanjing / ap-shanghai)
+
+```
+                         ┌──────────────────────────────┐
+                         │        DNS (Xinnet)           │
+                         │    *.wilddata.cn records      │
+                         └──────────────┬───────────────┘
+                                        │
+                         ┌──────────────▼───────────────┐
+                         │   EdgeOne (CDN + WAF + SSL)   │
+                         │  - Covers entire domain       │
+                         │  - DDoS / bot protection      │
+                         │  - Auto SSL certificate renew │
+                         │  - Static response caching    │
+                         └──────────────┬───────────────┘
+                                        │
+                  ┌─────────────────────▼─────────────────────┐
+                  │        CLB (Cloud Load Balancer)           │
+                  │                                           │
+                  │  Routes by subdomain:                     │
+                  │  suppr.wilddata.cn      → K8s Ingress     │
+                  │  api.suppr.wilddata.cn  → K8s Ingress     │
+                  │  docs.suppr.wilddata.cn → K8s Ingress     │
+                  │  seomanage.wilddata.cn  → K8s Ingress     │
+                  └─────────────────────┬─────────────────────┘
+                                        │
+          ┌─────────────────────────────▼─────────────────────────────┐
+          │                    TKE (K8s Cluster)                      │
+          │                                                           │
+          │  ┌─────────────────────────────────────────────────────┐  │
+          │  │              NGINX Ingress Controller                │  │
+          │  └───────────────────────┬─────────────────────────────┘  │
+          │                          │                                │
+          │  ┌───────────────────────▼─────────────────────────────┐  │
+          │  │  Namespace: production                              │  │
+          │  │                                                     │  │
+          │  │  suppr-backend x7    suppr-consumer x1              │  │
+          │  │  suppr-fed x1        suppr-api x1                   │  │
+          │  │  wilddata-module-pay x1    gotenberg x1             │  │
+          │  └─────────────────────────────────────────────────────┘  │
+          │                                                           │
+          │  Cloud Servers (Worker Nodes): 2 nodes (node affinity)   │
+          └───────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────┐
+  │     External AI Services (on TKE, owned by another team)          │
+  │                                                                    │
+  │  paper-search        — LLM-based academic document search          │
+  │  translation-service — Multi-language file translation engine      │
+  │  deep-research       — Research report generation                  │
+  └────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────┐
+  │    Lightweight Servers (Stateful Services via Docker Compose)      │
+  │    (docker-compose files exist locally but NOT persisted to repo)  │
+  │                                                                    │
+  │  Production Server       Shared Server          DevOps Server     │
+  │  ├── MySQL               ├── MongoDB (60GB,     ├── Jenkins CI    │
+  │  └── Redis               │   3 billion records) └── Strapi CMS   │
+  │                          └── Kafka                                │
+  └────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────┐
+  │                Tencent COS (Object Storage)                        │
+  │                                                                    │
+  │  Private bucket: Production user files (signed URLs)               │
+  │  Public bucket:  Avatars, share images (public read)               │
+  └────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────┐
+  │                Tencent CDN (dedicated domain)                      │
+  │                                                                    │
+  │  Serves ONLY /_next/static/* assets from suppr-fed                 │
+  │  via a dedicated CDN domain (not through EdgeOne)                  │
+  └────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.2 Service Inventory
+
+| Service | Type | Where | Purpose |
+|---------|------|-------|---------|
+| **suppr-backend** | Java 21 Spring Boot | TKE (api profile) | REST API, SSE streaming, JWT auth |
+| **suppr-consumer** | Java 21 Spring Boot | TKE (consumer profile) | Kafka consumers for translation/research |
+| **suppr-fed** | Next.js 15 | TKE | Admin dashboard at `/dashboard` |
+| **suppr-api** | Java 21 Spring Boot | TKE | Public API gateway with rate limiting |
+| **wilddata-module-pay** | Java 21 Spring Boot | TKE | Payment service (WeChat/Alipay) |
+| **paper-search** | External (another team) | TKE | LLM-based academic document search |
+| **translation-service** | External (another team) | TKE | Multi-language file translation engine |
+| **deep-research** | External (another team) | TKE | Research report generation |
+| **gotenberg** | Docker (3rd-party) | TKE | PDF conversion via LibreOffice/Chromium |
+| **MySQL** | Database | Lightweight Server | Relational data (users, orders, points) |
+| **Redis** | Cache/Pub-Sub | Lightweight Server | JWT, SSE relay, distributed locks, counters |
+| **MongoDB** | Document DB | Lightweight Server | Academic articles, link caches |
+| **Kafka** | Message Queue | Lightweight Server | Async task processing (3 brokers dev, 1 prod port) |
+| **Strapi** | Headless CMS | Lightweight Server | Content management for sharing |
+| **Jenkins** | CI Server | Lightweight Server | Build & deploy pipelines |
+
+---
+
+## 2. Network & Domain Architecture
+
+### 2.1 Domain Routing
+
+```
+*.wilddata.cn (Xinnet DNS)
+  │
+  ├── suppr.wilddata.cn ──────────► Production
+  │     ├── /suppr-backend/*       → suppr-backend (production ns)
+  │     ├── /dashboard/*           → suppr-fed (production ns)
+  │     └── /pay/*                 → wilddata-module-pay (production ns)
+  │
+  ├── test.suppr.wilddata.cn ─────► Test
+  │     ├── /suppr-backend/*       → suppr-backend (test ns)
+  │     ├── /dashboard/*           → suppr-fed (test ns)
+  │     └── /pay/*                 → wilddata-module-pay (testing ns)
+  │
+  ├── api.suppr.wilddata.cn ──────► Public API
+  │     └── /api/v1/*              → suppr-api (rate-limited gateway)
+  │
+  ├── docs.suppr.wilddata.cn ─────► API Documentation
+  │
+  └── seomanage.wilddata.cn ──────► SEO Management Tool
+```
+
+### 2.2 Traffic Flow
+
+```
+User Request
+  → Xinnet DNS (*.wilddata.cn)
+  → EdgeOne (covers entire *.wilddata.cn domain)
+     - WAF: Blocks malicious traffic (bots, DDoS, scanners)
+     - CDN: Caches static frontend responses (HTML, CSS, JS, images)
+     - SSL: Auto-renewal certificates for all subdomains
+  → CLB (Cloud Load Balancer)
+     - Routes by Host header to K8s Ingress
+     - Single CLB handles ALL subdomains (cost optimization)
+  → NGINX Ingress Controller (inside TKE)
+     - Path-based routing to K8s Services
+  → K8s Pod
+
+Static assets (separate path):
+  → suppr-fed sets assetPrefix to a dedicated CDN domain
+  → /_next/static/* requests go directly to Tencent CDN
+  → CDN origin pulls from suppr-fed pods
+  → Does NOT go through EdgeOne (separate domain)
+```
+
+### 2.3 SSL Certificate Management
+
+- **Provider**: EdgeOne (auto-renewal)
+- **Scope**: Covers entire `*.wilddata.cn` domain
+- **Termination point**: EdgeOne edge nodes (not at pod level)
+- **Renewal**: Automatic — EdgeOne handles certificate lifecycle
+
+---
+
+## 3. CI/CD Pipeline
+
+### 3.1 Pipeline Architecture
+
+```
+Developer pushes to coding.net branch
+  │
+  ▼
+coding.net webhook triggers Jenkins
+  │
+  ▼
+Jenkins (on dedicated lightweight server)
+  ├── Pull source code from coding.net
+  ├── Build Docker image (multi-stage)
+  │     ├── Maven build (Java 21) or npm build (Next.js)
+  │     └── Produce minimal runtime image
+  ├── Push image to Coding Docker Registry (private)
+  └── Trigger Orbit CD deployment
+        │
+        ▼
+Orbit CD (Tencent Coding CD)
+  ├── Select environment (test / production)
+  ├── Apply Helm chart with environment-specific values
+  │     ├── values-test.yaml
+  │     └── values-production.yaml
+  └── K8s rolling update in target namespace
+```
+
+### 3.2 Container Registry
+
+- **Host**: Coding.net private Docker registry
+- **K8s authentication**: Image pull secret configured per namespace
+- **Image naming**: `<org>/<project>/<service>:<tag>`
+- **Tag strategy**: `v0.0.X` for releases, `test` for test builds
+
+### 3.3 Deployment Tool: Orbit CD
+
+- Tencent Coding's built-in CD tool (GitOps-style)
+- Environment definitions stored in `.orbit/` directory per Helm chart
+- Each environment maps to a K8s namespace + cluster credential
+- **AutoSync disabled** — all deployments are manual (intentional for a startup)
+- **Force Sync enabled** — overrides drift when deploying
+- Version history in `.orbit/versions/` enables rollback
+
+### 3.4 Helm Repository Access Control
+
+Each `helm-*` repository has **strict role-based permissions**. Different team members have different access levels — only authorized members can modify production Helm values or trigger production deployments. This prevents accidental production changes by junior developers or non-ops members.
+
+### 3.5 Environment Strategy
+
+| Environment | Namespace | Replicas | Purpose |
+|-------------|-----------|----------|---------|
+| **Test** | `test` | 1 | Development testing |
+| **Production** | `production` | 7 (backend) | Live traffic |
+| ~~Demo~~ | ~~demo~~ | ~~1~~ | ~~Deprecated~~ |
+
+Key differences across environments:
+
+| Config | Test | Production |
+|--------|------|------------|
+| Backend replicas | 1 | 7 |
+| MySQL pool | min=10, max=15 | min=20, max=60 |
+| MongoDB pool | 20 | 100 |
+| Undertow workers | 32 | 128 |
+| Kafka file-translation partitions | 3 | 18 |
+| Kafka deep-research partitions | 3 | 6 |
+| Translation concurrency/node | 3 | 18 |
+
+---
+
+## 4. Container & JVM Configuration
+
+### 4.1 Docker Build Strategy
+
+All Java services use **multi-stage builds**:
+
+```
+Stage 1: maven:3.9.4-eclipse-temurin-21-alpine
+  → Maven build with production profile
+  → Output: fat JAR
+
+Stage 2: eclipse-temurin:21-jre
+  → Minimal JRE runtime
+  → SSH client for tunnel access
+  → Asia/Shanghai timezone
+  → Custom entrypoint.sh
+```
+
+Next.js frontend uses:
+
+```
+Stage 1: node:20-alpine (Aliyun npm mirror)
+  → npm ci + next build
+Stage 2: alpine (non-root user nextjs:1001)
+  → Standalone output mode
+  → Port 3000
+```
+
+### 4.2 JVM Tuning (entrypoint.sh)
+
+```bash
+-XX:+UseG1GC                    # Low-latency GC
+-XX:MaxGCPauseMillis=100        # Target 100ms pauses
+-XX:+UseContainerSupport        # Respect cgroup memory limits
+-XX:MaxRAMPercentage=75.0       # Use 75% of container memory
+-XX:+UseStringDeduplication     # Deduplicate string objects
+-XX:+UseTransparentHugePages    # OS-level memory optimization
+-XX:+UseCompressedOops          # Reduce pointer size on 64-bit
+```
+
+suppr-api additionally configures:
+```bash
+-XX:+HeapDumpOnOutOfMemoryError          # Capture heap dumps
+-XX:HeapDumpPath=/workspace/heapdumps/   # Dump location
+-XX:+ExitOnOutOfMemoryError              # Crash fast on OOM
+-Xlog:gc*:file=/workspace/logs/gc.log    # GC logging
+```
+
+### 4.3 Health Checks
+
+All K8s deployments use the same pattern:
+```yaml
+livenessProbe:
+  httpGet:
+    path: /ping
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 5
+
+readinessProbe:
+  httpGet:
+    path: /ping
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 5
+```
+
+- **API termination grace**: 10 seconds
+- **Consumer termination grace**: 30 seconds (allows in-flight Kafka tasks to finish)
+
+---
+
+## 5. Stateful Services: Lightweight Servers
+
+### 5.1 Why Lightweight Servers Instead of Managed Services
+
+You deploy MySQL, Redis, MongoDB, and Kafka on Tencent Lightweight Servers (self-managed) rather than using Tencent managed database services (TencentDB, TDSQL, etc.). This is a deliberate **cost optimization** for a startup:
+
+| Service | Lightweight Server | Managed Service (Tencent) |
+|---------|-------------------|--------------------------|
+| MySQL | Self-managed on VM | TencentDB for MySQL (~3-5x cost) |
+| Redis | Self-managed on VM | TencentDB for Redis (~2-3x cost) |
+| MongoDB | Self-managed on VM | TencentDB for MongoDB (~3x cost) |
+| Kafka | Self-managed on VM | CKafka (~4x cost) |
+
+**Trade-off**: Lower cost but no automatic backups, failover, patching, or monitoring out of the box.
+
+### 5.2 Docker Compose for Stateful Services
+
+All stateful services (MySQL, Redis, MongoDB, Kafka) are deployed via **Docker Compose** on lightweight servers. This makes setup straightforward — `docker compose up -d` brings up the entire stack. However, **the docker-compose files exist only locally on each server and are NOT persisted to any repository**, which is a risk for reproducibility.
+
+### 5.3 Server Layout
+
+```
+Production Server
+  ├── MySQL (via Docker Compose)
+  └── Redis (via Docker Compose)
+
+Shared Server
+  ├── MongoDB (via Docker Compose) — 60GB, ~3 billion records
+  └── Kafka  (via Docker Compose) — shared across test/prod
+
+DevOps Server
+  ├── Jenkins CI
+  └── Strapi CMS
+```
+
+---
+
+## 6. Object Storage (COS)
+
+### 6.1 Bucket Strategy
+
+| Bucket | Purpose | Access |
+|--------|---------|--------|
+| Private (production) | User files — translated docs, uploads | Private (signed URLs, 24h validity) |
+| Private (test) | Test environment files | Private (signed URLs) |
+| Public | Avatars, share images | Public read |
+
+### 6.2 Integration
+
+- MinIO SDK used as S3-compatible client (works with Tencent COS's S3 API)
+- Signed URLs with 24-hour validity for private file downloads
+- Max file size: 2GB
+- Separate credentials per bucket (private vs public)
+
+---
+
+## 7. CDN & Edge Security
+
+### 7.1 EdgeOne (Covers Entire Domain)
+
+- **Scope**: Covers all `*.wilddata.cn` subdomains
+- **WAF**: Blocks DDoS, bot traffic, vulnerability scanners, malicious crawlers
+- **CDN**: Caches frontend responses (HTML pages, images) at edge nodes
+- **SSL**: Auto-renewal certificates for all subdomains — no manual intervention needed
+- **Primary motivation**: Security — protecting specific pages from malicious attacks
+
+### 7.2 CDN (Tencent Cloud CDN — Separate Domain)
+
+- Serves **only** `/_next/static/*` files (Next.js JS bundles, CSS, fonts, media)
+- `suppr-fed` sets `assetPrefix` to a **dedicated CDN domain**, so static asset requests go directly to CDN without passing through EdgeOne
+- Origin: K8s suppr-fed pods
+- This is a valid use case — Next.js static assets have content-hash filenames (immutable), ideal for long `Cache-Control: max-age=31536000` TTLs
+
+### 7.3 EdgeOne vs CDN: No Overlap
+
+These two layers serve **different traffic on different domains**:
+
+```
+Page requests (suppr.wilddata.cn/*)
+  → EdgeOne (WAF + cache + SSL) → CLB → K8s
+
+Static assets (cdn-domain.example.com/_next/static/*)
+  → Tencent CDN (pure caching) → K8s suppr-fed (origin)
+```
+
+No overlap — EdgeOne handles security and page caching on the main domain; CDN handles static asset delivery on a dedicated domain.
+
+---
+
+## 8. Logging & Monitoring
+
+### 8.1 Application Logging
+
+- **Framework**: Logback with Spring profile-aware configuration
+- **Appenders**: Console (stdout) + Rolling file (30-day retention, 3GB cap)
+- **Pattern**: `timestamp [thread] level logger - message`
+- **Log levels**: Configurable via `LOGGING_LEVEL` env var per pod
+
+### 8.2 Tencent Cloud Log Service (CLS)
+
+- Collects stdout/stderr from all K8s pods
+- Enables centralized log search across namespaces
+- Useful for debugging cross-service issues (API → Kafka → Consumer)
+
+### 8.3 What's Missing
+
+- No structured JSON logging (plain text only)
+- No Prometheus metrics endpoint
+- No distributed tracing (SkyWalking agent config exists but not actively used)
+- No alerting on log patterns (e.g., ERROR rate spikes)
+
+---
+
+## 9. What's Done Well
+
+### 9.1 Cost-Effective Architecture for a Startup
+
+The entire production stack runs on a minimal footprint: 2 cloud servers for TKE worker nodes, a few lightweight servers for stateful services, and a single CLB for all subdomains. This is a pragmatic choice — managed services would cost 3-5x more for the same capacity.
+
+### 9.2 Clean Environment Separation via K8s Namespaces
+
+Test and production share the same K8s cluster but are isolated by namespace. Each environment has its own Helm values file with environment-specific databases, credentials, Kafka topics, and COS buckets. No cross-environment contamination is possible because topic names, DB names, and Redis databases are all namespaced. Helm repositories have strict per-member access controls to prevent unauthorized production changes.
+
+### 9.3 Profile-Based API/Consumer Split
+
+The same Docker image serves both roles. `SPRING_PROFILES_ACTIVE=api` starts the web server; `=consumer` starts Kafka listeners. This simplifies the build pipeline (one image, two deployments) while allowing independent scaling and different termination grace periods (10s vs 30s).
+
+### 9.4 Multi-Stage Docker Builds
+
+All services use multi-stage builds that produce minimal runtime images. The Java services drop the entire Maven toolchain in the final image; the Next.js frontend uses standalone output mode with a non-root user. This reduces image size, attack surface, and startup time.
+
+### 9.5 JVM Container Awareness
+
+The entrypoint scripts use `-XX:+UseContainerSupport` and `-XX:MaxRAMPercentage=75.0`, ensuring the JVM respects cgroup memory limits set by K8s. This prevents OOM kills from the JVM allocating more memory than the pod's resource limit. The suppr-api service additionally has `HeapDumpOnOutOfMemoryError` and `ExitOnOutOfMemoryError` for crash diagnostics.
+
+### 9.6 Graceful Shutdown Differentiation
+
+API pods have a 10-second termination grace period (sufficient for draining HTTP connections), while Consumer pods have 30 seconds (allowing in-flight Kafka tasks to complete and ACK before shutdown). This prevents message loss during rolling updates.
+
+### 9.7 Health Check Endpoints
+
+Every service exposes a `/ping` endpoint used for both liveness and readiness probes. K8s won't route traffic to a pod until it passes readiness, and will restart it if liveness fails. The 30-second initial delay accommodates Spring Boot startup time.
+
+### 9.8 SSH Tunnel for Secure Internal Access
+
+The backend pods mount SSH keys and establish tunnels to access services that aren't directly reachable from the K8s network. This is a lightweight alternative to VPN peering or private network setup, appropriate for a startup's infra budget.
+
+### 9.9 Helm Values Per Environment
+
+Environment-specific tuning is externalized to values files rather than hardcoded. Production gets 7 replicas, 128 Undertow workers, 60 MySQL connections, and 18 Kafka partitions. Test gets 1 replica, 32 workers, 15 connections, and 3 partitions. Changing any of these requires zero code changes.
+
+### 9.10 Immutable Asset CDN Caching via Dedicated Domain
+
+Using a **dedicated CDN domain** for `/_next/static/*` (via Next.js `assetPrefix`) is a smart optimization. Next.js generates content-hashed filenames for all static assets — they are immutable by design. A long `Cache-Control: max-age=31536000` TTL is safe and eliminates origin traffic for repeat visitors. Separating this onto its own domain avoids interference with EdgeOne's WAF rules on the main domain.
+
+---
+
+## 10. Current Issues
+
+### 10.1 Critical
+
+#### Single-node stateful services with no backup
+
+MySQL, Redis, MongoDB, and Kafka all run on single lightweight servers with no replication, automatic failover, or automated backups. If the production MySQL server dies, **all production data is lost**. This is the single highest risk in the entire infrastructure.
+
+#### Shared MongoDB and Kafka across environments
+
+MongoDB and Kafka are shared between test and production on the same server. A runaway test workload can saturate Kafka or MongoDB, causing production degradation. A misconfigured test consumer could accidentally consume production topic messages if topic naming conventions are violated.
+
+#### Credentials in Helm values files (checked into Git)
+
+Production database credentials, COS access keys, and JWT signing keys are stored in plain text in `values-production.yaml`. While Helm repositories have strict access controls per team member, the credentials are still in Git history. Anyone who gains repo access — even temporarily — can extract all production secrets.
+
+### 10.2 High
+
+#### Single CLB as the gateway for everything
+
+One Cloud Load Balancer handles all subdomains (suppr, test.suppr, api.suppr, docs, seomanage). If the CLB hits its connection limit or has a configuration error, **all services and all environments** go down simultaneously. There's no isolation between production and test traffic at the load balancer level.
+
+#### Node affinity pins pods to 2 specific servers
+
+Production pods have hard affinity to 2 specific worker nodes. If either node goes down, pods cannot be rescheduled to other nodes. This defeats K8s's self-healing capability. With 7 backend replicas pinned to 2 nodes, a single node failure takes out ~3-4 replicas.
+
+#### No automated database backups
+
+No `mysqldump` cron, no Redis RDB/AOF persistence verification, no MongoDB backup strategy. Recovery from data corruption or accidental deletion requires manual intervention — if a backup even exists. MongoDB is particularly challenging at 60GB / 3 billion records (see section 11.1).
+
+### 10.3 Medium
+
+#### Jenkins on a lightweight server with no redundancy
+
+The Jenkins CI server runs on a single lightweight server. Jenkins has no redundancy — if the server dies, the entire CI/CD pipeline stops. All build history and job configurations would be lost.
+
+#### Docker Compose files not persisted to repository
+
+Stateful services are deployed via Docker Compose on lightweight servers, but the compose files exist only locally. If a server is lost, the exact configuration (port mappings, volumes, environment variables) would need to be reconstructed from memory.
+
+#### No K8s resource limits visible in Helm charts
+
+The deployment templates don't specify CPU/memory `requests` and `limits`. Without resource limits, a single misbehaving pod can consume all node resources and starve other pods (noisy neighbor problem).
+
+#### Orbit CD AutoSync is disabled everywhere
+
+All environments use manual deployment. While this prevents accidental deployments, it also means deployments depend on a human remembering to trigger Orbit CD after the Jenkins build succeeds. There's no automated pipeline from code push to production.
+
+---
+
+## 11. How to Improve
+
+### 11.1 Database Backup Strategy (Urgent)
+
+**MySQL** — straightforward:
+
+```bash
+# Daily full backup + hourly binlog backup
+mysqldump --single-transaction --routines --triggers suppr_db | gzip > backup_$(date +%Y%m%d).sql.gz
+# Upload to COS for offsite storage
+```
+
+**Redis** — verify RDB persistence is enabled, daily copy of dump.rdb to COS.
+
+**MongoDB** — the hard problem. At **60GB / 3 billion records**, `mongodump` is impractical on a lightweight server (would consume all disk I/O and memory for hours). Better alternatives:
+
+- **Filesystem snapshots**: If the lightweight server uses a cloud disk, use Tencent Cloud's **CBS snapshot** to take a consistent point-in-time backup at the block level. Fast, zero application impact.
+- **Delayed secondary replica**: Add a small MongoDB replica set member with `slaveDelay` (e.g., 1 hour). Acts as a rolling backup — if data is corrupted, the delayed node still has clean data.
+- **Incremental backup with `mongodump --query`**: Back up only recent data (e.g., last 7 days by `_last_modified_time`) instead of the full 60GB. Combine with periodic full CBS snapshots.
+
+Store all backups in a **separate COS bucket** with lifecycle rules (30 days retention). Test restore procedures monthly.
+
+### 11.2 Separate Shared Infrastructure
+
+Split MongoDB and Kafka per environment:
+
+| Current | Improved |
+|---------|----------|
+| 1 shared MongoDB for all envs | Test MongoDB on test server, Prod MongoDB on prod server |
+| 1 shared Kafka for all envs | Test Kafka on test server, Prod Kafka on prod server |
+
+At minimum, use different Kafka ports or separate broker instances. This eliminates the risk of test traffic affecting production.
+
+### 11.3 Secret Management
+
+Move credentials out of Helm values files:
+
+- **Short-term**: Use K8s Secrets created manually (not checked into Git). Reference secrets in Helm via `existingSecret` pattern.
+- **Long-term**: Use Tencent Cloud SSM (Secrets Manager) or HashiCorp Vault. Inject secrets via K8s CSI driver or init container.
+- **Immediately**: Rotate all production credentials that are currently exposed in Git history.
+
+### 11.4 Remove Node Affinity Constraints
+
+Replace hard node affinity with **soft preference** (`preferredDuringSchedulingIgnoredDuringExecution`) or remove it entirely. Let K8s scheduler distribute pods across all available nodes. If specific nodes have more resources, use node labels and resource requests instead of IP-based pinning.
+
+### 11.5 Add K8s Resource Limits
+
+```yaml
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+```
+
+Without limits, a single pod can OOM the entire node. Set requests based on typical usage and limits based on peak usage. Monitor actual consumption with `kubectl top pods` to right-size over time.
+
+### 11.6 Persist Docker Compose Files and Infrastructure Config
+
+The docker-compose files for stateful services exist only locally on each server. Persist them to a Git repository:
+
+```
+infra/
+  ├── docker-compose/
+  │     ├── production/
+  │     │     ├── docker-compose.yml    (MySQL + Redis)
+  │     │     └── .env.example
+  │     ├── shared/
+  │     │     ├── docker-compose.yml    (MongoDB + Kafka)
+  │     │     └── .env.example
+  │     └── devops/
+  │           ├── docker-compose.yml    (Jenkins + Strapi)
+  │           └── .env.example
+  └── README.md                         (server setup instructions)
+```
+
+This ensures any team member can rebuild a server from scratch without tribal knowledge. Even without Ansible/Terraform, versioned compose files are a significant improvement.
+
+### 11.7 CI/CD Pipeline Improvements
+
+```
+Current:  Push → Jenkins → Build Image → Manual Orbit CD → Deploy
+Improved: Push → Jenkins → Build Image → Auto-deploy to Test
+                                       → Manual approval gate → Deploy to Prod
+```
+
+- Enable Orbit CD **AutoSync for test namespace only** — every push to the develop branch auto-deploys to test.
+- Keep production manual, but add a Slack/DingTalk notification when a new image is available for promotion.
+- Add a **build verification step**: Run `mvn test` in Jenkins before building the image.
+
+### 11.8 Structured Logging + Alerting
+
+Switch from plain text to JSON logging:
+
+```json
+{"timestamp":"2026-02-26T10:30:00","level":"ERROR","logger":"FileTranslateTaskConsumer","message":"Translation failed","uid":"abc123","sessionId":"xyz789","error":"Connection refused"}
+```
+
+This enables:
+- CLS (Log Service) structured queries (filter by uid, sessionId, level)
+- Alert rules: "Notify DingTalk if ERROR count > 10 in 5 minutes"
+- Dashboard: Error rate per service over time
+
+---
+
+## 12. Summary
+
+> Suppr runs on Tencent Cloud with a cost-optimized architecture: TKE for stateless services, lightweight servers running Docker Compose for databases, a single CLB for all subdomains, EdgeOne for domain-wide WAF + auto-SSL, and Coding.net + Jenkins for CI/CD. The infrastructure demonstrates good startup pragmatism — namespace-based environment isolation with strict Helm repo access controls, profile-based API/Consumer split, multi-stage Docker builds, container-aware JVM tuning, and a dedicated CDN domain for immutable Next.js assets. The critical risks are: single-node stateful services with no automated backups (especially the 60GB MongoDB), production credentials in Git history, shared MongoDB/Kafka across environments, and hard node affinity that defeats K8s self-healing. Priority improvements are: automated database backups (CBS snapshots for MongoDB), secret management via K8s Secrets, separating shared infrastructure per environment, persisting docker-compose files to Git, and removing node affinity constraints.
+9:T50a9,# Suppr System Design Analysis
+
+## 1. System Architecture Overview
+
+Suppr is an **AI-powered academic research platform** built on Spring Boot 3.5.3 (Java 21). It provides three core AI services: **LLM-based document search**, **multi-language file translation**, and **deep research report generation**.
+
+### 1.1 Deployment Topology
+
+```
+                    ┌──────────────┐
+                    │   Clients    │
+                    │ (Web/WeChat) │
+                    └──────┬───────┘
+                           │
+              ┌────────────┴────────────┐
+              │      K8s Ingress        │
+              └────────────┬────────────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         ▼                                   ▼
+  ┌──────────────┐                   ┌──────────────┐
+  │  API Profile │ (Undertow, 64    │   Consumer   │ (Kafka listeners,
+  │  (REST + SSE)│  worker threads)  │   Profile    │  3 concurrency/node)
+  └──────┬───────┘                   └──────┬───────┘
+         │                                  │
+         │    ┌─────────────────────────┐   │
+         ├───▶│         Kafka           │◀──┤
+         │    │ (3 topics, manual ACK)  │   │
+         │    └─────────────────────────┘   │
+         │                                  │
+    ┌────┴──────────────────────────────────┴────┐
+    │              Shared Data Layer              │
+    ├────────────┬───────────┬──────────┬────────┤
+    │   MySQL    │  MongoDB  │  Redis   │ MinIO  │
+    │ (HikariCP │ (articles,│ (JWT,    │ (S3    │
+    │  pool=2)  │  caches)  │  pub/sub │  files)│
+    │           │           │  locks)  │        │
+    └───────────┴───────────┴──────────┴────────┘
+```
+
+### 1.2 External Service Dependencies
+
+| Service | Purpose | Protocol | Timeout |
+|---------|---------|----------|---------|
+| **LLM Service** | Doc search, summarization, query rewriting | HTTP/REST | 30 min |
+| **Translation Service** | File translation (Word/Excel/PDF/PPT) | HTTP/SSE | 24 hours |
+| **Deep Research Service** | Research report generation | HTTP/SSE | 30 min |
+| **Gotenberg** | PDF conversion via LibreOffice/Chromium | HTTP/Multipart | 30 min |
+| **PubMed/NCBI** | Academic article metadata & citations | HTTP/REST | 30 min |
+| **WeChat MP + Mini-app** | OAuth login, notifications | HTTPS | Default |
+| **Wilddata Pay** | Payment gateway (WeChat Pay, Alipay) | HTTP/REST | 30 min |
+| **Strapi CMS** | Content management for sharing | HTTP/REST | 5 min |
+| **File Download Proxy** | External file retrieval with fallback chain | HTTP | 30s |
+
+### 1.3 Key Design Decisions
+
+- **API/Consumer profile split**: Same codebase, different Spring profiles. API handles HTTP requests; Consumer handles Kafka messages. Deployed as separate K8s workloads for independent scaling.
+- **Kafka for async task processing**: Long-running tasks (translation up to 24h, research up to 30min) are queued via Kafka with manual ACK for at-least-once delivery.
+- **SSE + Redis pub/sub for real-time progress**: Clients connect via SSE to the API pod; Consumer publishes events to Redis pub/sub; API pod relays them to clients.
+- **Three-stage point system**: Points go through `award → freeze → consume/rollback → expire`. Freezing prevents overselling during long-running async tasks. Rollback restores points on failure.
+- **TransactionSynchronization for Kafka**: Kafka messages are sent only after DB transaction commits, preventing orphan messages.
+
+---
+
+## 2. Core Business Flows
+
+### 2.1 File Translation Flow
+
+```
+User Upload → Pre-translate (extract metadata, calculate cost)
+           → Freeze Points
+           → DB Commit + Kafka Send (TransactionSynchronization)
+           → Consumer picks up message
+           → Concurrency check (3 for members, 1 for free users via Redis)
+           → Health check on Translation Service
+           → Stream translation via external service
+           → Upload result to MinIO
+           → Update session status → ACK Kafka
+           → On failure: rollback points, set ERROR status, no ACK (Kafka retries)
+```
+
+### 2.2 Deep Research Flow
+
+```
+User Query → Create session → Freeze estimated points (~1000)
+          → Send to Kafka DEEP_RESEARCH_TOPIC
+          → Consumer calls external Deep Research Service
+          → Events streamed via Redis pub/sub channel
+          → API pod relays events to client via SSE
+          → On completion: generate markdown/docx, save to MinIO
+          → Consume actual points, unfreeze remainder
+```
+
+### 2.3 Payment Flow
+
+```
+Create Order (OrderTab, status=WAITING)
+  → Call Wilddata Pay to create payment
+  → Return payment URL to client
+  → User pays via WeChat/Alipay
+  → Payment gateway sends callback
+  → Idempotency check (skip if already SUCCESS)
+  → Conditional update: WAITING → SUCCESS
+  → Allocate benefits (points / membership / API credits)
+  → On refund: reverse callback → withdraw benefits (FIFO)
+```
+
+### 2.4 Points Lifecycle
+
+```
+AWARD (purchase/membership/free/earned)
+  → FREEZE (reserve for pending operation)
+  → CONSUME (deduct after success) or ROLLBACK (restore on failure)
+  → EXPIRE (hourly cron via ShedLock, soft delete)
+```
+
+---
+
+## 3. Current Issues
+
+### 3.1 Critical
+
+#### MySQL connection pool size = 2
+
+HikariCP max pool is set to 2. Under any concurrent load, requests will queue for a DB connection, causing latency spikes and timeouts. With 64 Undertow worker threads, 62 could be blocked waiting for a connection.
+
+#### No circuit breakers on external services
+
+6+ external HTTP dependencies (LLM, Translation, Gotenberg, PubMed, Payment, Strapi) have no circuit breaker or fallback. If the LLM service goes down, all requests to it will hang for up to 30 minutes, exhausting thread pools and cascading failures to unrelated endpoints.
+
+#### Point system race conditions
+
+Recent git history shows a bug fix for "double refund consumer points". The point operations lack pessimistic locking (`SELECT ... FOR UPDATE`) or optimistic locking (version fields). Concurrent requests on the same user's points can produce inconsistent balances.
+
+### 3.2 High
+
+#### No distributed tracing or metrics
+
+No Micrometer/Prometheus metrics, no SkyWalking/OpenTelemetry tracing. In a multi-pod K8s deployment with async Kafka flows, diagnosing latency or failures across API → Kafka → Consumer → External Service is essentially guesswork.
+
+#### SSE memory leak risk
+
+SSE emitters are stored in a `ConcurrentHashMap` with a 50-minute timeout. If clients disconnect abnormally (network drop, browser close), callbacks may not fire, leaving stale emitters in memory. No periodic cleanup or eviction policy exists.
+
+#### Redis as single point of failure for real-time features
+
+SSE event relay, JWT validation, active task counting, and stop signals all depend on a single Redis instance. Redis downtime breaks all real-time features simultaneously.
+
+#### Kafka consumer concurrency mismatch
+
+Consumer concurrency is 3 per node, but the thread pool executor allows up to 50 threads. Non-premium users are limited to 1 concurrent task — excess tasks poll Redis every 2 seconds indefinitely, wasting consumer threads.
+
+### 3.3 Medium
+
+#### No database migration tool
+
+No Flyway or Liquibase detected. Schema changes are manual, making deployments error-prone and hard to roll back.
+
+#### God classes
+
+`FileTranslationServiceImpl` is 1,003 lines; `AdminController` is 1,095 lines. These violate single responsibility and are hard to test/maintain.
+
+#### Inconsistent thread pool rejection policies
+
+Some pools use `AbortPolicy` (throw exception), others use `CallerRunsPolicy` (block caller). This creates unpredictable behavior under load.
+
+---
+
+## 4. What's Done Well
+
+### 4.1 Transactional Safety: Deferred Kafka Send
+
+Kafka messages are sent **only after the DB transaction commits** using `TransactionSynchronizationManager`. This prevents a critical failure mode: if the transaction rolls back, no orphan Kafka message is produced. Without this, a consumer could process a message for data that never got persisted.
+
+```java
+// FileTranslationServiceImpl.java:421
+TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+    @Override
+    public void afterCommit() {
+        fileTranslateTaskProducer.sendTranslateTask(uid, fileTranslationSessionId);
+    }
+});
+```
+
+This pattern is used consistently across file translation, deep research, and payment notification flows.
+
+### 4.2 Three-Stage Point Lifecycle (Freeze → Consume → Rollback)
+
+The point system solves a hard problem: how to bill users for async operations that may take hours and may fail. The solution is a **reservation pattern**:
+
+1. **Freeze** — Reserve estimated points before starting the task. Points that expire soonest are frozen first (FIFO fairness). This prevents overselling if the user starts multiple tasks concurrently.
+2. **Consume** — Deduct from frozen points after the task succeeds. Each deduction is recorded in `UserConsumedPointTab` with an audit trail linking back to the source pool.
+3. **Rollback** — If the task fails, restore frozen points to their original pools and create a reversal record. The `uprid` (point record ID) links the entire chain for traceability.
+
+This design ensures **no points are lost** regardless of whether the async task succeeds, fails, or times out.
+
+### 4.3 Kafka Manual ACK with Point Rollback on Failure
+
+Consumers use **manual acknowledgment** (`enable-auto-commit: false`, `ack-mode: manual`). The consumer offloads long-running work to a thread pool and ACKs immediately, keeping the Kafka poller unblocked. On task failure, the error handler:
+
+1. Sets session status to `ERROR`
+2. Rolls back consumed points via `pointService.rollbackPointRecord()`
+3. Cleans up Redis stop signals and active task counters
+4. Logs the error for debugging
+
+This guarantees **no silent point loss** — every failure path restores the user's balance.
+
+### 4.4 Redis-Based Concurrency Control with Stop Signals
+
+File translation enforces per-user concurrency limits (3 for members, 1 for free users) via Redis atomic counters:
+
+- `file_translation:active_tasks:{uid}` — Incremented on task start, decremented on completion, with a 24-hour TTL to prevent leaks.
+- `file_translation:stop:{sessionId}` — A Redis key that acts as a cancellation flag. The consumer checks this key periodically, allowing users to cancel long-running tasks gracefully.
+
+The stop signal is checked both **while waiting for a slot** and **during translation processing**, so cancellation is responsive regardless of where the task is in its lifecycle.
+
+### 4.5 File Translation Deduplication
+
+Two levels of deduplication avoid redundant work:
+
+1. **Pre-translation cache**: If a file URL has been analyzed before (token count, language detection), the cached `FilePreTranslateInfoTab` is returned instead of re-calling the external service.
+2. **Translation result reuse**: If the same file has been translated with the same target language and options, a new session is created pointing to the **existing translated file** — no Kafka message, no external service call. The user gets instant results.
+
+This saves both compute cost and user wait time for popular documents.
+
+### 4.6 Idempotent Payment Callbacks
+
+Payment callbacks from WeChat/Alipay can arrive multiple times (network retries, webhook replays). The system handles this with:
+
+1. **Conditional DB update**: `UPDATE ... SET status = SUCCESS WHERE status = WAITING`. If the row was already `SUCCESS`, the update affects 0 rows and the callback is silently ignored.
+2. **Distributed lock + double-check**: The payment notification system acquires a Redis lock, then re-reads `notifyTimes` from the DB. If another request already processed the notification, it skips execution.
+3. **Audit log**: Every callback attempt is recorded in `PayNotifyLogDO` regardless of whether it was a duplicate.
+
+This ensures **exactly-once benefit allocation** (points/membership) even under concurrent callbacks.
+
+### 4.7 Profile-Based Deployment for Independent Scaling
+
+The same codebase runs in two modes via Spring profiles:
+
+- `api` profile: Activates controllers, interceptors, SSE emitters. Deployed behind K8s Ingress. Scales based on HTTP request load.
+- `consumer` profile: Activates `@KafkaListener` beans (annotated with `@Profile("consumer")`). Deployed as a separate K8s workload. Scales based on Kafka partition count and consumer lag.
+
+This means a spike in translation jobs doesn't affect API response times, and a burst of API traffic doesn't starve Kafka consumers. Each workload has its own Helm chart with independent replica counts and resource limits.
+
+### 4.8 Domain-Organized Exception Hierarchy
+
+The exception system maps cleanly from code to HTTP response:
+
+- `BusinessException` base class carries an `IResultCode` (code + message).
+- Domain subclasses (`UserException`, `PaymentException`, `FileException`) provide factory methods like `UserException.userNotFound()`.
+- `GlobalExceptionHandler` maps error code ranges to HTTP statuses automatically: 1000-1999 → 401, 2000-3999 → 400, 5000-5999 → 402, 100-199 → 502.
+- Business exceptions log at `WARN` (expected), system exceptions at `ERROR` (unexpected).
+
+This gives every API response a consistent `R<T>` shape with a domain-specific error code, making client-side error handling predictable.
+
+### 4.9 @CurrentUid Annotation for Clean Controller Signatures
+
+A custom `@CurrentUid` annotation with a `HandlerMethodArgumentResolver` injects the authenticated user ID directly into controller method parameters. Controllers never need to manually extract the user from the request or JWT token:
+
+```java
+@PostMapping("/start-translate")
+public R<FileStartTranslateResp> startTranslate(@CurrentUid String uid, @RequestBody FileStartTranslationReq req) {
+    return R.data(fileTranslationService.startTranslate(uid, req));
+}
+```
+
+This eliminates boilerplate across all 26 controllers and ensures consistent user extraction.
+
+### 4.10 Health Check Before Processing
+
+Before starting a translation task, the consumer calls `/health-check` on the Translation Service with a 2-second timeout. If unhealthy, it retries every 5 seconds (logging every 30 seconds to avoid spam). The task also checks for stop signals while waiting, so users can cancel even during the health-check wait. This prevents wasting points on tasks that would immediately fail due to a downstream outage.
+
+### 4.11 ShedLock for Distributed Cron Jobs
+
+All scheduled jobs use **ShedLock** with JDBC-backed locking to prevent duplicate execution across K8s pods. Lock timing is externalized to properties (`lockAtMostFor`, `lockAtLeastFor`), allowing tuning without code changes. The `pullLatestDocs` job is additionally gated by `AppEnv.PROD`, preventing accidental execution in dev/staging environments.
+
+---
+
+## 5. How to Improve
+
+### 5.1 Resilience: Circuit Breakers + Bulkheads
+
+Add **Resilience4j** to wrap all external service calls:
+
+```
+External Call → Circuit Breaker → Timeout → Retry → Bulkhead → Service
+```
+
+- **Circuit breaker**: Open after 5 consecutive failures, half-open after 30s. Prevents thread exhaustion when a dependency is down.
+- **Bulkhead**: Limit concurrent calls per external service (e.g., 10 for LLM, 5 for PubMed). Isolates failures so a slow PubMed API doesn't consume all threads.
+- **Fallback**: Return cached results or graceful degradation messages instead of 500 errors.
+
+### 5.2 Database: Connection Pool + Read Replicas
+
+- Increase HikariCP pool to **20-30** connections (rule of thumb: `connections = (2 * CPU cores) + disk spindles`).
+- Add a **MySQL read replica** for query-heavy operations (admin dashboard, point balance checks, session listings) via Spring's `AbstractRoutingDataSource`.
+- Add **Flyway** for versioned schema migrations.
+
+### 5.3 Point System: Idempotency + Locking
+
+- Add **optimistic locking** (version column) on `UserAvailablePointTab`. Every update checks `WHERE version = ?` and increments it.
+- Make point operations **idempotent** using a deduplication key (e.g., `operationId + operationType`). If the same freeze/consume/rollback is called twice, the second call is a no-op.
+- Alternatively, use **Redis distributed lock** per user ID for point mutations to serialize concurrent requests.
+
+### 5.4 Observability: Metrics + Tracing + Alerting
+
+```
+Application → Micrometer → Prometheus → Grafana (dashboards + alerts)
+           → OpenTelemetry → Jaeger (distributed tracing)
+```
+
+Key metrics to expose:
+
+- HTTP request latency (p50, p95, p99) per endpoint
+- Kafka consumer lag per topic/partition
+- Thread pool utilization (active/queued/rejected)
+- External service call latency and error rate (via Resilience4j metrics)
+- SSE active connections count
+- Point balance anomalies
+
+### 5.5 SSE: Heartbeat + Cleanup + Scaling
+
+- **Heartbeat**: Send a `:ping` comment every 15 seconds to detect dead connections early.
+- **Periodic cleanup**: Schedule a task every 60 seconds to evict emitters older than their expected TTL.
+- **Reduce timeout**: 50 minutes is too long. Use 5-minute timeout with client-side auto-reconnect via `last_event_id`.
+- **Scale-out**: Replace the in-memory emitter map with Redis Streams. Any API pod can serve any client, because events are distributed through Redis rather than held in local memory.
+
+### 5.6 Kafka: Dead Letter Queue + Monitoring
+
+- Add a **Dead Letter Topic (DLT)** for messages that fail after N retries. Currently, failed messages are silently dropped or retried indefinitely.
+- Add **Kafka consumer lag monitoring** via Micrometer's Kafka metrics. Alert when lag exceeds a threshold (e.g., 100 messages or 5 minutes).
+- Implement **backpressure**: Instead of polling Redis every 2 seconds for concurrency slots, use a semaphore-based approach within the consumer or partition assignment strategy.
+
+### 5.7 Caching: Multi-Level + Invalidation
+
+- Add **local cache (Caffeine)** as L1 in front of Redis (L2) for hot read paths like point balance lookups, user profiles, and product catalogs. This reduces Redis RTTs significantly.
+- Define explicit **TTLs** for all `@Cacheable` entries (currently using default Redis TTL).
+- Add **cache invalidation** on writes — currently caches are set-and-forget with no explicit invalidation strategy.
+
+### 5.8 Service Decomposition (Long-term)
+
+If the system continues to grow, consider extracting:
+
+- **Point Service** → standalone microservice with its own DB (it already has a clear API boundary and handles financial data that needs strict consistency).
+- **File Translation Orchestrator** → separate service that owns the Kafka consumer, translation state machine, and external service integration.
+- **Notification Service** → centralize WeChat notifications, email, and SSE push into one service.
+
+This reduces blast radius: a bug in file translation won't affect point operations or payment callbacks.
+
+---
+
+## 6. Summary
+
+> Suppr is an AI research platform with a Spring Boot backend split into API and Consumer profiles, deployed on Kubernetes. It uses Kafka for async processing of long-running AI tasks (translation, research), SSE + Redis pub/sub for real-time progress streaming, and a three-stage point system (freeze → consume → rollback) for billing reliability. The main architectural gaps are: undersized connection pools, missing circuit breakers on 6+ external dependencies, no distributed tracing, and race conditions in the point system. Key improvements would be adding Resilience4j for fault isolation, increasing the DB pool, adding optimistic locking for points, and implementing observability with Micrometer + OpenTelemetry.
+a:T179a,# HR Interview Checklist
+
+## 1. Self-Introduction (1-2 min)
+
+> Hey, I'm Yongjin. I studied Software Engineering at Sun Yat-sen University. I've been doing full-stack development for about 8 years — mostly Go, Python, Java, and TypeScript. I've worked at Huawei, Shopee, Tarro, and lately WildData where I came in as a technical partner. I really enjoy building backend systems and making things run faster and smoother.
+
+---
+
+## 2. Why Did You Leave Each Company?
+
+### Huawei (Jul 2017 - Aug 2019)
+
+**Real reason:** Tedious — just writing docs, sitting in meetings, reviewing code. No real coding anymore.
+
+**Say this:**
+
+> Huawei was a great start for me. I learned a lot about how big companies work. But over time, my job turned into mostly writing documents and sitting in meetings. I wasn't really coding anymore. I missed building things, so I decided to move on.
+
+### Shopee (Aug 2019 - Mar 2023)
+
+**Real reason:** Multiple layoffs made the vibe toxic. Left with a severance package.
+
+**Say this:**
+
+> I was at Shopee for almost 4 years, went from engineer to senior engineer. Then the company had a few rounds of layoffs, and things got pretty uncertain. They offered a separation package, and I thought it was a good time to try something new.
+
+**If they dig deeper:**
+
+> Yeah, the whole e-commerce space was slowing down at that time. It felt like a natural point to move on instead of just waiting around.
+
+### Tarro (Apr 2023 - Apr 2024)
+
+**Real reason:** Company shut down China operations. Whole team was let go.
+
+**Say this:**
+
+> Tarro decided to shut down their China office — it was a business decision. The whole local team was let go. Nothing to do with my performance.
+
+### WildData (Apr 2024 - Present)
+
+**Real reason:** No money coming in. Stuck in hometown too long.
+
+**Say this:**
+
+> I joined WildData as a technical partner with 5% equity. I built a lot of things from scratch — CI/CD, backend, payments. But honestly, the company hasn't found product-market fit yet, and there's no real revenue. I want to work somewhere more stable where I can keep growing as an engineer.
+
+**If they ask "why leave something you own?":**
+
+> I learned a ton from the startup — wearing many hats, owning everything end to end. But I've realized I want to work on bigger systems with a real team. I want to take what I learned and bring it to a larger company.
+
+---
+
+## 3. Common HR Questions
+
+### Why this role / company?
+
+- Do your homework on the company first!
+- Mention something specific — their product, tech, or culture
+
+> I've been looking at [company] for a while. I really like [something specific — their scale, tech stack, product]. I think my background in [skill] is a good fit for what you guys are doing.
+
+### What are your strengths?
+
+Pick 2-3 and give a quick example:
+
+- **I'm good at fixing performance issues:** "At Shopee, our billing API was slow — 4k DB connections, only 2k QPS. I dug into it and got it down to 1k connections with 5k QPS."
+- **I take ownership:** "At WildData, I handled everything — CI/CD, payments, infrastructure. Nobody told me to, I just did it."
+- **I pick things up fast:** "At Tarro, I was new to Go and POS systems. Within a month I was shipping core APIs."
+
+### What's your weakness?
+
+> Sometimes I spend too long making code perfect before I ship it. I've gotten better at this — now I try to ship something that works first, then improve it later.
+
+### Where do you see yourself in 3-5 years?
+
+> I want to grow into a tech lead — someone who can design systems and also help junior devs get better. I'm looking for a place where I can do that.
+
+### Salary expectations?
+
+- Look up market rates before the call
+- Give a range, not one number
+
+> Based on my experience and what I've seen in the market, I'm looking at something in the [X to Y] range. But I'm flexible — it depends on the whole package.
+
+### Questions for them?
+
+Always ask 2-3:
+
+1. "What does a normal day look like for this role?"
+2. "How does your team do code reviews and deployments?"
+3. "What's the biggest technical challenge you guys are dealing with right now?"
+
+---
+
+## 4. Tricky Questions
+
+### You've changed jobs a lot. Why?
+
+> If you look at it, most of the moves weren't really my choice. Tarro shut down their China office. Shopee had big layoffs. I actually stayed at Shopee for almost 4 years. I'm really looking for something long-term this time.
+
+### What did you get out of the startup?
+
+> I got to do everything — design the architecture, write the code, set up CI/CD, manage servers, build the payment system. You don't get that kind of experience at a big company. It really taught me how to own things end to end.
+
+### How do you deal with disagreements at work?
+
+> I try to focus on the problem, not the person. Like, "what's the best way to solve this?" not "who's right." At Shopee I ran code reviews every week, so I got a lot of practice giving and taking feedback.
+
+### Tell me about a hard project.
+
+> At Shopee, our billing API was struggling — 4k database connections and only handling 2k requests per second. I looked into it, found the bottlenecks, fixed the connection pooling and cleaned up the queries. Got it down to 1k connections and 5k QPS. The tricky part was doing it with zero downtime because billing can't go down.
+
+---
+
+## 5. Quick Reminders
+
+- [ ] Slow down — it's OK to pause and think
+- [ ] Keep answers short — under 2 minutes
+- [ ] It's fine to say "Let me think about that for a second"
+- [ ] Never talk bad about old companies
+- [ ] Always spin it positive — talk about what you want next, not what was bad
+- [ ] Have your numbers ready (4k→1k connections, 2k→5k QPS, etc.)
+- [ ] Prepare 2-3 questions to ask them
+- [ ] Google the company before the call
+
+## 6. Filler Phrases (when your brain goes blank)
+
+Use these to buy time:
+
+- "That's a great question. Let me think..."
+- "So basically what happened was..."
+- "The way I see it is..."
+- "To put it simply..."
+- "What I mean is..."
+- "Let me give you an example..."
+b:T8358,# External Dependencies — Deep Dive for Interviews & Real-Life Debugging
+
+> Companion to `suppr_interview_keywords.md`. Focuses on **MySQL**, **S3 (MinIO)**, **Kafka**, **MongoDB**, **Redis**, and other infrastructure dependencies used in the Suppr platform.
+
+---
+
+## 1. MySQL (via HikariCP)
+
+### Architecture in Suppr
+
+- Primary relational store for users, orders, payments, point ledgers, file metadata
+- HikariCP connection pool (currently max=2, should be 20–30)
+- MyBatis SQL mapper with XML result maps
+- No migration tool (Flyway/Liquibase missing — known weakness)
+
+### Top Interview Questions
+
+#### Q1: How does HikariCP manage connections, and why is pool sizing critical?
+
+HikariCP maintains a fixed-size pool of reusable JDBC connections. Key parameters:
+
+| Parameter | Purpose | Suppr Value | Recommended |
+|-----------|---------|-------------|-------------|
+| `maximumPoolSize` | Max concurrent connections | 2 | 20–30 |
+| `minimumIdle` | Idle connections kept warm | — | Same as max |
+| `maxLifetime` | Connection recycled after this | 30min | 25–28min (< MySQL `wait_timeout`) |
+| `connectionTimeout` | How long to wait for a connection | 30s | 5–10s |
+| `leakDetectionThreshold` | Log warning if connection held too long | 0 (off) | 60s |
+
+**Why pool=2 is dangerous**: With 2 connections, a single slow query blocks all other requests. Under load, threads queue up waiting for a connection, causing cascading timeouts.
+
+**Formula**: `pool_size = Tn × (Cm − 1) + 1` where Tn = max concurrent threads, Cm = max simultaneous connections per thread. A simpler rule of thumb: `connections = (2 × CPU cores) + effective_spindle_count`.
+
+#### Q2: Explain MySQL index types and when each is used.
+
+| Index Type | Use Case | Example |
+|------------|----------|---------|
+| B+Tree (default) | Range queries, sorting, prefix matching | `WHERE created_at > '2024-01-01'` |
+| Hash | Exact match only (Memory engine) | `WHERE api_key = 'abc123'` |
+| Composite | Multi-column filtering | `INDEX(user_id, status, created_at)` |
+| Covering | Query answered entirely from index | `SELECT status FROM orders WHERE user_id=1` with `INDEX(user_id, status)` |
+| Prefix | Long text columns | `INDEX(email(20))` |
+
+**Leftmost prefix rule**: Composite index `(A, B, C)` serves queries on `(A)`, `(A, B)`, `(A, B, C)` but NOT `(B, C)` alone.
+
+#### Q3: How do you diagnose and fix slow queries?
+
+**Step-by-step debugging**:
+
+```sql
+-- 1. Enable slow query log
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 1;  -- queries > 1s
+
+-- 2. Analyze with EXPLAIN
+EXPLAIN ANALYZE SELECT * FROM point_records
+WHERE user_id = 123 AND status = 'ACTIVE'
+ORDER BY expire_at ASC;
+
+-- Look for:
+--   type: ALL (full table scan — bad)
+--   type: ref / range / const (good)
+--   Extra: Using filesort (bad for large results)
+--   Extra: Using index (covering index — good)
+
+-- 3. Check index usage
+SHOW INDEX FROM point_records;
+
+-- 4. Add missing index
+ALTER TABLE point_records ADD INDEX idx_user_status_expire (user_id, status, expire_at);
+```
+
+#### Q4: How does InnoDB handle transactions and what isolation levels matter?
+
+| Isolation Level | Dirty Read | Non-Repeatable Read | Phantom Read | Performance |
+|-----------------|-----------|---------------------|--------------|-------------|
+| READ UNCOMMITTED | Yes | Yes | Yes | Fastest |
+| READ COMMITTED | No | Yes | Yes | Fast |
+| **REPEATABLE READ** (MySQL default) | No | No | Possible* | Good |
+| SERIALIZABLE | No | No | No | Slowest |
+
+*InnoDB uses **gap locking** to mostly prevent phantom reads even at REPEATABLE READ.
+
+**Suppr relevance**: Point freeze/consume pattern relies on transaction isolation. Without `SELECT ... FOR UPDATE` (pessimistic) or version column (optimistic), concurrent mutations can cause double-spending.
+
+#### Q5: How do deadlocks happen and how do you resolve them?
+
+**Common deadlock pattern**:
+```
+Transaction A: UPDATE points SET amount=90 WHERE id=1  -- locks row 1
+Transaction B: UPDATE points SET amount=80 WHERE id=2  -- locks row 2
+Transaction A: UPDATE points SET amount=70 WHERE id=2  -- waits for row 2 (held by B)
+Transaction B: UPDATE points SET amount=60 WHERE id=1  -- waits for row 1 (held by A) → DEADLOCK
+```
+
+**Solutions**:
+1. **Consistent lock ordering** — Always lock rows in the same order (e.g., ascending ID)
+2. **Shorter transactions** — Minimize time between lock acquisition and commit
+3. **Retry logic** — Catch `DeadlockLoserDataAccessException`, retry 2–3 times
+4. **Use `SHOW ENGINE INNODB STATUS`** to inspect latest deadlock details
+
+### Real-Life Debugging Scenarios
+
+#### Scenario 1: Connection pool exhaustion
+
+**Symptom**: `HikariPool-1 - Connection is not available, request timed out after 30000ms`
+
+**Root cause checklist**:
+1. Pool too small (Suppr: max=2)
+2. Long-running queries holding connections
+3. Missing `@Transactional` timeout — transaction never closes
+4. Connection leak — code path doesn't return connection to pool
+
+**Fix**:
+```yaml
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      leak-detection-threshold: 60000  # warn after 60s
+      connection-timeout: 5000
+```
+
+#### Scenario 2: Replication lag causing stale reads
+
+**Symptom**: User creates an order but immediately sees "no orders found"
+
+**Root cause**: Write goes to primary, read hits replica with lag
+
+**Fix**: Use `@Transactional(readOnly = false)` or `AbstractRoutingDataSource` to force reads to primary after writes within the same business flow.
+
+#### Scenario 3: Table lock during ALTER TABLE
+
+**Symptom**: All queries to `point_records` hang during deployment
+
+**Root cause**: `ALTER TABLE` on large table acquires metadata lock
+
+**Fix**: Use `pt-online-schema-change` (Percona) or MySQL 8.0+ instant DDL:
+```sql
+ALTER TABLE point_records ADD COLUMN memo VARCHAR(255), ALGORITHM=INSTANT;
+```
+
+---
+
+## 2. S3 / MinIO (Object Storage)
+
+### Architecture in Suppr
+
+- MinIO (S3-compatible) with private + public buckets
+- Pre-signed URLs for secure temporary access (24h validity)
+- 2GB max file size
+- Stores uploaded documents, translated PDFs, generated files
+
+### Top Interview Questions
+
+#### Q1: How do pre-signed URLs work and why use them?
+
+**Flow**:
+```
+Client → API Server: "I want to upload/download file X"
+API Server → MinIO: GeneratePresignedUrl(bucket, key, expiry=24h, method=PUT/GET)
+API Server → Client: Returns pre-signed URL
+Client → MinIO: Direct upload/download (bypasses API server)
+```
+
+**Benefits**:
+- API server doesn't proxy large files — reduces bandwidth and memory pressure
+- Fine-grained access control without exposing credentials
+- Time-limited — URL expires after configured duration
+- Method-specific — PUT URL can't be used for GET
+
+**Security considerations**:
+- Never set expiry > 7 days (S3 hard limit)
+- Use separate URLs for upload vs download
+- Validate file type/size on the server side after upload via S3 event notification
+
+#### Q2: How do you handle multipart uploads for large files?
+
+```
+1. InitiateMultipartUpload → get uploadId
+2. Upload parts (5MB–5GB each) in parallel → get ETag per part
+3. CompleteMultipartUpload(uploadId, part list) → assembles final object
+```
+
+**Why it matters**:
+- Retryable — failed parts don't restart entire upload
+- Parallelizable — multiple parts upload concurrently
+- Required for files > 5GB
+
+**Cleanup pitfall**: Incomplete multipart uploads consume storage. Configure lifecycle rule:
+```xml
+<AbortIncompleteMultipartUpload>
+  <DaysAfterInitiation>7</DaysAfterInitiation>
+</AbortIncompleteMultipartUpload>
+```
+
+#### Q3: How does S3 consistency model work?
+
+As of December 2020, S3 provides **strong read-after-write consistency** for all operations:
+- PUT new object → immediately readable
+- PUT overwrite → immediately returns new version
+- DELETE → immediately reflected
+
+MinIO also provides strong consistency since it's built on top of erasure coding.
+
+**Pre-2020 gotcha** (still asked in interviews): Previously, S3 had eventual consistency for overwrites and deletes. Interviewers may test if you know the current model.
+
+#### Q4: Private vs public bucket — when to use each?
+
+| Aspect | Private Bucket | Public Bucket |
+|--------|---------------|---------------|
+| Access | Pre-signed URLs only | Direct URL |
+| Use case | User uploads, translated docs | Static assets, shared templates |
+| Security | Time-limited, per-object | Open read, write-protected |
+| CDN | Pre-signed URL + CloudFront signed cookies | CloudFront direct |
+
+### Real-Life Debugging Scenarios
+
+#### Scenario 1: Pre-signed URL returns 403 Forbidden
+
+**Checklist**:
+1. URL expired (check `X-Amz-Expires` parameter)
+2. Clock skew > 15 minutes between server and S3 (use NTP)
+3. Bucket policy denies access despite valid signature
+4. Wrong region in endpoint URL
+5. Object key contains special characters not properly URL-encoded
+
+#### Scenario 2: Upload succeeds but download returns corrupted file
+
+**Root cause checklist**:
+1. Missing `Content-Type` header during upload — browser can't interpret
+2. Middleware/proxy truncated the response (check `Content-Length` header)
+3. Multipart upload — parts assembled in wrong order
+4. Client used gzip encoding but S3 returned raw bytes
+
+**Fix**: Always set `Content-Type` and `Content-Disposition` during upload:
+```java
+PutObjectArgs.builder()
+    .bucket("private")
+    .object(key)
+    .contentType("application/pdf")
+    .headers(Map.of("Content-Disposition", "attachment; filename=\"report.pdf\""))
+    .stream(inputStream, size, -1)
+    .build();
+```
+
+#### Scenario 3: MinIO disk full — all uploads fail
+
+**Symptom**: `XMinioStorageFull: Storage backend has reached its minimum free drive threshold`
+
+**Immediate fix**: Clear incomplete multipart uploads and expired objects:
+```bash
+mc rm --recursive --force --incomplete myminio/private
+mc ilm rule list myminio/private  # check lifecycle rules
+```
+
+---
+
+## 3. Kafka (Message Queue)
+
+### Architecture in Suppr
+
+- Decouples API servers from long-running translation consumers
+- Manual ACK (`enable-auto-commit: false`) — at-least-once delivery
+- 12-hour `max.poll.interval.ms` for long translation tasks
+- Consumer concurrency configured per node
+- **Known weakness**: No dead letter queue — failed messages silently dropped
+
+### Top Interview Questions
+
+#### Q1: Explain Kafka's architecture — brokers, topics, partitions, consumer groups.
+
+```
+Producer → Topic (logical channel)
+              ├── Partition 0 → [msg0, msg3, msg6, ...]
+              ├── Partition 1 → [msg1, msg4, msg7, ...]
+              └── Partition 2 → [msg2, msg5, msg8, ...]
+
+Consumer Group "translation-workers":
+  Consumer A ← Partition 0
+  Consumer B ← Partition 1, Partition 2
+```
+
+**Key rules**:
+- Each partition is consumed by exactly ONE consumer in a group
+- Adding consumers > partitions = idle consumers
+- Messages within a partition are strictly ordered
+- Cross-partition ordering is NOT guaranteed
+
+#### Q2: What's the difference between at-most-once, at-least-once, and exactly-once?
+
+| Guarantee | How | Trade-off |
+|-----------|-----|-----------|
+| At-most-once | Auto-commit offset before processing | Fast, may lose messages |
+| **At-least-once** (Suppr) | Commit offset after successful processing | Safe, may duplicate |
+| Exactly-once | Transactional producer + consumer `read_committed` | Slowest, most complex |
+
+**Suppr approach**: Manual ACK after processing + idempotent consumers. If a translation task fails mid-way, the message is redelivered and the consumer checks if work was already done (via DB status check).
+
+#### Q3: How do you handle consumer lag and slow consumers?
+
+**Monitoring**:
+```bash
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 \
+  --describe --group translation-workers
+# Shows: CURRENT-OFFSET, LOG-END-OFFSET, LAG per partition
+```
+
+**Solutions for high lag**:
+1. **Scale horizontally** — Add consumers (up to partition count)
+2. **Increase partitions** — Allows more parallel consumers
+3. **Optimize processing** — Profile the consumer's bottleneck
+4. **Backpressure** — Semaphore-based concurrency limiter per consumer
+5. **Separate fast/slow topics** — Route quick tasks and heavy tasks to different topics
+
+#### Q4: What happens during consumer group rebalancing?
+
+**Triggers**: Consumer joins/leaves group, new partition added, consumer heartbeat timeout
+
+**Stop-the-world rebalancing** (default):
+1. All consumers stop fetching
+2. Group coordinator revokes all partitions
+3. Reassigns partitions using configured strategy
+4. Consumers resume — processing paused during rebalance
+
+**Solutions**:
+- **Cooperative sticky assignor** — Incremental rebalancing, only moves affected partitions
+- **Static group membership** — `group.instance.id` prevents rebalance on transient disconnects
+- Tune `session.timeout.ms` (default 45s) and `heartbeat.interval.ms` (default 3s)
+
+#### Q5: How do you implement a Dead Letter Queue (DLQ)?
+
+```java
+@KafkaListener(topics = "file-translation")
+public void consume(ConsumerRecord<String, String> record, Acknowledgment ack) {
+    try {
+        processTranslation(record.value());
+        ack.acknowledge();
+    } catch (RetryableException e) {
+        // Don't ack — message will be redelivered
+        throw e;
+    } catch (NonRetryableException e) {
+        // Send to DLQ, then ack original
+        kafkaTemplate.send("file-translation.DLT", record.key(), record.value());
+        ack.acknowledge();
+        log.error("Sent to DLQ: key={}", record.key(), e);
+    }
+}
+```
+
+**Spring Kafka built-in**: Use `DefaultErrorHandler` with `DeadLetterPublishingRecoverer` for automatic DLQ routing after N retries.
+
+#### Q6: How does Kafka guarantee ordering, and when does it break?
+
+**Ordering guaranteed within a single partition**. Breaks when:
+1. Producer retries with `max.in.flight.requests.per.connection > 1` (out-of-order delivery)
+2. Messages for same entity sent to different partitions (missing/wrong partition key)
+3. Consumer processes messages from multiple partitions in parallel
+
+**Suppr fix**: Use `userId` or `sessionId` as partition key so all messages for one user go to the same partition.
+
+### Real-Life Debugging Scenarios
+
+#### Scenario 1: Consumer stops processing, no errors in log
+
+**Symptom**: Consumer is alive but no messages consumed, lag keeps growing
+
+**Checklist**:
+1. `max.poll.interval.ms` exceeded — consumer kicked from group silently
+2. Consumer stuck in long processing (Suppr: 12h timeout helps but verify)
+3. Rebalancing loop — consumer keeps joining and leaving
+4. All partitions assigned to a different consumer instance
+
+**Debug**:
+```bash
+kafka-consumer-groups.sh --describe --group translation-workers
+# Check: Is this consumer listed? Does it have assigned partitions?
+```
+
+#### Scenario 2: Duplicate message processing
+
+**Symptom**: Same file translated twice, user charged double points
+
+**Root cause**: At-least-once delivery + non-idempotent consumer
+
+**Fix**:
+```java
+// Idempotent consumer pattern
+public void processTranslation(TranslationMessage msg) {
+    int updated = db.update(
+        "UPDATE translation_tasks SET status='PROCESSING' WHERE id=? AND status='PENDING'",
+        msg.getTaskId()
+    );
+    if (updated == 0) {
+        log.info("Task already processed or in progress: {}", msg.getTaskId());
+        return;  // skip duplicate
+    }
+    // ... proceed with translation
+}
+```
+
+#### Scenario 3: Producer sends succeed but consumer never receives
+
+**Checklist**:
+1. Topic name mismatch (typo, case sensitivity)
+2. Consumer subscribed to wrong topic
+3. Message serialization error on consumer side (check `value.deserializer`)
+4. Consumer group already committed past offset — new messages from before the offset won't be seen
+5. `auto.offset.reset=latest` and consumer started after producer sent messages
+
+#### Scenario 4: Kafka broker OOM / disk full
+
+**Symptom**: `NotEnoughReplicasException` or broker crashes
+
+**Immediate actions**:
+1. Check disk: `kafka-log-dirs.sh --describe` — find largest topics
+2. Reduce retention: `kafka-configs.sh --alter --topic big-topic --add-config retention.ms=86400000`
+3. Delete old segments: `kafka-delete-records.sh`
+4. Add brokers and rebalance partitions
+
+---
+
+## 4. MongoDB (Document Store)
+
+### Architecture in Suppr
+
+- Stores document content, search indexes, translation records
+- `MongoRepository` for basic CRUD
+- Aggregation pipelines for complex queries
+- `$set` for partial updates (avoids full document replacement)
+
+### Top Interview Questions
+
+#### Q1: When should you use MongoDB vs MySQL?
+
+| Criteria | MongoDB | MySQL |
+|----------|---------|-------|
+| Schema | Flexible, evolving | Strict, relational |
+| Queries | Document-oriented, nested | SQL joins, complex relations |
+| Transactions | Multi-doc ACID (4.0+) | Full ACID |
+| Scaling | Horizontal (sharding) | Vertical (read replicas) |
+| Best for | Content, logs, catalogs, search | Orders, payments, ledgers |
+
+**Suppr choice**: MySQL for transactional data (payments, points), MongoDB for document content and search indexes — correct separation of concerns.
+
+#### Q2: How do you design MongoDB schemas — embedding vs referencing?
+
+**Embed when**:
+- Data is always accessed together (1:1 or 1:few)
+- Child data doesn't make sense without parent
+- Example: Translation task with its sentence-level results
+
+**Reference when**:
+- Data is accessed independently
+- Many-to-many relationships
+- Child documents are large or frequently updated
+- Example: User ↔ Translation tasks (reference user by `userId`)
+
+**Anti-pattern**: Unbounded arrays. Never embed an ever-growing list:
+```javascript
+// BAD: Array grows forever
+{ userId: 1, translations: [{...}, {...}, /* thousands */] }
+
+// GOOD: Separate collection with reference
+{ userId: 1, taskId: "abc", result: {...} }
+```
+
+#### Q3: How do MongoDB indexes work and what types are there?
+
+| Index Type | Use Case | Example |
+|------------|----------|---------|
+| Single field | Basic lookups | `{ userId: 1 }` |
+| Compound | Multi-field queries | `{ userId: 1, createdAt: -1 }` |
+| Text | Full-text search | `{ content: "text" }` |
+| TTL | Auto-expire documents | `{ createdAt: 1 }, { expireAfterSeconds: 86400 }` |
+| Hashed | Shard key distribution | `{ userId: "hashed" }` |
+| Wildcard | Dynamic schema fields | `{ "metadata.$**": 1 }` |
+
+**Important**: MongoDB uses only ONE index per query (except `$or` which can use index per clause). Use `explain()` to verify.
+
+#### Q4: Explain the aggregation pipeline.
+
+```javascript
+db.translations.aggregate([
+  { $match: { userId: ObjectId("..."), status: "COMPLETED" } },  // filter early
+  { $lookup: {                                                    // join
+      from: "users", localField: "userId",
+      foreignField: "_id", as: "user"
+  }},
+  { $unwind: "$user" },                                          // flatten array
+  { $group: {                                                     // aggregate
+      _id: "$user.plan",
+      totalPages: { $sum: "$pageCount" },
+      avgDuration: { $avg: "$durationMs" }
+  }},
+  { $sort: { totalPages: -1 } }                                  // sort
+])
+```
+
+**Performance rules**:
+1. `$match` and `$sort` first — uses indexes
+2. `$project` early to reduce document size in pipeline
+3. `$lookup` is expensive — equivalent to SQL JOIN
+4. Pipeline stages are processed left to right, documents flow one-by-one
+
+### Real-Life Debugging Scenarios
+
+#### Scenario 1: Slow aggregation query
+
+**Symptom**: Aggregation takes 30s+, high CPU
+
+**Debug**:
+```javascript
+db.translations.aggregate([...]).explain("executionStats")
+// Check: "stage": "COLLSCAN" means no index hit
+```
+
+**Fixes**:
+1. Add index matching `$match` + `$sort` fields
+2. Move `$match` to first stage
+3. Add `$project` to drop unneeded fields
+4. Consider `allowDiskUse: true` for large sorts (but fix root cause)
+
+#### Scenario 2: Write conflicts with concurrent updates
+
+**Symptom**: `WriteConflict` errors under load
+
+**Root cause**: Two threads updating the same document simultaneously
+
+**Fix**: Use atomic operators instead of read-modify-write:
+```javascript
+// BAD: Read-modify-write (race condition)
+doc = db.tasks.findOne({ _id: taskId });
+doc.retryCount += 1;
+db.tasks.replaceOne({ _id: taskId }, doc);
+
+// GOOD: Atomic update
+db.tasks.updateOne(
+  { _id: taskId },
+  { $inc: { retryCount: 1 }, $set: { lastRetry: new Date() } }
+);
+```
+
+#### Scenario 3: MongoDB eating all RAM
+
+**Symptom**: Server OOM, MongoDB using 90%+ memory
+
+**Explanation**: MongoDB's WiredTiger cache defaults to `(RAM - 1GB) / 2`. This is by design — the OS page cache handles the rest.
+
+**Actual problems**:
+1. Too many open connections (each uses ~1MB stack)
+2. Large `sort()` without index — in-memory sort exceeds 100MB limit
+3. Unbounded queries returning millions of documents
+
+**Fix**:
+```yaml
+# mongod.conf
+storage:
+  wiredTiger:
+    engineConfig:
+      cacheSizeGB: 4  # explicit limit
+net:
+  maxIncomingConnections: 200
+```
+
+---
+
+## 5. Redis (Cache + Coordination)
+
+### Architecture in Suppr
+
+- **Caching**: `@Cacheable` with JSON serialization (search results, pre-translation metadata)
+- **Pub/Sub relay**: Consumer → Redis channel → API pod → SSE client
+- **Distributed locks**: Payment dedup, ShedLock for cron jobs
+- **Atomic counters**: `INCR`/`DECR` for active task counting (24h TTL)
+- **Stop signals**: `file_translation:stop:{sessionId}` key as cancellation flag
+- **Rate limiting**: Token bucket implementation
+
+### Top Interview Questions
+
+#### Q1: Explain Redis data structures and when to use each.
+
+| Structure | Commands | Use Case in Suppr |
+|-----------|----------|-------------------|
+| String | `GET`, `SET`, `INCR`, `SETNX` | Counters, locks, stop signals, cache values |
+| Hash | `HGET`, `HSET`, `HGETALL` | Structured cache (user profiles, session data) |
+| List | `LPUSH`, `RPOP`, `LRANGE` | Task queues (though Kafka is primary) |
+| Set | `SADD`, `SISMEMBER`, `SINTER` | Unique collections, dedup sets |
+| Sorted Set | `ZADD`, `ZRANGEBYSCORE` | Leaderboards, rate limiting sliding windows |
+| Stream | `XADD`, `XREADGROUP` | Event sourcing, SSE improvement over pub/sub |
+| Pub/Sub | `PUBLISH`, `SUBSCRIBE` | Real-time SSE relay (current Suppr approach) |
+
+#### Q2: How do you implement a distributed lock in Redis?
+
+**Simple lock (Suppr approach)**:
+```java
+// Acquire
+Boolean acquired = redisTemplate.opsForValue()
+    .setIfAbsent("lock:payment:" + orderId, instanceId, Duration.ofSeconds(30));
+
+// Release (only if you own it — use Lua for atomicity)
+String script = """
+    if redis.call('get', KEYS[1]) == ARGV[1] then
+        return redis.call('del', KEYS[1])
+    else
+        return 0
+    end
+    """;
+redisTemplate.execute(new DefaultRedisScript<>(script, Long.class),
+    List.of("lock:payment:" + orderId), instanceId);
+```
+
+**Why Lua script for release?** Without it, between GET and DEL another process could acquire the lock — and you'd delete their lock.
+
+**Redlock (multi-node)**: Acquire lock on N/2+1 independent Redis nodes. Needed when a single Redis is not acceptable for safety. Controversial — see Martin Kleppmann vs Salvatore Sanfilippo debate.
+
+#### Q3: Redis persistence — RDB vs AOF.
+
+| Aspect | RDB (Snapshotting) | AOF (Append-Only File) |
+|--------|-------------------|----------------------|
+| How | Point-in-time snapshot via `fork()` | Log every write command |
+| Data loss | Up to last snapshot interval | Up to last `fsync` (1s with `everysec`) |
+| Recovery speed | Fast (load binary) | Slower (replay commands) |
+| Disk usage | Compact | Grows, needs rewrite |
+| CPU impact | Spike during `BGSAVE` | Steady with `everysec` |
+
+**Best practice**: Use both. RDB for fast restarts, AOF for minimal data loss. In Suppr, if Redis is purely a cache (not source of truth), RDB alone is sufficient.
+
+#### Q4: What happens when Redis runs out of memory?
+
+Controlled by `maxmemory-policy`:
+
+| Policy | Behavior | When to Use |
+|--------|----------|-------------|
+| `noeviction` | Return error on writes | Data must not be lost |
+| `allkeys-lru` | Evict least recently used | General cache |
+| `volatile-lru` | Evict LRU among keys with TTL | Mix of cache + permanent data |
+| `allkeys-lfu` | Evict least frequently used | Hot/cold access patterns |
+| `volatile-ttl` | Evict keys closest to expiry | TTL-based cache |
+
+**Suppr recommendation**: `allkeys-lru` for cache workload, but ensure counters and locks have TTLs to prevent unbounded growth.
+
+#### Q5: How does Redis pub/sub differ from Kafka, and what are its limitations?
+
+| Aspect | Redis Pub/Sub | Kafka |
+|--------|--------------|-------|
+| Persistence | None — fire-and-forget | Persisted on disk |
+| Delivery | At-most-once | At-least-once / exactly-once |
+| Consumer offline | Messages lost | Consumer catches up from offset |
+| Throughput | Very high (~1M msg/s) | High (~100K msg/s per partition) |
+| Use case | Real-time notifications, SSE relay | Durable event processing |
+
+**Suppr risk**: If an API pod restarts, all pub/sub messages during downtime are lost. SSE clients must reconnect and replay from `last_event_id`. Better alternative: **Redis Streams** (`XADD`/`XREADGROUP`) which persist messages and support consumer groups.
+
+#### Q6: How does Redis-backed rate limiting work?
+
+**Token bucket (Suppr's `@RateLimit`)**:
+```lua
+-- Lua script for atomic token bucket
+local key = KEYS[1]
+local max_tokens = tonumber(ARGV[1])
+local refill_rate = tonumber(ARGV[2])  -- tokens per second
+local now = tonumber(ARGV[3])
+
+local bucket = redis.call('HMGET', key, 'tokens', 'last_refill')
+local tokens = tonumber(bucket[1]) or max_tokens
+local last_refill = tonumber(bucket[2]) or now
+
+-- Refill tokens based on elapsed time
+local elapsed = now - last_refill
+tokens = math.min(max_tokens, tokens + elapsed * refill_rate)
+
+if tokens >= 1 then
+    tokens = tokens - 1
+    redis.call('HMSET', key, 'tokens', tokens, 'last_refill', now)
+    redis.call('EXPIRE', key, max_tokens / refill_rate * 2)
+    return 1  -- allowed
+else
+    redis.call('HMSET', key, 'tokens', tokens, 'last_refill', now)
+    redis.call('EXPIRE', key, max_tokens / refill_rate * 2)
+    return 0  -- rejected
+end
+```
+
+**Sliding window alternative**: Use sorted set with timestamp scores — `ZADD key <timestamp> <request_id>`, then `ZRANGEBYSCORE` to count requests in the window.
+
+### Real-Life Debugging Scenarios
+
+#### Scenario 1: Redis pub/sub messages not reaching SSE clients
+
+**Symptom**: Consumer publishes translation progress but client SSE stream is silent
+
+**Checklist**:
+1. Channel name mismatch (check dynamic channel naming pattern)
+2. API pod subscribed after message was published (race condition)
+3. Redis connection dropped and Lettuce didn't auto-reconnect
+4. `SseEmitter` already timed out (Suppr: 50-min timeout)
+
+**Debug**:
+```bash
+redis-cli SUBSCRIBE "translation:progress:*"
+# Manually verify messages are being published
+redis-cli PUBSUB CHANNELS "translation:*"
+# List active channels
+```
+
+#### Scenario 2: Redis counter leak — task count never reaches zero
+
+**Symptom**: User sees "max concurrent tasks reached" but no tasks are running
+
+**Root cause**: `INCR` executed but `DECR` skipped due to exception before reaching the decrement code
+
+**Fix pattern**:
+```java
+try {
+    redis.opsForValue().increment(counterKey);
+    redis.expire(counterKey, Duration.ofHours(24));  // TTL leak prevention
+    doTranslation();
+} finally {
+    redis.opsForValue().decrement(counterKey);  // ALWAYS decrement
+}
+```
+
+**Additional safety**: Periodic reconciliation job that compares counter value with actual active tasks in DB.
+
+#### Scenario 3: Cache stampede after TTL expiry
+
+**Symptom**: Spike in DB queries every time a popular cache key expires
+
+**Solutions**:
+1. **Lock-based rebuild**: Only one thread rebuilds; others wait or return stale
+2. **Probabilistic early expiry**: Randomly refresh before TTL hits
+3. **Background refresh**: Separate thread refreshes cache before expiry
+4. **Never-expire + async update**: Cache never expires; background job keeps it fresh
+
+```java
+// Lock-based rebuild
+public SearchResult getSearchResults(String query) {
+    String cached = redis.get("search:" + query);
+    if (cached != null) return deserialize(cached);
+
+    String lockKey = "lock:search:" + query;
+    if (redis.setIfAbsent(lockKey, "1", Duration.ofSeconds(10))) {
+        try {
+            SearchResult result = db.search(query);
+            redis.set("search:" + query, serialize(result), Duration.ofMinutes(30));
+            return result;
+        } finally {
+            redis.delete(lockKey);
+        }
+    }
+    // Another thread is rebuilding — wait briefly and retry, or return stale
+    Thread.sleep(100);
+    return getSearchResults(query);
+}
+```
+
+#### Scenario 4: Hot key problem
+
+**Symptom**: Single Redis node CPU at 100%, others idle
+
+**Root cause**: One key (e.g., popular search result) receiving millions of reads
+
+**Solutions**:
+1. **Local cache (L1)**: Caffeine in-memory cache with short TTL (5–30s)
+2. **Key replication**: Replicate hot key across `key:1`, `key:2`, ..., `key:N`, randomly read
+3. **Read replicas**: Route reads to Redis replicas
+4. **Redis Cluster**: Doesn't help for hot keys (single slot = single node)
+
+---
+
+## 6. Other External Dependencies
+
+### Gotenberg (Document Conversion)
+
+**What**: LibreOffice/Chromium-based PDF conversion service
+
+**Interview Q**: How do you handle conversion failures?
+- Timeout configuration (conversion can take minutes for large files)
+- Health check before submitting jobs
+- Retry with backoff for transient failures
+- Fallback: Queue for manual processing if automated conversion fails
+
+**Debugging**: Large files cause OOM in Gotenberg container. Set memory limits and max concurrent conversions.
+
+### External Translation Services
+
+**Interview Q**: How do you handle third-party API failures?
+- **RetryTemplate**: 3 attempts, 1s fixed backoff
+- **Health gate**: Check `/health-check` before starting work
+- **Fallback chain**: Primary service → Proxy → Direct download
+- **Circuit breaker** (recommended): Resilience4j to prevent hammering a down service
+
+**Debugging**: User-agent rotation for downloads — some services block non-browser agents. Rotate through 6 browser user-agents.
+
+### ShedLock (Distributed Cron)
+
+**What**: JDBC-backed distributed lock ensuring cron jobs run on exactly one node
+
+```java
+@Scheduled(cron = "0 0 * * * *")  // every hour
+@SchedulerLock(name = "expirePoints", lockAtMostFor = "50m", lockAtLeastFor = "5m")
+public void expirePoints() {
+    // Only one node executes this
+}
+```
+
+**Debugging**: If cron never runs, check:
+1. `shedlock` table exists with correct schema
+2. Clock skew between nodes (> `lockAtLeastFor` causes missed executions)
+3. Previous execution still holds lock (check `locked_until` column)
+
+---
+
+## 7. Cross-Cutting Concerns
+
+### Dependency Failure Matrix
+
+| Dependency Down | Impact | Mitigation |
+|----------------|--------|------------|
+| MySQL | Total outage — core data unavailable | Read replica failover, connection pool retry |
+| Redis | Cache miss storm, no locks, no SSE relay | Caffeine L1 fallback, graceful degradation |
+| Kafka | No async processing, translations queue up | In-memory queue fallback, retry on reconnect |
+| MongoDB | Search/document features unavailable | Cached results, feature flag to disable |
+| MinIO | File upload/download fails | Pre-signed URL retry, fallback to local temp storage |
+| Gotenberg | PDF conversion fails | Queue for retry, notify user |
+
+### Observability Checklist (What Suppr Needs)
+
+```
+┌─────────────┐     ┌────────────┐     ┌─────────┐
+│ Application │────→│ Micrometer │────→│Prometheus│────→ Grafana dashboards
+│  (metrics)  │     └────────────┘     └─────────┘
+└─────────────┘
+┌─────────────┐     ┌──────────────┐     ┌──────┐
+│ Application │────→│OpenTelemetry │────→│Jaeger │────→ Distributed traces
+│  (traces)   │     └──────────────┘     └──────┘
+└─────────────┘
+┌─────────────┐     ┌────────┐     ┌───────────────┐
+│ Application │────→│Logback │────→│ELK / Loki     │────→ Centralized logs
+│   (logs)    │     └────────┘     └───────────────┘
+└─────────────┘
+```
+
+**Key metrics to track**:
+- HikariCP: active connections, pending threads, connection wait time
+- Redis: connected clients, memory usage, hit rate, command latency
+- Kafka: consumer lag, produce rate, rebalance count
+- MongoDB: active connections, slow queries, replication lag
+- MinIO: request rate, error rate, disk usage
+
+### Capacity Planning Rules of Thumb
+
+| Resource | Sizing Guideline |
+|----------|-----------------|
+| MySQL connections | `(2 × CPU) + spindle_count` per node, typically 20–30 |
+| Redis memory | Data size × 2 (fragmentation) + 30% headroom |
+| Kafka partitions | Target throughput / per-partition throughput, minimum = consumer count |
+| MongoDB WiredTiger cache | 50% of RAM (default), tune per workload |
+| MinIO storage | Current usage × growth rate × retention period + 30% buffer |
+c:T255d,# Interview Checklist — Suppr Tech Stack Quick Review
+
+## 1. Core Framework
+
+- [ ] **Spring Boot 3.5.3** — Auto-configuration, dependency injection, profile-based deployment
+- [ ] **Java 21** — Virtual threads, record classes, pattern matching, sealed classes
+- [ ] **Undertow** — Non-blocking IO, 64 worker threads, replaces Tomcat for async/streaming workloads
+- [ ] **MyBatis** — SQL mapper, XML-based result maps, camelCase ↔ snake_case auto-mapping
+- [ ] **Lombok** — `@Builder`, `@Getter`, `@Slf4j`, reduces boilerplate
+
+## 2. Databases
+
+- [ ] **MySQL + HikariCP** — Connection pooling, leak detection, validation query, max-lifetime
+- [ ] **MongoDB** — Document storage, `MongoRepository`, aggregation pipelines, `$set` partial updates
+- [ ] **Redis (Lettuce)** — RESP2 protocol, `StringRedisTemplate`, pub/sub, distributed counters, TTL-based expiry
+
+## 3. Message Queue
+
+- [ ] **Kafka** — Topics, partitions, consumer groups, manual ACK (`enable-auto-commit: false`)
+- [ ] **At-least-once delivery** — Manual `acknowledgment.acknowledge()` only after success
+- [ ] **Long-poll interval** — 12-hour `max.poll.interval.ms` for long-running translation tasks
+- [ ] **Consumer concurrency** — `concurrency-per-node` config, one listener per partition
+
+## 4. Real-Time Streaming
+
+- [ ] **SSE (Server-Sent Events)** — `SseEmitter`, `text/event-stream`, 50-min timeout
+- [ ] **Redis pub/sub relay** — Consumer publishes events → Redis channel → API pod → SSE client
+- [ ] **Client reconnection** — `last_event_id` header, `ConcurrentHashMap<drid, Map<clientId, emitter>>`
+- [ ] **Reactive streams** — `Flux<ServerSentEvent<String>>` from WebClient for upstream SSE consumption
+
+## 5. Async Processing
+
+- [ ] **`@Async` + Virtual threads** — `newVirtualThreadPerTaskExecutor()`, fire-and-forget tasks
+- [ ] **Custom thread pools** — `fileTranslationExecutor` (core=30, max=50), `AbortPolicy` vs `CallerRunsPolicy`
+- [ ] **`CompletableFuture`** — Non-blocking composition, `.runAsync()`, `.completeExceptionally()`
+- [ ] **`TransactionSynchronizationManager`** — Defer side effects (Kafka send) until after DB commit
+
+## 6. Authentication & Security
+
+- [ ] **JWT (JJWT)** — HS256 symmetric signing, `X-Auth-Token` header, 30-day expiry, auto-refresh < 12h
+- [ ] **Separate admin JWT** — Different signing key, `X-Admin-Auth-Token`, WeChat QR login
+- [ ] **API key auth** — Hash-based storage, scope-based access control (`FILE_TRANSLATION`, `DOC_SEARCH`)
+- [ ] **`@CurrentUid`** — Custom annotation + `HandlerMethodArgumentResolver` for user ID injection
+- [ ] **Rate limiting** — `@RateLimit` annotation, Redis-backed token bucket, per-IP and per-endpoint
+
+## 7. Payment
+
+- [ ] **WeChat Pay / Alipay** — Order creation → payment URL → async callback → benefit allocation
+- [ ] **Idempotent callbacks** — Conditional update `WHERE status = WAITING`, distributed lock + double-check
+- [ ] **Refund flow** — Reverse callback → withdraw benefits FIFO (newest points first)
+
+## 8. Points / Credits System
+
+- [ ] **Three-stage lifecycle** — Award → Freeze → Consume / Rollback → Expire
+- [ ] **Freeze pattern** — Reserve before async task, prevents overselling
+- [ ] **FIFO consumption** — Points expiring soonest are consumed first
+- [ ] **Rollback** — Restore to original pools on failure, reversal record with `uprid` chain
+- [ ] **Expiration** — Hourly cron, soft delete, ShedLock distributed lock
+
+## 9. File Storage
+
+- [ ] **MinIO (S3-compatible)** — Private + public buckets, pre-signed URLs (24h validity), 2GB max
+- [ ] **Gotenberg** — LibreOffice/Chromium-based PDF conversion, dual-file concatenation (source + target)
+- [ ] **Apache POI / PDFBox / Tika** — Office document parsing, PDF processing, MIME type detection
+
+## 10. External Service Integration
+
+- [ ] **Spring `@HttpExchange`** — Declarative HTTP clients (newer than Feign), interface-based
+- [ ] **WebClient (WebFlux)** — Non-blocking HTTP, SSE consumption, configurable buffer size (50MB)
+- [ ] **Retry** — `RetryTemplate` (3 attempts, 1s fixed backoff), `@Retryable` on specific methods
+- [ ] **Health check** — Pre-emptive `/health-check` call before starting translation, 2s timeout, 5s retry
+- [ ] **Fallback download chain** — Remote service → SOCKS5/HTTP proxy → direct download
+- [ ] **User-agent rotation** — 6 browser user-agents for external file downloads
+
+## 11. Distributed Coordination
+
+- [ ] **ShedLock** — JDBC-backed distributed lock for cron jobs, `lockAtMostFor` / `lockAtLeastFor`
+- [ ] **Redis distributed lock** — Payment notification dedup, `notifyLockCoreRedisDAO.lock()`
+- [ ] **Redis atomic counters** — `INCR` / `DECR` for active task counting, 24h TTL leak prevention
+- [ ] **Redis stop signals** — `file_translation:stop:{sessionId}` key as cancellation flag
+
+## 12. Exception Handling
+
+- [ ] **Exception hierarchy** — `BusinessException` → `UserException`, `PaymentException`, `FileException`
+- [ ] **`ResultCode` enum** — Domain-organized error codes (0-999 system, 1000-1999 auth, 2000-2999 user, ...)
+- [ ] **`GlobalExceptionHandler`** — Auto HTTP status mapping by code range (401, 400, 402, 502)
+- [ ] **`R<T>` response wrapper** — `{ code, data, msg }`, factory methods `R.data()`, `R.fail()`
+
+## 13. Caching
+
+- [ ] **Spring `@Cacheable`** — Redis-backed, JSON serialization via Jackson
+- [ ] **Cache targets** — PubMed ID conversion, search pages, pre-translation metadata
+- [ ] **File dedup** — `FilePreTranslateInfoTab` caches analysis results by fileId/fileUrl
+- [ ] **Translation dedup** — Reuse translated files by articleUrl + targetLang + options
+
+## 14. Deployment & Infrastructure
+
+- [ ] **Docker multi-stage build** — Maven build stage → JRE runtime (eclipse-temurin:21-jre)
+- [ ] **JVM tuning** — G1GC, 75% RAM, compressed OOPs, transparent huge pages
+- [ ] **Kubernetes** — Separate Helm charts for API and Consumer workloads
+- [ ] **Profile activation** — `SPRING_PROFILES_ACTIVE=api` or `=consumer` via env var
+- [ ] **Graceful shutdown** — 10s grace for API, 30s for Consumer (long-running tasks)
+
+## 15. Patterns to Talk About in Interview
+
+| Pattern              | Where It's Used            | One-Liner                                                          |
+| -------------------- | -------------------------- | ------------------------------------------------------------------ |
+| Reservation pattern  | Point freeze/consume       | Reserve before async work, consume on success, rollback on failure |
+| Deferred side effect | TransactionSynchronization | Send Kafka message only after DB commit                            |
+| Manual ACK           | Kafka consumers            | No message loss — ACK only after processing                        |
+| Idempotent webhook   | Payment callbacks          | Conditional update + distributed lock prevents double processing   |
+| Profile-based split  | API vs Consumer            | Same code, independent scaling and failure isolation               |
+| Pub/sub relay        | SSE streaming              | Consumer → Redis → API pod → client, decouples producer from SSE   |
+| Concurrency limiter  | Redis counters             | Per-user task limits with graceful queuing                         |
+| Cancellation flag    | Redis stop signal          | Cooperative cancellation checked at multiple lifecycle points      |
+| Health gate          | Translation consumer       | Don't start work if downstream is unhealthy                        |
+| Deduplication        | File translation           | Cache analysis results + reuse translated files across users       |
+
+## 16. Known Weaknesses (Be Ready to Discuss)
+
+- [ ] **Connection pool undersized** — HikariCP max=2, should be 20-30
+- [ ] **No circuit breakers** — 6+ external deps with no Resilience4j, cascading failure risk
+- [ ] **No distributed tracing** — Missing Micrometer/OpenTelemetry, hard to debug async flows
+- [ ] **Point race conditions** — No optimistic/pessimistic locking, concurrent mutations possible
+- [ ] **SSE memory leak** — No periodic cleanup of stale emitters
+- [ ] **No dead letter queue** — Failed Kafka messages silently dropped
+- [ ] **No DB migration tool** — No Flyway/Liquibase, manual schema changes
+
+## 17. Improvement Keywords (Show You Know the Fix)
+
+| Problem               | Solution Keywords                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| Cascading failures    | **Resilience4j**, circuit breaker, bulkhead, fallback, half-open state                   |
+| Connection starvation | **HikariCP tuning**, read replica, `AbstractRoutingDataSource`                           |
+| Point race conditions | **Optimistic locking** (version column), `SELECT ... FOR UPDATE`, Redis distributed lock |
+| No observability      | **Micrometer** → Prometheus → Grafana, **OpenTelemetry** → Jaeger                        |
+| SSE scaling           | **Redis Streams**, heartbeat ping, periodic emitter cleanup, shorter timeout             |
+| Kafka reliability     | **Dead Letter Topic**, consumer lag monitoring, semaphore-based backpressure             |
+| Cache misses          | **Caffeine L1** + Redis L2, explicit TTL, write-through invalidation                     |
+| Monolith growth       | **Service decomposition** — extract Point Service, Translation Orchestrator              |
+0:{"P":null,"b":"5332kUYIu9Y516IKH5eo9","p":"","c":["","en","interviews"],"i":false,"f":[[["",{"children":[["lang","en","d"],{"children":["interviews",{"children":["__PAGE__",{}]}]}]},"$undefined","$undefined",true],["",["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/caa5c89c9b2edfcc.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"suppressHydrationWarning":true,"children":["$","body",null,{"children":["$","$L2",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[],[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]]],"forbidden":"$undefined","unauthorized":"$undefined"}]}]}]]}],{"children":[["lang","en","d"],["$","$1","c",{"children":[null,"$L4"]}],{"children":["interviews",["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","segmentPath":["children","$0:f:0:1:2:children:0","children","interviews","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":["__PAGE__",["$","$1","c",{"children":[["$","$L5",null,{"children":["$","div",null,{"className":"max-w-7xl mx-auto","children":["$","$L6",null,{"files":[{"slug":"CLOUD_SERVICES_GUIDE","filename":"CLOUD_SERVICES_GUIDE.md","title":"Cloud Services Daily Operations Guide","content":"$7"},{"slug":"OPERATIONS_ANALYSIS","filename":"OPERATIONS_ANALYSIS.md","title":"Suppr Operations & Infrastructure Analysis","content":"$8"},{"slug":"SUPPR_SYSTEM_DESIGN_ANALYSIS","filename":"SUPPR_SYSTEM_DESIGN_ANALYSIS.md","title":"Suppr System Design Analysis","content":"$9"},{"slug":"hr-interview-checklist","filename":"hr-interview-checklist.md","title":"HR Interview Checklist","content":"$a"},{"slug":"suppr_external_dependencies","filename":"suppr_external_dependencies.md","title":"External Dependencies — Deep Dive for Interviews & Real-Life Debugging","content":"$b"},{"slug":"suppr_interview_keywords","filename":"suppr_interview_keywords.md","title":"Interview Checklist — Suppr Tech Stack Quick Review","content":"$c"}]}]}]}],[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/5eacd01f773eed7f.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","$Ld",null,{"children":"$Le"}]]}],{},null,false]},null,false]},null,false]},null,false],["$","$1","h",{"children":[null,["$","$1","84u508N79bsCxOVcn1tGK",{"children":[["$","$Lf",null,{"children":"$L10"}],["$","$L11",null,{"children":"$L12"}],null]}]]}],false]],"m":"$undefined","G":["$13","$undefined"],"s":false,"S":true}
+14:I[7113,["711","static/chunks/8e1d74a4-e9923f466f557161.js","448","static/chunks/448-d671b33df2a05d3a.js","173","static/chunks/173-c75888ce60d46fb5.js","160","static/chunks/app/%5Blang%5D/layout-094286f4cbf73864.js"],"ThemeProvider"]
+15:I[1791,["711","static/chunks/8e1d74a4-e9923f466f557161.js","448","static/chunks/448-d671b33df2a05d3a.js","173","static/chunks/173-c75888ce60d46fb5.js","160","static/chunks/app/%5Blang%5D/layout-094286f4cbf73864.js"],"AnimatedBackground"]
+16:I[4783,["711","static/chunks/8e1d74a4-e9923f466f557161.js","448","static/chunks/448-d671b33df2a05d3a.js","173","static/chunks/173-c75888ce60d46fb5.js","160","static/chunks/app/%5Blang%5D/layout-094286f4cbf73864.js"],"CustomCursor"]
+17:I[1227,["711","static/chunks/8e1d74a4-e9923f466f557161.js","448","static/chunks/448-d671b33df2a05d3a.js","173","static/chunks/173-c75888ce60d46fb5.js","160","static/chunks/app/%5Blang%5D/layout-094286f4cbf73864.js"],"Navbar"]
+19:I[5961,["711","static/chunks/8e1d74a4-e9923f466f557161.js","448","static/chunks/448-d671b33df2a05d3a.js","173","static/chunks/173-c75888ce60d46fb5.js","160","static/chunks/app/%5Blang%5D/layout-094286f4cbf73864.js"],"ScrollToTop"]
+4:["$","$L14",null,{"attribute":"class","defaultTheme":"dark","enableSystem":true,"disableTransitionOnChange":true,"children":["$","div",null,{"className":"min-h-screen relative","children":[["$","$L15",null,{}],["$","$L16",null,{}],["$","$L17",null,{"nav":{"skills":"Skills","experience":"Experience"}}],["$","main",null,{"className":"container mx-auto px-4 pt-28 md:pt-32 pb-16","children":["$","$L2",null,{"parallelRouterKey":"children","segmentPath":["children","$0:f:0:1:2:children:0","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]}],"$L18",["$","$L19",null,{}]]}]}]
+18:["$","footer",null,{"className":"border-t-3 border-gray-200 dark:border-white/10 py-6 mt-12","children":["$","div",null,{"className":"max-w-4xl mx-auto text-center px-4","children":["$","p",null,{"className":"text-sm text-gray-600 dark:text-gray-400 font-medium","children":[["$","span",null,{"className":"text-accent font-mono font-bold","children":2026}],["$","span",null,{"className":"mx-2","children":"|"}],"Yongjin Huang",["$","span",null,{"className":"mx-2","children":"|"}],["$","span",null,{"className":"text-gray-500 dark:text-gray-500","children":"All rights reserved."}]]}]}]}]
+12:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+10:[["$","meta","0",{"charSet":"utf-8"}],["$","title","1",{"children":"Yongjin Huang"}],["$","meta","2",{"name":"description","content":"Software Developer Portfolio"}],["$","link","3",{"rel":"icon","href":"/favicon.ico","type":"image/x-icon","sizes":"16x16"}]]
+e:null
