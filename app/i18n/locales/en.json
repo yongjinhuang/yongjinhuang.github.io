@@ -46,9 +46,10 @@
         "linkUrl": "https://www.wilddata.cn",
         "logoUrl": "/logo/wilddata.png",
         "name": "WildData",
-        "position": "Software Engineer & Shareholder (5%)",
+        "position": "Software Engineer",
         "period": "April 2024 - Present",
         "responsibilities": [
+          "Joined as a 5% shareholder, contributing to both technical development and business growth",
           "Built CI/CD pipelines with [Tencent Cloud](https://cloud.tencent.com/) and [Coding](https://coding.net/), doubling deployment efficiency",
           "Developed backend for [Suppr](https://suppr.wilddata.cn/): WeChat integration, points system, literature search & summarization, document translation, and payments",
           "Managed HTTPS certificates, NGINX, and websites. Built containerized deployment service for better scalability",
