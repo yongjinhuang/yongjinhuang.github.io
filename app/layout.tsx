@@ -8,7 +8,8 @@ export const metadata: Metadata = {
     default: 'Yongjin Huang — Software Engineer',
     template: '%s | Yongjin Huang',
   },
-  description: 'Personal website of Yongjin Huang, a software engineer.',
+  description:
+    'Personal website of Yongjin Huang, a software engineer based in China. Work experience and skills.',
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
