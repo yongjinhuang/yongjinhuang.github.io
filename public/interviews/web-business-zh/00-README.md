@@ -42,6 +42,8 @@
 | 18 | [缓存策略](18-CACHING.md) | 快而不乱 |
 | 19 | [功能开关与灰度发布](19-FEATURE-FLAGS.md) | 安全地一步步上线新功能 |
 | 20 | [日志与监控](20-LOGGING-MONITORING.md) | 在用户发现问题之前你先发现 |
+| 21 | [配送与供应链](21-DELIVERY-SUPPLY-CHAIN.md) | 商品从仓库到家门口的全流程 |
+| 22 | [大语言模型与 RAG 的商业应用](22-LLM-RAG-BUSINESS.md) | 企业怎么用 AI 搜索、总结和生成内容 |
 
 ## 推荐阅读顺序
 

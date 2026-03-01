@@ -7,6 +7,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   'system-design': 'System Design',
   'web-business': 'Web Business',
   'web-business-zh': 'Web Business (中文)',
+  frontend: 'Frontend',
+  fullstack: 'Full-Stack',
+  behavioral: 'Behavioral',
 };
 
 function extractTitle(content: string, filename: string): string {

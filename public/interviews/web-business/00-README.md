@@ -42,6 +42,8 @@ Each article follows the same structure:
 | 18 | [Caching Strategies](18-CACHING.md) | Making things fast without breaking things |
 | 19 | [Feature Flags & Rollouts](19-FEATURE-FLAGS.md) | Shipping safely with gradual releases |
 | 20 | [Logging & Monitoring](20-LOGGING-MONITORING.md) | Knowing when things break before users tell you |
+| 21 | [Delivery & Supply Chain](21-DELIVERY-SUPPLY-CHAIN.md) | How products move from warehouse to doorstep |
+| 22 | [LLM & RAG for Business](22-LLM-RAG-BUSINESS.md) | How companies use AI to search, summarize, and generate |
 
 ## Reading Order
 
