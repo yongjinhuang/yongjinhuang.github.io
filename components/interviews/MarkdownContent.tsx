@@ -123,9 +123,7 @@ function createMarkdownComponents(
       />
     ),
     ul: ({ children }) => (
-      <ul className="list-disc pl-6 mb-4 space-y-1 text-[15px]">
-        {children}
-      </ul>
+      <ul className="list-disc pl-6 mb-4 space-y-1 text-[15px]">{children}</ul>
     ),
     ol: ({ children }) => (
       <ol className="list-decimal pl-6 mb-4 space-y-1 text-[15px]">
