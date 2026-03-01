@@ -1,10 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import type { InterviewCategory } from '@/types';
 import { SidebarItem } from './SidebarItem';
-import { HiChevronDown, HiChevronRight, HiFolderOpen } from 'react-icons/hi2';
+import {
+  HiChevronDown,
+  HiChevronRight,
+  HiFolderOpen,
+  HiMagnifyingGlass,
+  HiXMark,
+} from 'react-icons/hi2';
 
 interface SidebarProps {
   readonly categories: readonly InterviewCategory[];
@@ -14,24 +20,85 @@ interface SidebarProps {
 
 export function Sidebar({ categories, selectedSlug, onSelect }: SidebarProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [query, setQuery] = useState('');
 
   const toggleCategory = (name: string) => {
     setCollapsed((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
+  const isSearching = query.trim().length > 0;
+
+  const filteredCategories = useMemo(() => {
+    if (!isSearching) return categories;
+    const lowerQuery = query.toLowerCase();
+    return categories
+      .map((category) => ({
+        ...category,
+        files: category.files.filter((f) =>
+          f.title.toLowerCase().includes(lowerQuery)
+        ),
+      }))
+      .filter((category) => category.files.length > 0);
+  }, [categories, query, isSearching]);
+
+  const totalResults = useMemo(
+    () =>
+      isSearching
+        ? filteredCategories.reduce((sum, c) => sum + c.files.length, 0)
+        : 0,
+    [filteredCategories, isSearching]
+  );
+
   return (
     <div className="glass-card p-4 h-full overflow-y-auto max-h-[calc(100vh-8rem)]">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-accent mb-4 px-3">
+      <h3 className="text-sm font-bold uppercase tracking-wider text-accent mb-3 px-3">
         Files
       </h3>
+
+      {/* Search input */}
+      <div className="relative mb-3 px-1">
+        <HiMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search files..."
+          className={cn(
+            'w-full pl-9 pr-8 py-2 text-sm rounded-lg',
+            'bg-gray-100 dark:bg-white/5',
+            'border border-gray-200 dark:border-white/10',
+            'text-gray-800 dark:text-gray-200',
+            'placeholder-gray-400 dark:placeholder-gray-500',
+            'focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent',
+            'transition-colors duration-200'
+          )}
+        />
+        {isSearching && (
+          <button
+            onClick={() => setQuery('')}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            <HiXMark className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {isSearching && (
+        <p className="text-xs text-gray-400 dark:text-gray-500 px-3 mb-2">
+          {totalResults} result{totalResults !== 1 ? 's' : ''}
+        </p>
+      )}
+
       <nav className="space-y-3">
-        {categories.map((category) => {
-          const isCollapsed = collapsed[category.name] ?? false;
+        {filteredCategories.map((category) => {
+          const isCollapsed = isSearching
+            ? false
+            : (collapsed[category.name] ?? false);
           const hasSelected = category.files.some(
             (f) => f.slug === selectedSlug
           );
 
-          if (categories.length === 1) {
+          if (filteredCategories.length === 1 && !isSearching) {
             return (
               <div key={category.name} className="space-y-1">
                 {category.files.map((file) => (

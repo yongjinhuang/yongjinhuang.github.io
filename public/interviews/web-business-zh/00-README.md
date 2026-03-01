@@ -44,6 +44,18 @@
 | 20 | [日志与监控](20-LOGGING-MONITORING.md) | 在用户发现问题之前你先发现 |
 | 21 | [配送与供应链](21-DELIVERY-SUPPLY-CHAIN.md) | 商品从仓库到家门口的全流程 |
 | 22 | [大语言模型与 RAG 的商业应用](22-LLM-RAG-BUSINESS.md) | 企业怎么用 AI 搜索、总结和生成内容 |
+| 23 | [即时通讯与实时聊天](23-INSTANT-MESSAGING.md) | 消息怎么实时送达 |
+| 24 | [社交信息流与内容审核](24-SOCIAL-FEED-MODERATION.md) | 做信息流、管内容 |
+| 25 | [电商平台与双边市场](25-MARKETPLACE.md) | 买卖双方怎么在平台上撮合 |
+| 26 | [广告与广告技术](26-AD-TECH.md) | 广告怎么投、怎么算、怎么防作弊 |
+| 27 | [预订与预约系统](27-BOOKING-RESERVATION.md) | 管理有限资源的时间分配 |
+| 28 | [金融科技与数字钱包](28-FINTECH-WALLET.md) | KYC、钱包、合规，安全地搬钱 |
+| 29 | [视频与直播](29-VIDEO-LIVE-STREAMING.md) | 视频怎么转码、分发、变现 |
+| 30 | [客户支持与工单系统](30-CUSTOMER-SUPPORT.md) | 从用户反馈到问题解决的全流程 |
+| 31 | [工作流与审批系统](31-WORKFLOW-APPROVAL.md) | 审批链、状态机、流程自动化 |
+| 32 | [会员与积分体系](32-LOYALTY-REWARDS.md) | 积分、等级、让用户留下来 |
+| 33 | [外卖与即时配送](33-FOOD-DELIVERY.md) | 从下单到送达的全流程 |
+| 34 | [在线教育](34-ONLINE-EDUCATION.md) | 课程、学习进度、证书 |
 
 ## 推荐阅读顺序
 

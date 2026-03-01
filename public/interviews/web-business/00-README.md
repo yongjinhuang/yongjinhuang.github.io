@@ -44,6 +44,18 @@ Each article follows the same structure:
 | 20 | [Logging & Monitoring](20-LOGGING-MONITORING.md) | Knowing when things break before users tell you |
 | 21 | [Delivery & Supply Chain](21-DELIVERY-SUPPLY-CHAIN.md) | How products move from warehouse to doorstep |
 | 22 | [LLM & RAG for Business](22-LLM-RAG-BUSINESS.md) | How companies use AI to search, summarize, and generate |
+| 23 | [Instant Messaging & Real-time Chat](23-INSTANT-MESSAGING.md) | How chat systems deliver messages in real time |
+| 24 | [Social Feed & Content Moderation](24-SOCIAL-FEED-MODERATION.md) | Building feeds and keeping platforms safe |
+| 25 | [Marketplace & Two-Sided Platforms](25-MARKETPLACE.md) | Connecting buyers and sellers at scale |
+| 26 | [Advertising & Ad Tech](26-AD-TECH.md) | How ads are served, targeted, and measured |
+| 27 | [Booking & Reservation Systems](27-BOOKING-RESERVATION.md) | Managing finite resources over time |
+| 28 | [Fintech & Digital Wallet](28-FINTECH-WALLET.md) | Moving money safely with KYC, wallets, and compliance |
+| 29 | [Video & Live Streaming](29-VIDEO-LIVE-STREAMING.md) | How video gets encoded, delivered, and monetized |
+| 30 | [Customer Support & Ticketing](30-CUSTOMER-SUPPORT.md) | Managing user issues from ticket to resolution |
+| 31 | [Workflow & Approval Systems](31-WORKFLOW-APPROVAL.md) | Routing decisions through approval chains |
+| 32 | [Loyalty & Rewards Programs](32-LOYALTY-REWARDS.md) | Points, tiers, and keeping users coming back |
+| 33 | [Food Delivery & On-Demand](33-FOOD-DELIVERY.md) | From order placement to doorstep delivery |
+| 34 | [Online Education & E-Learning](34-ONLINE-EDUCATION.md) | Courses, progress tracking, and certificates |
 
 ## Reading Order
 
