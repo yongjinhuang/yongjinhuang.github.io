@@ -1,7 +1,12 @@
+import type { Metadata } from 'next';
 import { i18n } from '@/app/i18n/settings';
 import { getInterviewCategories } from '@/lib/interviews';
 import { InterviewViewer } from '@/components/interviews/InterviewViewer';
 import { PageTransition } from '@/components/PageTransition';
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function InterviewsPage() {
   const categories = getInterviewCategories();

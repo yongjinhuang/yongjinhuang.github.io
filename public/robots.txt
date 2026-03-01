@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /en/interviews
+Disallow: /zh/interviews
+Disallow: /interviews/
+
+Sitemap: https://yongjinhuang.github.io/sitemap.xml
