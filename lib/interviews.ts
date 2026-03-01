@@ -1,6 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import type { InterviewFile } from '@/types';
+import type { InterviewFile, InterviewCategory } from '@/types';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  general: 'General',
+  'system-design': 'System Design',
+  'web-business': 'Web Business',
+  'web-business-zh': 'Web Business (中文)',
+};
 
 function extractTitle(content: string, filename: string): string {
   const match = content.match(/^#\s+(.+)$/m);
@@ -13,25 +20,66 @@ function extractTitle(content: string, filename: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function getInterviewFiles(): readonly InterviewFile[] {
-  const interviewsDir = path.join(process.cwd(), 'public', 'interviews');
-
+function readMarkdownFiles(
+  dir: string,
+  category: string
+): readonly InterviewFile[] {
   try {
     const filenames = fs
-      .readdirSync(interviewsDir)
+      .readdirSync(dir)
       .filter((f) => f.endsWith('.md'))
       .sort();
 
     return filenames.map((filename) => {
-      const filePath = path.join(interviewsDir, filename);
+      const filePath = path.join(dir, filename);
       const content = fs.readFileSync(filePath, 'utf-8');
-      const slug = filename.replace(/\.md$/, '');
+      const slugBase = filename.replace(/\.md$/, '');
+      const slug =
+        category === 'general' ? slugBase : `${category}/${slugBase}`;
       const title = extractTitle(content, filename);
 
-      return { slug, filename, title, content };
+      return { slug, filename, title, content, category };
     });
+  } catch {
+    return [];
+  }
+}
+
+export function getInterviewFiles(): readonly InterviewFile[] {
+  const interviewsDir = path.join(process.cwd(), 'public', 'interviews');
+
+  try {
+    const topLevelFiles = readMarkdownFiles(interviewsDir, 'general');
+
+    const entries = fs.readdirSync(interviewsDir, { withFileTypes: true });
+    const subdirFiles = entries
+      .filter((entry) => entry.isDirectory() && entry.name !== 'imgs')
+      .flatMap((entry) => {
+        const subDir = path.join(interviewsDir, entry.name);
+        return readMarkdownFiles(subDir, entry.name);
+      });
+
+    return [...topLevelFiles, ...subdirFiles];
   } catch (error) {
     console.error('Failed to read interviews directory:', error);
     return [];
   }
+}
+
+export function getInterviewCategories(): readonly InterviewCategory[] {
+  const files = getInterviewFiles();
+  const categoryMap = new Map<string, InterviewFile[]>();
+
+  for (const file of files) {
+    const existing = categoryMap.get(file.category) ?? [];
+    categoryMap.set(file.category, [...existing, file]);
+  }
+
+  return Array.from(categoryMap.entries()).map(([name, catFiles]) => ({
+    name,
+    label:
+      CATEGORY_LABELS[name] ??
+      name.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    files: catFiles,
+  }));
 }

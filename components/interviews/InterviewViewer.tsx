@@ -9,16 +9,17 @@ import {
   HiChevronRight,
 } from 'react-icons/hi2';
 import { cn } from '@/lib/utils';
-import type { InterviewFile } from '@/types';
+import type { InterviewFile, InterviewCategory } from '@/types';
 import { Sidebar } from './Sidebar';
 import { MarkdownContent } from './MarkdownContent';
 import { TableOfContents } from './TableOfContents';
 
 interface InterviewViewerProps {
   readonly files: readonly InterviewFile[];
+  readonly categories: readonly InterviewCategory[];
 }
 
-export function InterviewViewer({ files }: InterviewViewerProps) {
+export function InterviewViewer({ files, categories }: InterviewViewerProps) {
   const [selectedSlug, setSelectedSlug] = useState<string>(
     files.length > 0 ? files[0].slug : ''
   );
@@ -69,7 +70,7 @@ export function InterviewViewer({ files }: InterviewViewerProps) {
         )}
       >
         <Sidebar
-          files={files}
+          categories={categories}
           selectedSlug={selectedSlug}
           onSelect={handleFileSelect}
         />
@@ -89,7 +90,7 @@ export function InterviewViewer({ files }: InterviewViewerProps) {
           )}
         >
           <Sidebar
-            files={files}
+            categories={categories}
             selectedSlug={selectedSlug}
             onSelect={handleFileSelect}
           />
@@ -157,7 +158,10 @@ export function InterviewViewer({ files }: InterviewViewerProps) {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <MarkdownContent file={selectedFile} />
+              <MarkdownContent
+                file={selectedFile}
+                onFileSelect={handleFileSelect}
+              />
             </motion.div>
           )}
         </AnimatePresence>

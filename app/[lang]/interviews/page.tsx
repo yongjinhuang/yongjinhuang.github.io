@@ -1,14 +1,17 @@
 import { i18n } from '@/app/i18n/settings';
-import { getInterviewFiles } from '@/lib/interviews';
+import { getInterviewCategories } from '@/lib/interviews';
 import { InterviewViewer } from '@/components/interviews/InterviewViewer';
 import { PageTransition } from '@/components/PageTransition';
 
 export default function InterviewsPage() {
-  const files = getInterviewFiles();
+  const categories = getInterviewCategories();
+  const files = categories.flatMap((c) => c.files);
 
   return (
     <PageTransition>
-      <InterviewViewer files={files} />
+      <div className="-mx-4 md:-mx-8 lg:-mx-12 xl:-mx-16 px-4 md:px-8 lg:px-12 xl:px-16">
+        <InterviewViewer files={files} categories={categories} />
+      </div>
     </PageTransition>
   );
 }

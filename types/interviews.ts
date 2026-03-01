@@ -3,4 +3,11 @@ export interface InterviewFile {
   readonly filename: string;
   readonly title: string;
   readonly content: string;
+  readonly category: string;
+}
+
+export interface InterviewCategory {
+  readonly name: string;
+  readonly label: string;
+  readonly files: readonly InterviewFile[];
 }
