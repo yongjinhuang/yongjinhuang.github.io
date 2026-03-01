@@ -1,0 +1,16 @@
+{
+  "name": "Yongjin Huang Portfolio",
+  "short_name": "YJ Huang",
+  "description": "Software Engineer Portfolio",
+  "start_url": "/en",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#d97706",
+  "icons": [
+    {
+      "src": "/selfie.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}
