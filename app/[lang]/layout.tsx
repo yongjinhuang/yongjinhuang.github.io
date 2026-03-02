@@ -8,11 +8,12 @@ import { Navbar } from '@/components/layout';
 
 interface Props {
   children: React.ReactNode;
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: string }>;
 }
 
 export default async function LangLayout({ children, params }: Props) {
-  const { lang } = await params;
+  const { lang: rawLang } = await params;
+  const lang = rawLang as Locale;
   const t = await getTranslations(lang);
 
   return (

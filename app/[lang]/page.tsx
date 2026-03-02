@@ -13,11 +13,12 @@ import { JsonLd } from '@/components/JsonLd';
 import { BASE_URL, META, OG_IMAGE, SITE_NAME } from '@/lib/seo';
 
 interface Props {
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params;
+  const { lang: rawLang } = await params;
+  const lang = rawLang as Locale;
   const meta = META[lang] ?? META.en;
 
   return {
@@ -50,7 +51,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Home({ params }: Props) {
-  const { lang } = await params;
+  const { lang: rawLang } = await params;
+  const lang = rawLang as Locale;
   const t = await getTranslations(lang);
 
   const personSchema = {

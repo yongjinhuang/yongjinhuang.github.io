@@ -2,11 +2,12 @@ import { getTranslations } from '@/app/i18n/settings';
 import { Locale } from '@/app/i18n/settings';
 
 interface FooterProps {
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: string }>;
 }
 
 export async function Footer({ params }: FooterProps) {
-  const { lang } = await params;
+  const { lang: rawLang } = await params;
+  const lang = rawLang as Locale;
   const t = await getTranslations(lang);
   const year = new Date().getFullYear();
 
