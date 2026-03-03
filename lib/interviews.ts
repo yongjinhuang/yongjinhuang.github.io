@@ -19,6 +19,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   'modern-frontend': 'Modern Frontend 2026',
   'staff-leadership': 'Staff+ Leadership',
   concurrency: 'Concurrency & Multithreading',
+  'cloud/docker': 'Cloud - Docker',
+  'cloud/kubernetes': 'Cloud - Kubernetes',
 };
 
 function extractTitle(content: string, filename: string): string {
