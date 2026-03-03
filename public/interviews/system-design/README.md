@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains comprehensive system design interview preparation materials covering **36 topics** across classic fundamentals, infrastructure deep dives, domain-specific systems, and emerging 2025-2026 trends. Each guide follows a structured approach with data modeling, architecture diagrams, trade-off analysis, and scaling strategies.
+This directory contains comprehensive system design interview preparation materials covering **43 topics** across classic fundamentals, infrastructure deep dives, domain-specific systems, SaaS & platform systems, and emerging 2025-2026 trends. Each guide follows a structured approach with data modeling, architecture diagrams, trade-off analysis, and scaling strategies.
 
 ## How to Use
 
@@ -91,6 +91,18 @@ This directory contains comprehensive system design interview preparation materi
 | 35 | [35-DIGITAL-WALLET.md](35-DIGITAL-WALLET.md) | Digital Wallet & Ledger (PayPal) | Double-entry bookkeeping, P2P, KYC/AML, reconciliation, fraud |
 | 36 | [36-API-GATEWAY.md](36-API-GATEWAY.md) | API Gateway & Service Mesh (Kong/Envoy) | Routing, circuit breaker, mTLS, service discovery, sidecar proxy |
 
+### Tier 8: SaaS & Platform Systems
+
+| # | File | Topic | Key Concepts |
+|---|------|-------|--------------|
+| 37 | [37-SUBSCRIPTION-BILLING.md](37-SUBSCRIPTION-BILLING.md) | Subscription & Billing System | Plan management, dunning, proration, metered billing, payment retry |
+| 38 | [38-MULTI-TENANT-SAAS.md](38-MULTI-TENANT-SAAS.md) | Multi-Tenant SaaS Platform | Schema isolation, resource quotas, tenant routing, data partitioning |
+| 39 | [39-FEATURE-FLAGS.md](39-FEATURE-FLAGS.md) | Feature Flag System (LaunchDarkly) | Flag evaluation, targeting rules, gradual rollout, A/B testing |
+| 40 | [40-CMS.md](40-CMS.md) | Content Management System | Content modeling, editorial workflows, versioning, headless API |
+| 41 | [41-TICKETING-SYSTEM.md](41-TICKETING-SYSTEM.md) | Ticketing & Support System (Zendesk) | Queue routing, SLA tracking, escalation, omni-channel |
+| 42 | [42-LOYALTY-REWARDS.md](42-LOYALTY-REWARDS.md) | Loyalty & Rewards System | Points ledger, tier calculation, redemption, partner integration |
+| 43 | [43-ELEARNING-PLATFORM.md](43-ELEARNING-PLATFORM.md) | E-Learning Platform (Coursera) | Progress tracking, video delivery, certificates, adaptive learning |
+
 ## Quick Reference: Common Building Blocks
 
 These building blocks appear across multiple system design questions:
@@ -163,22 +175,27 @@ Cross-reference with the [Web Business Knowledge](../web-business/00-README.md) 
 | 21 - Delivery & Supply Chain | [17-RIDE-SHARING](17-RIDE-SHARING.md) + [30-FOOD-DELIVERY](30-FOOD-DELIVERY.md) | Last-mile covered; warehouse logistics, fleet management missing |
 | 31 - Workflow & Approval | [22-DISTRIBUTED-TASK-SCHEDULER](22-DISTRIBUTED-TASK-SCHEDULER.md) | DAG execution covered; business approval chains, delegation, SLA missing |
 
-### Not covered (potential future topics)
+### Newly covered (Tier 8: SaaS & Platform Systems)
 
-| Priority | Web Business Topic | Potential System Design Topic | Key Concepts |
-|---|---|---|---|
-| Low | 04 - Subscription & Billing | Design Subscription System | Plan mgmt, dunning, proration, metering |
-| Low | 12 - Multi-Tenancy | Design Multi-Tenant SaaS | Schema isolation, resource quotas, routing |
-| Low | 19 - Feature Flags | Design Feature Flag System | Flag evaluation, targeting rules, gradual rollout |
-| Low | 07 - Content Management | Design a CMS | Content modeling, workflows, versioning |
-| Low | 30 - Customer Support | Design Ticketing System | Queue routing, SLA tracking, escalation |
-| Low | 32 - Loyalty & Rewards | Design Loyalty System | Points ledger, tier calculation, redemption |
-| Low | 34 - Online Education | Design E-Learning Platform | Progress tracking, video delivery, certificates |
-| N/A | 05 - User Management | (subsumed by [27-AUTH-SSO-SYSTEM](27-AUTH-SSO-SYSTEM.md)) | — |
-| N/A | 10 - DevOps Pipeline | (DevOps interview, not SD) | — |
-| N/A | 13 - Data Privacy | (cross-cutting concern) | — |
-| N/A | 15 - Internationalization | (not a system design topic) | — |
-| N/A | 16 - SEO | (not a system design topic) | — |
+| Web Business | System Design | Notes |
+|---|---|---|
+| 04 - Subscription & Billing | [37-SUBSCRIPTION-BILLING](37-SUBSCRIPTION-BILLING.md) | Plan management, dunning, proration, metering |
+| 12 - Multi-Tenancy | [38-MULTI-TENANT-SAAS](38-MULTI-TENANT-SAAS.md) | Schema isolation, resource quotas, routing |
+| 19 - Feature Flags | [39-FEATURE-FLAGS](39-FEATURE-FLAGS.md) | Flag evaluation, targeting rules, gradual rollout |
+| 07 - Content Management | [40-CMS](40-CMS.md) | Content modeling, workflows, versioning |
+| 30 - Customer Support | [41-TICKETING-SYSTEM](41-TICKETING-SYSTEM.md) | Queue routing, SLA tracking, escalation |
+| 32 - Loyalty & Rewards | [42-LOYALTY-REWARDS](42-LOYALTY-REWARDS.md) | Points ledger, tier calculation, redemption |
+| 34 - Online Education | [43-ELEARNING-PLATFORM](43-ELEARNING-PLATFORM.md) | Progress tracking, video delivery, certificates |
+
+### Not covered (no system design equivalent needed)
+
+| Web Business Topic | Reason |
+|---|---|
+| 05 - User Management | Subsumed by [27-AUTH-SSO-SYSTEM](27-AUTH-SSO-SYSTEM.md) |
+| 10 - DevOps Pipeline | DevOps interview topic, not system design |
+| 13 - Data Privacy | Cross-cutting concern |
+| 15 - Internationalization | Not a system design topic |
+| 16 - SEO | Not a system design topic |
 
 ## Study Timeline Suggestion
 
@@ -196,5 +213,7 @@ Cross-reference with the [Web Business Knowledge](../web-business/00-README.md) 
 | Week 10 | Tier 6 continued | Food Delivery, Search Engine |
 | Week 11 | Tier 7 (Platform) | Analytics, Marketplace, Content Moderation |
 | Week 12 | Tier 7 continued | Digital Wallet, API Gateway & Service Mesh |
+| Week 13 | Tier 8 (SaaS) | Subscription & Billing, Multi-Tenant SaaS, Feature Flags, CMS |
+| Week 14 | Tier 8 continued | Ticketing System, Loyalty & Rewards, E-Learning Platform |
 
 Good luck with your interviews!

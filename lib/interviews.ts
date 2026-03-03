@@ -6,10 +6,19 @@ const CATEGORY_LABELS: Record<string, string> = {
   general: 'General',
   'system-design': 'System Design',
   'web-business': 'Web Business',
+  'system-design-zh': 'System Design (中文)',
   'web-business-zh': 'Web Business (中文)',
   frontend: 'Frontend',
   fullstack: 'Full-Stack',
   behavioral: 'Behavioral',
+  'cloud/aws': 'Cloud - AWS',
+  'cloud/terraform': 'Cloud - Terraform',
+  dsa: 'DSA (Python)',
+  'ai-engineering': 'AI/ML Engineering',
+  'low-level-design': 'Low-Level Design',
+  'modern-frontend': 'Modern Frontend 2026',
+  'staff-leadership': 'Staff+ Leadership',
+  concurrency: 'Concurrency & Multithreading',
 };
 
 function extractTitle(content: string, filename: string): string {
@@ -59,7 +68,19 @@ export function getInterviewFiles(): readonly InterviewFile[] {
       .filter((entry) => entry.isDirectory() && entry.name !== 'imgs')
       .flatMap((entry) => {
         const subDir = path.join(interviewsDir, entry.name);
-        return readMarkdownFiles(subDir, entry.name);
+        const mdFiles = readMarkdownFiles(subDir, entry.name);
+
+        // Scan nested subdirectories (e.g., cloud/aws)
+        const nestedEntries = fs
+          .readdirSync(subDir, { withFileTypes: true })
+          .filter((e) => e.isDirectory());
+        const nestedFiles = nestedEntries.flatMap((nested) => {
+          const nestedDir = path.join(subDir, nested.name);
+          const category = `${entry.name}/${nested.name}`;
+          return readMarkdownFiles(nestedDir, category);
+        });
+
+        return [...mdFiles, ...nestedFiles];
       });
 
     return [...topLevelFiles, ...subdirFiles];
