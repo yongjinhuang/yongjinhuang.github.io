@@ -21,6 +21,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   concurrency: 'Concurrency & Multithreading',
   'cloud/docker': 'Cloud - Docker',
   'cloud/kubernetes': 'Cloud - Kubernetes',
+  'modern-backend': 'Modern Backend 2026',
+  'quant-trading': 'Quantitative Trading',
+  'cpu-gpu-programming': 'CPU/GPU Programming',
 };
 
 function extractTitle(content: string, filename: string): string {
