@@ -24,6 +24,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   'modern-backend': 'Modern Backend 2026',
   'quant-trading': 'Quantitative Trading',
   'cpu-gpu-programming': 'CPU/GPU Programming',
+  web3: 'Web3 Development',
   lifestyle: 'Lifestyle & Content Creation',
 };
 
