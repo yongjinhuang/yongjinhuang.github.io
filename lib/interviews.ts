@@ -26,6 +26,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   'cpu-gpu-programming': 'CPU/GPU Programming',
   web3: 'Web3 Development',
   lifestyle: 'Lifestyle & Content Creation',
+  'doc-processing': 'Document Processing',
 };
 
 function extractTitle(content: string, filename: string): string {
