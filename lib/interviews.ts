@@ -28,6 +28,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   lifestyle: 'Lifestyle & Content Creation',
   'doc-processing': 'Document Processing',
   robotics: 'Robotics & Control Systems',
+  'embedded-iot': 'Embedded Systems & IoT',
 };
 
 function extractTitle(content: string, filename: string): string {
