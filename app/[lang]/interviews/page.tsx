@@ -14,7 +14,7 @@ export default function InterviewsPage() {
 
   return (
     <PageTransition>
-      <div className="-mx-4 md:-mx-8 lg:-mx-12 xl:-mx-16 px-4 md:px-8 lg:px-12 xl:px-16">
+      <div className="w-[100vw] relative left-1/2 -translate-x-1/2 px-4 md:px-6 lg:px-8">
         <InterviewViewer files={files} categories={categories} />
       </div>
     </PageTransition>

@@ -27,6 +27,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   web3: 'Web3 Development',
   lifestyle: 'Lifestyle & Content Creation',
   'doc-processing': 'Document Processing',
+  robotics: 'Robotics & Control Systems',
 };
 
 function extractTitle(content: string, filename: string): string {
