@@ -6,7 +6,6 @@ import { ClientRedirect } from '@/components/ClientRedirect';
 const DEFAULT_LOCALE = i18n.defaultLocale;
 
 export const metadata: Metadata = {
-  robots: { index: false, follow: true },
   alternates: {
     canonical: `${BASE_URL}/${DEFAULT_LOCALE}`,
     languages: Object.fromEntries(
