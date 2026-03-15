@@ -49,7 +49,6 @@
         "period": "2024 年 4 月 - 至今",
         "techStack": "Java 21 / Spring Boot 3, MySQL, MongoDB, Redis, Kafka, K8s",
         "responsibilities": [
-          "作为 5% 股东加入，主导技术开发与业务增长",
           "构建 [超能文献](https://suppr.wilddata.cn/)，AI 学术研究平台，采用 API/Consumer 分离架构部署于 K8s，支持独立扩缩容",
           "开发三大核心 AI 服务：LLM 文献检索、多语言文件翻译、深度研究报告生成，使用 Kafka 异步处理 + SSE + Redis pub/sub 实时推送",
           "设计三阶段积分系统（冻结→扣减→回滚），实现微信支付/支付宝幂等回调",
