@@ -1,0 +1,2289 @@
+# Sprites, Animation & Visual Effects
+
+## Table of Contents
+
+1. [Sprite Sheets](#sprite-sheets)
+2. [Texture Atlas Formats](#texture-atlas-formats)
+3. [Sprite Animation](#sprite-animation)
+4. [Skeletal Animation](#skeletal-animation)
+5. [Tweening](#tweening)
+6. [Tween Chaining and Advanced Patterns](#tween-chaining-and-advanced-patterns)
+7. [Particle Systems](#particle-systems)
+8. [Common Visual Effects](#common-visual-effects)
+9. [Shader Effects](#shader-effects)
+10. [Atlas Packing Algorithms](#atlas-packing-algorithms)
+11. [Performance](#performance)
+12. [Interview Questions](#interview-questions)
+
+---
+
+## Sprite Sheets
+
+### What Are Sprite Sheets?
+
+A sprite sheet is a single image that contains multiple smaller images (sprites) arranged in a grid or packed layout. Instead of loading 100 separate image files, you load one image and specify which rectangular region to draw for each sprite.
+
+```
+┌──────────────────────────────┐
+│ idle_0 │ idle_1 │ idle_2 │   │
+├────────┼────────┼────────┤   │
+│ run_0  │ run_1  │ run_2  │   │
+├────────┼────────┼────────┤   │
+│ run_3  │ run_4  │ run_5  │   │
+├────────┼────────┼────────┤   │
+│ jump_0 │ jump_1 │ attack │   │
+└──────────────────────────────┘
+      Single Image File
+```
+
+### Why Use Sprite Sheets?
+
+1. **Fewer HTTP requests**: Loading 1 file instead of 100 means 1 connection, 1 download, 1 decode. On mobile networks, each request has 50-200ms overhead.
+
+2. **GPU batching**: All sprites from the same sprite sheet share one texture on the GPU. The sprite batcher can draw them all in a single draw call. Without an atlas, every texture change forces a batch flush (new draw call).
+
+3. **Reduced memory overhead**: Each texture object has fixed overhead (WebGL state, metadata). 100 separate textures = 100x that overhead. One atlas = 1x overhead.
+
+4. **Better texture filtering**: Individual small textures can have edge artifacts during filtering (bleeding). An atlas with proper padding avoids this.
+
+5. **Efficient VRAM usage**: GPUs prefer power-of-two textures. A 17x17 sprite would be padded to 32x32 (wasting 75% of VRAM). Packing many sprites into a 1024x1024 atlas uses space efficiently.
+
+### Loading a Sprite Sheet Manually
+
+```typescript
+interface SpriteFrame {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+}
+
+interface SpriteSheet {
+    readonly image: HTMLImageElement;
+    readonly frames: ReadonlyMap<string, SpriteFrame>;
+    readonly frameWidth: number;
+    readonly frameHeight: number;
+}
+
+async function loadSpriteSheet(
+    url: string,
+    frameWidth: number,
+    frameHeight: number,
+    frameNames: string[]
+): Promise<SpriteSheet> {
+    const image = await loadImage(url);
+    const cols = Math.floor(image.width / frameWidth);
+    const frames = new Map<string, SpriteFrame>();
+
+    frameNames.forEach((name, index) => {
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+        frames.set(name, {
+            x: col * frameWidth,
+            y: row * frameHeight,
+            width: frameWidth,
+            height: frameHeight,
+        });
+    });
+
+    return { image, frames, frameWidth, frameHeight };
+}
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load: ${url}`));
+        img.src = url;
+    });
+}
+```
+
+### Drawing a Sprite from a Sheet (Canvas 2D)
+
+```typescript
+function drawSprite(
+    ctx: CanvasRenderingContext2D,
+    sheet: SpriteSheet,
+    frameName: string,
+    destX: number,
+    destY: number,
+    scale: number = 1
+): void {
+    const frame = sheet.frames.get(frameName);
+    if (!frame) return;
+
+    ctx.drawImage(
+        sheet.image,
+        frame.x, frame.y,               // Source position
+        frame.width, frame.height,       // Source dimensions
+        destX, destY,                    // Destination position
+        frame.width * scale,             // Destination width
+        frame.height * scale             // Destination height
+    );
+}
+```
+
+### Drawing a Sprite from a Sheet (WebGL)
+
+In WebGL, you don't use `drawImage`. Instead, you compute UV coordinates for the sprite's region within the atlas texture:
+
+```typescript
+function getUVs(
+    frame: SpriteFrame,
+    atlasWidth: number,
+    atlasHeight: number
+): { u0: number; v0: number; u1: number; v1: number } {
+    return {
+        u0: frame.x / atlasWidth,
+        v0: frame.y / atlasHeight,
+        u1: (frame.x + frame.width) / atlasWidth,
+        v1: (frame.y + frame.height) / atlasHeight,
+    };
+}
+```
+
+---
+
+## Texture Atlas Formats
+
+### TexturePacker JSON (Hash Format)
+
+The most common atlas format for web games. Generated by TexturePacker, free-tex-packer, and others.
+
+```json
+{
+    "frames": {
+        "player_idle_01.png": {
+            "frame": { "x": 2, "y": 2, "w": 64, "h": 64 },
+            "rotated": false,
+            "trimmed": true,
+            "spriteSourceSize": { "x": 4, "y": 2, "w": 64, "h": 64 },
+            "sourceSize": { "w": 72, "h": 68 }
+        },
+        "player_run_01.png": {
+            "frame": { "x": 68, "y": 2, "w": 72, "h": 68 },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": { "x": 0, "y": 0, "w": 72, "h": 68 },
+            "sourceSize": { "w": 72, "h": 68 }
+        }
+    },
+    "meta": {
+        "app": "https://www.codeandweb.com/texturepacker",
+        "version": "1.1",
+        "image": "spritesheet.png",
+        "format": "RGBA8888",
+        "size": { "w": 1024, "h": 512 },
+        "scale": "1"
+    }
+}
+```
+
+**Key fields:**
+- `frame`: The rectangle in the atlas image where this sprite lives
+- `rotated`: If true, the sprite is rotated 90 degrees CW in the atlas (saves space)
+- `trimmed`: If true, transparent border pixels were removed
+- `spriteSourceSize`: The offset within the original image (accounts for trimming)
+- `sourceSize`: The original image dimensions before trimming
+
+### Handling Trimmed Sprites
+
+Trimming removes transparent borders to save atlas space. When drawing a trimmed sprite, you must offset the draw position:
+
+```typescript
+function drawTrimmedSprite(
+    ctx: CanvasRenderingContext2D,
+    atlas: HTMLImageElement,
+    frame: TexturePackerFrame,
+    destX: number,
+    destY: number
+): void {
+    const { frame: f, spriteSourceSize: sss, sourceSize: ss, trimmed } = frame;
+
+    if (trimmed) {
+        // Offset by the trimmed amount
+        ctx.drawImage(
+            atlas,
+            f.x, f.y, f.w, f.h,           // Source rect in atlas
+            destX + sss.x,                  // Offset for trimmed pixels
+            destY + sss.y,
+            f.w, f.h
+        );
+    } else {
+        ctx.drawImage(
+            atlas,
+            f.x, f.y, f.w, f.h,
+            destX, destY, f.w, f.h
+        );
+    }
+}
+```
+
+### Handling Rotated Sprites
+
+When `rotated: true`, the sprite is stored 90 degrees clockwise in the atlas. You must rotate it back when drawing:
+
+```typescript
+function drawRotatedSprite(
+    ctx: CanvasRenderingContext2D,
+    atlas: HTMLImageElement,
+    frame: TexturePackerFrame,
+    destX: number,
+    destY: number
+): void {
+    const { frame: f, rotated } = frame;
+
+    if (rotated) {
+        ctx.save();
+        ctx.translate(destX + f.h, destY); // Note: w and h are swapped when rotated
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(
+            atlas,
+            f.x, f.y, f.w, f.h,
+            0, 0, f.w, f.h
+        );
+        ctx.restore();
+    } else {
+        ctx.drawImage(atlas, f.x, f.y, f.w, f.h, destX, destY, f.w, f.h);
+    }
+}
+```
+
+### Spine Atlas Format
+
+Spine (skeletal animation tool) uses its own atlas format:
+
+```
+spritesheet.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+player_idle
+  rotate: false
+  xy: 2, 2
+  size: 64, 64
+  orig: 72, 68
+  offset: 4, 2
+  index: -1
+player_run
+  rotate: false
+  xy: 68, 2
+  size: 72, 68
+  orig: 72, 68
+  offset: 0, 0
+  index: -1
+```
+
+### Atlas Format Parsing (TexturePacker JSON)
+
+```typescript
+interface AtlasData {
+    readonly frames: Record<string, {
+        readonly frame: { x: number; y: number; w: number; h: number };
+        readonly rotated: boolean;
+        readonly trimmed: boolean;
+        readonly spriteSourceSize: { x: number; y: number; w: number; h: number };
+        readonly sourceSize: { w: number; h: number };
+    }>;
+    readonly meta: {
+        readonly image: string;
+        readonly size: { w: number; h: number };
+    };
+}
+
+class TextureAtlas {
+    private readonly image: HTMLImageElement;
+    private readonly data: AtlasData;
+
+    constructor(image: HTMLImageElement, data: AtlasData) {
+        this.image = image;
+        this.data = data;
+    }
+
+    getFrame(name: string): AtlasData['frames'][string] | undefined {
+        return this.data.frames[name];
+    }
+
+    getUVs(name: string): { u0: number; v0: number; u1: number; v1: number } | null {
+        const frameData = this.data.frames[name];
+        if (!frameData) return null;
+
+        const { w, h } = this.data.meta.size;
+        const f = frameData.frame;
+
+        return {
+            u0: f.x / w,
+            v0: f.y / h,
+            u1: (f.x + f.w) / w,
+            v1: (f.y + f.h) / h,
+        };
+    }
+
+    getFrameNames(): string[] {
+        return Object.keys(this.data.frames);
+    }
+
+    getAnimationFrames(prefix: string): string[] {
+        return this.getFrameNames()
+            .filter(name => name.startsWith(prefix))
+            .sort();
+    }
+}
+```
+
+---
+
+## Sprite Animation
+
+### Frame-Based Animation
+
+The simplest and most common animation technique for 2D games. An animation is a sequence of sprite frames played in order.
+
+```typescript
+interface AnimationDefinition {
+    readonly name: string;
+    readonly frames: ReadonlyArray<string>; // frame names in the atlas
+    readonly fps: number;
+    readonly loop: boolean;
+}
+
+class SpriteAnimator {
+    private currentAnimation: AnimationDefinition | null = null;
+    private currentFrameIndex: number = 0;
+    private elapsed: number = 0;
+    private playing: boolean = false;
+    private onComplete: (() => void) | null = null;
+
+    private readonly animations: Map<string, AnimationDefinition> = new Map();
+
+    addAnimation(definition: AnimationDefinition): void {
+        this.animations.set(definition.name, definition);
+    }
+
+    play(name: string, onComplete?: () => void): void {
+        const anim = this.animations.get(name);
+        if (!anim) return;
+
+        // Don't restart if already playing this animation
+        if (this.currentAnimation === anim && this.playing) return;
+
+        this.currentAnimation = anim;
+        this.currentFrameIndex = 0;
+        this.elapsed = 0;
+        this.playing = true;
+        this.onComplete = onComplete ?? null;
+    }
+
+    stop(): void {
+        this.playing = false;
+    }
+
+    update(dt: number): void {
+        if (!this.playing || !this.currentAnimation) return;
+
+        this.elapsed += dt;
+        const frameDuration = 1 / this.currentAnimation.fps;
+
+        while (this.elapsed >= frameDuration) {
+            this.elapsed -= frameDuration;
+            this.currentFrameIndex++;
+
+            if (this.currentFrameIndex >= this.currentAnimation.frames.length) {
+                if (this.currentAnimation.loop) {
+                    this.currentFrameIndex = 0;
+                } else {
+                    this.currentFrameIndex = this.currentAnimation.frames.length - 1;
+                    this.playing = false;
+                    this.onComplete?.();
+                    return;
+                }
+            }
+        }
+    }
+
+    getCurrentFrame(): string | null {
+        if (!this.currentAnimation) return null;
+        return this.currentAnimation.frames[this.currentFrameIndex];
+    }
+
+    isPlaying(): boolean {
+        return this.playing;
+    }
+}
+
+// Usage
+const animator = new SpriteAnimator();
+
+animator.addAnimation({
+    name: 'idle',
+    frames: ['idle_01', 'idle_02', 'idle_03', 'idle_04'],
+    fps: 8,
+    loop: true,
+});
+
+animator.addAnimation({
+    name: 'run',
+    frames: ['run_01', 'run_02', 'run_03', 'run_04', 'run_05', 'run_06'],
+    fps: 12,
+    loop: true,
+});
+
+animator.addAnimation({
+    name: 'attack',
+    frames: ['attack_01', 'attack_02', 'attack_03', 'attack_04', 'attack_05'],
+    fps: 15,
+    loop: false,
+});
+
+// In game loop
+animator.play('idle');
+
+function update(dt: number): void {
+    animator.update(dt);
+    const frameName = animator.getCurrentFrame();
+    // Draw the frame from the atlas
+}
+```
+
+### Animation Controller (State Machine)
+
+For characters with multiple animations, a state machine manages transitions:
+
+```typescript
+type AnimationTransition = {
+    readonly from: string;
+    readonly to: string;
+    readonly condition: () => boolean;
+    readonly priority: number;
+};
+
+class AnimationController {
+    private readonly animator: SpriteAnimator;
+    private currentState: string;
+    private readonly transitions: AnimationTransition[] = [];
+
+    constructor(animator: SpriteAnimator, initialState: string) {
+        this.animator = animator;
+        this.currentState = initialState;
+        this.animator.play(initialState);
+    }
+
+    addTransition(transition: AnimationTransition): void {
+        this.transitions.push(transition);
+        // Sort by priority (higher priority first)
+        this.transitions.sort((a, b) => b.priority - a.priority);
+    }
+
+    update(dt: number): void {
+        // Check transitions
+        for (const transition of this.transitions) {
+            if (transition.from === this.currentState && transition.condition()) {
+                this.currentState = transition.to;
+                this.animator.play(transition.to);
+                break;
+            }
+        }
+
+        this.animator.update(dt);
+    }
+
+    getCurrentState(): string {
+        return this.currentState;
+    }
+}
+
+// Usage
+const controller = new AnimationController(animator, 'idle');
+
+controller.addTransition({
+    from: 'idle',
+    to: 'run',
+    condition: () => Math.abs(player.vx) > 0.1,
+    priority: 1,
+});
+
+controller.addTransition({
+    from: 'run',
+    to: 'idle',
+    condition: () => Math.abs(player.vx) <= 0.1,
+    priority: 1,
+});
+
+controller.addTransition({
+    from: 'idle',
+    to: 'jump',
+    condition: () => !player.onGround,
+    priority: 2, // Higher priority than idle→run
+});
+
+controller.addTransition({
+    from: 'run',
+    to: 'jump',
+    condition: () => !player.onGround,
+    priority: 2,
+});
+
+controller.addTransition({
+    from: 'jump',
+    to: 'idle',
+    condition: () => player.onGround && Math.abs(player.vx) <= 0.1,
+    priority: 1,
+});
+
+controller.addTransition({
+    from: 'jump',
+    to: 'run',
+    condition: () => player.onGround && Math.abs(player.vx) > 0.1,
+    priority: 1,
+});
+```
+
+### Playback Speed Control
+
+```typescript
+class SpriteAnimatorWithSpeed {
+    private speed: number = 1.0;
+
+    setSpeed(speed: number): void {
+        this.speed = Math.max(0, speed);
+    }
+
+    update(dt: number): void {
+        if (!this.playing || !this.currentAnimation) return;
+
+        // Apply speed multiplier
+        this.elapsed += dt * this.speed;
+
+        // ... rest of frame advancement logic
+    }
+}
+
+// Match animation speed to movement speed
+const runSpeed = Math.abs(player.vx);
+const normalizedSpeed = runSpeed / MAX_RUN_SPEED; // 0.0 to 1.0+
+animator.setSpeed(normalizedSpeed);
+```
+
+---
+
+## Skeletal Animation
+
+### What Is Skeletal Animation?
+
+Instead of drawing pre-rendered frames, skeletal animation uses a hierarchy of bones to deform a mesh or position sprite parts. The animation defines how bones move over time; the visual is computed in real-time.
+
+```
+Root Bone
+├── Torso
+│   ├── Head
+│   ├── Left Arm
+│   │   ├── Left Forearm
+│   │   └── Left Hand
+│   ├── Right Arm
+│   │   ├── Right Forearm
+│   │   └── Right Hand
+│   ├── Left Leg
+│   │   ├── Left Shin
+│   │   └── Left Foot
+│   └── Right Leg
+│       ├── Right Shin
+│       └── Right Foot
+```
+
+### Spine Runtime
+
+Spine is the industry-standard skeletal animation tool for 2D games. It exports animation data that the Spine runtime plays in your game.
+
+```typescript
+// Spine with PixiJS
+import * as PIXI from 'pixi.js';
+import { Spine } from '@esotericsoftware/spine-pixi-v8';
+
+// Load Spine data
+await PIXI.Assets.load([
+    { alias: 'hero', src: 'hero.json' },
+]);
+
+// Create Spine instance
+const hero = Spine.from({
+    skeleton: 'hero',
+    atlas: 'hero',
+});
+
+hero.x = 400;
+hero.y = 500;
+hero.scale.set(0.5);
+app.stage.addChild(hero);
+
+// Play animation
+hero.state.setAnimation(0, 'idle', true);  // track 0, loop
+
+// Queue animation
+hero.state.addAnimation(0, 'run', true, 0); // starts after current finishes
+
+// Mix (crossfade) between animations
+hero.stateData.setMix('idle', 'run', 0.2);   // 0.2s blend
+hero.stateData.setMix('run', 'idle', 0.3);
+
+// Listen for events
+hero.state.addListener({
+    event: (trackEntry, event) => {
+        if (event.data.name === 'footstep') {
+            playFootstepSound();
+        }
+    },
+    complete: (trackEntry) => {
+        // Animation completed
+    },
+});
+
+// Multiple animation tracks (e.g., walk + shoot simultaneously)
+hero.state.setAnimation(0, 'walk', true);     // Track 0: legs
+hero.state.setAnimation(1, 'aim_gun', true);  // Track 1: upper body
+```
+
+### Spine Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Bone Animation** | Translate, rotate, scale bones with keyframes |
+| **Mesh Deformation** | Warp sprite meshes by moving mesh vertices |
+| **IK Constraints** | Inverse kinematics for realistic arm/leg targeting |
+| **Path Constraints** | Animate objects along a path (Bezier curves) |
+| **Skins** | Swap sprite sets (different costumes, colors) without new animations |
+| **Events** | Trigger callbacks at specific animation frames (footsteps, attack hits) |
+| **Blend Modes** | Per-attachment blend modes (normal, additive, multiply) |
+| **Clipping** | Mask regions using polygon clipping |
+
+### DragonBones
+
+DragonBones is a free alternative to Spine, popular in Asia (used with Cocos Creator and Egret). The API is similar:
+
+```typescript
+// DragonBones with PixiJS
+const factory = dragonBones.PixiFactory.factory;
+
+// Load assets
+factory.parseDragonBonesData(dragonBonesJSON);
+factory.parseTextureAtlasData(textureAtlasJSON, textureAtlasImage);
+
+// Build armature
+const armatureDisplay = factory.buildArmatureDisplay('characterName');
+armatureDisplay.x = 400;
+armatureDisplay.y = 500;
+stage.addChild(armatureDisplay);
+
+// Play animation
+armatureDisplay.animation.play('idle');
+
+// Fade to another animation
+armatureDisplay.animation.fadeIn('run', 0.2);
+```
+
+### Skeletal vs Frame-Based Animation Comparison
+
+| Aspect | Frame-Based | Skeletal (Spine/DragonBones) |
+|--------|------------|------------------------------|
+| **File size** | Large (many frames = many pixels) | Small (bone data is tiny, reuses same images) |
+| **Memory** | Each frame is a separate region in atlas | Base images + small bone data |
+| **Runtime cost** | Very low (just UV swap) | Higher (bone transforms, mesh deformation) |
+| **Visual quality** | Pixel-perfect at intended scale | Smooth at any scale, interpolated |
+| **Animation blending** | Difficult (no in-between frames) | Native (mix any two animations) |
+| **Dynamic behavior** | Impossible (pre-baked) | IK, ragdoll, runtime attachment swapping |
+| **Tool cost** | Free (any image editor) | Spine: $70-300, DragonBones: Free |
+| **Best for** | Pixel art, simple animations, effects | Characters, complex multi-part animations |
+
+---
+
+## Tweening
+
+### What Is Tweening?
+
+Tweening (short for "in-betweening") is the process of generating intermediate values between a start and end value over time. It's used for smooth animations: position changes, scale changes, opacity fades, color transitions.
+
+### Easing Functions
+
+Easing functions map a linear progress value `t` (0 to 1) to a curved output value. They control the "feel" of an animation.
+
+```typescript
+// t: progress from 0.0 to 1.0
+// Returns: eased value from 0.0 to 1.0
+
+const Easing = {
+    // Linear — constant speed
+    linear: (t: number): number => t,
+
+    // Quadratic
+    easeInQuad: (t: number): number => t * t,
+    easeOutQuad: (t: number): number => t * (2 - t),
+    easeInOutQuad: (t: number): number =>
+        t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+
+    // Cubic
+    easeInCubic: (t: number): number => t * t * t,
+    easeOutCubic: (t: number): number => {
+        const t1 = t - 1;
+        return t1 * t1 * t1 + 1;
+    },
+    easeInOutCubic: (t: number): number =>
+        t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
+
+    // Quartic
+    easeInQuart: (t: number): number => t * t * t * t,
+    easeOutQuart: (t: number): number => {
+        const t1 = t - 1;
+        return 1 - t1 * t1 * t1 * t1;
+    },
+
+    // Sinusoidal
+    easeInSine: (t: number): number => 1 - Math.cos((t * Math.PI) / 2),
+    easeOutSine: (t: number): number => Math.sin((t * Math.PI) / 2),
+    easeInOutSine: (t: number): number => -(Math.cos(Math.PI * t) - 1) / 2,
+
+    // Exponential
+    easeInExpo: (t: number): number =>
+        t === 0 ? 0 : Math.pow(2, 10 * (t - 1)),
+    easeOutExpo: (t: number): number =>
+        t === 1 ? 1 : 1 - Math.pow(2, -10 * t),
+
+    // Circular
+    easeInCirc: (t: number): number => 1 - Math.sqrt(1 - t * t),
+    easeOutCirc: (t: number): number => Math.sqrt(1 - (t - 1) * (t - 1)),
+
+    // Back (overshoots slightly, then returns)
+    easeInBack: (t: number): number => {
+        const s = 1.70158;
+        return t * t * ((s + 1) * t - s);
+    },
+    easeOutBack: (t: number): number => {
+        const s = 1.70158;
+        const t1 = t - 1;
+        return t1 * t1 * ((s + 1) * t1 + s) + 1;
+    },
+
+    // Elastic (spring-like oscillation)
+    easeOutElastic: (t: number): number => {
+        if (t === 0 || t === 1) return t;
+        return Math.pow(2, -10 * t) * Math.sin((t - 0.075) * (2 * Math.PI) / 0.3) + 1;
+    },
+    easeInElastic: (t: number): number => {
+        if (t === 0 || t === 1) return t;
+        return -Math.pow(2, 10 * (t - 1)) * Math.sin((t - 1.075) * (2 * Math.PI) / 0.3);
+    },
+
+    // Bounce (like a ball bouncing)
+    easeOutBounce: (t: number): number => {
+        if (t < 1 / 2.75) {
+            return 7.5625 * t * t;
+        } else if (t < 2 / 2.75) {
+            const t1 = t - 1.5 / 2.75;
+            return 7.5625 * t1 * t1 + 0.75;
+        } else if (t < 2.5 / 2.75) {
+            const t1 = t - 2.25 / 2.75;
+            return 7.5625 * t1 * t1 + 0.9375;
+        } else {
+            const t1 = t - 2.625 / 2.75;
+            return 7.5625 * t1 * t1 + 0.984375;
+        }
+    },
+    easeInBounce: (t: number): number =>
+        1 - Easing.easeOutBounce(1 - t),
+} as const;
+```
+
+### Math Behind Common Easing Functions
+
+```
+Linear:        f(t) = t
+EaseInQuad:    f(t) = t^2
+EaseOutQuad:   f(t) = 1 - (1-t)^2 = t(2-t)
+EaseInCubic:   f(t) = t^3
+EaseOutCubic:  f(t) = 1 - (1-t)^3
+
+EaseIn:   slow start, fast end    → apply power to t
+EaseOut:  fast start, slow end    → apply power to (1-t), invert
+EaseInOut: slow start and end     → combine EaseIn and EaseOut at t=0.5
+
+General pattern:
+  EaseIn(t)    = pow(t, n)
+  EaseOut(t)   = 1 - pow(1 - t, n)
+  EaseInOut(t) = t < 0.5
+                   ? pow(2, n-1) * pow(t, n)
+                   : 1 - pow(-2*t + 2, n) / 2
+```
+
+### Visualization
+
+```
+Linear:      ──────────────/
+EaseInQuad:  ─────────────╱
+EaseOutQuad: ╱──────────────
+EaseInOut:   ────────╱──────
+Back:        ────────╱╲─────  (overshoots)
+Elastic:     ──╱╲╱╲╱────────  (oscillates)
+Bounce:      ──╱╲╱╲╱╲───────  (bounces)
+```
+
+### Tween Engine
+
+```typescript
+type EasingFunction = (t: number) => number;
+
+interface TweenConfig {
+    readonly target: Record<string, number>;
+    readonly properties: Record<string, number>; // property name → target value
+    readonly duration: number;
+    readonly ease?: EasingFunction;
+    readonly delay?: number;
+    readonly yoyo?: boolean;
+    readonly repeat?: number;     // -1 for infinite
+    readonly onUpdate?: (progress: number) => void;
+    readonly onComplete?: () => void;
+}
+
+class Tween {
+    private readonly target: Record<string, number>;
+    private readonly startValues: Record<string, number>;
+    private readonly endValues: Record<string, number>;
+    private readonly duration: number;
+    private readonly ease: EasingFunction;
+    private readonly delay: number;
+    private readonly yoyo: boolean;
+    private readonly repeatCount: number;
+    private readonly onUpdate: ((progress: number) => void) | null;
+    private readonly onComplete: (() => void) | null;
+
+    private elapsed: number = 0;
+    private delayRemaining: number;
+    private currentRepeat: number = 0;
+    private forward: boolean = true;
+    private finished: boolean = false;
+
+    constructor(config: TweenConfig) {
+        this.target = config.target;
+        this.endValues = { ...config.properties };
+        this.startValues = {};
+        this.duration = config.duration;
+        this.ease = config.ease ?? Easing.linear;
+        this.delay = config.delay ?? 0;
+        this.delayRemaining = this.delay;
+        this.yoyo = config.yoyo ?? false;
+        this.repeatCount = config.repeat ?? 0;
+        this.onUpdate = config.onUpdate ?? null;
+        this.onComplete = config.onComplete ?? null;
+
+        // Capture start values
+        for (const prop of Object.keys(this.endValues)) {
+            this.startValues[prop] = this.target[prop];
+        }
+    }
+
+    update(dt: number): boolean {
+        if (this.finished) return true;
+
+        // Handle delay
+        if (this.delayRemaining > 0) {
+            this.delayRemaining -= dt;
+            return false;
+        }
+
+        this.elapsed += dt;
+        let rawT = Math.min(this.elapsed / this.duration, 1);
+
+        // Handle yoyo direction
+        const t = this.forward ? rawT : 1 - rawT;
+        const easedT = this.ease(t);
+
+        // Apply values
+        for (const prop of Object.keys(this.endValues)) {
+            const start = this.startValues[prop];
+            const end = this.endValues[prop];
+            this.target[prop] = start + (end - start) * easedT;
+        }
+
+        this.onUpdate?.(easedT);
+
+        // Check completion
+        if (rawT >= 1) {
+            if (this.yoyo && this.forward) {
+                // Start going backward
+                this.forward = false;
+                this.elapsed = 0;
+            } else if (this.repeatCount === -1 || this.currentRepeat < this.repeatCount) {
+                // Repeat
+                this.currentRepeat++;
+                this.forward = true;
+                this.elapsed = 0;
+            } else {
+                this.finished = true;
+                this.onComplete?.();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    isFinished(): boolean {
+        return this.finished;
+    }
+}
+```
+
+---
+
+## Tween Chaining and Advanced Patterns
+
+### Sequential Tweens (Timeline)
+
+```typescript
+class TweenTimeline {
+    private readonly tweens: Array<{ tween: Tween; startTime: number }> = [];
+    private totalDuration: number = 0;
+    private elapsed: number = 0;
+    private currentIndex: number = 0;
+
+    append(config: TweenConfig): TweenTimeline {
+        const tween = new Tween(config);
+        this.tweens.push({ tween, startTime: this.totalDuration });
+        this.totalDuration += (config.delay ?? 0) + config.duration;
+        return this; // chainable
+    }
+
+    update(dt: number): boolean {
+        if (this.currentIndex >= this.tweens.length) return true;
+
+        const entry = this.tweens[this.currentIndex];
+        const finished = entry.tween.update(dt);
+
+        if (finished) {
+            this.currentIndex++;
+        }
+
+        return this.currentIndex >= this.tweens.length;
+    }
+}
+
+// Usage: sequential animation
+const timeline = new TweenTimeline();
+timeline
+    .append({
+        target: sprite,
+        properties: { x: 400 },
+        duration: 0.5,
+        ease: Easing.easeOutQuad,
+    })
+    .append({
+        target: sprite,
+        properties: { y: 300, scaleX: 1.5, scaleY: 1.5 },
+        duration: 0.3,
+        ease: Easing.easeOutBack,
+    })
+    .append({
+        target: sprite,
+        properties: { alpha: 0 },
+        duration: 0.2,
+        ease: Easing.easeInQuad,
+    });
+```
+
+### Parallel Tweens
+
+```typescript
+class TweenGroup {
+    private readonly tweens: Tween[] = [];
+
+    add(config: TweenConfig): TweenGroup {
+        this.tweens.push(new Tween(config));
+        return this;
+    }
+
+    update(dt: number): boolean {
+        let allFinished = true;
+
+        for (const tween of this.tweens) {
+            if (!tween.isFinished()) {
+                tween.update(dt);
+                if (!tween.isFinished()) {
+                    allFinished = false;
+                }
+            }
+        }
+
+        return allFinished;
+    }
+}
+
+// Usage: parallel animations
+const group = new TweenGroup();
+group
+    .add({
+        target: sprite,
+        properties: { x: 400, y: 300 },
+        duration: 1,
+        ease: Easing.easeInOutCubic,
+    })
+    .add({
+        target: sprite,
+        properties: { rotation: Math.PI * 2 },
+        duration: 1,
+        ease: Easing.linear,
+    })
+    .add({
+        target: sprite,
+        properties: { alpha: 0 },
+        duration: 0.5,
+        delay: 0.5, // Starts 0.5s after the others
+        ease: Easing.easeInQuad,
+    });
+```
+
+### Yoyo and Repeat
+
+```typescript
+// Pulsing scale effect (infinite yoyo)
+const pulse = new Tween({
+    target: sprite,
+    properties: { scaleX: 1.2, scaleY: 1.2 },
+    duration: 0.5,
+    ease: Easing.easeInOutSine,
+    yoyo: true,
+    repeat: -1, // Infinite
+});
+
+// Bouncing (repeat without yoyo)
+const bounce = new Tween({
+    target: sprite,
+    properties: { y: sprite.y - 100 },
+    duration: 0.3,
+    ease: Easing.easeOutQuad,
+    yoyo: true,
+    repeat: 3, // Bounce 3 times
+});
+```
+
+### Common Animation Patterns
+
+```typescript
+// Pop-in effect
+function popIn(sprite: { scaleX: number; scaleY: number; alpha: number }): Tween {
+    sprite.scaleX = 0;
+    sprite.scaleY = 0;
+    sprite.alpha = 0;
+
+    return new Tween({
+        target: sprite,
+        properties: { scaleX: 1, scaleY: 1, alpha: 1 },
+        duration: 0.4,
+        ease: Easing.easeOutBack,
+    });
+}
+
+// Shake effect (for damage feedback)
+function shake(
+    sprite: { x: number },
+    intensity: number = 5,
+    duration: number = 0.3
+): void {
+    const originalX = sprite.x;
+    let elapsed = 0;
+
+    // Register a per-frame updater
+    function update(dt: number): boolean {
+        elapsed += dt;
+        if (elapsed >= duration) {
+            sprite.x = originalX;
+            return true; // done
+        }
+
+        const progress = elapsed / duration;
+        const decay = 1 - progress; // Reduce intensity over time
+        sprite.x = originalX + (Math.random() - 0.5) * 2 * intensity * decay;
+        return false;
+    }
+
+    tweenManager.addCustomUpdate(update);
+}
+
+// Floating/hovering effect
+function float(sprite: { y: number }, amplitude: number = 10): Tween {
+    const baseY = sprite.y;
+    return new Tween({
+        target: sprite,
+        properties: { y: baseY - amplitude },
+        duration: 1.5,
+        ease: Easing.easeInOutSine,
+        yoyo: true,
+        repeat: -1,
+    });
+}
+```
+
+---
+
+## Particle Systems
+
+### Architecture
+
+A particle system consists of:
+1. **Emitter**: Defines where and how particles are created
+2. **Particle**: Individual element with position, velocity, life, color, size
+3. **Forces**: Gravity, wind, attraction/repulsion
+4. **Renderer**: Draws all particles (typically as textured quads)
+
+```typescript
+interface Particle {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    life: number;
+    maxLife: number;
+    size: number;
+    sizeEnd: number;
+    rotation: number;
+    rotationSpeed: number;
+    color: number;       // 0xRRGGBB
+    alpha: number;
+    alphaEnd: number;
+    active: boolean;
+}
+
+interface EmitterConfig {
+    readonly x: number;
+    readonly y: number;
+    readonly rate: number;               // Particles per second
+    readonly maxParticles: number;
+    readonly lifetime: { min: number; max: number };
+    readonly speed: { min: number; max: number };
+    readonly angle: { min: number; max: number };  // Radians
+    readonly size: { start: number; end: number };
+    readonly alpha: { start: number; end: number };
+    readonly color: { start: number; end: number };
+    readonly gravity: { x: number; y: number };
+    readonly spread: { x: number; y: number };     // Random offset from emitter position
+}
+
+class ParticleEmitter {
+    private readonly particles: Particle[];
+    private readonly config: EmitterConfig;
+    private emitAccumulator: number = 0;
+    private activeCount: number = 0;
+
+    constructor(config: EmitterConfig) {
+        this.config = config;
+        this.particles = [];
+
+        // Pre-allocate particle pool
+        for (let i = 0; i < config.maxParticles; i++) {
+            this.particles.push(this.createDeadParticle());
+        }
+    }
+
+    private createDeadParticle(): Particle {
+        return {
+            x: 0, y: 0, vx: 0, vy: 0,
+            life: 0, maxLife: 1,
+            size: 1, sizeEnd: 0,
+            rotation: 0, rotationSpeed: 0,
+            color: 0xFFFFFF, alpha: 1, alphaEnd: 0,
+            active: false,
+        };
+    }
+
+    private emit(): void {
+        // Find a dead particle to reuse
+        const particle = this.particles.find(p => !p.active);
+        if (!particle) return;
+
+        const cfg = this.config;
+
+        // Random angle and speed
+        const angle = randomRange(cfg.angle.min, cfg.angle.max);
+        const speed = randomRange(cfg.speed.min, cfg.speed.max);
+
+        // Initialize particle
+        particle.x = cfg.x + randomRange(-cfg.spread.x, cfg.spread.x);
+        particle.y = cfg.y + randomRange(-cfg.spread.y, cfg.spread.y);
+        particle.vx = Math.cos(angle) * speed;
+        particle.vy = Math.sin(angle) * speed;
+        particle.life = randomRange(cfg.lifetime.min, cfg.lifetime.max);
+        particle.maxLife = particle.life;
+        particle.size = cfg.size.start;
+        particle.sizeEnd = cfg.size.end;
+        particle.alpha = cfg.alpha.start;
+        particle.alphaEnd = cfg.alpha.end;
+        particle.rotation = Math.random() * Math.PI * 2;
+        particle.rotationSpeed = (Math.random() - 0.5) * 3;
+        particle.color = cfg.color.start;
+        particle.active = true;
+
+        this.activeCount++;
+    }
+
+    update(dt: number): void {
+        const cfg = this.config;
+
+        // Emit new particles
+        this.emitAccumulator += cfg.rate * dt;
+        while (this.emitAccumulator >= 1) {
+            this.emit();
+            this.emitAccumulator -= 1;
+        }
+
+        // Update existing particles
+        for (const p of this.particles) {
+            if (!p.active) continue;
+
+            // Apply forces
+            p.vx += cfg.gravity.x * dt;
+            p.vy += cfg.gravity.y * dt;
+
+            // Update position
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+
+            // Update life
+            p.life -= dt;
+            if (p.life <= 0) {
+                p.active = false;
+                this.activeCount--;
+                continue;
+            }
+
+            // Interpolate properties over lifetime
+            const lifeRatio = 1 - (p.life / p.maxLife); // 0 at birth, 1 at death
+            p.size = cfg.size.start + (cfg.size.end - cfg.size.start) * lifeRatio;
+            p.alpha = cfg.alpha.start + (cfg.alpha.end - cfg.alpha.start) * lifeRatio;
+            p.rotation += p.rotationSpeed * dt;
+        }
+    }
+
+    getActiveParticles(): ReadonlyArray<Particle> {
+        return this.particles.filter(p => p.active);
+    }
+
+    getActiveCount(): number {
+        return this.activeCount;
+    }
+}
+
+function randomRange(min: number, max: number): number {
+    return min + Math.random() * (max - min);
+}
+```
+
+---
+
+## Common Visual Effects
+
+### Fire
+
+```typescript
+const fireConfig: EmitterConfig = {
+    x: 400,
+    y: 500,
+    rate: 50,                           // 50 particles/sec
+    maxParticles: 200,
+    lifetime: { min: 0.3, max: 0.8 },
+    speed: { min: 50, max: 150 },
+    angle: { min: -Math.PI * 0.7, max: -Math.PI * 0.3 }, // Upward
+    size: { start: 20, end: 2 },
+    alpha: { start: 0.8, end: 0 },
+    color: { start: 0xFF4400, end: 0xFFFF00 },
+    gravity: { x: 0, y: -50 },         // Slight upward drift
+    spread: { x: 15, y: 5 },
+};
+// Use additive blending: gl.blendFunc(gl.ONE, gl.ONE)
+```
+
+### Smoke
+
+```typescript
+const smokeConfig: EmitterConfig = {
+    x: 400,
+    y: 500,
+    rate: 10,
+    maxParticles: 100,
+    lifetime: { min: 1, max: 3 },
+    speed: { min: 20, max: 60 },
+    angle: { min: -Math.PI * 0.65, max: -Math.PI * 0.35 },
+    size: { start: 10, end: 60 },       // Grows as it rises
+    alpha: { start: 0.4, end: 0 },
+    color: { start: 0x888888, end: 0xCCCCCC },
+    gravity: { x: 0, y: -30 },
+    spread: { x: 10, y: 5 },
+};
+// Use normal blending
+```
+
+### Sparkle/Twinkle
+
+```typescript
+const sparkleConfig: EmitterConfig = {
+    x: 400,
+    y: 300,
+    rate: 30,
+    maxParticles: 100,
+    lifetime: { min: 0.3, max: 0.7 },
+    speed: { min: 10, max: 80 },
+    angle: { min: 0, max: Math.PI * 2 }, // All directions
+    size: { start: 8, end: 0 },
+    alpha: { start: 1, end: 0 },
+    color: { start: 0xFFFFFF, end: 0xFFFF88 },
+    gravity: { x: 0, y: 0 },
+    spread: { x: 30, y: 30 },
+};
+// Use additive blending for glow effect
+```
+
+### Explosion
+
+```typescript
+function createExplosion(x: number, y: number): ParticleEmitter {
+    const config: EmitterConfig = {
+        x,
+        y,
+        rate: 0,  // Burst mode — emit all at once
+        maxParticles: 100,
+        lifetime: { min: 0.3, max: 1.0 },
+        speed: { min: 100, max: 400 },
+        angle: { min: 0, max: Math.PI * 2 },
+        size: { start: 15, end: 3 },
+        alpha: { start: 1, end: 0 },
+        color: { start: 0xFF8800, end: 0xFF0000 },
+        gravity: { x: 0, y: 200 },
+        spread: { x: 5, y: 5 },
+    };
+
+    const emitter = new ParticleEmitter(config);
+
+    // Burst: emit all particles immediately
+    for (let i = 0; i < 100; i++) {
+        emitter.update(0); // emit without advancing time
+    }
+
+    return emitter;
+}
+```
+
+### Confetti
+
+```typescript
+const confettiConfig: EmitterConfig = {
+    x: 400,
+    y: -20,  // Above screen
+    rate: 40,
+    maxParticles: 200,
+    lifetime: { min: 2, max: 4 },
+    speed: { min: 50, max: 150 },
+    angle: { min: Math.PI * 0.3, max: Math.PI * 0.7 }, // Downward
+    size: { start: 8, end: 8 },           // Constant size
+    alpha: { start: 1, end: 0.5 },
+    color: { start: 0xFF0000, end: 0x0000FF }, // Multiple colors (handled differently)
+    gravity: { x: 0, y: 100 },
+    spread: { x: 400, y: 0 },              // Full width
+};
+
+// For multi-color confetti, assign random colors per particle at emission:
+// particle.color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+// const CONFETTI_COLORS = [0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0xFF00FF, 0x00FFFF];
+```
+
+---
+
+## Shader Effects
+
+### Glow Effect
+
+```glsl
+// Fragment shader: glow/bloom effect
+precision mediump float;
+
+varying vec2 v_texCoord;
+uniform sampler2D u_texture;
+uniform float u_glowSize;
+uniform vec3 u_glowColor;
+uniform float u_glowIntensity;
+
+void main() {
+    vec4 texColor = texture2D(u_texture, v_texCoord);
+
+    // Sample surrounding pixels for blur
+    float totalAlpha = 0.0;
+    float samples = 0.0;
+
+    for (float x = -4.0; x <= 4.0; x += 1.0) {
+        for (float y = -4.0; y <= 4.0; y += 1.0) {
+            vec2 offset = vec2(x, y) * u_glowSize;
+            totalAlpha += texture2D(u_texture, v_texCoord + offset).a;
+            samples += 1.0;
+        }
+    }
+
+    float avgAlpha = totalAlpha / samples;
+    vec4 glow = vec4(u_glowColor, avgAlpha * u_glowIntensity);
+
+    // Composite: glow behind original
+    gl_FragColor = mix(glow, texColor, texColor.a);
+}
+```
+
+### Dissolve Effect
+
+```glsl
+// Fragment shader: dissolve using noise texture
+precision mediump float;
+
+varying vec2 v_texCoord;
+uniform sampler2D u_texture;
+uniform sampler2D u_noise;       // Grayscale noise texture
+uniform float u_threshold;       // 0.0 (fully visible) to 1.0 (fully dissolved)
+uniform vec3 u_edgeColor;        // Color of dissolve edge
+uniform float u_edgeWidth;
+
+void main() {
+    vec4 texColor = texture2D(u_texture, v_texCoord);
+    float noiseValue = texture2D(u_noise, v_texCoord).r;
+
+    // Discard pixels below threshold
+    if (noiseValue < u_threshold) {
+        discard;
+    }
+
+    // Edge glow near the dissolve boundary
+    float edgeDistance = noiseValue - u_threshold;
+    if (edgeDistance < u_edgeWidth) {
+        float edgeFactor = 1.0 - (edgeDistance / u_edgeWidth);
+        texColor.rgb = mix(texColor.rgb, u_edgeColor, edgeFactor);
+    }
+
+    gl_FragColor = texColor;
+}
+```
+
+### Color Shift / Hue Rotation
+
+```glsl
+precision mediump float;
+
+varying vec2 v_texCoord;
+uniform sampler2D u_texture;
+uniform float u_hueShift;  // Radians
+
+vec3 rgb2hsv(vec3 c) {
+    vec4 K = vec4(0.0, -1.0/3.0, 2.0/3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+void main() {
+    vec4 color = texture2D(u_texture, v_texCoord);
+    vec3 hsv = rgb2hsv(color.rgb);
+    hsv.x = fract(hsv.x + u_hueShift / (2.0 * 3.14159));
+    color.rgb = hsv2rgb(hsv);
+    gl_FragColor = color;
+}
+```
+
+### Outline Effect
+
+```glsl
+precision mediump float;
+
+varying vec2 v_texCoord;
+uniform sampler2D u_texture;
+uniform vec2 u_texelSize;     // 1.0 / textureSize
+uniform vec3 u_outlineColor;
+uniform float u_outlineWidth;
+
+void main() {
+    vec4 texColor = texture2D(u_texture, v_texCoord);
+
+    if (texColor.a > 0.1) {
+        // Inside the sprite — draw normally
+        gl_FragColor = texColor;
+        return;
+    }
+
+    // Outside the sprite — check if we're near the edge
+    float maxAlpha = 0.0;
+    for (float x = -1.0; x <= 1.0; x += 1.0) {
+        for (float y = -1.0; y <= 1.0; y += 1.0) {
+            vec2 offset = vec2(x, y) * u_texelSize * u_outlineWidth;
+            maxAlpha = max(maxAlpha, texture2D(u_texture, v_texCoord + offset).a);
+        }
+    }
+
+    if (maxAlpha > 0.1) {
+        gl_FragColor = vec4(u_outlineColor, maxAlpha);
+    } else {
+        gl_FragColor = vec4(0.0);
+    }
+}
+```
+
+### CRT / Retro Effect
+
+```glsl
+precision mediump float;
+
+varying vec2 v_texCoord;
+uniform sampler2D u_texture;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+void main() {
+    vec2 uv = v_texCoord;
+
+    // Barrel distortion
+    vec2 center = uv - 0.5;
+    float dist = length(center);
+    uv = uv + center * dist * dist * 0.15;
+
+    // Scanlines
+    float scanline = sin(uv.y * u_resolution.y * 3.14159) * 0.04;
+
+    // Chromatic aberration
+    float r = texture2D(u_texture, uv + vec2(0.002, 0.0)).r;
+    float g = texture2D(u_texture, uv).g;
+    float b = texture2D(u_texture, uv - vec2(0.002, 0.0)).b;
+
+    vec3 color = vec3(r, g, b);
+    color -= scanline;
+
+    // Vignette
+    float vignette = 1.0 - dist * 1.5;
+    color *= vignette;
+
+    // Flicker
+    color *= 0.95 + 0.05 * sin(u_time * 15.0);
+
+    gl_FragColor = vec4(color, 1.0);
+}
+```
+
+---
+
+## Atlas Packing Algorithms
+
+### Why Custom Packing?
+
+For playable ads and custom engines, you may need to pack sprites at build time or even at runtime. Understanding packing algorithms helps you choose and tune the right approach.
+
+### MaxRects Algorithm
+
+The MaxRects algorithm is the most popular for texture atlas packing. It maintains a list of free rectangles and places each sprite in the best-fitting free rectangle.
+
+```typescript
+interface Rect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+class MaxRectsPacker {
+    private readonly width: number;
+    private readonly height: number;
+    private readonly freeRects: Rect[];
+    private readonly usedRects: Array<Rect & { name: string }>;
+
+    constructor(width: number, height: number) {
+        this.width = width;
+        this.height = height;
+        this.freeRects = [{ x: 0, y: 0, width, height }];
+        this.usedRects = [];
+    }
+
+    insert(name: string, rectWidth: number, rectHeight: number): Rect | null {
+        // Find the best free rect to place this sprite
+        let bestRect: Rect | null = null;
+        let bestScore = Infinity;
+        let bestIndex = -1;
+
+        for (let i = 0; i < this.freeRects.length; i++) {
+            const free = this.freeRects[i];
+
+            if (rectWidth <= free.width && rectHeight <= free.height) {
+                // Best Short Side Fit heuristic
+                const leftoverX = free.width - rectWidth;
+                const leftoverY = free.height - rectHeight;
+                const score = Math.min(leftoverX, leftoverY);
+
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestRect = {
+                        x: free.x,
+                        y: free.y,
+                        width: rectWidth,
+                        height: rectHeight,
+                    };
+                    bestIndex = i;
+                }
+            }
+        }
+
+        if (!bestRect) return null; // Doesn't fit
+
+        // Place the rect
+        this.usedRects.push({ ...bestRect, name });
+
+        // Split the free rect
+        this.splitFreeRect(bestIndex, bestRect);
+
+        // Prune overlapping free rects
+        this.pruneFreeRects();
+
+        return bestRect;
+    }
+
+    private splitFreeRect(freeIndex: number, placed: Rect): void {
+        const free = this.freeRects[freeIndex];
+
+        // Remove the used free rect
+        this.freeRects.splice(freeIndex, 1);
+
+        // Right remainder
+        if (placed.x + placed.width < free.x + free.width) {
+            this.freeRects.push({
+                x: placed.x + placed.width,
+                y: free.y,
+                width: (free.x + free.width) - (placed.x + placed.width),
+                height: free.height,
+            });
+        }
+
+        // Bottom remainder
+        if (placed.y + placed.height < free.y + free.height) {
+            this.freeRects.push({
+                x: free.x,
+                y: placed.y + placed.height,
+                width: free.width,
+                height: (free.y + free.height) - (placed.y + placed.height),
+            });
+        }
+    }
+
+    private pruneFreeRects(): void {
+        // Remove free rects that are fully contained by another free rect
+        for (let i = 0; i < this.freeRects.length; i++) {
+            for (let j = i + 1; j < this.freeRects.length; j++) {
+                if (this.contains(this.freeRects[i], this.freeRects[j])) {
+                    this.freeRects.splice(j, 1);
+                    j--;
+                } else if (this.contains(this.freeRects[j], this.freeRects[i])) {
+                    this.freeRects.splice(i, 1);
+                    i--;
+                    break;
+                }
+            }
+        }
+    }
+
+    private contains(outer: Rect, inner: Rect): boolean {
+        return (
+            inner.x >= outer.x &&
+            inner.y >= outer.y &&
+            inner.x + inner.width <= outer.x + outer.width &&
+            inner.y + inner.height <= outer.y + outer.height
+        );
+    }
+
+    getUsedRects(): ReadonlyArray<Rect & { name: string }> {
+        return this.usedRects;
+    }
+
+    getOccupancy(): number {
+        const usedArea = this.usedRects.reduce(
+            (sum, r) => sum + r.width * r.height, 0
+        );
+        return usedArea / (this.width * this.height);
+    }
+}
+```
+
+### Guillotine Algorithm
+
+Simpler than MaxRects. Each placement splits the free rectangle into two non-overlapping rectangles (like a guillotine cut).
+
+```
+Before:                After placing A:
+┌────────────┐         ┌──┬─────────┐
+│            │         │A │    R    │
+│   Free     │   →     ├──┘         │
+│            │         │     B      │
+└────────────┘         └────────────┘
+
+A = placed sprite
+R = right remainder (new free rect)
+B = bottom remainder (new free rect)
+```
+
+**MaxRects vs Guillotine:**
+
+| Aspect | MaxRects | Guillotine |
+|--------|----------|------------|
+| Packing efficiency | Better (90-95%) | Good (85-90%) |
+| Speed | Slower (more free rects to check) | Faster (simpler splits) |
+| Implementation | More complex | Simpler |
+| Memory | More free rects in memory | Fewer free rects |
+| Use case | Production atlas packing | Runtime packing, simple cases |
+
+### Packing Tips
+
+1. **Sort sprites by height** (tallest first) before packing — improves occupancy
+2. **Allow rotation**: rotating sprites 90 degrees can improve packing by 5-15%
+3. **Add padding**: 1-2px between sprites prevents texture bleeding during filtering
+4. **Power of two**: Make atlas dimensions power-of-two for WebGL1 compatibility
+5. **Multiple atlases**: If sprites don't fit in one atlas, use multiple. Group sprites that appear together.
+
+---
+
+## Performance
+
+### Texture Memory Budgets
+
+```
+Texture Memory = Width x Height x Bytes Per Pixel
+
+RGBA (4 bytes/pixel):
+  256x256   = 256 KB
+  512x512   = 1 MB
+  1024x1024 = 4 MB
+  2048x2048 = 16 MB
+  4096x4096 = 64 MB
+
+With mipmaps (1.33x base):
+  2048x2048 + mipmaps = ~21.3 MB
+  4096x4096 + mipmaps = ~85.3 MB
+```
+
+**Budget guidelines:**
+- Mobile games: 50-100 MB total texture memory
+- Desktop games: 200-500 MB
+- Playable ads: 10-30 MB (few small atlases)
+
+### Sprite Batching Performance
+
+| Scenario | Draw Calls | Performance |
+|----------|-----------|-------------|
+| 1000 sprites, 1 atlas | 1 | Excellent |
+| 1000 sprites, 5 atlases (sorted) | 5 | Great |
+| 1000 sprites, 5 atlases (unsorted) | 50-200 | Poor (frequent texture switches) |
+| 1000 sprites, 1000 textures | 1000 | Terrible |
+
+**Key rule:** Minimize texture switches. Sort sprites by texture before rendering. Use as few atlases as possible.
+
+### Atlas Size Limits
+
+```typescript
+function getMaxTextureSize(gl: WebGLRenderingContext): number {
+    return gl.getParameter(gl.MAX_TEXTURE_SIZE);
+}
+
+// Common values:
+// Low-end mobile:  2048
+// Mid-range mobile: 4096
+// Desktop:         8192 or 16384
+
+// Safe defaults for cross-platform:
+// 2048x2048 — works everywhere
+// 4096x4096 — works on 95%+ of devices
+```
+
+### Sprite Count Optimization Strategies
+
+For games with many sprites (1000+):
+
+1. **Object pooling**: Pre-allocate sprite objects and reuse them instead of creating/destroying.
+
+```typescript
+class SpritePool {
+    private readonly pool: Sprite[] = [];
+    private activeCount: number = 0;
+
+    constructor(maxSize: number) {
+        for (let i = 0; i < maxSize; i++) {
+            const sprite = new Sprite();
+            sprite.active = false;
+            this.pool.push(sprite);
+        }
+    }
+
+    acquire(): Sprite | null {
+        if (this.activeCount >= this.pool.length) return null;
+
+        const sprite = this.pool[this.activeCount];
+        sprite.active = true;
+        this.activeCount++;
+        return sprite;
+    }
+
+    release(sprite: Sprite): void {
+        sprite.active = false;
+        // Swap with last active sprite for contiguous active array
+        const index = this.pool.indexOf(sprite);
+        if (index < this.activeCount - 1) {
+            this.pool[index] = this.pool[this.activeCount - 1];
+            this.pool[this.activeCount - 1] = sprite;
+        }
+        this.activeCount--;
+    }
+
+    getActiveSprites(): ReadonlyArray<Sprite> {
+        return this.pool.slice(0, this.activeCount);
+    }
+}
+```
+
+2. **Frustum culling**: Only render sprites visible on screen.
+
+```typescript
+function isOnScreen(
+    spriteX: number, spriteY: number,
+    spriteW: number, spriteH: number,
+    cameraX: number, cameraY: number,
+    screenW: number, screenH: number
+): boolean {
+    return (
+        spriteX + spriteW > cameraX &&
+        spriteX < cameraX + screenW &&
+        spriteY + spriteH > cameraY &&
+        spriteY < cameraY + screenH
+    );
+}
+```
+
+3. **Level-of-detail (LOD)**: Use simpler sprites when far from camera. In a zoomed-out strategy game, individual unit details don't matter — use colored dots instead of detailed sprites.
+
+4. **Instanced rendering** (WebGL2): For many identical sprites (particles, bullets), use instanced drawing instead of sprite batching. One quad mesh drawn thousands of times with per-instance transforms.
+
+### Measuring Texture Memory Usage
+
+```typescript
+function estimateTotalTextureMemory(atlases: Array<{
+    width: number;
+    height: number;
+    hasMipmaps: boolean;
+}>): number {
+    let total = 0;
+
+    for (const atlas of atlases) {
+        const base = atlas.width * atlas.height * 4; // RGBA
+        total += atlas.hasMipmaps ? Math.ceil(base * 1.33) : base;
+    }
+
+    return total;
+}
+
+// Display in MB
+function formatBytes(bytes: number): string {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+```
+
+---
+
+## Interview Questions
+
+### Q1: Explain the benefits of using a texture atlas versus individual image files. Quantify the performance impact.
+
+**A:** A texture atlas provides three main benefits:
+
+1. **Fewer HTTP requests**: Loading 100 individual sprites requires 100 HTTP requests. Each request has overhead: DNS lookup (~1ms cached), TCP handshake (~1 RTT), TLS handshake (~1 RTT), request/response headers (~500B each), and server processing time. On mobile 4G with 50ms RTT, 100 requests add ~5-10 seconds of loading time versus ~200ms for a single atlas.
+
+2. **Fewer draw calls**: In WebGL, switching textures forces a batch flush (new draw call). With 100 individual textures, drawing 100 sprites requires up to 100 draw calls. With a single atlas, all 100 sprites can be drawn in 1 draw call. Each draw call has ~0.5-2ms of CPU overhead (driver validation, state setup), so 100 draw calls waste 50-200ms of CPU time per frame — far exceeding the 16.67ms budget for 60fps. With 1 draw call, the overhead is negligible.
+
+3. **Reduced GPU memory overhead**: Each `WebGLTexture` object has fixed overhead (texture state, metadata, alignment padding). 100 small textures waste memory on padding. For example, a 17x17 sprite stored individually may be padded to 32x32 on some GPUs, wasting 75% of the allocation. Packed in an atlas, no padding is needed per sprite.
+
+Quantified impact for a typical mobile game with 200 sprites on screen:
+- Without atlas: ~200 draw calls, ~100-400ms CPU time per frame, >30 HTTP requests
+- With atlas (1-2 textures): 1-2 draw calls, <1ms CPU overhead, 1-2 HTTP requests
+
+---
+
+### Q2: What is the difference between frame-based animation and skeletal animation? When would you use each?
+
+**A:**
+
+**Frame-based animation:**
+- Each frame is a complete pre-rendered image
+- Animation = cycling through frames in sequence
+- Simple and pixel-perfect at intended resolution
+- File size grows linearly with frame count (each frame adds pixels to the atlas)
+- No runtime deformation — what you see is what was drawn
+- Blending between animations is difficult (no in-between states)
+
+**Skeletal animation (Spine/DragonBones):**
+- A hierarchy of bones controls positions/rotations of sprite parts
+- Animation = bone transforms defined by keyframes, interpolated in real-time
+- File size is small regardless of animation length (bones + keyframes, not pixels)
+- Runtime deformation: mesh deformation, IK, dynamic attachments
+- Smooth blending between any two animations (crossfading bone transforms)
+- Scales well to any resolution (positions are relative, not pixel-based)
+
+**Use frame-based when:**
+- Pixel art style (every pixel is intentional)
+- Simple animations (idle, walk, attack with few frames)
+- Size is not a concern and you want maximum artistic control
+- The game has few unique animations
+
+**Use skeletal when:**
+- Characters need many animations (idle, walk, run, jump, attack, die, emote, etc.)
+- You need smooth transitions between animations
+- File size is limited (playable ads — Spine data is tiny compared to frame sheets)
+- Characters need dynamic features (IK aiming, equipment swapping via skins)
+- Multiple characters share the same skeleton but different skins
+
+**Example file size comparison:**
+A character with 10 animations at 12 frames each:
+- Frame-based: 120 frames x 128x128px = ~7.5MB uncompressed atlas
+- Skeletal: ~50KB bone data + 1 texture with body parts (~500KB) = ~550KB
+
+---
+
+### Q3: Implement an easing function for `easeOutElastic`. Explain the math.
+
+**A:**
+
+```typescript
+function easeOutElastic(t: number): number {
+    if (t === 0) return 0;
+    if (t === 1) return 1;
+
+    const period = 0.3;
+    const s = period / 4; // Phase shift
+
+    return Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / period) + 1;
+}
+```
+
+**The math:**
+
+The elastic easing combines two functions:
+1. **Exponential decay**: `2^(-10t)` — starts at 1 and rapidly decays toward 0. This creates the "damping" effect where oscillations get smaller.
+2. **Sine wave**: `sin((t - s) * 2pi / period)` — creates the oscillation. `period` controls the frequency (smaller = more oscillations), and `s` is a phase shift to start at the right position.
+
+The product `2^(-10t) * sin(...)` gives a decaying oscillation — like a spring coming to rest.
+
+Adding `+ 1` shifts the function so it ends at 1 (the target value).
+
+**Visual behavior:**
+```
+t=0.0: starts at 0 (start position)
+t=0.1: overshoots past 1
+t=0.2: bounces back below 1
+t=0.3: overshoots past 1 again (less)
+t=0.5: small oscillation around 1
+t=1.0: settles at exactly 1 (end position)
+```
+
+The `period` parameter (default 0.3) controls how many oscillations occur. Smaller values = more bounces. Larger values = fewer, wider bounces.
+
+---
+
+### Q4: How does a particle system achieve the appearance of fire?
+
+**A:** Fire is created by layering several particle properties:
+
+1. **Emission**: Continuous emission from a narrow base (the fire source), 30-80 particles/second. Slight horizontal spread at the base.
+
+2. **Direction**: Particles move upward (angle centered around -PI/2) with slight angular spread for flickering.
+
+3. **Velocity**: Moderate upward speed (50-150 px/sec). Slight random horizontal velocity for movement.
+
+4. **Color transition**: Start as bright yellow-white (0xFFFF88) and shift to orange (0xFF8800) then red (0xFF2200) as the particle ages. This simulates cooling.
+
+5. **Size**: Start medium, shrink to small as the particle ages. The shrinking creates the tapering shape of a flame.
+
+6. **Alpha**: Start semi-transparent (0.7-0.9), fade to fully transparent (0.0) as the particle dies. This creates soft edges.
+
+7. **Lifetime**: Short (0.3-0.8 seconds). This keeps the fire compact.
+
+8. **Blend mode**: **Additive blending** (`gl.blendFunc(gl.ONE, gl.ONE)`). Where particles overlap, brightness increases — creating the characteristic bright core of fire.
+
+9. **Gravity**: Slight upward force or zero gravity (fire rises against gravity in the real world, but particles already move upward).
+
+10. **Texture**: A soft, circular gradient (or a hand-drawn flame shape) works best. The gradient's soft edges blend well with additive blending.
+
+The combination of additive blending + color gradient + size decrease + short lifetime creates a convincing fire effect with as few as 50-100 particles.
+
+---
+
+### Q5: What is the MaxRects algorithm and why is it commonly used for atlas packing?
+
+**A:** MaxRects is a rectangle packing algorithm that maintains a list of "maximal free rectangles" — the largest available spaces in the atlas.
+
+**How it works:**
+1. Start with one free rectangle covering the entire atlas
+2. For each sprite to pack, find the best free rectangle that fits it (using a heuristic like Best Short Side Fit)
+3. Place the sprite in that rectangle
+4. Split the free rectangle into overlapping remainders (right and bottom)
+5. Remove any free rectangles that are fully contained by another (pruning)
+
+**Why it's popular:**
+1. **High packing efficiency**: Typically achieves 90-95% occupancy (most of the atlas area is used)
+2. **Good heuristic options**: Multiple placement strategies (Best Short Side Fit, Best Area Fit, Contact Point) let you tune for different sprite distributions
+3. **Handles irregular sizes well**: Unlike grid-based packing, MaxRects accommodates sprites of varying sizes efficiently
+4. **Reasonable speed**: O(n * f) where n = sprites and f = free rectangles. Fast enough for build-time packing with hundreds of sprites
+5. **Supports rotation**: Easy to test both orientations and pick the better fit
+
+**Comparison to simpler approaches:**
+- **Grid packing** (all sprites same size): 100% efficient but wastes space if sprites vary in size
+- **Strip packing** (row by row): Simple but lower efficiency (~75-85%)
+- **Guillotine** (binary splits): Simpler than MaxRects but lower efficiency (~85-90%)
+- **Skyline**: Good balance of simplicity and efficiency, used in stb_rect_pack
+
+TexturePacker and similar tools use MaxRects variants internally.
+
+---
+
+### Q6: Explain how pre-multiplied alpha affects sprite rendering and atlas handling.
+
+**A:** Pre-multiplied alpha is when RGB values in a texture are already multiplied by the alpha channel before storage.
+
+**Standard (straight) alpha:**
+- Stored: (R, G, B, A) = (1.0, 0.0, 0.0, 0.5) — a 50% transparent red
+- Blend: `color = src.rgb * src.a + dst.rgb * (1 - src.a)`
+- BlendFunc: `gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)`
+
+**Pre-multiplied alpha:**
+- Stored: (R*A, G*A, B*A, A) = (0.5, 0.0, 0.0, 0.5)
+- Blend: `color = src.rgb + dst.rgb * (1 - src.a)`
+- BlendFunc: `gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)`
+
+**How it affects sprite rendering:**
+
+1. **Texture filtering correctness**: When the GPU bilinearly interpolates between a colored pixel and a transparent pixel (at sprite edges), straight alpha produces dark halos. Example: interpolating between (1.0, 0.0, 0.0, 1.0) red and (0.0, 0.0, 0.0, 0.0) transparent gives (0.5, 0.0, 0.0, 0.5) which blends correctly with pre-multiplied but incorrectly with straight alpha (the RGB of the transparent pixel contaminates the result).
+
+2. **Additive + transparent in one texture**: With pre-multiplied alpha, you can have pixels where RGB > 0 but A = 0, creating additive glow effects. This is impossible with straight alpha because `src.rgb * src.a` would zero out the color.
+
+**How it affects atlas handling:**
+
+When packing sprites into an atlas, the transparent padding pixels between sprites must be (0, 0, 0, 0) for pre-multiplied alpha. If they contain non-zero RGB (e.g., white transparent pixels from an image editor), those colors will bleed into adjacent sprites during texture filtering.
+
+Tools like TexturePacker have a "pre-multiply alpha" option that:
+1. Multiplies all RGB by A before saving
+2. Sets fully transparent pixels to (0, 0, 0, 0) — "bleeding" the edge color outward into transparent areas
+
+PixiJS, Three.js, and most WebGL engines default to pre-multiplied alpha internally.
+
+---
+
+### Q7: How would you optimize a game that has 60 different character skins, each with 10 animations at 12 frames each?
+
+**A:** 60 skins x 10 animations x 12 frames = 7,200 individual frames. At 128x128 per frame, that's ~118MB of uncompressed texture data. This is clearly infeasible with frame-based animation.
+
+**Solution: Skeletal animation with Spine skins**
+
+1. **One skeleton, many skins**: Create a single Spine skeleton with all 10 animations. Each "skin" is a set of replacement textures for the character parts (head, body, arms, legs). The bone animations are shared across all skins.
+
+2. **Texture requirements**: Each skin needs only the body parts (~5-10 small images), not 120 full frames. 60 skins x ~500KB per skin atlas = ~30MB total, which can be reduced further by:
+   - Only loading skins the player has unlocked
+   - Lazy-loading skins on demand
+   - Sharing common body parts across skins (e.g., same legs, different head)
+
+3. **Runtime color/tinting**: Some skins can be achieved by tinting a base skin with different colors in the shader, reducing the number of unique textures needed.
+
+4. **Texture atlasing**: Pack multiple skins into shared atlases. Body parts are small; many skins fit in one 2048x2048 atlas.
+
+**Numbers:**
+- Skeletal approach: ~2-5MB for all 60 skins (bone data + part textures)
+- Frame-based approach: ~60-120MB for all 60 skins (impractical)
+
+This is exactly why games like Clash Royale and Brawl Stars use Spine — they have dozens of characters with many skins and animations, all running smoothly on mobile devices.
+
+---
+
+### Q8: What is the difference between additive and alpha blending? When would you use each?
+
+**A:**
+
+**Alpha blending (normal):**
+- Formula: `result = src * srcAlpha + dst * (1 - srcAlpha)`
+- Transparent objects obscure what's behind them proportionally to their alpha
+- Example: A 50% transparent red overlay tints everything behind it red while dimming the background
+- Use for: UI overlays, shadows, transparent objects, most sprites
+
+**Additive blending:**
+- Formula: `result = src + dst` (or `result = src * srcAlpha + dst`)
+- Source color is added to whatever is already on screen
+- Nothing is darkened — only brightened
+- Black (0,0,0) is completely invisible (adds nothing)
+- Example: A glowing particle brightens the background behind it
+- Use for: Fire, explosions, sparkles, laser beams, light effects, magic, neon glow
+
+**Key differences in practice:**
+- Alpha blending: dark colors show up (a dark transparent overlay darkens the scene)
+- Additive blending: dark colors are invisible (only bright colors add visible light)
+- Alpha blending: more particles = more opaque (eventually becomes solid)
+- Additive blending: more particles = brighter (can over-saturate to pure white)
+- Alpha blending: order-dependent (must render back-to-front)
+- Additive blending: order-independent (addition is commutative — A+B = B+A)
+
+**Combining them:**
+Many effects use both. For fire: inner bright particles use additive (bright core), outer smoke particles use alpha blending (opaque smoke). The blend mode can be set per-sprite or per-batch.
+
+```typescript
+// In PixiJS:
+sprite.blendMode = 'add';     // Additive
+sprite.blendMode = 'normal';  // Alpha blending
+
+// In WebGL:
+gl.blendFunc(gl.ONE, gl.ONE);                      // Additive
+gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);       // Alpha (pre-multiplied)
+```
+
+---
+
+### Q9: How do you handle animated sprites at different playback speeds matching character movement speed?
+
+**A:** The animation playback speed should scale with the character's actual movement speed to prevent a visual disconnect (feet sliding on the ground or moonwalking).
+
+```typescript
+class CharacterAnimator {
+    private readonly walkAnimation: FrameAnimation;
+    private readonly runAnimation: FrameAnimation;
+    private readonly idleAnimation: FrameAnimation;
+
+    // Walk animation was designed for 200 px/sec movement
+    private readonly walkReferenceSpeed = 200;
+    // Run animation was designed for 500 px/sec movement
+    private readonly runReferenceSpeed = 500;
+
+    update(dt: number, movementSpeed: number): void {
+        if (movementSpeed < 10) {
+            // Standing still
+            this.idleAnimation.update(dt);
+            return;
+        }
+
+        if (movementSpeed < 350) {
+            // Walking range: scale animation speed relative to reference
+            const speedRatio = movementSpeed / this.walkReferenceSpeed;
+            this.walkAnimation.update(dt * speedRatio);
+        } else {
+            // Running range
+            const speedRatio = movementSpeed / this.runReferenceSpeed;
+            this.runAnimation.update(dt * speedRatio);
+        }
+    }
+}
+```
+
+The key concept is the "reference speed" — the movement speed the animation was designed for. If the walk cycle was animated assuming 200px/sec, and the character is actually moving at 100px/sec, play the animation at half speed. At 400px/sec, play at double speed.
+
+**Foot sliding detection:**
+If the animation speed ratio goes beyond 0.5x - 2.0x, the visual starts looking wrong (too slow = moonwalking, too fast = cartoon legs). At that point, switch to a different animation (e.g., walk → run) designed for higher speeds.
+
+---
+
+### Q10: Describe how you would implement a dissolve/disintegration effect for a sprite.
+
+**A:** A dissolve effect makes a sprite appear to disintegrate into particles or fade away with a noise pattern.
+
+**Approach 1: Shader-based dissolve (GPU)**
+
+Use a noise texture and a threshold uniform. Pixels with noise values below the threshold are discarded:
+
+1. Upload a grayscale noise texture (Perlin noise, simplex noise, or cellular noise)
+2. In the fragment shader, sample the noise at the sprite's UV
+3. Compare the noise value to a threshold uniform (animated from 0 to 1)
+4. Discard pixels below the threshold
+5. Color pixels near the threshold edge with a bright color (fire/energy edge)
+
+```glsl
+float noiseValue = texture2D(u_noise, v_texCoord).r;
+if (noiseValue < u_threshold) discard;
+
+// Edge highlight
+float edgeDist = noiseValue - u_threshold;
+if (edgeDist < 0.05) {
+    // Bright edge color
+    gl_FragColor.rgb = mix(vec3(1.0, 0.5, 0.0), gl_FragColor.rgb, edgeDist / 0.05);
+}
+```
+
+Animate `u_threshold` from 0 to 1 over time with an easing function.
+
+**Approach 2: Particle-based dissolve (CPU)**
+
+1. Divide the sprite into small tiles (e.g., 4x4 pixel blocks)
+2. At dissolve start, spawn a particle for each tile
+3. Each particle has a random delay before it "breaks off"
+4. Once active, particles drift away with velocity, gravity, rotation, and fade
+5. The original sprite is masked to hide dissolved regions
+
+```typescript
+function createDissolveEffect(
+    sprite: Sprite,
+    tileSize: number = 4
+): DissolveParticle[] {
+    const particles: DissolveParticle[] = [];
+    const cols = Math.ceil(sprite.width / tileSize);
+    const rows = Math.ceil(sprite.height / tileSize);
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            particles.push({
+                srcX: col * tileSize,
+                srcY: row * tileSize,
+                x: sprite.x + col * tileSize,
+                y: sprite.y + row * tileSize,
+                vx: (Math.random() - 0.5) * 100,
+                vy: -Math.random() * 50,
+                delay: Math.random() * 0.5,   // Stagger the dissolution
+                alpha: 1,
+                rotation: 0,
+                rotSpeed: (Math.random() - 0.5) * 5,
+                active: false,
+            });
+        }
+    }
+
+    return particles;
+}
+```
+
+The shader approach is more performant (no CPU particle overhead) and produces smoother results. The particle approach is more dynamic (particles can interact with physics). For playable ads, the shader approach is preferred due to lower CPU cost.
+
+---
+
+### Q11: What are texture bleeding artifacts and how do you prevent them?
+
+**A:** Texture bleeding occurs when sampling a texture near the edge of a sprite in an atlas picks up pixels from an adjacent sprite. This creates visible colored lines or ghosting at sprite edges.
+
+**Causes:**
+1. **Bilinear filtering**: When the GPU samples a texture, `GL_LINEAR` filtering blends the 4 nearest texels. If the sample point is near the edge of a sprite's UV region, one of those 4 texels may belong to the adjacent sprite in the atlas.
+2. **Mipmaps**: At smaller mip levels, multiple source texels are averaged. Sprites that are adjacent in the atlas can bleed into each other's mip levels.
+3. **Floating point precision**: UV coordinates may land slightly outside the intended region.
+
+**Prevention:**
+1. **Padding**: Add 1-2 pixels of padding between sprites in the atlas. TexturePacker calls this "border padding" or "shape padding."
+2. **Edge extension (extrude)**: Duplicate the edge pixels of each sprite outward into the padding area. This ensures that if filtering samples beyond the sprite's UV, it picks up the same color as the edge.
+3. **Half-texel inset**: Inset UV coordinates by half a texel to ensure the sampling never reaches the boundary:
+   ```typescript
+   const halfTexelX = 0.5 / atlasWidth;
+   const halfTexelY = 0.5 / atlasHeight;
+   u0 += halfTexelX;
+   v0 += halfTexelY;
+   u1 -= halfTexelX;
+   v1 -= halfTexelY;
+   ```
+4. **Use NEAREST filtering**: Eliminates bilinear sampling entirely. Only appropriate for pixel art.
+5. **Avoid mipmaps on atlases**: Mipmaps cause cross-sprite bleeding at lower mip levels. If you need mipmaps, use separate textures or texture arrays.
+
+TexturePacker's default settings (2px padding + extrude) handle this automatically. When building a custom packer, always include at least 1px padding with edge extrusion.
