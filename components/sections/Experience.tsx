@@ -14,6 +14,66 @@ interface ExperienceProps {
   experience: ExperienceTranslations;
 }
 
+function TimelineDot({
+  index,
+  logoUrl,
+  name,
+}: {
+  readonly index: number;
+  readonly logoUrl: string;
+  readonly name: string;
+}) {
+  return (
+    <div className="absolute left-0 z-10 flex items-center">
+      {/* Outer pulsing ring */}
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        whileInView={{ scale: 1, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
+        className="relative w-12 h-12"
+      >
+        {/* Pulse animation ring */}
+        <motion.div
+          animate={{
+            scale: [1, 1.4, 1],
+            opacity: [0.4, 0, 0.4],
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            delay: index * 0.5,
+          }}
+          className="absolute inset-0 rounded-full border-2 border-accent"
+        />
+
+        {/* Glow background */}
+        <div className="absolute inset-0 rounded-full bg-accent/20 dark:bg-accent/10 blur-sm" />
+
+        {/* Logo container */}
+        <div className="relative w-12 h-12 rounded-full border-[3px] border-accent bg-white dark:bg-surface-darker overflow-hidden shadow-[0_0_20px_color-mix(in_srgb,var(--accent)_40%,transparent)]">
+          <Image
+            width={48}
+            height={48}
+            src={logoUrl}
+            alt={`${name} logo`}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      </motion.div>
+
+      {/* Connector line from dot to card */}
+      <motion.div
+        initial={{ scaleX: 0 }}
+        whileInView={{ scaleX: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4, delay: index * 0.1 + 0.4 }}
+        className="h-[2px] w-4 origin-left bg-gradient-to-r from-accent to-accent/30"
+      />
+    </div>
+  );
+}
+
 export function Experience({ experience }: ExperienceProps) {
   const experiences: CompanyExperienceTranslations[] = [
     experience.company.wilddata,
@@ -27,10 +87,41 @@ export function Experience({ experience }: ExperienceProps) {
       <SectionHeader tagline={experience.tagline} title={experience.title} />
 
       <div className="relative max-w-5xl mx-auto">
-        {/* Vertical Timeline Line */}
-        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-[4px] bg-accent/95 dark:bg-accent/60 rounded-full shadow-[0_0_16px_rgba(251,191,36,0.45)] dark:shadow-[0_0_12px_rgba(251,191,36,0.25)] md:-translate-x-1/2" />
+        {/* Animated gradient timeline line */}
+        <div className="absolute left-[23px] top-0 bottom-0 w-[2px]">
+          {/* Base line */}
+          <div className="absolute inset-0 bg-gradient-to-b from-accent via-accent/60 to-accent/20 rounded-full" />
 
-        <div className="space-y-12 md:space-y-16">
+          {/* Animated glow traveling down */}
+          <motion.div
+            animate={{
+              top: ['-20%', '120%'],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+            className="absolute left-1/2 -translate-x-1/2 w-[6px] h-24 rounded-full"
+            style={{
+              background:
+                'linear-gradient(to bottom, transparent, var(--accent), transparent)',
+              filter: 'blur(3px)',
+            }}
+          />
+
+          {/* Subtle static glow */}
+          <div
+            className="absolute inset-0 w-[6px] -left-[2px] rounded-full opacity-30"
+            style={{
+              background:
+                'linear-gradient(to bottom, var(--accent), transparent, var(--accent), transparent)',
+              filter: 'blur(4px)',
+            }}
+          />
+        </div>
+
+        <div className="space-y-10 md:space-y-14">
           {experiences.map((exp, index) => (
             <motion.div
               initial={{ opacity: 0, y: 50 }}
@@ -38,40 +129,22 @@ export function Experience({ experience }: ExperienceProps) {
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
               key={index}
-              className={`relative flex items-start ${
-                index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-              }`}
+              className="relative flex items-start"
             >
-              {/* Timeline Dot */}
-              <div className="absolute left-4 md:left-1/2 md:-translate-x-1/2 z-10">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.1 + 0.2 }}
-                  className="w-4 h-4 bg-accent border-[3px] border-white dark:border-surface-darker shadow-[0_0_15px_rgba(251,191,36,0.5)]"
-                />
-              </div>
+              <TimelineDot
+                index={index}
+                logoUrl={exp.logoUrl}
+                name={exp.name}
+              />
 
               {/* Content Card */}
-              <div
-                className={`w-full md:w-[calc(50%-2.5rem)] ml-12 md:ml-0 ${
-                  index % 2 === 0 ? 'md:pr-10' : 'md:pl-10'
-                }`}
-              >
-                <Card className="p-6">
+              <div className="w-full ml-[4.5rem]">
+                <Card className="p-6 relative overflow-hidden">
+                  {/* Accent top border gradient */}
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-accent via-accent/50 to-transparent" />
+
                   {/* Header */}
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white border-2 border-gray-200 dark:border-white/10 overflow-hidden group-hover:border-accent transition-colors duration-300">
-                      <Image
-                        width={56}
-                        height={56}
-                        src={exp.logoUrl}
-                        alt={`${exp.name} logo`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white group-hover:text-accent transition-colors duration-300">
                         <a
@@ -123,7 +196,7 @@ export function Experience({ experience }: ExperienceProps) {
                         key={respIndex}
                         className="flex items-start gap-2.5 text-gray-700 dark:text-gray-200 text-sm"
                       >
-                        <span className="flex-shrink-0 w-1.5 h-1.5 mt-2 bg-accent rounded-full shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
+                        <span className="flex-shrink-0 w-1.5 h-1.5 mt-2 bg-accent rounded-full shadow-[0_0_6px_color-mix(in_srgb,var(--accent)_50%,transparent)]" />
                         <div className="flex-1">
                           <ReactMarkdown
                             components={{

@@ -57,7 +57,7 @@ export function Skills({ skills }: SkillsProps) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto"
+        className="grid grid-cols-1 gap-6 md:gap-8 max-w-6xl mx-auto"
       >
         {categories.map((category, catIndex) => (
           <motion.div key={category.title} variants={item}>

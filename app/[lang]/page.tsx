@@ -74,15 +74,25 @@ export default async function Home({ params }: Props) {
   return (
     <PageTransition>
       <JsonLd data={personSchema} />
-      <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
-        <Intro intro={t.intro} />
-        <Details details={t.details} />
-        <Divider />
-        <Education education={t.education} />
-        <Divider />
-        <Skills skills={t.skills} />
-        <Divider />
-        <Experience experience={t.experience} />
+      <div className="max-w-7xl mx-auto">
+        {/* Two-column layout: left stacks info sections, right has Experience */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+          {/* Left column */}
+          <div className="lg:col-span-5 space-y-8 md:space-y-12">
+            <Intro intro={t.intro} />
+            <Education education={t.education} />
+            <Divider className="lg:hidden" />
+            <Skills skills={t.skills} />
+          </div>
+
+          {/* Right column - Details + Experience */}
+          <div className="lg:col-span-7 space-y-8 md:space-y-12">
+            <Divider className="lg:hidden" />
+            <Details details={t.details} />
+            <Divider className="lg:hidden" />
+            <Experience experience={t.experience} />
+          </div>
+        </div>
       </div>
     </PageTransition>
   );
