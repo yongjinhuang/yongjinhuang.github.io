@@ -30,6 +30,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   robotics: 'Robotics & Control Systems',
   'embedded-iot': 'Embedded Systems & IoT',
   'data-model': 'Data Model',
+  'web-game-dev': 'Web Game Development',
 };
 
 function extractTitle(content: string, filename: string): string {
