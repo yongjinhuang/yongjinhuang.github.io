@@ -4,6 +4,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ================================
+   CSS @property for animated transitions
+   ================================ */
+@property --accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #d97706;
+}
+
+@property --accent-light {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f59e0b;
+}
+
+@property --accent-dark {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #b45309;
+}
+
+@property --blob-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #fbbf24;
+}
+
+@property --blob-secondary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #d97706;
+}
+
 :root {
   --background: #f5f7fa;
   --foreground: #171717;
@@ -12,6 +45,13 @@
   --accent: #d97706;
   --accent-light: #f59e0b;
   --accent-dark: #b45309;
+
+  /* Blob Colors for AnimatedBackground */
+  --blob-primary: #fbbf24;
+  --blob-secondary: #d97706;
+
+  /* Smooth color scheme transitions */
+  transition: --accent 1s ease, --accent-light 1s ease, --accent-dark 1s ease, --blob-primary 1s ease, --blob-secondary 1s ease;
 
   /* Brutal Design Tokens */
   --border-brutal: 3px solid;
@@ -36,6 +76,108 @@
   --accent: #fbbf24;
   --accent-light: #fcd34d;
   --accent-dark: #f59e0b;
+  --blob-primary: #fcd34d;
+  --blob-secondary: #f59e0b;
+}
+
+/* ================================
+   COLOR SCHEMES
+   ================================ */
+
+/* Amber (default - values match :root) */
+[data-color-scheme="amber"] {
+  --accent: #d97706;
+  --accent-light: #f59e0b;
+  --accent-dark: #b45309;
+  --blob-primary: #fbbf24;
+  --blob-secondary: #d97706;
+}
+.dark[data-color-scheme="amber"] {
+  --accent: #fbbf24;
+  --accent-light: #fcd34d;
+  --accent-dark: #f59e0b;
+  --blob-primary: #fcd34d;
+  --blob-secondary: #f59e0b;
+}
+
+/* Aurora - Cool Emerald */
+[data-color-scheme="aurora"] {
+  --accent: #059669;
+  --accent-light: #34d399;
+  --accent-dark: #047857;
+  --blob-primary: #34d399;
+  --blob-secondary: #059669;
+}
+.dark[data-color-scheme="aurora"] {
+  --accent: #34d399;
+  --accent-light: #6ee7b7;
+  --accent-dark: #10b981;
+  --blob-primary: #6ee7b7;
+  --blob-secondary: #10b981;
+}
+
+/* Sunset - Bold Crimson */
+[data-color-scheme="sunset"] {
+  --accent: #dc2626;
+  --accent-light: #f87171;
+  --accent-dark: #b91c1c;
+  --blob-primary: #f87171;
+  --blob-secondary: #dc2626;
+}
+.dark[data-color-scheme="sunset"] {
+  --accent: #f87171;
+  --accent-light: #fca5a5;
+  --accent-dark: #ef4444;
+  --blob-primary: #fca5a5;
+  --blob-secondary: #ef4444;
+}
+
+/* Ocean - Deep Blue */
+[data-color-scheme="ocean"] {
+  --accent: #2563eb;
+  --accent-light: #60a5fa;
+  --accent-dark: #1d4ed8;
+  --blob-primary: #60a5fa;
+  --blob-secondary: #2563eb;
+}
+.dark[data-color-scheme="ocean"] {
+  --accent: #60a5fa;
+  --accent-light: #93c5fd;
+  --accent-dark: #3b82f6;
+  --blob-primary: #93c5fd;
+  --blob-secondary: #3b82f6;
+}
+
+/* Violet - Rich Purple */
+[data-color-scheme="violet"] {
+  --accent: #7c3aed;
+  --accent-light: #a78bfa;
+  --accent-dark: #6d28d9;
+  --blob-primary: #a78bfa;
+  --blob-secondary: #7c3aed;
+}
+.dark[data-color-scheme="violet"] {
+  --accent: #a78bfa;
+  --accent-light: #c4b5fd;
+  --accent-dark: #8b5cf6;
+  --blob-primary: #c4b5fd;
+  --blob-secondary: #8b5cf6;
+}
+
+/* Rose - Pink-Red Elegance */
+[data-color-scheme="rose"] {
+  --accent: #e11d48;
+  --accent-light: #fb7185;
+  --accent-dark: #be123c;
+  --blob-primary: #fb7185;
+  --blob-secondary: #e11d48;
+}
+.dark[data-color-scheme="rose"] {
+  --accent: #fb7185;
+  --accent-light: #fda4af;
+  --accent-dark: #f43f5e;
+  --blob-primary: #fda4af;
+  --blob-secondary: #f43f5e;
 }
 
 html {
@@ -101,7 +243,7 @@ body {
 
 .accent-glow {
   color: var(--accent);
-  text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 /* ================================
@@ -290,7 +432,7 @@ body {
 
 .dark .glass-card:hover {
   border-color: var(--accent);
-  box-shadow: var(--shadow-brutal-lg) rgba(251, 191, 36, 0.2);
+  box-shadow: var(--shadow-brutal-lg) color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 /* ================================

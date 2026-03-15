@@ -25,7 +25,7 @@ export default {
         'brutal-sm': '2px 2px 0 0 currentColor',
         'brutal-lg': '6px 6px 0 0 currentColor',
         'brutal-accent': '4px 4px 0 0 var(--accent)',
-        'glow-accent': '0 0 20px rgba(251, 191, 36, 0.4)',
+        'glow-accent': '0 0 20px color-mix(in srgb, var(--accent) 40%, transparent)',
       },
       animation: {
         'mesh-gradient': 'mesh-gradient 15s ease infinite',

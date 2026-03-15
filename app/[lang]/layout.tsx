@@ -5,6 +5,7 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 import { CustomCursor } from '@/components/CustomCursor';
 import { Navbar } from '@/components/layout';
+import { ColorSchemeProvider } from '@/components/ColorSchemeProvider';
 
 interface Props {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export default async function LangLayout({ children, params }: Props) {
       enableSystem
       disableTransitionOnChange
     >
+      <ColorSchemeProvider>
       <div className="min-h-screen relative">
         <AnimatedBackground />
         <CustomCursor />
@@ -35,6 +37,7 @@ export default async function LangLayout({ children, params }: Props) {
         <Footer params={params} />
         <ScrollToTop />
       </div>
+      </ColorSchemeProvider>
     </ThemeProvider>
   );
 }

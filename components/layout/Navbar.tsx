@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageSelector from '@/components/LanguageSelector';
+import ColorSchemePicker from '@/components/ColorSchemePicker';
 import type { NavTranslations } from '@/types';
 
 interface NavbarProps {
@@ -46,6 +47,7 @@ export function Navbar({ nav }: NavbarProps) {
             <div className="flex items-center gap-4 md:gap-6">
               <NavLink href="#skills">{nav.skills}</NavLink>
               <NavLink href="#experience">{nav.experience}</NavLink>
+              <ColorSchemePicker />
               <ThemeToggle />
             </div>
           </div>

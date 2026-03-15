@@ -29,8 +29,8 @@ export function AnimatedBackground() {
         style={{
           opacity: isDark ? 0.25 : 0.15,
           background: `
-            radial-gradient(ellipse 80% 50% at 20% 40%, rgba(251, 191, 36, 0.2), transparent),
-            radial-gradient(ellipse 60% 40% at 80% 60%, rgba(217, 119, 6, 0.15), transparent)
+            radial-gradient(ellipse 80% 50% at 20% 40%, color-mix(in srgb, var(--blob-primary) 20%, transparent), transparent),
+            radial-gradient(ellipse 60% 40% at 80% 60%, color-mix(in srgb, var(--blob-secondary) 15%, transparent), transparent)
           `,
           backgroundSize: '200% 200%',
           animation: 'mesh-gradient 15s ease infinite',
@@ -43,7 +43,7 @@ export function AnimatedBackground() {
         style={{
           opacity: isDark ? 0.2 : 0.1,
           background:
-            'radial-gradient(circle, rgba(251, 191, 36, 0.6) 0%, transparent 70%)',
+            'radial-gradient(circle, color-mix(in srgb, var(--blob-primary) 60%, transparent) 0%, transparent 70%)',
           animation: 'float 20s ease-in-out infinite',
         }}
       />
@@ -54,7 +54,7 @@ export function AnimatedBackground() {
         style={{
           opacity: isDark ? 0.15 : 0.1,
           background:
-            'radial-gradient(circle, rgba(217, 119, 6, 0.5) 0%, transparent 70%)',
+            'radial-gradient(circle, color-mix(in srgb, var(--blob-secondary) 50%, transparent) 0%, transparent 70%)',
           animation: 'float 20s ease-in-out infinite 5s',
         }}
       />
