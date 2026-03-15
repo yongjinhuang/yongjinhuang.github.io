@@ -29,6 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   'doc-processing': 'Document Processing',
   robotics: 'Robotics & Control Systems',
   'embedded-iot': 'Embedded Systems & IoT',
+  'data-model': 'Data Model',
 };
 
 function extractTitle(content: string, filename: string): string {
