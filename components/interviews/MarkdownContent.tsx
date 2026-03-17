@@ -3,9 +3,10 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import 'highlight.js/styles/github-dark.css';
+import './hljs-theme.css';
 import type { InterviewFile } from '@/types';
 import type { Components } from 'react-markdown';
+import { MermaidDiagram } from './MermaidDiagram';
 
 const INTERVIEWS_BASE = '/interviews';
 
@@ -108,11 +109,34 @@ function createMarkdownComponents(
         </code>
       );
     },
-    pre: ({ children }) => (
-      <pre className="font-mono rounded-lg p-4 overflow-x-auto my-5 text-[13px] leading-[1.65] border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0d1117] [&>code]:bg-transparent">
-        {children}
-      </pre>
-    ),
+    pre: ({ children }) => {
+      const child = Array.isArray(children) ? children[0] : children;
+      if (
+        child &&
+        typeof child === 'object' &&
+        'props' in child
+      ) {
+        const codeElement = child as React.ReactElement<{
+          className?: string;
+          children?: React.ReactNode;
+        }>;
+        const className = codeElement.props.className || '';
+        const isMermaid =
+          className.includes('language-mermaid') ||
+          className.includes('language-sequence') ||
+          className.includes('language-flowchart') ||
+          className.includes('language-graph');
+        if (isMermaid) {
+          const chart = getTextContent(codeElement.props.children);
+          return <MermaidDiagram chart={chart} />;
+        }
+      }
+      return (
+        <pre className="font-mono rounded-lg p-4 overflow-x-auto my-5 text-[13px] leading-[1.65] border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0d1117] [&>code]:bg-transparent">
+          {children}
+        </pre>
+      );
+    },
     img: ({ src, alt }) => (
       // eslint-disable-next-line @next/next/no-img-element
       <img
@@ -209,7 +233,9 @@ export function MarkdownContent({ file, onFileSelect }: MarkdownContentProps) {
     <article className="glass-card p-6 md:p-8 lg:p-10 max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
+        rehypePlugins={[
+          [rehypeHighlight, { ignoreMissing: true }],
+        ]}
         components={components}
       >
         {file.content}
