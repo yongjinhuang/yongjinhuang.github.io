@@ -361,12 +361,12 @@ sequenceDiagram
 
 **方法**：`UserRewardServiceImpl.handleNewUserSignUpRewards(UserTab, String context)`
 
-| 奖励     | 数量    | 有效期 | 条件                             |
-| -------- | ------- | ------ | -------------------------------- |
-| 注册积分 | 500 点  | 1 个月 | PointType=SIGN_UP 无记录         |
-| 免费会员 | 7 天    | 7 天   | UserFreeWeekMembershipTab 无记录 |
-| 会员积分 | 5000 点 | 7 天   | 伴随免费会员发放                 |
-| API 积分 | 2000 点 | —      | 无既有 API 注册积分              |
+| 奖励     | 数量                        | 有效期 | 条件                                          |
+| -------- | --------------------------- | ------ | --------------------------------------------- |
+| 注册积分 | 500 点                      | 1 个月 | PointType=SIGN_UP 无记录                      |
+| 免费会员 | 7 天                        | 7 天   | 无 FREE_TRIAL 零元订单（SKU=MEMBER_BASIC_7D） |
+| 会员积分 | 由 SKU 配置（默认 5000 点） | 7 天   | 伴随免费会员发放                              |
+| API 积分 | 2000 点                     | —      | 无既有 API 注册积分                           |
 
 ---
 
@@ -502,7 +502,7 @@ public class MembershipTab {
 - 1 个月会员
 - 3 个月会员
 - 1 年会员
-- 7 天免费试用（新用户专享）
+- 7 天免费试用（新用户专享，SKU=MEMBER_BASIC_7D，orderType=FREE_TRIAL）
 
 ### 5.3 V2 积分发放策略
 
@@ -544,19 +544,23 @@ Cron: 0 30 1 * * ?（每日凌晨 1:30）
 **升级检测**（`CartServiceImpl.createAndSubmitOrderBySku()`）：
 
 - 比较目标商品与当前会员的 `tierRank`
-- `targetTierRank > currentTierRank` → 升级
+- `targetTierRank > currentTierRank` → 升级（orderType=UPGRADE）
+- `skip_upgrade=true` → 跳过升级检测，全价购买（orderType=PURCHASE）
 - **零元升级**：升级差价为 0 时直接创建 SUCCESS 订单并发放积分
 - **付费升级**：计算按比例的升级差价，走正常支付流程
 
-**续费逻辑**（`handleMembershipTopUp()`）：
+**topUp 升级检测**（`handleMembershipTopUp()`）：
+
+- 仅 `orderType=UPGRADE` 的订单走实时升级路径（替换 product/sku + 补发积分 + ACTIVE）
+- 其他类型（PURCHASE / CARD_UPGRADE / ADMIN_GIFT / FREE_TRIAL）一律进 QUEUED
 
 ```mermaid
 graph TD
-    A[用户购买会员] --> B{当前有未过期会员？}
-    B -->|否| C[创建新会员，到期时间 = now + 购买时长]
-    B -->|是| D{在 7 天免费试用期内？}
-    D -->|是| E[替换会员，到期时间 = now + 购买时长]
-    D -->|否| F[延长到期时间 = 原到期时间 + 购买时长]
+    A["支付成功 / topUp"] --> B{"orderType = UPGRADE？"}
+    B -->|是| C{"tierRank 更高？"}
+    C -->|是| D["实时升级：替换 product/sku，旧卡 CONSUMED，新卡 ACTIVE"]
+    C -->|否| E["card_status = QUEUED"]
+    B -->|否| E
 ```
 
 ### 5.6 会员与积分消费的关系
@@ -740,11 +744,11 @@ Redis Key:  position_prefix + drid → 当前序列号（AtomicInteger）
 
 ```mermaid
 graph TD
-    A[客户端重连] --> B{会话已完成？}
+    A[客户端重连] --> B{"会话已完成？"}
     B -->|是| C[从 DB 读取完整 sseData]
-    C --> D[重放 seq > lastEventId 的事件]
+    C --> D["重放 seq > lastEventId 的事件"]
     B -->|否| E[从 Redis List 读取缓存事件]
-    E --> F[重放 seq > lastEventId 的事件]
+    E --> F["重放 seq > lastEventId 的事件"]
     F --> G[保持连接，等待实时事件]
 ```
 
@@ -1167,7 +1171,7 @@ graph TD
     F --> G[等待并发槽位]
     G --> H[检查服务健康状态]
     H --> I[订阅外部服务 SSE 流]
-    I --> J{完成？}
+    I --> J{"完成？"}
     J -->|成功| K[更新状态 DONE]
     J -->|失败| L[重试或标记 ERROR]
 ```
