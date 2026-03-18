@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { InterviewCategory } from '@/types';
 import { SidebarItem } from './SidebarItem';
@@ -10,6 +10,7 @@ import {
   HiFolderOpen,
   HiMagnifyingGlass,
   HiXMark,
+  HiMapPin,
 } from 'react-icons/hi2';
 
 interface SidebarProps {
@@ -20,11 +21,22 @@ interface SidebarProps {
 
 export function Sidebar({ categories, selectedSlug, onSelect }: SidebarProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [locateTrigger, setLocateTrigger] = useState(0);
   const [query, setQuery] = useState('');
 
   const toggleCategory = (name: string) => {
     setCollapsed((prev) => ({ ...prev, [name]: !prev[name] }));
   };
+
+  // Auto-expand the category containing the selected file
+  useEffect(() => {
+    const selectedCategory = categories.find((c) =>
+      c.files.some((f) => f.slug === selectedSlug)
+    );
+    if (selectedCategory && collapsed[selectedCategory.name]) {
+      setCollapsed((prev) => ({ ...prev, [selectedCategory.name]: false }));
+    }
+  }, [selectedSlug, categories, collapsed]);
 
   const isSearching = query.trim().length > 0;
 
@@ -51,9 +63,31 @@ export function Sidebar({ categories, selectedSlug, onSelect }: SidebarProps) {
 
   return (
     <div className="glass-card p-4 h-full overflow-y-auto max-h-[calc(100vh-8rem)]">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-accent mb-3 px-3">
-        Files
-      </h3>
+      <div className="flex items-center justify-between mb-3 px-3">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
+          Files
+        </h3>
+        <button
+          onClick={() => {
+            // Expand the category of the selected file and trigger scroll
+            const selectedCategory = categories.find((c) =>
+              c.files.some((f) => f.slug === selectedSlug)
+            );
+            if (selectedCategory) {
+              setCollapsed((prev) => ({
+                ...prev,
+                [selectedCategory.name]: false,
+              }));
+            }
+            setLocateTrigger((prev) => prev + 1);
+          }}
+          className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-accent transition-colors"
+          title="Locate current file"
+        >
+          <HiMapPin className="w-3.5 h-3.5" />
+          <span>Locate</span>
+        </button>
+      </div>
 
       {/* Search input */}
       <div className="relative mb-3 px-1">
@@ -107,6 +141,7 @@ export function Sidebar({ categories, selectedSlug, onSelect }: SidebarProps) {
                     file={file}
                     isSelected={file.slug === selectedSlug}
                     onSelect={onSelect}
+                    locateTrigger={locateTrigger}
                   />
                 ))}
               </div>
@@ -145,6 +180,7 @@ export function Sidebar({ categories, selectedSlug, onSelect }: SidebarProps) {
                       file={file}
                       isSelected={file.slug === selectedSlug}
                       onSelect={onSelect}
+                      locateTrigger={locateTrigger}
                     />
                   ))}
                 </div>
