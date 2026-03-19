@@ -1,3 +1,0 @@
-:HL["/_next/static/chunks/beb265a84b340388.css","style"]
-:HL["/_next/static/chunks/d72522eed19beb6a.css","style"]
-0:{"buildId":"7Vm_7kB2e2TqiIlGxOmu3","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"lang","paramType":"d","paramKey":"zh","hasRuntimePrefetch":false,"slots":{"children":{"name":"interviews","paramType":null,"paramKey":"interviews","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
