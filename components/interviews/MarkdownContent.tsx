@@ -137,7 +137,10 @@ function createMarkdownComponents(
     img: ({ src, alt }) => (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={resolveImageSrc(typeof src === 'string' ? src : undefined, vaultName)}
+        src={resolveImageSrc(
+          typeof src === 'string' ? src : undefined,
+          vaultName
+        )}
         alt={alt || ''}
         className="max-w-full h-auto rounded-lg my-4 border-2 border-gray-200 dark:border-white/10"
         loading="lazy"
