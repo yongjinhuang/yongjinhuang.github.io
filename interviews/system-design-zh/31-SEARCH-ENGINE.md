@@ -30,33 +30,33 @@
 
 ### 功能性需求
 
-| # | 需求 | 描述 |
-|---|------|------|
-| 1 | Full-Text Search | 接受用户查询并根据文本相关性返回排序后的文档 |
-| 2 | 文档索引 | 从多个来源摄取、解析、分析和索引文档 |
-| 3 | 查询语言 | 支持 term、phrase、bool、fuzzy、wildcard 和 range 查询 |
-| 4 | Faceted Search | 返回聚合的 facet 计数，用于下钻导航 |
-| 5 | Autocomplete | 基于前缀和 edge n-gram 的建议，延迟低于 50ms |
-| 6 | 相关性调优 | 字段加权、自定义评分函数、业务规则注入 |
-| 7 | Near-Real-Time (NRT) | 索引后的文档在约 1 秒内可被搜索到 |
-| 8 | 多租户 | 每个租户隔离索引，并设置租户级别配额 |
-| 9 | 高亮与摘要 | 返回匹配词项的高亮和上下文摘要 |
-| 10 | 同义词支持 | 在索引时或查询时使用同义词词典扩展查询 |
-| 11 | 分析 | 跟踪查询计数、零结果率、点击率 |
-| 12 | Hybrid Search | 结合关键词 (BM25) 和向量 (kNN) 搜索，融合结果 |
+| #   | 需求                 | 描述                                                   |
+| --- | -------------------- | ------------------------------------------------------ |
+| 1   | Full-Text Search     | 接受用户查询并根据文本相关性返回排序后的文档           |
+| 2   | 文档索引             | 从多个来源摄取、解析、分析和索引文档                   |
+| 3   | 查询语言             | 支持 term、phrase、bool、fuzzy、wildcard 和 range 查询 |
+| 4   | Faceted Search       | 返回聚合的 facet 计数，用于下钻导航                    |
+| 5   | Autocomplete         | 基于前缀和 edge n-gram 的建议，延迟低于 50ms           |
+| 6   | 相关性调优           | 字段加权、自定义评分函数、业务规则注入                 |
+| 7   | Near-Real-Time (NRT) | 索引后的文档在约 1 秒内可被搜索到                      |
+| 8   | 多租户               | 每个租户隔离索引，并设置租户级别配额                   |
+| 9   | 高亮与摘要           | 返回匹配词项的高亮和上下文摘要                         |
+| 10  | 同义词支持           | 在索引时或查询时使用同义词词典扩展查询                 |
+| 11  | 分析                 | 跟踪查询计数、零结果率、点击率                         |
+| 12  | Hybrid Search        | 结合关键词 (BM25) 和向量 (kNN) 搜索，融合结果          |
 
 ### 非功能性需求
 
-| 需求 | 目标 |
-|------|------|
-| 搜索延迟 | 关键词搜索 p99 < 100ms |
-| 索引延迟 | 从文档写入到可搜索 < 1 秒 (NRT) |
-| 可用性 | 99.99%（每年停机时间 < 52 分钟） |
-| 查询吞吐量 | 持续 10,000+ QPS |
-| 索引吞吐量 | 每小时 1,000,000 次文档更新 |
-| 持久性 | 零数据丢失；最少跨 3 个节点复制 |
-| 可扩展性 | 通过分片实现线性水平扩展 |
-| 一致性 | 搜索结果可接受最终一致性 |
+| 需求       | 目标                             |
+| ---------- | -------------------------------- |
+| 搜索延迟   | 关键词搜索 p99 < 100ms           |
+| 索引延迟   | 从文档写入到可搜索 < 1 秒 (NRT)  |
+| 可用性     | 99.99%（每年停机时间 < 52 分钟） |
+| 查询吞吐量 | 持续 10,000+ QPS                 |
+| 索引吞吐量 | 每小时 1,000,000 次文档更新      |
+| 持久性     | 零数据丢失；最少跨 3 个节点复制  |
+| 可扩展性   | 通过分片实现线性水平扩展         |
+| 一致性     | 搜索结果可接受最终一致性         |
 
 ### 规模估算
 
@@ -98,15 +98,15 @@
 
 ### 粗略估算总结
 
-| 资源 | 估算值 |
-|------|--------|
-| 总文档数 | 10 亿 |
-| 索引存储 | 50 TB |
-| 查询吞吐量 | 10K QPS（峰值 20K） |
-| 索引速率 | 平均 278/秒，突发 2,780/秒 |
-| 数据节点 | ~100 个节点 @ 64 GB RAM |
-| p99 搜索延迟 | < 100ms |
-| NRT 索引延迟 | < 1 秒 |
+| 资源         | 估算值                     |
+| ------------ | -------------------------- |
+| 总文档数     | 10 亿                      |
+| 索引存储     | 50 TB                      |
+| 查询吞吐量   | 10K QPS（峰值 20K）        |
+| 索引速率     | 平均 278/秒，突发 2,780/秒 |
+| 数据节点     | ~100 个节点 @ 64 GB RAM    |
+| p99 搜索延迟 | < 100ms                    |
+| NRT 索引延迟 | < 1 秒                     |
 
 ---
 
@@ -306,14 +306,14 @@ Response 200 OK:
 {
   "mappings": {
     "properties": {
-      "id":           { "type": "keyword" },
+      "id": { "type": "keyword" },
       "title": {
         "type": "text",
         "analyzer": "english",
         "fields": {
-          "keyword":  { "type": "keyword", "ignore_above": 256 },
-          "suggest":  { "type": "completion" },
-          "ngram":    { "type": "text", "analyzer": "edge_ngram_analyzer" }
+          "keyword": { "type": "keyword", "ignore_above": 256 },
+          "suggest": { "type": "completion" },
+          "ngram": { "type": "text", "analyzer": "edge_ngram_analyzer" }
         }
       },
       "body": {
@@ -328,10 +328,10 @@ Response 200 OK:
           "keyword": { "type": "keyword" }
         }
       },
-      "tags":         { "type": "keyword" },
-      "category":     { "type": "keyword" },
+      "tags": { "type": "keyword" },
+      "category": { "type": "keyword" },
       "published_at": { "type": "date", "format": "strict_date_time" },
-      "view_count":   { "type": "long" },
+      "view_count": { "type": "long" },
       "embedding": {
         "type": "dense_vector",
         "dims": 768,
@@ -945,6 +945,8 @@ TF 饱和效应:
 ```json
 { "term": { "category": "technology" } }
 // 不应用分析 -- 匹配精确的 keyword 值
+
+
 // 用于: 枚举值、ID、状态字段（映射为 keyword）
 ```
 
@@ -955,7 +957,7 @@ TF 饱和效应:
   "match": {
     "body": {
       "query": "distributed systems",
-      "operator": "OR",          // OR（默认）或 AND
+      "operator": "OR", // OR（默认）或 AND
       "minimum_should_match": "75%",
       "fuzziness": "AUTO"
     }
@@ -964,6 +966,8 @@ TF 饱和效应:
 // 对查询文本应用分析
 // "distributed systems" -> 分析后 -> ["distribut", "system"]
 // OR: 文档匹配任一 token 即可
+
+
 // AND: 文档必须包含所有 token
 ```
 
@@ -981,6 +985,8 @@ TF 饱和效应:
 // 要求 token 按顺序且相邻出现
 // slop=1 允许 1 个中间 token
 // "distributed computing systems" 在 slop=1 时匹配
+
+
 // 使用 posting list 中的位置数据
 ```
 
@@ -989,19 +995,15 @@ TF 饱和效应:
 ```json
 {
   "bool": {
-    "must": [
-      { "match": { "body": "search engine" } }
-    ],
+    "must": [{ "match": { "body": "search engine" } }],
     "should": [
       { "match": { "title": { "query": "search engine", "boost": 3.0 } } },
-      { "term":  { "tags": "featured" } }
+      { "term": { "tags": "featured" } }
     ],
-    "must_not": [
-      { "term": { "status": "deleted" } }
-    ],
+    "must_not": [{ "term": { "status": "deleted" } }],
     "filter": [
       { "range": { "published_at": { "gte": "now-30d" } } },
-      { "term":  { "category": "technology" } }
+      { "term": { "category": "technology" } }
     ],
     "minimum_should_match": 1
   }
@@ -1009,6 +1011,8 @@ TF 饱和效应:
 // must:     贡献评分，文档必须匹配
 // should:   贡献评分，可选（提升相关性）
 // must_not: 文档不得匹配（不评分，缓存为 bitset）
+
+
 // filter:   文档必须匹配（不评分，缓存为 bitset）
 ```
 
@@ -1019,14 +1023,16 @@ TF 饱和效应:
   "fuzzy": {
     "title": {
       "value": "serch",
-      "fuzziness": "AUTO",   // AUTO: 长度<3 为 0, 3-5 为 1, >5 为 2
-      "prefix_length": 2,    // 前 N 个字符必须精确匹配
-      "max_expansions": 50   // 最多考虑的候选词项数
+      "fuzziness": "AUTO", // AUTO: 长度<3 为 0, 3-5 为 1, >5 为 2
+      "prefix_length": 2, // 前 N 个字符必须精确匹配
+      "max_expansions": 50 // 最多考虑的候选词项数
     }
   }
 }
 // 使用 Levenshtein 距离（编辑距离）
 // "serch" 匹配 "search"（1 次插入）
+
+
 // 通过 term dictionary 上的 Levenshtein 自动机实现
 ```
 
@@ -1044,6 +1050,8 @@ TF 饱和效应:
   }
 }
 // 数值和日期字段使用 BKD tree (Block K-D Tree)
+
+
 // O(log N) 范围查找，对多维范围高效
 ```
 
@@ -1054,12 +1062,14 @@ TF 饱和效应:
   "multi_match": {
     "query": "search engine technology",
     "fields": ["title^3", "body^1", "tags^2"],
-    "type": "best_fields",    // 或 cross_fields, most_fields, phrase
+    "type": "best_fields", // 或 cross_fields, most_fields, phrase
     "tie_breaker": 0.3
   }
 }
 // best_fields: score = max(field_score) + tie_breaker * other_scores
 // cross_fields: 将所有字段视为一个大字段（适合姓名搜索）
+
+
 // most_fields:  所有字段评分之和（适合多分析器场景）
 ```
 
@@ -1990,19 +2000,19 @@ Shard 恢复场景:
 
 ## 19. 权衡取舍
 
-| 决策 | 方案 A | 方案 B | 建议 |
-|------|--------|--------|------|
-| Refresh interval | 1s (NRT) | 30s（高吞吐量） | 搜索应用用 1s，日志摄取用 30s |
-| Shard 大小 | 小 (5GB) | 大 (50GB) | 25-50 GB；避免过小（开销大）或过大（恢复慢） |
-| 副本数 | 0（无高可用） | 2（额外读取） | 1 个副本保证高可用；读密集型工作负载用 2 个 |
-| 索引时 vs 查询时分析 | 索引时同义词 | 查询时同义词 | 查询时: 词汇变更时无需重建索引 |
-| Keyword vs text 映射 | 仅 text | text + keyword 子字段 | 多字段: text 用于搜索，keyword 用于聚合/排序 |
-| BM25 vs TF-IDF | TF-IDF（更简单） | BM25（ES5 后默认） | 始终用 BM25；TF-IDF 仅用于遗留兼容 |
-| Mapping strict vs dynamic | dynamic=true | dynamic=false | 生产环境用 strict；防止 mapping 膨胀 |
-| 深度分页 | from/size | search_after（游标） | 超过 1000 条结果时始终用 search_after |
-| 聚合精度 | shard_size=10 | shard_size=1000 | 增大 shard_size 以获得准确计数（vs 延迟） |
-| 向量搜索 ANN | HNSW（快速，精度略低） | 精确 kNN（慢，完美） | HNSW 配合 num_candidates 调优 |
-| 跨集群搜索 | 单集群 | CCS（联邦式） | CCS 用于地理分布或隔离需求 |
+| 决策                      | 方案 A                 | 方案 B                | 建议                                         |
+| ------------------------- | ---------------------- | --------------------- | -------------------------------------------- |
+| Refresh interval          | 1s (NRT)               | 30s（高吞吐量）       | 搜索应用用 1s，日志摄取用 30s                |
+| Shard 大小                | 小 (5GB)               | 大 (50GB)             | 25-50 GB；避免过小（开销大）或过大（恢复慢） |
+| 副本数                    | 0（无高可用）          | 2（额外读取）         | 1 个副本保证高可用；读密集型工作负载用 2 个  |
+| 索引时 vs 查询时分析      | 索引时同义词           | 查询时同义词          | 查询时: 词汇变更时无需重建索引               |
+| Keyword vs text 映射      | 仅 text                | text + keyword 子字段 | 多字段: text 用于搜索，keyword 用于聚合/排序 |
+| BM25 vs TF-IDF            | TF-IDF（更简单）       | BM25（ES5 后默认）    | 始终用 BM25；TF-IDF 仅用于遗留兼容           |
+| Mapping strict vs dynamic | dynamic=true           | dynamic=false         | 生产环境用 strict；防止 mapping 膨胀         |
+| 深度分页                  | from/size              | search_after（游标）  | 超过 1000 条结果时始终用 search_after        |
+| 聚合精度                  | shard_size=10          | shard_size=1000       | 增大 shard_size 以获得准确计数（vs 延迟）    |
+| 向量搜索 ANN              | HNSW（快速，精度略低） | 精确 kNN（慢，完美）  | HNSW 配合 num_candidates 调优                |
+| 跨集群搜索                | 单集群                 | CCS（联邦式）         | CCS 用于地理分布或隔离需求                   |
 
 ### 深度分页问题
 
@@ -2032,24 +2042,24 @@ from+size 分页的问题:
 
 ## 20. 搜索引擎对比
 
-| 特性 | Elasticsearch | Apache Solr | Algolia | Typesense | Meilisearch |
-|------|--------------|-------------|---------|-----------|-------------|
-| **许可证** | Elastic License 2.0（旧版为 SSPL） | Apache 2.0 | 专有 SaaS | GPL-3.0 / Cloud | MIT（自托管） |
-| **主要用途** | 通用、日志、APM | 企业搜索、faceted | 开发者友好的 SaaS 搜索 | 开源 Algolia 替代品 | 开源、易用 |
-| **查询语言** | Query DSL (JSON) | Solr 查询语法, JSON | 自定义 JSON API | 自定义 JSON | 简单 JSON |
-| **可扩展性** | 优秀（PB 级） | 良好（TB 级） | 托管 / 自动 | 良好（数十 TB） | 中等（单 TB） |
-| **分布式** | 原生（shard+副本） | SolrCloud | 托管 | 原生 | 有限 |
-| **默认相关性** | BM25（可调） | BM25（可调） | 专有（拼写纠错、地理、业务规则） | BM25 + 拼写容错 | BM25 + 拼写容错 |
-| **Faceted Search** | 优秀（聚合） | 优秀 | 良好 | 良好 | 良好 |
-| **地理搜索** | 优秀 | 良好 | 优秀 | 良好 | 基础 |
-| **分析** | Kibana, X-Pack | 原生 + Solr Admin | 内置（点击分析） | 基础 | 基础 |
-| **向量/Hybrid** | 是 (kNN + RRF) | 是 (KNN) | 否（仅关键词） | 是（hybrid） | 否 |
-| **Schema** | 半无 schema（动态映射） | 需要 schema | 无 schema | Schema 可选 | 无 schema |
-| **托管** | 自托管或 Elastic Cloud | 自托管或托管 | 仅 SaaS | 自托管或 Cloud | 自托管或 Cloud |
-| **设置复杂度** | 高 | 高 | 低（API key + JSON） | 中等 | 非常低 |
-| **搜索延迟** | 10-100ms | 20-200ms | < 50ms (SLA) | < 50ms | < 50ms |
-| **索引速度** | 非常快（bulk API） | 快 | 快 | 快 | 快 |
-| **最适用于** | 企业全文搜索、可观测性 | 企业 Java 应用 | 初创/SaaS 即时搜索 | 自托管 Algolia | 简单自托管搜索 |
+| 特性               | Elasticsearch                      | Apache Solr         | Algolia                          | Typesense           | Meilisearch     |
+| ------------------ | ---------------------------------- | ------------------- | -------------------------------- | ------------------- | --------------- |
+| **许可证**         | Elastic License 2.0（旧版为 SSPL） | Apache 2.0          | 专有 SaaS                        | GPL-3.0 / Cloud     | MIT（自托管）   |
+| **主要用途**       | 通用、日志、APM                    | 企业搜索、faceted   | 开发者友好的 SaaS 搜索           | 开源 Algolia 替代品 | 开源、易用      |
+| **查询语言**       | Query DSL (JSON)                   | Solr 查询语法, JSON | 自定义 JSON API                  | 自定义 JSON         | 简单 JSON       |
+| **可扩展性**       | 优秀（PB 级）                      | 良好（TB 级）       | 托管 / 自动                      | 良好（数十 TB）     | 中等（单 TB）   |
+| **分布式**         | 原生（shard+副本）                 | SolrCloud           | 托管                             | 原生                | 有限            |
+| **默认相关性**     | BM25（可调）                       | BM25（可调）        | 专有（拼写纠错、地理、业务规则） | BM25 + 拼写容错     | BM25 + 拼写容错 |
+| **Faceted Search** | 优秀（聚合）                       | 优秀                | 良好                             | 良好                | 良好            |
+| **地理搜索**       | 优秀                               | 良好                | 优秀                             | 良好                | 基础            |
+| **分析**           | Kibana, X-Pack                     | 原生 + Solr Admin   | 内置（点击分析）                 | 基础                | 基础            |
+| **向量/Hybrid**    | 是 (kNN + RRF)                     | 是 (KNN)            | 否（仅关键词）                   | 是（hybrid）        | 否              |
+| **Schema**         | 半无 schema（动态映射）            | 需要 schema         | 无 schema                        | Schema 可选         | 无 schema       |
+| **托管**           | 自托管或 Elastic Cloud             | 自托管或托管        | 仅 SaaS                          | 自托管或 Cloud      | 自托管或 Cloud  |
+| **设置复杂度**     | 高                                 | 高                  | 低（API key + JSON）             | 中等                | 非常低          |
+| **搜索延迟**       | 10-100ms                           | 20-200ms            | < 50ms (SLA)                     | < 50ms              | < 50ms          |
+| **索引速度**       | 非常快（bulk API）                 | 快                  | 快                               | 快                  | 快              |
+| **最适用于**       | 企业全文搜索、可观测性             | 企业 Java 应用      | 初创/SaaS 即时搜索               | 自托管 Algolia      | 简单自托管搜索  |
 
 ### 如何选择
 

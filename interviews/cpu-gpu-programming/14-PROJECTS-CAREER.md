@@ -37,6 +37,7 @@ Implementation          Time        Speedup    GFLOPS
 ```
 
 **Stage 1: Naive C**
+
 ```c
 // Triple nested loop, row-major storage
 void matmul_naive(float* C, const float* A, const float* B,
@@ -52,21 +53,25 @@ void matmul_naive(float* C, const float* A, const float* B,
 ```
 
 **Stage 2: Cache-blocked**
+
 - Tile the i, j, k loops with tile size 32-64
 - Reorder loops to ikj for better B access pattern
 - Measure cache miss rate with `perf stat`
 
 **Stage 3: SIMD**
+
 - Use AVX2 `_mm256_fmadd_ps` for 8 FMAs per instruction
 - Process 8 columns of C simultaneously
 - Align memory with `aligned_alloc(32, ...)`
 
 **Stage 4: CUDA tiled**
+
 - Port to CUDA with shared memory tiling (chapter 7 technique)
 - Compare tile sizes: 16x16 vs 32x32
 - Add CUDA event timing
 
 **Deliverables**:
+
 - Single C file with all implementations behind `#ifdef`
 - Benchmark script that runs all versions and outputs a table
 - Graph (using Python/matplotlib) showing GFLOPS vs matrix size
@@ -110,10 +115,12 @@ Kernel 3: Sobel Edge Detection
 ```
 
 **Libraries needed**:
+
 - stb_image.h / stb_image_write.h for PNG/JPG I/O (header-only)
 - CUDA toolkit
 
 **Benchmarks to collect**:
+
 - CPU vs GPU time per kernel
 - Total pipeline throughput (images/second)
 - Memory transfer overhead as % of total time
@@ -125,6 +132,7 @@ Kernel 3: Sobel Edge Detection
 **Goal**: Count word frequencies in a large text file using GPU parallelism.
 
 **Approach**:
+
 1. Load text file into pinned host memory
 2. Upload to GPU
 3. Kernel 1: Parallel character classification (is_alpha, is_space)
@@ -173,6 +181,7 @@ Architecture:
 ```
 
 **Data structures**:
+
 ```cuda
 struct Sphere {
     float3 center;
@@ -196,6 +205,7 @@ struct HitRecord {
 ```
 
 **Optimizations to implement**:
+
 - Bounding Volume Hierarchy (BVH) for >100 objects
 - Stackless BVH traversal on GPU
 - Anti-aliasing via multiple samples per pixel
@@ -228,6 +238,7 @@ GPU advantage: embarrassingly parallel across bodies
 4. **(Optional) Barnes-Hut O(N log N)** -- Octree on GPU for >100K bodies
 
 **Tiled kernel pseudocode**:
+
 ```cuda
 __global__ void nbody_tiled(float4* pos, float4* vel, float dt, int N) {
     __shared__ float4 tile[BLOCK_SIZE];
@@ -266,6 +277,7 @@ __global__ void nbody_tiled(float4* pos, float4* vel, float dt, int N) {
 ```
 
 **Targets**:
+
 - 16K bodies at 60 FPS (naive GPU)
 - 65K bodies at 60 FPS (tiled GPU)
 - Visualization with OpenGL interop (cudaGraphicsMapResources)
@@ -293,6 +305,7 @@ Components to implement in CUDA:
 ```
 
 **Key kernels**:
+
 ```
 Forward pass:
   Input [batch, 784] @ W1 [784, 256] + b1 [256] -> Z1 [batch, 256]
@@ -338,6 +351,7 @@ FlashAttention insight:
 ```
 
 **Tiling strategy**:
+
 ```
 For each tile of Q (size Br x d):
   Initialize: O = 0, l = 0, m = -inf  (running softmax stats)
@@ -376,6 +390,7 @@ Operations to implement:
 ```
 
 **Column-store format** (SoA layout for GPU):
+
 ```
 Table "orders":
   Column: order_id    [int32]   -> contiguous GPU array
@@ -409,6 +424,7 @@ Each step is a GPU kernel operating on a 2D grid.
 **Grid**: 512x512 or 1024x1024 cells. Each cell stores velocity (u, v) and pressure (p).
 
 **Key kernels**:
+
 - Jacobi iterative solver (stencil computation)
 - Bilinear interpolation for advection
 - Divergence and gradient computation
@@ -426,6 +442,7 @@ Write a simple compiler that generates GPU code using LLVM's NVPTX backend.
 **Scope**: Compile a simple expression language (arithmetic + parallel-for) to PTX assembly, then to CUDA fatbin.
 
 **Pipeline**:
+
 ```
 Source code -> Lexer -> Parser -> AST -> LLVM IR -> NVPTX Backend -> PTX -> cubin
 ```
@@ -435,6 +452,7 @@ Source code -> Lexer -> Parser -> AST -> LLVM IR -> NVPTX Backend -> PTX -> cubi
 Implement a simplified version of PyTorch's DistributedDataParallel (DDP).
 
 **Components**:
+
 - Parameter server or all-reduce ring
 - Gradient bucketing (group small tensors for efficient all-reduce)
 - Communication-computation overlap
@@ -445,6 +463,7 @@ Implement a simplified version of PyTorch's DistributedDataParallel (DDP).
 Build an inference engine that loads ONNX models and runs them on GPU with operator fusion.
 
 **Operator fusion examples**:
+
 - Conv + BatchNorm + ReLU -> single fused kernel
 - MatMul + Bias + GELU -> single fused kernel
 - Reduce memory traffic by keeping intermediate results in registers
@@ -554,10 +573,10 @@ Growth:    Junior -> Senior -> Architect -> Fellow
    Key points: Tree-based reduction in shared memory, avoid warp divergence by using sequential addressing, warp-level reduction with `__shfl_down_sync` for the last warp.
 
 7. **Q: Optimize a matrix transpose kernel.**
-   Key points: Naive transpose has non-coalesced writes. Use shared memory: coalesced read into shared mem, __syncthreads(), coalesced write from shared mem (transposed indices). Pad shared memory to avoid bank conflicts.
+   Key points: Naive transpose has non-coalesced writes. Use shared memory: coalesced read into shared mem, \_\_syncthreads(), coalesced write from shared mem (transposed indices). Pad shared memory to avoid bank conflicts.
 
 8. **Q: What is the roofline model?**
-   A: A visual model that plots achievable performance (FLOPS) vs arithmetic intensity (FLOPS/byte). A kernel's peak performance is bounded by min(peak compute, peak bandwidth * arithmetic intensity). Identifies whether a kernel is compute-bound or memory-bound.
+   A: A visual model that plots achievable performance (FLOPS) vs arithmetic intensity (FLOPS/byte). A kernel's peak performance is bounded by min(peak compute, peak bandwidth \* arithmetic intensity). Identifies whether a kernel is compute-bound or memory-bound.
 
 **System Design**:
 
@@ -571,11 +590,11 @@ Growth:    Junior -> Senior -> Architect -> Fellow
 
 1. **You have N=1M elements. Your kernel uses 256 threads/block with 32 registers/thread and 4KB shared memory/block. Your GPU has 64 SMs, 64K registers/SM, 48KB shared memory/SM, max 2048 threads/SM. What is the occupancy?**
 
-   Answer: Registers: 256 threads * 32 regs = 8192 regs/block. 64K/8192 = 8 blocks per SM from register limit. Shared mem: 48KB/4KB = 12 blocks per SM. Threads: 2048/256 = 8 blocks per SM. Limiting factor: registers and threads (8 blocks). Occupancy: 8 * 256 / 2048 = 100%.
+   Answer: Registers: 256 threads _ 32 regs = 8192 regs/block. 64K/8192 = 8 blocks per SM from register limit. Shared mem: 48KB/4KB = 12 blocks per SM. Threads: 2048/256 = 8 blocks per SM. Limiting factor: registers and threads (8 blocks). Occupancy: 8 _ 256 / 2048 = 100%.
 
 2. **A kernel processes 1 billion floats. Each float is read once and written once. The GPU has 2 TB/s bandwidth. What is the minimum kernel time?**
 
-   Answer: Data moved = 1B * 4 bytes * 2 (read + write) = 8 GB. Time = 8 GB / 2 TB/s = 4 ms. This is the memory bandwidth floor.
+   Answer: Data moved = 1B _ 4 bytes _ 2 (read + write) = 8 GB. Time = 8 GB / 2 TB/s = 4 ms. This is the memory bandwidth floor.
 
 ---
 
@@ -599,6 +618,7 @@ github.com/yourname/
 ```
 
 **Each project should have**:
+
 - Clear README with architecture diagram
 - Performance benchmarks with graphs
 - Comparison against baseline/reference implementation
@@ -606,18 +626,19 @@ github.com/yourname/
 
 ### 7.2 Open Source Contributions
 
-| Project | What to Contribute |
-|---------|-------------------|
-| PyTorch | Custom CUDA kernels, operator optimization |
-| Triton | New autotuning configs, operator implementations |
-| CUTLASS | Gemm kernel variants, new data types |
-| RAPIDS (cuDF/cuML) | GPU-accelerated data science operators |
-| Vulkan samples | Compute shader examples |
-| llvm-project | NVPTX backend improvements |
+| Project            | What to Contribute                               |
+| ------------------ | ------------------------------------------------ |
+| PyTorch            | Custom CUDA kernels, operator optimization       |
+| Triton             | New autotuning configs, operator implementations |
+| CUTLASS            | Gemm kernel variants, new data types             |
+| RAPIDS (cuDF/cuML) | GPU-accelerated data science operators           |
+| Vulkan samples     | Compute shader examples                          |
+| llvm-project       | NVPTX backend improvements                       |
 
 ### 7.3 Technical Blog Posts
 
 Write about:
+
 - "How I achieved X% of peak bandwidth on [kernel]"
 - "Understanding [specific GPU architecture feature]"
 - "Profiling deep dive: optimizing [real workload]"
@@ -627,14 +648,14 @@ Write about:
 
 ### 7.4 Conference Talks
 
-| Conference | Focus |
-|-----------|-------|
-| GTC (NVIDIA) | GPU computing, CUDA, AI |
-| SC (Supercomputing) | HPC, distributed computing |
-| SIGGRAPH | Graphics, rendering, GPU |
-| CppCon | C++ performance, SIMD |
-| EuroSys / OSDI / SOSP | Systems, scheduling |
-| MLSys | ML infrastructure |
+| Conference            | Focus                      |
+| --------------------- | -------------------------- |
+| GTC (NVIDIA)          | GPU computing, CUDA, AI    |
+| SC (Supercomputing)   | HPC, distributed computing |
+| SIGGRAPH              | Graphics, rendering, GPU   |
+| CppCon                | C++ performance, SIMD      |
+| EuroSys / OSDI / SOSP | Systems, scheduling        |
+| MLSys                 | ML infrastructure          |
 
 ---
 
@@ -672,24 +693,28 @@ trading firms in high-cost-of-living areas.
 ### 8.2 Hot Companies Hiring GPU Engineers (2025-2026)
 
 **AI/ML**:
+
 - NVIDIA (GPU architecture, CUDA, Triton, cuDNN)
 - OpenAI / Anthropic / Google DeepMind (training infrastructure)
 - Meta FAIR (PyTorch, custom kernels)
 - xAI, Mistral, Cohere (inference optimization)
 
 **Cloud**:
+
 - AWS (Trainium/Inferentia, custom silicon)
 - Google (TPU team, JAX)
 - Microsoft (Azure GPU, DeepSpeed)
 - CoreWeave, Lambda, Together AI (GPU cloud)
 
 **Hardware**:
+
 - AMD (ROCm, CDNA)
 - Intel (Xe GPUs, oneAPI)
 - Apple (Metal, Neural Engine)
 - Cerebras, Groq, SambaNova (AI accelerators)
 
 **Finance**:
+
 - Citadel / Two Sigma / DE Shaw (GPU risk engines)
 - Jump Trading / HRT (FPGA + GPU low-latency)
 
@@ -729,11 +754,13 @@ Total: ~4 months to solid intermediate level
 ```
 
 **Hardware requirements**:
+
 - Minimum: Any NVIDIA GPU (even GTX 1060 works for learning)
 - Recommended: RTX 3060 or newer (good price/performance for learning)
 - Cloud alternative: Google Colab (free T4), Lambda Cloud, AWS p3/g4
 
 **Software setup**:
+
 ```bash
 # Install CUDA toolkit
 # https://developer.nvidia.com/cuda-downloads

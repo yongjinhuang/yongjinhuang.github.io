@@ -37,18 +37,18 @@ These are two complementary lenses for understanding users.
 +---------------------------+---------------------------+
 ```
 
-**Rule of thumb**: Use quantitative data to find *what* is happening, then qualitative data to understand *why*.
+**Rule of thumb**: Use quantitative data to find _what_ is happening, then qualitative data to understand _why_.
 
 ### Surveys vs. Interviews
 
-| Dimension       | Surveys                        | Interviews                      |
-|-----------------|--------------------------------|---------------------------------|
-| Scale           | Hundreds to thousands          | 5-15 participants               |
-| Depth           | Shallow, structured            | Deep, exploratory               |
-| Data type       | Mostly quantitative            | Mostly qualitative              |
-| Time per person | 2-10 minutes                   | 30-60 minutes                   |
-| Bias risk       | Leading questions, self-report | Interviewer bias, small sample  |
-| Best for        | Validating hypotheses          | Discovering unknowns            |
+| Dimension       | Surveys                        | Interviews                     |
+| --------------- | ------------------------------ | ------------------------------ |
+| Scale           | Hundreds to thousands          | 5-15 participants              |
+| Depth           | Shallow, structured            | Deep, exploratory              |
+| Data type       | Mostly quantitative            | Mostly qualitative             |
+| Time per person | 2-10 minutes                   | 30-60 minutes                  |
+| Bias risk       | Leading questions, self-report | Interviewer bias, small sample |
+| Best for        | Validating hypotheses          | Discovering unknowns           |
 
 ### User Personas
 
@@ -81,6 +81,7 @@ A persona is a fictional but research-based representation of a user segment. It
 ```
 
 **Common mistakes with personas:**
+
 - Making them up without research (fictional personas are harmful)
 - Creating too many (3-5 is usually sufficient)
 - Including irrelevant demographic details
@@ -137,7 +138,7 @@ POINTS:    from search   load       text, hard   demos or      only a
 
 ### Jobs-to-be-Done (JTBD) Framework
 
-JTBD shifts focus from *who* the user is to *what they are trying to accomplish*. The central idea: people do not buy products, they "hire" them to do a job.
+JTBD shifts focus from _who_ the user is to _what they are trying to accomplish_. The central idea: people do not buy products, they "hire" them to do a job.
 
 **JTBD Statement Format:**
 
@@ -179,6 +180,7 @@ Competitive analysis studies similar products to identify patterns, gaps, and op
 ```
 
 **Steps for competitive analysis:**
+
 1. Identify 5-10 competitors or comparable products
 2. Define evaluation criteria relevant to your goals
 3. Audit each product systematically
@@ -202,7 +204,7 @@ Usability testing observes real users attempting real tasks with your product. I
 **Severity rating for issues found:**
 
 | Severity | Description                     | Action             |
-|----------|---------------------------------|--------------------|
+| -------- | ------------------------------- | ------------------ |
 | Critical | Users cannot complete the task  | Fix immediately    |
 | Major    | Users struggle significantly    | Fix before launch  |
 | Minor    | Users notice but work around it | Fix when possible  |
@@ -217,6 +219,7 @@ You do not need to be a trained researcher to gather useful insights. Here are m
 **Hallway Testing**: Grab a colleague, friend, or family member. Give them a task ("Find my most recent project"). Watch them silently. Note where they hesitate or click wrong.
 
 **Analytics Review**: If your site is live, check:
+
 - Bounce rate (>70% on landing page = problem)
 - Time on page (very short = content not engaging)
 - Navigation paths (where do users go after the homepage?)
@@ -227,7 +230,7 @@ You do not need to be a trained researcher to gather useful insights. Here are m
 ```jsx
 // Lightweight feedback widget
 function FeedbackButton() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="fixed bottom-4 right-4">
@@ -235,9 +238,9 @@ function FeedbackButton() {
         <form
           className="bg-white p-4 rounded-lg shadow-lg"
           onSubmit={(e) => {
-            e.preventDefault()
+            e.preventDefault();
             // Send feedback to your preferred backend
-            setIsOpen(false)
+            setIsOpen(false);
           }}
         >
           <textarea
@@ -261,7 +264,7 @@ function FeedbackButton() {
         </button>
       )}
     </div>
-  )
+  );
 }
 ```
 
@@ -274,10 +277,12 @@ function FeedbackButton() {
 Suppose you are building a portfolio site and want to understand your audience.
 
 **Step 1: Gather data**
+
 - Interview 5 hiring managers, 3 recruiters, 2 fellow developers
 - Send a short survey to your professional network (20-50 responses)
 
 **Step 2: Identify patterns**
+
 - Cluster responses by goals and behaviors
 - Look for segments that behave differently
 
@@ -356,15 +361,15 @@ RECRUITER RAJ'S JOURNEY:
 
 ### Example 3: JTBD for Portfolio Features
 
-| Feature         | Job It Does                                              | Priority |
-|-----------------|----------------------------------------------------------|----------|
-| Hero section    | Communicates who you are in 5 seconds                    | High     |
-| Project cards   | Proves you can ship real work                            | High     |
-| Case studies    | Shows your problem-solving process                       | Medium   |
-| Blog            | Demonstrates communication skills and depth              | Low      |
-| Contact form    | Lets visitors reach you with minimal friction            | High     |
-| Resume download | Gives recruiters a shareable document                    | Medium   |
-| Testimonials    | Provides social proof from colleagues                    | Low      |
+| Feature         | Job It Does                                   | Priority |
+| --------------- | --------------------------------------------- | -------- |
+| Hero section    | Communicates who you are in 5 seconds         | High     |
+| Project cards   | Proves you can ship real work                 | High     |
+| Case studies    | Shows your problem-solving process            | Medium   |
+| Blog            | Demonstrates communication skills and depth   | Low      |
+| Contact form    | Lets visitors reach you with minimal friction | High     |
+| Resume download | Gives recruiters a shareable document         | Medium   |
+| Testimonials    | Provides social proof from colleagues         | Low      |
 
 ---
 
@@ -392,7 +397,7 @@ RECRUITER RAJ'S JOURNEY:
 
 ### Q6: What is an empathy map and how does it differ from a persona?
 
-**Answer:** An empathy map is a collaborative visualization tool that captures what a user says, thinks, does, and feels during a specific experience. A persona is a broader archival document representing an entire user segment. Think of it this way: a persona describes *who* the user is across many situations, while an empathy map captures their experience in *one specific context*. You might have a persona for "Hiring Manager Hannah" and then create multiple empathy maps: one for her experience reviewing portfolios, another for conducting interviews. Empathy maps are faster to create and best used in workshops to build team alignment.
+**Answer:** An empathy map is a collaborative visualization tool that captures what a user says, thinks, does, and feels during a specific experience. A persona is a broader archival document representing an entire user segment. Think of it this way: a persona describes _who_ the user is across many situations, while an empathy map captures their experience in _one specific context_. You might have a persona for "Hiring Manager Hannah" and then create multiple empathy maps: one for her experience reviewing portfolios, another for conducting interviews. Empathy maps are faster to create and best used in workshops to build team alignment.
 
 ### Q7: How would you conduct user research with zero budget?
 
@@ -426,9 +431,13 @@ Contact:  "Let me reach you with zero friction"
 ```tsx
 // In your Next.js layout, add Vercel Analytics for behavioral data
 // This gives you page views, referrers, and visitor geography
-import { Analytics } from '@vercel/analytics/react'
+import { Analytics } from '@vercel/analytics/react';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html>
       <body>
@@ -436,7 +445,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Analytics />
       </body>
     </html>
-  )
+  );
 }
 ```
 
@@ -465,14 +474,14 @@ function HeroSection({ name, title, summary }: HeroProps) {
         Get in Touch
       </a>
     </section>
-  )
+  );
 }
 ```
 
 **Framer Motion for journey-optimized transitions:**
 
 ```tsx
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
 
 // Stagger content to guide the visitor's eye through your story
 function SectionReveal({ children }: { children: React.ReactNode }) {
@@ -485,7 +494,7 @@ function SectionReveal({ children }: { children: React.ReactNode }) {
     >
       {children}
     </motion.div>
-  )
+  );
 }
 ```
 

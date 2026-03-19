@@ -73,21 +73,21 @@ Created → Paid → Processing → Shipped → Delivered
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **SKU** | Stock Keeping Unit — a unique identifier for each product variant |
-| **Cart Abandonment** | User adds items to cart but never completes checkout. Happens ~70% of the time |
-| **Conversion Rate** | Percentage of visitors who complete a purchase. Typically 2-3% |
-| **AOV** | Average Order Value — the average amount spent per order |
-| **GMV** | Gross Merchandise Value — total value of goods sold through your platform |
-| **Fulfillment** | The process of picking, packing, and shipping orders |
-| **3PL** | Third-Party Logistics — companies like ShipBob that handle warehousing and shipping for you |
-| **Dropshipping** | Selling products you don't stock. Supplier ships directly to customer |
-| **RMA** | Return Merchandise Authorization — a ticket number for returns |
-| **Promo Code / Coupon** | A code that gives discounts (percentage off, fixed amount off, free shipping) |
-| **Cross-sell** | "Customers also bought..." — suggesting related products |
-| **Upsell** | "Upgrade to the Pro version" — suggesting a higher-priced alternative |
-| **Backorder** | Customer buys an out-of-stock item with the promise it will ship when restocked |
+| Term                    | What It Means                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------- |
+| **SKU**                 | Stock Keeping Unit — a unique identifier for each product variant                           |
+| **Cart Abandonment**    | User adds items to cart but never completes checkout. Happens ~70% of the time              |
+| **Conversion Rate**     | Percentage of visitors who complete a purchase. Typically 2-3%                              |
+| **AOV**                 | Average Order Value — the average amount spent per order                                    |
+| **GMV**                 | Gross Merchandise Value — total value of goods sold through your platform                   |
+| **Fulfillment**         | The process of picking, packing, and shipping orders                                        |
+| **3PL**                 | Third-Party Logistics — companies like ShipBob that handle warehousing and shipping for you |
+| **Dropshipping**        | Selling products you don't stock. Supplier ships directly to customer                       |
+| **RMA**                 | Return Merchandise Authorization — a ticket number for returns                              |
+| **Promo Code / Coupon** | A code that gives discounts (percentage off, fixed amount off, free shipping)               |
+| **Cross-sell**          | "Customers also bought..." — suggesting related products                                    |
+| **Upsell**              | "Upgrade to the Pro version" — suggesting a higher-priced alternative                       |
+| **Backorder**           | Customer buys an out-of-stock item with the promise it will ship when restocked             |
 
 ## Common Patterns
 
@@ -128,13 +128,13 @@ Multiple sellers list products on one platform (Amazon, Etsy, eBay). The platfor
 
 ## Quick Reference
 
-| Component | Key Consideration |
-|-----------|-------------------|
-| Product catalog | Variants, pricing tiers, visibility states |
-| Shopping cart | Persistence, recalculation, guest vs logged-in |
-| Checkout | Tax, shipping, promo codes, payment |
-| Order management | State machine with clear transitions |
-| Inventory | Atomic updates, reservations, low-stock alerts |
-| Returns | RMA flow, refund types, restocking |
-| Search | Full-text, faceted filters, relevance ranking |
-| Admin panel | Product CRUD, order management, analytics |
+| Component        | Key Consideration                              |
+| ---------------- | ---------------------------------------------- |
+| Product catalog  | Variants, pricing tiers, visibility states     |
+| Shopping cart    | Persistence, recalculation, guest vs logged-in |
+| Checkout         | Tax, shipping, promo codes, payment            |
+| Order management | State machine with clear transitions           |
+| Inventory        | Atomic updates, reservations, low-stock alerts |
+| Returns          | RMA flow, refund types, restocking             |
+| Search           | Full-text, faceted filters, relevance ranking  |
+| Admin panel      | Product CRUD, order management, analytics      |

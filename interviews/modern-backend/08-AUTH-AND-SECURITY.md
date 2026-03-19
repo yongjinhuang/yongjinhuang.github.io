@@ -94,17 +94,17 @@ import {
   verifyRegistrationResponse,
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
-} from "@simplewebauthn/server";
+} from '@simplewebauthn/server';
 
-const rpName = "My Application";
-const rpID = "example.com";
+const rpName = 'My Application';
+const rpID = 'example.com';
 const origin = `https://${rpID}`;
 
 // ── Registration ────────────────────────────────────────────
 async function startRegistration(userId: string, userName: string) {
   // Get existing credentials for this user (to exclude them)
   const existingCredentials = await db.query(
-    "SELECT credential_id, transports FROM passkeys WHERE user_id = $1",
+    'SELECT credential_id, transports FROM passkeys WHERE user_id = $1',
     [userId]
   );
 
@@ -113,15 +113,15 @@ async function startRegistration(userId: string, userName: string) {
     rpID,
     userID: Buffer.from(userId),
     userName,
-    attestationType: "none", // "none" is simpler; "direct" for enterprise
+    attestationType: 'none', // "none" is simpler; "direct" for enterprise
     excludeCredentials: existingCredentials.rows.map((cred) => ({
       id: cred.credential_id,
-      type: "public-key",
+      type: 'public-key',
       transports: cred.transports,
     })),
     authenticatorSelection: {
-      residentKey: "preferred",       // Discoverable credential
-      userVerification: "preferred",  // Biometric/PIN
+      residentKey: 'preferred', // Discoverable credential
+      userVerification: 'preferred', // Biometric/PIN
     },
   });
 
@@ -129,7 +129,7 @@ async function startRegistration(userId: string, userName: string) {
   await redis.set(
     `webauthn:challenge:${userId}`,
     options.challenge,
-    "EX",
+    'EX',
     300 // 5 minute expiry
   );
 
@@ -142,7 +142,7 @@ async function finishRegistration(
 ) {
   const expectedChallenge = await redis.get(`webauthn:challenge:${userId}`);
   if (!expectedChallenge) {
-    throw new Error("Challenge expired or not found");
+    throw new Error('Challenge expired or not found');
   }
 
   const verification = await verifyRegistrationResponse({
@@ -153,7 +153,7 @@ async function finishRegistration(
   });
 
   if (!verification.verified || !verification.registrationInfo) {
-    throw new Error("Registration verification failed");
+    throw new Error('Registration verification failed');
   }
 
   const { credential, credentialDeviceType, credentialBackedUp } =
@@ -187,12 +187,12 @@ async function startAuthentication(userId?: string) {
   const allowCredentials = userId
     ? (
         await db.query(
-          "SELECT credential_id, transports FROM passkeys WHERE user_id = $1",
+          'SELECT credential_id, transports FROM passkeys WHERE user_id = $1',
           [userId]
         )
       ).rows.map((cred) => ({
         id: cred.credential_id,
-        type: "public-key" as const,
+        type: 'public-key' as const,
         transports: JSON.parse(cred.transports),
       }))
     : []; // Empty = discoverable credential (usernameless login)
@@ -200,13 +200,13 @@ async function startAuthentication(userId?: string) {
   const options = await generateAuthenticationOptions({
     rpID,
     allowCredentials,
-    userVerification: "preferred",
+    userVerification: 'preferred',
   });
 
   await redis.set(
     `webauthn:auth-challenge:${options.challenge}`,
-    userId ?? "discoverable",
-    "EX",
+    userId ?? 'discoverable',
+    'EX',
     300
   );
 
@@ -219,12 +219,12 @@ async function finishAuthentication(
 ) {
   // Look up credential
   const credential = await db.query(
-    "SELECT * FROM passkeys WHERE credential_id = $1",
-    [Buffer.from(response.id, "base64url")]
+    'SELECT * FROM passkeys WHERE credential_id = $1',
+    [Buffer.from(response.id, 'base64url')]
   );
 
   if (credential.rows.length === 0) {
-    throw new Error("Credential not found");
+    throw new Error('Credential not found');
   }
 
   const passkey = credential.rows[0];
@@ -242,14 +242,14 @@ async function finishAuthentication(
   });
 
   if (!verification.verified) {
-    throw new Error("Authentication verification failed");
+    throw new Error('Authentication verification failed');
   }
 
   // Update counter (replay attack protection)
-  await db.query(
-    "UPDATE passkeys SET counter = $1 WHERE credential_id = $2",
-    [verification.authenticationInfo.newCounter, passkey.credential_id]
-  );
+  await db.query('UPDATE passkeys SET counter = $1 WHERE credential_id = $2', [
+    verification.authenticationInfo.newCounter,
+    passkey.credential_id,
+  ]);
 
   return { verified: true, userId: passkey.user_id };
 }
@@ -366,11 +366,11 @@ OAuth 2.1 consolidates OAuth 2.0 best practices. Key changes: PKCE is mandatory 
 ### JWT with Refresh Token Rotation
 
 ```typescript
-import { SignJWT, jwtVerify, JWTPayload } from "jose";
-import crypto from "crypto";
+import { SignJWT, jwtVerify, JWTPayload } from 'jose';
+import crypto from 'crypto';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
-const ACCESS_TOKEN_TTL = "15m";
+const ACCESS_TOKEN_TTL = '15m';
 const REFRESH_TOKEN_TTL_DAYS = 30;
 
 interface TokenPair {
@@ -398,20 +398,20 @@ async function generateTokenPair(
   const accessToken = await new SignJWT({
     sub: userId,
     roles,
-    type: "access",
+    type: 'access',
   })
-    .setProtectedHeader({ alg: "HS256" })
+    .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(ACCESS_TOKEN_TTL)
     .setJti(crypto.randomUUID())
     .sign(JWT_SECRET);
 
   // Generate refresh token (opaque, stored in DB)
-  const refreshToken = crypto.randomBytes(64).toString("base64url");
+  const refreshToken = crypto.randomBytes(64).toString('base64url');
   const tokenHash = crypto
-    .createHash("sha256")
+    .createHash('sha256')
     .update(refreshToken)
-    .digest("hex");
+    .digest('hex');
 
   const family = familyId ?? crypto.randomUUID();
 
@@ -429,13 +429,11 @@ async function generateTokenPair(
   };
 }
 
-async function rotateRefreshToken(
-  oldRefreshToken: string
-): Promise<TokenPair> {
+async function rotateRefreshToken(oldRefreshToken: string): Promise<TokenPair> {
   const tokenHash = crypto
-    .createHash("sha256")
+    .createHash('sha256')
     .update(oldRefreshToken)
-    .digest("hex");
+    .digest('hex');
 
   // Find the token
   const result = await db.query(
@@ -445,7 +443,7 @@ async function rotateRefreshToken(
   );
 
   if (result.rows.length === 0) {
-    throw new Error("Invalid refresh token");
+    throw new Error('Invalid refresh token');
   }
 
   const token: RefreshTokenRecord = result.rows[0];
@@ -460,34 +458,26 @@ async function rotateRefreshToken(
        WHERE family_id = $1`,
       [token.familyId]
     );
-    throw new Error(
-      "Refresh token reuse detected. All sessions revoked."
-    );
+    throw new Error('Refresh token reuse detected. All sessions revoked.');
   }
 
   // Check expiration
   if (new Date(token.expiresAt) < new Date()) {
-    throw new Error("Refresh token expired");
+    throw new Error('Refresh token expired');
   }
 
   // Mark current token as used
-  await db.query(
-    "UPDATE refresh_tokens SET used_at = NOW() WHERE id = $1",
-    [token.id]
-  );
+  await db.query('UPDATE refresh_tokens SET used_at = NOW() WHERE id = $1', [
+    token.id,
+  ]);
 
   // Get user roles for new access token
-  const user = await db.query(
-    "SELECT roles FROM users WHERE id = $1",
-    [token.userId]
-  );
+  const user = await db.query('SELECT roles FROM users WHERE id = $1', [
+    token.userId,
+  ]);
 
   // Generate new token pair (same family)
-  return generateTokenPair(
-    token.userId,
-    user.rows[0].roles,
-    token.familyId
-  );
+  return generateTokenPair(token.userId, user.rows[0].roles, token.familyId);
 }
 
 async function verifyAccessToken(
@@ -495,8 +485,8 @@ async function verifyAccessToken(
 ): Promise<JWTPayload & { sub: string; roles: string[] }> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    if (payload.type !== "access") {
-      throw new Error("Invalid token type");
+    if (payload.type !== 'access') {
+      throw new Error('Invalid token type');
     }
     return payload as JWTPayload & { sub: string; roles: string[] };
   } catch (error) {
@@ -606,12 +596,12 @@ allow if {
 
 ```typescript
 // OPA integration in Express middleware
-import { loadPolicy } from "@open-policy-agent/opa-wasm";
+import { loadPolicy } from '@open-policy-agent/opa-wasm';
 
 let policy: any;
 
 async function initOPA(): Promise<void> {
-  const policyWasm = await fs.readFile("./policy.wasm");
+  const policyWasm = await fs.readFile('./policy.wasm');
   policy = await loadPolicy(policyWasm);
 }
 
@@ -623,7 +613,7 @@ function authorize(req: Request, res: Response, next: NextFunction): void {
       team_id: req.user.teamId,
     },
     method: req.method,
-    path: req.path.split("/").filter(Boolean),
+    path: req.path.split('/').filter(Boolean),
     rate_limit: {
       remaining: req.rateLimit?.remaining ?? 0,
     },
@@ -635,8 +625,8 @@ function authorize(req: Request, res: Response, next: NextFunction): void {
     next();
   } else {
     res.status(403).json({
-      error: "Forbidden",
-      message: "You do not have permission to perform this action",
+      error: 'Forbidden',
+      message: 'You do not have permission to perform this action',
     });
   }
 }
@@ -758,12 +748,11 @@ async function checkRateLimit(
     .expire(currentKey, windowSeconds * 2)
     .exec();
 
-  const previousCount = parseInt((results?.[0]?.[1] as string) ?? "0", 10);
+  const previousCount = parseInt((results?.[0]?.[1] as string) ?? '0', 10);
   const currentCount = (results?.[1]?.[1] as number) ?? 1;
 
   // Weighted count
-  const effectiveCount =
-    previousCount * (1 - windowProgress) + currentCount;
+  const effectiveCount = previousCount * (1 - windowProgress) + currentCount;
 
   if (effectiveCount > limit) {
     const retryAfter = Math.ceil(windowSeconds * (1 - windowProgress));
@@ -781,21 +770,18 @@ async function checkRateLimit(
 }
 
 // Express middleware
-function rateLimitMiddleware(
-  limit: number,
-  windowSeconds: number
-) {
+function rateLimitMiddleware(limit: number, windowSeconds: number) {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const key = req.user?.id ?? req.ip ?? "anonymous";
+    const key = req.user?.id ?? req.ip ?? 'anonymous';
     const result = await checkRateLimit(key, limit, windowSeconds);
 
-    res.set("X-RateLimit-Limit", limit.toString());
-    res.set("X-RateLimit-Remaining", result.remaining.toString());
+    res.set('X-RateLimit-Limit', limit.toString());
+    res.set('X-RateLimit-Remaining', result.remaining.toString());
 
     if (!result.allowed) {
-      res.set("Retry-After", result.retryAfter?.toString() ?? "60");
+      res.set('Retry-After', result.retryAfter?.toString() ?? '60');
       res.status(429).json({
-        error: "Too Many Requests",
+        error: 'Too Many Requests',
         retryAfter: result.retryAfter,
       });
       return;
@@ -843,7 +829,7 @@ function rateLimitMiddleware(
 ```
 
 ```typescript
-import crypto from "crypto";
+import crypto from 'crypto';
 
 function signRequest(
   method: string,
@@ -853,15 +839,15 @@ function signRequest(
   secretKey: string
 ): { signature: string; timestamp: string; nonce: string } {
   const timestamp = Math.floor(Date.now() / 1000).toString();
-  const nonce = crypto.randomBytes(16).toString("hex");
+  const nonce = crypto.randomBytes(16).toString('hex');
 
   // Sort query parameters for canonical form
   const sortedQuery = Object.keys(query)
     .sort()
     .map((k) => `${k}=${query[k]}`)
-    .join("&");
+    .join('&');
 
-  const bodyHash = crypto.createHash("sha256").update(body).digest("hex");
+  const bodyHash = crypto.createHash('sha256').update(body).digest('hex');
 
   const canonical = [
     method.toUpperCase(),
@@ -870,12 +856,12 @@ function signRequest(
     timestamp,
     nonce,
     `sha256:${bodyHash}`,
-  ].join("\n");
+  ].join('\n');
 
   const signature = crypto
-    .createHmac("sha256", secretKey)
+    .createHmac('sha256', secretKey)
     .update(canonical)
-    .digest("base64");
+    .digest('base64');
 
   return { signature, timestamp, nonce };
 }
@@ -896,14 +882,14 @@ function verifySignature(
 
   // 2. Reconstruct and compute
   const bodyHash = crypto
-    .createHash("sha256")
+    .createHash('sha256')
     .update(JSON.stringify(req.body))
-    .digest("hex");
+    .digest('hex');
 
   const sortedQuery = Object.keys(req.query)
     .sort()
     .map((k) => `${k}=${req.query[k]}`)
-    .join("&");
+    .join('&');
 
   const canonical = [
     req.method.toUpperCase(),
@@ -912,12 +898,12 @@ function verifySignature(
     timestamp,
     nonce,
     `sha256:${bodyHash}`,
-  ].join("\n");
+  ].join('\n');
 
   const expected = crypto
-    .createHmac("sha256", secretKey)
+    .createHmac('sha256', secretKey)
     .update(canonical)
-    .digest("base64");
+    .digest('base64');
 
   // 3. Timing-safe comparison (prevents timing attacks)
   return crypto.timingSafeEqual(
@@ -977,19 +963,16 @@ function verifySignature(
 ### CORS Deep Dive
 
 ```typescript
-import cors from "cors";
+import cors from 'cors';
 
 // WRONG: Overly permissive
 // app.use(cors()); // Allows ALL origins!
 
 // CORRECT: Restrictive CORS configuration
-const allowedOrigins = [
-  "https://app.example.com",
-  "https://admin.example.com",
-];
+const allowedOrigins = ['https://app.example.com', 'https://admin.example.com'];
 
-if (process.env.NODE_ENV === "development") {
-  allowedOrigins.push("http://localhost:3000");
+if (process.env.NODE_ENV === 'development') {
+  allowedOrigins.push('http://localhost:3000');
 }
 
 const corsOptions: cors.CorsOptions = {
@@ -1005,8 +988,8 @@ const corsOptions: cors.CorsOptions = {
       callback(new Error(`Origin ${origin} not allowed by CORS`));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Request-ID"],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
   credentials: true, // Allow cookies (requires specific origin, not *)
   maxAge: 86400, // Cache preflight for 24 hours
 };

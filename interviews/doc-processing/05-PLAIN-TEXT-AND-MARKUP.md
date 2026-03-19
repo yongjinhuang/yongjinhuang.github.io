@@ -5,7 +5,7 @@ are scraping web pages, reading configuration files, parsing API responses, or
 normalising free-form user input, you need a reliable mental model of the formats
 you will encounter and the Python libraries that handle them. This chapter walks
 through every major format -- plain text, Markdown, HTML, XML, JSON, YAML, TOML --
-and closes with Jinja2 templating so you can *generate* documents as fluently as
+and closes with Jinja2 templating so you can _generate_ documents as fluently as
 you parse them.
 
 ```
@@ -264,7 +264,7 @@ html = md.render("## Section\n\n- item 1\n- item 2\n")
 
 The token stream gives you AST-level access:
 
-```python
+````python
 from markdown_it import MarkdownIt
 
 source = """
@@ -276,7 +276,7 @@ Some text with a [link](https://example.com).
 
 ```python
 print("hello")
-```
+````
 
 Another [reference](https://docs.python.org).
 """
@@ -285,28 +285,33 @@ md = MarkdownIt()
 tokens = md.parse(source)
 
 # Extract headings
+
 headings = []
 for i, tok in enumerate(tokens):
-    if tok.type == "heading_open":
-        level = int(tok.tag[1])             # "h1" -> 1
-        content = tokens[i + 1].content     # inline token follows
-        headings.append({"level": level, "text": content})
+if tok.type == "heading_open":
+level = int(tok.tag[1]) # "h1" -> 1
+content = tokens[i + 1].content # inline token follows
+headings.append({"level": level, "text": content})
 
 # headings = [{'level': 1, 'text': 'Title'}, {'level': 2, 'text': 'Subtitle'}]
 
 # Extract links (from inline tokens)
+
 import re
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 links = LINK_RE.findall(source)
+
 # [('link', 'https://example.com'), ('reference', 'https://docs.python.org')]
 
 # Extract fenced code blocks
+
 code_blocks = [
-    {"lang": tok.info, "code": tok.content}
-    for tok in tokens
-    if tok.type == "fence"
+{"lang": tok.info, "code": tok.content}
+for tok in tokens
+if tok.type == "fence"
 ]
-```
+
+````
 
 ### 2.4 Generating Markdown Programmatically
 
@@ -331,7 +336,7 @@ print(generate_table(
 # | --- | --- |
 # | Alice | Engineer |
 # | Bob | Designer |
-```
+````
 
 ---
 
@@ -658,6 +663,7 @@ parsed = orjson.loads(raw)
 ```
 
 Key differences from stdlib json:
+
 - `dumps()` returns `bytes`, not `str`
 - No `default` parameter; use `option` flags or `orjson.OPT_PASSTHROUGH_*`
 - Natively handles `datetime`, `date`, `UUID`, `numpy` arrays
@@ -869,7 +875,7 @@ config = tomllib.loads(toml_str)
 # config['project']['authors'] -> [{'name': 'Alice', ...}, {'name': 'Bob', ...}]
 ```
 
-For *writing* TOML, use **tomli-w**:
+For _writing_ TOML, use **tomli-w**:
 
 ```python
 import tomli_w

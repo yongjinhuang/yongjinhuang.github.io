@@ -100,6 +100,7 @@ CORRECT:                      WRONG:
 ```
 
 **Rules:**
+
 - One `<h1>` per page
 - Never skip heading levels (h1 to h3 without h2)
 - Headings should describe content, not be used for visual sizing
@@ -143,7 +144,10 @@ Page Landmark Structure:
 
 ```html
 <!-- Informative image: describe the content -->
-<img src="chart.png" alt="Bar chart showing 40% increase in revenue from Q1 to Q4 2025" />
+<img
+  src="chart.png"
+  alt="Bar chart showing 40% increase in revenue from Q1 to Q4 2025"
+/>
 
 <!-- Decorative image: empty alt -->
 <img src="divider.svg" alt="" />
@@ -155,7 +159,11 @@ Page Landmark Structure:
 
 <!-- Complex image: use longer description -->
 <figure>
-  <img src="architecture.png" alt="System architecture diagram" aria-describedby="arch-desc" />
+  <img
+    src="architecture.png"
+    alt="System architecture diagram"
+    aria-describedby="arch-desc"
+  />
   <figcaption id="arch-desc">
     The system uses a microservices architecture with three main services:
     authentication, data processing, and notification...
@@ -208,7 +216,7 @@ Every interactive element must have a **visible focus indicator** when navigated
 ```css
 /* Default browser focus (often removed by reset stylesheets -- DON'T) */
 :focus {
-  outline: 2px solid #4A90D9;
+  outline: 2px solid #4a90d9;
   outline-offset: 2px;
 }
 
@@ -227,14 +235,14 @@ Every interactive element must have a **visible focus indicator** when navigated
 
 **Keyboard navigation requirements:**
 
-| Key          | Expected Behavior                    |
-|--------------|--------------------------------------|
-| Tab          | Move to next interactive element     |
-| Shift+Tab    | Move to previous interactive element |
-| Enter        | Activate buttons, links              |
-| Space        | Activate buttons, toggle checkboxes  |
-| Escape       | Close modals, dropdowns, menus       |
-| Arrow keys   | Navigate within components (tabs, menus) |
+| Key        | Expected Behavior                        |
+| ---------- | ---------------------------------------- |
+| Tab        | Move to next interactive element         |
+| Shift+Tab  | Move to previous interactive element     |
+| Enter      | Activate buttons, links                  |
+| Space      | Activate buttons, toggle checkboxes      |
+| Escape     | Close modals, dropdowns, menus           |
+| Arrow keys | Navigate within components (tabs, menus) |
 
 **Focus management rules:**
 
@@ -245,7 +253,10 @@ Every interactive element must have a **visible focus indicator** when navigated
 
 ```html
 <!-- Skip link (first element in body) -->
-<a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:p-4 focus:bg-white">
+<a
+  href="#main-content"
+  className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:p-4 focus:bg-white"
+>
   Skip to main content
 </a>
 ```
@@ -332,6 +343,7 @@ Before destructive action:          After error:
 ```
 
 Key principles:
+
 - Confirm before destructive actions
 - Allow undo when possible
 - Save work automatically
@@ -368,18 +380,18 @@ Both approaches are valuable. In practice, web design often uses a combination: 
 
 ### Accessibility Testing Tools
 
-| Tool                | Type           | Purpose                                    |
-|---------------------|----------------|--------------------------------------------|
-| axe DevTools        | Browser ext.   | Automated accessibility auditing           |
-| Lighthouse          | Chrome DevTools| Performance + accessibility scoring        |
-| WAVE                | Browser ext.   | Visual accessibility evaluation            |
-| VoiceOver           | macOS/iOS      | Built-in screen reader                     |
-| NVDA                | Windows        | Free screen reader                         |
-| JAWS                | Windows        | Enterprise screen reader                   |
-| Contrast Checker    | Web tool       | Check color contrast ratios                |
-| Stark               | Figma plugin   | Contrast + vision simulation in Figma      |
-| pa11y               | CLI/CI         | Automated testing in CI pipeline           |
-| eslint-plugin-jsx-a11y | ESLint      | Catch a11y issues in JSX at lint time      |
+| Tool                   | Type            | Purpose                               |
+| ---------------------- | --------------- | ------------------------------------- |
+| axe DevTools           | Browser ext.    | Automated accessibility auditing      |
+| Lighthouse             | Chrome DevTools | Performance + accessibility scoring   |
+| WAVE                   | Browser ext.    | Visual accessibility evaluation       |
+| VoiceOver              | macOS/iOS       | Built-in screen reader                |
+| NVDA                   | Windows         | Free screen reader                    |
+| JAWS                   | Windows         | Enterprise screen reader              |
+| Contrast Checker       | Web tool        | Check color contrast ratios           |
+| Stark                  | Figma plugin    | Contrast + vision simulation in Figma |
+| pa11y                  | CLI/CI          | Automated testing in CI pipeline      |
+| eslint-plugin-jsx-a11y | ESLint          | Catch a11y issues in JSX at lint time |
 
 **Testing methodology:**
 
@@ -603,7 +615,7 @@ function SkipLink() {
   <main id="main-content" tabIndex={-1}>
     ...
   </main>
-</body>
+</body>;
 ```
 
 ---
@@ -638,7 +650,10 @@ function ProjectCard({ title, description, href, tags }: CardProps) {
       <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
         {description}
       </p>
-      <div className="mt-4 flex flex-wrap gap-2" aria-label={`Technologies: ${tags.join(', ')}`}>
+      <div
+        className="mt-4 flex flex-wrap gap-2"
+        aria-label={`Technologies: ${tags.join(', ')}`}
+      >
         {tags.map((tag) => (
           <span
             key={tag}
@@ -742,6 +757,7 @@ function ThemeToggle() {
 ### Q4: How should focus indicators be designed?
 
 Focus indicators must be:
+
 - **Visible**: High contrast against surrounding elements (at least 3:1)
 - **Distinct**: Clearly different from hover states
 - **Consistent**: Same style across all interactive elements
@@ -753,7 +769,7 @@ Best practice is to use `:focus-visible` (which only shows focus for keyboard na
 
 **Universal design** creates one solution that works for the widest possible audience. It comes from architecture (ramps, automatic doors). In digital design, this might mean one layout that works for all screen readers, keyboards, and mice.
 
-**Inclusive design** goes further by designing *with* people who have diverse abilities, not just *for* them. It acknowledges that a single solution may not fit all and provides flexibility -- multiple input methods, customizable font sizes, adjustable motion, high contrast modes.
+**Inclusive design** goes further by designing _with_ people who have diverse abilities, not just _for_ them. It acknowledges that a single solution may not fit all and provides flexibility -- multiple input methods, customizable font sizes, adjustable motion, high contrast modes.
 
 In practice, web accessibility combines both: a single accessible baseline (universal) with user preferences and options (inclusive).
 
@@ -770,6 +786,7 @@ In practice, web accessibility combines both: a single accessible baseline (univ
 ### Q7: What tools do you use for accessibility testing?
 
 I use a layered approach:
+
 1. **Linting**: `eslint-plugin-jsx-a11y` catches issues at development time
 2. **Automated scanning**: axe DevTools and Lighthouse for automated WCAG checks
 3. **Keyboard testing**: Tab through every interactive element manually
@@ -786,6 +803,7 @@ ARIA (Accessible Rich Internet Applications) provides attributes that add meanin
 **The first rule of ARIA: do not use ARIA if a native HTML element provides the behavior.** For example, use `<button>` instead of `<div role="button">`. Native elements come with keyboard support and screen reader compatibility built in.
 
 Use ARIA when:
+
 - Building custom widgets that have no native HTML equivalent (tabs, accordions, carousels)
 - Providing additional context (aria-label, aria-describedby)
 - Managing dynamic content (aria-live for announcements)
@@ -798,34 +816,41 @@ Use ARIA when:
 ### For a Next.js + Tailwind + Framer Motion Portfolio
 
 1. **Add a skip link**
+
    - Add a "Skip to main content" link as the first focusable element
    - Use Tailwind's `sr-only` and `focus:not-sr-only` classes
 
 2. **Audit heading hierarchy**
+
    - Ensure each page has exactly one `<h1>`
    - Section headers (Experience, Skills, Education) should be `<h2>`
    - Sub-items within sections should be `<h3>`
 
 3. **Add landmark regions**
+
    - Use `<header>`, `<nav>`, `<main>`, `<footer>` semantic elements
    - Add `aria-label` to `<section>` elements for screen reader navigation
 
 4. **Check color contrast**
+
    - Run your light and dark themes through a contrast checker
    - Pay attention to muted text colors and border colors
    - Ensure the theme toggle icon has sufficient contrast in both themes
 
 5. **Respect motion preferences**
+
    - Use Framer Motion's `useReducedMotion` hook
    - Disable or reduce the animated background for users who prefer reduced motion
    - Disable the custom cursor animation for reduced motion preference
 
 6. **Make interactive elements accessible**
+
    - Ensure all buttons and links are at least 44x44px
    - Add `aria-label` to icon-only buttons (theme toggle, language selector, social links)
    - Ensure visible focus indicators on all interactive elements
 
 7. **Test with keyboard and VoiceOver**
+
    - Tab through your entire portfolio
    - Verify every section is reachable and content is announced properly
    - Test the language selector and theme toggle with keyboard only

@@ -120,13 +120,13 @@ contract MyToken is ERC20, ERC20Burnable, ERC20Permit, Ownable {
 
 ### 2.4 ERC-20 Gotchas
 
-| Gotcha | Tokens Affected | Solution |
-|--------|----------------|----------|
-| No `bool` return on `transfer` | USDT, BNB | Use `SafeERC20.safeTransfer()` |
-| Fee-on-transfer | STA, PAXG | Check balance before/after transfer |
-| Rebasing (balance changes) | stETH, AMPL | Use wrappers (wstETH) |
-| Approval race condition | All ERC-20 | Use `increaseAllowance()`/`decreaseAllowance()` |
-| Decimals != 18 | USDC (6), WBTC (8) | Always use `10 ** decimals()` |
+| Gotcha                         | Tokens Affected    | Solution                                        |
+| ------------------------------ | ------------------ | ----------------------------------------------- |
+| No `bool` return on `transfer` | USDT, BNB          | Use `SafeERC20.safeTransfer()`                  |
+| Fee-on-transfer                | STA, PAXG          | Check balance before/after transfer             |
+| Rebasing (balance changes)     | stETH, AMPL        | Use wrappers (wstETH)                           |
+| Approval race condition        | All ERC-20         | Use `increaseAllowance()`/`decreaseAllowance()` |
+| Decimals != 18                 | USDC (6), WBTC (8) | Always use `10 ** decimals()`                   |
 
 ---
 
@@ -306,12 +306,12 @@ contract GameItems is ERC1155, Ownable {
 
 **When to use each standard**:
 
-| Use Case | Standard | Why |
-|----------|----------|-----|
-| Currency/governance token | ERC-20 | Simple, universal compatibility |
-| Unique art/collectible | ERC-721 | Each token is distinct |
-| Game items (mix of types) | ERC-1155 | Batch operations, mixed types |
-| Yield-bearing vault shares | ERC-4626 | Standardized vault interface |
+| Use Case                   | Standard | Why                             |
+| -------------------------- | -------- | ------------------------------- |
+| Currency/governance token  | ERC-20   | Simple, universal compatibility |
+| Unique art/collectible     | ERC-721  | Each token is distinct          |
+| Game items (mix of types)  | ERC-1155 | Batch operations, mixed types   |
+| Yield-bearing vault shares | ERC-4626 | Standardized vault interface    |
 
 ---
 
@@ -430,14 +430,14 @@ owned by Alice               ├── Owns 500 USDC
 
 ### 7.2 Distribution Methods
 
-| Method | How It Works | Example |
-|--------|-------------|---------|
-| Fair Launch | No pre-mine, everyone mines/stakes equally | Bitcoin |
-| ICO/IDO | Public sale at fixed price | Early Ethereum |
-| Airdrop | Free distribution to existing users | Uniswap (UNI) |
-| Liquidity Mining | Earn tokens by providing liquidity | Compound (COMP) |
-| Vesting | Team/investor tokens unlock over time | Most VC-backed projects |
-| Points → Token | Accumulate points, convert to tokens | Blur, EigenLayer |
+| Method           | How It Works                               | Example                 |
+| ---------------- | ------------------------------------------ | ----------------------- |
+| Fair Launch      | No pre-mine, everyone mines/stakes equally | Bitcoin                 |
+| ICO/IDO          | Public sale at fixed price                 | Early Ethereum          |
+| Airdrop          | Free distribution to existing users        | Uniswap (UNI)           |
+| Liquidity Mining | Earn tokens by providing liquidity         | Compound (COMP)         |
+| Vesting          | Team/investor tokens unlock over time      | Most VC-backed projects |
+| Points → Token   | Accumulate points, convert to tokens       | Blur, EigenLayer        |
 
 ---
 

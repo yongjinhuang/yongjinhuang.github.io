@@ -37,39 +37,46 @@ Developer Push
 ### Pipeline Stages in Detail
 
 **Stage 1: Source Commit**
+
 - Triggered by: PR merge to `main`, tag push, scheduled (nightly)
 - Key checks: branch protection rules, required reviewers, status checks
 
 **Stage 2: Build**
+
 - Compile source code, resolve dependencies
 - Build Docker image (multi-stage for smaller final image)
 - Lint, static analysis, dependency audit
 
 **Stage 3: Test**
+
 - Unit tests with coverage gate (fail if < 80%)
 - Integration tests against real dependencies (testcontainers)
 - SAST: static application security testing (Semgrep, CodeQL)
 - Secret scanning (truffleHog, GitGuardian)
 
 **Stage 4: Artifact**
+
 - Push versioned image to registry
 - Sign artifact with Cosign
 - Generate SBOM (Software Bill of Materials)
 - Scan image for CVEs (Trivy, Grype)
 
 **Stage 5: Staging**
+
 - Deploy to staging cluster (identical config to prod)
 - Smoke tests: is the service responding?
 - E2E tests: critical user flows
 - Performance baseline comparison
 
 **Stage 6: Canary**
+
 - Route 5% of real production traffic to new version
 - Collect metrics: error rate, latency p99, business metrics
 - Automated analysis (Flagger, Argo Rollouts)
 - Promote or rollback based on thresholds
 
 **Stage 7: Production**
+
 - Progressive rollout (rolling, blue-green, or full canary)
 - Real-time monitoring
 - Deployment marked successful when health checks pass
@@ -294,13 +301,13 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 2      # At most 2 pods down at any time
-      maxSurge: 2            # At most 2 extra pods above desired
+      maxUnavailable: 2 # At most 2 pods down at any time
+      maxSurge: 2 # At most 2 extra pods above desired
   template:
     spec:
       containers:
         - name: app
-          readinessProbe:    # CRITICAL: pod must be ready before old pod is killed
+          readinessProbe: # CRITICAL: pod must be ready before old pod is killed
             httpGet:
               path: /health/ready
               port: 8080
@@ -310,7 +317,7 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["/bin/sleep", "5"]  # Drain connections before SIGTERM
+                command: ['/bin/sleep', '5'] # Drain connections before SIGTERM
       terminationGracePeriodSeconds: 60
 ```
 
@@ -319,7 +326,7 @@ spec:
 ```yaml
 spec:
   readinessGates:
-    - conditionType: "feature-gates.example.com/ready"
+    - conditionType: 'feature-gates.example.com/ready'
 # External controller (e.g., Argo Rollouts) sets this condition
 # Pod receives traffic only when both readiness probe AND gate pass
 ```
@@ -446,11 +453,11 @@ kind: Ingress
 metadata:
   name: my-service-canary
   annotations:
-    nginx.ingress.kubernetes.io/canary: "true"
-    nginx.ingress.kubernetes.io/canary-weight: "5"       # 5% traffic
+    nginx.ingress.kubernetes.io/canary: 'true'
+    nginx.ingress.kubernetes.io/canary-weight: '5' # 5% traffic
     # Or by header for internal testing:
-    nginx.ingress.kubernetes.io/canary-by-header: "X-Canary"
-    nginx.ingress.kubernetes.io/canary-by-header-value: "always"
+    nginx.ingress.kubernetes.io/canary-by-header: 'X-Canary'
+    nginx.ingress.kubernetes.io/canary-by-header-value: 'always'
 spec:
   rules:
     - host: myapp.example.com
@@ -494,9 +501,9 @@ const ldClient = LaunchDarkly.init(process.env.LD_SDK_KEY);
 
 const user = { key: userId, email, country };
 const showNewCheckout = await ldClient.variation(
-  "new-checkout-flow",
+  'new-checkout-flow',
   user,
-  false  // default if flag service is down
+  false // default if flag service is down
 );
 
 if (showNewCheckout) {
@@ -537,16 +544,16 @@ spec:
         nginx:
           stableIngress: my-service-stable
       steps:
-        - setWeight: 5         # Step 1: 5% traffic
-        - pause: {duration: 10m}
-        - analysis:            # Step 2: automated metric check
+        - setWeight: 5 # Step 1: 5% traffic
+        - pause: { duration: 10m }
+        - analysis: # Step 2: automated metric check
             templates:
               - templateName: success-rate
-        - setWeight: 25        # Step 3: 25% traffic
-        - pause: {duration: 5m}
+        - setWeight: 25 # Step 3: 25% traffic
+        - pause: { duration: 5m }
         - setWeight: 50
-        - pause: {duration: 5m}
-        - setWeight: 100       # Full rollout
+        - pause: { duration: 5m }
+        - setWeight: 100 # Full rollout
       analysis:
         successfulRunHistoryLimit: 3
         unsuccessfulRunHistoryLimit: 3
@@ -573,7 +580,7 @@ spec:
             sum(rate(http_requests_total{deployment="{{args.service-name}}"}[5m]))
     - name: latency-p99
       interval: 1m
-      successCondition: result[0] <= 0.2  # 200ms
+      successCondition: result[0] <= 0.2 # 200ms
       provider:
         prometheus:
           address: http://prometheus:9090
@@ -602,9 +609,9 @@ spec:
     targetPort: 8080
   analysis:
     interval: 1m
-    threshold: 5        # max failed checks before rollback
-    maxWeight: 50       # max canary traffic weight
-    stepWeight: 10      # increment per step
+    threshold: 5 # max failed checks before rollback
+    maxWeight: 50 # max canary traffic weight
+    stepWeight: 10 # increment per step
     metrics:
       - name: request-success-rate
         thresholdRange:
@@ -612,7 +619,7 @@ spec:
         interval: 1m
       - name: request-duration
         thresholdRange:
-          max: 500       # ms
+          max: 500 # ms
         interval: 1m
     webhooks:
       - name: load-test
@@ -620,7 +627,7 @@ spec:
         timeout: 5s
         metadata:
           type: cmd
-          cmd: "hey -z 1m -q 10 -c 2 http://my-service-canary/"
+          cmd: 'hey -z 1m -q 10 -c 2 http://my-service-canary/'
 ```
 
 **Promotion gates** — manual approval before promoting:
@@ -778,8 +785,8 @@ Deployment in progress
 
 ```yaml
 spec:
-  progressDeadlineSeconds: 600   # Auto-rollback if not progressed in 10min
-  minReadySeconds: 30            # Pod must be ready 30s before counting as available
+  progressDeadlineSeconds: 600 # Auto-rollback if not progressed in 10min
+  minReadySeconds: 30 # Pod must be ready 30s before counting as available
 ```
 
 ```bash
@@ -992,12 +999,12 @@ jobs:
 
 **SLSA (Supply chain Levels for Software Artifacts):**
 
-| Level | Requirement | How |
-|-------|-------------|-----|
-| SLSA 1 | Provenance exists | Generated by build system |
-| SLSA 2 | Provenance signed | Build service signs it |
-| SLSA 3 | Hermetic build | Isolated build environment |
-| SLSA 4 | Two-party review | All changes reviewed |
+| Level  | Requirement       | How                        |
+| ------ | ----------------- | -------------------------- |
+| SLSA 1 | Provenance exists | Generated by build system  |
+| SLSA 2 | Provenance signed | Build service signs it     |
+| SLSA 3 | Hermetic build    | Isolated build environment |
+| SLSA 4 | Two-party review  | All changes reviewed       |
 
 **Cosign image signing:**
 
@@ -1034,7 +1041,7 @@ spec:
               namespaces: [production]
       verifyImages:
         - imageReferences:
-            - "ghcr.io/org/*"
+            - 'ghcr.io/org/*'
           attestors:
             - entries:
                 - keys:
@@ -1136,11 +1143,11 @@ spec:
     namespace: production
   syncPolicy:
     automated:
-      prune: true      # Delete resources removed from Git
-      selfHeal: true   # Revert manual cluster changes
+      prune: true # Delete resources removed from Git
+      selfHeal: true # Revert manual cluster changes
     syncOptions:
       - CreateNamespace=true
-      - PruneLast=true       # Delete old resources after new ones are healthy
+      - PruneLast=true # Delete old resources after new ones are healthy
     retry:
       limit: 5
       backoff:
@@ -1161,14 +1168,14 @@ kind: Job
 metadata:
   name: db-migrate
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: '-1'
 spec:
   template:
     spec:
       containers:
         - name: migrate
           image: ghcr.io/org/app:v2.3.1
-          command: ["./migrate", "up"]
+          command: ['./migrate', 'up']
 ---
 # Wave 0: Deploy application after migration
 apiVersion: apps/v1
@@ -1176,7 +1183,7 @@ kind: Deployment
 metadata:
   name: my-service
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: '0'
 ```
 
 ### Drift Detection
@@ -1218,7 +1225,7 @@ spec:
   # Automated image update
   images:
     - name: ghcr.io/org/app
-      newTag: ${{ IMAGE_TAG }}  # Updated by Flux image automation
+      newTag: ${{ IMAGE_TAG }} # Updated by Flux image automation
 ```
 
 ---
@@ -1552,15 +1559,15 @@ cosign verify --certificate-identity-regexp=".*" \
 
 ## Interview Checklist
 
-| Topic | Key Points to Demonstrate |
-|-------|--------------------------|
-| Pipeline stages | Know the commit → artifact → staging → canary → prod flow |
-| Immutable artifacts | SHA-tagged images, no rebuilds between environments |
-| Rolling vs Blue-Green vs Canary | Trade-offs: risk, speed, infrastructure cost |
-| Database migrations | Expand-contract, never rename/drop in same deploy as code |
-| Rollback triggers | Automated on error rate spike; when to roll back vs forward |
-| Multi-region ordering | Start with smallest blast radius; gate on regional health |
-| GitOps | Pull-based model, drift detection, sync waves for ordering |
-| Supply chain | Cosign signing, SBOM, Kyverno admission policies |
-| DORA metrics | Deployment frequency, lead time, CFR, MTTR |
-| Feature flags | Decouple deploy from release; kill switch capability |
+| Topic                           | Key Points to Demonstrate                                   |
+| ------------------------------- | ----------------------------------------------------------- |
+| Pipeline stages                 | Know the commit → artifact → staging → canary → prod flow   |
+| Immutable artifacts             | SHA-tagged images, no rebuilds between environments         |
+| Rolling vs Blue-Green vs Canary | Trade-offs: risk, speed, infrastructure cost                |
+| Database migrations             | Expand-contract, never rename/drop in same deploy as code   |
+| Rollback triggers               | Automated on error rate spike; when to roll back vs forward |
+| Multi-region ordering           | Start with smallest blast radius; gate on regional health   |
+| GitOps                          | Pull-based model, drift detection, sync waves for ordering  |
+| Supply chain                    | Cosign signing, SBOM, Kyverno admission policies            |
+| DORA metrics                    | Deployment frequency, lead time, CFR, MTTR                  |
+| Feature flags                   | Decouple deploy from release; kill switch capability        |

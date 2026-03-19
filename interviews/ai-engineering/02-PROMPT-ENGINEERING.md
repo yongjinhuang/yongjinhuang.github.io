@@ -85,15 +85,15 @@ Modern LLM APIs use a chat-based interface with three roles:
 
 ### Role Definitions
 
-| Role | Purpose | Example |
-|------|---------|---------|
-| **system** | Sets behavior, persona, constraints | "You are a helpful coding assistant. Always respond in JSON." |
-| **user** | The human's message/query | "How do I sort a list in Python?" |
-| **assistant** | The model's previous responses | Used for multi-turn conversations and few-shot examples |
+| Role          | Purpose                             | Example                                                       |
+| ------------- | ----------------------------------- | ------------------------------------------------------------- |
+| **system**    | Sets behavior, persona, constraints | "You are a helpful coding assistant. Always respond in JSON." |
+| **user**      | The human's message/query           | "How do I sort a list in Python?"                             |
+| **assistant** | The model's previous responses      | Used for multi-turn conversations and few-shot examples       |
 
 ### Message Structure
 
-```python
+````python
 messages = [
     {
         "role": "system",
@@ -113,7 +113,7 @@ messages = [
         "content": "Now add support for checking MX records."
     },
 ]
-```
+````
 
 ### System Prompt Best Practices
 
@@ -210,6 +210,7 @@ messages = [
 **When to use:** Tasks that need consistent formatting or the model struggles with zero-shot.
 
 **Guidelines:**
+
 - 2-5 examples is usually sufficient
 - Choose diverse examples that cover edge cases
 - Order examples from simple to complex
@@ -251,18 +252,18 @@ messages = [
 
 **Variants:**
 
-| Variant | Trigger Phrase | Best For |
-|---------|---------------|----------|
-| Basic CoT | "Think step by step" | General reasoning |
-| Zero-shot CoT | "Let's think about this carefully" | When no examples available |
-| Few-shot CoT | Show examples with reasoning steps | Complex multi-step tasks |
+| Variant          | Trigger Phrase                                       | Best For                      |
+| ---------------- | ---------------------------------------------------- | ----------------------------- |
+| Basic CoT        | "Think step by step"                                 | General reasoning             |
+| Zero-shot CoT    | "Let's think about this carefully"                   | When no examples available    |
+| Few-shot CoT     | Show examples with reasoning steps                   | Complex multi-step tasks      |
 | CoT + extraction | "Think step by step, then give final answer as JSON" | Reasoning + structured output |
 
 ### 4. Role Prompting
 
 Assign a specific expertise or persona to improve quality in domain-specific tasks.
 
-```python
+````python
 messages = [
     {
         "role": "system",
@@ -284,7 +285,7 @@ messages = [
                    "```",
     },
 ]
-```
+````
 
 ### 5. Self-Consistency
 
@@ -383,6 +384,7 @@ def chained_customer_support(client, user_message: str) -> dict:
 ```
 
 **Why chain instead of one big prompt?**
+
 - Each step can use a different model (cheap model for extraction, expensive for generation)
 - Easier to debug -- you can inspect intermediate results
 - Each step can be tested independently
@@ -663,7 +665,7 @@ def build_defended_prompt(system_instructions: str, user_input: str) -> list[dic
 
 ### Template System
 
-```python
+````python
 from string import Template
 from typing import Any
 
@@ -710,7 +712,7 @@ prompt = SUMMARIZE_TEMPLATE.render(
     audience="senior engineers",
     document=rfc_text,
 )
-```
+````
 
 ### Prompt Composition Pattern
 
@@ -978,23 +980,23 @@ Start: What kind of task?
 
 ### Common Prompt Patterns Cheat Sheet
 
-| Pattern | When to Use | Example Trigger |
-|---------|-------------|-----------------|
-| Zero-shot | Simple tasks, strong models | "Classify this email" |
-| Few-shot | Format-sensitive, extraction | "Parse this invoice" |
-| Chain-of-thought | Reasoning, math, logic | "Why did this error occur?" |
-| Role prompting | Domain expertise needed | "Review this security code" |
-| Self-consistency | High-stakes decisions | "Diagnose this patient" |
-| Prompt chaining | Multi-stage pipelines | "Analyze, then act on this ticket" |
-| Structured output | API responses, data processing | "Extract into JSON schema" |
-| Decomposition | Complex, multi-faceted tasks | "Full code review" |
+| Pattern           | When to Use                    | Example Trigger                    |
+| ----------------- | ------------------------------ | ---------------------------------- |
+| Zero-shot         | Simple tasks, strong models    | "Classify this email"              |
+| Few-shot          | Format-sensitive, extraction   | "Parse this invoice"               |
+| Chain-of-thought  | Reasoning, math, logic         | "Why did this error occur?"        |
+| Role prompting    | Domain expertise needed        | "Review this security code"        |
+| Self-consistency  | High-stakes decisions          | "Diagnose this patient"            |
+| Prompt chaining   | Multi-stage pipelines          | "Analyze, then act on this ticket" |
+| Structured output | API responses, data processing | "Extract into JSON schema"         |
+| Decomposition     | Complex, multi-faceted tasks   | "Full code review"                 |
 
 ### Token Cost by Technique
 
-| Technique | Token Overhead | Latency Impact |
-|-----------|---------------|----------------|
-| Zero-shot | Minimal (~50 tokens) | Negligible |
-| Few-shot (3 examples) | +200-500 tokens | +100-200ms |
-| Chain-of-thought | +100-300 tokens output | +200-500ms |
-| Self-consistency (5x) | 5x total tokens | 5x latency |
-| Prompt chaining (3 steps) | 3x total tokens | 3x latency |
+| Technique                 | Token Overhead         | Latency Impact |
+| ------------------------- | ---------------------- | -------------- |
+| Zero-shot                 | Minimal (~50 tokens)   | Negligible     |
+| Few-shot (3 examples)     | +200-500 tokens        | +100-200ms     |
+| Chain-of-thought          | +100-300 tokens output | +200-500ms     |
+| Self-consistency (5x)     | 5x total tokens        | 5x latency     |
+| Prompt chaining (3 steps) | 3x total tokens        | 3x latency     |

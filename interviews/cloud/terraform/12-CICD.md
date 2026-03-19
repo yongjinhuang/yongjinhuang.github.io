@@ -46,13 +46,13 @@ on:
       - 'infrastructure/**'
 
 permissions:
-  id-token: write    # Required for OIDC
+  id-token: write # Required for OIDC
   contents: read
-  pull-requests: write  # Required to post PR comments
+  pull-requests: write # Required to post PR comments
 
 env:
-  TF_VERSION: "1.7.0"
-  WORKING_DIR: "infrastructure/environments/production"
+  TF_VERSION: '1.7.0'
+  WORKING_DIR: 'infrastructure/environments/production'
 
 jobs:
   plan:
@@ -272,8 +272,8 @@ projects:
     terraform_version: v1.7.0
     autoplan:
       when_modified:
-        - "*.tf"
-        - "*.tfvars"
+        - '*.tf'
+        - '*.tfvars'
       enabled: true
     apply_requirements:
       - approved
@@ -285,8 +285,8 @@ projects:
     terraform_version: v1.7.0
     autoplan:
       when_modified:
-        - "*.tf"
-        - "*.tfvars"
+        - '*.tf'
+        - '*.tfvars'
       enabled: true
     apply_requirements:
       - approved
@@ -305,16 +305,16 @@ atlantis unlock                  # Unlock state (if stuck)
 
 ### Atlantis vs GitHub Actions
 
-| Aspect | Atlantis | GitHub Actions |
-|--------|----------|----------------|
-| Hosting | Self-hosted (you manage it) | Managed by GitHub |
-| Plan/apply trigger | PR comments | PR events / merge |
-| State locking | Built-in per-project | You must handle it |
-| Multi-repo | Supports multiple repos | Per-repo workflows |
-| Cost | Server cost | GitHub Actions minutes |
-| Customization | Workflow hooks, custom scripts | Full workflow flexibility |
-| Setup complexity | Moderate (deploy server, webhooks) | Low (YAML in repo) |
-| Approval flow | `atlantis apply` after approval | Merge triggers apply |
+| Aspect             | Atlantis                           | GitHub Actions            |
+| ------------------ | ---------------------------------- | ------------------------- |
+| Hosting            | Self-hosted (you manage it)        | Managed by GitHub         |
+| Plan/apply trigger | PR comments                        | PR events / merge         |
+| State locking      | Built-in per-project               | You must handle it        |
+| Multi-repo         | Supports multiple repos            | Per-repo workflows        |
+| Cost               | Server cost                        | GitHub Actions minutes    |
+| Customization      | Workflow hooks, custom scripts     | Full workflow flexibility |
+| Setup complexity   | Moderate (deploy server, webhooks) | Low (YAML in repo)        |
+| Approval flow      | `atlantis apply` after approval    | Merge triggers apply      |
 
 Use Atlantis when you want plan/apply tightly integrated into PR comments, need built-in state locking, or manage many Terraform repos from a central server.
 
@@ -328,15 +328,15 @@ Terraform Cloud connects directly to your VCS (GitHub, GitLab, Bitbucket). When 
 
 ### Key Features
 
-| Feature | Description |
-|---------|-------------|
-| Remote Execution | Plan and apply run on Terraform Cloud, not in CI runners |
-| State Management | Built-in remote state with locking, versioning, encryption |
-| Cost Estimation | Shows estimated monthly cost change before apply |
-| Sentinel Policies | Policy-as-code evaluated between plan and apply |
-| Private Registry | Host private modules and providers for your organization |
-| Run Triggers | Chain workspaces (networking applies triggers app workspace) |
-| Variable Sets | Share variables across multiple workspaces |
+| Feature           | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| Remote Execution  | Plan and apply run on Terraform Cloud, not in CI runners     |
+| State Management  | Built-in remote state with locking, versioning, encryption   |
+| Cost Estimation   | Shows estimated monthly cost change before apply             |
+| Sentinel Policies | Policy-as-code evaluated between plan and apply              |
+| Private Registry  | Host private modules and providers for your organization     |
+| Run Triggers      | Chain workspaces (networking applies triggers app workspace) |
+| Variable Sets     | Share variables across multiple workspaces                   |
 
 ### Configuration
 
@@ -354,14 +354,14 @@ terraform {
 
 ### When to Use Terraform Cloud vs Self-Managed CI/CD
 
-| Use Terraform Cloud When | Use Self-Managed CI/CD When |
-|--------------------------|----------------------------|
-| You want minimal setup | You need full pipeline control |
-| Cost estimation matters | You already have CI/CD infrastructure |
-| You need Sentinel policies | You use OPA/Conftest for policies |
-| Small-medium team | Large team with custom requirements |
-| Single Terraform workflow | Terraform is part of a larger deploy pipeline |
-| You want managed state | You manage state in S3/GCS already |
+| Use Terraform Cloud When   | Use Self-Managed CI/CD When                   |
+| -------------------------- | --------------------------------------------- |
+| You want minimal setup     | You need full pipeline control                |
+| Cost estimation matters    | You already have CI/CD infrastructure         |
+| You need Sentinel policies | You use OPA/Conftest for policies             |
+| Small-medium team          | Large team with custom requirements           |
+| Single Terraform workflow  | Terraform is part of a larger deploy pipeline |
+| You want managed state     | You manage state in S3/GCS already            |
 
 ---
 
@@ -391,8 +391,8 @@ Never combine plan and apply in a single step. The plan output must be reviewabl
 - run: terraform apply -auto-approve
 
 # CORRECT: Saved plan file
-- run: terraform plan -out=tfplan    # Plan stage
-- run: terraform apply tfplan        # Apply stage (after approval)
+- run: terraform plan -out=tfplan # Plan stage
+- run: terraform apply tfplan # Apply stage (after approval)
 ```
 
 Using a saved plan file guarantees that exactly what was reviewed gets applied. Without it, the infrastructure could change between plan and apply.
@@ -420,6 +420,7 @@ terraform force-unlock LOCK_ID
 Always make the plan visible in the PR. Reviewers should see exactly what will change without opening CI logs.
 
 Key elements to include in the PR comment:
+
 - Format/validate/plan status
 - Number of resources to add, change, destroy
 - Full plan output (in a collapsible details block)
@@ -437,7 +438,7 @@ name: Drift Detection
 
 on:
   schedule:
-    - cron: '0 8 * * 1-5'  # Weekdays at 8 AM UTC
+    - cron: '0 8 * * 1-5' # Weekdays at 8 AM UTC
 
 jobs:
   detect-drift:
@@ -476,6 +477,7 @@ jobs:
 ```
 
 `terraform plan -detailed-exitcode` returns:
+
 - `0` = no changes (no drift)
 - `1` = error
 - `2` = changes detected (drift exists)

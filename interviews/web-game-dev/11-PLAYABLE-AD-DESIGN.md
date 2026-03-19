@@ -55,19 +55,19 @@ The core gameplay loop. This is where the user experiences the game mechanics.
 ```typescript
 interface PlayPhaseConfig {
   // Gameplay timing
-  minPlayTime: number;      // Minimum time before showing end card (seconds)
-  maxPlayTime: number;      // Maximum play time before forcing end card
-  idealPlayTime: number;    // Target play duration for best conversion
+  minPlayTime: number; // Minimum time before showing end card (seconds)
+  maxPlayTime: number; // Maximum play time before forcing end card
+  idealPlayTime: number; // Target play duration for best conversion
 
   // Difficulty
-  startDifficulty: number;  // 0-1, should be very low (0.1-0.2)
-  endDifficulty: number;    // 0-1, should feel challenging but not frustrating
+  startDifficulty: number; // 0-1, should be very low (0.1-0.2)
+  endDifficulty: number; // 0-1, should feel challenging but not frustrating
   difficultyRampStart: number; // When to start ramping (seconds)
 
   // Progression
-  numLevels: number;        // 1-3 levels typically
+  numLevels: number; // 1-3 levels typically
   showProgressBar: boolean; // Visual progress indicator
-  rewardFrequency: number;  // How often the player gets a reward (seconds)
+  rewardFrequency: number; // How often the player gets a reward (seconds)
 
   // CTA triggers
   triggerEndCardOn: 'timer' | 'lives' | 'levelComplete' | 'fail';
@@ -182,13 +182,16 @@ class PlayableAdDirector {
     const elapsed = this.phaseTimer - this.config.difficultyRampStart;
     if (elapsed <= 0) return this.config.startDifficulty;
 
-    const rampDuration = this.config.maxPlayTime - this.config.difficultyRampStart;
+    const rampDuration =
+      this.config.maxPlayTime - this.config.difficultyRampStart;
     const t = Math.min(elapsed / rampDuration, 1);
 
     // Ease-in curve for natural-feeling difficulty ramp
     const eased = t * t;
-    return this.config.startDifficulty +
-      (this.config.endDifficulty - this.config.startDifficulty) * eased;
+    return (
+      this.config.startDifficulty +
+      (this.config.endDifficulty - this.config.startDifficulty) * eased
+    );
   }
 
   private transitionTo(phase: 'hook' | 'play' | 'cta'): void {
@@ -225,8 +228,8 @@ interface TutorialStep {
   startPos: { x: number; y: number };
   endPos: { x: number; y: number };
   gesture: 'tap' | 'swipe' | 'drag' | 'hold';
-  duration: number;     // Animation duration in seconds
-  pauseAfter: number;   // Pause between repetitions
+  duration: number; // Animation duration in seconds
+  pauseAfter: number; // Pause between repetitions
   highlightArea?: { x: number; y: number; w: number; h: number };
 }
 
@@ -272,10 +275,10 @@ class TutorialHand {
       const t = cycleTime / step.duration;
       const eased = this.easeInOutQuad(t);
 
-      this.currentX = step.startPos.x +
-        (step.endPos.x - step.startPos.x) * eased;
-      this.currentY = step.startPos.y +
-        (step.endPos.y - step.startPos.y) * eased;
+      this.currentX =
+        step.startPos.x + (step.endPos.x - step.startPos.x) * eased;
+      this.currentY =
+        step.startPos.y + (step.endPos.y - step.startPos.y) * eased;
       this.alpha = 1;
 
       // Scale animation for tap gesture
@@ -493,20 +496,20 @@ class DifficultyManager {
     maxSpawnRate: number;
     startObstacleCount: number;
     maxObstacleCount: number;
-    rampStartTime: number;   // When difficulty starts increasing
-    rampEndTime: number;     // When difficulty reaches maximum
+    rampStartTime: number; // When difficulty starts increasing
+    rampEndTime: number; // When difficulty reaches maximum
   };
 
   constructor() {
     this.config = {
       startSpeed: 100,
       maxSpeed: 300,
-      startSpawnRate: 1,       // Spawns per second
+      startSpawnRate: 1, // Spawns per second
       maxSpawnRate: 4,
       startObstacleCount: 1,
       maxObstacleCount: 5,
-      rampStartTime: 3,       // Start ramping at 3 seconds
-      rampEndTime: 20,        // Reach max at 20 seconds
+      rampStartTime: 3, // Start ramping at 3 seconds
+      rampEndTime: 20, // Reach max at 20 seconds
     };
   }
 
@@ -532,21 +535,13 @@ class DifficultyManager {
 
   getSpawnRate(elapsedTime: number): number {
     const t = this.getRampFactor(elapsedTime);
-    return this.lerp(
-      this.config.startSpawnRate,
-      this.config.maxSpawnRate,
-      t
-    );
+    return this.lerp(this.config.startSpawnRate, this.config.maxSpawnRate, t);
   }
 
   getObstacleCount(elapsedTime: number): number {
     const t = this.getRampFactor(elapsedTime);
     return Math.floor(
-      this.lerp(
-        this.config.startObstacleCount,
-        this.config.maxObstacleCount,
-        t
-      )
+      this.lerp(this.config.startObstacleCount, this.config.maxObstacleCount, t)
     );
   }
 
@@ -555,7 +550,7 @@ class DifficultyManager {
   shouldGuaranteeEasyPattern(elapsedTime: number): boolean {
     // Every 5 seconds, give the player an easy pattern
     // to maintain the "I can do this" feeling
-    return (elapsedTime % 5) < 0.5;
+    return elapsedTime % 5 < 0.5;
   }
 }
 ```
@@ -565,9 +560,9 @@ class DifficultyManager {
 ```typescript
 interface LevelConfig {
   levelNumber: number;
-  duration: number;        // Seconds for this level
-  targetScore: number;     // Score needed to "complete" the level
-  difficulty: number;      // 0-1 base difficulty
+  duration: number; // Seconds for this level
+  targetScore: number; // Score needed to "complete" the level
+  difficulty: number; // 0-1 base difficulty
   specialMechanic?: string; // Optional new mechanic introduced
   endCondition: 'timer' | 'score' | 'fail';
 }
@@ -608,7 +603,7 @@ Unpredictable rewards are more engaging than predictable ones. This is the core 
 
 ```typescript
 class RewardSystem {
-  private baseRewardChance: number = 0.3;   // 30% chance per action
+  private baseRewardChance: number = 0.3; // 30% chance per action
   private streakBonus: number = 0;
   private lastRewardTime: number = 0;
   private rewardDrought: number = 0;
@@ -674,7 +669,7 @@ class NearMissController {
   // For a puzzle game: show how close the player was to the solution
   showNearMissUI(
     ctx: CanvasRenderingContext2D,
-    achievedProgress: number,  // 0-1
+    achievedProgress: number, // 0-1
     canvasWidth: number,
     canvasHeight: number
   ): void {
@@ -757,8 +752,8 @@ class JuiceEffects {
 
     const t = elapsed / duration;
     // Quick grow, slow shrink (overshoot curve)
-    const scale = 1 + (maxScale - 1) * Math.sin(t * Math.PI) *
-      Math.pow(1 - t, 0.5);
+    const scale =
+      1 + (maxScale - 1) * Math.sin(t * Math.PI) * Math.pow(1 - t, 0.5);
     return scale;
   }
 
@@ -793,7 +788,7 @@ class JuiceEffects {
 
     const t = elapsed / duration;
     const y = startY - 50 * t; // Float upward
-    const alpha = 1 - t * t;   // Fade out
+    const alpha = 1 - t * t; // Fade out
     const scale = 1 + t * 0.5; // Grow slightly
 
     ctx.save();
@@ -860,8 +855,8 @@ class ParticleBurst {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    this.particles.forEach(p => {
-      const alpha = 1 - (p.life / p.maxLife);
+    this.particles.forEach((p) => {
+      const alpha = 1 - p.life / p.maxLife;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = p.color;
       ctx.beginPath();
@@ -1182,12 +1177,12 @@ SIZE BUDGET:
 interface EndCardConfig {
   title: string;
   score?: number;
-  stars?: number;          // 0-5
+  stars?: number; // 0-5
   appIcon?: HTMLImageElement;
   screenshots?: HTMLImageElement[];
   ctaText: string;
-  socialProof?: string;    // "50M+ Downloads"
-  rating?: number;         // 4.8
+  socialProof?: string; // "50M+ Downloads"
+  rating?: number; // 4.8
   backgroundColor: string;
   ctaColor: string;
   textColor: string;
@@ -1210,11 +1205,7 @@ class EndCard {
     this.ctaPulseTimer += dt;
   }
 
-  render(
-    ctx: CanvasRenderingContext2D,
-    width: number,
-    height: number
-  ): void {
+  render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     // Semi-transparent overlay
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, width, height);
@@ -1253,11 +1244,7 @@ class EndCard {
     if (this.config.score !== undefined) {
       ctx.font = 'bold 36px sans-serif';
       ctx.fillStyle = '#FFD700';
-      ctx.fillText(
-        this.config.score.toLocaleString(),
-        centerX,
-        panelY + 95
-      );
+      ctx.fillText(this.config.score.toLocaleString(), centerX, panelY + 95);
     }
 
     // Stars
@@ -1311,11 +1298,7 @@ class EndCard {
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 22px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(
-      this.config.ctaText,
-      centerX,
-      ctaY + ctaHeight / 2 + 8
-    );
+    ctx.fillText(this.config.ctaText, centerX, ctaY + ctaHeight / 2 + 8);
 
     ctx.restore();
 
@@ -1324,11 +1307,7 @@ class EndCard {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
       ctx.font = '14px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(
-        this.config.socialProof,
-        centerX,
-        ctaY + ctaHeight + 30
-      );
+      ctx.fillText(this.config.socialProof, centerX, ctaY + ctaHeight + 30);
     }
 
     ctx.restore(); // Undo slide-in translate
@@ -1345,8 +1324,10 @@ class EndCard {
     const ctaX = (width - ctaWidth) / 2;
 
     if (
-      x >= ctaX && x <= ctaX + ctaWidth &&
-      y >= ctaY && y <= ctaY + ctaHeight
+      x >= ctaX &&
+      x <= ctaX + ctaWidth &&
+      y >= ctaY &&
+      y <= ctaY + ctaHeight
     ) {
       this.onCTA();
       return true;
@@ -1475,26 +1456,26 @@ UNITY ADS:
 ```typescript
 interface PlayableAdMetrics {
   // Impression and engagement
-  impressions: number;      // Total times ad was shown
-  engagements: number;      // Times user interacted (tapped/swiped)
-  engagementRate: number;   // engagements / impressions
+  impressions: number; // Total times ad was shown
+  engagements: number; // Times user interacted (tapped/swiped)
+  engagementRate: number; // engagements / impressions
 
   // Conversion
-  ctaClicks: number;        // Times CTA button was clicked
-  ctr: number;              // Click-Through Rate = ctaClicks / impressions
-  installs: number;         // Actual app installs
-  ipm: number;              // Installs Per Mille = (installs / impressions) * 1000
-  ivr: number;              // Install to View Rate = installs / impressions
+  ctaClicks: number; // Times CTA button was clicked
+  ctr: number; // Click-Through Rate = ctaClicks / impressions
+  installs: number; // Actual app installs
+  ipm: number; // Installs Per Mille = (installs / impressions) * 1000
+  ivr: number; // Install to View Rate = installs / impressions
 
   // Quality
-  d1Retention: number;      // Day 1 retention rate of acquired users
-  d7Retention: number;      // Day 7 retention rate
-  ltv: number;              // Lifetime value of acquired users
-  roas: number;             // Return on Ad Spend = revenue / adSpend
+  d1Retention: number; // Day 1 retention rate of acquired users
+  d7Retention: number; // Day 7 retention rate
+  ltv: number; // Lifetime value of acquired users
+  roas: number; // Return on Ad Spend = revenue / adSpend
 
   // Playable-specific
-  completionRate: number;   // % of users who reached end card
-  avgPlayDuration: number;  // Average seconds of gameplay
+  completionRate: number; // % of users who reached end card
+  avgPlayDuration: number; // Average seconds of gameplay
   tutorialSkipRate: number; // % of users who skipped tutorial
 }
 ```
@@ -1597,7 +1578,7 @@ class PlayableAnalytics {
     return {
       totalEvents: this.events.length,
       totalDuration: Date.now() - this.startTime,
-      events: this.events.map(e => e.eventName),
+      events: this.events.map((e) => e.eventName),
     };
   }
 }
@@ -1754,6 +1735,7 @@ BAD END TRIGGERS:
 # Playable Ad Design Document
 
 ## Overview
+
 - **Game Title**: [Name of the game being advertised]
 - **Genre**: [Match-3 / Runner / Puzzle / Merge / etc.]
 - **Target Networks**: [Facebook, Google, Unity, IronSource, etc.]
@@ -1761,21 +1743,25 @@ BAD END TRIGGERS:
 - **Target Duration**: [15-25 seconds]
 
 ## Core Mechanic
+
 [One sentence describing the single core mechanic]
 Example: "Swipe to swap adjacent gems and match 3+ in a row"
 
 ## Hook (0-3 seconds)
+
 - **Visual hook**: [What the user sees immediately]
 - **Auto-play**: [What happens if user doesn't interact for 3s]
 - **Transition to gameplay**: [How do we hand control to the user]
 
 ## Tutorial (0-3 seconds, overlapping with hook)
+
 - **Gesture shown**: [Tap / Swipe / Drag]
 - **Tutorial hand path**: [Start position → End position]
 - **Highlight**: [What element is highlighted]
 - **Dismiss condition**: [User performs correct gesture]
 
 ## Gameplay (3-25 seconds)
+
 - **Controls**: [Tap / Swipe / Drag, describe exactly]
 - **Objective**: [What the player is trying to do]
 - **Difficulty ramp**:
@@ -1787,11 +1773,13 @@ Example: "Swipe to swap adjacent gems and match 3+ in a row"
 - **Number of levels**: [1-3]
 
 ## End Card Trigger
+
 - **Primary trigger**: [Timer / Lives / Level complete]
 - **"Almost won" setup**: [How we create the near-miss feeling]
 - **Transition animation**: [How gameplay transitions to end card]
 
 ## End Card Layout
+
 - **Title text**: [e.g., "So Close!"]
 - **Score display**: [Yes/No, format]
 - **CTA button text**: [e.g., "Install Now"]
@@ -1800,32 +1788,37 @@ Example: "Swipe to swap adjacent gems and match 3+ in a row"
 - **Secondary CTA**: [Optional, e.g., "Continue Playing"]
 
 ## Art Style
+
 - **Color palette**: [Primary, secondary, accent colors]
 - **Reference**: [Link to game's actual art style]
 - **Sprite list**: [List of all sprites needed with sizes]
 
 ## Audio
+
 - **Strategy**: [Procedural / Sound sprite / No audio]
 - **SFX list**: [List of sound effects if any]
 - **Music**: [Yes/No, if yes: loop duration]
 
 ## Asset Budget
-| Asset Type    | Count | Estimated Size |
-|---------------|-------|----------------|
-| Sprite atlas  | 1     | ___KB          |
-| Background    | 1     | ___KB          |
-| UI elements   | ___   | ___KB          |
-| Audio         | ___   | ___KB          |
-| Code          | -     | ~200KB         |
-| **Total**     |       | **___KB**      |
+
+| Asset Type   | Count  | Estimated Size |
+| ------------ | ------ | -------------- |
+| Sprite atlas | 1      | \_\_\_KB       |
+| Background   | 1      | \_\_\_KB       |
+| UI elements  | \_\_\_ | \_\_\_KB       |
+| Audio        | \_\_\_ | \_\_\_KB       |
+| Code         | -      | ~200KB         |
+| **Total**    |        | **\_\_\_KB**   |
 
 ## Success Metrics
+
 - **Target CTR**: >2%
 - **Target IPM**: >10
 - **Target Completion Rate**: >50%
 - **Target Avg Play Time**: 12-18 seconds
 
 ## A/B Test Plan
+
 1. [First test: e.g., CTA text "Install Now" vs "Play Now"]
 2. [Second test: e.g., difficulty level easy vs medium]
 3. [Third test: e.g., 1 level vs 2 levels]
@@ -2067,20 +2060,20 @@ I would A/B test end card redesigns first (biggest likely impact), then tune gam
 
 **Answer:**
 
-| Aspect | Playable Ad | Full Game |
-|--------|------------|-----------|
-| **Goal** | Drive installs | Retain players |
-| **Duration** | 15-30 seconds | Hours to years |
-| **Onboarding** | 0-3 seconds, no text | 5-30 minutes, guided |
-| **Mechanics** | ONE core mechanic | Many interlocking systems |
-| **Difficulty** | Start trivial, ramp fast | Gradual learning curve |
-| **Failure** | Designed, intentional | Avoidable with skill |
-| **Audio** | Often none | Full soundtrack + SFX |
-| **Tutorial** | Visual only, 3 seconds | Text + guided levels |
-| **End state** | CTA screen | Infinite play / chapters |
-| **Success metric** | IPM, ROAS | Retention, revenue |
-| **User mindset** | Passive (didn't ask for this) | Active (chose to play) |
-| **Forgiveness** | Extremely forgiving | Can challenge the player |
+| Aspect             | Playable Ad                   | Full Game                 |
+| ------------------ | ----------------------------- | ------------------------- |
+| **Goal**           | Drive installs                | Retain players            |
+| **Duration**       | 15-30 seconds                 | Hours to years            |
+| **Onboarding**     | 0-3 seconds, no text          | 5-30 minutes, guided      |
+| **Mechanics**      | ONE core mechanic             | Many interlocking systems |
+| **Difficulty**     | Start trivial, ramp fast      | Gradual learning curve    |
+| **Failure**        | Designed, intentional         | Avoidable with skill      |
+| **Audio**          | Often none                    | Full soundtrack + SFX     |
+| **Tutorial**       | Visual only, 3 seconds        | Text + guided levels      |
+| **End state**      | CTA screen                    | Infinite play / chapters  |
+| **Success metric** | IPM, ROAS                     | Retention, revenue        |
+| **User mindset**   | Passive (didn't ask for this) | Active (chose to play)    |
+| **Forgiveness**    | Extremely forgiving           | Can challenge the player  |
 
 The biggest mindset shift: in a full game, you want the player to improve over time. In a playable ad, you want the player to feel competent immediately but then fail at a prescribed moment. The playable ad designer is choreographing an experience, not building a fair game.
 
@@ -2121,6 +2114,7 @@ The key principle: **sell the feeling, not the feature set.** Users install beca
 **20-22s (Near-miss fail):** The player hits an obstacle. Screen flashes. Slow-motion shows the collision. The character is knocked back dramatically. The progress bar shows "85% complete." The text "SO CLOSE!" appears briefly.
 
 **22-25s (End card):** The gameplay dims. An end card slides up showing:
+
 - "YOU RAN 850m!" with a distance graphic
 - Star rating: 3/5 stars
 - Large green "PLAY NOW" button (pulsing)

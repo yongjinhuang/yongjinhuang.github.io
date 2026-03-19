@@ -52,17 +52,17 @@ every system.
 
 ### 1.1 The Three Formats
 
-| Feature          | `.xlsx` (OOXML)         | `.xls` (BIFF)          | `.csv`              |
-|------------------|-------------------------|------------------------|---------------------|
-| Introduced       | Office 2007             | Office 97              | 1970s               |
-| Binary format    | ZIP archive of XML      | Binary (BIFF8)         | Plain text          |
-| Max rows         | 1,048,576               | 65,536                 | Unlimited           |
-| Max columns      | 16,384 (XFD)            | 256 (IV)               | Unlimited           |
-| Multiple sheets  | Yes                     | Yes                    | No                  |
-| Formulas         | Yes                     | Yes                    | No                  |
-| Formatting       | Full (styles, charts)   | Full                   | None                |
-| File size        | Compressed (small)      | Uncompressed (large)   | Smallest            |
-| Python library   | openpyxl, xlsxwriter    | xlrd (read), xlwt (w)  | csv (stdlib)        |
+| Feature         | `.xlsx` (OOXML)       | `.xls` (BIFF)         | `.csv`       |
+| --------------- | --------------------- | --------------------- | ------------ |
+| Introduced      | Office 2007           | Office 97             | 1970s        |
+| Binary format   | ZIP archive of XML    | Binary (BIFF8)        | Plain text   |
+| Max rows        | 1,048,576             | 65,536                | Unlimited    |
+| Max columns     | 16,384 (XFD)          | 256 (IV)              | Unlimited    |
+| Multiple sheets | Yes                   | Yes                   | No           |
+| Formulas        | Yes                   | Yes                   | No           |
+| Formatting      | Full (styles, charts) | Full                  | None         |
+| File size       | Compressed (small)    | Uncompressed (large)  | Smallest     |
+| Python library  | openpyxl, xlsxwriter  | xlrd (read), xlwt (w) | csv (stdlib) |
 
 ### 1.2 XLSX Internals
 
@@ -229,7 +229,7 @@ ws_d = wb_data.active
 print(ws_d["C10"].value)  # 42500.0 (the computed result, or None if not cached)
 ```
 
-**Important caveat**: `data_only=True` reads the *cached* result that Excel stored
+**Important caveat**: `data_only=True` reads the _cached_ result that Excel stored
 on last save. If the file was created programmatically without Excel, cached values
 may be `None`. To get computed values from programmatic files, you would need a
 calculation engine like `formulas` or `xlcalc`.
@@ -1211,14 +1211,14 @@ df = pd.read_csv("large.csv", dtype=dtypes, parse_dates=["date"])
 
 ### 7.1 Why polars Is Faster
 
-| Feature              | pandas                  | polars                      |
-|----------------------|-------------------------|-----------------------------|
-| Backend              | NumPy (single-threaded) | Arrow (multi-threaded Rust) |
-| Memory model         | Copy-heavy              | Zero-copy where possible    |
-| String handling      | Python objects           | Arrow UTF-8 buffers        |
-| Missing values       | NaN (float only)         | Null (any type)            |
-| Lazy evaluation      | No                      | Yes (LazyFrame)            |
-| Typical speedup      | Baseline                | 5-20x faster               |
+| Feature         | pandas                  | polars                      |
+| --------------- | ----------------------- | --------------------------- |
+| Backend         | NumPy (single-threaded) | Arrow (multi-threaded Rust) |
+| Memory model    | Copy-heavy              | Zero-copy where possible    |
+| String handling | Python objects          | Arrow UTF-8 buffers         |
+| Missing values  | NaN (float only)        | Null (any type)             |
+| Lazy evaluation | No                      | Yes (LazyFrame)             |
+| Typical speedup | Baseline                | 5-20x faster                |
 
 ### 7.2 Reading Files
 

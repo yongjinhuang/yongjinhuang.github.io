@@ -423,11 +423,11 @@ class SemanticCache:
 
 ### Cache Strategy Comparison
 
-| Strategy | Hit Rate | Accuracy | Cost Overhead | Best For |
-|----------|---------|----------|---------------|----------|
-| Exact match | Low (10-30%) | 100% | None | Deterministic queries (temp=0) |
-| Semantic cache | Medium (30-60%) | 95%+ | Embedding cost | Similar user queries |
-| Prompt-level | High (50-70%) | 100% | None | System prompts, prefixes |
+| Strategy       | Hit Rate        | Accuracy | Cost Overhead  | Best For                       |
+| -------------- | --------------- | -------- | -------------- | ------------------------------ |
+| Exact match    | Low (10-30%)    | 100%     | None           | Deterministic queries (temp=0) |
+| Semantic cache | Medium (30-60%) | 95%+     | Embedding cost | Similar user queries           |
+| Prompt-level   | High (50-70%)   | 100%     | None           | System prompts, prefixes       |
 
 ---
 
@@ -808,14 +808,14 @@ print(json.dumps(tracer.get_trace(), indent=2))
 
 ### Observability Tools
 
-| Tool | Type | Best For | Open Source |
-|------|------|----------|-------------|
-| **LangSmith** | LLM tracing | LangChain pipelines | No |
-| **Langfuse** | LLM tracing | General LLM ops | Yes |
-| **Helicone** | LLM proxy | API monitoring | Yes |
-| **Arize Phoenix** | LLM evaluation | Tracing + eval | Yes |
-| **OpenTelemetry** | General tracing | Custom pipelines | Yes |
-| **Weights & Biases** | Experiment tracking | Fine-tuning | No |
+| Tool                 | Type                | Best For            | Open Source |
+| -------------------- | ------------------- | ------------------- | ----------- |
+| **LangSmith**        | LLM tracing         | LangChain pipelines | No          |
+| **Langfuse**         | LLM tracing         | General LLM ops     | Yes         |
+| **Helicone**         | LLM proxy           | API monitoring      | Yes         |
+| **Arize Phoenix**    | LLM evaluation      | Tracing + eval      | Yes         |
+| **OpenTelemetry**    | General tracing     | Custom pipelines    | Yes         |
+| **Weights & Biases** | Experiment tracking | Fine-tuning         | No          |
 
 ---
 

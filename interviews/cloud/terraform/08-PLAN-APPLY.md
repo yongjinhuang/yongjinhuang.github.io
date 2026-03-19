@@ -47,14 +47,14 @@ Plan is read-only. It never modifies infrastructure.
 
 Plan output uses symbols to indicate change types:
 
-| Symbol | Meaning | Description |
-|--------|---------|-------------|
-| `+` | Create | New resource will be created |
-| `~` | Update in-place | Existing resource will be modified without recreation |
-| `-` | Destroy | Resource will be deleted |
-| `-/+` | Replace (destroy then create) | Resource must be destroyed and recreated |
-| `+/-` | Replace (create then destroy) | New resource created before old one is destroyed |
-| `<=` | Read | Data source will be read |
+| Symbol | Meaning                       | Description                                           |
+| ------ | ----------------------------- | ----------------------------------------------------- |
+| `+`    | Create                        | New resource will be created                          |
+| `~`    | Update in-place               | Existing resource will be modified without recreation |
+| `-`    | Destroy                       | Resource will be deleted                              |
+| `-/+`  | Replace (destroy then create) | Resource must be destroyed and recreated              |
+| `+/-`  | Replace (create then destroy) | New resource created before old one is destroyed      |
+| `<=`   | Read                          | Data source will be read                              |
 
 ```
 # aws_instance.web will be updated in-place
@@ -314,7 +314,7 @@ PR Merged to main:
   2. terraform apply tfplan   # or re-plan + auto-approve
 ```
 
-```yaml
+````yaml
 # GitHub Actions example (simplified)
 - name: Terraform Plan
   run: |
@@ -333,21 +333,21 @@ PR Merged to main:
         repo: context.repo.repo,
         body: '```\n' + plan + '\n```'
       });
-```
+````
 
 ---
 
 ## Common Gotchas
 
-| Gotcha | Why It Happens | How to Avoid |
-|--------|----------------|--------------|
-| Plan succeeds but apply fails | Plan only checks Terraform logic; apply hits real APIs that may reject requests (quota, permissions, naming conflicts) | Test in a lower environment first; handle API-specific constraints in config |
-| Plan output differs from actual apply | Infrastructure changed between plan and apply | Use saved plans (`-out=tfplan`) |
-| `-target` leaves state inconsistent | Terraform skips dependency graph for non-targeted resources | Always run a full plan after targeted operations |
-| `-auto-approve` destroys resources | No human review before apply | Only use in CI/CD after plan review; never use interactively |
-| `prevent_destroy` blocks `terraform destroy` | Working as intended | Remove the lifecycle rule before destroying |
-| `ignore_changes` hides real drift | Terraform stops tracking those attributes entirely | Only ignore attributes managed by external systems |
-| Refresh shows unexpected changes | Someone modified infrastructure outside Terraform | Run `terraform apply -refresh-only` to accept the drift, or fix the config |
+| Gotcha                                       | Why It Happens                                                                                                         | How to Avoid                                                                 |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Plan succeeds but apply fails                | Plan only checks Terraform logic; apply hits real APIs that may reject requests (quota, permissions, naming conflicts) | Test in a lower environment first; handle API-specific constraints in config |
+| Plan output differs from actual apply        | Infrastructure changed between plan and apply                                                                          | Use saved plans (`-out=tfplan`)                                              |
+| `-target` leaves state inconsistent          | Terraform skips dependency graph for non-targeted resources                                                            | Always run a full plan after targeted operations                             |
+| `-auto-approve` destroys resources           | No human review before apply                                                                                           | Only use in CI/CD after plan review; never use interactively                 |
+| `prevent_destroy` blocks `terraform destroy` | Working as intended                                                                                                    | Remove the lifecycle rule before destroying                                  |
+| `ignore_changes` hides real drift            | Terraform stops tracking those attributes entirely                                                                     | Only ignore attributes managed by external systems                           |
+| Refresh shows unexpected changes             | Someone modified infrastructure outside Terraform                                                                      | Run `terraform apply -refresh-only` to accept the drift, or fix the config   |
 
 ---
 

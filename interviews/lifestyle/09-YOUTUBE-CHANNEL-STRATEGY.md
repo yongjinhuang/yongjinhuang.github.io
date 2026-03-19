@@ -54,15 +54,15 @@ For each viewer, for each video candidate:
 
 ### 1.2 The Key Metrics
 
-| Metric | What It Measures | Why It Matters |
-|--------|-----------------|----------------|
-| **Click-Through Rate (CTR)** | % of people who click after seeing thumbnail | Measures thumbnail + title effectiveness |
-| **Average View Duration (AVD)** | Average time viewers watch | Measures content quality |
-| **Average Percentage Viewed** | % of video watched on average | Measures retention |
-| **Watch Time** | Total minutes watched (all viewers) | YouTube's primary ranking signal |
-| **Impressions** | How many times thumbnail was shown | Measures reach |
-| **Likes / Comments / Shares** | Engagement actions | Satisfaction signals |
-| **Subscribers gained** | New subs from this video | Value signal |
+| Metric                          | What It Measures                             | Why It Matters                           |
+| ------------------------------- | -------------------------------------------- | ---------------------------------------- |
+| **Click-Through Rate (CTR)**    | % of people who click after seeing thumbnail | Measures thumbnail + title effectiveness |
+| **Average View Duration (AVD)** | Average time viewers watch                   | Measures content quality                 |
+| **Average Percentage Viewed**   | % of video watched on average                | Measures retention                       |
+| **Watch Time**                  | Total minutes watched (all viewers)          | YouTube's primary ranking signal         |
+| **Impressions**                 | How many times thumbnail was shown           | Measures reach                           |
+| **Likes / Comments / Shares**   | Engagement actions                           | Satisfaction signals                     |
+| **Subscribers gained**          | New subs from this video                     | Value signal                             |
 
 ### 1.3 The Feedback Loop
 
@@ -94,14 +94,14 @@ Each circle only opens if the previous performed well.
 
 ### 1.4 What the Algorithm Does NOT Care About
 
-| Myth | Reality |
-|------|---------|
-| "Upload schedule matters for algorithm" | Algorithm evaluates each video individually |
-| "Longer videos rank better" | Watch time percentage matters more than length |
-| "Tags are important" | Tags have minimal impact (title and description matter more) |
-| "Subscribers see all your videos" | Only 10-30% of subscribers see your video initially |
-| "The algorithm is punishing me" | Your videos just did not perform with test audiences |
-| "Posting at specific times matters" | Marginal impact; content quality matters far more |
+| Myth                                    | Reality                                                      |
+| --------------------------------------- | ------------------------------------------------------------ |
+| "Upload schedule matters for algorithm" | Algorithm evaluates each video individually                  |
+| "Longer videos rank better"             | Watch time percentage matters more than length               |
+| "Tags are important"                    | Tags have minimal impact (title and description matter more) |
+| "Subscribers see all your videos"       | Only 10-30% of subscribers see your video initially          |
+| "The algorithm is punishing me"         | Your videos just did not perform with test audiences         |
+| "Posting at specific times matters"     | Marginal impact; content quality matters far more            |
 
 ## 2. YouTube SEO
 
@@ -125,13 +125,13 @@ YouTube Search Ranking Factors:
 
 ### 2.2 Keyword Research
 
-| Method | How | Tools |
-|--------|-----|-------|
-| YouTube autosuggest | Type a keyword, see what YouTube suggests | YouTube search bar |
-| Competitor analysis | See what titles/tags successful channels use | TubeBuddy, vidIQ |
-| Google Trends | Compare search interest over time | trends.google.com |
-| YouTube Studio search report | See what search terms lead to your videos | YouTube Studio analytics |
-| Answer the Public | See questions people ask about a topic | answerthepublic.com |
+| Method                       | How                                          | Tools                    |
+| ---------------------------- | -------------------------------------------- | ------------------------ |
+| YouTube autosuggest          | Type a keyword, see what YouTube suggests    | YouTube search bar       |
+| Competitor analysis          | See what titles/tags successful channels use | TubeBuddy, vidIQ         |
+| Google Trends                | Compare search interest over time            | trends.google.com        |
+| YouTube Studio search report | See what search terms lead to your videos    | YouTube Studio analytics |
+| Answer the Public            | See questions people ask about a topic       | answerthepublic.com      |
 
 ### 2.3 Optimizing Video Metadata
 
@@ -184,28 +184,28 @@ Full description:
 
 ### 2.4 Hashtags and Tags
 
-| Element | Impact | How to Use |
-|---------|--------|-----------|
-| **Hashtags** (in description) | Low-medium | 3-5 relevant hashtags, appear above title |
-| **Tags** (in video settings) | Low | Include 5-10 relevant keywords, diminishing importance |
-| **Title keywords** | High | Most important SEO factor |
-| **Description keywords** | High | Natural keyword inclusion in first 2-3 lines |
+| Element                       | Impact     | How to Use                                             |
+| ----------------------------- | ---------- | ------------------------------------------------------ |
+| **Hashtags** (in description) | Low-medium | 3-5 relevant hashtags, appear above title              |
+| **Tags** (in video settings)  | Low        | Include 5-10 relevant keywords, diminishing importance |
+| **Title keywords**            | High       | Most important SEO factor                              |
+| **Description keywords**      | High       | Natural keyword inclusion in first 2-3 lines           |
 
 ## 3. Channel Setup and Optimization
 
 ### 3.1 Channel Page Checklist
 
-| Element | Specification | Status |
-|---------|--------------|--------|
-| Channel name | Memorable, searchable, relevant | Required |
-| Profile picture | Clear face or logo, 800×800px | Required |
-| Banner | 2560×1440px, mobile-safe text | Required |
-| Channel description | Keywords + what you offer + upload schedule | Required |
-| Channel trailer | 30-90 sec video for non-subscribers | Recommended |
-| Featured video | Best-performing or newest for subscribers | Recommended |
-| Playlists | Organized by topic/series | Recommended |
-| Channel links | Social media, website | Recommended |
-| Watermark | Small subscribe button, appears during video | Recommended |
+| Element             | Specification                                | Status      |
+| ------------------- | -------------------------------------------- | ----------- |
+| Channel name        | Memorable, searchable, relevant              | Required    |
+| Profile picture     | Clear face or logo, 800×800px                | Required    |
+| Banner              | 2560×1440px, mobile-safe text                | Required    |
+| Channel description | Keywords + what you offer + upload schedule  | Required    |
+| Channel trailer     | 30-90 sec video for non-subscribers          | Recommended |
+| Featured video      | Best-performing or newest for subscribers    | Recommended |
+| Playlists           | Organized by topic/series                    | Recommended |
+| Channel links       | Social media, website                        | Recommended |
+| Watermark           | Small subscribe button, appears during video | Recommended |
 
 ### 3.2 Playlist Strategy
 
@@ -251,11 +251,11 @@ Each playlist should make sense as a standalone binge session.
 └─────────────────────────────────────────────────────────────┘
 ```
 
-| Type | Goal | Example |
-|------|------|---------|
-| **Hero** | Go viral, attract new viewers | "I edited video for 24 hours straight" |
-| **Hub** | Build loyal audience, consistency | Weekly vlog, regular series |
-| **Help** | Capture search traffic forever | "How to color grade in DaVinci Resolve" |
+| Type     | Goal                              | Example                                 |
+| -------- | --------------------------------- | --------------------------------------- |
+| **Hero** | Go viral, attract new viewers     | "I edited video for 24 hours straight"  |
+| **Hub**  | Build loyal audience, consistency | Weekly vlog, regular series             |
+| **Help** | Capture search traffic forever    | "How to color grade in DaVinci Resolve" |
 
 ### 4.2 Niche Down, Then Expand
 
@@ -326,11 +326,11 @@ Established channels: Suggested drives the most views
 
 ### 5.2 Optimizing for Each Source
 
-| Source | Key Optimization |
-|--------|-----------------|
-| Search | Keyword-rich title, thorough description, answer the question quickly |
-| Browse (Homepage) | Irresistible thumbnail, curiosity-gap title, high CTR |
-| Suggested | Related content to popular videos, strong retention, series playlists |
+| Source            | Key Optimization                                                      |
+| ----------------- | --------------------------------------------------------------------- |
+| Search            | Keyword-rich title, thorough description, answer the question quickly |
+| Browse (Homepage) | Irresistible thumbnail, curiosity-gap title, high CTR                 |
+| Suggested         | Related content to popular videos, strong retention, series playlists |
 
 ## 6. Analytics Deep Dive
 
@@ -386,37 +386,37 @@ Retention %
      D: Spikes UP — Something was very interesting (viewers rewatching)
 ```
 
-| Pattern | What It Means | Fix |
-|---------|--------------|-----|
-| Steep drop at 0-30 sec | Weak hook, video did not match thumbnail promise | Better hook, align thumbnail to content |
-| Drop at intro/logo sequence | Intro too long | Keep intros under 5 seconds or skip entirely |
-| Drop at specific point | That section was boring or off-topic | Cut or shorten that section type in future |
-| Spike (retention goes UP) | Viewers rewatching a segment | Make more content like that segment |
-| Flat line at end | Viewers watched to the end | Great content, strong ending |
+| Pattern                     | What It Means                                    | Fix                                          |
+| --------------------------- | ------------------------------------------------ | -------------------------------------------- |
+| Steep drop at 0-30 sec      | Weak hook, video did not match thumbnail promise | Better hook, align thumbnail to content      |
+| Drop at intro/logo sequence | Intro too long                                   | Keep intros under 5 seconds or skip entirely |
+| Drop at specific point      | That section was boring or off-topic             | Cut or shorten that section type in future   |
+| Spike (retention goes UP)   | Viewers rewatching a segment                     | Make more content like that segment          |
+| Flat line at end            | Viewers watched to the end                       | Great content, strong ending                 |
 
 ### 6.3 Key Benchmarks for Small Channels
 
-| Metric | Poor | Average | Good | Excellent |
-|--------|------|---------|------|-----------|
-| CTR | < 3% | 3-6% | 6-10% | > 10% |
-| Avg % Viewed (10 min video) | < 25% | 25-40% | 40-55% | > 55% |
-| Avg % Viewed (2 min Short) | < 50% | 50-70% | 70-90% | > 90% |
-| Likes/Views ratio | < 2% | 2-4% | 4-8% | > 8% |
-| Comments/Views ratio | < 0.5% | 0.5-2% | 2-5% | > 5% |
+| Metric                      | Poor   | Average | Good   | Excellent |
+| --------------------------- | ------ | ------- | ------ | --------- |
+| CTR                         | < 3%   | 3-6%    | 6-10%  | > 10%     |
+| Avg % Viewed (10 min video) | < 25%  | 25-40%  | 40-55% | > 55%     |
+| Avg % Viewed (2 min Short)  | < 50%  | 50-70%  | 70-90% | > 90%     |
+| Likes/Views ratio           | < 2%   | 2-4%    | 4-8%   | > 8%      |
+| Comments/Views ratio        | < 0.5% | 0.5-2%  | 2-5%   | > 5%      |
 
 ## 7. Growth Tactics
 
 ### 7.1 The First 1,000 Subscribers
 
-| Tactic | Impact | Effort |
-|--------|--------|--------|
-| **SEO-focused content** | High | Medium — research keywords, answer questions |
-| **Consistent uploads** | High | High — at least weekly for 6+ months |
-| **Engage in comments** | Medium | Low — reply to every comment for first year |
-| **Cross-promote on social** | Medium | Low — share on Reddit, Twitter, relevant communities |
-| **Collaborate with similar-sized creators** | High | Medium — find peers in your niche |
-| **Create YouTube Shorts** | High | Low — repurpose long-form content |
-| **Improve thumbnails continuously** | High | Medium — study high-CTR thumbnails |
+| Tactic                                      | Impact | Effort                                               |
+| ------------------------------------------- | ------ | ---------------------------------------------------- |
+| **SEO-focused content**                     | High   | Medium — research keywords, answer questions         |
+| **Consistent uploads**                      | High   | High — at least weekly for 6+ months                 |
+| **Engage in comments**                      | Medium | Low — reply to every comment for first year          |
+| **Cross-promote on social**                 | Medium | Low — share on Reddit, Twitter, relevant communities |
+| **Collaborate with similar-sized creators** | High   | Medium — find peers in your niche                    |
+| **Create YouTube Shorts**                   | High   | Low — repurpose long-form content                    |
+| **Improve thumbnails continuously**         | High   | Medium — study high-CTR thumbnails                   |
 
 ### 7.2 Collaboration Strategy
 
@@ -463,37 +463,37 @@ Maximum reach from minimum production effort.
 
 ### 8.1 What Makes Shorts Different
 
-| Aspect | Long-form | Shorts |
-|--------|-----------|--------|
-| Length | 2-60 minutes | Under 60 seconds |
-| Orientation | Horizontal (16:9) | Vertical (9:16) |
-| Discovery | Search + Browse + Suggested | Shorts shelf + Shorts feed |
-| Audience | Subscribers + Search | Mostly new viewers |
-| Monetization | Ad revenue (CPM) | Shorts revenue pool (lower CPM) |
-| Content style | In-depth, detailed | Quick, punchy, hook-first |
+| Aspect        | Long-form                   | Shorts                          |
+| ------------- | --------------------------- | ------------------------------- |
+| Length        | 2-60 minutes                | Under 60 seconds                |
+| Orientation   | Horizontal (16:9)           | Vertical (9:16)                 |
+| Discovery     | Search + Browse + Suggested | Shorts shelf + Shorts feed      |
+| Audience      | Subscribers + Search        | Mostly new viewers              |
+| Monetization  | Ad revenue (CPM)            | Shorts revenue pool (lower CPM) |
+| Content style | In-depth, detailed          | Quick, punchy, hook-first       |
 
 ### 8.2 Shorts Best Practices
 
-| Practice | Why |
-|----------|-----|
-| Hook in first 1-2 seconds | Viewers swipe away instantly if not hooked |
-| Keep it under 30 seconds (ideally) | Completion rate matters for algorithm |
-| Use on-screen text / captions | Many watch without sound |
-| End with a loop | High replay rate = algorithm boost |
-| Clear single topic per Short | No time for multiple points |
-| Vertical framing (9:16) | Fill the entire phone screen |
+| Practice                           | Why                                        |
+| ---------------------------------- | ------------------------------------------ |
+| Hook in first 1-2 seconds          | Viewers swipe away instantly if not hooked |
+| Keep it under 30 seconds (ideally) | Completion rate matters for algorithm      |
+| Use on-screen text / captions      | Many watch without sound                   |
+| End with a loop                    | High replay rate = algorithm boost         |
+| Clear single topic per Short       | No time for multiple points                |
+| Vertical framing (9:16)            | Fill the entire phone screen               |
 
 ### 8.3 Short Ideas for Any Niche
 
-| Format | Example |
-|--------|---------|
-| Quick tip | "One trick that will improve your videos instantly" |
-| Before/after | Show transformation in under 30 seconds |
-| Satisfying process | Speed up an editing process, cooking, building |
-| Hot take / opinion | Quick, bold statement about your niche |
-| Reply to a comment | Screen record a comment, give your answer |
-| Mini tutorial | Fastest possible way to teach one thing |
-| Behind the scenes | 15-second peek at your process |
+| Format             | Example                                             |
+| ------------------ | --------------------------------------------------- |
+| Quick tip          | "One trick that will improve your videos instantly" |
+| Before/after       | Show transformation in under 30 seconds             |
+| Satisfying process | Speed up an editing process, cooking, building      |
+| Hot take / opinion | Quick, bold statement about your niche              |
+| Reply to a comment | Screen record a comment, give your answer           |
+| Mini tutorial      | Fastest possible way to teach one thing             |
+| Behind the scenes  | 15-second peek at your process                      |
 
 ## 9. Community Building
 
@@ -509,14 +509,14 @@ Numbers on a dashboard             Real people who support you
 
 ### 9.2 Community Building Tactics
 
-| Tactic | How | When |
-|--------|-----|------|
-| Reply to every comment | Genuine, specific replies (not just "thanks!") | First 24-48 hours after upload |
-| Ask questions in videos | "What do you think? Comment below" | End of each video |
-| Community tab posts | Polls, behind-scenes photos, updates | 2-3x per week |
-| Live streams | Q&A, casual hangouts, working sessions | Weekly or monthly |
-| Acknowledge regulars | Mention returning commenters by name | When you notice them |
-| Share viewer content | Feature viewer projects or responses | When relevant |
+| Tactic                  | How                                            | When                           |
+| ----------------------- | ---------------------------------------------- | ------------------------------ |
+| Reply to every comment  | Genuine, specific replies (not just "thanks!") | First 24-48 hours after upload |
+| Ask questions in videos | "What do you think? Comment below"             | End of each video              |
+| Community tab posts     | Polls, behind-scenes photos, updates           | 2-3x per week                  |
+| Live streams            | Q&A, casual hangouts, working sessions         | Weekly or monthly              |
+| Acknowledge regulars    | Mention returning commenters by name           | When you notice them           |
+| Share viewer content    | Feature viewer projects or responses           | When relevant                  |
 
 ### 9.3 The Community Flywheel
 
@@ -545,18 +545,18 @@ New viewers discover you
 
 ### 10.1 Mistakes to Avoid
 
-| Mistake | Why It Hurts | Fix |
-|---------|-------------|-----|
-| **Inconsistent uploads** | Algorithm and audience lose trust | Set a sustainable schedule and stick to it |
-| **Ignoring analytics** | Making content blind | Check retention graphs for every video |
-| **Too broad a niche** | No clear audience, hard to recommend | Pick one topic and go deep |
-| **Copying others exactly** | No unique value proposition | Adapt ideas, add your perspective |
-| **Obsessing over equipment** | Gear does not make content interesting | Focus on storytelling and personality |
-| **Not making Shorts** | Missing free subscriber growth engine | Repurpose every long-form into 2-3 Shorts |
-| **Giving up at 6 months** | Growth is exponential, not linear | Commit to 1 year minimum before evaluating |
-| **Chasing trends only** | No evergreen content library | Mix trending with evergreen tutorials |
-| **Sub4Sub / engagement pods** | Fake engagement kills algorithm performance | Grow organically with real viewers |
-| **Comparing to large channels** | Unfair comparison, different context | Compare to yourself 3 months ago |
+| Mistake                         | Why It Hurts                                | Fix                                        |
+| ------------------------------- | ------------------------------------------- | ------------------------------------------ |
+| **Inconsistent uploads**        | Algorithm and audience lose trust           | Set a sustainable schedule and stick to it |
+| **Ignoring analytics**          | Making content blind                        | Check retention graphs for every video     |
+| **Too broad a niche**           | No clear audience, hard to recommend        | Pick one topic and go deep                 |
+| **Copying others exactly**      | No unique value proposition                 | Adapt ideas, add your perspective          |
+| **Obsessing over equipment**    | Gear does not make content interesting      | Focus on storytelling and personality      |
+| **Not making Shorts**           | Missing free subscriber growth engine       | Repurpose every long-form into 2-3 Shorts  |
+| **Giving up at 6 months**       | Growth is exponential, not linear           | Commit to 1 year minimum before evaluating |
+| **Chasing trends only**         | No evergreen content library                | Mix trending with evergreen tutorials      |
+| **Sub4Sub / engagement pods**   | Fake engagement kills algorithm performance | Grow organically with real viewers         |
+| **Comparing to large channels** | Unfair comparison, different context        | Compare to yourself 3 months ago           |
 
 ### 10.2 The Growth Timeline Expectation
 

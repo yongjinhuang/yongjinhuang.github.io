@@ -73,6 +73,7 @@ This guide takes you from understanding file formats at the binary level to buil
 ```
 
 You cannot process documents reliably without understanding:
+
 - **What** a file format actually contains at the byte level
 - **Why** PDF extraction is hard (it is a page-description language, not a data format)
 - **How** character encoding works (UTF-8 vs Latin-1 vs Windows-1252)
@@ -210,24 +211,26 @@ You cannot process documents reliably without understanding:
 ## Recommended Resources
 
 ### Books
-| Book | Author | Focus |
-|------|--------|-------|
-| *Automate the Boring Stuff with Python* | Al Sweigart | Python automation basics (PDF, Excel, Word) |
-| *Python for Data Analysis* | Wes McKinney | pandas for data processing |
-| *Natural Language Processing with Python* | Bird, Klein, Loper | NLP for text extraction |
-| *PDF Explained* | John Whitington | PDF format internals |
-| *Designing Data-Intensive Applications* | Martin Kleppmann | Pipeline architecture |
+
+| Book                                      | Author             | Focus                                       |
+| ----------------------------------------- | ------------------ | ------------------------------------------- |
+| _Automate the Boring Stuff with Python_   | Al Sweigart        | Python automation basics (PDF, Excel, Word) |
+| _Python for Data Analysis_                | Wes McKinney       | pandas for data processing                  |
+| _Natural Language Processing with Python_ | Bird, Klein, Loper | NLP for text extraction                     |
+| _PDF Explained_                           | John Whitington    | PDF format internals                        |
+| _Designing Data-Intensive Applications_   | Martin Kleppmann   | Pipeline architecture                       |
 
 ### Online Resources
-| Resource | Type | Level |
-|----------|------|-------|
-| PyMuPDF documentation | Official docs | All |
-| python-docx documentation | Official docs | Beginner |
-| openpyxl documentation | Official docs | Beginner |
-| pandas user guide | Official docs | All |
-| Tesseract OCR wiki | Official docs | Intermediate |
-| AWS Textract developer guide | Official docs | Intermediate |
-| LangChain document loaders | Framework docs | Intermediate |
+
+| Resource                     | Type           | Level        |
+| ---------------------------- | -------------- | ------------ |
+| PyMuPDF documentation        | Official docs  | All          |
+| python-docx documentation    | Official docs  | Beginner     |
+| openpyxl documentation       | Official docs  | Beginner     |
+| pandas user guide            | Official docs  | All          |
+| Tesseract OCR wiki           | Official docs  | Intermediate |
+| AWS Textract developer guide | Official docs  | Intermediate |
+| LangChain document loaders   | Framework docs | Intermediate |
 
 ---
 

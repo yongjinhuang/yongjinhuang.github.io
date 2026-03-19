@@ -687,19 +687,19 @@ CREATE INDEX idx_audit_created ON audit_log(created_at);
 
 ### 状态转换
 
-| 起始状态 | 目标状态 | 触发条件 | 副作用 |
-|---|---|---|---|
-| `created` | `processing` | 确认支付 | 锁定 idempotency key |
-| `created` | `canceled` | 商户取消 | 释放冻结资金 |
-| `processing` | `authorized` | 处理器批准 | 记录授权码 |
-| `processing` | `failed` | 处理器拒绝 | 记录失败原因 |
-| `processing` | `requires_action` | 需要 3DS 验证 | 返回 next_action URL |
-| `requires_action` | `processing` | 客户完成 3DS 验证 | 重新提交到处理器 |
-| `authorized` | `captured` | 自动或手动捕获 | 创建 ledger 条目 |
-| `authorized` | `canceled` | 授权作废 | 向处理器发送作废请求 |
-| `captured` | `settled` | 日终结算 | 更新 ledger |
-| `captured` | `refunded` | 退款处理完成 | 创建退款 ledger 条目 |
-| `settled` | `refunded` | 结算后退款 | 创建退款 + 付款调整 |
+| 起始状态          | 目标状态          | 触发条件          | 副作用               |
+| ----------------- | ----------------- | ----------------- | -------------------- |
+| `created`         | `processing`      | 确认支付          | 锁定 idempotency key |
+| `created`         | `canceled`        | 商户取消          | 释放冻结资金         |
+| `processing`      | `authorized`      | 处理器批准        | 记录授权码           |
+| `processing`      | `failed`          | 处理器拒绝        | 记录失败原因         |
+| `processing`      | `requires_action` | 需要 3DS 验证     | 返回 next_action URL |
+| `requires_action` | `processing`      | 客户完成 3DS 验证 | 重新提交到处理器     |
+| `authorized`      | `captured`        | 自动或手动捕获    | 创建 ledger 条目     |
+| `authorized`      | `canceled`        | 授权作废          | 向处理器发送作废请求 |
+| `captured`        | `settled`         | 日终结算          | 更新 ledger          |
+| `captured`        | `refunded`        | 退款处理完成      | 创建退款 ledger 条目 |
+| `settled`         | `refunded`        | 结算后退款        | 创建退款 + 付款调整  |
 
 ### 超时处理
 
@@ -888,6 +888,7 @@ Compensation:      Void Auth <----------------+
 ### 什么是复式记账法？
 
 每笔金融交易都记录为两个条目：
+
 - 一笔**借方**（资金流入某账户）
 - 一笔**贷方**（资金流出某账户）
 
@@ -1097,12 +1098,12 @@ Customer        Merchant         Our System       Card Network    Issuing Bank
 
 ### 实时与批量欺诈检测
 
-| 方面 | 实时 | 批量 |
-|---|---|---|
-| 延迟 | < 50ms | 数小时 |
-| 范围 | 单笔交易 | 跨商户模式 |
-| 数据 | 交易特征 | 聚合统计 |
-| 操作 | 拦截/放行/3DS | 标记审查，更新模型 |
+| 方面 | 实时               | 批量               |
+| ---- | ------------------ | ------------------ |
+| 延迟 | < 50ms             | 数小时             |
+| 范围 | 单笔交易           | 跨商户模式         |
+| 数据 | 交易特征           | 聚合统计           |
+| 操作 | 拦截/放行/3DS      | 标记审查，更新模型 |
 | 示例 | 速率检查，地理位置 | 团伙欺诈，商户串通 |
 
 ---

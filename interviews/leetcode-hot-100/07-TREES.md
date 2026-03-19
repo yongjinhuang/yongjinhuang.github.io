@@ -175,7 +175,7 @@ class Solution:
         )
 ```
 
-**Time**: O(n * m) where n is the size of root and m is the size of subRoot
+**Time**: O(n \* m) where n is the size of root and m is the size of subRoot
 **Space**: O(h) recursion stack where h is height of root
 **Edge Cases**: subRoot is None (True), root is None (False), identical trees, subRoot matches a leaf
 

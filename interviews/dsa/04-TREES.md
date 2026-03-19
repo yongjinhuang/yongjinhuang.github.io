@@ -21,11 +21,11 @@ class TreeNode:
 
 ### 1.2 Traversal Orders
 
-| Traversal | Order | Common Use |
-|-----------|-------|------------|
-| Preorder | Root, Left, Right | Copy/serialize a tree |
-| Inorder | Left, Root, Right | BST gives sorted order |
-| Postorder | Left, Right, Root | Delete tree, compute sizes |
+| Traversal   | Order                | Common Use                 |
+| ----------- | -------------------- | -------------------------- |
+| Preorder    | Root, Left, Right    | Copy/serialize a tree      |
+| Inorder     | Left, Root, Right    | BST gives sorted order     |
+| Postorder   | Left, Right, Root    | Delete tree, compute sizes |
 | Level-order | Level by level (BFS) | Find depth, level averages |
 
 ### 1.3 Recursive vs Iterative
@@ -52,6 +52,7 @@ def dfs(node):
 ### 1.4 BST Properties
 
 A valid Binary Search Tree satisfies:
+
 - All nodes in the left subtree have values **strictly less than** the root
 - All nodes in the right subtree have values **strictly greater than** the root
 - Both subtrees are also valid BSTs
@@ -600,26 +601,27 @@ def max_path_sum(root: TreeNode | None) -> int:
 
 ## 5. Common Interview Questions
 
-| # | Problem | Difficulty | Pattern | Key Insight |
-|---|---------|-----------|---------|-------------|
-| 1 | Maximum Depth | Easy | DFS | `1 + max(left, right)` |
-| 2 | Invert Binary Tree | Easy | DFS | Swap children recursively |
-| 3 | Same Tree | Easy | DFS | Compare structure + values |
-| 4 | Diameter of Binary Tree | Easy | DFS (postorder) | `left_h + right_h` at each node |
-| 5 | Balanced Binary Tree | Easy | DFS | Height diff <= 1 at every node |
-| 6 | Validate BST | Medium | DFS with range | Pass `(low, high)` bounds |
-| 7 | Lowest Common Ancestor | Medium | DFS | Both sides non-null = LCA |
-| 8 | Binary Tree Right Side View | Medium | BFS | Last node at each level |
-| 9 | Kth Smallest in BST | Medium | Inorder | Stop at kth element |
-| 10 | Construct from Preorder/Inorder | Medium | Divide and conquer | Root splits inorder array |
-| 11 | Serialize/Deserialize | Hard | Preorder + null markers | Use iterator for deserialize |
-| 12 | Binary Tree Max Path Sum | Hard | DFS (postorder) | Track global max, return single-side |
+| #   | Problem                         | Difficulty | Pattern                 | Key Insight                          |
+| --- | ------------------------------- | ---------- | ----------------------- | ------------------------------------ |
+| 1   | Maximum Depth                   | Easy       | DFS                     | `1 + max(left, right)`               |
+| 2   | Invert Binary Tree              | Easy       | DFS                     | Swap children recursively            |
+| 3   | Same Tree                       | Easy       | DFS                     | Compare structure + values           |
+| 4   | Diameter of Binary Tree         | Easy       | DFS (postorder)         | `left_h + right_h` at each node      |
+| 5   | Balanced Binary Tree            | Easy       | DFS                     | Height diff <= 1 at every node       |
+| 6   | Validate BST                    | Medium     | DFS with range          | Pass `(low, high)` bounds            |
+| 7   | Lowest Common Ancestor          | Medium     | DFS                     | Both sides non-null = LCA            |
+| 8   | Binary Tree Right Side View     | Medium     | BFS                     | Last node at each level              |
+| 9   | Kth Smallest in BST             | Medium     | Inorder                 | Stop at kth element                  |
+| 10  | Construct from Preorder/Inorder | Medium     | Divide and conquer      | Root splits inorder array            |
+| 11  | Serialize/Deserialize           | Hard       | Preorder + null markers | Use iterator for deserialize         |
+| 12  | Binary Tree Max Path Sum        | Hard       | DFS (postorder)         | Track global max, return single-side |
 
 ---
 
 ## 6. Gotchas
 
 ### 6.1 Recursive Gotchas
+
 - **Base case**: Always handle `None` nodes. Forgetting this causes `AttributeError`.
 - **Return value confusion**: Know what your recursive function returns. Height? Boolean?
   Node reference? Mixing these up is a common bug.
@@ -628,6 +630,7 @@ def max_path_sum(root: TreeNode | None) -> int:
   due to Python's scoping rules.
 
 ### 6.2 BST Gotchas
+
 - **Validate BST**: You cannot just check `left.val < root.val < right.val` locally. You
   must check against the entire valid range (all ancestors).
 - **Duplicate values**: Clarify with the interviewer how duplicates are handled. Standard
@@ -636,12 +639,14 @@ def max_path_sum(root: TreeNode | None) -> int:
   validate BST, and convert BST to sorted list.
 
 ### 6.3 BFS Gotchas
+
 - **Level tracking**: Use `for _ in range(len(queue))` to process one level at a time.
   Don't forget to capture `len(queue)` before the inner loop starts.
 - **Space complexity**: BFS space is O(w) where w is the maximum width, which can be up
   to O(n/2) = O(n) for a complete binary tree.
 
 ### 6.4 Path Gotchas
+
 - **Path sum vs max path sum**: "Path" can mean root-to-leaf, any-to-any, or root-to-any.
   Clarify with the interviewer.
 - **Negative values**: When computing max path sum, use `max(child_gain, 0)` to optionally
@@ -651,14 +656,14 @@ def max_path_sum(root: TreeNode | None) -> int:
 
 ## 7. Quick Reference
 
-| Pattern | When to Use | Time | Space | Key Steps |
-|---------|-------------|------|-------|-----------|
-| DFS (preorder) | Process root before children | O(n) | O(h) | Process, then recurse left/right |
-| DFS (inorder) | BST operations, sorted order | O(n) | O(h) | Left, process, right |
-| DFS (postorder) | Compute subtree info bottom-up | O(n) | O(h) | Left, right, process |
-| BFS (level-order) | Level-by-level processing | O(n) | O(w) | Queue with level size loop |
-| Range validation | Validate BST | O(n) | O(h) | Pass `(low, high)` bounds |
-| LCA recursion | Find common ancestor | O(n) | O(h) | Return node if found, combine |
-| Preorder + null markers | Serialize/deserialize | O(n) | O(n) | "N" for null, comma-separated |
-| Height + diameter | Longest path in tree | O(n) | O(h) | Track `left_h + right_h` globally |
-| Iterative inorder | BST kth smallest, no recursion | O(h+k) | O(h) | Stack, go left, pop, go right |
+| Pattern                 | When to Use                    | Time   | Space | Key Steps                         |
+| ----------------------- | ------------------------------ | ------ | ----- | --------------------------------- |
+| DFS (preorder)          | Process root before children   | O(n)   | O(h)  | Process, then recurse left/right  |
+| DFS (inorder)           | BST operations, sorted order   | O(n)   | O(h)  | Left, process, right              |
+| DFS (postorder)         | Compute subtree info bottom-up | O(n)   | O(h)  | Left, right, process              |
+| BFS (level-order)       | Level-by-level processing      | O(n)   | O(w)  | Queue with level size loop        |
+| Range validation        | Validate BST                   | O(n)   | O(h)  | Pass `(low, high)` bounds         |
+| LCA recursion           | Find common ancestor           | O(n)   | O(h)  | Return node if found, combine     |
+| Preorder + null markers | Serialize/deserialize          | O(n)   | O(n)  | "N" for null, comma-separated     |
+| Height + diameter       | Longest path in tree           | O(n)   | O(h)  | Track `left_h + right_h` globally |
+| Iterative inorder       | BST kth smallest, no recursion | O(h+k) | O(h)  | Stack, go left, pop, go right     |

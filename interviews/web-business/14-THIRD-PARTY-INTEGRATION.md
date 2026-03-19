@@ -52,22 +52,22 @@ When your app and a third-party service need to stay in sync:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **API** | Application Programming Interface — the contract for communicating with a service |
-| **REST API** | API that uses HTTP methods (GET, POST, PUT, DELETE) and URL paths to represent resources |
-| **GraphQL** | A query language for APIs where the client specifies exactly what data it needs |
-| **Webhook** | An HTTP callback — the service pushes data to your server when an event occurs |
-| **API Key** | A credential that identifies your application. Usually a long random string |
-| **OAuth 2.0** | A protocol for delegated access — your app acts on behalf of a user |
-| **Rate Limit** | Maximum number of API calls allowed in a time window (e.g., 100 requests/minute) |
+| Term                    | What It Means                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------- |
+| **API**                 | Application Programming Interface — the contract for communicating with a service                 |
+| **REST API**            | API that uses HTTP methods (GET, POST, PUT, DELETE) and URL paths to represent resources          |
+| **GraphQL**             | A query language for APIs where the client specifies exactly what data it needs                   |
+| **Webhook**             | An HTTP callback — the service pushes data to your server when an event occurs                    |
+| **API Key**             | A credential that identifies your application. Usually a long random string                       |
+| **OAuth 2.0**           | A protocol for delegated access — your app acts on behalf of a user                               |
+| **Rate Limit**          | Maximum number of API calls allowed in a time window (e.g., 100 requests/minute)                  |
 | **Sandbox / Test Mode** | A separate environment for development/testing that doesn't affect real data or charge real money |
-| **SDK** | Software Development Kit — a library the service provides for easier integration |
-| **Idempotency** | Ensuring the same operation can be safely retried without duplicate effects |
-| **Circuit Breaker** | A pattern that stops calling a failing service to prevent cascading failures |
-| **Retry with Backoff** | Retrying failed requests with increasing delays (1s, 2s, 4s, 8s) |
-| **API Versioning** | Services release new versions (`v1`, `v2`). Old versions are eventually deprecated |
-| **Deprecation** | When a service announces that an API endpoint or version will be removed |
+| **SDK**                 | Software Development Kit — a library the service provides for easier integration                  |
+| **Idempotency**         | Ensuring the same operation can be safely retried without duplicate effects                       |
+| **Circuit Breaker**     | A pattern that stops calling a failing service to prevent cascading failures                      |
+| **Retry with Backoff**  | Retrying failed requests with increasing delays (1s, 2s, 4s, 8s)                                  |
+| **API Versioning**      | Services release new versions (`v1`, `v2`). Old versions are eventually deprecated                |
+| **Deprecation**         | When a service announces that an API endpoint or version will be removed                          |
 
 ## Common Patterns
 
@@ -144,12 +144,12 @@ class PostmarkProvider implements EmailProvider { ... }
 
 ## Quick Reference
 
-| Integration Type | Pattern | Example |
-|-----------------|---------|---------|
-| Payment | Webhook + API | Stripe: create payment intent → receive webhook on success |
-| Email | Queue + API | SendGrid: queue email → worker sends via API |
-| Auth | OAuth 2.0 | Google: redirect → authorize → exchange code → use tokens |
-| Storage | Direct API | S3: generate presigned URL → client uploads directly |
-| Communication | Webhook | Slack: receive webhook on message → process → respond |
-| Analytics | Event streaming | Segment: send events → fan out to destinations |
-| CRM sync | Batch + webhook | Salesforce: webhook on changes + nightly batch reconciliation |
+| Integration Type | Pattern         | Example                                                       |
+| ---------------- | --------------- | ------------------------------------------------------------- |
+| Payment          | Webhook + API   | Stripe: create payment intent → receive webhook on success    |
+| Email            | Queue + API     | SendGrid: queue email → worker sends via API                  |
+| Auth             | OAuth 2.0       | Google: redirect → authorize → exchange code → use tokens     |
+| Storage          | Direct API      | S3: generate presigned URL → client uploads directly          |
+| Communication    | Webhook         | Slack: receive webhook on message → process → respond         |
+| Analytics        | Event streaming | Segment: send events → fan out to destinations                |
+| CRM sync         | Batch + webhook | Salesforce: webhook on changes + nightly batch reconciliation |

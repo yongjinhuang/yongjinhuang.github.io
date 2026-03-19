@@ -2,7 +2,7 @@
 
 ## Introduction
 
-PDF (Portable Document Format) is the most important document format in business. Contracts, invoices, reports, research papers, government forms — they are all PDFs. Yet PDF is one of the hardest formats to process programmatically because it is a *page description language*, not a data format. Text is positioned character by character, tables are just lines and text at coordinates, and a "paragraph" is a visual construct that no PDF reader natively understands.
+PDF (Portable Document Format) is the most important document format in business. Contracts, invoices, reports, research papers, government forms — they are all PDFs. Yet PDF is one of the hardest formats to process programmatically because it is a _page description language_, not a data format. Text is positioned character by character, tables are just lines and text at coordinates, and a "paragraph" is a visual construct that no PDF reader natively understands.
 
 ```
 +------------------------------------------------------------------------+

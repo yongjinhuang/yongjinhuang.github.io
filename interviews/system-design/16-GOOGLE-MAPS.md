@@ -11,29 +11,29 @@ algorithms, real-time traffic, navigation, and search/geocoding.
 
 ### 1.1 Functional Requirements
 
-| Requirement                  | Description                                                        |
-|------------------------------|--------------------------------------------------------------------|
-| **Map tile display**         | Render map tiles at 21 zoom levels (world overview to street view) |
-| **Place search**             | Search for places by name, address, or category                    |
-| **Route calculation**        | Calculate routes for driving, walking, cycling, and transit         |
-| **Real-time navigation**     | Turn-by-turn directions with voice guidance                        |
-| **ETA estimation**           | Accurate arrival time incorporating live traffic                   |
-| **Traffic visualization**    | Color-coded traffic overlay on map (green/yellow/red)              |
-| **Offline maps**             | Download regions for offline use                                   |
-| **Multi-stop routing**       | Routes with multiple waypoints                                     |
-| **Route options**            | Avoid tolls, highways, ferries; shortest vs fastest                |
+| Requirement               | Description                                                        |
+| ------------------------- | ------------------------------------------------------------------ |
+| **Map tile display**      | Render map tiles at 21 zoom levels (world overview to street view) |
+| **Place search**          | Search for places by name, address, or category                    |
+| **Route calculation**     | Calculate routes for driving, walking, cycling, and transit        |
+| **Real-time navigation**  | Turn-by-turn directions with voice guidance                        |
+| **ETA estimation**        | Accurate arrival time incorporating live traffic                   |
+| **Traffic visualization** | Color-coded traffic overlay on map (green/yellow/red)              |
+| **Offline maps**          | Download regions for offline use                                   |
+| **Multi-stop routing**    | Routes with multiple waypoints                                     |
+| **Route options**         | Avoid tolls, highways, ferries; shortest vs fastest                |
 
 ### 1.2 Non-Functional Requirements
 
-| Requirement              | Target                                                      |
-|--------------------------|-------------------------------------------------------------|
-| **Route latency**        | < 500ms for single-origin-destination route calculation     |
-| **Tile load latency**    | < 100ms per tile (from CDN cache hit)                       |
-| **Traffic freshness**    | Real-time traffic updates within 30-60 seconds              |
-| **Availability**         | 99.99% uptime globally                                      |
-| **Global coverage**      | Road networks for 220+ countries                            |
-| **Offline capability**   | Full routing on downloaded regions without network           |
-| **Accuracy**             | ETA within 10% of actual travel time (p90)                  |
+| Requirement            | Target                                                  |
+| ---------------------- | ------------------------------------------------------- |
+| **Route latency**      | < 500ms for single-origin-destination route calculation |
+| **Tile load latency**  | < 100ms per tile (from CDN cache hit)                   |
+| **Traffic freshness**  | Real-time traffic updates within 30-60 seconds          |
+| **Availability**       | 99.99% uptime globally                                  |
+| **Global coverage**    | Road networks for 220+ countries                        |
+| **Offline capability** | Full routing on downloaded regions without network      |
+| **Accuracy**           | ETA within 10% of actual travel time (p90)              |
 
 ### 1.3 Scale Estimation
 
@@ -184,19 +184,19 @@ Example: San Francisco at zoom 15
 
 ### 2.3 Vector Tiles vs Raster Tiles
 
-| Property               | Raster Tiles              | Vector Tiles              |
-|------------------------|---------------------------|---------------------------|
-| **Format**             | Pre-rendered PNG/JPEG     | Protobuf / GeoJSON        |
-| **Size**               | ~15-30 KB per tile        | ~2-5 KB per tile          |
-| **Rendering**          | Server-side               | Client-side (GPU)         |
-| **Styling**            | Fixed at render time      | Dynamic (dark mode, etc.) |
-| **Rotation**           | Pixelated when rotated    | Crisp at any angle        |
-| **Label placement**    | Baked into image          | Dynamic per viewport      |
-| **Zoom transitions**   | Discrete jumps            | Smooth continuous zoom    |
-| **Offline storage**    | ~5 GB per metro area      | ~500 MB per metro area    |
-| **CPU usage (client)** | Low (just display image)  | Higher (parse + render)   |
-| **Bandwidth**          | Higher                    | 5-10x lower               |
-| **Best for**           | Legacy, simple maps       | Modern interactive maps   |
+| Property               | Raster Tiles             | Vector Tiles              |
+| ---------------------- | ------------------------ | ------------------------- |
+| **Format**             | Pre-rendered PNG/JPEG    | Protobuf / GeoJSON        |
+| **Size**               | ~15-30 KB per tile       | ~2-5 KB per tile          |
+| **Rendering**          | Server-side              | Client-side (GPU)         |
+| **Styling**            | Fixed at render time     | Dynamic (dark mode, etc.) |
+| **Rotation**           | Pixelated when rotated   | Crisp at any angle        |
+| **Label placement**    | Baked into image         | Dynamic per viewport      |
+| **Zoom transitions**   | Discrete jumps           | Smooth continuous zoom    |
+| **Offline storage**    | ~5 GB per metro area     | ~500 MB per metro area    |
+| **CPU usage (client)** | Low (just display image) | Higher (parse + render)   |
+| **Bandwidth**          | Higher                   | 5-10x lower               |
+| **Best for**           | Legacy, simple maps      | Modern interactive maps   |
 
 Modern Google Maps uses **vector tiles** for most views. Satellite imagery uses raster tiles.
 
@@ -467,7 +467,7 @@ Dijkstra Exploration Pattern (source = S, target = T):
     - FAR too slow for a consumer product
 ```
 
-### 4.2 A* Algorithm
+### 4.2 A\* Algorithm
 
 Improves on Dijkstra by using a **heuristic function** to guide the search toward the target.
 
@@ -668,7 +668,7 @@ CH Performance on US Road Network (~24M nodes, ~58M edges):
     Total:                            ~2.5 GB
 ```
 
-### 4.4 ALT Algorithm (A* + Landmarks + Triangle Inequality)
+### 4.4 ALT Algorithm (A\* + Landmarks + Triangle Inequality)
 
 An alternative speedup technique that is simpler to implement and supports dynamic edge
 weights better than CH.
@@ -706,18 +706,18 @@ ALT Algorithm:
 
 ### 4.5 Algorithm Comparison Table
 
-| Property                | Dijkstra       | A*             | CH              | ALT            |
-|-------------------------|----------------|----------------|-----------------|----------------|
-| **Preprocessing**       | None           | None           | 15-30 min       | 30-60 min      |
-| **Query time (US)**     | 3-10 sec       | 0.5-2 sec      | 0.1-1 ms        | 10-50 ms       |
-| **Nodes explored**      | ~15M           | ~3M            | ~500-2000       | ~50K-200K      |
-| **Speedup vs Dijkstra** | 1x             | 3-5x           | 1000-3000x      | 50-200x        |
-| **Dynamic weights**     | Yes            | Yes            | No (re-preproc) | Partial        |
-| **Space overhead**      | O(V)           | O(V)           | O(V + E')       | O(k * V)       |
-| **Implementation**      | Simple         | Simple         | Complex         | Moderate       |
-| **Used in production**  | Rarely         | Small graphs   | Google, Apple   | Some providers |
-| **Turn restrictions**   | Easy           | Easy           | Complex         | Easy           |
-| **Multi-criteria**      | Easy           | Easy           | Separate CH     | Moderate       |
+| Property                | Dijkstra | A\*          | CH              | ALT            |
+| ----------------------- | -------- | ------------ | --------------- | -------------- |
+| **Preprocessing**       | None     | None         | 15-30 min       | 30-60 min      |
+| **Query time (US)**     | 3-10 sec | 0.5-2 sec    | 0.1-1 ms        | 10-50 ms       |
+| **Nodes explored**      | ~15M     | ~3M          | ~500-2000       | ~50K-200K      |
+| **Speedup vs Dijkstra** | 1x       | 3-5x         | 1000-3000x      | 50-200x        |
+| **Dynamic weights**     | Yes      | Yes          | No (re-preproc) | Partial        |
+| **Space overhead**      | O(V)     | O(V)         | O(V + E')       | O(k \* V)      |
+| **Implementation**      | Simple   | Simple       | Complex         | Moderate       |
+| **Used in production**  | Rarely   | Small graphs | Google, Apple   | Some providers |
+| **Turn restrictions**   | Easy     | Easy         | Complex         | Easy           |
+| **Multi-criteria**      | Easy     | Easy         | Separate CH     | Moderate       |
 
 ---
 
@@ -970,14 +970,14 @@ Google Maps System Architecture:
 
 ### 6.1 Service Responsibilities
 
-| Service              | Responsibility                                              |
-|----------------------|-------------------------------------------------------------|
-| **Tile Service**     | Serve pre-rendered map tiles, generate custom tiles on miss  |
-| **Search Service**   | Forward/reverse geocoding, place search, autocomplete        |
-| **Routing Service**  | Calculate shortest/fastest paths using CH algorithm          |
-| **Navigation Svc**   | Manage active navigation sessions, push reroute updates      |
-| **Traffic Service**  | Aggregate GPS data, compute live speeds per road segment     |
-| **ETA Service**      | ML-based ETA prediction combining traffic + historical data  |
+| Service             | Responsibility                                              |
+| ------------------- | ----------------------------------------------------------- |
+| **Tile Service**    | Serve pre-rendered map tiles, generate custom tiles on miss |
+| **Search Service**  | Forward/reverse geocoding, place search, autocomplete       |
+| **Routing Service** | Calculate shortest/fastest paths using CH algorithm         |
+| **Navigation Svc**  | Manage active navigation sessions, push reroute updates     |
+| **Traffic Service** | Aggregate GPS data, compute live speeds per road segment    |
+| **ETA Service**     | ML-based ETA prediction combining traffic + historical data |
 
 ---
 

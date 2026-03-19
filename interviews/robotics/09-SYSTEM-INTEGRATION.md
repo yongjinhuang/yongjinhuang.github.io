@@ -38,13 +38,13 @@ that cannot run it in real time.
 
 ### 1.2 Compute Selection
 
-| Platform | Power | Use Case | Example |
-|----------|-------|----------|---------|
-| Microcontroller (ARM Cortex-M) | 0.1-1W | Motor control, sensor reading | STM32, ESP32 |
-| Single-board computer | 5-15W | Basic perception, ROS 2 | Raspberry Pi, BeagleBone |
-| Embedded GPU (Jetson) | 10-60W | Neural network inference, SLAM | Jetson Orin Nano/NX/AGX |
-| Industrial PC (x86) | 50-200W | Full autonomy stack | Intel NUC, Advantech |
-| Workstation GPU | 200-500W | Training, heavy perception | Desktop with RTX 4090 |
+| Platform                       | Power    | Use Case                       | Example                  |
+| ------------------------------ | -------- | ------------------------------ | ------------------------ |
+| Microcontroller (ARM Cortex-M) | 0.1-1W   | Motor control, sensor reading  | STM32, ESP32             |
+| Single-board computer          | 5-15W    | Basic perception, ROS 2        | Raspberry Pi, BeagleBone |
+| Embedded GPU (Jetson)          | 10-60W   | Neural network inference, SLAM | Jetson Orin Nano/NX/AGX  |
+| Industrial PC (x86)            | 50-200W  | Full autonomy stack            | Intel NUC, Advantech     |
+| Workstation GPU                | 200-500W | Training, heavy perception     | Desktop with RTX 4090    |
 
 A common architecture splits compute across tiers:
 
@@ -77,17 +77,17 @@ A common architecture splits compute across tiers:
 
 ### 1.3 Actuator Selection
 
-| Type | Speed | Precision | Force | Cost | Use Case |
-|------|-------|-----------|-------|------|----------|
-| DC brushed motor | High | Low | Medium | Low | Wheels, simple joints |
-| Brushless DC (BLDC) | High | Medium | High | Medium | Drones, wheels |
-| Stepper motor | Low | High | Low | Low | 3D printers, cameras |
-| Servo (hobby) | Medium | Low | Low | Very Low | Small robots, demos |
-| Harmonic drive | Low | Very High | High | High | Robot arms |
-| Direct drive | High | High | Low | High | Haptics, fast arms |
-| Linear actuator | Low | Medium | High | Medium | Grippers, lifts |
-| Pneumatic | Very High | Low | Very High | Medium | Industrial grippers |
-| Hydraulic | Medium | Medium | Very High | High | Heavy machinery |
+| Type                | Speed     | Precision | Force     | Cost     | Use Case              |
+| ------------------- | --------- | --------- | --------- | -------- | --------------------- |
+| DC brushed motor    | High      | Low       | Medium    | Low      | Wheels, simple joints |
+| Brushless DC (BLDC) | High      | Medium    | High      | Medium   | Drones, wheels        |
+| Stepper motor       | Low       | High      | Low       | Low      | 3D printers, cameras  |
+| Servo (hobby)       | Medium    | Low       | Low       | Very Low | Small robots, demos   |
+| Harmonic drive      | Low       | Very High | High      | High     | Robot arms            |
+| Direct drive        | High      | High      | Low       | High     | Haptics, fast arms    |
+| Linear actuator     | Low       | Medium    | High      | Medium   | Grippers, lifts       |
+| Pneumatic           | Very High | Low       | Very High | Medium   | Industrial grippers   |
+| Hydraulic           | Medium    | Medium    | Very High | High     | Heavy machinery       |
 
 ### 1.4 Power Budget
 
@@ -197,13 +197,13 @@ PREEMPT_RT kernel:
 
 For hard real-time requirements (< 10 microseconds), use a dedicated RTOS:
 
-| RTOS | License | Typical Latency | Use Case |
-|------|---------|----------------|----------|
-| FreeRTOS | MIT | 1-10 μs | Microcontrollers |
-| Zephyr | Apache 2.0 | 1-10 μs | IoT, safety-critical |
-| VxWorks | Proprietary | < 1 μs | Aerospace, defense |
-| QNX | Proprietary | < 5 μs | Automotive, medical |
-| Xenomai | GPL | 5-15 μs | Linux + hard RT |
+| RTOS     | License     | Typical Latency | Use Case             |
+| -------- | ----------- | --------------- | -------------------- |
+| FreeRTOS | MIT         | 1-10 μs         | Microcontrollers     |
+| Zephyr   | Apache 2.0  | 1-10 μs         | IoT, safety-critical |
+| VxWorks  | Proprietary | < 1 μs          | Aerospace, defense   |
+| QNX      | Proprietary | < 5 μs          | Automotive, medical  |
+| Xenomai  | GPL         | 5-15 μs         | Linux + hard RT      |
 
 ### 2.5 Latency Budgets
 
@@ -349,6 +349,7 @@ CAN Bus Topology:
 ```
 
 CAN frame structure:
+
 ```
 ┌─────┬────┬─────┬──────┬──────┬─────┬─────┬─────┐
 │ SOF │ ID │ RTR │ DLC  │ Data │ CRC │ ACK │ EOF │
@@ -379,15 +380,15 @@ EtherCAT Ring Topology:
 
 For chip-to-chip communication on a single board:
 
-| Feature | SPI | I2C |
-|---------|-----|-----|
-| Wires | 4 (MOSI, MISO, SCLK, CS) | 2 (SDA, SCL) |
-| Speed | Up to 100 MHz | Up to 3.4 MHz |
-| Topology | Star (one CS per device) | Bus (shared, addressed) |
-| Full duplex | Yes | No |
-| Max distance | ~30 cm | ~1 m |
-| Typical use | IMU, ADC, display | Temperature sensor, EEPROM |
-| Complexity | Simple, fast | More complex, slower |
+| Feature      | SPI                      | I2C                        |
+| ------------ | ------------------------ | -------------------------- |
+| Wires        | 4 (MOSI, MISO, SCLK, CS) | 2 (SDA, SCL)               |
+| Speed        | Up to 100 MHz            | Up to 3.4 MHz              |
+| Topology     | Star (one CS per device) | Bus (shared, addressed)    |
+| Full duplex  | Yes                      | No                         |
+| Max distance | ~30 cm                   | ~1 m                       |
+| Typical use  | IMU, ADC, display        | Temperature sensor, EEPROM |
+| Complexity   | Simple, fast             | More complex, slower       |
 
 ### 3.5 Protocol Selection Guide
 
@@ -415,15 +416,15 @@ Need > 10 Mbps?
 
 ### 4.1 Functional Safety Standards
 
-| Standard | Domain | Levels | Focus |
-|----------|--------|--------|-------|
-| ISO 13849 | Machinery | PL a-e | Safety-related control |
-| IEC 62443 | Industrial | SL 1-4 | Cybersecurity |
-| ISO 10218 | Industrial robots | Cat 1-4 | Robot-specific safety |
-| ISO 13482 | Service robots | -- | Personal care robots |
-| ISO 26262 | Automotive | ASIL A-D | Vehicle safety |
-| IEC 61508 | General | SIL 1-4 | Electrical/electronic |
-| DO-178C | Aviation | DAL A-E | Airborne software |
+| Standard  | Domain            | Levels   | Focus                  |
+| --------- | ----------------- | -------- | ---------------------- |
+| ISO 13849 | Machinery         | PL a-e   | Safety-related control |
+| IEC 62443 | Industrial        | SL 1-4   | Cybersecurity          |
+| ISO 10218 | Industrial robots | Cat 1-4  | Robot-specific safety  |
+| ISO 13482 | Service robots    | --       | Personal care robots   |
+| ISO 26262 | Automotive        | ASIL A-D | Vehicle safety         |
+| IEC 61508 | General           | SIL 1-4  | Electrical/electronic  |
+| DO-178C   | Aviation          | DAL A-E  | Airborne software      |
 
 ### 4.2 Safety Architecture
 

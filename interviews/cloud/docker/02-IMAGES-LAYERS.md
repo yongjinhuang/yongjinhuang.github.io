@@ -24,6 +24,7 @@ Image = Ordered Stack of Layers + Config JSON
 ```
 
 Each layer is:
+
 - A tar archive of filesystem changes (added, modified, or deleted files)
 - Identified by a content-addressable SHA256 digest
 - Immutable once created
@@ -60,14 +61,14 @@ overlay on /var/lib/docker/overlay2/abc123/merged type overlay \
 
 ### 2.2 How File Operations Work
 
-| Operation | What Happens in OverlayFS |
-|-----------|---------------------------|
-| **Read existing file** | Look in upper, then lower layers top-down. First match returned. |
-| **Create new file** | Written directly to upper layer. |
-| **Modify existing file** | File copied from lower to upper (copy-on-write), then modified in upper. |
-| **Delete file** | A "whiteout" character device created in upper. Hides the lower layer file. |
-| **Delete directory** | An "opaque whiteout" (`.wh..wh..opq`) created in upper. |
-| **Rename file** | Depends on kernel version. Older kernels: copy-up + whiteout. Newer: redirect. |
+| Operation                | What Happens in OverlayFS                                                      |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| **Read existing file**   | Look in upper, then lower layers top-down. First match returned.               |
+| **Create new file**      | Written directly to upper layer.                                               |
+| **Modify existing file** | File copied from lower to upper (copy-on-write), then modified in upper.       |
+| **Delete file**          | A "whiteout" character device created in upper. Hides the lower layer file.    |
+| **Delete directory**     | An "opaque whiteout" (`.wh..wh..opq`) created in upper.                        |
+| **Rename file**          | Depends on kernel version. Older kernels: copy-up + whiteout. Newer: redirect. |
 
 ### 2.3 Copy-on-Write Performance Implications
 
@@ -145,16 +146,23 @@ The config describes the runtime behavior and build history:
   },
   "rootfs": {
     "type": "layers",
-    "diff_ids": [
-      "sha256:aaa...",
-      "sha256:bbb...",
-      "sha256:ccc..."
-    ]
+    "diff_ids": ["sha256:aaa...", "sha256:bbb...", "sha256:ccc..."]
   },
   "history": [
-    { "created": "2024-01-15T10:30:00Z", "created_by": "/bin/sh -c #(nop) ADD file:... in /" },
-    { "created": "2024-01-15T10:30:01Z", "created_by": "/bin/sh -c apt-get update && apt-get install -y python3", "comment": "" },
-    { "created": "2024-01-15T10:30:05Z", "created_by": "/bin/sh -c #(nop) COPY dir:... in /app", "comment": "" }
+    {
+      "created": "2024-01-15T10:30:00Z",
+      "created_by": "/bin/sh -c #(nop) ADD file:... in /"
+    },
+    {
+      "created": "2024-01-15T10:30:01Z",
+      "created_by": "/bin/sh -c apt-get update && apt-get install -y python3",
+      "comment": ""
+    },
+    {
+      "created": "2024-01-15T10:30:05Z",
+      "created_by": "/bin/sh -c #(nop) COPY dir:... in /app",
+      "comment": ""
+    }
   ]
 }
 ```
@@ -193,11 +201,11 @@ cache-id    diff    parent    size    tar-split.json.gz
 
 ### 4.2 Digest vs DiffID vs ChainID
 
-| ID Type | What It Is | Calculated From |
-|---------|-----------|-----------------|
-| **Digest** | SHA256 of compressed layer tar.gz | The compressed blob as stored in registry |
-| **DiffID** | SHA256 of uncompressed layer tar | The uncompressed content |
-| **ChainID** | SHA256 of (parent_chain_id + " " + diff_id) | Ordered sequence of layers (for dedup) |
+| ID Type     | What It Is                                  | Calculated From                           |
+| ----------- | ------------------------------------------- | ----------------------------------------- |
+| **Digest**  | SHA256 of compressed layer tar.gz           | The compressed blob as stored in registry |
+| **DiffID**  | SHA256 of uncompressed layer tar            | The uncompressed content                  |
+| **ChainID** | SHA256 of (parent_chain_id + " " + diff_id) | Ordered sequence of layers (for dedup)    |
 
 ```bash
 # Get diff IDs (uncompressed layer hashes)
@@ -244,25 +252,25 @@ IMAGE          CREATED       CREATED BY                                      SIZ
 
 ### 5.2 Which Dockerfile Instructions Create Layers
 
-| Instruction | Creates Layer? | Notes |
-|-------------|---------------|-------|
-| `FROM` | Yes | Base image layers |
-| `RUN` | Yes | Executes command, captures filesystem changes |
-| `COPY` | Yes | Adds files from build context |
-| `ADD` | Yes | Like COPY but also handles URLs and tar extraction |
-| `ENV` | No | Metadata only |
-| `ARG` | No | Build-time variable, metadata only |
-| `EXPOSE` | No | Metadata only (documentation) |
-| `CMD` | No | Metadata only |
-| `ENTRYPOINT` | No | Metadata only |
-| `WORKDIR` | No* | Metadata, but creates the directory if it does not exist (tiny layer) |
-| `USER` | No | Metadata only |
-| `LABEL` | No | Metadata only |
-| `VOLUME` | No | Metadata only |
-| `HEALTHCHECK` | No | Metadata only |
-| `STOPSIGNAL` | No | Metadata only |
-| `SHELL` | No | Metadata only |
-| `ONBUILD` | No | Metadata only (triggers in child builds) |
+| Instruction   | Creates Layer? | Notes                                                                 |
+| ------------- | -------------- | --------------------------------------------------------------------- |
+| `FROM`        | Yes            | Base image layers                                                     |
+| `RUN`         | Yes            | Executes command, captures filesystem changes                         |
+| `COPY`        | Yes            | Adds files from build context                                         |
+| `ADD`         | Yes            | Like COPY but also handles URLs and tar extraction                    |
+| `ENV`         | No             | Metadata only                                                         |
+| `ARG`         | No             | Build-time variable, metadata only                                    |
+| `EXPOSE`      | No             | Metadata only (documentation)                                         |
+| `CMD`         | No             | Metadata only                                                         |
+| `ENTRYPOINT`  | No             | Metadata only                                                         |
+| `WORKDIR`     | No\*           | Metadata, but creates the directory if it does not exist (tiny layer) |
+| `USER`        | No             | Metadata only                                                         |
+| `LABEL`       | No             | Metadata only                                                         |
+| `VOLUME`      | No             | Metadata only                                                         |
+| `HEALTHCHECK` | No             | Metadata only                                                         |
+| `STOPSIGNAL`  | No             | Metadata only                                                         |
+| `SHELL`       | No             | Metadata only                                                         |
+| `ONBUILD`     | No             | Metadata only (triggers in child builds)                              |
 
 ### 5.3 Using dive for Layer Analysis
 
@@ -542,6 +550,7 @@ CMD ["npm", "start"]
 ```
 
 Why this is 1.2GB:
+
 - `node:20` is based on Debian with full OS tools (~900MB)
 - `npm install` includes dev dependencies
 - Source code, node_modules, and build artifacts all in the final image
@@ -630,13 +639,13 @@ RUN apt-get update && \
 
 ### 9.3 Size Comparison
 
-| Approach | Size | Notes |
-|----------|------|-------|
-| `FROM node:20` + copy everything | ~1.2GB | Full OS + dev deps + source |
+| Approach                            | Size   | Notes                                   |
+| ----------------------------------- | ------ | --------------------------------------- |
+| `FROM node:20` + copy everything    | ~1.2GB | Full OS + dev deps + source             |
 | `FROM node:20-alpine` + multi-stage | ~150MB | Alpine + production deps + built assets |
-| `FROM node:20-alpine` + prune | ~80MB | Alpine + minimal deps |
-| `FROM gcr.io/distroless/nodejs20` | ~50MB | No shell, no package manager |
-| Go app `FROM scratch` | ~10MB | Just the static binary |
+| `FROM node:20-alpine` + prune       | ~80MB  | Alpine + minimal deps                   |
+| `FROM gcr.io/distroless/nodejs20`   | ~50MB  | No shell, no package manager            |
+| Go app `FROM scratch`               | ~10MB  | Just the static binary                  |
 
 ---
 
@@ -742,6 +751,7 @@ Deletions work via whiteout files: a special file in the upper layer that hides 
 **Strong answer:**
 
 **Push:**
+
 1. Client authenticates with the registry (OAuth2 token exchange).
 2. For each layer, client sends a HEAD request to check if the blob already exists (by digest). If it exists, skip upload.
 3. For new layers, client initiates a blob upload (POST), streams the compressed tar.gz (PATCH), and completes with the digest (PUT).
@@ -749,6 +759,7 @@ Deletions work via whiteout files: a special file in the upper layer that hides 
 5. Finally, client uploads the manifest (PUT), which ties together the config and layer references. The manifest is what the tag points to.
 
 **Pull:**
+
 1. Client authenticates.
 2. Client fetches the manifest by tag (GET /v2/repo/manifests/tag). If it is a manifest list (multi-arch), client selects the platform-specific manifest.
 3. Client fetches the config blob.
@@ -778,6 +789,7 @@ The relationship is similar to class vs object in OOP: the image is the class (t
 Every layer is identified by the SHA256 hash of its content (content-addressable storage). When Docker stores or pulls a layer, it checks if a blob with that digest already exists. If it does, it reuses the existing blob instead of storing a duplicate.
 
 This works at three levels:
+
 1. **On disk:** Two images based on `python:3.12` share the same base layers in `/var/lib/docker/overlay2/`. The layers are stored once.
 2. **During pull:** When pulling an image, Docker sends HEAD requests for each layer digest. The registry returns 200 if the layer exists. The client skips downloading layers it already has locally.
 3. **During push:** Same mechanism -- the client checks if each layer already exists in the target repository. If so, it can use cross-repository blob mounting instead of re-uploading.
@@ -788,18 +800,18 @@ This is why choosing common base images matters: if your team standardizes on `p
 
 ## 12. Quick Reference
 
-| Command | Purpose |
-|---------|---------|
-| `docker images` | List local images with sizes |
-| `docker image inspect <img>` | Full image metadata (JSON) |
-| `docker history <img>` | Layer-by-layer build history |
-| `docker manifest inspect <img>` | Multi-arch manifest list |
-| `docker buildx imagetools inspect <img>` | Detailed multi-platform info |
-| `docker image prune` | Remove dangling images |
-| `docker image prune -a` | Remove all unused images |
-| `docker system df` | Disk usage summary |
-| `docker save <img> -o file.tar` | Export image to tar archive |
-| `docker load -i file.tar` | Import image from tar archive |
-| `dive <img>` | Interactive layer analysis |
-| `skopeo inspect docker://<img>` | Inspect remote image without pulling |
-| `crane manifest <img>` | Fetch manifest from registry |
+| Command                                  | Purpose                              |
+| ---------------------------------------- | ------------------------------------ |
+| `docker images`                          | List local images with sizes         |
+| `docker image inspect <img>`             | Full image metadata (JSON)           |
+| `docker history <img>`                   | Layer-by-layer build history         |
+| `docker manifest inspect <img>`          | Multi-arch manifest list             |
+| `docker buildx imagetools inspect <img>` | Detailed multi-platform info         |
+| `docker image prune`                     | Remove dangling images               |
+| `docker image prune -a`                  | Remove all unused images             |
+| `docker system df`                       | Disk usage summary                   |
+| `docker save <img> -o file.tar`          | Export image to tar archive          |
+| `docker load -i file.tar`                | Import image from tar archive        |
+| `dive <img>`                             | Interactive layer analysis           |
+| `skopeo inspect docker://<img>`          | Inspect remote image without pulling |
+| `crane manifest <img>`                   | Fetch manifest from registry         |

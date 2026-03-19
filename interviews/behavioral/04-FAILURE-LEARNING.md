@@ -23,12 +23,12 @@ Candidates often try to pick a "safe" failure, something so minor it barely coun
 
 ### What Level of Failure to Share
 
-| Level | When to Use |
-|-------|-------------|
-| **Minor** (typo caused a bug, missed a small deadline) | Avoid. Too trivial. Shows nothing. |
-| **Moderate** (wrong technical decision, feature shipped with issues) | Good for mid-level roles. Shows judgment. |
+| Level                                                                       | When to Use                                                 |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **Minor** (typo caused a bug, missed a small deadline)                      | Avoid. Too trivial. Shows nothing.                          |
+| **Moderate** (wrong technical decision, feature shipped with issues)        | Good for mid-level roles. Shows judgment.                   |
 | **Significant** (production outage, missed major deadline, project failure) | Best for senior roles. Shows accountability and leadership. |
-| **Career-defining** (left a company, pivoted a strategy, public failure) | Use only if you have genuine growth to show. |
+| **Career-defining** (left a company, pivoted a strategy, public failure)    | Use only if you have genuine growth to show.                |
 
 ---
 
@@ -80,6 +80,7 @@ Include both the immediate outcome and the longer-term learning.
 
 **The Learning (Critical):**
 This is where strong candidates separate themselves. Your learning should be:
+
 - **Specific**: Not "I learned to communicate better" but "I now send a weekly risk update to stakeholders for any project over four weeks"
 - **Behavioral**: Describe the concrete change in how you work
 - **Lasting**: Show that you still do this, not that it was a one-time adjustment
@@ -122,6 +123,7 @@ The preventive measures I built have been in place for two years with zero payme
 My biggest takeaway was that testing with synthetic data creates a false sense of security. Since this incident, I advocate for anonymized production data in test suites, especially for systems handling financial transactions. I also learned the importance of understanding downstream system behavior: our banking partner's silent rejection was a known behavior in their documentation that I had not read thoroughly. I now review the full error handling documentation for any third-party system we integrate with, not just the happy path."
 
 **Why this is strong:**
+
 - Does not minimize the severity (real people did not get paid)
 - Takes clear personal responsibility
 - Describes both the immediate fix and the systemic improvements
@@ -163,6 +165,7 @@ The concrete changes I made to my decision-making process were threefold. First,
 These three practices have become part of our team's technical decision template, and I have seen them prevent at least two similar over-engineering decisions in the past year."
 
 **Why this is strong:**
+
 - Chooses a genuinely wrong decision, not a minor misstep
 - Explains the flawed reasoning, not just the bad outcome
 - Admits to the sunk cost fallacy honestly
@@ -202,6 +205,7 @@ The biggest lesson was not about estimation or third-party dependencies. It was 
 I changed three things permanently. First, I now track 'risk budget' separately from task progress. Every project starts with a risk budget, and when setbacks consume it, I escalate immediately regardless of whether I think I can recover. Second, I subscribe to changelogs and release notes for every third-party dependency from day one of a project. Third, I adopted a personal rule: if I am considering working evenings or weekends to hit a deadline, that is a signal to escalate, not a solution. Heroics hide problems from the people who need to know about them."
 
 **Why this is strong:**
+
 - Honest about multiple compounding failures, not just bad luck
 - Takes responsibility for the late communication, which is the real failure
 - Provides specific behavioral changes with clear reasoning
@@ -220,6 +224,7 @@ I changed three things permanently. First, I now track 'risk budget' separately 
 > "Hmm, I'd say my biggest failure was being too much of a perfectionist. I spent too long on code quality when I could have shipped faster. But honestly, the code I shipped was really solid, so in the end it worked out."
 
 **Why this is weak:**
+
 - This is a disguised strength, not a failure.
 - Shows no self-awareness about actual shortcomings.
 - The interviewer will ask for a real failure and you will have wasted time.
@@ -232,6 +237,7 @@ I changed three things permanently. First, I now track 'risk budget' separately 
 > "We missed the launch deadline because the PM kept changing the requirements. Every week there was something new. And then the design team took forever to deliver the mocks. By the time we had everything we needed, there wasn't enough time to build it properly. I told my manager that we needed more time, but they said we had to ship anyway."
 
 **Why this is weak:**
+
 - Every sentence blames someone else (PM, design team, manager).
 - No mention of what the candidate could have done differently.
 - No personal accountability whatsoever.
@@ -245,6 +251,7 @@ I changed three things permanently. First, I now track 'risk budget' separately 
 > "I learned that communication is really important. And that you should always test your code thoroughly. And that deadlines should be realistic. I think the main takeaway is that you should be proactive instead of reactive."
 
 **Why this is weak:**
+
 - Every "learning" is a generic platitude.
 - No specific behavior change described.
 - "Communication is important" tells the interviewer nothing.
@@ -323,29 +330,29 @@ I changed three things permanently. First, I now track 'risk budget' separately 
 
 ### Do's and Don'ts
 
-| Do | Don't |
-|----|-------|
-| Choose a genuine, meaningful failure | Pick a trivial failure or a disguised strength |
-| Take personal accountability for your role | Blame circumstances, colleagues, or bad luck |
-| Describe what you specifically did wrong | Describe only what happened to you |
-| Show how you responded under pressure | Skip from failure to learning without showing the response |
-| Provide specific, concrete behavioral changes | Say "I learned communication is important" |
-| Connect the learning to ongoing practice | Describe a one-time adjustment |
-| Be matter-of-fact about the failure | Be overly dramatic or self-flagellating |
-| Show the failure made you better | Show the failure made you fearful or cautious |
+| Do                                            | Don't                                                      |
+| --------------------------------------------- | ---------------------------------------------------------- |
+| Choose a genuine, meaningful failure          | Pick a trivial failure or a disguised strength             |
+| Take personal accountability for your role    | Blame circumstances, colleagues, or bad luck               |
+| Describe what you specifically did wrong      | Describe only what happened to you                         |
+| Show how you responded under pressure         | Skip from failure to learning without showing the response |
+| Provide specific, concrete behavioral changes | Say "I learned communication is important"                 |
+| Connect the learning to ongoing practice      | Describe a one-time adjustment                             |
+| Be matter-of-fact about the failure           | Be overly dramatic or self-flagellating                    |
+| Show the failure made you better              | Show the failure made you fearful or cautious              |
 
 ### Key Phrases for Failure Stories
 
-| Use These | Avoid These |
-|-----------|-------------|
-| "The mistake I made was..." | "What happened was..." |
-| "I should have..." | "Nobody told me..." |
-| "I was responsible for..." | "It wasn't really my fault..." |
-| "I underestimated..." | "It was impossible to predict..." |
-| "I raised the issue too late because..." | "I didn't have time to..." |
-| "The specific change I made was..." | "I learned to be more careful" |
-| "Since that experience, I always..." | "I try to..." |
-| "The impact was [number]..." | "It was kind of a big deal" |
+| Use These                                | Avoid These                       |
+| ---------------------------------------- | --------------------------------- |
+| "The mistake I made was..."              | "What happened was..."            |
+| "I should have..."                       | "Nobody told me..."               |
+| "I was responsible for..."               | "It wasn't really my fault..."    |
+| "I underestimated..."                    | "It was impossible to predict..." |
+| "I raised the issue too late because..." | "I didn't have time to..."        |
+| "The specific change I made was..."      | "I learned to be more careful"    |
+| "Since that experience, I always..."     | "I try to..."                     |
+| "The impact was [number]..."             | "It was kind of a big deal"       |
 
 ### Failure Response Checklist
 
@@ -361,15 +368,15 @@ When describing how you responded to a failure, cover these points:
 
 ### How Interviewers Evaluate Failure Answers
 
-| Signal | Positive | Negative |
-|--------|----------|----------|
-| **Accountability** | "The root cause was my decision to..." | "The PM should have..." |
-| **Self-awareness** | "In hindsight, I can see that I..." | "There was no way to know..." |
-| **Response quality** | "I immediately communicated the scope..." | "I tried to fix it quietly..." |
-| **Learning depth** | "I changed three specific things in my process..." | "I learned to be more careful" |
-| **Proportionality** | Failure matches seniority level | Trivial failure for senior role |
-| **Recency** | Can articulate current practices from the learning | Vague about whether lessons stuck |
+| Signal               | Positive                                           | Negative                          |
+| -------------------- | -------------------------------------------------- | --------------------------------- |
+| **Accountability**   | "The root cause was my decision to..."             | "The PM should have..."           |
+| **Self-awareness**   | "In hindsight, I can see that I..."                | "There was no way to know..."     |
+| **Response quality** | "I immediately communicated the scope..."          | "I tried to fix it quietly..."    |
+| **Learning depth**   | "I changed three specific things in my process..." | "I learned to be more careful"    |
+| **Proportionality**  | Failure matches seniority level                    | Trivial failure for senior role   |
+| **Recency**          | Can articulate current practices from the learning | Vague about whether lessons stuck |
 
 ---
 
-*Continue to the next topics in the series. See the [Framework guide](./00-FRAMEWORK.md) for the full table of contents.*
+_Continue to the next topics in the series. See the [Framework guide](./00-FRAMEWORK.md) for the full table of contents._

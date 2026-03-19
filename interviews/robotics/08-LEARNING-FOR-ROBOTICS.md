@@ -15,15 +15,15 @@ for robot control.
 
 ### 1.1 The Core Challenges
 
-| Challenge | Vision/NLP | Robotics |
-|-----------|-----------|----------|
-| Data | Billions of images/text | Hours of robot experience |
-| Labels | Cheap (crowdsourcing) | Expensive (expert demos) |
-| Safety | Wrong answer is annoying | Wrong action breaks hardware |
-| Feedback | Immediate (loss function) | Delayed (task completion) |
-| Environment | Static dataset | Dynamic, continuous |
-| Evaluation | Accuracy metric | Physical success rate |
-| Distribution shift | Moderate | Severe (sim vs. real) |
+| Challenge          | Vision/NLP                | Robotics                     |
+| ------------------ | ------------------------- | ---------------------------- |
+| Data               | Billions of images/text   | Hours of robot experience    |
+| Labels             | Cheap (crowdsourcing)     | Expensive (expert demos)     |
+| Safety             | Wrong answer is annoying  | Wrong action breaks hardware |
+| Feedback           | Immediate (loss function) | Delayed (task completion)    |
+| Environment        | Static dataset            | Dynamic, continuous          |
+| Evaluation         | Accuracy metric           | Physical success rate        |
+| Distribution shift | Moderate                  | Severe (sim vs. real)        |
 
 ### 1.2 The Data Problem
 
@@ -593,12 +593,12 @@ knowledge learned during language pretraining.
 
 The field is rapidly evolving. Notable open efforts:
 
-| Model | Organization | Approach |
-|-------|-------------|----------|
-| Octo | UC Berkeley | Transformer policy, multi-robot |
-| OpenVLA | Stanford/Berkeley | Fine-tuned Llama for actions |
-| pi0 | Physical Intelligence | Flow matching VLA |
-| RT-X | Open X-Embodiment | Cross-robot dataset + models |
+| Model   | Organization          | Approach                        |
+| ------- | --------------------- | ------------------------------- |
+| Octo    | UC Berkeley           | Transformer policy, multi-robot |
+| OpenVLA | Stanford/Berkeley     | Fine-tuned Llama for actions    |
+| pi0     | Physical Intelligence | Flow matching VLA               |
+| RT-X    | Open X-Embodiment     | Cross-robot dataset + models    |
 
 ### 5.5 Limitations of Foundation Models
 
@@ -951,14 +951,14 @@ Use Both (common in practice):
 
 ### 9.3 Common Failure Modes
 
-| Failure | Symptom | Fix |
-|---------|---------|-----|
-| Behavior cloning drift | Works for 2 seconds then fails | DAgger, action chunking |
-| Reward hacking | Robot "cheats" the reward | Redesign reward, add constraints |
-| Sim-to-real gap | Works in sim, fails on robot | Domain randomization, fine-tune |
-| Covariate shift | Degrades over deployment | Continual learning, monitoring |
-| Causal confusion | Learns spurious correlations | Causal IL, data augmentation |
-| Mode collapse | Only does one thing | Diffusion policies, mixture models |
+| Failure                | Symptom                        | Fix                                |
+| ---------------------- | ------------------------------ | ---------------------------------- |
+| Behavior cloning drift | Works for 2 seconds then fails | DAgger, action chunking            |
+| Reward hacking         | Robot "cheats" the reward      | Redesign reward, add constraints   |
+| Sim-to-real gap        | Works in sim, fails on robot   | Domain randomization, fine-tune    |
+| Covariate shift        | Degrades over deployment       | Continual learning, monitoring     |
+| Causal confusion       | Learns spurious correlations   | Causal IL, data augmentation       |
+| Mode collapse          | Only does one thing            | Diffusion policies, mixture models |
 
 ---
 
@@ -1028,7 +1028,7 @@ planning, with classical controllers handling low-level execution.
 **Q8: Explain Control Barrier Functions and their role in safe learned control.**
 
 A CBF defines a safe set via h(x) >= 0 and enforces the condition
-dh/dt + alpha*h(x) >= 0. This mathematically guarantees the system stays
+dh/dt + alpha\*h(x) >= 0. This mathematically guarantees the system stays
 within the safe set. In learned control, a CBF acts as a safety filter: the
 learned policy proposes an action, the CBF checks if it would violate safety,
 and if so, projects it to the closest safe action. This provides formal

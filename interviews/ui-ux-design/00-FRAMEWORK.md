@@ -21,23 +21,23 @@ This ordering is intentional. Each stage builds on the previous one. You researc
 
 This series covers 15 essential UI/UX design topics. Each guide follows a consistent structure: Overview, Core Concepts, Common Interview Questions, Applying to Your Portfolio, Gotchas, and a Quick Reference cheat sheet.
 
-| # | Topic | File | Key Areas |
-|---|-------|------|-----------|
-| 01 | [User Research & Discovery](./01-USER-RESEARCH.md) | `01-USER-RESEARCH.md` | Personas, interviews, competitive analysis, empathy maps |
-| 02 | [Information Architecture](./02-INFORMATION-ARCHITECTURE.md) | `02-INFORMATION-ARCHITECTURE.md` | Content hierarchy, sitemaps, card sorting, navigation models |
-| 03 | [Wireframing & Prototyping](./03-WIREFRAMING-PROTOTYPING.md) | `03-WIREFRAMING-PROTOTYPING.md` | Lo-fi to hi-fi, tools, testing with wireframes |
-| 04 | [Visual Hierarchy & Layout](./04-VISUAL-HIERARCHY-LAYOUT.md) | `04-VISUAL-HIERARCHY-LAYOUT.md` | Gestalt principles, grids, spacing, alignment, whitespace |
-| 05 | [Typography](./05-TYPOGRAPHY.md) | `05-TYPOGRAPHY.md` | Font selection, type scales, pairing, readability, web fonts |
-| 06 | [Color Systems](./06-COLOR-SYSTEMS.md) | `06-COLOR-SYSTEMS.md` | Palettes, contrast, accessibility, color psychology |
-| 07 | [Common UI Patterns](./07-UI-PATTERNS.md) | `07-UI-PATTERNS.md` | Cards, modals, toasts, empty states, loading, navigation |
-| 08 | [Forms & Input Design](./08-FORMS-INPUT-DESIGN.md) | `08-FORMS-INPUT-DESIGN.md` | Validation UX, error states, progressive disclosure |
-| 09 | [Animation & Micro-interactions](./09-ANIMATION-MICROINTERACTIONS.md) | `09-ANIMATION-MICROINTERACTIONS.md` | Purpose-driven motion, timing, easing, Framer Motion |
-| 10 | [Responsive & Adaptive Design](./10-RESPONSIVE-DESIGN.md) | `10-RESPONSIVE-DESIGN.md` | Mobile-first, breakpoints, fluid design, touch targets |
-| 11 | [Design Systems & Tokens](./11-DESIGN-SYSTEMS.md) | `11-DESIGN-SYSTEMS.md` | Design tokens, component libraries, Figma, Storybook |
-| 12 | [Accessibility (Design Perspective)](./12-ACCESSIBILITY-DESIGN.md) | `12-ACCESSIBILITY-DESIGN.md` | WCAG, inclusive design, testing, screen reader considerations |
-| 13 | [Dark Mode & Theming](./13-DARK-MODE-THEMING.md) | `13-DARK-MODE-THEMING.md` | Theme architecture, color tokens, contrast across themes |
-| 14 | [Design Tools & Dev Handoff](./14-DESIGN-TOOLS-HANDOFF.md) | `14-DESIGN-TOOLS-HANDOFF.md` | Figma workflow, design-to-code, collaboration |
-| 15 | [Design Critique & Heuristic Evaluation](./15-DESIGN-CRITIQUE.md) | `15-DESIGN-CRITIQUE.md` | Nielsen's heuristics, evaluation methods, improving designs |
+| #   | Topic                                                                 | File                                | Key Areas                                                     |
+| --- | --------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------- |
+| 01  | [User Research & Discovery](./01-USER-RESEARCH.md)                    | `01-USER-RESEARCH.md`               | Personas, interviews, competitive analysis, empathy maps      |
+| 02  | [Information Architecture](./02-INFORMATION-ARCHITECTURE.md)          | `02-INFORMATION-ARCHITECTURE.md`    | Content hierarchy, sitemaps, card sorting, navigation models  |
+| 03  | [Wireframing & Prototyping](./03-WIREFRAMING-PROTOTYPING.md)          | `03-WIREFRAMING-PROTOTYPING.md`     | Lo-fi to hi-fi, tools, testing with wireframes                |
+| 04  | [Visual Hierarchy & Layout](./04-VISUAL-HIERARCHY-LAYOUT.md)          | `04-VISUAL-HIERARCHY-LAYOUT.md`     | Gestalt principles, grids, spacing, alignment, whitespace     |
+| 05  | [Typography](./05-TYPOGRAPHY.md)                                      | `05-TYPOGRAPHY.md`                  | Font selection, type scales, pairing, readability, web fonts  |
+| 06  | [Color Systems](./06-COLOR-SYSTEMS.md)                                | `06-COLOR-SYSTEMS.md`               | Palettes, contrast, accessibility, color psychology           |
+| 07  | [Common UI Patterns](./07-UI-PATTERNS.md)                             | `07-UI-PATTERNS.md`                 | Cards, modals, toasts, empty states, loading, navigation      |
+| 08  | [Forms & Input Design](./08-FORMS-INPUT-DESIGN.md)                    | `08-FORMS-INPUT-DESIGN.md`          | Validation UX, error states, progressive disclosure           |
+| 09  | [Animation & Micro-interactions](./09-ANIMATION-MICROINTERACTIONS.md) | `09-ANIMATION-MICROINTERACTIONS.md` | Purpose-driven motion, timing, easing, Framer Motion          |
+| 10  | [Responsive & Adaptive Design](./10-RESPONSIVE-DESIGN.md)             | `10-RESPONSIVE-DESIGN.md`           | Mobile-first, breakpoints, fluid design, touch targets        |
+| 11  | [Design Systems & Tokens](./11-DESIGN-SYSTEMS.md)                     | `11-DESIGN-SYSTEMS.md`              | Design tokens, component libraries, Figma, Storybook          |
+| 12  | [Accessibility (Design Perspective)](./12-ACCESSIBILITY-DESIGN.md)    | `12-ACCESSIBILITY-DESIGN.md`        | WCAG, inclusive design, testing, screen reader considerations |
+| 13  | [Dark Mode & Theming](./13-DARK-MODE-THEMING.md)                      | `13-DARK-MODE-THEMING.md`           | Theme architecture, color tokens, contrast across themes      |
+| 14  | [Design Tools & Dev Handoff](./14-DESIGN-TOOLS-HANDOFF.md)            | `14-DESIGN-TOOLS-HANDOFF.md`        | Figma workflow, design-to-code, collaboration                 |
+| 15  | [Design Critique & Heuristic Evaluation](./15-DESIGN-CRITIQUE.md)     | `15-DESIGN-CRITIQUE.md`             | Nielsen's heuristics, evaluation methods, improving designs   |
 
 ---
 
@@ -159,22 +159,26 @@ If you want to make your personal site or side project look and feel more polish
 ### Suggested Study Order
 
 **Week 1: Foundations**
+
 - 00 Framework (this file)
 - 04 Visual Hierarchy & Layout
 - 05 Typography
 - 06 Color Systems
 
 **Week 2: Structure & Patterns**
+
 - 02 Information Architecture
 - 07 Common UI Patterns
 - 08 Forms & Input Design
 
 **Week 3: Interaction & Systems**
+
 - 09 Animation & Micro-interactions
 - 10 Responsive & Adaptive Design
 - 11 Design Systems & Tokens
 
 **Week 4: Research, Access, & Polish**
+
 - 01 User Research & Discovery
 - 03 Wireframing & Prototyping
 - 12 Accessibility (Design Perspective)
@@ -192,7 +196,7 @@ These principles come up again and again across all 15 topics. Internalize them.
 
 ### 1. Design is problem-solving, not decoration
 
-Good design is not about making things pretty. It is about making things work. Every visual choice -- spacing, color, typography, animation -- should solve a user problem or support a user goal. If you cannot explain *why* a design decision was made, it is probably wrong.
+Good design is not about making things pretty. It is about making things work. Every visual choice -- spacing, color, typography, animation -- should solve a user problem or support a user goal. If you cannot explain _why_ a design decision was made, it is probably wrong.
 
 ### 2. Every design decision should have a reason
 
@@ -217,6 +221,7 @@ Jakob Nielsen's research shows that users read about 20% of text on a page. Desi
 ### 7. Design for the worst case, not the best case
 
 Your design should work when:
+
 - The user's name is 40 characters long
 - There are zero items in a list (empty state)
 - The image fails to load
@@ -243,6 +248,7 @@ Use multiples of 8 for all spacing and sizing: 8px, 16px, 24px, 32px, 40px, 48px
 ### Type Scale
 
 Use a modular scale for font sizes. A common ratio is 1.25 (Major Third):
+
 - xs: 12px
 - sm: 14px
 - base: 16px
@@ -253,11 +259,11 @@ Use a modular scale for font sizes. A common ratio is 1.25 (Major Third):
 
 ### Color Contrast Minimums (WCAG 2.1)
 
-| Element | AA | AAA |
-|---------|-----|-----|
-| Normal text (< 18px) | 4.5:1 | 7:1 |
-| Large text (>= 18px bold or >= 24px) | 3:1 | 4.5:1 |
-| UI components & graphical objects | 3:1 | -- |
+| Element                              | AA    | AAA   |
+| ------------------------------------ | ----- | ----- |
+| Normal text (< 18px)                 | 4.5:1 | 7:1   |
+| Large text (>= 18px bold or >= 24px) | 3:1   | 4.5:1 |
+| UI components & graphical objects    | 3:1   | --    |
 
 ### Gestalt Principles (Top 5 for UI)
 
@@ -269,13 +275,13 @@ Use a modular scale for font sizes. A common ratio is 1.25 (Major Third):
 
 ### Responsive Breakpoints (Common)
 
-| Name | Width | Target |
-|------|-------|--------|
-| sm | 640px | Large phones |
-| md | 768px | Tablets |
-| lg | 1024px | Small laptops |
-| xl | 1280px | Desktops |
-| 2xl | 1536px | Large screens |
+| Name | Width  | Target        |
+| ---- | ------ | ------------- |
+| sm   | 640px  | Large phones  |
+| md   | 768px  | Tablets       |
+| lg   | 1024px | Small laptops |
+| xl   | 1280px | Desktops      |
+| 2xl  | 1536px | Large screens |
 
 ### Touch Target Minimums
 
@@ -285,12 +291,12 @@ Use a modular scale for font sizes. A common ratio is 1.25 (Major Third):
 
 ### Animation Timing Guidelines
 
-| Type | Duration | Use |
-|------|----------|-----|
-| Micro-interaction | 100-200ms | Button press, toggle |
-| Transition | 200-300ms | Page elements, modals |
-| Complex animation | 300-500ms | Page transitions, reveals |
-| Attention-grab | 500-1000ms | Onboarding, celebrations |
+| Type              | Duration   | Use                       |
+| ----------------- | ---------- | ------------------------- |
+| Micro-interaction | 100-200ms  | Button press, toggle      |
+| Transition        | 200-300ms  | Page elements, modals     |
+| Complex animation | 300-500ms  | Page transitions, reveals |
+| Attention-grab    | 500-1000ms | Onboarding, celebrations  |
 
 Use ease-out for entrances (decelerating). Use ease-in for exits (accelerating). Use ease-in-out for elements that move from point A to point B.
 
@@ -338,4 +344,4 @@ These are all valid and important disciplines, but they fall outside the scope o
 
 ---
 
-*Next: [01 - User Research & Discovery](./01-USER-RESEARCH.md)*
+_Next: [01 - User Research & Discovery](./01-USER-RESEARCH.md)_

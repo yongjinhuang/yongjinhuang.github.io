@@ -112,14 +112,14 @@ A learning path is an ordered sequence of courses that builds toward a broader s
 
 ### Pricing Models
 
-| Model | How It Works | Example |
-|-------|-------------|---------|
-| **One-time purchase** | Pay once, access forever | Udemy |
-| **Subscription** | Monthly/annual fee for access to a library | Coursera Plus, LinkedIn Learning |
-| **Freemium** | Free content with paid upgrades (certificates, advanced courses) | Coursera (audit for free, pay for certificate) |
-| **Cohort premium** | Higher price for cohort-based experience with live instruction | Maven, On Deck |
-| **B2B / seat license** | Company pays per seat or per team for access | Udemy Business, Pluralsight |
-| **Revenue share** | Platform takes a percentage of instructor sales | Udemy (37-97% to instructor depending on channel) |
+| Model                  | How It Works                                                     | Example                                           |
+| ---------------------- | ---------------------------------------------------------------- | ------------------------------------------------- |
+| **One-time purchase**  | Pay once, access forever                                         | Udemy                                             |
+| **Subscription**       | Monthly/annual fee for access to a library                       | Coursera Plus, LinkedIn Learning                  |
+| **Freemium**           | Free content with paid upgrades (certificates, advanced courses) | Coursera (audit for free, pay for certificate)    |
+| **Cohort premium**     | Higher price for cohort-based experience with live instruction   | Maven, On Deck                                    |
+| **B2B / seat license** | Company pays per seat or per team for access                     | Udemy Business, Pluralsight                       |
+| **Revenue share**      | Platform takes a percentage of instructor sales                  | Udemy (37-97% to instructor depending on channel) |
 
 ### Student Analytics
 
@@ -133,38 +133,43 @@ Beyond progress tracking, analytics help optimize the learning experience:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **LMS** | Learning Management System — the platform that hosts, delivers, and tracks courses (e.g., Moodle, Canvas, Blackboard) |
-| **SCORM** | Sharable Content Object Reference Model — a legacy standard for packaging e-learning content so it works across LMS platforms |
-| **xAPI (Tin Can)** | Modern successor to SCORM. Tracks granular learning activities ("learner watched video," "learner scored 85%") as statements |
-| **Content Dripping** | Releasing course content on a schedule rather than all at once |
-| **Cohort** | A group of learners progressing through a course together on a shared timeline |
-| **Learning Path** | An ordered sequence of courses leading to a broader skill or credential |
-| **Completion Rate** | Percentage of enrolled learners who finish the course. Industry benchmark for self-paced: 5-15% |
-| **Rubric** | A scoring guide for subjective assessments, defining criteria and point values for each quality level |
-| **Proctoring** | Monitoring exam-takers to prevent cheating — via webcam, screen capture, or lockdown browser |
-| **CEU** | Continuing Education Unit — a standardized credit for professional development courses |
-| **Open Badge** | A portable, verifiable digital credential following the Open Badges standard |
-| **Adaptive Learning** | Content that adjusts difficulty or sequence based on the learner's performance |
-| **Seat License** | A per-user access right, typically sold to organizations in bulk |
-| **Engagement Score** | A composite metric combining video watch time, quiz participation, forum activity, and login frequency |
+| Term                  | What It Means                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **LMS**               | Learning Management System — the platform that hosts, delivers, and tracks courses (e.g., Moodle, Canvas, Blackboard)         |
+| **SCORM**             | Sharable Content Object Reference Model — a legacy standard for packaging e-learning content so it works across LMS platforms |
+| **xAPI (Tin Can)**    | Modern successor to SCORM. Tracks granular learning activities ("learner watched video," "learner scored 85%") as statements  |
+| **Content Dripping**  | Releasing course content on a schedule rather than all at once                                                                |
+| **Cohort**            | A group of learners progressing through a course together on a shared timeline                                                |
+| **Learning Path**     | An ordered sequence of courses leading to a broader skill or credential                                                       |
+| **Completion Rate**   | Percentage of enrolled learners who finish the course. Industry benchmark for self-paced: 5-15%                               |
+| **Rubric**            | A scoring guide for subjective assessments, defining criteria and point values for each quality level                         |
+| **Proctoring**        | Monitoring exam-takers to prevent cheating — via webcam, screen capture, or lockdown browser                                  |
+| **CEU**               | Continuing Education Unit — a standardized credit for professional development courses                                        |
+| **Open Badge**        | A portable, verifiable digital credential following the Open Badges standard                                                  |
+| **Adaptive Learning** | Content that adjusts difficulty or sequence based on the learner's performance                                                |
+| **Seat License**      | A per-user access right, typically sold to organizations in bulk                                                              |
+| **Engagement Score**  | A composite metric combining video watch time, quiz participation, forum activity, and login frequency                        |
 
 ## Common Patterns
 
 ### Pattern 1: Marketplace (Udemy Model)
+
 Anyone can create and sell courses. The platform handles hosting, payments, and discovery. Instructors compete for students. Revenue is split between instructor and platform. Works at scale but quality varies widely. Requires robust review processes and rating systems.
 
 ### Pattern 2: Curated Platform (Coursera/edX Model)
+
 Content comes from vetted partners (universities, companies). Higher production quality and brand trust. The platform controls the curriculum and credentialing. Harder to scale content supply but commands premium pricing.
 
 ### Pattern 3: Creator-Owned (Teachable/Kajabi Model)
+
 Instructors get their own branded site and keep most revenue. The platform provides the infrastructure (hosting, payments, course builder) as a SaaS product. The instructor handles marketing and audience building. Best for established creators with existing audiences.
 
 ### Pattern 4: Corporate LMS (Internal Training)
+
 Companies deploy an LMS for employee onboarding, compliance training, and skill development. Content is internal and proprietary. Features emphasize compliance tracking (did everyone complete the mandatory security training?), reporting for managers, and integration with HR systems. Often uses SCORM/xAPI for content interoperability.
 
 ### Pattern 5: Cohort-Based Course (Maven/Reforge Model)
+
 Instructor-led, time-bound programs with live sessions, group projects, and peer interaction. Premium pricing ($500-$5000+). Small class sizes. The value proposition is community and accountability, not just content. Requires scheduling, live video, and group management features.
 
 ## Gotchas

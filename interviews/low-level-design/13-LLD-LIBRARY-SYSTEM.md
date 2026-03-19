@@ -28,24 +28,24 @@ expect a clean, extensible design with proper handling of due dates, fines, and 
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Book catalog | Book metadata (title, author, ISBN, subject) with multiple copies |
-| F2 | Member types | Student and Faculty with different borrowing limits |
-| F3 | Borrow/return | Check out a book copy, return it, track due dates |
-| F4 | Fines | Calculate fines for overdue books based on policy |
-| F5 | Reservations | Members can place holds; queue per book, FIFO |
-| F6 | Search | Search by title, author, subject, ISBN with composable criteria |
-| F7 | Notifications | Notify on overdue, reservation available, due soon |
-| F8 | Rack location | Track physical location (rack, shelf) of each copy |
+| #   | Requirement   | Details                                                           |
+| --- | ------------- | ----------------------------------------------------------------- |
+| F1  | Book catalog  | Book metadata (title, author, ISBN, subject) with multiple copies |
+| F2  | Member types  | Student and Faculty with different borrowing limits               |
+| F3  | Borrow/return | Check out a book copy, return it, track due dates                 |
+| F4  | Fines         | Calculate fines for overdue books based on policy                 |
+| F5  | Reservations  | Members can place holds; queue per book, FIFO                     |
+| F6  | Search        | Search by title, author, subject, ISBN with composable criteria   |
+| F7  | Notifications | Notify on overdue, reservation available, due soon                |
+| F8  | Rack location | Track physical location (rack, shelf) of each copy                |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
-| NF1 | Thread-safe borrow/return (no double-lending) |
+| #   | Requirement                                           |
+| --- | ----------------------------------------------------- |
+| NF1 | Thread-safe borrow/return (no double-lending)         |
 | NF2 | Extensible search without modifying existing criteria |
-| NF3 | Pluggable fine policies (flat, progressive, capped) |
+| NF3 | Pluggable fine policies (flat, progressive, capped)   |
 
 ### Clarifying Questions to Ask
 

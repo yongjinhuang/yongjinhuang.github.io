@@ -11,25 +11,25 @@ questions because it touches on fan-out strategies, caching, ranking, and massiv
 
 ### Functional Requirements
 
-| ID  | Requirement                        | Description                                                    |
-| --- | ---------------------------------- | -------------------------------------------------------------- |
-| F1  | Publish posts                      | Users can create text, image, and video posts                  |
-| F2  | View personalized feed             | Users see an aggregated feed of posts from people they follow  |
-| F3  | Follow / Unfollow                  | Users can follow and unfollow other users                      |
-| F4  | Like / Comment                     | Users can like and comment on posts                            |
-| F5  | Media support                      | Posts can contain images, videos, and links with previews      |
-| F6  | Feed refresh                       | Users can pull to refresh to see new posts                     |
-| F7  | Pagination                         | Infinite scroll with efficient pagination                      |
+| ID  | Requirement            | Description                                                   |
+| --- | ---------------------- | ------------------------------------------------------------- |
+| F1  | Publish posts          | Users can create text, image, and video posts                 |
+| F2  | View personalized feed | Users see an aggregated feed of posts from people they follow |
+| F3  | Follow / Unfollow      | Users can follow and unfollow other users                     |
+| F4  | Like / Comment         | Users can like and comment on posts                           |
+| F5  | Media support          | Posts can contain images, videos, and links with previews     |
+| F6  | Feed refresh           | Users can pull to refresh to see new posts                    |
+| F7  | Pagination             | Infinite scroll with efficient pagination                     |
 
 ### Non-Functional Requirements
 
-| ID   | Requirement            | Target                                                        |
-| ---- | ---------------------- | ------------------------------------------------------------- |
-| NF1  | Feed latency           | Feed generation and retrieval < 500ms at p99                  |
-| NF2  | Consistency model       | Eventually consistent (slight delay in feed updates is OK)    |
-| NF3  | Availability            | 99.99% uptime (AP system in CAP theorem)                      |
-| NF4  | Durability              | Zero data loss for published posts                            |
-| NF5  | Scalability             | Handle 300M DAU with traffic spikes                           |
+| ID  | Requirement       | Target                                                     |
+| --- | ----------------- | ---------------------------------------------------------- |
+| NF1 | Feed latency      | Feed generation and retrieval < 500ms at p99               |
+| NF2 | Consistency model | Eventually consistent (slight delay in feed updates is OK) |
+| NF3 | Availability      | 99.99% uptime (AP system in CAP theorem)                   |
+| NF4 | Durability        | Zero data loss for published posts                         |
+| NF5 | Scalability       | Handle 300M DAU with traffic spikes                        |
 
 ### Scale Estimation
 
@@ -146,13 +146,13 @@ Offset-based:  GET /feed?offset=20&limit=10
 Cursor-based:  GET /feed?cursor=abc123&limit=10
 ```
 
-| Aspect               | Offset-Based                  | Cursor-Based                      |
-| -------------------- | ----------------------------- | --------------------------------- |
-| New items inserted   | Duplicates / skipped items    | No duplicates                     |
-| Performance          | O(n) - scans skipped rows     | O(1) - seeks to cursor position   |
-| Consistency          | Breaks with real-time inserts | Stable across mutations           |
-| Implementation       | Simple                        | Slightly more complex             |
-| Use case             | Static datasets               | Real-time feeds (our choice)      |
+| Aspect             | Offset-Based                  | Cursor-Based                    |
+| ------------------ | ----------------------------- | ------------------------------- |
+| New items inserted | Duplicates / skipped items    | No duplicates                   |
+| Performance        | O(n) - scans skipped rows     | O(1) - seeks to cursor position |
+| Consistency        | Breaks with real-time inserts | Stable across mutations         |
+| Implementation     | Simple                        | Slightly more complex           |
+| Use case           | Static datasets               | Real-time feeds (our choice)    |
 
 **Cursor format**: Base64-encoded JSON containing the timestamp or sort key of the last
 item returned. The server decodes it and uses it as a WHERE clause boundary.
@@ -287,17 +287,17 @@ CREATE TABLE media (
 
 ### 3.8 Database Selection Rationale
 
-| Data               | Storage Choice  | Reason                                                       |
-| ------------------ | --------------- | ------------------------------------------------------------ |
-| Users              | PostgreSQL      | Strong consistency for profiles, ACID transactions           |
-| Posts              | PostgreSQL      | Structured data, relational queries, sharded by author_id    |
-| Follows            | PostgreSQL      | Graph queries, bidirectional lookups, transactional counts   |
-| Feed cache         | Redis           | Ultra-low latency reads, sorted sets for ranking             |
-| Media metadata     | PostgreSQL      | Relational joins with posts                                  |
-| Media files        | S3 + CDN        | Blob storage, globally distributed                           |
-| Likes / Comments   | PostgreSQL      | Transactional integrity, count accuracy                      |
-| Activity log       | Cassandra       | High write throughput, time-series, append-only              |
-| Search index       | Elasticsearch   | Full-text search on post content                             |
+| Data             | Storage Choice | Reason                                                     |
+| ---------------- | -------------- | ---------------------------------------------------------- |
+| Users            | PostgreSQL     | Strong consistency for profiles, ACID transactions         |
+| Posts            | PostgreSQL     | Structured data, relational queries, sharded by author_id  |
+| Follows          | PostgreSQL     | Graph queries, bidirectional lookups, transactional counts |
+| Feed cache       | Redis          | Ultra-low latency reads, sorted sets for ranking           |
+| Media metadata   | PostgreSQL     | Relational joins with posts                                |
+| Media files      | S3 + CDN       | Blob storage, globally distributed                         |
+| Likes / Comments | PostgreSQL     | Transactional integrity, count accuracy                    |
+| Activity log     | Cassandra      | High write throughput, time-series, append-only            |
+| Search index     | Elasticsearch  | Full-text search on post content                           |
 
 ---
 
@@ -349,6 +349,7 @@ CREATE TABLE media (
 ### Two Main Flows
 
 **Flow 1 - Feed Publishing (Write Path):**
+
 ```
 User creates post
   -> API Gateway
@@ -360,6 +361,7 @@ User creates post
 ```
 
 **Flow 2 - Feed Reading (Read Path):**
+
 ```
 User opens app / scrolls feed
   -> API Gateway
@@ -412,6 +414,7 @@ every follower.
 ```
 
 **Steps:**
+
 1. Post Service validates and stores the post in the Posts DB.
 2. Post Service publishes an event to Kafka: `{ post_id, author_id }`.
 3. Fan-out workers consume the event.
@@ -453,6 +456,7 @@ everyone they follow in real time.
 ```
 
 **Steps:**
+
 1. Feed Service looks up who User B follows (from follows table or cache).
 2. For each followee, fetch their latest N posts.
 3. Merge all posts, rank by score, and return the top page.
@@ -503,16 +507,16 @@ Use **fan-out on write** for normal users and **fan-out on read** for celebritie
 
 ### 5.4 Strategy Comparison
 
-| Aspect              | Fan-out on Write (Push)       | Fan-out on Read (Pull)       | Hybrid                         |
-| ------------------- | ----------------------------- | ---------------------------- | ------------------------------ |
-| Write latency       | High (fan to all followers)   | Low (just store post)        | Medium                         |
-| Read latency        | Low (pre-computed)            | High (compute on read)       | Low (mostly pre-computed)      |
-| Celebrity problem   | Severe (millions of writes)   | None                         | Solved (pull for celebrities)  |
-| Storage cost        | High (duplicate post_ids)     | Low                          | Medium                         |
-| Freshness           | Near real-time                | Always fresh                 | Near real-time                 |
-| Inactive users      | Wasted writes                 | No waste                     | Optimized (TTL on cache)       |
-| Complexity          | Simple                        | Simple                       | More complex                   |
-| Best for            | Small-medium users            | Systems with many celebrities| Production systems at scale    |
+| Aspect            | Fan-out on Write (Push)     | Fan-out on Read (Pull)        | Hybrid                        |
+| ----------------- | --------------------------- | ----------------------------- | ----------------------------- |
+| Write latency     | High (fan to all followers) | Low (just store post)         | Medium                        |
+| Read latency      | Low (pre-computed)          | High (compute on read)        | Low (mostly pre-computed)     |
+| Celebrity problem | Severe (millions of writes) | None                          | Solved (pull for celebrities) |
+| Storage cost      | High (duplicate post_ids)   | Low                           | Medium                        |
+| Freshness         | Near real-time              | Always fresh                  | Near real-time                |
+| Inactive users    | Wasted writes               | No waste                      | Optimized (TTL on cache)      |
+| Complexity        | Simple                      | Simple                        | More complex                  |
+| Best for          | Small-medium users          | Systems with many celebrities | Production systems at scale   |
 
 ### 5.5 Fan-out Write Volume Calculation
 
@@ -535,10 +539,10 @@ For a celebrity with 10M followers:
 
 ### 6.1 Chronological vs Algorithmic
 
-| Approach       | Pros                               | Cons                              |
-| -------------- | ---------------------------------- | --------------------------------- |
-| Chronological  | Simple, transparent, real-time     | Low engagement, spam dominates    |
-| Algorithmic    | Higher engagement, personalized    | Complex, "filter bubble" risk     |
+| Approach      | Pros                            | Cons                           |
+| ------------- | ------------------------------- | ------------------------------ |
+| Chronological | Simple, transparent, real-time  | Low engagement, spam dominates |
+| Algorithmic   | Higher engagement, personalized | Complex, "filter bubble" risk  |
 
 Most modern feeds use **algorithmic ranking** with an option to switch to chronological.
 
@@ -646,14 +650,14 @@ For a production system, ranking is a multi-stage ML pipeline:
 
 **Feature Categories for ML Model:**
 
-| Category          | Features                                                        |
-| ----------------- | --------------------------------------------------------------- |
-| User features     | Age, location, device, session count, active hours              |
-| Author features   | Follower count, post frequency, avg engagement rate             |
-| Post features     | Age, type, length, has_media, has_link, language                |
-| Interaction       | Affinity score, last interaction time, mutual friends           |
-| Context           | Time of day, day of week, user's recent activity                |
-| Engagement (label)| Did user like/comment/share/click/spend >5s reading?           |
+| Category           | Features                                              |
+| ------------------ | ----------------------------------------------------- |
+| User features      | Age, location, device, session count, active hours    |
+| Author features    | Follower count, post frequency, avg engagement rate   |
+| Post features      | Age, type, length, has_media, has_link, language      |
+| Interaction        | Affinity score, last interaction time, mutual friends |
+| Context            | Time of day, day of week, user's recent activity      |
+| Engagement (label) | Did user like/comment/share/click/spend >5s reading?  |
 
 ---
 
@@ -1043,6 +1047,7 @@ Cache warming strategy:
 ```
 
 **Why partition by target_user_id for fan-out:**
+
 - All writes to the same user's feed go through the same partition
 - Prevents race conditions on a single user's feed cache
 - Enables ordered processing per user
@@ -1177,16 +1182,17 @@ CDN configuration:
 
 ### 11.2 Cross-Region Consistency Challenges
 
-| Challenge                 | Solution                                                     |
-| ------------------------- | ------------------------------------------------------------ |
-| User posts in US, follower reads in EU | Async replication with <500ms lag; acceptable for feeds |
-| User profile update       | Write to primary (US-EAST), replicate to all regions         |
-| Follow/Unfollow           | Write to primary, async fan-out adjustment in all regions    |
-| Feed cache inconsistency  | Each region maintains its own feed cache, populated locally  |
-| Celebrity post propagation| Publish to all regional Kafka clusters via MirrorMaker       |
-| Conflict resolution       | Last-writer-wins with vector clocks for edge cases           |
+| Challenge                              | Solution                                                    |
+| -------------------------------------- | ----------------------------------------------------------- |
+| User posts in US, follower reads in EU | Async replication with <500ms lag; acceptable for feeds     |
+| User profile update                    | Write to primary (US-EAST), replicate to all regions        |
+| Follow/Unfollow                        | Write to primary, async fan-out adjustment in all regions   |
+| Feed cache inconsistency               | Each region maintains its own feed cache, populated locally |
+| Celebrity post propagation             | Publish to all regional Kafka clusters via MirrorMaker      |
+| Conflict resolution                    | Last-writer-wins with vector clocks for edge cases          |
 
 **Consistency model:**
+
 - Posts: written to primary region, replicated within ~200-500ms
 - Feed cache: eventually consistent, built per-region from local replicas
 - User profiles: read-your-own-writes guaranteed via sticky sessions to primary
@@ -1408,19 +1414,19 @@ Ad injection happens at the re-ranking / policy layer (Stage 4 of ranking pipeli
 
 ## 13. Summary: Key Design Decisions
 
-| Decision Point             | Our Choice                     | Rationale                              |
-| -------------------------- | ------------------------------ | -------------------------------------- |
-| Fan-out strategy           | Hybrid (push + pull)           | Handles celebrities without waste      |
-| Feed storage               | Redis sorted sets              | Sub-millisecond reads, sorted by rank  |
-| Pagination                 | Cursor-based                   | Stable under real-time insertions      |
-| Ranking                    | Algorithmic (ML pipeline)      | Higher engagement than chronological   |
-| Database for posts         | PostgreSQL (sharded)           | ACID, mature tooling, well understood  |
-| Message queue              | Kafka                          | High throughput, durable, partitioned  |
-| Cache invalidation         | Write-through + TTL            | Eventual consistency is acceptable     |
-| Celebrity threshold        | 500K followers                 | Empirically balances cost vs freshness |
-| Multi-region               | Active-passive per region      | Latency-optimized reads, central write |
-| Real-time updates          | SSE                            | Lightweight, sufficient for feeds      |
-| Content moderation         | Multi-layer (rules + ML + human)| Balance speed and accuracy            |
+| Decision Point      | Our Choice                       | Rationale                              |
+| ------------------- | -------------------------------- | -------------------------------------- |
+| Fan-out strategy    | Hybrid (push + pull)             | Handles celebrities without waste      |
+| Feed storage        | Redis sorted sets                | Sub-millisecond reads, sorted by rank  |
+| Pagination          | Cursor-based                     | Stable under real-time insertions      |
+| Ranking             | Algorithmic (ML pipeline)        | Higher engagement than chronological   |
+| Database for posts  | PostgreSQL (sharded)             | ACID, mature tooling, well understood  |
+| Message queue       | Kafka                            | High throughput, durable, partitioned  |
+| Cache invalidation  | Write-through + TTL              | Eventual consistency is acceptable     |
+| Celebrity threshold | 500K followers                   | Empirically balances cost vs freshness |
+| Multi-region        | Active-passive per region        | Latency-optimized reads, central write |
+| Real-time updates   | SSE                              | Lightweight, sufficient for feeds      |
+| Content moderation  | Multi-layer (rules + ML + human) | Balance speed and accuracy             |
 
 ---
 

@@ -93,53 +93,53 @@ metadata:
   name: api-server-metrics
   namespace: production
   labels:
-    release: prometheus            # Must match Prometheus operator selector
+    release: prometheus # Must match Prometheus operator selector
 spec:
   selector:
     matchLabels:
       app: api-server
   endpoints:
-  - port: metrics
-    interval: 15s
-    path: /metrics
+    - port: metrics
+      interval: 15s
+      path: /metrics
 ```
 
 ### 1.3 Key Metrics to Monitor
 
 **Node-level:**
 
-| Metric | PromQL | Alert Threshold |
-|--------|--------|----------------|
-| CPU utilization | `100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)` | > 80% sustained |
-| Memory utilization | `(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100` | > 85% |
-| Disk utilization | `(1 - node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100` | > 80% |
-| Disk I/O latency | `rate(node_disk_io_time_seconds_total[5m])` | > 100ms |
+| Metric             | PromQL                                                                          | Alert Threshold |
+| ------------------ | ------------------------------------------------------------------------------- | --------------- |
+| CPU utilization    | `100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)` | > 80% sustained |
+| Memory utilization | `(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100`       | > 85%           |
+| Disk utilization   | `(1 - node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100`          | > 80%           |
+| Disk I/O latency   | `rate(node_disk_io_time_seconds_total[5m])`                                     | > 100ms         |
 
 **Pod/Container-level:**
 
-| Metric | PromQL | Alert Threshold |
-|--------|--------|----------------|
-| Container CPU | `rate(container_cpu_usage_seconds_total[5m])` | > 80% of limit |
-| Container memory | `container_memory_working_set_bytes` | > 80% of limit |
-| Pod restarts | `kube_pod_container_status_restarts_total` | > 3 in 10 min |
-| OOM kills | `kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}` | Any |
+| Metric           | PromQL                                                                 | Alert Threshold |
+| ---------------- | ---------------------------------------------------------------------- | --------------- |
+| Container CPU    | `rate(container_cpu_usage_seconds_total[5m])`                          | > 80% of limit  |
+| Container memory | `container_memory_working_set_bytes`                                   | > 80% of limit  |
+| Pod restarts     | `kube_pod_container_status_restarts_total`                             | > 3 in 10 min   |
+| OOM kills        | `kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}` | Any             |
 
 **API Server:**
 
-| Metric | PromQL | Alert Threshold |
-|--------|--------|----------------|
-| Request latency | `histogram_quantile(0.99, rate(apiserver_request_duration_seconds_bucket[5m]))` | p99 > 1s |
-| Error rate | `rate(apiserver_request_total{code=~"5.."}[5m])` | > 1% |
-| Request rate | `rate(apiserver_request_total[5m])` | Spike > 2x baseline |
+| Metric          | PromQL                                                                          | Alert Threshold     |
+| --------------- | ------------------------------------------------------------------------------- | ------------------- |
+| Request latency | `histogram_quantile(0.99, rate(apiserver_request_duration_seconds_bucket[5m]))` | p99 > 1s            |
+| Error rate      | `rate(apiserver_request_total{code=~"5.."}[5m])`                                | > 1%                |
+| Request rate    | `rate(apiserver_request_total[5m])`                                             | Spike > 2x baseline |
 
 **etcd:**
 
-| Metric | PromQL | Alert Threshold |
-|--------|--------|----------------|
-| Leader changes | `rate(etcd_server_leader_changes_seen_total[1h])` | > 3/hour |
-| Proposal failures | `rate(etcd_server_proposals_failed_total[5m])` | > 0 sustained |
-| Disk fsync | `histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket[5m]))` | p99 > 10ms |
-| DB size | `etcd_mvcc_db_total_size_in_bytes` | > 4GB |
+| Metric            | PromQL                                                                            | Alert Threshold |
+| ----------------- | --------------------------------------------------------------------------------- | --------------- |
+| Leader changes    | `rate(etcd_server_leader_changes_seen_total[1h])`                                 | > 3/hour        |
+| Proposal failures | `rate(etcd_server_proposals_failed_total[5m])`                                    | > 0 sustained   |
+| Disk fsync        | `histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket[5m]))` | p99 > 10ms      |
+| DB size           | `etcd_mvcc_db_total_size_in_bytes`                                                | > 4GB           |
 
 ### 1.4 Alerting with PrometheusRule
 
@@ -151,24 +151,24 @@ metadata:
   namespace: monitoring
 spec:
   groups:
-  - name: pod.rules
-    rules:
-    - alert: PodCrashLooping
-      expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
-      for: 10m
-      labels:
-        severity: warning
-      annotations:
-        summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
-        description: "Pod has restarted {{ $value }} times in the last 15 minutes"
+    - name: pod.rules
+      rules:
+        - alert: PodCrashLooping
+          expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping'
+            description: 'Pod has restarted {{ $value }} times in the last 15 minutes'
 
-    - alert: PodOOMKilled
-      expr: kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} > 0
-      for: 0m
-      labels:
-        severity: critical
-      annotations:
-        summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} was OOM killed"
+        - alert: PodOOMKilled
+          expr: kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} > 0
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} was OOM killed'
 ```
 
 ---
@@ -292,18 +292,18 @@ spec:
   template:
     spec:
       containers:
-      - name: collector
-        image: otel/opentelemetry-collector-contrib:latest
-        ports:
-        - containerPort: 4317       # gRPC OTLP receiver
-        - containerPort: 4318       # HTTP OTLP receiver
-        volumeMounts:
-        - name: config
-          mountPath: /etc/otelcol
+        - name: collector
+          image: otel/opentelemetry-collector-contrib:latest
+          ports:
+            - containerPort: 4317 # gRPC OTLP receiver
+            - containerPort: 4318 # HTTP OTLP receiver
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otelcol
       volumes:
-      - name: config
-        configMap:
-          name: otel-collector-config
+        - name: config
+          configMap:
+            name: otel-collector-config
 ```
 
 ---
@@ -398,13 +398,13 @@ kubectl describe pod <pod-name>
 # Look for Events section:
 ```
 
-| Event Message | Cause | Fix |
-|--------------|-------|-----|
-| `Insufficient cpu/memory` | No node has enough allocatable resources | Add nodes, reduce requests, or clean up pods |
-| `0/3 nodes are available: 3 node(s) had taint...` | Pod does not tolerate node taints | Add tolerations or remove taints |
-| `no persistent volumes available` | PVC not bound (no matching PV or StorageClass) | Check PVC status, StorageClass, provisioner |
-| `0/3 nodes are available: 3 node(s) didn't match Pod's node affinity` | Node affinity/selector eliminates all nodes | Fix affinity rules or add matching nodes |
-| `pod has unbound immediate PersistentVolumeClaims` | PVC stuck in Pending | Check PVC events, StorageClass |
+| Event Message                                                         | Cause                                          | Fix                                          |
+| --------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------- |
+| `Insufficient cpu/memory`                                             | No node has enough allocatable resources       | Add nodes, reduce requests, or clean up pods |
+| `0/3 nodes are available: 3 node(s) had taint...`                     | Pod does not tolerate node taints              | Add tolerations or remove taints             |
+| `no persistent volumes available`                                     | PVC not bound (no matching PV or StorageClass) | Check PVC status, StorageClass, provisioner  |
+| `0/3 nodes are available: 3 node(s) didn't match Pod's node affinity` | Node affinity/selector eliminates all nodes    | Fix affinity rules or add matching nodes     |
+| `pod has unbound immediate PersistentVolumeClaims`                    | PVC stuck in Pending                           | Check PVC events, StorageClass               |
 
 ### 5.2 Pod Stuck in CrashLoopBackOff
 
@@ -420,12 +420,12 @@ kubectl describe pod <pod> | grep -A5 "Last State"
 # Exit Code 143:  Graceful termination (128 + SIGTERM=15)
 ```
 
-| Exit Code | Cause | Fix |
-|-----------|-------|-----|
-| 1 | Application error | Check logs, fix application code |
-| 137 | OOM killed or killed by system | Increase memory limit, fix memory leak |
-| 139 | Segmentation fault | Application bug (null pointer, buffer overflow) |
-| 0 (but CrashLoop) | Container exits immediately | Command/entrypoint is wrong, add sleep or fix |
+| Exit Code         | Cause                          | Fix                                             |
+| ----------------- | ------------------------------ | ----------------------------------------------- |
+| 1                 | Application error              | Check logs, fix application code                |
+| 137               | OOM killed or killed by system | Increase memory limit, fix memory leak          |
+| 139               | Segmentation fault             | Application bug (null pointer, buffer overflow) |
+| 0 (but CrashLoop) | Container exits immediately    | Command/entrypoint is wrong, add sleep or fix   |
 
 ### 5.3 Pod Stuck in ImagePullBackOff
 
@@ -436,12 +436,12 @@ kubectl describe pod <pod>
 #   Failed to pull image "my-app:v99": not found
 ```
 
-| Event | Cause | Fix |
-|-------|-------|-----|
-| `unauthorized` | Missing or wrong imagePullSecrets | Create docker-registry secret, reference in pod |
-| `not found` / `manifest unknown` | Wrong image name or tag | Verify image exists in registry |
-| `request canceled while waiting for connection` | Registry unreachable | Check network, DNS, firewall |
-| `toomanyrequests` | Docker Hub rate limit | Use private registry or authenticated pulls |
+| Event                                           | Cause                             | Fix                                             |
+| ----------------------------------------------- | --------------------------------- | ----------------------------------------------- |
+| `unauthorized`                                  | Missing or wrong imagePullSecrets | Create docker-registry secret, reference in pod |
+| `not found` / `manifest unknown`                | Wrong image name or tag           | Verify image exists in registry                 |
+| `request canceled while waiting for connection` | Registry unreachable              | Check network, DNS, firewall                    |
+| `toomanyrequests`                               | Docker Hub rate limit             | Use private registry or authenticated pulls     |
 
 ### 5.4 Service Not Reachable
 
@@ -484,12 +484,12 @@ systemctl status kubelet
 journalctl -u kubelet --since "10 minutes ago"
 ```
 
-| Condition | Cause | Fix |
-|-----------|-------|-----|
-| Ready: Unknown | kubelet stopped sending heartbeats | SSH into node, check kubelet status |
-| MemoryPressure: True | Node running low on memory | Evict pods, add memory, check for leaks |
-| DiskPressure: True | Disk > 85% full | Clean up images (`crictl rmi --prune`), logs, or expand disk |
-| NetworkUnavailable: True | CNI plugin failure | Check CNI pods, restart if needed |
+| Condition                | Cause                              | Fix                                                          |
+| ------------------------ | ---------------------------------- | ------------------------------------------------------------ |
+| Ready: Unknown           | kubelet stopped sending heartbeats | SSH into node, check kubelet status                          |
+| MemoryPressure: True     | Node running low on memory         | Evict pods, add memory, check for leaks                      |
+| DiskPressure: True       | Disk > 85% full                    | Clean up images (`crictl rmi --prune`), logs, or expand disk |
+| NetworkUnavailable: True | CNI plugin failure                 | Check CNI pods, restart if needed                            |
 
 ### 5.6 Deployment Rollout Stuck
 
@@ -501,13 +501,13 @@ kubectl describe deployment web
 # Check Events and Conditions
 ```
 
-| Cause | Symptom | Fix |
-|-------|---------|-----|
-| PDB blocking | "Cannot evict pod, would violate PDB" | Temporarily relax PDB or fix unhealthy pods |
-| Resource quota exceeded | "exceeded quota" in events | Increase quota or reduce resource requests |
-| Image pull failure | New pods in ImagePullBackOff | Fix image reference or registry access |
-| Readiness probe failing | New pods never become Ready | Fix probe or application |
-| Insufficient resources | New pods stuck in Pending | Add capacity or reduce requests |
+| Cause                   | Symptom                               | Fix                                         |
+| ----------------------- | ------------------------------------- | ------------------------------------------- |
+| PDB blocking            | "Cannot evict pod, would violate PDB" | Temporarily relax PDB or fix unhealthy pods |
+| Resource quota exceeded | "exceeded quota" in events            | Increase quota or reduce resource requests  |
+| Image pull failure      | New pods in ImagePullBackOff          | Fix image reference or registry access      |
+| Readiness probe failing | New pods never become Ready           | Fix probe or application                    |
+| Insufficient resources  | New pods stuck in Pending             | Add capacity or reduce requests             |
 
 ---
 
@@ -531,38 +531,38 @@ spec:
   minReplicas: 3
   maxReplicas: 50
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70      # Scale when avg CPU > 70% of request
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
-  - type: Pods                      # Custom metric from Prometheus
-    pods:
-      metric:
-        name: http_requests_per_second
-      target:
-        type: AverageValue
-        averageValue: "1000"
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70 # Scale when avg CPU > 70% of request
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Pods # Custom metric from Prometheus
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: '1000'
   behavior:
     scaleUp:
-      stabilizationWindowSeconds: 60      # Wait 60s before scaling up
+      stabilizationWindowSeconds: 60 # Wait 60s before scaling up
       policies:
-      - type: Percent
-        value: 100                        # Max double replicas per period
-        periodSeconds: 60
+        - type: Percent
+          value: 100 # Max double replicas per period
+          periodSeconds: 60
     scaleDown:
-      stabilizationWindowSeconds: 300     # Wait 5 min before scaling down
+      stabilizationWindowSeconds: 300 # Wait 5 min before scaling down
       policies:
-      - type: Percent
-        value: 10                         # Max reduce by 10% per period
-        periodSeconds: 60
+        - type: Percent
+          value: 10 # Max reduce by 10% per period
+          periodSeconds: 60
 ```
 
 **HPA scaling algorithm:**
@@ -592,18 +592,19 @@ spec:
     kind: Deployment
     name: web
   updatePolicy:
-    updateMode: "Off"          # "Off" = recommendations only (safest)
-                               # "Auto" = restart pods with new resources
-                               # "Initial" = set on pod creation only
+    updateMode:
+      'Off' # "Off" = recommendations only (safest)
+      # "Auto" = restart pods with new resources
+      # "Initial" = set on pod creation only
   resourcePolicy:
     containerPolicies:
-    - containerName: web
-      minAllowed:
-        cpu: 100m
-        memory: 128Mi
-      maxAllowed:
-        cpu: 2
-        memory: 2Gi
+      - containerName: web
+        minAllowed:
+          cpu: 100m
+          memory: 128Mi
+        maxAllowed:
+          cpu: 2
+          memory: 2Gi
 ```
 
 ```bash
@@ -618,20 +619,21 @@ kubectl describe vpa web-vpa
 ```
 
 **VPA limitations:**
+
 - Cannot be used simultaneously with HPA on the same metric (CPU/memory)
 - `Auto` mode requires pod restarts to apply new resource values
 - May cause service disruption if many pods restart at once (use PDB)
 
 ### 6.3 Cluster Autoscaler / Karpenter
 
-| Feature | Cluster Autoscaler | Karpenter (AWS) |
-|---------|-------------------|-----------------|
-| Scaling trigger | Pending pods (unschedulable) | Pending pods |
-| Scale-down | Underutilized nodes removed | Consolidation (bin-packing) |
-| Node selection | Pre-defined node groups/pools | Dynamic (chooses instance type) |
-| Speed | 2-5 min to add node | 30-90 sec to add node |
-| Flexibility | Limited to configured groups | Selects from full instance catalog |
-| Spot/Preemptible | Supported | First-class support |
+| Feature          | Cluster Autoscaler            | Karpenter (AWS)                    |
+| ---------------- | ----------------------------- | ---------------------------------- |
+| Scaling trigger  | Pending pods (unschedulable)  | Pending pods                       |
+| Scale-down       | Underutilized nodes removed   | Consolidation (bin-packing)        |
+| Node selection   | Pre-defined node groups/pools | Dynamic (chooses instance type)    |
+| Speed            | 2-5 min to add node           | 30-90 sec to add node              |
+| Flexibility      | Limited to configured groups  | Selects from full instance catalog |
+| Spot/Preemptible | Supported                     | First-class support                |
 
 ---
 
@@ -709,27 +711,27 @@ Ephemeral debug containers (`kubectl debug`) remain in the pod's container list 
 
 ## 9. Quick Reference
 
-| Tool | Type | Purpose |
-|------|------|---------|
-| **Metrics Server** | Metrics | kubectl top, HPA (current metrics only) |
-| **Prometheus** | Metrics | Scraping, storage, alerting, PromQL |
-| **Grafana** | Visualization | Dashboards for metrics, logs, traces |
-| **AlertManager** | Alerting | Route and deduplicate Prometheus alerts |
-| **Fluent Bit** | Logging | Lightweight log collector (DaemonSet) |
-| **Loki** | Logging | Log storage (label-indexed, cheap) |
-| **Elasticsearch** | Logging | Log storage (full-text indexed, powerful) |
-| **OpenTelemetry** | Tracing | Instrumentation + collection standard |
-| **Jaeger / Tempo** | Tracing | Trace storage and visualization |
+| Tool               | Type          | Purpose                                   |
+| ------------------ | ------------- | ----------------------------------------- |
+| **Metrics Server** | Metrics       | kubectl top, HPA (current metrics only)   |
+| **Prometheus**     | Metrics       | Scraping, storage, alerting, PromQL       |
+| **Grafana**        | Visualization | Dashboards for metrics, logs, traces      |
+| **AlertManager**   | Alerting      | Route and deduplicate Prometheus alerts   |
+| **Fluent Bit**     | Logging       | Lightweight log collector (DaemonSet)     |
+| **Loki**           | Logging       | Log storage (label-indexed, cheap)        |
+| **Elasticsearch**  | Logging       | Log storage (full-text indexed, powerful) |
+| **OpenTelemetry**  | Tracing       | Instrumentation + collection standard     |
+| **Jaeger / Tempo** | Tracing       | Trace storage and visualization           |
 
-| Troubleshooting Step | Command |
-|---------------------|---------|
-| Recent events | `kubectl get events --sort-by=.lastTimestamp` |
-| Pod details + events | `kubectl describe pod <name>` |
-| Container logs | `kubectl logs <pod> -c <container>` |
-| Previous instance logs | `kubectl logs <pod> --previous` |
-| Interactive shell | `kubectl exec -it <pod> -- /bin/sh` |
-| Debug container | `kubectl debug <pod> -it --image=busybox` |
-| Port forward | `kubectl port-forward <pod> 8080:80` |
-| Resource usage | `kubectl top pod --sort-by=cpu` |
-| RBAC check | `kubectl auth can-i <verb> <resource>` |
-| API resources | `kubectl api-resources` |
+| Troubleshooting Step   | Command                                       |
+| ---------------------- | --------------------------------------------- |
+| Recent events          | `kubectl get events --sort-by=.lastTimestamp` |
+| Pod details + events   | `kubectl describe pod <name>`                 |
+| Container logs         | `kubectl logs <pod> -c <container>`           |
+| Previous instance logs | `kubectl logs <pod> --previous`               |
+| Interactive shell      | `kubectl exec -it <pod> -- /bin/sh`           |
+| Debug container        | `kubectl debug <pod> -it --image=busybox`     |
+| Port forward           | `kubectl port-forward <pod> 8080:80`          |
+| Resource usage         | `kubectl top pod --sort-by=cpu`               |
+| RBAC check             | `kubectl auth can-i <verb> <resource>`        |
+| API resources          | `kubectl api-resources`                       |

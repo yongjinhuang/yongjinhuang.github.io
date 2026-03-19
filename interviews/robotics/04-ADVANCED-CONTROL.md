@@ -18,6 +18,7 @@ The canonical continuous-time state-space form:
 ```
 
 Where:
+
 - `x(t)` is the state vector (n x 1) -- the minimum set of variables that fully describe the system
 - `u(t)` is the input vector (m x 1)
 - `y(t)` is the output vector (p x 1)
@@ -180,6 +181,7 @@ The eigenvalues of (A - BK) determine stability and response speed. If the syste
 3. Verify the closed-loop eigenvalues match
 
 **Design rules of thumb:**
+
 - Poles further left in the complex plane give faster response but require more control effort
 - Complex poles cause oscillation; real poles give smooth response
 - Avoid placing poles too far left -- it amplifies noise and saturates actuators
@@ -190,7 +192,7 @@ The eigenvalues of (A - BK) determine stability and response speed. If the syste
 
 ### 4.1 The Optimality Question
 
-Pole placement tells us *what is possible* but not *what is best*. LQR answers: "What gain K minimizes a cost function that balances state error against control effort?"
+Pole placement tells us _what is possible_ but not _what is best_. LQR answers: "What gain K minimizes a cost function that balances state error against control effort?"
 
 ### 4.2 Cost Function
 
@@ -278,13 +280,13 @@ Use `scipy.linalg.solve_discrete_are` for the discrete Riccati equation.
 
 ### 4.6 LQR Tuning Guidelines
 
-| Goal                        | Action              |
-|-----------------------------|---------------------|
-| Faster response             | Increase Q          |
-| Less actuator effort        | Increase R          |
-| Penalize specific state i   | Increase Q[i,i]     |
-| Limit specific input j      | Increase R[j,j]     |
-| Equal priority all states   | Q = C^T C (Bryson)  |
+| Goal                      | Action             |
+| ------------------------- | ------------------ |
+| Faster response           | Increase Q         |
+| Less actuator effort      | Increase R         |
+| Penalize specific state i | Increase Q[i,i]    |
+| Limit specific input j    | Increase R[j,j]    |
+| Equal priority all states | Q = C^T C (Bryson) |
 
 ---
 
@@ -473,13 +475,13 @@ For production MPC, use dedicated solvers like OSQP, qpOASES, or CVXPY with a QP
 
 ### 6.6 MPC Tuning
 
-| Parameter       | Effect                                              |
-|-----------------|-----------------------------------------------------|
-| Horizon N       | Longer = better performance, more computation       |
-| Q (state cost)  | Larger = tighter tracking, more aggressive inputs   |
-| R (input cost)  | Larger = smoother inputs, slower response            |
-| Q_f (terminal)  | Ensures stability; often set to LQR cost-to-go      |
-| Sampling time   | Shorter = better tracking, heavier computation      |
+| Parameter      | Effect                                            |
+| -------------- | ------------------------------------------------- |
+| Horizon N      | Longer = better performance, more computation     |
+| Q (state cost) | Larger = tighter tracking, more aggressive inputs |
+| R (input cost) | Larger = smoother inputs, slower response         |
+| Q_f (terminal) | Ensures stability; often set to LQR cost-to-go    |
+| Sampling time  | Shorter = better tracking, heavier computation    |
 
 ### 6.7 Nonlinear MPC
 
@@ -535,7 +537,7 @@ The adaptation law adjusts controller gains to drive the tracking error e = y - 
 
 ### 8.1 The Robustness Problem
 
-Instead of adapting to uncertainty, robust control designs a *fixed* controller that works well despite bounded uncertainty. The question shifts from "what is the model?" to "what could the model be?"
+Instead of adapting to uncertainty, robust control designs a _fixed_ controller that works well despite bounded uncertainty. The question shifts from "what is the model?" to "what could the model be?"
 
 ### 8.2 Uncertainty Modeling
 
@@ -649,8 +651,8 @@ Sliding mode control forces the state to reach and stay on a **sliding surface**
 
 Lyapunov's direct method is the fundamental tool for analyzing nonlinear stability. Choose a scalar function V(x) (the "energy-like" Lyapunov function):
 
-- V(x) > 0 for all x != 0, V(0) = 0  (positive definite)
-- V_dot(x) < 0 for all x != 0          (decreasing along trajectories)
+- V(x) > 0 for all x != 0, V(0) = 0 (positive definite)
+- V_dot(x) < 0 for all x != 0 (decreasing along trajectories)
 
 If such a V exists, the origin is asymptotically stable. No linearization needed.
 
@@ -695,6 +697,7 @@ This is used extensively in robotics to prove stability of controllers for manip
 Every actuator has limits. A motor cannot produce infinite torque. When the controller commands an input beyond the limit, the actuator saturates. This can cause **integrator windup** in PID and instability in state-feedback controllers.
 
 **Solutions:**
+
 - Anti-windup for PID (clamp integrator when output saturates)
 - MPC handles this naturally via constraints
 - For LQR: add saturation-aware modifications or switch to MPC
@@ -702,6 +705,7 @@ Every actuator has limits. A motor cannot produce infinite torque. When the cont
 ### 11.2 Model Mismatch
 
 No model is perfect. Always validate controllers in simulation before hardware. Common issues:
+
 - Unmodeled friction (stiction, Coulomb friction)
 - Unmodeled flexibility (cables, joints)
 - Time delays (communication, computation)
@@ -710,6 +714,7 @@ No model is perfect. Always validate controllers in simulation before hardware. 
 ### 11.3 Discrete-Time Implementation
 
 All controllers run on digital computers at finite sample rates. The sample rate must be fast enough:
+
 - Rule of thumb: sample at least 10x the closed-loop bandwidth
 - ZOH (zero-order hold) discretization is most common
 - Watch for aliasing in sensor measurements
@@ -744,7 +749,7 @@ MPC predicts the system's future behavior over a finite horizon, optimizes the i
 
 **Q7: Why is MPC computationally expensive compared to LQR?**
 
-LQR computes a fixed gain offline (solve Riccati once). MPC solves an optimization problem at every time step. For a horizon of N steps with n states and m inputs, the QP has N*m decision variables. This must be solved within one sample period, which is challenging for fast systems.
+LQR computes a fixed gain offline (solve Riccati once). MPC solves an optimization problem at every time step. For a horizon of N steps with n states and m inputs, the QP has N\*m decision variables. This must be solved within one sample period, which is challenging for fast systems.
 
 **Q8: What is feedback linearization? What are its limitations?**
 

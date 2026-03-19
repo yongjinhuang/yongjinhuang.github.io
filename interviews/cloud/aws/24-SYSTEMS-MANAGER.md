@@ -6,16 +6,16 @@ Systems Manager (SSM) is the operational hub for managing your AWS infrastructur
 
 ## 1. Core Capabilities Overview
 
-| Capability | What It Does | Key Use Case |
-|-----------|-------------|-------------|
-| **Parameter Store** | Hierarchical key-value storage | App config, connection strings, feature flags |
-| **Session Manager** | Browser/CLI shell access to instances | Replace SSH and bastion hosts |
-| **Run Command** | Execute commands on instance fleets | Run scripts across 1000 servers |
-| **Patch Manager** | Automated OS patching | Monthly security patches |
-| **State Manager** | Desired state configuration | Ensure agents are always installed |
-| **Automation** | Multi-step operational runbooks | Restart service, snapshot, resize |
-| **Inventory** | Collect software/hardware metadata | Audit installed packages |
-| **OpsCenter** | Aggregate and resolve operational issues | Centralized incident tracking |
+| Capability          | What It Does                             | Key Use Case                                  |
+| ------------------- | ---------------------------------------- | --------------------------------------------- |
+| **Parameter Store** | Hierarchical key-value storage           | App config, connection strings, feature flags |
+| **Session Manager** | Browser/CLI shell access to instances    | Replace SSH and bastion hosts                 |
+| **Run Command**     | Execute commands on instance fleets      | Run scripts across 1000 servers               |
+| **Patch Manager**   | Automated OS patching                    | Monthly security patches                      |
+| **State Manager**   | Desired state configuration              | Ensure agents are always installed            |
+| **Automation**      | Multi-step operational runbooks          | Restart service, snapshot, resize             |
+| **Inventory**       | Collect software/hardware metadata       | Audit installed packages                      |
+| **OpsCenter**       | Aggregate and resolve operational issues | Centralized incident tracking                 |
 
 ---
 
@@ -43,6 +43,7 @@ aws ssm describe-instance-information \
 ```
 
 **Connectivity requirements:** The instance needs outbound HTTPS (443) access to these endpoints (or use VPC endpoints):
+
 - `ssm.<region>.amazonaws.com`
 - `ssmmessages.<region>.amazonaws.com` (Session Manager)
 - `ec2messages.<region>.amazonaws.com` (Run Command)
@@ -55,21 +56,21 @@ A hierarchical key-value store for configuration data, secrets, and feature flag
 
 ### 3.1 Parameter Types
 
-| Type | Use Case | Encryption |
-|------|----------|-----------|
-| **String** | Plain text values | No |
-| **StringList** | Comma-separated values | No |
+| Type             | Use Case                             | Encryption    |
+| ---------------- | ------------------------------------ | ------------- |
+| **String**       | Plain text values                    | No            |
+| **StringList**   | Comma-separated values               | No            |
 | **SecureString** | Sensitive data (passwords, API keys) | KMS encrypted |
 
 ### 3.2 Standard vs Advanced Tiers
 
-| Feature | Standard | Advanced |
-|---------|----------|----------|
-| **Max parameters** | 10,000 | 100,000 |
-| **Max value size** | 4 KB | 8 KB |
-| **Parameter policies** | No | Yes (expiration, notification) |
-| **Throughput** | 40 TPS default (adjustable to 1000) | 1000 TPS default |
-| **Cost** | Free | $0.05 per parameter per month |
+| Feature                | Standard                            | Advanced                       |
+| ---------------------- | ----------------------------------- | ------------------------------ |
+| **Max parameters**     | 10,000                              | 100,000                        |
+| **Max value size**     | 4 KB                                | 8 KB                           |
+| **Parameter policies** | No                                  | Yes (expiration, notification) |
+| **Throughput**         | 40 TPS default (adjustable to 1000) | 1000 TPS default               |
+| **Cost**               | Free                                | $0.05 per parameter per month  |
 
 ### 3.3 Common Operations
 
@@ -121,15 +122,15 @@ aws ssm delete-parameter --name "/myapp/prod/old-key"
 
 ### 3.4 Parameter Store vs Secrets Manager
 
-| Feature | Parameter Store | Secrets Manager |
-|---------|----------------|-----------------|
-| **Cost** | Free (Standard) | $0.40/secret/month + API calls |
-| **Rotation** | Manual only | Built-in automatic rotation (Lambda) |
-| **Cross-account sharing** | Via RAM or IAM policies | Native cross-account |
-| **Max size** | 4 KB (Standard) / 8 KB (Advanced) | 64 KB |
-| **RDS integration** | Manual | Native rotation for RDS, Redshift, DocumentDB |
-| **Versioning** | Yes | Yes |
-| **Audit** | CloudTrail | CloudTrail |
+| Feature                   | Parameter Store                   | Secrets Manager                               |
+| ------------------------- | --------------------------------- | --------------------------------------------- |
+| **Cost**                  | Free (Standard)                   | $0.40/secret/month + API calls                |
+| **Rotation**              | Manual only                       | Built-in automatic rotation (Lambda)          |
+| **Cross-account sharing** | Via RAM or IAM policies           | Native cross-account                          |
+| **Max size**              | 4 KB (Standard) / 8 KB (Advanced) | 64 KB                                         |
+| **RDS integration**       | Manual                            | Native rotation for RDS, Redshift, DocumentDB |
+| **Versioning**            | Yes                               | Yes                                           |
+| **Audit**                 | CloudTrail                        | CloudTrail                                    |
 
 **Decision rule:** Use Parameter Store for app config and non-rotating secrets. Use Secrets Manager when you need automatic rotation, especially for database credentials.
 
@@ -329,14 +330,14 @@ Inventory data can be synced to S3 and queried with Athena for fleet-wide auditi
 
 ## 9. Common Gotchas
 
-| Gotcha | Details |
-|--------|---------|
-| **SSM Agent version matters** | Older agents lack features like Session Manager port forwarding. Keep agents updated. |
-| **IAM instance profile required** | No instance profile = instance does not appear in SSM. Attach `AmazonSSMManagedInstanceCore`. |
-| **Parameter Store 4 KB limit** | Standard parameters max at 4 KB. Use Advanced tier (8 KB) or store large configs in S3 and reference them. |
-| **Rate limits on API calls** | `GetParameter` has a default 40 TPS limit (Standard tier). Cache parameters in your app. |
-| **VPC endpoints needed in private subnets** | Instances without internet access need VPC endpoints for `ssm`, `ssmmessages`, and `ec2messages`. |
-| **SecureString and CloudFormation** | CloudFormation cannot create `SecureString` parameters. Create them via CLI/SDK, then reference in templates. |
-| **Run Command output truncation** | Command output over 48,000 characters is truncated. Send output to S3 for full logs. |
-| **Maintenance window timezone** | Maintenance windows use UTC by default. Specify `--schedule-timezone` to avoid surprises. |
-| **Hybrid activation** | On-premises servers need a hybrid activation (managed instance ID starts with `mi-`, not `i-`). |
+| Gotcha                                      | Details                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **SSM Agent version matters**               | Older agents lack features like Session Manager port forwarding. Keep agents updated.                         |
+| **IAM instance profile required**           | No instance profile = instance does not appear in SSM. Attach `AmazonSSMManagedInstanceCore`.                 |
+| **Parameter Store 4 KB limit**              | Standard parameters max at 4 KB. Use Advanced tier (8 KB) or store large configs in S3 and reference them.    |
+| **Rate limits on API calls**                | `GetParameter` has a default 40 TPS limit (Standard tier). Cache parameters in your app.                      |
+| **VPC endpoints needed in private subnets** | Instances without internet access need VPC endpoints for `ssm`, `ssmmessages`, and `ec2messages`.             |
+| **SecureString and CloudFormation**         | CloudFormation cannot create `SecureString` parameters. Create them via CLI/SDK, then reference in templates. |
+| **Run Command output truncation**           | Command output over 48,000 characters is truncated. Send output to S3 for full logs.                          |
+| **Maintenance window timezone**             | Maintenance windows use UTC by default. Specify `--schedule-timezone` to avoid surprises.                     |
+| **Hybrid activation**                       | On-premises servers need a hybrid activation (managed instance ID starts with `mi-`, not `i-`).               |

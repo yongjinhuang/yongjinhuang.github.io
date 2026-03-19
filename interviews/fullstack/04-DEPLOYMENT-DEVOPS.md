@@ -15,6 +15,7 @@ In interviews, these topics signal that you can operate independently, reduce bo
 Continuous Integration (CI) is the practice of automatically building and testing every code change. Continuous Deployment (CD) extends this by automatically deploying passing builds to production.
 
 **Key principles:**
+
 - Every commit triggers an automated pipeline
 - Tests must pass before merging
 - Builds are reproducible and deterministic
@@ -25,6 +26,7 @@ Continuous Integration (CI) is the practice of automatically building and testin
 **GitLab CI** uses a `.gitlab-ci.yml` file at the repository root and offers built-in container registry, environments, and review apps.
 
 **Pipeline stages typically include:**
+
 1. **Lint** - Code style and static analysis
 2. **Build** - Compile/bundle the application
 3. **Test** - Unit, integration, and E2E tests
@@ -37,6 +39,7 @@ Continuous Integration (CI) is the practice of automatically building and testin
 Docker packages applications into lightweight, portable containers that run consistently across environments.
 
 **Core concepts:**
+
 - **Image** - A read-only template with the application and its dependencies
 - **Container** - A running instance of an image
 - **Dockerfile** - Instructions to build an image
@@ -44,6 +47,7 @@ Docker packages applications into lightweight, portable containers that run cons
 - **Multi-stage builds** - Use multiple FROM statements to keep final images small
 
 **Multi-stage build benefits:**
+
 - Build dependencies stay out of the production image
 - Final image contains only the runtime and built artifacts
 - Dramatically reduces image size (often 10x smaller)
@@ -53,6 +57,7 @@ Docker packages applications into lightweight, portable containers that run cons
 Docker Compose defines and runs multi-container applications using a `docker-compose.yml` file.
 
 **Use cases:**
+
 - Local development environments with databases, caches, and message queues
 - Integration testing with real service dependencies
 - Consistent development setups across a team
@@ -62,6 +67,7 @@ Docker Compose defines and runs multi-container applications using a `docker-com
 Kubernetes (K8s) orchestrates containerized applications across a cluster of machines.
 
 **Key resources:**
+
 - **Pod** - The smallest deployable unit; one or more containers sharing network/storage
 - **Service** - A stable network endpoint that routes traffic to pods
 - **Deployment** - Manages pod replicas, rolling updates, and rollbacks
@@ -73,6 +79,7 @@ Kubernetes (K8s) orchestrates containerized applications across a cluster of mac
 Pending -> Running -> Succeeded/Failed
 
 **Service types:**
+
 - `ClusterIP` - Internal cluster access only (default)
 - `NodePort` - Exposes on each node's IP at a static port
 - `LoadBalancer` - Provisions an external load balancer
@@ -81,14 +88,15 @@ Pending -> Running -> Succeeded/Failed
 
 Typical environment progression:
 
-| Environment | Purpose | Data | Access |
-|-------------|---------|------|--------|
-| Local | Developer machine | Seed/mock data | Developer only |
-| Dev | Shared development | Synthetic data | Team |
-| Staging | Pre-production | Production-like data | Team + QA |
-| Production | Live users | Real data | Restricted |
+| Environment | Purpose            | Data                 | Access         |
+| ----------- | ------------------ | -------------------- | -------------- |
+| Local       | Developer machine  | Seed/mock data       | Developer only |
+| Dev         | Shared development | Synthetic data       | Team           |
+| Staging     | Pre-production     | Production-like data | Team + QA      |
+| Production  | Live users         | Real data            | Restricted     |
 
 **Best practices:**
+
 - Environment parity: keep staging as close to production as possible
 - Use environment variables for configuration (12-Factor App methodology)
 - Never hardcode environment-specific values
@@ -97,23 +105,27 @@ Typical environment progression:
 ### Deployment Strategies
 
 **Rolling deployment:**
+
 - Gradually replaces old instances with new ones
 - No downtime but both versions run simultaneously during rollout
 - Default strategy in Kubernetes
 
 **Blue-green deployment:**
+
 - Run two identical environments (blue = current, green = new)
 - Switch traffic from blue to green once validated
 - Instant rollback by switching back
 - Requires double the infrastructure
 
 **Canary deployment:**
+
 - Route a small percentage of traffic (e.g., 5%) to the new version
 - Monitor error rates and performance metrics
 - Gradually increase traffic if healthy
 - Minimizes blast radius of bad deployments
 
 **Feature flags:**
+
 - Decouple deployment from feature release
 - Enable/disable features without code deployment
 - Support A/B testing and gradual rollouts
@@ -123,6 +135,7 @@ Typical environment progression:
 Infrastructure as Code means managing infrastructure through declarative configuration files rather than manual processes.
 
 **Terraform** is the most popular IaC tool:
+
 - Uses HCL (HashiCorp Configuration Language)
 - Provider-agnostic (AWS, GCP, Azure, etc.)
 - Maintains state to track resource changes
@@ -131,6 +144,7 @@ Infrastructure as Code means managing infrastructure through declarative configu
 - Modules enable reusable infrastructure components
 
 **Key Terraform concepts:**
+
 - **Provider** - Plugin for a specific cloud or service
 - **Resource** - A single infrastructure component
 - **State** - Current known state of infrastructure
@@ -140,6 +154,7 @@ Infrastructure as Code means managing infrastructure through declarative configu
 ### Cloud Providers
 
 **AWS (Amazon Web Services):**
+
 - EC2 - Virtual servers
 - S3 - Object storage
 - RDS - Managed databases
@@ -149,6 +164,7 @@ Infrastructure as Code means managing infrastructure through declarative configu
 - SQS/SNS - Messaging
 
 **GCP (Google Cloud Platform):**
+
 - Compute Engine - Virtual machines
 - Cloud Storage - Object storage
 - Cloud SQL - Managed databases
@@ -162,18 +178,21 @@ Infrastructure as Code means managing infrastructure through declarative configu
 Serverless abstracts away server management entirely. You deploy functions, and the platform handles scaling, availability, and infrastructure.
 
 **AWS Lambda:**
+
 - Event-driven execution
 - Pay per invocation and duration
 - Cold start latency is a consideration
 - Integrates with API Gateway, S3, DynamoDB, SQS
 
 **Vercel / Netlify:**
+
 - Optimized for frontend frameworks (Next.js, Nuxt)
 - Edge functions for low-latency responses
 - Automatic preview deployments per PR
 - Built-in CDN and SSL
 
 **Serverless trade-offs:**
+
 - Pros: No infrastructure management, automatic scaling, pay-per-use
 - Cons: Cold starts, vendor lock-in, limited execution time, harder debugging
 
@@ -186,6 +205,7 @@ Serverless abstracts away server management entirely. You deploy functions, and 
 You are building a new Node.js microservice. You need automated testing and deployment.
 
 **Approach:**
+
 1. Create a GitHub Actions workflow that triggers on push and PR
 2. Run linting and unit tests in parallel
 3. Build the Docker image if tests pass
@@ -200,6 +220,7 @@ You are building a new Node.js microservice. You need automated testing and depl
 Your team runs applications on EC2 instances managed with Ansible. You want to move to containers.
 
 **Approach:**
+
 1. Write Dockerfiles for each service with multi-stage builds
 2. Set up a container registry
 3. Create docker-compose files for local development
@@ -214,6 +235,7 @@ Your team runs applications on EC2 instances managed with Ansible. You want to m
 You need to change a database schema without any downtime.
 
 **Approach:**
+
 1. Add new columns/tables (backward compatible)
 2. Deploy new code that writes to both old and new schema
 3. Backfill existing data
@@ -226,6 +248,7 @@ You need to change a database schema without any downtime.
 A deployment causes a spike in 500 errors.
 
 **Approach:**
+
 1. Detect via monitoring alerts (error rate threshold exceeded)
 2. Trigger automatic rollback or manually roll back
 3. Communicate status to stakeholders
@@ -244,6 +267,7 @@ A deployment causes a spike in 500 errors.
 I would structure the pipeline in stages with clear gates between them:
 
 **CI phase (triggered on every push/PR):**
+
 - Install dependencies with lockfile for reproducibility
 - Run linting and type checking in parallel
 - Run unit tests with coverage reporting
@@ -252,6 +276,7 @@ I would structure the pipeline in stages with clear gates between them:
 - Run security scanning (dependency audit, SAST)
 
 **CD phase (triggered on merge to main):**
+
 - Tag the Docker image with commit SHA and `latest`
 - Push to container registry
 - Deploy to staging environment automatically
@@ -262,6 +287,7 @@ I would structure the pipeline in stages with clear gates between them:
 - Promote to full rollout or auto-rollback
 
 **Key considerations:**
+
 - Cache dependencies between runs to speed up pipelines
 - Use matrix builds for testing against multiple versions
 - Store secrets in the CI platform's secret manager, not in code
@@ -275,6 +301,7 @@ I would structure the pipeline in stages with clear gates between them:
 Multi-stage builds use multiple `FROM` statements in a single Dockerfile. Each stage can use a different base image, and you can selectively copy artifacts from one stage to another.
 
 **Why they matter:**
+
 - **Smaller images**: The final image only contains the runtime and built artifacts, not build tools, source code, or dev dependencies
 - **Security**: Fewer packages in the final image means a smaller attack surface
 - **Speed**: Smaller images push and pull faster from registries
@@ -291,12 +318,14 @@ A typical Node.js multi-stage build might produce a final image of 150MB versus 
 **Canary** gradually routes increasing percentages of traffic to the new version while monitoring for issues. If problems arise, you route traffic back to the stable version.
 
 **When to use blue-green:**
+
 - When you need instant, all-or-nothing rollback
 - When your application has session affinity requirements
 - When you need to validate the full environment before any users see it
 - Simpler to implement and reason about
 
 **When to use canary:**
+
 - When you want to minimize blast radius
 - When you have sufficient traffic for statistical significance
 - When you have good observability (metrics, alerts)
@@ -308,11 +337,13 @@ A typical Node.js multi-stage build might produce a final image of 150MB versus 
 **Answer:**
 
 **Scaling:**
+
 - **Horizontal Pod Autoscaler (HPA)** adjusts the number of pod replicas based on CPU/memory utilization or custom metrics
 - **Vertical Pod Autoscaler (VPA)** adjusts resource requests/limits for containers
 - **Cluster Autoscaler** adds or removes nodes based on pending pods that cannot be scheduled
 
 **Self-healing:**
+
 - **Liveness probes** detect when a container is stuck and restart it
 - **Readiness probes** detect when a container is not ready to serve traffic and remove it from the service endpoint
 - **Startup probes** give slow-starting containers time before liveness probes kick in
@@ -327,6 +358,7 @@ A typical Node.js multi-stage build might produce a final image of 150MB versus 
 Infrastructure as Code (IaC) means defining your infrastructure in version-controlled configuration files rather than manually provisioning resources through a console.
 
 **Benefits:**
+
 - **Reproducibility**: Spin up identical environments reliably
 - **Version control**: Track changes, review diffs, audit history
 - **Collaboration**: Team members can review infrastructure changes like code
@@ -335,12 +367,14 @@ Infrastructure as Code (IaC) means defining your infrastructure in version-contr
 - **Automation**: Infrastructure changes go through the same CI/CD pipeline as code
 
 **Terraform workflow:**
+
 1. `terraform init` - Initialize providers and modules
 2. `terraform plan` - Preview changes before applying
 3. `terraform apply` - Execute the planned changes
 4. `terraform destroy` - Tear down infrastructure
 
 **State management:**
+
 - Terraform stores state remotely (S3 + DynamoDB for locking)
 - State tracks the mapping between configuration and real resources
 - State locking prevents concurrent modifications
@@ -350,6 +384,7 @@ Infrastructure as Code (IaC) means defining your infrastructure in version-contr
 **Answer:**
 
 **Choose serverless when:**
+
 - Traffic is unpredictable or bursty
 - You want zero infrastructure management
 - Functions are short-lived (under 15 minutes)
@@ -358,6 +393,7 @@ Infrastructure as Code (IaC) means defining your infrastructure in version-contr
 - Event-driven architecture fits the use case
 
 **Choose containers when:**
+
 - You need long-running processes
 - You require fine-grained control over the runtime
 - Cold start latency is unacceptable
@@ -374,12 +410,14 @@ Many production systems use both. For example, a containerized API service for c
 **Answer:**
 
 **Principles:**
+
 - Never commit secrets to version control
 - Rotate secrets regularly
 - Use the principle of least privilege
 - Audit secret access
 
 **Tools and approaches:**
+
 - **Environment variables** for simple cases (set in CI/CD platform)
 - **AWS Secrets Manager / GCP Secret Manager** for cloud-native secret storage
 - **HashiCorp Vault** for cross-cloud secret management with dynamic credentials
@@ -387,6 +425,7 @@ Many production systems use both. For example, a containerized API service for c
 - **CI/CD platform secrets** (GitHub Actions secrets, GitLab CI variables)
 
 **Best practices:**
+
 - Use different secrets per environment
 - Inject secrets at runtime, not build time
 - Encrypt secrets at rest and in transit
@@ -577,7 +616,7 @@ services:
       context: .
       target: builder
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       DATABASE_URL: postgres://postgres:devpass@db:5432/appdb
       REDIS_URL: redis://redis:6379
@@ -599,11 +638,11 @@ services:
       POSTGRES_PASSWORD: devpass
       POSTGRES_DB: appdb
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -611,7 +650,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redisdata:/data
 
@@ -944,12 +983,12 @@ CORS_ORIGIN=https://app.example.com
 
 ### Deployment Strategy Comparison
 
-| Strategy | Downtime | Risk | Rollback Speed | Cost |
-|----------|----------|------|---------------|------|
-| Rolling | None | Medium | Slow | Low |
-| Blue-Green | None | Low | Instant | High (2x infra) |
-| Canary | None | Low | Fast | Medium |
-| Recreate | Yes | High | Slow | Low |
+| Strategy   | Downtime | Risk   | Rollback Speed | Cost            |
+| ---------- | -------- | ------ | -------------- | --------------- |
+| Rolling    | None     | Medium | Slow           | Low             |
+| Blue-Green | None     | Low    | Instant        | High (2x infra) |
+| Canary     | None     | Low    | Fast           | Medium          |
+| Recreate   | Yes      | High   | Slow           | Low             |
 
 ### Health Check Endpoints Pattern
 

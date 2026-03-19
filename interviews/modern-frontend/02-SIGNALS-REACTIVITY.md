@@ -62,10 +62,10 @@ function Dashboard() {
 
   return (
     <div>
-      <h1>Count: {count}</h1>          {/* Only this needs updating */}
-      <ExpensiveList items={items} />   {/* Re-renders unnecessarily */}
-      <Chart data={chartData} />        {/* Re-renders unnecessarily */}
-      <button onClick={() => setCount(c => c + 1)}>+</button>
+      <h1>Count: {count}</h1> {/* Only this needs updating */}
+      <ExpensiveList items={items} /> {/* Re-renders unnecessarily */}
+      <Chart data={chartData} /> {/* Re-renders unnecessarily */}
+      <button onClick={() => setCount((c) => c + 1)}>+</button>
     </div>
   );
 }
@@ -81,7 +81,7 @@ With signals, only the specific DOM text node showing the count updates. Nothing
 **React (Virtual DOM, top-down re-rendering):**
 
 ```jsx
-import { useState, useMemo, useCallback, memo } from "react";
+import { useState, useMemo, useCallback, memo } from 'react';
 
 const TodoItem = memo(function TodoItem({ todo, onToggle }) {
   return (
@@ -98,45 +98,50 @@ const TodoItem = memo(function TodoItem({ todo, onToggle }) {
 
 function TodoApp() {
   const [todos, setTodos] = useState([]);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState('all');
 
   const filteredTodos = useMemo(() => {
     switch (filter) {
-      case "active": return todos.filter(t => !t.completed);
-      case "completed": return todos.filter(t => t.completed);
-      default: return todos;
+      case 'active':
+        return todos.filter((t) => !t.completed);
+      case 'completed':
+        return todos.filter((t) => t.completed);
+      default:
+        return todos;
     }
   }, [todos, filter]);
 
   const toggleTodo = useCallback((id) => {
-    setTodos(prev => prev.map(t =>
-      t.id === id ? { ...t, completed: !t.completed } : t
-    ));
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+    );
   }, []);
 
   const addTodo = useCallback((text) => {
-    setTodos(prev => [...prev, { id: Date.now(), text, completed: false }]);
+    setTodos((prev) => [...prev, { id: Date.now(), text, completed: false }]);
   }, []);
 
   return (
     <div>
-      <input onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          addTodo(e.currentTarget.value);
-          e.currentTarget.value = "";
-        }
-      }} />
+      <input
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            addTodo(e.currentTarget.value);
+            e.currentTarget.value = '';
+          }
+        }}
+      />
       <div>
-        <button onClick={() => setFilter("all")}>All</button>
-        <button onClick={() => setFilter("active")}>Active</button>
-        <button onClick={() => setFilter("completed")}>Completed</button>
+        <button onClick={() => setFilter('all')}>All</button>
+        <button onClick={() => setFilter('active')}>Active</button>
+        <button onClick={() => setFilter('completed')}>Completed</button>
       </div>
       <ul>
-        {filteredTodos.map(todo => (
+        {filteredTodos.map((todo) => (
           <TodoItem key={todo.id} todo={todo} onToggle={toggleTodo} />
         ))}
       </ul>
-      <p>{todos.filter(t => !t.completed).length} remaining</p>
+      <p>{todos.filter((t) => !t.completed).length} remaining</p>
     </div>
   );
 }
@@ -145,47 +150,54 @@ function TodoApp() {
 **Solid.js (Signals, fine-grained reactivity, no virtual DOM):**
 
 ```jsx
-import { createSignal, createMemo, For } from "solid-js";
+import { createSignal, createMemo, For } from 'solid-js';
 
 function TodoApp() {
   const [todos, setTodos] = createSignal([]);
-  const [filter, setFilter] = createSignal("all");
+  const [filter, setFilter] = createSignal('all');
 
   const filteredTodos = createMemo(() => {
-    switch (filter()) {          // Note: signals are called as functions
-      case "active": return todos().filter(t => !t.completed);
-      case "completed": return todos().filter(t => t.completed);
-      default: return todos();
+    switch (
+      filter() // Note: signals are called as functions
+    ) {
+      case 'active':
+        return todos().filter((t) => !t.completed);
+      case 'completed':
+        return todos().filter((t) => t.completed);
+      default:
+        return todos();
     }
   });
 
-  const remaining = createMemo(() =>
-    todos().filter(t => !t.completed).length
+  const remaining = createMemo(
+    () => todos().filter((t) => !t.completed).length
   );
 
   function toggleTodo(id) {
-    setTodos(prev => prev.map(t =>
-      t.id === id ? { ...t, completed: !t.completed } : t
-    ));
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+    );
   }
 
   function addTodo(text) {
-    setTodos(prev => [...prev, { id: Date.now(), text, completed: false }]);
+    setTodos((prev) => [...prev, { id: Date.now(), text, completed: false }]);
   }
 
   // This function body runs ONCE. Only the signal reads update the DOM.
   return (
     <div>
-      <input onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          addTodo(e.currentTarget.value);
-          e.currentTarget.value = "";
-        }
-      }} />
+      <input
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            addTodo(e.currentTarget.value);
+            e.currentTarget.value = '';
+          }
+        }}
+      />
       <div>
-        <button onClick={() => setFilter("all")}>All</button>
-        <button onClick={() => setFilter("active")}>Active</button>
-        <button onClick={() => setFilter("completed")}>Completed</button>
+        <button onClick={() => setFilter('all')}>All</button>
+        <button onClick={() => setFilter('active')}>Active</button>
+        <button onClick={() => setFilter('completed')}>Completed</button>
       </div>
       <ul>
         <For each={filteredTodos()}>
@@ -214,10 +226,10 @@ function TodoApp() {
 Angular adopted signals as a core reactivity primitive starting in v17, replacing the zone.js-based change detection:
 
 ```typescript
-import { Component, signal, computed, effect } from "@angular/core";
+import { Component, signal, computed, effect } from '@angular/core';
 
 @Component({
-  selector: "app-counter",
+  selector: 'app-counter',
   template: `
     <h1>Count: {{ count() }}</h1>
     <p>Double: {{ doubled() }}</p>
@@ -236,7 +248,7 @@ export class CounterComponent {
   }
 
   increment() {
-    this.count.update(c => c + 1);
+    this.count.update((c) => c + 1);
     // Or: this.count.set(this.count() + 1);
   }
 }
@@ -249,7 +261,7 @@ Angular signals are interesting because they retrofit fine-grained reactivity on
 Preact added signals as a first-class addon, demonstrating that signals can coexist with a virtual DOM:
 
 ```jsx
-import { signal, computed, effect } from "@preact/signals";
+import { signal, computed, effect } from '@preact/signals';
 
 // Signals can be declared outside components (global state)
 const count = signal(0);
@@ -259,7 +271,7 @@ function Counter() {
   // No hooks needed -- signals integrate directly with JSX
   return (
     <div>
-      <h1>Count: {count}</h1>         {/* Signal used directly in JSX */}
+      <h1>Count: {count}</h1> {/* Signal used directly in JSX */}
       <p>Double: {doubled}</p>
       <button onClick={() => count.value++}>+</button>
     </div>
@@ -275,10 +287,10 @@ Vue's Composition API uses a reactivity system conceptually similar to signals:
 
 ```vue
 <script setup>
-import { ref, reactive, computed, watch } from "vue";
+import { ref, reactive, computed, watch } from 'vue';
 
 const count = ref(0);
-const user = reactive({ name: "Alice", age: 30 });
+const user = reactive({ name: 'Alice', age: 30 });
 
 const doubled = computed(() => count.value * 2);
 
@@ -315,24 +327,26 @@ const counter = new Signal.State(0);
 const isEven = new Signal.Computed(() => counter.get() % 2 === 0);
 
 // Reading values
-console.log(counter.get());   // 0
-console.log(isEven.get());    // true
+console.log(counter.get()); // 0
+console.log(isEven.get()); // true
 
 // Writing values
 counter.set(1);
-console.log(isEven.get());    // false
+console.log(isEven.get()); // false
 
 // The proposal focuses on the core reactive graph.
 // DOM integration and effects are left to frameworks and userland.
 ```
 
 **What the proposal covers:**
+
 - `Signal.State` -- writable signal with `.get()` and `.set()`
 - `Signal.Computed` -- derived signal that lazily recomputes
 - Automatic dependency tracking
 - Glitch-free synchronous updates (no intermediate states)
 
 **What the proposal does NOT cover:**
+
 - Effects (running side effects when signals change)
 - DOM bindings
 - Batching strategies
@@ -342,19 +356,19 @@ The idea is that the language provides the reactive graph primitive, and framewo
 
 ### Virtual DOM vs Fine-Grained Reactivity: The Tradeoffs
 
-| Aspect | Virtual DOM (React) | Fine-Grained (Signals) |
-|--------|-------------------|----------------------|
-| **Update granularity** | Component-level | DOM-node-level |
-| **Update mechanism** | Diff old/new VDOM trees | Direct subscriber notification |
-| **Optimization model** | Opt-in (memo, useMemo) | Automatic |
-| **Mental model** | Function of state: `UI = f(state)` | Reactive graph: signals -> DOM |
-| **Component execution** | Re-runs on every state change | Runs once, sets up subscriptions |
-| **Memory overhead** | Two VDOM trees in memory | Reactive subscription graph |
-| **CPU overhead** | Diffing cost on every update | Near-zero for targeted updates |
-| **Worst case** | Large tree with frequent small updates | Many signals with interconnected dependencies |
-| **Best case** | Infrequent, large-batch updates | Frequent, isolated small updates |
-| **Debugging** | DevTools show re-render counts | DevTools show dependency graph |
-| **Ecosystem maturity** | Massive (React) | Growing (Solid, Angular) |
+| Aspect                  | Virtual DOM (React)                    | Fine-Grained (Signals)                        |
+| ----------------------- | -------------------------------------- | --------------------------------------------- |
+| **Update granularity**  | Component-level                        | DOM-node-level                                |
+| **Update mechanism**    | Diff old/new VDOM trees                | Direct subscriber notification                |
+| **Optimization model**  | Opt-in (memo, useMemo)                 | Automatic                                     |
+| **Mental model**        | Function of state: `UI = f(state)`     | Reactive graph: signals -> DOM                |
+| **Component execution** | Re-runs on every state change          | Runs once, sets up subscriptions              |
+| **Memory overhead**     | Two VDOM trees in memory               | Reactive subscription graph                   |
+| **CPU overhead**        | Diffing cost on every update           | Near-zero for targeted updates                |
+| **Worst case**          | Large tree with frequent small updates | Many signals with interconnected dependencies |
+| **Best case**           | Infrequent, large-batch updates        | Frequent, isolated small updates              |
+| **Debugging**           | DevTools show re-render counts         | DevTools show dependency graph                |
+| **Ecosystem maturity**  | Massive (React)                        | Growing (Solid, Angular)                      |
 
 ### When Virtual DOM Wins
 
@@ -377,7 +391,7 @@ React is not adopting signals, but the React Compiler (formerly React Forget) ad
 ```jsx
 // What you write (no manual memoization)
 function TodoApp({ todos, filter }) {
-  const filteredTodos = todos.filter(t => matchesFilter(t, filter));
+  const filteredTodos = todos.filter((t) => matchesFilter(t, filter));
 
   return (
     <div>
@@ -390,7 +404,7 @@ function TodoApp({ todos, filter }) {
 // What the compiler produces (conceptually)
 function TodoApp({ todos, filter }) {
   const filteredTodos = useMemo(
-    () => todos.filter(t => matchesFilter(t, filter)),
+    () => todos.filter((t) => matchesFilter(t, filter)),
     [todos, filter]
   );
 
@@ -450,7 +464,7 @@ It matters because it signals (no pun intended) a consensus in the JavaScript co
 
 ### Q5: Can React adopt signals? Why or why not?
 
-**Answer:** React *could* adopt signals internally, but it would require a fundamental change to React's programming model. React's core design principle is that components are pure functions of their props and state -- you call the function, it returns JSX, and React figures out the DOM changes. Signals replace this with a model where the function runs once and sets up a reactive graph.
+**Answer:** React _could_ adopt signals internally, but it would require a fundamental change to React's programming model. React's core design principle is that components are pure functions of their props and state -- you call the function, it returns JSX, and React figures out the DOM changes. Signals replace this with a model where the function runs once and sets up a reactive graph.
 
 React's team has chosen a different path: the React Compiler. Instead of changing the programming model, the compiler automatically adds the memoization that developers would otherwise write manually. This preserves React's existing mental model while eliminating much of the performance overhead.
 
@@ -488,29 +502,29 @@ The honest answer is that for 80% of web applications, the performance differenc
 
 ## Quick Reference
 
-| Framework | Reactivity Model | Signal Primitive | VDOM | Bundle Size |
-|-----------|-----------------|-----------------|------|-------------|
-| React 19 | Virtual DOM + compiler | None (use external) | Yes | ~40KB |
-| Solid.js 1.9 | Fine-grained signals | `createSignal` | No | ~7KB |
-| Angular 19 | Signals + zone.js (legacy) | `signal()` | No (incremental DOM) | ~90KB |
-| Vue 3.5 | Proxy-based reactivity | `ref()` / `reactive()` | Yes | ~33KB |
-| Preact 10 | VDOM + optional signals | `signal()` via addon | Yes | ~4KB |
-| Svelte 5 | Runes (signal-like) | `$state` / `$derived` | No (compile-time) | ~2KB |
-| Qwik 2 | Fine-grained + resumability | `useSignal` | No | ~1KB initial |
+| Framework    | Reactivity Model            | Signal Primitive       | VDOM                 | Bundle Size  |
+| ------------ | --------------------------- | ---------------------- | -------------------- | ------------ |
+| React 19     | Virtual DOM + compiler      | None (use external)    | Yes                  | ~40KB        |
+| Solid.js 1.9 | Fine-grained signals        | `createSignal`         | No                   | ~7KB         |
+| Angular 19   | Signals + zone.js (legacy)  | `signal()`             | No (incremental DOM) | ~90KB        |
+| Vue 3.5      | Proxy-based reactivity      | `ref()` / `reactive()` | Yes                  | ~33KB        |
+| Preact 10    | VDOM + optional signals     | `signal()` via addon   | Yes                  | ~4KB         |
+| Svelte 5     | Runes (signal-like)         | `$state` / `$derived`  | No (compile-time)    | ~2KB         |
+| Qwik 2       | Fine-grained + resumability | `useSignal`            | No                   | ~1KB initial |
 
-| Signal Concept | React Equivalent | Description |
-|---------------|-----------------|-------------|
-| `signal(value)` | `useState(value)` | Writable reactive value |
-| `computed(fn)` | `useMemo(fn, deps)` | Derived value, auto-tracks deps |
-| `effect(fn)` | `useEffect(fn, deps)` | Side effect, auto-tracks deps |
-| `batch(fn)` | Automatic in React 18+ | Group updates to prevent glitches |
-| `untrack(fn)` | N/A | Read a signal without subscribing |
+| Signal Concept  | React Equivalent       | Description                       |
+| --------------- | ---------------------- | --------------------------------- |
+| `signal(value)` | `useState(value)`      | Writable reactive value           |
+| `computed(fn)`  | `useMemo(fn, deps)`    | Derived value, auto-tracks deps   |
+| `effect(fn)`    | `useEffect(fn, deps)`  | Side effect, auto-tracks deps     |
+| `batch(fn)`     | Automatic in React 18+ | Group updates to prevent glitches |
+| `untrack(fn)`   | N/A                    | Read a signal without subscribing |
 
-| TC39 Proposal API | Purpose |
-|-------------------|---------|
-| `Signal.State(value)` | Create a writable signal |
-| `signal.get()` | Read the current value |
-| `signal.set(value)` | Write a new value |
-| `Signal.Computed(fn)` | Create a derived signal |
-| `Signal.subtle.Watcher` | Low-level effect primitive |
+| TC39 Proposal API                 | Purpose                            |
+| --------------------------------- | ---------------------------------- |
+| `Signal.State(value)`             | Create a writable signal           |
+| `signal.get()`                    | Read the current value             |
+| `signal.set(value)`               | Write a new value                  |
+| `Signal.Computed(fn)`             | Create a derived signal            |
+| `Signal.subtle.Watcher`           | Low-level effect primitive         |
 | `Signal.subtle.currentComputed()` | Introspect the current computation |

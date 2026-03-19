@@ -27,14 +27,15 @@ Timeline of a Disaster Event
                      (service downtime)
 ```
 
-| Metric | Definition | Measures | Business Impact |
-|--------|-----------|----------|-----------------|
-| **RPO** (Recovery Point Objective) | Max acceptable data loss | How old can restored data be? | Data integrity, compliance |
-| **RTO** (Recovery Time Objective) | Max acceptable downtime | How fast must service be restored? | Revenue loss, SLA penalties |
-| **WRT** (Work Recovery Time) | Time to make data consistent after restore | Manual data entry, reconciliation | Operational cost |
-| **MTD** (Maximum Tolerable Downtime) | Absolute maximum outage | Beyond this = business failure | Existential threat |
+| Metric                               | Definition                                 | Measures                           | Business Impact             |
+| ------------------------------------ | ------------------------------------------ | ---------------------------------- | --------------------------- |
+| **RPO** (Recovery Point Objective)   | Max acceptable data loss                   | How old can restored data be?      | Data integrity, compliance  |
+| **RTO** (Recovery Time Objective)    | Max acceptable downtime                    | How fast must service be restored? | Revenue loss, SLA penalties |
+| **WRT** (Work Recovery Time)         | Time to make data consistent after restore | Manual data entry, reconciliation  | Operational cost            |
+| **MTD** (Maximum Tolerable Downtime) | Absolute maximum outage                    | Beyond this = business failure     | Existential threat          |
 
 **The Relationship:**
+
 ```
 MTD >= RTO + WRT
 ```
@@ -75,6 +76,7 @@ If RTO = 4 hours:
 ```
 
 **BIA Process:**
+
 1. Inventory all systems and dependencies
 2. Assign criticality tier (P0–P4)
 3. Estimate hourly downtime cost per system
@@ -84,13 +86,13 @@ If RTO = 4 hours:
 
 ### DR Testing Frequency
 
-| Test Type | Frequency | Duration | Disruption | Cost |
-|-----------|-----------|----------|------------|------|
-| Tabletop exercise | Monthly | 2 hours | None | Low |
-| Backup restore test | Weekly (automated) | Automated | None | Low |
-| Component failover | Quarterly | 4 hours | Minimal | Medium |
-| Simulated regional failure | Bi-annual | 8 hours | Some traffic | High |
-| Full DR drill | Annual | 24–48 hours | Significant | Very High |
+| Test Type                  | Frequency          | Duration    | Disruption   | Cost      |
+| -------------------------- | ------------------ | ----------- | ------------ | --------- |
+| Tabletop exercise          | Monthly            | 2 hours     | None         | Low       |
+| Backup restore test        | Weekly (automated) | Automated   | None         | Low       |
+| Component failover         | Quarterly          | 4 hours     | Minimal      | Medium    |
+| Simulated regional failure | Bi-annual          | 8 hours     | Some traffic | High      |
+| Full DR drill              | Annual             | 24–48 hours | Significant  | Very High |
 
 ---
 
@@ -120,6 +122,7 @@ Recovery Speed vs Cost Matrix
 ### Strategy Deep Dive
 
 **Backup & Restore**
+
 ```
 PRIMARY REGION              DR REGION
 ┌─────────────────┐         ┌─────────────────┐
@@ -131,6 +134,7 @@ Use case: Non-critical systems, development, archive data
 ```
 
 **Pilot Light**
+
 ```
 PRIMARY REGION              DR REGION
 ┌─────────────────┐         ┌─────────────────┐
@@ -143,6 +147,7 @@ Use case: Internal apps, moderate criticality
 ```
 
 **Warm Standby**
+
 ```
 PRIMARY REGION              DR REGION
 ┌─────────────────┐         ┌─────────────────┐
@@ -155,6 +160,7 @@ Use case: Business-critical apps, e-commerce
 ```
 
 **Multi-Site Active-Active**
+
 ```
 REGION A                    REGION B
 ┌─────────────────┐         ┌─────────────────┐
@@ -171,12 +177,12 @@ Use case: High-traffic, globally distributed, financial
 
 ### Cost vs Recovery Comparison
 
-| Strategy | Annual Cost (est.) | RTO | RPO | Complexity |
-|----------|-------------------|-----|-----|------------|
-| Backup & Restore | $500–$2K | Hours–Days | Hours | Low |
-| Pilot Light | $2K–$10K | 1–4 hours | Minutes | Medium |
-| Warm Standby | $10K–$50K | Minutes | Seconds | High |
-| Active-Active | $50K–$500K | Zero | Near-zero | Very High |
+| Strategy         | Annual Cost (est.) | RTO        | RPO       | Complexity |
+| ---------------- | ------------------ | ---------- | --------- | ---------- |
+| Backup & Restore | $500–$2K           | Hours–Days | Hours     | Low        |
+| Pilot Light      | $2K–$10K           | 1–4 hours  | Minutes   | Medium     |
+| Warm Standby     | $10K–$50K          | Minutes    | Seconds   | High       |
+| Active-Active    | $50K–$500K         | Zero       | Near-zero | Very High  |
 
 ---
 
@@ -334,13 +340,13 @@ log "Backup verification complete. Result: $RESULT"
 
 ### Retention Policy Matrix
 
-| Data Type | Daily | Weekly | Monthly | Annual | Compliance |
-|-----------|-------|--------|---------|--------|-----------|
-| Application DB | 7 days | 4 weeks | 12 months | 7 years | GDPR/SOC2 |
-| Audit logs | 90 days | — | 24 months | 7 years | PCI-DSS |
-| Config snapshots | 30 days | 12 weeks | 24 months | 5 years | SOC2 |
-| User uploads | 7 days | — | — | — | Internal |
-| Financial records | — | — | — | 10 years | Financial |
+| Data Type         | Daily   | Weekly   | Monthly   | Annual   | Compliance |
+| ----------------- | ------- | -------- | --------- | -------- | ---------- |
+| Application DB    | 7 days  | 4 weeks  | 12 months | 7 years  | GDPR/SOC2  |
+| Audit logs        | 90 days | —        | 24 months | 7 years  | PCI-DSS    |
+| Config snapshots  | 30 days | 12 weeks | 24 months | 5 years  | SOC2       |
+| User uploads      | 7 days  | —        | —         | —        | Internal   |
+| Financial records | —       | —        | —         | 10 years | Financial  |
 
 ### Backup Encryption
 
@@ -687,24 +693,24 @@ spec:
         components:
           env:
             - name: TOTAL_CHAOS_DURATION
-              value: "300"  # 5 minutes
+              value: '300' # 5 minutes
             - name: NETWORK_INTERFACE
               value: eth0
             - name: DESTINATION_IPS
-              value: "10.0.0.0/8"  # Block internal traffic
+              value: '10.0.0.0/8' # Block internal traffic
             - name: POLICY
               value: egress
         probe:
-          - name: "check-payment-api"
+          - name: 'check-payment-api'
             type: httpProbe
             mode: Continuous
             httpProbe/inputs:
-              url: "http://payment-service/health"
+              url: 'http://payment-service/health'
               responseTimeout: 1000
               method:
                 get:
                   criteria: ==
-                  responseCode: "200"
+                  responseCode: '200'
 ```
 
 ### Game Day Checklist
@@ -961,13 +967,13 @@ aws cloudwatch get-metric-statistics \
 
 ### Conflict Resolution Strategies
 
-| Strategy | Mechanism | Use Case | Trade-off |
-|----------|-----------|----------|-----------|
-| Last-writer-wins (LWW) | Compare timestamps | DynamoDB Global Tables | Can lose updates |
-| Multi-version concurrency (MVCC) | Keep all versions | CRDTs, collaborative editing | Storage overhead |
-| Application-level merge | Custom merge logic | Domain-specific rules | Complex to implement |
-| Operational transformation | Track intent, not state | Google Docs-style | Very complex |
-| Avoid conflicts | Route same user to same region | Session affinity | Reduces availability |
+| Strategy                         | Mechanism                      | Use Case                     | Trade-off            |
+| -------------------------------- | ------------------------------ | ---------------------------- | -------------------- |
+| Last-writer-wins (LWW)           | Compare timestamps             | DynamoDB Global Tables       | Can lose updates     |
+| Multi-version concurrency (MVCC) | Keep all versions              | CRDTs, collaborative editing | Storage overhead     |
+| Application-level merge          | Custom merge logic             | Domain-specific rules        | Complex to implement |
+| Operational transformation       | Track intent, not state        | Google Docs-style            | Very complex         |
+| Avoid conflicts                  | Route same user to same region | Session affinity             | Reduces availability |
 
 ---
 
@@ -1120,31 +1126,37 @@ Annual
 **Environment:** Production
 
 ## Hypothesis
+
 Promoting the us-west-2 read replica to primary will result in:
+
 - RTO < 10 minutes
 - RPO < 30 seconds (replication lag at time of failover)
 - Error rate < 5% during failover window
 
 ## Results
-| Metric | Target | Actual | Pass/Fail |
-|--------|--------|--------|-----------|
-| Time to detect failure | < 2 min | 1m 42s | PASS |
-| Time to promote replica | < 8 min | 6m 15s | PASS |
-| Time to update app config | < 2 min | 3m 10s | FAIL |
-| Data loss (replication lag) | < 30s | 8s | PASS |
-| Error rate during failover | < 5% | 2.3% | PASS |
-| Total RTO | < 15 min | 12m 07s | PASS |
+
+| Metric                      | Target   | Actual  | Pass/Fail |
+| --------------------------- | -------- | ------- | --------- |
+| Time to detect failure      | < 2 min  | 1m 42s  | PASS      |
+| Time to promote replica     | < 8 min  | 6m 15s  | PASS      |
+| Time to update app config   | < 2 min  | 3m 10s  | FAIL      |
+| Data loss (replication lag) | < 30s    | 8s      | PASS      |
+| Error rate during failover  | < 5%     | 2.3%    | PASS      |
+| Total RTO                   | < 15 min | 12m 07s | PASS      |
 
 ## Issues Found
+
 1. (MEDIUM) App config update was manual — should be automated
 2. (LOW) DNS TTL was 300s, consider reducing to 60s pre-emptively
 
 ## Action Items
+
 - [ ] Automate config update via SSM Parameter Store hook (#TICKET-1234)
 - [ ] Set DNS TTL to 60s during business hours (#TICKET-1235)
 - [ ] Add replication lag alert at >20s (#TICKET-1236)
 
 ## Next Test
+
 Scheduled for 2026-06-15
 ```
 

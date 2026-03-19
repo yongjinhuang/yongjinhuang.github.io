@@ -14,33 +14,39 @@ Before understanding bundlers, you need to understand the module formats they pr
 
 ```js
 // Named exports
-export function add(a, b) { return a + b }
-export const PI = 3.14159
+export function add(a, b) {
+  return a + b;
+}
+export const PI = 3.14159;
 
 // Default export
-export default function multiply(a, b) { return a * b }
+export default function multiply(a, b) {
+  return a * b;
+}
 
 // Import
-import multiply, { add, PI } from './math.js'
+import multiply, { add, PI } from './math.js';
 
 // Dynamic import (code splitting)
-const module = await import('./heavyModule.js')
+const module = await import('./heavyModule.js');
 ```
 
 **CommonJS (CJS)** - Node.js module system. Dynamic, not statically analyzable.
 
 ```js
 // Export
-module.exports = { add, multiply }
+module.exports = { add, multiply };
 // or
-exports.add = function(a, b) { return a + b }
+exports.add = function (a, b) {
+  return a + b;
+};
 
 // Import
-const { add } = require('./math')
+const { add } = require('./math');
 
 // Dynamic (can be conditional)
 if (needsMath) {
-  const math = require('./math')
+  const math = require('./math');
 }
 ```
 
@@ -49,24 +55,26 @@ if (needsMath) {
 ```js
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define(['dependency'], factory)
+    define(['dependency'], factory);
   } else if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('dependency'))
+    module.exports = factory(require('dependency'));
   } else {
-    root.MyLibrary = factory(root.Dependency)
+    root.MyLibrary = factory(root.Dependency);
   }
-}(typeof self !== 'undefined' ? self : this, function (dependency) {
+})(typeof self !== 'undefined' ? self : this, function (dependency) {
   // Library code
-  return { /* public API */ }
-}))
+  return {
+    /* public API */
+  };
+});
 ```
 
-| Format | Static Analysis | Tree Shaking | Browser Native | Node.js Native | Async Loading |
-|---|---|---|---|---|---|
-| ESM | Yes | Yes | Yes | Yes (with config) | Yes (dynamic import) |
-| CJS | No | Limited | No | Yes | No |
-| UMD | No | No | Yes (global) | Yes | No |
-| AMD | Partial | No | With loader | No | Yes |
+| Format | Static Analysis | Tree Shaking | Browser Native | Node.js Native    | Async Loading        |
+| ------ | --------------- | ------------ | -------------- | ----------------- | -------------------- |
+| ESM    | Yes             | Yes          | Yes            | Yes (with config) | Yes (dynamic import) |
+| CJS    | No              | Limited      | No             | Yes               | No                   |
+| UMD    | No              | No           | Yes (global)   | Yes               | No                   |
+| AMD    | Partial         | No           | With loader    | No                | Yes                  |
 
 ### Webpack
 
@@ -76,16 +84,16 @@ Webpack is the most mature and feature-rich bundler. It treats everything as a m
 
 ```js
 // webpack.config.js
-const path = require('path')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 module.exports = {
   // Entry: Where bundling starts
   entry: {
     main: './src/index.tsx',
-    vendor: './src/vendor.ts'
+    vendor: './src/vendor.ts',
   },
 
   // Output: Where bundles are written
@@ -93,7 +101,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].[contenthash].js',
     chunkFilename: '[name].[contenthash].chunk.js',
-    clean: true
+    clean: true,
   },
 
   // Module: How different file types are processed
@@ -102,49 +110,49 @@ module.exports = {
       {
         test: /\.(ts|tsx)$/,
         use: 'ts-loader',
-        exclude: /node_modules/
+        exclude: /node_modules/,
       },
       {
         test: /\.css$/,
         use: [
-          MiniCssExtractPlugin.loader,  // Extract CSS to files
-          'css-loader',                  // Resolve CSS imports
-          'postcss-loader'               // PostCSS transformations
-        ]
+          MiniCssExtractPlugin.loader, // Extract CSS to files
+          'css-loader', // Resolve CSS imports
+          'postcss-loader', // PostCSS transformations
+        ],
       },
       {
         test: /\.(png|jpg|gif|svg)$/,
-        type: 'asset',                  // Built-in asset modules (Webpack 5)
+        type: 'asset', // Built-in asset modules (Webpack 5)
         parser: {
           dataUrlCondition: {
-            maxSize: 8 * 1024            // Inline if < 8KB
-          }
-        }
+            maxSize: 8 * 1024, // Inline if < 8KB
+          },
+        },
       },
       {
         test: /\.(woff|woff2)$/,
-        type: 'asset/resource'
-      }
-    ]
+        type: 'asset/resource',
+      },
+    ],
   },
 
   // Plugins: Extend Webpack functionality
   plugins: [
     new HtmlWebpackPlugin({
-      template: './public/index.html'
+      template: './public/index.html',
     }),
     new MiniCssExtractPlugin({
-      filename: '[name].[contenthash].css'
+      filename: '[name].[contenthash].css',
     }),
-    process.env.ANALYZE && new BundleAnalyzerPlugin()
+    process.env.ANALYZE && new BundleAnalyzerPlugin(),
   ].filter(Boolean),
 
   // Resolve: How modules are found
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {
-      '@': path.resolve(__dirname, 'src')
-    }
+      '@': path.resolve(__dirname, 'src'),
+    },
   },
 
   // Optimization: Code splitting and minification
@@ -155,16 +163,16 @@ module.exports = {
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendors',
-          chunks: 'all'
+          chunks: 'all',
         },
         common: {
           minChunks: 2,
           priority: -10,
-          reuseExistingChunk: true
-        }
-      }
+          reuseExistingChunk: true,
+        },
+      },
     },
-    runtimeChunk: 'single'
+    runtimeChunk: 'single',
   },
 
   // DevServer: Development server with HMR
@@ -175,11 +183,11 @@ module.exports = {
     proxy: [
       {
         context: ['/api'],
-        target: 'http://localhost:8080'
-      }
-    ]
-  }
-}
+        target: 'http://localhost:8080',
+      },
+    ],
+  },
+};
 ```
 
 **Loaders** transform files. They are functions that take source code and return transformed code. They chain right-to-left:
@@ -197,14 +205,14 @@ module.exports = {
 
 **Plugins** extend Webpack's build process. They hook into the compilation lifecycle:
 
-| Plugin | Purpose |
-|---|---|
-| HtmlWebpackPlugin | Generates HTML with script tags |
-| MiniCssExtractPlugin | Extracts CSS into separate files |
-| DefinePlugin | Define compile-time constants |
-| CopyWebpackPlugin | Copy static files to output |
-| BundleAnalyzerPlugin | Visualize bundle composition |
-| CompressionPlugin | Generate gzip/brotli compressed files |
+| Plugin               | Purpose                               |
+| -------------------- | ------------------------------------- |
+| HtmlWebpackPlugin    | Generates HTML with script tags       |
+| MiniCssExtractPlugin | Extracts CSS into separate files      |
+| DefinePlugin         | Define compile-time constants         |
+| CopyWebpackPlugin    | Copy static files to output           |
+| BundleAnalyzerPlugin | Visualize bundle composition          |
+| CompressionPlugin    | Generate gzip/brotli compressed files |
 
 **Hot Module Replacement (HMR)** - Updates modules in the browser without a full page reload, preserving application state.
 
@@ -213,9 +221,9 @@ module.exports = {
 if (module.hot) {
   module.hot.accept('./App', () => {
     // Re-render with updated component
-    const NextApp = require('./App').default
-    render(<NextApp />, document.getElementById('root'))
-  })
+    const NextApp = require('./App').default;
+    render(<NextApp />, document.getElementById('root'));
+  });
 }
 ```
 
@@ -234,17 +242,17 @@ Vite takes a fundamentally different approach to development tooling. In develop
 
 ```js
 // vite.config.ts
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
 
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src')
-    }
+      '@': resolve(__dirname, 'src'),
+    },
   },
 
   server: {
@@ -252,9 +260,9 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
-        changeOrigin: true
-      }
-    }
+        changeOrigin: true,
+      },
+    },
   },
 
   build: {
@@ -263,32 +271,32 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          router: ['react-router-dom']
-        }
-      }
+          router: ['react-router-dom'],
+        },
+      },
     },
     sourcemap: true,
     target: 'es2020',
-    minify: 'terser'   // or 'esbuild' (faster but less optimized)
+    minify: 'terser', // or 'esbuild' (faster but less optimized)
   },
 
   css: {
     modules: {
-      localsConvention: 'camelCase'
+      localsConvention: 'camelCase',
     },
     preprocessorOptions: {
       scss: {
-        additionalData: `@import "@/styles/variables.scss";`
-      }
-    }
+        additionalData: `@import "@/styles/variables.scss";`,
+      },
+    },
   },
 
   // Environment variables
   // Only VITE_ prefixed variables are exposed to client code
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
-  }
-})
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+  },
+});
 ```
 
 **Vite Plugin System:**
@@ -304,28 +312,28 @@ function myPlugin() {
     // Rollup hooks (work in both dev and build)
     resolveId(source) {
       if (source === 'virtual:my-module') {
-        return source
+        return source;
       }
     },
     load(id) {
       if (id === 'virtual:my-module') {
-        return `export const timestamp = ${Date.now()}`
+        return `export const timestamp = ${Date.now()}`;
       }
     },
 
     // Vite-specific hooks
     configureServer(server) {
       server.middlewares.use('/health', (req, res) => {
-        res.end('OK')
-      })
+        res.end('OK');
+      });
     },
     transformIndexHtml(html) {
       return html.replace(
         '</head>',
         `<script>window.__BUILD_TIME__ = "${new Date().toISOString()}"</script></head>`
-      )
-    }
-  }
+      );
+    },
+  };
 }
 ```
 
@@ -344,7 +352,7 @@ function myPlugin() {
 esbuild is an extremely fast bundler/transpiler written in Go. It is 10-100x faster than JavaScript-based tools because it uses parallelism, shared memory, and avoids AST-to-string serialization.
 
 ```js
-import * as esbuild from 'esbuild'
+import * as esbuild from 'esbuild';
 
 await esbuild.build({
   entryPoints: ['src/index.tsx'],
@@ -357,16 +365,17 @@ await esbuild.build({
   format: 'esm',
   loader: {
     '.png': 'file',
-    '.svg': 'text'
+    '.svg': 'text',
   },
   define: {
-    'process.env.NODE_ENV': '"production"'
+    'process.env.NODE_ENV': '"production"',
   },
-  external: ['fsevents']
-})
+  external: ['fsevents'],
+});
 ```
 
 **Limitations of esbuild:**
+
 - No built-in HMR (used as a tool within other systems)
 - Limited CSS handling compared to PostCSS
 - No support for some advanced TypeScript features (decorators with metadata)
@@ -379,11 +388,11 @@ Rollup is designed for library bundling and produces clean, efficient output. It
 
 ```js
 // rollup.config.js
-import resolve from '@rollup/plugin-node-resolve'
-import commonjs from '@rollup/plugin-commonjs'
-import typescript from '@rollup/plugin-typescript'
-import terser from '@rollup/plugin-terser'
-import { dts } from 'rollup-plugin-dts'
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import typescript from '@rollup/plugin-typescript';
+import terser from '@rollup/plugin-terser';
+import { dts } from 'rollup-plugin-dts';
 
 export default [
   // Main build
@@ -393,38 +402,39 @@ export default [
       {
         file: 'dist/index.cjs.js',
         format: 'cjs',
-        sourcemap: true
+        sourcemap: true,
       },
       {
         file: 'dist/index.esm.js',
         format: 'esm',
-        sourcemap: true
+        sourcemap: true,
       },
       {
         file: 'dist/index.umd.js',
         format: 'umd',
         name: 'MyLibrary',
-        sourcemap: true
-      }
+        sourcemap: true,
+      },
     ],
     plugins: [
       resolve(),
       commonjs(),
       typescript({ tsconfig: './tsconfig.json' }),
-      terser()
+      terser(),
     ],
-    external: ['react', 'react-dom']
+    external: ['react', 'react-dom'],
   },
   // Type declarations
   {
     input: 'src/index.ts',
     output: { file: 'dist/index.d.ts', format: 'esm' },
-    plugins: [dts()]
-  }
-]
+    plugins: [dts()],
+  },
+];
 ```
 
 **When to use Rollup:**
+
 - Building libraries (produces cleaner output than Webpack)
 - When you need multiple output formats (CJS, ESM, UMD)
 - When tree shaking quality matters (Rollup's is the most thorough)
@@ -434,6 +444,7 @@ export default [
 Turbopack is the Webpack successor built by Vercel in Rust. It is designed for incremental computation.
 
 Key features:
+
 - **Incremental computation** - Only recomputes what changed, caching everything else
 - **Function-level caching** - Caches the result of every function in the build pipeline
 - **Rust-based** - Native performance without garbage collection pauses
@@ -452,13 +463,19 @@ Tree shaking eliminates dead code by analyzing the static structure of ES module
 
 ```js
 // math.js
-export function add(a, b) { return a + b }       // Used -> kept
-export function subtract(a, b) { return a - b }  // Unused -> removed
-export function multiply(a, b) { return a * b }  // Unused -> removed
+export function add(a, b) {
+  return a + b;
+} // Used -> kept
+export function subtract(a, b) {
+  return a - b;
+} // Unused -> removed
+export function multiply(a, b) {
+  return a * b;
+} // Unused -> removed
 
 // app.js
-import { add } from './math.js'
-console.log(add(1, 2))
+import { add } from './math.js';
+console.log(add(1, 2));
 // Only `add` ends up in the final bundle
 ```
 
@@ -466,14 +483,14 @@ console.log(add(1, 2))
 
 ```js
 // This file has side effects - importing it runs code
-import './polyfills.js'    // Cannot be tree-shaken
+import './polyfills.js'; // Cannot be tree-shaken
 
 // CSS imports are side effects
-import './styles.css'
+import './styles.css';
 
 // Top-level function calls are side effects
-console.log('module loaded')
-registerPlugin(myPlugin)
+console.log('module loaded');
+registerPlugin(myPlugin);
 ```
 
 Mark your package as side-effect-free in package.json:
@@ -504,16 +521,16 @@ module.exports = {
 
   // Production (hidden): map exists but not referenced in bundle
   // devtool: 'hidden-source-map',
-}
+};
 ```
 
-| Type | Speed | Quality | Production Safe |
-|---|---|---|---|
-| `eval` | Fastest | Low | No |
-| `eval-cheap-module-source-map` | Fast | Medium | No |
-| `source-map` | Slow | High | Yes (with access control) |
-| `hidden-source-map` | Slow | High | Yes |
-| `nosources-source-map` | Slow | Medium | Yes |
+| Type                           | Speed   | Quality | Production Safe           |
+| ------------------------------ | ------- | ------- | ------------------------- |
+| `eval`                         | Fastest | Low     | No                        |
+| `eval-cheap-module-source-map` | Fast    | Medium  | No                        |
+| `source-map`                   | Slow    | High    | Yes (with access control) |
+| `hidden-source-map`            | Slow    | High    | Yes                       |
+| `nosources-source-map`         | Slow    | Medium  | Yes                       |
 
 **Security concern:** Never serve source maps publicly in production. They expose your entire source code. Use `hidden-source-map` and upload maps to error tracking services (Sentry, Datadog) privately.
 
@@ -521,16 +538,16 @@ module.exports = {
 
 ```js
 // Webpack: DefinePlugin
-const webpack = require('webpack')
+const webpack = require('webpack');
 
 module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       'process.env.API_URL': JSON.stringify(process.env.API_URL),
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
-    })
-  ]
-}
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    }),
+  ],
+};
 
 // Vite: import.meta.env
 // Only VITE_ prefixed variables are exposed
@@ -539,7 +556,7 @@ module.exports = {
 // SECRET_KEY=abc123  <-- NOT exposed to client
 
 // Usage in code:
-const apiUrl = import.meta.env.VITE_API_URL
+const apiUrl = import.meta.env.VITE_API_URL;
 
 // Next.js: NEXT_PUBLIC_ prefix
 // .env.local
@@ -547,7 +564,7 @@ const apiUrl = import.meta.env.VITE_API_URL
 // DATABASE_URL=postgres://...  <-- Server only
 
 // Usage:
-const apiUrl = process.env.NEXT_PUBLIC_API_URL
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 ```
 
 ### Monorepo Tools
@@ -591,16 +608,16 @@ npx nx graph
 npx nx generate @nx/react:library shared-ui
 ```
 
-| Feature | Turborepo | Nx |
-|---|---|---|
-| Task orchestration | Yes | Yes |
-| Remote caching | Yes (Vercel) | Yes (Nx Cloud) |
-| Dependency graph | Implicit (file-based) | Explicit + implicit |
-| Code generation | No | Yes (generators) |
-| Affected commands | Via git diff | Via dependency graph |
-| Plugin system | No | Extensive |
-| Learning curve | Low | Medium-High |
-| Best for | Simple monorepos | Large, complex monorepos |
+| Feature            | Turborepo             | Nx                       |
+| ------------------ | --------------------- | ------------------------ |
+| Task orchestration | Yes                   | Yes                      |
+| Remote caching     | Yes (Vercel)          | Yes (Nx Cloud)           |
+| Dependency graph   | Implicit (file-based) | Explicit + implicit      |
+| Code generation    | No                    | Yes (generators)         |
+| Affected commands  | Via git diff          | Via dependency graph     |
+| Plugin system      | No                    | Extensive                |
+| Learning curve     | Low                   | Medium-High              |
+| Best for           | Simple monorepos      | Large, complex monorepos |
 
 ## Common Interview Questions
 
@@ -642,39 +659,40 @@ Turborepo is simpler: it focuses on task orchestration and caching with minimal 
 
 ```js
 // Webpack: require syntax and DefinePlugin
-const path = require('path')
-const webpack = require('webpack')
+const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
-    }
+      '@': path.resolve(__dirname, 'src'),
+    },
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.API_URL': JSON.stringify(process.env.API_URL)
-    })
-  ]
-}
+      'process.env.API_URL': JSON.stringify(process.env.API_URL),
+    }),
+  ],
+};
 
 // Vite: ESM config, import.meta.env
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src')
-    }
+      '@': resolve(__dirname, 'src'),
+    },
   },
   define: {
     // Rename process.env.X to import.meta.env.VITE_X in source code
-  }
-})
+  },
+});
 ```
 
 Migration steps:
+
 1. Replace `process.env.REACT_APP_*` with `import.meta.env.VITE_*` in source code
 2. Convert `require()` to `import` in config and source files
 3. Move HTML entry to project root (Vite uses `index.html` as entry)
@@ -686,34 +704,31 @@ Migration steps:
 
 ```js
 // vite.config.ts for a library
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import dts from 'vite-plugin-dts'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import dts from 'vite-plugin-dts';
+import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    dts({ include: ['src'] })
-  ],
+  plugins: [react(), dts({ include: ['src'] })],
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'MyComponentLib',
       formats: ['es', 'cjs'],
-      fileName: (format) => `index.${format}.js`
+      fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
       external: ['react', 'react-dom', 'react/jsx-runtime'],
       output: {
         globals: {
           react: 'React',
-          'react-dom': 'ReactDOM'
-        }
-      }
-    }
-  }
-})
+          'react-dom': 'ReactDOM',
+        },
+      },
+    },
+  },
+});
 ```
 
 ```json
@@ -755,30 +770,30 @@ export default defineConfig({
 
 6. **ContentHash vs Hash**: In Webpack 5, use `[contenthash]` for cache busting. `[hash]` is based on the entire compilation, meaning all files change hash even if only one file changed. `[contenthash]` only changes when the file's content changes.
 
-7. **Vite VITE_ prefix requirement**: Forgetting the `VITE_` prefix means your environment variable is `undefined` in client code. This is a security feature, not a bug -- it prevents accidental exposure of server secrets.
+7. **Vite VITE\_ prefix requirement**: Forgetting the `VITE_` prefix means your environment variable is `undefined` in client code. This is a security feature, not a bug -- it prevents accidental exposure of server secrets.
 
 8. **Tree shaking babel transforms**: Babel can transform ES modules to CommonJS if `@babel/preset-env` has `modules: "commonjs"` (or `"auto"` in certain configs). This kills tree shaking. Set `modules: false` to preserve ESM syntax for the bundler.
 
 ## Quick Reference
 
-| Tool | Written In | Primary Use | Dev Speed | Build Speed | Ecosystem |
-|---|---|---|---|---|---|
-| Webpack | JavaScript | Applications | Medium | Medium | Largest |
-| Vite | JavaScript + Go (esbuild) | Applications | Fast | Fast | Growing |
-| esbuild | Go | Transpiling/bundling | N/A | Fastest | Small |
-| Rollup | JavaScript | Libraries | N/A | Medium | Good |
-| Turbopack | Rust | Next.js apps | Fastest | Fast | Next.js |
-| SWC | Rust | Transpiling | N/A | Very fast | Growing |
-| Parcel | JavaScript + Rust | Zero-config apps | Fast | Fast | Small |
+| Tool      | Written In                | Primary Use          | Dev Speed | Build Speed | Ecosystem |
+| --------- | ------------------------- | -------------------- | --------- | ----------- | --------- |
+| Webpack   | JavaScript                | Applications         | Medium    | Medium      | Largest   |
+| Vite      | JavaScript + Go (esbuild) | Applications         | Fast      | Fast        | Growing   |
+| esbuild   | Go                        | Transpiling/bundling | N/A       | Fastest     | Small     |
+| Rollup    | JavaScript                | Libraries            | N/A       | Medium      | Good      |
+| Turbopack | Rust                      | Next.js apps         | Fastest   | Fast        | Next.js   |
+| SWC       | Rust                      | Transpiling          | N/A       | Very fast   | Growing   |
+| Parcel    | JavaScript + Rust         | Zero-config apps     | Fast      | Fast        | Small     |
 
-| Task | Webpack | Vite | Rollup |
-|---|---|---|---|
-| Config format | CJS (webpack.config.js) | ESM (vite.config.ts) | ESM (rollup.config.js) |
-| File transforms | Loaders | Plugins (Rollup-compatible) | Plugins |
-| Code splitting | splitChunks + dynamic import | Rollup manualChunks | manualChunks |
-| CSS processing | css-loader + style-loader | Built-in | Plugin |
-| TypeScript | ts-loader or babel | esbuild (dev), Rollup (build) | @rollup/plugin-typescript |
-| Dev server | webpack-dev-server | Built-in | Plugin (rollup-plugin-serve) |
-| HMR | webpack-dev-server | Built-in (native ESM) | N/A |
-| Tree shaking | Yes (production mode) | Yes (via Rollup) | Yes (best) |
-| Source maps | devtool option | build.sourcemap | output.sourcemap |
+| Task            | Webpack                      | Vite                          | Rollup                       |
+| --------------- | ---------------------------- | ----------------------------- | ---------------------------- |
+| Config format   | CJS (webpack.config.js)      | ESM (vite.config.ts)          | ESM (rollup.config.js)       |
+| File transforms | Loaders                      | Plugins (Rollup-compatible)   | Plugins                      |
+| Code splitting  | splitChunks + dynamic import | Rollup manualChunks           | manualChunks                 |
+| CSS processing  | css-loader + style-loader    | Built-in                      | Plugin                       |
+| TypeScript      | ts-loader or babel           | esbuild (dev), Rollup (build) | @rollup/plugin-typescript    |
+| Dev server      | webpack-dev-server           | Built-in                      | Plugin (rollup-plugin-serve) |
+| HMR             | webpack-dev-server           | Built-in (native ESM)         | N/A                          |
+| Tree shaking    | Yes (production mode)        | Yes (via Rollup)              | Yes (best)                   |
+| Source maps     | devtool option               | build.sourcemap               | output.sourcemap             |

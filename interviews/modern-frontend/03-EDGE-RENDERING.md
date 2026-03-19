@@ -29,18 +29,19 @@ Edge nodes are typically small, lightweight runtimes that execute your code at C
 ### Edge Platforms Comparison
 
 **Cloudflare Workers:**
+
 ```javascript
 // Cloudflare Worker -- runs at 300+ edge locations
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/api/user") {
+    if (url.pathname === '/api/user') {
       // Access KV store (globally distributed key-value)
-      const user = await env.USER_KV.get("current-user", "json");
+      const user = await env.USER_KV.get('current-user', 'json');
 
       return new Response(JSON.stringify(user), {
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -51,42 +52,44 @@ export default {
 ```
 
 **Vercel Edge Functions:**
+
 ```typescript
 // middleware.ts or API route with edge runtime
-export const config = { runtime: "edge" };
+export const config = { runtime: 'edge' };
 
 export default async function handler(request: Request) {
-  const country = request.headers.get("x-vercel-ip-country");
-  const city = request.headers.get("x-vercel-ip-city");
+  const country = request.headers.get('x-vercel-ip-country');
+  const city = request.headers.get('x-vercel-ip-city');
 
   // Personalize based on geolocation
   const content = await getLocalizedContent(country);
 
   return new Response(JSON.stringify(content), {
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 ```
 
 **Deno Deploy:**
+
 ```typescript
 // Deno Deploy -- built on Deno runtime, V8 isolates
 Deno.serve(async (request: Request) => {
   const url = new URL(request.url);
 
-  if (url.pathname === "/api/time") {
-    return new Response(
-      JSON.stringify({ time: new Date().toISOString() }),
-      { headers: { "Content-Type": "application/json" } },
-    );
+  if (url.pathname === '/api/time') {
+    return new Response(JSON.stringify({ time: new Date().toISOString() }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   // Serve static files from edge
-  return new Response("Not found", { status: 404 });
+  return new Response('Not found', { status: 404 });
 });
 ```
 
 **AWS Lambda@Edge / CloudFront Functions:**
+
 ```javascript
 // CloudFront Function (lightweight, <1ms execution)
 function handler(event) {
@@ -94,9 +97,9 @@ function handler(event) {
   const headers = request.headers;
 
   // A/B testing at the edge
-  if (!headers.cookie || !headers.cookie.value.includes("ab-test")) {
-    const variant = Math.random() < 0.5 ? "a" : "b";
-    request.headers["x-ab-variant"] = { value: variant };
+  if (!headers.cookie || !headers.cookie.value.includes('ab-test')) {
+    const variant = Math.random() < 0.5 ? 'a' : 'b';
+    request.headers['x-ab-variant'] = { value: variant };
   }
 
   return request;
@@ -141,17 +144,17 @@ Edge (Global V8 Isolates)
 
 ### Key Constraints of Edge Runtimes
 
-| Constraint | Edge | Serverless | Origin |
-|------------|------|-----------|--------|
-| **Runtime** | V8 isolate (Web APIs) | Full Node.js | Full Node.js |
-| **Cold start** | <5ms | 100-500ms | N/A (always warm) |
-| **Max execution** | 10-30s typical | 5-15 min | Unlimited |
-| **Memory** | 128MB typical | 128MB-10GB | Unlimited |
-| **File system** | None | /tmp only | Full |
-| **Native modules** | No (C++ addons) | Yes | Yes |
-| **WebSocket** | Limited | Yes | Yes |
-| **Database** | HTTP-based only | Any | Any |
-| **NPM packages** | Web-compatible only | All | All |
+| Constraint         | Edge                  | Serverless   | Origin            |
+| ------------------ | --------------------- | ------------ | ----------------- |
+| **Runtime**        | V8 isolate (Web APIs) | Full Node.js | Full Node.js      |
+| **Cold start**     | <5ms                  | 100-500ms    | N/A (always warm) |
+| **Max execution**  | 10-30s typical        | 5-15 min     | Unlimited         |
+| **Memory**         | 128MB typical         | 128MB-10GB   | Unlimited         |
+| **File system**    | None                  | /tmp only    | Full              |
+| **Native modules** | No (C++ addons)       | Yes          | Yes               |
+| **WebSocket**      | Limited               | Yes          | Yes               |
+| **Database**       | HTTP-based only       | Any          | Any               |
+| **NPM packages**   | Web-compatible only   | All          | All               |
 
 ### What Works at the Edge
 
@@ -189,7 +192,7 @@ PPR:
 ```tsx
 // app/product/[id]/page.tsx
 
-import { Suspense } from "react";
+import { Suspense } from 'react';
 
 // This component is static -- prerendered at build time
 function ProductHeader({ product }) {
@@ -255,6 +258,7 @@ export default async function ProductPage({ params }) {
 ```
 
 **How PPR works:**
+
 1. At build time, Next.js renders the static parts of the page and stores them as a static HTML shell
 2. The shell includes Suspense fallbacks where dynamic content will go
 3. When a request arrives, the CDN/edge serves the static shell immediately
@@ -267,7 +271,7 @@ Even without PPR, streaming SSR from the edge provides significant performance b
 
 ```tsx
 // Next.js Edge Runtime page
-export const runtime = "edge";
+export const runtime = 'edge';
 
 export default async function DashboardPage() {
   return (
@@ -316,32 +320,34 @@ The edge node starts streaming HTML immediately. As each async component resolve
 
 ```typescript
 // middleware.ts -- runs at the edge for every request
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
 export function middleware(request) {
   const response = NextResponse.next();
 
   // Feature flags at the edge
   const flags = getFeatureFlags(request.cookies);
-  response.headers.set("x-feature-flags", JSON.stringify(flags));
+  response.headers.set('x-feature-flags', JSON.stringify(flags));
 
   // Geolocation-based routing
-  const country = request.geo?.country || "US";
-  if (country === "CN" && !request.nextUrl.pathname.startsWith("/zh")) {
-    return NextResponse.redirect(new URL("/zh" + request.nextUrl.pathname, request.url));
+  const country = request.geo?.country || 'US';
+  if (country === 'CN' && !request.nextUrl.pathname.startsWith('/zh')) {
+    return NextResponse.redirect(
+      new URL('/zh' + request.nextUrl.pathname, request.url)
+    );
   }
 
   // Bot detection
-  const ua = request.headers.get("user-agent") || "";
+  const ua = request.headers.get('user-agent') || '';
   if (isBot(ua)) {
-    response.headers.set("x-is-bot", "true");
+    response.headers.set('x-is-bot', 'true');
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
 ```
 
@@ -363,8 +369,8 @@ export const config = {
 
 ```typescript
 // Using Turso (SQLite at the edge) with Drizzle ORM
-import { drizzle } from "drizzle-orm/libsql";
-import { createClient } from "@libsql/client";
+import { drizzle } from 'drizzle-orm/libsql';
+import { createClient } from '@libsql/client';
 
 const client = createClient({
   url: process.env.TURSO_DATABASE_URL,
@@ -391,7 +397,7 @@ export async function getProduct(id: string) {
 // next.config.ts -- different rendering strategies per route
 const nextConfig = {
   experimental: {
-    ppr: true,  // Enable Partial Prerendering
+    ppr: true, // Enable Partial Prerendering
   },
 };
 
@@ -400,11 +406,11 @@ const nextConfig = {
 
 // Edge-rendered pages: low latency, no cold start
 // app/dashboard/page.tsx
-export const runtime = "edge";
+export const runtime = 'edge';
 
 // Serverless pages: full Node.js for heavy computation
 // app/api/generate-report/route.ts
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 export const maxDuration = 60; // 60 second timeout
 ```
 
@@ -439,6 +445,7 @@ PPR (dynamic streams)      ~100ms (progressive)       ~150ms (progressive)
 ```
 
 **When Edge Makes Sense:**
+
 - Your users are globally distributed
 - Low TTFB is critical (e-commerce, media)
 - Content is personalized but computation is light
@@ -446,6 +453,7 @@ PPR (dynamic streams)      ~100ms (progressive)       ~150ms (progressive)
 - A/B testing or feature flags per request
 
 **When Edge Does NOT Make Sense:**
+
 - Heavy computation (image processing, ML inference)
 - Database-heavy workloads with non-edge-compatible databases
 - Your users are all in one region (use regional serverless)
@@ -530,29 +538,29 @@ The combination of streaming SSR and edge deployment is particularly powerful: t
 
 ## Quick Reference
 
-| Platform | Runtime | Locations | Cold Start | Max Execution | Max Bundle |
-|----------|---------|-----------|------------|---------------|------------|
-| Cloudflare Workers | V8 isolate | 300+ | <5ms | 30s (paid) | 1MB compressed |
-| Vercel Edge Functions | V8 isolate | 30+ | <15ms | 30s | 4MB |
-| Deno Deploy | V8 isolate (Deno) | 35+ | <10ms | 50s | 20MB |
-| AWS Lambda@Edge | Node.js/Python | 200+ | 50-200ms | 30s | 50MB |
-| AWS CloudFront Functions | Lightweight JS | 400+ | <1ms | 1ms | 10KB |
-| Netlify Edge Functions | Deno | 30+ | <10ms | 50s | 20MB |
+| Platform                 | Runtime           | Locations | Cold Start | Max Execution | Max Bundle     |
+| ------------------------ | ----------------- | --------- | ---------- | ------------- | -------------- |
+| Cloudflare Workers       | V8 isolate        | 300+      | <5ms       | 30s (paid)    | 1MB compressed |
+| Vercel Edge Functions    | V8 isolate        | 30+       | <15ms      | 30s           | 4MB            |
+| Deno Deploy              | V8 isolate (Deno) | 35+       | <10ms      | 50s           | 20MB           |
+| AWS Lambda@Edge          | Node.js/Python    | 200+      | 50-200ms   | 30s           | 50MB           |
+| AWS CloudFront Functions | Lightweight JS    | 400+      | <1ms       | 1ms           | 10KB           |
+| Netlify Edge Functions   | Deno              | 30+       | <10ms      | 50s           | 20MB           |
 
-| Next.js Rendering Strategy | When to Use | TTFB | Freshness |
-|---------------------------|------------|------|-----------|
-| Static (SSG) | Content rarely changes | Instant (CDN) | Stale until rebuild |
-| ISR | Content changes periodically | Instant (CDN) | Stale within window |
-| SSR (Node.js) | Complex computation needed | Medium | Always fresh |
-| SSR (Edge) | Needs global low latency | Low | Always fresh |
-| PPR | Mix of static + dynamic | Instant (shell) | Shell cached, dynamic fresh |
+| Next.js Rendering Strategy | When to Use                  | TTFB            | Freshness                   |
+| -------------------------- | ---------------------------- | --------------- | --------------------------- |
+| Static (SSG)               | Content rarely changes       | Instant (CDN)   | Stale until rebuild         |
+| ISR                        | Content changes periodically | Instant (CDN)   | Stale within window         |
+| SSR (Node.js)              | Complex computation needed   | Medium          | Always fresh                |
+| SSR (Edge)                 | Needs global low latency     | Low             | Always fresh                |
+| PPR                        | Mix of static + dynamic      | Instant (shell) | Shell cached, dynamic fresh |
 
-| Edge Database | Type | Global Replication | Best For |
-|--------------|------|-------------------|----------|
-| Cloudflare D1 | SQLite | Yes (read replicas) | Simple queries at edge |
-| Turso / libSQL | SQLite | Yes | Full SQL at edge |
-| PlanetScale | MySQL | Yes | MySQL workloads |
-| Neon | Postgres | Regional | Postgres with HTTP |
-| Upstash Redis | KV/Redis | Yes | Cache, sessions |
-| Cloudflare KV | KV | Yes (eventual) | Config, feature flags |
-| DynamoDB Global | NoSQL | Yes | High-throughput reads |
+| Edge Database   | Type     | Global Replication  | Best For               |
+| --------------- | -------- | ------------------- | ---------------------- |
+| Cloudflare D1   | SQLite   | Yes (read replicas) | Simple queries at edge |
+| Turso / libSQL  | SQLite   | Yes                 | Full SQL at edge       |
+| PlanetScale     | MySQL    | Yes                 | MySQL workloads        |
+| Neon            | Postgres | Regional            | Postgres with HTTP     |
+| Upstash Redis   | KV/Redis | Yes                 | Cache, sessions        |
+| Cloudflare KV   | KV       | Yes (eventual)      | Config, feature flags  |
+| DynamoDB Global | NoSQL    | Yes                 | High-throughput reads  |

@@ -81,23 +81,23 @@
 
 ### 1.2 Service Inventory
 
-| Service | Type | Where | Purpose |
-|---------|------|-------|---------|
-| **suppr-backend** | Java 21 Spring Boot | TKE (api profile) | REST API, SSE streaming, JWT auth |
-| **suppr-consumer** | Java 21 Spring Boot | TKE (consumer profile) | Kafka consumers for translation/research |
-| **suppr-fed** | Next.js 15 | TKE | Admin dashboard at `/dashboard` |
-| **suppr-api** | Java 21 Spring Boot | TKE | Public API gateway with rate limiting |
-| **wilddata-module-pay** | Java 21 Spring Boot | TKE | Payment service (WeChat/Alipay) |
-| **paper-search** | External (another team) | TKE | LLM-based academic document search |
-| **translation-service** | External (another team) | TKE | Multi-language file translation engine |
-| **deep-research** | External (another team) | TKE | Research report generation |
-| **gotenberg** | Docker (3rd-party) | TKE | PDF conversion via LibreOffice/Chromium |
-| **MySQL** | Database | Lightweight Server | Relational data (users, orders, points) |
-| **Redis** | Cache/Pub-Sub | Lightweight Server | JWT, SSE relay, distributed locks, counters |
-| **MongoDB** | Document DB | Lightweight Server | Academic articles, link caches |
-| **Kafka** | Message Queue | Lightweight Server | Async task processing (3 brokers dev, 1 prod port) |
-| **Strapi** | Headless CMS | Lightweight Server | Content management for sharing |
-| **Jenkins** | CI Server | Lightweight Server | Build & deploy pipelines |
+| Service                 | Type                    | Where                  | Purpose                                            |
+| ----------------------- | ----------------------- | ---------------------- | -------------------------------------------------- |
+| **suppr-backend**       | Java 21 Spring Boot     | TKE (api profile)      | REST API, SSE streaming, JWT auth                  |
+| **suppr-consumer**      | Java 21 Spring Boot     | TKE (consumer profile) | Kafka consumers for translation/research           |
+| **suppr-fed**           | Next.js 15              | TKE                    | Admin dashboard at `/dashboard`                    |
+| **suppr-api**           | Java 21 Spring Boot     | TKE                    | Public API gateway with rate limiting              |
+| **wilddata-module-pay** | Java 21 Spring Boot     | TKE                    | Payment service (WeChat/Alipay)                    |
+| **paper-search**        | External (another team) | TKE                    | LLM-based academic document search                 |
+| **translation-service** | External (another team) | TKE                    | Multi-language file translation engine             |
+| **deep-research**       | External (another team) | TKE                    | Research report generation                         |
+| **gotenberg**           | Docker (3rd-party)      | TKE                    | PDF conversion via LibreOffice/Chromium            |
+| **MySQL**               | Database                | Lightweight Server     | Relational data (users, orders, points)            |
+| **Redis**               | Cache/Pub-Sub           | Lightweight Server     | JWT, SSE relay, distributed locks, counters        |
+| **MongoDB**             | Document DB             | Lightweight Server     | Academic articles, link caches                     |
+| **Kafka**               | Message Queue           | Lightweight Server     | Async task processing (3 brokers dev, 1 prod port) |
+| **Strapi**              | Headless CMS            | Lightweight Server     | Content management for sharing                     |
+| **Jenkins**             | CI Server               | Lightweight Server     | Build & deploy pipelines                           |
 
 ---
 
@@ -208,23 +208,23 @@ Each `helm-*` repository has **strict role-based permissions**. Different team m
 
 ### 3.5 Environment Strategy
 
-| Environment | Namespace | Replicas | Purpose |
-|-------------|-----------|----------|---------|
-| **Test** | `test` | 1 | Development testing |
-| **Production** | `production` | 7 (backend) | Live traffic |
-| ~~Demo~~ | ~~demo~~ | ~~1~~ | ~~Deprecated~~ |
+| Environment    | Namespace    | Replicas    | Purpose             |
+| -------------- | ------------ | ----------- | ------------------- |
+| **Test**       | `test`       | 1           | Development testing |
+| **Production** | `production` | 7 (backend) | Live traffic        |
+| ~~Demo~~       | ~~demo~~     | ~~1~~       | ~~Deprecated~~      |
 
 Key differences across environments:
 
-| Config | Test | Production |
-|--------|------|------------|
-| Backend replicas | 1 | 7 |
-| MySQL pool | min=10, max=15 | min=20, max=60 |
-| MongoDB pool | 20 | 100 |
-| Undertow workers | 32 | 128 |
-| Kafka file-translation partitions | 3 | 18 |
-| Kafka deep-research partitions | 3 | 6 |
-| Translation concurrency/node | 3 | 18 |
+| Config                            | Test           | Production     |
+| --------------------------------- | -------------- | -------------- |
+| Backend replicas                  | 1              | 7              |
+| MySQL pool                        | min=10, max=15 | min=20, max=60 |
+| MongoDB pool                      | 20             | 100            |
+| Undertow workers                  | 32             | 128            |
+| Kafka file-translation partitions | 3              | 18             |
+| Kafka deep-research partitions    | 3              | 6              |
+| Translation concurrency/node      | 3              | 18             |
 
 ---
 
@@ -269,6 +269,7 @@ Stage 2: alpine (non-root user nextjs:1001)
 ```
 
 suppr-api additionally configures:
+
 ```bash
 -XX:+HeapDumpOnOutOfMemoryError          # Capture heap dumps
 -XX:HeapDumpPath=/workspace/heapdumps/   # Dump location
@@ -279,6 +280,7 @@ suppr-api additionally configures:
 ### 4.3 Health Checks
 
 All K8s deployments use the same pattern:
+
 ```yaml
 livenessProbe:
   httpGet:
@@ -306,12 +308,12 @@ readinessProbe:
 
 You deploy MySQL, Redis, MongoDB, and Kafka on Tencent Lightweight Servers (self-managed) rather than using Tencent managed database services (TencentDB, TDSQL, etc.). This is a deliberate **cost optimization** for a startup:
 
-| Service | Lightweight Server | Managed Service (Tencent) |
-|---------|-------------------|--------------------------|
-| MySQL | Self-managed on VM | TencentDB for MySQL (~3-5x cost) |
-| Redis | Self-managed on VM | TencentDB for Redis (~2-3x cost) |
+| Service | Lightweight Server | Managed Service (Tencent)        |
+| ------- | ------------------ | -------------------------------- |
+| MySQL   | Self-managed on VM | TencentDB for MySQL (~3-5x cost) |
+| Redis   | Self-managed on VM | TencentDB for Redis (~2-3x cost) |
 | MongoDB | Self-managed on VM | TencentDB for MongoDB (~3x cost) |
-| Kafka | Self-managed on VM | CKafka (~4x cost) |
+| Kafka   | Self-managed on VM | CKafka (~4x cost)                |
 
 **Trade-off**: Lower cost but no automatic backups, failover, patching, or monitoring out of the box.
 
@@ -341,11 +343,11 @@ DevOps Server
 
 ### 6.1 Bucket Strategy
 
-| Bucket | Purpose | Access |
-|--------|---------|--------|
+| Bucket               | Purpose                               | Access                              |
+| -------------------- | ------------------------------------- | ----------------------------------- |
 | Private (production) | User files — translated docs, uploads | Private (signed URLs, 24h validity) |
-| Private (test) | Test environment files | Private (signed URLs) |
-| Public | Avatars, share images | Public read |
+| Private (test)       | Test environment files                | Private (signed URLs)               |
+| Public               | Avatars, share images                 | Public read                         |
 
 ### 6.2 Integration
 
@@ -533,10 +535,10 @@ Store all backups in a **separate COS bucket** with lifecycle rules (30 days ret
 
 Split MongoDB and Kafka per environment:
 
-| Current | Improved |
-|---------|----------|
+| Current                       | Improved                                                 |
+| ----------------------------- | -------------------------------------------------------- |
 | 1 shared MongoDB for all envs | Test MongoDB on test server, Prod MongoDB on prod server |
-| 1 shared Kafka for all envs | Test Kafka on test server, Prod Kafka on prod server |
+| 1 shared Kafka for all envs   | Test Kafka on test server, Prod Kafka on prod server     |
 
 At minimum, use different Kafka ports or separate broker instances. This eliminates the risk of test traffic affecting production.
 
@@ -604,10 +606,19 @@ Improved: Push → Jenkins → Build Image → Auto-deploy to Test
 Switch from plain text to JSON logging:
 
 ```json
-{"timestamp":"2026-02-26T10:30:00","level":"ERROR","logger":"FileTranslateTaskConsumer","message":"Translation failed","uid":"abc123","sessionId":"xyz789","error":"Connection refused"}
+{
+  "timestamp": "2026-02-26T10:30:00",
+  "level": "ERROR",
+  "logger": "FileTranslateTaskConsumer",
+  "message": "Translation failed",
+  "uid": "abc123",
+  "sessionId": "xyz789",
+  "error": "Connection refused"
+}
 ```
 
 This enables:
+
 - CLS (Log Service) structured queries (filter by uid, sessionId, level)
 - Alert rules: "Notify DingTalk if ERROR count > 10 in 5 minutes"
 - Dashboard: Error rate per service over time

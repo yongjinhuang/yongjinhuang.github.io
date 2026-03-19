@@ -79,12 +79,12 @@ def search_right(nums: list[int], target: int) -> int:
 
 ### 1.3 When to Use Each Template
 
-| Goal | Template | Condition | Returns |
-|------|----------|-----------|---------|
-| Find exact match | `left <= right` | `== target` | Index or -1 |
-| First element >= target | `left < right` | `< target -> left = mid+1` | Insertion point |
-| Last element <= target | `left < right` | `<= target -> left = mid+1` | `left - 1` |
-| Minimize x where f(x) is True | `left < right` | `not f(mid) -> left = mid+1` | First True |
+| Goal                          | Template        | Condition                    | Returns         |
+| ----------------------------- | --------------- | ---------------------------- | --------------- |
+| Find exact match              | `left <= right` | `== target`                  | Index or -1     |
+| First element >= target       | `left < right`  | `< target -> left = mid+1`   | Insertion point |
+| Last element <= target        | `left < right`  | `<= target -> left = mid+1`  | `left - 1`      |
+| Minimize x where f(x) is True | `left < right`  | `not f(mid) -> left = mid+1` | First True      |
 
 ### 1.4 Python's bisect Module
 
@@ -454,25 +454,26 @@ def split_array(nums: list[int], k: int) -> int:
 
 ## 4. Common Interview Questions
 
-| # | Problem | Difficulty | Variant | Key Insight |
-|---|---------|-----------|---------|-------------|
-| 1 | Binary Search | Easy | Standard | `left <= right`, shrink by 1 |
-| 2 | First Bad Version | Easy | Left boundary | Find first True |
-| 3 | Search Insert Position | Easy | Left boundary | `bisect_left` equivalent |
-| 4 | Find Peak Element | Medium | Modified search | Compare `mid` with `mid+1` |
-| 5 | Search Rotated Array | Medium | Two-phase | Identify sorted half |
-| 6 | Find Min in Rotated Array | Medium | Inflection point | Compare `mid` with `right` |
-| 7 | Search a 2D Matrix | Medium | Flatten matrix | `mid // n, mid % n` |
-| 8 | Koko Eating Bananas | Medium | Search on answer | Binary search on speed |
-| 9 | Time Based Key-Value Store | Medium | bisect_right | Largest timestamp <= target |
-| 10 | Split Array Largest Sum | Hard | Search on answer | Binary search on max sum |
-| 11 | Median of Two Sorted Arrays | Hard | Partition | Binary search on shorter array |
+| #   | Problem                     | Difficulty | Variant          | Key Insight                    |
+| --- | --------------------------- | ---------- | ---------------- | ------------------------------ |
+| 1   | Binary Search               | Easy       | Standard         | `left <= right`, shrink by 1   |
+| 2   | First Bad Version           | Easy       | Left boundary    | Find first True                |
+| 3   | Search Insert Position      | Easy       | Left boundary    | `bisect_left` equivalent       |
+| 4   | Find Peak Element           | Medium     | Modified search  | Compare `mid` with `mid+1`     |
+| 5   | Search Rotated Array        | Medium     | Two-phase        | Identify sorted half           |
+| 6   | Find Min in Rotated Array   | Medium     | Inflection point | Compare `mid` with `right`     |
+| 7   | Search a 2D Matrix          | Medium     | Flatten matrix   | `mid // n, mid % n`            |
+| 8   | Koko Eating Bananas         | Medium     | Search on answer | Binary search on speed         |
+| 9   | Time Based Key-Value Store  | Medium     | bisect_right     | Largest timestamp <= target    |
+| 10  | Split Array Largest Sum     | Hard       | Search on answer | Binary search on max sum       |
+| 11  | Median of Two Sorted Arrays | Hard       | Partition        | Binary search on shorter array |
 
 ---
 
 ## 5. Gotchas
 
 ### 5.1 Off-by-One Errors
+
 - **`left <= right` vs `left < right`**: Use `<=` when searching for exact match. Use `<` when
   searching for a boundary (left/right template).
 - **`right = mid` vs `right = mid - 1`**: With `left < right`, use `right = mid`. With
@@ -481,23 +482,27 @@ def split_array(nums: list[int], k: int) -> int:
   integers natively, but this is critical in Java/C++.
 
 ### 5.2 Infinite Loops
+
 - If `left = mid` (not `mid + 1`) with `while left < right`, you risk infinite loops when
   `left == right - 1` and the condition keeps choosing `left = mid`.
 - **Fix**: Use `mid = left + (right - left + 1) // 2` (ceiling division) when `left = mid`.
 
 ### 5.3 Rotated Array Gotchas
+
 - **Duplicates change complexity**: With duplicates, worst case is O(n) because you can't
   determine the sorted half.
 - **Compare with right, not left**: For `findMin`, comparing `nums[mid]` with `nums[right]`
   handles the non-rotated case correctly.
 
 ### 5.4 Binary Search on Answer Gotchas
+
 - **Search space**: Make sure `left` and `right` cover all possible answers.
 - **Monotonic condition**: The condition must be monotonic (once True, stays True; or once
   False, stays False). Otherwise binary search doesn't work.
 - **Feasibility function**: Implement it correctly. This is where most bugs are.
 
 ### 5.5 Python-Specific
+
 - `//` is floor division (rounds toward negative infinity). For positive numbers, same as
   truncation. For negative, `-7 // 2 = -4` (not -3).
 - `bisect_left` and `bisect_right` assume the list is sorted. They return insertion points.
@@ -507,13 +512,13 @@ def split_array(nums: list[int], k: int) -> int:
 
 ## 6. Quick Reference
 
-| Pattern | When to Use | Time | Template | Key Decision |
-|---------|-------------|------|----------|-------------|
-| Standard search | Find exact target | O(log n) | `left <= right` | `== target` returns |
-| Left boundary | First occurrence / insert position | O(log n) | `left < right` | `nums[mid] < target -> left = mid+1` |
-| Right boundary | Last occurrence | O(log n) | `left < right` | `nums[mid] <= target -> left = mid+1` |
-| Rotated array | Search in rotated sorted | O(log n) | `left <= right` | Identify sorted half |
-| Find minimum | Min in rotated array | O(log n) | `left < right` | Compare mid with right |
-| Search on answer | Min/max satisfying condition | O(n * log range) | `left < right` | Feasibility check function |
-| 2D matrix search | Sorted matrix | O(log(m*n)) | `left <= right` | `mid // n, mid % n` |
-| Median of two arrays | Two sorted arrays | O(log min(m,n)) | Partition-based | Binary search on partition |
+| Pattern              | When to Use                        | Time              | Template        | Key Decision                          |
+| -------------------- | ---------------------------------- | ----------------- | --------------- | ------------------------------------- |
+| Standard search      | Find exact target                  | O(log n)          | `left <= right` | `== target` returns                   |
+| Left boundary        | First occurrence / insert position | O(log n)          | `left < right`  | `nums[mid] < target -> left = mid+1`  |
+| Right boundary       | Last occurrence                    | O(log n)          | `left < right`  | `nums[mid] <= target -> left = mid+1` |
+| Rotated array        | Search in rotated sorted           | O(log n)          | `left <= right` | Identify sorted half                  |
+| Find minimum         | Min in rotated array               | O(log n)          | `left < right`  | Compare mid with right                |
+| Search on answer     | Min/max satisfying condition       | O(n \* log range) | `left < right`  | Feasibility check function            |
+| 2D matrix search     | Sorted matrix                      | O(log(m\*n))      | `left <= right` | `mid // n, mid % n`                   |
+| Median of two arrays | Two sorted arrays                  | O(log min(m,n))   | Partition-based | Binary search on partition            |

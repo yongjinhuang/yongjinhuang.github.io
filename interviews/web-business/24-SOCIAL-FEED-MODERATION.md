@@ -92,26 +92,26 @@ Certain content is legal but restricted -- alcohol advertising, gambling, mature
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Fan-out on write** | Pre-computing feeds by pushing new posts into all followers' inboxes at publish time |
-| **Fan-out on read** | Building feeds on demand by pulling and merging posts from followed accounts at read time |
-| **Social graph** | The network of follow/friend relationships between users, stored as a directed or undirected graph |
-| **Engagement signal** | Any user interaction (like, comment, share, dwell time) used as input to the ranking algorithm |
-| **Content ranking** | Ordering feed items by predicted relevance rather than pure chronology |
-| **UGC (User-Generated Content)** | Any content created by users rather than the platform itself |
-| **NSFW detection** | Automated classification of sexually explicit or graphic content, typically using computer vision models |
-| **Shadow banning** | Reducing a user's content visibility without notifying them. Their posts appear normal to them but are hidden from others |
-| **Age-gating** | Restricting content access based on the user's stated age, required by law in many jurisdictions for adult content |
-| **PhotoDNA / perceptual hashing** | Technology that creates a fingerprint of an image to match against databases of known illegal content |
-| **Community guidelines** | The platform's published rules defining what content is and isn't allowed |
-| **Content velocity** | The rate at which a piece of content accumulates engagement, used to detect viral spread |
-| **Trust and Safety (T&S)** | The team and systems responsible for keeping a platform safe from abuse, illegal content, and harmful behavior |
-| **Creator/Influencer tier** | Special account classifications with different distribution rules, monetization access, and moderation priority |
-| **Dwell time** | How long a user looks at a piece of content before scrolling past, used as an implicit engagement signal |
-| **Candidate generation** | The first stage of ranking that narrows millions of possible posts to a manageable set using cheap heuristics |
-| **Coordinated inauthentic behavior** | Networks of fake accounts acting together to amplify content, manipulate trends, or harass targets |
-| **Content appeal** | A formal request by a user to have a moderation decision reviewed by a different reviewer or panel |
+| Term                                 | What It Means                                                                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| **Fan-out on write**                 | Pre-computing feeds by pushing new posts into all followers' inboxes at publish time                                      |
+| **Fan-out on read**                  | Building feeds on demand by pulling and merging posts from followed accounts at read time                                 |
+| **Social graph**                     | The network of follow/friend relationships between users, stored as a directed or undirected graph                        |
+| **Engagement signal**                | Any user interaction (like, comment, share, dwell time) used as input to the ranking algorithm                            |
+| **Content ranking**                  | Ordering feed items by predicted relevance rather than pure chronology                                                    |
+| **UGC (User-Generated Content)**     | Any content created by users rather than the platform itself                                                              |
+| **NSFW detection**                   | Automated classification of sexually explicit or graphic content, typically using computer vision models                  |
+| **Shadow banning**                   | Reducing a user's content visibility without notifying them. Their posts appear normal to them but are hidden from others |
+| **Age-gating**                       | Restricting content access based on the user's stated age, required by law in many jurisdictions for adult content        |
+| **PhotoDNA / perceptual hashing**    | Technology that creates a fingerprint of an image to match against databases of known illegal content                     |
+| **Community guidelines**             | The platform's published rules defining what content is and isn't allowed                                                 |
+| **Content velocity**                 | The rate at which a piece of content accumulates engagement, used to detect viral spread                                  |
+| **Trust and Safety (T&S)**           | The team and systems responsible for keeping a platform safe from abuse, illegal content, and harmful behavior            |
+| **Creator/Influencer tier**          | Special account classifications with different distribution rules, monetization access, and moderation priority           |
+| **Dwell time**                       | How long a user looks at a piece of content before scrolling past, used as an implicit engagement signal                  |
+| **Candidate generation**             | The first stage of ranking that narrows millions of possible posts to a manageable set using cheap heuristics             |
+| **Coordinated inauthentic behavior** | Networks of fake accounts acting together to amplify content, manipulate trends, or harass targets                        |
+| **Content appeal**                   | A formal request by a user to have a moderation decision reviewed by a different reviewer or panel                        |
 
 ## Common Patterns
 
@@ -167,29 +167,29 @@ New accounts are the highest risk for spam and abuse. Apply stricter moderation 
 
 ## Quick Reference
 
-| Decision | Recommendation |
-|----------|---------------|
-| Feed architecture for a new product | Start with fan-out on write (simpler), add read-path merging when you hit scale |
-| First moderation system | Hash matching + off-the-shelf NSFW API + user reporting queue with manual review |
-| Ranking algorithm starting point | Chronological with engagement-based re-ranking (likes + comments + recency) |
-| Shadow banning | Avoid it. Use explicit restrictions with notifications and appeal paths |
-| Viral content risk | Slow distribution of unreviewed fast-spreading content until moderation clears it |
-| Creator/influencer program | Build analytics and monetization only after core feed and moderation are solid |
-| Moderation staffing | Budget for human reviewers from day one, not as a future expense |
-| Legal compliance | Consult legal for DMCA, DSA, age-gating, and local content laws before launch |
+| Decision                            | Recommendation                                                                    |
+| ----------------------------------- | --------------------------------------------------------------------------------- |
+| Feed architecture for a new product | Start with fan-out on write (simpler), add read-path merging when you hit scale   |
+| First moderation system             | Hash matching + off-the-shelf NSFW API + user reporting queue with manual review  |
+| Ranking algorithm starting point    | Chronological with engagement-based re-ranking (likes + comments + recency)       |
+| Shadow banning                      | Avoid it. Use explicit restrictions with notifications and appeal paths           |
+| Viral content risk                  | Slow distribution of unreviewed fast-spreading content until moderation clears it |
+| Creator/influencer program          | Build analytics and monetization only after core feed and moderation are solid    |
+| Moderation staffing                 | Budget for human reviewers from day one, not as a future expense                  |
+| Legal compliance                    | Consult legal for DMCA, DSA, age-gating, and local content laws before launch     |
 
-| Scale Milestone | What Changes |
-|----------------|-------------|
-| 0 - 10K users | Chronological feed, basic spam filters, manual moderation by founders |
-| 10K - 1M users | Add ranking algorithm, ML-based moderation, hire dedicated T&S team |
-| 1M - 100M users | Hybrid fan-out, multi-layer moderation pipeline, creator programs, regional compliance |
-| 100M+ users | Custom infrastructure (social graph DB, real-time ML serving), independent oversight, global legal teams |
+| Scale Milestone | What Changes                                                                                             |
+| --------------- | -------------------------------------------------------------------------------------------------------- |
+| 0 - 10K users   | Chronological feed, basic spam filters, manual moderation by founders                                    |
+| 10K - 1M users  | Add ranking algorithm, ML-based moderation, hire dedicated T&S team                                      |
+| 1M - 100M users | Hybrid fan-out, multi-layer moderation pipeline, creator programs, regional compliance                   |
+| 100M+ users     | Custom infrastructure (social graph DB, real-time ML serving), independent oversight, global legal teams |
 
-| Moderation Metric | What It Tells You |
-|-------------------|-------------------|
-| Precision (false positive rate) | How often you wrongly remove legitimate content |
-| Recall (false negative rate) | How often harmful content slips through |
-| Median review time | How fast your moderation pipeline processes flagged content |
-| Appeal overturn rate | How often human reviewers reverse automated decisions |
-| User report volume | Whether community trust in self-policing is healthy |
-| Viral content response time | How quickly you catch and review fast-spreading harmful content |
+| Moderation Metric               | What It Tells You                                               |
+| ------------------------------- | --------------------------------------------------------------- |
+| Precision (false positive rate) | How often you wrongly remove legitimate content                 |
+| Recall (false negative rate)    | How often harmful content slips through                         |
+| Median review time              | How fast your moderation pipeline processes flagged content     |
+| Appeal overturn rate            | How often human reviewers reverse automated decisions           |
+| User report volume              | Whether community trust in self-policing is healthy             |
+| Viral content response time     | How quickly you catch and review fast-spreading harmful content |

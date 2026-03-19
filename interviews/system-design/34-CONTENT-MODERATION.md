@@ -40,37 +40,37 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Pre-publish Screening | Automatically screen content before it becomes publicly visible |
-| 2 | ML Classification | Run content through text, image, video, and audio classifiers |
-| 3 | Hash-Based Matching | Match against known bad content databases (PhotoDNA, pHash) |
-| 4 | Human Review Queue | Route borderline content to human reviewers with priority ranking |
-| 5 | Policy Engine | Apply rule-based and ML-hybrid policies, support policy versioning |
-| 6 | User Reporting | Allow users to report content with categories; score report quality |
-| 7 | Content Actions | Remove, reduce distribution, add label/warning, age-gate, demonetize |
-| 8 | Appeals Workflow | Users can appeal decisions; multi-tier escalation to policy committee |
-| 9 | Live Stream Moderation | Monitor live streams with delay buffer and kill switch capability |
-| 10 | Abuse Pattern Detection | Detect coordinated inauthentic behavior, spam networks, ban evasion |
-| 11 | Transparency Reporting | Export removal stats, false positive rates, appeal outcomes |
-| 12 | LLM-Powered Decisions | Use large language models for nuanced, context-dependent policy calls |
+| #   | Requirement             | Description                                                           |
+| --- | ----------------------- | --------------------------------------------------------------------- |
+| 1   | Pre-publish Screening   | Automatically screen content before it becomes publicly visible       |
+| 2   | ML Classification       | Run content through text, image, video, and audio classifiers         |
+| 3   | Hash-Based Matching     | Match against known bad content databases (PhotoDNA, pHash)           |
+| 4   | Human Review Queue      | Route borderline content to human reviewers with priority ranking     |
+| 5   | Policy Engine           | Apply rule-based and ML-hybrid policies, support policy versioning    |
+| 6   | User Reporting          | Allow users to report content with categories; score report quality   |
+| 7   | Content Actions         | Remove, reduce distribution, add label/warning, age-gate, demonetize  |
+| 8   | Appeals Workflow        | Users can appeal decisions; multi-tier escalation to policy committee |
+| 9   | Live Stream Moderation  | Monitor live streams with delay buffer and kill switch capability     |
+| 10  | Abuse Pattern Detection | Detect coordinated inauthentic behavior, spam networks, ban evasion   |
+| 11  | Transparency Reporting  | Export removal stats, false positive rates, appeal outcomes           |
+| 12  | LLM-Powered Decisions   | Use large language models for nuanced, context-dependent policy calls |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Pre-publish screening latency | < 30 seconds end-to-end |
-| 2 | ML inference latency | < 500ms per content item |
-| 3 | Hash matching latency | < 100ms |
-| 4 | Availability | 99.99% (< 1 hour downtime/year) |
-| 5 | False positive rate | < 1% (legitimate content incorrectly removed) |
-| 6 | Human review SLA (standard) | 24 hours |
-| 7 | Human review SLA (urgent) | 1 hour |
-| 8 | Throughput | 500M posts/day screened |
-| 9 | Report processing | 10M user reports/day |
-| 10 | Hash database size | 1B stored content hashes |
-| 11 | Reviewer capacity | 50K human reviewers globally |
-| 12 | Auto-action accuracy | > 99% precision at auto-remove threshold |
+| #   | Requirement                   | Target                                        |
+| --- | ----------------------------- | --------------------------------------------- |
+| 1   | Pre-publish screening latency | < 30 seconds end-to-end                       |
+| 2   | ML inference latency          | < 500ms per content item                      |
+| 3   | Hash matching latency         | < 100ms                                       |
+| 4   | Availability                  | 99.99% (< 1 hour downtime/year)               |
+| 5   | False positive rate           | < 1% (legitimate content incorrectly removed) |
+| 6   | Human review SLA (standard)   | 24 hours                                      |
+| 7   | Human review SLA (urgent)     | 1 hour                                        |
+| 8   | Throughput                    | 500M posts/day screened                       |
+| 9   | Report processing             | 10M user reports/day                          |
+| 10  | Hash database size            | 1B stored content hashes                      |
+| 11  | Reviewer capacity             | 50K human reviewers globally                  |
+| 12  | Auto-action accuracy          | > 99% precision at auto-remove threshold      |
 
 ### Scale Estimation
 
@@ -586,12 +586,14 @@ Content Submitted
 ### Pipeline Stage Details
 
 **Stage 1: Ingestion and Pre-screening**
+
 - Content is written to raw object storage (S3/GCS) before any processing
 - A unique `content_id` is assigned immediately
 - Upload service publishes `content.submitted` event to Kafka
 - Content is held in "pending" state — not yet visible to other users
 
 **Stage 2: Hash Matching (< 100ms)**
+
 - Parallel lookup against:
   - SHA-256 exact match (known bad files)
   - pHash (perceptual hash for near-duplicate images)
@@ -601,16 +603,19 @@ Content Submitted
 - Hash match on terrorism triggers rejection + referral to GIFCT database
 
 **Stage 3: ML Classification (< 500ms per classifier)**
+
 - Classifiers run in parallel for applicable content types
 - Each classifier returns a confidence score [0.0 - 1.0] per violation category
 - Results aggregated into a composite safety score
 
 **Stage 4: Policy Engine Evaluation**
+
 - Policy rules applied on top of ML scores
 - Rules can override ML (e.g., regional legal requirements)
 - Result: auto-approve, auto-reject, or route to human review
 
 **Stage 5: Action Execution**
+
 - Actions applied atomically: status update + notification + distribution change
 - All actions recorded in immutable audit log
 
@@ -814,13 +819,13 @@ The confidence tier system translates ML scores into moderation decisions, balan
 
 ### Tier Definitions
 
-| Tier | Condition | Action | Rationale |
-|------|-----------|--------|-----------|
-| Auto-Approve | Safe confidence > 0.95 | Publish immediately | 95% of content; low risk of error |
-| Auto-Reject (standard) | Violation score > 0.99 | Remove + notify creator | Very high precision required |
-| Auto-Reject (critical) | CSAM/terrorism score > 0.90 | Remove + law enforcement + hash | Safety over false positives |
-| Human Review | Gray zone 0.05–0.95 | Queue for human | Uncertain; human judgment needed |
-| Expedited Human | Gray zone + high reach content | Priority queue (1hr SLA) | Viral content needs faster review |
+| Tier                   | Condition                      | Action                          | Rationale                         |
+| ---------------------- | ------------------------------ | ------------------------------- | --------------------------------- |
+| Auto-Approve           | Safe confidence > 0.95         | Publish immediately             | 95% of content; low risk of error |
+| Auto-Reject (standard) | Violation score > 0.99         | Remove + notify creator         | Very high precision required      |
+| Auto-Reject (critical) | CSAM/terrorism score > 0.90    | Remove + law enforcement + hash | Safety over false positives       |
+| Human Review           | Gray zone 0.05–0.95            | Queue for human                 | Uncertain; human judgment needed  |
+| Expedited Human        | Gray zone + high reach content | Priority queue (1hr SLA)        | Viral content needs faster review |
 
 ### Priority Scoring Formula for Human Review
 
@@ -1739,51 +1744,51 @@ Review Queue: Partition by priority_score range + region
 
 ### False Positives vs. False Negatives
 
-| Concern | False Positives (Over-removal) | False Negatives (Under-removal) |
-|---------|-------------------------------|----------------------------------|
-| Definition | Legitimate content removed | Harmful content remains up |
-| User impact | Chilling effect on speech | Harm to targets, platform trust |
-| Business impact | Creator exodus, press criticism | Advertiser boycotts, legal liability |
-| Measurement | FPR = FP / (FP + TN) | FNR = FN / (FN + TP) |
-| Mitigation | Lower auto-reject threshold | Lower human review threshold |
-| Tension | Tightening one loosens the other | — |
+| Concern         | False Positives (Over-removal)   | False Negatives (Under-removal)      |
+| --------------- | -------------------------------- | ------------------------------------ |
+| Definition      | Legitimate content removed       | Harmful content remains up           |
+| User impact     | Chilling effect on speech        | Harm to targets, platform trust      |
+| Business impact | Creator exodus, press criticism  | Advertiser boycotts, legal liability |
+| Measurement     | FPR = FP / (FP + TN)             | FNR = FN / (FN + TP)                 |
+| Mitigation      | Lower auto-reject threshold      | Lower human review threshold         |
+| Tension         | Tightening one loosens the other | —                                    |
 
 **Decision: Optimize for low FPR on auto-reject (< 0.1%), accept higher human review volume**
 
 ### Automation vs. Human Review Tradeoff
 
-| Dimension | Full Automation | Full Human Review |
-|-----------|----------------|-------------------|
-| Speed | Milliseconds | Hours to days |
-| Cost | $ | $$$$$ |
-| Accuracy | Good for clear cases | Better for nuance |
-| Scalability | Unlimited | 50K reviewers cap |
-| Bias | ML model bias | Human cultural bias |
-| Consistency | Very consistent | Variable |
+| Dimension   | Full Automation      | Full Human Review   |
+| ----------- | -------------------- | ------------------- |
+| Speed       | Milliseconds         | Hours to days       |
+| Cost        | $                    | $$$$$               |
+| Accuracy    | Good for clear cases | Better for nuance   |
+| Scalability | Unlimited            | 50K reviewers cap   |
+| Bias        | ML model bias        | Human cultural bias |
+| Consistency | Very consistent      | Variable            |
 
 **Decision: 95%+ automated for clear cases, humans for gray zone; tiered by severity**
 
 ### Pre-publish vs. Post-publish
 
-| Approach | Pre-publish Screening | Post-publish + Reactive |
-|----------|-----------------------|------------------------|
-| Safety | Higher (prevents harm) | Lower (harm may occur) |
-| Latency | 30s delay before visible | Immediate publish |
-| User experience | Frustrating for creators | Better creator experience |
-| Scale | Must handle all traffic | Only handle flagged |
-| Suitable for | High-risk categories, CSAM | Low-risk content types |
+| Approach        | Pre-publish Screening      | Post-publish + Reactive   |
+| --------------- | -------------------------- | ------------------------- |
+| Safety          | Higher (prevents harm)     | Lower (harm may occur)    |
+| Latency         | 30s delay before visible   | Immediate publish         |
+| User experience | Frustrating for creators   | Better creator experience |
+| Scale           | Must handle all traffic    | Only handle flagged       |
+| Suitable for    | High-risk categories, CSAM | Low-risk content types    |
 
 **Decision: Pre-publish for video/image (higher risk), post-publish for most text (lower risk)**
 
 ### Centralized vs. Federated Moderation
 
-| Approach | Centralized | Federated (community) |
-|----------|-------------|----------------------|
-| Consistency | Uniform standards globally | Local norms respected |
-| Scale | Needs large team | Distributed effort |
-| Accountability | Single point of responsibility | Diffuse accountability |
-| Speed | Slower (central bottleneck) | Faster (local action) |
-| Abuse potential | Platform overreach | Community harassment |
+| Approach        | Centralized                    | Federated (community)  |
+| --------------- | ------------------------------ | ---------------------- |
+| Consistency     | Uniform standards globally     | Local norms respected  |
+| Scale           | Needs large team               | Distributed effort     |
+| Accountability  | Single point of responsibility | Diffuse accountability |
+| Speed           | Slower (central bottleneck)    | Faster (local action)  |
+| Abuse potential | Platform overreach             | Community harassment   |
 
 **Decision: Centralized for illegal content (non-negotiable), federated for community standards (subreddits, groups)**
 

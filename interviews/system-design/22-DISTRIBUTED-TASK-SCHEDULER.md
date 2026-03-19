@@ -28,29 +28,29 @@
 
 ### Functional Requirements
 
-| Category | Requirements |
-|----------|-------------|
-| **Workflow Definition** | Define workflows as code (Temporal) or DAG configs (Airflow); support sequential, parallel, and conditional task execution; version workflows |
-| **Task Scheduling** | One-time tasks, cron-based recurring tasks, event-triggered tasks, dependency-based triggers |
-| **Task Execution** | Execute arbitrary code units (Python, Go, Java, etc.); pass inputs/outputs between tasks; support task timeouts |
-| **Dependency Resolution** | DAG-based dependency graph; tasks wait for upstream tasks to complete; fan-out and fan-in patterns |
-| **Retry & Error Handling** | Configurable retry policies (fixed, exponential backoff, jitter); dead letter queue for permanently failed tasks |
-| **Monitoring & Observability** | Real-time task status; workflow execution history; task logs; alerting on failures |
-| **Workflow Control** | Pause, resume, cancel, and manually retry workflows; backfill historical runs |
-| **Multi-tenancy** | Namespace/tenant isolation; resource quotas per tenant; RBAC |
+| Category                       | Requirements                                                                                                                                  |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Workflow Definition**        | Define workflows as code (Temporal) or DAG configs (Airflow); support sequential, parallel, and conditional task execution; version workflows |
+| **Task Scheduling**            | One-time tasks, cron-based recurring tasks, event-triggered tasks, dependency-based triggers                                                  |
+| **Task Execution**             | Execute arbitrary code units (Python, Go, Java, etc.); pass inputs/outputs between tasks; support task timeouts                               |
+| **Dependency Resolution**      | DAG-based dependency graph; tasks wait for upstream tasks to complete; fan-out and fan-in patterns                                            |
+| **Retry & Error Handling**     | Configurable retry policies (fixed, exponential backoff, jitter); dead letter queue for permanently failed tasks                              |
+| **Monitoring & Observability** | Real-time task status; workflow execution history; task logs; alerting on failures                                                            |
+| **Workflow Control**           | Pause, resume, cancel, and manually retry workflows; backfill historical runs                                                                 |
+| **Multi-tenancy**              | Namespace/tenant isolation; resource quotas per tenant; RBAC                                                                                  |
 
 ### Non-Functional Requirements
 
-| Requirement | Target |
-|-------------|--------|
-| Throughput | 10,000+ tasks/minute (167 tasks/sec) |
-| Schedule-to-dispatch latency | < 1 second |
-| Availability | 99.99% (52 minutes downtime/year) |
-| Durability | Zero task loss; all state persisted before execution |
-| Exactly-once semantics | Critical workflows must not execute twice |
-| Scalability | Horizontal scaling of workers; 10K concurrent workflows |
-| Task execution latency | < 100ms overhead added by scheduler |
-| Audit trail | Immutable history of all workflow/task state transitions |
+| Requirement                  | Target                                                   |
+| ---------------------------- | -------------------------------------------------------- |
+| Throughput                   | 10,000+ tasks/minute (167 tasks/sec)                     |
+| Schedule-to-dispatch latency | < 1 second                                               |
+| Availability                 | 99.99% (52 minutes downtime/year)                        |
+| Durability                   | Zero task loss; all state persisted before execution     |
+| Exactly-once semantics       | Critical workflows must not execute twice                |
+| Scalability                  | Horizontal scaling of workers; 10K concurrent workflows  |
+| Task execution latency       | < 100ms overhead added by scheduler                      |
+| Audit trail                  | Immutable history of all workflow/task state transitions |
 
 ### Scale Estimates
 
@@ -455,6 +455,7 @@ CREATE TABLE namespaces (
 ### DAG Structure and Topological Sort
 
 A workflow is modeled as a Directed Acyclic Graph (DAG) where:
+
 - **Nodes** = individual tasks/activities
 - **Edges** = dependencies (A -> B means B depends on A)
 
@@ -566,20 +567,20 @@ Total wall-clock time: 25s (vs ~50s sequential)
 
 ### Framework Comparison: Temporal vs Airflow vs Celery
 
-| Feature | Temporal | Apache Airflow | Celery |
-|---------|----------|---------------|--------|
-| **Paradigm** | Workflow-as-code (durable execution) | DAG-as-config (Python) | Task queue with chains |
-| **Workflow definition** | Code (Go, Python, Java, TS) | Python DAG files | Python decorators |
-| **State management** | Event sourcing (replay) | DB-backed (task instances) | Stateless (results in Redis/DB) |
-| **Durability** | Built-in (event history) | Requires careful DB setup | Best-effort unless configured |
-| **Exactly-once** | Yes (via idempotent SDK) | Partial (idempotency not automatic) | No (at-least-once by default) |
-| **Long-running workflows** | Excellent (months/years) | Poor (scheduler loop restarts) | Poor (task timeouts) |
-| **Dynamic task generation** | Native (dynamic activities) | Limited (dynamic task mapping in 2.3+) | Yes (chains, chords) |
-| **Visibility/UI** | Temporal Web | Airflow Web UI | Flower (basic) |
-| **Versioning** | Built-in workflow versioning | Limited | None |
-| **Scale (tasks/sec)** | 10K+ | ~100-500 | 10K+ (with proper broker) |
-| **Operational complexity** | Medium (managed: Temporal Cloud) | High (scheduler, workers, DB) | Low-Medium |
-| **Best for** | Microservice orchestration, long-running business processes | Batch ETL pipelines, data engineering | Simple async task processing |
+| Feature                     | Temporal                                                    | Apache Airflow                         | Celery                          |
+| --------------------------- | ----------------------------------------------------------- | -------------------------------------- | ------------------------------- |
+| **Paradigm**                | Workflow-as-code (durable execution)                        | DAG-as-config (Python)                 | Task queue with chains          |
+| **Workflow definition**     | Code (Go, Python, Java, TS)                                 | Python DAG files                       | Python decorators               |
+| **State management**        | Event sourcing (replay)                                     | DB-backed (task instances)             | Stateless (results in Redis/DB) |
+| **Durability**              | Built-in (event history)                                    | Requires careful DB setup              | Best-effort unless configured   |
+| **Exactly-once**            | Yes (via idempotent SDK)                                    | Partial (idempotency not automatic)    | No (at-least-once by default)   |
+| **Long-running workflows**  | Excellent (months/years)                                    | Poor (scheduler loop restarts)         | Poor (task timeouts)            |
+| **Dynamic task generation** | Native (dynamic activities)                                 | Limited (dynamic task mapping in 2.3+) | Yes (chains, chords)            |
+| **Visibility/UI**           | Temporal Web                                                | Airflow Web UI                         | Flower (basic)                  |
+| **Versioning**              | Built-in workflow versioning                                | Limited                                | None                            |
+| **Scale (tasks/sec)**       | 10K+                                                        | ~100-500                               | 10K+ (with proper broker)       |
+| **Operational complexity**  | Medium (managed: Temporal Cloud)                            | High (scheduler, workers, DB)          | Low-Medium                      |
+| **Best for**                | Microservice orchestration, long-running business processes | Batch ETL pipelines, data engineering  | Simple async task processing    |
 
 ### Workflow-as-Code (Temporal) vs DAG-as-Config (Airflow)
 
@@ -1656,11 +1657,11 @@ spec:
   maxReplicaCount: 50
   cooldownPeriod: 60
   triggers:
-  - type: redis
-    metadata:
-      address: redis-cluster:6379
-      listName: "tasks:order-fulfillment:normal"
-      listLength: "10"        # scale up when > 10 tasks per replica
+    - type: redis
+      metadata:
+        address: redis-cluster:6379
+        listName: 'tasks:order-fulfillment:normal'
+        listLength: '10' # scale up when > 10 tasks per replica
 ```
 
 ### Database Partitioning
@@ -1694,19 +1695,19 @@ $$;
 
 ## 17. Comparison: Build vs Buy
 
-| Dimension | Build Custom | Temporal (managed) | Airflow (self-hosted) | Celery |
-|-----------|-------------|-------------------|----------------------|--------|
-| **Setup time** | 6-12 months | Hours (Temporal Cloud) | 1-2 weeks | Days |
-| **Operational cost** | High (infra team) | Medium (SaaS fees) | High (infra + ops) | Low-Medium |
-| **Exactly-once** | Must build yourself | Built-in | Manual effort | No |
-| **Durable execution** | Complex to implement | Core feature | Not supported | No |
-| **Long-running workflows** | Possible | Excellent (years) | Poor | Poor |
-| **Visibility** | Custom build | Temporal Web UI | Airflow UI | Flower |
-| **Cost at scale** | High initially, lower long-term | ~$0.25/1M workflow actions | Infra cost | Very low |
-| **DAG/ETL workflows** | Custom | Possible but verbose | Excellent | Limited |
-| **Microservice orchestration** | Custom | Excellent | Awkward | Limited |
-| **Multi-language workers** | Custom | Go, Java, Python, TS, .NET, PHP | Python-only | Python-only |
-| **When to choose** | Unique requirements, full control | Microservice workflows, reliability | Batch ETL, data pipelines | Simple async tasks |
+| Dimension                      | Build Custom                      | Temporal (managed)                  | Airflow (self-hosted)     | Celery             |
+| ------------------------------ | --------------------------------- | ----------------------------------- | ------------------------- | ------------------ |
+| **Setup time**                 | 6-12 months                       | Hours (Temporal Cloud)              | 1-2 weeks                 | Days               |
+| **Operational cost**           | High (infra team)                 | Medium (SaaS fees)                  | High (infra + ops)        | Low-Medium         |
+| **Exactly-once**               | Must build yourself               | Built-in                            | Manual effort             | No                 |
+| **Durable execution**          | Complex to implement              | Core feature                        | Not supported             | No                 |
+| **Long-running workflows**     | Possible                          | Excellent (years)                   | Poor                      | Poor               |
+| **Visibility**                 | Custom build                      | Temporal Web UI                     | Airflow UI                | Flower             |
+| **Cost at scale**              | High initially, lower long-term   | ~$0.25/1M workflow actions          | Infra cost                | Very low           |
+| **DAG/ETL workflows**          | Custom                            | Possible but verbose                | Excellent                 | Limited            |
+| **Microservice orchestration** | Custom                            | Excellent                           | Awkward                   | Limited            |
+| **Multi-language workers**     | Custom                            | Go, Java, Python, TS, .NET, PHP     | Python-only               | Python-only        |
+| **When to choose**             | Unique requirements, full control | Microservice workflows, reliability | Batch ETL, data pipelines | Simple async tasks |
 
 ---
 
@@ -1736,24 +1737,24 @@ $$;
 
 ### Workflow-as-Code vs DAG-as-Config
 
-| Aspect | Workflow-as-Code (Temporal) | DAG-as-Config (Airflow) |
-|--------|---------------------------|------------------------|
-| **Flexibility** | Full programming language power | Limited to DAG operators |
-| **Testing** | Unit test with standard tools | Harder to unit test |
-| **Learning curve** | Higher (new programming model) | Lower (Python config) |
-| **Dynamic workflows** | Native (loops, conditionals, recursion) | Limited |
-| **Versioning** | Built-in workflow versioning API | Manual (DAG file management) |
-| **Determinism requirement** | Strict (replay-based) | None |
+| Aspect                      | Workflow-as-Code (Temporal)             | DAG-as-Config (Airflow)      |
+| --------------------------- | --------------------------------------- | ---------------------------- |
+| **Flexibility**             | Full programming language power         | Limited to DAG operators     |
+| **Testing**                 | Unit test with standard tools           | Harder to unit test          |
+| **Learning curve**          | Higher (new programming model)          | Lower (Python config)        |
+| **Dynamic workflows**       | Native (loops, conditionals, recursion) | Limited                      |
+| **Versioning**              | Built-in workflow versioning API        | Manual (DAG file management) |
+| **Determinism requirement** | Strict (replay-based)                   | None                         |
 
 ### Key Design Trade-offs
 
-| Decision | Option A | Option B | Recommendation |
-|----------|----------|----------|----------------|
-| Task queue backend | Redis (lower latency) | Kafka (higher durability) | Redis for tasks < 1MB; Kafka for event-driven triggers |
-| Scheduler HA | Single leader (simple) | Active-active with sharding | Single leader + fast failover for < 100K schedules |
-| State storage | PostgreSQL (ACID) | Cassandra (scale) | PostgreSQL up to 50K concurrent workflows; Cassandra beyond |
-| Worker polling | Short poll (1s) | Long poll (20s) | Long poll: reduces DB load by 20x |
-| History storage | Relational DB | Append-only log (Kafka/S3) | Append-only log for Temporal-style replay |
+| Decision           | Option A               | Option B                    | Recommendation                                              |
+| ------------------ | ---------------------- | --------------------------- | ----------------------------------------------------------- |
+| Task queue backend | Redis (lower latency)  | Kafka (higher durability)   | Redis for tasks < 1MB; Kafka for event-driven triggers      |
+| Scheduler HA       | Single leader (simple) | Active-active with sharding | Single leader + fast failover for < 100K schedules          |
+| State storage      | PostgreSQL (ACID)      | Cassandra (scale)           | PostgreSQL up to 50K concurrent workflows; Cassandra beyond |
+| Worker polling     | Short poll (1s)        | Long poll (20s)             | Long poll: reduces DB load by 20x                           |
+| History storage    | Relational DB          | Append-only log (Kafka/S3)  | Append-only log for Temporal-style replay                   |
 
 ---
 
@@ -1762,6 +1763,7 @@ $$;
 ### Q: How do you prevent duplicate task execution?
 
 **A:** Three layers of defense:
+
 1. **Idempotency keys**: Every task has a unique `task_token`. Workers check for existing `SUCCESS` records before executing.
 2. **Database constraints**: `UNIQUE(namespace_id, workflow_id)` prevents duplicate workflow starts.
 3. **Optimistic locking**: Update task status atomically: `UPDATE tasks SET status='RUNNING' WHERE id=$1 AND status='SCHEDULED'`. If 0 rows updated, another worker claimed it.
@@ -1773,6 +1775,7 @@ $$;
 ### Q: How do you handle a task that takes longer than expected?
 
 **A:** Three mechanisms:
+
 1. **Heartbeat extension**: Worker sends periodic heartbeats to extend the task deadline. If heartbeats stop, the task is timed out after `heartbeat_timeout`.
 2. **Execution timeout**: Hard cap on total execution time; task is killed and retried or failed.
 3. **Async tasks**: For very long operations, use async task pattern -- worker returns immediately with a callback URL, external system calls back when done (Temporal's `wait_for_signal`).
@@ -1780,6 +1783,7 @@ $$;
 ### Q: How do you scale to 100K tasks/sec?
 
 **A:**
+
 - **Partition task queues** by `(task_type, namespace)` -- each queue scales independently.
 - **Shard the scheduler** by workflow namespace or ID hash range.
 - **Use Kafka instead of Redis** for task queues at this scale (Kafka partition consumers = dedicated worker groups).
@@ -1789,6 +1793,7 @@ $$;
 ### Q: How do you implement workflow search/visibility?
 
 **A:** Dual-write pattern:
+
 1. All workflow state changes write to **PostgreSQL** (source of truth).
 2. An async stream (Debezium CDC) indexes workflow attributes into **Elasticsearch**.
 3. Search API queries Elasticsearch for filters like `status = FAILED AND started_at > 7d ago`.
@@ -1798,6 +1803,7 @@ $$;
 ### Q: How do you handle the Airflow scheduler being a single point of failure?
 
 **A:**
+
 - **Airflow 2.6+ High Availability**: Multiple scheduler processes using distributed locks (Postgres advisory locks or database row locking) to coordinate without stepping on each other.
 - **Leader election**: Each scheduler tries to acquire a lock on each DAG. First to acquire runs the scheduling loop for that DAG.
 - **Database as coordination layer**: Since Airflow's scheduler loop queries the DB to find tasks to run, multiple schedulers can run simultaneously -- they use `SELECT FOR UPDATE SKIP LOCKED` to claim DagRuns without double-processing.
@@ -1806,6 +1812,7 @@ $$;
 ### Q: What's the difference between Temporal's workflow history and a traditional event log?
 
 **A:** Temporal's history is a **deterministic replay log** -- not just an audit log. Key differences:
+
 - It's the **ground truth for workflow state** (not a secondary audit log).
 - It enables **exact replay**: given the history, you can reconstruct the exact workflow state at any point.
 - It captures **both commands and responses**: `TASK_SCHEDULED`, `TASK_STARTED`, `TASK_COMPLETED` with full inputs/outputs.
@@ -1815,6 +1822,7 @@ $$;
 ### Q: How do you implement fair scheduling across tenants without starvation?
 
 **A:** **Weighted Fair Queuing (WFQ)**:
+
 - Each namespace has a `weight` proportional to their SLA tier (e.g., paid=10, free=1).
 - Track `virtual finish time` per namespace: `vft += task_cost / weight`.
 - Always pick the task with the smallest `vft` across all namespaces.
@@ -1824,6 +1832,7 @@ $$;
 ### Q: How does Celery compare to Temporal for microservice orchestration?
 
 **A:** Celery is a task queue, not a workflow orchestrator:
+
 - **Celery**: Enqueue individual tasks; use `chains` and `chords` for simple sequencing. No native saga support, no durable execution, best-effort delivery unless configured carefully with `acks_late=True` and idempotent tasks.
 - **Temporal**: Workflow-centric; handles multi-step orchestration, error propagation, compensation, and long-running state natively.
 - For microservice orchestration with distributed transactions, Temporal is far superior. Celery shines for simple fire-and-forget async tasks like sending emails or generating thumbnails.
@@ -1831,6 +1840,7 @@ $$;
 ### Q: How would you implement a distributed cron that doesn't fire duplicate runs?
 
 **A:**
+
 1. **Leader election**: Only the leader node fires cron triggers. Standbys are idle but ready to take over within 5-10 seconds via etcd watch.
 2. **Idempotent trigger records**: Before starting a workflow, insert a record into a `schedule_runs` table with `UNIQUE(schedule_id, scheduled_at)`. If insert fails (duplicate), skip.
 3. **Workflow ID includes timestamp**: `workflow_id = f"{schedule_id}-{scheduled_at_epoch}"`. Since `workflow_id` is unique per namespace, attempting to start a duplicate is a no-op.

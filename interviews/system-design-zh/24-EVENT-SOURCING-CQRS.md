@@ -6,33 +6,33 @@
 
 ### 功能需求
 
-| # | 需求 | 备注 |
-|---|------|------|
-| 1 | 接受修改 aggregate 状态的 command | CreateOrder, AddItem, PayOrder, CancelOrder |
-| 2 | 将每个状态变更持久化为不可变 event | Append-only event log |
-| 3 | 通过重放 event 重建当前状态 | 不直接存储可变状态 |
-| 4 | 从读优化的 projection 提供查询服务 | 独立的查询端 (CQRS) |
-| 5 | 支持 event replay 来重建任意 projection | 历史和新的 projection |
-| 6 | 在 aggregate 级别执行 optimistic concurrency | 每个 aggregate 一个 version number |
-| 7 | 向下游消费者发布 event | Event streaming / pub-sub |
-| 8 | 支持 snapshot 优化 | 避免在大型 aggregate 上重放所有 event |
-| 9 | 通过 Saga 协调分布式事务 | 长时间运行的 process manager |
-| 10 | 支持 event schema 演进 | 向后兼容的 event 版本控制 |
+| #   | 需求                                         | 备注                                        |
+| --- | -------------------------------------------- | ------------------------------------------- |
+| 1   | 接受修改 aggregate 状态的 command            | CreateOrder, AddItem, PayOrder, CancelOrder |
+| 2   | 将每个状态变更持久化为不可变 event           | Append-only event log                       |
+| 3   | 通过重放 event 重建当前状态                  | 不直接存储可变状态                          |
+| 4   | 从读优化的 projection 提供查询服务           | 独立的查询端 (CQRS)                         |
+| 5   | 支持 event replay 来重建任意 projection      | 历史和新的 projection                       |
+| 6   | 在 aggregate 级别执行 optimistic concurrency | 每个 aggregate 一个 version number          |
+| 7   | 向下游消费者发布 event                       | Event streaming / pub-sub                   |
+| 8   | 支持 snapshot 优化                           | 避免在大型 aggregate 上重放所有 event       |
+| 9   | 通过 Saga 协调分布式事务                     | 长时间运行的 process manager                |
+| 10  | 支持 event schema 演进                       | 向后兼容的 event 版本控制                   |
 
 ### 非功能需求
 
-| # | 需求 | 目标 |
-|---|------|------|
-| 1 | 写入延迟 (event append) | < 10ms p99 |
-| 2 | 读取延迟 (projected view) | < 50ms p99 |
-| 3 | Event 吞吐量 | 100,000 events/sec |
-| 4 | 持久性 | 零 event 丢失 (at-least-once delivery) |
-| 5 | 写侧一致性 | 强一致性 (每个 aggregate 线性化) |
-| 6 | 读侧一致性 | 最终一致性 (可接受读取延迟 < 1s) |
-| 7 | 可用性 | 99.99% 正常运行时间 |
-| 8 | 可扩展性 | 读侧水平扩展 |
-| 9 | 可审计性 | 完整历史永久保留 |
-| 10 | 幂等性 | 读侧 exactly-once event 处理 |
+| #   | 需求                      | 目标                                   |
+| --- | ------------------------- | -------------------------------------- |
+| 1   | 写入延迟 (event append)   | < 10ms p99                             |
+| 2   | 读取延迟 (projected view) | < 50ms p99                             |
+| 3   | Event 吞吐量              | 100,000 events/sec                     |
+| 4   | 持久性                    | 零 event 丢失 (at-least-once delivery) |
+| 5   | 写侧一致性                | 强一致性 (每个 aggregate 线性化)       |
+| 6   | 读侧一致性                | 最终一致性 (可接受读取延迟 < 1s)       |
+| 7   | 可用性                    | 99.99% 正常运行时间                    |
+| 8   | 可扩展性                  | 读侧水平扩展                           |
+| 9   | 可审计性                  | 完整历史永久保留                       |
+| 10  | 幂等性                    | 读侧 exactly-once event 处理           |
 
 ### 范围之外
 
@@ -660,6 +660,7 @@ CQRS（Command Query Responsibility Segregation，命令查询职责分离）将
 ```
 
 **Command Model��为一致性而规范化）**
+
 ```
   Aggregate root 执行所有不变量。
   复杂对象图，但仅在处理 command 时查询。
@@ -667,6 +668,7 @@ CQRS（Command Query Responsibility Segregation，命令查询职责分离）将
 ```
 
 **Query Model（为性能而反规范化）**
+
 ```
   扁平的、查询优化的结构。
   同一数据的多个视图用于不同场景。

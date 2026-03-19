@@ -250,9 +250,9 @@ function flatDeep(arr) {
 }
 
 // Tests
-flat([1, [2, [3, [4]]]], 1);    // [1, 2, [3, [4]]]
-flat([1, [2, [3, [4]]]], 2);    // [1, 2, 3, [4]]
-flatDeep([1, [2, [3, [4]]]]);   // [1, 2, 3, 4]
+flat([1, [2, [3, [4]]]], 1); // [1, 2, [3, [4]]]
+flat([1, [2, [3, [4]]]], 2); // [1, 2, 3, [4]]
+flatDeep([1, [2, [3, [4]]]]); // [1, 2, 3, 4]
 ```
 
 ---
@@ -346,7 +346,9 @@ function onMessage(data) {
 }
 
 emitter.on('message', onMessage);
-emitter.once('connect', () => { /* runs once */ });
+emitter.once('connect', () => {
+  /* runs once */
+});
 emitter.emit('message', { text: 'hello' });
 emitter.off('message', onMessage);
 ```
@@ -389,13 +391,11 @@ function promiseAll(promises) {
 }
 
 // Tests
-promiseAll([
-  Promise.resolve(1),
-  Promise.resolve(2),
-  Promise.resolve(3),
-]).then((results) => {
-  // [1, 2, 3]
-});
+promiseAll([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)]).then(
+  (results) => {
+    // [1, 2, 3]
+  }
+);
 
 promiseAll([
   Promise.resolve(1),
@@ -475,17 +475,17 @@ function add(a, b, c) {
 }
 
 const curriedAdd = curry(add);
-curriedAdd(1)(2)(3);       // 6
-curriedAdd(1, 2)(3);       // 6
-curriedAdd(1)(2, 3);       // 6
-curriedAdd(1, 2, 3);       // 6
+curriedAdd(1)(2)(3); // 6
+curriedAdd(1, 2)(3); // 6
+curriedAdd(1)(2, 3); // 6
+curriedAdd(1, 2, 3); // 6
 
 // Practical: reusable utilities
 const multiply = curry((a, b) => a * b);
 const double = multiply(2);
 const triple = multiply(3);
-double(5);  // 10
-triple(5);  // 15
+double(5); // 10
+triple(5); // 15
 ```
 
 **Variant with placeholder support**:
@@ -652,17 +652,10 @@ function diff(oldTree, newTree) {
     }
 
     // Diff children
-    const maxLen = Math.max(
-      oldNode.children.length,
-      newNode.children.length
-    );
+    const maxLen = Math.max(oldNode.children.length, newNode.children.length);
 
     for (let i = 0; i < maxLen; i++) {
-      walk(
-        oldNode.children[i],
-        newNode.children[i],
-        `${path}.children[${i}]`
-      );
+      walk(oldNode.children[i], newNode.children[i], `${path}.children[${i}]`);
     }
   }
 
@@ -737,12 +730,16 @@ function renderToDOM(vnode) {
 }
 
 // Test
-const oldTree = createElement('div', { class: 'app' },
+const oldTree = createElement(
+  'div',
+  { class: 'app' },
   createElement('h1', {}, 'Hello'),
   createElement('p', {}, 'World')
 );
 
-const newTree = createElement('div', { class: 'app updated' },
+const newTree = createElement(
+  'div',
+  { class: 'app updated' },
   createElement('h1', {}, 'Hello!'),
   createElement('span', {}, 'New element')
 );
@@ -838,7 +835,7 @@ watchEffect(() => {
 
 const doubled = computed(() => state.count * 2);
 
-state.count = 5;  // Triggers only the counter effect, doubled updates
+state.count = 5; // Triggers only the counter effect, doubled updates
 state.name = 'Bob'; // Triggers only the greeting effect
 ```
 
@@ -929,7 +926,9 @@ function useInfiniteScroll(fetchPage) {
       setIsLoading(false);
     });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [page, fetchPage]);
 
   return { items, isLoading, hasMore, sentinelRef };
@@ -937,17 +936,17 @@ function useInfiniteScroll(fetchPage) {
 
 // Usage
 function ItemList() {
-  const { items, isLoading, sentinelRef } = useInfiniteScroll(
-    async (page) => {
-      const res = await fetch(`/api/items?page=${page}`);
-      const data = await res.json();
-      return { items: data.items, hasMore: data.hasNext };
-    }
-  );
+  const { items, isLoading, sentinelRef } = useInfiniteScroll(async (page) => {
+    const res = await fetch(`/api/items?page=${page}`);
+    const data = await res.json();
+    return { items: data.items, hasMore: data.hasNext };
+  });
 
   return (
     <div>
-      {items.map((item) => <ItemCard key={item.id} item={item} />)}
+      {items.map((item) => (
+        <ItemCard key={item.id} item={item} />
+      ))}
       <div ref={sentinelRef} />
       {isLoading && <Spinner />}
     </div>
@@ -966,13 +965,7 @@ function createDraggable(element, options = {}) {
   let isDragging = false;
   let startX, startY, initialLeft, initialTop;
 
-  const {
-    onDragStart,
-    onDrag,
-    onDragEnd,
-    handle,
-    bounds,
-  } = options;
+  const { onDragStart, onDrag, onDragEnd, handle, bounds } = options;
 
   const dragHandle = handle ? element.querySelector(handle) : element;
 
@@ -1011,8 +1004,14 @@ function createDraggable(element, options = {}) {
     if (bounds) {
       const boundRect = bounds.getBoundingClientRect();
       const elRect = element.getBoundingClientRect();
-      newLeft = Math.max(boundRect.left, Math.min(newLeft, boundRect.right - elRect.width));
-      newTop = Math.max(boundRect.top, Math.min(newTop, boundRect.bottom - elRect.height));
+      newLeft = Math.max(
+        boundRect.left,
+        Math.min(newLeft, boundRect.right - elRect.width)
+      );
+      newTop = Math.max(
+        boundRect.top,
+        Math.min(newTop, boundRect.bottom - elRect.height)
+      );
     }
 
     element.style.left = `${newLeft}px`;
@@ -1104,7 +1103,12 @@ function createSortableList(container) {
 Full-featured autocomplete with keyboard navigation, debounced search, and accessibility.
 
 ```jsx
-function Autocomplete({ fetchSuggestions, onSelect, placeholder, debounceMs = 300 }) {
+function Autocomplete({
+  fetchSuggestions,
+  onSelect,
+  placeholder,
+  debounceMs = 300,
+}) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -1204,7 +1208,10 @@ function Autocomplete({ fetchSuggestions, onSelect, placeholder, debounceMs = 30
   // Close on outside click
   useEffect(() => {
     function handleClickOutside(e) {
-      if (!inputRef.current?.contains(e.target) && !listRef.current?.contains(e.target)) {
+      if (
+        !inputRef.current?.contains(e.target) &&
+        !listRef.current?.contains(e.target)
+      ) {
         setIsOpen(false);
       }
     }
@@ -1226,7 +1233,9 @@ function Autocomplete({ fetchSuggestions, onSelect, placeholder, debounceMs = 30
         role="combobox"
         aria-expanded={isOpen}
         aria-controls={listboxId}
-        aria-activedescendant={activeIndex >= 0 ? `option-${activeIndex}` : undefined}
+        aria-activedescendant={
+          activeIndex >= 0 ? `option-${activeIndex}` : undefined
+        }
         aria-autocomplete="list"
       />
 
@@ -1399,12 +1408,23 @@ function Modal({ isOpen, onClose, title, children }) {
           overflow: 'auto',
         }}
       >
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <header
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <h2 id="modal-title">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Close modal"
-            style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+            }}
           >
             x
           </button>
@@ -1461,11 +1481,20 @@ function App() {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>Open Modal</button>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Confirm Action">
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Confirm Action"
+      >
         <p>Are you sure you want to proceed?</p>
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
           <button onClick={() => setIsOpen(false)}>Cancel</button>
-          <button onClick={() => { handleConfirm(); setIsOpen(false); }}>
+          <button
+            onClick={() => {
+              handleConfirm();
+              setIsOpen(false);
+            }}
+          >
             Confirm
           </button>
         </div>
@@ -1523,20 +1552,20 @@ function App() {
 
 ## Quick Reference
 
-| Implementation | Key Technique | Common Pitfall |
-|---------------|---------------|----------------|
-| Debounce | clearTimeout + setTimeout | Not preserving `this` context |
-| Throttle | Date.now comparison + trailing call | Missing trailing execution |
-| Deep Clone | WeakMap for circular refs | Missing Date, RegExp, Map, Set |
-| Flat Array | Recursive reduce with depth | Stack overflow on deep nesting |
-| Event Emitter | Map of event -> listener arrays | Memory leaks from unremoved listeners |
-| Promise.all | Counter + results array by index | Not wrapping non-promise values |
-| Promise.race | First .then wins | Empty array never settles |
-| Curry | Recursive closure checking arity | Not supporting partial application |
-| Memoize | Map with serialized key | Object key serialization failures |
-| Virtual DOM Diff | Recursive tree walk + patches | Not handling keyed lists |
-| Reactive System | Proxy get/set + dependency tracking | Nested object reactivity |
-| Infinite Scroll | IntersectionObserver + sentinel | Race conditions on rapid scroll |
-| Drag and Drop | mousedown/move/up lifecycle | Missing touch/pointer events |
-| Autocomplete | Debounced fetch + keyboard nav | Missing ARIA attributes |
-| Modal Focus Trap | Tab/Shift+Tab interception | Not restoring focus on close |
+| Implementation   | Key Technique                       | Common Pitfall                        |
+| ---------------- | ----------------------------------- | ------------------------------------- |
+| Debounce         | clearTimeout + setTimeout           | Not preserving `this` context         |
+| Throttle         | Date.now comparison + trailing call | Missing trailing execution            |
+| Deep Clone       | WeakMap for circular refs           | Missing Date, RegExp, Map, Set        |
+| Flat Array       | Recursive reduce with depth         | Stack overflow on deep nesting        |
+| Event Emitter    | Map of event -> listener arrays     | Memory leaks from unremoved listeners |
+| Promise.all      | Counter + results array by index    | Not wrapping non-promise values       |
+| Promise.race     | First .then wins                    | Empty array never settles             |
+| Curry            | Recursive closure checking arity    | Not supporting partial application    |
+| Memoize          | Map with serialized key             | Object key serialization failures     |
+| Virtual DOM Diff | Recursive tree walk + patches       | Not handling keyed lists              |
+| Reactive System  | Proxy get/set + dependency tracking | Nested object reactivity              |
+| Infinite Scroll  | IntersectionObserver + sentinel     | Race conditions on rapid scroll       |
+| Drag and Drop    | mousedown/move/up lifecycle         | Missing touch/pointer events          |
+| Autocomplete     | Debounced fetch + keyboard nav      | Missing ARIA attributes               |
+| Modal Focus Trap | Tab/Shift+Tab interception          | Not restoring focus on close          |

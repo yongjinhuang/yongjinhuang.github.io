@@ -31,6 +31,7 @@ Problem occurs. Which layer?
 ```
 
 **Debugging workflow:**
+
 1. What is the symptom? (crash, slow, unreachable, wrong output)
 2. Which layer is involved? (app, config, network, storage, resources, daemon)
 3. Use the right tool for that layer
@@ -216,15 +217,15 @@ $ docker compose stats
 
 **What the columns mean:**
 
-| Column | Description | Notes |
-|--------|-------------|-------|
-| CPU % | CPU usage relative to host | 200% = 2 full CPUs |
-| MEM USAGE | Current memory (RSS + cache) | Includes page cache |
-| MEM LIMIT | Memory limit (cgroup) | Unlimited if not set |
-| MEM % | Usage / Limit | Watch for approaching 100% |
-| NET I/O | Network traffic (in / out) | Since container start |
-| BLOCK I/O | Disk reads / writes | Since container start |
-| PIDS | Number of processes | Watch for growth (fork bomb, leak) |
+| Column    | Description                  | Notes                              |
+| --------- | ---------------------------- | ---------------------------------- |
+| CPU %     | CPU usage relative to host   | 200% = 2 full CPUs                 |
+| MEM USAGE | Current memory (RSS + cache) | Includes page cache                |
+| MEM LIMIT | Memory limit (cgroup)        | Unlimited if not set               |
+| MEM %     | Usage / Limit                | Watch for approaching 100%         |
+| NET I/O   | Network traffic (in / out)   | Since container start              |
+| BLOCK I/O | Disk reads / writes          | Since container start              |
+| PIDS      | Number of processes          | Watch for growth (fork bomb, leak) |
 
 ---
 
@@ -762,6 +763,7 @@ Docker modifies `/etc/hosts`, `/etc/resolv.conf`, and `/etc/hostname` for every 
 ### 15.9 Build Cache Debug
 
 BuildKit does not show which layer caused a cache miss by default. Enable verbose output:
+
 ```bash
 $ BUILDKIT_PROGRESS=plain docker build .
 ```
@@ -781,33 +783,43 @@ $ BUILDKIT_PROGRESS=plain docker build .
 Systematic approach:
 
 1. **Check restart count and exit code:**
+
    ```bash
    docker inspect --format '{{.RestartCount}} {{.State.ExitCode}}' myapp
    ```
+
    Exit code tells you why: 0 = clean exit, 1 = app error, 137 = OOM/SIGKILL, 139 = segfault.
 
 2. **Check logs for the crash:**
+
    ```bash
    docker logs --tail 50 myapp
    ```
+
    Look for error messages, stack traces, missing configuration.
 
 3. **Check if OOM killed:**
+
    ```bash
    docker inspect --format '{{.State.OOMKilled}}' myapp
    ```
+
    Also check `dmesg | grep -i oom`. If OOM, either the memory limit is too low or the app has a leak.
 
 4. **Check events for the pattern:**
+
    ```bash
    docker events --filter container=myapp --since 30m
    ```
+
    Look for die/start cycles and whether OOM events precede them.
 
 5. **Start the container interactively to reproduce:**
+
    ```bash
    docker run -it --entrypoint /bin/sh myapp
    ```
+
    Then run the application manually to see the error in real-time.
 
 6. **Check resource limits:** `docker stats` to see if the container is hitting CPU or memory ceilings.
@@ -823,15 +835,19 @@ Several approaches:
 1. **Use `docker debug` (Docker Desktop feature):** `docker debug myapp` injects a debugging shell into the container.
 
 2. **Use a sidecar debug container** sharing the same namespaces:
+
    ```bash
    docker run --rm -it --pid=container:myapp --net=container:myapp nicolaka/netshoot
    ```
+
    This gives you a full toolkit (bash, curl, tcpdump, strace) while operating in the same network and process namespace.
 
 3. **Use nsenter from the host:**
+
    ```bash
    nsenter -t $(docker inspect --format '{{.State.Pid}}' myapp) -n -p -m /bin/bash
    ```
+
    This uses host-installed tools inside the container's namespaces.
 
 4. **Examine from outside:** `docker logs`, `docker inspect`, `docker stats`, and `docker diff` all work without a shell inside the container.
@@ -849,29 +865,37 @@ Work from inside out:
 1. **Is the container running?** `docker ps | grep myapp`
 
 2. **Is the application listening?**
+
    ```bash
    docker exec myapp ss -tlnp
    ```
+
    Check that it is listening on `0.0.0.0:<port>`, not `127.0.0.1:<port>`. If bound to localhost, it only accepts connections from inside the container.
 
 3. **Is the port published?**
+
    ```bash
    docker port myapp
    ```
+
    No output means no port mapping. Need `-p host:container`.
 
 4. **Can you reach it from the host?**
+
    ```bash
    curl http://localhost:8080
    ```
 
 5. **Check iptables rules:**
+
    ```bash
    sudo iptables -t nat -L DOCKER -n -v
    ```
+
    Look for the DNAT rule mapping host port to container IP.
 
 6. **Check the docker-proxy:**
+
    ```bash
    ps aux | grep docker-proxy
    ```
@@ -889,18 +913,23 @@ Work from inside out:
 1. **Get current usage:** `docker stats --no-stream myapp` shows MEM USAGE vs LIMIT.
 
 2. **Distinguish real usage from cache:** The memory number includes page cache. Check the actual breakdown:
+
    ```bash
    cat /sys/fs/cgroup/system.slice/docker-<id>.scope/memory.stat
    ```
+
    `anon` is application memory, `file` is page cache (reclaimable).
 
 3. **Check for memory leaks:** Monitor RSS over time:
+
    ```bash
    docker exec myapp cat /proc/1/status | grep VmRSS
    ```
+
    If it grows continuously without leveling off, there is a leak.
 
 4. **Application-level profiling:** Use language-specific tools:
+
    - Node.js: `--inspect` flag + Chrome DevTools heap snapshot
    - Python: `tracemalloc`, `memory_profiler`
    - Java: `jmap -heap`, JFR, VisualVM
@@ -919,22 +948,27 @@ Work from inside out:
 1. **Check build context size:** The "Sending build context" line tells you how much data is transferred. If it is hundreds of MB, create or fix `.dockerignore` to exclude `.git`, `node_modules`, test data, etc.
 
 2. **Enable BuildKit verbose output:**
+
    ```bash
    BUILDKIT_PROGRESS=plain docker build .
    ```
+
    This shows timing for every step and whether each layer was cached.
 
 3. **Identify cache misses:** Look for steps that should be cached but are rebuilding. Common cause: `COPY . .` early in the Dockerfile invalidates cache when any file changes. Reorder to copy dependency files first, install, then copy source.
 
 4. **Use cache mounts:**
+
    ```dockerfile
    RUN --mount=type=cache,target=/root/.npm npm ci
    ```
+
    This persists the package manager cache between builds.
 
 5. **Check for unnecessary layer creation:** Multiple `RUN apt-get` commands create multiple layers. Combine into one.
 
 6. **Enable remote caching for CI:**
+
    ```bash
    docker buildx build --cache-from type=registry,ref=myapp:cache --cache-to type=registry,ref=myapp:cache .
    ```
@@ -945,20 +979,20 @@ Work from inside out:
 
 ## 17. Quick Reference
 
-| Tool | When to Use | Key Flags |
-|------|------------|-----------|
-| `docker logs` | First step for any issue | `-f` (follow), `--tail`, `--since` |
-| `docker exec` | Run commands inside container | `-it` (interactive), `-u` (user) |
-| `docker inspect` | Container config and state | `--format '{{.State.Status}}'` |
-| `docker stats` | Real-time resource monitoring | `--no-stream`, `--format` |
-| `docker events` | Daemon event stream | `--filter`, `--since` |
-| `docker diff` | Filesystem changes | (no notable flags) |
-| `docker top` | Process list inside container | (like `ps` inside container) |
-| `docker cp` | Copy files in/out of container | `container:/path ./local` |
-| `nsenter` | Enter container namespaces | `-t PID -n -p -m` |
-| `strace` | System call tracing | `-p PID -f -e trace=network` |
-| `tcpdump` | Packet capture | `-i eth0 -nn port 80` |
-| `netshoot` | Full network debug toolkit | `--network container:target` |
-| `dive` | Image layer analysis | Interactive TUI |
-| `docker system df` | Disk usage overview | `-v` for details |
-| `docker builder prune` | Clean build cache | `-a` for all cache |
+| Tool                   | When to Use                    | Key Flags                          |
+| ---------------------- | ------------------------------ | ---------------------------------- |
+| `docker logs`          | First step for any issue       | `-f` (follow), `--tail`, `--since` |
+| `docker exec`          | Run commands inside container  | `-it` (interactive), `-u` (user)   |
+| `docker inspect`       | Container config and state     | `--format '{{.State.Status}}'`     |
+| `docker stats`         | Real-time resource monitoring  | `--no-stream`, `--format`          |
+| `docker events`        | Daemon event stream            | `--filter`, `--since`              |
+| `docker diff`          | Filesystem changes             | (no notable flags)                 |
+| `docker top`           | Process list inside container  | (like `ps` inside container)       |
+| `docker cp`            | Copy files in/out of container | `container:/path ./local`          |
+| `nsenter`              | Enter container namespaces     | `-t PID -n -p -m`                  |
+| `strace`               | System call tracing            | `-p PID -f -e trace=network`       |
+| `tcpdump`              | Packet capture                 | `-i eth0 -nn port 80`              |
+| `netshoot`             | Full network debug toolkit     | `--network container:target`       |
+| `dive`                 | Image layer analysis           | Interactive TUI                    |
+| `docker system df`     | Disk usage overview            | `-v` for details                   |
+| `docker builder prune` | Clean build cache              | `-a` for all cache                 |

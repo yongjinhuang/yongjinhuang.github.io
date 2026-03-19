@@ -6,33 +6,33 @@
 
 ### Functional Requirements
 
-| # | Requirement | Notes |
-|---|-------------|-------|
-| 1 | Accept commands that mutate aggregate state | CreateOrder, AddItem, PayOrder, CancelOrder |
-| 2 | Persist every state change as an immutable event | Append-only event log |
-| 3 | Reconstruct current state by replaying events | No mutable state stored directly |
-| 4 | Serve queries from read-optimized projections | Separate query side (CQRS) |
-| 5 | Support event replay to rebuild any projection | Historical and new projections |
-| 6 | Enforce aggregate-level optimistic concurrency | Version number per aggregate |
-| 7 | Publish events to downstream consumers | Event streaming / pub-sub |
-| 8 | Support snapshot optimization | Avoid replaying all events on large aggregates |
-| 9 | Coordinate distributed transactions via Sagas | Long-running process managers |
-| 10 | Support event schema evolution | Backward-compatible event versioning |
+| #   | Requirement                                      | Notes                                          |
+| --- | ------------------------------------------------ | ---------------------------------------------- |
+| 1   | Accept commands that mutate aggregate state      | CreateOrder, AddItem, PayOrder, CancelOrder    |
+| 2   | Persist every state change as an immutable event | Append-only event log                          |
+| 3   | Reconstruct current state by replaying events    | No mutable state stored directly               |
+| 4   | Serve queries from read-optimized projections    | Separate query side (CQRS)                     |
+| 5   | Support event replay to rebuild any projection   | Historical and new projections                 |
+| 6   | Enforce aggregate-level optimistic concurrency   | Version number per aggregate                   |
+| 7   | Publish events to downstream consumers           | Event streaming / pub-sub                      |
+| 8   | Support snapshot optimization                    | Avoid replaying all events on large aggregates |
+| 9   | Coordinate distributed transactions via Sagas    | Long-running process managers                  |
+| 10  | Support event schema evolution                   | Backward-compatible event versioning           |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Write latency (event append) | < 10ms p99 |
-| 2 | Read latency (projected views) | < 50ms p99 |
-| 3 | Event throughput | 100,000 events/sec |
-| 4 | Durability | Zero event loss (at-least-once delivery) |
-| 5 | Write-side consistency | Strong (linearizable per aggregate) |
-| 6 | Read-side consistency | Eventual (acceptable read lag < 1s) |
-| 7 | Availability | 99.99% uptime |
-| 8 | Scalability | Horizontal scaling on read side |
-| 9 | Auditability | Full history preserved indefinitely |
-| 10 | Idempotency | Exactly-once event processing on read side |
+| #   | Requirement                    | Target                                     |
+| --- | ------------------------------ | ------------------------------------------ |
+| 1   | Write latency (event append)   | < 10ms p99                                 |
+| 2   | Read latency (projected views) | < 50ms p99                                 |
+| 3   | Event throughput               | 100,000 events/sec                         |
+| 4   | Durability                     | Zero event loss (at-least-once delivery)   |
+| 5   | Write-side consistency         | Strong (linearizable per aggregate)        |
+| 6   | Read-side consistency          | Eventual (acceptable read lag < 1s)        |
+| 7   | Availability                   | 99.99% uptime                              |
+| 8   | Scalability                    | Horizontal scaling on read side            |
+| 9   | Auditability                   | Full history preserved indefinitely        |
+| 10  | Idempotency                    | Exactly-once event processing on read side |
 
 ### Out of Scope
 
@@ -660,6 +660,7 @@ CQRS (Command Query Responsibility Segregation) separates the write model (comma
 ```
 
 **Command Model (Normalized for Consistency)**
+
 ```
   Aggregate root enforces all invariants.
   Complex object graph, but only queried to process commands.
@@ -667,6 +668,7 @@ CQRS (Command Query Responsibility Segregation) separates the write model (comma
 ```
 
 **Query Model (Denormalized for Performance)**
+
 ```
   Flat, query-optimized structures.
   Multiple views of the same data for different use cases.

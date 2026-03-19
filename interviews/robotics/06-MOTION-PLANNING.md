@@ -30,21 +30,22 @@ For a point robot in 2D, C-space equals workspace. For a robot with shape, obsta
 
 ### 1.2 C-Space Dimension Examples
 
-| Robot                    | DOF | C-space Dimension |
-|--------------------------|-----|-------------------|
-| Point robot in 2D        | 2   | 2 (x, y)         |
-| Rigid body in 2D         | 3   | 3 (x, y, theta)  |
-| Rigid body in 3D         | 6   | 6 (x,y,z,r,p,y)  |
-| 6-DOF robot arm          | 6   | 6 (joint angles)  |
-| Humanoid robot (30 joints)| 30+ | 30+               |
-| Two 6-DOF arms           | 12  | 12                |
+| Robot                      | DOF | C-space Dimension |
+| -------------------------- | --- | ----------------- |
+| Point robot in 2D          | 2   | 2 (x, y)          |
+| Rigid body in 2D           | 3   | 3 (x, y, theta)   |
+| Rigid body in 3D           | 6   | 6 (x,y,z,r,p,y)   |
+| 6-DOF robot arm            | 6   | 6 (joint angles)  |
+| Humanoid robot (30 joints) | 30+ | 30+               |
+| Two 6-DOF arms             | 12  | 12                |
 
 **Key insight:** Planning in C-space reduces the problem to moving a point through a space with obstacles, regardless of the robot's actual geometry. The price is that C-space obstacles are complex shapes that are expensive to compute explicitly.
 
 ### 1.3 C-Space Topology
 
 Not all C-spaces are simple Euclidean spaces:
-- Rotational joints have topology S^1 (a circle): 0 and 2*pi are the same configuration
+
+- Rotational joints have topology S^1 (a circle): 0 and 2\*pi are the same configuration
 - SO(3) (3D rotation) is not Euclidean; it requires quaternions or rotation matrices
 - A planar rigid body has C-space R^2 x S^1 (a cylinder)
 
@@ -59,12 +60,14 @@ Ignoring topology leads to bugs: a planner might take the long way around instea
 The simplest complete motion planners. They require no map -- only a sensor to detect the obstacle boundary and knowledge of the goal direction.
 
 **Bug 1:**
+
 1. Move toward the goal
 2. If you hit an obstacle, circumnavigate it completely
 3. Find the point on the boundary closest to the goal
 4. Go to that point, then resume moving toward the goal
 
 **Bug 2:**
+
 1. Move toward the goal along the line from start to goal (the M-line)
 2. If you hit an obstacle, follow the boundary until you hit the M-line again at a point closer to the goal
 3. Resume toward the goal
@@ -123,6 +126,7 @@ The robot follows the negative gradient: `F = -grad(U_att + U_rep)`
 ### 3.1 Why Sampling?
 
 Explicit C-space construction is intractable in high dimensions. Sampling-based planners avoid this by:
+
 1. Sampling random configurations
 2. Checking only those configurations for collision
 3. Building a graph or tree connecting collision-free samples
@@ -133,6 +137,7 @@ They are **probabilistically complete**: the probability of finding a path (if o
 ### 3.2 Rapidly-exploring Random Tree (RRT)
 
 RRT grows a tree from the start configuration by repeatedly:
+
 1. Sample a random configuration q_rand in C-space
 2. Find the nearest node q_near in the tree
 3. Extend from q_near toward q_rand by a step size delta to get q_new
@@ -273,9 +278,9 @@ else:
     print("No path found")
 ```
 
-### 3.4 RRT* (Asymptotically Optimal)
+### 3.4 RRT\* (Asymptotically Optimal)
 
-Standard RRT finds *a* path but not the *best* path. RRT* adds two operations to converge toward the optimal path:
+Standard RRT finds _a_ path but not the _best_ path. RRT\* adds two operations to converge toward the optimal path:
 
 1. **Near-neighbor search:** Instead of just the nearest node, find all nodes within a radius r_n (that shrinks as the tree grows)
 2. **Rewiring:** After adding q_new, check if any nearby nodes would have a shorter path through q_new. If so, rewire them.
@@ -293,20 +298,22 @@ Standard RRT finds *a* path but not the *best* path. RRT* adds two operations to
       D                                     because path is shorter)
 ```
 
-RRT* is **asymptotically optimal**: as the number of samples approaches infinity, the path converges to the true optimal path. In practice, it produces significantly better paths than RRT after sufficient iterations.
+RRT\* is **asymptotically optimal**: as the number of samples approaches infinity, the path converges to the true optimal path. In practice, it produces significantly better paths than RRT after sufficient iterations.
 
 ### 3.5 Probabilistic Roadmap (PRM)
 
 PRM is a multi-query planner. Unlike RRT (which plans for a single start-goal pair), PRM builds a reusable roadmap of the free C-space:
 
 **Learning phase:**
+
 1. Sample N random collision-free configurations
 2. For each sample, connect to its k nearest neighbors if the edge is collision-free
 3. Store the resulting graph
 
 **Query phase:**
+
 1. Connect start and goal to the graph
-2. Search the graph (A*, Dijkstra) for the shortest path
+2. Search the graph (A\*, Dijkstra) for the shortest path
 
 ```
   PRM Roadmap:
@@ -326,6 +333,7 @@ PRM is a multi-query planner. Unlike RRT (which plans for a single start-goal pa
 ```
 
 **When to use PRM vs. RRT:**
+
 - PRM: multiple queries in the same environment (e.g., a robot arm in a fixed workcell)
 - RRT: single query, dynamic environments
 
@@ -355,11 +363,13 @@ A lattice planner discretizes the C-space into a regular grid and connects grid 
 ```
 
 **Advantages:**
+
 - Guarantees kinematic/dynamic feasibility by construction
 - Systematic coverage of the state space
-- Can use graph search (A* with admissible heuristic) for optimality
+- Can use graph search (A\* with admissible heuristic) for optimality
 
 **Disadvantages:**
+
 - Resolution limited by discretization
 - Exponential growth with dimension
 - Motion primitive library must be carefully designed
@@ -513,7 +523,7 @@ DWA is a local reactive planner for mobile robots. At each time step, it:
 
 **Strengths:** Real-time (runs at 10-50 Hz), handles dynamic constraints, good for reactive obstacle avoidance.
 
-**Limitations:** Local planner (can get stuck in U-shaped obstacles), short planning horizon, no global optimality. Must be combined with a global planner (A* on an occupancy grid, or a topological planner).
+**Limitations:** Local planner (can get stuck in U-shaped obstacles), short planning horizon, no global optimality. Must be combined with a global planner (A\* on an occupancy grid, or a topological planner).
 
 ---
 
@@ -706,7 +716,7 @@ Potential fields can have local minima where attractive and repulsive forces can
 
 RRT grows a tree by sampling random configurations, finding the nearest tree node, and extending toward the sample. It explores rapidly due to Voronoi bias: nodes in sparsely explored regions have large Voronoi cells, making them more likely to be selected as the nearest node. This naturally drives exploration toward unexplored areas.
 
-**Q4: What is the difference between RRT and RRT*?**
+**Q4: What is the difference between RRT and RRT\*?**
 
 RRT finds any feasible path. RRT* adds two operations: (1) near-neighbor search to find potentially better parent nodes for new nodes, and (2) rewiring to update the tree when a shorter path through the new node is discovered. RRT* is asymptotically optimal -- the path converges to the true optimum as samples increase. The cost is slower per-iteration computation.
 
@@ -728,7 +738,7 @@ Collision checking tests whether a robot configuration or a path segment interse
 
 **Q9: What is the significance of C-space topology? Give an example.**
 
-C-space topology determines how distances and paths work. For rotational joints, the topology is S^1 (a circle), meaning angles 0 and 2*pi are identical. A planner unaware of this topology might compute a 350-degree rotation instead of a 10-degree rotation in the opposite direction. Similarly, SO(3) is not Euclidean, requiring proper distance metrics (e.g., quaternion distance).
+C-space topology determines how distances and paths work. For rotational joints, the topology is S^1 (a circle), meaning angles 0 and 2\*pi are identical. A planner unaware of this topology might compute a 350-degree rotation instead of a 10-degree rotation in the opposite direction. Similarly, SO(3) is not Euclidean, requiring proper distance metrics (e.g., quaternion distance).
 
 **Q10: Explain planning under uncertainty. What is belief space planning?**
 
@@ -748,8 +758,8 @@ Narrow passages have very small volumes in C-space, making random sampling unlik
 
 **Q14: What is a lattice planner and why is it useful for autonomous vehicles?**
 
-A lattice planner discretizes the state space into a regular grid and connects states with precomputed motion primitives (arcs, lane changes, turns). Graph search (A*) finds the optimal path through the lattice. It is useful for vehicles because: motion primitives guarantee kinematic feasibility, the lattice structure enables efficient search, and the precomputed primitives capture vehicle dynamics accurately.
+A lattice planner discretizes the state space into a regular grid and connects states with precomputed motion primitives (arcs, lane changes, turns). Graph search (A\*) finds the optimal path through the lattice. It is useful for vehicles because: motion primitives guarantee kinematic feasibility, the lattice structure enables efficient search, and the precomputed primitives capture vehicle dynamics accurately.
 
 **Q15: Compare local and global planning. Why are both needed?**
 
-Global planners (RRT, PRM, A*) find paths considering the entire environment but are too slow for real-time replanning. Local planners (DWA, potential fields) react quickly to immediate obstacles but can get stuck in local traps. A typical architecture uses a global planner to compute a coarse path and a local planner for real-time execution and obstacle avoidance, re-invoking the global planner when the local planner fails.
+Global planners (RRT, PRM, A\*) find paths considering the entire environment but are too slow for real-time replanning. Local planners (DWA, potential fields) react quickly to immediate obstacles but can get stuck in local traps. A typical architecture uses a global planner to compute a coarse path and a local planner for real-time execution and obstacle avoidance, re-invoking the global planner when the local planner fails.

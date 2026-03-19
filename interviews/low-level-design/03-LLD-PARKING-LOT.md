@@ -23,22 +23,22 @@ real-world edge cases like payment calculation and capacity tracking.
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Multiple vehicle types | Motorcycle, Car, Bus/Truck |
-| F2 | Multiple floors | Each floor has spots of different sizes |
-| F3 | Entry/exit points | Multiple entrances, track which gate was used |
-| F4 | Spot assignment | Assign nearest available spot matching vehicle size |
-| F5 | Payment | Calculate fee based on duration and vehicle type |
-| F6 | Capacity tracking | Know available spots per floor per type in real-time |
-| F7 | Ticket system | Issue ticket on entry, collect on exit |
+| #   | Requirement            | Details                                              |
+| --- | ---------------------- | ---------------------------------------------------- |
+| F1  | Multiple vehicle types | Motorcycle, Car, Bus/Truck                           |
+| F2  | Multiple floors        | Each floor has spots of different sizes              |
+| F3  | Entry/exit points      | Multiple entrances, track which gate was used        |
+| F4  | Spot assignment        | Assign nearest available spot matching vehicle size  |
+| F5  | Payment                | Calculate fee based on duration and vehicle type     |
+| F6  | Capacity tracking      | Know available spots per floor per type in real-time |
+| F7  | Ticket system          | Issue ticket on entry, collect on exit               |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
-| NF1 | Thread-safe (concurrent entry/exit) |
-| NF2 | O(1) spot lookup for availability check |
+| #   | Requirement                                           |
+| --- | ----------------------------------------------------- |
+| NF1 | Thread-safe (concurrent entry/exit)                   |
+| NF2 | O(1) spot lookup for availability check               |
 | NF3 | Extensible for new vehicle types without code changes |
 
 ### Clarifying Questions to Ask

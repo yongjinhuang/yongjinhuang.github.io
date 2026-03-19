@@ -38,35 +38,35 @@
 
 ### 功能需求
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Course Creation | Instructors create courses with sections, lessons (video/text/code), pricing, and metadata |
-| 2 | Video Delivery | Upload, transcode, and stream video lectures with adaptive bitrate and subtitle support |
-| 3 | Progress Tracking | Track video watch position, lesson completion, section completion, and overall course progress |
-| 4 | Quizzes & Assignments | Support MCQ, coding exercises, essay submissions with auto and manual grading |
-| 5 | Certificates | Generate verifiable completion certificates with unique codes |
-| 6 | Enrollment | Browse, purchase/enroll, and manage course enrollments with payment processing |
-| 7 | Reviews & Ratings | Learners rate and review courses; aggregate ratings displayed on course pages |
-| 8 | Instructor Dashboard | Revenue analytics, engagement metrics, student progress overview, Q&A management |
-| 9 | Search & Discovery | Full-text search, category browsing, personalized recommendations |
-| 10 | Discussion Forums | Per-course Q&A threads, upvoting, instructor responses |
-| 11 | Live Classes | Scheduled live video sessions with chat, screen sharing, and recording |
-| 12 | Notifications | Enrollment confirmation, new content alerts, deadline reminders, certificate issued |
+| #   | Requirement           | Description                                                                                    |
+| --- | --------------------- | ---------------------------------------------------------------------------------------------- |
+| 1   | Course Creation       | Instructors create courses with sections, lessons (video/text/code), pricing, and metadata     |
+| 2   | Video Delivery        | Upload, transcode, and stream video lectures with adaptive bitrate and subtitle support        |
+| 3   | Progress Tracking     | Track video watch position, lesson completion, section completion, and overall course progress |
+| 4   | Quizzes & Assignments | Support MCQ, coding exercises, essay submissions with auto and manual grading                  |
+| 5   | Certificates          | Generate verifiable completion certificates with unique codes                                  |
+| 6   | Enrollment            | Browse, purchase/enroll, and manage course enrollments with payment processing                 |
+| 7   | Reviews & Ratings     | Learners rate and review courses; aggregate ratings displayed on course pages                  |
+| 8   | Instructor Dashboard  | Revenue analytics, engagement metrics, student progress overview, Q&A management               |
+| 9   | Search & Discovery    | Full-text search, category browsing, personalized recommendations                              |
+| 10  | Discussion Forums     | Per-course Q&A threads, upvoting, instructor responses                                         |
+| 11  | Live Classes          | Scheduled live video sessions with chat, screen sharing, and recording                         |
+| 12  | Notifications         | Enrollment confirmation, new content alerts, deadline reminders, certificate issued            |
 
 ### 非功能需求
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Video start latency | < 2 seconds globally (p95) |
-| 2 | Video rebuffer ratio | < 0.5% of playback time |
-| 3 | API response latency | < 200ms (p95) for reads, < 500ms for writes |
-| 4 | Availability | 99.95% (< 4.4 hours downtime/year) |
-| 5 | Progress sync latency | < 5 seconds (eventual consistency acceptable) |
-| 6 | Search latency | < 150ms (p95) |
-| 7 | Concurrent video streams | 2M simultaneous viewers at peak |
-| 8 | Offline content | Download and view without network; sync on reconnect |
-| 9 | Accessibility | WCAG 2.1 AA compliance (captions, screen reader, keyboard nav) |
-| 10 | Data durability | Zero loss of enrollment, progress, or payment data |
+| #   | Requirement              | Target                                                         |
+| --- | ------------------------ | -------------------------------------------------------------- |
+| 1   | Video start latency      | < 2 seconds globally (p95)                                     |
+| 2   | Video rebuffer ratio     | < 0.5% of playback time                                        |
+| 3   | API response latency     | < 200ms (p95) for reads, < 500ms for writes                    |
+| 4   | Availability             | 99.95% (< 4.4 hours downtime/year)                             |
+| 5   | Progress sync latency    | < 5 seconds (eventual consistency acceptable)                  |
+| 6   | Search latency           | < 150ms (p95)                                                  |
+| 7   | Concurrent video streams | 2M simultaneous viewers at peak                                |
+| 8   | Offline content          | Download and view without network; sync on reconnect           |
+| 9   | Accessibility            | WCAG 2.1 AA compliance (captions, screen reader, keyboard nav) |
+| 10  | Data durability          | Zero loss of enrollment, progress, or payment data             |
 
 ### 规模估算
 
@@ -100,6 +100,7 @@ Payments:
 ### 粗略计算
 
 **Video Storage:**
+
 ```
 Existing library:      5M hours × 3 resolutions × avg 1.5 GB/hr = 22.5 PB
 New uploads/month:     50,000 hrs × 3 resolutions × 1.5 GB/hr = 225 TB/month
@@ -108,6 +109,7 @@ Subtitle storage:      5M hours × 2 languages avg × 50 KB = 500 GB (negligible
 ```
 
 **Video Bandwidth:**
+
 ```
 Concurrent streams:    2M peak
 Average bitrate:       3 Mbps (720p adaptive)
@@ -117,6 +119,7 @@ CDN cost estimate:     ~$0.02/GB = ~$6.7M/month at scale
 ```
 
 **API Throughput:**
+
 ```
 Read QPS (catalog/progress):    50M views/day / 86400 = ~580 QPS avg, 3K peak
 Write QPS (progress updates):   50M views × 5 progress pings/view = 250M/day
@@ -126,6 +129,7 @@ Quiz submissions:               10M/day = ~116/sec avg, ~600/sec peak
 ```
 
 **Database Storage:**
+
 ```
 Enrollment records:    100M users × 5 courses avg × 500 bytes = 250 GB
 Progress records:      100M users × 5 courses × 20 lessons × 200 bytes = 2 TB
@@ -2524,30 +2528,30 @@ Multi-layered approach: (1) DRM encryption (Widevine/FairPlay) prevents direct d
 
 ### 关键架构决策
 
-| 决策 | 选择 | 理由 |
-|------|------|------|
-| 视频存储 | S3 + CDN (CloudFront) | PB 级别成本效益高，全球分发 |
-| 视频流 | HLS + DASH 自适应码率 | 通用设备支持，带宽自适应 |
-| DRM | Widevine + FairPlay | 覆盖 Android/Chrome + iOS/Safari |
-| 主数据库 | PostgreSQL（分片） | 注册/支付的 ACID，JSON 支持 |
-| 进度写入 | Redis 写后 → PostgreSQL | 以最终一致性处理 15K 次写入/秒 |
-| 搜索 | Elasticsearch | 全文 + 分面过滤 + 自动补全 |
-| 事件总线 | Kafka | 服务解耦，用于分析的事件溯源 |
-| 代码执行 | gVisor 沙箱容器 | 安全隔离，多语言支持 |
-| 推荐 | 混合 CF + CBF | 结合社交信号和内容相似度 |
-| 证书 | PDF + PNG + 区块链锚定 | 可分享、可验证、防篡改 |
-| 直播课堂 | WebRTC (SFU) + LL-HLS 回退 | 小组低延迟，大规模 CDN 扩展 |
-| 离线 | 加密下载 + DRM 许可证 | 带有时间限制许可证的安全离线观看 |
+| 决策     | 选择                       | 理由                             |
+| -------- | -------------------------- | -------------------------------- |
+| 视频存储 | S3 + CDN (CloudFront)      | PB 级别成本效益高，全球分发      |
+| 视频流   | HLS + DASH 自适应码率      | 通用设备支持，带宽自适应         |
+| DRM      | Widevine + FairPlay        | 覆盖 Android/Chrome + iOS/Safari |
+| 主数据库 | PostgreSQL（分片）         | 注册/支付的 ACID，JSON 支持      |
+| 进度写入 | Redis 写后 → PostgreSQL    | 以最终一致性处理 15K 次写入/秒   |
+| 搜索     | Elasticsearch              | 全文 + 分面过滤 + 自动补全       |
+| 事件总线 | Kafka                      | 服务解耦，用于分析的事件溯源     |
+| 代码执行 | gVisor 沙箱容器            | 安全隔离，多语言支持             |
+| 推荐     | 混合 CF + CBF              | 结合社交信号和内容相似度         |
+| 证书     | PDF + PNG + 区块链锚定     | 可分享、可验证、防篡改           |
+| 直播课堂 | WebRTC (SFU) + LL-HLS 回退 | 小组低延迟，大规模 CDN 扩展      |
+| 离线     | 加密下载 + DRM 许可证      | 带有时间限制许可证的安全离线观看 |
 
 ### 关键权衡
 
-| 权衡 | 选项 A | 选项 B | 决策 |
-|------|--------|--------|------|
-| 视频延迟 vs. 成本 | 专用流媒体服务器（低延迟） | CDN + HLS（较高延迟，较低成本） | CDN + HLS。2-3 秒启动时间对教育场景可接受。CDN 规模化后的成本节省显著。 |
-| 进度一致性 | 同步数据库写入（强一致性） | Redis 写后（最终一致性） | 写后模式。丢失 30 秒进度数据是可接受的。同步处理 15K 次写入/秒成本很高。 |
-| 代码执行安全性 | 每次执行完整 VM（最大隔离） | gVisor 容器（良好隔离，较低开销） | gVisor。启动速度比完整 VM 快 10 倍。安全性对教育代码执行足够。 |
-| 评分方式 | 全部自动评分（可扩展，即时） | 可用人工评分（准确，慢） | 混合方式。自动评分选择题/代码，人工评分论述题。AI 辅助的简答评分减少人工负担。 |
-| 推荐新鲜度 | 实时更新（计算成本高） | 每日批量计算（过时但便宜） | 每日批量 + 注册时事件触发刷新。推荐不需要秒级新鲜度。 |
-| 离线 DRM 严格度 | 严格 DRM，不允许下载 | 带 30 天许可证的加密离线 | 加密离线。新兴市场的移动学习者需要离线访问。30 天许可证平衡了安全性和可用性。 |
-| 直播课堂架构 | 纯 WebRTC（低延迟，有限规模） | RTMP + CDN（高延迟，无限规模） | 分层。< 500 名参与者使用 WebRTC，更大受众使用 RTMP + LL-HLS。大多数直播课堂是小规模的。 |
-| 字幕生成 | 仅人工（高准确度，慢，昂贵） | ASR 自动生成（快速，更便宜，准确度较低） | 自动生成 + 热门课程人工审核。ASR 准确度（Whisper）对大多数内容足够。前 100 门课程进行人工审核。 |
+| 权衡              | 选项 A                        | 选项 B                                   | 决策                                                                                            |
+| ----------------- | ----------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 视频延迟 vs. 成本 | 专用流媒体服务器（低延迟）    | CDN + HLS（较高延迟，较低成本）          | CDN + HLS。2-3 秒启动时间对教育场景可接受。CDN 规模化后的成本节省显著。                         |
+| 进度一致性        | 同步数据库写入（强一致性）    | Redis 写后（最终一致性）                 | 写后模式。丢失 30 秒进度数据是可接受的。同步处理 15K 次写入/秒成本很高。                        |
+| 代码执行安全性    | 每次执行完整 VM（最大隔离）   | gVisor 容器（良好隔离，较低开销）        | gVisor。启动速度比完整 VM 快 10 倍。安全性对教育代码执行足够。                                  |
+| 评分方式          | 全部自动评分（可扩展，即时）  | 可用人工评分（准确，慢）                 | 混合方式。自动评分选择题/代码，人工评分论述题。AI 辅助的简答评分减少人工负担。                  |
+| 推荐新鲜度        | 实时更新（计算成本高）        | 每日批量计算（过时但便宜）               | 每日批量 + 注册时事件触发刷新。推荐不需要秒级新鲜度。                                           |
+| 离线 DRM 严格度   | 严格 DRM，不允许下载          | 带 30 天许可证的加密离线                 | 加密离线。新兴市场的移动学习者需要离线访问。30 天许可证平衡了安全性和可用性。                   |
+| 直播课堂架构      | 纯 WebRTC（低延迟，有限规模） | RTMP + CDN（高延迟，无限规模）           | 分层。< 500 名参与者使用 WebRTC，更大受众使用 RTMP + LL-HLS。大多数直播课堂是小规模的。         |
+| 字幕生成          | 仅人工（高准确度，慢，昂贵）  | ASR 自动生成（快速，更便宜，准确度较低） | 自动生成 + 热门课程人工审核。ASR 准确度（Whisper）对大多数内容足够。前 100 门课程进行人工审核。 |

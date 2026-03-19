@@ -28,35 +28,35 @@
 
 ### 功能性需求
 
-| # | 需求 | 描述 |
-|---|------|------|
-| 1 | 开关创建与管理 | 创建 boolean、string、number 和 JSON 多变体开关，每个环境设置默认值 |
-| 2 | 定向投放规则 | 根据用户属性（email、国家、套餐、自定义属性）结合 AND/OR 条件评估开关 |
-| 3 | 百分比灰度发布 | 将开关逐步灰度发布给一定百分比的用户，保证分配一致性（同一用户始终看到相同值） |
-| 4 | A/B Testing / 实验 | 将用户分配到实验变体中，追踪事件，计算统计显著性 |
-| 5 | 熔断开关 | 在数秒内跨所有环境和 SDK 全局禁用某个开关 |
-| 6 | 审计日志 | 不可变的记录，包含每次开关变更、操作者、时间和变更前的值 |
-| 7 | 用户分组 | 定义可复用的用户组（如 "Beta 测试用户"、"企业客户"）并将开关定向到分组 |
-| 8 | 定时发布 | 安排开关状态在未来某个日期/时间变更（如午夜上线） |
-| 9 | 开关依赖 | 定义前置开关——开关 B 仅在开关 A 启用时才会评估 |
-| 10 | Webhooks 与集成 | 当开关变更时通知外部系统（Slack、Datadog、CI/CD） |
-| 11 | SDK 支持 | 提供服务端 SDK（Node、Python、Go、Java）和客户端 SDK（JavaScript、React、iOS、Android） |
-| 12 | 多环境 | 开发、预发布和生产环境各自独立的开关配置 |
+| #   | 需求               | 描述                                                                                    |
+| --- | ------------------ | --------------------------------------------------------------------------------------- |
+| 1   | 开关创建与管理     | 创建 boolean、string、number 和 JSON 多变体开关，每个环境设置默认值                     |
+| 2   | 定向投放规则       | 根据用户属性（email、国家、套餐、自定义属性）结合 AND/OR 条件评估开关                   |
+| 3   | 百分比灰度发布     | 将开关逐步灰度发布给一定百分比的用户，保证分配一致性（同一用户始终看到相同值）          |
+| 4   | A/B Testing / 实验 | 将用户分配到实验变体中，追踪事件，计算统计显著性                                        |
+| 5   | 熔断开关           | 在数秒内跨所有环境和 SDK 全局禁用某个开关                                               |
+| 6   | 审计日志           | 不可变的记录，包含每次开关变更、操作者、时间和变更前的值                                |
+| 7   | 用户分组           | 定义可复用的用户组（如 "Beta 测试用户"、"企业客户"）并将开关定向到分组                  |
+| 8   | 定时发布           | 安排开关状态在未来某个日期/时间变更（如午夜上线）                                       |
+| 9   | 开关依赖           | 定义前置开关——开关 B 仅在开关 A 启用时才会评估                                          |
+| 10  | Webhooks 与集成    | 当开关变更时通知外部系统（Slack、Datadog、CI/CD）                                       |
+| 11  | SDK 支持           | 提供服务端 SDK（Node、Python、Go、Java）和客户端 SDK（JavaScript、React、iOS、Android） |
+| 12  | 多环境             | 开发、预发布和生产环境各自独立的开关配置                                                |
 
 ### 非功能性需求
 
-| # | 需求 | 目标 |
-|---|------|------|
-| 1 | 开关评估延迟（服务端 SDK） | < 1ms（本地评估，无网络调用） |
-| 2 | 开关评估延迟（客户端 SDK） | < 10ms（从缓存启动，后续通过流式更新） |
-| 3 | 开关更新传播 | 从保存到所有已连接 SDK < 500ms |
-| 4 | 可用性 | 99.99%（每年停机 < 52.6 分钟） |
-| 5 | SDK 弹性 | 当服务不可达时优雅降级到缓存/默认值 |
-| 6 | 一致性 | 在给定开关配置下，同一用户始终获得相同的开关值（sticky bucketing） |
-| 7 | 可扩展性 | 100K 个已连接 SDK，每天 10 亿次开关评估 |
-| 8 | 审计保留 | 热存储 2 年，冷存储 7 年 |
-| 9 | 安全性 | 项目/环境级 RBAC，API key 作用域限定，开关规则中不含 PII |
-| 10 | 多租户 | 每个团队隔离的项目，各自拥有独立的 API key 和权限 |
+| #   | 需求                       | 目标                                                               |
+| --- | -------------------------- | ------------------------------------------------------------------ |
+| 1   | 开关评估延迟（服务端 SDK） | < 1ms（本地评估，无网络调用）                                      |
+| 2   | 开关评估延迟（客户端 SDK） | < 10ms（从缓存启动，后续通过流式更新）                             |
+| 3   | 开关更新传播               | 从保存到所有已连接 SDK < 500ms                                     |
+| 4   | 可用性                     | 99.99%（每年停机 < 52.6 分钟）                                     |
+| 5   | SDK 弹性                   | 当服务不可达时优雅降级到缓存/默认值                                |
+| 6   | 一致性                     | 在给定开关配置下，同一用户始终获得相同的开关值（sticky bucketing） |
+| 7   | 可扩展性                   | 100K 个已连接 SDK，每天 10 亿次开关评估                            |
+| 8   | 审计保留                   | 热存储 2 年，冷存储 7 年                                           |
+| 9   | 安全性                     | 项目/环境级 RBAC，API key 作用域限定，开关规则中不含 PII           |
+| 10  | 多租户                     | 每个团队隔离的项目，各自拥有独立的 API key 和权限                  |
 
 ### 容量估算
 
@@ -129,6 +129,7 @@ GET    /api/v1/projects/{projectId}/flags/{flagKey}/audit
 ```
 
 **POST /api/v1/projects/{projectId}/flags 请求：**
+
 ```json
 {
   "key": "new-checkout-flow",
@@ -138,7 +139,11 @@ GET    /api/v1/projects/{projectId}/flags/{flagKey}/audit
   "flagType": "boolean",
   "variations": [
     { "value": true, "name": "Enabled", "description": "Show new checkout" },
-    { "value": false, "name": "Disabled", "description": "Show legacy checkout" }
+    {
+      "value": false,
+      "name": "Disabled",
+      "description": "Show legacy checkout"
+    }
   ],
   "defaults": {
     "onVariation": 0,
@@ -149,6 +154,7 @@ GET    /api/v1/projects/{projectId}/flags/{flagKey}/audit
 ```
 
 **PATCH /api/v1/projects/{projectId}/flags/{flagKey}/environments/{envKey} 请求：**
+
 ```json
 {
   "enabled": true,
@@ -163,9 +169,7 @@ GET    /api/v1/projects/{projectId}/flags/{flagKey}/audit
         }
       ],
       "rollout": {
-        "variations": [
-          { "variation": 0, "weight": 100000 }
-        ]
+        "variations": [{ "variation": 0, "weight": 100000 }]
       }
     },
     {
@@ -197,6 +201,7 @@ DELETE /api/v1/projects/{projectId}/segments/{segKey}   删除分组
 ```
 
 **POST /api/v1/projects/{projectId}/segments 请求：**
+
 ```json
 {
   "key": "beta-testers",
@@ -210,7 +215,11 @@ DELETE /api/v1/projects/{projectId}/segments/{segKey}   删除分组
     },
     {
       "clauses": [
-        { "attribute": "plan", "op": "in", "values": ["enterprise", "business"] },
+        {
+          "attribute": "plan",
+          "op": "in",
+          "values": ["enterprise", "business"]
+        },
         { "attribute": "betaOptIn", "op": "eq", "values": [true] }
       ]
     }
@@ -254,6 +263,7 @@ POST   /sdk/v1/events/client
 ```
 
 **GET /sdk/v1/flags/{envKey} 响应：**
+
 ```json
 {
   "flags": {
@@ -265,7 +275,11 @@ POST   /sdk/v1/events/client
       "rules": [
         {
           "clauses": [
-            { "attribute": "segment", "op": "segmentMatch", "values": ["beta-testers"] }
+            {
+              "attribute": "segment",
+              "op": "segmentMatch",
+              "values": ["beta-testers"]
+            }
           ],
           "rollout": { "variations": [{ "variation": 0, "weight": 100000 }] }
         },
@@ -293,7 +307,11 @@ POST   /sdk/v1/events/client
       "rules": [
         {
           "clauses": [
-            { "attribute": "email", "op": "endsWith", "values": ["@company.com"] }
+            {
+              "attribute": "email",
+              "op": "endsWith",
+              "values": ["@company.com"]
+            }
           ]
         }
       ]
@@ -499,9 +517,7 @@ TTL:     无（通过 score 清理过期条目）
       }
     ],
     "rollout": {
-      "variations": [
-        { "variation": 0, "weight": 100000 }
-      ]
+      "variations": [{ "variation": 0, "weight": 100000 }]
     }
   },
   {
@@ -799,15 +815,15 @@ def _apply_rollout(
 
 ### 评估原因码
 
-| 原因 | 描述 |
-|------|------|
-| `FLAG_NOT_FOUND` | 配置中不存在该开关 key |
-| `FLAG_DISABLED` | 开关已关闭；返回 off variation |
-| `PREREQUISITE_FAILED` | 某个前置开关未匹配期望的变体 |
-| `TARGET_MATCH` | 用户命中了个体定向列表 |
-| `RULE_MATCH` | 用户命中了定向投放规则 |
-| `FALLTHROUGH` | 没有规则匹配；使用默认变体 |
-| `ERROR` | 评估出错；返回应用默认值 |
+| 原因                  | 描述                           |
+| --------------------- | ------------------------------ |
+| `FLAG_NOT_FOUND`      | 配置中不存在该开关 key         |
+| `FLAG_DISABLED`       | 开关已关闭；返回 off variation |
+| `PREREQUISITE_FAILED` | 某个前置开关未匹配期望的变体   |
+| `TARGET_MATCH`        | 用户命中了个体定向列表         |
+| `RULE_MATCH`          | 用户命中了定向投放规则         |
+| `FALLTHROUGH`         | 没有规则匹配；使用默认变体     |
+| `ERROR`               | 评估出错；返回应用默认值       |
 
 ---
 
@@ -846,21 +862,21 @@ def _apply_rollout(
 
 ### 支持的运算符
 
-| 运算符 | 类型 | 描述 | 示例 |
-|--------|------|------|------|
-| `in` | String, Number | 精确匹配列表 | `country in ["US", "CA"]` |
-| `notIn` | String, Number | 不在列表中 | `plan notIn ["free"]` |
-| `endsWith` | String | 字符串后缀匹配 | `email endsWith ["@company.com"]` |
-| `startsWith` | String | 字符串前缀匹配 | `email startsWith ["admin"]` |
-| `contains` | String | 子字符串匹配 | `userAgent contains ["Mobile"]` |
-| `regex` | String | 正则表达式 | `email regex ["^test.*@example"]` |
-| `greaterThan` | Number | 数值比较 | `age greaterThan 18` |
-| `lessThan` | Number | 数值比较 | `loginCount lessThan 5` |
-| `before` | Date | 日期比较 | `signupDate before "2026-01-01"` |
-| `after` | Date | 日期比较 | `signupDate after "2025-06-01"` |
-| `semVerEqual` | SemVer | 语义化版本相等 | `appVersion semVerEqual "2.1.0"` |
-| `semVerGreaterThan` | SemVer | 语义化版本大于 | `appVersion semVerGreaterThan "2.0.0"` |
-| `segmentMatch` | Segment | 用户在分组中 | `segment segmentMatch ["beta-testers"]` |
+| 运算符              | 类型           | 描述           | 示例                                    |
+| ------------------- | -------------- | -------------- | --------------------------------------- |
+| `in`                | String, Number | 精确匹配列表   | `country in ["US", "CA"]`               |
+| `notIn`             | String, Number | 不在列表中     | `plan notIn ["free"]`                   |
+| `endsWith`          | String         | 字符串后缀匹配 | `email endsWith ["@company.com"]`       |
+| `startsWith`        | String         | 字符串前缀匹配 | `email startsWith ["admin"]`            |
+| `contains`          | String         | 子字符串匹配   | `userAgent contains ["Mobile"]`         |
+| `regex`             | String         | 正则表达式     | `email regex ["^test.*@example"]`       |
+| `greaterThan`       | Number         | 数值比较       | `age greaterThan 18`                    |
+| `lessThan`          | Number         | 数值比较       | `loginCount lessThan 5`                 |
+| `before`            | Date           | 日期比较       | `signupDate before "2026-01-01"`        |
+| `after`             | Date           | 日期比较       | `signupDate after "2025-06-01"`         |
+| `semVerEqual`       | SemVer         | 语义化版本相等 | `appVersion semVerEqual "2.1.0"`        |
+| `semVerGreaterThan` | SemVer         | 语义化版本大于 | `appVersion semVerGreaterThan "2.0.0"`  |
+| `segmentMatch`      | Segment        | 用户在分组中   | `segment segmentMatch ["beta-testers"]` |
 
 ### 基于分组的定向投放
 
@@ -890,6 +906,7 @@ def _apply_rollout(
 ### 百分比灰度策略
 
 **简单百分比灰度：**
+
 ```json
 {
   "description": "Gradual rollout to 25% of users",
@@ -905,12 +922,11 @@ def _apply_rollout(
 ```
 
 **定向百分比灰度：**
+
 ```json
 {
   "description": "50% of enterprise users get new feature",
-  "clauses": [
-    { "attribute": "plan", "op": "in", "values": ["enterprise"] }
-  ],
+  "clauses": [{ "attribute": "plan", "op": "in", "values": ["enterprise"] }],
   "rollout": {
     "variations": [
       { "variation": 0, "weight": 50000 },
@@ -922,6 +938,7 @@ def _apply_rollout(
 ```
 
 **Canary 发布模式（多规则）：**
+
 ```json
 {
   "rules": [
@@ -936,9 +953,7 @@ def _apply_rollout(
     },
     {
       "description": "Step 2: 5% canary to pro users",
-      "clauses": [
-        { "attribute": "plan", "op": "in", "values": ["pro"] }
-      ],
+      "clauses": [{ "attribute": "plan", "op": "in", "values": ["pro"] }],
       "rollout": {
         "variations": [
           { "variation": 0, "weight": 5000 },
@@ -1012,10 +1027,10 @@ import { FeatureFlagClient } from '@flags/node-sdk';
 const client = FeatureFlagClient.init({
   sdkKey: 'sdk-prod-xxxx',
   baseUrl: 'https://flags.example.com',
-  updateMode: 'streaming',       // 'streaming' | 'polling'
-  pollingInterval: 30_000,       // 回退轮询间隔（ms）
+  updateMode: 'streaming', // 'streaming' | 'polling'
+  pollingInterval: 30_000, // 回退轮询间隔（ms）
   connectTimeout: 5_000,
-  flushInterval: 5_000,          // 事件刷新间隔（ms）
+  flushInterval: 5_000, // 事件刷新间隔（ms）
   flushBatchSize: 500,
   offlineMode: false,
 });
@@ -1038,15 +1053,11 @@ const user = {
 const showNewCheckout = client.boolVariation(
   'new-checkout-flow',
   user,
-  false  // 开关未找到时的默认值
+  false // 开关未找到时的默认值
 );
 
 // 获取评估详情用于调试
-const detail = client.boolVariationDetail(
-  'new-checkout-flow',
-  user,
-  false
-);
+const detail = client.boolVariationDetail('new-checkout-flow', user, false);
 // detail = {
 //   value: true,
 //   variationIndex: 0,
@@ -1061,7 +1072,7 @@ client.track('checkout_completed', user, {
 
 // 优雅关闭
 process.on('SIGTERM', async () => {
-  await client.close();  // 刷新待发送事件，关闭 SSE
+  await client.close(); // 刷新待发送事件，关闭 SSE
 });
 ```
 
@@ -1110,7 +1121,7 @@ function App() {
       clientId="client-prod-xxxx"
       user={userContext}
       options={{
-        bootstrap: 'localStorage',  // 加载时使用缓存值
+        bootstrap: 'localStorage', // 加载时使用缓存值
         streaming: true,
       }}
     >
@@ -1125,23 +1136,21 @@ function CheckoutPage() {
 
   if (loading) return <Skeleton />;
 
-  return showNewCheckout
-    ? <NewCheckoutFlow />
-    : <LegacyCheckoutFlow />;
+  return showNewCheckout ? <NewCheckoutFlow /> : <LegacyCheckoutFlow />;
 }
 ```
 
 ### 本地评估 vs. 远程评估
 
-| 方面 | 本地评估（服务端 SDK） | 远程评估（客户端 SDK） |
-|------|----------------------|----------------------|
-| 规则执行位置 | 进程内（SDK） | 在开关服务上 |
-| 发送到 SDK 的数据 | 完整规则集 + 分组 | 仅预计算的值 |
-| 延迟 | < 1ms | 网络 RTT + 评估时间 |
-| 安全性 | 规则在进程内存中可见 | 规则从不离开服务器 |
-| 网络依赖 | 仅用于更新 | 每次评估都需要（或使用缓存） |
-| 使用场景 | 后端服务 | 浏览器、移动应用 |
-| 离线支持 | 完全支持（使用缓存的规则） | 部分支持（使用缓存的值） |
+| 方面              | 本地评估（服务端 SDK）     | 远程评估（客户端 SDK）       |
+| ----------------- | -------------------------- | ---------------------------- |
+| 规则执行位置      | 进程内（SDK）              | 在开关服务上                 |
+| 发送到 SDK 的数据 | 完整规则集 + 分组          | 仅预计算的值                 |
+| 延迟              | < 1ms                      | 网络 RTT + 评估时间          |
+| 安全性            | 规则在进程内存中可见       | 规则从不离开服务器           |
+| 网络依赖          | 仅用于更新                 | 每次评估都需要（或使用缓存） |
+| 使用场景          | 后端服务                   | 浏览器、移动应用             |
+| 离线支持          | 完全支持（使用缓存的规则） | 部分支持（使用缓存的值）     |
 
 ### 缓存策略
 
@@ -1360,12 +1369,12 @@ class UpdateProcessor {
 
 ### 一致性保证
 
-| 保证 | 机制 |
-|------|------|
-| 顺序性 | 单调递增的版本号；SDK 拒绝版本号 <= 当前版本的更新 |
-| 原子性 | 完整开关配置作为单个 JSON 文档更新；不存在部分状态 |
-| 可靠投递 | SSE 自动重连 + 轮询回退 |
-| 最终收敛 | 基于版本号：SDK 检测到版本间隙时拉取完整配置 |
+| 保证       | 机制                                                        |
+| ---------- | ----------------------------------------------------------- |
+| 顺序性     | 单调递增的版本号；SDK 拒绝版本号 <= 当前版本的更新          |
+| 原子性     | 完整开关配置作为单个 JSON 文档更新；不存在部分状态          |
+| 可靠投递   | SSE 自动重连 + 轮询回退                                     |
+| 最终收敛   | 基于版本号：SDK 检测到版本间隙时拉取完整配置                |
 | 一致性窗口 | 典型 < 500ms（Redis Pub/Sub + SSE）；最差情况 < 30s（轮询） |
 
 ---
@@ -2020,15 +2029,15 @@ Browser/App ──▶ CDN Edge ──▶ SDK Service ──▶ Redis ──▶ P
 
 ### 水平扩展方案
 
-| 组件 | 扩展策略 | 实例数 |
-|------|---------|--------|
-| 开关管理 API | 无状态，负载均衡后 | 每区域 3-6 个 |
-| SDK Service | 无状态，负载均衡后 | 每区域 6-12 个 |
-| SSE Gateway | 有状态（连接），按环境 key 分片 | 每区域 10-15 个 |
-| PostgreSQL | 主节点 + 只读副本 | 1 主 + 2 副本 |
-| Redis Cluster | 按环境 key 分片 | 6 个分片，每个 3 副本 |
-| Event Collector | 无状态，自动扩缩 | 每区域 3-10 个 |
-| ClickHouse | 按时间分片 | 3 节点集群 |
+| 组件            | 扩展策略                        | 实例数                |
+| --------------- | ------------------------------- | --------------------- |
+| 开关管理 API    | 无状态，负载均衡后              | 每区域 3-6 个         |
+| SDK Service     | 无状态，负载均衡后              | 每区域 6-12 个        |
+| SSE Gateway     | 有状态（连接），按环境 key 分片 | 每区域 10-15 个       |
+| PostgreSQL      | 主节点 + 只读副本               | 1 主 + 2 副本         |
+| Redis Cluster   | 按环境 key 分片                 | 6 个分片，每个 3 副本 |
+| Event Collector | 无状态，自动扩缩                | 每区域 3-10 个        |
+| ClickHouse      | 按时间分片                      | 3 节点集群            |
 
 ---
 
@@ -2183,28 +2192,28 @@ SSR 要求在服务器渲染过程中同步获取开关值。服务端 SDK 天�
 
 ### 关键架构决策
 
-| 决策 | 选择 | 理由 |
-|------|------|------|
-| 评估位置 | 服务端本地（SDK 内）；客户端由服务器评估 | 亚毫秒级延迟；热路径无网络依赖 |
-| 更新传播 | SSE 流式推送，轮询回退 | 实时更新（< 500ms）；可穿透防火墙 |
-| 一致性模型 | 确定性哈希（无存储状态） | 同一用户始终获得相同值；无需按用户存储；O(1) 评估 |
-| 规则存储 | PostgreSQL 中的 JSON | 规则 schema 灵活；开关变更具备 ACID；写入量可承受 |
-| 缓存 | Redis 用于配置 + CDN 用于客户端引导 | 配置可放入内存；CDN 分流客户端流量 |
-| 事件流水线 | Kafka + ClickHouse | 高吞吐事件摄入；实验结果的快速分析查询 |
-| 多环境 | 每个环境独立配置，共享开关定义 | 隔离防止跨环境事故；推进工作流保证一致性 |
-| 客户端安全 | 仅提供服务端评估后的值（不暴露规则） | 防止暴露定向逻辑、分组和灰度百分比 |
+| 决策       | 选择                                     | 理由                                              |
+| ---------- | ---------------------------------------- | ------------------------------------------------- |
+| 评估位置   | 服务端本地（SDK 内）；客户端由服务器评估 | 亚毫秒级延迟；热路径无网络依赖                    |
+| 更新传播   | SSE 流式推送，轮询回退                   | 实时更新（< 500ms）；可穿透防火墙                 |
+| 一致性模型 | 确定性哈希（无存储状态）                 | 同一用户始终获得相同值；无需按用户存储；O(1) 评估 |
+| 规则存储   | PostgreSQL 中的 JSON                     | 规则 schema 灵活；开关变更具备 ACID；写入量可承受 |
+| 缓存       | Redis 用于配置 + CDN 用于客户端引导      | 配置可放入内存；CDN 分流客户端流量                |
+| 事件流水线 | Kafka + ClickHouse                       | 高吞吐事件摄入；实验结果的快速分析查询            |
+| 多环境     | 每个环境独立配置，共享开关定义           | 隔离防止跨环境事故；推进工作流保证一致性          |
+| 客户端安全 | 仅提供服务端评估后的值（不暴露规则）     | 防止暴露定向逻辑、分组和灰度百分比                |
 
 ### 权衡取舍
 
-| 决策 | 方案 A | 方案 B | 建议 |
-|------|--------|--------|------|
-| 本地 vs. 远程评估 | 本地（SDK 中包含完整规则） | 远程（服务器逐请求评估） | 服务端 SDK 用本地评估（性能）；客户端 SDK 用远程评估（安全） |
-| SSE vs. WebSocket | SSE（单向，基于 HTTP） | WebSocket（双向） | SSE——更简单，可穿透 HTTP 代理/CDN，单向对开关更新足够 |
-| 轮询间隔 | 短（5 秒）——更快更新 | 长（60 秒）——更少服务器负载 | 默认 30 秒，SSE 为主要方式；轮询仅作回退 |
-| 开关存储格式 | 关系型（规范化表） | 文档型（每个开关一个 JSON blob） | 混合——关系型用于元数据/搜索，JSON 用于规则（灵活 schema） |
-| 灰度变更时的一致性 | 重新分配所有用户 | 仅单调扩展 | 单调扩展——增加灰度百分比永远不会将用户移出实验组 |
-| 客户端引导 | 网络拉取 | localStorage 缓存 | localStorage 优先（即时），然后 SSE 流更新（避免内容闪烁） |
-| 实验分配 | 实时（评估时） | 预计算（批处理） | 实时——不依赖批处理作业；确定性哈希为 O(1) |
-| 过期开关清理 | 手动 | 自动移除 | 半自动——自动检测并通知，需人工审批后移除 |
-| 多区域配置 | 单主节点，异步复制 | 多主节点，冲突解决 | 单主节点——开关变更量低；避免冲突解决的复杂性 |
-| 审计日志存储 | 同一数据库（PostgreSQL） | 独立的仅追加存储 | 每天变更量低于 1 万时用同一数据库；合规归档用独立存储（如 S3 + Athena） |
+| 决策               | 方案 A                     | 方案 B                           | 建议                                                                    |
+| ------------------ | -------------------------- | -------------------------------- | ----------------------------------------------------------------------- |
+| 本地 vs. 远程评估  | 本地（SDK 中包含完整规则） | 远程（服务器逐请求评估）         | 服务端 SDK 用本地评估（性能）；客户端 SDK 用远程评估（安全）            |
+| SSE vs. WebSocket  | SSE（单向，基于 HTTP）     | WebSocket（双向）                | SSE——更简单，可穿透 HTTP 代理/CDN，单向对开关更新足够                   |
+| 轮询间隔           | 短（5 秒）——更快更新       | 长（60 秒）——更少服务器负载      | 默认 30 秒，SSE 为主要方式；轮询仅作回退                                |
+| 开关存储格式       | 关系型（规范化表）         | 文档型（每个开关一个 JSON blob） | 混合——关系型用于元数据/搜索，JSON 用于规则（灵活 schema）               |
+| 灰度变更时的一致性 | 重新分配所有用户           | 仅单调扩展                       | 单调扩展——增加灰度百分比永远不会将用户移出实验组                        |
+| 客户端引导         | 网络拉取                   | localStorage 缓存                | localStorage 优先（即时），然后 SSE 流更新（避免内容闪烁）              |
+| 实验分配           | 实时（评估时）             | 预计算（批处理）                 | 实时——不依赖批处理作业；确定性哈希为 O(1)                               |
+| 过期开关清理       | 手动                       | 自动移除                         | 半自动——自动检测并通知，需人工审批后移除                                |
+| 多区域配置         | 单主节点，异步复制         | 多主节点，冲突解决               | 单主节点——开关变更量低；避免冲突解决的复杂性                            |
+| 审计日志存储       | 同一数据库（PostgreSQL）   | 独立的仅追加存储                 | 每天变更量低于 1 万时用同一数据库；合规归档用独立存储（如 S3 + Athena） |

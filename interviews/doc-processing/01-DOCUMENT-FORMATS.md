@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Before you can process a document, you need to understand what a document *is* at the byte level. A `.pdf` file is not "just text" — it is a complex binary format with objects, cross-reference tables, and content streams. A `.docx` file is actually a ZIP archive containing XML files. Understanding these internals is what allows you to choose the right library, debug extraction failures, and handle edge cases that trip up naive approaches.
+Before you can process a document, you need to understand what a document _is_ at the byte level. A `.pdf` file is not "just text" — it is a complex binary format with objects, cross-reference tables, and content streams. A `.docx` file is actually a ZIP archive containing XML files. Understanding these internals is what allows you to choose the right library, debug extraction failures, and handle edge cases that trip up naive approaches.
 
 ```
 +------------------------------------------------------------------------+
@@ -122,15 +122,15 @@ This is the #1 cause of garbled text in document processing.
 
 ### 2.2 Common Encodings
 
-| Encoding | Bytes/Char | Range | Used By |
-|----------|-----------|-------|---------|
-| ASCII | 1 | 0-127 (English only) | Legacy systems |
-| UTF-8 | 1-4 | All Unicode | Web, Linux, modern systems |
-| UTF-16 | 2-4 | All Unicode | Windows internals, Java |
-| Latin-1 (ISO-8859-1) | 1 | Western European | Old web pages, legacy |
-| Windows-1252 | 1 | Western European + extras | Windows legacy documents |
-| Shift-JIS | 1-2 | Japanese | Japanese legacy systems |
-| GB2312 / GBK | 1-2 | Chinese | Chinese legacy systems |
+| Encoding             | Bytes/Char | Range                     | Used By                    |
+| -------------------- | ---------- | ------------------------- | -------------------------- |
+| ASCII                | 1          | 0-127 (English only)      | Legacy systems             |
+| UTF-8                | 1-4        | All Unicode               | Web, Linux, modern systems |
+| UTF-16               | 2-4        | All Unicode               | Windows internals, Java    |
+| Latin-1 (ISO-8859-1) | 1          | Western European          | Old web pages, legacy      |
+| Windows-1252         | 1          | Western European + extras | Windows legacy documents   |
+| Shift-JIS            | 1-2        | Japanese                  | Japanese legacy systems    |
+| GB2312 / GBK         | 1-2        | Chinese                   | Chinese legacy systems     |
 
 ### 2.3 Detecting and Handling Encoding
 
@@ -312,7 +312,7 @@ startxref
 %%EOF                             <- End of file
 ```
 
-**Key insight**: PDF is a *page description language*, not a data format. Text in a PDF is positioned character by character with `(H) Tj (e) Tj (l) Tj (l) Tj (o) Tj` commands. There is no concept of "paragraphs" or "tables" — those are visual constructs that libraries must infer from character positions.
+**Key insight**: PDF is a _page description language_, not a data format. Text in a PDF is positioned character by character with `(H) Tj (e) Tj (l) Tj (l) Tj (o) Tj` commands. There is no concept of "paragraphs" or "tables" — those are visual constructs that libraries must infer from character positions.
 
 ---
 

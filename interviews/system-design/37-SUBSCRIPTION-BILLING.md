@@ -29,35 +29,35 @@ A subscription and billing system manages the full lifecycle of recurring revenu
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Plan Management | Create, update, archive pricing plans with multiple billing intervals (monthly, quarterly, annual) and currencies |
-| 2 | Subscription Lifecycle | Create, upgrade, downgrade, pause, resume, cancel subscriptions with configurable trial periods |
-| 3 | Usage-Based Billing | Ingest usage events in real time, aggregate by metered dimensions, and bill based on consumption |
-| 4 | Invoice Generation | Automatically generate invoices at billing cycle boundaries with line items, taxes, discounts, and credits |
-| 5 | Payment Processing | Charge customer payment methods (cards, ACH, wallets) via payment gateway integration with idempotent retries |
-| 6 | Proration | Calculate prorated charges and credits for mid-cycle plan changes (upgrades, downgrades, quantity changes) |
-| 7 | Dunning & Retry | Automatically retry failed payments with configurable schedules, grace periods, and escalation (email, downgrade, cancel) |
-| 8 | Coupons & Discounts | Apply percentage or fixed-amount discounts at the subscription, invoice, or line-item level with redemption limits |
-| 9 | Webhooks & Events | Emit lifecycle events (subscription.created, invoice.paid, payment.failed) to merchant endpoints with guaranteed delivery |
-| 10 | Multi-Currency | Price plans in multiple currencies, convert at invoice time, settle to merchant in their payout currency |
-| 11 | Tax Calculation | Integrate with tax engines (Avalara, TaxJar) for jurisdiction-aware tax computation on each line item |
-| 12 | Customer Portal | Self-service UI for customers to manage subscriptions, view invoices, update payment methods |
+| #   | Requirement            | Description                                                                                                               |
+| --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Plan Management        | Create, update, archive pricing plans with multiple billing intervals (monthly, quarterly, annual) and currencies         |
+| 2   | Subscription Lifecycle | Create, upgrade, downgrade, pause, resume, cancel subscriptions with configurable trial periods                           |
+| 3   | Usage-Based Billing    | Ingest usage events in real time, aggregate by metered dimensions, and bill based on consumption                          |
+| 4   | Invoice Generation     | Automatically generate invoices at billing cycle boundaries with line items, taxes, discounts, and credits                |
+| 5   | Payment Processing     | Charge customer payment methods (cards, ACH, wallets) via payment gateway integration with idempotent retries             |
+| 6   | Proration              | Calculate prorated charges and credits for mid-cycle plan changes (upgrades, downgrades, quantity changes)                |
+| 7   | Dunning & Retry        | Automatically retry failed payments with configurable schedules, grace periods, and escalation (email, downgrade, cancel) |
+| 8   | Coupons & Discounts    | Apply percentage or fixed-amount discounts at the subscription, invoice, or line-item level with redemption limits        |
+| 9   | Webhooks & Events      | Emit lifecycle events (subscription.created, invoice.paid, payment.failed) to merchant endpoints with guaranteed delivery |
+| 10  | Multi-Currency         | Price plans in multiple currencies, convert at invoice time, settle to merchant in their payout currency                  |
+| 11  | Tax Calculation        | Integrate with tax engines (Avalara, TaxJar) for jurisdiction-aware tax computation on each line item                     |
+| 12  | Customer Portal        | Self-service UI for customers to manage subscriptions, view invoices, update payment methods                              |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Invoice accuracy | 100% — zero tolerance for billing errors |
-| 2 | Payment idempotency | Exactly-once charging; no double-billing under any failure mode |
-| 3 | Availability | 99.99% for payment processing path (< 52 min downtime/year) |
-| 4 | PCI DSS Compliance | Level 1; card data never stored or transmitted in our systems (tokenization via gateway) |
-| 5 | Auditability | Immutable audit log for every state change on subscriptions, invoices, and payments |
-| 6 | Consistency | Strong consistency for billing mutations; eventual consistency acceptable for analytics |
-| 7 | Webhook delivery | At-least-once with retry; < 30 second p99 delivery latency |
-| 8 | Usage event ingestion | < 500ms acknowledgment at 100K events/sec peak |
-| 9 | Invoice generation latency | All invoices for a billing cycle generated within 1 hour window |
-| 10 | Data retention | 7-year retention for financial records (SOX, tax compliance) |
+| #   | Requirement                | Target                                                                                   |
+| --- | -------------------------- | ---------------------------------------------------------------------------------------- |
+| 1   | Invoice accuracy           | 100% — zero tolerance for billing errors                                                 |
+| 2   | Payment idempotency        | Exactly-once charging; no double-billing under any failure mode                          |
+| 3   | Availability               | 99.99% for payment processing path (< 52 min downtime/year)                              |
+| 4   | PCI DSS Compliance         | Level 1; card data never stored or transmitted in our systems (tokenization via gateway) |
+| 5   | Auditability               | Immutable audit log for every state change on subscriptions, invoices, and payments      |
+| 6   | Consistency                | Strong consistency for billing mutations; eventual consistency acceptable for analytics  |
+| 7   | Webhook delivery           | At-least-once with retry; < 30 second p99 delivery latency                               |
+| 8   | Usage event ingestion      | < 500ms acknowledgment at 100K events/sec peak                                           |
+| 9   | Invoice generation latency | All invoices for a billing cycle generated within 1 hour window                          |
+| 10  | Data retention             | 7-year retention for financial records (SOX, tax compliance)                             |
 
 ### Capacity Estimation
 
@@ -117,6 +117,7 @@ POST   /v1/plans/{planId}/archive               Archive plan (no new subscriptio
 ```
 
 **POST /v1/plans Request:**
+
 ```json
 {
   "name": "Pro Monthly",
@@ -156,6 +157,7 @@ POST   /v1/plans/{planId}/archive               Archive plan (no new subscriptio
 ```
 
 **POST /v1/plans Response (201 Created):**
+
 ```json
 {
   "planId": "plan_a1b2c3d4",
@@ -166,7 +168,7 @@ POST   /v1/plans/{planId}/archive               Archive plan (no new subscriptio
   "billingInterval": "month",
   "billingIntervalCount": 1,
   "trialPeriodDays": 14,
-  "prices": [ "..." ],
+  "prices": ["..."],
   "createdAt": "2024-06-01T00:00:00Z",
   "updatedAt": "2024-06-01T00:00:00Z"
 }
@@ -185,6 +187,7 @@ GET    /v1/subscriptions?customerId={id}&status= List customer subscriptions
 ```
 
 **POST /v1/subscriptions Request:**
+
 ```json
 {
   "idempotencyKey": "idem_sub_550e8400",
@@ -201,6 +204,7 @@ GET    /v1/subscriptions?customerId={id}&status= List customer subscriptions
 ```
 
 **POST /v1/subscriptions Response (201 Created):**
+
 ```json
 {
   "subscriptionId": "sub_7a8b9c0d",
@@ -224,6 +228,7 @@ GET    /v1/subscriptions?customerId={id}&status= List customer subscriptions
 ```
 
 **PATCH /v1/subscriptions/{subId} Request (Mid-Cycle Upgrade):**
+
 ```json
 {
   "idempotencyKey": "idem_upgrade_abc123",
@@ -247,6 +252,7 @@ GET    /v1/invoices/upcoming?subscriptionId={id} Preview upcoming invoice
 ```
 
 **GET /v1/invoices/{invoiceId} Response:**
+
 ```json
 {
   "invoiceId": "inv_e5f6g7h8",
@@ -310,6 +316,7 @@ GET    /v1/usage_events/summary?subscriptionId={id}&meterId={id}&periodStart=&pe
 ```
 
 **POST /v1/usage_events/batch Request:**
+
 ```json
 {
   "events": [
@@ -340,6 +347,7 @@ GET    /v1/usage_events/summary?subscriptionId={id}&meterId={id}&periodStart=&pe
 ```
 
 **POST /v1/usage_events/batch Response (202 Accepted):**
+
 ```json
 {
   "accepted": 2,
@@ -761,22 +769,22 @@ subscriptions  1---*  subscription_events (audit log)
 
 ### Component Responsibilities
 
-| Component | Responsibility |
-|-----------|---------------|
-| API Gateway | Authentication, rate limiting, request routing, TLS termination |
-| Plan Service | CRUD for pricing plans, prices, and tiers; plan versioning |
-| Subscription Service | Lifecycle management: create, upgrade, downgrade, pause, cancel |
-| Billing Engine | Proration calculation, metered usage pricing, discount application |
-| Invoice Generator | Assembles invoices from subscription state, usage aggregates, and credits |
-| Payment Gateway Adapter | Abstraction over external payment gateways; tokenization, charge, refund |
-| Dunning Engine | Orchestrates retry schedules for failed payments, escalation policies |
-| Usage Metering Service | Ingests usage events, deduplicates, aggregates per billing period |
-| Webhook Service | Reliable event delivery to merchant endpoints with retry and signing |
-| Kafka | Decouples services; provides at-least-once delivery guarantees |
-| PostgreSQL | Source of truth for all transactional data |
-| Redis | Caching, distributed locks, idempotency key store, rate limiting |
-| ClickHouse | Columnar store for high-volume usage events and analytics queries |
-| S3 | Invoice PDFs, cold storage for archived usage events and audit logs |
+| Component               | Responsibility                                                            |
+| ----------------------- | ------------------------------------------------------------------------- |
+| API Gateway             | Authentication, rate limiting, request routing, TLS termination           |
+| Plan Service            | CRUD for pricing plans, prices, and tiers; plan versioning                |
+| Subscription Service    | Lifecycle management: create, upgrade, downgrade, pause, cancel           |
+| Billing Engine          | Proration calculation, metered usage pricing, discount application        |
+| Invoice Generator       | Assembles invoices from subscription state, usage aggregates, and credits |
+| Payment Gateway Adapter | Abstraction over external payment gateways; tokenization, charge, refund  |
+| Dunning Engine          | Orchestrates retry schedules for failed payments, escalation policies     |
+| Usage Metering Service  | Ingests usage events, deduplicates, aggregates per billing period         |
+| Webhook Service         | Reliable event delivery to merchant endpoints with retry and signing      |
+| Kafka                   | Decouples services; provides at-least-once delivery guarantees            |
+| PostgreSQL              | Source of truth for all transactional data                                |
+| Redis                   | Caching, distributed locks, idempotency key store, rate limiting          |
+| ClickHouse              | Columnar store for high-volume usage events and analytics queries         |
+| S3                      | Invoice PDFs, cold storage for archived usage events and audit logs       |
 
 ---
 
@@ -836,24 +844,24 @@ subscriptions  1---*  subscription_events (audit log)
 
 ### State Transition Rules
 
-| From | To | Trigger | Action |
-|------|----|---------|--------|
-| (none) | trialing | Subscription created with trial | Set trial_start, trial_end; no charge |
-| (none) | active | Subscription created without trial | Charge immediately; generate first invoice |
-| (none) | incomplete | First payment fails | Mark incomplete; dunning begins |
-| trialing | active | Trial ends + payment succeeds | Generate invoice; charge customer |
-| trialing | incomplete | Trial ends + payment fails | Invoice open; dunning begins |
-| trialing | canceled | Customer cancels during trial | No charge; immediate cancellation |
-| active | past_due | Renewal payment fails | Invoice remains open; dunning begins |
-| active | paused | Customer requests pause | Stop billing; optionally set resume date |
-| active | canceled | Customer cancels (immediate) | Generate final invoice with proration credits |
-| active | canceled | Customer cancels (at period end) | Set cancel_at_period_end; active until period_end |
-| past_due | active | Retry payment succeeds | Invoice marked paid; subscription restored |
-| past_due | canceled | Grace period expires or max retries | Mark canceled; emit webhook |
-| paused | active | Customer resumes or auto-resume date | Restart billing from resume date |
-| canceled | expired | Current period end reached | Terminal state; no further action |
-| incomplete | active | Payment succeeds within window | Invoice paid; subscription activated |
-| incomplete | expired | Payment window expires (48h) | Terminal state |
+| From       | To         | Trigger                              | Action                                            |
+| ---------- | ---------- | ------------------------------------ | ------------------------------------------------- |
+| (none)     | trialing   | Subscription created with trial      | Set trial_start, trial_end; no charge             |
+| (none)     | active     | Subscription created without trial   | Charge immediately; generate first invoice        |
+| (none)     | incomplete | First payment fails                  | Mark incomplete; dunning begins                   |
+| trialing   | active     | Trial ends + payment succeeds        | Generate invoice; charge customer                 |
+| trialing   | incomplete | Trial ends + payment fails           | Invoice open; dunning begins                      |
+| trialing   | canceled   | Customer cancels during trial        | No charge; immediate cancellation                 |
+| active     | past_due   | Renewal payment fails                | Invoice remains open; dunning begins              |
+| active     | paused     | Customer requests pause              | Stop billing; optionally set resume date          |
+| active     | canceled   | Customer cancels (immediate)         | Generate final invoice with proration credits     |
+| active     | canceled   | Customer cancels (at period end)     | Set cancel_at_period_end; active until period_end |
+| past_due   | active     | Retry payment succeeds               | Invoice marked paid; subscription restored        |
+| past_due   | canceled   | Grace period expires or max retries  | Mark canceled; emit webhook                       |
+| paused     | active     | Customer resumes or auto-resume date | Restart billing from resume date                  |
+| canceled   | expired    | Current period end reached           | Terminal state; no further action                 |
+| incomplete | active     | Payment succeeds within window       | Invoice paid; subscription activated              |
+| incomplete | expired    | Payment window expires (48h)         | Terminal state                                    |
 
 ### Lifecycle Processing (Pseudocode)
 
@@ -931,14 +939,14 @@ def transition(sub, new_status, **kwargs):
 
 ### Model Overview
 
-| Model | Description | Example | Calculation |
-|-------|-------------|---------|-------------|
-| Flat-rate | Fixed price per billing period | $49/month | `total = flat_price` |
-| Per-seat | Price per unit (users, licenses) | $12/user/month | `total = price_per_seat * quantity` |
-| Usage-based | Pay for what you use | $0.05/API call | `total = sum(tier_price * units_in_tier)` |
-| Tiered (Graduated) | Different price per tier, charges accumulate | First 10K free, next 90K at $0.05 | `total = sum(units_in_tier * tier_rate)` |
-| Tiered (Volume) | Single price based on total volume tier | 0-10K: $0.10, 10K-100K: $0.07 | `total = total_units * tier_rate` |
-| Hybrid | Combination of flat + per-seat + metered | $49 base + $12/user + metered API | `total = flat + seats + metered` |
+| Model              | Description                                  | Example                           | Calculation                               |
+| ------------------ | -------------------------------------------- | --------------------------------- | ----------------------------------------- |
+| Flat-rate          | Fixed price per billing period               | $49/month                         | `total = flat_price`                      |
+| Per-seat           | Price per unit (users, licenses)             | $12/user/month                    | `total = price_per_seat * quantity`       |
+| Usage-based        | Pay for what you use                         | $0.05/API call                    | `total = sum(tier_price * units_in_tier)` |
+| Tiered (Graduated) | Different price per tier, charges accumulate | First 10K free, next 90K at $0.05 | `total = sum(units_in_tier * tier_rate)`  |
+| Tiered (Volume)    | Single price based on total volume tier      | 0-10K: $0.10, 10K-100K: $0.07     | `total = total_units * tier_rate`         |
+| Hybrid             | Combination of flat + per-seat + metered     | $49 base + $12/user + metered API | `total = flat + seats + metered`          |
 
 ### Graduated Tiered Pricing Calculation
 
@@ -1153,11 +1161,11 @@ Next full invoice (Aug 1):
 
 ### Proration Behaviors
 
-| Behavior | Description | Use Case |
-|----------|-------------|----------|
-| `create_prorations` | Generate proration line items on next invoice | Default; most common |
-| `always_invoice` | Generate and immediately charge a proration invoice | For significant upgrades |
-| `none` | No proration; new price starts next cycle | Simpler; for downgrades only |
+| Behavior            | Description                                         | Use Case                     |
+| ------------------- | --------------------------------------------------- | ---------------------------- |
+| `create_prorations` | Generate proration line items on next invoice       | Default; most common         |
+| `always_invoice`    | Generate and immediately charge a proration invoice | For significant upgrades     |
+| `none`              | No proration; new price starts next cycle           | Simpler; for downgrades only |
 
 ### Proration Calculation (Pseudocode)
 
@@ -1724,12 +1732,12 @@ def send_dunning_notification(sub, invoice, attempt_count):
 
 ### Dunning Metrics
 
-| Metric | Target | Description |
-|--------|--------|-------------|
-| Recovery rate | > 70% | Percentage of initially failed payments eventually recovered |
-| Avg recovery time | < 5 days | Average days from first failure to successful payment |
-| Involuntary churn rate | < 2% | Percentage of active subscriptions lost to payment failure per month |
-| Smart retry success rate | > 40% | Percentage of smart-timed retries that succeed |
+| Metric                   | Target   | Description                                                          |
+| ------------------------ | -------- | -------------------------------------------------------------------- |
+| Recovery rate            | > 70%    | Percentage of initially failed payments eventually recovered         |
+| Avg recovery time        | < 5 days | Average days from first failure to successful payment                |
+| Involuntary churn rate   | < 2%     | Percentage of active subscriptions lost to payment failure per month |
+| Smart retry success rate | > 40%    | Percentage of smart-timed retries that succeed                       |
 
 ---
 
@@ -2181,13 +2189,13 @@ External Dependencies:
 
 ### Deployment Strategies
 
-| Component | Strategy | Reason |
-|-----------|----------|--------|
-| API Services | Rolling update (maxUnavailable: 25%) | Zero-downtime for API consumers |
-| Billing Workers | Blue-green | Ensure exactly one billing processor active at a time |
-| Usage Aggregation | Rolling update | Kafka consumer group rebalancing handles transitions |
-| CronJobs | Leader election via Redis lock | Prevent duplicate cron execution across replicas |
-| Database migrations | Expand-then-contract | Add new columns/tables first; backfill; then remove old |
+| Component           | Strategy                             | Reason                                                  |
+| ------------------- | ------------------------------------ | ------------------------------------------------------- |
+| API Services        | Rolling update (maxUnavailable: 25%) | Zero-downtime for API consumers                         |
+| Billing Workers     | Blue-green                           | Ensure exactly one billing processor active at a time   |
+| Usage Aggregation   | Rolling update                       | Kafka consumer group rebalancing handles transitions    |
+| CronJobs            | Leader election via Redis lock       | Prevent duplicate cron execution across replicas        |
+| Database migrations | Expand-then-contract                 | Add new columns/tables first; backfill; then remove old |
 
 ---
 
@@ -2199,7 +2207,7 @@ A: Three-layer idempotency protection. First, the API layer deduplicates using t
 
 **Q: How do you handle a mid-cycle plan change from monthly to annual billing?**
 
-A: We treat it as a plan change with proration. First, we credit the customer for the unused portion of the current monthly cycle. Then we charge the full annual price immediately. The billing cycle anchor resets to the change date, and the next renewal is set to one year from now. For example, if a customer on a $49/month plan upgrades to $468/year ($39/month equivalent) on day 16 of a 30-day cycle, they get a credit of $49 * (14/30) = $22.87 for the unused monthly time, and are charged $468 for the year. Net charge: $468 - $22.87 = $445.13. The proration line items are recorded on the invoice for full audit trail.
+A: We treat it as a plan change with proration. First, we credit the customer for the unused portion of the current monthly cycle. Then we charge the full annual price immediately. The billing cycle anchor resets to the change date, and the next renewal is set to one year from now. For example, if a customer on a $49/month plan upgrades to $468/year ($39/month equivalent) on day 16 of a 30-day cycle, they get a credit of $49 \* (14/30) = $22.87 for the unused monthly time, and are charged $468 for the year. Net charge: $468 - $22.87 = $445.13. The proration line items are recorded on the invoice for full audit trail.
 
 **Q: How do you ensure usage events are not lost and not double-counted?**
 
@@ -2235,18 +2243,18 @@ A: Tax calculation is delegated to a specialized tax engine (such as Avalara or 
 
 ### Key Architecture Decisions
 
-| Decision | Chosen Approach | Alternative | Reason |
-|----------|----------------|-------------|--------|
-| Subscription state management | State machine with optimistic locking | Simple status field | State machine enforces valid transitions; optimistic lock prevents race conditions |
-| Invoice generation | Batch cron + Kafka workers | Real-time on subscription renewal | Decoupled; handles millions of invoices in a controlled window; crash recovery via idempotent jobs |
-| Usage event storage | Kafka + ClickHouse (hot) + S3 Parquet (cold) | PostgreSQL only | 100K events/sec exceeds RDBMS write capacity; columnar store optimal for aggregation queries |
-| Usage deduplication | Bloom filter + DB unique constraint | DB unique constraint only | Bloom filter absorbs 99.9% of duplicate checks without DB round-trip at 100K events/sec |
-| Proration | Per-second calculation with accumulated pending items | Per-day calculation | Per-second avoids edge cases at day boundaries; pending items allow multiple mid-cycle changes |
-| Payment idempotency | Redis (fast) + PostgreSQL (durable) + gateway-level | Redis only | Survives Redis failures; gateway-level idempotency prevents double charges even if our system replays |
-| Dunning retry timing | Smart retry (customer timezone + decline code analysis) | Fixed interval | 15-30% higher recovery rate by retrying when customer is likely to have funds |
-| Multi-tenant data isolation | Logical sharding by tenant_id, dedicated shards for large tenants | Single database | Co-locates all tenant data; avoids cross-shard joins; large tenants get noisy-neighbor isolation |
-| Revenue recognition | Pre-computed schedule table | Computed on-demand from invoices | Schedule table enables efficient monthly close; supports ASC 606 audit requirements |
-| Tax calculation | External tax engine (Avalara) with caching | Built-in tax tables | Tax law changes constantly across 10,000+ jurisdictions; external engine maintained by specialists |
+| Decision                      | Chosen Approach                                                   | Alternative                       | Reason                                                                                                |
+| ----------------------------- | ----------------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Subscription state management | State machine with optimistic locking                             | Simple status field               | State machine enforces valid transitions; optimistic lock prevents race conditions                    |
+| Invoice generation            | Batch cron + Kafka workers                                        | Real-time on subscription renewal | Decoupled; handles millions of invoices in a controlled window; crash recovery via idempotent jobs    |
+| Usage event storage           | Kafka + ClickHouse (hot) + S3 Parquet (cold)                      | PostgreSQL only                   | 100K events/sec exceeds RDBMS write capacity; columnar store optimal for aggregation queries          |
+| Usage deduplication           | Bloom filter + DB unique constraint                               | DB unique constraint only         | Bloom filter absorbs 99.9% of duplicate checks without DB round-trip at 100K events/sec               |
+| Proration                     | Per-second calculation with accumulated pending items             | Per-day calculation               | Per-second avoids edge cases at day boundaries; pending items allow multiple mid-cycle changes        |
+| Payment idempotency           | Redis (fast) + PostgreSQL (durable) + gateway-level               | Redis only                        | Survives Redis failures; gateway-level idempotency prevents double charges even if our system replays |
+| Dunning retry timing          | Smart retry (customer timezone + decline code analysis)           | Fixed interval                    | 15-30% higher recovery rate by retrying when customer is likely to have funds                         |
+| Multi-tenant data isolation   | Logical sharding by tenant_id, dedicated shards for large tenants | Single database                   | Co-locates all tenant data; avoids cross-shard joins; large tenants get noisy-neighbor isolation      |
+| Revenue recognition           | Pre-computed schedule table                                       | Computed on-demand from invoices  | Schedule table enables efficient monthly close; supports ASC 606 audit requirements                   |
+| Tax calculation               | External tax engine (Avalara) with caching                        | Built-in tax tables               | Tax law changes constantly across 10,000+ jurisdictions; external engine maintained by specialists    |
 
 ### Trade-Off Analysis
 
@@ -2276,4 +2284,4 @@ Build vs. Buy:
 
 ---
 
-*Covers: subscription state machine, billing models (flat/per-seat/metered/tiered/hybrid), proration calculation, invoice pipeline, idempotent payment processing, PCI compliance, dunning & smart retry, usage-based billing at scale, revenue recognition (ASC 606), tenant-based sharding, event-driven architecture.*
+_Covers: subscription state machine, billing models (flat/per-seat/metered/tiered/hybrid), proration calculation, invoice pipeline, idempotent payment processing, PCI compliance, dunning & smart retry, usage-based billing at scale, revenue recognition (ASC 606), tenant-based sharding, event-driven architecture._

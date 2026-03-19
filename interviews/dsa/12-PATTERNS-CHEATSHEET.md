@@ -37,16 +37,17 @@ def sliding_window(arr, condition):
 ```
 
 **Variants:**
+
 - Fixed window size: no contraction needed, slide of size k
 - Variable window: expand/contract
 - Minimum window: shrink while valid, track minimum
 
-| Problem | Window Type | Time |
-|---------|------------|------|
-| Max sum subarray of size k | Fixed | O(n) |
-| Longest substring without repeat | Variable | O(n) |
-| Minimum window substring | Variable (min) | O(n) |
-| Sliding window maximum | Fixed + deque | O(n) |
+| Problem                          | Window Type    | Time |
+| -------------------------------- | -------------- | ---- |
+| Max sum subarray of size k       | Fixed          | O(n) |
+| Longest substring without repeat | Variable       | O(n) |
+| Minimum window substring         | Variable (min) | O(n) |
+| Sliding window maximum           | Fixed + deque  | O(n) |
 
 ---
 
@@ -76,13 +77,13 @@ for fast in range(len(arr)):
         slow += 1
 ```
 
-| Problem | Pointer Type | Time |
-|---------|-------------|------|
-| Two Sum (sorted) | Opposite | O(n) |
-| Container With Most Water | Opposite | O(n) |
-| Remove Duplicates | Same direction | O(n) |
-| Palindrome Check | Opposite | O(n) |
-| Merge Sorted Arrays | Same direction | O(n+m) |
+| Problem                   | Pointer Type   | Time   |
+| ------------------------- | -------------- | ------ |
+| Two Sum (sorted)          | Opposite       | O(n)   |
+| Container With Most Water | Opposite       | O(n)   |
+| Remove Duplicates         | Same direction | O(n)   |
+| Palindrome Check          | Opposite       | O(n)   |
+| Merge Sorted Arrays       | Same direction | O(n+m) |
 
 ---
 
@@ -98,12 +99,12 @@ while fast and fast.next:
     # If they meet: cycle exists
 ```
 
-| Problem | Usage | Time |
-|---------|-------|------|
-| Detect cycle | Meet = cycle | O(n) |
-| Find cycle start | Reset to head after meeting | O(n) |
-| Find middle | When fast ends, slow = middle | O(n) |
-| Happy number | Cycle in digit sum sequence | O(log n) |
+| Problem          | Usage                         | Time     |
+| ---------------- | ----------------------------- | -------- |
+| Detect cycle     | Meet = cycle                  | O(n)     |
+| Find cycle start | Reset to head after meeting   | O(n)     |
+| Find middle      | When fast ends, slow = middle | O(n)     |
+| Happy number     | Cycle in digit sum sequence   | O(log n) |
 
 ---
 
@@ -139,10 +140,10 @@ def cyclic_sort(nums):
             i += 1
 ```
 
-| Problem | Find | Time |
-|---------|------|------|
-| Missing Number | `nums[i] != i` after sort | O(n) |
-| Find Duplicate | `nums[i] != i` during sort | O(n) |
+| Problem          | Find                         | Time |
+| ---------------- | ---------------------------- | ---- |
+| Missing Number   | `nums[i] != i` after sort    | O(n) |
+| Find Duplicate   | `nums[i] != i` during sort   | O(n) |
 | Find All Missing | All `i` where `nums[i] != i` | O(n) |
 
 ---
@@ -239,19 +240,19 @@ Can you make a greedy choice?
 
 ### When to Use Each Data Structure
 
-| Data Structure | Use When | Python | Operations |
-|---------------|----------|--------|------------|
-| Array/List | Ordered collection, index access | `list` | O(1) access, O(n) insert/delete |
-| Hash Map | Key-value lookup, counting | `dict`, `defaultdict` | O(1) avg lookup/insert |
-| Hash Set | Membership testing, uniqueness | `set` | O(1) avg lookup/insert |
-| Stack | LIFO, matching, monotonic problems | `list` | O(1) push/pop |
-| Queue | FIFO, BFS | `deque` | O(1) append/popleft |
-| Heap | Top-K, priority scheduling | `heapq` | O(log n) push/pop, O(1) peek |
-| Linked List | Frequent insert/delete at head | Custom class | O(1) head insert, O(n) access |
-| Binary Search Tree | Sorted data with dynamic updates | `sortedcontainers` | O(log n) ops |
-| Trie | Prefix matching, autocomplete | Custom class | O(m) per operation |
-| Union-Find | Connected components, cycle detection | Custom class | O(alpha(n)) per op |
-| Deque | Sliding window max/min | `deque` | O(1) both ends |
+| Data Structure     | Use When                              | Python                | Operations                      |
+| ------------------ | ------------------------------------- | --------------------- | ------------------------------- |
+| Array/List         | Ordered collection, index access      | `list`                | O(1) access, O(n) insert/delete |
+| Hash Map           | Key-value lookup, counting            | `dict`, `defaultdict` | O(1) avg lookup/insert          |
+| Hash Set           | Membership testing, uniqueness        | `set`                 | O(1) avg lookup/insert          |
+| Stack              | LIFO, matching, monotonic problems    | `list`                | O(1) push/pop                   |
+| Queue              | FIFO, BFS                             | `deque`               | O(1) append/popleft             |
+| Heap               | Top-K, priority scheduling            | `heapq`               | O(log n) push/pop, O(1) peek    |
+| Linked List        | Frequent insert/delete at head        | Custom class          | O(1) head insert, O(n) access   |
+| Binary Search Tree | Sorted data with dynamic updates      | `sortedcontainers`    | O(log n) ops                    |
+| Trie               | Prefix matching, autocomplete         | Custom class          | O(m) per operation              |
+| Union-Find         | Connected components, cycle detection | Custom class          | O(alpha(n)) per op              |
+| Deque              | Sliding window max/min                | `deque`               | O(1) both ends                  |
 
 ---
 
@@ -259,55 +260,55 @@ Can you make a greedy choice?
 
 ### 3.1 Time Complexity Comparison
 
-| Complexity | Name | Example | n=1000 |
-|-----------|------|---------|--------|
-| O(1) | Constant | Hash lookup | 1 |
-| O(log n) | Logarithmic | Binary search | 10 |
-| O(n) | Linear | Single pass | 1,000 |
-| O(n log n) | Linearithmic | Merge sort | 10,000 |
-| O(n^2) | Quadratic | Nested loops | 1,000,000 |
-| O(n^3) | Cubic | Triple nested loops | 1,000,000,000 |
-| O(2^n) | Exponential | Subsets | 10^301 |
-| O(n!) | Factorial | Permutations | Astronomically large |
+| Complexity | Name         | Example             | n=1000               |
+| ---------- | ------------ | ------------------- | -------------------- |
+| O(1)       | Constant     | Hash lookup         | 1                    |
+| O(log n)   | Logarithmic  | Binary search       | 10                   |
+| O(n)       | Linear       | Single pass         | 1,000                |
+| O(n log n) | Linearithmic | Merge sort          | 10,000               |
+| O(n^2)     | Quadratic    | Nested loops        | 1,000,000            |
+| O(n^3)     | Cubic        | Triple nested loops | 1,000,000,000        |
+| O(2^n)     | Exponential  | Subsets             | 10^301               |
+| O(n!)      | Factorial    | Permutations        | Astronomically large |
 
 ### 3.2 Sorting Algorithms
 
-| Algorithm | Best | Average | Worst | Space | Stable |
-|-----------|------|---------|-------|-------|--------|
-| Timsort (Python default) | O(n) | O(n log n) | O(n log n) | O(n) | Yes |
-| Merge Sort | O(n log n) | O(n log n) | O(n log n) | O(n) | Yes |
-| Quick Sort | O(n log n) | O(n log n) | O(n^2) | O(log n) | No |
-| Heap Sort | O(n log n) | O(n log n) | O(n log n) | O(1) | No |
-| Counting Sort | O(n+k) | O(n+k) | O(n+k) | O(k) | Yes |
-| Radix Sort | O(d*(n+k)) | O(d*(n+k)) | O(d*(n+k)) | O(n+k) | Yes |
-| Bucket Sort | O(n+k) | O(n+k) | O(n^2) | O(n) | Yes |
+| Algorithm                | Best        | Average     | Worst       | Space    | Stable |
+| ------------------------ | ----------- | ----------- | ----------- | -------- | ------ |
+| Timsort (Python default) | O(n)        | O(n log n)  | O(n log n)  | O(n)     | Yes    |
+| Merge Sort               | O(n log n)  | O(n log n)  | O(n log n)  | O(n)     | Yes    |
+| Quick Sort               | O(n log n)  | O(n log n)  | O(n^2)      | O(log n) | No     |
+| Heap Sort                | O(n log n)  | O(n log n)  | O(n log n)  | O(1)     | No     |
+| Counting Sort            | O(n+k)      | O(n+k)      | O(n+k)      | O(k)     | Yes    |
+| Radix Sort               | O(d\*(n+k)) | O(d\*(n+k)) | O(d\*(n+k)) | O(n+k)   | Yes    |
+| Bucket Sort              | O(n+k)      | O(n+k)      | O(n^2)      | O(n)     | Yes    |
 
 ### 3.3 Data Structure Operations
 
-| Structure | Access | Search | Insert | Delete |
-|-----------|--------|--------|--------|--------|
-| Array | O(1) | O(n) | O(n) | O(n) |
-| Linked List | O(n) | O(n) | O(1)* | O(1)* |
-| Hash Table | N/A | O(1) avg | O(1) avg | O(1) avg |
+| Structure      | Access   | Search   | Insert   | Delete   |
+| -------------- | -------- | -------- | -------- | -------- |
+| Array          | O(1)     | O(n)     | O(n)     | O(n)     |
+| Linked List    | O(n)     | O(n)     | O(1)\*   | O(1)\*   |
+| Hash Table     | N/A      | O(1) avg | O(1) avg | O(1) avg |
 | BST (balanced) | O(log n) | O(log n) | O(log n) | O(log n) |
-| Heap | N/A | O(n) | O(log n) | O(log n) |
-| Trie | N/A | O(m) | O(m) | O(m) |
+| Heap           | N/A      | O(n)     | O(log n) | O(log n) |
+| Trie           | N/A      | O(m)     | O(m)     | O(m)     |
 
-*Given a reference to the node
+\*Given a reference to the node
 
 ### 3.4 Graph Algorithms
 
-| Algorithm | Time | Space | Use Case |
-|-----------|------|-------|----------|
-| BFS | O(V+E) | O(V) | Shortest path (unweighted) |
-| DFS | O(V+E) | O(V) | Cycle detection, topo sort |
-| Dijkstra (binary heap) | O((V+E) log V) | O(V) | Shortest path (weighted, non-neg) |
-| Bellman-Ford | O(V*E) | O(V) | Shortest path (negative edges) |
-| Floyd-Warshall | O(V^3) | O(V^2) | All-pairs shortest path |
-| Kruskal (MST) | O(E log E) | O(V) | Minimum spanning tree |
-| Prim (MST) | O((V+E) log V) | O(V) | Minimum spanning tree (dense) |
-| Topological Sort | O(V+E) | O(V) | Dependency ordering |
-| Union-Find | O(alpha(n)) per op | O(V) | Connected components |
+| Algorithm              | Time               | Space  | Use Case                          |
+| ---------------------- | ------------------ | ------ | --------------------------------- |
+| BFS                    | O(V+E)             | O(V)   | Shortest path (unweighted)        |
+| DFS                    | O(V+E)             | O(V)   | Cycle detection, topo sort        |
+| Dijkstra (binary heap) | O((V+E) log V)     | O(V)   | Shortest path (weighted, non-neg) |
+| Bellman-Ford           | O(V\*E)            | O(V)   | Shortest path (negative edges)    |
+| Floyd-Warshall         | O(V^3)             | O(V^2) | All-pairs shortest path           |
+| Kruskal (MST)          | O(E log E)         | O(V)   | Minimum spanning tree             |
+| Prim (MST)             | O((V+E) log V)     | O(V)   | Minimum spanning tree (dense)     |
+| Topological Sort       | O(V+E)             | O(V)   | Dependency ordering               |
+| Union-Find             | O(alpha(n)) per op | O(V)   | Connected components              |
 
 ---
 
@@ -476,27 +477,32 @@ fib.cache_clear()
 ## 5. Problem-Solving Framework
 
 ### Step 1: Understand the Problem (2-3 minutes)
+
 - Restate the problem in your own words
 - Clarify edge cases: empty input, single element, duplicates, negative numbers
 - Ask about constraints: input size, value range, time/space requirements
 
 ### Step 2: Identify the Pattern (2-3 minutes)
+
 - What data structure fits naturally?
 - What pattern does the problem match?
 - Can I reduce it to a known problem?
 
 ### Step 3: Plan the Approach (3-5 minutes)
+
 - Write pseudocode or explain the algorithm
 - Identify the time and space complexity
 - Discuss trade-offs if multiple approaches exist
 
 ### Step 4: Code (15-20 minutes)
+
 - Write clean, readable code
 - Use meaningful variable names
 - Handle edge cases
 - Add brief comments for non-obvious logic
 
 ### Step 5: Test (3-5 minutes)
+
 - Walk through with a small example
 - Test edge cases: empty, single, large
 - Verify time and space complexity claims
@@ -566,26 +572,26 @@ GENERATE ALL POSSIBILITIES?
 
 ### Interview Constraint Guidelines
 
-| Input Size (n) | Expected Complexity | Common Patterns |
-|----------------|-------------------|-----------------|
-| n <= 10 | O(n!), O(2^n) | Backtracking, brute force |
-| n <= 20 | O(2^n), O(n * 2^n) | Bitmask DP, backtracking |
-| n <= 100 | O(n^3) | Floyd-Warshall, interval DP |
-| n <= 1,000 | O(n^2) | DP, nested loops |
-| n <= 10,000 | O(n^2) possible, O(n log n) preferred | Sort-based, DP |
-| n <= 100,000 | O(n log n) | Sort, binary search, heap |
-| n <= 1,000,000 | O(n) or O(n log n) | Hash map, two pointers, sliding window |
-| n <= 10,000,000 | O(n) | Linear scan, counting sort |
-| n > 10^8 | O(log n), O(1) | Math, binary search on answer |
+| Input Size (n)  | Expected Complexity                   | Common Patterns                        |
+| --------------- | ------------------------------------- | -------------------------------------- |
+| n <= 10         | O(n!), O(2^n)                         | Backtracking, brute force              |
+| n <= 20         | O(2^n), O(n \* 2^n)                   | Bitmask DP, backtracking               |
+| n <= 100        | O(n^3)                                | Floyd-Warshall, interval DP            |
+| n <= 1,000      | O(n^2)                                | DP, nested loops                       |
+| n <= 10,000     | O(n^2) possible, O(n log n) preferred | Sort-based, DP                         |
+| n <= 100,000    | O(n log n)                            | Sort, binary search, heap              |
+| n <= 1,000,000  | O(n) or O(n log n)                    | Hash map, two pointers, sliding window |
+| n <= 10,000,000 | O(n)                                  | Linear scan, counting sort             |
+| n > 10^8        | O(log n), O(1)                        | Math, binary search on answer          |
 
 ### Space Complexity Guidelines
 
-| Approach | Space | Notes |
-|----------|-------|-------|
-| In-place modification | O(1) | Modify input directly |
-| Two pointers | O(1) | Constant extra space |
-| Hash set/map | O(n) | Trading space for time |
-| Recursion | O(h) or O(n) | Call stack depth |
-| DP table | O(n) or O(n*m) | Often reducible to O(n) |
-| BFS queue | O(w) or O(n) | Width of tree/graph |
-| Sorting (Timsort) | O(n) | Python's built-in sort |
+| Approach              | Space           | Notes                   |
+| --------------------- | --------------- | ----------------------- |
+| In-place modification | O(1)            | Modify input directly   |
+| Two pointers          | O(1)            | Constant extra space    |
+| Hash set/map          | O(n)            | Trading space for time  |
+| Recursion             | O(h) or O(n)    | Call stack depth        |
+| DP table              | O(n) or O(n\*m) | Often reducible to O(n) |
+| BFS queue             | O(w) or O(n)    | Width of tree/graph     |
+| Sorting (Timsort)     | O(n)            | Python's built-in sort  |

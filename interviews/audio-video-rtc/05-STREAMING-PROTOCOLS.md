@@ -228,6 +228,7 @@ Basic Header Format (1 byte, most common):
 Action Message Format (AMF) serializes ActionScript objects for RTMP commands:
 
 **AMF0 Types:**
+
 - `0x00` - Number (IEEE 754 double)
 - `0x01` - Boolean
 - `0x02` - String (UTF-8, 16-bit length prefix)
@@ -237,6 +238,7 @@ Action Message Format (AMF) serializes ActionScript objects for RTMP commands:
 - `0x09` - Object End Marker
 
 **Example connect command in AMF0:**
+
 ```
 Command Name: "connect" (string)
 Transaction ID: 1 (number)
@@ -263,13 +265,13 @@ of the legacy 4-bit codec ID, which was limited to 15 codecs.
 
 ### RTMP Variants
 
-| Variant | Transport | Encryption | Port |
-|---------|-----------|------------|------|
-| RTMP    | TCP       | None       | 1935 |
-| RTMPS   | TCP + TLS | TLS 1.2+   | 443  |
-| RTMPE   | TCP       | Adobe proprietary | 1935 |
-| RTMPT   | HTTP tunnel| None      | 80   |
-| RTMFP   | UDP       | AES-128    | 1935 |
+| Variant | Transport   | Encryption        | Port |
+| ------- | ----------- | ----------------- | ---- |
+| RTMP    | TCP         | None              | 1935 |
+| RTMPS   | TCP + TLS   | TLS 1.2+          | 443  |
+| RTMPE   | TCP         | Adobe proprietary | 1935 |
+| RTMPT   | HTTP tunnel | None              | 80   |
+| RTMFP   | UDP         | AES-128           | 1935 |
 
 RTMPS is the only variant recommended today. RTMPE uses broken proprietary encryption.
 RTMPT tunnels through HTTP but adds overhead. RTMFP is peer-to-peer and rarely used.
@@ -388,27 +390,28 @@ segment_0149.ts
 
 ### Key EXT-X Tags
 
-| Tag | Purpose |
-|-----|---------|
-| `#EXT-X-VERSION` | HLS protocol version |
-| `#EXT-X-TARGETDURATION` | Maximum segment duration (integer seconds) |
-| `#EXT-X-MEDIA-SEQUENCE` | Sequence number of first segment in playlist |
-| `#EXT-X-DISCONTINUITY-SEQUENCE` | Discontinuity counter for live |
-| `#EXT-X-ENDLIST` | Marks VOD or ended live stream |
-| `#EXT-X-PLAYLIST-TYPE` | VOD or EVENT |
-| `#EXT-X-MAP` | Initialization segment for fMP4 |
-| `#EXT-X-KEY` | Encryption method and key URI |
-| `#EXT-X-PROGRAM-DATE-TIME` | Wall-clock time mapping |
-| `#EXT-X-DISCONTINUITY` | Encoding parameter change |
-| `#EXT-X-STREAM-INF` | Variant stream properties |
-| `#EXT-X-I-FRAME-STREAM-INF` | I-frame only variant (trick play) |
-| `#EXT-X-MEDIA` | Alternate renditions (audio, subtitles) |
-| `#EXT-X-INDEPENDENT-SEGMENTS` | Segments decode independently |
-| `#EXT-X-DATERANGE` | Timed metadata (ad insertion, chapters) |
+| Tag                             | Purpose                                      |
+| ------------------------------- | -------------------------------------------- |
+| `#EXT-X-VERSION`                | HLS protocol version                         |
+| `#EXT-X-TARGETDURATION`         | Maximum segment duration (integer seconds)   |
+| `#EXT-X-MEDIA-SEQUENCE`         | Sequence number of first segment in playlist |
+| `#EXT-X-DISCONTINUITY-SEQUENCE` | Discontinuity counter for live               |
+| `#EXT-X-ENDLIST`                | Marks VOD or ended live stream               |
+| `#EXT-X-PLAYLIST-TYPE`          | VOD or EVENT                                 |
+| `#EXT-X-MAP`                    | Initialization segment for fMP4              |
+| `#EXT-X-KEY`                    | Encryption method and key URI                |
+| `#EXT-X-PROGRAM-DATE-TIME`      | Wall-clock time mapping                      |
+| `#EXT-X-DISCONTINUITY`          | Encoding parameter change                    |
+| `#EXT-X-STREAM-INF`             | Variant stream properties                    |
+| `#EXT-X-I-FRAME-STREAM-INF`     | I-frame only variant (trick play)            |
+| `#EXT-X-MEDIA`                  | Alternate renditions (audio, subtitles)      |
+| `#EXT-X-INDEPENDENT-SEGMENTS`   | Segments decode independently                |
+| `#EXT-X-DATERANGE`              | Timed metadata (ad insertion, chapters)      |
 
 ### Segment Formats
 
 **MPEG-2 Transport Stream (.ts):**
+
 - Legacy format, widely supported
 - 188-byte fixed-size packets
 - Contains PAT/PMT tables for stream identification
@@ -416,6 +419,7 @@ segment_0149.ts
 - Each segment starts with a PAT + PMT + keyframe
 
 **Fragmented MP4 (.m4s / .fmp4):**
+
 - Modern format, recommended since HLS v7
 - Requires `#EXT-X-MAP` for initialization segment (.mp4 with moov box)
 - Lower overhead than TS
@@ -661,12 +665,15 @@ MPD (Media Presentation Description)
 ### Segment Addressing Modes
 
 **SegmentTemplate with $Number$:**
+
 ```xml
 <SegmentTemplate media="seg_$Number$.m4s" startNumber="1" duration="6"/>
 ```
+
 Segments are addressed by sequential number. Simple and predictable.
 
 **SegmentTemplate with $Time$:**
+
 ```xml
 <SegmentTemplate media="seg_$Time$.m4s" timescale="90000">
   <SegmentTimeline>
@@ -675,9 +682,11 @@ Segments are addressed by sequential number. Simple and predictable.
   </SegmentTimeline>
 </SegmentTemplate>
 ```
+
 Segments are addressed by presentation timestamp. Supports variable-duration segments.
 
 **SegmentList:**
+
 ```xml
 <SegmentList duration="6">
   <Initialization sourceURL="init.mp4"/>
@@ -685,14 +694,17 @@ Segments are addressed by presentation timestamp. Supports variable-duration seg
   <SegmentURL media="seg2.m4s"/>
 </SegmentList>
 ```
+
 Explicit list of segment URLs. Used for VOD when segments have irregular durations.
 
 **SegmentBase:**
+
 ```xml
 <SegmentBase indexRange="708-1183">
   <Initialization range="0-707"/>
 </SegmentBase>
 ```
+
 Single file with byte-range addressing. Efficient for VOD with SIDX box for seeking.
 
 ### CMAF (Common Media Application Format)
@@ -725,6 +737,7 @@ LL-DASH with CMAF Chunks:
 ```
 
 Key LL-DASH MPD attributes:
+
 - `availabilityTimeOffset` - how early segments can be requested
 - `@duration` on SegmentTemplate for chunk duration
 - `UTCTiming` element for clock synchronization
@@ -764,16 +777,16 @@ media sessions but does not carry media data itself.
 
 **Key RTSP Methods:**
 
-| Method | Purpose |
-|--------|---------|
-| OPTIONS | Query supported methods |
-| DESCRIBE | Get session description (SDP) |
-| SETUP | Establish transport parameters |
-| PLAY | Start media delivery |
-| PAUSE | Temporarily halt delivery |
-| TEARDOWN | End session |
-| GET_PARAMETER | Keep-alive / query state |
-| SET_PARAMETER | Set server parameters |
+| Method        | Purpose                        |
+| ------------- | ------------------------------ |
+| OPTIONS       | Query supported methods        |
+| DESCRIBE      | Get session description (SDP)  |
+| SETUP         | Establish transport parameters |
+| PLAY          | Start media delivery           |
+| PAUSE         | Temporarily halt delivery      |
+| TEARDOWN      | End session                    |
+| GET_PARAMETER | Keep-alive / query state       |
+| SET_PARAMETER | Set server parameters          |
 
 **Example RTSP Session:**
 
@@ -869,25 +882,25 @@ Field descriptions:
 
 RTCP provides feedback about the quality of RTP delivery:
 
-| Type | Name | Purpose |
-|------|------|---------|
-| 200 | SR (Sender Report) | Sender's packet/byte counts, NTP+RTP timestamp mapping |
-| 201 | RR (Receiver Report) | Fraction lost, cumulative lost, jitter, last SR timestamp |
-| 202 | SDES | Source description (CNAME, NAME, EMAIL, etc.) |
-| 203 | BYE | Session termination |
-| 204 | APP | Application-specific data |
-| 205 | RTPFB | Transport-layer feedback |
-| 206 | PSFB | Payload-specific feedback |
+| Type | Name                 | Purpose                                                   |
+| ---- | -------------------- | --------------------------------------------------------- |
+| 200  | SR (Sender Report)   | Sender's packet/byte counts, NTP+RTP timestamp mapping    |
+| 201  | RR (Receiver Report) | Fraction lost, cumulative lost, jitter, last SR timestamp |
+| 202  | SDES                 | Source description (CNAME, NAME, EMAIL, etc.)             |
+| 203  | BYE                  | Session termination                                       |
+| 204  | APP                  | Application-specific data                                 |
+| 205  | RTPFB                | Transport-layer feedback                                  |
+| 206  | PSFB                 | Payload-specific feedback                                 |
 
 **Key Feedback Messages (types 205/206):**
 
-| FMT | Name | Description |
-|-----|------|-------------|
-| 1 | NACK | Negative acknowledgement (request retransmission of specific packets) |
-| 1 | PLI | Picture Loss Indication (request a new keyframe) |
-| 4 | FIR | Full Intra Request (force keyframe from encoder) |
-| 15 | REMB | Receiver Estimated Maximum Bitrate |
-| 15 | TWCC | Transport-Wide Congestion Control |
+| FMT | Name | Description                                                           |
+| --- | ---- | --------------------------------------------------------------------- |
+| 1   | NACK | Negative acknowledgement (request retransmission of specific packets) |
+| 1   | PLI  | Picture Loss Indication (request a new keyframe)                      |
+| 4   | FIR  | Full Intra Request (force keyframe from encoder)                      |
+| 15  | REMB | Receiver Estimated Maximum Bitrate                                    |
+| 15  | TWCC | Transport-Wide Congestion Control                                     |
 
 ### Jitter Buffer
 
@@ -914,6 +927,7 @@ Adaptive: Adjusts size based on measured jitter
 ```
 
 **Adaptive jitter buffer algorithm (simplified):**
+
 1. Measure inter-arrival jitter for each packet
 2. Maintain exponential moving average of jitter
 3. Set buffer target to `mean_delay + k * jitter_estimate`
@@ -933,16 +947,16 @@ for contribution (encoder-to-server) links.
 
 ### Why SRT Over RTMP?
 
-| Feature | RTMP | SRT |
-|---------|------|-----|
-| Transport | TCP | UDP |
-| Error recovery | TCP retransmission | ARQ (selective) |
-| Encryption | RTMPS (TLS wrapper) | AES-128/256 built-in |
-| Latency control | No | Configurable latency buffer |
-| Firewall traversal | Poor (port 1935) | Rendezvous mode |
-| Modern codecs | Enhanced RTMP only | Codec-agnostic (MPEG-TS) |
-| Bandwidth overhead | TCP overhead | Minimal (selective retransmit) |
-| Bonding | No | Yes (link aggregation) |
+| Feature            | RTMP                | SRT                            |
+| ------------------ | ------------------- | ------------------------------ |
+| Transport          | TCP                 | UDP                            |
+| Error recovery     | TCP retransmission  | ARQ (selective)                |
+| Encryption         | RTMPS (TLS wrapper) | AES-128/256 built-in           |
+| Latency control    | No                  | Configurable latency buffer    |
+| Firewall traversal | Poor (port 1935)    | Rendezvous mode                |
+| Modern codecs      | Enhanced RTMP only  | Codec-agnostic (MPEG-TS)       |
+| Bandwidth overhead | TCP overhead        | Minimal (selective retransmit) |
+| Bonding            | No                  | Yes (link aggregation)         |
 
 ### SRT Architecture
 
@@ -1047,36 +1061,38 @@ interoperable implementations.
 
 RIST defines three profile levels of increasing complexity:
 
-| Profile | Features |
-|---------|----------|
-| **Simple** | ARQ-based error recovery, null-packet deletion, basic authentication |
-| **Main** | Adds tunneling, encryption (DTLS), multiplexing, bandwidth bonding |
-| **Advanced** | Adds advanced congestion control, header extensions (future) |
+| Profile      | Features                                                             |
+| ------------ | -------------------------------------------------------------------- |
+| **Simple**   | ARQ-based error recovery, null-packet deletion, basic authentication |
+| **Main**     | Adds tunneling, encryption (DTLS), multiplexing, bandwidth bonding   |
+| **Advanced** | Adds advanced congestion control, header extensions (future)         |
 
 ### RIST vs SRT Comparison
 
-| Feature | RIST | SRT |
-|---------|------|-----|
-| Standardization | VSF TR-06 (industry standard) | Open source (de facto standard) |
-| Error recovery | ARQ (similar) | ARQ (similar) |
-| Encryption | DTLS 1.2 (standard) | AES-CTR (custom) |
-| Multiplexing | Native (Main profile) | Single stream per connection |
-| Bonding | Yes (Main profile) | Yes (connection groups) |
-| NAT traversal | STUN-based (Main profile) | Rendezvous mode |
-| Interoperability | Multiple vendors, tested | Single reference implementation |
-| Ecosystem | Broadcast vendors | IT/streaming vendors |
-| Adoption | Traditional broadcast | OTT/cloud streaming |
-| Maturity | Newer (2018+) | Older (2017+), more deployed |
+| Feature          | RIST                          | SRT                             |
+| ---------------- | ----------------------------- | ------------------------------- |
+| Standardization  | VSF TR-06 (industry standard) | Open source (de facto standard) |
+| Error recovery   | ARQ (similar)                 | ARQ (similar)                   |
+| Encryption       | DTLS 1.2 (standard)           | AES-CTR (custom)                |
+| Multiplexing     | Native (Main profile)         | Single stream per connection    |
+| Bonding          | Yes (Main profile)            | Yes (connection groups)         |
+| NAT traversal    | STUN-based (Main profile)     | Rendezvous mode                 |
+| Interoperability | Multiple vendors, tested      | Single reference implementation |
+| Ecosystem        | Broadcast vendors             | IT/streaming vendors            |
+| Adoption         | Traditional broadcast         | OTT/cloud streaming             |
+| Maturity         | Newer (2018+)                 | Older (2017+), more deployed    |
 
 ### When to Choose RIST vs SRT
 
 **Choose RIST when:**
+
 - Multi-vendor broadcast infrastructure
 - Standards compliance required (regulatory/contractual)
 - Need native multiplexing of multiple streams
 - Integration with traditional broadcast equipment
 
 **Choose SRT when:**
+
 - OTT/cloud-native infrastructure
 - Wider software ecosystem needed (OBS, FFmpeg, etc.)
 - Simpler deployment (single connection = single stream)
@@ -1093,6 +1109,7 @@ scenarios. The choice often comes down to ecosystem and organizational preferenc
 
 WebRTC provides ultra-low-latency (sub-500ms) media delivery, but it was designed
 for peer-to-peer communication. Using it for broadcast-style streaming requires:
+
 1. A signaling server (custom implementation)
 2. ICE negotiation for each viewer
 3. Custom integration with media servers
@@ -1133,6 +1150,7 @@ Encoder/Browser                          WHIP Endpoint
 ```
 
 **Key WHIP Features:**
+
 - Single HTTP POST for signaling (SDP offer/answer)
 - Bearer token authentication (standard HTTP)
 - ICE trickle via HTTP PATCH (optional)
@@ -1186,6 +1204,7 @@ Hybrid Workflow:
 ```
 
 **Advantages over RTMP for ingest:**
+
 - Sub-second latency (vs 1-3s for RTMP)
 - Browser-native (no plugins, no Flash)
 - Modern codecs (VP8/VP9/AV1/H.264/H.265 via WebRTC)
@@ -1254,18 +1273,18 @@ Hybrid Workflow:
 
 ### Typical Use Cases
 
-| Use Case | Primary Protocol | Fallback |
-|----------|-----------------|----------|
-| Live event to millions | HLS / DASH | LL-HLS |
-| Sports with low latency | LL-HLS / LL-DASH | WebRTC |
-| Video conferencing | WebRTC | -- |
-| Game streaming | WebRTC | SRT |
-| Encoder to server | SRT / WHIP | RTMP |
-| IP camera surveillance | RTSP/RTP | ONVIF |
-| VOD (Netflix-style) | DASH (Widevine) | HLS (FairPlay) |
-| Social media live | RTMP ingest, HLS delivery | WHIP ingest |
-| Auction / betting | WebRTC / WHEP | LL-HLS |
-| Broadcast contribution | SRT / RIST | Dedicated fiber |
+| Use Case                | Primary Protocol          | Fallback        |
+| ----------------------- | ------------------------- | --------------- |
+| Live event to millions  | HLS / DASH                | LL-HLS          |
+| Sports with low latency | LL-HLS / LL-DASH          | WebRTC          |
+| Video conferencing      | WebRTC                    | --              |
+| Game streaming          | WebRTC                    | SRT             |
+| Encoder to server       | SRT / WHIP                | RTMP            |
+| IP camera surveillance  | RTSP/RTP                  | ONVIF           |
+| VOD (Netflix-style)     | DASH (Widevine)           | HLS (FairPlay)  |
+| Social media live       | RTMP ingest, HLS delivery | WHIP ingest     |
+| Auction / betting       | WebRTC / WHEP             | LL-HLS          |
+| Broadcast contribution  | SRT / RIST                | Dedicated fiber |
 
 ### Protocol Latency Comparison (ASCII Diagram)
 
@@ -1465,15 +1484,15 @@ Typical weights (example):
 
 **Key QoE Metrics:**
 
-| Metric | Description | Target |
-|--------|-------------|--------|
-| VMAF | Video Multi-Method Assessment Fusion (0-100) | > 80 |
-| PSNR | Peak Signal-to-Noise Ratio (dB) | > 35 dB |
-| SSIM | Structural Similarity Index (0-1) | > 0.95 |
-| Time to First Frame | Startup latency | < 2 seconds |
-| Rebuffer Ratio | Rebuffer time / total time | < 1% |
-| Bitrate Utilization | Delivered bitrate / available bandwidth | > 80% |
-| Quality Stability | 1 - (switch_count / segment_count) | > 90% |
+| Metric              | Description                                  | Target      |
+| ------------------- | -------------------------------------------- | ----------- |
+| VMAF                | Video Multi-Method Assessment Fusion (0-100) | > 80        |
+| PSNR                | Peak Signal-to-Noise Ratio (dB)              | > 35 dB     |
+| SSIM                | Structural Similarity Index (0-1)            | > 0.95      |
+| Time to First Frame | Startup latency                              | < 2 seconds |
+| Rebuffer Ratio      | Rebuffer time / total time                   | < 1%        |
+| Bitrate Utilization | Delivered bitrate / available bandwidth      | > 80%       |
+| Quality Stability   | 1 - (switch_count / segment_count)           | > 90%       |
 
 ---
 
@@ -1513,6 +1532,7 @@ DRM Ecosystem:
 Developed by Google, Widevine is the most widely deployed DRM for web and Android.
 
 **Security Levels:**
+
 - **L1:** Hardware-based decryption and rendering. Required for HD/4K. Keys never
   leave the TEE (Trusted Execution Environment). Available on Android, ChromeOS,
   smart TVs.
@@ -1521,6 +1541,7 @@ Developed by Google, Widevine is the most widely deployed DRM for web and Androi
   by most content providers.
 
 **License Flow:**
+
 1. Player detects encrypted content (PSSH box in init segment)
 2. EME `encrypted` event fires
 3. Player creates `MediaKeySession` with Widevine CDM
@@ -1534,6 +1555,7 @@ Developed by Google, Widevine is the most widely deployed DRM for web and Androi
 Apple's DRM for Safari, iOS, tvOS, and macOS.
 
 **Key Differences from Widevine:**
+
 - Uses HLS with SAMPLE-AES or SAMPLE-AES-CTR encryption
 - Key delivery via custom `skd://` URI in `#EXT-X-KEY` tag
 - Requires Apple-issued FPS Deployment Package
@@ -1541,6 +1563,7 @@ Apple's DRM for Safari, iOS, tvOS, and macOS.
 - Hardware-level security on Apple devices
 
 **HLS with FairPlay:**
+
 ```
 #EXT-X-KEY:METHOD=SAMPLE-AES,URI="skd://content_id",
 KEYFORMAT="com.apple.streamingkeydelivery",
@@ -1552,11 +1575,13 @@ KEYFORMATVERSIONS="1"
 Microsoft's DRM for Edge, Windows, Xbox, and many smart TVs.
 
 **Security Levels:**
+
 - **SL3000:** Hardware TEE (similar to Widevine L1)
 - **SL2000:** Software with hardware root of trust
 - **SL150:** Software-only
 
 **PlayReady features:**
+
 - License chaining (root + leaf licenses)
 - Domain-based licensing (share across devices)
 - Secure stop (confirm playback ended)
@@ -1621,16 +1646,22 @@ async function setupDRM(video, initData) {
   // 1. Request access to a key system
   const keySystemAccess = await navigator.requestMediaKeySystemAccess(
     'com.widevine.alpha',
-    [{
-      initDataTypes: ['cenc'],
-      videoCapabilities: [{
-        contentType: 'video/mp4;codecs="avc1.640028"',
-        robustness: 'SW_SECURE_DECODE'
-      }],
-      audioCapabilities: [{
-        contentType: 'audio/mp4;codecs="mp4a.40.2"'
-      }]
-    }]
+    [
+      {
+        initDataTypes: ['cenc'],
+        videoCapabilities: [
+          {
+            contentType: 'video/mp4;codecs="avc1.640028"',
+            robustness: 'SW_SECURE_DECODE',
+          },
+        ],
+        audioCapabilities: [
+          {
+            contentType: 'audio/mp4;codecs="mp4a.40.2"',
+          },
+        ],
+      },
+    ]
   );
 
   // 2. Create MediaKeys and set on video element
@@ -1646,7 +1677,7 @@ async function setupDRM(video, initData) {
     const response = await fetch('https://license.example.com/widevine', {
       method: 'POST',
       headers: { 'Content-Type': 'application/octet-stream' },
-      body: event.message
+      body: event.message,
     });
     const license = await response.arrayBuffer();
 
@@ -1924,13 +1955,13 @@ async function startWHIPStream(whipEndpoint, authToken) {
   // 1. Get user media
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { width: 1280, height: 720, frameRate: 30 },
-    audio: { sampleRate: 48000, channelCount: 2 }
+    audio: { sampleRate: 48000, channelCount: 2 },
   });
 
   // 2. Create RTCPeerConnection
   const pc = new RTCPeerConnection({
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-    bundlePolicy: 'max-bundle'
+    bundlePolicy: 'max-bundle',
   });
 
   // 3. Add tracks (send-only)
@@ -1941,8 +1972,8 @@ async function startWHIPStream(whipEndpoint, authToken) {
     direction: 'sendonly',
     sendEncodings: [
       { rid: 'h', maxBitrate: 2500000 },
-      { rid: 'l', maxBitrate: 500000, scaleResolutionDownBy: 4 }
-    ]
+      { rid: 'l', maxBitrate: 500000, scaleResolutionDownBy: 4 },
+    ],
   });
 
   pc.addTransceiver(audioTrack, { direction: 'sendonly' });
@@ -1967,9 +1998,9 @@ async function startWHIPStream(whipEndpoint, authToken) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/sdp',
-      'Authorization': `Bearer ${authToken}`
+      Authorization: `Bearer ${authToken}`,
     },
-    body: pc.localDescription.sdp
+    body: pc.localDescription.sdp,
   });
 
   if (response.status !== 201) {
@@ -1982,7 +2013,7 @@ async function startWHIPStream(whipEndpoint, authToken) {
 
   await pc.setRemoteDescription({
     type: 'answer',
-    sdp: answerSDP
+    sdp: answerSDP,
   });
 
   // 8. Return cleanup function
@@ -1990,13 +2021,13 @@ async function startWHIPStream(whipEndpoint, authToken) {
     resourceURL,
     stop: async () => {
       pc.close();
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       // Delete the WHIP resource
       await fetch(resourceURL, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${authToken}` }
+        headers: { Authorization: `Bearer ${authToken}` },
       });
-    }
+    },
   };
 }
 
@@ -2017,7 +2048,7 @@ async function startWHEPPlayback(whepEndpoint, videoElement, authToken) {
   // 1. Create RTCPeerConnection
   const pc = new RTCPeerConnection({
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-    bundlePolicy: 'max-bundle'
+    bundlePolicy: 'max-bundle',
   });
 
   // 2. Set up receive-only transceivers
@@ -2051,9 +2082,9 @@ async function startWHEPPlayback(whepEndpoint, videoElement, authToken) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/sdp',
-      'Authorization': `Bearer ${authToken}`
+      Authorization: `Bearer ${authToken}`,
     },
-    body: pc.localDescription.sdp
+    body: pc.localDescription.sdp,
   });
 
   if (response.status !== 201) {
@@ -2066,7 +2097,7 @@ async function startWHEPPlayback(whepEndpoint, videoElement, authToken) {
 
   await pc.setRemoteDescription({
     type: 'answer',
-    sdp: answerSDP
+    sdp: answerSDP,
   });
 
   // 8. Return session info
@@ -2078,9 +2109,9 @@ async function startWHEPPlayback(whepEndpoint, videoElement, authToken) {
       videoElement.srcObject = null;
       await fetch(resourceURL, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${authToken}` }
+        headers: { Authorization: `Bearer ${authToken}` },
       });
-    }
+    },
   };
 }
 

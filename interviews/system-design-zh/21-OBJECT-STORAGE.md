@@ -8,60 +8,65 @@
 
 ### 1.1 功能需求
 
-| 功能 | 描述 |
-|------|------|
-| **Bucket 管理** | 创建、删除和列出 bucket；bucket 是全局唯一的命名空间 |
-| **对象 CRUD** | 通过 bucket + key 标识的对象进行 PUT、GET、DELETE 操作 |
-| **列出对象** | 使用 prefix/delimiter 过滤和分页列出 bucket 中的对象 |
-| **Multipart Upload** | 并行分片上传大对象（> 5 GB） |
-| **版本控制** | 保留同一 object key 的多个版本；delete marker |
-| **访问控制** | Bucket policy、ACL、基于 IAM 的权限 |
-| **生命周期策略** | 根据对象年龄自动转换或过期对象 |
-| **Pre-signed URL** | 用于未认证上传/下载的限时 URL |
-| **跨区域复制** | 异步将对象复制到另一个 region |
-| **存储类别** | Standard、Infrequent Access、Glacier/Archive 层 |
-| **数据完整性** | 上传和静态存储时验证 checksum（MD5、CRC32） |
-| **事件通知** | 向队列/Lambda 发布事件（ObjectCreated、ObjectDeleted） |
+| 功能                 | 描述                                                   |
+| -------------------- | ------------------------------------------------------ |
+| **Bucket 管理**      | 创建、删除和列出 bucket；bucket 是全局唯一的命名空间   |
+| **对象 CRUD**        | 通过 bucket + key 标识的对象进行 PUT、GET、DELETE 操作 |
+| **列出对象**         | 使用 prefix/delimiter 过滤和分页列出 bucket 中的对象   |
+| **Multipart Upload** | 并行分片上传大对象（> 5 GB）                           |
+| **版本控制**         | 保留同一 object key 的多个版本；delete marker          |
+| **访问控制**         | Bucket policy、ACL、基于 IAM 的权限                    |
+| **生命周期策略**     | 根据对象年龄自动转换或过期对象                         |
+| **Pre-signed URL**   | 用于未认证上传/下载的限时 URL                          |
+| **跨区域复制**       | 异步将对象复制到另一个 region                          |
+| **存储类别**         | Standard、Infrequent Access、Glacier/Archive 层        |
+| **数据完整性**       | 上传和静态存储时验证 checksum（MD5、CRC32）            |
+| **事件通知**         | 向队列/Lambda 发布事件（ObjectCreated、ObjectDeleted） |
 
 ### 1.2 非功能需求
 
-| 需求 | 目标 |
-|------|------|
-| **持久性** | 99.999999999%（11 个 9）- 每 1000 亿个对象最多丢失 1 个 |
-| **可用性** | 99.99%（Standard 类）/ 99.9%（IA 类） |
-| **吞吐量** | 每个 bucket prefix 100,000+ 请求/秒 |
-| **对象大小** | 每个对象 1 字节到 5 TB |
-| **首字节延迟** | Standard 类 < 100 ms |
-| **可扩展性** | EB 级别的总存储 |
-| **一致性** | 新对象的 read-after-write；所有操作的强一致性（现代 S3 2020+） |
-| **安全性** | 静态加密（SSE-S3、SSE-KMS）和传输加密（TLS） |
+| 需求           | 目标                                                           |
+| -------------- | -------------------------------------------------------------- |
+| **持久性**     | 99.999999999%（11 个 9）- 每 1000 亿个对象最多丢失 1 个        |
+| **可用性**     | 99.99%（Standard 类）/ 99.9%（IA 类）                          |
+| **吞吐量**     | 每个 bucket prefix 100,000+ 请求/秒                            |
+| **对象大小**   | 每个对象 1 字节到 5 TB                                         |
+| **首字节延迟** | Standard 类 < 100 ms                                           |
+| **可扩展性**   | EB 级别的总存储                                                |
+| **一致性**     | 新对象的 read-after-write；所有操作的强一致性（现代 S3 2020+） |
+| **安全性**     | 静态加密（SSE-S3、SSE-KMS）和传输加密（TLS）                   |
 
 ### 1.3 规模估算
 
 **存储规模**
+
 - 存储对象数：1 万亿（10^12）
 - 平均对象大小：1 MB
 - 总存储量：1 PB = 10^15 字节
 - 存储增长：10 PB/年
 
 **请求规模**
+
 - 峰值 100,000 请求/秒
 - 读写比：70/30
 - 读取：70,000/秒
 - 写入：30,000/秒
 
 **带宽**
+
 - 平均对象读取大小：100 KB
 - 读取带宽：70,000 x 100 KB = 7 GB/秒
 - 写入带宽：30,000 x 100 KB = 3 GB/秒
 - 总网络 I/O：~10 GB/秒
 
 **元数据规模**
+
 - 每个对象约 1 KB 的元数据（bucket、key、size、ETag、时间戳、ACL、storage class）
 - 1 万亿对象 x 1 KB = 1 PB 元数据
 - 元数据必须建立索引以支持快速查找：需要具有数十亿行的分布式数据库
 
 **数据节点容量**
+
 - 每个数据节点存储 100 TB（10 x 10 TB HDD）
 - 100 PB 原始数据需要：1,000 个数据节点
 - 使用 RS(10,4) erasure coding：1,000 x 1.4 倍开销 = 1,400 个物理节点
@@ -88,6 +93,7 @@ PUT /?replication        设置复制配置
 ### 2.2 对象操作
 
 **上传（PUT Object）**
+
 ```
 PUT /{bucket}/{key}
 Host: {bucket}.s3.amazonaws.com
@@ -106,6 +112,7 @@ x-amz-version-id: 3/L4kqtJlcpXroDTDmJ+rmSpXd3dIbrHY+MTRCxf3vjVBH40Nr8X8gdRQBpUML
 ```
 
 **下载（GET Object）**
+
 ```
 GET /{bucket}/{key}
 Host: {bucket}.s3.amazonaws.com
@@ -122,6 +129,7 @@ x-amz-version-id: ...
 ```
 
 **删除（DELETE Object）**
+
 ```
 DELETE /{bucket}/{key}
 DELETE /{bucket}/{key}?versionId=xxx   (specific version)
@@ -132,6 +140,7 @@ x-amz-delete-marker: true
 ```
 
 **列出对象**
+
 ```
 GET /{bucket}?list-type=2
   &prefix=images/2024/
@@ -283,8 +292,17 @@ CREATE TABLE multipart_parts (
   "bucket": "my-bucket",
   "owner": "account-123",
   "grants": [
-    { "grantee": { "type": "CanonicalUser", "id": "account-123" }, "permission": "FULL_CONTROL" },
-    { "grantee": { "type": "Group", "uri": "http://acs.amazonaws.com/groups/global/AllUsers" }, "permission": "READ" }
+    {
+      "grantee": { "type": "CanonicalUser", "id": "account-123" },
+      "permission": "FULL_CONTROL"
+    },
+    {
+      "grantee": {
+        "type": "Group",
+        "uri": "http://acs.amazonaws.com/groups/global/AllUsers"
+      },
+      "permission": "READ"
+    }
   ],
   "policy": {
     "Version": "2012-10-17",
@@ -367,17 +385,17 @@ Supporting Services:
 
 ### 对象存储 vs 块存储 vs 文件存储
 
-| 维度 | 对象存储 (S3) | 块存储 (EBS) | 文件存储 (EFS/NFS) |
-|------|--------------|-------------|-------------------|
-| **访问模式** | REST API (HTTP GET/PUT) | 原始磁盘 I/O (iSCSI/NVMe) | POSIX 文件系统 (read/write/seek) |
-| **粒度** | 整个对象（不可变） | 固定大小块 (512B-4KB) | 文件和目录 |
-| **更新语义** | 全量替换；无原地编辑 | 随机读/写 | 字节范围读/写 |
-| **命名空间** | bucket 内的扁平 key | 块地址偏移 | 层级路径 |
-| **可扩展性** | EB 级别，几乎无限 | 每卷 TB 级别 | PB 级别（分布式 NFS） |
-| **持久性** | 99.999999999% | 99.999%（带 snapshot） | 99.999999999% (EFS) |
-| **延迟** | ms (首字节 100ms) | us (< 1ms) | ms (1-10ms) |
-| **使用场景** | 备份、媒体、数据湖、静态网站 | 数据库、操作系统卷、虚拟机 | 共享文件访问、ML 训练数据 |
-| **元数据** | 丰富的用户自定义元数据 | 最少（仅块元数据） | POSIX 文件属性 |
+| 维度         | 对象存储 (S3)                | 块存储 (EBS)               | 文件存储 (EFS/NFS)               |
+| ------------ | ---------------------------- | -------------------------- | -------------------------------- |
+| **访问模式** | REST API (HTTP GET/PUT)      | 原始磁盘 I/O (iSCSI/NVMe)  | POSIX 文件系统 (read/write/seek) |
+| **粒度**     | 整个对象（不可变）           | 固定大小块 (512B-4KB)      | 文件和目录                       |
+| **更新语义** | 全量替换；无原地编辑         | 随机读/写                  | 字节范围读/写                    |
+| **命名空间** | bucket 内的扁平 key          | 块地址偏移                 | 层级路径                         |
+| **可扩展性** | EB 级别，几乎无限            | 每卷 TB 级别               | PB 级别（分布式 NFS）            |
+| **持久性**   | 99.999999999%                | 99.999%（带 snapshot）     | 99.999999999% (EFS)              |
+| **延迟**     | ms (首字节 100ms)            | us (< 1ms)                 | ms (1-10ms)                      |
+| **使用场景** | 备份、媒体、数据湖、静态网站 | 数据库、操作系统卷、虚拟机 | 共享文件访问、ML 训练数据        |
+| **元数据**   | 丰富的用户自定义元数据       | 最少（仅块元数据）         | POSIX 文件属性                   |
 
 **关键洞察**：对象存储牺牲了随机写能力和低延迟，换取了大规模可扩展性、高持久性和简单的 HTTP API。这是根本的权衡。
 
@@ -413,6 +431,7 @@ Client                API Gateway         Metadata Svc       Data Nodes
 ```
 
 **大对象分块**：
+
 - 大于 64 MB 的对象被拆分为 64 MB 的块
 - 每个块独立进行 erasure coding
 - 块清单存储在元数据中：`[chunk0_location, chunk1_location, ...]`
@@ -436,6 +455,7 @@ Client                API Gateway         Metadata Svc       Data Nodes
 ```
 
 **Range request 优化**：
+
 - `GET /bucket/key` 带 `Range: bytes=5000000-10000000`
 - API 层将字节范围转换为特定的块
 - 仅获取相关块，而非整个对象
@@ -497,13 +517,13 @@ Compute 4 parity shards (XOR-like): p0  p1  p2  p3
 
 ### 7.2 存储效率对比
 
-| 方法 | 开销 | 容错能力 | 重建成本 | CPU 成本 |
-|------|------|---------|---------|---------|
-| 无冗余 | 1.0x | 0 次故障 | 不适用 | 无 |
-| 3 倍复制 | 3.0x | 2 次故障（任意） | 复制 1 个副本 | 低 |
-| RS(6,3) | 1.5x | 3 次故障 | 从 6 个分片重建 | 中等 |
-| RS(10,4) | 1.4x | 4 次故障 | 从 10 个分片重建 | 高 |
-| RS(14,2) | 1.14x | 2 次故障 | 从 14 个分片重建 | 更高 |
+| 方法     | 开销  | 容错能力         | 重建成本         | CPU 成本 |
+| -------- | ----- | ---------------- | ---------------- | -------- |
+| 无冗余   | 1.0x  | 0 次故障         | 不适用           | 无       |
+| 3 倍复制 | 3.0x  | 2 次故障（任意） | 复制 1 个副本    | 低       |
+| RS(6,3)  | 1.5x  | 3 次故障         | 从 6 个分片重建  | 中等     |
+| RS(10,4) | 1.4x  | 4 次故障         | 从 10 个分片重建 | 高       |
+| RS(14,2) | 1.14x | 2 次故障         | 从 14 个分片重建 | 更高     |
 
 **S3 在可用区内使用 RS(10,4)** + 跨可用区的地理复制。
 
@@ -542,6 +562,7 @@ Can lose entire AZ-3 (4 shards) and still reconstruct from AZ-1 + AZ-2 (10 shard
 ### 8.1 命名空间管理
 
 元数据服务负责：
+
 1. **对象命名空间**：映射 `(bucket, key, version) -> 物理位置`
 2. **Bucket 命名空间**：bucket 名称的全局唯一性
 3. **列举**：基于 prefix 的高效 key 枚举
@@ -567,9 +588,11 @@ Solution: Add random suffix for listing; or shard by (bucket, hash(key) % num_pa
 ### 8.3 一致性：Read-After-Write
 
 **经典 S3（2020 年之前）**：覆盖写 PUT 和 DELETE 的最终一致性
+
 - 原因：带有缓存层的分布式元数据；可能出现陈旧读取
 
 **现代 S3（2020 年 12 月以后）**：所有操作的强 read-after-write 一致性
+
 - 实现方式：fencing token / 带版本检查的条件写入
 - 每次写入递增一个单调版本号；读取拒绝返回陈旧版本
 
@@ -612,13 +635,13 @@ GET /bucket/key          -> read from leader OR follower with V >= V5
 
 ### 9.1 一致性保证（现代 S3）
 
-| 操作 | 一致性保证 |
-|------|-----------|
-| PUT 新对象 | Read-after-write：立即可见 |
-| PUT 覆盖写 | 强一致性：始终返回最新版本 |
-| DELETE 对象 | 强一致性：DELETE 完成后对象不可见 |
-| PUT 后 LIST | List 反映新对象 |
-| DELETE 后 LIST | List 不包含已删除对象 |
+| 操作                 | 一致性保证                                          |
+| -------------------- | --------------------------------------------------- |
+| PUT 新对象           | Read-after-write：立即可见                          |
+| PUT 覆盖写           | 强一致性：始终返回最新版本                          |
+| DELETE 对象          | 强一致性：DELETE 完成后对象不可见                   |
+| PUT 后 LIST          | List 反映新对象                                     |
+| DELETE 后 LIST       | List 不包含已删除对象                               |
 | 并发 PUT（相同 key） | 以墙上时钟为准的 last-writer-wins；两次写入均被确认 |
 
 ### 9.2 如何实现强一致性
@@ -707,8 +730,8 @@ Strategy: Each version is a full copy of the object data.
       "Status": "Enabled",
       "Filter": { "Prefix": "logs/" },
       "Transitions": [
-        { "Days": 30,  "StorageClass": "STANDARD_IA" },
-        { "Days": 90,  "StorageClass": "GLACIER" },
+        { "Days": 30, "StorageClass": "STANDARD_IA" },
+        { "Days": 90, "StorageClass": "GLACIER" },
         { "Days": 365, "StorageClass": "DEEP_ARCHIVE" }
       ],
       "Expiration": { "Days": 2555 },
@@ -740,15 +763,15 @@ Performance: Process 10M objects/day = 115 objects/sec (batch processing)
 
 ### 11.3 存储类别
 
-| 类别 | 最短存储期 | 最小大小 | 检索时间 | 使用场景 |
-|------|----------|---------|---------|---------|
-| STANDARD | 无 | 无 | ms | 频繁访问的数据 |
-| STANDARD_IA | 30 天 | 128 KB | ms | 月度访问，成本敏感 |
-| ONE_ZONE_IA | 30 天 | 128 KB | ms | 可复现的数据，单可用区 |
-| INTELLIGENT_TIERING | 无 | 无 | ms / 小时 | 未知访问模式 |
-| GLACIER_INSTANT | 90 天 | 128 KB | ms | 需要即时检索的归档 |
-| GLACIER_FLEXIBLE | 90 天 | 40 KB | 分钟-小时 | 归档 |
-| GLACIER_DEEP_ARCHIVE | 180 天 | 40 KB | 12-48 小时 | 长期合规性存储 |
+| 类别                 | 最短存储期 | 最小大小 | 检索时间   | 使用场景               |
+| -------------------- | ---------- | -------- | ---------- | ---------------------- |
+| STANDARD             | 无         | 无       | ms         | 频繁访问的数据         |
+| STANDARD_IA          | 30 天      | 128 KB   | ms         | 月度访问，成本敏感     |
+| ONE_ZONE_IA          | 30 天      | 128 KB   | ms         | 可复现的数据，单可用区 |
+| INTELLIGENT_TIERING  | 无         | 无       | ms / 小时  | 未知访问模式           |
+| GLACIER_INSTANT      | 90 天      | 128 KB   | ms         | 需要即时检索的归档     |
+| GLACIER_FLEXIBLE     | 90 天      | 40 KB    | 分钟-小时  | 归档                   |
+| GLACIER_DEEP_ARCHIVE | 180 天     | 40 KB    | 12-48 小时 | 长期合规性存储         |
 
 ---
 
@@ -953,6 +976,7 @@ S3's claim of 99.999999999% (11 nines) is conservative and backed by:
 ### 15.1 为什么需要 GC
 
 为保持性能，对象采用惰性删除：
+
 - DELETE 请求：在元数据中标记为已删除，不会立即释放数据节点
 - 覆盖写：旧数据块在新版本提交后变为孤儿数据
 - Multipart 中止：已上传的分片需要清理
@@ -1089,13 +1113,13 @@ No data movement at assembly time: metadata-only operation in O(1)
 
 ### 17.1 存储效率
 
-| 策略 | 节省 |
-|------|------|
-| Erasure coding RS(10,4) vs 3 倍复制 | 存储成本降低 53% |
-| 块级别去重 | 备份工作负载节省 10-30% |
-| 压缩（zstd）用于可压缩数据 | 日志、JSON 压缩比 2-5 倍 |
-| Intelligent-Tiering 自动分类 | 混合访问数据节省 30-50% |
-| 生命周期策略转为 Glacier | 归档数据成本降低 80% |
+| 策略                                | 节省                     |
+| ----------------------------------- | ------------------------ |
+| Erasure coding RS(10,4) vs 3 倍复制 | 存储成本降低 53%         |
+| 块级别去重                          | 备份工作负载节省 10-30%  |
+| 压缩（zstd）用于可压缩数据          | 日志、JSON 压缩比 2-5 倍 |
+| Intelligent-Tiering 自动分类        | 混合访问数据节省 30-50%  |
+| 生命周期策略转为 Glacier            | 归档数据成本降低 80%     |
 
 ### 17.2 计算效率
 
@@ -1132,43 +1156,43 @@ Request optimization:
 
 ### 18.1 一致性 vs 可用性
 
-| 选择 | 权衡 |
-|------|------|
-| **强一致性（现代 S3）** | 略高延迟（leader 往返）；leader 不可用导致读取错误 |
-| **最终一致性（经典 S3）** | 更低延迟；写入/删除后可能出现陈旧读取；脑裂场景 |
+| 选择                      | 权衡                                               |
+| ------------------------- | -------------------------------------------------- |
+| **强一致性（现代 S3）**   | 略高延迟（leader 往返）；leader 不可用导致读取错误 |
+| **最终一致性（经典 S3）** | 更低延迟；写入/删除后可能出现陈旧读取；脑裂场景    |
 
 **决策**：现代 S3 选择了强一致性，因为用户最大的痛点是缓存失效 bug，而非多出的微秒级延迟。
 
 ### 18.2 Erasure Coding vs 复制
 
-| 权衡 | Erasure Coding (RS) | 3 倍复制 |
-|------|---------------------|---------|
-| 存储开销 | 1.4x | 3.0x |
-| 读取延迟 | 更高（需要 k 个分片 + EC 解码） | 更低（读取 1 个副本） |
-| 写入延迟 | 更高（计算 parity + 写入 14 个节点） | 更低（写入 3 个节点） |
-| 重建时间 | 更长（网络密集型重建） | 更快（简单复制） |
-| 小对象成本 | 低效（100B 对象 -> 14 x 100B 分片） | 更高效 |
+| 权衡       | Erasure Coding (RS)                  | 3 倍复制              |
+| ---------- | ------------------------------------ | --------------------- |
+| 存储开销   | 1.4x                                 | 3.0x                  |
+| 读取延迟   | 更高（需要 k 个分片 + EC 解码）      | 更低（读取 1 个副本） |
+| 写入延迟   | 更高（计算 parity + 写入 14 个节点） | 更低（写入 3 个节点） |
+| 重建时间   | 更长（网络密集型重建）               | 更快（简单复制）      |
+| 小对象成本 | 低效（100B 对象 -> 14 x 100B 分片）  | 更高效                |
 
 **S3 实际做法**：对小对象（低于某阈值）使用 3 倍复制；对大对象使用 erasure coding。同时跨可用区复制，可用区内使用 EC。
 
 ### 18.3 元数据架构
 
-| 方案 | 优点 | 缺点 |
-|------|------|------|
-| **关系型数据库（分片）** | ACID、SQL 查询、易上手 | 难以水平扩展 |
-| **分布式 KV 存储** | 易扩展、快速点查询 | 无范围扫描、弱一致性选项 |
-| **宽列存储（Cassandra）** | 按 key 范围扫描、可调一致性 | 操作复杂、默认最终一致性 |
-| **专用元数据数据库（自研）** | 针对对象存储工作负载优化 | 工程成本高 |
+| 方案                         | 优点                        | 缺点                     |
+| ---------------------------- | --------------------------- | ------------------------ |
+| **关系型数据库（分片）**     | ACID、SQL 查询、易上手      | 难以水平扩展             |
+| **分布式 KV 存储**           | 易扩展、快速点查询          | 无范围扫描、弱一致性选项 |
+| **宽列存储（Cassandra）**    | 按 key 范围扫描、可调一致性 | 操作复杂、默认最终一致性 |
+| **专用元数据数据库（自研）** | 针对对象存储工作负载优化    | 工程成本高               |
 
 **S3 方案**：自研分布式元数据服务，采用 Raft 共识，针对 (bucket, key, version) 访问模式优化。
 
 ### 18.4 同步 vs 异步复制
 
-| 复制模式 | 持久性 | 写入延迟 | 使用场景 |
-|---------|--------|---------|---------|
-| 同步（所有 AZ 确认后才返回） | 最高 | 额外 ~50-100ms | 金融记录 |
-| 同步（3 个 AZ 中 2 个确认） | 高 | 额外 ~10-20ms | 标准数据 |
-| 异步（1 个 AZ 确认后返回，稍后复制） | 最终 | 最小 | 高吞吐量摄入 |
+| 复制模式                             | 持久性 | 写入延迟       | 使用场景     |
+| ------------------------------------ | ------ | -------------- | ------------ |
+| 同步（所有 AZ 确认后才返回）         | 最高   | 额外 ~50-100ms | 金融记录     |
+| 同步（3 个 AZ 中 2 个确认）          | 高     | 额外 ~10-20ms  | 标准数据     |
+| 异步（1 个 AZ 确认后返回，稍后复制） | 最终   | 最小           | 高吞吐量摄入 |
 
 **S3 Standard**：同步写入 3 个可用区后才返回 200 OK。这就是为什么持久性达到 11 个 9。
 

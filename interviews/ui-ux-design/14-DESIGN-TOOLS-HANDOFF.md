@@ -26,6 +26,7 @@ Figma is the industry-standard design tool. As a developer, you do not need to c
 
 **Inspect Mode (Free)**
 Available to anyone with view access to a Figma file. Click any element to see:
+
 - Dimensions (width, height)
 - Position (x, y coordinates)
 - Colors (hex, RGB, HSL)
@@ -35,6 +36,7 @@ Available to anyone with view access to a Figma file. Click any element to see:
 
 **Dev Mode (Paid Feature)**
 Figma's dedicated developer view provides:
+
 - Measurements between elements (click one, hover another)
 - Code generation in CSS, iOS, and Android formats
 - Component property inspection
@@ -72,6 +74,7 @@ Figma File Hierarchy:
 ```
 
 **Key Terminology:**
+
 - **Frame** — The primary container in Figma. Equivalent to a `<div>`. Frames can be nested, have auto layout, and clip content.
 - **Group** — A loose collection of layers. Unlike frames, groups have no layout properties. Think of it as visual grouping only.
 - **Component** — A reusable element (like a React component). Has a purple diamond icon.
@@ -131,11 +134,11 @@ This maps to a React component with props:
 
 ```tsx
 interface ButtonProps {
-  variant: 'primary' | 'secondary' | 'ghost'
-  size: 'sm' | 'md' | 'lg'
-  disabled?: boolean
-  iconPosition?: 'leading' | 'trailing' | 'none'
-  children: React.ReactNode
+  variant: 'primary' | 'secondary' | 'ghost';
+  size: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  iconPosition?: 'leading' | 'trailing' | 'none';
+  children: React.ReactNode;
 }
 ```
 
@@ -144,12 +147,14 @@ interface ButtonProps {
 When reviewing a design, extract these properties systematically:
 
 **Spacing**
+
 - Padding within containers (inner spacing)
 - Margin/gap between elements (outer spacing)
 - Section spacing (vertical rhythm)
 - Look for a spacing scale (4, 8, 12, 16, 24, 32, 48, 64)
 
 **Colors**
+
 - Background colors per surface level
 - Text colors (primary, secondary, muted)
 - Accent/brand colors
@@ -158,6 +163,7 @@ When reviewing a design, extract these properties systematically:
 - Opacity values
 
 **Typography**
+
 - Font family and fallbacks
 - Font sizes (look for a type scale)
 - Font weights used
@@ -166,12 +172,14 @@ When reviewing a design, extract these properties systematically:
 - Text transforms (uppercase, capitalize)
 
 **Layout**
+
 - Max content width
 - Grid column count and gutters
 - Breakpoints (check if multiple frames exist for different screen sizes)
 - Container padding per breakpoint
 
 **Assets**
+
 - Icons (are they from an icon library? which one?)
 - Images (dimensions, aspect ratios, object-fit behavior)
 - Illustrations (SVG? PNG? theme-aware?)
@@ -276,6 +284,7 @@ tokens.json  -->  Style Dictionary  -->  CSS variables
 Effective communication prevents rework and frustration.
 
 **What Developers Should Ask Designers:**
+
 1. What happens at different breakpoints? (if not shown)
 2. What are the hover/focus/active states? (if not annotated)
 3. What are the loading/empty/error states?
@@ -285,6 +294,7 @@ Effective communication prevents rework and frustration.
 7. Which elements are components vs. one-off designs?
 
 **How to Provide Design Feedback as a Developer:**
+
 - Reference specific frames and layers by name
 - Explain technical constraints clearly ("sticky positioning causes z-index stacking issues with this layout")
 - Suggest alternatives rather than just saying "can't do that"
@@ -295,30 +305,33 @@ Effective communication prevents rework and frustration.
 
 Useful plugins that bridge design and development:
 
-| Plugin | Purpose |
-|--------|---------|
-| Tokens Studio | Define and export design tokens |
-| Locofy | AI-powered design-to-code conversion |
-| Figma to Code (HTML) | Generates HTML/CSS from selections |
-| Iconify | Access thousands of icon sets directly |
-| Content Reel | Populate designs with realistic data |
-| Stark | Accessibility checker (contrast, vision sim) |
-| Measure | Add detailed measurements and annotations |
+| Plugin               | Purpose                                      |
+| -------------------- | -------------------------------------------- |
+| Tokens Studio        | Define and export design tokens              |
+| Locofy               | AI-powered design-to-code conversion         |
+| Figma to Code (HTML) | Generates HTML/CSS from selections           |
+| Iconify              | Access thousands of icon sets directly       |
+| Content Reel         | Populate designs with realistic data         |
+| Stark                | Accessibility checker (contrast, vision sim) |
+| Measure              | Add detailed measurements and annotations    |
 
 ### Other Design Tools (Brief Overview)
 
 **Sketch** (macOS only)
+
 - Was the industry standard before Figma. Still used at some companies.
 - `.sketch` files can be opened in Figma (import).
 - Uses "Symbols" instead of "Components" and "Overrides" instead of "Variants."
 - Handoff via plugins like Zeplin or Avocode.
 
 **Adobe XD**
+
 - Adobe's attempt to compete with Figma. Officially discontinued in 2024.
 - You may encounter legacy XD files in older projects.
 - Can be imported into Figma.
 
 **Penpot**
+
 - Open-source alternative to Figma.
 - Growing in popularity, especially in open-source communities.
 - Similar concepts (frames, components, auto layout) but different terminology in places.
@@ -327,6 +340,7 @@ Useful plugins that bridge design and development:
 
 **Zeplin**
 A dedicated handoff tool that sits between design and development:
+
 - Designers publish screens from Figma/Sketch
 - Developers get accurate measurements, colors, fonts, and assets
 - Supports style guide generation
@@ -379,20 +393,18 @@ Translates to:
 ```tsx
 function ProjectCard({ title, description, image, tags }) {
   return (
-    <div className="flex flex-col gap-4 p-6 min-w-[280px] max-w-[400px]
+    <div
+      className="flex flex-col gap-4 p-6 min-w-[280px] max-w-[400px]
                     rounded-xl bg-white border border-gray-200
-                    shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
+                    shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+    >
       <img
         src={image}
         alt={title}
         className="w-full h-[200px] object-cover rounded-lg"
       />
-      <h3 className="font-semibold text-xl text-gray-900">
-        {title}
-      </h3>
-      <p className="text-sm text-gray-500 line-clamp-2">
-        {description}
-      </p>
+      <h3 className="font-semibold text-xl text-gray-900">{title}</h3>
+      <p className="text-sm text-gray-500 line-clamp-2">{description}</p>
       <div className="flex flex-wrap gap-2">
         {tags.map((tag) => (
           <span
@@ -405,7 +417,7 @@ function ProjectCard({ title, description, image, tags }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 ```
 
@@ -485,10 +497,10 @@ export const tokens = {
     border: { subtle: '...', strong: '...' },
   },
   spacing: {
-    section: '64px',    // Between major sections
-    component: '24px',  // Between components within a section
-    element: '16px',    // Between elements within a component
-    inline: '8px',      // Between inline elements
+    section: '64px', // Between major sections
+    component: '24px', // Between components within a section
+    element: '16px', // Between elements within a component
+    inline: '8px', // Between inline elements
   },
   typography: {
     h1: { size: '48px', weight: 700, lineHeight: 1.1 },
@@ -497,14 +509,19 @@ export const tokens = {
     small: { size: '14px', weight: 400, lineHeight: 1.5 },
   },
   radii: {
-    sm: '4px', md: '8px', lg: '12px', xl: '16px', full: '999px',
+    sm: '4px',
+    md: '8px',
+    lg: '12px',
+    xl: '16px',
+    full: '999px',
   },
-}
+};
 ```
 
 ### Component Audit
 
 Review your existing components against design system principles:
+
 1. **Card.tsx** — Does it use consistent padding and border radius tokens?
 2. **Button.tsx** — Are all variants (primary, secondary, ghost) clearly defined with consistent sizing?
 3. **SectionHeader.tsx** — Is the typography consistent with a type scale?
@@ -513,6 +530,7 @@ Review your existing components against design system principles:
 ### Developer-Designer Collaboration Showcase
 
 If you want to demonstrate design awareness in your portfolio:
+
 - Include a "Design Process" section or case study that shows before/after iterations
 - Show awareness of spacing systems by using consistent spacing throughout
 - Demonstrate responsive design across breakpoints

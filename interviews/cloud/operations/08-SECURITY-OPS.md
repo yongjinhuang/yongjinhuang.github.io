@@ -131,13 +131,13 @@ ansible-playbook patch.yml \
 
 ### Reboot Strategies
 
-| Strategy | Use Case | Risk | Command |
-|---|---|---|---|
-| `RebootIfNeeded` | Standard patching | Low | SSM default option |
-| `NoReboot` | Kernel patches only deferred | Medium — kernel vuln still active | `--parameters RebootOption=NoReboot` |
-| Scheduled Reboot Window | DB servers, stateful | Low with coordination | Separate maintenance window |
-| Live Patching (kpatch) | Zero-downtime kernel | Subscription needed | `kpatch load /var/cache/kpatch/` |
-| AMI rotation | Immutable infra | Requires ASG | Replace ASG launch template |
+| Strategy                | Use Case                     | Risk                              | Command                              |
+| ----------------------- | ---------------------------- | --------------------------------- | ------------------------------------ |
+| `RebootIfNeeded`        | Standard patching            | Low                               | SSM default option                   |
+| `NoReboot`              | Kernel patches only deferred | Medium — kernel vuln still active | `--parameters RebootOption=NoReboot` |
+| Scheduled Reboot Window | DB servers, stateful         | Low with coordination             | Separate maintenance window          |
+| Live Patching (kpatch)  | Zero-downtime kernel         | Subscription needed               | `kpatch load /var/cache/kpatch/`     |
+| AMI rotation            | Immutable infra              | Requires ASG                      | Replace ASG launch template          |
 
 ```bash
 # Live kernel patching (Amazon Linux 2 with kpatch)
@@ -637,8 +637,8 @@ spec:
   commonName: api.company.com
   dnsNames:
     - api.company.com
-    - "*.api.company.com"
-  renewBefore: 720h  # Renew 30 days before expiry
+    - '*.api.company.com'
+  renewBefore: 720h # Renew 30 days before expiry
 ```
 
 ### Internal PKI with Vault
@@ -746,9 +746,12 @@ aws iam get-service-last-accessed-details --job-id <job-id> \
       "Sid": "DenyPrivilegeEscalation",
       "Effect": "Deny",
       "Action": [
-        "iam:CreateUser", "iam:AttachUserPolicy",
-        "iam:PutUserPolicy", "iam:CreateAccessKey",
-        "iam:CreateLoginProfile", "sts:AssumeRole"
+        "iam:CreateUser",
+        "iam:AttachUserPolicy",
+        "iam:PutUserPolicy",
+        "iam:CreateAccessKey",
+        "iam:CreateLoginProfile",
+        "sts:AssumeRole"
       ],
       "Resource": "*",
       "Condition": {
@@ -992,9 +995,9 @@ metadata:
 spec:
   match:
     kinds:
-      - apiGroups: [""]
-        kinds: ["Pod"]
-    namespaces: ["production", "staging"]
+      - apiGroups: ['']
+        kinds: ['Pod']
+    namespaces: ['production', 'staging']
 ---
 # Kyverno policy — require image digest (prevent tag mutation attacks)
 apiVersion: kyverno.io/v1
@@ -1007,14 +1010,14 @@ spec:
     - name: check-image-digest
       match:
         resources:
-          kinds: ["Pod"]
-          namespaces: ["production"]
+          kinds: ['Pod']
+          namespaces: ['production']
       validate:
-        message: "Images must use SHA digest, not mutable tags"
+        message: 'Images must use SHA digest, not mutable tags'
         pattern:
           spec:
             containers:
-              - image: "*@sha256:*"
+              - image: '*@sha256:*'
 ```
 
 ### Falco Runtime Security
@@ -1133,13 +1136,13 @@ LIMIT 100;
 
 ### Log Retention Policy
 
-| Log Type | Hot Storage | Warm Storage | Cold/Archive | Legal Hold |
-|---|---|---|---|---|
-| CloudTrail | S3 (90d) | S3 IA (1y) | Glacier (7y) | S3 Object Lock |
-| VPC Flow Logs | CloudWatch (30d) | S3 (1y) | Glacier (3y) | — |
-| Application Logs | OpenSearch (14d) | S3 (1y) | — | — |
-| Security Events | SIEM (90d) | S3 (3y) | Glacier (7y) | S3 Object Lock |
-| Access Reviews | IAM (90d) | S3 (3y) | — | — |
+| Log Type         | Hot Storage      | Warm Storage | Cold/Archive | Legal Hold     |
+| ---------------- | ---------------- | ------------ | ------------ | -------------- |
+| CloudTrail       | S3 (90d)         | S3 IA (1y)   | Glacier (7y) | S3 Object Lock |
+| VPC Flow Logs    | CloudWatch (30d) | S3 (1y)      | Glacier (3y) | —              |
+| Application Logs | OpenSearch (14d) | S3 (1y)      | —            | —              |
+| Security Events  | SIEM (90d)       | S3 (3y)      | Glacier (7y) | S3 Object Lock |
+| Access Reviews   | IAM (90d)        | S3 (3y)      | —            | —              |
 
 ---
 
@@ -1282,17 +1285,17 @@ ROOT CAUSE ANALYSIS QUESTIONS
 
 ## Quick Reference: Security Operations Cheat Sheet
 
-| Domain | Key Tool | Critical Command/Concept |
-|---|---|---|
-| Patch Mgmt | SSM Patch Manager | `max-concurrency 20%`, wave deployments |
-| Vuln Scanning | Trivy / Qualys | EPSS score + CVSS for prioritization |
-| Compliance | AWS Config / OPA | `conftest test` + Security Hub standards |
-| Hardening | CIS Benchmarks | InSpec `linux-baseline` for validation |
-| Secrets | HashiCorp Vault | Dynamic credentials, `vault agent` sidecar |
-| Certs | cert-manager / Vault PKI | `renewBefore: 720h`, WORM storage |
-| IAM | Access Analyzer | Remove permissions unused for 90+ days |
-| Network | WAF + Shield | Rate-limit critical endpoints; Shield Advanced |
-| Incident | GuardDuty + isolation | Snapshot → isolate SG → forensic mount |
-| Container | Falco + Kyverno | Enforce image digest, deny privileged |
-| Audit | CloudTrail + Athena | Object Lock (WORM), log file validation |
-| CVE Response | SSM + CI/CD | Scope → Prioritize → Canary → Full fleet |
+| Domain        | Key Tool                 | Critical Command/Concept                       |
+| ------------- | ------------------------ | ---------------------------------------------- |
+| Patch Mgmt    | SSM Patch Manager        | `max-concurrency 20%`, wave deployments        |
+| Vuln Scanning | Trivy / Qualys           | EPSS score + CVSS for prioritization           |
+| Compliance    | AWS Config / OPA         | `conftest test` + Security Hub standards       |
+| Hardening     | CIS Benchmarks           | InSpec `linux-baseline` for validation         |
+| Secrets       | HashiCorp Vault          | Dynamic credentials, `vault agent` sidecar     |
+| Certs         | cert-manager / Vault PKI | `renewBefore: 720h`, WORM storage              |
+| IAM           | Access Analyzer          | Remove permissions unused for 90+ days         |
+| Network       | WAF + Shield             | Rate-limit critical endpoints; Shield Advanced |
+| Incident      | GuardDuty + isolation    | Snapshot → isolate SG → forensic mount         |
+| Container     | Falco + Kyverno          | Enforce image digest, deny privileged          |
+| Audit         | CloudTrail + Athena      | Object Lock (WORM), log file validation        |
+| CVE Response  | SSM + CI/CD              | Scope → Prioritize → Canary → Full fleet       |

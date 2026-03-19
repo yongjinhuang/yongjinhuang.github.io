@@ -2393,6 +2393,7 @@ Modify the shared memory matrix multiply from Section 1.4 to use padding (`__sha
 ### Exercise 2: Pipelined Stream Processing
 
 Create a 4-stream pipeline that processes an image (1D array of pixels):
+
 1. Stream i copies chunk i to the device (async)
 2. Stream i applies a blur kernel to chunk i
 3. Stream i applies an edge detection kernel to chunk i
@@ -2403,6 +2404,7 @@ Ensure proper dependencies using events. Time the total execution and compare ag
 ### Exercise 3: Multi-Level Reduction
 
 Implement a complete reduction pipeline:
+
 1. Use warp-level `__shfl_down_sync` for intra-warp reduction
 2. Use shared memory for inter-warp reduction within a block
 3. Use `atomicAdd` for inter-block accumulation
@@ -2423,6 +2425,7 @@ Run for 1000 iterations in a single kernel launch (using `grid.sync()` between i
 ### Exercise 5: Build-Your-Own Thrust
 
 Implement a simplified version of `thrust::reduce` and `thrust::exclusive_scan` using raw CUDA kernels. Use all the techniques from this chapter:
+
 - Shared memory tiling
 - Warp-level shuffles for intra-warp operations
 - Proper `__syncthreads()` placement
@@ -2433,6 +2436,7 @@ Benchmark against Thrust and CUB implementations.
 ### Exercise 6: CUDA Graph Pipeline
 
 Build a CUDA Graph for a multi-step image processing pipeline:
+
 1. H2D copy
 2. Gaussian blur (3x3 stencil)
 3. Threshold (binarize)
@@ -2443,6 +2447,7 @@ Capture the graph, then replay it 1000 times with different input images. Measur
 ### Exercise 7: Dynamic Parallelism Mandelbrot
 
 Implement a Mandelbrot set renderer that uses dynamic parallelism for adaptive refinement:
+
 - Coarse pass: evaluate every 16th pixel
 - Where the set boundary is detected (rapid change), launch child kernels for finer 4x4 blocks
 - Where the region is uniform (all inside or all outside), skip fine evaluation
@@ -2452,6 +2457,7 @@ Compare total pixel evaluations against a brute-force approach.
 ### Exercise 8: Lock-Free Stack with Atomics
 
 Implement a lock-free stack on the GPU using `atomicCAS`:
+
 - `push(value)`: atomically updates the top-of-stack pointer
 - `pop()`: atomically reads and removes the top element
 

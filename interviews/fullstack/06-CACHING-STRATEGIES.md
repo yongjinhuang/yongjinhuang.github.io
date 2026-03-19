@@ -19,24 +19,28 @@ User -> Browser Cache -> CDN -> Load Balancer -> App Cache -> Database Cache -> 
 ```
 
 **Browser cache:**
+
 - Closest to the user, fastest possible response
 - Controlled by HTTP headers (Cache-Control, ETag, Last-Modified)
 - Stores static assets (JS, CSS, images, fonts)
 - No server round-trip when cache is valid
 
 **CDN (Content Delivery Network):**
+
 - Geographically distributed edge servers
 - Caches static assets and sometimes dynamic content
 - Reduces latency by serving from the nearest edge location
 - Examples: CloudFront, Cloudflare, Fastly, Vercel Edge
 
 **Application cache (e.g., Redis, Memcached):**
+
 - Caches computed results, database query results, session data
 - Shared across application instances
 - Sub-millisecond reads for in-memory stores
 - Supports complex data structures (Redis)
 
 **Database cache:**
+
 - Query result cache (MySQL query cache, PostgreSQL shared buffers)
 - Connection pooling (PgBouncer, ProxySQL)
 - Materialized views for expensive aggregations
@@ -47,6 +51,7 @@ User -> Browser Cache -> CDN -> Load Balancer -> App Cache -> Database Cache -> 
 Redis is an in-memory data store used as a cache, message broker, and session store.
 
 **Key data structures:**
+
 - **String**: Simple key-value pairs, counters, serialized objects
 - **Hash**: Field-value maps (like a row in a database)
 - **List**: Ordered collections (queues, recent items)
@@ -55,11 +60,13 @@ Redis is an in-memory data store used as a cache, message broker, and session st
 - **Stream**: Append-only log (event streams, activity feeds)
 
 **TTL (Time to Live):**
+
 - Set expiration on keys: `SET key value EX 3600` (1 hour)
 - After TTL expires, the key is automatically deleted
 - Use TTL to prevent stale data and control memory usage
 
 **Eviction policies (when memory is full):**
+
 - `noeviction`: Return errors when memory is full
 - `allkeys-lru`: Evict least recently used keys across all keys
 - `volatile-lru`: Evict least recently used keys with TTL set
@@ -68,6 +75,7 @@ Redis is an in-memory data store used as a cache, message broker, and session st
 - `allkeys-random`: Evict random keys
 
 **Choosing an eviction policy:**
+
 - Use `allkeys-lru` for general caching (most common)
 - Use `volatile-lru` when mixing cached and persistent data
 - Use `volatile-ttl` when shorter-lived keys should be evicted first
@@ -75,6 +83,7 @@ Redis is an in-memory data store used as a cache, message broker, and session st
 ### Cache Patterns
 
 **Cache-aside (lazy loading):**
+
 1. Application checks cache first
 2. On cache miss, query the database
 3. Store the result in cache
@@ -84,6 +93,7 @@ Pros: Only caches data that is actually requested. Simple to implement.
 Cons: First request is always a cache miss. Data can become stale.
 
 **Write-through:**
+
 1. Application writes to cache and database simultaneously
 2. Every write updates both stores
 3. Reads always hit the cache
@@ -92,6 +102,7 @@ Pros: Cache is always consistent with database. No stale reads.
 Cons: Higher write latency (two writes). Caches data that may never be read.
 
 **Write-behind (write-back):**
+
 1. Application writes to cache only
 2. Cache asynchronously writes to database in batches
 3. Reads are served from cache
@@ -100,6 +111,7 @@ Pros: Very fast writes. Batching reduces database load.
 Cons: Risk of data loss if cache crashes before flushing. Complex to implement.
 
 **Read-through:**
+
 1. Application reads from cache
 2. On cache miss, the cache itself loads from the database
 3. Cache returns the result to the application
@@ -112,27 +124,32 @@ Cons: Cache implementation is more complex.
 Cache invalidation is the process of removing or updating stale cache entries.
 
 **Time-based expiration (TTL):**
+
 - Simplest strategy: set TTL on every cached entry
 - Data can be stale for up to TTL duration
 - Good for data that changes infrequently
 
 **Event-based invalidation:**
+
 - Invalidate cache when the underlying data changes
 - Triggered by database change events, application events, or pub/sub
 - Provides better consistency than TTL alone
 
 **Version-based invalidation:**
+
 - Include a version number in the cache key
 - When data changes, increment the version
 - Old cache entries expire naturally via TTL
 - Avoids explicit deletion
 
 **Tag-based invalidation:**
+
 - Associate cache entries with tags (e.g., `user:123`, `product:456`)
 - Invalidate all entries with a given tag when related data changes
 - Useful for complex dependency graphs
 
 **Patterns to avoid:**
+
 - Deleting all cache entries on any change (defeats the purpose)
 - Never invalidating (data becomes permanently stale)
 - Manual cache clearing in production (error-prone, not scalable)
@@ -142,18 +159,21 @@ Cache invalidation is the process of removing or updating stale cache entries.
 CDNs cache content at edge servers close to users.
 
 **What to cache on a CDN:**
+
 - Static assets (JavaScript, CSS, images, fonts)
 - Pre-rendered HTML pages
 - API responses that are the same for all users (public data)
 - Media files (videos, documents)
 
 **What NOT to cache on a CDN:**
+
 - Personalized content (user dashboards, account pages)
 - Responses with authentication headers
 - Real-time data (stock prices, chat messages)
 - POST/PUT/DELETE responses
 
 **CDN cache key strategies:**
+
 - URL-based (default): same URL = same cache entry
 - Query string handling: include, exclude, or sort query parameters
 - Header-based: vary cache by Accept-Language, Accept-Encoding
@@ -164,9 +184,11 @@ CDNs cache content at edge servers close to users.
 HTTP caching is controlled by response headers that tell browsers and proxies how to cache responses.
 
 **Cache-Control:**
+
 ```
 Cache-Control: public, max-age=31536000, immutable
 ```
+
 - `public`: Can be cached by any intermediate proxy
 - `private`: Only the browser can cache (not CDNs or proxies)
 - `max-age=N`: Cache is valid for N seconds
@@ -177,18 +199,22 @@ Cache-Control: public, max-age=31536000, immutable
 - `stale-while-revalidate=N`: Serve stale content while revalidating in background
 
 **ETag (Entity Tag):**
+
 ```
 ETag: "abc123"
 ```
+
 - A unique identifier for a specific version of a resource
 - Server generates ETag from content hash or version number
 - Client sends `If-None-Match: "abc123"` on subsequent requests
 - Server returns `304 Not Modified` if ETag matches (no body sent)
 
 **Last-Modified:**
+
 ```
 Last-Modified: Wed, 01 Jan 2025 00:00:00 GMT
 ```
+
 - Timestamp of the last modification
 - Client sends `If-Modified-Since` on subsequent requests
 - Server returns `304 Not Modified` if unchanged
@@ -196,24 +222,26 @@ Last-Modified: Wed, 01 Jan 2025 00:00:00 GMT
 
 **Common caching strategies:**
 
-| Resource Type | Cache-Control | Why |
-|--------------|--------------|-----|
-| Fingerprinted assets (app.abc123.js) | `public, max-age=31536000, immutable` | Content hash in filename; changes get new URL |
-| HTML pages | `no-cache` or `max-age=0, must-revalidate` | Always check for latest version |
-| API responses (public) | `public, max-age=60, s-maxage=300` | Short browser cache, longer CDN cache |
-| API responses (private) | `private, max-age=0, no-store` | Sensitive data, never cache |
-| Images/fonts | `public, max-age=604800` | Change infrequently (1 week) |
+| Resource Type                        | Cache-Control                              | Why                                           |
+| ------------------------------------ | ------------------------------------------ | --------------------------------------------- |
+| Fingerprinted assets (app.abc123.js) | `public, max-age=31536000, immutable`      | Content hash in filename; changes get new URL |
+| HTML pages                           | `no-cache` or `max-age=0, must-revalidate` | Always check for latest version               |
+| API responses (public)               | `public, max-age=60, s-maxage=300`         | Short browser cache, longer CDN cache         |
+| API responses (private)              | `private, max-age=0, no-store`             | Sensitive data, never cache                   |
+| Images/fonts                         | `public, max-age=604800`                   | Change infrequently (1 week)                  |
 
 ### Cache Warming
 
 Cache warming is the practice of pre-populating the cache before it is needed.
 
 **When to warm the cache:**
+
 - After a deployment (cache was cleared or invalidated)
 - Before a traffic spike (marketing campaign, product launch)
 - When migrating to a new cache cluster
 
 **Strategies:**
+
 - Run a script that queries the most popular endpoints
 - Use access logs to identify the top N most-requested resources
 - Pre-compute and cache expensive aggregations during off-peak hours
@@ -224,17 +252,20 @@ Cache warming is the practice of pre-populating the cache before it is needed.
 When your application runs on multiple servers, caching becomes a distributed systems problem.
 
 **Consistent hashing:**
+
 - Distributes keys evenly across cache nodes
 - When a node is added or removed, only a fraction of keys need to be remapped
 - Used by Redis Cluster, Memcached
 
 **Redis Cluster:**
+
 - Automatic data sharding across multiple nodes
 - 16,384 hash slots distributed across nodes
 - Automatic failover with replica promotion
 - Client-side routing to the correct shard
 
 **Redis Sentinel:**
+
 - Monitoring: watches Redis instances for availability
 - Notification: alerts when instances fail
 - Automatic failover: promotes a replica to primary
@@ -245,17 +276,20 @@ When your application runs on multiple servers, caching becomes a distributed sy
 A cache stampede (thundering herd) occurs when many requests simultaneously find a cache miss and all query the database at once.
 
 **Lock-based approach:**
+
 - When a cache miss occurs, acquire a lock
 - Only the lock holder queries the database and populates the cache
 - Other requests wait for the cache to be populated
 - Use Redis `SET key value NX EX 30` for distributed locking
 
 **Probabilistic early expiration:**
+
 - Before the TTL expires, randomly decide to recompute
 - Spreads recomputation over time instead of all at once
 - Each request has a small chance of refreshing the cache early
 
 **Stale-while-revalidate:**
+
 - Serve the stale cached value immediately
 - Trigger an asynchronous cache refresh in the background
 - Users get fast responses while the cache is being updated
@@ -269,6 +303,7 @@ A cache stampede (thundering herd) occurs when many requests simultaneously find
 You have a product catalog with 100,000 products. Product pages are the most visited pages.
 
 **Approach:**
+
 1. Cache individual product data in Redis with a 1-hour TTL
 2. Use cache-aside pattern: check Redis first, fall back to database
 3. Invalidate the specific product cache when it is updated via admin panel
@@ -281,6 +316,7 @@ You have a product catalog with 100,000 products. Product pages are the most vis
 Your application needs to check user permissions on every API request.
 
 **Approach:**
+
 1. Store session data in Redis with a 30-minute sliding TTL
 2. Use Redis Hash to store user profile, roles, and permissions
 3. On every request, read from Redis (sub-millisecond)
@@ -293,6 +329,7 @@ Your application needs to check user permissions on every API request.
 Your homepage makes an expensive aggregation query that takes 5 seconds. It is cached for 5 minutes. When the cache expires, 1,000 concurrent users all trigger the expensive query.
 
 **Approach:**
+
 1. Implement distributed locking: only one request computes the result
 2. Other requests wait for the lock holder to populate the cache
 3. Set a lock timeout (10 seconds) to prevent deadlocks
@@ -305,6 +342,7 @@ Your homepage makes an expensive aggregation query that takes 5 seconds. It is c
 Your application caches data in process memory (Node.js Map). It works on a single server but fails with multiple servers because each has its own cache.
 
 **Approach:**
+
 1. Set up a Redis cluster accessible from all application servers
 2. Replace in-memory Map with Redis client calls
 3. Use JSON serialization for cached objects
@@ -347,16 +385,19 @@ Cache-aside (also called lazy loading) is the most common caching pattern:
 6. Return the result
 
 **When to use it:**
+
 - Read-heavy workloads where data does not change frequently
 - When it is acceptable for data to be stale for a short period
 - When you want to cache only data that is actually requested (as opposed to caching everything)
 
 **Trade-offs:**
+
 - First request is always a cache miss (cold start)
 - Data can be stale until TTL expires or explicit invalidation
 - Application must handle cache failures gracefully (fall back to database)
 
 **When to use alternatives:**
+
 - Write-through when consistency is critical
 - Write-behind when write performance is critical
 - Read-through when you want the cache to manage its own loading logic
@@ -374,6 +415,7 @@ Cache invalidation is the hardest part of caching. There are several strategies,
 **Version-based cache keys** avoid explicit invalidation. Include a version number or content hash in the cache key. When data changes, the new version gets a new cache key. Old entries expire naturally. Good for static assets with fingerprinted URLs.
 
 **My approach in practice:**
+
 - Start with TTL-based expiration (simplest)
 - Add event-based invalidation for data that must be consistent
 - Use short TTLs (30-60 seconds) as a safety net even with event-based invalidation
@@ -392,6 +434,7 @@ These are commonly confused but have distinct meanings:
 **`must-revalidate`**: Once the cached response becomes stale (max-age expires), the cache must revalidate with the server before serving it. Without this header, caches might serve stale content when the server is unreachable.
 
 **Common combinations:**
+
 - `Cache-Control: no-store` -- Never cache (sensitive data)
 - `Cache-Control: no-cache` -- Cache but always revalidate (HTML pages)
 - `Cache-Control: public, max-age=3600, must-revalidate` -- Cache for 1 hour, then revalidate
@@ -422,6 +465,7 @@ A background job proactively refreshes cache entries for high-traffic keys befor
 **Answer:**
 
 **Choose Redis when:**
+
 - You need data structures beyond simple key-value (lists, sets, sorted sets, hashes)
 - You need persistence (data survives restarts)
 - You need pub/sub messaging
@@ -430,6 +474,7 @@ A background job proactively refreshes cache entries for high-traffic keys befor
 - You need cluster mode with automatic sharding
 
 **Choose Memcached when:**
+
 - You only need simple key-value caching
 - You want multi-threaded performance (Memcached is multi-threaded; Redis is single-threaded)
 - Memory efficiency is critical (Memcached has lower per-key overhead)
@@ -445,17 +490,18 @@ TTL selection depends on three factors: data volatility, consistency requirement
 
 **Framework for choosing TTLs:**
 
-| Data Type | TTL Range | Reasoning |
-|-----------|-----------|-----------|
-| Static assets | Infinite (immutable URLs) | Content hash in filename |
-| Configuration / feature flags | 1-5 minutes | Changes are rare but should propagate quickly |
-| Product catalog | 5-60 minutes | Changes occasionally, slight staleness is fine |
-| User profile | 5-15 minutes | Changes infrequently, but should not be too stale |
-| Session data | 30 min sliding | Security requirement: sessions must expire |
-| Real-time data (prices) | 1-10 seconds | Staleness is costly |
-| Search results | 5-30 minutes | Expensive to compute, slight staleness is acceptable |
+| Data Type                     | TTL Range                 | Reasoning                                            |
+| ----------------------------- | ------------------------- | ---------------------------------------------------- |
+| Static assets                 | Infinite (immutable URLs) | Content hash in filename                             |
+| Configuration / feature flags | 1-5 minutes               | Changes are rare but should propagate quickly        |
+| Product catalog               | 5-60 minutes              | Changes occasionally, slight staleness is fine       |
+| User profile                  | 5-15 minutes              | Changes infrequently, but should not be too stale    |
+| Session data                  | 30 min sliding            | Security requirement: sessions must expire           |
+| Real-time data (prices)       | 1-10 seconds              | Staleness is costly                                  |
+| Search results                | 5-30 minutes              | Expensive to compute, slight staleness is acceptable |
 
 **General principles:**
+
 - Start with a conservative (short) TTL and increase it based on observed hit rates
 - Use shorter TTLs for data that changes frequently
 - Use longer TTLs for expensive-to-compute data
@@ -468,6 +514,7 @@ TTL selection depends on three factors: data volatility, consistency requirement
 
 **Layer 1: HTTP caching headers**
 Set appropriate Cache-Control headers on every response:
+
 - Public, read-only endpoints: `Cache-Control: public, max-age=60, s-maxage=300`
 - Authenticated endpoints: `Cache-Control: private, no-cache`
 - Static resources: `Cache-Control: public, max-age=31536000, immutable`
@@ -478,6 +525,7 @@ Put a CDN in front of the API for public endpoints. Configure the CDN to respect
 
 **Layer 3: Application-level caching (Redis)**
 Cache expensive database queries and computed results:
+
 - Use the endpoint + query parameters as the cache key
 - Serialize the response body in Redis
 - Set TTL based on data volatility
@@ -487,6 +535,7 @@ Cache expensive database queries and computed results:
 Use materialized views for expensive aggregations. Configure the database buffer pool appropriately. Use read replicas for read-heavy endpoints.
 
 **Cache key design:**
+
 ```
 cache:api:v1:products:list:page=1&sort=price&category=electronics
 cache:api:v1:products:detail:prod-123
@@ -562,7 +611,12 @@ export const cacheDeletePattern = async (pattern: string): Promise<void> => {
 
 ```typescript
 // services/product-service.ts
-import { cacheGet, cacheSet, cacheDelete, cacheDeletePattern } from '../cache/redis-cache';
+import {
+  cacheGet,
+  cacheSet,
+  cacheDelete,
+  cacheDeletePattern,
+} from '../cache/redis-cache';
 import { db } from '../database';
 
 interface Product {
@@ -670,9 +724,7 @@ export const getWithStampedeProtection = async <T>(
 
   // Another process holds the lock: wait and retry
   for (let i = 0; i < options.maxRetries; i++) {
-    await new Promise((resolve) =>
-      setTimeout(resolve, options.retryDelayMs)
-    );
+    await new Promise((resolve) => setTimeout(resolve, options.retryDelayMs));
 
     const retryResult = await redis.get(options.cacheKey);
     if (retryResult !== null) {
@@ -699,9 +751,7 @@ const getPopularProducts = async (): Promise<Product[]> => {
     },
     async () => {
       // Expensive query
-      return db('products')
-        .orderBy('view_count', 'desc')
-        .limit(100);
+      return db('products').orderBy('view_count', 'desc').limit(100);
     }
   );
 };
@@ -733,9 +783,7 @@ export const setCacheHeaders = (config: CacheConfig) => {
     }
 
     if (config.staleWhileRevalidate !== undefined) {
-      directives.push(
-        `stale-while-revalidate=${config.staleWhileRevalidate}`
-      );
+      directives.push(`stale-while-revalidate=${config.staleWhileRevalidate}`);
     }
 
     if (config.immutable) {
@@ -747,7 +795,11 @@ export const setCacheHeaders = (config: CacheConfig) => {
   };
 };
 
-export const noCache = (_req: Request, res: Response, next: NextFunction): void => {
+export const noCache = (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   res.set('Cache-Control', 'no-store');
   next();
 };
@@ -949,12 +1001,12 @@ func GetOrSet[T any](
 
 ### Cache Pattern Comparison
 
-| Pattern | Read Perf | Write Perf | Consistency | Complexity |
-|---------|----------|-----------|-------------|------------|
-| Cache-aside | Fast (after warm) | Normal | Eventual | Low |
-| Write-through | Fast | Slower (2 writes) | Strong | Medium |
-| Write-behind | Fast | Fast | Eventual | High |
-| Read-through | Fast (after warm) | Normal | Eventual | Medium |
+| Pattern       | Read Perf         | Write Perf        | Consistency | Complexity |
+| ------------- | ----------------- | ----------------- | ----------- | ---------- |
+| Cache-aside   | Fast (after warm) | Normal            | Eventual    | Low        |
+| Write-through | Fast              | Slower (2 writes) | Strong      | Medium     |
+| Write-behind  | Fast              | Fast              | Eventual    | High       |
+| Read-through  | Fast (after warm) | Normal            | Eventual    | Medium     |
 
 ### Redis Data Structure Cheat Sheet
 
@@ -1013,15 +1065,15 @@ cache:products:prod-123:en-US
 
 ### Common TTL Values
 
-| Data Type | TTL | Rationale |
-|-----------|-----|-----------|
-| Static assets | Infinite | Fingerprinted URLs |
-| Feature flags | 60s | Need quick propagation |
-| Product listings | 300s (5 min) | Acceptable staleness |
-| User sessions | 1800s (30 min) | Security sliding window |
-| API rate limits | 60s | Per-minute windows |
-| Search results | 600s (10 min) | Expensive to compute |
-| Dashboard aggregations | 300s (5 min) | Balance freshness/cost |
+| Data Type              | TTL            | Rationale               |
+| ---------------------- | -------------- | ----------------------- |
+| Static assets          | Infinite       | Fingerprinted URLs      |
+| Feature flags          | 60s            | Need quick propagation  |
+| Product listings       | 300s (5 min)   | Acceptable staleness    |
+| User sessions          | 1800s (30 min) | Security sliding window |
+| API rate limits        | 60s            | Per-minute windows      |
+| Search results         | 600s (10 min)  | Expensive to compute    |
+| Dashboard aggregations | 300s (5 min)   | Balance freshness/cost  |
 
 ### Cache Monitoring Metrics
 

@@ -4,68 +4,68 @@ A chat system requires real-time message delivery, offline support, and read rec
 
 ## Table Responsibilities
 
-| Table | Purpose | Storage | Key Characteristic |
-|-------|---------|---------|-------------------|
-| **users** | User profiles and authentication | PostgreSQL | Low-write, frequently joined |
-| **conversations** | Conversation metadata (group name, type) | PostgreSQL | Relatively static after creation |
-| **conversation_members** | Membership and roles in conversations | PostgreSQL | Updated on join/leave/mute |
-| **messages** | Message content and metadata | Cassandra | Partitioned by conversation, ordered by time DESC |
-| **message_status** | Per-user delivery/read receipts | Cassandra | Partitioned by (conversation, user) for fast lookups |
-| **user_conversations** | Each user's conversation list (inbox) | Cassandra | Partitioned by user, ordered by last activity |
+| Table                    | Purpose                                  | Storage    | Key Characteristic                                   |
+| ------------------------ | ---------------------------------------- | ---------- | ---------------------------------------------------- |
+| **users**                | User profiles and authentication         | PostgreSQL | Low-write, frequently joined                         |
+| **conversations**        | Conversation metadata (group name, type) | PostgreSQL | Relatively static after creation                     |
+| **conversation_members** | Membership and roles in conversations    | PostgreSQL | Updated on join/leave/mute                           |
+| **messages**             | Message content and metadata             | Cassandra  | Partitioned by conversation, ordered by time DESC    |
+| **message_status**       | Per-user delivery/read receipts          | Cassandra  | Partitioned by (conversation, user) for fast lookups |
+| **user_conversations**   | Each user's conversation list (inbox)    | Cassandra  | Partitioned by user, ordered by last activity        |
 
 ## Detailed Field Descriptions
 
 ### users (PostgreSQL)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| user_id | BIGINT, PK (Snowflake) | Globally unique, time-sortable ID. Snowflake IDs embed timestamp + worker + sequence, avoiding coordination across datacenters. |
-| username | VARCHAR(50), UNIQUE | Login handle. Unique constraint prevents duplicates. |
-| display_name | VARCHAR(100) | Displayed in chat UI. Can contain spaces and special characters unlike username. |
-| email | VARCHAR(255) | For account recovery and notifications. |
-| phone | VARCHAR(20), UNIQUE | Primary identifier for WhatsApp-style systems. Phone verification prevents spam. |
-| avatar_url | VARCHAR(500) | CDN URL to profile picture. Stored as URL, not blob, to keep the database lean. |
-| public_key | TEXT | End-to-end encryption public key. Each device registers a key; the server never sees plaintext messages. |
-| status_message | VARCHAR(200) | "Hey there! I am using WhatsApp" equivalent. |
+| Field          | Type                   | Description                                                                                                                     |
+| -------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| user_id        | BIGINT, PK (Snowflake) | Globally unique, time-sortable ID. Snowflake IDs embed timestamp + worker + sequence, avoiding coordination across datacenters. |
+| username       | VARCHAR(50), UNIQUE    | Login handle. Unique constraint prevents duplicates.                                                                            |
+| display_name   | VARCHAR(100)           | Displayed in chat UI. Can contain spaces and special characters unlike username.                                                |
+| email          | VARCHAR(255)           | For account recovery and notifications.                                                                                         |
+| phone          | VARCHAR(20), UNIQUE    | Primary identifier for WhatsApp-style systems. Phone verification prevents spam.                                                |
+| avatar_url     | VARCHAR(500)           | CDN URL to profile picture. Stored as URL, not blob, to keep the database lean.                                                 |
+| public_key     | TEXT                   | End-to-end encryption public key. Each device registers a key; the server never sees plaintext messages.                        |
+| status_message | VARCHAR(200)           | "Hey there! I am using WhatsApp" equivalent.                                                                                    |
 
 **Why Snowflake IDs?** Auto-increment IDs require a single coordinator, which is a bottleneck at global scale. Snowflake IDs are generated independently on each server while remaining globally unique and roughly time-ordered.
 
 ### conversations (PostgreSQL)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| conversation_id | BIGINT, PK | Unique conversation identifier. |
-| type | ENUM('direct','group') | Direct messages have exactly 2 members. Groups can have up to 1024. Different UI and business rules apply. |
-| name | VARCHAR(100), NULLABLE | Group name. Null for direct messages (UI shows the other user's name instead). |
-| avatar_url | VARCHAR(500), NULLABLE | Group avatar. Null for direct messages. |
-| creator_id | BIGINT, FK → users.user_id | Who created the conversation. For direct messages, the user who initiated. |
+| Field           | Type                       | Description                                                                                                |
+| --------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| conversation_id | BIGINT, PK                 | Unique conversation identifier.                                                                            |
+| type            | ENUM('direct','group')     | Direct messages have exactly 2 members. Groups can have up to 1024. Different UI and business rules apply. |
+| name            | VARCHAR(100), NULLABLE     | Group name. Null for direct messages (UI shows the other user's name instead).                             |
+| avatar_url      | VARCHAR(500), NULLABLE     | Group avatar. Null for direct messages.                                                                    |
+| creator_id      | BIGINT, FK → users.user_id | Who created the conversation. For direct messages, the user who initiated.                                 |
 
 ### conversation_members (PostgreSQL)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| conversation_id | BIGINT, PK (composite) | FK → conversations. Part of composite primary key. |
-| user_id | BIGINT, PK (composite) | FK → users. Together with conversation_id, ensures a user appears only once per conversation. |
-| role | ENUM('admin','member') | Admins can add/remove members, change group settings. Creator is auto-admin. |
-| nickname | VARCHAR(100), NULLABLE | Per-group display name override. |
-| joined_at | TIMESTAMP | When the user joined. Messages before this time are hidden from the user. |
-| muted_until | TIMESTAMP, NULLABLE | Suppresses push notifications until this time. Null means not muted. |
+| Field           | Type                   | Description                                                                                   |
+| --------------- | ---------------------- | --------------------------------------------------------------------------------------------- |
+| conversation_id | BIGINT, PK (composite) | FK → conversations. Part of composite primary key.                                            |
+| user_id         | BIGINT, PK (composite) | FK → users. Together with conversation_id, ensures a user appears only once per conversation. |
+| role            | ENUM('admin','member') | Admins can add/remove members, change group settings. Creator is auto-admin.                  |
+| nickname        | VARCHAR(100), NULLABLE | Per-group display name override.                                                              |
+| joined_at       | TIMESTAMP              | When the user joined. Messages before this time are hidden from the user.                     |
+| muted_until     | TIMESTAMP, NULLABLE    | Suppresses push notifications until this time. Null means not muted.                          |
 
 **Why composite PK instead of a surrogate key?** The composite key (conversation_id, user_id) naturally prevents duplicate memberships and serves as the most common lookup pattern.
 
 ### messages (Cassandra)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| conversation_id | BIGINT, PARTITION KEY | All messages for a conversation live on the same Cassandra node. Enables efficient range scans for "load more messages." |
-| message_id | BIGINT, CLUSTERING KEY DESC | Snowflake ID, sorted descending. DESC ordering means the latest messages are read first without a full scan. |
-| sender_id | BIGINT | Who sent the message. Not a FK in Cassandra (no joins), denormalized from users. |
-| message_type | ENUM('text','image','video','file','voice') | Determines how the client renders the message. Media types include a URL in metadata. |
-| content | TEXT | Message text for text messages. For media, this is a caption. Encrypted end-to-end in production. |
-| metadata | MAP<TEXT, TEXT> | Flexible key-value store for media_url, file_size, dimensions, duration, etc. Avoids schema changes for new media types. |
-| reply_to_id | BIGINT, NULLABLE | References another message_id for threaded replies. Client fetches the referenced message for preview. |
-| is_deleted | BOOLEAN | Soft delete for "delete for everyone." Content is cleared but the tombstone remains so other clients know to remove it. |
-| created_at | TIMESTAMP | When the message was created. Redundant with Snowflake ID timestamp but useful for TTL and display. |
+| Field           | Type                                        | Description                                                                                                              |
+| --------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| conversation_id | BIGINT, PARTITION KEY                       | All messages for a conversation live on the same Cassandra node. Enables efficient range scans for "load more messages." |
+| message_id      | BIGINT, CLUSTERING KEY DESC                 | Snowflake ID, sorted descending. DESC ordering means the latest messages are read first without a full scan.             |
+| sender_id       | BIGINT                                      | Who sent the message. Not a FK in Cassandra (no joins), denormalized from users.                                         |
+| message_type    | ENUM('text','image','video','file','voice') | Determines how the client renders the message. Media types include a URL in metadata.                                    |
+| content         | TEXT                                        | Message text for text messages. For media, this is a caption. Encrypted end-to-end in production.                        |
+| metadata        | MAP<TEXT, TEXT>                             | Flexible key-value store for media_url, file_size, dimensions, duration, etc. Avoids schema changes for new media types. |
+| reply_to_id     | BIGINT, NULLABLE                            | References another message_id for threaded replies. Client fetches the referenced message for preview.                   |
+| is_deleted      | BOOLEAN                                     | Soft delete for "delete for everyone." Content is cleared but the tombstone remains so other clients know to remove it.  |
+| created_at      | TIMESTAMP                                   | When the message was created. Redundant with Snowflake ID timestamp but useful for TTL and display.                      |
 
 **Why Cassandra for messages?** Messages are partitioned by conversation (natural partition key), append-heavy (writes far exceed updates), and need high availability across regions. Cassandra's log-structured merge tree is optimized for this workload.
 
@@ -73,25 +73,25 @@ A chat system requires real-time message delivery, offline support, and read rec
 
 ### message_status (Cassandra)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| conversation_id | BIGINT, PARTITION KEY (composite) | First part of composite partition key. |
-| user_id | BIGINT, PARTITION KEY (composite) | Together with conversation_id, partitions status by "which user in which conversation." |
-| message_id | BIGINT, CLUSTERING KEY | Which message this status refers to. Enables range scans: "all unread messages for user X in conversation Y." |
-| status | ENUM('sent','delivered','read') | Progression: sent → delivered (reached device) → read (user opened). Only moves forward, never backward. |
-| updated_at | TIMESTAMP | When the status last changed. Used for "last seen" indicators. |
+| Field           | Type                              | Description                                                                                                   |
+| --------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| conversation_id | BIGINT, PARTITION KEY (composite) | First part of composite partition key.                                                                        |
+| user_id         | BIGINT, PARTITION KEY (composite) | Together with conversation_id, partitions status by "which user in which conversation."                       |
+| message_id      | BIGINT, CLUSTERING KEY            | Which message this status refers to. Enables range scans: "all unread messages for user X in conversation Y." |
+| status          | ENUM('sent','delivered','read')   | Progression: sent → delivered (reached device) → read (user opened). Only moves forward, never backward.      |
+| updated_at      | TIMESTAMP                         | When the status last changed. Used for "last seen" indicators.                                                |
 
 **Why partition by (conversation_id, user_id)?** The query "how many unread messages does user X have in conversation Y" needs to scan message_status for that specific partition. This key makes it a single-partition query.
 
 ### user_conversations (Cassandra)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| user_id | BIGINT, PARTITION KEY | Each user's inbox lives on one partition. |
-| last_message_at | TIMESTAMP, CLUSTERING KEY DESC | Sorts conversations by most recent activity. DESC means opening the app immediately shows the most active chats. |
-| conversation_id | BIGINT | Which conversation this entry refers to. |
-| last_message_preview | TEXT | Truncated preview of the last message (e.g., "Hey, are you coming to..."). Denormalized to avoid fetching the messages table for the inbox view. |
-| unread_count | INT | Number of unread messages. Denormalized counter, updated on new message and on read receipt. |
+| Field                | Type                           | Description                                                                                                                                      |
+| -------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| user_id              | BIGINT, PARTITION KEY          | Each user's inbox lives on one partition.                                                                                                        |
+| last_message_at      | TIMESTAMP, CLUSTERING KEY DESC | Sorts conversations by most recent activity. DESC means opening the app immediately shows the most active chats.                                 |
+| conversation_id      | BIGINT                         | Which conversation this entry refers to.                                                                                                         |
+| last_message_preview | TEXT                           | Truncated preview of the last message (e.g., "Hey, are you coming to..."). Denormalized to avoid fetching the messages table for the inbox view. |
+| unread_count         | INT                            | Number of unread messages. Denormalized counter, updated on new message and on read receipt.                                                     |
 
 **Why denormalize `last_message_preview` and `unread_count`?** The inbox screen is the most viewed page. Without denormalization, rendering it would require joining conversations → messages → message_status, which is impossible in Cassandra and expensive even in a relational DB at scale.
 

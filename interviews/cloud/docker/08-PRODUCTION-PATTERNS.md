@@ -26,6 +26,7 @@ Build --> Test --> Scan --> Push --> Deploy --> Run --> Monitor --> Stop/Replace
 ### 2.1 Why PID 1 Is Special
 
 In Linux, PID 1 (the init process) has two special responsibilities:
+
 1. **Signal handling:** PID 1 does NOT get default signal handlers. SIGTERM does not kill PID 1 by default -- the process must explicitly handle it.
 2. **Zombie reaping:** PID 1 must call `wait()` on orphaned child processes (zombies). If it does not, zombie processes accumulate.
 
@@ -117,12 +118,12 @@ process.on('SIGTERM', () => {
 
 ### 2.4 When You Need an Init Process
 
-| Scenario | Need tini/dumb-init? |
-|----------|---------------------|
-| Single-process container (your app is PID 1) | Yes, if you spawn child processes |
-| Your app handles SIGTERM and has no children | No (but recommended anyway) |
-| Multi-process container (supervisord, etc.) | Use supervisord as PID 1 |
-| Shell form CMD/ENTRYPOINT | Always fix this first (use exec form) |
+| Scenario                                     | Need tini/dumb-init?                  |
+| -------------------------------------------- | ------------------------------------- |
+| Single-process container (your app is PID 1) | Yes, if you spawn child processes     |
+| Your app handles SIGTERM and has no children | No (but recommended anyway)           |
+| Multi-process container (supervisord, etc.)  | Use supervisord as PID 1              |
+| Shell form CMD/ENTRYPOINT                    | Always fix this first (use exec form) |
 
 ---
 
@@ -130,11 +131,11 @@ process.on('SIGTERM', () => {
 
 ### 3.1 Types of Health Checks
 
-| Type | Purpose | Where Defined |
-|------|---------|--------------|
-| **Startup probe** | Is the app done initializing? | `start_period` in HEALTHCHECK |
-| **Liveness check** | Is the app still alive? | HEALTHCHECK instruction |
-| **Readiness check** | Can the app accept traffic? | Orchestrator (K8s), not Docker natively |
+| Type                | Purpose                       | Where Defined                           |
+| ------------------- | ----------------------------- | --------------------------------------- |
+| **Startup probe**   | Is the app done initializing? | `start_period` in HEALTHCHECK           |
+| **Liveness check**  | Is the app still alive?       | HEALTHCHECK instruction                 |
+| **Readiness check** | Can the app accept traffic?   | Orchestrator (K8s), not Docker natively |
 
 ### 3.2 HEALTHCHECK Instruction
 
@@ -348,8 +349,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 ```
 
 ### 5.4 Structured Logging
@@ -447,11 +448,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 512M
           pids: 100
         reservations:
-          cpus: "0.25"
+          cpus: '0.25'
           memory: 128M
 ```
 
@@ -473,12 +474,12 @@ $ docker run --restart=always myapp
 $ docker run --restart=unless-stopped myapp
 ```
 
-| Policy | On crash | On docker stop | On daemon restart |
-|--------|----------|---------------|-------------------|
-| `no` | No restart | Stays stopped | Stays stopped |
-| `on-failure[:N]` | Restart (up to N times) | Stays stopped | Restarts |
-| `always` | Restart | Restarts | Restarts |
-| `unless-stopped` | Restart | Stays stopped | Stays stopped |
+| Policy           | On crash                | On docker stop | On daemon restart |
+| ---------------- | ----------------------- | -------------- | ----------------- |
+| `no`             | No restart              | Stays stopped  | Stays stopped     |
+| `on-failure[:N]` | Restart (up to N times) | Stays stopped  | Restarts          |
+| `always`         | Restart                 | Restarts       | Restarts          |
+| `unless-stopped` | Restart                 | Stays stopped  | Stays stopped     |
 
 **Production recommendation:** Use `unless-stopped` for services and `on-failure` for batch jobs.
 
@@ -502,13 +503,13 @@ $ docker push myapp:v1.2.3-abc123f  # both
 $ docker pull myapp@sha256:abc...   # immutable, verifiable
 ```
 
-| Tag Pattern | Use Case | Mutable? |
-|-------------|----------|----------|
-| `latest` | Development only, never production | Yes |
-| `v1.2.3` | Releases | Should not change |
-| `abc123f` | Git SHA, CI builds | No |
-| `v1.2.3-abc123f` | Release + commit | No |
-| `sha256:abc...` | Production deployment | No (by definition) |
+| Tag Pattern      | Use Case                           | Mutable?           |
+| ---------------- | ---------------------------------- | ------------------ |
+| `latest`         | Development only, never production | Yes                |
+| `v1.2.3`         | Releases                           | Should not change  |
+| `abc123f`        | Git SHA, CI builds                 | No                 |
+| `v1.2.3-abc123f` | Release + commit                   | No                 |
+| `sha256:abc...`  | Production deployment              | No (by definition) |
 
 ### 8.2 Multi-Stage CI Pipeline
 
@@ -571,12 +572,12 @@ jobs:
 
 ### 8.3 Docker-in-Docker vs Docker-outside-of-Docker
 
-| Approach | How | Pros | Cons |
-|----------|-----|------|------|
-| **DinD** (Docker-in-Docker) | Run dockerd inside a container | Full isolation, clean environment | Requires --privileged, storage overhead |
-| **DooD** (Docker-outside-of-Docker) | Mount host's Docker socket | Simple, uses host cache | Shared daemon, security risk |
-| **Kaniko** | Build without Docker daemon | No daemon needed, secure | Slower, no run/test |
-| **Buildah** | Build OCI images without daemon | Rootless, no daemon | Different tool/syntax |
+| Approach                            | How                             | Pros                              | Cons                                    |
+| ----------------------------------- | ------------------------------- | --------------------------------- | --------------------------------------- |
+| **DinD** (Docker-in-Docker)         | Run dockerd inside a container  | Full isolation, clean environment | Requires --privileged, storage overhead |
+| **DooD** (Docker-outside-of-Docker) | Mount host's Docker socket      | Simple, uses host cache           | Shared daemon, security risk            |
+| **Kaniko**                          | Build without Docker daemon     | No daemon needed, secure          | Slower, no run/test                     |
+| **Buildah**                         | Build OCI images without daemon | Rootless, no daemon               | Different tool/syntax                   |
 
 ```bash
 # DinD (used by GitLab CI, GitHub Actions)
@@ -612,29 +613,30 @@ $ docker buildx build \
 
 ## 9. Container Orchestration: When You Outgrow Single-Host Docker
 
-| Signal | You Need Orchestration |
-|--------|----------------------|
-| Running on multiple hosts | Yes |
-| Need automatic scaling | Yes |
-| Need zero-downtime deployments | Yes |
-| Need self-healing (restart on node failure) | Yes |
-| Need service mesh / advanced networking | Yes |
-| Single host, few containers | Maybe not |
+| Signal                                      | You Need Orchestration |
+| ------------------------------------------- | ---------------------- |
+| Running on multiple hosts                   | Yes                    |
+| Need automatic scaling                      | Yes                    |
+| Need zero-downtime deployments              | Yes                    |
+| Need self-healing (restart on node failure) | Yes                    |
+| Need service mesh / advanced networking     | Yes                    |
+| Single host, few containers                 | Maybe not              |
 
-| Orchestrator | Complexity | Use Case |
-|-------------|-----------|----------|
-| **Docker Compose** | Low | Single host, development, simple production |
-| **Docker Swarm** | Medium | Simple multi-host, built into Docker |
-| **Kubernetes** | High | Production multi-host, industry standard |
-| **ECS/Fargate** | Medium | AWS-native, managed |
-| **Cloud Run** | Low | Serverless containers (GCP) |
-| **Azure Container Apps** | Low | Serverless containers (Azure) |
+| Orchestrator             | Complexity | Use Case                                    |
+| ------------------------ | ---------- | ------------------------------------------- |
+| **Docker Compose**       | Low        | Single host, development, simple production |
+| **Docker Swarm**         | Medium     | Simple multi-host, built into Docker        |
+| **Kubernetes**           | High       | Production multi-host, industry standard    |
+| **ECS/Fargate**          | Medium     | AWS-native, managed                         |
+| **Cloud Run**            | Low        | Serverless containers (GCP)                 |
+| **Azure Container Apps** | Low        | Serverless containers (Azure)               |
 
 ---
 
 ## 10. Production Checklist
 
 ### Image
+
 - [ ] Minimal base image (Alpine, distroless, scratch)
 - [ ] Multi-stage build (no build tools in production image)
 - [ ] Non-root USER in Dockerfile
@@ -645,6 +647,7 @@ $ docker buildx build \
 - [ ] .dockerignore excludes unnecessary files
 
 ### Runtime
+
 - [ ] Health check defined (HEALTHCHECK or orchestrator probe)
 - [ ] Graceful shutdown implemented (SIGTERM handler)
 - [ ] PID 1 problem addressed (tini, dumb-init, or signal handler)
@@ -655,6 +658,7 @@ $ docker buildx build \
 - [ ] Log rotation configured (max-size, max-file)
 
 ### Security
+
 - [ ] No --privileged
 - [ ] Capabilities dropped (--cap-drop=ALL, --cap-add only needed)
 - [ ] No new privileges (--security-opt=no-new-privileges)
@@ -664,12 +668,14 @@ $ docker buildx build \
 - [ ] Seccomp profile applied (default or custom)
 
 ### Networking
+
 - [ ] Only necessary ports published
 - [ ] Ports bound to specific interface (not 0.0.0.0)
 - [ ] User-defined networks (not default bridge)
 - [ ] Backend networks marked internal
 
 ### Storage
+
 - [ ] Named volumes for persistent data
 - [ ] Volume backup strategy documented and tested
 - [ ] No important data in container writable layer
@@ -727,12 +733,14 @@ The `deploy:` key (replicas, resources, restart_policy) is partially ignored in 
 **Strong answer:**
 
 First, confirm the OOM kill:
+
 ```bash
 docker inspect --format '{{.State.OOMKilled}}' myapp   # true
 docker inspect --format '{{.State.ExitCode}}' myapp     # 137
 ```
 
 Then understand the memory usage pattern:
+
 ```bash
 docker stats myapp --no-stream   # current usage vs limit
 ```
@@ -801,17 +809,17 @@ I never use `latest` in production because it is ambiguous -- you cannot tell wh
 
 ## 13. Quick Reference
 
-| Pattern | Implementation |
-|---------|---------------|
-| PID 1 init | `docker run --init` or `ENTRYPOINT ["/sbin/tini", "--"]` |
+| Pattern           | Implementation                                                  |
+| ----------------- | --------------------------------------------------------------- |
+| PID 1 init        | `docker run --init` or `ENTRYPOINT ["/sbin/tini", "--"]`        |
 | Graceful shutdown | Handle SIGTERM in app + exec form CMD + sufficient stop timeout |
-| Health check | `HEALTHCHECK CMD curl -f http://localhost/health` |
-| Log rotation | `--log-opt max-size=10m --log-opt max-file=3` |
-| Memory limit | `--memory=512m` |
-| CPU limit | `--cpus=1.5` |
-| PID limit | `--pids-limit=100` |
-| Restart policy | `--restart=unless-stopped` |
-| Non-root | `USER 1000:1000` in Dockerfile |
-| Read-only | `--read-only --tmpfs /tmp` |
-| Image tag | `v1.2.3` or `sha256:abc...` (never `latest`) |
-| Stop timeout | `docker stop -t 30` or `stop_grace_period: 30s` |
+| Health check      | `HEALTHCHECK CMD curl -f http://localhost/health`               |
+| Log rotation      | `--log-opt max-size=10m --log-opt max-file=3`                   |
+| Memory limit      | `--memory=512m`                                                 |
+| CPU limit         | `--cpus=1.5`                                                    |
+| PID limit         | `--pids-limit=100`                                              |
+| Restart policy    | `--restart=unless-stopped`                                      |
+| Non-root          | `USER 1000:1000` in Dockerfile                                  |
+| Read-only         | `--read-only --tmpfs /tmp`                                      |
+| Image tag         | `v1.2.3` or `sha256:abc...` (never `latest`)                    |
+| Stop timeout      | `docker stop -t 30` or `stop_grace_period: 30s`                 |

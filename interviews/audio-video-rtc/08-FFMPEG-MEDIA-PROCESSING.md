@@ -1740,21 +1740,18 @@ ffmpeg.ffprobe('input.mp4', (err, metadata) => {
     console.error('Probe error:', err);
     return;
   }
-  const videoStream = metadata.streams.find(
-    (s) => s.codec_type === 'video'
-  );
+  const videoStream = metadata.streams.find((s) => s.codec_type === 'video');
   console.log(`Resolution: ${videoStream.width}x${videoStream.height}`);
   console.log(`Duration: ${metadata.format.duration}s`);
 });
 
 // Generate thumbnails
-ffmpeg('input.mp4')
-  .screenshots({
-    timestamps: ['10%', '50%', '90%'],
-    filename: 'thumb-%i.png',
-    folder: './thumbnails',
-    size: '320x240',
-  });
+ffmpeg('input.mp4').screenshots({
+  timestamps: ['10%', '50%', '90%'],
+  filename: 'thumb-%i.png',
+  folder: './thumbnails',
+  size: '320x240',
+});
 
 // HLS output
 ffmpeg('input.mp4')
@@ -2448,14 +2445,14 @@ ffplay to visually verify synchronization.
 
 ### Q13: What are the tradeoffs between H.264, H.265, VP9, and AV1?
 
-| Factor | H.264 | H.265 | VP9 | AV1 |
-|--------|-------|-------|-----|-----|
-| Compression | Baseline | ~40-50% better | ~40-50% better | ~30% better than H.265 |
-| Encode speed | Fast | 3-5x slower | 5-10x slower | 10-100x slower |
-| Decode support | Universal | Wide | Wide (browsers) | Growing |
-| Royalties | Licensed | Licensed | Free | Free |
-| Hardware decode | Universal | Very wide | Wide | Growing |
-| Hardware encode | Universal | Wide | Rare | Growing |
+| Factor          | H.264     | H.265          | VP9             | AV1                    |
+| --------------- | --------- | -------------- | --------------- | ---------------------- |
+| Compression     | Baseline  | ~40-50% better | ~40-50% better  | ~30% better than H.265 |
+| Encode speed    | Fast      | 3-5x slower    | 5-10x slower    | 10-100x slower         |
+| Decode support  | Universal | Wide           | Wide (browsers) | Growing                |
+| Royalties       | Licensed  | Licensed       | Free            | Free                   |
+| Hardware decode | Universal | Very wide      | Wide            | Growing                |
+| Hardware encode | Universal | Wide           | Rare            | Growing                |
 
 For maximum compatibility, use H.264. For modern streaming where bandwidth savings
 matter, use H.265 (if licensing allows) or AV1 (if encode time is acceptable). VP9
@@ -2483,6 +2480,7 @@ output pixel format explicitly to avoid unexpected conversions:
 camera angles simultaneously with a broadcaster name overlay and normalized audio.
 
 **Solution**:
+
 ```bash
 ffmpeg -i cam1.mp4 -i cam2.mp4 -i cam3.mp4 -i cam4.mp4 -filter_complex \
   "[0:v]scale=640:360[a];[1:v]scale=640:360[b]; \

@@ -444,13 +444,13 @@ Some futures exchanges (notably CME for certain products like Eurodollar futures
 
 **Implications**:
 
-| Feature | Price-Time (FIFO) | Pro-Rata |
-|---------|-------------------|----------|
-| Rewards | Speed (latency) | Size (capital) |
-| Spread | Tighter (race to queue) | Wider (less incentive to improve) |
-| HFT advantage | High (queue position) | Lower (size matters more) |
-| Fill certainty | Binary (front or back) | Partial fills common |
-| Used by | Most equity exchanges | Some futures (CME), options |
+| Feature        | Price-Time (FIFO)       | Pro-Rata                          |
+| -------------- | ----------------------- | --------------------------------- |
+| Rewards        | Speed (latency)         | Size (capital)                    |
+| Spread         | Tighter (race to queue) | Wider (less incentive to improve) |
+| HFT advantage  | High (queue position)   | Lower (size matters more)         |
+| Fill certainty | Binary (front or back)  | Partial fills common              |
+| Used by        | Most equity exchanges   | Some futures (CME), options       |
 
 ### 5.2.4 Auction Mechanisms
 
@@ -956,6 +956,7 @@ The most widely used empirical model of price impact is the square-root model:
 ```
 
 **Why square-root?** It is a robust empirical finding across many markets and time periods. The intuition is that impact grows sublinearly because:
+
 - Large orders are typically split across time
 - Markets absorb liquidity gradually
 - Information leaks slowly rather than all at once
@@ -2445,21 +2446,21 @@ Order flow imbalance (OFI) is a powerful predictor of short-term price movements
 
 ### 5.9.3 Essential References
 
-| Paper / Book | Author(s) | Year | Topic |
-|---|---|---|---|
-| *Trading and Exchanges* | Larry Harris | 2003 | Comprehensive microstructure textbook |
-| *Market Microstructure Theory* | Maureen O'Hara | 1995 | Theoretical foundations |
-| *Continuous Auctions and Insider Trading* | Albert Kyle | 1985 | Kyle's Lambda, informed trading |
-| *Bid, Ask and Transaction Prices* | Lawrence Glosten, Paul Milgrom | 1985 | Adverse selection model |
-| *A Simple Implicit Measure of the Effective Bid-Ask Spread* | Richard Roll | 1984 | Roll's spread estimator |
-| *Inferring Trade Direction from Intraday Data* | Charles Lee, Mark Ready | 1991 | Trade classification algorithm |
-| *High-frequency trading in a limit order book* | Marco Avellaneda, Sasha Stoikov | 2008 | Optimal market making |
-| *Optimal Execution of Portfolio Transactions* | Robert Almgren, Neil Chriss | 2001 | Execution optimization |
-| *Flow Toxicity and Liquidity in a High Frequency World* | David Easley, Marcos Lopez de Prado, Maureen O'Hara | 2012 | VPIN |
-| *A Likelihood Approach to Estimating PIN* | David Easley et al. | 1996 | PIN model |
-| *The Price Impact of Order Book Events* | Rama Cont, Arseniy Kukanov, Sasha Stoikov | 2014 | Order flow imbalance |
-| *Advances in Financial Machine Learning* | Marcos Lopez de Prado | 2018 | Dollar/volume bars, modern methods |
+| Paper / Book                                                | Author(s)                                           | Year | Topic                                 |
+| ----------------------------------------------------------- | --------------------------------------------------- | ---- | ------------------------------------- |
+| _Trading and Exchanges_                                     | Larry Harris                                        | 2003 | Comprehensive microstructure textbook |
+| _Market Microstructure Theory_                              | Maureen O'Hara                                      | 1995 | Theoretical foundations               |
+| _Continuous Auctions and Insider Trading_                   | Albert Kyle                                         | 1985 | Kyle's Lambda, informed trading       |
+| _Bid, Ask and Transaction Prices_                           | Lawrence Glosten, Paul Milgrom                      | 1985 | Adverse selection model               |
+| _A Simple Implicit Measure of the Effective Bid-Ask Spread_ | Richard Roll                                        | 1984 | Roll's spread estimator               |
+| _Inferring Trade Direction from Intraday Data_              | Charles Lee, Mark Ready                             | 1991 | Trade classification algorithm        |
+| _High-frequency trading in a limit order book_              | Marco Avellaneda, Sasha Stoikov                     | 2008 | Optimal market making                 |
+| _Optimal Execution of Portfolio Transactions_               | Robert Almgren, Neil Chriss                         | 2001 | Execution optimization                |
+| _Flow Toxicity and Liquidity in a High Frequency World_     | David Easley, Marcos Lopez de Prado, Maureen O'Hara | 2012 | VPIN                                  |
+| _A Likelihood Approach to Estimating PIN_                   | David Easley et al.                                 | 1996 | PIN model                             |
+| _The Price Impact of Order Book Events_                     | Rama Cont, Arseniy Kukanov, Sasha Stoikov           | 2014 | Order flow imbalance                  |
+| _Advances in Financial Machine Learning_                    | Marcos Lopez de Prado                               | 2018 | Dollar/volume bars, modern methods    |
 
 ---
 
-*Next Chapter: [06-TIME-SERIES-ANALYSIS](./06-TIME-SERIES-ANALYSIS.md) -- Stationarity, ARIMA, GARCH, cointegration, spectral analysis, and regime detection for financial time series.*
+_Next Chapter: [06-TIME-SERIES-ANALYSIS](./06-TIME-SERIES-ANALYSIS.md) -- Stationarity, ARIMA, GARCH, cointegration, spectral analysis, and regime detection for financial time series._

@@ -11,25 +11,25 @@ preventing resource starvation, and managing costs.
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| FR1 | Limit requests per time window | e.g., 100 requests per minute per user |
+| #   | Requirement                      | Details                                    |
+| --- | -------------------------------- | ------------------------------------------ |
+| FR1 | Limit requests per time window   | e.g., 100 requests per minute per user     |
 | FR2 | Different rules per API endpoint | e.g., `/login` = 5/min, `/search` = 30/min |
-| FR3 | Different rules per user tier | Free = 100/hr, Premium = 10,000/hr |
-| FR4 | Inform clients of limit status | Return remaining quota in response headers |
-| FR5 | Return 429 when limit exceeded | Standard HTTP 429 Too Many Requests |
-| FR6 | Configurable rules | Rules can be updated without redeployment |
+| FR3 | Different rules per user tier    | Free = 100/hr, Premium = 10,000/hr         |
+| FR4 | Inform clients of limit status   | Return remaining quota in response headers |
+| FR5 | Return 429 when limit exceeded   | Standard HTTP 429 Too Many Requests        |
+| FR6 | Configurable rules               | Rules can be updated without redeployment  |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| NFR1 | Low latency | < 1ms overhead per request |
-| NFR2 | High availability | 99.99% uptime |
-| NFR3 | Distributed | Work across multiple servers/regions |
-| NFR4 | Fault tolerant | Degrade gracefully on failure |
-| NFR5 | Memory efficient | Minimal per-client storage |
-| NFR6 | Accurate | Minimal over-counting or under-counting |
+| #    | Requirement       | Target                                  |
+| ---- | ----------------- | --------------------------------------- |
+| NFR1 | Low latency       | < 1ms overhead per request              |
+| NFR2 | High availability | 99.99% uptime                           |
+| NFR3 | Distributed       | Work across multiple servers/regions    |
+| NFR4 | Fault tolerant    | Degrade gracefully on failure           |
+| NFR5 | Memory efficient  | Minimal per-client storage              |
+| NFR6 | Accurate          | Minimal over-counting or under-counting |
 
 ### Where to Place the Rate Limiter
 
@@ -63,6 +63,7 @@ rate limiting logic from business logic and provides a single enforcement point.
 ### Back-of-the-Envelope Estimation
 
 Assumptions:
+
 - 10 million active users
 - Average 10 requests/user/minute at peak
 - 100 million requests/minute peak
@@ -163,12 +164,12 @@ redis.call('EXPIRE', key, math.ceil(capacity / refill_rate) * 2)
 return { allowed, math.floor(tokens) }
 ```
 
-| Pros | Cons |
-|------|------|
-| Allows burst traffic up to bucket size | Two parameters to tune (capacity + rate) |
-| Memory efficient (just 2 values per key) | Burst at bucket boundaries possible |
-| Smooth rate limiting | Slightly more complex than fixed window |
-| Used by AWS, Stripe, and most API providers | - |
+| Pros                                        | Cons                                     |
+| ------------------------------------------- | ---------------------------------------- |
+| Allows burst traffic up to bucket size      | Two parameters to tune (capacity + rate) |
+| Memory efficient (just 2 values per key)    | Burst at bucket boundaries possible      |
+| Smooth rate limiting                        | Slightly more complex than fixed window  |
+| Used by AWS, Stripe, and most API providers | -                                        |
 
 ---
 
@@ -223,12 +224,12 @@ class LeakingBucket:
         self.last_leak = now()
 ```
 
-| Pros | Cons |
-|------|------|
+| Pros                           | Cons                                               |
+| ------------------------------ | -------------------------------------------------- |
 | Smooth output rate (no bursts) | Burst of traffic fills queue; new requests dropped |
-| Memory efficient | Does not guarantee processing of recent requests |
-| Predictable processing rate | Old requests may starve recent ones |
-| Used by Shopify | Not suitable when bursts are acceptable |
+| Memory efficient               | Does not guarantee processing of recent requests   |
+| Predictable processing rate    | Old requests may starve recent ones                |
+| Used by Shopify                | Not suitable when bursts are acceptable            |
 
 ---
 
@@ -305,12 +306,12 @@ end
 return { 1, limit - count }  -- allowed, remaining
 ```
 
-| Pros | Cons |
-|------|------|
-| Very simple to implement | Boundary burst problem (2x rate at edges) |
-| Memory efficient (1 counter per window) | Not smooth; resets suddenly |
-| Easy to understand | Spikes at window boundaries |
-| Fast O(1) operations | Unfair to users who arrive late in window |
+| Pros                                    | Cons                                      |
+| --------------------------------------- | ----------------------------------------- |
+| Very simple to implement                | Boundary burst problem (2x rate at edges) |
+| Memory efficient (1 counter per window) | Not smooth; resets suddenly               |
+| Easy to understand                      | Spikes at window boundaries               |
+| Fast O(1) operations                    | Unfair to users who arrive late in window |
 
 ---
 
@@ -397,12 +398,12 @@ end
 return { 0, 0 }  -- rejected
 ```
 
-| Pros | Cons |
-|------|------|
+| Pros                              | Cons                                       |
+| --------------------------------- | ------------------------------------------ |
 | Very accurate, no boundary issues | High memory usage (stores every timestamp) |
-| Smooth sliding window | O(N) cleanup per request |
-| Precise per-user tracking | Not suitable for high-volume endpoints |
-| No burst at boundaries | Storage grows with request volume |
+| Smooth sliding window             | O(N) cleanup per request                   |
+| Precise per-user tracking         | Not suitable for high-volume endpoints     |
+| No burst at boundaries            | Storage grows with request volume          |
 
 ---
 
@@ -478,12 +479,12 @@ class SlidingWindowCounter:
         return True
 ```
 
-| Pros | Cons |
-|------|------|
-| Memory efficient (2 counters per key) | Only an approximation (not exact) |
-| Smooths boundary spikes | Slightly more complex than fixed window |
-| Good balance of accuracy and performance | Weighted count is an estimate |
-| Recommended by Cloudflare | Rare edge cases may slightly exceed limit |
+| Pros                                     | Cons                                      |
+| ---------------------------------------- | ----------------------------------------- |
+| Memory efficient (2 counters per key)    | Only an approximation (not exact)         |
+| Smooths boundary spikes                  | Slightly more complex than fixed window   |
+| Good balance of accuracy and performance | Weighted count is an estimate             |
+| Recommended by Cloudflare                | Rare edge cases may slightly exceed limit |
 
 ---
 
@@ -568,13 +569,13 @@ Request Flow:
 
 ### Component Responsibilities
 
-| Component | Responsibility |
-|-----------|---------------|
-| API Gateway | Entry point, routing, TLS termination |
-| Rate Limiter | Enforce rate limits, set headers |
-| Redis Cluster | Store counters/tokens, atomic operations |
-| Rules Engine | Store and serve rate limit configurations |
-| App Servers | Handle business logic (only receives allowed requests) |
+| Component     | Responsibility                                         |
+| ------------- | ------------------------------------------------------ |
+| API Gateway   | Entry point, routing, TLS termination                  |
+| Rate Limiter  | Enforce rate limits, set headers                       |
+| Redis Cluster | Store counters/tokens, atomic operations               |
+| Rules Engine  | Store and serve rate limit configurations              |
+| App Servers   | Handle business logic (only receives allowed requests) |
 
 ---
 
@@ -633,63 +634,63 @@ Sliding Window Counter:
 ```yaml
 # rate_limit_rules.yaml
 rules:
-  - id: "global-default"
-    description: "Default rate limit for all endpoints"
+  - id: 'global-default'
+    description: 'Default rate limit for all endpoints'
     match:
-      scope: "global"
+      scope: 'global'
     limit: 1000
-    window: 60          # seconds
-    algorithm: "sliding_window_counter"
-    action: "reject"    # reject | queue | throttle
+    window: 60 # seconds
+    algorithm: 'sliding_window_counter'
+    action: 'reject' # reject | queue | throttle
 
-  - id: "auth-strict"
-    description: "Strict limit on authentication endpoints"
+  - id: 'auth-strict'
+    description: 'Strict limit on authentication endpoints'
     match:
       endpoints:
-        - "/api/v1/login"
-        - "/api/v1/register"
-        - "/api/v1/password-reset"
-      scope: "per_ip"
+        - '/api/v1/login'
+        - '/api/v1/register'
+        - '/api/v1/password-reset'
+      scope: 'per_ip'
     limit: 5
     window: 60
-    algorithm: "sliding_window_log"
-    action: "reject"
+    algorithm: 'sliding_window_log'
+    action: 'reject'
     response:
       status: 429
-      message: "Too many authentication attempts. Please try again later."
+      message: 'Too many authentication attempts. Please try again later.'
 
-  - id: "search-api"
-    description: "Search endpoint rate limit"
+  - id: 'search-api'
+    description: 'Search endpoint rate limit'
     match:
       endpoints:
-        - "/api/v1/search"
-      scope: "per_user"
+        - '/api/v1/search'
+      scope: 'per_user'
     limit: 30
     window: 60
-    algorithm: "token_bucket"
+    algorithm: 'token_bucket'
     token_bucket:
       capacity: 30
-      refill_rate: 0.5   # tokens per second
-    action: "reject"
+      refill_rate: 0.5 # tokens per second
+    action: 'reject'
 
-  - id: "premium-tier"
-    description: "Higher limits for premium users"
+  - id: 'premium-tier'
+    description: 'Higher limits for premium users'
     match:
-      user_tier: "premium"
-      scope: "per_user"
+      user_tier: 'premium'
+      scope: 'per_user'
     limit: 10000
-    window: 3600        # 1 hour
-    algorithm: "sliding_window_counter"
-    priority: 10        # Higher priority overrides lower
+    window: 3600 # 1 hour
+    algorithm: 'sliding_window_counter'
+    priority: 10 # Higher priority overrides lower
 
-  - id: "free-tier"
-    description: "Standard limits for free users"
+  - id: 'free-tier'
+    description: 'Standard limits for free users'
     match:
-      user_tier: "free"
-      scope: "per_user"
+      user_tier: 'free'
+      scope: 'per_user'
     limit: 100
     window: 3600
-    algorithm: "sliding_window_counter"
+    algorithm: 'sliding_window_counter'
     priority: 5
 ```
 
@@ -837,11 +838,11 @@ Content-Type: application/json
 
 ```typescript
 interface RateLimitResult {
-  allowed: boolean
-  limit: number
-  remaining: number
-  resetAt: number
-  retryAfter: number
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  resetAt: number;
+  retryAfter: number;
 }
 
 async function rateLimiterMiddleware(
@@ -849,21 +850,25 @@ async function rateLimiterMiddleware(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const clientId = extractClientId(req)  // user ID, API key, or IP
-  const endpoint = req.path
-  const rule = await getRuleForRequest(clientId, endpoint)
+  const clientId = extractClientId(req); // user ID, API key, or IP
+  const endpoint = req.path;
+  const rule = await getRuleForRequest(clientId, endpoint);
 
-  const result: RateLimitResult = await checkRateLimit(clientId, endpoint, rule)
+  const result: RateLimitResult = await checkRateLimit(
+    clientId,
+    endpoint,
+    rule
+  );
 
   // Always set rate limit headers
   res.set({
     'X-Ratelimit-Limit': String(result.limit),
     'X-Ratelimit-Remaining': String(Math.max(0, result.remaining)),
     'X-Ratelimit-Reset': String(result.resetAt),
-  })
+  });
 
   if (!result.allowed) {
-    res.set('Retry-After', String(result.retryAfter))
+    res.set('Retry-After', String(result.retryAfter));
     res.status(429).json({
       error: {
         code: 'RATE_LIMIT_EXCEEDED',
@@ -872,22 +877,22 @@ async function rateLimiterMiddleware(
         limit: result.limit,
         window: rule.window,
       },
-    })
-    return
+    });
+    return;
   }
 
-  next()
+  next();
 }
 
 function extractClientId(req: Request): string {
   // Priority: API Key > User ID (JWT) > IP Address
   if (req.headers['x-api-key']) {
-    return `apikey:${req.headers['x-api-key']}`
+    return `apikey:${req.headers['x-api-key']}`;
   }
   if (req.user?.id) {
-    return `user:${req.user.id}`
+    return `user:${req.user.id}`;
   }
-  return `ip:${req.ip}`
+  return `ip:${req.ip}`;
 }
 ```
 
@@ -994,11 +999,13 @@ Centralized Redis Solution
 ```
 
 **Advantages**:
+
 - Single source of truth
 - Atomic operations via Lua scripts
 - Simple to reason about
 
 **Disadvantages**:
+
 - Redis becomes a single point of failure (mitigated by Redis Cluster)
 - Network latency to Redis on every request (~0.5ms)
 - Redis throughput limits (~100K ops/sec per shard)
@@ -1024,10 +1031,12 @@ Sticky Sessions (Session Affinity)
 ```
 
 **Advantages**:
+
 - No external dependency (no Redis needed)
 - Very low latency (local memory)
 
 **Disadvantages**:
+
 - Uneven load distribution
 - Fails when instances scale up/down (rehashing)
 - Loses counts on instance restart
@@ -1056,11 +1065,13 @@ Eventual Consistency Model
 ```
 
 **Advantages**:
+
 - No single point of failure
 - Very low latency (local decisions)
 - Tolerates network partitions
 
 **Disadvantages**:
+
 - May exceed rate limits during sync intervals
 - More complex implementation
 - Eventually consistent (not strongly consistent)
@@ -1124,6 +1135,7 @@ return { allowed, math.floor(remaining), retry_after }
 ```
 
 **Why Lua scripts solve race conditions**:
+
 1. Redis executes Lua scripts atomically (single-threaded)
 2. No other command can interleave during execution
 3. Read-check-update happens as one indivisible operation
@@ -1199,13 +1211,13 @@ Local Cache + Redis Sync
 
 **Trade-offs**:
 
-| Aspect | Local Cache | Direct Redis |
-|--------|-------------|--------------|
-| Latency | ~1 microsecond | ~0.5 millisecond |
-| Accuracy | Approximate (within sync interval) | Exact |
-| Failure mode | Continues with local data | Fails if Redis down |
-| Memory | Uses instance memory | Centralized |
-| Consistency | Eventually consistent | Strongly consistent |
+| Aspect       | Local Cache                        | Direct Redis        |
+| ------------ | ---------------------------------- | ------------------- |
+| Latency      | ~1 microsecond                     | ~0.5 millisecond    |
+| Accuracy     | Approximate (within sync interval) | Exact               |
+| Failure mode | Continues with local data          | Fails if Redis down |
+| Memory       | Uses instance memory               | Centralized         |
+| Consistency  | Eventually consistent              | Strongly consistent |
 
 ### 7.3 Monitoring and Alerting
 
@@ -1214,34 +1226,34 @@ Key metrics to track:
 ```yaml
 metrics:
   counters:
-    - rate_limit_requests_total          # Total requests checked
-    - rate_limit_rejected_total          # Total 429 responses
-    - rate_limit_allowed_total           # Total allowed requests
-    - rate_limit_errors_total            # Errors in rate limiter
+    - rate_limit_requests_total # Total requests checked
+    - rate_limit_rejected_total # Total 429 responses
+    - rate_limit_allowed_total # Total allowed requests
+    - rate_limit_errors_total # Errors in rate limiter
 
   histograms:
-    - rate_limit_check_duration_seconds  # Time to check rate limit
-    - rate_limit_redis_latency_seconds   # Redis operation latency
+    - rate_limit_check_duration_seconds # Time to check rate limit
+    - rate_limit_redis_latency_seconds # Redis operation latency
 
   gauges:
-    - rate_limit_current_usage_ratio     # Current usage as % of limit
-    - rate_limit_redis_connection_pool   # Active Redis connections
+    - rate_limit_current_usage_ratio # Current usage as % of limit
+    - rate_limit_redis_connection_pool # Active Redis connections
 
 alerts:
   - name: HighRejectionRate
     condition: rate(rate_limit_rejected_total[5m]) / rate(rate_limit_requests_total[5m]) > 0.1
     severity: warning
-    message: "More than 10% of requests are being rate limited"
+    message: 'More than 10% of requests are being rate limited'
 
   - name: RedisLatencyHigh
     condition: histogram_quantile(0.99, rate_limit_redis_latency_seconds) > 0.005
     severity: critical
-    message: "Redis p99 latency exceeds 5ms"
+    message: 'Redis p99 latency exceeds 5ms'
 
   - name: RateLimiterErrors
     condition: rate(rate_limit_errors_total[1m]) > 0
     severity: critical
-    message: "Rate limiter encountering errors"
+    message: 'Rate limiter encountering errors'
 ```
 
 ---

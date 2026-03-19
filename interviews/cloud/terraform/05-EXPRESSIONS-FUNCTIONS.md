@@ -111,12 +111,12 @@ dynamic "ingress" {
 
 ## Operators
 
-| Category | Operators | Example |
-|----------|-----------|---------|
-| Arithmetic | `+`, `-`, `*`, `/`, `%` | `var.count * 2` |
-| Equality | `==`, `!=` | `var.env == "prod"` |
-| Comparison | `<`, `>`, `<=`, `>=` | `var.replicas >= 3` |
-| Logical | `&&`, `\|\|`, `!` | `var.enabled && var.env == "prod"` |
+| Category   | Operators               | Example                            |
+| ---------- | ----------------------- | ---------------------------------- |
+| Arithmetic | `+`, `-`, `*`, `/`, `%` | `var.count * 2`                    |
+| Equality   | `==`, `!=`              | `var.env == "prod"`                |
+| Comparison | `<`, `>`, `<=`, `>=`    | `var.replicas >= 3`                |
+| Logical    | `&&`, `\|\|`, `!`       | `var.enabled && var.env == "prod"` |
 
 ---
 
@@ -342,30 +342,30 @@ resource "aws_subnet" "this" {
 
 ## Common Gotchas
 
-| Gotcha | Explanation |
-|--------|-------------|
-| Splat on `for_each` resources | `resource[*].id` fails with `for_each`. Use `values(resource)[*].id`. |
-| `for_each` needs map or set(string) | Passing a list of objects fails. Convert: `{ for o in list : o.key => o }`. |
-| Dynamic blocks hurt readability | More than 2 levels deep is a code smell. Restructure inputs or split resources. |
-| `count` to `for_each` migration | Switching forces recreation of all instances. Plan carefully. |
-| `templatefile` whitespace | Use `%{~ ... }` for trimming. Without `~`, expect extra blank lines. |
-| `merge()` last-key-wins | `merge({a=1}, {a=2})` returns `{a=2}`. Easy to miss with tag maps. |
-| `timestamp()` perpetual diff | Changes every plan. Use `plantimestamp()` or a `null_resource` trigger. |
-| `jsonencode` key ordering | Keys are sorted alphabetically, which can cause diffs vs external JSON. |
-| `regex` returns captures | `regex("(a)(b)", "ab")` returns `["a", "b"]`, not `"ab"`. |
-| `coalesce` vs `coalescelist` | `coalesce` is for strings/numbers. For lists, use `coalescelist`. |
+| Gotcha                              | Explanation                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------- |
+| Splat on `for_each` resources       | `resource[*].id` fails with `for_each`. Use `values(resource)[*].id`.           |
+| `for_each` needs map or set(string) | Passing a list of objects fails. Convert: `{ for o in list : o.key => o }`.     |
+| Dynamic blocks hurt readability     | More than 2 levels deep is a code smell. Restructure inputs or split resources. |
+| `count` to `for_each` migration     | Switching forces recreation of all instances. Plan carefully.                   |
+| `templatefile` whitespace           | Use `%{~ ... }` for trimming. Without `~`, expect extra blank lines.            |
+| `merge()` last-key-wins             | `merge({a=1}, {a=2})` returns `{a=2}`. Easy to miss with tag maps.              |
+| `timestamp()` perpetual diff        | Changes every plan. Use `plantimestamp()` or a `null_resource` trigger.         |
+| `jsonencode` key ordering           | Keys are sorted alphabetically, which can cause diffs vs external JSON.         |
+| `regex` returns captures            | `regex("(a)(b)", "ab")` returns `["a", "b"]`, not `"ab"`.                       |
+| `coalesce` vs `coalescelist`        | `coalesce` is for strings/numbers. For lists, use `coalescelist`.               |
 
 ---
 
 ## Quick Function Reference
 
-| Category | Key Functions |
-|----------|--------------|
-| Strings | `format`, `join`, `split`, `replace`, `trimspace`, `upper`, `lower`, `regex`, `regexall` |
-| Collections | `length`, `flatten`, `merge`, `lookup`, `contains`, `keys`, `values`, `zipmap`, `distinct`, `sort`, `one` |
-| Type Conversion | `tostring`, `tonumber`, `tobool`, `tolist`, `tomap`, `toset` |
-| Filesystem | `file`, `filebase64`, `templatefile`, `fileset`, `fileexists` |
-| Date/Time | `timestamp`, `plantimestamp`, `timeadd`, `formatdate` |
-| Hash/Encoding | `base64encode`, `base64decode`, `sha256`, `md5`, `jsonencode`, `jsondecode`, `yamlencode`, `yamldecode` |
-| Networking | `cidrsubnet`, `cidrhost`, `cidrnetmask` |
-| Error Handling | `try`, `can` |
+| Category        | Key Functions                                                                                             |
+| --------------- | --------------------------------------------------------------------------------------------------------- |
+| Strings         | `format`, `join`, `split`, `replace`, `trimspace`, `upper`, `lower`, `regex`, `regexall`                  |
+| Collections     | `length`, `flatten`, `merge`, `lookup`, `contains`, `keys`, `values`, `zipmap`, `distinct`, `sort`, `one` |
+| Type Conversion | `tostring`, `tonumber`, `tobool`, `tolist`, `tomap`, `toset`                                              |
+| Filesystem      | `file`, `filebase64`, `templatefile`, `fileset`, `fileexists`                                             |
+| Date/Time       | `timestamp`, `plantimestamp`, `timeadd`, `formatdate`                                                     |
+| Hash/Encoding   | `base64encode`, `base64decode`, `sha256`, `md5`, `jsonencode`, `jsondecode`, `yamlencode`, `yamldecode`   |
+| Networking      | `cidrsubnet`, `cidrhost`, `cidrnetmask`                                                                   |
+| Error Handling  | `try`, `can`                                                                                              |

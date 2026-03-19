@@ -6,38 +6,38 @@
 
 ### 功能需求
 
-| # | 需求 | 描述 |
-|---|------|------|
-| 1 | Request Routing | 根据路径、主机名、请求头或查询参数将传入请求路由到正确的上游服务 |
-| 2 | Authentication & Authorization | 在网关层转发请求前验证 API Key、JWT token 和 OAuth2/OIDC token |
-| 3 | Rate Limiting | 使用滑动窗口计数器实施按客户端、按端点和全局的速率限制 |
-| 4 | Load Balancing | 使用可配置的算法将流量分发到多个服务实例 |
-| 5 | Request/Response Transformation | 添加、删除或重写请求头；在 REST 和 gRPC 之间转换；重塑请求载荷 |
-| 6 | Circuit Breaker | 检测上游服务故障，打开熔断器，快速失败以防止级联故障 |
-| 7 | Retry & Timeout | 应用带有指数退避的重试预算和按请求的截止时间传播 |
-| 8 | TLS Termination | 终止入站 TLS；可选择对上游重新加密（service mesh 中的 mTLS） |
-| 9 | Service Discovery | 通过 DNS 或服务注册中心（Consul、etcd）动态解析上游地址 |
-| 10 | Observability | 输出分布式追踪、指标（延迟、错误率、饱和度）和结构化访问日志 |
-| 11 | API Versioning | 支持 URL 路径版本化（`/v1/`、`/v2/`）和基于请求头的版本化（`Accept: application/vnd.api+json;version=2`） |
-| 12 | Plugin / Middleware 架构 | 可组合的过滤器链，使团队无需修改服务即可添加横切关注点 |
-| 13 | Canary & Traffic Splitting | 逐步将一定比例的流量切换到新的服务版本 |
-| 14 | Service Mesh Sidecar | 向每个 Pod 注入 Envoy sidecar proxy；从中央 control plane（Istio）管理 data plane |
-| 15 | 服务间 mTLS | 为每个工作负载签发短期 X.509 证书；对所有东西向流量强制执行 mutual TLS |
+| #   | 需求                            | 描述                                                                                                      |
+| --- | ------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | Request Routing                 | 根据路径、主机名、请求头或查询参数将传入请求路由到正确的上游服务                                          |
+| 2   | Authentication & Authorization  | 在网关层转发请求前验证 API Key、JWT token 和 OAuth2/OIDC token                                            |
+| 3   | Rate Limiting                   | 使用滑动窗口计数器实施按客户端、按端点和全局的速率限制                                                    |
+| 4   | Load Balancing                  | 使用可配置的算法将流量分发到多个服务实例                                                                  |
+| 5   | Request/Response Transformation | 添加、删除或重写请求头；在 REST 和 gRPC 之间转换；重塑请求载荷                                            |
+| 6   | Circuit Breaker                 | 检测上游服务故障，打开熔断器，快速失败以防止级联故障                                                      |
+| 7   | Retry & Timeout                 | 应用带有指数退避的重试预算和按请求的截止时间传播                                                          |
+| 8   | TLS Termination                 | 终止入站 TLS；可选择对上游重新加密（service mesh 中的 mTLS）                                              |
+| 9   | Service Discovery               | 通过 DNS 或服务注册中心（Consul、etcd）动态解析上游地址                                                   |
+| 10  | Observability                   | 输出分布式追踪、指标（延迟、错误率、饱和度）和结构化访问日志                                              |
+| 11  | API Versioning                  | 支持 URL 路径版本化（`/v1/`、`/v2/`）和基于请求头的版本化（`Accept: application/vnd.api+json;version=2`） |
+| 12  | Plugin / Middleware 架构        | 可组合的过滤器链，使团队无需修改服务即可添加横切关注点                                                    |
+| 13  | Canary & Traffic Splitting      | 逐步将一定比例的流量切换到新的服务版本                                                                    |
+| 14  | Service Mesh Sidecar            | 向每个 Pod 注入 Envoy sidecar proxy；从中央 control plane（Istio）管理 data plane                         |
+| 15  | 服务间 mTLS                     | 为每个工作负载签发短期 X.509 证书；对所有东西向流量强制执行 mutual TLS                                    |
 
 ### 非功能需求
 
-| # | 需求 | 目标 |
-|---|------|------|
-| 1 | 附加延迟（网关开销） | < 5ms p99 |
-| 2 | 吞吐量 | 持续 1,000,000+ req/sec |
-| 3 | 可用性 | 99.999%（每年 < 5.26 分钟停机） |
-| 4 | 水平可扩展性 | 线性扩展，无单点瓶颈 |
-| 5 | 配置传播 | 从 control plane 到所有 data plane 节点 < 1 秒 |
-| 6 | 证书轮换 | 自动轮换；零停机；轮换周期 < 24 小时 |
-| 7 | 可观测性覆盖率 | 100% 的请求被追踪和度量 |
-| 8 | 安全性 | 零信任：每个服务间调用都经过认证和授权 |
-| 9 | 故障隔离 | 单个服务故障不得级联到其他服务 |
-| 10 | 多区域 | 至少 3 个地理区域的主主架构 |
+| #   | 需求                 | 目标                                           |
+| --- | -------------------- | ---------------------------------------------- |
+| 1   | 附加延迟（网关开销） | < 5ms p99                                      |
+| 2   | 吞吐量               | 持续 1,000,000+ req/sec                        |
+| 3   | 可用性               | 99.999%（每年 < 5.26 分钟停机）                |
+| 4   | 水平可扩展性         | 线性扩展，无单点瓶颈                           |
+| 5   | 配置传播             | 从 control plane 到所有 data plane 节点 < 1 秒 |
+| 6   | 证书轮换             | 自动轮换；零停机；轮换周期 < 24 小时           |
+| 7   | 可观测性覆盖率       | 100% 的请求被追踪和度量                        |
+| 8   | 安全性               | 零信任：每个服务间调用都经过认证和授权         |
+| 9   | 故障隔离             | 单个服务故障不得级联到其他服务                 |
+| 10  | 多区域               | 至少 3 个地理区域的主主架构                    |
 
 ### 规模估算
 
@@ -122,6 +122,7 @@ DELETE /admin/v1/upstreams/{name}/targets/{targetId}  移除目标
 ```
 
 **POST /admin/v1/routes 请求体：**
+
 ```json
 {
   "name": "orders-v2-route",
@@ -135,13 +136,17 @@ DELETE /admin/v1/upstreams/{name}/targets/{targetId}  移除目标
   "strip_path": false,
   "preserve_host": true,
   "plugins": [
-    { "name": "rate-limiting", "config": { "minute": 1000, "policy": "redis" } },
+    {
+      "name": "rate-limiting",
+      "config": { "minute": 1000, "policy": "redis" }
+    },
     { "name": "jwt", "config": { "secret_is_base64": false } }
   ]
 }
 ```
 
 **POST /admin/v1/services 请求体：**
+
 ```json
 {
   "name": "orders-service",
@@ -174,6 +179,7 @@ GET  /debug/pprof             Go pprof 性能分析端点（仅管理员）
 ```
 
 **GET /metrics（Prometheus 文本格式摘录）：**
+
 ```
 # HELP gateway_requests_total Total number of requests proxied
 # TYPE gateway_requests_total counter
@@ -604,14 +610,14 @@ Routing Trie 示例：
 # 将所有 /v1/orders/* 路由到 orders service
 routes:
   - name: orders-v1
-    paths: ["/v1/orders", "/v1/orders/.*"]
+    paths: ['/v1/orders', '/v1/orders/.*']
     service: orders-service-v1
     strip_path: false
     methods: [GET, POST, PUT, DELETE]
 
   # 转发前重写路径
   - name: legacy-compat
-    paths: ["/api/(.*)"]
+    paths: ['/api/(.*)']
     service: modern-service
     path_handling: v1
     # /api/users/123 -> /users/123 (strip prefix)
@@ -623,23 +629,23 @@ routes:
 routes:
   # 基于自定义请求头路由（功能标志、A/B 测试）
   - name: orders-v2-beta
-    paths: ["/v1/orders"]
+    paths: ['/v1/orders']
     headers:
-      X-Beta-User: ["true"]
-      X-Version: ["2"]
+      X-Beta-User: ['true']
+      X-Version: ['2']
     service: orders-service-v2
-    priority: 100   # 更高优先级胜出
+    priority: 100 # 更高优先级胜出
 
   # 基于主机名的路由（多租户）
   - name: tenant-a
-    hosts: ["tenant-a.api.example.com"]
+    hosts: ['tenant-a.api.example.com']
     service: tenant-a-service
 
   # 基于消费者的路由
   - name: partner-route
-    paths: ["/v1/data"]
+    paths: ['/v1/data']
     headers:
-      X-Consumer-Groups: ["partners"]
+      X-Consumer-Groups: ['partners']
     service: partner-data-service
 ```
 
@@ -912,34 +918,34 @@ plugins:
     config:
       add:
         headers:
-          - "X-Consumer-ID: $(consumer.id)"
-          - "X-Forwarded-For: $(client.ip)"
-          - "X-Request-ID: $(uuid())"
-          - "X-Trace-ID: $(trace.id)"
+          - 'X-Consumer-ID: $(consumer.id)'
+          - 'X-Forwarded-For: $(client.ip)'
+          - 'X-Request-ID: $(uuid())'
+          - 'X-Trace-ID: $(trace.id)'
         querystring: []
         body: []
       remove:
         headers:
-          - "Authorization"          # 转发前剥离凭证
-          - "X-Internal-Debug"       # 移除外部请求的调试头
+          - 'Authorization' # 转发前剥离凭证
+          - 'X-Internal-Debug' # 移除外部请求的调试头
       replace:
         headers:
-          - "Host: internal.orders.svc"
+          - 'Host: internal.orders.svc'
       rename:
         headers:
-          - "X-Legacy-Auth: X-Service-Token"
+          - 'X-Legacy-Auth: X-Service-Token'
 
   - name: response-transformer
     config:
       add:
         headers:
-          - "X-Kong-Upstream-Latency: $(upstream_response_time)"
-          - "X-Kong-Proxy-Latency: $(proxy_latency)"
+          - 'X-Kong-Upstream-Latency: $(upstream_response_time)'
+          - 'X-Kong-Proxy-Latency: $(proxy_latency)'
       remove:
         headers:
-          - "Server"                 # 隐藏上游服务器身份
-          - "X-Powered-By"
-          - "Via"
+          - 'Server' # 隐藏上游服务器身份
+          - 'X-Powered-By'
+          - 'Via'
 ```
 
 ### 协议转换：REST 到 gRPC
@@ -2014,18 +2020,18 @@ SPIRE Server：         3 个副本（主备模式用于证书签名）
 
 ## 21. 权衡取舍
 
-| 决策 | 选项 A | 选项 B | 建议 |
-|------|--------|--------|------|
-| Auth token 验证 | 每次请求查数据库 | JWT 自验证 | JWT 短 TTL（15 分钟）+ refresh token；使用 JWT 进行无状态验证，仅对高价值操作使用 introspection |
-| Rate limit 粒度 | 按消费者全局 | 按消费者按端点 | 按端点（更精确）但更多 Redis 键；使用层级限制（两者兼用） |
-| Rate limit 拒绝时 | 失败开放（允许） | 失败关闭（拒绝） | Redis 故障时失败开放；防止因基础设施故障导致整个 API 宕机 |
-| 配置存储 | PostgreSQL（ACID） | etcd（分布式） | Kong 使用 PostgreSQL（完整关系模型）；Istio/Envoy xDS 使用 etcd（专为此设计） |
-| Canary 路由 | 基于请求头 | 基于权重 | 渐进式发布用基于权重；内部测试/QA 用基于请求头 |
-| 全面 mTLS | Strict 模式 | Permissive 模式 | 先使用 permissive（仅记录日志），逐服务迁移到 strict；突然切换 strict 会影响未感知的服务 |
-| Plugin 执行 | 内联（同步） | 异步（事件驱动） | 认证/限流用同步（必须阻塞），日志/分析用异步（非阻塞） |
-| 跨区域 rate limits | 严格全局 | 区域独立桶 | 区域独立桶（更低延迟）；最坏情况下接受最多 3 倍突发（多区域同时） |
-| Sidecar vs. SDK | Sidecar proxy（mesh） | 客户端库 | Sidecar 用于语言无关的策略执行；SDK 用于亚毫秒级要求的性能关键路径 |
-| 网关扩展 | 垂直（更大节点） | 水平（更多节点） | 始终水平扩展；网关是无状态的，天然适合水平扩展 |
+| 决策               | 选项 A                | 选项 B           | 建议                                                                                            |
+| ------------------ | --------------------- | ---------------- | ----------------------------------------------------------------------------------------------- |
+| Auth token 验证    | 每次请求查数据库      | JWT 自验证       | JWT 短 TTL（15 分钟）+ refresh token；使用 JWT 进行无状态验证，仅对高价值操作使用 introspection |
+| Rate limit 粒度    | 按消费者全局          | 按消费者按端点   | 按端点（更精确）但更多 Redis 键；使用层级限制（两者兼用）                                       |
+| Rate limit 拒绝时  | 失败开放（允许）      | 失败关闭（拒绝） | Redis 故障时失败开放；防止因基础设施故障导致整个 API 宕机                                       |
+| 配置存储           | PostgreSQL（ACID）    | etcd（分布式）   | Kong 使用 PostgreSQL（完整关系模型）；Istio/Envoy xDS 使用 etcd（专为此设计）                   |
+| Canary 路由        | 基于请求头            | 基于权重         | 渐进式发布用基于权重；内部测试/QA 用基于请求头                                                  |
+| 全面 mTLS          | Strict 模式           | Permissive 模式  | 先使用 permissive（仅记录日志），逐服务迁移到 strict；突然切换 strict 会影响未感知的服务        |
+| Plugin 执行        | 内联（同步）          | 异步（事件驱动） | 认证/限流用同步（必须阻塞），日志/分析用异步（非阻塞）                                          |
+| 跨区域 rate limits | 严格全局              | 区域独立桶       | 区域独立桶（更低延迟）；最坏情况下接受最多 3 倍突发（多区域同时）                               |
+| Sidecar vs. SDK    | Sidecar proxy（mesh） | 客户端库         | Sidecar 用于语言无关的策略执行；SDK 用于亚毫秒级要求的性能关键路径                              |
+| 网关扩展           | 垂直（更大节点）      | 水平（更多节点） | 始终水平扩展；网关是无状态的，天然适合水平扩展                                                  |
 
 ---
 

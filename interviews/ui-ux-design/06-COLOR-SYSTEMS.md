@@ -7,7 +7,7 @@ meaning before a user reads a single word. It guides attention, conveys brand
 identity, signals interactivity, and -- when done wrong -- makes interfaces
 unusable for millions of people with color vision deficiencies.
 
-A color *system* goes beyond picking pretty colors. It defines a structured,
+A color _system_ goes beyond picking pretty colors. It defines a structured,
 scalable palette with semantic meaning, accessibility guarantees, and theme
 adaptability. This is what separates professional UI work from guesswork.
 
@@ -240,24 +240,24 @@ be consistent throughout the entire application.
 ```jsx
 const semanticColors = {
   success: {
-    light: 'hsl(142, 72%, 95%)',   // background
-    base:  'hsl(142, 72%, 40%)',   // icon, border
-    dark:  'hsl(142, 72%, 20%)',   // text
+    light: 'hsl(142, 72%, 95%)', // background
+    base: 'hsl(142, 72%, 40%)', // icon, border
+    dark: 'hsl(142, 72%, 20%)', // text
   },
   error: {
     light: 'hsl(0, 84%, 95%)',
-    base:  'hsl(0, 84%, 55%)',
-    dark:  'hsl(0, 84%, 25%)',
+    base: 'hsl(0, 84%, 55%)',
+    dark: 'hsl(0, 84%, 25%)',
   },
   warning: {
     light: 'hsl(38, 92%, 95%)',
-    base:  'hsl(38, 92%, 50%)',
-    dark:  'hsl(38, 92%, 25%)',
+    base: 'hsl(38, 92%, 50%)',
+    dark: 'hsl(38, 92%, 25%)',
   },
   info: {
     light: 'hsl(220, 90%, 95%)',
-    base:  'hsl(220, 90%, 56%)',
-    dark:  'hsl(220, 90%, 25%)',
+    base: 'hsl(220, 90%, 56%)',
+    dark: 'hsl(220, 90%, 25%)',
   },
 };
 ```
@@ -345,15 +345,15 @@ Accessibility is more than meeting contrast ratios.
 
 ### Tools for Color
 
-| Tool             | What It Does                                    | URL                        |
-|------------------|-------------------------------------------------|----------------------------|
-| Coolors          | Generate and explore palettes                   | coolors.co                 |
-| Adobe Color      | Color wheel with harmony rules                  | color.adobe.com            |
-| Realtime Colors  | Preview palette on a real page layout            | realtimecolors.com         |
-| Contrast Checker | Test WCAG contrast ratios                       | webaim.org/resources       |
-| Huetone          | Build palettes by controlling HSL curves         | huetone.ardov.me           |
-| Tailwind Colors  | Reference Tailwind's built-in palette            | tailwindcss.com/docs/colors|
-| ColorBox         | Algorithmic palette generation by Lyft           | colorbox.io                |
+| Tool             | What It Does                             | URL                         |
+| ---------------- | ---------------------------------------- | --------------------------- |
+| Coolors          | Generate and explore palettes            | coolors.co                  |
+| Adobe Color      | Color wheel with harmony rules           | color.adobe.com             |
+| Realtime Colors  | Preview palette on a real page layout    | realtimecolors.com          |
+| Contrast Checker | Test WCAG contrast ratios                | webaim.org/resources        |
+| Huetone          | Build palettes by controlling HSL curves | huetone.ardov.me            |
+| Tailwind Colors  | Reference Tailwind's built-in palette    | tailwindcss.com/docs/colors |
+| ColorBox         | Algorithmic palette generation by Lyft   | colorbox.io                 |
 
 ### Color in Dark vs Light Themes
 
@@ -381,11 +381,11 @@ approach to elevation, saturation, and contrast.
    backgrounds cause visual vibration.
 
 ```css
-  /* Light theme */
-  --primary: hsl(220, 90%, 56%);
+/* Light theme */
+--primary: hsl(220, 90%, 56%);
 
-  /* Dark theme -- reduce saturation, increase lightness */
-  --primary: hsl(220, 70%, 65%);
+/* Dark theme -- reduce saturation, increase lightness */
+--primary: hsl(220, 70%, 65%);
 ```
 
 3. **Flip the elevation model.** In light themes, deeper shadows = higher
@@ -408,23 +408,23 @@ approach to elevation, saturation, and contrast.
 ```css
 :root {
   /* Light theme (default) */
-  --color-bg:       hsl(0, 0%, 100%);
-  --color-surface:  hsl(0, 0%, 98%);
-  --color-text:     hsl(220, 15%, 15%);
-  --color-muted:    hsl(220, 10%, 45%);
-  --color-border:   hsl(220, 10%, 88%);
-  --color-primary:  hsl(220, 90%, 56%);
-  --color-accent:   hsl(280, 70%, 55%);
+  --color-bg: hsl(0, 0%, 100%);
+  --color-surface: hsl(0, 0%, 98%);
+  --color-text: hsl(220, 15%, 15%);
+  --color-muted: hsl(220, 10%, 45%);
+  --color-border: hsl(220, 10%, 88%);
+  --color-primary: hsl(220, 90%, 56%);
+  --color-accent: hsl(280, 70%, 55%);
 }
 
 [data-theme='dark'] {
-  --color-bg:       hsl(220, 15%, 8%);
-  --color-surface:  hsl(220, 15%, 12%);
-  --color-text:     hsl(220, 10%, 90%);
-  --color-muted:    hsl(220, 8%, 55%);
-  --color-border:   hsl(220, 10%, 20%);
-  --color-primary:  hsl(220, 70%, 65%);
-  --color-accent:   hsl(280, 55%, 68%);
+  --color-bg: hsl(220, 15%, 8%);
+  --color-surface: hsl(220, 15%, 12%);
+  --color-text: hsl(220, 10%, 90%);
+  --color-muted: hsl(220, 8%, 55%);
+  --color-border: hsl(220, 10%, 20%);
+  --color-primary: hsl(220, 70%, 65%);
+  --color-accent: hsl(280, 55%, 68%);
 }
 ```
 
@@ -489,6 +489,7 @@ swappable and intent clear.
 ```
 
 This three-tier system (raw -> semantic -> component) enables:
+
 - **Theme switching** by changing only semantic tokens
 - **Consistency** by forcing all components to reference shared tokens
 - **Maintainability** by updating a color in one place
@@ -502,7 +503,7 @@ module.exports = {
     colors: {
       // Raw palette
       blue: {
-        50:  'hsl(220, 90%, 97%)',
+        50: 'hsl(220, 90%, 97%)',
         100: 'hsl(220, 85%, 93%)',
         500: 'hsl(220, 90%, 56%)',
         600: 'hsl(220, 85%, 46%)',
@@ -510,19 +511,19 @@ module.exports = {
         900: 'hsl(220, 60%, 18%)',
       },
       // Semantic tokens via CSS variables
-      primary:    'var(--color-primary)',
-      secondary:  'var(--color-secondary)',
-      success:    'var(--color-success)',
-      error:      'var(--color-error)',
-      warning:    'var(--color-warning)',
+      primary: 'var(--color-primary)',
+      secondary: 'var(--color-secondary)',
+      success: 'var(--color-success)',
+      error: 'var(--color-error)',
+      warning: 'var(--color-warning)',
       background: 'var(--color-bg)',
-      surface:    'var(--color-surface)',
+      surface: 'var(--color-surface)',
       foreground: 'var(--color-text)',
-      muted:      'var(--color-muted)',
-      border:     'var(--color-border)',
+      muted: 'var(--color-muted)',
+      border: 'var(--color-border)',
     },
   },
-}
+};
 ```
 
 ---
@@ -536,31 +537,31 @@ module.exports = {
 
 @layer base {
   :root {
-    --color-bg:         0 0% 100%;
-    --color-surface:    220 15% 97%;
-    --color-text:       220 15% 15%;
-    --color-muted:      220 10% 45%;
-    --color-border:     220 10% 88%;
-    --color-primary:    220 90% 56%;
+    --color-bg: 0 0% 100%;
+    --color-surface: 220 15% 97%;
+    --color-text: 220 15% 15%;
+    --color-muted: 220 10% 45%;
+    --color-border: 220 10% 88%;
+    --color-primary: 220 90% 56%;
     --color-primary-fg: 0 0% 100%;
-    --color-accent:     280 70% 55%;
-    --color-success:    142 72% 40%;
-    --color-warning:    38 92% 50%;
-    --color-error:      0 84% 55%;
+    --color-accent: 280 70% 55%;
+    --color-success: 142 72% 40%;
+    --color-warning: 38 92% 50%;
+    --color-error: 0 84% 55%;
   }
 
   .dark {
-    --color-bg:         220 15% 8%;
-    --color-surface:    220 15% 12%;
-    --color-text:       220 10% 90%;
-    --color-muted:      220 8% 55%;
-    --color-border:     220 10% 20%;
-    --color-primary:    220 70% 65%;
+    --color-bg: 220 15% 8%;
+    --color-surface: 220 15% 12%;
+    --color-text: 220 10% 90%;
+    --color-muted: 220 8% 55%;
+    --color-border: 220 10% 20%;
+    --color-primary: 220 70% 65%;
     --color-primary-fg: 220 15% 8%;
-    --color-accent:     280 55% 68%;
-    --color-success:    142 60% 55%;
-    --color-warning:    38 80% 60%;
-    --color-error:      0 70% 65%;
+    --color-accent: 280 55% 68%;
+    --color-success: 142 60% 55%;
+    --color-warning: 38 80% 60%;
+    --color-error: 0 70% 65%;
   }
 }
 ```
@@ -572,22 +573,22 @@ module.exports = {
     extend: {
       colors: {
         background: 'hsl(var(--color-bg))',
-        surface:    'hsl(var(--color-surface))',
+        surface: 'hsl(var(--color-surface))',
         foreground: 'hsl(var(--color-text))',
-        muted:      'hsl(var(--color-muted))',
-        border:     'hsl(var(--color-border))',
+        muted: 'hsl(var(--color-muted))',
+        border: 'hsl(var(--color-border))',
         primary: {
-          DEFAULT:    'hsl(var(--color-primary))',
+          DEFAULT: 'hsl(var(--color-primary))',
           foreground: 'hsl(var(--color-primary-fg))',
         },
-        accent:     'hsl(var(--color-accent))',
-        success:    'hsl(var(--color-success))',
-        warning:    'hsl(var(--color-warning))',
-        error:      'hsl(var(--color-error))',
+        accent: 'hsl(var(--color-accent))',
+        success: 'hsl(var(--color-success))',
+        warning: 'hsl(var(--color-warning))',
+        error: 'hsl(var(--color-error))',
       },
     },
   },
-}
+};
 ```
 
 ### Semantic Alert Component
@@ -595,21 +596,27 @@ module.exports = {
 ```jsx
 function Alert({ variant, title, children }) {
   const styles = {
-    success: 'bg-green-50 border-green-500 text-green-900 dark:bg-green-950 dark:text-green-100',
-    error:   'bg-red-50 border-red-500 text-red-900 dark:bg-red-950 dark:text-red-100',
-    warning: 'bg-amber-50 border-amber-500 text-amber-900 dark:bg-amber-950 dark:text-amber-100',
-    info:    'bg-blue-50 border-blue-500 text-blue-900 dark:bg-blue-950 dark:text-blue-100',
+    success:
+      'bg-green-50 border-green-500 text-green-900 dark:bg-green-950 dark:text-green-100',
+    error:
+      'bg-red-50 border-red-500 text-red-900 dark:bg-red-950 dark:text-red-100',
+    warning:
+      'bg-amber-50 border-amber-500 text-amber-900 dark:bg-amber-950 dark:text-amber-100',
+    info: 'bg-blue-50 border-blue-500 text-blue-900 dark:bg-blue-950 dark:text-blue-100',
   };
 
   const icons = {
     success: '✓',
-    error:   '✕',
+    error: '✕',
     warning: '!',
-    info:    'i',
+    info: 'i',
   };
 
   return (
-    <div className={`border-l-4 p-4 rounded-r-lg ${styles[variant]}`} role="alert">
+    <div
+      className={`border-l-4 p-4 rounded-r-lg ${styles[variant]}`}
+      role="alert"
+    >
       <div className="flex items-start gap-3">
         <span className="font-bold text-lg" aria-hidden="true">
           {icons[variant]}
@@ -653,7 +660,15 @@ function ContrastBadge({ foreground, background }) {
   return (
     <div className="flex items-center gap-2">
       <span className="font-mono text-sm">{rounded}:1</span>
-      <span className={passAAA ? 'text-green-600' : passAA ? 'text-yellow-600' : 'text-red-600'}>
+      <span
+        className={
+          passAAA
+            ? 'text-green-600'
+            : passAA
+              ? 'text-yellow-600'
+              : 'text-red-600'
+        }
+      >
         {passAAA ? 'AAA' : passAA ? 'AA' : 'FAIL'}
       </span>
     </div>
@@ -802,6 +817,7 @@ variables. Here are improvements to make the color system more systematic.
    on gray backgrounds is the most common accessibility failure.
 
 3. **Apply the 60-30-10 rule:**
+
    - 60%: Your background and neutral surface colors
    - 30%: Card backgrounds, section differentiation
    - 10%: Your accent color on CTAs, active nav items, skill tags, links

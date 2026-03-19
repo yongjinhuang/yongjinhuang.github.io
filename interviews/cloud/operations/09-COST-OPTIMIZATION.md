@@ -71,14 +71,14 @@ cloud costs across engineering, finance, and business teams.
 
 ### Cost Ownership Culture
 
-| Anti-Pattern | FinOps Pattern |
-|---|---|
-| "Cloud costs are IT's problem" | Every team owns their cloud spend |
-| Monthly cost reviews only | Daily cost visibility in dashboards |
-| Finance surprises at end of month | Budget alerts at 50%, 80%, 100% |
+| Anti-Pattern                          | FinOps Pattern                          |
+| ------------------------------------- | --------------------------------------- |
+| "Cloud costs are IT's problem"        | Every team owns their cloud spend       |
+| Monthly cost reviews only             | Daily cost visibility in dashboards     |
+| Finance surprises at end of month     | Budget alerts at 50%, 80%, 100%         |
 | Cost not considered in design reviews | Cost estimate required for new features |
-| Shared accounts with no allocation | Per-team cost allocation via tags |
-| Engineers don't see costs | Cost metrics on team dashboards |
+| Shared accounts with no allocation    | Per-team cost allocation via tags       |
+| Engineers don't see costs             | Cost metrics on team dashboards         |
 
 **The Golden Rule**: The team that creates the cost should own the cost.
 
@@ -150,14 +150,14 @@ REAL-WORLD EXAMPLE:
 
 ### RI vs Savings Plans Comparison
 
-| Dimension | Reserved Instances | Compute Savings Plans | EC2 Instance SP |
-|---|---|---|---|
-| Flexibility | Instance family locked | Any EC2 + Fargate + Lambda | Specific region + family |
-| Discount depth | Up to 72% | Up to 66% | Up to 72% |
-| Scope | Instance type specific | Compute spend | Instance family, region |
-| Exchange | Convertible RIs only | N/A (automatic) | N/A |
-| Applies to | EC2, RDS, ElastiCache | EC2, Fargate, Lambda | EC2 (specific family) |
-| Best for | Stable, predictable workloads | Mixed/flexible compute | Stable family, flexible size |
+| Dimension      | Reserved Instances            | Compute Savings Plans      | EC2 Instance SP              |
+| -------------- | ----------------------------- | -------------------------- | ---------------------------- |
+| Flexibility    | Instance family locked        | Any EC2 + Fargate + Lambda | Specific region + family     |
+| Discount depth | Up to 72%                     | Up to 66%                  | Up to 72%                    |
+| Scope          | Instance type specific        | Compute spend              | Instance family, region      |
+| Exchange       | Convertible RIs only          | N/A (automatic)            | N/A                          |
+| Applies to     | EC2, RDS, ElastiCache         | EC2, Fargate, Lambda       | EC2 (specific family)        |
+| Best for       | Stable, predictable workloads | Mixed/flexible compute     | Stable family, flexible size |
 
 ### Commitment Levels and Break-Even
 
@@ -303,11 +303,11 @@ GOOD (Diversified fleet — low interruption probability):
           "Version": "$Latest"
         },
         "Overrides": [
-          {"InstanceType": "m5.xlarge",  "WeightedCapacity": 1},
-          {"InstanceType": "m5a.xlarge", "WeightedCapacity": 1},
-          {"InstanceType": "m4.xlarge",  "WeightedCapacity": 1},
-          {"InstanceType": "m5.2xlarge", "WeightedCapacity": 2},
-          {"InstanceType": "r5.xlarge",  "WeightedCapacity": 1}
+          { "InstanceType": "m5.xlarge", "WeightedCapacity": 1 },
+          { "InstanceType": "m5a.xlarge", "WeightedCapacity": 1 },
+          { "InstanceType": "m4.xlarge", "WeightedCapacity": 1 },
+          { "InstanceType": "m5.2xlarge", "WeightedCapacity": 2 },
+          { "InstanceType": "r5.xlarge", "WeightedCapacity": 1 }
         ]
       }
     ],
@@ -336,15 +336,23 @@ spec:
       requirements:
         - key: karpenter.sh/capacity-type
           operator: In
-          values: ["spot", "on-demand"]
+          values: ['spot', 'on-demand']
         - key: kubernetes.io/arch
           operator: In
-          values: ["amd64", "arm64"]
+          values: ['amd64', 'arm64']
         - key: node.kubernetes.io/instance-type
           operator: In
           # Explicitly allow multiple families for diversification
-          values: ["m5.xlarge", "m5a.xlarge", "m4.xlarge", "m5.2xlarge",
-                   "c5.xlarge", "c5a.xlarge", "r5.xlarge"]
+          values:
+            [
+              'm5.xlarge',
+              'm5a.xlarge',
+              'm4.xlarge',
+              'm5.2xlarge',
+              'c5.xlarge',
+              'c5a.xlarge',
+              'r5.xlarge',
+            ]
       nodeClassRef:
         apiVersion: karpenter.k8s.aws/v1beta1
         kind: EC2NodeClass
@@ -352,7 +360,7 @@ spec:
   disruption:
     consolidationPolicy: WhenUnderutilized
     consolidateAfter: 30s
-    expireAfter: 720h  # Cycle nodes every 30 days
+    expireAfter: 720h # Cycle nodes every 30 days
 ```
 
 ### Spot-Friendly Architecture Patterns
@@ -617,16 +625,16 @@ spec:
     kind: Deployment
     name: my-app
   updatePolicy:
-    updateMode: "Off"  # Recommendation only — apply manually first
+    updateMode: 'Off' # Recommendation only — apply manually first
   resourcePolicy:
     containerPolicies:
       - containerName: app
         minAllowed:
-          cpu: "50m"
-          memory: "64Mi"
+          cpu: '50m'
+          memory: '64Mi'
         maxAllowed:
-          cpu: "2"
-          memory: "2Gi"
+          cpu: '2'
+          memory: '2Gi'
 ```
 
 ```bash
@@ -962,15 +970,15 @@ done
 
 ### Waste Cost Impact Table
 
-| Resource Type | Typical Waste | Monthly Cost | Annual Waste |
-|---|---|---|---|
-| Unattached EBS gp3 100GB | Common after instance termination | $8/vol | $96 |
-| Unassociated EIP | Often left after NAT changes | $3.60 each | $43 |
-| Idle ALB | After app decommission | $16–$25/mo | $300 |
-| Stopped m5.xlarge (EBS) | Forgotten dev instances | $6–20 (EBS only) | $240 |
-| Old snapshots (1TB) | Never cleaned up | $50 | $600 |
-| Idle RDS db.r5.large | Dev DB left running | $146/mo | $1,752 |
-| Unused RI (not sold) | Wrong instance type | $100–500/mo | $6,000 |
+| Resource Type            | Typical Waste                     | Monthly Cost     | Annual Waste |
+| ------------------------ | --------------------------------- | ---------------- | ------------ |
+| Unattached EBS gp3 100GB | Common after instance termination | $8/vol           | $96          |
+| Unassociated EIP         | Often left after NAT changes      | $3.60 each       | $43          |
+| Idle ALB                 | After app decommission            | $16–$25/mo       | $300         |
+| Stopped m5.xlarge (EBS)  | Forgotten dev instances           | $6–20 (EBS only) | $240         |
+| Old snapshots (1TB)      | Never cleaned up                  | $50              | $600         |
+| Idle RDS db.r5.large     | Dev DB left running               | $146/mo          | $1,752       |
+| Unused RI (not sold)     | Wrong instance type               | $100–500/mo      | $6,000       |
 
 ---
 

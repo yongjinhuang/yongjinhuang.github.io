@@ -58,14 +58,18 @@ gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 // Upload vertex positions (a simple triangle)
 const positions = new Float32Array([
   // x,    y
-   0.0,  0.5,   // top
-  -0.5, -0.5,   // bottom-left
-   0.5, -0.5,   // bottom-right
+  0.0,
+  0.5, // top
+  -0.5,
+  -0.5, // bottom-left
+  0.5,
+  -0.5, // bottom-right
 ]);
 gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 ```
 
 Key concepts:
+
 - **Vertex**: A point with associated data (position, color, UV, normal, etc.)
 - **Attribute**: A per-vertex input to the vertex shader
 - **Buffer Object**: GPU memory that stores vertex data
@@ -94,12 +98,14 @@ void main() {
 ```
 
 The vertex shader outputs:
+
 - `gl_Position`: The clip-space position (mandatory)
 - `varying` variables: Data interpolated and passed to the fragment shader
 
 ### Stage 3: Primitive Assembly
 
 After vertex processing, the GPU groups vertices into primitives:
+
 - `gl.TRIANGLES` — every 3 vertices form a triangle
 - `gl.TRIANGLE_STRIP` — each new vertex forms a triangle with the previous two
 - `gl.TRIANGLE_FAN` — all triangles share the first vertex
@@ -112,6 +118,7 @@ For 2D games, almost everything uses `gl.TRIANGLES` (two triangles per quad/spri
 The rasterizer determines which pixels (fragments) are covered by each primitive. For each fragment, it interpolates the `varying` values from the triangle's vertices using barycentric coordinates.
 
 This is a fixed-function stage — you cannot program it, but you can influence it:
+
 - `gl.viewport(x, y, width, height)` — defines the screen region
 - `gl.scissor(x, y, width, height)` — clips rendering to a rectangle
 - Face culling: `gl.enable(gl.CULL_FACE)` — skips back-facing triangles
@@ -134,12 +141,14 @@ void main() {
 ```
 
 The fragment shader outputs:
+
 - `gl_FragColor`: The RGBA color of the fragment (WebGL1)
 - In WebGL2, you use `out vec4 fragColor` instead
 
 ### Stage 6: Per-Fragment Operations
 
 After the fragment shader, several fixed-function tests and operations occur:
+
 - **Scissor Test**: Discard fragments outside the scissor rectangle
 - **Depth Test**: Compare fragment depth to the depth buffer
 - **Stencil Test**: Compare against the stencil buffer
@@ -148,6 +157,7 @@ After the fragment shader, several fixed-function tests and operations occur:
 ### Stage 7: Framebuffer
 
 The final pixel colors are written to the framebuffer. This can be:
+
 - The **default framebuffer** (the canvas on screen)
 - A **Framebuffer Object (FBO)**: renders to a texture for post-processing
 
@@ -158,9 +168,25 @@ gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
 
 const targetTexture = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+gl.texImage2D(
+  gl.TEXTURE_2D,
+  0,
+  gl.RGBA,
+  width,
+  height,
+  0,
+  gl.RGBA,
+  gl.UNSIGNED_BYTE,
+  null
+);
 
-gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0);
+gl.framebufferTexture2D(
+  gl.FRAMEBUFFER,
+  gl.COLOR_ATTACHMENT0,
+  gl.TEXTURE_2D,
+  targetTexture,
+  0
+);
 ```
 
 ---
@@ -320,11 +346,10 @@ A Vertex Buffer Object stores vertex attribute data in GPU memory.
 ```typescript
 // A quad (two triangles) without index buffer = 6 vertices
 const vertices = new Float32Array([
-    // Triangle 1           // Triangle 2
-    // x,    y,   u,   v     x,    y,   u,   v
-    -0.5,  0.5, 0.0, 0.0,   -0.5, -0.5, 0.0, 1.0,
-     0.5,  0.5, 1.0, 0.0,    0.5, -0.5, 1.0, 1.0,
-     0.5, -0.5, 1.0, 1.0,   -0.5, -0.5, 0.0, 1.0,
+  // Triangle 1           // Triangle 2
+  // x,    y,   u,   v     x,    y,   u,   v
+  -0.5, 0.5, 0.0, 0.0, -0.5, -0.5, 0.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0.5, -0.5, 1.0,
+  1.0, 0.5, -0.5, 1.0, 1.0, -0.5, -0.5, 0.0, 1.0,
 ]);
 
 const buffer = gl.createBuffer();
@@ -356,16 +381,32 @@ Index buffers let you reuse vertices, reducing memory usage and bandwidth.
 ```typescript
 // A quad with 4 unique vertices + 6 indices (instead of 6 vertices)
 const vertices = new Float32Array([
-    // x,    y,   u,   v
-    -0.5,  0.5, 0.0, 0.0,  // 0: top-left
-     0.5,  0.5, 1.0, 0.0,  // 1: top-right
-     0.5, -0.5, 1.0, 1.0,  // 2: bottom-right
-    -0.5, -0.5, 0.0, 1.0,  // 3: bottom-left
+  // x,    y,   u,   v
+  -0.5,
+  0.5,
+  0.0,
+  0.0, // 0: top-left
+  0.5,
+  0.5,
+  1.0,
+  0.0, // 1: top-right
+  0.5,
+  -0.5,
+  1.0,
+  1.0, // 2: bottom-right
+  -0.5,
+  -0.5,
+  0.0,
+  1.0, // 3: bottom-left
 ]);
 
 const indices = new Uint16Array([
-    0, 1, 2,  // first triangle
-    0, 2, 3,  // second triangle
+  0,
+  1,
+  2, // first triangle
+  0,
+  2,
+  3, // second triangle
 ]);
 
 const indexBuffer = gl.createBuffer();
@@ -377,6 +418,7 @@ gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 ```
 
 **Memory savings for a sprite batcher:**
+
 - Without indices: 1000 sprites x 6 vertices = 6000 vertices
 - With indices: 1000 sprites x 4 vertices + 6000 indices = 4000 vertices + 6000 shorts
 - Savings grow as vertex size (stride) increases
@@ -388,50 +430,54 @@ gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 ### Loading Textures
 
 ```typescript
-function loadTexture(gl: WebGLRenderingContext, url: string): Promise<WebGLTexture> {
-    return new Promise((resolve, reject) => {
-        const texture = gl.createTexture();
-        if (!texture) {
-            reject(new Error('Failed to create texture'));
-            return;
-        }
+function loadTexture(
+  gl: WebGLRenderingContext,
+  url: string
+): Promise<WebGLTexture> {
+  return new Promise((resolve, reject) => {
+    const texture = gl.createTexture();
+    if (!texture) {
+      reject(new Error('Failed to create texture'));
+      return;
+    }
 
-        const image = new Image();
-        image.crossOrigin = 'anonymous';
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
 
-        image.onload = () => {
-            gl.bindTexture(gl.TEXTURE_2D, texture);
+    image.onload = () => {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
 
-            // Upload pixel data
-            gl.texImage2D(
-                gl.TEXTURE_2D,
-                0,              // mip level
-                gl.RGBA,        // internal format
-                gl.RGBA,        // source format
-                gl.UNSIGNED_BYTE,
-                image
-            );
+      // Upload pixel data
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0, // mip level
+        gl.RGBA, // internal format
+        gl.RGBA, // source format
+        gl.UNSIGNED_BYTE,
+        image
+      );
 
-            // Set filtering
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      // Set filtering
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-            // Clamp to edge (important for NPOT textures and sprite atlases)
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      // Clamp to edge (important for NPOT textures and sprite atlases)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-            resolve(texture);
-        };
+      resolve(texture);
+    };
 
-        image.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-        image.src = url;
-    });
+    image.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    image.src = url;
+  });
 }
 ```
 
 ### UV Mapping
 
 UV coordinates map texture pixels to vertices. Range is 0.0 to 1.0:
+
 - (0, 0) = top-left of texture
 - (1, 1) = bottom-right of texture
 
@@ -439,30 +485,30 @@ For sprite atlas sub-regions:
 
 ```typescript
 function getAtlasUVs(
-    atlasWidth: number,
-    atlasHeight: number,
-    spriteX: number,
-    spriteY: number,
-    spriteW: number,
-    spriteH: number
+  atlasWidth: number,
+  atlasHeight: number,
+  spriteX: number,
+  spriteY: number,
+  spriteW: number,
+  spriteH: number
 ): { u0: number; v0: number; u1: number; v1: number } {
-    return {
-        u0: spriteX / atlasWidth,
-        v0: spriteY / atlasHeight,
-        u1: (spriteX + spriteW) / atlasWidth,
-        v1: (spriteY + spriteH) / atlasHeight,
-    };
+  return {
+    u0: spriteX / atlasWidth,
+    v0: spriteY / atlasHeight,
+    u1: (spriteX + spriteW) / atlasWidth,
+    v1: (spriteY + spriteH) / atlasHeight,
+  };
 }
 ```
 
 ### Texture Filtering
 
-| Filter | `TEXTURE_MIN_FILTER` | `TEXTURE_MAG_FILTER` | Use Case |
-|--------|---------------------|---------------------|----------|
-| `NEAREST` | Pixelated when small | Pixelated when big | Pixel art games |
-| `LINEAR` | Blurred when small | Smoothed when big | Most 2D games |
-| `NEAREST_MIPMAP_NEAREST` | Pixelated + mips | N/A | Pixel art at distance |
-| `LINEAR_MIPMAP_LINEAR` | Trilinear | N/A | Highest quality 3D |
+| Filter                   | `TEXTURE_MIN_FILTER` | `TEXTURE_MAG_FILTER` | Use Case              |
+| ------------------------ | -------------------- | -------------------- | --------------------- |
+| `NEAREST`                | Pixelated when small | Pixelated when big   | Pixel art games       |
+| `LINEAR`                 | Blurred when small   | Smoothed when big    | Most 2D games         |
+| `NEAREST_MIPMAP_NEAREST` | Pixelated + mips     | N/A                  | Pixel art at distance |
+| `LINEAR_MIPMAP_LINEAR`   | Trilinear            | N/A                  | Highest quality 3D    |
 
 **Pixel art games should always use `NEAREST` filtering** to preserve crisp edges.
 
@@ -483,6 +529,7 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 ### Texture Atlases
 
 A texture atlas combines multiple sprites into a single texture. Benefits:
+
 1. **Fewer texture binds** — switching textures is expensive
 2. **Fewer draw calls** — sprites sharing an atlas can be batched
 3. **Fewer HTTP requests** — one image file instead of hundreds
@@ -490,20 +537,20 @@ A texture atlas combines multiple sprites into a single texture. Benefits:
 ```typescript
 // Atlas JSON format (TexturePacker style)
 interface AtlasFrame {
-    frame: { x: number; y: number; w: number; h: number };
-    rotated: boolean;
-    trimmed: boolean;
-    spriteSourceSize: { x: number; y: number; w: number; h: number };
-    sourceSize: { w: number; h: number };
+  frame: { x: number; y: number; w: number; h: number };
+  rotated: boolean;
+  trimmed: boolean;
+  spriteSourceSize: { x: number; y: number; w: number; h: number };
+  sourceSize: { w: number; h: number };
 }
 
 interface AtlasData {
-    frames: Record<string, AtlasFrame>;
-    meta: {
-        image: string;
-        size: { w: number; h: number };
-        scale: string;
-    };
+  frames: Record<string, AtlasFrame>;
+  meta: {
+    image: string;
+    size: { w: number; h: number };
+    scale: string;
+  };
 }
 ```
 
@@ -525,10 +572,12 @@ gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 ### Pre-multiplied Alpha
 
 In pre-multiplied alpha, RGB values are already multiplied by the alpha channel:
+
 - Standard: `(R, G, B, A)` = `(1.0, 0.0, 0.0, 0.5)` (50% red)
 - Pre-multiplied: `(R*A, G*A, B*A, A)` = `(0.5, 0.0, 0.0, 0.5)`
 
 Advantages of pre-multiplied alpha:
+
 1. Correct filtering when texture edges blend with transparent pixels
 2. Simpler blend equation: `gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)`
 3. Supports both transparency and additive blending in the same image
@@ -611,7 +660,7 @@ gl.bufferData(gl.ARRAY_BUFFER, instanceData, gl.DYNAMIC_DRAW);
 const offsetLoc = gl.getAttribLocation(program, 'a_offset');
 gl.enableVertexAttribArray(offsetLoc);
 gl.vertexAttribPointer(offsetLoc, 2, gl.FLOAT, false, INSTANCE_STRIDE, 0);
-gl.vertexAttribDivisor(offsetLoc, 1);  // advance once per instance
+gl.vertexAttribDivisor(offsetLoc, 1); // advance once per instance
 
 const scaleLoc = gl.getAttribLocation(program, 'a_scale');
 gl.enableVertexAttribArray(scaleLoc);
@@ -624,16 +673,16 @@ gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, 1000);
 
 ### Other Key WebGL2 Features
 
-| Feature | Game Dev Use |
-|---------|-------------|
-| **3D Textures** (`TEXTURE_3D`) | Volume effects, lookup tables |
+| Feature                                 | Game Dev Use                          |
+| --------------------------------------- | ------------------------------------- |
+| **3D Textures** (`TEXTURE_3D`)          | Volume effects, lookup tables         |
 | **Texture arrays** (`TEXTURE_2D_ARRAY`) | Multiple texture layers without atlas |
-| **Non-power-of-two textures** | Any texture size works fully |
-| **Multiple Render Targets (MRT)** | Deferred rendering, G-buffers |
-| **Transform Feedback** | GPU-side particle simulation |
-| **Uniform Buffer Objects (UBOs)** | Shared uniforms across shaders |
-| **Integer attributes** | Pass int data to shaders |
-| **`gl.fenceSync`** | Async GPU queries |
+| **Non-power-of-two textures**           | Any texture size works fully          |
+| **Multiple Render Targets (MRT)**       | Deferred rendering, G-buffers         |
+| **Transform Feedback**                  | GPU-side particle simulation          |
+| **Uniform Buffer Objects (UBOs)**       | Shared uniforms across shaders        |
+| **Integer attributes**                  | Pass int data to shaders              |
+| **`gl.fenceSync`**                      | Async GPU queries                     |
 
 ---
 
@@ -645,92 +694,116 @@ The most important optimization for 2D WebGL games. Instead of one draw call per
 
 ```typescript
 class SpriteBatcher {
-    private readonly maxSprites: number;
-    private readonly vertexData: Float32Array;
-    private readonly indexData: Uint16Array;
-    private spriteCount: number;
-    private currentTexture: WebGLTexture | null;
+  private readonly maxSprites: number;
+  private readonly vertexData: Float32Array;
+  private readonly indexData: Uint16Array;
+  private spriteCount: number;
+  private currentTexture: WebGLTexture | null;
 
-    constructor(gl: WebGL2RenderingContext, maxSprites: number = 2000) {
-        this.maxSprites = maxSprites;
-        this.spriteCount = 0;
-        this.currentTexture = null;
+  constructor(gl: WebGL2RenderingContext, maxSprites: number = 2000) {
+    this.maxSprites = maxSprites;
+    this.spriteCount = 0;
+    this.currentTexture = null;
 
-        // 4 vertices per sprite, each vertex has: x, y, u, v, r, g, b, a
-        const FLOATS_PER_VERTEX = 8;
-        const VERTICES_PER_SPRITE = 4;
-        this.vertexData = new Float32Array(maxSprites * VERTICES_PER_SPRITE * FLOATS_PER_VERTEX);
+    // 4 vertices per sprite, each vertex has: x, y, u, v, r, g, b, a
+    const FLOATS_PER_VERTEX = 8;
+    const VERTICES_PER_SPRITE = 4;
+    this.vertexData = new Float32Array(
+      maxSprites * VERTICES_PER_SPRITE * FLOATS_PER_VERTEX
+    );
 
-        // 6 indices per sprite (two triangles)
-        this.indexData = new Uint16Array(maxSprites * 6);
-        for (let i = 0; i < maxSprites; i++) {
-            const vi = i * 4;
-            const ii = i * 6;
-            this.indexData[ii + 0] = vi + 0;
-            this.indexData[ii + 1] = vi + 1;
-            this.indexData[ii + 2] = vi + 2;
-            this.indexData[ii + 3] = vi + 0;
-            this.indexData[ii + 4] = vi + 2;
-            this.indexData[ii + 5] = vi + 3;
-        }
+    // 6 indices per sprite (two triangles)
+    this.indexData = new Uint16Array(maxSprites * 6);
+    for (let i = 0; i < maxSprites; i++) {
+      const vi = i * 4;
+      const ii = i * 6;
+      this.indexData[ii + 0] = vi + 0;
+      this.indexData[ii + 1] = vi + 1;
+      this.indexData[ii + 2] = vi + 2;
+      this.indexData[ii + 3] = vi + 0;
+      this.indexData[ii + 4] = vi + 2;
+      this.indexData[ii + 5] = vi + 3;
+    }
+  }
+
+  drawSprite(
+    texture: WebGLTexture,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    u0: number,
+    v0: number,
+    u1: number,
+    v1: number,
+    r: number,
+    g: number,
+    b: number,
+    a: number
+  ): void {
+    // Flush if texture changes or batch is full
+    if (this.currentTexture !== null && this.currentTexture !== texture) {
+      this.flush();
+    }
+    if (this.spriteCount >= this.maxSprites) {
+      this.flush();
     }
 
-    drawSprite(
-        texture: WebGLTexture,
-        x: number, y: number,
-        width: number, height: number,
-        u0: number, v0: number,
-        u1: number, v1: number,
-        r: number, g: number, b: number, a: number
-    ): void {
-        // Flush if texture changes or batch is full
-        if (this.currentTexture !== null &&
-            this.currentTexture !== texture) {
-            this.flush();
-        }
-        if (this.spriteCount >= this.maxSprites) {
-            this.flush();
-        }
+    this.currentTexture = texture;
 
-        this.currentTexture = texture;
+    const offset = this.spriteCount * 4 * 8; // 4 verts, 8 floats each
+    const d = this.vertexData;
 
-        const offset = this.spriteCount * 4 * 8; // 4 verts, 8 floats each
-        const d = this.vertexData;
+    // Top-left
+    d[offset + 0] = x;
+    d[offset + 1] = y;
+    d[offset + 2] = u0;
+    d[offset + 3] = v0;
+    d[offset + 4] = r;
+    d[offset + 5] = g;
+    d[offset + 6] = b;
+    d[offset + 7] = a;
 
-        // Top-left
-        d[offset +  0] = x;         d[offset +  1] = y;
-        d[offset +  2] = u0;        d[offset +  3] = v0;
-        d[offset +  4] = r;         d[offset +  5] = g;
-        d[offset +  6] = b;         d[offset +  7] = a;
+    // Top-right
+    d[offset + 8] = x + width;
+    d[offset + 9] = y;
+    d[offset + 10] = u1;
+    d[offset + 11] = v0;
+    d[offset + 12] = r;
+    d[offset + 13] = g;
+    d[offset + 14] = b;
+    d[offset + 15] = a;
 
-        // Top-right
-        d[offset +  8] = x + width; d[offset +  9] = y;
-        d[offset + 10] = u1;        d[offset + 11] = v0;
-        d[offset + 12] = r;         d[offset + 13] = g;
-        d[offset + 14] = b;         d[offset + 15] = a;
+    // Bottom-right
+    d[offset + 16] = x + width;
+    d[offset + 17] = y + height;
+    d[offset + 18] = u1;
+    d[offset + 19] = v1;
+    d[offset + 20] = r;
+    d[offset + 21] = g;
+    d[offset + 22] = b;
+    d[offset + 23] = a;
 
-        // Bottom-right
-        d[offset + 16] = x + width; d[offset + 17] = y + height;
-        d[offset + 18] = u1;        d[offset + 19] = v1;
-        d[offset + 20] = r;         d[offset + 21] = g;
-        d[offset + 22] = b;         d[offset + 23] = a;
+    // Bottom-left
+    d[offset + 24] = x;
+    d[offset + 25] = y + height;
+    d[offset + 26] = u0;
+    d[offset + 27] = v1;
+    d[offset + 28] = r;
+    d[offset + 29] = g;
+    d[offset + 30] = b;
+    d[offset + 31] = a;
 
-        // Bottom-left
-        d[offset + 24] = x;         d[offset + 25] = y + height;
-        d[offset + 26] = u0;        d[offset + 27] = v1;
-        d[offset + 28] = r;         d[offset + 29] = g;
-        d[offset + 30] = b;         d[offset + 31] = a;
+    this.spriteCount++;
+  }
 
-        this.spriteCount++;
-    }
+  flush(): void {
+    if (this.spriteCount === 0) return;
 
-    flush(): void {
-        if (this.spriteCount === 0) return;
-
-        // Bind texture, upload vertex data, draw, reset count
-        // ... (gl calls omitted for brevity)
-        this.spriteCount = 0;
-    }
+    // Bind texture, upload vertex data, draw, reset count
+    // ... (gl calls omitted for brevity)
+    this.spriteCount = 0;
+  }
 }
 ```
 
@@ -770,13 +843,13 @@ void main() {
 
 **Batching vs Instancing comparison:**
 
-| Aspect | Sprite Batching | Instanced Quads |
-|--------|----------------|-----------------|
-| Draw calls | 1 per batch | 1 per batch |
-| CPU overhead | Must fill vertex buffer | Must fill instance buffer |
-| Vertex count | 4 per sprite | 4 total (shared) |
-| Rotation support | CPU transform per vertex | Shader transform |
-| Compatibility | WebGL1 | WebGL2 (or extension) |
+| Aspect           | Sprite Batching          | Instanced Quads           |
+| ---------------- | ------------------------ | ------------------------- |
+| Draw calls       | 1 per batch              | 1 per batch               |
+| CPU overhead     | Must fill vertex buffer  | Must fill instance buffer |
+| Vertex count     | 4 per sprite             | 4 total (shared)          |
+| Rotation support | CPU transform per vertex | Shader transform          |
+| Compatibility    | WebGL1                   | WebGL2 (or extension)     |
 
 ---
 
@@ -798,9 +871,12 @@ camera.position.z = 5;
 
 // For 2D games, use OrthographicCamera
 const camera2D = new THREE.OrthographicCamera(
-    -width / 2, width / 2,      // left, right
-    height / 2, -height / 2,    // top, bottom
-    0.1, 100                     // near, far
+  -width / 2,
+  width / 2, // left, right
+  height / 2,
+  -height / 2, // top, bottom
+  0.1,
+  100 // near, far
 );
 
 // Renderer
@@ -816,9 +892,9 @@ document.body.appendChild(renderer.domElement);
 // Geometry + Material = Mesh
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 const material = new THREE.MeshStandardMaterial({
-    color: 0x00ff00,
-    metalness: 0.3,
-    roughness: 0.7,
+  color: 0x00ff00,
+  metalness: 0.3,
+  roughness: 0.7,
 });
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
@@ -835,24 +911,24 @@ scene.add(sprite);
 
 ```typescript
 function animate(): void {
-    requestAnimationFrame(animate);
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-    renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+  cube.rotation.x += 0.01;
+  cube.rotation.y += 0.01;
+  renderer.render(scene, camera);
 }
 animate();
 ```
 
 ### Key Three.js Concepts for Games
 
-| Concept | Description |
-|---------|-------------|
-| **Scene Graph** | Tree of objects; transforms are inherited (parent affects children) |
-| **Geometry** | Vertex data (BufferGeometry for custom, BoxGeometry, PlaneGeometry for built-in) |
-| **Material** | Surface appearance (MeshBasicMaterial, MeshStandardMaterial, ShaderMaterial) |
-| **Raycaster** | Click/hover detection by casting rays from camera through mouse position |
-| **Texture Loader** | Async image loading with caching |
-| **Post-processing** | EffectComposer with render passes (bloom, SSAO, etc.) |
+| Concept             | Description                                                                      |
+| ------------------- | -------------------------------------------------------------------------------- |
+| **Scene Graph**     | Tree of objects; transforms are inherited (parent affects children)              |
+| **Geometry**        | Vertex data (BufferGeometry for custom, BoxGeometry, PlaneGeometry for built-in) |
+| **Material**        | Surface appearance (MeshBasicMaterial, MeshStandardMaterial, ShaderMaterial)     |
+| **Raycaster**       | Click/hover detection by casting rays from camera through mouse position         |
+| **Texture Loader**  | Async image loading with caching                                                 |
+| **Post-processing** | EffectComposer with render passes (bloom, SSAO, etc.)                            |
 
 ---
 
@@ -869,9 +945,9 @@ import * as PIXI from 'pixi.js';
 
 const app = new PIXI.Application();
 await app.init({
-    width: 800,
-    height: 600,
-    backgroundColor: 0x1099bb,
+  width: 800,
+  height: 600,
+  backgroundColor: 0x1099bb,
 });
 document.body.appendChild(app.canvas);
 
@@ -882,7 +958,7 @@ app.stage.addChild(gameWorld);
 // Sprite — textured quad
 const texture = await PIXI.Assets.load('bunny.png');
 const bunny = new PIXI.Sprite(texture);
-bunny.anchor.set(0.5);  // center the anchor
+bunny.anchor.set(0.5); // center the anchor
 bunny.x = 400;
 bunny.y = 300;
 gameWorld.addChild(bunny);
@@ -901,7 +977,7 @@ const frame2 = new PIXI.Sprite(sheet.textures['walk_02.png']);
 // Animated sprite from spritesheet
 const walkFrames = [];
 for (let i = 1; i <= 8; i++) {
-    walkFrames.push(sheet.textures[`walk_${String(i).padStart(2, '0')}.png`]);
+  walkFrames.push(sheet.textures[`walk_${String(i).padStart(2, '0')}.png`]);
 }
 
 const animatedSprite = new PIXI.AnimatedSprite(walkFrames);
@@ -924,8 +1000,8 @@ sprite.filters = [blur, colorMatrix];
 
 // Custom filter (fragment shader)
 const customFilter = new PIXI.Filter({
-    glProgram: new PIXI.GlProgram({
-        fragment: `
+  glProgram: new PIXI.GlProgram({
+    fragment: `
             in vec2 vTextureCoord;
             uniform sampler2D uTexture;
             uniform float uTime;
@@ -936,16 +1012,17 @@ const customFilter = new PIXI.Filter({
                 gl_FragColor = texture2D(uTexture, uv);
             }
         `,
-    }),
-    resources: {
-        customUniforms: { uTime: { value: 0, type: 'f32' } },
-    },
+  }),
+  resources: {
+    customUniforms: { uTime: { value: 0, type: 'f32' } },
+  },
 });
 ```
 
 ### PixiJS Renderer Internals
 
 PixiJS automatically batches sprites that share the same texture into a single draw call. The `BatchRenderer` is its core optimization. Key numbers:
+
 - Default batch size: ~4096 sprites per draw call
 - Batch break triggers: texture change, blend mode change, filter, mask
 - Typical 2D game: 5-20 draw calls per frame (with good atlas usage)
@@ -958,15 +1035,15 @@ WebGPU is the successor to WebGL, providing a modern, low-level GPU API modeled 
 
 ### Key Differences from WebGL
 
-| Aspect | WebGL | WebGPU |
-|--------|-------|--------|
-| API Model | OpenGL ES (stateful) | Modern (descriptor-based) |
-| Shader Language | GLSL | WGSL |
-| Command Submission | Immediate | Command buffers |
-| Compute Shaders | No (WebGL2 has limited transform feedback) | Yes, first-class |
-| Multi-threaded | No | Yes (command encoding on workers) |
-| Pipeline State | Mutable global state | Immutable pipeline objects |
-| Validation | Runtime (slow) | Creation time (fast at runtime) |
+| Aspect             | WebGL                                      | WebGPU                            |
+| ------------------ | ------------------------------------------ | --------------------------------- |
+| API Model          | OpenGL ES (stateful)                       | Modern (descriptor-based)         |
+| Shader Language    | GLSL                                       | WGSL                              |
+| Command Submission | Immediate                                  | Command buffers                   |
+| Compute Shaders    | No (WebGL2 has limited transform feedback) | Yes, first-class                  |
+| Multi-threaded     | No                                         | Yes (command encoding on workers) |
+| Pipeline State     | Mutable global state                       | Immutable pipeline objects        |
+| Validation         | Runtime (slow)                             | Creation time (fast at runtime)   |
 
 ### Basic WebGPU Setup
 
@@ -983,17 +1060,17 @@ context.configure({ device, format });
 
 // Create a render pipeline (immutable — no state mutation!)
 const pipeline = device.createRenderPipeline({
-    layout: 'auto',
-    vertex: {
-        module: device.createShaderModule({ code: vertexWGSL }),
-        entryPoint: 'main',
-    },
-    fragment: {
-        module: device.createShaderModule({ code: fragmentWGSL }),
-        entryPoint: 'main',
-        targets: [{ format }],
-    },
-    primitive: { topology: 'triangle-list' },
+  layout: 'auto',
+  vertex: {
+    module: device.createShaderModule({ code: vertexWGSL }),
+    entryPoint: 'main',
+  },
+  fragment: {
+    module: device.createShaderModule({ code: fragmentWGSL }),
+    entryPoint: 'main',
+    targets: [{ format }],
+  },
+  primitive: { topology: 'triangle-list' },
 });
 ```
 
@@ -1027,6 +1104,7 @@ fn fragmentMain(@location(0) uv: vec2f) -> @location(0) vec4f {
 ### WebGPU Compute Shaders for Games
 
 Compute shaders unlock GPU-accelerated game logic:
+
 - **Particle simulation**: Update millions of particles on the GPU
 - **Pathfinding**: Parallel BFS/Dijkstra on grid maps
 - **Physics**: Broad-phase collision detection
@@ -1062,6 +1140,7 @@ fn updateParticles(@builtin(global_invocation_id) id: vec3u) {
 ### Why Draw Calls Matter
 
 Each draw call (`gl.drawArrays` / `gl.drawElements`) has overhead:
+
 1. CPU-side: driver validation, state checking, command buffer building
 2. GPU-side: pipeline state changes, cache flushes
 
@@ -1100,17 +1179,17 @@ Packing sprites into atlases is the single most impactful optimization for draw 
 // WebGL extension for GPU timing
 const ext = gl.getExtension('EXT_disjoint_timer_query_webgl2');
 if (ext) {
-    const query = gl.createQuery();
-    gl.beginQuery(ext.TIME_ELAPSED_EXT, query);
-    // ... render ...
-    gl.endQuery(ext.TIME_ELAPSED_EXT);
+  const query = gl.createQuery();
+  gl.beginQuery(ext.TIME_ELAPSED_EXT, query);
+  // ... render ...
+  gl.endQuery(ext.TIME_ELAPSED_EXT);
 
-    // Check result later (async)
-    const available = gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE);
-    if (available) {
-        const elapsed = gl.getQueryParameter(query, gl.QUERY_RESULT);
-        const ms = elapsed / 1_000_000; // nanoseconds to milliseconds
-    }
+  // Check result later (async)
+  const available = gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE);
+  if (available) {
+    const elapsed = gl.getQueryParameter(query, gl.QUERY_RESULT);
+    const ms = elapsed / 1_000_000; // nanoseconds to milliseconds
+  }
 }
 
 // Browser tools:
@@ -1130,9 +1209,13 @@ if (ext) {
 // RGBA (4 bytes/pixel) at 2048x2048 = 16 MB
 // With mipmaps: ~21.3 MB (4/3 ratio)
 
-function estimateTextureMemory(width: number, height: number, withMipmaps: boolean): number {
-    const baseSize = width * height * 4; // RGBA
-    return withMipmaps ? Math.ceil(baseSize * (4 / 3)) : baseSize;
+function estimateTextureMemory(
+  width: number,
+  height: number,
+  withMipmaps: boolean
+): number {
+  const baseSize = width * height * 4; // RGBA
+  return withMipmaps ? Math.ceil(baseSize * (4 / 3)) : baseSize;
 }
 
 // Mobile budget: 50-100 MB total texture memory
@@ -1144,18 +1227,21 @@ function estimateTextureMemory(width: number, height: number, withMipmaps: boole
 WebGL resources are not garbage collected — you must manually delete them.
 
 ```typescript
-function destroySpriteBatcher(gl: WebGLRenderingContext, batcher: {
+function destroySpriteBatcher(
+  gl: WebGLRenderingContext,
+  batcher: {
     vertexBuffer: WebGLBuffer;
     indexBuffer: WebGLBuffer;
     vao: WebGLVertexArrayObject | null;
     program: WebGLProgram;
     textures: WebGLTexture[];
-}): void {
-    gl.deleteBuffer(batcher.vertexBuffer);
-    gl.deleteBuffer(batcher.indexBuffer);
-    if (batcher.vao) gl.deleteVertexArray(batcher.vao);
-    gl.deleteProgram(batcher.program);
-    batcher.textures.forEach(tex => gl.deleteTexture(tex));
+  }
+): void {
+  gl.deleteBuffer(batcher.vertexBuffer);
+  gl.deleteBuffer(batcher.indexBuffer);
+  if (batcher.vao) gl.deleteVertexArray(batcher.vao);
+  gl.deleteProgram(batcher.program);
+  batcher.textures.forEach((tex) => gl.deleteTexture(tex));
 }
 ```
 
@@ -1167,26 +1253,27 @@ The browser can destroy the WebGL context at any time (GPU reset, memory pressur
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
 canvas.addEventListener('webglcontextlost', (event) => {
-    event.preventDefault(); // Prevents default behavior (allows restoration)
-    // Stop the game loop
-    cancelAnimationFrame(animationFrameId);
-    // Show "reconnecting" UI
+  event.preventDefault(); // Prevents default behavior (allows restoration)
+  // Stop the game loop
+  cancelAnimationFrame(animationFrameId);
+  // Show "reconnecting" UI
 });
 
 canvas.addEventListener('webglcontextrestored', () => {
-    // Recreate ALL GPU resources:
-    // - Shaders and programs
-    // - Buffers
-    // - Textures
-    // - Framebuffers
-    // - VAOs
-    initWebGL();
-    // Resume game loop
-    requestAnimationFrame(gameLoop);
+  // Recreate ALL GPU resources:
+  // - Shaders and programs
+  // - Buffers
+  // - Textures
+  // - Framebuffers
+  // - VAOs
+  initWebGL();
+  // Resume game loop
+  requestAnimationFrame(gameLoop);
 });
 ```
 
 **Key points about context loss:**
+
 - All GPU resources (textures, buffers, shaders) are destroyed
 - JavaScript objects (references to WebGL objects) become invalid
 - You must recreate everything from scratch
@@ -1202,6 +1289,7 @@ canvas.addEventListener('webglcontextrestored', () => {
 **A:** The process involves several stages:
 
 1. **CPU Setup (JavaScript):**
+
    - Bind the shader program containing the vertex and fragment shaders
    - Bind the vertex buffer containing quad vertices (position + UV coordinates)
    - Bind the index buffer (6 indices for 2 triangles making a quad)
@@ -1210,18 +1298,22 @@ canvas.addEventListener('webglcontextrestored', () => {
    - Issue `gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0)`
 
 2. **Vertex Shader (GPU):**
+
    - Runs 4 times (once per vertex of the quad)
    - Multiplies each vertex position by the model and projection matrices
    - Outputs clip-space position (`gl_Position`) and passes UV coordinates as a varying
 
 3. **Primitive Assembly:**
+
    - Groups the 4 vertices into 2 triangles using the index buffer
 
 4. **Rasterization:**
+
    - Determines which screen pixels each triangle covers
    - Interpolates the varying UV coordinates across each triangle using barycentric interpolation
 
 5. **Fragment Shader (GPU):**
+
    - Runs once per covered pixel
    - Samples the texture at the interpolated UV coordinate (`texture2D(sampler, uv)`)
    - Outputs the sampled color, potentially tinted by a uniform color
@@ -1244,7 +1336,7 @@ canvas.addEventListener('webglcontextrestored', () => {
 
 In practice, sprite batchers typically use `gl.DYNAMIC_DRAW` because the vertex data changes every frame. The index buffer can be `gl.STATIC_DRAW` because the pattern (0,1,2,0,2,3, 4,5,6,4,6,7, ...) never changes.
 
-Note: These are *hints* — the driver may ignore them. But correct hints can improve performance, especially on mobile GPUs.
+Note: These are _hints_ — the driver may ignore them. But correct hints can improve performance, especially on mobile GPUs.
 
 ---
 
@@ -1287,6 +1379,7 @@ With a single atlas and a good batcher, 500 sprites can be drawn in 1 draw call.
 ### Q5: What happens during a WebGL context loss? How should a game handle it?
 
 **A:** WebGL context loss occurs when the browser destroys the GPU context. Common triggers:
+
 - GPU driver crash or reset
 - System memory pressure
 - Too many contexts open (browsers limit to ~16)
@@ -1294,6 +1387,7 @@ With a single atlas and a good batcher, 500 sprites can be drawn in 1 draw call.
 - Device sleep/wake
 
 When context is lost:
+
 - **All GPU resources are destroyed**: textures, buffers, shaders, programs, framebuffers, VAOs — everything
 - JavaScript references to these objects become invalid stubs
 - Any `gl` calls return errors or no-ops
@@ -1427,13 +1521,13 @@ In PixiJS, you can achieve this with `new PIXI.BlurFilter()` applied to a sprite
 
 **A:**
 
-| Aspect | Vertex Buffer (VBO) | Index Buffer (EBO/IBO) |
-|--------|---------------------|------------------------|
-| **Contains** | Vertex attribute data (position, UV, color, normal) | Integer indices into the vertex buffer |
-| **Data type** | Usually `Float32Array` | `Uint16Array` or `Uint32Array` |
-| **Bind target** | `gl.ARRAY_BUFFER` | `gl.ELEMENT_ARRAY_BUFFER` |
-| **Purpose** | Define unique vertex data | Reuse vertices by referencing them by index |
-| **Draw call** | `gl.drawArrays(mode, offset, count)` | `gl.drawElements(mode, count, type, offset)` |
+| Aspect          | Vertex Buffer (VBO)                                 | Index Buffer (EBO/IBO)                       |
+| --------------- | --------------------------------------------------- | -------------------------------------------- |
+| **Contains**    | Vertex attribute data (position, UV, color, normal) | Integer indices into the vertex buffer       |
+| **Data type**   | Usually `Float32Array`                              | `Uint16Array` or `Uint32Array`               |
+| **Bind target** | `gl.ARRAY_BUFFER`                                   | `gl.ELEMENT_ARRAY_BUFFER`                    |
+| **Purpose**     | Define unique vertex data                           | Reuse vertices by referencing them by index  |
+| **Draw call**   | `gl.drawArrays(mode, offset, count)`                | `gl.drawElements(mode, count, type, offset)` |
 
 Without index buffers, a quad requires 6 vertices (3 per triangle, 2 triangles). Two vertices are duplicated. With index buffers, you store only 4 unique vertices and 6 indices pointing to them. For a sprite batcher with 1000 quads, this saves 2000 vertex copies — significant when each vertex has 8+ floats.
 
@@ -1444,6 +1538,7 @@ Without index buffers, a quad requires 6 vertices (3 per triangle, 2 triangles).
 **A:** For a tiled background, there are several approaches ranked by performance:
 
 **Best: Single-draw tilemap shader**
+
 - Upload the tile map as a data texture (each pixel = tile ID)
 - Render a single full-screen quad
 - In the fragment shader, compute which tile the pixel belongs to, look up the tile ID from the data texture, and sample the tile atlas
@@ -1470,10 +1565,12 @@ void main() {
 ```
 
 **Good: Instanced quads (WebGL2)**
+
 - Use instanced rendering with per-instance tile position and atlas UV
 - One draw call for all visible tiles
 
 **Acceptable: Sprite batch**
+
 - Add each visible tile to a sprite batcher
 - Use frustum culling to only render on-screen tiles
 - Still one draw call if all tiles share one atlas
@@ -1486,13 +1583,14 @@ The key optimization regardless of approach: **only render visible tiles**. If t
 
 **A:** `gl.MAX_TEXTURE_SIZE` returns the maximum dimension (width or height) of a 2D texture that the GPU supports. Common values:
 
-| Platform | Typical Max |
-|----------|-------------|
-| Low-end mobile | 2048 |
-| Mid-range mobile | 4096 |
-| Desktop | 8192 or 16384 |
+| Platform         | Typical Max   |
+| ---------------- | ------------- |
+| Low-end mobile   | 2048          |
+| Mid-range mobile | 4096          |
+| Desktop          | 8192 or 16384 |
 
 This matters for games because:
+
 1. **Atlas size planning**: Your texture atlases must not exceed this limit. If you pack sprites into a 4096x4096 atlas but the device supports only 2048x2048, the texture upload will fail silently or produce a black texture.
 2. **Multi-resolution assets**: Ship 2048 atlases for mobile and 4096 for desktop, or check the limit at runtime and load appropriate assets.
 3. **Memory budget**: A 4096x4096 RGBA texture = 64 MB. On mobile, you might only have 100-200 MB total for textures. Planning atlas sizes relative to the memory budget is critical.
@@ -1506,10 +1604,12 @@ Always query this value at initialization and use it to inform your asset loadin
 **A:**
 
 **Filtering (how to sample between texels):**
+
 - `gl.NEAREST`: Returns the color of the nearest texel. Produces sharp, pixelated edges. Required for pixel art games to maintain crisp pixels.
 - `gl.LINEAR`: Blends the 4 nearest texels using bilinear interpolation. Produces smooth results. Best for photographic or high-res art.
 
 **Wrapping (what happens at UV coordinates outside 0-1):**
+
 - `gl.CLAMP_TO_EDGE`: UVs outside 0-1 are clamped. The edge pixel is stretched. Essential for sprite atlases — prevents adjacent sprites from bleeding into each other.
 - `gl.REPEAT`: UVs wrap around. UV 1.5 becomes 0.5. Used for tiling textures (backgrounds, terrain).
 - `gl.MIRRORED_REPEAT`: Like REPEAT but alternates direction. UV 1.5 maps to 0.5 reversed.

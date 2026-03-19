@@ -36,11 +36,11 @@ fast to query, and reliable enough to trust during an incident.
 
 ### When to use each pillar
 
-| Pillar  | Best for                                 | Cost model           | Query latency |
-|---------|------------------------------------------|----------------------|---------------|
-| Metrics | Trending, alerting, dashboards           | Low (aggregated)     | Milliseconds  |
-| Logs    | Root-cause analysis, audit trail         | High (raw text)      | Seconds       |
-| Traces  | Latency breakdown, service dependencies  | Medium (sampled)     | Seconds       |
+| Pillar  | Best for                                | Cost model       | Query latency |
+| ------- | --------------------------------------- | ---------------- | ------------- |
+| Metrics | Trending, alerting, dashboards          | Low (aggregated) | Milliseconds  |
+| Logs    | Root-cause analysis, audit trail        | High (raw text)  | Seconds       |
+| Traces  | Latency breakdown, service dependencies | Medium (sampled) | Seconds       |
 
 ### The correlation chain
 
@@ -81,12 +81,14 @@ collection gaps, cardinality explosions, and alert delays.
 ### Collection methods
 
 **Pull (Prometheus model)**
+
 - Prometheus scrapes `/metrics` endpoints on a schedule (default: 15s)
 - Service discovery via Kubernetes, Consul, EC2 tags, file-based SD
 - Pros: Simple, self-documenting endpoints, no push coordination
 - Cons: Firewall traversal issues, scrape interval jitter
 
 **Push (StatsD/Telegraf/OTLP model)**
+
 - Agents push to a gateway or aggregator
 - Required for ephemeral jobs (batch, cron) via Pushgateway
 - Pros: Works behind NAT, low-latency for short-lived jobs
@@ -156,7 +158,7 @@ scrape_configs:
     params:
       match[]:
         - '{job="kubernetes-pods"}'
-        - 'job:http_requests_total:rate5m'  # Only pre-aggregated
+        - 'job:http_requests_total:rate5m' # Only pre-aggregated
         - 'job:http_request_duration_p99:5m'
     static_configs:
       - targets:
@@ -187,21 +189,22 @@ scrape_configs:
 
 **Thanos vs Cortex vs Mimir**
 
-| Feature               | Thanos          | Cortex           | Grafana Mimir     |
-|-----------------------|-----------------|------------------|-------------------|
-| Storage backend       | Object store    | Object store     | Object store      |
-| Query deduplication   | Yes             | Yes              | Yes               |
-| Multi-tenancy         | Limited         | Full             | Full              |
-| Horizontal scale      | Good            | Excellent        | Excellent         |
-| Operational complexity| Medium          | High             | Medium            |
-| Remote write support  | Thanos Receive  | Yes              | Yes               |
-| Recommended for       | <50 Prometheus  | Large SaaS       | Large SaaS        |
+| Feature                | Thanos         | Cortex       | Grafana Mimir |
+| ---------------------- | -------------- | ------------ | ------------- |
+| Storage backend        | Object store   | Object store | Object store  |
+| Query deduplication    | Yes            | Yes          | Yes           |
+| Multi-tenancy          | Limited        | Full         | Full          |
+| Horizontal scale       | Good           | Excellent    | Excellent     |
+| Operational complexity | Medium         | High         | Medium        |
+| Remote write support   | Thanos Receive | Yes          | Yes           |
+| Recommended for        | <50 Prometheus | Large SaaS   | Large SaaS    |
 
 ### Cardinality management
 
 Cardinality = number of unique label combinations. This is the #1 scaling problem.
 
 **Dangerous patterns:**
+
 ```
 # BAD: unbounded cardinality
 http_requests_total{user_id="12345", session_id="abc-xyz", request_body="..."}
@@ -211,6 +214,7 @@ http_requests_total{service="api", endpoint="/users", status="200", method="GET"
 ```
 
 **Identifying cardinality explosions:**
+
 ```bash
 # Top 10 metrics by series count
 curl -s http://prometheus:9090/api/v1/label/__name__/values | \
@@ -225,6 +229,7 @@ curl http://prometheus:9090/api/v1/status/tsdb | jq '.data.seriesCountByMetricNa
 ```
 
 **Recording rules to reduce cardinality:**
+
 ```yaml
 # Aggregate away high-cardinality labels before storage
 - record: service:http_requests_total:rate5m
@@ -244,6 +249,7 @@ curl http://prometheus:9090/api/v1/status/tsdb | jq '.data.seriesCountByMetricNa
 Never click-to-create dashboards in production. Store as JSON, provision via ConfigMap or Git.
 
 **Grafana provisioning directory structure:**
+
 ```
 grafana/
 ├── provisioning/
@@ -263,6 +269,7 @@ grafana/
 ```
 
 **datasources provisioning:**
+
 ```yaml
 # grafana/provisioning/datasources/prometheus.yaml
 apiVersion: 1
@@ -272,8 +279,8 @@ datasources:
     url: http://thanos-query:9090
     isDefault: true
     jsonData:
-      timeInterval: "15s"
-      queryTimeout: "60s"
+      timeInterval: '15s'
+      queryTimeout: '60s'
       httpMethod: POST
 
   - name: Loki
@@ -324,6 +331,7 @@ Variables make dashboards reusable across environments:
 ### RED and USE methods
 
 **RED (for services — request-oriented):**
+
 - **R**ate: requests per second
 - **E**rrors: error rate (%)
 - **D**uration: latency (p50, p95, p99)
@@ -345,6 +353,7 @@ histogram_quantile(0.99,
 ```
 
 **USE (for resources — utilization-oriented):**
+
 - **U**tilization: % of time resource is busy
 - **S**aturation: queue depth / backlog
 - **E**rrors: error count
@@ -385,6 +394,7 @@ rate(node_network_receive_bytes_total[5m]) / 1e9  # GB/s
 ```
 
 **Why Kafka in the middle?**
+
 - Decouples producers from consumers — Elasticsearch can fall behind without losing logs
 - Replay capability — re-process logs after a pipeline fix
 - Fan-out — send same logs to security SIEM and observability stack simultaneously
@@ -455,6 +465,7 @@ At scale, unstructured logs are useless. Enforce JSON everywhere:
 ```
 
 **What to always include:**
+
 - `timestamp` (RFC3339 with milliseconds)
 - `level` (DEBUG, INFO, WARN, ERROR, FATAL)
 - `service` and `version`
@@ -474,6 +485,7 @@ TRACE  ──── 0% in production (only local dev)
 ```
 
 **Dynamic log-level adjustment without restart:**
+
 ```bash
 # Spring Boot Actuator
 curl -X POST http://service:8080/actuator/loggers/com.example.payments \
@@ -546,13 +558,13 @@ processors:
     policies:
       - name: errors-policy
         type: status_code
-        status_code: {status_codes: [ERROR]}
+        status_code: { status_codes: [ERROR] }
       - name: slow-traces
         type: latency
-        latency: {threshold_ms: 500}
+        latency: { threshold_ms: 500 }
       - name: probabilistic-sample
         type: probabilistic
-        probabilistic: {sampling_percentage: 1}  # 1% of normal traces
+        probabilistic: { sampling_percentage: 1 } # 1% of normal traces
 
 exporters:
   otlp/tempo:
@@ -570,13 +582,13 @@ service:
 
 ### Trace sampling strategies
 
-| Strategy           | Use case                              | Cost     | Coverage    |
-|--------------------|---------------------------------------|----------|-------------|
-| Head sampling      | Simple, early decision                | Low      | Biased      |
-| Tail sampling      | Keep errors + slow traces             | Medium   | Good        |
-| Probabilistic      | Uniform random % of traces            | Low      | Uniform     |
-| Rate-limiting      | N traces/second per service           | Medium   | Even        |
-| Adaptive           | Dynamic based on error rate           | High     | Excellent   |
+| Strategy      | Use case                    | Cost   | Coverage  |
+| ------------- | --------------------------- | ------ | --------- |
+| Head sampling | Simple, early decision      | Low    | Biased    |
+| Tail sampling | Keep errors + slow traces   | Medium | Good      |
+| Probabilistic | Uniform random % of traces  | Low    | Uniform   |
+| Rate-limiting | N traces/second per service | Medium | Even      |
+| Adaptive      | Dynamic based on error rate | High   | Excellent |
 
 **Recommended: Tail sampling with error + latency policies + 1% probabilistic.**
 
@@ -629,12 +641,12 @@ CORRECT (symptom-based):
 
 ### Alert severity levels
 
-| Severity | SLA impact  | Response time | Channel          | Example                     |
-|----------|-------------|---------------|------------------|-----------------------------|
-| P1/CRIT  | Yes, now    | 5 minutes     | PagerDuty + call | Service down, >5% error rate|
-| P2/HIGH  | Imminent    | 30 minutes    | PagerDuty        | Latency p99 > 2s            |
-| P3/WARN  | Potential   | Next business  | Slack            | Disk >80%, pod restarts     |
-| P4/INFO  | No          | Sprint         | Ticket           | Deprecated API used         |
+| Severity | SLA impact | Response time | Channel          | Example                      |
+| -------- | ---------- | ------------- | ---------------- | ---------------------------- |
+| P1/CRIT  | Yes, now   | 5 minutes     | PagerDuty + call | Service down, >5% error rate |
+| P2/HIGH  | Imminent   | 30 minutes    | PagerDuty        | Latency p99 > 2s             |
+| P3/WARN  | Potential  | Next business | Slack            | Disk >80%, pod restarts      |
+| P4/INFO  | No         | Sprint        | Ticket           | Deprecated API used          |
 
 ### Prometheus alert rules
 
@@ -656,12 +668,12 @@ groups:
           severity: critical
           team: platform
         annotations:
-          summary: "High error rate on {{ $labels.job }}"
+          summary: 'High error rate on {{ $labels.job }}'
           description: |
             Error rate is {{ $value | humanizePercentage }} over the last 5m.
             Threshold: 1%
-          runbook: "https://wiki.internal/runbooks/high-error-rate"
-          dashboard: "https://grafana.internal/d/service-overview"
+          runbook: 'https://wiki.internal/runbooks/high-error-rate'
+          dashboard: 'https://grafana.internal/d/service-overview'
 
       # Symptom: users experience slowness
       - alert: HighP99Latency
@@ -676,9 +688,9 @@ groups:
           severity: high
           team: platform
         annotations:
-          summary: "p99 latency > 2s on {{ $labels.job }}"
-          description: "p99={{ $value | humanizeDuration }}"
-          runbook: "https://wiki.internal/runbooks/high-latency"
+          summary: 'p99 latency > 2s on {{ $labels.job }}'
+          description: 'p99={{ $value | humanizeDuration }}'
+          runbook: 'https://wiki.internal/runbooks/high-latency'
 
       # Cause: disk filling — actionable before user impact
       - alert: DiskWillFillIn4Hours
@@ -691,8 +703,8 @@ groups:
           severity: warning
           team: infra
         annotations:
-          summary: "Disk predicted full in 4h on {{ $labels.instance }}"
-          description: "Mount {{ $labels.mountpoint }} predicted full at current write rate"
+          summary: 'Disk predicted full in 4h on {{ $labels.instance }}'
+          description: 'Mount {{ $labels.mountpoint }} predicted full at current write rate'
 
   - name: slo_burn_rate
     rules:
@@ -708,8 +720,8 @@ groups:
           severity: critical
           slo: payment_api_availability
         annotations:
-          summary: "Fast burn rate — SLO budget depleting rapidly"
-          description: "At this rate, the error budget will be exhausted in ~1 hour"
+          summary: 'Fast burn rate — SLO budget depleting rapidly'
+          description: 'At this rate, the error budget will be exhausted in ~1 hour'
 ```
 
 ### AlertManager routing
@@ -731,7 +743,7 @@ route:
     - match:
         severity: critical
       receiver: pagerduty-platform
-      continue: true  # also notify Slack
+      continue: true # also notify Slack
 
     - match:
         severity: critical
@@ -796,7 +808,7 @@ modules:
     prober: http
     timeout: 10s
     http:
-      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      valid_http_versions: ['HTTP/1.1', 'HTTP/2.0']
       valid_status_codes: [200, 201, 204]
       method: GET
       follow_redirects: true
@@ -825,6 +837,7 @@ modules:
 ```
 
 **Prometheus scrape config for Blackbox:**
+
 ```yaml
 scrape_configs:
   - job_name: 'blackbox-http'
@@ -846,6 +859,7 @@ scrape_configs:
 ```
 
 **Alerts on probe failures:**
+
 ```yaml
 - alert: EndpointDown
   expr: probe_success == 0
@@ -853,15 +867,15 @@ scrape_configs:
   labels:
     severity: critical
   annotations:
-    summary: "Endpoint {{ $labels.instance }} is down"
+    summary: 'Endpoint {{ $labels.instance }} is down'
 
 - alert: SSLCertExpiringIn14Days
   expr: probe_ssl_earliest_cert_expiry - time() < 14 * 24 * 3600
   labels:
     severity: warning
   annotations:
-    summary: "SSL cert for {{ $labels.instance }} expires in < 14 days"
-    description: "Expiry: {{ $value | humanizeDuration }} from now"
+    summary: 'SSL cert for {{ $labels.instance }} expires in < 14 days'
+    description: 'Expiry: {{ $value | humanizeDuration }} from now'
 ```
 
 ### Canary deployment verification
@@ -909,6 +923,7 @@ docker run -d --net="host" --pid="host" -v "/:/host:ro,rslave" \
 ```
 
 **Essential PromQL for infrastructure:**
+
 ```promql
 # CPU utilization per host
 100 - (avg by (instance) (
@@ -1015,6 +1030,7 @@ Defined by Google SRE — the minimum viable dashboard for any service:
 ```
 
 **PromQL for each golden signal:**
+
 ```promql
 # Latency — histogram quantiles
 histogram_quantile(0.99,
@@ -1072,9 +1088,11 @@ Every alert annotation must have a `runbook` link. Structure runbooks as:
 # HighErrorRate Runbook
 
 ## Impact
+
 Users are receiving 5xx errors. Check SLO dashboard for budget remaining.
 
 ## Triage Steps
+
 1. Identify which endpoints are erroring:
    `rate(http_requests_total{status=~"5.."}[5m]) by (endpoint)`
 2. Check recent deployments in deployment timeline
@@ -1082,6 +1100,7 @@ Users are receiving 5xx errors. Check SLO dashboard for budget remaining.
 4. Review error logs: `{job="payment-api"} |= "ERROR" | json`
 
 ## Escalation
+
 - If fix not found in 15m: escalate to service owner via PagerDuty
 - If data integrity risk: escalate to DBA immediately
 ```
@@ -1092,16 +1111,16 @@ Users are receiving 5xx errors. Check SLO dashboard for budget remaining.
 
 ### Scale parameters
 
-| Parameter                  | Value                  |
-|----------------------------|------------------------|
-| Total hosts                | 5,000                  |
-| Kubernetes pods            | ~30,000                |
-| Active time series         | ~2,000,000             |
-| Metrics ingestion rate     | ~150,000 samples/sec   |
-| Log volume                 | ~2 TB/day              |
-| Trace volume               | ~500 GB/day (sampled)  |
-| Prometheus scrape interval | 15s                    |
-| Long-term retention        | 13 months (S3)         |
+| Parameter                  | Value                 |
+| -------------------------- | --------------------- |
+| Total hosts                | 5,000                 |
+| Kubernetes pods            | ~30,000               |
+| Active time series         | ~2,000,000            |
+| Metrics ingestion rate     | ~150,000 samples/sec  |
+| Log volume                 | ~2 TB/day             |
+| Trace volume               | ~500 GB/day (sampled) |
+| Prometheus scrape interval | 15s                   |
+| Long-term retention        | 13 months (S3)        |
 
 ### Full architecture
 
@@ -1171,18 +1190,18 @@ Users are receiving 5xx errors. Check SLO dashboard for budget remaining.
 
 ### Resource sizing (approximate)
 
-| Component              | Instances | CPU   | Memory  | Storage          |
-|------------------------|-----------|-------|---------|------------------|
-| Prometheus shards      | 6         | 4c    | 32 GB   | 500 GB NVMe each |
-| Mimir ingesters        | 6         | 8c    | 64 GB   | 200 GB SSD each  |
-| Mimir queriers         | 4         | 4c    | 16 GB   | —                |
-| Grafana                | 3         | 2c    | 8 GB    | —                |
-| Alertmanager           | 3         | 1c    | 4 GB    | —                |
-| Kafka brokers          | 6         | 8c    | 32 GB   | 4 TB HDD each    |
-| Elasticsearch data     | 12        | 8c    | 64 GB   | 4 TB SSD each    |
-| Tempo                  | 4         | 4c    | 16 GB   | S3 backend       |
-| OTel collectors        | 10        | 4c    | 8 GB    | —                |
-| Fluent Bit (per host)  | 5000      | 0.1c  | 128 MB  | —                |
+| Component             | Instances | CPU  | Memory | Storage          |
+| --------------------- | --------- | ---- | ------ | ---------------- |
+| Prometheus shards     | 6         | 4c   | 32 GB  | 500 GB NVMe each |
+| Mimir ingesters       | 6         | 8c   | 64 GB  | 200 GB SSD each  |
+| Mimir queriers        | 4         | 4c   | 16 GB  | —                |
+| Grafana               | 3         | 2c   | 8 GB   | —                |
+| Alertmanager          | 3         | 1c   | 4 GB   | —                |
+| Kafka brokers         | 6         | 8c   | 32 GB  | 4 TB HDD each    |
+| Elasticsearch data    | 12        | 8c   | 64 GB  | 4 TB SSD each    |
+| Tempo                 | 4         | 4c   | 16 GB  | S3 backend       |
+| OTel collectors       | 10        | 4c   | 8 GB   | —                |
+| Fluent Bit (per host) | 5000      | 0.1c | 128 MB | —                |
 
 ### Operational runbook: responding to 2M series alert
 
@@ -1267,15 +1286,15 @@ logcli query '{job="payment-api"} |= "ERROR" | json | level="ERROR"' \
 
 ## Interview Cheat Sheet
 
-| Question                              | Key Answer                                                      |
-|---------------------------------------|-----------------------------------------------------------------|
-| "How do you handle 2M time series?"  | Sharding + federation + Thanos/Mimir + cardinality governance  |
-| "Why does my alert keep flapping?"   | Missing `for:` duration, metric too volatile — use longer window|
-| "Logs vs metrics for alerting?"       | Metrics for alerting (fast), logs for root cause (slow)        |
-| "How do you prevent alert fatigue?"  | Symptom-based, inhibition rules, mandatory runbooks, reviews   |
-| "What's tail sampling?"               | Decide to keep/drop trace AFTER seeing full span (errors/slow) |
-| "RED vs USE?"                         | RED = services (requests), USE = resources (infrastructure)    |
-| "How do you correlate logs + traces?" | Inject trace_id into log fields via OTel context propagation   |
-| "Disk prediction in Prometheus?"      | `predict_linear(metric[window], seconds_to_project)`           |
-| "How to reduce Prometheus costs?"     | Recording rules, drop unused metrics, cardinality audits       |
-| "What are the 4 golden signals?"      | Latency, Traffic, Errors, Saturation                           |
+| Question                              | Key Answer                                                       |
+| ------------------------------------- | ---------------------------------------------------------------- |
+| "How do you handle 2M time series?"   | Sharding + federation + Thanos/Mimir + cardinality governance    |
+| "Why does my alert keep flapping?"    | Missing `for:` duration, metric too volatile — use longer window |
+| "Logs vs metrics for alerting?"       | Metrics for alerting (fast), logs for root cause (slow)          |
+| "How do you prevent alert fatigue?"   | Symptom-based, inhibition rules, mandatory runbooks, reviews     |
+| "What's tail sampling?"               | Decide to keep/drop trace AFTER seeing full span (errors/slow)   |
+| "RED vs USE?"                         | RED = services (requests), USE = resources (infrastructure)      |
+| "How do you correlate logs + traces?" | Inject trace_id into log fields via OTel context propagation     |
+| "Disk prediction in Prometheus?"      | `predict_linear(metric[window], seconds_to_project)`             |
+| "How to reduce Prometheus costs?"     | Recording rules, drop unused metrics, cardinality audits         |
+| "What are the 4 golden signals?"      | Latency, Traffic, Errors, Saturation                             |

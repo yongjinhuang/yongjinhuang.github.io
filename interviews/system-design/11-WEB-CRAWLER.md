@@ -11,7 +11,7 @@ mining pipelines, and web archiving systems.
 ### Functional Requirements
 
 | Requirement              | Description                                                  |
-|--------------------------|--------------------------------------------------------------|
+| ------------------------ | ------------------------------------------------------------ |
 | Crawl web pages          | Download HTML content from billions of URLs                  |
 | Store content            | Persist raw HTML and parsed content for downstream consumers |
 | Extract links            | Parse downloaded pages and discover new URLs                 |
@@ -24,14 +24,14 @@ mining pipelines, and web archiving systems.
 
 ### Non-Functional Requirements
 
-| Requirement   | Target                                                        |
-|---------------|---------------------------------------------------------------|
-| Scalability   | 1 billion pages per month                                     |
-| Politeness    | Respect per-domain rate limits, crawl-delay, robots.txt       |
-| Robustness    | Handle spider traps, malformed HTML, timeouts, server errors  |
-| Extensibility | Plugin architecture for new content types and extraction logic |
-| Freshness     | Re-crawl important pages within hours of change               |
-| Fault tolerance | No single point of failure; resume after crashes            |
+| Requirement     | Target                                                         |
+| --------------- | -------------------------------------------------------------- |
+| Scalability     | 1 billion pages per month                                      |
+| Politeness      | Respect per-domain rate limits, crawl-delay, robots.txt        |
+| Robustness      | Handle spider traps, malformed HTML, timeouts, server errors   |
+| Extensibility   | Plugin architecture for new content types and extraction logic |
+| Freshness       | Re-crawl important pages within hours of change                |
+| Fault tolerance | No single point of failure; resume after crashes               |
 
 ### Scale Estimation
 
@@ -164,6 +164,7 @@ Seed URLs bootstrap the crawl. The choice of seeds dramatically affects coverage
 efficiency.
 
 **Domain-Based Seeds:**
+
 ```
 - Top sites from Alexa/Similarweb rankings (top 10K domains)
 - Country-specific top domains (.uk, .de, .jp)
@@ -171,6 +172,7 @@ efficiency.
 ```
 
 **Topic-Based Seeds:**
+
 ```
 - Curated lists per vertical (news, e-commerce, academic)
 - Sitemaps from major sites (sitemap.xml)
@@ -203,13 +205,13 @@ def generate_seeds():
 
 **Prioritization of Starting Points:**
 
-| Tier | Source              | Priority | Rationale                          |
-|------|---------------------|----------|------------------------------------|
-| 1    | Top 10K domains     | Highest  | Maximum outlink coverage           |
-| 2    | Country TLD leaders | High     | Geographic coverage                |
-| 3    | Topic verticals     | Medium   | Domain-specific depth              |
-| 4    | Sitemaps            | Medium   | Direct URL discovery               |
-| 5    | Re-crawl backlog    | Variable | Based on freshness requirements    |
+| Tier | Source              | Priority | Rationale                       |
+| ---- | ------------------- | -------- | ------------------------------- |
+| 1    | Top 10K domains     | Highest  | Maximum outlink coverage        |
+| 2    | Country TLD leaders | High     | Geographic coverage             |
+| 3    | Topic verticals     | Medium   | Domain-specific depth           |
+| 4    | Sitemaps            | Medium   | Direct URL discovery            |
+| 5    | Re-crawl backlog    | Variable | Based on freshness requirements |
 
 ---
 
@@ -1725,18 +1727,18 @@ Lifecycle policy:
 {
   "mappings": {
     "properties": {
-      "url":            { "type": "keyword" },
-      "url_hash":       { "type": "long" },
-      "domain":         { "type": "keyword" },
-      "title":          { "type": "text", "analyzer": "standard" },
-      "description":    { "type": "text", "analyzer": "standard" },
-      "body_text":      { "type": "text", "analyzer": "standard" },
-      "language":       { "type": "keyword" },
+      "url": { "type": "keyword" },
+      "url_hash": { "type": "long" },
+      "domain": { "type": "keyword" },
+      "title": { "type": "text", "analyzer": "standard" },
+      "description": { "type": "text", "analyzer": "standard" },
+      "body_text": { "type": "text", "analyzer": "standard" },
+      "language": { "type": "keyword" },
       "content_length": { "type": "integer" },
-      "crawl_time":     { "type": "date" },
-      "simhash":        { "type": "long" },
-      "outlink_count":  { "type": "integer" },
-      "inlink_count":   { "type": "integer" }
+      "crawl_time": { "type": "date" },
+      "simhash": { "type": "long" },
+      "outlink_count": { "type": "integer" },
+      "inlink_count": { "type": "integer" }
     }
   }
 }
@@ -2058,7 +2060,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Crawl rate below threshold"
+          summary: 'Crawl rate below threshold'
 
       - alert: HighErrorRate
         expr: >
@@ -2068,7 +2070,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Crawl error rate exceeds 5%"
+          summary: 'Crawl error rate exceeds 5%'
 
       - alert: FrontierQueueOverflow
         expr: frontier_queue_depth > 10000000
@@ -2076,7 +2078,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "URL frontier queue depth exceeding 10M"
+          summary: 'URL frontier queue depth exceeding 10M'
 
       - alert: StorageNearCapacity
         expr: storage_used_bytes / storage_capacity_bytes > 0.9
@@ -2084,7 +2086,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Storage at 90% capacity"
+          summary: 'Storage at 90% capacity'
 
       - alert: BloomFilterHighFPRate
         expr: bloom_filter_false_positive_rate > 0.02
@@ -2092,7 +2094,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Bloom filter false positive rate exceeds 2%"
+          summary: 'Bloom filter false positive rate exceeds 2%'
 ```
 
 ### Health Check Endpoints

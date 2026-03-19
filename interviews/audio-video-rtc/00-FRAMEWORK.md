@@ -6,24 +6,24 @@ Audio, video, and real-time communication engineering is the discipline of captu
 
 ## Table of Contents
 
-| # | Topic | File | Key Areas |
-|---|-------|------|-----------|
-| [00](./00-FRAMEWORK.md) | **Framework & Overview** | 00-FRAMEWORK.md | Roadmap, landscape, prerequisites, industry players |
-| [01](./01-DIGITAL-AUDIO-FUNDAMENTALS.md) | **Digital Audio Fundamentals** | 01-DIGITAL-AUDIO-FUNDAMENTALS.md | Sampling, quantization, PCM, psychoacoustics, DSP basics |
-| [02](./02-DIGITAL-VIDEO-FUNDAMENTALS.md) | **Digital Video Fundamentals** | 02-DIGITAL-VIDEO-FUNDAMENTALS.md | Pixels, color spaces, frame rates, resolution, raw video |
-| [03](./03-AUDIO-VIDEO-CODECS.md) | **Audio & Video Codecs** | 03-AUDIO-VIDEO-CODECS.md | H.264, H.265, VP9, AV1, Opus, AAC, encoding theory |
-| [04](./04-CONTAINER-FORMATS-MUXING.md) | **Container Formats & Muxing** | 04-CONTAINER-FORMATS-MUXING.md | MP4, MKV, WebM, TS, FLV, muxing/demuxing |
-| [05](./05-STREAMING-PROTOCOLS.md) | **Streaming Protocols** | 05-STREAMING-PROTOCOLS.md | HLS, DASH, RTMP, SRT, RIST, RTP/RTSP |
-| [06](./06-WEBRTC-FUNDAMENTALS.md) | **WebRTC Fundamentals** | 06-WEBRTC-FUNDAMENTALS.md | Peer connections, ICE, STUN, TURN, SDP, NAT traversal |
-| [07](./07-WEBRTC-ADVANCED.md) | **WebRTC Advanced** | 07-WEBRTC-ADVANCED.md | Simulcast, SVC, data channels, scalability, SFU vs MCU |
-| [08](./08-FFMPEG-MEDIA-PROCESSING.md) | **FFmpeg & Media Processing** | 08-FFMPEG-MEDIA-PROCESSING.md | Transcoding, filtering, batch processing, hardware accel |
-| [09](./09-GSTREAMER-PIPELINES.md) | **GStreamer Pipelines** | 09-GSTREAMER-PIPELINES.md | Elements, pads, bins, pipeline construction, plugins |
-| [10](./10-WEB-AUDIO-VIDEO-APIS.md) | **Web Audio & Video APIs** | 10-WEB-AUDIO-VIDEO-APIS.md | MediaStream, Web Audio API, MSE, EME, Canvas/WebGL |
-| [11](./11-MEDIA-SERVERS.md) | **Media Servers** | 11-MEDIA-SERVERS.md | Janus, mediasoup, Jitsi, LiveKit, Wowza, architecture |
-| [12](./12-LOW-LATENCY-ARCHITECTURE.md) | **Low-Latency Architecture** | 12-LOW-LATENCY-ARCHITECTURE.md | LL-HLS, LL-DASH, QUIC, WebTransport, edge compute |
-| [13](./13-CDN-MEDIA-DELIVERY.md) | **CDN & Media Delivery** | 13-CDN-MEDIA-DELIVERY.md | Origin/edge architecture, caching, ABR, multi-CDN |
-| [14](./14-TOOLS-DEBUGGING.md) | **Tools & Debugging** | 14-TOOLS-DEBUGGING.md | Wireshark, chrome://webrtc-internals, ffprobe, test patterns |
-| [15](./15-HANDS-ON-PROJECTS.md) | **Hands-On Projects** | 15-HANDS-ON-PROJECTS.md | Build a video player, WebRTC app, streaming server, CDN |
+| #                                        | Topic                          | File                             | Key Areas                                                    |
+| ---------------------------------------- | ------------------------------ | -------------------------------- | ------------------------------------------------------------ |
+| [00](./00-FRAMEWORK.md)                  | **Framework & Overview**       | 00-FRAMEWORK.md                  | Roadmap, landscape, prerequisites, industry players          |
+| [01](./01-DIGITAL-AUDIO-FUNDAMENTALS.md) | **Digital Audio Fundamentals** | 01-DIGITAL-AUDIO-FUNDAMENTALS.md | Sampling, quantization, PCM, psychoacoustics, DSP basics     |
+| [02](./02-DIGITAL-VIDEO-FUNDAMENTALS.md) | **Digital Video Fundamentals** | 02-DIGITAL-VIDEO-FUNDAMENTALS.md | Pixels, color spaces, frame rates, resolution, raw video     |
+| [03](./03-AUDIO-VIDEO-CODECS.md)         | **Audio & Video Codecs**       | 03-AUDIO-VIDEO-CODECS.md         | H.264, H.265, VP9, AV1, Opus, AAC, encoding theory           |
+| [04](./04-CONTAINER-FORMATS-MUXING.md)   | **Container Formats & Muxing** | 04-CONTAINER-FORMATS-MUXING.md   | MP4, MKV, WebM, TS, FLV, muxing/demuxing                     |
+| [05](./05-STREAMING-PROTOCOLS.md)        | **Streaming Protocols**        | 05-STREAMING-PROTOCOLS.md        | HLS, DASH, RTMP, SRT, RIST, RTP/RTSP                         |
+| [06](./06-WEBRTC-FUNDAMENTALS.md)        | **WebRTC Fundamentals**        | 06-WEBRTC-FUNDAMENTALS.md        | Peer connections, ICE, STUN, TURN, SDP, NAT traversal        |
+| [07](./07-WEBRTC-ADVANCED.md)            | **WebRTC Advanced**            | 07-WEBRTC-ADVANCED.md            | Simulcast, SVC, data channels, scalability, SFU vs MCU       |
+| [08](./08-FFMPEG-MEDIA-PROCESSING.md)    | **FFmpeg & Media Processing**  | 08-FFMPEG-MEDIA-PROCESSING.md    | Transcoding, filtering, batch processing, hardware accel     |
+| [09](./09-GSTREAMER-PIPELINES.md)        | **GStreamer Pipelines**        | 09-GSTREAMER-PIPELINES.md        | Elements, pads, bins, pipeline construction, plugins         |
+| [10](./10-WEB-AUDIO-VIDEO-APIS.md)       | **Web Audio & Video APIs**     | 10-WEB-AUDIO-VIDEO-APIS.md       | MediaStream, Web Audio API, MSE, EME, Canvas/WebGL           |
+| [11](./11-MEDIA-SERVERS.md)              | **Media Servers**              | 11-MEDIA-SERVERS.md              | Janus, mediasoup, Jitsi, LiveKit, Wowza, architecture        |
+| [12](./12-LOW-LATENCY-ARCHITECTURE.md)   | **Low-Latency Architecture**   | 12-LOW-LATENCY-ARCHITECTURE.md   | LL-HLS, LL-DASH, QUIC, WebTransport, edge compute            |
+| [13](./13-CDN-MEDIA-DELIVERY.md)         | **CDN & Media Delivery**       | 13-CDN-MEDIA-DELIVERY.md         | Origin/edge architecture, caching, ABR, multi-CDN            |
+| [14](./14-TOOLS-DEBUGGING.md)            | **Tools & Debugging**          | 14-TOOLS-DEBUGGING.md            | Wireshark, chrome://webrtc-internals, ffprobe, test patterns |
+| [15](./15-HANDS-ON-PROJECTS.md)          | **Hands-On Projects**          | 15-HANDS-ON-PROJECTS.md          | Build a video player, WebRTC app, streaming server, CDN      |
 
 ---
 
@@ -99,16 +99,16 @@ Capture --> Encode --> Package --> Transport --> Decode --> Render
 
 The media engineering world splits into two broad categories with different constraints, architectures, and tooling:
 
-| Dimension | Real-Time Communication | On-Demand / Live Streaming |
-|-----------|------------------------|---------------------------|
-| **Latency target** | < 200ms (conversational) | 2-30 seconds (acceptable) |
-| **Protocol** | WebRTC, RTP/RTCP | HLS, DASH, CMAF |
-| **Encoding** | Fast encode, lower quality | Slow encode, higher quality |
-| **Architecture** | Peer-to-peer or SFU | Origin + CDN edge network |
-| **Scale pattern** | N participants in a room | 1 source to N million viewers |
-| **Error handling** | Conceal and continue | Rebuffer and retry |
-| **Bitrate control** | Congestion-based (GCC, REMB) | ABR ladder with segment switching |
-| **Typical products** | Zoom, Meet, Teams, Discord | YouTube, Netflix, Twitch, Disney+ |
+| Dimension            | Real-Time Communication      | On-Demand / Live Streaming        |
+| -------------------- | ---------------------------- | --------------------------------- |
+| **Latency target**   | < 200ms (conversational)     | 2-30 seconds (acceptable)         |
+| **Protocol**         | WebRTC, RTP/RTCP             | HLS, DASH, CMAF                   |
+| **Encoding**         | Fast encode, lower quality   | Slow encode, higher quality       |
+| **Architecture**     | Peer-to-peer or SFU          | Origin + CDN edge network         |
+| **Scale pattern**    | N participants in a room     | 1 source to N million viewers     |
+| **Error handling**   | Conceal and continue         | Rebuffer and retry                |
+| **Bitrate control**  | Congestion-based (GCC, REMB) | ABR ladder with segment switching |
+| **Typical products** | Zoom, Meet, Teams, Discord   | YouTube, Netflix, Twitch, Disney+ |
 
 Understanding which world you are operating in -- and the gray area between them (ultra-low-latency live streaming, interactive live) -- is fundamental to making correct architectural decisions.
 
@@ -123,6 +123,7 @@ This roadmap is structured in four phases. Each phase builds on the previous one
 **Goal**: Understand what media data is, how it is represented digitally, and how compression works at a conceptual level.
 
 **Topics**:
+
 - Digital audio: sampling rate, bit depth, PCM, channels, frequency domain basics
 - Digital video: pixels, color spaces (RGB, YUV/YCbCr), resolution, frame rate, interlacing vs. progressive
 - Codec fundamentals: why compression is necessary, lossy vs. lossless, spatial vs. temporal compression, I/P/B frames, transform coding, entropy coding
@@ -138,6 +139,7 @@ This roadmap is structured in four phases. Each phase builds on the previous one
 **Goal**: Understand how media is delivered over networks, from traditional streaming to real-time communication.
 
 **Topics**:
+
 - Streaming protocols: HLS, DASH, CMAF, RTMP, SRT, RIST, RTSP/RTP
 - Adaptive bitrate (ABR) streaming: how it works, encoding ladders, manifest files
 - WebRTC fundamentals: peer connections, SDP offer/answer, ICE candidates, STUN/TURN, NAT traversal
@@ -153,6 +155,7 @@ This roadmap is structured in four phases. Each phase builds on the previous one
 **Goal**: Build and operate media systems at scale. Understand media servers, processing pipelines, delivery networks, and low-latency architectures.
 
 **Topics**:
+
 - FFmpeg advanced: complex filtergraphs, hardware acceleration, batch processing pipelines
 - GStreamer: pipeline model, elements and pads, building custom pipelines, plugins
 - Web APIs: getUserMedia, MediaStream, Web Audio API, Media Source Extensions, Encrypted Media Extensions
@@ -169,6 +172,7 @@ This roadmap is structured in four phases. Each phase builds on the previous one
 **Goal**: Debug complex media issues, build production-grade systems, and understand the cutting edge of the field.
 
 **Topics**:
+
 - Debugging: Wireshark for RTP analysis, chrome://webrtc-internals, ffprobe deep analysis, test signal generation
 - Quality metrics: PSNR, SSIM, VMAF, MOS, PESQ, POLQA
 - Production concerns: monitoring, alerting, SLA definition for media quality, capacity planning
@@ -233,41 +237,44 @@ The codec landscape is shaped by a tension between compression efficiency, compu
 
 **Video Codecs** (in rough chronological order):
 
-| Codec | Year | Organization | License | Adoption |
-|-------|------|-------------|---------|----------|
-| H.264/AVC | 2003 | MPEG/ITU | Patent pool (MPEG LA) | Universal. The baseline for everything. |
-| H.265/HEVC | 2013 | MPEG/ITU | Complex patent pools | Mixed. Strong in broadcast, weak on web. |
-| VP9 | 2013 | Google | Royalty-free | YouTube, Android, Chrome |
-| AV1 | 2018 | Alliance for Open Media | Royalty-free | Growing fast. Netflix, YouTube, Meta |
-| H.266/VVC | 2020 | MPEG/ITU | Patent pool | Early adoption, mainly broadcast |
-| AV2 | TBD | Alliance for Open Media | Royalty-free | In development |
+| Codec      | Year | Organization            | License               | Adoption                                 |
+| ---------- | ---- | ----------------------- | --------------------- | ---------------------------------------- |
+| H.264/AVC  | 2003 | MPEG/ITU                | Patent pool (MPEG LA) | Universal. The baseline for everything.  |
+| H.265/HEVC | 2013 | MPEG/ITU                | Complex patent pools  | Mixed. Strong in broadcast, weak on web. |
+| VP9        | 2013 | Google                  | Royalty-free          | YouTube, Android, Chrome                 |
+| AV1        | 2018 | Alliance for Open Media | Royalty-free          | Growing fast. Netflix, YouTube, Meta     |
+| H.266/VVC  | 2020 | MPEG/ITU                | Patent pool           | Early adoption, mainly broadcast         |
+| AV2        | TBD  | Alliance for Open Media | Royalty-free          | In development                           |
 
 **Audio Codecs**:
 
-| Codec | Year | Organization | License | Typical Use |
-|-------|------|-------------|---------|-------------|
-| MP3 | 1993 | Fraunhofer | Patents expired | Legacy music distribution |
-| AAC | 1997 | MPEG | Patent pool | Streaming, broadcasting, Apple ecosystem |
-| Vorbis | 2000 | Xiph.Org | Royalty-free | Open-source projects |
-| Opus | 2012 | IETF (Xiph.Org/Skype) | Royalty-free | WebRTC (mandatory), VoIP, streaming |
-| FLAC | 2001 | Xiph.Org | Royalty-free | Lossless archival |
-| Lyra/Soundstream | 2021 | Google | Open-source | Ultra-low bitrate neural audio |
+| Codec            | Year | Organization          | License         | Typical Use                              |
+| ---------------- | ---- | --------------------- | --------------- | ---------------------------------------- |
+| MP3              | 1993 | Fraunhofer            | Patents expired | Legacy music distribution                |
+| AAC              | 1997 | MPEG                  | Patent pool     | Streaming, broadcasting, Apple ecosystem |
+| Vorbis           | 2000 | Xiph.Org              | Royalty-free    | Open-source projects                     |
+| Opus             | 2012 | IETF (Xiph.Org/Skype) | Royalty-free    | WebRTC (mandatory), VoIP, streaming      |
+| FLAC             | 2001 | Xiph.Org              | Royalty-free    | Lossless archival                        |
+| Lyra/Soundstream | 2021 | Google                | Open-source     | Ultra-low bitrate neural audio           |
 
 The industry trend is clearly toward royalty-free codecs (AV1, Opus) driven by the Alliance for Open Media, though patent-encumbered codecs (H.264, HEVC) remain entrenched in hardware and broadcast ecosystems.
 
 ### Protocol Landscape
 
 **Streaming (high latency, high scale)**:
+
 - **HLS (HTTP Live Streaming)**: Apple's protocol. De facto standard for OTT delivery. Works everywhere. Segment-based, typically 2-6 second latency with LL-HLS.
 - **DASH (Dynamic Adaptive Streaming over HTTP)**: MPEG standard. More flexible than HLS. Often used alongside HLS with CMAF for unified segment format.
 - **CMAF (Common Media Application Format)**: Enables a single set of segments to serve both HLS and DASH manifests.
 
 **Contribution / Ingest (medium latency, reliable)**:
+
 - **RTMP (Real-Time Messaging Protocol)**: Adobe's legacy protocol. Still the dominant ingest protocol for live streaming platforms (Twitch, YouTube Live) despite its age.
 - **SRT (Secure Reliable Transport)**: Open-source protocol by Haivision. Designed for reliable, low-latency transport over unpredictable networks. Increasingly replacing RTMP for contribution.
 - **RIST (Reliable Internet Stream Transport)**: Standardized protocol for broadcast-quality contribution over the public internet.
 
 **Real-time (ultra-low latency, interactive)**:
+
 - **WebRTC**: Browser-native real-time communication. Built on RTP/RTCP, ICE, DTLS, SRTP. The standard for video calling and interactive media.
 - **RTP/RTCP (Real-time Transport Protocol)**: The foundational transport for real-time media. Carries media payloads (RTP) with control feedback (RTCP).
 - **WebTransport**: Emerging protocol built on HTTP/3 and QUIC. Aims to provide low-latency, bidirectional transport as a modern alternative to WebSocket and potentially some WebRTC use cases.
@@ -313,6 +320,7 @@ MCU (legacy conferencing):           CDN (broadcast/VoD):
 ### Companies Building Media Infrastructure
 
 **Video Conferencing & Communication**:
+
 - **Zoom**: Dominant video conferencing platform. Custom media stack with proprietary SFU, heavy investment in AI features.
 - **Google (Meet/Duo)**: WebRTC pioneer. Google created and open-sourced the original WebRTC codebase. Operates Meet for enterprise and Duo for consumer.
 - **Microsoft (Teams)**: Enterprise communication platform. Uses a custom media stack built on their acquisition of Skype's technology.
@@ -324,6 +332,7 @@ MCU (legacy conferencing):           CDN (broadcast/VoD):
 - **100ms**: WebRTC infrastructure company. Provides SDKs for building video conferencing, live streaming, and interactive live apps.
 
 **Streaming & OTT**:
+
 - **Netflix**: Pioneer in adaptive bitrate streaming. Invented and open-sourced VMAF quality metric. Major AV1 adopter. Open-sourced many media tools.
 - **YouTube (Google)**: Largest video platform. VP9 and AV1 deployment at massive scale. Drives codec adoption.
 - **Twitch (Amazon)**: Dominant live streaming platform for gaming. RTMP ingest, HLS delivery, low-latency extensions.
@@ -334,12 +343,14 @@ MCU (legacy conferencing):           CDN (broadcast/VoD):
 - **Bitmovin**: Encoding, player, and analytics company. Known for DASH expertise and per-title encoding optimization.
 
 **CDN & Delivery**:
+
 - **Akamai**: Largest CDN. Handles significant portion of global video delivery. Acquired Limelight Networks.
 - **Cloudflare**: Edge network with growing media capabilities. CDN, Stream, and R2 storage.
 - **Fastly**: Edge cloud platform. Real-time CDN with compute@edge for media logic.
 - **AWS CloudFront**: Amazon's CDN. Tight integration with AWS media services.
 
 **Hardware & Silicon**:
+
 - **NVIDIA**: GPU-accelerated encoding/decoding (NVENC/NVDEC). Essential for large-scale transcoding and AI-based media processing.
 - **Intel**: Quick Sync Video for hardware encode/decode. Widely available in consumer and server CPUs.
 - **Apple**: VideoToolbox framework, ProRes codec, custom silicon with dedicated media engines.
@@ -350,6 +361,7 @@ MCU (legacy conferencing):           CDN (broadcast/VoD):
 These projects form the backbone of media engineering. Understanding them is essential.
 
 **Media Processing**:
+
 - **FFmpeg**: The Swiss Army knife of media. Command-line tool and library for encoding, decoding, transcoding, muxing, demuxing, filtering, and streaming. Nearly every media application uses FFmpeg or its libraries (libavcodec, libavformat, libavutil) under the hood.
 - **GStreamer**: Pipeline-based multimedia framework. More modular and programmable than FFmpeg. Used extensively in embedded systems, broadcast, and custom media applications.
 - **x264 / x265**: The reference open-source encoders for H.264 and H.265 respectively. x264 is arguably the most important single piece of video software ever written.
@@ -360,6 +372,7 @@ These projects form the backbone of media engineering. Understanding them is ess
 - **libvpx**: Google's VP8/VP9 codec library.
 
 **WebRTC & Real-Time**:
+
 - **WebRTC (webrtc.org)**: Google's open-source implementation used in Chrome, Edge, and as the foundation for many native WebRTC stacks.
 - **Pion**: WebRTC implementation in Go. Popular for building custom WebRTC servers and media processing pipelines.
 - **libwebrtc**: Google's C++ WebRTC library extracted from Chromium. The most complete native WebRTC implementation.
@@ -370,6 +383,7 @@ These projects form the backbone of media engineering. Understanding them is ess
 - **str0m**: Rust-based WebRTC library focused on correctness and sans-IO design.
 
 **Players & Rendering**:
+
 - **hls.js**: JavaScript HLS player library. Used by many major streaming platforms.
 - **dash.js**: DASH Industry Forum's reference DASH player.
 - **Shaka Player**: Google's open-source media player supporting DASH and HLS with DRM.
@@ -379,6 +393,7 @@ These projects form the backbone of media engineering. Understanding them is ess
 - **MPV**: Modern, minimalist media player. Fork of MPlayer/MPlayer2. Built on FFmpeg.
 
 **Standards Bodies**:
+
 - **IETF**: Defines WebRTC standards (RTP, RTCP, ICE, SDP, STUN, TURN, DTLS-SRTP, Opus).
 - **W3C**: Defines WebRTC browser APIs, Web Audio API, Media Source Extensions, Encrypted Media Extensions, WebCodecs.
 - **MPEG (ISO)**: Defines MPEG codecs (H.264, H.265, H.266, AAC), container formats (MP4/ISOBMFF, MPEG-TS), and streaming (DASH, CMAF).
@@ -397,14 +412,14 @@ To reason effectively about media systems, internalize these fundamental concept
 
 Media engineering is defined by trade-offs. There is no "best" codec, protocol, or architecture -- only the best choice for a given set of constraints.
 
-| You want... | You sacrifice... |
-|-------------|-----------------|
-| Lower latency | Encoding efficiency (less time for compression) |
-| Higher quality | More bandwidth or more compute |
-| Wider compatibility | Newer, more efficient codecs |
-| Royalty-free codecs | Sometimes encoding speed or hardware support |
-| Lower bandwidth | Higher encode compute cost or lower quality |
-| Real-time interaction | Scale (P2P/SFU vs. CDN) |
+| You want...           | You sacrifice...                                |
+| --------------------- | ----------------------------------------------- |
+| Lower latency         | Encoding efficiency (less time for compression) |
+| Higher quality        | More bandwidth or more compute                  |
+| Wider compatibility   | Newer, more efficient codecs                    |
+| Royalty-free codecs   | Sometimes encoding speed or hardware support    |
+| Lower bandwidth       | Higher encode compute cost or lower quality     |
+| Real-time interaction | Scale (P2P/SFU vs. CDN)                         |
 
 ### 2. Latency Budget Thinking
 
@@ -476,6 +491,7 @@ The fundamental tension in media engineering is: **buffers make everything bette
 Keeping audio and video in sync (lip sync) across capture, encode, transport, and render is a persistent challenge. The human brain can detect audio-video desynchronization of as little as 45ms (audio leading video) to 125ms (audio lagging video). Standards typically require sync within +/- 30ms.
 
 Synchronization mechanisms include:
+
 - **Timestamps**: PTS (Presentation Timestamp) and DTS (Decode Timestamp) in container formats
 - **RTCP Sender Reports**: Mapping RTP timestamps to wall-clock time in WebRTC
 - **NTP synchronization**: Aligning clocks between sender and receiver
@@ -506,17 +522,20 @@ Synchronization mechanisms include:
 ### Key Resources
 
 **Books**:
+
 - "Digital Video and HD: Algorithms and Interfaces" by Charles Poynton -- the definitive reference on digital video fundamentals
 - "High Efficiency Video Coding (HEVC)" by Sze, Budagavi, Sullivan -- deep dive into modern video coding
 - "WebRTC for the Curious" (webrtcforthecurious.com) -- free, excellent introduction to WebRTC internals
 
 **Online**:
+
 - webrtcforthecurious.com -- comprehensive WebRTC explanation
 - howvideo.works -- visual explanation of video compression
 - developer.mozilla.org/en-US/docs/Web/API/WebRTC_API -- MDN WebRTC documentation
 - ffmpeg.org/documentation.html -- FFmpeg official documentation
 
 **Communities**:
+
 - WebRTC subreddit and mailing lists
 - Video-Dev Slack (video-dev.org) -- the primary community for streaming engineers
 - Streaming Media conferences and publications

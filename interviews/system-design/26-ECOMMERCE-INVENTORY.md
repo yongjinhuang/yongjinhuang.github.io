@@ -6,31 +6,31 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Product Catalog | Browse, search, and view product details including SKUs and variants |
-| 2 | Shopping Cart | Add/remove items, persist cart across sessions, merge guest cart on login |
-| 3 | Inventory Management | Track stock levels (available, reserved, sold) per SKU per warehouse |
-| 4 | Checkout & Order Creation | Reserve inventory, process payment, confirm order atomically |
-| 5 | Order Tracking | View order status and history, receive status update notifications |
-| 6 | Returns & Refunds | Initiate returns, partial/full refunds, restock returned inventory |
-| 7 | Seller Inventory Updates | Sellers can update stock levels, trigger restocking alerts |
-| 8 | Flash Sale Support | Handle burst traffic with pre-sale reservation and queue-based ordering |
-| 9 | Multi-warehouse Routing | Route orders to nearest warehouse, support split shipments |
-| 10 | Price Snapshot | Lock in product price at time of order creation |
+| #   | Requirement               | Description                                                               |
+| --- | ------------------------- | ------------------------------------------------------------------------- |
+| 1   | Product Catalog           | Browse, search, and view product details including SKUs and variants      |
+| 2   | Shopping Cart             | Add/remove items, persist cart across sessions, merge guest cart on login |
+| 3   | Inventory Management      | Track stock levels (available, reserved, sold) per SKU per warehouse      |
+| 4   | Checkout & Order Creation | Reserve inventory, process payment, confirm order atomically              |
+| 5   | Order Tracking            | View order status and history, receive status update notifications        |
+| 6   | Returns & Refunds         | Initiate returns, partial/full refunds, restock returned inventory        |
+| 7   | Seller Inventory Updates  | Sellers can update stock levels, trigger restocking alerts                |
+| 8   | Flash Sale Support        | Handle burst traffic with pre-sale reservation and queue-based ordering   |
+| 9   | Multi-warehouse Routing   | Route orders to nearest warehouse, support split shipments                |
+| 10  | Price Snapshot            | Lock in product price at time of order creation                           |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Order creation latency | < 500ms (p99) |
-| 2 | Inventory accuracy | 99.99% (near-zero overselling) |
-| 3 | Availability | 99.99% (< 1 hour downtime/year) |
-| 4 | Peak throughput | 50,000 orders/minute during flash sales |
-| 5 | Durability | Zero order loss (at-least-once delivery) |
-| 6 | Consistency | Strong consistency for inventory deduction, eventual consistency for reads |
-| 7 | Idempotency | Duplicate order submissions must not create duplicate orders |
-| 8 | Scalability | 100M products, 1M orders/day, 500M daily active users |
+| #   | Requirement            | Target                                                                     |
+| --- | ---------------------- | -------------------------------------------------------------------------- |
+| 1   | Order creation latency | < 500ms (p99)                                                              |
+| 2   | Inventory accuracy     | 99.99% (near-zero overselling)                                             |
+| 3   | Availability           | 99.99% (< 1 hour downtime/year)                                            |
+| 4   | Peak throughput        | 50,000 orders/minute during flash sales                                    |
+| 5   | Durability             | Zero order loss (at-least-once delivery)                                   |
+| 6   | Consistency            | Strong consistency for inventory deduction, eventual consistency for reads |
+| 7   | Idempotency            | Duplicate order submissions must not create duplicate orders               |
+| 8   | Scalability            | 100M products, 1M orders/day, 500M daily active users                      |
 
 ### Scale Estimation
 
@@ -871,6 +871,7 @@ Recovery flow:
 #### Pre-Deduction Strategy
 
 Before sale starts:
+
 ```
 1. Seller confirms: 10,000 units available for flash sale
 2. Load into Redis: SET inventory:flash:{skuId} 10000
@@ -1360,17 +1361,17 @@ Queue-based ordering ensures first-come-first-served fairness and decouples traf
 
 ## 8. Trade-offs
 
-| Decision | Choice Made | Alternative | Trade-off |
-|----------|-------------|-------------|-----------|
-| Inventory consistency | Strong (optimistic lock + Redis) | Eventual consistency | Prevents overselling at cost of retry complexity |
-| Transaction pattern | Saga (orchestration) | 2PC / single DB tx | Fault tolerant but eventual consistency, complex compensation |
-| Cart storage | Redis + PostgreSQL | DB only | Faster reads, risk of Redis data loss (mitigated by persistence) |
-| Inventory read | Redis cache (5s stale) | DB read always | Faster but may show stale stock; acceptable UX trade-off |
-| Order sharding | By user_id | By order date | User queries efficient; date-range queries need scatter-gather |
-| Flash sale inventory | Redis pre-deduction | DB with queue | Higher throughput but Redis-DB sync complexity |
-| Product reads | CQRS + Elasticsearch | Single DB | Near-linear read scaling but eventual consistency on writes |
-| Duplicate orders | Idempotency key in DB | Request dedup cache | Durable guarantee but adds DB constraint |
-| Price at checkout | Snapshot at add-to-cart | Real-time price | Predictable UX; seller loses dynamic pricing control |
+| Decision              | Choice Made                      | Alternative          | Trade-off                                                        |
+| --------------------- | -------------------------------- | -------------------- | ---------------------------------------------------------------- |
+| Inventory consistency | Strong (optimistic lock + Redis) | Eventual consistency | Prevents overselling at cost of retry complexity                 |
+| Transaction pattern   | Saga (orchestration)             | 2PC / single DB tx   | Fault tolerant but eventual consistency, complex compensation    |
+| Cart storage          | Redis + PostgreSQL               | DB only              | Faster reads, risk of Redis data loss (mitigated by persistence) |
+| Inventory read        | Redis cache (5s stale)           | DB read always       | Faster but may show stale stock; acceptable UX trade-off         |
+| Order sharding        | By user_id                       | By order date        | User queries efficient; date-range queries need scatter-gather   |
+| Flash sale inventory  | Redis pre-deduction              | DB with queue        | Higher throughput but Redis-DB sync complexity                   |
+| Product reads         | CQRS + Elasticsearch             | Single DB            | Near-linear read scaling but eventual consistency on writes      |
+| Duplicate orders      | Idempotency key in DB            | Request dedup cache  | Durable guarantee but adds DB constraint                         |
+| Price at checkout     | Snapshot at add-to-cart          | Real-time price      | Predictable UX; seller loses dynamic pricing control             |
 
 ---
 

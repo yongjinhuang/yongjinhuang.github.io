@@ -25,24 +25,24 @@ levels because it has real complexity in coordinating multiple elevators efficie
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Multiple elevators | N elevators serving M floors |
-| F2 | Request types | External (hall button up/down), Internal (floor button in car) |
-| F3 | Scheduling | Efficiently assign requests to elevators |
-| F4 | Direction handling | Elevator continues in one direction, picks up en-route requests |
-| F5 | Door control | Open/close doors, handle door obstruction |
-| F6 | Priority requests | Emergency, VIP, maintenance override |
-| F7 | Display | Show current floor and direction on each elevator |
+| #   | Requirement        | Details                                                         |
+| --- | ------------------ | --------------------------------------------------------------- |
+| F1  | Multiple elevators | N elevators serving M floors                                    |
+| F2  | Request types      | External (hall button up/down), Internal (floor button in car)  |
+| F3  | Scheduling         | Efficiently assign requests to elevators                        |
+| F4  | Direction handling | Elevator continues in one direction, picks up en-route requests |
+| F5  | Door control       | Open/close doors, handle door obstruction                       |
+| F6  | Priority requests  | Emergency, VIP, maintenance override                            |
+| F7  | Display            | Show current floor and direction on each elevator               |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
-| NF1 | Minimize average wait time |
-| NF2 | Minimize average travel time |
+| #   | Requirement                       |
+| --- | --------------------------------- |
+| NF1 | Minimize average wait time        |
+| NF2 | Minimize average travel time      |
 | NF3 | Handle concurrent requests safely |
-| NF4 | Extensible scheduling algorithm |
+| NF4 | Extensible scheduling algorithm   |
 
 ---
 
@@ -125,17 +125,17 @@ Each elevator operates as a finite state machine:
 
 **Transitions:**
 
-| From | Event | To | Action |
-|------|-------|----|--------|
-| IDLE | Request UP | MOVING_UP | Start moving up |
-| IDLE | Request DOWN | MOVING_DOWN | Start moving down |
-| IDLE | Request same floor | DOOR_OPEN | Open doors immediately |
-| MOVING_UP | Arrived at requested floor | DOOR_OPEN | Stop, open doors |
-| MOVING_UP | More requests above | MOVING_UP | Continue up |
-| MOVING_UP | No more requests above | IDLE or MOVING_DOWN | Reverse or idle |
-| MOVING_DOWN | Arrived at requested floor | DOOR_OPEN | Stop, open doors |
-| DOOR_OPEN | Timer expired | IDLE / MOVING_* | Close doors, continue |
-| Any | Emergency | MAINTENANCE | Stop immediately |
+| From        | Event                      | To                  | Action                 |
+| ----------- | -------------------------- | ------------------- | ---------------------- |
+| IDLE        | Request UP                 | MOVING_UP           | Start moving up        |
+| IDLE        | Request DOWN               | MOVING_DOWN         | Start moving down      |
+| IDLE        | Request same floor         | DOOR_OPEN           | Open doors immediately |
+| MOVING_UP   | Arrived at requested floor | DOOR_OPEN           | Stop, open doors       |
+| MOVING_UP   | More requests above        | MOVING_UP           | Continue up            |
+| MOVING_UP   | No more requests above     | IDLE or MOVING_DOWN | Reverse or idle        |
+| MOVING_DOWN | Arrived at requested floor | DOOR_OPEN           | Stop, open doors       |
+| DOOR_OPEN   | Timer expired              | IDLE / MOVING\_\*   | Close doors, continue  |
+| Any         | Emergency                  | MAINTENANCE         | Stop immediately       |
 
 ---
 

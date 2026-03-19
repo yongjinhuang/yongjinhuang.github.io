@@ -62,21 +62,21 @@ The content model defines what editors can enter. It enforces consistency and ma
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **CMS** | Content Management System — software for managing digital content |
-| **Headless CMS** | CMS that provides content via API. No built-in frontend. You build the presentation layer |
-| **Traditional CMS** | CMS with a built-in frontend (WordPress, Drupal). Content and display are coupled |
-| **WYSIWYG** | "What You See Is What You Get" — a rich text editor that shows formatted content as you type |
-| **Markdown** | A lightweight text format that many technical CMS systems use instead of WYSIWYG |
-| **Content Type / Model** | The schema for a kind of content (e.g., a Blog Post has title, body, author) |
-| **Slug** | URL-friendly version of a title. "My First Post" → `my-first-post` |
-| **Taxonomy** | Classification system — categories, tags, hierarchies for organizing content |
-| **Widget / Block / Component** | Reusable content chunks that editors can assemble into pages |
-| **Content Preview** | Seeing how content will look on the live site before publishing |
-| **Workflow** | The approval process content goes through before publishing |
-| **Webhook** | CMS sends a notification to your app when content changes (useful for rebuilding static sites) |
-| **CDN** | Content Delivery Network — distributes content globally for fast loading |
+| Term                           | What It Means                                                                                  |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| **CMS**                        | Content Management System — software for managing digital content                              |
+| **Headless CMS**               | CMS that provides content via API. No built-in frontend. You build the presentation layer      |
+| **Traditional CMS**            | CMS with a built-in frontend (WordPress, Drupal). Content and display are coupled              |
+| **WYSIWYG**                    | "What You See Is What You Get" — a rich text editor that shows formatted content as you type   |
+| **Markdown**                   | A lightweight text format that many technical CMS systems use instead of WYSIWYG               |
+| **Content Type / Model**       | The schema for a kind of content (e.g., a Blog Post has title, body, author)                   |
+| **Slug**                       | URL-friendly version of a title. "My First Post" → `my-first-post`                             |
+| **Taxonomy**                   | Classification system — categories, tags, hierarchies for organizing content                   |
+| **Widget / Block / Component** | Reusable content chunks that editors can assemble into pages                                   |
+| **Content Preview**            | Seeing how content will look on the live site before publishing                                |
+| **Workflow**                   | The approval process content goes through before publishing                                    |
+| **Webhook**                    | CMS sends a notification to your app when content changes (useful for rebuilding static sites) |
+| **CDN**                        | Content Delivery Network — distributes content globally for fast loading                       |
 
 ## Common Patterns
 
@@ -125,13 +125,13 @@ Editors build pages from blocks — text, image, video, columns, buttons. Very f
 
 ## Quick Reference
 
-| Need | Recommended Approach |
-|------|---------------------|
-| Simple blog | WordPress or headless CMS + static site generator |
-| Corporate website | Headless CMS + Next.js with ISR |
-| E-commerce content | Headless CMS integrated with commerce platform |
-| Documentation | Git-based CMS with Markdown |
-| Marketing landing pages | Page builder / block-based CMS |
-| Multi-language | CMS with native localization support (Contentful, Sanity) |
-| Editorial workflow | CMS with built-in approval flows and user roles |
+| Need                    | Recommended Approach                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| Simple blog             | WordPress or headless CMS + static site generator            |
+| Corporate website       | Headless CMS + Next.js with ISR                              |
+| E-commerce content      | Headless CMS integrated with commerce platform               |
+| Documentation           | Git-based CMS with Markdown                                  |
+| Marketing landing pages | Page builder / block-based CMS                               |
+| Multi-language          | CMS with native localization support (Contentful, Sanity)    |
+| Editorial workflow      | CMS with built-in approval flows and user roles              |
 | Real-time collaboration | Notion-like or Google Docs-style with operational transforms |

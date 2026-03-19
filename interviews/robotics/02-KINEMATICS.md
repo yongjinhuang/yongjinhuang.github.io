@@ -73,12 +73,12 @@ with exactly **four parameters**.
 
 For each joint i:
 
-| Parameter | Symbol | Meaning                                          |
-|-----------|--------|--------------------------------------------------|
-| Link length    | a_i    | Distance along x_{i} from z_{i-1} to z_i   |
-| Link twist     | alpha_i| Angle about x_{i} from z_{i-1} to z_i      |
-| Link offset    | d_i    | Distance along z_{i-1} from x_{i-1} to x_i |
-| Joint angle    | theta_i| Angle about z_{i-1} from x_{i-1} to x_i    |
+| Parameter   | Symbol  | Meaning                                    |
+| ----------- | ------- | ------------------------------------------ |
+| Link length | a_i     | Distance along x*{i} from z*{i-1} to z_i   |
+| Link twist  | alpha_i | Angle about x*{i} from z*{i-1} to z_i      |
+| Link offset | d_i     | Distance along z*{i-1} from x*{i-1} to x_i |
+| Joint angle | theta_i | Angle about z*{i-1} from x*{i-1} to x_i    |
 
 For a **revolute** joint, theta_i is the variable. For a **prismatic** joint,
 d_i is the variable. The other three parameters are fixed by the robot geometry.
@@ -194,6 +194,7 @@ FK(q) = T_desired
 ```
 
 This is fundamentally harder than FK because:
+
 - The mapping is nonlinear.
 - Multiple solutions may exist (or none).
 - The solution space can be infinite (redundant robots).
@@ -259,6 +260,7 @@ def ik_2dof(
 For a 6-DOF arm with a spherical wrist (joints 4, 5, 6 intersect at a point):
 
 1. **Compute the wrist center position** from the desired tool pose:
+
    ```
    p_wrist = p_desired - d6 * R_desired * [0, 0, 1]^T
    ```
@@ -328,14 +330,14 @@ def numerical_ik(
 
 ### 3.5 Comparison: Analytical vs. Numerical IK
 
-| Property            | Analytical         | Numerical                |
-|--------------------|--------------------|--------------------------|
-| Speed              | Very fast (direct) | Slower (iterative)       |
-| Completeness       | All solutions      | One solution (depends on init) |
-| Generality         | Specific geometry  | Any robot                |
-| Singularity handling| Explicit          | Must be damped           |
-| Redundancy         | Not applicable     | Handles naturally        |
-| Real-time capable  | Always             | Usually (with good init) |
+| Property             | Analytical         | Numerical                      |
+| -------------------- | ------------------ | ------------------------------ |
+| Speed                | Very fast (direct) | Slower (iterative)             |
+| Completeness         | All solutions      | One solution (depends on init) |
+| Generality           | Specific geometry  | Any robot                      |
+| Singularity handling | Explicit           | Must be damped                 |
+| Redundancy           | Not applicable     | Handles naturally              |
+| Real-time capable    | Always             | Usually (with good init)       |
 
 ---
 
@@ -366,8 +368,9 @@ J_i   =  [                            ]
 ```
 
 where:
-- z_{i-1} is the unit vector along joint i's axis (third column of R_{0,i-1}).
-- p_{i-1} is the origin of frame i-1 (from T_{0,i-1}).
+
+- z*{i-1} is the unit vector along joint i's axis (third column of R*{0,i-1}).
+- p*{i-1} is the origin of frame i-1 (from T*{0,i-1}).
 - p_n is the end-effector position.
 
 For a prismatic joint:
@@ -442,6 +445,7 @@ rank(J(q)) < min(6, n)
 ```
 
 At a singularity:
+
 - Some task-space directions become unachievable (zero velocity in that direction
   regardless of joint speeds).
 - The inverse/pseudoinverse of J blows up.
@@ -516,7 +520,7 @@ def damped_pseudoinverse(J: np.ndarray, lam: float = 0.01) -> np.ndarray:
 - **Reachable workspace**: the set of all positions the end-effector can reach
   (with at least one orientation).
 - **Dexterous workspace**: the set of all positions the end-effector can reach
-  with *any* arbitrary orientation.
+  with _any_ arbitrary orientation.
 
 For a 6-DOF arm, the dexterous workspace is typically a subset of the reachable
 workspace. For arms with fewer than 6 DOF, the dexterous workspace may be empty.
@@ -596,6 +600,7 @@ where q_0_dot is an arbitrary joint velocity. The projection (I - J^dagger J)
 maps it into J's null space.
 
 Applications of null-space motion:
+
 - Joint limit avoidance
 - Obstacle avoidance
 - Minimizing joint torques
@@ -627,10 +632,12 @@ def redundancy_resolution(
 ### 8.1 Task-Space vs. Joint-Space Trajectories
 
 **Joint-space trajectory**: interpolate directly in joint angles.
+
 - Simple, always feasible if within joint limits.
 - End-effector path is not straight in Cartesian space.
 
 **Task-space trajectory**: specify end-effector path in Cartesian space.
+
 - Straight-line or circular motions are easy to specify.
 - Requires IK at each time step; may encounter singularities.
 
@@ -811,7 +818,7 @@ harder and why?
 
 **Q2.** What are the four DH parameters, and what does each represent?
 
-> **A:** theta (rotation about z_{i-1}), d (translation along z_{i-1}), a
+> **A:** theta (rotation about z*{i-1}), d (translation along z*{i-1}), a
 > (translation along x_i), alpha (rotation about x_i). Together, they define
 > the relative transform between consecutive link frames.
 
@@ -824,7 +831,7 @@ happens?
 **Q4.** What is the Jacobian matrix in robotics, and why is it important?
 
 > **A:** The Jacobian J(q) maps joint velocities to end-effector velocities:
-> x_dot = J * q_dot. It is essential for velocity control, force mapping
+> x*dot = J * q*dot. It is essential for velocity control, force mapping
 > (tau = J^T * F), singularity analysis, and numerical IK.
 
 **Q5.** What happens at a kinematic singularity?
@@ -857,7 +864,7 @@ happens?
 differ from DH?
 
 > **A:** PoE uses screw axes and the matrix exponential to compute FK:
-> T = exp(S1*q1) * ... * exp(Sn*qn) * M. Unlike DH, it has no frame assignment
+> T = exp(S1*q1) * ... * exp(Sn*qn) \* M. Unlike DH, it has no frame assignment
 > ambiguity (especially for parallel axes), requires no intermediate frames, and
 > generalizes naturally to arbitrary joint types.
 
@@ -870,7 +877,7 @@ differ from DH?
 
 **Q11.** What is the manipulability index? How is it computed?
 
-> **A:** w = sqrt(det(J * J^T)). It measures how far the robot is from a
+> **A:** w = sqrt(det(J \* J^T)). It measures how far the robot is from a
 > singularity. High w means good dexterity in all directions; w = 0 means
 > singular. It is related to the volume of the velocity manipulability ellipsoid.
 
@@ -879,7 +886,7 @@ the extra DOF?
 
 > **A:** Project a secondary objective (e.g., maximize manipulability, avoid
 > joint limits, minimize energy) into the null space:
-> q_dot = J^dagger * x_dot + (I - J^dagger * J) * q0_dot. The null-space
+> q*dot = J^dagger * x*dot + (I - J^dagger * J) \* q0_dot. The null-space
 > component does not affect the end-effector motion.
 
 **Q13.** Why do industrial robots typically have exactly 6 DOF?

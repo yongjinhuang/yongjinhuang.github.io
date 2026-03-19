@@ -41,13 +41,13 @@ RAW FOOTAGE                    CORRECTED                      GRADED
   Fix exposure, WB, contrast      Add mood, style, atmosphere
 ```
 
-| Aspect | Color Correction | Color Grading |
-|--------|-----------------|---------------|
-| Goal | Accurate, neutral image | Stylized, emotional image |
-| Process | Technical: fix exposure, WB, contrast | Creative: add mood, color palette |
-| Order | First | Second (after correction) |
-| Skill | Learn the rules | Break the rules creatively |
-| Consistency | Match all clips to look uniform | Apply a unified style across all clips |
+| Aspect      | Color Correction                      | Color Grading                          |
+| ----------- | ------------------------------------- | -------------------------------------- |
+| Goal        | Accurate, neutral image               | Stylized, emotional image              |
+| Process     | Technical: fix exposure, WB, contrast | Creative: add mood, color palette      |
+| Order       | First                                 | Second (after correction)              |
+| Skill       | Learn the rules                       | Break the rules creatively             |
+| Consistency | Match all clips to look uniform       | Apply a unified style across all clips |
 
 ## 2. Color Theory for Video
 
@@ -77,36 +77,36 @@ RAW FOOTAGE                    CORRECTED                      GRADED
 
 ### 2.2 Color Harmony in Video
 
-| Harmony | Description | Feel | Example |
-|---------|-------------|------|---------|
-| Complementary | Two opposite colors | Dynamic, high contrast | Teal + Orange (blockbusters) |
-| Analogous | Adjacent colors on wheel | Harmonious, calm | Blue + Cyan + Green (nature) |
-| Triadic | Three evenly spaced colors | Vibrant, energetic | Red + Yellow + Blue |
-| Monochromatic | Shades of one color | Unified, moody | Sepia tones, blue tones |
+| Harmony       | Description                | Feel                   | Example                      |
+| ------------- | -------------------------- | ---------------------- | ---------------------------- |
+| Complementary | Two opposite colors        | Dynamic, high contrast | Teal + Orange (blockbusters) |
+| Analogous     | Adjacent colors on wheel   | Harmonious, calm       | Blue + Cyan + Green (nature) |
+| Triadic       | Three evenly spaced colors | Vibrant, energetic     | Red + Yellow + Blue          |
+| Monochromatic | Shades of one color        | Unified, moody         | Sepia tones, blue tones      |
 
 ### 2.3 Color Psychology
 
-| Color | Emotion/Feeling | Usage Example |
-|-------|----------------|---------------|
-| Blue/Teal | Cold, sad, corporate, technology | Night scenes, corporate videos |
-| Orange/Warm | Energy, warmth, nostalgia | Sunset scenes, food, lifestyle |
-| Green | Nature, growth, toxicity, Matrix | Nature docs, sci-fi |
-| Red | Danger, passion, urgency | Action, romance, horror |
-| Yellow | Joy, energy, caution | Summer, comedy, travel |
-| Purple | Luxury, mystery, creativity | Beauty, fashion, sci-fi |
-| Desaturated | Gritty, serious, documentary | Drama, war, thriller |
-| High saturation | Fun, playful, youthful | Children's content, pop culture |
+| Color           | Emotion/Feeling                  | Usage Example                   |
+| --------------- | -------------------------------- | ------------------------------- |
+| Blue/Teal       | Cold, sad, corporate, technology | Night scenes, corporate videos  |
+| Orange/Warm     | Energy, warmth, nostalgia        | Sunset scenes, food, lifestyle  |
+| Green           | Nature, growth, toxicity, Matrix | Nature docs, sci-fi             |
+| Red             | Danger, passion, urgency         | Action, romance, horror         |
+| Yellow          | Joy, energy, caution             | Summer, comedy, travel          |
+| Purple          | Luxury, mystery, creativity      | Beauty, fashion, sci-fi         |
+| Desaturated     | Gritty, serious, documentary     | Drama, war, thriller            |
+| High saturation | Fun, playful, youthful           | Children's content, pop culture |
 
 ## 3. Color Spaces and Bit Depth
 
 ### 3.1 What You Need to Know
 
-| Concept | Simple Explanation | Practical Impact |
-|---------|-------------------|------------------|
-| Color space | Range of colors your footage can contain | Rec.709 = standard, Rec.2020 = wider |
-| Bit depth | How many shades between black and white | 8-bit = 256 shades, 10-bit = 1,024 shades |
+| Concept     | Simple Explanation                            | Practical Impact                           |
+| ----------- | --------------------------------------------- | ------------------------------------------ |
+| Color space | Range of colors your footage can contain      | Rec.709 = standard, Rec.2020 = wider       |
+| Bit depth   | How many shades between black and white       | 8-bit = 256 shades, 10-bit = 1,024 shades  |
 | Log profile | Flat, desaturated image that preserves detail | More room for grading, requires correction |
-| RAW | Unprocessed sensor data | Maximum flexibility, huge files |
+| RAW         | Unprocessed sensor data                       | Maximum flexibility, huge files            |
 
 ### 3.2 Bit Depth Visual
 
@@ -237,12 +237,12 @@ Create separation             Match shots to each other
 
 ### 5.2 Exposure Correction
 
-| Problem | Scope Indicator | Fix |
-|---------|----------------|-----|
-| Underexposed | Waveform clustered at bottom | Raise Lift (shadows) and Gain (highlights) |
-| Overexposed | Waveform touching top (clipping) | Lower Gain, recover highlights |
-| Low contrast | Waveform compressed in middle | Expand: lower Lift, raise Gain |
-| High contrast | Waveform touching both extremes | Compress: raise Lift, lower Gain |
+| Problem       | Scope Indicator                  | Fix                                        |
+| ------------- | -------------------------------- | ------------------------------------------ |
+| Underexposed  | Waveform clustered at bottom     | Raise Lift (shadows) and Gain (highlights) |
+| Overexposed   | Waveform touching top (clipping) | Lower Gain, recover highlights             |
+| Low contrast  | Waveform compressed in middle    | Expand: lower Lift, raise Gain             |
+| High contrast | Waveform touching both extremes  | Compress: raise Lift, lower Gain           |
 
 ### 5.3 White Balance Correction
 
@@ -371,11 +371,11 @@ Every possible color gets mapped to a new value.
 
 ### 7.2 Types of LUTs
 
-| Type | Purpose | When to Apply |
-|------|---------|---------------|
-| **Technical LUT** | Convert Log footage to Rec.709 | First step, on Log footage only |
-| **Creative LUT** | Apply a stylistic look | After correction, as a starting point |
-| **Camera LUT** | Camera-specific Log conversion | Matches specific camera profiles |
+| Type              | Purpose                        | When to Apply                         |
+| ----------------- | ------------------------------ | ------------------------------------- |
+| **Technical LUT** | Convert Log footage to Rec.709 | First step, on Log footage only       |
+| **Creative LUT**  | Apply a stylistic look         | After correction, as a starting point |
+| **Camera LUT**    | Camera-specific Log conversion | Matches specific camera profiles      |
 
 ### 7.3 How to Use LUTs Correctly
 
@@ -391,13 +391,13 @@ Raw footage ──► Correct exposure/WB ──► Apply LUT ──► Fine-tun
 
 ### 7.4 Recommended Free LUT Packs
 
-| Source | Style | Notes |
-|--------|-------|-------|
-| DaVinci Resolve built-in | Various | Included with software |
+| Source                     | Style              | Notes                             |
+| -------------------------- | ------------------ | --------------------------------- |
+| DaVinci Resolve built-in   | Various            | Included with software            |
 | Blackmagic Film to Rec.709 | Natural conversion | For Blackmagic camera Log footage |
-| SmallHD Movie Look Pack | Cinematic | Free download from SmallHD |
-| Ground Control Free LUTs | Various cinematic | Popular free pack |
-| Lutify.me free pack | Various styles | Sample pack of their premium LUTs |
+| SmallHD Movie Look Pack    | Cinematic          | Free download from SmallHD        |
+| Ground Control Free LUTs   | Various cinematic  | Popular free pack                 |
+| Lutify.me free pack        | Various styles     | Sample pack of their premium LUTs |
 
 > **Warning**: Do not just slap a LUT on your footage and call it done. LUTs are a
 > starting point. Always correct first, apply LUT, then fine-tune.
@@ -422,14 +422,14 @@ without affecting the others. Think of it like middleware in a web server.
 
 ### 8.2 Essential Color Page Tools
 
-| Tool | What It Does | When to Use |
-|------|-------------|-------------|
-| **Primary Wheels** | Lift/Gamma/Gain (shadows/mids/highlights) | Every clip |
-| **Curves** | Precise tonal and color control | Fine-tuning, creative looks |
-| **Qualifier** | Select specific colors (HSL) | Skin tone fixes, sky enhancement |
-| **Power Windows** | Mask specific areas | Localized adjustments |
-| **Tracker** | Track moving objects for masks | Moving subjects |
-| **Color Warper** | Remap specific colors visually | Creative color shifts |
+| Tool               | What It Does                              | When to Use                      |
+| ------------------ | ----------------------------------------- | -------------------------------- |
+| **Primary Wheels** | Lift/Gamma/Gain (shadows/mids/highlights) | Every clip                       |
+| **Curves**         | Precise tonal and color control           | Fine-tuning, creative looks      |
+| **Qualifier**      | Select specific colors (HSL)              | Skin tone fixes, sky enhancement |
+| **Power Windows**  | Mask specific areas                       | Localized adjustments            |
+| **Tracker**        | Track moving objects for masks            | Moving subjects                  |
+| **Color Warper**   | Remap specific colors visually            | Creative color shifts            |
 
 ### 8.3 Quick Grade Workflow in Resolve
 
@@ -488,13 +488,13 @@ All skin: same hue angle on vectorscope
 
 ### 9.2 Common Skin Tone Problems
 
-| Problem | Vectorscope Shows | Fix |
-|---------|------------------|-----|
-| Too warm/orange | Skin dots shifted toward Yl | Reduce warmth (lower color temp) |
-| Too cool/pale | Skin dots shifted toward Cy | Add warmth (raise color temp) |
-| Too saturated | Skin dots far from center | Reduce saturation on skin hue |
-| Green/sick cast | Skin dots shifted toward Gr | Add magenta (tint adjustment) |
-| Uneven tone | Skin dots scattered | Use qualifier to isolate and unify |
+| Problem         | Vectorscope Shows           | Fix                                |
+| --------------- | --------------------------- | ---------------------------------- |
+| Too warm/orange | Skin dots shifted toward Yl | Reduce warmth (lower color temp)   |
+| Too cool/pale   | Skin dots shifted toward Cy | Add warmth (raise color temp)      |
+| Too saturated   | Skin dots far from center   | Reduce saturation on skin hue      |
+| Green/sick cast | Skin dots shifted toward Gr | Add magenta (tint adjustment)      |
+| Uneven tone     | Skin dots scattered         | Use qualifier to isolate and unify |
 
 ### 9.3 Protecting Skin Tones While Grading
 

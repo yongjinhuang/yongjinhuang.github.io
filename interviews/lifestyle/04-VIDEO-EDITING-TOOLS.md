@@ -47,14 +47,14 @@ START
 
 ### 1.2 The Short Answer
 
-| Situation | Best Choice |
-|-----------|------------|
-| Beginner, no budget | **DaVinci Resolve** (free, professional-grade) |
-| Quick social media edits | **CapCut** (free, fast, templates) |
-| Mac user, willing to pay once | **Final Cut Pro** ($300 one-time) |
-| Already in Adobe ecosystem | **Premiere Pro** ($23/month) |
-| Want the best color grading | **DaVinci Resolve** (industry standard for color) |
-| Mobile-first editing | **CapCut** or **LumaFusion** (iPad) |
+| Situation                     | Best Choice                                       |
+| ----------------------------- | ------------------------------------------------- |
+| Beginner, no budget           | **DaVinci Resolve** (free, professional-grade)    |
+| Quick social media edits      | **CapCut** (free, fast, templates)                |
+| Mac user, willing to pay once | **Final Cut Pro** ($300 one-time)                 |
+| Already in Adobe ecosystem    | **Premiere Pro** ($23/month)                      |
+| Want the best color grading   | **DaVinci Resolve** (industry standard for color) |
+| Mobile-first editing          | **CapCut** or **LumaFusion** (iPad)               |
 
 > **My recommendation**: Start with **DaVinci Resolve** (free version). It is the only
 > professional-grade editor that costs nothing, and it includes industry-leading color
@@ -92,15 +92,15 @@ DaVinci Resolve organizes work into separate "pages," each focused on a specific
                                                         └───────────┘
 ```
 
-| Page | When to Use | Beginner Priority |
-|------|-------------|-------------------|
-| **Media** | Import footage, organize clips | Learn first |
-| **Cut** | Fast, rough editing (simplified interface) | Great for beginners |
-| **Edit** | Full editing control (traditional NLE) | Learn after Cut page |
-| **Fusion** | Motion graphics, VFX, compositing | Learn later |
-| **Color** | Color correction and grading | Learn after editing basics |
-| **Fairlight** | Professional audio post-production | Learn after editing basics |
-| **Deliver** | Export your final video | Learn first |
+| Page          | When to Use                                | Beginner Priority          |
+| ------------- | ------------------------------------------ | -------------------------- |
+| **Media**     | Import footage, organize clips             | Learn first                |
+| **Cut**       | Fast, rough editing (simplified interface) | Great for beginners        |
+| **Edit**      | Full editing control (traditional NLE)     | Learn after Cut page       |
+| **Fusion**    | Motion graphics, VFX, compositing          | Learn later                |
+| **Color**     | Color correction and grading               | Learn after editing basics |
+| **Fairlight** | Professional audio post-production         | Learn after editing basics |
+| **Deliver**   | Export your final video                    | Learn first                |
 
 ### 2.3 Getting Started Workflow
 
@@ -138,37 +138,37 @@ Step 6: Deliver Page
 
 ### 2.4 Essential DaVinci Resolve Shortcuts
 
-| Action | Mac | Windows |
-|--------|-----|---------|
-| Play/Stop | Space | Space |
-| Split clip | Cmd+B | Ctrl+B |
-| Ripple delete | Cmd+Backspace | Ctrl+Backspace |
-| Select all forward | Y | Y |
-| Trim mode | T | T |
-| Zoom to fit | Shift+Z | Shift+Z |
-| Mark In | I | I |
-| Mark Out | O | O |
-| Insert clip | F9 | F9 |
-| Overwrite clip | F10 | F10 |
-| Undo | Cmd+Z | Ctrl+Z |
-| Full screen viewer | Cmd+F | Ctrl+F |
+| Action             | Mac           | Windows        |
+| ------------------ | ------------- | -------------- |
+| Play/Stop          | Space         | Space          |
+| Split clip         | Cmd+B         | Ctrl+B         |
+| Ripple delete      | Cmd+Backspace | Ctrl+Backspace |
+| Select all forward | Y             | Y              |
+| Trim mode          | T             | T              |
+| Zoom to fit        | Shift+Z       | Shift+Z        |
+| Mark In            | I             | I              |
+| Mark Out           | O             | O              |
+| Insert clip        | F9            | F9             |
+| Overwrite clip     | F10           | F10            |
+| Undo               | Cmd+Z         | Ctrl+Z         |
+| Full screen viewer | Cmd+F         | Ctrl+F         |
 
 ### 2.5 Free vs Studio ($295 One-Time)
 
-| Feature | Free | Studio |
-|---------|------|--------|
-| Basic editing | Yes | Yes |
-| Color grading (nodes, scopes) | Yes | Yes |
-| Fairlight audio | Yes | Yes |
-| Export up to 4K UHD | Yes | Yes |
-| Neural Engine (AI features) | No | Yes |
-| Noise reduction | Basic | Advanced (temporal + spatial) |
-| HDR grading tools | No | Yes |
-| Multi-GPU support | No | Yes |
-| Stereoscopic 3D | No | Yes |
-| Film grain | No | Yes |
-| Motion blur effects | No | Yes |
-| 120fps timeline | No | Yes |
+| Feature                       | Free  | Studio                        |
+| ----------------------------- | ----- | ----------------------------- |
+| Basic editing                 | Yes   | Yes                           |
+| Color grading (nodes, scopes) | Yes   | Yes                           |
+| Fairlight audio               | Yes   | Yes                           |
+| Export up to 4K UHD           | Yes   | Yes                           |
+| Neural Engine (AI features)   | No    | Yes                           |
+| Noise reduction               | Basic | Advanced (temporal + spatial) |
+| HDR grading tools             | No    | Yes                           |
+| Multi-GPU support             | No    | Yes                           |
+| Stereoscopic 3D               | No    | Yes                           |
+| Film grain                    | No    | Yes                           |
+| Motion blur effects           | No    | Yes                           |
+| 120fps timeline               | No    | Yes                           |
 
 > **Start free.** The free version is genuinely professional-grade. Upgrade only if you
 > specifically need AI noise reduction, HDR, or advanced GPU acceleration.
@@ -184,14 +184,14 @@ workflows. Part of the Adobe Creative Cloud ecosystem.
 
 ### 3.2 Strengths and Weaknesses
 
-| Strengths | Weaknesses |
-|-----------|-----------|
-| Huge community, countless tutorials | Subscription-only (no one-time purchase) |
-| Integration with After Effects, Photoshop, Audition | Can be buggy, especially with updates |
-| Best proxy workflow | Color grading less powerful than Resolve |
-| Most YouTube tutorials assume Premiere | Resource-heavy |
-| Dynamic Link to After Effects | Monthly cost adds up |
-| Lumetri color panel is good | |
+| Strengths                                           | Weaknesses                               |
+| --------------------------------------------------- | ---------------------------------------- |
+| Huge community, countless tutorials                 | Subscription-only (no one-time purchase) |
+| Integration with After Effects, Photoshop, Audition | Can be buggy, especially with updates    |
+| Best proxy workflow                                 | Color grading less powerful than Resolve |
+| Most YouTube tutorials assume Premiere              | Resource-heavy                           |
+| Dynamic Link to After Effects                       | Monthly cost adds up                     |
+| Lumetri color panel is good                         |                                          |
 
 ### 3.3 Premiere Pro Workspace
 
@@ -219,18 +219,18 @@ workflows. Part of the Adobe Creative Cloud ecosystem.
 
 ### 3.4 Essential Premiere Pro Shortcuts
 
-| Action | Mac | Windows |
-|--------|-----|---------|
-| Razor tool | C | C |
-| Selection tool | V | V |
-| Ripple trim (previous) | Q | Q |
-| Ripple trim (next) | W | W |
-| Add edit | Cmd+K | Ctrl+K |
-| Render in to out | Enter | Enter |
-| Export | Cmd+M | Ctrl+M |
-| Mark In | I | I |
-| Mark Out | O | O |
-| Nest clips | Cmd+Shift+N | Ctrl+Shift+N |
+| Action                 | Mac         | Windows      |
+| ---------------------- | ----------- | ------------ |
+| Razor tool             | C           | C            |
+| Selection tool         | V           | V            |
+| Ripple trim (previous) | Q           | Q            |
+| Ripple trim (next)     | W           | W            |
+| Add edit               | Cmd+K       | Ctrl+K       |
+| Render in to out       | Enter       | Enter        |
+| Export                 | Cmd+M       | Ctrl+M       |
+| Mark In                | I           | I            |
+| Mark Out               | O           | O            |
+| Nest clips             | Cmd+Shift+N | Ctrl+Shift+N |
 
 ## 4. Final Cut Pro
 
@@ -243,14 +243,14 @@ and a unique "magnetic timeline" that some love and others find confusing.
 
 ### 4.2 Strengths and Weaknesses
 
-| Strengths | Weaknesses |
-|-----------|-----------|
-| Blazingly fast on Apple Silicon (M1-M4) | Mac only |
-| One-time purchase | Magnetic timeline has learning curve |
-| Magnetic timeline prevents gaps/sync issues | Smaller community than Premiere |
-| Excellent proxy workflow | Less common in professional settings |
-| Compressor bundled for encoding | Fewer third-party plugins |
-| Best performance per dollar on Mac | Non-standard timeline behavior |
+| Strengths                                   | Weaknesses                           |
+| ------------------------------------------- | ------------------------------------ |
+| Blazingly fast on Apple Silicon (M1-M4)     | Mac only                             |
+| One-time purchase                           | Magnetic timeline has learning curve |
+| Magnetic timeline prevents gaps/sync issues | Smaller community than Premiere      |
+| Excellent proxy workflow                    | Less common in professional settings |
+| Compressor bundled for encoding             | Fewer third-party plugins            |
+| Best performance per dollar on Mac          | Non-standard timeline behavior       |
 
 ### 4.3 The Magnetic Timeline
 
@@ -274,19 +274,19 @@ Connected│   B-roll  │         │         ← clips "connect" to primary
 
 ### 4.4 Essential Final Cut Pro Shortcuts
 
-| Action | Shortcut |
-|--------|----------|
-| Blade (cut) | B |
-| Select | A |
-| Trim start | [ |
-| Trim end | ] |
-| Append to timeline | E |
-| Insert | W |
-| Connect (as B-roll) | Q |
-| New compound clip | Option+G |
-| Color board | Cmd+6 |
-| Play/Stop | Space or L/K |
-| Skim (preview without clicking) | S (toggle) |
+| Action                          | Shortcut     |
+| ------------------------------- | ------------ |
+| Blade (cut)                     | B            |
+| Select                          | A            |
+| Trim start                      | [            |
+| Trim end                        | ]            |
+| Append to timeline              | E            |
+| Insert                          | W            |
+| Connect (as B-roll)             | Q            |
+| New compound clip               | Option+G     |
+| Color board                     | Cmd+6        |
+| Play/Stop                       | Space or L/K |
+| Skim (preview without clicking) | S (toggle)   |
 
 ## 5. CapCut (Mobile + Desktop)
 
@@ -322,38 +322,38 @@ Phone Workflow:
 
 ### 5.4 Best Use Cases for CapCut
 
-| Use Case | Why CapCut |
-|----------|-----------|
-| YouTube Shorts | Vertical editing is fast, auto-captions |
-| TikTok content | Direct export, trending templates |
-| Instagram Reels | Quick turnaround, social-native features |
-| Quick edits on the go | Mobile editing is excellent |
-| Auto-captioned videos | Best free auto-caption tool |
-| Repurposing long-form to short-form | Fast clipping and resizing |
+| Use Case                            | Why CapCut                               |
+| ----------------------------------- | ---------------------------------------- |
+| YouTube Shorts                      | Vertical editing is fast, auto-captions  |
+| TikTok content                      | Direct export, trending templates        |
+| Instagram Reels                     | Quick turnaround, social-native features |
+| Quick edits on the go               | Mobile editing is excellent              |
+| Auto-captioned videos               | Best free auto-caption tool              |
+| Repurposing long-form to short-form | Fast clipping and resizing               |
 
 ### 5.5 CapCut Limitations
 
-| Limitation | Impact | Workaround |
-|-----------|--------|-----------|
-| Limited color grading | Cannot achieve cinematic grades | Use DaVinci Resolve for color |
-| Basic audio editing | No parametric EQ, limited compression | Process audio separately |
-| No proxy workflow | Large files may lag | Edit lower-res, re-export |
-| Limited track count | Complex projects hit limits | Use DaVinci Resolve for complex edits |
-| Template-heavy culture | Videos can look "same-ish" | Customize templates, develop your style |
+| Limitation             | Impact                                | Workaround                              |
+| ---------------------- | ------------------------------------- | --------------------------------------- |
+| Limited color grading  | Cannot achieve cinematic grades       | Use DaVinci Resolve for color           |
+| Basic audio editing    | No parametric EQ, limited compression | Process audio separately                |
+| No proxy workflow      | Large files may lag                   | Edit lower-res, re-export               |
+| Limited track count    | Complex projects hit limits           | Use DaVinci Resolve for complex edits   |
+| Template-heavy culture | Videos can look "same-ish"            | Customize templates, develop your style |
 
 ## 6. Other Notable Tools
 
 ### 6.1 Quick Comparison
 
-| Tool | Platform | Price | Best For |
-|------|----------|-------|----------|
-| iMovie | Mac/iOS | Free | Absolute beginners on Apple |
-| LumaFusion | iPad/iPhone | $30 | Serious mobile editing |
-| Shotcut | All | Free/open-source | Free alternative, simple needs |
-| Kdenlive | Linux/All | Free/open-source | Linux users |
-| HitFilm | All | Free tier | VFX on a budget |
-| Descript | All | $24/mo | Podcast/interview editing (text-based) |
-| Adobe After Effects | All | $23/mo | Motion graphics, VFX (not editing) |
+| Tool                | Platform    | Price            | Best For                               |
+| ------------------- | ----------- | ---------------- | -------------------------------------- |
+| iMovie              | Mac/iOS     | Free             | Absolute beginners on Apple            |
+| LumaFusion          | iPad/iPhone | $30              | Serious mobile editing                 |
+| Shotcut             | All         | Free/open-source | Free alternative, simple needs         |
+| Kdenlive            | Linux/All   | Free/open-source | Linux users                            |
+| HitFilm             | All         | Free tier        | VFX on a budget                        |
+| Descript            | All         | $24/mo           | Podcast/interview editing (text-based) |
+| Adobe After Effects | All         | $23/mo           | Motion graphics, VFX (not editing)     |
 
 ### 6.2 Descript (Text-Based Editing)
 
@@ -378,19 +378,19 @@ Timeline view:                          Text view:
 
 ### 7.1 Feature Comparison
 
-| Feature | DaVinci Resolve | Premiere Pro | Final Cut Pro | CapCut |
-|---------|----------------|-------------|---------------|--------|
-| Price | Free / $295 | $23/mo | $300 / $5/mo | Free / $8/mo |
-| Platform | Mac/Win/Linux | Mac/Win | Mac only | All |
-| Color grading | Excellent | Good | Good | Basic |
-| Audio editing | Excellent (Fairlight) | Good (or Audition) | Good | Basic |
-| Motion graphics | Good (Fusion) | Good (+ AE) | Basic | Templates |
-| VFX | Good (Fusion) | Basic (+ AE) | Basic | Filters |
-| Auto-captions | Yes (Studio) | Yes (AI) | Yes | Excellent |
-| Learning curve | Moderate | Moderate | Moderate | Easy |
-| Performance | Good | Variable | Excellent on Mac | Good |
-| Community size | Large | Largest | Medium | Large (growing) |
-| Proxy workflow | Yes | Yes (best) | Yes | Limited |
+| Feature         | DaVinci Resolve       | Premiere Pro       | Final Cut Pro    | CapCut          |
+| --------------- | --------------------- | ------------------ | ---------------- | --------------- |
+| Price           | Free / $295           | $23/mo             | $300 / $5/mo     | Free / $8/mo    |
+| Platform        | Mac/Win/Linux         | Mac/Win            | Mac only         | All             |
+| Color grading   | Excellent             | Good               | Good             | Basic           |
+| Audio editing   | Excellent (Fairlight) | Good (or Audition) | Good             | Basic           |
+| Motion graphics | Good (Fusion)         | Good (+ AE)        | Basic            | Templates       |
+| VFX             | Good (Fusion)         | Basic (+ AE)       | Basic            | Filters         |
+| Auto-captions   | Yes (Studio)          | Yes (AI)           | Yes              | Excellent       |
+| Learning curve  | Moderate              | Moderate           | Moderate         | Easy            |
+| Performance     | Good                  | Variable           | Excellent on Mac | Good            |
+| Community size  | Large                 | Largest            | Medium           | Large (growing) |
+| Proxy workflow  | Yes                   | Yes (best)         | Yes              | Limited         |
 
 ### 7.2 Learning Curve Comparison
 
@@ -422,20 +422,20 @@ Expert│                              ╭────────╯
 
 ### 8.1 Minimum Specs by Editor
 
-| Component | DaVinci Resolve | Premiere Pro | Final Cut Pro | CapCut Desktop |
-|-----------|----------------|-------------|---------------|----------------|
-| RAM | 16 GB | 16 GB | 8 GB (16 recommended) | 8 GB |
-| GPU | 2 GB VRAM | 2 GB VRAM | Apple Silicon | Integrated OK |
-| Storage | SSD (NVMe preferred) | SSD | SSD | SSD |
-| CPU | 6+ cores | 6+ cores | Apple Silicon | 4+ cores |
+| Component | DaVinci Resolve      | Premiere Pro | Final Cut Pro         | CapCut Desktop |
+| --------- | -------------------- | ------------ | --------------------- | -------------- |
+| RAM       | 16 GB                | 16 GB        | 8 GB (16 recommended) | 8 GB           |
+| GPU       | 2 GB VRAM            | 2 GB VRAM    | Apple Silicon         | Integrated OK  |
+| Storage   | SSD (NVMe preferred) | SSD          | SSD                   | SSD            |
+| CPU       | 6+ cores             | 6+ cores     | Apple Silicon         | 4+ cores       |
 
 ### 8.2 Recommended Editing Computers
 
-| Budget | Mac | Windows |
-|--------|-----|---------|
-| Budget ($800-1,200) | MacBook Air M2 (16GB) | AMD 5600X + 32GB + RTX 3060 |
-| Mid-range ($1,500-2,500) | MacBook Pro M3 Pro (18GB) | AMD 7700X + 32GB + RTX 4070 |
-| Professional ($3,000+) | MacBook Pro M4 Max (48GB) | AMD 9800X3D + 64GB + RTX 4080 |
+| Budget                   | Mac                       | Windows                       |
+| ------------------------ | ------------------------- | ----------------------------- |
+| Budget ($800-1,200)      | MacBook Air M2 (16GB)     | AMD 5600X + 32GB + RTX 3060   |
+| Mid-range ($1,500-2,500) | MacBook Pro M3 Pro (18GB) | AMD 7700X + 32GB + RTX 4070   |
+| Professional ($3,000+)   | MacBook Pro M4 Max (48GB) | AMD 9800X3D + 64GB + RTX 4080 |
 
 ### 8.3 Storage Strategy
 
@@ -496,14 +496,14 @@ Bad: IMG_4521.mp4, final_v2_FINAL_final(1).mp4
 
 Once you establish a video style, create templates for:
 
-| Template | What It Includes | Time Saved |
-|----------|-----------------|------------|
-| Intro sequence | Animated logo, music sting | 30-60 min per video |
-| Lower thirds | Name/title graphic preset | 15-30 min per video |
-| End screen | Subscribe button, video links | 20-30 min per video |
-| Color grade | Your signature look as a LUT/preset | 30-60 min per video |
-| Audio chain | EQ, compression, de-ess presets | 15-20 min per video |
-| Project template | Pre-built timeline with tracks, bins | 15 min per video |
+| Template         | What It Includes                     | Time Saved          |
+| ---------------- | ------------------------------------ | ------------------- |
+| Intro sequence   | Animated logo, music sting           | 30-60 min per video |
+| Lower thirds     | Name/title graphic preset            | 15-30 min per video |
+| End screen       | Subscribe button, video links        | 20-30 min per video |
+| Color grade      | Your signature look as a LUT/preset  | 30-60 min per video |
+| Audio chain      | EQ, compression, de-ess presets      | 15-20 min per video |
+| Project template | Pre-built timeline with tracks, bins | 15 min per video    |
 
 ### 10.2 Creating a Project Template
 

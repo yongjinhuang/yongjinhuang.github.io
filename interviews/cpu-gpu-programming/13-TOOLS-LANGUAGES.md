@@ -41,6 +41,7 @@ The right tool for the job matters enormously in performance programming. A sing
 C is the lingua franca of systems programming. The Linux kernel, CUDA runtime, OpenCL drivers, and virtually every hardware interface is written in C. Even if you write application code in C++ or Rust, you will call C libraries, read C headers, and debug C code.
 
 Key reasons C remains critical:
+
 - **Hardware proximity**: C maps almost directly to machine instructions
 - **ABI stability**: The C calling convention is the universal FFI
 - **Kernel programming**: Linux kernel is written in C (with recent Rust additions)
@@ -278,7 +279,7 @@ void main_loop(void) {
 
 ### The restrict Keyword
 
-`restrict` tells the compiler that a pointer is the *only* way to access the memory it points to. This enables crucial optimizations, especially auto-vectorization.
+`restrict` tells the compiler that a pointer is the _only_ way to access the memory it points to. This enables crucial optimizations, especially auto-vectorization.
 
 ```c
 /* Without restrict: compiler assumes a and b might overlap (alias),
@@ -1097,7 +1098,8 @@ async fn gpu_compute_example() {
 
 ### Why Learn Assembly
 
-You will rarely *write* assembly, but you must be able to *read* it to:
+You will rarely _write_ assembly, but you must be able to _read_ it to:
+
 - Verify the compiler is vectorizing your hot loops
 - Understand why a seemingly simple change caused a 2x performance regression
 - Debug subtle issues in lock-free code
@@ -1268,6 +1270,7 @@ float dot_product_avx2(const float *a, const float *b, int n) {
 ### Python's Role
 
 Python is the **glue language** of GPU computing. It is used for:
+
 - Orchestrating GPU workflows (launch kernels, manage memory)
 - Data preprocessing and postprocessing
 - Prototyping algorithms before porting to C++/CUDA
@@ -1935,12 +1938,12 @@ jobs:
 
   # ---- GPU tests (run on self-hosted GPU runner) ----
   gpu-tests:
-    runs-on: [self-hosted, gpu]  # requires self-hosted runner with GPU
-    needs: cpu-tests             # only run if CPU tests pass
+    runs-on: [self-hosted, gpu] # requires self-hosted runner with GPU
+    needs: cpu-tests # only run if CPU tests pass
     steps:
       - uses: actions/checkout@v4
         with:
-          lfs: true              # fetch LFS objects for test data
+          lfs: true # fetch LFS objects for test data
 
       - name: Check GPU
         run: nvidia-smi
@@ -2953,22 +2956,22 @@ COMMUNITY:
 
 This chapter covered the essential tools and languages for CPU/GPU programming:
 
-| Topic | Key Takeaway |
-|---|---|
-| **C** | Still the foundation. Master pointers, volatile, restrict, aligned allocation. |
-| **C++** | Use modern features (constexpr, move semantics, parallel algorithms) for zero-cost abstractions. |
-| **Rust** | Ownership model eliminates data races at compile time. Rayon makes parallelism trivial. |
-| **Assembly** | Read it, rarely write it. Use Godbolt to verify compiler output. |
-| **Python** | Glue language. NumPy/CuPy/Numba for rapid prototyping. Never write hot loops in Python. |
-| **Build Systems** | CMake is standard. Know your nvcc flags and compute capability targets. |
-| **Godbolt** | Your best friend for understanding what the compiler does. Use it daily. |
-| **Git/CI** | Git LFS for large files. Run sanitizers and GPU tests in CI. |
-| **Linux Interfaces** | mmap, CPU affinity, io_uring, cgroups -- the kernel is your partner. |
-| **Sanitizers** | ASan, TSan, UBSan, MSan. Run them before optimizing. Fix UB first. |
-| **Documentation** | NVIDIA docs, Intel Intrinsics Guide, Agner Fog. Bookmark them now. |
+| Topic                | Key Takeaway                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| **C**                | Still the foundation. Master pointers, volatile, restrict, aligned allocation.                   |
+| **C++**              | Use modern features (constexpr, move semantics, parallel algorithms) for zero-cost abstractions. |
+| **Rust**             | Ownership model eliminates data races at compile time. Rayon makes parallelism trivial.          |
+| **Assembly**         | Read it, rarely write it. Use Godbolt to verify compiler output.                                 |
+| **Python**           | Glue language. NumPy/CuPy/Numba for rapid prototyping. Never write hot loops in Python.          |
+| **Build Systems**    | CMake is standard. Know your nvcc flags and compute capability targets.                          |
+| **Godbolt**          | Your best friend for understanding what the compiler does. Use it daily.                         |
+| **Git/CI**           | Git LFS for large files. Run sanitizers and GPU tests in CI.                                     |
+| **Linux Interfaces** | mmap, CPU affinity, io_uring, cgroups -- the kernel is your partner.                             |
+| **Sanitizers**       | ASan, TSan, UBSan, MSan. Run them before optimizing. Fix UB first.                               |
+| **Documentation**    | NVIDIA docs, Intel Intrinsics Guide, Agner Fog. Bookmark them now.                               |
 
 The tools do not make you productive by themselves. Consistent practice does. Set up your environment, write code, profile it, read the assembly, fix the bugs, and repeat.
 
 ---
 
-*Next chapter: [Chapter 14 - Real-World Case Studies](./14-CASE-STUDIES.md) -- Putting everything together with production GPU code.*
+_Next chapter: [Chapter 14 - Real-World Case Studies](./14-CASE-STUDIES.md) -- Putting everything together with production GPU code._

@@ -4,28 +4,28 @@
 
 ### Functional Requirements
 
-| Requirement | Description |
-|---|---|
-| Multi-channel delivery | Push notifications (iOS/Android), SMS, email, in-app |
-| Real-time notifications | Deliver within seconds of trigger event |
-| Scheduled notifications | Support future-dated delivery |
-| User preferences | Per-channel opt-in/opt-out, quiet hours, frequency caps |
-| Template system | Reusable templates with variable substitution and localization |
-| Notification grouping | Batch related notifications into digests |
-| Delivery tracking | Track sent, delivered, opened, clicked states |
-| Priority levels | Different urgency tiers with corresponding SLAs |
+| Requirement             | Description                                                    |
+| ----------------------- | -------------------------------------------------------------- |
+| Multi-channel delivery  | Push notifications (iOS/Android), SMS, email, in-app           |
+| Real-time notifications | Deliver within seconds of trigger event                        |
+| Scheduled notifications | Support future-dated delivery                                  |
+| User preferences        | Per-channel opt-in/opt-out, quiet hours, frequency caps        |
+| Template system         | Reusable templates with variable substitution and localization |
+| Notification grouping   | Batch related notifications into digests                       |
+| Delivery tracking       | Track sent, delivered, opened, clicked states                  |
+| Priority levels         | Different urgency tiers with corresponding SLAs                |
 
 ### Non-Functional Requirements
 
-| Requirement | Target |
-|---|---|
-| Latency | Soft real-time, < 5 seconds for P0/P1 |
-| Delivery guarantee | At-least-once delivery |
-| Availability | 99.99% uptime |
-| Scalability | Billions of notifications per day |
-| Fault tolerance | No single point of failure |
-| Idempotency | Prevent duplicate notifications |
-| Observability | End-to-end tracking and metrics |
+| Requirement        | Target                                |
+| ------------------ | ------------------------------------- |
+| Latency            | Soft real-time, < 5 seconds for P0/P1 |
+| Delivery guarantee | At-least-once delivery                |
+| Availability       | 99.99% uptime                         |
+| Scalability        | Billions of notifications per day     |
+| Fault tolerance    | No single point of failure            |
+| Idempotency        | Prevent duplicate notifications       |
+| Observability      | End-to-end tracking and metrics       |
 
 ### Scale Estimation
 
@@ -275,15 +275,15 @@ Fallback chain:
 
 ### Component Responsibilities
 
-| Component | Responsibility |
-|---|---|
+| Component                | Responsibility                                                                               |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
 | Notification Service API | Receives notification requests, validates, deduplicates, renders templates, routes to queues |
-| Priority Queue (Kafka) | Decouples producers from consumers, enables backpressure, ordered delivery per partition |
-| Channel Workers | Consume from queues, format payloads per channel, call third-party APIs |
-| Template Engine | Renders templates with variables, handles localization |
-| User Preference Store | Stores opt-in/out, quiet hours, frequency caps (cached in Redis) |
-| Delivery Tracker | Records delivery attempts, successes, failures for each notification |
-| WebSocket Server | Maintains persistent connections for in-app real-time delivery |
+| Priority Queue (Kafka)   | Decouples producers from consumers, enables backpressure, ordered delivery per partition     |
+| Channel Workers          | Consume from queues, format payloads per channel, call third-party APIs                      |
+| Template Engine          | Renders templates with variables, handles localization                                       |
+| User Preference Store    | Stores opt-in/out, quiet hours, frequency caps (cached in Redis)                             |
+| Delivery Tracker         | Records delivery attempts, successes, failures for each notification                         |
+| WebSocket Server         | Maintains persistent connections for in-app real-time delivery                               |
 
 ---
 
@@ -834,9 +834,7 @@ async function resolveTemplate(
   });
 
   if (!fallback) {
-    throw new Error(
-      `No template found: name=${name}, channel=${channel}`
-    );
+    throw new Error(`No template found: name=${name}, channel=${channel}`);
   }
 
   return fallback;
@@ -853,8 +851,8 @@ interface UserPreference {
   readonly channel: 'push' | 'sms' | 'email' | 'in_app';
   readonly category: string;
   readonly enabled: boolean;
-  readonly quietStart: string | null;  // "22:00"
-  readonly quietEnd: string | null;    // "08:00"
+  readonly quietStart: string | null; // "22:00"
+  readonly quietEnd: string | null; // "08:00"
   readonly frequencyCap: number | null;
 }
 
@@ -895,7 +893,11 @@ async function shouldSendNotification(
   // 4. Check frequency cap
   const effectiveCap = categoryPref?.frequencyCap ?? globalPref?.frequencyCap;
   if (effectiveCap) {
-    const sentToday = await getNotificationCountToday(userId, channel, category);
+    const sentToday = await getNotificationCountToday(
+      userId,
+      channel,
+      category
+    );
     if (sentToday >= effectiveCap) {
       return { allowed: false, reason: 'frequency_cap_exceeded' };
     }
@@ -997,9 +999,7 @@ async function checkAndSetIdempotency(
 }
 
 // Additional deduplication at consumer level
-async function deduplicateAtConsumer(
-  notificationId: string
-): Promise<boolean> {
+async function deduplicateAtConsumer(notificationId: string): Promise<boolean> {
   const lockKey = `processing:${notificationId}`;
   // Distributed lock with 5-minute TTL
   const acquired = await redis.set(lockKey, '1', 'NX', 'EX', 300);
@@ -1018,10 +1018,10 @@ interface RetryConfig {
 }
 
 const RETRY_CONFIGS: Record<number, RetryConfig> = {
-  0: { maxAttempts: 3, baseDelayMs: 100,  maxDelayMs: 1000,   jitterMs: 50  },
-  1: { maxAttempts: 5, baseDelayMs: 1000, maxDelayMs: 30000,  jitterMs: 500 },
-  2: { maxAttempts: 3, baseDelayMs: 5000, maxDelayMs: 60000,  jitterMs: 1000},
-  3: { maxAttempts: 2, baseDelayMs: 10000,maxDelayMs: 120000, jitterMs: 2000},
+  0: { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000, jitterMs: 50 },
+  1: { maxAttempts: 5, baseDelayMs: 1000, maxDelayMs: 30000, jitterMs: 500 },
+  2: { maxAttempts: 3, baseDelayMs: 5000, maxDelayMs: 60000, jitterMs: 1000 },
+  3: { maxAttempts: 2, baseDelayMs: 10000, maxDelayMs: 120000, jitterMs: 2000 },
 };
 
 function calculateRetryDelay(
@@ -1125,10 +1125,10 @@ async function checkUserRateLimit(
   channel: string
 ): Promise<{ allowed: boolean; retryAfterMs?: number }> {
   const limits: Record<string, { count: number; windowSec: number }> = {
-    push:   { count: 30,  windowSec: 3600 },   // 30 push/hour
-    sms:    { count: 5,   windowSec: 3600 },   // 5 SMS/hour
-    email:  { count: 10,  windowSec: 3600 },   // 10 emails/hour
-    in_app: { count: 100, windowSec: 3600 },   // 100 in-app/hour
+    push: { count: 30, windowSec: 3600 }, // 30 push/hour
+    sms: { count: 5, windowSec: 3600 }, // 5 SMS/hour
+    email: { count: 10, windowSec: 3600 }, // 10 emails/hour
+    in_app: { count: 100, windowSec: 3600 }, // 100 in-app/hour
   };
 
   const limit = limits[channel];
@@ -1142,19 +1142,20 @@ async function checkUserRateLimit(
 
   // Redis sorted set: score = timestamp, value = notification ID
   const pipeline = redis.pipeline();
-  pipeline.zremrangebyscore(key, 0, windowStart);      // Remove old entries
-  pipeline.zcard(key);                                  // Count current window
-  pipeline.zadd(key, now, `${now}:${Math.random()}`);  // Add current request
-  pipeline.expire(key, limit.windowSec);                // Set TTL
+  pipeline.zremrangebyscore(key, 0, windowStart); // Remove old entries
+  pipeline.zcard(key); // Count current window
+  pipeline.zadd(key, now, `${now}:${Math.random()}`); // Add current request
+  pipeline.expire(key, limit.windowSec); // Set TTL
 
   const results = await pipeline.exec();
   const currentCount = results[1][1] as number;
 
   if (currentCount >= limit.count) {
     const oldestInWindow = await redis.zrange(key, 0, 0, 'WITHSCORES');
-    const retryAfterMs = oldestInWindow.length > 1
-      ? Number(oldestInWindow[1]) + limit.windowSec * 1000 - now
-      : limit.windowSec * 1000;
+    const retryAfterMs =
+      oldestInWindow.length > 1
+        ? Number(oldestInWindow[1]) + limit.windowSec * 1000 - now
+        : limit.windowSec * 1000;
 
     return { allowed: false, retryAfterMs };
   }
@@ -1228,9 +1229,9 @@ class TokenBucketRateLimiter {
 
 // Usage per provider:
 const providerLimiters = {
-  fcm:      new TokenBucketRateLimiter(1000, 1000),
-  apns:     new TokenBucketRateLimiter(50000, 50000),
-  twilio:   new TokenBucketRateLimiter(100, 100),
+  fcm: new TokenBucketRateLimiter(1000, 1000),
+  apns: new TokenBucketRateLimiter(50000, 50000),
+  twilio: new TokenBucketRateLimiter(100, 100),
   sendgrid: new TokenBucketRateLimiter(10000, 10000),
 };
 ```

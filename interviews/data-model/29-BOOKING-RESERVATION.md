@@ -6,14 +6,14 @@ A booking and reservation system must solve the double-booking problem: two gues
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **listings** | Property catalog with attributes and pricing | Central entity describing what is bookable |
-| **availability** | Per-date availability status | One row per listing per date; enables precise control and prevents double-booking |
-| **bookings** | Confirmed reservations | Immutable record of a guest's stay with full pricing breakdown |
-| **holds** | Short-lived inventory locks during checkout | Prevents two users from booking the same dates simultaneously |
-| **pricing_rules** | Dynamic pricing configuration | Allows hosts to set seasonal, weekend, and demand-based pricing |
-| **waitlist_entries** | Demand capture for unavailable dates | Notifies guests when dates become available; measures unmet demand |
+| Table                | Purpose                                      | Why It Exists                                                                     |
+| -------------------- | -------------------------------------------- | --------------------------------------------------------------------------------- |
+| **listings**         | Property catalog with attributes and pricing | Central entity describing what is bookable                                        |
+| **availability**     | Per-date availability status                 | One row per listing per date; enables precise control and prevents double-booking |
+| **bookings**         | Confirmed reservations                       | Immutable record of a guest's stay with full pricing breakdown                    |
+| **holds**            | Short-lived inventory locks during checkout  | Prevents two users from booking the same dates simultaneously                     |
+| **pricing_rules**    | Dynamic pricing configuration                | Allows hosts to set seasonal, weekend, and demand-based pricing                   |
+| **waitlist_entries** | Demand capture for unavailable dates         | Notifies guests when dates become available; measures unmet demand                |
 
 ---
 
@@ -21,37 +21,37 @@ A booking and reservation system must solve the double-booking problem: two gues
 
 ### listings
 
-| Field | Type | Description |
-|-------|------|-------------|
-| listing_id | UUID (PK) | Unique listing identifier |
-| host_id | UUID (FK) | The property owner |
-| title | VARCHAR | Listing title |
-| description | TEXT | Full property description |
-| property_type | ENUM | apartment, house, room, villa, cabin |
-| lat | DECIMAL | Latitude for geo-search |
-| lng | DECIMAL | Longitude for geo-search |
-| max_guests | INT | Maximum number of guests allowed |
-| bedrooms | INT | Number of bedrooms |
-| bathrooms | INT | Number of bathrooms |
-| amenities | VARCHAR[] | Array of amenity tags (wifi, pool, parking, etc.) |
-| base_price | DECIMAL | Default nightly price before any pricing rules apply |
-| cleaning_fee | DECIMAL | One-time cleaning fee per booking |
-| rating | DECIMAL | Average review rating (1.0 to 5.0) |
-| status | ENUM | active, unlisted, suspended |
+| Field         | Type      | Description                                          |
+| ------------- | --------- | ---------------------------------------------------- |
+| listing_id    | UUID (PK) | Unique listing identifier                            |
+| host_id       | UUID (FK) | The property owner                                   |
+| title         | VARCHAR   | Listing title                                        |
+| description   | TEXT      | Full property description                            |
+| property_type | ENUM      | apartment, house, room, villa, cabin                 |
+| lat           | DECIMAL   | Latitude for geo-search                              |
+| lng           | DECIMAL   | Longitude for geo-search                             |
+| max_guests    | INT       | Maximum number of guests allowed                     |
+| bedrooms      | INT       | Number of bedrooms                                   |
+| bathrooms     | INT       | Number of bathrooms                                  |
+| amenities     | VARCHAR[] | Array of amenity tags (wifi, pool, parking, etc.)    |
+| base_price    | DECIMAL   | Default nightly price before any pricing rules apply |
+| cleaning_fee  | DECIMAL   | One-time cleaning fee per booking                    |
+| rating        | DECIMAL   | Average review rating (1.0 to 5.0)                   |
+| status        | ENUM      | active, unlisted, suspended                          |
 
 **Why amenities as an array?** Amenities are used for filtering ("show listings with pool AND wifi") but do not have their own lifecycle or relationships. An array with a GIN index is simpler than a many-to-many join table and performs well for containment queries.
 
 ### availability
 
-| Field | Type | Description |
-|-------|------|-------------|
-| listing_id | UUID (CPK) | Part of composite primary key |
-| date | DATE (CPK) | Part of composite primary key; one row per listing per date |
-| status | ENUM | available, blocked (host blocked), booked, held |
-| booking_id | UUID | Set when status=booked; references the confirmed booking |
-| hold_id | UUID | Set when status=held; references the active hold |
-| price_override | DECIMAL | Host-set price for this specific date (overrides base_price and rules) |
-| calendar_version | INT | Optimistic lock; incremented on every status change |
+| Field            | Type       | Description                                                            |
+| ---------------- | ---------- | ---------------------------------------------------------------------- |
+| listing_id       | UUID (CPK) | Part of composite primary key                                          |
+| date             | DATE (CPK) | Part of composite primary key; one row per listing per date            |
+| status           | ENUM       | available, blocked (host blocked), booked, held                        |
+| booking_id       | UUID       | Set when status=booked; references the confirmed booking               |
+| hold_id          | UUID       | Set when status=held; references the active hold                       |
+| price_override   | DECIMAL    | Host-set price for this specific date (overrides base_price and rules) |
+| calendar_version | INT        | Optimistic lock; incremented on every status change                    |
 
 **Why one row per date instead of date ranges?** Date ranges (checkin-checkout) create overlap-detection complexity. With one row per date, "is Oct 15 available?" is a simple primary key lookup. Double-booking prevention becomes: UPDATE availability SET status='booked' WHERE listing_id=X AND date IN (...) AND status='available' -- if the affected row count does not match the expected date count, the booking fails atomically.
 
@@ -59,42 +59,42 @@ A booking and reservation system must solve the double-booking problem: two gues
 
 ### bookings
 
-| Field | Type | Description |
-|-------|------|-------------|
-| booking_id | UUID (PK) | Unique booking identifier |
-| listing_id | UUID (FK) | Which property is booked |
-| guest_id | UUID (FK) | The guest |
-| host_id | UUID (FK) | The host (denormalized for query efficiency) |
-| checkin | DATE | Check-in date |
-| checkout | DATE | Check-out date |
-| guest_count | INT | Number of guests |
-| nights | INT | Number of nights (checkout - checkin) |
-| status | ENUM | confirmed, checked_in, completed, cancelled |
-| price_per_night | DECIMAL | Computed average price per night |
-| subtotal | DECIMAL | Sum of per-night prices |
-| cleaning_fee | DECIMAL | Cleaning fee at time of booking |
-| service_fee | DECIMAL | Platform service fee |
-| taxes | DECIMAL | Applicable taxes |
-| total | DECIMAL | Grand total charged to guest |
-| payment_id | VARCHAR | Reference to payment processor |
-| cancellation_policy | ENUM | flexible, moderate, strict |
-| idempotency_key | UUID (UNIQUE) | Prevents duplicate bookings from retried requests |
+| Field               | Type          | Description                                       |
+| ------------------- | ------------- | ------------------------------------------------- |
+| booking_id          | UUID (PK)     | Unique booking identifier                         |
+| listing_id          | UUID (FK)     | Which property is booked                          |
+| guest_id            | UUID (FK)     | The guest                                         |
+| host_id             | UUID (FK)     | The host (denormalized for query efficiency)      |
+| checkin             | DATE          | Check-in date                                     |
+| checkout            | DATE          | Check-out date                                    |
+| guest_count         | INT           | Number of guests                                  |
+| nights              | INT           | Number of nights (checkout - checkin)             |
+| status              | ENUM          | confirmed, checked_in, completed, cancelled       |
+| price_per_night     | DECIMAL       | Computed average price per night                  |
+| subtotal            | DECIMAL       | Sum of per-night prices                           |
+| cleaning_fee        | DECIMAL       | Cleaning fee at time of booking                   |
+| service_fee         | DECIMAL       | Platform service fee                              |
+| taxes               | DECIMAL       | Applicable taxes                                  |
+| total               | DECIMAL       | Grand total charged to guest                      |
+| payment_id          | VARCHAR       | Reference to payment processor                    |
+| cancellation_policy | ENUM          | flexible, moderate, strict                        |
+| idempotency_key     | UUID (UNIQUE) | Prevents duplicate bookings from retried requests |
 
 **Why store all price components separately?** Hosts, guests, and the platform each need to see different breakdowns. The host sees subtotal minus platform commission. The guest sees subtotal + cleaning_fee + service_fee + taxes. Storing components separately enables these views without recomputation.
 
 ### holds
 
-| Field | Type | Description |
-|-------|------|-------------|
-| hold_id | UUID (PK) | Unique hold identifier |
-| listing_id | UUID (FK) | Which listing is held |
-| guest_id | UUID | Which guest placed the hold |
-| checkin | DATE | Hold start date |
-| checkout | DATE | Hold end date |
-| price_snapshot_json | JSONB | Full pricing at hold time (per-night prices, fees, taxes) |
-| status | ENUM | active, converted (became a booking), expired |
-| expires_at | TIMESTAMP | 15-minute TTL from creation |
-| idempotency_key | UUID (UNIQUE) | Prevents duplicate holds from retried requests |
+| Field               | Type          | Description                                               |
+| ------------------- | ------------- | --------------------------------------------------------- |
+| hold_id             | UUID (PK)     | Unique hold identifier                                    |
+| listing_id          | UUID (FK)     | Which listing is held                                     |
+| guest_id            | UUID          | Which guest placed the hold                               |
+| checkin             | DATE          | Hold start date                                           |
+| checkout            | DATE          | Hold end date                                             |
+| price_snapshot_json | JSONB         | Full pricing at hold time (per-night prices, fees, taxes) |
+| status              | ENUM          | active, converted (became a booking), expired             |
+| expires_at          | TIMESTAMP     | 15-minute TTL from creation                               |
+| idempotency_key     | UUID (UNIQUE) | Prevents duplicate holds from retried requests            |
 
 **Why 15-minute TTL?** Long enough for a user to enter payment details. Short enough to not block inventory from other buyers. If the hold expires, availability rows are reset to 'available' and other users can book.
 
@@ -102,29 +102,29 @@ A booking and reservation system must solve the double-booking problem: two gues
 
 ### pricing_rules
 
-| Field | Type | Description |
-|-------|------|-------------|
-| rule_id | UUID (PK) | Unique rule identifier |
-| listing_id | UUID (FK) | Which listing this rule applies to |
-| rule_type | ENUM | seasonal, weekend, early_bird, last_minute |
-| start_date | DATE | Rule effective start date |
-| end_date | DATE | Rule effective end date |
-| price_modifier | DECIMAL | Multiplier (1.5 = 50% increase) or fixed amount depending on type |
-| priority | INT | Higher priority rules override lower ones |
+| Field          | Type      | Description                                                       |
+| -------------- | --------- | ----------------------------------------------------------------- |
+| rule_id        | UUID (PK) | Unique rule identifier                                            |
+| listing_id     | UUID (FK) | Which listing this rule applies to                                |
+| rule_type      | ENUM      | seasonal, weekend, early_bird, last_minute                        |
+| start_date     | DATE      | Rule effective start date                                         |
+| end_date       | DATE      | Rule effective end date                                           |
+| price_modifier | DECIMAL   | Multiplier (1.5 = 50% increase) or fixed amount depending on type |
+| priority       | INT       | Higher priority rules override lower ones                         |
 
 **Why priority-based rules?** A date might match both "summer season (+30%)" and "weekend (+20%)." Priority determines which applies, or whether they stack. This gives hosts fine-grained control without conflicting rules.
 
 ### waitlist_entries
 
-| Field | Type | Description |
-|-------|------|-------------|
-| listing_id | UUID (CPK) | Part of composite primary key |
-| guest_id | UUID (CPK) | Part of composite primary key |
-| dates | DATERANGE (CPK) | Desired date range |
-| max_price | DECIMAL | Maximum price the guest is willing to pay |
-| priority_score | DECIMAL | Computed from max_price, signup time, and guest reputation |
-| status | ENUM | waiting, notified, converted, expired |
-| notified_at | TIMESTAMP | When the guest was notified of availability |
+| Field          | Type            | Description                                                |
+| -------------- | --------------- | ---------------------------------------------------------- |
+| listing_id     | UUID (CPK)      | Part of composite primary key                              |
+| guest_id       | UUID (CPK)      | Part of composite primary key                              |
+| dates          | DATERANGE (CPK) | Desired date range                                         |
+| max_price      | DECIMAL         | Maximum price the guest is willing to pay                  |
+| priority_score | DECIMAL         | Computed from max_price, signup time, and guest reputation |
+| status         | ENUM            | waiting, notified, converted, expired                      |
+| notified_at    | TIMESTAMP       | When the guest was notified of availability                |
 
 **Why waitlist?** When a booking is cancelled, the platform can immediately notify waitlisted guests, increasing rebooking speed and reducing revenue loss. The priority_score ensures the most engaged guests are notified first.
 
@@ -216,22 +216,26 @@ holds          1───* availability       (one hold marks multiple dates as 
 2. **View listing details** -- Load the listing record with pricing. For each date in the requested range, apply pricing_rules in priority order: check for price_override on the specific availability row first, then matching pricing_rules (seasonal > weekend > early_bird), finally fall back to base_price.
 
 3. **Place hold** -- When the guest clicks "Reserve":
+
    - Create a `holds` row with a 15-minute expires_at
    - UPDATE all `availability` rows for the date range: SET status='held', hold_id=X WHERE status='available' AND calendar_version matches
    - If affected row count does not equal the number of dates, another user grabbed a date -- rollback and show "dates unavailable"
    - Store the full price breakdown in price_snapshot_json
 
 4. **Complete payment** -- Guest enters payment details and confirms:
+
    - Charge the guest via the payment processor
    - Create a `bookings` row with all pricing details and idempotency_key
    - UPDATE `availability` rows: SET status='booked', booking_id=X, hold_id=NULL
    - UPDATE `holds` row: SET status=converted
 
 5. **Hold expiry** -- A background job runs every minute, scanning for holds where `expires_at < NOW()` and status=active:
+
    - UPDATE `availability` rows: SET status='available', hold_id=NULL, increment calendar_version
    - UPDATE `holds` row: SET status=expired
 
 6. **Cancellation** -- If a confirmed booking is cancelled:
+
    - Apply refund policy based on cancellation_policy and time until checkin
    - UPDATE `availability` rows: SET status='available', booking_id=NULL
    - UPDATE `bookings` row: SET status=cancelled

@@ -52,8 +52,8 @@ The simplest test: is a point inside an axis-aligned bounding box?
 
 ```typescript
 interface AABB {
-  x: number;      // left edge
-  y: number;      // top edge
+  x: number; // left edge
+  y: number; // top edge
   width: number;
   height: number;
 }
@@ -119,7 +119,13 @@ function aabbVsAabbDetailed(a: AABB, b: AABB): CollisionResult {
   const overlapY = halfHeightA + halfHeightB - Math.abs(dy);
 
   if (overlapX <= 0 || overlapY <= 0) {
-    return { colliding: false, overlapX: 0, overlapY: 0, normalX: 0, normalY: 0 };
+    return {
+      colliding: false,
+      overlapX: 0,
+      overlapY: 0,
+      normalX: 0,
+      normalY: 0,
+    };
   }
 
   // Resolve along the axis of least penetration
@@ -174,7 +180,14 @@ function circleVsCircleDetailed(a: Circle, b: Circle): CircleCollision {
   const radiusSum = a.radius + b.radius;
 
   if (distSq > radiusSum * radiusSum) {
-    return { colliding: false, depth: 0, normalX: 0, normalY: 0, contactX: 0, contactY: 0 };
+    return {
+      colliding: false,
+      depth: 0,
+      normalX: 0,
+      normalY: 0,
+      contactX: 0,
+      contactY: 0,
+    };
   }
 
   const dist = Math.sqrt(distSq);
@@ -208,7 +221,7 @@ function circleVsAABB(circle: Circle, box: AABB): boolean {
   const dx = circle.x - closestX;
   const dy = circle.y - closestY;
 
-  return (dx * dx + dy * dy) <= (circle.radius * circle.radius);
+  return dx * dx + dy * dy <= circle.radius * circle.radius;
 }
 ```
 
@@ -247,7 +260,10 @@ function normalize(v: Vector2): Vector2 {
 }
 
 // Project polygon onto axis and return min/max
-function projectPolygon(polygon: Polygon, axis: Vector2): { min: number; max: number } {
+function projectPolygon(
+  polygon: Polygon,
+  axis: Vector2
+): { min: number; max: number } {
   let min = dot(polygon.vertices[0], axis);
   let max = min;
 
@@ -309,7 +325,7 @@ interface Ray {
 
 interface RaycastHit {
   hit: boolean;
-  t: number;           // Parameter along ray (0 = origin, 1 = origin + dir)
+  t: number; // Parameter along ray (0 = origin, 1 = origin + dir)
   pointX: number;
   pointY: number;
   normalX: number;
@@ -421,7 +437,13 @@ class SpatialGrid {
     this.cells.clear();
   }
 
-  insert(id: number, x: number, y: number, width: number, height: number): void {
+  insert(
+    id: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): void {
     const minCell = this.getCellCoords(x, y);
     const maxCell = this.getCellCoords(x + width, y + height);
 
@@ -445,7 +467,8 @@ class SpatialGrid {
       const arr = Array.from(ids);
       for (let i = 0; i < arr.length; i++) {
         for (let j = i + 1; j < arr.length; j++) {
-          const pairKey = arr[i] < arr[j] ? `${arr[i]},${arr[j]}` : `${arr[j]},${arr[i]}`;
+          const pairKey =
+            arr[i] < arr[j] ? `${arr[i]},${arr[j]}` : `${arr[j]},${arr[i]}`;
           if (!checked.has(pairKey)) {
             checked.add(pairKey);
             pairs.push([arr[i], arr[j]]);
@@ -481,6 +504,7 @@ class SpatialGrid {
 ```
 
 **When to use a uniform grid**:
+
 - Objects are roughly the same size
 - Objects are distributed somewhat uniformly
 - Cell size should be ~2x the largest object size
@@ -539,10 +563,30 @@ class Quadtree {
     const hh = height / 2;
 
     this.children = [
-      new Quadtree({ x: x + hw, y, width: hw, height: hh }, this.maxItems, this.maxDepth, this.depth + 1),       // NE
-      new Quadtree({ x, y, width: hw, height: hh }, this.maxItems, this.maxDepth, this.depth + 1),                // NW
-      new Quadtree({ x, y: y + hh, width: hw, height: hh }, this.maxItems, this.maxDepth, this.depth + 1),        // SW
-      new Quadtree({ x: x + hw, y: y + hh, width: hw, height: hh }, this.maxItems, this.maxDepth, this.depth + 1), // SE
+      new Quadtree(
+        { x: x + hw, y, width: hw, height: hh },
+        this.maxItems,
+        this.maxDepth,
+        this.depth + 1
+      ), // NE
+      new Quadtree(
+        { x, y, width: hw, height: hh },
+        this.maxItems,
+        this.maxDepth,
+        this.depth + 1
+      ), // NW
+      new Quadtree(
+        { x, y: y + hh, width: hw, height: hh },
+        this.maxItems,
+        this.maxDepth,
+        this.depth + 1
+      ), // SW
+      new Quadtree(
+        { x: x + hw, y: y + hh, width: hw, height: hh },
+        this.maxItems,
+        this.maxDepth,
+        this.depth + 1
+      ), // SE
     ];
 
     // Re-insert items into children
@@ -612,6 +656,7 @@ function intersectsRect(a: QuadRect, b: QuadRect): boolean {
 ```
 
 **When to use a quadtree**:
+
 - Objects vary in size
 - Objects cluster in certain regions
 - You need efficient range queries
@@ -643,7 +688,13 @@ class SpatialHash {
     this.buckets.clear();
   }
 
-  insert(id: number, x: number, y: number, width: number, height: number): void {
+  insert(
+    id: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): void {
     const minCX = Math.floor(x / this.cellSize);
     const minCY = Math.floor(y / this.cellSize);
     const maxCX = Math.floor((x + width) / this.cellSize);
@@ -707,8 +758,24 @@ For AABB vs AABB, the contact point is along the axis of minimum penetration:
 
 ```typescript
 function resolveAABBCollision(
-  a: { x: number; y: number; width: number; height: number; vx: number; vy: number; mass: number },
-  b: { x: number; y: number; width: number; height: number; vx: number; vy: number; mass: number },
+  a: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    vx: number;
+    vy: number;
+    mass: number;
+  },
+  b: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    vx: number;
+    vy: number;
+    mass: number;
+  },
   restitution = 0.5
 ): void {
   const collision = aabbVsAabbDetailed(a, b);
@@ -780,8 +847,22 @@ Full impulse-based collision response for circles:
 
 ```typescript
 function resolveCircleCollision(
-  a: { x: number; y: number; vx: number; vy: number; radius: number; mass: number },
-  b: { x: number; y: number; vx: number; vy: number; radius: number; mass: number },
+  a: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    radius: number;
+    mass: number;
+  },
+  b: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    radius: number;
+    mass: number;
+  },
   restitution = 0.8
 ): { a: typeof a; b: typeof b } {
   const dx = b.x - a.x;
@@ -844,7 +925,14 @@ The simplest integration method. Two variants:
 
 ```typescript
 function explicitEuler(
-  body: { x: number; y: number; vx: number; vy: number; ax: number; ay: number },
+  body: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    ax: number;
+    ay: number;
+  },
   dt: number
 ): { x: number; y: number; vx: number; vy: number; ax: number; ay: number } {
   // Position updated with OLD velocity
@@ -862,7 +950,14 @@ function explicitEuler(
 
 ```typescript
 function semiImplicitEuler(
-  body: { x: number; y: number; vx: number; vy: number; ax: number; ay: number },
+  body: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    ax: number;
+    ay: number;
+  },
   dt: number
 ): { x: number; y: number; vx: number; vy: number; ax: number; ay: number } {
   // Velocity updated FIRST, then position uses NEW velocity
@@ -949,7 +1044,11 @@ function applyDrag(body: PhysicsBody, dragCoeff = 0.01): PhysicsBody {
   };
 }
 
-function applyFriction(body: PhysicsBody, frictionCoeff = 0.3, normalForce = 980): PhysicsBody {
+function applyFriction(
+  body: PhysicsBody,
+  frictionCoeff = 0.3,
+  normalForce = 980
+): PhysicsBody {
   const speed = Math.sqrt(body.vx * body.vx + body.vy * body.vy);
   if (speed === 0) return body;
 
@@ -978,7 +1077,7 @@ function integrateBody(body: PhysicsBody, dt: number): PhysicsBody {
     vy: newVy,
     x: body.x + newVx * dt,
     y: body.y + newVy * dt,
-    forceX: 0,  // Reset forces for next frame
+    forceX: 0, // Reset forces for next frame
     forceY: 0,
   };
 }
@@ -990,10 +1089,10 @@ For rotating objects:
 
 ```typescript
 interface RotatingBody extends PhysicsBody {
-  angle: number;          // Rotation in radians
+  angle: number; // Rotation in radians
   angularVelocity: number;
   torque: number;
-  inertia: number;        // Moment of inertia
+  inertia: number; // Moment of inertia
 }
 
 function integrateRotation(body: RotatingBody, dt: number): RotatingBody {
@@ -1036,7 +1135,10 @@ interface Constraint {
   stiffness: number; // 0 to 1, where 1 = rigid
 }
 
-function solveDistanceConstraint(constraint: Constraint): { bodyA: VerletBody; bodyB: VerletBody } {
+function solveDistanceConstraint(constraint: Constraint): {
+  bodyA: VerletBody;
+  bodyB: VerletBody;
+} {
   const dx = constraint.bodyB.x - constraint.bodyA.x;
   const dy = constraint.bodyB.y - constraint.bodyA.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
@@ -1074,8 +1176,10 @@ interface Rope {
 }
 
 function createRope(
-  startX: number, startY: number,
-  endX: number, endY: number,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
   segments: number
 ): Rope {
   const particles: VerletBody[] = [];
@@ -1088,9 +1192,8 @@ function createRope(
     particles.push({ x, y, prevX: x, prevY: y, ax: 0, ay: 980 });
   }
 
-  const segmentLength = Math.sqrt(
-    (endX - startX) ** 2 + (endY - startY) ** 2
-  ) / segments;
+  const segmentLength =
+    Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2) / segments;
 
   for (let i = 0; i < segments; i++) {
     constraints.push({
@@ -1146,7 +1249,7 @@ engine.world.gravity.y = 1;
 // Create bodies
 const ground = Matter.Bodies.rectangle(400, 580, 800, 40, { isStatic: true });
 const ball = Matter.Bodies.circle(400, 200, 30, {
-  restitution: 0.8,      // Bounciness
+  restitution: 0.8, // Bounciness
   friction: 0.1,
   density: 0.001,
 });
@@ -1212,15 +1315,17 @@ ball.applyLinearImpulse(Vec2(2, 5), ball.getWorldCenter());
 const bodyA = world.createDynamicBody({ position: Vec2(-2, 5) });
 bodyA.createFixture(Box(0.5, 2), { density: 1.0 });
 
-const joint = world.createJoint(RevoluteJoint({
-  bodyA: ground,
-  bodyB: bodyA,
-  localAnchorA: Vec2(-2, 7),
-  localAnchorB: Vec2(0, 2),
-  enableMotor: true,
-  motorSpeed: 2.0,
-  maxMotorTorque: 100,
-}));
+const joint = world.createJoint(
+  RevoluteJoint({
+    bodyA: ground,
+    bodyB: bodyA,
+    localAnchorA: Vec2(-2, 7),
+    localAnchorB: Vec2(0, 2),
+    enableMotor: true,
+    motorSpeed: 2.0,
+    maxMotorTorque: 100,
+  })
+);
 
 // Step simulation
 const timeStep = 1 / 60;
@@ -1292,8 +1397,8 @@ Implementation:
 interface ColliderComponent {
   type: 'physical' | 'trigger';
   shape: AABB | Circle;
-  layer: number;           // Collision layer bitmask
-  mask: number;            // Which layers to collide with
+  layer: number; // Collision layer bitmask
+  mask: number; // Which layers to collide with
   onEnter?: (other: number) => void;
   onExit?: (other: number) => void;
 }
@@ -1304,11 +1409,11 @@ function shouldCollide(a: ColliderComponent, b: ColliderComponent): boolean {
 
 // Example collision layers
 const LAYERS = {
-  PLAYER: 1 << 0,      // 0001
-  ENEMY: 1 << 1,       // 0010
-  BULLET: 1 << 2,      // 0100
-  PICKUP: 1 << 3,      // 1000
-  WALL: 1 << 4,        // 10000
+  PLAYER: 1 << 0, // 0001
+  ENEMY: 1 << 1, // 0010
+  BULLET: 1 << 2, // 0100
+  PICKUP: 1 << 3, // 1000
+  WALL: 1 << 4, // 10000
 } as const;
 
 // Player collides with enemies, walls, pickups
@@ -1358,8 +1463,8 @@ const PHYSICS = {
   ACCELERATION: 1500,
   DECELERATION: 2000,
   AIR_ACCELERATION: 800,
-  JUMP_BUFFER_TIME: 0.1,   // seconds
-  COYOTE_TIME: 0.08,       // seconds
+  JUMP_BUFFER_TIME: 0.1, // seconds
+  COYOTE_TIME: 0.08, // seconds
 } as const;
 
 function updatePlatformer(
@@ -1371,7 +1476,11 @@ function updatePlatformer(
 
   // Horizontal movement with acceleration
   const accel = grounded ? PHYSICS.ACCELERATION : PHYSICS.AIR_ACCELERATION;
-  const targetVx = input.left ? -PHYSICS.MOVE_SPEED : input.right ? PHYSICS.MOVE_SPEED : 0;
+  const targetVx = input.left
+    ? -PHYSICS.MOVE_SPEED
+    : input.right
+      ? PHYSICS.MOVE_SPEED
+      : 0;
 
   if (Math.abs(targetVx) > 0) {
     vx += Math.sign(targetVx - vx) * accel * dt;
@@ -1428,9 +1537,13 @@ interface Ball {
   angularVelocity: number;
 }
 
-function updateBalls(balls: readonly Ball[], dt: number, friction = 0.98): readonly Ball[] {
+function updateBalls(
+  balls: readonly Ball[],
+  dt: number,
+  friction = 0.98
+): readonly Ball[] {
   // Apply friction
-  let updated = balls.map(ball => ({
+  let updated = balls.map((ball) => ({
     ...ball,
     vx: ball.vx * friction,
     vy: ball.vy * friction,
@@ -1449,7 +1562,7 @@ function updateBalls(balls: readonly Ball[], dt: number, friction = 0.98): reado
   }
 
   // Stop very slow balls
-  return updated.map(ball => {
+  return updated.map((ball) => {
     const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
     if (speed < 0.5) {
       return { ...ball, vx: 0, vy: 0 };
@@ -1477,22 +1590,42 @@ representing body parts:
 ```typescript
 function createSimpleRagdoll(x: number, y: number): Rope {
   const particles: VerletBody[] = [
-    { x, y: y - 30, prevX: x, prevY: y - 30, ax: 0, ay: 980 },       // 0: head
-    { x, y, prevX: x, prevY: y, ax: 0, ay: 980 },                     // 1: torso top
-    { x, y: y + 30, prevX: x, prevY: y + 30, ax: 0, ay: 980 },       // 2: torso bottom
-    { x: x - 20, y: y + 5, prevX: x - 20, prevY: y + 5, ax: 0, ay: 980 },  // 3: left hand
-    { x: x + 20, y: y + 5, prevX: x + 20, prevY: y + 5, ax: 0, ay: 980 },  // 4: right hand
+    { x, y: y - 30, prevX: x, prevY: y - 30, ax: 0, ay: 980 }, // 0: head
+    { x, y, prevX: x, prevY: y, ax: 0, ay: 980 }, // 1: torso top
+    { x, y: y + 30, prevX: x, prevY: y + 30, ax: 0, ay: 980 }, // 2: torso bottom
+    { x: x - 20, y: y + 5, prevX: x - 20, prevY: y + 5, ax: 0, ay: 980 }, // 3: left hand
+    { x: x + 20, y: y + 5, prevX: x + 20, prevY: y + 5, ax: 0, ay: 980 }, // 4: right hand
     { x: x - 10, y: y + 60, prevX: x - 10, prevY: y + 60, ax: 0, ay: 980 }, // 5: left foot
     { x: x + 10, y: y + 60, prevX: x + 10, prevY: y + 60, ax: 0, ay: 980 }, // 6: right foot
   ];
 
   const constraints: Constraint[] = [
-    { bodyA: particles[0], bodyB: particles[1], restLength: 30, stiffness: 1 },  // head-torso
-    { bodyA: particles[1], bodyB: particles[2], restLength: 30, stiffness: 1 },  // torso
-    { bodyA: particles[1], bodyB: particles[3], restLength: 25, stiffness: 0.8 }, // left arm
-    { bodyA: particles[1], bodyB: particles[4], restLength: 25, stiffness: 0.8 }, // right arm
-    { bodyA: particles[2], bodyB: particles[5], restLength: 35, stiffness: 0.9 }, // left leg
-    { bodyA: particles[2], bodyB: particles[6], restLength: 35, stiffness: 0.9 }, // right leg
+    { bodyA: particles[0], bodyB: particles[1], restLength: 30, stiffness: 1 }, // head-torso
+    { bodyA: particles[1], bodyB: particles[2], restLength: 30, stiffness: 1 }, // torso
+    {
+      bodyA: particles[1],
+      bodyB: particles[3],
+      restLength: 25,
+      stiffness: 0.8,
+    }, // left arm
+    {
+      bodyA: particles[1],
+      bodyB: particles[4],
+      restLength: 25,
+      stiffness: 0.8,
+    }, // right arm
+    {
+      bodyA: particles[2],
+      bodyB: particles[5],
+      restLength: 35,
+      stiffness: 0.9,
+    }, // left leg
+    {
+      bodyA: particles[2],
+      bodyB: particles[6],
+      restLength: 35,
+      stiffness: 0.9,
+    }, // right leg
   ];
 
   return { particles, constraints, pinned: new Set() };
@@ -1511,7 +1644,7 @@ Bodies at rest should stop being simulated:
 interface SleepableBody extends PhysicsBody {
   sleeping: boolean;
   sleepTimer: number;
-  sleepThreshold: number;    // Minimum velocity to stay awake
+  sleepThreshold: number; // Minimum velocity to stay awake
   sleepTimeRequired: number; // Seconds of low velocity before sleeping
 }
 
@@ -1540,7 +1673,10 @@ Use bitmasks to avoid unnecessary collision checks:
 
 ```typescript
 // Only check collisions between layers that can interact
-function broadPhaseFilter(bodyA: ColliderComponent, bodyB: ColliderComponent): boolean {
+function broadPhaseFilter(
+  bodyA: ColliderComponent,
+  bodyB: ColliderComponent
+): boolean {
   return (bodyA.layer & bodyB.mask) !== 0 && (bodyB.layer & bodyA.mask) !== 0;
 }
 ```
@@ -1602,7 +1738,7 @@ class PhysicsWorld {
 ### Q1: Explain the difference between broad phase and narrow phase collision detection.
 
 **Answer**: Broad phase is a fast, approximate step that identifies which pairs of objects
-*might* be colliding. It uses spatial data structures (grids, quadtrees, spatial hashing)
+_might_ be colliding. It uses spatial data structures (grids, quadtrees, spatial hashing)
 to quickly eliminate pairs that are clearly too far apart. The result is a list of
 "potential collision pairs."
 
@@ -1616,11 +1752,11 @@ reduces this to O(N log N) or better.
 
 ### Q2: Why use semi-implicit Euler instead of explicit Euler for game physics?
 
-**Answer**: Explicit Euler updates position using the *old* velocity, then updates
+**Answer**: Explicit Euler updates position using the _old_ velocity, then updates
 velocity. This can cause energy to increase over time (instability), especially at
 larger time steps or with springs/constraints.
 
-Semi-implicit Euler updates velocity first, then uses the *new* velocity to update
+Semi-implicit Euler updates velocity first, then uses the _new_ velocity to update
 position. This simple change makes the integration symplectic, meaning it approximately
 conserves energy. For game physics, this means objects won't explode or gain energy
 from nowhere.
@@ -1638,18 +1774,21 @@ position and velocity. The new position is calculated as:
 Velocity is implicit in the difference between current and previous positions.
 
 **Advantages over Euler**:
+
 - Naturally stable for constraints (ropes, cloth, ragdolls)
 - Easy to implement distance constraints by directly adjusting positions
 - Iterative constraint solving converges well
 - No need to store/manage velocity separately
 
 **When to use**:
+
 - Rope/chain simulations
 - Cloth/soft body
 - Ragdoll physics
 - Particle systems with constraints
 
 **When Euler is better**:
+
 - When you need precise velocity control (player character)
 - When applying forces directly (platformer movement)
 - Simple projectile motion
@@ -1682,6 +1821,7 @@ a thin object in a single frame. If a bullet moves 100 pixels/frame and a wall
 is 5 pixels thick, the bullet can teleport through it.
 
 Solutions:
+
 - **CCD (Continuous Collision Detection)**: Instead of testing positions, sweep the
   object along its trajectory and find the first collision point. More expensive but exact.
 - **Increase collision shape sizes**: Make the bullet's collision shape extend along
@@ -1705,7 +1845,7 @@ For playable ads, limiting velocity or using ray casting for projectiles is usua
    for bouncy feel). Maybe 5-20 balls.
 
 3. **Collision**: Circle-vs-circle for ball-ball, circle-vs-AABB for ball-wall.
-   With 20 balls, no broad phase needed (20*19/2 = 190 pairs is fine).
+   With 20 balls, no broad phase needed (20\*19/2 = 190 pairs is fine).
 
 4. **Bounce response**: On collision with walls, reflect velocity and multiply by
    restitution. On ball-ball collision, use impulse-based elastic collision.
@@ -1723,16 +1863,17 @@ For playable ads, limiting velocity or using ray casting for projectiles is usua
 
 **Answer**:
 
-| Feature    | Matter.js  | Planck.js | p2.js     |
-|------------|-----------|-----------|-----------|
-| Size       | ~100KB    | ~45KB     | ~30KB     |
-| API        | Easy      | Box2D-like| Simple    |
-| Features   | Rich      | Full      | Basic     |
-| Performance| Good      | Very Good | Good      |
-| Docs       | Excellent | Good      | Fair      |
-| Active     | Yes       | Yes       | Maintained|
+| Feature     | Matter.js | Planck.js  | p2.js      |
+| ----------- | --------- | ---------- | ---------- |
+| Size        | ~100KB    | ~45KB      | ~30KB      |
+| API         | Easy      | Box2D-like | Simple     |
+| Features    | Rich      | Full       | Basic      |
+| Performance | Good      | Very Good  | Good       |
+| Docs        | Excellent | Good       | Fair       |
+| Active      | Yes       | Yes        | Maintained |
 
 **Recommendation for playable ads**:
+
 - **Under 2MB budget (TikTok)**: Custom physics or p2.js. Every KB counts.
 - **Under 5MB budget**: Planck.js is the best balance. Full-featured at half
   the size of Matter.js.
@@ -1765,6 +1906,7 @@ exists an axis along which their projections do not overlap. For polygons, you o
 need to test the edge normals of both shapes as potential separating axes.
 
 **Algorithm**:
+
 1. Get all edge normals from both polygons.
 2. For each normal, project both polygons onto that axis.
 3. If projections don't overlap on any axis, the shapes don't collide.

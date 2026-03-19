@@ -4,33 +4,33 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Content Delivery | Serve static assets (images, JS, CSS, video) from edge locations close to users |
-| 2 | Origin Fetching | Pull content from origin on cache miss; push content proactively for known assets |
-| 3 | Cache Management | Store, serve, and expire cached content at edge nodes |
-| 4 | Cache Invalidation | Support TTL expiry, manual purge by URL/tag, and stale-while-revalidate |
-| 5 | DNS-based Routing | Route clients to the nearest/fastest edge POP via GeoDNS or anycast |
-| 6 | TLS Termination | Terminate HTTPS at the edge with managed certificates |
-| 7 | Edge Compute | Execute lightweight logic (A/B testing, auth, rewrites) at edge nodes |
-| 8 | Analytics | Provide per-POP metrics: cache hit ratio, bandwidth, error rates, latency |
-| 9 | Multi-origin Support | Route different URL paths to different origin servers |
-| 10 | DDoS / WAF | Rate limiting, bot detection, and web application firewall at edge |
+| #   | Requirement          | Description                                                                       |
+| --- | -------------------- | --------------------------------------------------------------------------------- |
+| 1   | Content Delivery     | Serve static assets (images, JS, CSS, video) from edge locations close to users   |
+| 2   | Origin Fetching      | Pull content from origin on cache miss; push content proactively for known assets |
+| 3   | Cache Management     | Store, serve, and expire cached content at edge nodes                             |
+| 4   | Cache Invalidation   | Support TTL expiry, manual purge by URL/tag, and stale-while-revalidate           |
+| 5   | DNS-based Routing    | Route clients to the nearest/fastest edge POP via GeoDNS or anycast               |
+| 6   | TLS Termination      | Terminate HTTPS at the edge with managed certificates                             |
+| 7   | Edge Compute         | Execute lightweight logic (A/B testing, auth, rewrites) at edge nodes             |
+| 8   | Analytics            | Provide per-POP metrics: cache hit ratio, bandwidth, error rates, latency         |
+| 9   | Multi-origin Support | Route different URL paths to different origin servers                             |
+| 10  | DDoS / WAF           | Rate limiting, bot detection, and web application firewall at edge                |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Latency | < 50ms to nearest edge for 99th percentile (globally) |
-| 2 | Cache Hit Ratio | > 95% for static content |
-| 3 | Availability | 99.999% (< 5 min downtime/year) |
-| 4 | Throughput | Millions of requests/second globally across all POPs |
-| 5 | Purge Propagation | < 5 seconds globally after purge request |
-| 6 | Durability | Cached content available until TTL expiry or explicit purge |
-| 7 | Scalability | Auto-scale per-POP capacity horizontally |
-| 8 | Security | TLS 1.3, OCSP stapling, HSTS, certificate auto-renewal |
-| 9 | Consistency | Eventual consistency for cache invalidation across POPs |
-| 10 | Observability | Real-time metrics, per-request logs, distributed tracing |
+| #   | Requirement       | Target                                                      |
+| --- | ----------------- | ----------------------------------------------------------- |
+| 1   | Latency           | < 50ms to nearest edge for 99th percentile (globally)       |
+| 2   | Cache Hit Ratio   | > 95% for static content                                    |
+| 3   | Availability      | 99.999% (< 5 min downtime/year)                             |
+| 4   | Throughput        | Millions of requests/second globally across all POPs        |
+| 5   | Purge Propagation | < 5 seconds globally after purge request                    |
+| 6   | Durability        | Cached content available until TTL expiry or explicit purge |
+| 7   | Scalability       | Auto-scale per-POP capacity horizontally                    |
+| 8   | Security          | TLS 1.3, OCSP stapling, HSTS, certificate auto-renewal      |
+| 9   | Consistency       | Eventual consistency for cache invalidation across POPs     |
+| 10  | Observability     | Real-time metrics, per-request logs, distributed tracing    |
 
 ### Scale Estimation
 
@@ -377,6 +377,7 @@ A CDN is a geographically distributed network of proxy servers that caches conte
 - **Origin overload**: Every request hits origin servers directly
 
 With a CDN:
+
 - A user in Tokyo hits a POP in Tokyo (< 5ms network hop) instead of origin in Virginia (150ms+)
 - 95%+ of requests are served from cache, origin only sees 5% of traffic
 - Bandwidth costs shift from expensive origin egress to cheaper CDN bulk pricing
@@ -410,11 +411,13 @@ With CDN:
 ```
 
 **When to use Push CDN:**
+
 - Software distribution (OS updates, game patches) - content is known ahead of time
 - Marketing campaigns - ensure content is pre-warmed before launch
 - Video content where you control encoding and upload pipeline
 
 **When to use Pull CDN:**
+
 - Websites with millions of URLs (news, e-commerce) - impractical to push all
 - Dynamic content that changes frequently
 - Long-tail content where only some URLs get traffic
@@ -520,6 +523,7 @@ Cache hit ratios per tier (example):
 ```
 
 Benefits of tiered cache:
+
 - L1 provides sub-millisecond cache lookups for hot content
 - L2 reduces duplicate fetches from multiple L1 POPs in same region
 - Origin Shield ensures origin only sees a single request per unique cache miss globally
@@ -587,12 +591,14 @@ Consistent hashing within a POP:
 ```
 
 **TTL Expiry:**
+
 ```
 Cache-Control: public, max-age=86400
 # After 86400 seconds, CDN re-fetches from origin on next request
 ```
 
 **stale-while-revalidate:**
+
 ```
 Cache-Control: max-age=60, stale-while-revalidate=600
 # Serve stale content for up to 660 seconds
@@ -606,6 +612,7 @@ Timeline:
 ```
 
 **Tag-based Purge (most powerful):**
+
 ```
 1. Content is tagged at response time via CDN-Cache-Tag header:
    CDN-Cache-Tag: product-123, category-shoes, homepage
@@ -618,6 +625,7 @@ Timeline:
 ```
 
 **Purge propagation mechanism:**
+
 ```
 Purge Service
      |

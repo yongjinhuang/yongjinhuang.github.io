@@ -21,10 +21,10 @@ Interviewers assess whether you can:
 
 ### Level Expectations
 
-| Level | Execution Signal |
-|-------|-----------------|
-| L5 (Senior) | Breaks down features into tasks. Manages their own work. Delivers on time. Flags risks early. |
-| L6 (Staff) | Scopes multi-team projects. Manages execution across 2-4 teams. Unblocks other engineers. Makes scope trade-offs with product. |
+| Level          | Execution Signal                                                                                                                        |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| L5 (Senior)    | Breaks down features into tasks. Manages their own work. Delivers on time. Flags risks early.                                           |
+| L6 (Staff)     | Scopes multi-team projects. Manages execution across 2-4 teams. Unblocks other engineers. Makes scope trade-offs with product.          |
 | L7 (Principal) | Drives multi-quarter, multi-org programs. Makes judgment calls that carry enormous risk. Defines the execution framework others follow. |
 
 ---
@@ -119,13 +119,13 @@ The signature skill of a Staff+ engineer. When the problem is "our systems are n
 
 ### Ambiguity Reduction Techniques
 
-| Technique | When to Use | How It Works |
-|-----------|------------|-------------|
-| **Constraint mapping** | Problem has many possible solutions | List all constraints (time, money, people, technology, politics). Constraints eliminate options. |
-| **User journey mapping** | Problem is user-facing | Walk through the user's experience step by step. Where does it break down? |
-| **Data gathering sprint** | Nobody agrees on the problem | Spend 1-2 weeks instrumenting and measuring before proposing solutions. |
-| **Stakeholder alignment** | Multiple teams have different definitions of success | Interview all stakeholders. Write a shared problem statement. Get explicit agreement. |
-| **Timeboxed spike** | Highest-risk element is unclear | Spend 1 week building a proof-of-concept for the riskiest part. Learn before committing. |
+| Technique                 | When to Use                                          | How It Works                                                                                     |
+| ------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Constraint mapping**    | Problem has many possible solutions                  | List all constraints (time, money, people, technology, politics). Constraints eliminate options. |
+| **User journey mapping**  | Problem is user-facing                               | Walk through the user's experience step by step. Where does it break down?                       |
+| **Data gathering sprint** | Nobody agrees on the problem                         | Spend 1-2 weeks instrumenting and measuring before proposing solutions.                          |
+| **Stakeholder alignment** | Multiple teams have different definitions of success | Interview all stakeholders. Write a shared problem statement. Get explicit agreement.            |
+| **Timeboxed spike**       | Highest-risk element is unclear                      | Spend 1 week building a proof-of-concept for the riskiest part. Learn before committing.         |
 
 ---
 
@@ -173,11 +173,11 @@ Big-bang releases fail. The Staff+ skill is structuring work so that every incre
 
 Staff+ engineers negotiate scope, not timelines. This is a critical distinction.
 
-| Instead Of | Say |
-|-----------|-----|
-| "We cannot do this in 6 weeks" | "In 6 weeks, here is what we can deliver. The remaining items would take an additional 4 weeks. Which items are most important to include?" |
-| "This will take 3 months" | "I see three levels of scope. Level 1 ships in 3 weeks and gives us X. Level 2 ships in 6 weeks with Y. Level 3 is the full vision at 12 weeks. Which level should we target first?" |
-| "We need more time" | "We are on track for the core functionality. The risk items are A and B. I recommend cutting C to create a buffer. Here is the impact of cutting C." |
+| Instead Of                     | Say                                                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| "We cannot do this in 6 weeks" | "In 6 weeks, here is what we can deliver. The remaining items would take an additional 4 weeks. Which items are most important to include?"                                          |
+| "This will take 3 months"      | "I see three levels of scope. Level 1 ships in 3 weeks and gives us X. Level 2 ships in 6 weeks with Y. Level 3 is the full vision at 12 weeks. Which level should we target first?" |
+| "We need more time"            | "We are on track for the core functionality. The risk items are A and B. I recommend cutting C to create a buffer. Here is the impact of cutting C."                                 |
 
 ---
 
@@ -187,14 +187,14 @@ Risk management at Staff+ level is not about avoiding risk -- it is about identi
 
 ### Risk Identification Framework
 
-| Risk Category | Questions to Ask | Example |
-|--------------|-----------------|---------|
-| **Technical** | What is the hardest technical problem? Have we solved it before? | "We have never built a real-time sync engine. The consistency model is unclear." |
-| **Integration** | What external dependencies do we have? What if they change? | "This depends on the payments team shipping their API by week 4." |
-| **Scale** | Will this work at 10x current load? Where will it break? | "The current design works for 1M users but not 10M." |
-| **People** | Do we have the right skills? What if someone leaves? | "Only one person understands the legacy system we are migrating from." |
-| **Timeline** | What is the critical path? What has no slack? | "If the database migration slips by 1 week, everything downstream shifts." |
-| **Scope** | Are requirements stable? Is there a risk of scope creep? | "The PM has changed requirements twice. The third change could invalidate our architecture." |
+| Risk Category   | Questions to Ask                                                 | Example                                                                                      |
+| --------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Technical**   | What is the hardest technical problem? Have we solved it before? | "We have never built a real-time sync engine. The consistency model is unclear."             |
+| **Integration** | What external dependencies do we have? What if they change?      | "This depends on the payments team shipping their API by week 4."                            |
+| **Scale**       | Will this work at 10x current load? Where will it break?         | "The current design works for 1M users but not 10M."                                         |
+| **People**      | Do we have the right skills? What if someone leaves?             | "Only one person understands the legacy system we are migrating from."                       |
+| **Timeline**    | What is the critical path? What has no slack?                    | "If the database migration slips by 1 week, everything downstream shifts."                   |
+| **Scope**       | Are requirements stable? Is there a risk of scope creep?         | "The PM has changed requirements twice. The third change could invalidate our architecture." |
 
 ### Risk Mitigation Strategies
 
@@ -221,11 +221,11 @@ Risk management at Staff+ level is not about avoiding risk -- it is about identi
 
 Maintain a living document of identified risks for any multi-team project.
 
-| Risk | Probability | Impact | Mitigation | Owner | Status |
-|------|------------|--------|-----------|-------|--------|
-| Database migration takes longer than estimated | High | High | Run parallel systems. Feature flag new writes. | @you | Active |
-| Partner API is not ready on time | Medium | High | Build a mock service. Define contract early. | @partner_lead | Monitoring |
-| Key engineer leaves mid-project | Low | High | Document all architecture decisions. Pair on critical work. | @you | Accepted |
+| Risk                                           | Probability | Impact | Mitigation                                                  | Owner         | Status     |
+| ---------------------------------------------- | ----------- | ------ | ----------------------------------------------------------- | ------------- | ---------- |
+| Database migration takes longer than estimated | High        | High   | Run parallel systems. Feature flag new writes.              | @you          | Active     |
+| Partner API is not ready on time               | Medium      | High   | Build a mock service. Define contract early.                | @partner_lead | Monitoring |
+| Key engineer leaves mid-project                | Low         | High   | Document all architecture decisions. Pair on critical work. | @you          | Accepted   |
 
 ---
 
@@ -243,13 +243,13 @@ Staff+ projects almost always involve multiple teams working in parallel. The co
 
 ### Coordination Cadence
 
-| Meeting | Frequency | Purpose | Attendees |
-|---------|-----------|---------|-----------|
-| **Stream standup** | Daily | Each stream's progress and blockers | Stream members |
-| **Cross-stream sync** | Twice weekly | Integration issues, dependency management | Stream leads + you |
-| **Stakeholder update** | Weekly | Progress, risks, scope decisions | Product, eng leadership, you |
-| **Demo / integration** | Weekly | End-to-end working software | Everyone |
-| **Risk review** | Bi-weekly | Update risk register, adjust mitigations | Stream leads + you |
+| Meeting                | Frequency    | Purpose                                   | Attendees                    |
+| ---------------------- | ------------ | ----------------------------------------- | ---------------------------- |
+| **Stream standup**     | Daily        | Each stream's progress and blockers       | Stream members               |
+| **Cross-stream sync**  | Twice weekly | Integration issues, dependency management | Stream leads + you           |
+| **Stakeholder update** | Weekly       | Progress, risks, scope decisions          | Product, eng leadership, you |
+| **Demo / integration** | Weekly       | End-to-end working software               | Everyone                     |
+| **Risk review**        | Bi-weekly    | Update risk register, adjust mitigations  | Stream leads + you           |
 
 ---
 
@@ -259,14 +259,14 @@ At Staff+ level, one of your most valuable activities is removing obstacles that
 
 ### Types of Blockers and How to Remove Them
 
-| Blocker Type | Example | How to Unblock |
-|-------------|---------|---------------|
-| **Technical uncertainty** | "I do not know how to design the caching layer" | Pair with them. Point to examples. Make the first design decision together. |
-| **Cross-team dependency** | "We are waiting on the auth team to expose an API" | Talk to the auth team's lead directly. Define the interface together. Offer to build a mock. |
-| **Decision paralysis** | "We have been debating two approaches for a week" | Facilitate a time-boxed decision meeting. Set criteria. Make the call if consensus fails. |
-| **Process overhead** | "The approval process for infrastructure changes takes 2 weeks" | Understand the process. Identify the bottleneck. Propose streamlining or get exceptions for your project. |
-| **Knowledge gap** | "Nobody on the team has worked with Kafka" | Find someone in the org who has. Arrange a knowledge transfer session. Or spike it yourself and teach the team. |
-| **Political blocker** | "The platform team does not want to support our use case" | Understand their concerns. Find a compromise. Escalate with data if needed. |
+| Blocker Type              | Example                                                         | How to Unblock                                                                                                  |
+| ------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Technical uncertainty** | "I do not know how to design the caching layer"                 | Pair with them. Point to examples. Make the first design decision together.                                     |
+| **Cross-team dependency** | "We are waiting on the auth team to expose an API"              | Talk to the auth team's lead directly. Define the interface together. Offer to build a mock.                    |
+| **Decision paralysis**    | "We have been debating two approaches for a week"               | Facilitate a time-boxed decision meeting. Set criteria. Make the call if consensus fails.                       |
+| **Process overhead**      | "The approval process for infrastructure changes takes 2 weeks" | Understand the process. Identify the bottleneck. Propose streamlining or get exceptions for your project.       |
+| **Knowledge gap**         | "Nobody on the team has worked with Kafka"                      | Find someone in the org who has. Arrange a knowledge transfer session. Or spike it yourself and teach the team. |
+| **Political blocker**     | "The platform team does not want to support our use case"       | Understand their concerns. Find a compromise. Escalate with data if needed.                                     |
 
 ### The Unblocking Mindset
 
@@ -300,23 +300,23 @@ Cutting scope is not failure -- it is judgment. The best Staff+ engineers are de
 
 ### Scope Cutting Decision Framework
 
-| Signal | Action |
-|--------|--------|
-| Feature X is nice-to-have and timeline is tight | Cut it. Ship without it. Add it in the next iteration. |
-| Requirement Y has unclear user value | Validate with 3 users before building. If you cannot validate quickly, cut it. |
-| Technical approach Z is taking 3x longer than estimated | Step back. Is there a simpler approach? Can we use an existing solution for now? |
-| Edge case handling covers 5% of users but takes 30% of development time | Ship the 95% case. Handle the 5% manually or in a follow-up. |
-| Two teams disagree on a shared interface | Ship the simpler version. Iterate based on real usage data. |
+| Signal                                                                  | Action                                                                           |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Feature X is nice-to-have and timeline is tight                         | Cut it. Ship without it. Add it in the next iteration.                           |
+| Requirement Y has unclear user value                                    | Validate with 3 users before building. If you cannot validate quickly, cut it.   |
+| Technical approach Z is taking 3x longer than estimated                 | Step back. Is there a simpler approach? Can we use an existing solution for now? |
+| Edge case handling covers 5% of users but takes 30% of development time | Ship the 95% case. Handle the 5% manually or in a follow-up.                     |
+| Two teams disagree on a shared interface                                | Ship the simpler version. Iterate based on real usage data.                      |
 
 ### What to NEVER Cut
 
-| Never Cut | Why |
-|-----------|-----|
-| **Error handling for critical paths** | Silent failures in production are worse than missing features |
-| **Security for user data** | The cost of a breach far exceeds the cost of delay |
-| **Basic observability** | If you cannot monitor it, you cannot operate it |
-| **Rollback capability** | If you cannot undo a deployment, every deploy is a one-way door |
-| **Core data integrity** | Corrupted data is often unrecoverable |
+| Never Cut                             | Why                                                             |
+| ------------------------------------- | --------------------------------------------------------------- |
+| **Error handling for critical paths** | Silent failures in production are worse than missing features   |
+| **Security for user data**            | The cost of a breach far exceeds the cost of delay              |
+| **Basic observability**               | If you cannot monitor it, you cannot operate it                 |
+| **Rollback capability**               | If you cannot undo a deployment, every deploy is a one-way door |
+| **Core data integrity**               | Corrupted data is often unrecoverable                           |
 
 ---
 
@@ -347,13 +347,13 @@ Staff+ engineers need to operate differently depending on the organizational con
 
 ### Recognizing War-Time
 
-| Signal | What It Means |
-|--------|---------------|
-| Company has less than 12 months of runway | Survival mode. Ship revenue-generating features. |
-| Major customer threatening to leave | All hands on the customer's blockers. |
-| Competitor just launched your roadmap | Accelerate. Cut scope ruthlessly. Ship faster. |
-| Critical system is failing daily | Reliability before features. Full stop. |
-| Recently acquired / major leadership change | Prove value quickly. Results over process. |
+| Signal                                      | What It Means                                    |
+| ------------------------------------------- | ------------------------------------------------ |
+| Company has less than 12 months of runway   | Survival mode. Ship revenue-generating features. |
+| Major customer threatening to leave         | All hands on the customer's blockers.            |
+| Competitor just launched your roadmap       | Accelerate. Cut scope ruthlessly. Ship faster.   |
+| Critical system is failing daily            | Reliability before features. Full stop.          |
+| Recently acquired / major leadership change | Prove value quickly. Results over process.       |
 
 ### The Transition Back to Peace-Time
 
@@ -429,16 +429,16 @@ My role in all of this is not to manage the teams -- they have their own leads. 
 
 ## Anti-patterns to Avoid
 
-| Anti-pattern | Why It Fails | What to Do Instead |
-|-------------|-------------|-------------------|
-| **Big-bang delivery** | Everything ships at once, nothing works | Deliver incrementally. Ship a walking skeleton first. |
-| **Time estimation** | Asking "how long will this take?" sets up failure | Manage scope, not time. "What can we ship in 6 weeks?" |
-| **Hero mode** | One person works 80 hours to save the project | Sustainable pace. If the project requires heroics, the plan was wrong. |
-| **Scope creep acceptance** | Saying yes to every new requirement | Scope tiers. Lock Tier 1. Negotiate Tier 2. Defer Tier 3. |
-| **Ignoring the critical path** | Working on non-critical items while blockers persist | Identify the critical path on day 1. Protect it ruthlessly. |
-| **Consensus paralysis** | Debating for weeks without deciding | Time-box decisions. "We will decide by Friday. If no consensus, I will make the call." |
-| **Invisible progress** | Teams working hard but stakeholders cannot see progress | Weekly demos. Stakeholder updates. Make progress visible. |
-| **War-time forever** | Crisis culture as the norm | Explicitly declare when war-time ends. Transition back to sustainable practices. |
+| Anti-pattern                   | Why It Fails                                            | What to Do Instead                                                                     |
+| ------------------------------ | ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **Big-bang delivery**          | Everything ships at once, nothing works                 | Deliver incrementally. Ship a walking skeleton first.                                  |
+| **Time estimation**            | Asking "how long will this take?" sets up failure       | Manage scope, not time. "What can we ship in 6 weeks?"                                 |
+| **Hero mode**                  | One person works 80 hours to save the project           | Sustainable pace. If the project requires heroics, the plan was wrong.                 |
+| **Scope creep acceptance**     | Saying yes to every new requirement                     | Scope tiers. Lock Tier 1. Negotiate Tier 2. Defer Tier 3.                              |
+| **Ignoring the critical path** | Working on non-critical items while blockers persist    | Identify the critical path on day 1. Protect it ruthlessly.                            |
+| **Consensus paralysis**        | Debating for weeks without deciding                     | Time-box decisions. "We will decide by Friday. If no consensus, I will make the call." |
+| **Invisible progress**         | Teams working hard but stakeholders cannot see progress | Weekly demos. Stakeholder updates. Make progress visible.                              |
+| **War-time forever**           | Crisis culture as the norm                              | Explicitly declare when war-time ends. Transition back to sustainable practices.       |
 
 ---
 

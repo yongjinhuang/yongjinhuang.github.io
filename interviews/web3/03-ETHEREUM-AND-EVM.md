@@ -105,12 +105,12 @@ A contract account is created by deploying bytecode. It has code, storage, and a
 
 **Account State Fields:**
 
-| Field          | EOA            | Contract Account     |
-|----------------|----------------|----------------------|
-| `nonce`        | Tx count       | Contracts created    |
-| `balance`      | ETH in wei     | ETH in wei           |
-| `codeHash`     | keccak256("") | keccak256(bytecode)  |
-| `storageRoot`  | Empty trie     | Merkle root of slots |
+| Field         | EOA           | Contract Account     |
+| ------------- | ------------- | -------------------- |
+| `nonce`       | Tx count      | Contracts created    |
+| `balance`     | ETH in wei    | ETH in wei           |
+| `codeHash`    | keccak256("") | keccak256(bytecode)  |
+| `storageRoot` | Empty trie    | Merkle root of slots |
 
 ### Address Derivation: CREATE vs CREATE2
 
@@ -138,14 +138,14 @@ CREATE2 makes the address independent of the nonce. By choosing a salt, you can 
 
 ```javascript
 // Computing a CREATE2 address with ethers.js
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
-const factoryAddress = "0x1234567890abcdef1234567890abcdef12345678";
-const salt = ethers.zeroPadValue("0x01", 32);
-const initCodeHash = ethers.keccak256("0x6000600055"); // example bytecode
+const factoryAddress = '0x1234567890abcdef1234567890abcdef12345678';
+const salt = ethers.zeroPadValue('0x01', 32);
+const initCodeHash = ethers.keccak256('0x6000600055'); // example bytecode
 
 const computed = ethers.getCreate2Address(factoryAddress, salt, initCodeHash);
-console.log("Predicted address:", computed);
+console.log('Predicted address:', computed);
 ```
 
 ---
@@ -156,11 +156,11 @@ Every state change in Ethereum originates from a transaction signed by an EOA. E
 
 ### Transaction Types
 
-| Type     | Envelope | EIP     | Key Feature                           |
-|----------|----------|---------|---------------------------------------|
-| Legacy   | None     | Pre-2930| `gasPrice` field                      |
-| Type 1   | `0x01`   | EIP-2930| Access lists for storage warming       |
-| Type 2   | `0x02`   | EIP-1559| Base fee + priority tip               |
+| Type   | Envelope | EIP      | Key Feature                      |
+| ------ | -------- | -------- | -------------------------------- |
+| Legacy | None     | Pre-2930 | `gasPrice` field                 |
+| Type 1 | `0x01`   | EIP-2930 | Access lists for storage warming |
+| Type 2 | `0x02`   | EIP-1559 | Base fee + priority tip          |
 
 ### EIP-1559 Transaction Fields
 
@@ -215,38 +215,38 @@ validatorTip = gasUsed * (effectiveGasPrice - baseFee)
 
 After execution, each transaction produces a receipt containing:
 
-| Field               | Description                                |
-|---------------------|--------------------------------------------|
-| `status`            | 1 (success) or 0 (revert)                 |
-| `cumulativeGasUsed` | Total gas used up to this tx in the block  |
-| `logs`              | Array of event logs emitted                |
-| `logsBloom`         | 256-byte bloom filter for log topics       |
-| `transactionHash`   | Hash of the original transaction           |
-| `blockNumber`       | Block in which the transaction was included|
-| `gasUsed`           | Gas consumed by this specific transaction  |
+| Field               | Description                                 |
+| ------------------- | ------------------------------------------- |
+| `status`            | 1 (success) or 0 (revert)                   |
+| `cumulativeGasUsed` | Total gas used up to this tx in the block   |
+| `logs`              | Array of event logs emitted                 |
+| `logsBloom`         | 256-byte bloom filter for log topics        |
+| `transactionHash`   | Hash of the original transaction            |
+| `blockNumber`       | Block in which the transaction was included |
+| `gasUsed`           | Gas consumed by this specific transaction   |
 
 ```javascript
 // Sending an EIP-1559 transaction and reading the receipt with ethers.js
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
-const provider = new ethers.JsonRpcProvider("https://rpc.ankr.com/eth");
+const provider = new ethers.JsonRpcProvider('https://rpc.ankr.com/eth');
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 async function sendTransaction() {
   const tx = await wallet.sendTransaction({
-    to: "0xRecipientAddress",
-    value: ethers.parseEther("0.01"),
-    maxFeePerGas: ethers.parseUnits("30", "gwei"),
-    maxPriorityFeePerGas: ethers.parseUnits("2", "gwei"),
+    to: '0xRecipientAddress',
+    value: ethers.parseEther('0.01'),
+    maxFeePerGas: ethers.parseUnits('30', 'gwei'),
+    maxPriorityFeePerGas: ethers.parseUnits('2', 'gwei'),
     gasLimit: 21000n,
   });
 
-  console.log("Tx hash:", tx.hash);
+  console.log('Tx hash:', tx.hash);
 
   const receipt = await tx.wait();
-  console.log("Status:", receipt.status); // 1 = success
-  console.log("Gas used:", receipt.gasUsed.toString());
-  console.log("Block:", receipt.blockNumber);
+  console.log('Status:', receipt.status); // 1 = success
+  console.log('Gas used:', receipt.gasUsed.toString());
+  console.log('Block:', receipt.blockNumber);
 }
 ```
 
@@ -300,13 +300,13 @@ This discourages contracts from allocating huge memory regions.
 
 **Storage**: A persistent key-value mapping from 256-bit keys to 256-bit values, stored in each contract's storage trie. Storage operations are the most expensive EVM operations:
 
-| Operation              | Gas Cost (approximate)         |
-|------------------------|-------------------------------|
-| SLOAD (cold)           | 2,100                         |
-| SLOAD (warm)           | 100                           |
-| SSTORE (0 -> non-zero) | 20,000                        |
-| SSTORE (non-zero -> non-zero) | 2,900              |
-| SSTORE (non-zero -> 0) | 2,900 + 4,800 refund         |
+| Operation                     | Gas Cost (approximate) |
+| ----------------------------- | ---------------------- |
+| SLOAD (cold)                  | 2,100                  |
+| SLOAD (warm)                  | 100                    |
+| SSTORE (0 -> non-zero)        | 20,000                 |
+| SSTORE (non-zero -> non-zero) | 2,900                  |
+| SSTORE (non-zero -> 0)        | 2,900 + 4,800 refund   |
 
 **Calldata**: The immutable byte array passed as input to a transaction or internal call. It is read-only. Reading calldata is cheap (3 gas per word via CALLDATALOAD).
 
@@ -314,90 +314,90 @@ This discourages contracts from allocating huge memory regions.
 
 **Arithmetic:**
 
-| Opcode    | Hex  | Gas | Description                   |
-|-----------|------|-----|-------------------------------|
-| ADD       | 0x01 | 3   | Addition                      |
-| MUL       | 0x02 | 5   | Multiplication                |
-| SUB       | 0x03 | 3   | Subtraction                   |
-| DIV       | 0x04 | 5   | Integer division              |
-| MOD       | 0x06 | 5   | Modulo                        |
-| ADDMOD    | 0x08 | 8   | (a + b) % N                   |
-| MULMOD    | 0x09 | 8   | (a * b) % N                   |
-| EXP       | 0x0a | 10* | Exponentiation (*+50/byte)    |
+| Opcode | Hex  | Gas  | Description                 |
+| ------ | ---- | ---- | --------------------------- |
+| ADD    | 0x01 | 3    | Addition                    |
+| MUL    | 0x02 | 5    | Multiplication              |
+| SUB    | 0x03 | 3    | Subtraction                 |
+| DIV    | 0x04 | 5    | Integer division            |
+| MOD    | 0x06 | 5    | Modulo                      |
+| ADDMOD | 0x08 | 8    | (a + b) % N                 |
+| MULMOD | 0x09 | 8    | (a \* b) % N                |
+| EXP    | 0x0a | 10\* | Exponentiation (\*+50/byte) |
 
 **Comparison & Bitwise:**
 
-| Opcode    | Hex  | Gas | Description                   |
-|-----------|------|-----|-------------------------------|
-| LT        | 0x10 | 3   | Less than                     |
-| GT        | 0x11 | 3   | Greater than                  |
-| EQ        | 0x14 | 3   | Equality                      |
-| ISZERO    | 0x15 | 3   | Boolean not                   |
-| AND       | 0x16 | 3   | Bitwise AND                   |
-| OR        | 0x17 | 3   | Bitwise OR                    |
-| XOR       | 0x18 | 3   | Bitwise XOR                   |
-| SHL       | 0x1b | 3   | Shift left                    |
-| SHR       | 0x1c | 3   | Shift right                   |
+| Opcode | Hex  | Gas | Description  |
+| ------ | ---- | --- | ------------ |
+| LT     | 0x10 | 3   | Less than    |
+| GT     | 0x11 | 3   | Greater than |
+| EQ     | 0x14 | 3   | Equality     |
+| ISZERO | 0x15 | 3   | Boolean not  |
+| AND    | 0x16 | 3   | Bitwise AND  |
+| OR     | 0x17 | 3   | Bitwise OR   |
+| XOR    | 0x18 | 3   | Bitwise XOR  |
+| SHL    | 0x1b | 3   | Shift left   |
+| SHR    | 0x1c | 3   | Shift right  |
 
 **Stack Operations:**
 
-| Opcode    | Hex  | Gas | Description                   |
-|-----------|------|-----|-------------------------------|
-| POP       | 0x50 | 2   | Remove top item               |
-| PUSH1-32  | 0x60-0x7f | 3 | Push 1-32 bytes           |
-| DUP1-16   | 0x80-0x8f | 3 | Duplicate stack item      |
-| SWAP1-16  | 0x90-0x9f | 3 | Swap stack items          |
+| Opcode   | Hex       | Gas | Description          |
+| -------- | --------- | --- | -------------------- |
+| POP      | 0x50      | 2   | Remove top item      |
+| PUSH1-32 | 0x60-0x7f | 3   | Push 1-32 bytes      |
+| DUP1-16  | 0x80-0x8f | 3   | Duplicate stack item |
+| SWAP1-16 | 0x90-0x9f | 3   | Swap stack items     |
 
 **Memory Operations:**
 
-| Opcode    | Hex  | Gas | Description                   |
-|-----------|------|-----|-------------------------------|
-| MLOAD     | 0x51 | 3*  | Load 32 bytes from memory     |
-| MSTORE    | 0x52 | 3*  | Store 32 bytes to memory      |
-| MSTORE8   | 0x53 | 3*  | Store 1 byte to memory        |
-| MSIZE     | 0x59 | 2   | Current memory size           |
+| Opcode  | Hex  | Gas | Description               |
+| ------- | ---- | --- | ------------------------- |
+| MLOAD   | 0x51 | 3\* | Load 32 bytes from memory |
+| MSTORE  | 0x52 | 3\* | Store 32 bytes to memory  |
+| MSTORE8 | 0x53 | 3\* | Store 1 byte to memory    |
+| MSIZE   | 0x59 | 2   | Current memory size       |
 
 **Storage Operations:**
 
-| Opcode    | Hex  | Gas     | Description                   |
-|-----------|------|---------|-------------------------------|
-| SLOAD     | 0x54 | 100-2100| Load from storage             |
-| SSTORE    | 0x55 | 100-20000| Store to storage             |
+| Opcode | Hex  | Gas       | Description       |
+| ------ | ---- | --------- | ----------------- |
+| SLOAD  | 0x54 | 100-2100  | Load from storage |
+| SSTORE | 0x55 | 100-20000 | Store to storage  |
 
 **Control Flow:**
 
-| Opcode    | Hex  | Gas | Description                   |
-|-----------|------|-----|-------------------------------|
-| JUMP      | 0x56 | 8   | Unconditional jump            |
-| JUMPI     | 0x57 | 10  | Conditional jump              |
-| JUMPDEST  | 0x5b | 1   | Valid jump destination        |
-| STOP      | 0x00 | 0   | Halt execution                |
-| RETURN    | 0xf3 | 0*  | Return output data            |
-| REVERT    | 0xfd | 0*  | Revert with output data       |
+| Opcode   | Hex  | Gas | Description             |
+| -------- | ---- | --- | ----------------------- |
+| JUMP     | 0x56 | 8   | Unconditional jump      |
+| JUMPI    | 0x57 | 10  | Conditional jump        |
+| JUMPDEST | 0x5b | 1   | Valid jump destination  |
+| STOP     | 0x00 | 0   | Halt execution          |
+| RETURN   | 0xf3 | 0\* | Return output data      |
+| REVERT   | 0xfd | 0\* | Revert with output data |
 
 **Environment:**
 
-| Opcode       | Hex  | Gas  | Description                   |
-|--------------|------|------|-------------------------------|
-| ADDRESS      | 0x30 | 2    | Current contract address      |
-| CALLER       | 0x33 | 2    | msg.sender                    |
-| CALLVALUE    | 0x34 | 2    | msg.value                     |
-| CALLDATALOAD | 0x35 | 3    | Load 32 bytes from calldata   |
-| CALLDATASIZE | 0x36 | 2    | Size of calldata              |
-| BLOCKHASH    | 0x40 | 20   | Hash of a recent block        |
-| TIMESTAMP    | 0x42 | 2    | Current block timestamp       |
-| NUMBER       | 0x43 | 2    | Current block number          |
-| CHAINID      | 0x46 | 2    | Chain ID (EIP-1344)           |
+| Opcode       | Hex  | Gas | Description                 |
+| ------------ | ---- | --- | --------------------------- |
+| ADDRESS      | 0x30 | 2   | Current contract address    |
+| CALLER       | 0x33 | 2   | msg.sender                  |
+| CALLVALUE    | 0x34 | 2   | msg.value                   |
+| CALLDATALOAD | 0x35 | 3   | Load 32 bytes from calldata |
+| CALLDATASIZE | 0x36 | 2   | Size of calldata            |
+| BLOCKHASH    | 0x40 | 20  | Hash of a recent block      |
+| TIMESTAMP    | 0x42 | 2   | Current block timestamp     |
+| NUMBER       | 0x43 | 2   | Current block number        |
+| CHAINID      | 0x46 | 2   | Chain ID (EIP-1344)         |
 
 **External Calls:**
 
-| Opcode       | Hex  | Gas     | Description                   |
-|--------------|------|---------|-------------------------------|
-| CALL         | 0xf1 | 100+*   | Call another contract         |
-| DELEGATECALL | 0xf4 | 100+*   | Call with caller's context    |
-| STATICCALL   | 0xfa | 100+*   | Read-only call                |
-| CREATE       | 0xf0 | 32000   | Deploy a new contract         |
-| CREATE2      | 0xf5 | 32000   | Deploy with deterministic addr|
+| Opcode       | Hex  | Gas    | Description                    |
+| ------------ | ---- | ------ | ------------------------------ |
+| CALL         | 0xf1 | 100+\* | Call another contract          |
+| DELEGATECALL | 0xf4 | 100+\* | Call with caller's context     |
+| STATICCALL   | 0xfa | 100+\* | Read-only call                 |
+| CREATE       | 0xf0 | 32000  | Deploy a new contract          |
+| CREATE2      | 0xf5 | 32000  | Deploy with deterministic addr |
 
 ### EVM Execution Walkthrough
 
@@ -488,49 +488,61 @@ Before EIP-1559, users bid a single `gasPrice` in a first-price auction. This wa
 ### Gas Estimation with ethers.js
 
 ```javascript
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
-const provider = new ethers.JsonRpcProvider("https://rpc.ankr.com/eth");
+const provider = new ethers.JsonRpcProvider('https://rpc.ankr.com/eth');
 
 async function estimateGas() {
   // Get current fee data
   const feeData = await provider.getFeeData();
-  console.log("Base fee:", ethers.formatUnits(feeData.gasPrice, "gwei"), "gwei");
-  console.log("Max fee:", ethers.formatUnits(feeData.maxFeePerGas, "gwei"), "gwei");
-  console.log("Priority fee:", ethers.formatUnits(feeData.maxPriorityFeePerGas, "gwei"), "gwei");
+  console.log(
+    'Base fee:',
+    ethers.formatUnits(feeData.gasPrice, 'gwei'),
+    'gwei'
+  );
+  console.log(
+    'Max fee:',
+    ethers.formatUnits(feeData.maxFeePerGas, 'gwei'),
+    'gwei'
+  );
+  console.log(
+    'Priority fee:',
+    ethers.formatUnits(feeData.maxPriorityFeePerGas, 'gwei'),
+    'gwei'
+  );
 
   // Estimate gas for a contract call
   const contract = new ethers.Contract(
-    "0xContractAddress",
-    ["function transfer(address to, uint256 amount) returns (bool)"],
+    '0xContractAddress',
+    ['function transfer(address to, uint256 amount) returns (bool)'],
     provider
   );
 
   const gasEstimate = await contract.transfer.estimateGas(
-    "0xRecipientAddress",
-    ethers.parseUnits("100", 18)
+    '0xRecipientAddress',
+    ethers.parseUnits('100', 18)
   );
 
-  console.log("Estimated gas:", gasEstimate.toString());
+  console.log('Estimated gas:', gasEstimate.toString());
 
   // Calculate total cost
   const totalCostWei = gasEstimate * feeData.maxFeePerGas;
-  console.log("Max cost:", ethers.formatEther(totalCostWei), "ETH");
+  console.log('Max cost:', ethers.formatEther(totalCostWei), 'ETH');
 }
 ```
 
 ### Gas Optimization Tips
 
-| Technique                        | Savings             |
-|----------------------------------|---------------------|
-| Pack storage variables           | Up to 50% SSTORE    |
-| Use `calldata` over `memory`     | ~60% for read-only  |
-| Cache storage reads in local vars| 2,000 gas per re-read|
-| Use `++i` over `i++`             | ~5 gas per iteration |
-| Short-circuit conditionals       | Variable            |
-| Use events instead of storage    | ~95% cheaper        |
-| Use `bytes32` over `string`      | ~50% for short text  |
-| Batch operations                 | Save base cost/tx    |
+| Technique                         | Savings               |
+| --------------------------------- | --------------------- |
+| Pack storage variables            | Up to 50% SSTORE      |
+| Use `calldata` over `memory`      | ~60% for read-only    |
+| Cache storage reads in local vars | 2,000 gas per re-read |
+| Use `++i` over `i++`              | ~5 gas per iteration  |
+| Short-circuit conditionals        | Variable              |
+| Use events instead of storage     | ~95% cheaper          |
+| Use `bytes32` over `string`       | ~50% for short text   |
+| Batch operations                  | Save base cost/tx     |
 
 ---
 
@@ -610,11 +622,11 @@ The transition involves:
 
 The MPT combines a Merkle tree (hash-based integrity) with a Patricia trie (prefix-based compression). Nodes are of three types:
 
-| Node Type   | Description                                      |
-|-------------|--------------------------------------------------|
-| Branch      | 17-element array (16 hex nibbles + value)        |
-| Extension   | Shared prefix + pointer to next node             |
-| Leaf        | Remaining path + value                           |
+| Node Type | Description                               |
+| --------- | ----------------------------------------- |
+| Branch    | 17-element array (16 hex nibbles + value) |
+| Extension | Shared prefix + pointer to next node      |
+| Leaf      | Remaining path + value                    |
 
 This structure enables **Merkle proofs**: a client can verify that an account has a specific balance by requesting only the path from the state root to the account's leaf, without downloading the entire state.
 
@@ -651,17 +663,18 @@ On September 15, 2022, Ethereum transitioned from Proof of Work to Proof of Stak
 
 ### Slots and Epochs
 
-| Concept    | Duration      | Description                               |
-|------------|---------------|-------------------------------------------|
-| **Slot**   | 12 seconds    | One opportunity to propose a block         |
-| **Epoch**  | 32 slots      | 6.4 minutes; all validators attest once    |
-| **Period** | 256 epochs    | ~27.3 hours; sync committee rotation       |
+| Concept    | Duration   | Description                             |
+| ---------- | ---------- | --------------------------------------- |
+| **Slot**   | 12 seconds | One opportunity to propose a block      |
+| **Epoch**  | 32 slots   | 6.4 minutes; all validators attest once |
+| **Period** | 256 epochs | ~27.3 hours; sync committee rotation    |
 
 Each slot, one validator is pseudo-randomly selected to propose a block. All other validators in the epoch's committee attest to the block they believe is the head of the chain.
 
 ### Attestations
 
 An attestation is a validator's vote on:
+
 - **Source**: The most recent justified checkpoint
 - **Target**: The checkpoint at the start of the current epoch
 - **Head**: The block the validator believes is the chain head
@@ -765,68 +778,67 @@ Every function call is identified by the first 4 bytes of the keccak256 hash of 
 ### ABI Encoding with ethers.js
 
 ```javascript
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
 // Encode a function call
 const iface = new ethers.Interface([
-  "function transfer(address to, uint256 amount) returns (bool)"
+  'function transfer(address to, uint256 amount) returns (bool)',
 ]);
 
-const calldata = iface.encodeFunctionData("transfer", [
-  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-  ethers.parseUnits("1000", 18)
+const calldata = iface.encodeFunctionData('transfer', [
+  '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  ethers.parseUnits('1000', 18),
 ]);
-console.log("Calldata:", calldata);
+console.log('Calldata:', calldata);
 // 0xa9059cbb000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045
 //           00000000000000000000000000000000000000000000003635c9adc5dea00000
 
 // Decode calldata back
-const decoded = iface.decodeFunctionData("transfer", calldata);
-console.log("To:", decoded[0]);
-console.log("Amount:", ethers.formatUnits(decoded[1], 18));
+const decoded = iface.decodeFunctionData('transfer', calldata);
+console.log('To:', decoded[0]);
+console.log('Amount:', ethers.formatUnits(decoded[1], 18));
 
 // Compute function selector manually
-const selector = ethers.id("transfer(address,uint256)").slice(0, 10);
-console.log("Selector:", selector); // 0xa9059cbb
+const selector = ethers.id('transfer(address,uint256)').slice(0, 10);
+console.log('Selector:', selector); // 0xa9059cbb
 
 // Encode with raw ABI coder
 const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
-  ["address", "uint256"],
-  ["0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", ethers.parseUnits("1000", 18)]
+  ['address', 'uint256'],
+  ['0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', ethers.parseUnits('1000', 18)]
 );
-console.log("ABI encoded args:", encoded);
+console.log('ABI encoded args:', encoded);
 ```
 
 ### Encoding Dynamic Types: Tuples and Arrays
 
 ```javascript
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
 const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
 // Encode a tuple (struct)
 const tupleEncoded = abiCoder.encode(
-  ["tuple(address owner, uint256 amount, string memo)"],
-  [{
-    owner: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-    amount: 1000n,
-    memo: "Payment for services"
-  }]
+  ['tuple(address owner, uint256 amount, string memo)'],
+  [
+    {
+      owner: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+      amount: 1000n,
+      memo: 'Payment for services',
+    },
+  ]
 );
 
 // Encode a dynamic array
-const arrayEncoded = abiCoder.encode(
-  ["uint256[]"],
-  [[100n, 200n, 300n]]
-);
+const arrayEncoded = abiCoder.encode(['uint256[]'], [[100n, 200n, 300n]]);
 
 // Decode
 const decodedTuple = abiCoder.decode(
-  ["tuple(address owner, uint256 amount, string memo)"],
+  ['tuple(address owner, uint256 amount, string memo)'],
   tupleEncoded
 );
-console.log("Owner:", decodedTuple[0].owner);
-console.log("Memo:", decodedTuple[0].memo);
+console.log('Owner:', decodedTuple[0].owner);
+console.log('Memo:', decodedTuple[0].memo);
 ```
 
 ---
@@ -859,14 +871,14 @@ Events are the primary mechanism for contracts to communicate information to off
 
 ### Indexed vs Non-Indexed Parameters
 
-| Aspect          | Indexed                          | Non-Indexed              |
-|-----------------|----------------------------------|--------------------------|
-| Storage         | Stored as topics                 | ABI-encoded in data      |
-| Filterable      | Yes (bloom filter + topic match) | No                       |
-| Max per event   | 3 (or 4 for anonymous events)   | Unlimited                |
-| Value types     | Stored directly (32 bytes)       | ABI-encoded              |
-| Reference types | keccak256 hash stored            | Full value in data       |
-| Gas cost        | 375 per topic                    | 8 per byte of data       |
+| Aspect          | Indexed                          | Non-Indexed         |
+| --------------- | -------------------------------- | ------------------- |
+| Storage         | Stored as topics                 | ABI-encoded in data |
+| Filterable      | Yes (bloom filter + topic match) | No                  |
+| Max per event   | 3 (or 4 for anonymous events)    | Unlimited           |
+| Value types     | Stored directly (32 bytes)       | ABI-encoded         |
+| Reference types | keccak256 hash stored            | Full value in data  |
+| Gas cost        | 375 per topic                    | 8 per byte of data  |
 
 ### Bloom Filters
 
@@ -934,23 +946,27 @@ contract TokenEvents {
 ### Parsing Event Logs with ethers.js
 
 ```javascript
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
-const provider = new ethers.JsonRpcProvider("https://rpc.ankr.com/eth");
+const provider = new ethers.JsonRpcProvider('https://rpc.ankr.com/eth');
 
 const ERC20_ABI = [
-  "event Transfer(address indexed from, address indexed to, uint256 amount)",
-  "event Approval(address indexed owner, address indexed spender, uint256 amount)"
+  'event Transfer(address indexed from, address indexed to, uint256 amount)',
+  'event Approval(address indexed owner, address indexed spender, uint256 amount)',
 ];
 
-const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const USDC = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const contract = new ethers.Contract(USDC, ERC20_ABI, provider);
 
 async function parseRecentTransfers() {
   // Method 1: Query past events with filters
   const filter = contract.filters.Transfer();
   const latestBlock = await provider.getBlockNumber();
-  const events = await contract.queryFilter(filter, latestBlock - 100, latestBlock);
+  const events = await contract.queryFilter(
+    filter,
+    latestBlock - 100,
+    latestBlock
+  );
 
   for (const event of events) {
     console.log({
@@ -963,20 +979,26 @@ async function parseRecentTransfers() {
   }
 
   // Method 2: Filter by specific indexed parameter
-  const vitalikAddress = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+  const vitalikAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
   const fromVitalik = contract.filters.Transfer(vitalikAddress);
-  const vitalikTxs = await contract.queryFilter(fromVitalik, latestBlock - 10000, latestBlock);
-  console.log("Transfers from Vitalik:", vitalikTxs.length);
+  const vitalikTxs = await contract.queryFilter(
+    fromVitalik,
+    latestBlock - 10000,
+    latestBlock
+  );
+  console.log('Transfers from Vitalik:', vitalikTxs.length);
 
   // Method 3: Listen for real-time events
-  contract.on("Transfer", (from, to, amount, event) => {
-    console.log(`Transfer: ${from} -> ${to}: ${ethers.formatUnits(amount, 6)} USDC`);
+  contract.on('Transfer', (from, to, amount, event) => {
+    console.log(
+      `Transfer: ${from} -> ${to}: ${ethers.formatUnits(amount, 6)} USDC`
+    );
   });
 }
 
 async function parseRawLogs() {
   // Parse raw logs from a transaction receipt
-  const txHash = "0xYourTransactionHash";
+  const txHash = '0xYourTransactionHash';
   const receipt = await provider.getTransactionReceipt(txHash);
 
   const iface = new ethers.Interface(ERC20_ABI);
@@ -987,8 +1009,8 @@ async function parseRawLogs() {
         topics: log.topics,
         data: log.data,
       });
-      console.log("Event:", parsed.name);
-      console.log("Args:", parsed.args);
+      console.log('Event:', parsed.name);
+      console.log('Args:', parsed.args);
     } catch (e) {
       // Log does not match any event in the ABI -- skip
     }
@@ -997,20 +1019,20 @@ async function parseRawLogs() {
 
 async function buildCustomFilter() {
   // Build a raw filter using topic hashes
-  const transferTopic = ethers.id("Transfer(address,address,uint256)");
+  const transferTopic = ethers.id('Transfer(address,address,uint256)');
 
   const filter = {
     address: USDC,
     topics: [
       transferTopic,
       null, // any 'from' address
-      ethers.zeroPadValue("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", 32), // specific 'to'
+      ethers.zeroPadValue('0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', 32), // specific 'to'
     ],
-    fromBlock: "latest",
+    fromBlock: 'latest',
   };
 
   const logs = await provider.getLogs(filter);
-  console.log("Matching logs:", logs.length);
+  console.log('Matching logs:', logs.length);
 }
 ```
 
@@ -1034,24 +1056,26 @@ Step 1: Identify the function selector.
 The first 4 bytes are `0xa9059cbb`. This is `keccak256("transfer(address,uint256)")` truncated to 4 bytes.
 
 Step 2: Decode the arguments.
+
 - **Arg 0 (address)**: Strip leading zeros from bytes 4-36. Address = `0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045`
 - **Arg 1 (uint256)**: `0x0de0b6b3a7640000` = 1,000,000,000,000,000,000 = 1e18 (1 token with 18 decimals)
 
 Step 3: Verify with ethers.js:
 
 ```javascript
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
 const iface = new ethers.Interface([
-  "function transfer(address to, uint256 amount) returns (bool)"
+  'function transfer(address to, uint256 amount) returns (bool)',
 ]);
 
-const calldata = "0xa9059cbb000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa960450000000000000000000000000000000000000000000000000de0b6b3a7640000";
+const calldata =
+  '0xa9059cbb000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa960450000000000000000000000000000000000000000000000000de0b6b3a7640000';
 
-const decoded = iface.decodeFunctionData("transfer", calldata);
-console.log("To:", decoded[0]);
+const decoded = iface.decodeFunctionData('transfer', calldata);
+console.log('To:', decoded[0]);
 // 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-console.log("Amount:", ethers.formatEther(decoded[1]));
+console.log('Amount:', ethers.formatEther(decoded[1]));
 // 1.0
 ```
 
@@ -1070,18 +1094,18 @@ address = keccak256(0xff ++ factory ++ salt ++ keccak256(initCode))[12:]
 Step 1: Compute `keccak256(initCode)`:
 
 ```javascript
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
-const factory = "0x1111111111111111111111111111111111111111";
-const salt = ethers.zeroPadValue("0x01", 32);
-const initCode = "0x600a600055";
+const factory = '0x1111111111111111111111111111111111111111';
+const salt = ethers.zeroPadValue('0x01', 32);
+const initCode = '0x600a600055';
 const initCodeHash = ethers.keccak256(initCode);
 
-console.log("Init code hash:", initCodeHash);
+console.log('Init code hash:', initCodeHash);
 
 // Use ethers helper
 const predicted = ethers.getCreate2Address(factory, salt, initCodeHash);
-console.log("Predicted address:", predicted);
+console.log('Predicted address:', predicted);
 ```
 
 Step 2: Manual computation:
@@ -1101,6 +1125,7 @@ The key insight is that CREATE2 addresses are fully deterministic and can be com
 ### Problem 3: Calculate Transaction Cost After EIP-1559
 
 **Question**: A block has a `baseFee` of 20 gwei. A user submits a transaction with `maxFeePerGas = 50 gwei`, `maxPriorityFeePerGas = 3 gwei`, and `gasLimit = 100,000`. The transaction consumes 65,000 gas. Calculate:
+
 1. The effective gas price
 2. Total fee paid by the user
 3. Amount burned
@@ -1143,7 +1168,7 @@ The key insight is that CREATE2 addresses are fully deterministic and can be com
 Verification:
 
 ```javascript
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
 const baseFee = 20n;
 const maxFeePerGas = 50n;
@@ -1151,9 +1176,10 @@ const maxPriorityFeePerGas = 3n;
 const gasLimit = 100000n;
 const gasUsed = 65000n;
 
-const effectiveGasPrice = maxFeePerGas < baseFee + maxPriorityFeePerGas
-  ? maxFeePerGas
-  : baseFee + maxPriorityFeePerGas;
+const effectiveGasPrice =
+  maxFeePerGas < baseFee + maxPriorityFeePerGas
+    ? maxFeePerGas
+    : baseFee + maxPriorityFeePerGas;
 
 const totalFee = gasUsed * effectiveGasPrice;
 const burned = gasUsed * baseFee;
@@ -1161,11 +1187,11 @@ const validatorTip = gasUsed * (effectiveGasPrice - baseFee);
 const upfrontCost = gasLimit * maxFeePerGas;
 const refund = upfrontCost - totalFee;
 
-console.log("Effective gas price:", effectiveGasPrice.toString(), "gwei");
-console.log("Total fee:", ethers.formatUnits(totalFee, "gwei"), "gwei");
-console.log("Burned:", ethers.formatUnits(burned, "gwei"), "gwei");
-console.log("Validator tip:", ethers.formatUnits(validatorTip, "gwei"), "gwei");
-console.log("Refund:", ethers.formatUnits(refund, "gwei"), "gwei");
+console.log('Effective gas price:', effectiveGasPrice.toString(), 'gwei');
+console.log('Total fee:', ethers.formatUnits(totalFee, 'gwei'), 'gwei');
+console.log('Burned:', ethers.formatUnits(burned, 'gwei'), 'gwei');
+console.log('Validator tip:', ethers.formatUnits(validatorTip, 'gwei'), 'gwei');
+console.log('Refund:', ethers.formatUnits(refund, 'gwei'), 'gwei');
 ```
 
 ---
@@ -1174,86 +1200,86 @@ console.log("Refund:", ethers.formatUnits(refund, "gwei"), "gwei");
 
 A reference table of commonly encountered opcodes with their gas costs and stack effects.
 
-| Opcode       | Hex  | Gas       | Stack In | Stack Out | Description                          |
-|--------------|------|-----------|----------|-----------|--------------------------------------|
-| STOP         | 0x00 | 0         | 0        | 0         | Halt execution                       |
-| ADD          | 0x01 | 3         | 2        | 1         | a + b                                |
-| MUL          | 0x02 | 5         | 2        | 1         | a * b                                |
-| SUB          | 0x03 | 3         | 2        | 1         | a - b                                |
-| DIV          | 0x04 | 5         | 2        | 1         | a / b (integer)                      |
-| SDIV         | 0x05 | 5         | 2        | 1         | Signed a / b                         |
-| MOD          | 0x06 | 5         | 2        | 1         | a % b                                |
-| SMOD         | 0x07 | 5         | 2        | 1         | Signed a % b                         |
-| ADDMOD       | 0x08 | 8         | 3        | 1         | (a + b) % N                          |
-| MULMOD       | 0x09 | 8         | 3        | 1         | (a * b) % N                          |
-| EXP          | 0x0a | 10+50/B   | 2        | 1         | a ** b                               |
-| SIGNEXTEND   | 0x0b | 5         | 2        | 1         | Sign extend                          |
-| LT           | 0x10 | 3         | 2        | 1         | a < b                                |
-| GT           | 0x11 | 3         | 2        | 1         | a > b                                |
-| SLT          | 0x12 | 3         | 2        | 1         | Signed a < b                         |
-| SGT          | 0x13 | 3         | 2        | 1         | Signed a > b                         |
-| EQ           | 0x14 | 3         | 2        | 1         | a == b                               |
-| ISZERO       | 0x15 | 3         | 1        | 1         | a == 0                               |
-| AND          | 0x16 | 3         | 2        | 1         | Bitwise AND                          |
-| OR           | 0x17 | 3         | 2        | 1         | Bitwise OR                           |
-| XOR          | 0x18 | 3         | 2        | 1         | Bitwise XOR                          |
-| NOT          | 0x19 | 3         | 1        | 1         | Bitwise NOT                          |
-| BYTE         | 0x1a | 3         | 2        | 1         | Extract byte from word               |
-| SHL          | 0x1b | 3         | 2        | 1         | Shift left                           |
-| SHR          | 0x1c | 3         | 2        | 1         | Logical shift right                  |
-| SAR          | 0x1d | 3         | 2        | 1         | Arithmetic shift right               |
-| SHA3         | 0x20 | 30+6/W   | 2        | 1         | keccak256 hash                       |
-| ADDRESS      | 0x30 | 2         | 0        | 1         | Current contract address             |
-| BALANCE      | 0x31 | 100-2600 | 1        | 1         | Address balance                      |
-| ORIGIN       | 0x32 | 2         | 0        | 1         | tx.origin                            |
-| CALLER       | 0x33 | 2         | 0        | 1         | msg.sender                           |
-| CALLVALUE    | 0x34 | 2         | 0        | 1         | msg.value                            |
-| CALLDATALOAD | 0x35 | 3         | 1        | 1         | Load 32 bytes from calldata          |
-| CALLDATASIZE | 0x36 | 2         | 0        | 1         | Size of calldata in bytes            |
-| CALLDATACOPY | 0x37 | 3+3/W    | 3        | 0         | Copy calldata to memory              |
-| CODESIZE     | 0x38 | 2         | 0        | 1         | Size of contract code                |
-| CODECOPY     | 0x39 | 3+3/W    | 3        | 0         | Copy code to memory                  |
-| GASPRICE     | 0x3a | 2         | 0        | 1         | Transaction gas price                |
-| RETURNDATASIZE| 0x3d| 2         | 0        | 1         | Size of last return data             |
-| RETURNDATACOPY| 0x3e| 3+3/W    | 3        | 0         | Copy return data to memory           |
-| BLOCKHASH    | 0x40 | 20        | 1        | 1         | Hash of a recent block               |
-| COINBASE     | 0x41 | 2         | 0        | 1         | Block validator address              |
-| TIMESTAMP    | 0x42 | 2         | 0        | 1         | Block timestamp                      |
-| NUMBER       | 0x43 | 2         | 0        | 1         | Block number                         |
-| PREVRANDAO   | 0x44 | 2         | 0        | 1         | Randomness beacon (post-Merge)       |
-| GASLIMIT     | 0x45 | 2         | 0        | 1         | Block gas limit                      |
-| CHAINID      | 0x46 | 2         | 0        | 1         | Chain ID                             |
-| SELFBALANCE  | 0x47 | 5         | 0        | 1         | Current contract balance             |
-| BASEFEE      | 0x48 | 2         | 0        | 1         | Block base fee (EIP-1559)            |
-| POP          | 0x50 | 2         | 1        | 0         | Remove top stack item                |
-| MLOAD        | 0x51 | 3*        | 1        | 1         | Load 32 bytes from memory            |
-| MSTORE       | 0x52 | 3*        | 2        | 0         | Store 32 bytes to memory             |
-| MSTORE8      | 0x53 | 3*        | 2        | 0         | Store 1 byte to memory               |
-| SLOAD        | 0x54 | 100-2100 | 1        | 1         | Load from storage                    |
-| SSTORE       | 0x55 | 100-20000| 2        | 0         | Store to storage                     |
-| JUMP         | 0x56 | 8         | 1        | 0         | Unconditional jump                   |
-| JUMPI        | 0x57 | 10        | 2        | 0         | Conditional jump                     |
-| PC           | 0x58 | 2         | 0        | 1         | Program counter                      |
-| MSIZE        | 0x59 | 2         | 0        | 1         | Current memory size                  |
-| GAS          | 0x5a | 2         | 0        | 1         | Remaining gas                        |
-| JUMPDEST     | 0x5b | 1         | 0        | 0         | Valid jump destination               |
-| PUSH1-PUSH32 | 0x60-0x7f | 3  | 0        | 1         | Push 1-32 bytes onto stack           |
-| DUP1-DUP16   | 0x80-0x8f | 3  | N        | N+1       | Duplicate Nth stack item             |
-| SWAP1-SWAP16 | 0x90-0x9f | 3  | N+1      | N+1       | Swap top with Nth item               |
-| LOG0         | 0xa0 | 375       | 2        | 0         | Log with 0 topics                    |
-| LOG1         | 0xa1 | 750       | 3        | 0         | Log with 1 topic                     |
-| LOG2         | 0xa2 | 1125      | 4        | 0         | Log with 2 topics                    |
-| LOG3         | 0xa3 | 1500      | 5        | 0         | Log with 3 topics                    |
-| LOG4         | 0xa4 | 1875      | 6        | 0         | Log with 4 topics                    |
-| CREATE       | 0xf0 | 32000     | 3        | 1         | Create new contract                  |
-| CALL         | 0xf1 | 100+*     | 7        | 1         | Call another contract                |
-| CALLCODE     | 0xf2 | 100+*     | 7        | 1         | Call with own storage (deprecated)   |
-| RETURN       | 0xf3 | 0*        | 2        | 0         | Return output data                   |
-| DELEGATECALL | 0xf4 | 100+*     | 6        | 1         | Call with caller's context           |
-| CREATE2      | 0xf5 | 32000     | 4        | 1         | Create with deterministic address    |
-| STATICCALL   | 0xfa | 100+*     | 6        | 1         | Read-only external call              |
-| REVERT       | 0xfd | 0*        | 2        | 0         | Revert with return data              |
-| INVALID      | 0xfe | All       | 0        | 0         | Designated invalid opcode            |
-| SELFDESTRUCT | 0xff | 5000+*    | 1        | 0         | Deprecated (EIP-6780)                |
+| Opcode         | Hex       | Gas       | Stack In | Stack Out | Description                        |
+| -------------- | --------- | --------- | -------- | --------- | ---------------------------------- |
+| STOP           | 0x00      | 0         | 0        | 0         | Halt execution                     |
+| ADD            | 0x01      | 3         | 2        | 1         | a + b                              |
+| MUL            | 0x02      | 5         | 2        | 1         | a \* b                             |
+| SUB            | 0x03      | 3         | 2        | 1         | a - b                              |
+| DIV            | 0x04      | 5         | 2        | 1         | a / b (integer)                    |
+| SDIV           | 0x05      | 5         | 2        | 1         | Signed a / b                       |
+| MOD            | 0x06      | 5         | 2        | 1         | a % b                              |
+| SMOD           | 0x07      | 5         | 2        | 1         | Signed a % b                       |
+| ADDMOD         | 0x08      | 8         | 3        | 1         | (a + b) % N                        |
+| MULMOD         | 0x09      | 8         | 3        | 1         | (a \* b) % N                       |
+| EXP            | 0x0a      | 10+50/B   | 2        | 1         | a \*\* b                           |
+| SIGNEXTEND     | 0x0b      | 5         | 2        | 1         | Sign extend                        |
+| LT             | 0x10      | 3         | 2        | 1         | a < b                              |
+| GT             | 0x11      | 3         | 2        | 1         | a > b                              |
+| SLT            | 0x12      | 3         | 2        | 1         | Signed a < b                       |
+| SGT            | 0x13      | 3         | 2        | 1         | Signed a > b                       |
+| EQ             | 0x14      | 3         | 2        | 1         | a == b                             |
+| ISZERO         | 0x15      | 3         | 1        | 1         | a == 0                             |
+| AND            | 0x16      | 3         | 2        | 1         | Bitwise AND                        |
+| OR             | 0x17      | 3         | 2        | 1         | Bitwise OR                         |
+| XOR            | 0x18      | 3         | 2        | 1         | Bitwise XOR                        |
+| NOT            | 0x19      | 3         | 1        | 1         | Bitwise NOT                        |
+| BYTE           | 0x1a      | 3         | 2        | 1         | Extract byte from word             |
+| SHL            | 0x1b      | 3         | 2        | 1         | Shift left                         |
+| SHR            | 0x1c      | 3         | 2        | 1         | Logical shift right                |
+| SAR            | 0x1d      | 3         | 2        | 1         | Arithmetic shift right             |
+| SHA3           | 0x20      | 30+6/W    | 2        | 1         | keccak256 hash                     |
+| ADDRESS        | 0x30      | 2         | 0        | 1         | Current contract address           |
+| BALANCE        | 0x31      | 100-2600  | 1        | 1         | Address balance                    |
+| ORIGIN         | 0x32      | 2         | 0        | 1         | tx.origin                          |
+| CALLER         | 0x33      | 2         | 0        | 1         | msg.sender                         |
+| CALLVALUE      | 0x34      | 2         | 0        | 1         | msg.value                          |
+| CALLDATALOAD   | 0x35      | 3         | 1        | 1         | Load 32 bytes from calldata        |
+| CALLDATASIZE   | 0x36      | 2         | 0        | 1         | Size of calldata in bytes          |
+| CALLDATACOPY   | 0x37      | 3+3/W     | 3        | 0         | Copy calldata to memory            |
+| CODESIZE       | 0x38      | 2         | 0        | 1         | Size of contract code              |
+| CODECOPY       | 0x39      | 3+3/W     | 3        | 0         | Copy code to memory                |
+| GASPRICE       | 0x3a      | 2         | 0        | 1         | Transaction gas price              |
+| RETURNDATASIZE | 0x3d      | 2         | 0        | 1         | Size of last return data           |
+| RETURNDATACOPY | 0x3e      | 3+3/W     | 3        | 0         | Copy return data to memory         |
+| BLOCKHASH      | 0x40      | 20        | 1        | 1         | Hash of a recent block             |
+| COINBASE       | 0x41      | 2         | 0        | 1         | Block validator address            |
+| TIMESTAMP      | 0x42      | 2         | 0        | 1         | Block timestamp                    |
+| NUMBER         | 0x43      | 2         | 0        | 1         | Block number                       |
+| PREVRANDAO     | 0x44      | 2         | 0        | 1         | Randomness beacon (post-Merge)     |
+| GASLIMIT       | 0x45      | 2         | 0        | 1         | Block gas limit                    |
+| CHAINID        | 0x46      | 2         | 0        | 1         | Chain ID                           |
+| SELFBALANCE    | 0x47      | 5         | 0        | 1         | Current contract balance           |
+| BASEFEE        | 0x48      | 2         | 0        | 1         | Block base fee (EIP-1559)          |
+| POP            | 0x50      | 2         | 1        | 0         | Remove top stack item              |
+| MLOAD          | 0x51      | 3\*       | 1        | 1         | Load 32 bytes from memory          |
+| MSTORE         | 0x52      | 3\*       | 2        | 0         | Store 32 bytes to memory           |
+| MSTORE8        | 0x53      | 3\*       | 2        | 0         | Store 1 byte to memory             |
+| SLOAD          | 0x54      | 100-2100  | 1        | 1         | Load from storage                  |
+| SSTORE         | 0x55      | 100-20000 | 2        | 0         | Store to storage                   |
+| JUMP           | 0x56      | 8         | 1        | 0         | Unconditional jump                 |
+| JUMPI          | 0x57      | 10        | 2        | 0         | Conditional jump                   |
+| PC             | 0x58      | 2         | 0        | 1         | Program counter                    |
+| MSIZE          | 0x59      | 2         | 0        | 1         | Current memory size                |
+| GAS            | 0x5a      | 2         | 0        | 1         | Remaining gas                      |
+| JUMPDEST       | 0x5b      | 1         | 0        | 0         | Valid jump destination             |
+| PUSH1-PUSH32   | 0x60-0x7f | 3         | 0        | 1         | Push 1-32 bytes onto stack         |
+| DUP1-DUP16     | 0x80-0x8f | 3         | N        | N+1       | Duplicate Nth stack item           |
+| SWAP1-SWAP16   | 0x90-0x9f | 3         | N+1      | N+1       | Swap top with Nth item             |
+| LOG0           | 0xa0      | 375       | 2        | 0         | Log with 0 topics                  |
+| LOG1           | 0xa1      | 750       | 3        | 0         | Log with 1 topic                   |
+| LOG2           | 0xa2      | 1125      | 4        | 0         | Log with 2 topics                  |
+| LOG3           | 0xa3      | 1500      | 5        | 0         | Log with 3 topics                  |
+| LOG4           | 0xa4      | 1875      | 6        | 0         | Log with 4 topics                  |
+| CREATE         | 0xf0      | 32000     | 3        | 1         | Create new contract                |
+| CALL           | 0xf1      | 100+\*    | 7        | 1         | Call another contract              |
+| CALLCODE       | 0xf2      | 100+\*    | 7        | 1         | Call with own storage (deprecated) |
+| RETURN         | 0xf3      | 0\*       | 2        | 0         | Return output data                 |
+| DELEGATECALL   | 0xf4      | 100+\*    | 6        | 1         | Call with caller's context         |
+| CREATE2        | 0xf5      | 32000     | 4        | 1         | Create with deterministic address  |
+| STATICCALL     | 0xfa      | 100+\*    | 6        | 1         | Read-only external call            |
+| REVERT         | 0xfd      | 0\*       | 2        | 0         | Revert with return data            |
+| INVALID        | 0xfe      | All       | 0        | 0         | Designated invalid opcode          |
+| SELFDESTRUCT   | 0xff      | 5000+\*   | 1        | 0         | Deprecated (EIP-6780)              |
 
 **Gas notation**: `*` indicates additional memory expansion cost may apply. `+*` indicates variable cost depending on cold/warm access and value transfer. `/B` means per byte of exponent. `/W` means per 32-byte word.

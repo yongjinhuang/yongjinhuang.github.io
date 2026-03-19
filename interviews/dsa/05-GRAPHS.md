@@ -40,21 +40,21 @@ matrix[0][1] = 1  # edge from 0 to 1
 edges = [(0, 1, 5), (1, 2, 3), (0, 2, 8)]  # (u, v, weight)
 ```
 
-| Representation | Space | Check Edge | Get Neighbors | Best For |
-|---------------|-------|-----------|---------------|----------|
-| Adjacency List | O(V+E) | O(degree) | O(1) | Sparse graphs |
-| Adjacency Matrix | O(V^2) | O(1) | O(V) | Dense graphs |
-| Edge List | O(E) | O(E) | O(E) | Union-find, sorting edges |
+| Representation   | Space  | Check Edge | Get Neighbors | Best For                  |
+| ---------------- | ------ | ---------- | ------------- | ------------------------- |
+| Adjacency List   | O(V+E) | O(degree)  | O(1)          | Sparse graphs             |
+| Adjacency Matrix | O(V^2) | O(1)       | O(V)          | Dense graphs              |
+| Edge List        | O(E)   | O(E)       | O(E)          | Union-find, sorting edges |
 
 ### 1.2 BFS vs DFS: When to Use Each
 
-| Use BFS | Use DFS |
-|---------|---------|
-| Shortest path (unweighted) | Detect cycles |
-| Level-order processing | Topological sort |
-| Nearest neighbor | Path existence |
-| Connected components (either works) | Backtracking/exhaustive search |
-| Minimum steps/moves | Connected components (either works) |
+| Use BFS                             | Use DFS                             |
+| ----------------------------------- | ----------------------------------- |
+| Shortest path (unweighted)          | Detect cycles                       |
+| Level-order processing              | Topological sort                    |
+| Nearest neighbor                    | Path existence                      |
+| Connected components (either works) | Backtracking/exhaustive search      |
+| Minimum steps/moves                 | Connected components (either works) |
 
 ### 1.3 BFS Template
 
@@ -575,49 +575,54 @@ def valid_tree(n: int, edges: list[list[int]]) -> bool:
 
 ## 4. Common Interview Questions
 
-| # | Problem | Difficulty | Pattern | Key Insight |
-|---|---------|-----------|---------|-------------|
-| 1 | Number of Islands | Medium | BFS/DFS on grid | Flood fill from each unvisited '1' |
-| 2 | Clone Graph | Medium | BFS + hash map | Map original to clone |
-| 3 | Course Schedule | Medium | Cycle detection (DFS) | 3-state coloring |
-| 4 | Course Schedule II | Medium | Topological sort | Kahn's BFS or DFS postorder |
-| 5 | Pacific Atlantic | Medium | Multi-source DFS | Start from ocean borders |
-| 6 | Number of Connected Components | Medium | Union-Find or DFS | Count roots/components |
-| 7 | Graph Valid Tree | Medium | Union-Find | n-1 edges + no cycle = tree |
-| 8 | Word Ladder | Hard | BFS | Each word is a node, 1-letter diff = edge |
-| 9 | Network Delay Time | Medium | Dijkstra | Min-heap shortest path |
-| 10 | Redundant Connection | Medium | Union-Find | First edge creating a cycle |
-| 11 | Alien Dictionary | Hard | Topological sort | Build order from word comparisons |
+| #   | Problem                        | Difficulty | Pattern               | Key Insight                               |
+| --- | ------------------------------ | ---------- | --------------------- | ----------------------------------------- |
+| 1   | Number of Islands              | Medium     | BFS/DFS on grid       | Flood fill from each unvisited '1'        |
+| 2   | Clone Graph                    | Medium     | BFS + hash map        | Map original to clone                     |
+| 3   | Course Schedule                | Medium     | Cycle detection (DFS) | 3-state coloring                          |
+| 4   | Course Schedule II             | Medium     | Topological sort      | Kahn's BFS or DFS postorder               |
+| 5   | Pacific Atlantic               | Medium     | Multi-source DFS      | Start from ocean borders                  |
+| 6   | Number of Connected Components | Medium     | Union-Find or DFS     | Count roots/components                    |
+| 7   | Graph Valid Tree               | Medium     | Union-Find            | n-1 edges + no cycle = tree               |
+| 8   | Word Ladder                    | Hard       | BFS                   | Each word is a node, 1-letter diff = edge |
+| 9   | Network Delay Time             | Medium     | Dijkstra              | Min-heap shortest path                    |
+| 10  | Redundant Connection           | Medium     | Union-Find            | First edge creating a cycle               |
+| 11  | Alien Dictionary               | Hard       | Topological sort      | Build order from word comparisons         |
 
 ---
 
 ## 5. Gotchas
 
 ### 5.1 BFS Gotchas
+
 - **Mark visited BEFORE enqueueing**, not when dequeuing. Otherwise you enqueue duplicates.
 - **Grid BFS**: Use `(row, col)` tuples for visited set. Don't forget bounds checking.
 - **Shortest path guarantee**: BFS only gives shortest path for **unweighted** graphs. For
   weighted graphs, use Dijkstra.
 
 ### 5.2 DFS Gotchas
+
 - **Cycle detection**: Need 3 states (unvisited, in-progress, completed) for **directed**
   graphs. For undirected graphs, tracking parent is sufficient.
 - **Stack overflow**: For very deep graphs (100,000+ nodes), iterative DFS is safer.
 - **Grid DFS**: Set `sys.setrecursionlimit()` for large grids, or use iterative BFS.
 
 ### 5.3 Topological Sort Gotchas
+
 - **Only for DAGs**: Topological sort is undefined for graphs with cycles. Always check.
 - **Multiple valid orders**: Topological sort is not unique. Don't assume a specific order.
 - **Kahn's vs DFS**: Kahn's naturally detects cycles (output length < V). DFS needs
   explicit cycle checking.
 
 ### 5.4 Dijkstra Gotchas
+
 - **No negative weights**: Dijkstra fails with negative edges. Use Bellman-Ford instead.
 - **Lazy deletion**: With a binary heap, you may pop already-visited nodes. Skip them with
   `if node in dist: continue`.
 - **0-indexed vs 1-indexed**: Many problems use 1-indexed nodes. Adjust accordingly.
 
 ### 5.5 Union-Find Gotchas
+
 - **Path compression**: Always implement it. Without it, find is O(n) worst case.
 - **Union by rank**: Pair with path compression for near-O(1) amortized operations.
 - **Connected check**: `uf.find(a) == uf.find(b)`, not `uf.parent[a] == uf.parent[b]`.
@@ -626,14 +631,14 @@ def valid_tree(n: int, edges: list[list[int]]) -> bool:
 
 ## 6. Quick Reference
 
-| Algorithm | When to Use | Time | Space | Key Detail |
-|-----------|-------------|------|-------|------------|
-| BFS | Shortest path (unweighted), level-order | O(V+E) | O(V) | Mark visited before enqueue |
-| DFS | Cycle detection, path finding, topo sort | O(V+E) | O(V) | 3-state for directed cycles |
-| Topological Sort (Kahn's) | Dependency ordering | O(V+E) | O(V+E) | Start from in-degree 0 |
-| Topological Sort (DFS) | Dependency ordering | O(V+E) | O(V+E) | Reverse postorder |
-| Dijkstra | Shortest path (weighted, non-negative) | O((V+E)logV) | O(V+E) | Min-heap, no negative edges |
-| Bellman-Ford | Shortest path (negative edges ok) | O(V*E) | O(V) | Relax all edges V-1 times |
-| Union-Find | Connected components, cycle detection | O(alpha(n))/op | O(V) | Path compression + union by rank |
-| Grid BFS/DFS | 2D matrix traversal | O(m*n) | O(m*n) | 4-directional neighbors |
-| Multi-source BFS | Distance from multiple sources | O(V+E) | O(V) | Enqueue all sources initially |
+| Algorithm                 | When to Use                              | Time           | Space   | Key Detail                       |
+| ------------------------- | ---------------------------------------- | -------------- | ------- | -------------------------------- |
+| BFS                       | Shortest path (unweighted), level-order  | O(V+E)         | O(V)    | Mark visited before enqueue      |
+| DFS                       | Cycle detection, path finding, topo sort | O(V+E)         | O(V)    | 3-state for directed cycles      |
+| Topological Sort (Kahn's) | Dependency ordering                      | O(V+E)         | O(V+E)  | Start from in-degree 0           |
+| Topological Sort (DFS)    | Dependency ordering                      | O(V+E)         | O(V+E)  | Reverse postorder                |
+| Dijkstra                  | Shortest path (weighted, non-negative)   | O((V+E)logV)   | O(V+E)  | Min-heap, no negative edges      |
+| Bellman-Ford              | Shortest path (negative edges ok)        | O(V\*E)        | O(V)    | Relax all edges V-1 times        |
+| Union-Find                | Connected components, cycle detection    | O(alpha(n))/op | O(V)    | Path compression + union by rank |
+| Grid BFS/DFS              | 2D matrix traversal                      | O(m\*n)        | O(m\*n) | 4-directional neighbors          |
+| Multi-source BFS          | Distance from multiple sources           | O(V+E)         | O(V)    | Enqueue all sources initially    |

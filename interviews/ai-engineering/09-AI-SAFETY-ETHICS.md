@@ -60,14 +60,14 @@ by design, not as an afterthought.
 
 ### Core Principles for AI Engineers
 
-| Principle | What It Means in Practice |
-|-----------|--------------------------|
-| **Transparency** | Users know they are talking to AI; log decisions for auditability |
-| **Fairness** | Test for bias across demographics; equal quality for all users |
-| **Safety** | Prevent harmful outputs; have guardrails at every layer |
-| **Privacy** | Minimize PII collection; redact before logging; comply with regulations |
-| **Accountability** | Human oversight for high-stakes decisions; clear escalation paths |
-| **Robustness** | Handle adversarial inputs; fail gracefully; no unintended behaviors |
+| Principle          | What It Means in Practice                                               |
+| ------------------ | ----------------------------------------------------------------------- |
+| **Transparency**   | Users know they are talking to AI; log decisions for auditability       |
+| **Fairness**       | Test for bias across demographics; equal quality for all users          |
+| **Safety**         | Prevent harmful outputs; have guardrails at every layer                 |
+| **Privacy**        | Minimize PII collection; redact before logging; comply with regulations |
+| **Accountability** | Human oversight for high-stakes decisions; clear escalation paths       |
+| **Robustness**     | Handle adversarial inputs; fail gracefully; no unintended behaviors     |
 
 ### Safety-by-Design Architecture
 
@@ -242,14 +242,14 @@ analysis = analyze_bias(
 
 ### Bias Mitigation Strategies
 
-| Strategy | Implementation | Effectiveness |
-|----------|---------------|---------------|
-| **Prompt debiasing** | Add "treat all demographics equally" to system prompt | Low-Medium |
-| **Blind evaluation** | Remove demographic info from inputs before LLM processing | High |
-| **Diverse test sets** | Test across demographics before deployment | High (detection) |
-| **Output auditing** | Regular automated bias audits on production outputs | Medium |
-| **Calibrated prompts** | Use structured criteria that apply equally to all groups | Medium-High |
-| **Human review** | Expert review of outputs for sensitive use cases | Highest |
+| Strategy               | Implementation                                            | Effectiveness    |
+| ---------------------- | --------------------------------------------------------- | ---------------- |
+| **Prompt debiasing**   | Add "treat all demographics equally" to system prompt     | Low-Medium       |
+| **Blind evaluation**   | Remove demographic info from inputs before LLM processing | High             |
+| **Diverse test sets**  | Test across demographics before deployment                | High (detection) |
+| **Output auditing**    | Regular automated bias audits on production outputs       | Medium           |
+| **Calibrated prompts** | Use structured criteria that apply equally to all groups  | Medium-High      |
+| **Human review**       | Expert review of outputs for sensitive use cases          | Highest          |
 
 ---
 
@@ -343,16 +343,16 @@ class ContentModerator:
 
 ### Content Categories
 
-| Category | Examples | Severity |
-|----------|---------|----------|
-| **Violence** | Instructions for harm, glorification | Critical |
-| **Hate speech** | Slurs, discrimination, dehumanization | Critical |
-| **Sexual content** | Explicit material, grooming | Critical |
-| **Self-harm** | Suicide instructions, pro-anorexia | Critical |
-| **Illegal activity** | Drug manufacturing, fraud instructions | High |
-| **Harassment** | Bullying, doxxing, stalking | High |
-| **Misinformation** | Health misinformation, election disinfo | Medium |
-| **Off-brand** | Competitor praise, wrong persona | Low |
+| Category             | Examples                                | Severity |
+| -------------------- | --------------------------------------- | -------- |
+| **Violence**         | Instructions for harm, glorification    | Critical |
+| **Hate speech**      | Slurs, discrimination, dehumanization   | Critical |
+| **Sexual content**   | Explicit material, grooming             | Critical |
+| **Self-harm**        | Suicide instructions, pro-anorexia      | Critical |
+| **Illegal activity** | Drug manufacturing, fraud instructions  | High     |
+| **Harassment**       | Bullying, doxxing, stalking             | High     |
+| **Misinformation**   | Health misinformation, election disinfo | Medium   |
+| **Off-brand**        | Competitor praise, wrong persona        | Low      |
 
 ---
 
@@ -622,14 +622,14 @@ print(f"PII found: {len(pii_found)} items")
 
 ### Key Regulations for AI Engineers
 
-| Regulation | Scope | Key Requirements | Penalty |
-|-----------|-------|------------------|---------|
-| **EU AI Act** | EU market | Risk classification, transparency, human oversight | Up to 7% global revenue |
-| **GDPR** | EU residents' data | Data minimization, consent, right to deletion | Up to 4% global revenue |
-| **CCPA/CPRA** | California residents | Disclosure, opt-out, deletion rights | $7,500 per violation |
-| **NYC Local Law 144** | NYC employers | Bias audit for AI hiring tools | $1,500/violation/day |
-| **NIST AI RMF** | US voluntary | Risk management framework | N/A (guidance) |
-| **White House AI EO** | US federal | Safety testing, reporting for frontier models | Varies |
+| Regulation            | Scope                | Key Requirements                                   | Penalty                 |
+| --------------------- | -------------------- | -------------------------------------------------- | ----------------------- |
+| **EU AI Act**         | EU market            | Risk classification, transparency, human oversight | Up to 7% global revenue |
+| **GDPR**              | EU residents' data   | Data minimization, consent, right to deletion      | Up to 4% global revenue |
+| **CCPA/CPRA**         | California residents | Disclosure, opt-out, deletion rights               | $7,500 per violation    |
+| **NYC Local Law 144** | NYC employers        | Bias audit for AI hiring tools                     | $1,500/violation/day    |
+| **NIST AI RMF**       | US voluntary         | Risk management framework                          | N/A (guidance)          |
+| **White House AI EO** | US federal           | Safety testing, reporting for frontier models      | Varies                  |
 
 ### EU AI Act Risk Classification
 
@@ -836,13 +836,13 @@ def run_red_team(
 
 ### Red Team Cadence
 
-| Phase | Frequency | Scope |
-|-------|-----------|-------|
-| Pre-launch | Once | Full test suite (100+ test cases) |
-| Monthly | Monthly | Focused on new attack vectors |
+| Phase         | Frequency                 | Scope                               |
+| ------------- | ------------------------- | ----------------------------------- |
+| Pre-launch    | Once                      | Full test suite (100+ test cases)   |
+| Monthly       | Monthly                   | Focused on new attack vectors       |
 | Post-incident | After any safety incident | Targeted tests for the failure mode |
-| Model update | Each model version change | Full regression suite |
-| Quarterly | Quarterly | External red team (fresh eyes) |
+| Model update  | Each model version change | Full regression suite               |
+| Quarterly     | Quarterly                 | External red team (fresh eyes)      |
 
 ---
 
@@ -850,14 +850,14 @@ def run_red_team(
 
 ### Safety Benchmarks
 
-| Benchmark | What It Tests | How to Use |
-|-----------|--------------|------------|
-| **TruthfulQA** | Tendency to generate false statements | Run before and after fine-tuning |
-| **BBQ (Bias Benchmark)** | Social biases across 9 categories | Test for bias in Q&A |
-| **RealToxicityPrompts** | Toxicity in generation | Test with open-ended prompts |
-| **WinoBias** | Gender bias in coreference | Measure stereotyping |
-| **CrowS-Pairs** | Stereotypical bias | Compare biased vs anti-biased |
-| **HarmBench** | Resistance to harmful requests | Red team benchmark |
+| Benchmark                | What It Tests                         | How to Use                       |
+| ------------------------ | ------------------------------------- | -------------------------------- |
+| **TruthfulQA**           | Tendency to generate false statements | Run before and after fine-tuning |
+| **BBQ (Bias Benchmark)** | Social biases across 9 categories     | Test for bias in Q&A             |
+| **RealToxicityPrompts**  | Toxicity in generation                | Test with open-ended prompts     |
+| **WinoBias**             | Gender bias in coreference            | Measure stereotyping             |
+| **CrowS-Pairs**          | Stereotypical bias                    | Compare biased vs anti-biased    |
+| **HarmBench**            | Resistance to harmful requests        | Red team benchmark               |
 
 ### Safety Scorecard
 
@@ -996,22 +996,22 @@ Post-Launch:
 
 ### Safety Metric Targets
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Harmful content rate | < 0.01% | Content moderation on output |
-| Jailbreak success rate | < 1% | Monthly red team |
-| PII leakage rate | 0% | Automated PII scan on output |
-| Bias score (cross-demographic) | < 10% variance | Quarterly bias audit |
-| Content policy violation | < 0.1% | Automated flagging |
-| System prompt leak rate | 0% | Red team + monitoring |
+| Metric                         | Target         | Measurement                  |
+| ------------------------------ | -------------- | ---------------------------- |
+| Harmful content rate           | < 0.01%        | Content moderation on output |
+| Jailbreak success rate         | < 1%           | Monthly red team             |
+| PII leakage rate               | 0%             | Automated PII scan on output |
+| Bias score (cross-demographic) | < 10% variance | Quarterly bias audit         |
+| Content policy violation       | < 0.1%         | Automated flagging           |
+| System prompt leak rate        | 0%             | Red team + monitoring        |
 
 ### Quick Response Guide
 
-| Incident | Immediate Action | Follow-up |
-|----------|-----------------|-----------|
-| Harmful output reported | Block the specific prompt pattern | Update guardrails, red team |
-| PII leaked in response | Purge logs, notify affected users | Add PII filter, audit pipeline |
-| Jailbreak discovered | Patch input filter immediately | Full red team with new vector |
-| Bias detected | Acknowledge, fix prompt/filters | Comprehensive bias audit |
-| System prompt leaked | Rotate system prompt | Harden extraction defenses |
-| Regulatory inquiry | Engage legal, produce audit logs | Gap analysis, remediation plan |
+| Incident                | Immediate Action                  | Follow-up                      |
+| ----------------------- | --------------------------------- | ------------------------------ |
+| Harmful output reported | Block the specific prompt pattern | Update guardrails, red team    |
+| PII leaked in response  | Purge logs, notify affected users | Add PII filter, audit pipeline |
+| Jailbreak discovered    | Patch input filter immediately    | Full red team with new vector  |
+| Bias detected           | Acknowledge, fix prompt/filters   | Comprehensive bias audit       |
+| System prompt leaked    | Rotate system prompt              | Harden extraction defenses     |
+| Regulatory inquiry      | Engage legal, produce audit logs  | Gap analysis, remediation plan |

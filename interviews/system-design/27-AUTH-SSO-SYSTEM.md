@@ -6,37 +6,37 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | User Registration | Sign up with email/password, or via social providers (Google, GitHub, Apple) |
-| 2 | Login / Logout | Authenticate user identity, issue session tokens, and revoke them on logout |
-| 3 | Single Sign-On (SSO) | One login grants access to multiple applications under the same identity provider |
-| 4 | OAuth 2.0 / OIDC | Act as both an OAuth Authorization Server and an OpenID Connect Provider |
-| 5 | SAML 2.0 Support | Enterprise SSO using SAML assertions for SP-initiated and IdP-initiated flows |
-| 6 | Multi-Factor Authentication | TOTP (Google Authenticator), WebAuthn/FIDO2 passkeys, fallback SMS OTP |
-| 7 | Passwordless Auth | Magic link via email, passkey-based authentication |
-| 8 | Social Login | OAuth integration with Google, GitHub, Apple to federate identity |
-| 9 | Token Management | Issue, refresh, rotate, and revoke access tokens and refresh tokens |
-| 10 | Session Management | Server-side session store, sliding expiration, concurrent session limits |
-| 11 | Role-Based Access Control | Assign roles and permissions, embed claims in tokens |
-| 12 | Account Security | Rate limiting, account lockout, CAPTCHA, suspicious login detection |
-| 13 | Password Management | Secure password storage, reset via email, breach detection |
-| 14 | Audit Logging | Immutable log of all authentication events for compliance and forensics |
+| #   | Requirement                 | Description                                                                       |
+| --- | --------------------------- | --------------------------------------------------------------------------------- |
+| 1   | User Registration           | Sign up with email/password, or via social providers (Google, GitHub, Apple)      |
+| 2   | Login / Logout              | Authenticate user identity, issue session tokens, and revoke them on logout       |
+| 3   | Single Sign-On (SSO)        | One login grants access to multiple applications under the same identity provider |
+| 4   | OAuth 2.0 / OIDC            | Act as both an OAuth Authorization Server and an OpenID Connect Provider          |
+| 5   | SAML 2.0 Support            | Enterprise SSO using SAML assertions for SP-initiated and IdP-initiated flows     |
+| 6   | Multi-Factor Authentication | TOTP (Google Authenticator), WebAuthn/FIDO2 passkeys, fallback SMS OTP            |
+| 7   | Passwordless Auth           | Magic link via email, passkey-based authentication                                |
+| 8   | Social Login                | OAuth integration with Google, GitHub, Apple to federate identity                 |
+| 9   | Token Management            | Issue, refresh, rotate, and revoke access tokens and refresh tokens               |
+| 10  | Session Management          | Server-side session store, sliding expiration, concurrent session limits          |
+| 11  | Role-Based Access Control   | Assign roles and permissions, embed claims in tokens                              |
+| 12  | Account Security            | Rate limiting, account lockout, CAPTCHA, suspicious login detection               |
+| 13  | Password Management         | Secure password storage, reset via email, breach detection                        |
+| 14  | Audit Logging               | Immutable log of all authentication events for compliance and forensics           |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Login latency | < 200ms p99 (end-to-end) |
-| 2 | Availability | 99.999% (< 5.26 min downtime/year) |
-| 3 | Session lookup latency | < 5ms (Redis in-memory) |
-| 4 | Token validation latency | < 1ms (local, no network call via JWT signature verification) |
-| 5 | Password security | Zero plaintext password exposure, Argon2id hashing |
-| 6 | Token expiry | Access tokens: 15 min; Refresh tokens: 30 days |
-| 7 | Scalability | 100M total users, 10M DAU, 50K login/sec peak |
-| 8 | Security compliance | SOC 2 Type II, ISO 27001, GDPR |
-| 9 | Audit retention | 1 year hot, 7 years cold storage |
-| 10 | Multi-region | Active-active across 3 regions with < 100ms replication lag |
+| #   | Requirement              | Target                                                        |
+| --- | ------------------------ | ------------------------------------------------------------- |
+| 1   | Login latency            | < 200ms p99 (end-to-end)                                      |
+| 2   | Availability             | 99.999% (< 5.26 min downtime/year)                            |
+| 3   | Session lookup latency   | < 5ms (Redis in-memory)                                       |
+| 4   | Token validation latency | < 1ms (local, no network call via JWT signature verification) |
+| 5   | Password security        | Zero plaintext password exposure, Argon2id hashing            |
+| 6   | Token expiry             | Access tokens: 15 min; Refresh tokens: 30 days                |
+| 7   | Scalability              | 100M total users, 10M DAU, 50K login/sec peak                 |
+| 8   | Security compliance      | SOC 2 Type II, ISO 27001, GDPR                                |
+| 9   | Audit retention          | 1 year hot, 7 years cold storage                              |
+| 10  | Multi-region             | Active-active across 3 regions with < 100ms replication lag   |
 
 ### Scale Estimation
 
@@ -531,35 +531,38 @@ SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c      <- Signature
 ```
 
 **Header** (decoded):
+
 ```json
 {
-  "alg": "ES256",       // Algorithm: ECDSA with P-256 and SHA-256
+  "alg": "ES256", // Algorithm: ECDSA with P-256 and SHA-256
   "typ": "JWT",
-  "kid": "key-202603"   // Key ID for key rotation — verifiers look up JWKS
+  "kid": "key-202603" // Key ID for key rotation — verifiers look up JWKS
 }
 ```
 
 **Payload** (decoded):
+
 ```json
 {
-  "iss": "https://auth.example.com",     // Issuer
-  "sub": "usr_01J8X...",                 // Subject (user ID)
-  "aud": ["api.example.com"],            // Audience
-  "exp": 1740788100,                     // Expiry (Unix timestamp, 15 min from now)
-  "iat": 1740787200,                     // Issued At
-  "jti": "tok_01J8X...",                 // JWT ID (for revocation blacklist)
-  "sid": "ses_01J8X...",                 // Session ID
+  "iss": "https://auth.example.com", // Issuer
+  "sub": "usr_01J8X...", // Subject (user ID)
+  "aud": ["api.example.com"], // Audience
+  "exp": 1740788100, // Expiry (Unix timestamp, 15 min from now)
+  "iat": 1740787200, // Issued At
+  "jti": "tok_01J8X...", // JWT ID (for revocation blacklist)
+  "sid": "ses_01J8X...", // Session ID
   "email": "alice@example.com",
   "email_verified": true,
   "name": "Alice",
   "roles": ["editor"],
   "permissions": ["reports:read", "billing:read"],
-  "amr": ["pwd", "totp"],                // Authentication Methods References
-  "auth_time": 1740787200               // When user last authenticated
+  "amr": ["pwd", "totp"], // Authentication Methods References
+  "auth_time": 1740787200 // When user last authenticated
 }
 ```
 
 **Signature** (ECDSA P-256):
+
 ```
 ES256_Sign(
   private_key,
@@ -811,18 +814,18 @@ OIDC is an identity layer on top of OAuth 2.0. It adds:
 {
   "iss": "https://auth.example.com",
   "sub": "usr_01J8X...",
-  "aud": "app_123",               // Must match client_id
+  "aud": "app_123", // Must match client_id
   "exp": 1740788100,
   "iat": 1740787200,
-  "auth_time": 1740787100,        // When authentication happened
-  "nonce": "client_nonce_abc",    // Replay attack prevention
+  "auth_time": 1740787100, // When authentication happened
+  "nonce": "client_nonce_abc", // Replay attack prevention
   "email": "alice@example.com",
   "email_verified": true,
   "name": "Alice",
   "picture": "https://cdn.example.com/avatars/alice.jpg",
   "locale": "en-US",
   "acr": "urn:mace:incommon:iap:silver", // Authentication Context Class
-  "amr": ["pwd", "otp"]          // Authentication Method References
+  "amr": ["pwd", "otp"] // Authentication Method References
 }
 ```
 
@@ -866,7 +869,7 @@ Response:
     {
       "kty": "EC",
       "crv": "P-256",
-      "kid": "key-202302",    // Old key, still valid for tokens issued before rotation
+      "kid": "key-202302", // Old key, still valid for tokens issued before rotation
       "use": "sig",
       "alg": "ES256",
       "x": "...",
@@ -1701,17 +1704,20 @@ Layer 4: RBAC permissions
 ### JWT vs Opaque Tokens
 
 **JWT chosen for access tokens because:**
+
 - Zero network calls for validation (< 1ms vs 5ms+ for Redis)
 - Works across microservices without shared session store
 - Self-contained: embed roles, permissions, claims
 
 **Trade-off:** Cannot instantly revoke a JWT. Mitigated by:
+
 - Short TTL (15 minutes)
 - jti blacklist with local cache for critical revocations
 
 ### Stateless vs Stateful Session
 
 **Hybrid chosen because:**
+
 - Refresh tokens must be revocable (stateful, in DB + Redis)
 - Access tokens benefit from statelessness (JWT)
 - SSO session requires server-side tracking for SLO
@@ -1719,6 +1725,7 @@ Layer 4: RBAC permissions
 ### Argon2id Hashing vs Speed
 
 **Argon2id chosen despite slowness because:**
+
 - 300ms hash time intentional — makes brute force impractical
 - At 50K logins/sec peak: need dedicated hashing worker pool
 - Use async queue: accept login request, enqueue hash job, return when done
@@ -1732,6 +1739,7 @@ Login Request -> Queue (Kafka/SQS) -> Hashing Worker Pool (N pods)
 ### Centralized IdP vs Decentralized Auth
 
 **Centralized IdP chosen because:**
+
 - Single audit trail
 - Consistent security policy enforcement
 - Simpler MFA and SSO

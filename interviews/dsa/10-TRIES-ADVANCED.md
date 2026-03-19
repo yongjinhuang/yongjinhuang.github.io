@@ -15,10 +15,11 @@ A trie stores strings character by character. Each node represents a prefix, and
 root to marked nodes represent complete words.
 
 **Properties:**
+
 - Insertion: O(m) where m = word length
 - Search: O(m)
 - Prefix search: O(m)
-- Space: O(ALPHABET_SIZE * m * n) where n = number of words
+- Space: O(ALPHABET*SIZE * m \_ n) where n = number of words
 
 ### 1.2 Trie Implementation
 
@@ -72,13 +73,13 @@ class Trie:
 
 ### 1.3 When to Use a Trie vs Hash Set
 
-| Feature | Trie | Hash Set |
-|---------|------|----------|
-| Exact word lookup | O(m) | O(m) average |
-| Prefix matching | O(m) | O(n * m) -- check all words |
-| Autocomplete | Natural | Not supported |
-| Space | Higher (one node per char) | Lower (one entry per word) |
-| Wildcard search | O(26^m) but feasible | Impossible efficiently |
+| Feature           | Trie                       | Hash Set                     |
+| ----------------- | -------------------------- | ---------------------------- |
+| Exact word lookup | O(m)                       | O(m) average                 |
+| Prefix matching   | O(m)                       | O(n \* m) -- check all words |
+| Autocomplete      | Natural                    | Not supported                |
+| Space             | Higher (one node per char) | Lower (one entry per word)   |
+| Wildcard search   | O(26^m) but feasible       | Impossible efficiently       |
 
 **Use a trie when:** prefix matching, autocomplete, wildcard search, or building words
 character by character.
@@ -456,24 +457,25 @@ precision. The mask simulates 32-bit overflow.
 
 ## 4. Common Interview Questions
 
-| # | Problem | Difficulty | Category | Key Insight |
-|---|---------|-----------|----------|-------------|
-| 1 | Implement Trie | Medium | Trie | Dict-based children, is_end flag |
-| 2 | Word Search II | Hard | Trie + backtracking | Trie guides DFS exploration |
-| 3 | Design Add/Search Words | Medium | Trie + DFS | Wildcard `.` explores all children |
-| 4 | Single Number | Easy | Bit: XOR | `a ^ a = 0` |
-| 5 | Missing Number | Easy | Bit: XOR or math | XOR cancels paired numbers |
-| 6 | Counting Bits | Easy | Bit: DP | `dp[i] = dp[i>>1] + (i&1)` |
-| 7 | Reverse Bits | Easy | Bit: shift | Extract LSB, build result |
-| 8 | Number of 1 Bits | Easy | Bit: `n & (n-1)` | Clear lowest set bit |
-| 9 | Sum of Two Integers | Medium | Bit: carry | XOR for sum, AND for carry |
-| 10 | Word Search II | Hard | Trie + DFS | Prune trie branches after finding |
+| #   | Problem                 | Difficulty | Category            | Key Insight                        |
+| --- | ----------------------- | ---------- | ------------------- | ---------------------------------- |
+| 1   | Implement Trie          | Medium     | Trie                | Dict-based children, is_end flag   |
+| 2   | Word Search II          | Hard       | Trie + backtracking | Trie guides DFS exploration        |
+| 3   | Design Add/Search Words | Medium     | Trie + DFS          | Wildcard `.` explores all children |
+| 4   | Single Number           | Easy       | Bit: XOR            | `a ^ a = 0`                        |
+| 5   | Missing Number          | Easy       | Bit: XOR or math    | XOR cancels paired numbers         |
+| 6   | Counting Bits           | Easy       | Bit: DP             | `dp[i] = dp[i>>1] + (i&1)`         |
+| 7   | Reverse Bits            | Easy       | Bit: shift          | Extract LSB, build result          |
+| 8   | Number of 1 Bits        | Easy       | Bit: `n & (n-1)`    | Clear lowest set bit               |
+| 9   | Sum of Two Integers     | Medium     | Bit: carry          | XOR for sum, AND for carry         |
+| 10  | Word Search II          | Hard       | Trie + DFS          | Prune trie branches after finding  |
 
 ---
 
 ## 5. Gotchas
 
 ### 5.1 Trie Gotchas
+
 - **`search` vs `startsWith`**: `search` requires `is_end = True` at the final node.
   `startsWith` only requires the prefix path exists.
 - **Memory**: Tries can use a lot of memory. For sparse vocabularies, consider hash maps
@@ -483,6 +485,7 @@ precision. The mask simulates 32-bit overflow.
 - **Case sensitivity**: Clarify with the interviewer. Convert to lowercase if case-insensitive.
 
 ### 5.2 Word Search II Gotchas
+
 - **Trie pruning**: After finding a word, set `node.word = None` to avoid duplicates.
   Optionally prune empty branches for speed.
 - **Board restoration**: Always restore `board[r][c]` after DFS returns.
@@ -490,6 +493,7 @@ precision. The mask simulates 32-bit overflow.
   can find multiple words.
 
 ### 5.3 Bit Manipulation Gotchas
+
 - **Python integers are arbitrary precision**: Unlike C/Java, Python ints don't overflow.
   For problems expecting 32-bit behavior, use `& 0xFFFFFFFF`.
 - **Negative numbers**: Python's `~` on positive numbers gives negative results (due to
@@ -500,6 +504,7 @@ precision. The mask simulates 32-bit overflow.
   element appearing exactly twice. For 3 occurrences, you need a different approach.
 
 ### 5.4 Python-Specific
+
 - `bin(n)` returns binary string: `bin(5)` = `'0b101'`
 - `bin(n).count('1')` counts set bits (Hamming weight)
 - `int('101', 2)` converts binary string to int: `5`
@@ -509,14 +514,14 @@ precision. The mask simulates 32-bit overflow.
 
 ## 6. Quick Reference
 
-| Data Structure / Technique | When to Use | Time | Space | Key Detail |
-|---------------------------|-------------|------|-------|------------|
-| Trie insert/search | String prefix operations | O(m) | O(SIGMA*m*n) | Dict or array for children |
-| Trie + DFS | Word search in grid | O(m*n*4^L) | O(W*L) | Trie prunes exploration |
-| Trie + wildcard | Pattern matching with `.` | O(26^m) worst | O(W*L) | DFS on wildcard characters |
-| XOR (single number) | Find unique in pairs | O(n) | O(1) | `a ^ a = 0`, `a ^ 0 = a` |
-| XOR (missing number) | Find missing in range | O(n) | O(1) | XOR indices with values |
-| `n & (n-1)` | Clear lowest set bit | O(1) | O(1) | Count bits, power-of-2 check |
-| `n & (-n)` | Isolate lowest set bit | O(1) | O(1) | Useful in BIT/Fenwick tree |
-| Shift + mask | Reverse bits, extract bits | O(32) | O(1) | Process bit by bit |
-| DP on bits | Count bits for range | O(n) | O(n) | `dp[i] = dp[i>>1] + (i&1)` |
+| Data Structure / Technique | When to Use                | Time          | Space        | Key Detail                   |
+| -------------------------- | -------------------------- | ------------- | ------------ | ---------------------------- |
+| Trie insert/search         | String prefix operations   | O(m)          | O(SIGMA*m*n) | Dict or array for children   |
+| Trie + DFS                 | Word search in grid        | O(m*n*4^L)    | O(W\*L)      | Trie prunes exploration      |
+| Trie + wildcard            | Pattern matching with `.`  | O(26^m) worst | O(W\*L)      | DFS on wildcard characters   |
+| XOR (single number)        | Find unique in pairs       | O(n)          | O(1)         | `a ^ a = 0`, `a ^ 0 = a`     |
+| XOR (missing number)       | Find missing in range      | O(n)          | O(1)         | XOR indices with values      |
+| `n & (n-1)`                | Clear lowest set bit       | O(1)          | O(1)         | Count bits, power-of-2 check |
+| `n & (-n)`                 | Isolate lowest set bit     | O(1)          | O(1)         | Useful in BIT/Fenwick tree   |
+| Shift + mask               | Reverse bits, extract bits | O(32)         | O(1)         | Process bit by bit           |
+| DP on bits                 | Count bits for range       | O(n)          | O(n)         | `dp[i] = dp[i>>1] + (i&1)`   |

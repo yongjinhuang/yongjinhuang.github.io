@@ -177,12 +177,12 @@ for everything. Images load with blur-up, lists render incrementally.
 
 **Guidelines:**
 
-| Wait Time    | Pattern                              |
-|--------------|--------------------------------------|
-| < 300ms      | No indicator (feels instant)         |
-| 300ms - 2s   | Inline spinner or progress bar       |
-| 2s - 10s     | Skeleton screen with shimmer         |
-| > 10s        | Progress bar with percentage/status  |
+| Wait Time  | Pattern                             |
+| ---------- | ----------------------------------- |
+| < 300ms    | No indicator (feels instant)        |
+| 300ms - 2s | Inline spinner or progress bar      |
+| 2s - 10s   | Skeleton screen with shimmer        |
+| > 10s      | Progress bar with percentage/status |
 
 ### Navigation Patterns
 
@@ -249,14 +249,14 @@ can hurt performance if not virtualized.
 
 **When to choose which:**
 
-| Use Case           | Recommendation    |
-|--------------------|-------------------|
-| Search results     | Pagination        |
-| Social feed        | Infinite scroll   |
-| Product catalog    | Pagination        |
-| Image gallery      | Infinite scroll   |
-| Data tables        | Pagination        |
-| News feed          | Infinite scroll   |
+| Use Case        | Recommendation  |
+| --------------- | --------------- |
+| Search results  | Pagination      |
+| Social feed     | Infinite scroll |
+| Product catalog | Pagination      |
+| Image gallery   | Infinite scroll |
+| Data tables     | Pagination      |
+| News feed       | Infinite scroll |
 
 Consider "Load more" buttons as a middle ground: explicit action without page changes.
 
@@ -370,7 +370,7 @@ function ToastContainer({ toasts }: { toasts: Toast[] }) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           className="rounded-lg bg-white px-4 py-3 shadow-lg"
-          role={toast.type === "error" ? "alert" : "status"}
+          role={toast.type === 'error' ? 'alert' : 'status'}
         >
           {toast.message}
         </motion.div>
@@ -418,15 +418,15 @@ function Modal({ isOpen, onClose, title, children }: ModalProps) {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === 'Escape') onClose();
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    document.body.style.overflow = "hidden";
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
     };
   }, [isOpen, onClose]);
 
@@ -558,25 +558,25 @@ Implement toast notifications for contact form success/failure rather than redir
 
 ## Quick Reference
 
-| Pattern          | When to Use                        | Key Consideration                |
-|------------------|------------------------------------|----------------------------------|
-| Content Card     | Browsable collections              | Consistent height in grids       |
-| Modal            | Short, focused tasks               | Trap focus, allow Escape         |
-| Toast            | Action feedback                    | Auto-dismiss success, persist errors |
-| Empty State      | No data available                  | Always include a CTA             |
-| Skeleton Screen  | Content loading (2-10s)            | Match the layout of real content |
-| Spinner          | Short wait (< 2s)                  | Inline, not full-page            |
-| Top Nav          | < 7 primary destinations           | Collapses on mobile              |
-| Side Nav         | Dashboards, many sections          | Collapsible for more space       |
-| Tabs             | Related views, same context        | Max 5-7 tabs                     |
-| Breadcrumbs      | Deep hierarchies                   | Not for flat site structures     |
-| Pagination       | Search results, data tables        | Shareable URLs per page          |
-| Infinite Scroll  | Feeds, galleries                   | Virtualize for performance       |
-| Dropdown         | > 5 options, limited space         | Keyboard nav required            |
-| Combobox         | > 15 options                       | Type-ahead search                |
-| Tooltip          | Brief supplementary info           | Never for essential info         |
-| Popover          | Rich interactive overlay           | Close on outside click           |
-| Search           | Content-heavy apps                 | Debounce, recent searches        |
+| Pattern         | When to Use                 | Key Consideration                    |
+| --------------- | --------------------------- | ------------------------------------ |
+| Content Card    | Browsable collections       | Consistent height in grids           |
+| Modal           | Short, focused tasks        | Trap focus, allow Escape             |
+| Toast           | Action feedback             | Auto-dismiss success, persist errors |
+| Empty State     | No data available           | Always include a CTA                 |
+| Skeleton Screen | Content loading (2-10s)     | Match the layout of real content     |
+| Spinner         | Short wait (< 2s)           | Inline, not full-page                |
+| Top Nav         | < 7 primary destinations    | Collapses on mobile                  |
+| Side Nav        | Dashboards, many sections   | Collapsible for more space           |
+| Tabs            | Related views, same context | Max 5-7 tabs                         |
+| Breadcrumbs     | Deep hierarchies            | Not for flat site structures         |
+| Pagination      | Search results, data tables | Shareable URLs per page              |
+| Infinite Scroll | Feeds, galleries            | Virtualize for performance           |
+| Dropdown        | > 5 options, limited space  | Keyboard nav required                |
+| Combobox        | > 15 options                | Type-ahead search                    |
+| Tooltip         | Brief supplementary info    | Never for essential info             |
+| Popover         | Rich interactive overlay    | Close on outside click               |
+| Search          | Content-heavy apps          | Debounce, recent searches            |
 
 **The golden rule of UI patterns:** Use established patterns unless you have a
 specific, user-validated reason to deviate. Novelty in UI is a cost, not a feature.

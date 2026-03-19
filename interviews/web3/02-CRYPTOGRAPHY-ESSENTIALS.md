@@ -67,26 +67,24 @@ Where Keccak-256 is used in Ethereum:
 
 ```javascript
 // Computing keccak256 with ethers.js
-const { keccak256, toUtf8Bytes, AbiCoder } = require("ethers");
+const { keccak256, toUtf8Bytes, AbiCoder } = require('ethers');
 
 // Hash a string
-const hash = keccak256(toUtf8Bytes("Hello, Web3!"));
+const hash = keccak256(toUtf8Bytes('Hello, Web3!'));
 console.log(hash);
 // 0x5c8b7be8b59e0bce...
 
 // Compute a function selector
-const signature = "transfer(address,uint256)";
+const signature = 'transfer(address,uint256)';
 const selector = keccak256(toUtf8Bytes(signature)).slice(0, 10);
 console.log(selector);
 // 0xa9059cbb
 
 // Compute a storage slot for mapping(address => uint256) at slot 1
 const coder = new AbiCoder();
-const key = "0x1234567890AbCdEf1234567890AbCdEf12345678";
-const slot = keccak256(
-  coder.encode(["address", "uint256"], [key, 1])
-);
-console.log("Storage slot:", slot);
+const key = '0x1234567890AbCdEf1234567890AbCdEf12345678';
+const slot = keccak256(coder.encode(['address', 'uint256'], [key, 1]));
+console.log('Storage slot:', slot);
 ```
 
 ### 1.3 SHA-256 (Bitcoin's Hash Function)
@@ -97,13 +95,13 @@ Bitcoin uses SHA-256 (double SHA-256 for block hashing: `SHA256(SHA256(block_hea
 
 Traditional hash functions like SHA-256 and Keccak-256 are expensive to compute inside zero-knowledge circuits. Special "ZK-friendly" hash functions are designed for efficient circuit representation:
 
-| Hash Function | Used In | ZK Circuit Cost |
-|---------------|---------|-----------------|
-| Poseidon | zkSync, StarkNet circuits | Very low (~300 constraints) |
-| Pedersen | ZCash, older ZK systems | Low (~1000 constraints) |
-| Rescue | Academic research | Low |
-| SHA-256 | Compatibility when needed | Very high (~30,000 constraints) |
-| Keccak-256 | Compatibility when needed | Very high (~150,000 constraints) |
+| Hash Function | Used In                   | ZK Circuit Cost                  |
+| ------------- | ------------------------- | -------------------------------- |
+| Poseidon      | zkSync, StarkNet circuits | Very low (~300 constraints)      |
+| Pedersen      | ZCash, older ZK systems   | Low (~1000 constraints)          |
+| Rescue        | Academic research         | Low                              |
+| SHA-256       | Compatibility when needed | Very high (~30,000 constraints)  |
+| Keccak-256    | Compatibility when needed | Very high (~150,000 constraints) |
 
 ---
 
@@ -182,22 +180,23 @@ Step-by-step Ethereum address derivation:
 ```
 
 ```javascript
-const { Wallet } = require("ethers");
+const { Wallet } = require('ethers');
 
 // Derive address from private key
-const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+const privateKey =
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const wallet = new Wallet(privateKey);
 
-console.log("Address:", wallet.address);
+console.log('Address:', wallet.address);
 // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 
-console.log("Public Key:", wallet.signingKey.publicKey);
+console.log('Public Key:', wallet.signingKey.publicKey);
 // 0x04 + 64 bytes (uncompressed)
 
 // Generate a random wallet
 const randomWallet = Wallet.createRandom();
-console.log("New address:", randomWallet.address);
-console.log("Mnemonic:", randomWallet.mnemonic.phrase);
+console.log('New address:', randomWallet.address);
+console.log('Mnemonic:', randomWallet.mnemonic.phrase);
 ```
 
 ---
@@ -238,21 +237,21 @@ Output: valid or invalid
 ### 3.2 Ethereum Signatures in Practice
 
 ```javascript
-const { Wallet, hashMessage, verifyMessage } = require("ethers");
+const { Wallet, hashMessage, verifyMessage } = require('ethers');
 
 const wallet = new Wallet(
-  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
 );
 
 // Sign a message
-const message = "I authorize this action";
+const message = 'I authorize this action';
 const signature = await wallet.signMessage(message);
-console.log("Signature:", signature);
+console.log('Signature:', signature);
 // 0x + 65 bytes (r: 32 bytes, s: 32 bytes, v: 1 byte)
 
 // Verify the signature (recover the signer's address)
 const recoveredAddress = verifyMessage(message, signature);
-console.log("Signer:", recoveredAddress);
+console.log('Signer:', recoveredAddress);
 // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 
 // In Solidity, this is done with ecrecover:
@@ -264,36 +263,36 @@ console.log("Signer:", recoveredAddress);
 EIP-712 defines a standard for signing structured data (not just raw bytes), making signatures human-readable in wallets:
 
 ```javascript
-const { Wallet } = require("ethers");
+const { Wallet } = require('ethers');
 
-const wallet = new Wallet("0xac0974bec...");
+const wallet = new Wallet('0xac0974bec...');
 
 // Define the domain separator
 const domain = {
-  name: "MyDApp",
-  version: "1",
+  name: 'MyDApp',
+  version: '1',
   chainId: 1,
-  verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+  verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
 };
 
 // Define the types
 const types = {
   Transfer: [
-    { name: "to", type: "address" },
-    { name: "amount", type: "uint256" },
-    { name: "nonce", type: "uint256" }
-  ]
+    { name: 'to', type: 'address' },
+    { name: 'amount', type: 'uint256' },
+    { name: 'nonce', type: 'uint256' },
+  ],
 };
 
 // Sign structured data
 const value = {
-  to: "0x1234567890AbCdEf1234567890AbCdEf12345678",
+  to: '0x1234567890AbCdEf1234567890AbCdEf12345678',
   amount: 1000000n,
-  nonce: 0n
+  nonce: 0n,
 };
 
 const signature = await wallet.signTypedData(domain, types, value);
-console.log("EIP-712 Signature:", signature);
+console.log('EIP-712 Signature:', signature);
 ```
 
 ### 3.4 EIP-155: Replay Protection
@@ -346,12 +345,12 @@ This is critical for Ethereum PoS where 300,000+ validators must attest per epoc
 
 ### 4.2 BLS Uses in Web3
 
-| Application | Why BLS |
-|-------------|---------|
+| Application               | Why BLS                                             |
+| ------------------------- | --------------------------------------------------- |
 | Ethereum PoS attestations | Aggregate 300K+ validator votes into compact proofs |
-| Threshold signatures | M-of-N signing without revealing individual keys |
-| Cross-chain bridges | Compact multi-validator proofs |
-| Account abstraction | Aggregate multiple UserOps into one verification |
+| Threshold signatures      | M-of-N signing without revealing individual keys    |
+| Cross-chain bridges       | Compact multi-validator proofs                      |
+| Account abstraction       | Aggregate multiple UserOps into one verification    |
 
 ---
 
@@ -397,22 +396,22 @@ contract MerkleAirdrop {
 
 ```javascript
 // Generate Merkle tree off-chain
-const { StandardMerkleTree } = require("@openzeppelin/merkle-tree");
+const { StandardMerkleTree } = require('@openzeppelin/merkle-tree');
 
 const values = [
-  ["0xAlice...", "1000000000000000000"],  // 1 ETH
-  ["0xBob...",   "2000000000000000000"],  // 2 ETH
-  ["0xCharlie...", "500000000000000000"], // 0.5 ETH
+  ['0xAlice...', '1000000000000000000'], // 1 ETH
+  ['0xBob...', '2000000000000000000'], // 2 ETH
+  ['0xCharlie...', '500000000000000000'], // 0.5 ETH
 ];
 
-const tree = StandardMerkleTree.of(values, ["address", "uint256"]);
-console.log("Root:", tree.root);
+const tree = StandardMerkleTree.of(values, ['address', 'uint256']);
+console.log('Root:', tree.root);
 
 // Get proof for Alice
 for (const [i, v] of tree.entries()) {
-  if (v[0] === "0xAlice...") {
+  if (v[0] === '0xAlice...') {
     const proof = tree.getProof(i);
-    console.log("Proof for Alice:", proof);
+    console.log('Proof for Alice:', proof);
   }
 }
 ```
@@ -526,16 +525,16 @@ ZK PROOF APPLICATIONS IN WEB3
 
 ### 7.3 SNARKs vs STARKs
 
-| Property | SNARKs | STARKs |
-|----------|--------|--------|
-| Full name | Succinct Non-interactive Arguments of Knowledge | Scalable Transparent Arguments of Knowledge |
-| Trusted setup | Required (ceremony) | Not required (transparent) |
-| Proof size | ~200 bytes (very small) | ~50-200 KB (larger) |
-| Verification time | Very fast (~5ms) | Fast (~50ms) |
-| Proving time | Moderate | Slower for small circuits |
-| Quantum resistance | No (relies on elliptic curves) | Yes (relies on hash functions) |
-| Used by | zkSync, Scroll, Polygon zkEVM | StarkNet, StarkEx |
-| Key scheme | Groth16, PLONK, KZG | FRI (Fast Reed-Solomon IOP) |
+| Property           | SNARKs                                          | STARKs                                      |
+| ------------------ | ----------------------------------------------- | ------------------------------------------- |
+| Full name          | Succinct Non-interactive Arguments of Knowledge | Scalable Transparent Arguments of Knowledge |
+| Trusted setup      | Required (ceremony)                             | Not required (transparent)                  |
+| Proof size         | ~200 bytes (very small)                         | ~50-200 KB (larger)                         |
+| Verification time  | Very fast (~5ms)                                | Fast (~50ms)                                |
+| Proving time       | Moderate                                        | Slower for small circuits                   |
+| Quantum resistance | No (relies on elliptic curves)                  | Yes (relies on hash functions)              |
+| Used by            | zkSync, Scroll, Polygon zkEVM                   | StarkNet, StarkEx                           |
+| Key scheme         | Groth16, PLONK, KZG                             | FRI (Fast Reed-Solomon IOP)                 |
 
 ---
 
@@ -577,11 +576,13 @@ Bitcoin:       m / 44' / 0'  / 0' / 0 / 0
 ```
 
 ```javascript
-const { Mnemonic, HDNodeWallet } = require("ethers");
+const { Mnemonic, HDNodeWallet } = require('ethers');
 
 // Generate a new mnemonic
-const mnemonic = Mnemonic.fromEntropy(crypto.getRandomValues(new Uint8Array(16)));
-console.log("Mnemonic:", mnemonic.phrase);
+const mnemonic = Mnemonic.fromEntropy(
+  crypto.getRandomValues(new Uint8Array(16))
+);
+console.log('Mnemonic:', mnemonic.phrase);
 
 // Derive wallets from mnemonic
 const hdNode = HDNodeWallet.fromMnemonic(mnemonic);
@@ -644,6 +645,7 @@ for (let i = 0; i < 5; i++) {
 **Question**: Given private key `0x1`, what is the Ethereum address? Walk through each step.
 
 **Solution**:
+
 ```
 1. Private key: k = 1
 
@@ -684,6 +686,7 @@ OpenZeppelin's ECDSA.sol enforces this check automatically.
 **Question**: You have a Merkle tree with 100,000 leaves. How many hashes are needed to verify a proof, and approximately how much gas does verification cost?
 
 **Solution**:
+
 ```
 Proof depth = ceil(log2(100,000)) = 17 levels
 

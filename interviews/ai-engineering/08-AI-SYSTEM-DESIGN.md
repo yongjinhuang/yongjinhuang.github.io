@@ -108,17 +108,17 @@ reason about model selection, prompt design, evaluation, and AI-specific failure
 
 **Requirements gathered:**
 
-| Requirement | Detail |
-|-------------|--------|
-| Users | Customers (external), support agents (internal) |
-| Primary task | Answer customer questions about orders, products, policies |
-| Knowledge sources | Help center articles, product catalog, order database |
-| Languages | English primary, Spanish secondary |
-| Escalation | Seamlessly hand off to human agents when needed |
-| Scale | 50K conversations/day, 5 messages per conversation avg |
-| Latency | TTFT < 1 second |
-| Accuracy | < 3% hallucination rate on factual claims |
-| Availability | 99.9% uptime |
+| Requirement       | Detail                                                     |
+| ----------------- | ---------------------------------------------------------- |
+| Users             | Customers (external), support agents (internal)            |
+| Primary task      | Answer customer questions about orders, products, policies |
+| Knowledge sources | Help center articles, product catalog, order database      |
+| Languages         | English primary, Spanish secondary                         |
+| Escalation        | Seamlessly hand off to human agents when needed            |
+| Scale             | 50K conversations/day, 5 messages per conversation avg     |
+| Latency           | TTFT < 1 second                                            |
+| Accuracy          | < 3% hallucination rate on factual claims                  |
+| Availability      | 99.9% uptime                                               |
 
 ### Step 2: Define the AI Pipeline
 
@@ -183,15 +183,16 @@ reason about model selection, prompt design, evaluation, and AI-specific failure
 
 ### Step 3: Choose Models & Approach
 
-| Component | Choice | Reasoning |
-|-----------|--------|-----------|
-| Intent classifier | GPT-4o-mini | Fast, cheap, reliable for classification |
-| RAG embedding | text-embedding-3-small | Good quality, low cost |
-| Main LLM | GPT-4o-mini (90%), GPT-4o (10%) | Route by complexity for cost |
-| Reranker | Cohere Rerank | Better precision than embedding-only |
-| Language detect | fasttext | Free, instant, on-device |
+| Component         | Choice                          | Reasoning                                |
+| ----------------- | ------------------------------- | ---------------------------------------- |
+| Intent classifier | GPT-4o-mini                     | Fast, cheap, reliable for classification |
+| RAG embedding     | text-embedding-3-small          | Good quality, low cost                   |
+| Main LLM          | GPT-4o-mini (90%), GPT-4o (10%) | Route by complexity for cost             |
+| Reranker          | Cohere Rerank                   | Better precision than embedding-only     |
+| Language detect   | fasttext                        | Free, instant, on-device                 |
 
 **RAG over fine-tuning because:**
+
 - Help articles and policies change frequently
 - Product catalog updates daily
 - Need citations for trust
@@ -200,6 +201,7 @@ reason about model selection, prompt design, evaluation, and AI-specific failure
 ### Step 4: Design Retrieval & Data
 
 **Knowledge ingestion:**
+
 - Help center: ~500 articles, crawled weekly
 - Product catalog: ~10K products, synced daily
 - Policies: ~50 documents, updated monthly
@@ -207,6 +209,7 @@ reason about model selection, prompt design, evaluation, and AI-specific failure
 - Total chunks: ~15K
 
 **Retrieval flow:**
+
 1. Query rewrite: rephrase customer message into search query
 2. Hybrid search: dense (embedding) + sparse (BM25)
 3. Metadata filter: by product category if detected
@@ -214,6 +217,7 @@ reason about model selection, prompt design, evaluation, and AI-specific failure
 5. Inject into prompt with order data from DB
 
 **Escalation triggers:**
+
 - Customer explicitly asks for human
 - Sentiment analysis detects anger/frustration
 - Agent confidence score below threshold
@@ -222,17 +226,18 @@ reason about model selection, prompt design, evaluation, and AI-specific failure
 
 ### Step 5: Handle Failures
 
-| Failure Mode | Detection | Mitigation |
-|-------------|-----------|------------|
-| Hallucination | Faithfulness check on output | "Only answer from provided context" in prompt |
-| LLM provider down | Circuit breaker + error rate | Fallback to Anthropic, then canned responses |
-| Wrong intent | Confidence threshold | Ask clarifying question if < 0.7 confidence |
-| PII in output | Regex + NER check | Redact before sending to customer |
-| Prompt injection | Input filter + monitoring | Sanitize input, use XML delimiters |
+| Failure Mode      | Detection                    | Mitigation                                    |
+| ----------------- | ---------------------------- | --------------------------------------------- |
+| Hallucination     | Faithfulness check on output | "Only answer from provided context" in prompt |
+| LLM provider down | Circuit breaker + error rate | Fallback to Anthropic, then canned responses  |
+| Wrong intent      | Confidence threshold         | Ask clarifying question if < 0.7 confidence   |
+| PII in output     | Regex + NER check            | Redact before sending to customer             |
+| Prompt injection  | Input filter + monitoring    | Sanitize input, use XML delimiters            |
 
 ### Step 6: Cost & Observability
 
 **Cost estimation:**
+
 ```
 Daily volume: 50K conversations * 5 messages = 250K messages
 
@@ -253,6 +258,7 @@ Per message:
 ```
 
 **Monitoring dashboard:**
+
 - Resolution rate (goal: >70% without human)
 - CSAT score per conversation
 - Escalation rate (goal: <30%)
@@ -268,15 +274,15 @@ Per message:
 
 **Scenario:** Design a document Q&A system for a 10,000-employee company.
 
-| Requirement | Detail |
-|-------------|--------|
-| Users | All employees (engineers, sales, legal, HR) |
-| Documents | Confluence wikis, Google Docs, Slack threads, PDFs |
-| Scale | 100K documents, growing 5K/month |
-| Access control | Users should only see docs they have access to |
-| Latency | < 3 seconds end-to-end |
-| Accuracy | Must cite sources, < 5% hallucination rate |
-| Update freshness | New docs searchable within 30 minutes |
+| Requirement      | Detail                                             |
+| ---------------- | -------------------------------------------------- |
+| Users            | All employees (engineers, sales, legal, HR)        |
+| Documents        | Confluence wikis, Google Docs, Slack threads, PDFs |
+| Scale            | 100K documents, growing 5K/month                   |
+| Access control   | Users should only see docs they have access to     |
+| Latency          | < 3 seconds end-to-end                             |
+| Accuracy         | Must cite sources, < 5% hallucination rate         |
+| Update freshness | New docs searchable within 30 minutes              |
 
 ### Step 2: Define the AI Pipeline
 
@@ -328,16 +334,17 @@ Per message:
 
 ### Step 3: Choose Models & Approach
 
-| Component | Choice | Reasoning |
-|-----------|--------|-----------|
-| Embedding | text-embedding-3-small (1536d) | Good balance of quality and cost |
-| Vector DB | pgvector (self-hosted) | Already running Postgres, ACL support |
-| Sparse search | Elasticsearch | Full-text search, faceted filtering |
-| Reranker | cross-encoder/ms-marco-MiniLM | Open-source, fast, self-hosted |
-| Main LLM | Claude 3.5 Sonnet | Best for long-context analysis |
-| Query rewrite | GPT-4o-mini | Cheap, fast |
+| Component     | Choice                         | Reasoning                             |
+| ------------- | ------------------------------ | ------------------------------------- |
+| Embedding     | text-embedding-3-small (1536d) | Good balance of quality and cost      |
+| Vector DB     | pgvector (self-hosted)         | Already running Postgres, ACL support |
+| Sparse search | Elasticsearch                  | Full-text search, faceted filtering   |
+| Reranker      | cross-encoder/ms-marco-MiniLM  | Open-source, fast, self-hosted        |
+| Main LLM      | Claude 3.5 Sonnet              | Best for long-context analysis        |
+| Query rewrite | GPT-4o-mini                    | Cheap, fast                           |
 
 **Access control strategy:**
+
 - Store document ACL (access control list) as metadata
 - At query time, filter vector search by user's groups/permissions
 - Pre-filter approach: `WHERE user_groups && doc_groups` in pgvector query
@@ -346,6 +353,7 @@ Per message:
 ### Step 4: Design Retrieval & Data
 
 **Ingestion pipeline:**
+
 - Source connectors poll or receive webhooks for changes
 - Change detection: hash comparison for full crawl, webhooks for incremental
 - Document parsing: Unstructured for most, LlamaParse for complex PDFs
@@ -353,6 +361,7 @@ Per message:
 - Metadata per chunk: source_url, author, last_modified, teams_with_access, doc_type
 
 **Scale estimation:**
+
 ```
 100K documents * avg 10 chunks = 1M chunks
 1M chunks * 1536 dims * 4 bytes = ~6 GB vectors
@@ -394,15 +403,15 @@ Monthly cost:
 
 **Scenario:** Design an AI code review assistant that integrates with GitHub.
 
-| Requirement | Detail |
-|-------------|--------|
-| Users | 500 engineers, ~200 PRs/day |
-| Trigger | Automatically runs on every PR |
-| Review scope | Security, bugs, performance, style |
-| Codebase | Monorepo, ~5M lines of code, TypeScript + Python |
-| Latency | Complete review within 2 minutes of PR creation |
-| False positive rate | < 20% (developers will ignore if too noisy) |
-| Integration | GitHub PR comments, inline suggestions |
+| Requirement         | Detail                                           |
+| ------------------- | ------------------------------------------------ |
+| Users               | 500 engineers, ~200 PRs/day                      |
+| Trigger             | Automatically runs on every PR                   |
+| Review scope        | Security, bugs, performance, style               |
+| Codebase            | Monorepo, ~5M lines of code, TypeScript + Python |
+| Latency             | Complete review within 2 minutes of PR creation  |
+| False positive rate | < 20% (developers will ignore if too noisy)      |
+| Integration         | GitHub PR comments, inline suggestions           |
 
 ### Step 2: Define the AI Pipeline
 
@@ -461,15 +470,16 @@ Monthly cost:
 
 ### Step 3: Choose Models & Approach
 
-| Component | Choice | Reasoning |
-|-----------|--------|-----------|
-| Security review | Claude 3.5 Sonnet | Best at nuanced code analysis |
-| Bug detection | GPT-4o | Strong at code reasoning |
-| Style checking | GPT-4o-mini | Simple pattern matching, cheap |
-| Codebase RAG | text-embedding-3-small + pgvector | Index architecture docs + style guides |
-| Dedup/prioritize | GPT-4o-mini | Cheap meta-analysis |
+| Component        | Choice                            | Reasoning                              |
+| ---------------- | --------------------------------- | -------------------------------------- |
+| Security review  | Claude 3.5 Sonnet                 | Best at nuanced code analysis          |
+| Bug detection    | GPT-4o                            | Strong at code reasoning               |
+| Style checking   | GPT-4o-mini                       | Simple pattern matching, cheap         |
+| Codebase RAG     | text-embedding-3-small + pgvector | Index architecture docs + style guides |
+| Dedup/prioritize | GPT-4o-mini                       | Cheap meta-analysis                    |
 
 **Why parallel agents:**
+
 - Each agent has a specialized system prompt and focus area
 - Parallel execution meets the 2-minute latency budget
 - Can independently tune each agent's prompt and model
@@ -477,6 +487,7 @@ Monthly cost:
 ### Step 4: Design Retrieval & Data
 
 **Context building strategy:**
+
 1. Fetch the PR diff (changed files only)
 2. For each changed file, retrieve:
    - Full file content (pre and post change)
@@ -489,6 +500,7 @@ Monthly cost:
    - Similar past review comments (learn from history)
 
 **Token budget per review:**
+
 ```
 Diff:              ~2,000 tokens (avg PR)
 File context:      ~3,000 tokens (related files)
@@ -500,13 +512,13 @@ Output:            ~1,000 tokens per agent = ~3,000 tokens
 
 ### Step 5: Handle Failures
 
-| Failure Mode | Impact | Mitigation |
-|-------------|--------|------------|
-| Too many comments (noise) | Developers ignore reviews | Max 10 comments, prioritize by severity |
-| False positive | Loss of trust | Confidence threshold, learn from dismissals |
-| Large PR (>2000 lines) | Timeout, context overflow | Split by file, summarize instead of line-by-line |
-| LLM provider down | No review posted | Retry with fallback, post "review delayed" comment |
-| Stale context | Wrong suggestions | Re-fetch diff at review time, not webhook time |
+| Failure Mode              | Impact                    | Mitigation                                         |
+| ------------------------- | ------------------------- | -------------------------------------------------- |
+| Too many comments (noise) | Developers ignore reviews | Max 10 comments, prioritize by severity            |
+| False positive            | Loss of trust             | Confidence threshold, learn from dismissals        |
+| Large PR (>2000 lines)    | Timeout, context overflow | Split by file, summarize instead of line-by-line   |
+| LLM provider down         | No review posted          | Retry with fallback, post "review delayed" comment |
+| Stale context             | Wrong suggestions         | Re-fetch diff at review time, not webhook time     |
 
 ### Step 6: Cost & Observability
 
@@ -528,6 +540,7 @@ Output:            ~1,000 tokens per agent = ~3,000 tokens
 ```
 
 **Monitoring:**
+
 - Comment acceptance rate (goal: >60% helpful)
 - Developer feedback (thumbs up/down on each comment)
 - False positive rate (dismissed comments)
@@ -626,16 +639,16 @@ Step 6: Cost & Observability
 
 ### Common AI System Design Questions
 
-| Question | Key Focus Areas |
-|----------|----------------|
-| AI customer support chatbot | RAG, intent routing, escalation, multi-turn |
-| Document Q&A system | RAG at scale, access control, freshness |
-| AI code review assistant | Parallel agents, context building, PR integration |
-| AI search engine | Hybrid search, ranking, personalization |
-| Content moderation system | Classification, multi-modal, speed, accuracy |
-| AI writing assistant | Real-time suggestions, streaming, context |
-| Automated data extraction | Structured output, validation, error handling |
-| AI-powered recommendation | Embeddings, user modeling, cold start |
+| Question                    | Key Focus Areas                                   |
+| --------------------------- | ------------------------------------------------- |
+| AI customer support chatbot | RAG, intent routing, escalation, multi-turn       |
+| Document Q&A system         | RAG at scale, access control, freshness           |
+| AI code review assistant    | Parallel agents, context building, PR integration |
+| AI search engine            | Hybrid search, ranking, personalization           |
+| Content moderation system   | Classification, multi-modal, speed, accuracy      |
+| AI writing assistant        | Real-time suggestions, streaming, context         |
+| Automated data extraction   | Structured output, validation, error handling     |
+| AI-powered recommendation   | Embeddings, user modeling, cold start             |
 
 ### Cost Estimation Quick Reference
 

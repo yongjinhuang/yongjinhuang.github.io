@@ -14,8 +14,8 @@ State can be categorized by its scope and purpose:
 
 ```jsx
 function SearchBar() {
-  const [query, setQuery] = useState('')
-  const [isFocused, setIsFocused] = useState(false)
+  const [query, setQuery] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
     <input
@@ -25,7 +25,7 @@ function SearchBar() {
       onBlur={() => setIsFocused(false)}
       className={isFocused ? 'focused' : ''}
     />
-  )
+  );
 }
 ```
 
@@ -47,42 +47,46 @@ Context provides a way to pass data through the component tree without prop dril
 
 ```jsx
 // 1. Create the context
-const ThemeContext = createContext({ theme: 'light', toggleTheme: () => {} })
+const ThemeContext = createContext({ theme: 'light', toggleTheme: () => {} });
 
 // 2. Create a provider
 function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light')
+  const [theme, setTheme] = useState('light');
 
-  const value = useMemo(() => ({
-    theme,
-    toggleTheme: () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
-  }), [theme])
+  const value = useMemo(
+    () => ({
+      theme,
+      toggleTheme: () =>
+        setTheme((prev) => (prev === 'light' ? 'dark' : 'light')),
+    }),
+    [theme]
+  );
 
   return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  )
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 // 3. Consume the context
 function Header() {
-  const { theme, toggleTheme } = useContext(ThemeContext)
+  const { theme, toggleTheme } = useContext(ThemeContext);
 
   return (
     <header className={theme}>
       <button onClick={toggleTheme}>Toggle Theme</button>
     </header>
-  )
+  );
 }
 ```
 
 **When to use Context:**
+
 - Theme, locale, auth status (infrequently changing data)
 - Dependency injection (providing services to deep components)
 - Avoiding prop drilling for 3+ levels
 
 **When to avoid Context:**
+
 - High-frequency updates (every keystroke, animations)
 - Large state objects where consumers only need a slice
 - When you need middleware, devtools, or time-travel debugging
@@ -96,13 +100,13 @@ Redux Toolkit is the official, opinionated way to write Redux logic. It drastica
 **Slices** - A slice combines reducer logic and actions for a single feature:
 
 ```js
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
 
 const todosSlice = createSlice({
   name: 'todos',
   initialState: {
     items: [],
-    filter: 'all'
+    filter: 'all',
   },
   reducers: {
     addTodo: (state, action) => {
@@ -110,44 +114,44 @@ const todosSlice = createSlice({
       state.items.push({
         id: crypto.randomUUID(),
         text: action.payload,
-        completed: false
-      })
+        completed: false,
+      });
     },
     toggleTodo: (state, action) => {
-      const todo = state.items.find((t) => t.id === action.payload)
+      const todo = state.items.find((t) => t.id === action.payload);
       if (todo) {
-        todo.completed = !todo.completed
+        todo.completed = !todo.completed;
       }
     },
     setFilter: (state, action) => {
-      state.filter = action.payload
-    }
-  }
-})
+      state.filter = action.payload;
+    },
+  },
+});
 
-export const { addTodo, toggleTodo, setFilter } = todosSlice.actions
-export default todosSlice.reducer
+export const { addTodo, toggleTodo, setFilter } = todosSlice.actions;
+export default todosSlice.reducer;
 ```
 
 **Thunks** - Async logic with `createAsyncThunk`:
 
 ```js
-import { createAsyncThunk } from '@reduxjs/toolkit'
+import { createAsyncThunk } from '@reduxjs/toolkit';
 
 export const fetchTodos = createAsyncThunk(
   'todos/fetchTodos',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/todos')
+      const response = await fetch('/api/todos');
       if (!response.ok) {
-        throw new Error('Failed to fetch todos')
+        throw new Error('Failed to fetch todos');
       }
-      return await response.json()
+      return await response.json();
     } catch (error) {
-      return rejectWithValue(error.message)
+      return rejectWithValue(error.message);
     }
   }
-)
+);
 
 // Handle in the slice with extraReducers
 const todosSlice = createSlice({
@@ -157,27 +161,27 @@ const todosSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchTodos.pending, (state) => {
-        state.status = 'loading'
+        state.status = 'loading';
       })
       .addCase(fetchTodos.fulfilled, (state, action) => {
-        state.status = 'succeeded'
-        state.items = action.payload
+        state.status = 'succeeded';
+        state.items = action.payload;
       })
       .addCase(fetchTodos.rejected, (state, action) => {
-        state.status = 'failed'
-        state.error = action.payload
-      })
-  }
-})
+        state.status = 'failed';
+        state.error = action.payload;
+      });
+  },
+});
 ```
 
 **Selectors** - Derive data from the store:
 
 ```js
-import { createSelector } from '@reduxjs/toolkit'
+import { createSelector } from '@reduxjs/toolkit';
 
-const selectTodos = (state) => state.todos.items
-const selectFilter = (state) => state.todos.filter
+const selectTodos = (state) => state.todos.items;
+const selectFilter = (state) => state.todos.filter;
 
 // Memoized selector - only recomputes when inputs change
 export const selectFilteredTodos = createSelector(
@@ -185,14 +189,14 @@ export const selectFilteredTodos = createSelector(
   (todos, filter) => {
     switch (filter) {
       case 'completed':
-        return todos.filter((t) => t.completed)
+        return todos.filter((t) => t.completed);
       case 'active':
-        return todos.filter((t) => !t.completed)
+        return todos.filter((t) => !t.completed);
       default:
-        return todos
+        return todos;
     }
   }
-)
+);
 ```
 
 ### Zustand
@@ -200,8 +204,8 @@ export const selectFilteredTodos = createSelector(
 Zustand is a lightweight state management library with a minimal API. No providers, no boilerplate.
 
 ```js
-import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
 
 const useCartStore = create(
   devtools(
@@ -210,46 +214,49 @@ const useCartStore = create(
         items: [],
         totalItems: 0,
 
-        addItem: (product) => set((state) => {
-          const existing = state.items.find((i) => i.id === product.id)
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.id === product.id
-                  ? { ...i, quantity: i.quantity + 1 }
-                  : i
-              ),
-              totalItems: state.totalItems + 1
+        addItem: (product) =>
+          set((state) => {
+            const existing = state.items.find((i) => i.id === product.id);
+            if (existing) {
+              return {
+                items: state.items.map((i) =>
+                  i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+                ),
+                totalItems: state.totalItems + 1,
+              };
             }
-          }
-          return {
-            items: [...state.items, { ...product, quantity: 1 }],
-            totalItems: state.totalItems + 1
-          }
-        }),
+            return {
+              items: [...state.items, { ...product, quantity: 1 }],
+              totalItems: state.totalItems + 1,
+            };
+          }),
 
-        removeItem: (id) => set((state) => {
-          const item = state.items.find((i) => i.id === id)
-          return {
-            items: state.items.filter((i) => i.id !== id),
-            totalItems: state.totalItems - (item?.quantity ?? 0)
-          }
-        }),
+        removeItem: (id) =>
+          set((state) => {
+            const item = state.items.find((i) => i.id === id);
+            return {
+              items: state.items.filter((i) => i.id !== id),
+              totalItems: state.totalItems - (item?.quantity ?? 0),
+            };
+          }),
 
         getTotal: () => {
-          const { items } = get()
-          return items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-        }
+          const { items } = get();
+          return items.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+          );
+        },
       }),
       { name: 'cart-storage' }
     )
   )
-)
+);
 
 // Usage - components only re-render when their selected state changes
 function CartCount() {
-  const totalItems = useCartStore((state) => state.totalItems)
-  return <span>{totalItems}</span>
+  const totalItems = useCartStore((state) => state.totalItems);
+  return <span>{totalItems}</span>;
 }
 ```
 
@@ -258,27 +265,27 @@ function CartCount() {
 Jotai takes a bottom-up approach with atoms -- minimal units of state.
 
 ```js
-import { atom, useAtom } from 'jotai'
+import { atom, useAtom } from 'jotai';
 
 // Primitive atoms
-const countAtom = atom(0)
-const doubleCountAtom = atom((get) => get(countAtom) * 2) // Derived atom
+const countAtom = atom(0);
+const doubleCountAtom = atom((get) => get(countAtom) * 2); // Derived atom
 
 // Async atom
 const userAtom = atom(async () => {
-  const response = await fetch('/api/user')
-  return response.json()
-})
+  const response = await fetch('/api/user');
+  return response.json();
+});
 
 // Writable derived atom
 const decrementCountAtom = atom(
   (get) => get(countAtom),
   (get, set) => set(countAtom, get(countAtom) - 1)
-)
+);
 
 function Counter() {
-  const [count, setCount] = useAtom(countAtom)
-  const [doubleCount] = useAtom(doubleCountAtom)
+  const [count, setCount] = useAtom(countAtom);
+  const [doubleCount] = useAtom(doubleCountAtom);
 
   return (
     <div>
@@ -286,7 +293,7 @@ function Counter() {
       <p>Double: {doubleCount}</p>
       <button onClick={() => setCount((c) => c + 1)}>Increment</button>
     </div>
-  )
+  );
 }
 ```
 
@@ -295,51 +302,55 @@ function Counter() {
 TanStack Query treats server data as a separate concern from client state.
 
 ```jsx
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 function TodoList() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-  const { data: todos, isLoading, error } = useQuery({
+  const {
+    data: todos,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['todos'],
     queryFn: async () => {
-      const res = await fetch('/api/todos')
-      if (!res.ok) throw new Error('Failed to fetch')
-      return res.json()
+      const res = await fetch('/api/todos');
+      if (!res.ok) throw new Error('Failed to fetch');
+      return res.json();
     },
-    staleTime: 5 * 60 * 1000,   // Data considered fresh for 5 min
-    gcTime: 10 * 60 * 1000,     // Garbage collected after 10 min
-  })
+    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 min
+    gcTime: 10 * 60 * 1000, // Garbage collected after 10 min
+  });
 
   const addTodo = useMutation({
     mutationFn: async (newTodo) => {
       const res = await fetch('/api/todos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTodo)
-      })
-      return res.json()
+        body: JSON.stringify(newTodo),
+      });
+      return res.json();
     },
     // Optimistic update
     onMutate: async (newTodo) => {
-      await queryClient.cancelQueries({ queryKey: ['todos'] })
-      const previous = queryClient.getQueryData(['todos'])
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+      const previous = queryClient.getQueryData(['todos']);
       queryClient.setQueryData(['todos'], (old) => [
         ...old,
-        { ...newTodo, id: 'temp-id' }
-      ])
-      return { previous }
+        { ...newTodo, id: 'temp-id' },
+      ]);
+      return { previous };
     },
     onError: (err, newTodo, context) => {
-      queryClient.setQueryData(['todos'], context.previous)
+      queryClient.setQueryData(['todos'], context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
-    }
-  })
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+  });
 
-  if (isLoading) return <p>Loading...</p>
-  if (error) return <p>Error: {error.message}</p>
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
 
   return (
     <ul>
@@ -347,7 +358,7 @@ function TodoList() {
         <li key={todo.id}>{todo.text}</li>
       ))}
     </ul>
-  )
+  );
 }
 ```
 
@@ -364,38 +375,38 @@ const state = {
       title: 'Post 1',
       author: { id: 'a1', name: 'Alice' },
       comments: [
-        { id: 'c1', text: 'Great!', author: { id: 'a1', name: 'Alice' } }
-      ]
-    }
-  ]
-}
+        { id: 'c1', text: 'Great!', author: { id: 'a1', name: 'Alice' } },
+      ],
+    },
+  ],
+};
 
 // GOOD: Normalized data
 const state = {
   entities: {
     users: {
-      'a1': { id: 'a1', name: 'Alice' }
+      a1: { id: 'a1', name: 'Alice' },
     },
     posts: {
-      '1': { id: '1', title: 'Post 1', authorId: 'a1', commentIds: ['c1'] }
+      1: { id: '1', title: 'Post 1', authorId: 'a1', commentIds: ['c1'] },
     },
     comments: {
-      'c1': { id: 'c1', text: 'Great!', authorId: 'a1', postId: '1' }
-    }
+      c1: { id: 'c1', text: 'Great!', authorId: 'a1', postId: '1' },
+    },
   },
   ids: {
     posts: ['1'],
-    comments: ['c1']
-  }
-}
+    comments: ['c1'],
+  },
+};
 ```
 
 RTK provides `createEntityAdapter` for this:
 
 ```js
-import { createEntityAdapter, createSlice } from '@reduxjs/toolkit'
+import { createEntityAdapter, createSlice } from '@reduxjs/toolkit';
 
-const usersAdapter = createEntityAdapter()
+const usersAdapter = createEntityAdapter();
 
 const usersSlice = createSlice({
   name: 'users',
@@ -404,16 +415,16 @@ const usersSlice = createSlice({
     addUser: usersAdapter.addOne,
     updateUser: usersAdapter.updateOne,
     removeUser: usersAdapter.removeOne,
-    setUsers: usersAdapter.setAll
-  }
-})
+    setUsers: usersAdapter.setAll,
+  },
+});
 
 // Generated selectors
 export const {
   selectAll: selectAllUsers,
   selectById: selectUserById,
-  selectIds: selectUserIds
-} = usersAdapter.getSelectors((state) => state.users)
+  selectIds: selectUserIds,
+} = usersAdapter.getSelectors((state) => state.users);
 ```
 
 ## Common Interview Questions
@@ -454,19 +465,26 @@ Use `useReducer` when state transitions are complex (multiple related values tha
 function formReducer(state, action) {
   switch (action.type) {
     case 'SET_FIELD':
-      return { ...state, [action.field]: action.value, errors: { ...state.errors, [action.field]: null } }
+      return {
+        ...state,
+        [action.field]: action.value,
+        errors: { ...state.errors, [action.field]: null },
+      };
     case 'SET_ERROR':
-      return { ...state, errors: { ...state.errors, [action.field]: action.message } }
+      return {
+        ...state,
+        errors: { ...state.errors, [action.field]: action.message },
+      };
     case 'RESET':
-      return action.initialState
+      return action.initialState;
     default:
-      return state
+      return state;
   }
 }
 
 function useForm(initialState) {
-  const [state, dispatch] = useReducer(formReducer, initialState)
-  return { state, dispatch }
+  const [state, dispatch] = useReducer(formReducer, initialState);
+  return { state, dispatch };
 }
 ```
 
@@ -480,35 +498,34 @@ Authentication state is a good candidate for Context + a dedicated hook. Store t
 
 ```js
 function createStore(initializer) {
-  let state
-  const listeners = new Set()
+  let state;
+  const listeners = new Set();
 
-  const getState = () => state
+  const getState = () => state;
 
   const setState = (partial) => {
-    const nextState = typeof partial === 'function' ? partial(state) : partial
+    const nextState = typeof partial === 'function' ? partial(state) : partial;
     if (!Object.is(state, nextState)) {
-      state = { ...state, ...nextState }
-      listeners.forEach((listener) => listener(state))
+      state = { ...state, ...nextState };
+      listeners.forEach((listener) => listener(state));
     }
-  }
+  };
 
-  state = initializer(setState, getState)
+  state = initializer(setState, getState);
 
   const subscribe = (listener) => {
-    listeners.add(listener)
-    return () => listeners.delete(listener)
-  }
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  };
 
-  return { getState, setState, subscribe }
+  return { getState, setState, subscribe };
 }
 
 // React hook with selector
 function useStore(store, selector) {
-  return useSyncExternalStore(
-    store.subscribe,
-    () => selector(store.getState())
-  )
+  return useSyncExternalStore(store.subscribe, () =>
+    selector(store.getState())
+  );
 }
 ```
 
@@ -519,8 +536,8 @@ function useStore(store, selector) {
 function useProducts(categoryId) {
   return useQuery({
     queryKey: ['products', categoryId],
-    queryFn: () => fetchProducts(categoryId)
-  })
+    queryFn: () => fetchProducts(categoryId),
+  });
 }
 
 // Client state with Zustand
@@ -528,17 +545,18 @@ const useUIStore = create((set) => ({
   selectedProductId: null,
   isDetailOpen: false,
   selectProduct: (id) => set({ selectedProductId: id, isDetailOpen: true }),
-  closeDetail: () => set({ isDetailOpen: false })
-}))
+  closeDetail: () => set({ isDetailOpen: false }),
+}));
 
 // Component combining both
 function ProductPage({ categoryId }) {
-  const { data: products, isLoading } = useProducts(categoryId)
-  const { selectedProductId, selectProduct, isDetailOpen, closeDetail } = useUIStore()
+  const { data: products, isLoading } = useProducts(categoryId);
+  const { selectedProductId, selectProduct, isDetailOpen, closeDetail } =
+    useUIStore();
 
-  const selectedProduct = products?.find((p) => p.id === selectedProductId)
+  const selectedProduct = products?.find((p) => p.id === selectedProductId);
 
-  if (isLoading) return <Skeleton />
+  if (isLoading) return <Skeleton />;
 
   return (
     <div>
@@ -547,7 +565,7 @@ function ProductPage({ categoryId }) {
         <ProductDetail product={selectedProduct} onClose={closeDetail} />
       )}
     </div>
-  )
+  );
 }
 ```
 
@@ -571,23 +589,23 @@ function ProductPage({ categoryId }) {
 
 ## Quick Reference
 
-| Solution | Bundle Size | Learning Curve | Best For | Re-render Control |
-|---|---|---|---|---|
-| useState/useReducer | 0 KB | Low | Local component state | N/A |
-| React Context | 0 KB | Low | Theme, auth, locale | Poor (all consumers) |
-| Redux Toolkit | ~11 KB | Medium-High | Large apps, complex logic | Good (useSelector) |
-| Zustand | ~1.5 KB | Low | Medium apps, simple API | Excellent (selectors) |
-| Jotai | ~3 KB | Low-Medium | Fine-grained reactivity | Excellent (per-atom) |
-| Recoil | ~15 KB | Medium | Meta-backed, graph state | Excellent (per-atom) |
-| TanStack Query | ~13 KB | Medium | Server/async state | Built-in (query keys) |
+| Solution            | Bundle Size | Learning Curve | Best For                  | Re-render Control     |
+| ------------------- | ----------- | -------------- | ------------------------- | --------------------- |
+| useState/useReducer | 0 KB        | Low            | Local component state     | N/A                   |
+| React Context       | 0 KB        | Low            | Theme, auth, locale       | Poor (all consumers)  |
+| Redux Toolkit       | ~11 KB      | Medium-High    | Large apps, complex logic | Good (useSelector)    |
+| Zustand             | ~1.5 KB     | Low            | Medium apps, simple API   | Excellent (selectors) |
+| Jotai               | ~3 KB       | Low-Medium     | Fine-grained reactivity   | Excellent (per-atom)  |
+| Recoil              | ~15 KB      | Medium         | Meta-backed, graph state  | Excellent (per-atom)  |
+| TanStack Query      | ~13 KB      | Medium         | Server/async state        | Built-in (query keys) |
 
-| Decision | Choose |
-|---|---|
-| Form input state | useState |
-| Complex form with validation | useReducer |
-| Theme / Auth / Locale | Context |
-| Shopping cart, UI preferences | Zustand |
-| Enterprise app with strict patterns | Redux Toolkit |
-| Fine-grained updates, many atoms | Jotai |
-| API data, caching, pagination | TanStack Query |
+| Decision                            | Choose                    |
+| ----------------------------------- | ------------------------- |
+| Form input state                    | useState                  |
+| Complex form with validation        | useReducer                |
+| Theme / Auth / Locale               | Context                   |
+| Shopping cart, UI preferences       | Zustand                   |
+| Enterprise app with strict patterns | Redux Toolkit             |
+| Fine-grained updates, many atoms    | Jotai                     |
+| API data, caching, pagination       | TanStack Query            |
 | Shared state across micro-frontends | Redux or custom event bus |

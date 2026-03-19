@@ -29,11 +29,11 @@ Slices      Slices      Slices     -- Each node has 2-16 slices (sub-units of pa
 
 ## 2. Node Types
 
-| Node Type | Storage | Best For | Notes |
-|-----------|---------|----------|-------|
-| **RA3** | Managed storage (S3-backed with local SSD cache) | Most workloads | Decouple compute from storage, scale independently |
-| **DC2** | Local NVMe SSD | Small datasets needing low latency | Fixed storage per node, cost-effective under ~1 TB |
-| **DS2** | Local HDD | Legacy only | Deprecated in favor of RA3, do not use for new clusters |
+| Node Type | Storage                                          | Best For                           | Notes                                                   |
+| --------- | ------------------------------------------------ | ---------------------------------- | ------------------------------------------------------- |
+| **RA3**   | Managed storage (S3-backed with local SSD cache) | Most workloads                     | Decouple compute from storage, scale independently      |
+| **DC2**   | Local NVMe SSD                                   | Small datasets needing low latency | Fixed storage per node, cost-effective under ~1 TB      |
+| **DS2**   | Local HDD                                        | Legacy only                        | Deprecated in favor of RA3, do not use for new clusters |
 
 **Decision rule:** Use RA3 for new clusters. RA3 nodes cache hot data on local SSD and spill cold data to S3, giving you effectively unlimited storage without managing disk capacity. DC2 is only worth it for small, latency-sensitive workloads where you want everything on local SSD.
 
@@ -58,12 +58,12 @@ aws redshift-serverless create-workgroup \
   --base-capacity 32
 ```
 
-| Feature | Provisioned | Serverless |
-|---------|------------|------------|
-| **Pricing** | Per-node per-hour | Per RPU-hour (only when queries run) |
-| **Scaling** | Manual or elastic resize | Automatic |
-| **Management** | You manage nodes, WLM, VACUUM | AWS manages everything |
-| **Use case** | Predictable, sustained workloads | Bursty, intermittent, or getting started |
+| Feature        | Provisioned                      | Serverless                               |
+| -------------- | -------------------------------- | ---------------------------------------- |
+| **Pricing**    | Per-node per-hour                | Per RPU-hour (only when queries run)     |
+| **Scaling**    | Manual or elastic resize         | Automatic                                |
+| **Management** | You manage nodes, WLM, VACUUM    | AWS manages everything                   |
+| **Use case**   | Predictable, sustained workloads | Bursty, intermittent, or getting started |
 
 Serverless is ideal when you do not want to tune cluster sizing, or when query volume is unpredictable. For steady, high-throughput pipelines, provisioned clusters with reserved instances are cheaper.
 
@@ -73,12 +73,12 @@ Serverless is ideal when you do not want to tune cluster sizing, or when query v
 
 Distribution determines how rows are spread across compute nodes. Getting this wrong causes expensive data redistribution during joins.
 
-| Style | How It Works | When to Use |
-|-------|-------------|-------------|
-| **AUTO** | Redshift chooses (starts as ALL for small tables, switches to EVEN or KEY as table grows) | Default, good starting point |
-| **KEY** | Rows with the same key value go to the same node | Large fact tables joined on a specific column (e.g., `customer_id`) |
-| **EVEN** | Round-robin across all slices | Tables not joined with others, or when no good key exists |
-| **ALL** | Full copy on every node | Small dimension tables (< ~5M rows) frequently joined with large tables |
+| Style    | How It Works                                                                              | When to Use                                                             |
+| -------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **AUTO** | Redshift chooses (starts as ALL for small tables, switches to EVEN or KEY as table grows) | Default, good starting point                                            |
+| **KEY**  | Rows with the same key value go to the same node                                          | Large fact tables joined on a specific column (e.g., `customer_id`)     |
+| **EVEN** | Round-robin across all slices                                                             | Tables not joined with others, or when no good key exists               |
+| **ALL**  | Full copy on every node                                                                   | Small dimension tables (< ~5M rows) frequently joined with large tables |
 
 ```sql
 -- KEY distribution on the join column
@@ -107,10 +107,10 @@ DISTSTYLE ALL;
 
 Sort keys determine the physical order of data on disk. Redshift uses zone maps (min/max metadata per 1 MB block) to skip blocks that cannot contain matching rows.
 
-| Type | Behavior | Best For |
-|------|----------|----------|
-| **Compound** | Data sorted by columns in order (col1, then col2 within col1, etc.) | Range-restricted queries on a leading column (e.g., `WHERE date BETWEEN ...`) |
-| **Interleaved** | Equal weight to each column in the key | Queries that filter on different columns unpredictably |
+| Type            | Behavior                                                            | Best For                                                                      |
+| --------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Compound**    | Data sorted by columns in order (col1, then col2 within col1, etc.) | Range-restricted queries on a leading column (e.g., `WHERE date BETWEEN ...`) |
+| **Interleaved** | Equal weight to each column in the key                              | Queries that filter on different columns unpredictably                        |
 
 ```sql
 -- Compound sort key: queries filtering on event_date benefit most
@@ -142,14 +142,14 @@ Redshift stores data by column, not by row. A query like `SELECT AVG(price) FROM
 
 Each column can have a compression encoding:
 
-| Encoding | Description | Good For |
-|----------|-------------|----------|
-| **AZ64** | Amazon's proprietary encoding for numeric/date types | Default for numeric types, excellent compression |
-| **LZO** | General-purpose compression | VARCHAR columns with varied content |
-| **ZSTD** | High compression ratio | Large VARCHAR, general use |
-| **BYTEDICT** | Dictionary encoding | Columns with fewer than ~256 distinct values |
-| **RUNLENGTH** | Run-length encoding | Columns with many consecutive repeated values (e.g., sorted columns) |
-| **RAW** | No compression | Columns used in SORTKEY (sometimes recommended) |
+| Encoding      | Description                                          | Good For                                                             |
+| ------------- | ---------------------------------------------------- | -------------------------------------------------------------------- |
+| **AZ64**      | Amazon's proprietary encoding for numeric/date types | Default for numeric types, excellent compression                     |
+| **LZO**       | General-purpose compression                          | VARCHAR columns with varied content                                  |
+| **ZSTD**      | High compression ratio                               | Large VARCHAR, general use                                           |
+| **BYTEDICT**  | Dictionary encoding                                  | Columns with fewer than ~256 distinct values                         |
+| **RUNLENGTH** | Run-length encoding                                  | Columns with many consecutive repeated values (e.g., sorted columns) |
+| **RAW**       | No compression                                       | Columns used in SORTKEY (sometimes recommended)                      |
 
 ```sql
 -- Specify encodings explicitly
@@ -197,6 +197,7 @@ READRATIO 50;
 ```
 
 **Performance tips for COPY:**
+
 - Split input files so the number of files is a multiple of the number of slices (e.g., 16 slices = 16, 32, 48 files).
 - Use compressed files (GZIP, LZO, ZSTD, BZIP2).
 - Prefer columnar formats (Parquet, ORC) over CSV for large loads.
@@ -244,10 +245,10 @@ When query queues are full, Redshift can automatically spin up additional transi
 
 WLM controls how queries are queued and allocated memory. You define queues with different concurrency levels and memory allocation.
 
-| WLM Mode | Description |
-|----------|-------------|
+| WLM Mode          | Description                                                     |
+| ----------------- | --------------------------------------------------------------- |
 | **Automatic WLM** | Redshift manages concurrency and memory per queue (recommended) |
-| **Manual WLM** | You set concurrency slots and memory percentage per queue |
+| **Manual WLM**    | You set concurrency slots and memory percentage per queue       |
 
 ```sql
 -- Check current WLM configuration
@@ -433,18 +434,18 @@ WHERE "table" = 'orders';
 
 ## 16. Common Gotchas
 
-| Gotcha | Details |
-|--------|---------|
-| **Leader-node-only functions** | Some functions (e.g., certain system catalog queries, `CURRENT_SCHEMA`) run only on the leader node. If used in a query against large datasets, the leader becomes a bottleneck. |
-| **VACUUM and ANALYZE are not automatic** | Unlike PostgreSQL with autovacuum, Redshift requires you to schedule VACUUM and ANALYZE. Skipping them degrades query performance over time. |
-| **Commit queue contention** | Redshift serializes commits. Lots of small single-row INSERTs cause commit queue bottlenecks. Batch writes with COPY instead. |
-| **Not for OLTP** | Single-row lookups, frequent small updates, and high-concurrency short transactions are anti-patterns. Use RDS/Aurora/DynamoDB for OLTP. |
-| **Cross-AZ data transfer costs** | Multi-AZ deployments or Spectrum queries across AZs incur data transfer charges. |
-| **Concurrency limits** | Default concurrency is low (5-50 queries depending on WLM config). Design dashboards to cache results rather than hit Redshift directly. |
-| **Resize downtime** | Classic resize copies data to a new cluster (hours of downtime). Use elastic resize for faster node count changes (minutes), but it only supports same node type. |
-| **Sort key maintenance** | Interleaved sort keys require expensive VACUUM REINDEX operations. Compound sort keys are much cheaper to maintain. |
-| **Distribution key changes** | You cannot ALTER a distribution key. Changing it requires recreating the table via deep copy (`CREATE TABLE new AS SELECT ... FROM old`). |
-| **Distribution key skew** | A low-cardinality DISTKEY puts most data on one node, making queries sequential. Check `svv_table_info.skew_rows` and choose high-cardinality columns. |
-| **Result caching** | Redshift caches results for identical queries. Great for dashboards, but can mask performance problems during development. Disable with `SET enable_result_cache_for_session TO off;`. |
-| **Spectrum scan costs** | Spectrum charges $5 per TB scanned from S3. Use columnar formats (Parquet/ORC) and partition data to minimize scan volume. |
-| **Disk space at 100%** | When disk usage exceeds ~80%, queries may fail. Monitor `PercentageDiskSpaceUsed` in CloudWatch. RA3 nodes avoid this by spilling to S3. |
+| Gotcha                                   | Details                                                                                                                                                                                |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Leader-node-only functions**           | Some functions (e.g., certain system catalog queries, `CURRENT_SCHEMA`) run only on the leader node. If used in a query against large datasets, the leader becomes a bottleneck.       |
+| **VACUUM and ANALYZE are not automatic** | Unlike PostgreSQL with autovacuum, Redshift requires you to schedule VACUUM and ANALYZE. Skipping them degrades query performance over time.                                           |
+| **Commit queue contention**              | Redshift serializes commits. Lots of small single-row INSERTs cause commit queue bottlenecks. Batch writes with COPY instead.                                                          |
+| **Not for OLTP**                         | Single-row lookups, frequent small updates, and high-concurrency short transactions are anti-patterns. Use RDS/Aurora/DynamoDB for OLTP.                                               |
+| **Cross-AZ data transfer costs**         | Multi-AZ deployments or Spectrum queries across AZs incur data transfer charges.                                                                                                       |
+| **Concurrency limits**                   | Default concurrency is low (5-50 queries depending on WLM config). Design dashboards to cache results rather than hit Redshift directly.                                               |
+| **Resize downtime**                      | Classic resize copies data to a new cluster (hours of downtime). Use elastic resize for faster node count changes (minutes), but it only supports same node type.                      |
+| **Sort key maintenance**                 | Interleaved sort keys require expensive VACUUM REINDEX operations. Compound sort keys are much cheaper to maintain.                                                                    |
+| **Distribution key changes**             | You cannot ALTER a distribution key. Changing it requires recreating the table via deep copy (`CREATE TABLE new AS SELECT ... FROM old`).                                              |
+| **Distribution key skew**                | A low-cardinality DISTKEY puts most data on one node, making queries sequential. Check `svv_table_info.skew_rows` and choose high-cardinality columns.                                 |
+| **Result caching**                       | Redshift caches results for identical queries. Great for dashboards, but can mask performance problems during development. Disable with `SET enable_result_cache_for_session TO off;`. |
+| **Spectrum scan costs**                  | Spectrum charges $5 per TB scanned from S3. Use columnar formats (Parquet/ORC) and partition data to minimize scan volume.                                                             |
+| **Disk space at 100%**                   | When disk usage exceeds ~80%, queries may fail. Monitor `PercentageDiskSpaceUsed` in CloudWatch. RA3 nodes avoid this by spilling to S3.                                               |

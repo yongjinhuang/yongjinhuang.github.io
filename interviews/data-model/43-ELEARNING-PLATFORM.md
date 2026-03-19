@@ -6,19 +6,19 @@ An e-learning platform must support course creation with structured content (vid
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **instructors** | Course creator profiles | Separates instructor identity from user account; supports verified status, payout tracking, and aggregate metrics |
-| **courses** | Top-level learning product | The primary entity students browse and purchase; contains metadata, pricing, and aggregate statistics |
-| **sections** | Logical groupings within a course | Organizes lessons into chapters/modules; provides structure and ordering |
-| **lessons** | Individual learning units | The atomic content unit; each lesson is one video, article, quiz, or exercise |
-| **video_assets** | Video file metadata and streaming configuration | Manages transcoding, DRM, adaptive bitrate manifests, and subtitles separately from lesson metadata |
-| **enrollments** | Student-course relationships | Tracks each student's lifecycle in a course: purchase, progress, completion, and access expiration |
-| **lesson_progress** | Per-lesson progress for each student | Granular tracking of video position, time spent, and completion status per lesson per student |
-| **quizzes** | Quiz configuration | Defines quiz parameters (passing score, attempts, time limit) separately from questions |
-| **quiz_questions** | Individual questions within a quiz | Supports multiple question types with type-specific data (MCQ options, code test cases) |
-| **quiz_attempts** | Student quiz submission records | Records each attempt with answers, score, and time spent; supports multiple attempts |
-| **certificates** | Completion certificates | Generated when a student completes all course requirements; includes a unique verification code |
+| Table               | Purpose                                         | Why It Exists                                                                                                     |
+| ------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **instructors**     | Course creator profiles                         | Separates instructor identity from user account; supports verified status, payout tracking, and aggregate metrics |
+| **courses**         | Top-level learning product                      | The primary entity students browse and purchase; contains metadata, pricing, and aggregate statistics             |
+| **sections**        | Logical groupings within a course               | Organizes lessons into chapters/modules; provides structure and ordering                                          |
+| **lessons**         | Individual learning units                       | The atomic content unit; each lesson is one video, article, quiz, or exercise                                     |
+| **video_assets**    | Video file metadata and streaming configuration | Manages transcoding, DRM, adaptive bitrate manifests, and subtitles separately from lesson metadata               |
+| **enrollments**     | Student-course relationships                    | Tracks each student's lifecycle in a course: purchase, progress, completion, and access expiration                |
+| **lesson_progress** | Per-lesson progress for each student            | Granular tracking of video position, time spent, and completion status per lesson per student                     |
+| **quizzes**         | Quiz configuration                              | Defines quiz parameters (passing score, attempts, time limit) separately from questions                           |
+| **quiz_questions**  | Individual questions within a quiz              | Supports multiple question types with type-specific data (MCQ options, code test cases)                           |
+| **quiz_attempts**   | Student quiz submission records                 | Records each attempt with answers, score, and time spent; supports multiple attempts                              |
+| **certificates**    | Completion certificates                         | Generated when a student completes all course requirements; includes a unique verification code                   |
 
 ---
 
@@ -26,147 +26,147 @@ An e-learning platform must support course creation with structured content (vid
 
 ### instructors
 
-| Field | Type | Description |
-|-------|------|-------------|
-| instructor_id | PK, UUID | Unique instructor identifier |
-| user_id | FK → users | Links to the user account; an instructor is a role, not a separate user |
-| display_name | VARCHAR | Public-facing name shown on course pages |
-| bio | TEXT | Instructor biography and credentials |
-| expertise | ARRAY | Areas of expertise (e.g., "machine_learning", "web_development"); used for discovery and recommendations |
-| is_verified | BOOLEAN | Whether the instructor's credentials have been verified by the platform |
-| payout_account_id | FK → payout_accounts | Where revenue share payments are sent |
-| total_students | INT | Aggregate count of enrolled students across all courses; denormalized for display |
-| avg_rating | DECIMAL(3,2) | Average rating across all courses; denormalized for sorting and filtering |
+| Field             | Type                 | Description                                                                                              |
+| ----------------- | -------------------- | -------------------------------------------------------------------------------------------------------- |
+| instructor_id     | PK, UUID             | Unique instructor identifier                                                                             |
+| user_id           | FK → users           | Links to the user account; an instructor is a role, not a separate user                                  |
+| display_name      | VARCHAR              | Public-facing name shown on course pages                                                                 |
+| bio               | TEXT                 | Instructor biography and credentials                                                                     |
+| expertise         | ARRAY                | Areas of expertise (e.g., "machine_learning", "web_development"); used for discovery and recommendations |
+| is_verified       | BOOLEAN              | Whether the instructor's credentials have been verified by the platform                                  |
+| payout_account_id | FK → payout_accounts | Where revenue share payments are sent                                                                    |
+| total_students    | INT                  | Aggregate count of enrolled students across all courses; denormalized for display                        |
+| avg_rating        | DECIMAL(3,2)         | Average rating across all courses; denormalized for sorting and filtering                                |
 
 ### courses
 
-| Field | Type | Description |
-|-------|------|-------------|
-| course_id | PK, UUID | Unique course identifier |
-| instructor_id | FK → instructors | Who created and teaches this course |
-| title | VARCHAR | Course title shown in search and catalog |
-| description | TEXT | Full course description with learning outcomes |
-| category_id | FK → categories | Course category for browsing and filtering (e.g., "Data Science", "Web Development") |
-| level | ENUM | beginner, intermediate, advanced; helps students find appropriate courses |
-| price_cents | INT | Course price in smallest currency unit; 0 for free courses |
-| currency | VARCHAR(3) | ISO 4217 currency code |
-| duration_hours | DECIMAL | Total course duration; calculated from sum of lesson durations |
-| total_lessons | INT | Denormalized lesson count for display |
-| total_enrolled | INT | Denormalized enrollment count; social proof for prospective students |
-| avg_rating | DECIMAL(3,2) | Average student rating; denormalized for sorting |
-| status | ENUM | draft (being created), published (live), archived (no longer accepting enrollments) |
+| Field          | Type             | Description                                                                          |
+| -------------- | ---------------- | ------------------------------------------------------------------------------------ |
+| course_id      | PK, UUID         | Unique course identifier                                                             |
+| instructor_id  | FK → instructors | Who created and teaches this course                                                  |
+| title          | VARCHAR          | Course title shown in search and catalog                                             |
+| description    | TEXT             | Full course description with learning outcomes                                       |
+| category_id    | FK → categories  | Course category for browsing and filtering (e.g., "Data Science", "Web Development") |
+| level          | ENUM             | beginner, intermediate, advanced; helps students find appropriate courses            |
+| price_cents    | INT              | Course price in smallest currency unit; 0 for free courses                           |
+| currency       | VARCHAR(3)       | ISO 4217 currency code                                                               |
+| duration_hours | DECIMAL          | Total course duration; calculated from sum of lesson durations                       |
+| total_lessons  | INT              | Denormalized lesson count for display                                                |
+| total_enrolled | INT              | Denormalized enrollment count; social proof for prospective students                 |
+| avg_rating     | DECIMAL(3,2)     | Average student rating; denormalized for sorting                                     |
+| status         | ENUM             | draft (being created), published (live), archived (no longer accepting enrollments)  |
 
 ### sections
 
-| Field | Type | Description |
-|-------|------|-------------|
-| section_id | PK, UUID | Unique section identifier |
-| course_id | FK → courses | Which course this section belongs to |
-| title | VARCHAR | Section title (e.g., "Module 1: Introduction to Python") |
-| position | INT | Display order within the course; enables drag-and-drop reordering |
-| lesson_count | INT | Denormalized count of lessons in this section |
+| Field        | Type         | Description                                                       |
+| ------------ | ------------ | ----------------------------------------------------------------- |
+| section_id   | PK, UUID     | Unique section identifier                                         |
+| course_id    | FK → courses | Which course this section belongs to                              |
+| title        | VARCHAR      | Section title (e.g., "Module 1: Introduction to Python")          |
+| position     | INT          | Display order within the course; enables drag-and-drop reordering |
+| lesson_count | INT          | Denormalized count of lessons in this section                     |
 
 ### lessons
 
-| Field | Type | Description |
-|-------|------|-------------|
-| lesson_id | PK, UUID | Unique lesson identifier |
-| section_id | FK → sections | Which section this lesson belongs to |
-| title | VARCHAR | Lesson title |
-| lesson_type | ENUM | video, article, quiz, coding_exercise, assignment; determines the rendering component and progress tracking logic |
-| position | INT | Display order within the section |
-| duration_sec | INT | Estimated or actual duration in seconds; used for course total calculation |
-| is_preview | BOOLEAN | If true, this lesson is accessible without enrollment; used for course marketing |
+| Field        | Type          | Description                                                                                                       |
+| ------------ | ------------- | ----------------------------------------------------------------------------------------------------------------- |
+| lesson_id    | PK, UUID      | Unique lesson identifier                                                                                          |
+| section_id   | FK → sections | Which section this lesson belongs to                                                                              |
+| title        | VARCHAR       | Lesson title                                                                                                      |
+| lesson_type  | ENUM          | video, article, quiz, coding_exercise, assignment; determines the rendering component and progress tracking logic |
+| position     | INT           | Display order within the section                                                                                  |
+| duration_sec | INT           | Estimated or actual duration in seconds; used for course total calculation                                        |
+| is_preview   | BOOLEAN       | If true, this lesson is accessible without enrollment; used for course marketing                                  |
 
 ### video_assets
 
-| Field | Type | Description |
-|-------|------|-------------|
-| video_id | PK, UUID | Unique video asset identifier |
-| lesson_id | FK → lessons | Which lesson this video belongs to; 1:1 relationship |
-| storage_key | VARCHAR | S3 object key for the original uploaded video; used for re-transcoding if needed |
-| manifest_url | VARCHAR | HLS manifest URL (.m3u8) for adaptive bitrate streaming |
-| renditions_json | JSONB | Available quality levels: `{"360p": {"url": "...", "bitrate": 800}, "720p": {...}, "1080p": {...}}` |
-| drm_key_id | VARCHAR | DRM encryption key reference (Widevine/FairPlay); prevents unauthorized downloads |
-| subtitles_json | JSONB | Available subtitle tracks: `{"en": "url", "zh": "url", "es": "url"}` |
-| duration_sec | INT | Exact video duration from transcoding; may differ slightly from lesson.duration_sec |
-| thumbnail_url | VARCHAR | Auto-generated or custom thumbnail for video preview |
+| Field           | Type         | Description                                                                                         |
+| --------------- | ------------ | --------------------------------------------------------------------------------------------------- |
+| video_id        | PK, UUID     | Unique video asset identifier                                                                       |
+| lesson_id       | FK → lessons | Which lesson this video belongs to; 1:1 relationship                                                |
+| storage_key     | VARCHAR      | S3 object key for the original uploaded video; used for re-transcoding if needed                    |
+| manifest_url    | VARCHAR      | HLS manifest URL (.m3u8) for adaptive bitrate streaming                                             |
+| renditions_json | JSONB        | Available quality levels: `{"360p": {"url": "...", "bitrate": 800}, "720p": {...}, "1080p": {...}}` |
+| drm_key_id      | VARCHAR      | DRM encryption key reference (Widevine/FairPlay); prevents unauthorized downloads                   |
+| subtitles_json  | JSONB        | Available subtitle tracks: `{"en": "url", "zh": "url", "es": "url"}`                                |
+| duration_sec    | INT          | Exact video duration from transcoding; may differ slightly from lesson.duration_sec                 |
+| thumbnail_url   | VARCHAR      | Auto-generated or custom thumbnail for video preview                                                |
 
 ### enrollments
 
-| Field | Type | Description |
-|-------|------|-------------|
-| enrollment_id | PK, UUID | Unique enrollment identifier |
-| course_id | FK → courses | Which course the student enrolled in |
-| user_id | FK → users | Which student enrolled |
-| status | ENUM | active (learning), completed (finished all lessons), refunded (money returned), expired (access ended) |
-| payment_id | FK → payments | Reference to the purchase transaction; null for free courses |
-| progress_percent | DECIMAL(5,2) | Calculated as (completed_lessons / total_lessons) * 100; denormalized for dashboard display |
-| enrolled_at | TIMESTAMP | When the student enrolled; used for refund window calculation |
-| completed_at | TIMESTAMP | When progress_percent reached 100%; null until completed |
-| access_expires_at | TIMESTAMP | When access to course materials expires; null for lifetime access |
+| Field             | Type          | Description                                                                                            |
+| ----------------- | ------------- | ------------------------------------------------------------------------------------------------------ |
+| enrollment_id     | PK, UUID      | Unique enrollment identifier                                                                           |
+| course_id         | FK → courses  | Which course the student enrolled in                                                                   |
+| user_id           | FK → users    | Which student enrolled                                                                                 |
+| status            | ENUM          | active (learning), completed (finished all lessons), refunded (money returned), expired (access ended) |
+| payment_id        | FK → payments | Reference to the purchase transaction; null for free courses                                           |
+| progress_percent  | DECIMAL(5,2)  | Calculated as (completed_lessons / total_lessons) \* 100; denormalized for dashboard display           |
+| enrolled_at       | TIMESTAMP     | When the student enrolled; used for refund window calculation                                          |
+| completed_at      | TIMESTAMP     | When progress_percent reached 100%; null until completed                                               |
+| access_expires_at | TIMESTAMP     | When access to course materials expires; null for lifetime access                                      |
 
 ### lesson_progress
 
-| Field | Type | Description |
-|-------|------|-------------|
-| enrollment_id | FK, composite PK | Which enrollment this progress belongs to |
-| lesson_id | FK, composite PK | Which lesson this progress tracks |
-| status | ENUM | not_started, in_progress, completed; drives the progress bar UI |
-| video_position_sec | INT | Last watched position in the video; enables resume-where-you-left-off |
-| time_spent_sec | INT | Total time spent on this lesson; used for learning analytics |
-| playback_speed | DECIMAL(3,2) | Last used playback speed (0.5x to 2.0x); restored on resume |
-| completed_at | TIMESTAMP | When the student completed this lesson; null until completed |
+| Field              | Type             | Description                                                           |
+| ------------------ | ---------------- | --------------------------------------------------------------------- |
+| enrollment_id      | FK, composite PK | Which enrollment this progress belongs to                             |
+| lesson_id          | FK, composite PK | Which lesson this progress tracks                                     |
+| status             | ENUM             | not_started, in_progress, completed; drives the progress bar UI       |
+| video_position_sec | INT              | Last watched position in the video; enables resume-where-you-left-off |
+| time_spent_sec     | INT              | Total time spent on this lesson; used for learning analytics          |
+| playback_speed     | DECIMAL(3,2)     | Last used playback speed (0.5x to 2.0x); restored on resume           |
+| completed_at       | TIMESTAMP        | When the student completed this lesson; null until completed          |
 
 ### quizzes
 
-| Field | Type | Description |
-|-------|------|-------------|
-| quiz_id | PK, UUID | Unique quiz identifier |
-| lesson_id | FK → lessons | Which lesson contains this quiz; 1:1 with quiz-type lessons |
-| quiz_type | ENUM | mcq (multiple choice), short_answer, code (coding challenge), essay; determines grading method |
-| passing_score | INT | Minimum percentage to pass (e.g., 70); below this the attempt is marked failed |
-| max_attempts | INT | How many times the student can retake; null for unlimited |
-| time_limit_min | INT | Time limit in minutes; null for untimed quizzes |
+| Field          | Type         | Description                                                                                    |
+| -------------- | ------------ | ---------------------------------------------------------------------------------------------- |
+| quiz_id        | PK, UUID     | Unique quiz identifier                                                                         |
+| lesson_id      | FK → lessons | Which lesson contains this quiz; 1:1 with quiz-type lessons                                    |
+| quiz_type      | ENUM         | mcq (multiple choice), short_answer, code (coding challenge), essay; determines grading method |
+| passing_score  | INT          | Minimum percentage to pass (e.g., 70); below this the attempt is marked failed                 |
+| max_attempts   | INT          | How many times the student can retake; null for unlimited                                      |
+| time_limit_min | INT          | Time limit in minutes; null for untimed quizzes                                                |
 
 ### quiz_questions
 
-| Field | Type | Description |
-|-------|------|-------------|
-| question_id | PK, UUID | Unique question identifier |
-| quiz_id | FK → quizzes | Which quiz this question belongs to |
-| question_text | TEXT | The question prompt; supports markdown for formatting |
-| question_type | ENUM | single_choice, multi_choice, short_answer, code, essay; determines the answer UI |
-| options_json | JSONB | For choice questions: `[{"label": "A", "text": "...", "is_correct": true}, ...]` |
-| correct_answer | TEXT | For short_answer: the expected answer; null for MCQ (stored in options_json) |
-| test_cases_json | JSONB | For code questions: `[{"input": "...", "expected_output": "...", "is_hidden": false}]` |
-| explanation | TEXT | Shown after the student answers; explains why the correct answer is correct |
-| position | INT | Display order within the quiz |
+| Field           | Type         | Description                                                                            |
+| --------------- | ------------ | -------------------------------------------------------------------------------------- |
+| question_id     | PK, UUID     | Unique question identifier                                                             |
+| quiz_id         | FK → quizzes | Which quiz this question belongs to                                                    |
+| question_text   | TEXT         | The question prompt; supports markdown for formatting                                  |
+| question_type   | ENUM         | single_choice, multi_choice, short_answer, code, essay; determines the answer UI       |
+| options_json    | JSONB        | For choice questions: `[{"label": "A", "text": "...", "is_correct": true}, ...]`       |
+| correct_answer  | TEXT         | For short_answer: the expected answer; null for MCQ (stored in options_json)           |
+| test_cases_json | JSONB        | For code questions: `[{"input": "...", "expected_output": "...", "is_hidden": false}]` |
+| explanation     | TEXT         | Shown after the student answers; explains why the correct answer is correct            |
+| position        | INT          | Display order within the quiz                                                          |
 
 ### quiz_attempts
 
-| Field | Type | Description |
-|-------|------|-------------|
-| attempt_id | PK, UUID | Unique attempt identifier |
-| quiz_id | FK → quizzes | Which quiz was attempted |
-| enrollment_id | FK → enrollments | Which enrollment (student+course) this attempt belongs to |
-| answers_json | JSONB | Student's submitted answers: `{"question_id": "selected_option/text/code"}` |
-| score | INT | Percentage score achieved (0-100) |
-| passed | BOOLEAN | Whether score >= passing_score; determines if the lesson is marked complete |
-| time_spent_sec | INT | How long the student spent on this attempt |
-| submitted_at | TIMESTAMP | When the attempt was submitted |
+| Field          | Type             | Description                                                                 |
+| -------------- | ---------------- | --------------------------------------------------------------------------- |
+| attempt_id     | PK, UUID         | Unique attempt identifier                                                   |
+| quiz_id        | FK → quizzes     | Which quiz was attempted                                                    |
+| enrollment_id  | FK → enrollments | Which enrollment (student+course) this attempt belongs to                   |
+| answers_json   | JSONB            | Student's submitted answers: `{"question_id": "selected_option/text/code"}` |
+| score          | INT              | Percentage score achieved (0-100)                                           |
+| passed         | BOOLEAN          | Whether score >= passing_score; determines if the lesson is marked complete |
+| time_spent_sec | INT              | How long the student spent on this attempt                                  |
+| submitted_at   | TIMESTAMP        | When the attempt was submitted                                              |
 
 ### certificates
 
-| Field | Type | Description |
-|-------|------|-------------|
-| certificate_id | PK, UUID | Unique certificate identifier |
-| enrollment_id | FK → enrollments | Which enrollment earned this certificate |
-| course_id | FK → courses | Denormalized for quick lookup; avoids joining through enrollment |
-| user_id | FK → users | Denormalized for the certificate display page |
-| verification_code | VARCHAR, UNIQUE | Short alphanumeric code (e.g., "CERT-A7B3X9") for third-party verification |
-| issued_at | TIMESTAMP | When the certificate was generated |
-| certificate_url | VARCHAR | URL to the rendered certificate PDF/image (stored in S3) |
+| Field             | Type             | Description                                                                |
+| ----------------- | ---------------- | -------------------------------------------------------------------------- |
+| certificate_id    | PK, UUID         | Unique certificate identifier                                              |
+| enrollment_id     | FK → enrollments | Which enrollment earned this certificate                                   |
+| course_id         | FK → courses     | Denormalized for quick lookup; avoids joining through enrollment           |
+| user_id           | FK → users       | Denormalized for the certificate display page                              |
+| verification_code | VARCHAR, UNIQUE  | Short alphanumeric code (e.g., "CERT-A7B3X9") for third-party verification |
+| issued_at         | TIMESTAMP        | When the certificate was generated                                         |
+| certificate_url   | VARCHAR          | URL to the rendered certificate PDF/image (stored in S3)                   |
 
 ---
 

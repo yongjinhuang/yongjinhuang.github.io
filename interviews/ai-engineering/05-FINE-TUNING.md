@@ -75,24 +75,24 @@ Start: What do you need?
 
 ### When Fine-Tuning IS the Right Choice
 
-| Scenario | Why Fine-Tuning | Example |
-|----------|----------------|---------|
-| Consistent output format | Prompt engineering fails at scale | JSON with exact schema every time |
-| Domain-specific language | Model lacks training data | Legal briefs, medical notes |
-| Distillation (cost reduction) | Smaller model, same quality | GPT-4o quality from 8B model |
-| Custom tone/persona | Cannot be achieved with prompts alone | Brand-specific writing style |
-| Classification tasks | Few-shot is expensive per-call | Ticket routing, intent detection |
-| Code generation for proprietary framework | Model has no training data | Internal DSL, custom APIs |
+| Scenario                                  | Why Fine-Tuning                       | Example                           |
+| ----------------------------------------- | ------------------------------------- | --------------------------------- |
+| Consistent output format                  | Prompt engineering fails at scale     | JSON with exact schema every time |
+| Domain-specific language                  | Model lacks training data             | Legal briefs, medical notes       |
+| Distillation (cost reduction)             | Smaller model, same quality           | GPT-4o quality from 8B model      |
+| Custom tone/persona                       | Cannot be achieved with prompts alone | Brand-specific writing style      |
+| Classification tasks                      | Few-shot is expensive per-call        | Ticket routing, intent detection  |
+| Code generation for proprietary framework | Model has no training data            | Internal DSL, custom APIs         |
 
 ### When Fine-Tuning is NOT the Right Choice
 
-| Scenario | Better Alternative | Why |
-|----------|-------------------|-----|
-| Adding factual knowledge | RAG | Knowledge goes stale, hallucination risk |
-| Simple format changes | Prompt engineering | Cheaper, faster, no training needed |
-| One-off tasks | Few-shot prompting | Not worth the investment |
-| Rapidly changing domain | RAG | Cannot retrain fast enough |
-| Small dataset (< 50 examples) | Few-shot prompting | Not enough data to fine-tune well |
+| Scenario                      | Better Alternative | Why                                      |
+| ----------------------------- | ------------------ | ---------------------------------------- |
+| Adding factual knowledge      | RAG                | Knowledge goes stale, hallucination risk |
+| Simple format changes         | Prompt engineering | Cheaper, faster, no training needed      |
+| One-off tasks                 | Few-shot prompting | Not worth the investment                 |
+| Rapidly changing domain       | RAG                | Cannot retrain fast enough               |
+| Small dataset (< 50 examples) | Few-shot prompting | Not enough data to fine-tune well        |
 
 ---
 
@@ -302,14 +302,14 @@ QLoRA (4-bit):      ~40 GB   (1x A100 80GB or 2x RTX 4090)
 
 ### LoRA Hyperparameters
 
-| Parameter | Typical Range | Effect |
-|-----------|-------------|--------|
-| **rank (r)** | 8-64 | Higher = more capacity, more memory |
-| **alpha** | 16-64 (usually 2x rank) | Scaling factor for LoRA updates |
-| **target_modules** | q_proj, v_proj, k_proj, o_proj | Which layers to add LoRA to |
-| **dropout** | 0.05-0.1 | Regularization to prevent overfitting |
-| **learning_rate** | 1e-4 to 3e-4 | Higher than full fine-tuning |
-| **epochs** | 1-5 | Fewer for large datasets, more for small |
+| Parameter          | Typical Range                  | Effect                                   |
+| ------------------ | ------------------------------ | ---------------------------------------- |
+| **rank (r)**       | 8-64                           | Higher = more capacity, more memory      |
+| **alpha**          | 16-64 (usually 2x rank)        | Scaling factor for LoRA updates          |
+| **target_modules** | q_proj, v_proj, k_proj, o_proj | Which layers to add LoRA to              |
+| **dropout**        | 0.05-0.1                       | Regularization to prevent overfitting    |
+| **learning_rate**  | 1e-4 to 3e-4                   | Higher than full fine-tuning             |
+| **epochs**         | 1-5                            | Fewer for large datasets, more for small |
 
 ---
 
@@ -378,12 +378,12 @@ Data quality is the single most important factor in fine-tuning success.
 
 ### Data Requirements
 
-| Model Size | Minimum Examples | Recommended | Quality Bar |
-|-----------|-----------------|-------------|-------------|
-| 7B-8B | 100 | 1K-10K | High (human reviewed) |
-| 13B | 200 | 5K-50K | High |
-| 70B | 500 | 10K-100K | Medium-High |
-| API (GPT-4o-mini) | 10 | 50-500 | High |
+| Model Size        | Minimum Examples | Recommended | Quality Bar           |
+| ----------------- | ---------------- | ----------- | --------------------- |
+| 7B-8B             | 100              | 1K-10K      | High (human reviewed) |
+| 13B               | 200              | 5K-50K      | High                  |
+| 70B               | 500              | 10K-100K    | Medium-High           |
+| API (GPT-4o-mini) | 10               | 50-500      | High                  |
 
 ### Data Quality Checklist
 
@@ -765,12 +765,12 @@ def evaluate_classification_model(
 
 ### Cost Decision Matrix
 
-| Monthly Volume | Recommended Approach | Estimated Monthly Cost |
-|---------------|---------------------|----------------------|
-| < 10K queries | API (GPT-4o-mini) | $20-50 |
-| 10K-100K queries | Fine-tuned GPT-4o-mini | $50-200 |
-| 100K-1M queries | Self-hosted fine-tuned 8B | $500-1,500 |
-| > 1M queries | Self-hosted fine-tuned (optimized) | $1,000-5,000 |
+| Monthly Volume   | Recommended Approach               | Estimated Monthly Cost |
+| ---------------- | ---------------------------------- | ---------------------- |
+| < 10K queries    | API (GPT-4o-mini)                  | $20-50                 |
+| 10K-100K queries | Fine-tuned GPT-4o-mini             | $50-200                |
+| 100K-1M queries  | Self-hosted fine-tuned 8B          | $500-1,500             |
+| > 1M queries     | Self-hosted fine-tuned (optimized) | $1,000-5,000           |
 
 ---
 
@@ -877,13 +877,13 @@ Training time (QLoRA, 1K examples, 3 epochs):
 
 ### Tool Ecosystem
 
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| **Hugging Face Transformers** | Model loading, training | Open-source fine-tuning |
-| **PEFT** | LoRA/QLoRA implementation | Parameter-efficient fine-tuning |
-| **TRL** | SFT, DPO, RLHF trainers | Alignment training |
-| **bitsandbytes** | 4/8-bit quantization | Reduce memory for QLoRA |
-| **Weights & Biases** | Experiment tracking | Monitor training runs |
-| **Axolotl** | Simplified fine-tuning config | Quick fine-tuning with YAML |
-| **OpenAI API** | Hosted fine-tuning | Fine-tune GPT-4o-mini |
-| **Unsloth** | Optimized training | 2x faster LoRA training |
+| Tool                          | Purpose                       | When to Use                     |
+| ----------------------------- | ----------------------------- | ------------------------------- |
+| **Hugging Face Transformers** | Model loading, training       | Open-source fine-tuning         |
+| **PEFT**                      | LoRA/QLoRA implementation     | Parameter-efficient fine-tuning |
+| **TRL**                       | SFT, DPO, RLHF trainers       | Alignment training              |
+| **bitsandbytes**              | 4/8-bit quantization          | Reduce memory for QLoRA         |
+| **Weights & Biases**          | Experiment tracking           | Monitor training runs           |
+| **Axolotl**                   | Simplified fine-tuning config | Quick fine-tuning with YAML     |
+| **OpenAI API**                | Hosted fine-tuning            | Fine-tune GPT-4o-mini           |
+| **Unsloth**                   | Optimized training            | 2x faster LoRA training         |

@@ -33,12 +33,12 @@ function navigateToPage(newContent) {
 
   // Optional: wait for the transition to finish
   transition.finished.then(() => {
-    console.log("Transition complete");
+    console.log('Transition complete');
   });
 }
 
 function updateDOM(content) {
-  document.getElementById("main-content").innerHTML = content;
+  document.getElementById('main-content').innerHTML = content;
 }
 ```
 
@@ -74,13 +74,21 @@ The API creates a pseudo-element tree that you can style with CSS:
 }
 
 @keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 ```
 
@@ -105,7 +113,7 @@ The real power comes from naming specific elements so they animate independently
 }
 
 ::view-transition-old(hero) {
-  animation: none;  /* Don't fade -- just morph */
+  animation: none; /* Don't fade -- just morph */
 }
 
 ::view-transition-new(hero) {
@@ -155,6 +163,7 @@ The most exciting development: view transitions that work across full page navig
 ```
 
 **Requirements for cross-document transitions:**
+
 - Both pages must be same-origin
 - Both pages must opt in with `@view-transition { navigation: auto; }`
 - Elements must share the same `view-transition-name`
@@ -163,25 +172,28 @@ The most exciting development: view transitions that work across full page navig
 ### Integration with React and Next.js
 
 ```tsx
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 
 // Custom hook for view transition navigation
 function useViewTransitionRouter() {
   const router = useRouter();
 
-  const push = useCallback((href: string) => {
-    if (!document.startViewTransition) {
-      router.push(href);
-      return;
-    }
+  const push = useCallback(
+    (href: string) => {
+      if (!document.startViewTransition) {
+        router.push(href);
+        return;
+      }
 
-    document.startViewTransition(() => {
-      router.push(href);
-    });
-  }, [router]);
+      document.startViewTransition(() => {
+        router.push(href);
+      });
+    },
+    [router]
+  );
 
   return { push };
 }
@@ -229,18 +241,18 @@ function ProductDetail({ product }) {
 
 ### View Transitions vs Framer Motion / CSS Animations
 
-| Feature | View Transitions API | Framer Motion | CSS Animations |
-|---------|---------------------|---------------|----------------|
-| **Cross-page animation** | Native support | Requires AnimatePresence + layout | Not possible |
-| **Shared element morph** | Automatic with naming | `layoutId` prop | Not possible |
-| **Bundle size** | 0 KB (native) | ~30 KB gzipped | 0 KB |
-| **Configuration** | CSS + minimal JS | JSX props | CSS keyframes |
-| **Spring physics** | No (CSS easing only) | Yes | No |
-| **Gesture-driven** | No | Yes (drag, pan, etc.) | No |
-| **Exit animations** | Automatic | Requires AnimatePresence | Difficult |
-| **Browser support** | Chrome, Edge, Safari 18+ | All browsers | All browsers |
-| **SSR compatible** | Yes | Yes (with care) | Yes |
-| **Accessibility** | Respects prefers-reduced-motion | Manual | Manual |
+| Feature                  | View Transitions API            | Framer Motion                     | CSS Animations |
+| ------------------------ | ------------------------------- | --------------------------------- | -------------- |
+| **Cross-page animation** | Native support                  | Requires AnimatePresence + layout | Not possible   |
+| **Shared element morph** | Automatic with naming           | `layoutId` prop                   | Not possible   |
+| **Bundle size**          | 0 KB (native)                   | ~30 KB gzipped                    | 0 KB           |
+| **Configuration**        | CSS + minimal JS                | JSX props                         | CSS keyframes  |
+| **Spring physics**       | No (CSS easing only)            | Yes                               | No             |
+| **Gesture-driven**       | No                              | Yes (drag, pan, etc.)             | No             |
+| **Exit animations**      | Automatic                       | Requires AnimatePresence          | Difficult      |
+| **Browser support**      | Chrome, Edge, Safari 18+        | All browsers                      | All browsers   |
+| **SSR compatible**       | Yes                             | Yes (with care)                   | Yes            |
+| **Accessibility**        | Respects prefers-reduced-motion | Manual                            | Manual         |
 
 **When to use View Transitions:** Page transitions, shared element animations between routes, simple fade/slide transitions between states. Use when you want zero-dependency page navigation animations.
 
@@ -287,24 +299,32 @@ The Scroll-Driven Animations API (CSS `animation-timeline`) lets you tie CSS ani
 /* Animate element based on scroll progress */
 .progress-bar {
   animation: grow-width linear;
-  animation-timeline: scroll();  /* Bind to scroll progress */
+  animation-timeline: scroll(); /* Bind to scroll progress */
 }
 
 @keyframes grow-width {
-  from { width: 0%; }
-  to { width: 100%; }
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 /* Parallax effect driven by scroll */
 .hero-background {
   animation: parallax linear;
   animation-timeline: scroll();
-  animation-range: 0% 50%;  /* Only animate for first half of scroll */
+  animation-range: 0% 50%; /* Only animate for first half of scroll */
 }
 
 @keyframes parallax {
-  from { transform: translateY(0); }
-  to { transform: translateY(-100px); }
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100px);
+  }
 }
 ```
 
@@ -361,8 +381,14 @@ The Scroll-Driven Animations API (CSS `animation-timeline`) lets you tie CSS ani
 }
 
 @keyframes slide-in {
-  from { transform: translateX(-100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 ```
 
@@ -377,7 +403,9 @@ The Scroll-Driven Animations API (CSS `animation-timeline`) lets you tie CSS ani
 dialog[open] {
   opacity: 1;
   transform: scale(1);
-  transition: opacity 0.3s, transform 0.3s;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
 
   /* Starting style when dialog first opens */
   @starting-style {
@@ -390,8 +418,10 @@ dialog[open] {
 dialog {
   opacity: 0;
   transform: scale(0.9);
-  transition: opacity 0.3s, transform 0.3s,
-              display 0.3s allow-discrete;
+  transition:
+    opacity 0.3s,
+    transform 0.3s,
+    display 0.3s allow-discrete;
 }
 ```
 
@@ -400,7 +430,9 @@ dialog {
 .card {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
 
   @starting-style {
     opacity: 0;
@@ -419,7 +451,9 @@ dialog {
 .tooltip {
   display: none;
   opacity: 0;
-  transition: opacity 0.3s, display 0.3s allow-discrete;
+  transition:
+    opacity 0.3s,
+    display 0.3s allow-discrete;
 
   &.visible {
     display: block;
@@ -463,8 +497,10 @@ The Popover API provides built-in popover behavior: toggle visibility, light dis
   /* Entry animation */
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.2s, transform 0.2s,
-              display 0.2s allow-discrete;
+  transition:
+    opacity 0.2s,
+    transform 0.2s,
+    display 0.2s allow-discrete;
 
   @starting-style {
     opacity: 0;
@@ -505,7 +541,7 @@ The Popover API provides built-in popover behavior: toggle visibility, light dis
 ### Programmatic Control
 
 ```javascript
-const popover = document.getElementById("my-popover");
+const popover = document.getElementById('my-popover');
 
 // Show/hide programmatically
 popover.showPopover();
@@ -513,11 +549,11 @@ popover.hidePopover();
 popover.togglePopover();
 
 // Listen for toggle events
-popover.addEventListener("toggle", (event) => {
-  if (event.newState === "open") {
-    console.log("Popover opened");
+popover.addEventListener('toggle', (event) => {
+  if (event.newState === 'open') {
+    console.log('Popover opened');
   } else {
-    console.log("Popover closed");
+    console.log('Popover closed');
   }
 });
 ```
@@ -625,34 +661,34 @@ In CSS, I use `@supports (view-transition-name: none)` to apply view-transition-
 
 ## Quick Reference
 
-| API | Purpose | Browser Support (2026) |
-|-----|---------|----------------------|
-| `document.startViewTransition()` | SPA page transitions | Chrome, Edge, Safari 18+ |
-| `@view-transition { navigation: auto }` | MPA page transitions | Chrome 126+, Edge |
-| `view-transition-name` | Named element transitions | Chrome, Edge, Safari 18+ |
-| `animation-timeline: scroll()` | Scroll-progress animations | Chrome, Edge |
-| `animation-timeline: view()` | Viewport-entry animations | Chrome, Edge |
-| `@starting-style` | Entry animations for new elements | Chrome, Edge, Safari 17.5+ |
-| `popover` attribute | Native popover behavior | All modern browsers |
-| `anchor-name` / `position-anchor` | Anchor positioning | Chrome 125+, Edge |
-| `transition: display allow-discrete` | Animate display changes | Chrome, Edge, Safari |
+| API                                     | Purpose                           | Browser Support (2026)     |
+| --------------------------------------- | --------------------------------- | -------------------------- |
+| `document.startViewTransition()`        | SPA page transitions              | Chrome, Edge, Safari 18+   |
+| `@view-transition { navigation: auto }` | MPA page transitions              | Chrome 126+, Edge          |
+| `view-transition-name`                  | Named element transitions         | Chrome, Edge, Safari 18+   |
+| `animation-timeline: scroll()`          | Scroll-progress animations        | Chrome, Edge               |
+| `animation-timeline: view()`            | Viewport-entry animations         | Chrome, Edge               |
+| `@starting-style`                       | Entry animations for new elements | Chrome, Edge, Safari 17.5+ |
+| `popover` attribute                     | Native popover behavior           | All modern browsers        |
+| `anchor-name` / `position-anchor`       | Anchor positioning                | Chrome 125+, Edge          |
+| `transition: display allow-discrete`    | Animate display changes           | Chrome, Edge, Safari       |
 
-| Pattern | Old Approach | New Native Approach |
-|---------|-------------|-------------------|
-| Page transitions | Framer Motion AnimatePresence | View Transitions API |
-| Shared element morph | Framer Motion layoutId | `view-transition-name` matching |
-| Reveal on scroll | Intersection Observer + JS | `animation-timeline: view()` |
-| Scroll progress bar | Scroll event + rAF | `animation-timeline: scroll()` |
-| Parallax scrolling | JS scroll listener | `animation-timeline: scroll()` |
-| Entry animations | JS class toggle after rAF | `@starting-style` |
-| Tooltips/dropdowns | Custom JS + z-index | Popover API + Anchor Positioning |
-| Modal dialogs | Custom JS + focus trap | `<dialog>` element |
-| Display transitions | `visibility` hack | `transition: display allow-discrete` |
+| Pattern              | Old Approach                  | New Native Approach                  |
+| -------------------- | ----------------------------- | ------------------------------------ |
+| Page transitions     | Framer Motion AnimatePresence | View Transitions API                 |
+| Shared element morph | Framer Motion layoutId        | `view-transition-name` matching      |
+| Reveal on scroll     | Intersection Observer + JS    | `animation-timeline: view()`         |
+| Scroll progress bar  | Scroll event + rAF            | `animation-timeline: scroll()`       |
+| Parallax scrolling   | JS scroll listener            | `animation-timeline: scroll()`       |
+| Entry animations     | JS class toggle after rAF     | `@starting-style`                    |
+| Tooltips/dropdowns   | Custom JS + z-index           | Popover API + Anchor Positioning     |
+| Modal dialogs        | Custom JS + focus trap        | `<dialog>` element                   |
+| Display transitions  | `visibility` hack             | `transition: display allow-discrete` |
 
-| View Transition Pseudo-Element | Purpose |
-|-------------------------------|---------|
-| `::view-transition` | Root overlay for all transitions |
-| `::view-transition-group(name)` | Container for a named transition |
-| `::view-transition-image-pair(name)` | Holds old and new snapshots |
-| `::view-transition-old(name)` | Snapshot of the old state |
-| `::view-transition-new(name)` | Snapshot of the new state |
+| View Transition Pseudo-Element       | Purpose                          |
+| ------------------------------------ | -------------------------------- |
+| `::view-transition`                  | Root overlay for all transitions |
+| `::view-transition-group(name)`      | Container for a named transition |
+| `::view-transition-image-pair(name)` | Holds old and new snapshots      |
+| `::view-transition-old(name)`        | Snapshot of the old state        |
+| `::view-transition-new(name)`        | Snapshot of the new state        |

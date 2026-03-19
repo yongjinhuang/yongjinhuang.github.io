@@ -61,43 +61,50 @@ Recommendation:
 ### 1.2 ethers.js Basics
 
 ```typescript
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 
 // Connect to Ethereum via browser wallet
 const provider = new ethers.BrowserProvider(window.ethereum);
 const signer = await provider.getSigner();
 
 // Connect to a specific RPC
-const rpcProvider = new ethers.JsonRpcProvider("https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY");
+const rpcProvider = new ethers.JsonRpcProvider(
+  'https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY'
+);
 
 // Read chain data
 const blockNumber = await provider.getBlockNumber();
-const balance = await provider.getBalance("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"); // vitalik.eth
+const balance = await provider.getBalance(
+  '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+); // vitalik.eth
 console.log(`Balance: ${ethers.formatEther(balance)} ETH`);
 
 // Interact with a contract
 const ERC20_ABI = [
-  "function name() view returns (string)",
-  "function symbol() view returns (string)",
-  "function balanceOf(address) view returns (uint256)",
-  "function transfer(address to, uint256 amount) returns (bool)",
-  "event Transfer(address indexed from, address indexed to, uint256 value)"
+  'function name() view returns (string)',
+  'function symbol() view returns (string)',
+  'function balanceOf(address) view returns (uint256)',
+  'function transfer(address to, uint256 amount) returns (bool)',
+  'event Transfer(address indexed from, address indexed to, uint256 value)',
 ];
 
 const usdc = new ethers.Contract(
-  "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC address
+  '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC address
   ERC20_ABI,
   provider // read-only; use signer for write operations
 );
 
-const name = await usdc.name();       // "USD Coin"
-const symbol = await usdc.symbol();   // "USDC"
-const balance = await usdc.balanceOf("0xAlice...");
+const name = await usdc.name(); // "USD Coin"
+const symbol = await usdc.symbol(); // "USDC"
+const balance = await usdc.balanceOf('0xAlice...');
 console.log(`${name}: ${ethers.formatUnits(balance, 6)}`); // USDC has 6 decimals
 
 // Send a transaction (requires signer)
 const usdcWithSigner = usdc.connect(signer);
-const tx = await usdcWithSigner.transfer("0xBob...", ethers.parseUnits("100", 6));
+const tx = await usdcWithSigner.transfer(
+  '0xBob...',
+  ethers.parseUnits('100', 6)
+);
 const receipt = await tx.wait(); // Wait for confirmation
 console.log(`Transaction confirmed in block ${receipt.blockNumber}`);
 ```
@@ -105,38 +112,44 @@ console.log(`Transaction confirmed in block ${receipt.blockNumber}`);
 ### 1.3 viem Basics
 
 ```typescript
-import { createPublicClient, createWalletClient, http, parseEther, formatEther } from "viem";
-import { mainnet } from "viem/chains";
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+  formatEther,
+} from 'viem';
+import { mainnet } from 'viem/chains';
 
 // Public client (read-only)
 const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http("https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"),
+  transport: http('https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY'),
 });
 
 // Read data
 const blockNumber = await publicClient.getBlockNumber();
 const balance = await publicClient.getBalance({
-  address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
 });
 console.log(`Balance: ${formatEther(balance)} ETH`);
 
 // Read contract (fully typed with ABI)
 const erc20Abi = [
   {
-    name: "balanceOf",
-    type: "function",
-    stateMutability: "view",
-    inputs: [{ name: "account", type: "address" }],
-    outputs: [{ name: "", type: "uint256" }],
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
   },
 ] as const;
 
 const usdcBalance = await publicClient.readContract({
-  address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
   abi: erc20Abi,
-  functionName: "balanceOf",
-  args: ["0xAlice..."],
+  functionName: 'balanceOf',
+  args: ['0xAlice...'],
 });
 ```
 
@@ -157,25 +170,25 @@ npm install
 
 ```typescript
 // src/wagmi.ts
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { mainnet, sepolia, arbitrum, optimism, base } from "wagmi/chains";
+import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { mainnet, sepolia, arbitrum, optimism, base } from 'wagmi/chains';
 
 export const config = getDefaultConfig({
-  appName: "My DApp",
-  projectId: "YOUR_WALLETCONNECT_PROJECT_ID", // From cloud.walletconnect.com
+  appName: 'My DApp',
+  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID', // From cloud.walletconnect.com
   chains: [mainnet, sepolia, arbitrum, optimism, base],
 });
 ```
 
 ```tsx
 // src/app/providers.tsx
-"use client";
+'use client';
 
-import { WagmiProvider } from "wagmi";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { config } from "../wagmi";
-import "@rainbow-me/rainbowkit/styles.css";
+import { WagmiProvider } from 'wagmi';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { config } from '../wagmi';
+import '@rainbow-me/rainbowkit/styles.css';
 
 const queryClient = new QueryClient();
 
@@ -183,9 +196,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          {children}
-        </RainbowKitProvider>
+        <RainbowKitProvider>{children}</RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
@@ -196,7 +207,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
 ```tsx
 // src/app/page.tsx
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function Home() {
   return (
@@ -215,24 +226,28 @@ export default function Home() {
 ### 3.1 useReadContract
 
 ```tsx
-import { useReadContract } from "wagmi";
-import { formatUnits } from "viem";
+import { useReadContract } from 'wagmi';
+import { formatUnits } from 'viem';
 
 const erc20Abi = [
   {
-    name: "balanceOf",
-    type: "function",
-    stateMutability: "view",
-    inputs: [{ name: "account", type: "address" }],
-    outputs: [{ name: "", type: "uint256" }],
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
   },
 ] as const;
 
 function TokenBalance({ address }: { address: `0x${string}` }) {
-  const { data: balance, isLoading, error } = useReadContract({
-    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  const {
+    data: balance,
+    isLoading,
+    error,
+  } = useReadContract({
+    address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     abi: erc20Abi,
-    functionName: "balanceOf",
+    functionName: 'balanceOf',
     args: [address],
   });
 
@@ -246,8 +261,8 @@ function TokenBalance({ address }: { address: `0x${string}` }) {
 ### 3.2 useAccount and useBalance
 
 ```tsx
-import { useAccount, useBalance } from "wagmi";
-import { formatEther } from "viem";
+import { useAccount, useBalance } from 'wagmi';
+import { formatEther } from 'viem';
 
 function WalletInfo() {
   const { address, isConnected, chain } = useAccount();
@@ -259,7 +274,7 @@ function WalletInfo() {
     <div>
       <p>Address: {address}</p>
       <p>Chain: {chain?.name}</p>
-      <p>Balance: {balance ? formatEther(balance.value) : "0"} ETH</p>
+      <p>Balance: {balance ? formatEther(balance.value) : '0'} ETH</p>
     </div>
   );
 }
@@ -272,19 +287,19 @@ function WalletInfo() {
 ### 4.1 useWriteContract
 
 ```tsx
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseUnits } from "viem";
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { parseUnits } from 'viem';
 
 const erc20Abi = [
   {
-    name: "transfer",
-    type: "function",
-    stateMutability: "nonpayable",
+    name: 'transfer',
+    type: 'function',
+    stateMutability: 'nonpayable',
     inputs: [
-      { name: "to", type: "address" },
-      { name: "amount", type: "uint256" },
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
     ],
-    outputs: [{ name: "", type: "bool" }],
+    outputs: [{ name: '', type: 'bool' }],
   },
 ] as const;
 
@@ -297,17 +312,17 @@ function TransferForm() {
 
   function handleTransfer() {
     writeContract({
-      address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
       abi: erc20Abi,
-      functionName: "transfer",
-      args: ["0xRecipient...", parseUnits("100", 6)],
+      functionName: 'transfer',
+      args: ['0xRecipient...', parseUnits('100', 6)],
     });
   }
 
   return (
     <div>
       <button onClick={handleTransfer} disabled={isPending}>
-        {isPending ? "Confirm in wallet..." : "Send 100 USDC"}
+        {isPending ? 'Confirm in wallet...' : 'Send 100 USDC'}
       </button>
       {isConfirming && <p>Waiting for confirmation...</p>}
       {isSuccess && <p>Transaction confirmed!</p>}
@@ -355,26 +370,28 @@ USER EXPERIENCE FLOW
 ### 5.1 useWatchContractEvent
 
 ```tsx
-import { useWatchContractEvent } from "wagmi";
+import { useWatchContractEvent } from 'wagmi';
 
 function TransferWatcher() {
   useWatchContractEvent({
-    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     abi: [
       {
-        name: "Transfer",
-        type: "event",
+        name: 'Transfer',
+        type: 'event',
         inputs: [
-          { name: "from", type: "address", indexed: true },
-          { name: "to", type: "address", indexed: true },
-          { name: "value", type: "uint256", indexed: false },
+          { name: 'from', type: 'address', indexed: true },
+          { name: 'to', type: 'address', indexed: true },
+          { name: 'value', type: 'uint256', indexed: false },
         ],
       },
     ],
-    eventName: "Transfer",
+    eventName: 'Transfer',
     onLogs(logs) {
       for (const log of logs) {
-        console.log(`Transfer: ${log.args.from} -> ${log.args.to}: ${log.args.value}`);
+        console.log(
+          `Transfer: ${log.args.from} -> ${log.args.to}: ${log.args.value}`
+        );
       }
     },
   });
@@ -386,7 +403,7 @@ function TransferWatcher() {
 ### 5.2 Querying Historical Events with ethers.js
 
 ```typescript
-const filter = usdc.filters.Transfer(null, "0xAlice..."); // All transfers TO Alice
+const filter = usdc.filters.Transfer(null, '0xAlice...'); // All transfers TO Alice
 const events = await usdc.queryFilter(filter, -10000); // Last 10,000 blocks
 
 for (const event of events) {
@@ -401,7 +418,7 @@ for (const event of events) {
 ## 6. ENS Resolution
 
 ```tsx
-import { useEnsName, useEnsAvatar, useEnsAddress } from "wagmi";
+import { useEnsName, useEnsAvatar, useEnsAddress } from 'wagmi';
 
 function ENSProfile({ address }: { address: `0x${string}` }) {
   const { data: ensName } = useEnsName({ address });
@@ -417,7 +434,7 @@ function ENSProfile({ address }: { address: `0x${string}` }) {
 
 // Reverse: ENS name to address
 function ENSLookup() {
-  const { data: address } = useEnsAddress({ name: "vitalik.eth" });
+  const { data: address } = useEnsAddress({ name: 'vitalik.eth' });
   return <p>vitalik.eth = {address}</p>;
 }
 ```
@@ -433,7 +450,7 @@ function DepositForm({ vaultAddress, tokenAddress }: Props) {
   const { data: allowance } = useReadContract({
     address: tokenAddress,
     abi: erc20Abi,
-    functionName: "allowance",
+    functionName: 'allowance',
     args: [userAddress, vaultAddress],
   });
 
@@ -445,21 +462,29 @@ function DepositForm({ vaultAddress, tokenAddress }: Props) {
   return (
     <div>
       {needsApproval ? (
-        <button onClick={() => approve({
-          address: tokenAddress,
-          abi: erc20Abi,
-          functionName: "approve",
-          args: [vaultAddress, depositAmount],
-        })}>
+        <button
+          onClick={() =>
+            approve({
+              address: tokenAddress,
+              abi: erc20Abi,
+              functionName: 'approve',
+              args: [vaultAddress, depositAmount],
+            })
+          }
+        >
           Approve USDC
         </button>
       ) : (
-        <button onClick={() => deposit({
-          address: vaultAddress,
-          abi: vaultAbi,
-          functionName: "deposit",
-          args: [depositAmount],
-        })}>
+        <button
+          onClick={() =>
+            deposit({
+              address: vaultAddress,
+              abi: vaultAbi,
+              functionName: 'deposit',
+              args: [depositAmount],
+            })
+          }
+        >
           Deposit
         </button>
       )}
@@ -471,8 +496,8 @@ function DepositForm({ vaultAddress, tokenAddress }: Props) {
 ### 7.2 Multi-Chain Support
 
 ```tsx
-import { useAccount, useSwitchChain } from "wagmi";
-import { mainnet, arbitrum, optimism } from "wagmi/chains";
+import { useAccount, useSwitchChain } from 'wagmi';
+import { mainnet, arbitrum, optimism } from 'wagmi/chains';
 
 function ChainSwitcher() {
   const { chain } = useAccount();
@@ -480,10 +505,16 @@ function ChainSwitcher() {
 
   return (
     <div>
-      <p>Current: {chain?.name ?? "Not connected"}</p>
-      <button onClick={() => switchChain({ chainId: mainnet.id })}>Ethereum</button>
-      <button onClick={() => switchChain({ chainId: arbitrum.id })}>Arbitrum</button>
-      <button onClick={() => switchChain({ chainId: optimism.id })}>Optimism</button>
+      <p>Current: {chain?.name ?? 'Not connected'}</p>
+      <button onClick={() => switchChain({ chainId: mainnet.id })}>
+        Ethereum
+      </button>
+      <button onClick={() => switchChain({ chainId: arbitrum.id })}>
+        Arbitrum
+      </button>
+      <button onClick={() => switchChain({ chainId: optimism.id })}>
+        Optimism
+      </button>
     </div>
   );
 }
@@ -494,7 +525,7 @@ function ChainSwitcher() {
 ## 8. Error Handling
 
 ```tsx
-import { BaseError, ContractFunctionRevertedError } from "viem";
+import { BaseError, ContractFunctionRevertedError } from 'viem';
 
 function parseContractError(error: unknown): string {
   if (error instanceof BaseError) {
@@ -503,14 +534,15 @@ function parseContractError(error: unknown): string {
     );
     if (revertError instanceof ContractFunctionRevertedError) {
       const errorName = revertError.data?.errorName;
-      if (errorName === "InsufficientBalance") return "Not enough tokens";
-      if (errorName === "Unauthorized") return "You don't have permission";
+      if (errorName === 'InsufficientBalance') return 'Not enough tokens';
+      if (errorName === 'Unauthorized') return "You don't have permission";
       return `Contract error: ${errorName}`;
     }
-    if (error.message.includes("User rejected")) return "Transaction cancelled";
-    if (error.message.includes("insufficient funds")) return "Not enough ETH for gas";
+    if (error.message.includes('User rejected')) return 'Transaction cancelled';
+    if (error.message.includes('insufficient funds'))
+      return 'Not enough ETH for gas';
   }
-  return "An unexpected error occurred";
+  return 'An unexpected error occurred';
 }
 ```
 
@@ -522,22 +554,36 @@ function parseContractError(error: unknown): string {
 
 ```tsx
 // Complete component: Shows balances for multiple tokens
-import { useReadContracts, useAccount } from "wagmi";
-import { formatUnits } from "viem";
+import { useReadContracts, useAccount } from 'wagmi';
+import { formatUnits } from 'viem';
 
 const TOKENS = [
-  { address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", symbol: "USDC", decimals: 6 },
-  { address: "0xdAC17F958D2ee523a2206206994597C13D831ec7", symbol: "USDT", decimals: 6 },
-  { address: "0x6B175474E89094C44Da98b954EedeAC495271d0F", symbol: "DAI", decimals: 18 },
+  {
+    address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    symbol: 'USDC',
+    decimals: 6,
+  },
+  {
+    address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+    symbol: 'USDT',
+    decimals: 6,
+  },
+  {
+    address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+    symbol: 'DAI',
+    decimals: 18,
+  },
 ] as const;
 
-const balanceOfAbi = [{
-  name: "balanceOf",
-  type: "function",
-  stateMutability: "view",
-  inputs: [{ name: "account", type: "address" }],
-  outputs: [{ name: "", type: "uint256" }],
-}] as const;
+const balanceOfAbi = [
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+] as const;
 
 function TokenDashboard() {
   const { address } = useAccount();
@@ -546,7 +592,7 @@ function TokenDashboard() {
     contracts: TOKENS.map((token) => ({
       address: token.address,
       abi: balanceOfAbi,
-      functionName: "balanceOf",
+      functionName: 'balanceOf',
       args: [address!],
     })),
     query: { enabled: !!address },
@@ -554,7 +600,12 @@ function TokenDashboard() {
 
   return (
     <table>
-      <thead><tr><th>Token</th><th>Balance</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th>Balance</th>
+        </tr>
+      </thead>
       <tbody>
         {TOKENS.map((token, i) => (
           <tr key={token.symbol}>
@@ -562,7 +613,7 @@ function TokenDashboard() {
             <td>
               {balances?.[i]?.result
                 ? formatUnits(balances[i].result as bigint, token.decimals)
-                : "0"}
+                : '0'}
             </td>
           </tr>
         ))}

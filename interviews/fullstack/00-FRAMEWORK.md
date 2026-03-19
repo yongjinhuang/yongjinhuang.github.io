@@ -2,21 +2,21 @@
 
 ## Table of Contents - Full-Stack Interview Series
 
-| # | Topic | Key Areas |
-|---|-------|-----------|
-| [00](./00-FRAMEWORK.md) | **Interview Framework** | Format, strategy, preparation |
-| [01](./01-API-DESIGN.md) | **API Design** | REST, GraphQL, gRPC, versioning |
-| [02](./02-DATABASE-FUNDAMENTALS.md) | **Database Fundamentals** | SQL, NoSQL, optimization, ORMs |
-| [03](./03-AUTHENTICATION-AUTHORIZATION.md) | **Authentication & Authorization** | JWT, OAuth 2.0, RBAC, security |
-| [04](./04-SYSTEM-DESIGN.md) | **System Design** | Architecture, scaling, trade-offs |
-| [05](./05-DEVOPS-DEPLOYMENT.md) | **DevOps & Deployment** | CI/CD, Docker, Kubernetes, IaC |
-| [06](./06-TESTING-STRATEGIES.md) | **Testing Strategies** | Unit, integration, E2E, TDD |
-| [07](./07-PERFORMANCE-OPTIMIZATION.md) | **Performance Optimization** | Frontend, backend, database tuning |
-| [08](./08-SECURITY.md) | **Security** | OWASP, XSS, CSRF, injection, encryption |
-| [09](./09-REAL-TIME-SYSTEMS.md) | **Real-Time Systems** | WebSockets, SSE, message queues |
-| [10](./10-MICROSERVICES.md) | **Microservices** | Patterns, communication, observability |
-| [11](./11-FRONTEND-BACKEND-INTEGRATION.md) | **Frontend-Backend Integration** | State management, data fetching, SSR |
-| [12](./12-BEHAVIORAL-AND-LEADERSHIP.md) | **Behavioral & Leadership** | Cross-functional collaboration, ownership |
+| #                                          | Topic                              | Key Areas                                 |
+| ------------------------------------------ | ---------------------------------- | ----------------------------------------- |
+| [00](./00-FRAMEWORK.md)                    | **Interview Framework**            | Format, strategy, preparation             |
+| [01](./01-API-DESIGN.md)                   | **API Design**                     | REST, GraphQL, gRPC, versioning           |
+| [02](./02-DATABASE-FUNDAMENTALS.md)        | **Database Fundamentals**          | SQL, NoSQL, optimization, ORMs            |
+| [03](./03-AUTHENTICATION-AUTHORIZATION.md) | **Authentication & Authorization** | JWT, OAuth 2.0, RBAC, security            |
+| [04](./04-SYSTEM-DESIGN.md)                | **System Design**                  | Architecture, scaling, trade-offs         |
+| [05](./05-DEVOPS-DEPLOYMENT.md)            | **DevOps & Deployment**            | CI/CD, Docker, Kubernetes, IaC            |
+| [06](./06-TESTING-STRATEGIES.md)           | **Testing Strategies**             | Unit, integration, E2E, TDD               |
+| [07](./07-PERFORMANCE-OPTIMIZATION.md)     | **Performance Optimization**       | Frontend, backend, database tuning        |
+| [08](./08-SECURITY.md)                     | **Security**                       | OWASP, XSS, CSRF, injection, encryption   |
+| [09](./09-REAL-TIME-SYSTEMS.md)            | **Real-Time Systems**              | WebSockets, SSE, message queues           |
+| [10](./10-MICROSERVICES.md)                | **Microservices**                  | Patterns, communication, observability    |
+| [11](./11-FRONTEND-BACKEND-INTEGRATION.md) | **Frontend-Backend Integration**   | State management, data fetching, SSR      |
+| [12](./12-BEHAVIORAL-AND-LEADERSHIP.md)    | **Behavioral & Leadership**        | Cross-functional collaboration, ownership |
 
 ---
 
@@ -78,6 +78,7 @@ Full-stack interviews typically combine multiple formats. Understanding each for
 **What to expect**: Build a small application (4-8 hours) that demonstrates full-stack capability. Common examples include a task management app, a URL shortener, or a simplified social feed.
 
 **What interviewers evaluate**:
+
 - Code organization and architecture decisions
 - Data modeling and API design
 - Error handling and edge cases
@@ -86,6 +87,7 @@ Full-stack interviews typically combine multiple formats. Understanding each for
 - Git history (clean, meaningful commits)
 
 **How to excel**:
+
 ```
 DO:
 ├── Use a well-structured project layout
@@ -109,6 +111,7 @@ DON'T:
 **What to expect**: 45-90 minutes building a feature or small application with an interviewer watching. May involve a pre-built codebase you extend.
 
 **What interviewers evaluate**:
+
 - How you break down a problem
 - Communication while coding
 - Debugging approach
@@ -116,6 +119,7 @@ DON'T:
 - Ability to ask clarifying questions
 
 **How to excel**:
+
 ```
 1. Clarify requirements BEFORE writing code (2-3 minutes)
 2. Outline your approach verbally (2-3 minutes)
@@ -130,12 +134,14 @@ DON'T:
 **What to expect**: Design a system at a high level. Full-stack system design differs from backend-only design because you need to address the entire user experience.
 
 **What interviewers evaluate**:
+
 - Ability to scope the problem
 - Understanding of how frontend and backend interact
 - Knowledge of trade-offs (consistency vs availability, latency vs throughput)
 - Awareness of operational concerns (monitoring, deployment, failure modes)
 
 **Full-stack system design template**:
+
 ```
 1. Requirements Clarification (5 min)
    - Functional requirements (what the system does)
@@ -175,12 +181,14 @@ DON'T:
 **What to expect**: Given a buggy application or a production incident scenario, diagnose and fix the problem.
 
 **What interviewers evaluate**:
+
 - Systematic debugging approach
 - Ability to read unfamiliar code quickly
 - Understanding of how layers interact
 - Communication of findings and hypotheses
 
 **Debugging framework**:
+
 ```
 1. Reproduce the issue
 2. Isolate the layer (frontend, API, database, infrastructure)
@@ -539,6 +547,7 @@ Step-by-step approach:
 ### Example 1: Full-Stack Feature - Task List with Real-Time Updates
 
 **Database Schema (PostgreSQL)**:
+
 ```sql
 CREATE TABLE tasks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -556,6 +565,7 @@ CREATE INDEX idx_tasks_assignee ON tasks(assignee_id);
 ```
 
 **Backend API (Node.js + Express)**:
+
 ```typescript
 // routes/tasks.ts
 import { Router } from 'express';
@@ -583,7 +593,10 @@ const UpdateTaskSchema = z.object({
 router.get('/', authenticate, async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(req.query.limit as string) || 20)
+    );
     const offset = (page - 1) * limit;
     const status = req.query.status as string | undefined;
 
@@ -638,7 +651,12 @@ router.post('/', authenticate, async (req, res) => {
       `INSERT INTO tasks (title, description, assignee_id, created_by)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [input.title, input.description || null, input.assigneeId || null, req.user.id]
+      [
+        input.title,
+        input.description || null,
+        input.assigneeId || null,
+        req.user.id,
+      ]
     );
 
     const task = result.rows[0];
@@ -740,6 +758,7 @@ export default router;
 ```
 
 **Frontend (React + TypeScript)**:
+
 ```tsx
 // hooks/useTasks.ts
 import { useState, useEffect, useCallback } from 'react';
@@ -824,7 +843,9 @@ export function useTasks(status?: string) {
 import { z } from 'zod';
 
 const ConfigSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url().optional(),

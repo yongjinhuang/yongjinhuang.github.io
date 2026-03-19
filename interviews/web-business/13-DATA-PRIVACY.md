@@ -33,14 +33,14 @@ You need a legal reason to collect and use personal data. The main ones under GD
 
 Users have rights over their data. Your system must support these:
 
-| Right | What It Means | Your System Must... |
-|-------|---------------|-------------------|
-| **Right to Access** | "Show me all data you have about me" | Export user's data in a readable format |
-| **Right to Rectification** | "Fix my incorrect data" | Allow users to edit their personal info |
-| **Right to Erasure** (Right to be Forgotten) | "Delete all my data" | Delete user's data (with exceptions for legal holds) |
-| **Right to Data Portability** | "Give me my data so I can take it elsewhere" | Export data in a machine-readable format (JSON, CSV) |
-| **Right to Restrict Processing** | "Stop using my data but keep it" | Flag account to prevent processing while retaining data |
-| **Right to Object** | "Stop using my data for marketing" | Opt-out of specific processing activities |
+| Right                                        | What It Means                                | Your System Must...                                     |
+| -------------------------------------------- | -------------------------------------------- | ------------------------------------------------------- |
+| **Right to Access**                          | "Show me all data you have about me"         | Export user's data in a readable format                 |
+| **Right to Rectification**                   | "Fix my incorrect data"                      | Allow users to edit their personal info                 |
+| **Right to Erasure** (Right to be Forgotten) | "Delete all my data"                         | Delete user's data (with exceptions for legal holds)    |
+| **Right to Data Portability**                | "Give me my data so I can take it elsewhere" | Export data in a machine-readable format (JSON, CSV)    |
+| **Right to Restrict Processing**             | "Stop using my data but keep it"             | Flag account to prevent processing while retaining data |
+| **Right to Object**                          | "Stop using my data for marketing"           | Opt-out of specific processing activities               |
 
 ### Consent Management
 
@@ -63,23 +63,23 @@ If personal data is compromised:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **GDPR** | General Data Protection Regulation — EU privacy law. The most influential privacy regulation globally |
-| **CCPA / CPRA** | California Consumer Privacy Act / California Privacy Rights Act — California's privacy law |
-| **LGPD** | Lei Geral de Proteção de Dados — Brazil's privacy law, modeled on GDPR |
-| **PIPL** | Personal Information Protection Law — China's privacy law |
-| **PII** | Personally Identifiable Information — data that identifies a specific person |
-| **Data Controller** | The entity that decides why and how data is processed (usually your company) |
-| **Data Processor** | The entity that processes data on behalf of the controller (e.g., your cloud provider, analytics vendor) |
-| **DPA** | Data Processing Agreement — a contract between controller and processor defining data handling rules |
-| **DPO** | Data Protection Officer — a person responsible for privacy compliance within an organization |
-| **DSAR / DSR** | Data Subject Access Request — when a user formally exercises their privacy rights |
-| **Data Minimization** | Collect only the data you actually need. Don't hoard data "just in case" |
+| Term                   | What It Means                                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **GDPR**               | General Data Protection Regulation — EU privacy law. The most influential privacy regulation globally         |
+| **CCPA / CPRA**        | California Consumer Privacy Act / California Privacy Rights Act — California's privacy law                    |
+| **LGPD**               | Lei Geral de Proteção de Dados — Brazil's privacy law, modeled on GDPR                                        |
+| **PIPL**               | Personal Information Protection Law — China's privacy law                                                     |
+| **PII**                | Personally Identifiable Information — data that identifies a specific person                                  |
+| **Data Controller**    | The entity that decides why and how data is processed (usually your company)                                  |
+| **Data Processor**     | The entity that processes data on behalf of the controller (e.g., your cloud provider, analytics vendor)      |
+| **DPA**                | Data Processing Agreement — a contract between controller and processor defining data handling rules          |
+| **DPO**                | Data Protection Officer — a person responsible for privacy compliance within an organization                  |
+| **DSAR / DSR**         | Data Subject Access Request — when a user formally exercises their privacy rights                             |
+| **Data Minimization**  | Collect only the data you actually need. Don't hoard data "just in case"                                      |
 | **Purpose Limitation** | Use data only for the purpose it was collected. Don't repurpose email addresses for marketing without consent |
-| **Privacy by Design** | Build privacy into your system from the start, not as an afterthought |
-| **Anonymization** | Removing all identifying information so data can never be linked back to a person. Irreversible |
-| **Pseudonymization** | Replacing identifiers with tokens. The data can be re-identified with the mapping key |
+| **Privacy by Design**  | Build privacy into your system from the start, not as an afterthought                                         |
+| **Anonymization**      | Removing all identifying information so data can never be linked back to a person. Irreversible               |
+| **Pseudonymization**   | Replacing identifiers with tokens. The data can be re-identified with the mapping key                         |
 
 ## Common Patterns
 
@@ -135,18 +135,18 @@ Automated jobs that enforce retention policies:
 
 ## Quick Reference
 
-| Regulation | Region | Key Requirements |
-|-----------|--------|-----------------|
-| GDPR | EU/EEA | Consent, data subject rights, 72h breach notification, DPAs, data minimization |
-| CCPA/CPRA | California | Right to know, right to delete, right to opt-out of data sale |
-| LGPD | Brazil | Similar to GDPR, consent-based, data subject rights |
-| PIPL | China | Consent, data localization, cross-border transfer restrictions |
-| PIPEDA | Canada | Consent, limited collection, accuracy, accountability |
+| Regulation | Region     | Key Requirements                                                               |
+| ---------- | ---------- | ------------------------------------------------------------------------------ |
+| GDPR       | EU/EEA     | Consent, data subject rights, 72h breach notification, DPAs, data minimization |
+| CCPA/CPRA  | California | Right to know, right to delete, right to opt-out of data sale                  |
+| LGPD       | Brazil     | Similar to GDPR, consent-based, data subject rights                            |
+| PIPL       | China      | Consent, data localization, cross-border transfer restrictions                 |
+| PIPEDA     | Canada     | Consent, limited collection, accuracy, accountability                          |
 
-| Action | Compliance Requirement |
-|--------|----------------------|
-| Collecting data | Have a lawful basis + privacy notice |
-| Storing data | Encrypt, access-control, define retention |
-| Sharing data | DPA with processor, user consent if needed |
-| Deleting data | Honor deletion requests within 30 days |
-| Breach occurs | Notify authority within 72 hours (GDPR) |
+| Action          | Compliance Requirement                     |
+| --------------- | ------------------------------------------ |
+| Collecting data | Have a lawful basis + privacy notice       |
+| Storing data    | Encrypt, access-control, define retention  |
+| Sharing data    | DPA with processor, user consent if needed |
+| Deleting data   | Honor deletion requests within 30 days     |
+| Breach occurs   | Notify authority within 72 hours (GDPR)    |

@@ -25,6 +25,7 @@ largest = -heapq.heappop(max_heap)
 ### Greedy Strategy
 
 Make the locally optimal choice at each step, trusting it leads to a global optimum. Works when:
+
 - The problem has **optimal substructure** (optimal solution contains optimal sub-solutions)
 - The problem has the **greedy choice property** (local optimum leads to global optimum)
 
@@ -33,6 +34,7 @@ Common greedy patterns: sort by end time, sort by start time, always pick the la
 ### Interval Patterns
 
 Most interval problems follow one of these templates:
+
 1. **Sort by start** then merge/process left to right (merge intervals)
 2. **Sort by end** then greedily pick non-overlapping (max non-overlapping)
 3. **Sweep line** using a heap to track active intervals (meeting rooms)
@@ -70,6 +72,7 @@ def merge(intervals: list[list[int]]) -> list[list[int]]:
 **Time**: O(n log n) for sorting
 **Space**: O(n) for the output list
 **Edge Cases**:
+
 - Single interval returns itself
 - All intervals overlap into one
 - Already sorted and non-overlapping (no merges)
@@ -86,6 +89,7 @@ def merge(intervals: list[list[int]]) -> list[list[int]]:
 ### Approach
 
 Split processing into three phases:
+
 1. Add all intervals that end before the new interval starts (no overlap on the left).
 2. Merge all intervals that overlap with the new interval by updating its start/end.
 3. Add all remaining intervals that start after the new interval ends.
@@ -125,6 +129,7 @@ def insert(
 **Time**: O(n) single pass
 **Space**: O(n) for the output list
 **Edge Cases**:
+
 - Empty intervals list: return `[new_interval]`
 - New interval before all existing intervals
 - New interval after all existing intervals
@@ -161,6 +166,7 @@ def erase_overlap_intervals(intervals: list[list[int]]) -> int:
 **Time**: O(n log n) for sorting
 **Space**: O(1) ignoring sort space
 **Edge Cases**:
+
 - No overlaps: return 0
 - All intervals identical: remove all but one
 - One interval: return 0
@@ -194,6 +200,7 @@ def can_attend_meetings(intervals: list[list[int]]) -> bool:
 **Time**: O(n log n) for sorting
 **Space**: O(1) ignoring sort space
 **Edge Cases**:
+
 - Empty list or single meeting: return `True`
 - Two meetings where one ends exactly when the next starts (`[1,5], [5,10]`): no overlap, return `True`
 - All meetings at the same time
@@ -249,6 +256,7 @@ def min_meeting_rooms_sweep(intervals: list[list[int]]) -> int:
 **Time**: O(n log n) for sorting
 **Space**: O(n) for the heap
 **Edge Cases**:
+
 - Empty list: return 0
 - No overlaps: return 1
 - All meetings overlap: return `n`
@@ -323,6 +331,7 @@ def top_k_frequent_bucket(nums: list[int], k: int) -> list[int]:
 **Time**: O(n log k) for the heap approach, O(n) for bucket sort
 **Space**: O(n) for frequency map
 **Edge Cases**:
+
 - `k` equals the number of distinct elements (return all)
 - All elements are the same (`k=1`)
 - Array of length 1
@@ -394,6 +403,7 @@ def find_kth_largest_quickselect(nums: list[int], k: int) -> int:
 **Time**: O(n log k) heap, O(n) average quickselect (O(n^2) worst case)
 **Space**: O(k) heap, O(1) quickselect (ignoring recursion stack)
 **Edge Cases**:
+
 - `k = 1` (find maximum)
 - `k = n` (find minimum)
 - All elements identical
@@ -461,9 +471,10 @@ def least_interval_heap(tasks: list[str], n: int) -> int:
     return time
 ```
 
-**Time**: O(n) for the formula approach, O(total * log 26) for heap simulation
+**Time**: O(n) for the formula approach, O(total \* log 26) for heap simulation
 **Space**: O(1) for formula (26 letters max), O(26) for heap
 **Edge Cases**:
+
 - `n = 0`: answer is simply `len(tasks)`
 - All tasks are the same character
 - Many distinct tasks with low frequency (no idle needed)
@@ -480,6 +491,7 @@ def least_interval_heap(tasks: list[str], n: int) -> int:
 ### Approach
 
 Maintain two heaps:
+
 - `lo` (max-heap via negation): stores the smaller half of numbers
 - `hi` (min-heap): stores the larger half of numbers
 
@@ -514,6 +526,7 @@ class MedianFinder:
 **Time**: O(log n) per `add_num`, O(1) per `find_median`
 **Space**: O(n) for storing all elements
 **Edge Cases**:
+
 - Single element: median is that element
 - Two elements: median is their average
 - All identical elements
@@ -556,6 +569,7 @@ def jump(nums: list[int]) -> int:
 **Time**: O(n) single pass
 **Space**: O(1)
 **Edge Cases**:
+
 - Array of length 1: already at the end, return 0
 - First element can reach the end: return 1
 - Array of all 1s: return `n - 1`
@@ -565,15 +579,15 @@ def jump(nums: list[int]) -> int:
 
 ## Summary Table
 
-| # | Problem | Pattern | Time | Space |
-|---|---------|---------|------|-------|
-| 56 | Merge Intervals | Sort + merge | O(n log n) | O(n) |
-| 57 | Insert Interval | Three-phase scan | O(n) | O(n) |
-| 435 | Non-overlapping Intervals | Greedy (sort by end) | O(n log n) | O(1) |
-| 252 | Meeting Rooms | Sort + check | O(n log n) | O(1) |
-| 253 | Meeting Rooms II | Sweep line + heap | O(n log n) | O(n) |
-| 347 | Top K Frequent Elements | Frequency + heap | O(n log k) | O(n) |
-| 215 | Kth Largest Element | Min-heap of size k | O(n log k) | O(k) |
-| 621 | Task Scheduler | Greedy formula | O(n) | O(1) |
-| 295 | Find Median from Data Stream | Two heaps | O(log n) add | O(n) |
-| 45 | Jump Game II | Greedy BFS | O(n) | O(1) |
+| #   | Problem                      | Pattern              | Time         | Space |
+| --- | ---------------------------- | -------------------- | ------------ | ----- |
+| 56  | Merge Intervals              | Sort + merge         | O(n log n)   | O(n)  |
+| 57  | Insert Interval              | Three-phase scan     | O(n)         | O(n)  |
+| 435 | Non-overlapping Intervals    | Greedy (sort by end) | O(n log n)   | O(1)  |
+| 252 | Meeting Rooms                | Sort + check         | O(n log n)   | O(1)  |
+| 253 | Meeting Rooms II             | Sweep line + heap    | O(n log n)   | O(n)  |
+| 347 | Top K Frequent Elements      | Frequency + heap     | O(n log k)   | O(n)  |
+| 215 | Kth Largest Element          | Min-heap of size k   | O(n log k)   | O(k)  |
+| 621 | Task Scheduler               | Greedy formula       | O(n)         | O(1)  |
+| 295 | Find Median from Data Stream | Two heaps            | O(log n) add | O(n)  |
+| 45  | Jump Game II                 | Greedy BFS           | O(n)         | O(1)  |

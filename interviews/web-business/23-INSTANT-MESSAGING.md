@@ -66,24 +66,24 @@ Typing indicators should include debouncing logic on the client: send a "started
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **WebSocket** | A persistent, bidirectional connection between client and server. The backbone of real-time chat. Unlike HTTP, the server can push data to the client without the client asking |
-| **Presence** | A user's online status -- online, offline, away, do not disturb. Derived from active connections and user-set preferences |
-| **Typing Indicator** | An ephemeral signal broadcast to chat participants when someone is composing a message. Never persisted |
-| **Read Receipt** | Confirmation that a recipient has seen a message. Triggered when the message becomes visible in the recipient's viewport |
-| **Delivery Receipt** | Confirmation that a message reached the recipient's device, even if they haven't opened the chat yet |
-| **Fan-out** | The process of distributing a single message to multiple recipients in a group chat. Can be fan-out-on-write (push to all at send time) or fan-out-on-read (recipients pull when they open the chat) |
-| **Message Queue** | A buffer (e.g., Kafka, RabbitMQ, Redis Streams) that decouples message ingestion from delivery. Absorbs traffic spikes and ensures no messages are lost |
-| **Push Notification** | An alert sent to a user's device when they're not actively using the app. Delivered via APNs (iOS) or FCM (Android/web) |
-| **End-to-End Encryption (E2EE)** | Encryption where only the sender and recipient can read the message. The server sees only ciphertext. Used by Signal, WhatsApp, and iMessage |
-| **Idempotency Key** | A unique identifier (usually the client-generated message ID) that prevents duplicate messages if the client retries a send due to network issues |
-| **Thread / Reply** | A message linked to a parent message, creating a sub-conversation within a chat. Reduces noise in busy group chats |
-| **Conversation / Channel** | The container for a set of messages and participants. Can be 1:1 (direct message) or group (multiple members) |
-| **Message Retention Policy** | Rules governing how long messages are stored. Important for compliance (HIPAA, GDPR) and storage cost management |
-| **Webhook** | An HTTP callback triggered by chat events (new message, user joined). Used to integrate bots and external services |
-| **SSE (Server-Sent Events)** | A one-way persistent connection from server to client. Simpler than WebSockets but only supports server-to-client push |
-| **Long-Polling** | The client sends a request that the server holds open until new data is available. A fallback when WebSockets and SSE are unavailable |
+| Term                             | What It Means                                                                                                                                                                                        |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **WebSocket**                    | A persistent, bidirectional connection between client and server. The backbone of real-time chat. Unlike HTTP, the server can push data to the client without the client asking                      |
+| **Presence**                     | A user's online status -- online, offline, away, do not disturb. Derived from active connections and user-set preferences                                                                            |
+| **Typing Indicator**             | An ephemeral signal broadcast to chat participants when someone is composing a message. Never persisted                                                                                              |
+| **Read Receipt**                 | Confirmation that a recipient has seen a message. Triggered when the message becomes visible in the recipient's viewport                                                                             |
+| **Delivery Receipt**             | Confirmation that a message reached the recipient's device, even if they haven't opened the chat yet                                                                                                 |
+| **Fan-out**                      | The process of distributing a single message to multiple recipients in a group chat. Can be fan-out-on-write (push to all at send time) or fan-out-on-read (recipients pull when they open the chat) |
+| **Message Queue**                | A buffer (e.g., Kafka, RabbitMQ, Redis Streams) that decouples message ingestion from delivery. Absorbs traffic spikes and ensures no messages are lost                                              |
+| **Push Notification**            | An alert sent to a user's device when they're not actively using the app. Delivered via APNs (iOS) or FCM (Android/web)                                                                              |
+| **End-to-End Encryption (E2EE)** | Encryption where only the sender and recipient can read the message. The server sees only ciphertext. Used by Signal, WhatsApp, and iMessage                                                         |
+| **Idempotency Key**              | A unique identifier (usually the client-generated message ID) that prevents duplicate messages if the client retries a send due to network issues                                                    |
+| **Thread / Reply**               | A message linked to a parent message, creating a sub-conversation within a chat. Reduces noise in busy group chats                                                                                   |
+| **Conversation / Channel**       | The container for a set of messages and participants. Can be 1:1 (direct message) or group (multiple members)                                                                                        |
+| **Message Retention Policy**     | Rules governing how long messages are stored. Important for compliance (HIPAA, GDPR) and storage cost management                                                                                     |
+| **Webhook**                      | An HTTP callback triggered by chat events (new message, user joined). Used to integrate bots and external services                                                                                   |
+| **SSE (Server-Sent Events)**     | A one-way persistent connection from server to client. Simpler than WebSockets but only supports server-to-client push                                                                               |
+| **Long-Polling**                 | The client sends a request that the server holds open until new data is available. A fallback when WebSockets and SSE are unavailable                                                                |
 
 ## Common Patterns
 
@@ -151,50 +151,50 @@ Every chat app needs unread counts -- both per-conversation and a global total. 
 
 ## Quick Reference
 
-| Decision | Recommendation |
-|----------|---------------|
-| Protocol for real-time delivery | WebSockets for persistent connections; fall back to SSE or long-polling for restrictive networks |
-| Message storage | Partitioned by conversation ID. Use a time-series-friendly schema. PostgreSQL for small scale, Cassandra or ScyllaDB for massive scale |
-| Push notifications | FCM for Android/web, APNs for iOS. Use a unified service like Firebase or Amazon SNS |
-| Media handling | Upload to S3/GCS/CDN, store URL in message. Generate thumbnails server-side. Enforce file size and type limits |
-| Search | Elasticsearch or OpenSearch for server-side. SQLite FTS for client-side (E2EE chats) |
-| Encryption | Signal Protocol for E2EE. TLS for transport encryption (non-negotiable baseline) |
-| Presence tracking | Redis or in-memory store with TTL-based expiry. Batch updates for large user bases |
-| Moderation | Automated filters (fast, inline) plus human review queue for flagged content |
-| Build vs buy | Use a managed SDK (Stream, Sendbird, PubNub) to ship fast; build custom only when you need full control over data and UX |
-| Bot integration | Webhook-based for simple bots, WebSocket-based for interactive real-time bots |
-| Read receipts in groups | Track per-user "read up to" cursor, not per-message receipts |
-| Message ordering | Server-assigned sequence numbers per conversation, not client timestamps |
+| Decision                        | Recommendation                                                                                                                         |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Protocol for real-time delivery | WebSockets for persistent connections; fall back to SSE or long-polling for restrictive networks                                       |
+| Message storage                 | Partitioned by conversation ID. Use a time-series-friendly schema. PostgreSQL for small scale, Cassandra or ScyllaDB for massive scale |
+| Push notifications              | FCM for Android/web, APNs for iOS. Use a unified service like Firebase or Amazon SNS                                                   |
+| Media handling                  | Upload to S3/GCS/CDN, store URL in message. Generate thumbnails server-side. Enforce file size and type limits                         |
+| Search                          | Elasticsearch or OpenSearch for server-side. SQLite FTS for client-side (E2EE chats)                                                   |
+| Encryption                      | Signal Protocol for E2EE. TLS for transport encryption (non-negotiable baseline)                                                       |
+| Presence tracking               | Redis or in-memory store with TTL-based expiry. Batch updates for large user bases                                                     |
+| Moderation                      | Automated filters (fast, inline) plus human review queue for flagged content                                                           |
+| Build vs buy                    | Use a managed SDK (Stream, Sendbird, PubNub) to ship fast; build custom only when you need full control over data and UX               |
+| Bot integration                 | Webhook-based for simple bots, WebSocket-based for interactive real-time bots                                                          |
+| Read receipts in groups         | Track per-user "read up to" cursor, not per-message receipts                                                                           |
+| Message ordering                | Server-assigned sequence numbers per conversation, not client timestamps                                                               |
 
-| Scale Consideration | Typical Threshold |
-|---------------------|-------------------|
-| WebSocket connections per server | 50,000 - 100,000 with proper tuning |
-| Messages per second (single server) | 10,000 - 50,000 depending on fan-out strategy |
-| Message storage per user per year | 50 MB - 500 MB (text only), 5 - 50 GB (with media) |
-| Push notification delivery time | Under 1 second for FCM/APNs in normal conditions |
-| Acceptable message delivery latency | Under 300ms for a good user experience |
-| Typing indicator broadcast frequency | Debounce to at most once every 2-3 seconds |
+| Scale Consideration                     | Typical Threshold                                   |
+| --------------------------------------- | --------------------------------------------------- |
+| WebSocket connections per server        | 50,000 - 100,000 with proper tuning                 |
+| Messages per second (single server)     | 10,000 - 50,000 depending on fan-out strategy       |
+| Message storage per user per year       | 50 MB - 500 MB (text only), 5 - 50 GB (with media)  |
+| Push notification delivery time         | Under 1 second for FCM/APNs in normal conditions    |
+| Acceptable message delivery latency     | Under 300ms for a good user experience              |
+| Typing indicator broadcast frequency    | Debounce to at most once every 2-3 seconds          |
 | Group size threshold for fan-out switch | Around 100-500 members, depending on message volume |
 
-| Build vs Buy Option | Best For |
-|---------------------|----------|
-| **Stream Chat** | High-quality SDKs, strong React/React Native support, quick integration |
-| **Sendbird** | Enterprise features, compliance certifications, global infrastructure |
-| **PubNub** | Real-time infrastructure beyond just chat (IoT, gaming, live events) |
-| **Firebase Realtime DB / Firestore** | Prototypes and small-scale apps, tight integration with Google ecosystem |
-| **Custom (WebSocket + your stack)** | Full control over data, UX, and costs at scale. Highest engineering investment |
-| **Matrix (open protocol)** | Self-hosted, federated, open-source. Good for privacy-focused or government use cases |
+| Build vs Buy Option                  | Best For                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------- |
+| **Stream Chat**                      | High-quality SDKs, strong React/React Native support, quick integration               |
+| **Sendbird**                         | Enterprise features, compliance certifications, global infrastructure                 |
+| **PubNub**                           | Real-time infrastructure beyond just chat (IoT, gaming, live events)                  |
+| **Firebase Realtime DB / Firestore** | Prototypes and small-scale apps, tight integration with Google ecosystem              |
+| **Custom (WebSocket + your stack)**  | Full control over data, UX, and costs at scale. Highest engineering investment        |
+| **Matrix (open protocol)**           | Self-hosted, federated, open-source. Good for privacy-focused or government use cases |
 
-| Feature | Implementation Complexity |
-|---------|--------------------------|
-| 1:1 text messaging | Low -- WebSocket + message store |
-| Group chat (small groups) | Medium -- fan-out, member management |
-| Read receipts | Medium -- per-user cursor tracking |
-| Typing indicators | Low -- ephemeral WebSocket events |
-| Presence (online/offline) | Medium -- connection tracking + grace periods |
-| Push notifications | Medium -- APNs/FCM integration, notification preferences |
-| Media sharing | Medium -- object storage, thumbnails, file validation |
-| Message search | High -- full-text index, query optimization |
-| End-to-end encryption | Very High -- key management, multi-device, protocol implementation |
-| Moderation pipeline | High -- real-time filters, review queue, audit trails |
-| Bots and automation | Medium -- webhook/WebSocket bot API, command parsing |
+| Feature                   | Implementation Complexity                                          |
+| ------------------------- | ------------------------------------------------------------------ |
+| 1:1 text messaging        | Low -- WebSocket + message store                                   |
+| Group chat (small groups) | Medium -- fan-out, member management                               |
+| Read receipts             | Medium -- per-user cursor tracking                                 |
+| Typing indicators         | Low -- ephemeral WebSocket events                                  |
+| Presence (online/offline) | Medium -- connection tracking + grace periods                      |
+| Push notifications        | Medium -- APNs/FCM integration, notification preferences           |
+| Media sharing             | Medium -- object storage, thumbnails, file validation              |
+| Message search            | High -- full-text index, query optimization                        |
+| End-to-end encryption     | Very High -- key management, multi-device, protocol implementation |
+| Moderation pipeline       | High -- real-time filters, review queue, audit trails              |
+| Bots and automation       | Medium -- webhook/WebSocket bot API, command parsing               |

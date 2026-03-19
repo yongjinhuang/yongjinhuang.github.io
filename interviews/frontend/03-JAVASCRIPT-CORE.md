@@ -4,7 +4,7 @@
 
 JavaScript is the foundation of every frontend interview. Even if the role is "React Developer," interviewers will probe your understanding of the language itself -- closures, the event loop, prototypal inheritance, asynchronous patterns, and the `this` keyword. These concepts are tested because they reveal whether you truly understand the code you write or merely copy patterns from documentation.
 
-This guide covers the topics that appear most frequently in interviews, with emphasis on the *why* behind each concept, not just the *what*. Understanding these fundamentals will make you more effective at debugging, optimizing, and architecting JavaScript applications.
+This guide covers the topics that appear most frequently in interviews, with emphasis on the _why_ behind each concept, not just the _what_. Understanding these fundamentals will make you more effective at debugging, optimizing, and architecting JavaScript applications.
 
 ---
 
@@ -19,16 +19,22 @@ function createCounter(initialValue) {
   let count = initialValue;
 
   return {
-    increment() { return ++count; },
-    decrement() { return --count; },
-    getCount()  { return count; }
+    increment() {
+      return ++count;
+    },
+    decrement() {
+      return --count;
+    },
+    getCount() {
+      return count;
+    },
   };
 }
 
 const counter = createCounter(0);
-counter.increment();  // 1
-counter.increment();  // 2
-counter.getCount();   // 2
+counter.increment(); // 1
+counter.increment(); // 2
+counter.getCount(); // 2
 
 // 'count' is not accessible directly -- it is enclosed
 // The returned methods "close over" the variable
@@ -42,13 +48,13 @@ function createWallet(balance) {
   // 'balance' is private, only accessible through the returned interface
   return {
     deposit(amount) {
-      if (amount <= 0) throw new Error("Amount must be positive");
+      if (amount <= 0) throw new Error('Amount must be positive');
       balance += amount;
       return balance;
     },
     getBalance() {
       return balance;
-    }
+    },
   };
 }
 
@@ -58,8 +64,8 @@ function createMultiplier(factor) {
 }
 const double = createMultiplier(2);
 const triple = createMultiplier(3);
-double(5);   // 10
-triple(5);   // 15
+double(5); // 10
+triple(5); // 15
 
 // 3. Memoization
 function memoize(fn) {
@@ -120,7 +126,7 @@ Hoisting is JavaScript's behavior of moving declarations to the top of their sco
 
 ```javascript
 // What you write:
-greet("Alice");
+greet('Alice');
 
 function greet(name) {
   return `Hello, ${name}`;
@@ -130,25 +136,25 @@ function greet(name) {
 function greet(name) {
   return `Hello, ${name}`;
 }
-greet("Alice");   // Works: function declarations are fully hoisted
+greet('Alice'); // Works: function declarations are fully hoisted
 ```
 
 ```javascript
 // var is hoisted (declaration only, not initialization)
-console.log(x);   // undefined (not ReferenceError)
+console.log(x); // undefined (not ReferenceError)
 var x = 10;
 
 // let and const are hoisted but NOT initialized (Temporal Dead Zone)
-console.log(y);   // ReferenceError: Cannot access 'y' before initialization
+console.log(y); // ReferenceError: Cannot access 'y' before initialization
 let y = 20;
 
 // The TDZ exists from the start of the block until the declaration
 {
   // TDZ for 'z' starts here
-  const fn = () => z;  // OK: not called yet
+  const fn = () => z; // OK: not called yet
   // TDZ continues...
-  let z = 30;          // TDZ ends
-  fn();                // 30: works now
+  let z = 30; // TDZ ends
+  fn(); // 30: works now
 }
 ```
 
@@ -156,21 +162,21 @@ let y = 20;
 
 ```javascript
 // Global scope
-var globalVar = "global";
+var globalVar = 'global';
 
 function outer() {
   // Function scope
-  var functionVar = "function";
+  var functionVar = 'function';
 
   if (true) {
     // Block scope (let and const only)
-    let blockLet = "block-let";
-    const blockConst = "block-const";
-    var blockVar = "still-function-scoped";   // var ignores block scope
+    let blockLet = 'block-let';
+    const blockConst = 'block-const';
+    var blockVar = 'still-function-scoped'; // var ignores block scope
   }
 
-  console.log(blockVar);    // "still-function-scoped"
-  console.log(blockLet);    // ReferenceError
+  console.log(blockVar); // "still-function-scoped"
+  console.log(blockLet); // ReferenceError
 }
 ```
 
@@ -183,17 +189,17 @@ JavaScript uses prototypal inheritance, not classical inheritance. Every object 
 const animal = {
   speak() {
     return `${this.name} makes a sound.`;
-  }
+  },
 };
 
 const dog = Object.create(animal);
-dog.name = "Rex";
+dog.name = 'Rex';
 dog.bark = function () {
   return `${this.name} barks!`;
 };
 
-dog.speak();   // "Rex makes a sound." (inherited from animal)
-dog.bark();    // "Rex barks!" (own method)
+dog.speak(); // "Rex makes a sound." (inherited from animal)
+dog.bark(); // "Rex barks!" (own method)
 
 // Prototype chain: dog -> animal -> Object.prototype -> null
 ```
@@ -213,7 +219,7 @@ class Animal {
 
 class Dog extends Animal {
   constructor(name, breed) {
-    super(name);     // MUST call super before using 'this'
+    super(name); // MUST call super before using 'this'
     this.breed = breed;
   }
 
@@ -227,14 +233,14 @@ class Dog extends Animal {
   }
 }
 
-const rex = new Dog("Rex", "Labrador");
-rex.speak();   // "Rex barks loudly!"
-rex.bark();    // "Rex barks!"
+const rex = new Dog('Rex', 'Labrador');
+rex.speak(); // "Rex barks loudly!"
+rex.bark(); // "Rex barks!"
 
 // Under the hood, this is still prototypal:
 // rex -> Dog.prototype -> Animal.prototype -> Object.prototype -> null
-rex instanceof Dog;      // true
-rex instanceof Animal;   // true
+rex instanceof Dog; // true
+rex instanceof Animal; // true
 ```
 
 #### Prototype Chain Lookup
@@ -243,63 +249,65 @@ rex instanceof Animal;   // true
 const obj = { a: 1 };
 
 // Property lookup walks the chain
-obj.a;             // 1 (found on obj itself)
-obj.toString();    // "[object Object]" (found on Object.prototype)
-obj.nonExistent;   // undefined (reached null, not found)
+obj.a; // 1 (found on obj itself)
+obj.toString(); // "[object Object]" (found on Object.prototype)
+obj.nonExistent; // undefined (reached null, not found)
 
 // hasOwnProperty vs. in
-obj.hasOwnProperty("a");          // true
-obj.hasOwnProperty("toString");   // false
-"a" in obj;                        // true
-"toString" in obj;                 // true (checks prototype chain)
+obj.hasOwnProperty('a'); // true
+obj.hasOwnProperty('toString'); // false
+'a' in obj; // true
+'toString' in obj; // true (checks prototype chain)
 ```
 
 ### The `this` Keyword
 
-`this` in JavaScript is determined by *how a function is called*, not where it is defined (with one exception: arrow functions).
+`this` in JavaScript is determined by _how a function is called_, not where it is defined (with one exception: arrow functions).
 
 #### Rules of `this` (in order of precedence)
 
 ```javascript
 // 1. new binding: this = new object
 function Person(name) {
-  this.name = name;    // this = newly created object
+  this.name = name; // this = newly created object
 }
-const alice = new Person("Alice");
+const alice = new Person('Alice');
 
 // 2. Explicit binding: call, apply, bind
 function greet() {
   return `Hello, ${this.name}`;
 }
-const user = { name: "Bob" };
-greet.call(user);       // "Hello, Bob"
-greet.apply(user);      // "Hello, Bob"
+const user = { name: 'Bob' };
+greet.call(user); // "Hello, Bob"
+greet.apply(user); // "Hello, Bob"
 const bound = greet.bind(user);
-bound();                // "Hello, Bob"
+bound(); // "Hello, Bob"
 
 // 3. Implicit binding: method call (dot notation)
 const obj = {
-  name: "Charlie",
-  greet() { return `Hello, ${this.name}`; }
+  name: 'Charlie',
+  greet() {
+    return `Hello, ${this.name}`;
+  },
 };
-obj.greet();            // "Hello, Charlie"
+obj.greet(); // "Hello, Charlie"
 
 // 4. Default binding: standalone function call
 function standalone() {
-  return this;          // global object (or undefined in strict mode)
+  return this; // global object (or undefined in strict mode)
 }
 standalone();
 
 // 5. Arrow functions: lexical this (inherits from enclosing scope)
 const team = {
-  name: "Engineering",
-  members: ["Alice", "Bob"],
+  name: 'Engineering',
+  members: ['Alice', 'Bob'],
   listMembers() {
     // Arrow function inherits 'this' from listMembers()
     return this.members.map((member) => `${member} from ${this.name}`);
-  }
+  },
 };
-team.listMembers();   // ["Alice from Engineering", "Bob from Engineering"]
+team.listMembers(); // ["Alice from Engineering", "Bob from Engineering"]
 ```
 
 #### Common `this` Pitfalls
@@ -307,15 +315,17 @@ team.listMembers();   // ["Alice from Engineering", "Bob from Engineering"]
 ```javascript
 // PROBLEM: Lost context when extracting a method
 const obj = {
-  name: "Dave",
-  greet() { return `Hello, ${this.name}`; }
+  name: 'Dave',
+  greet() {
+    return `Hello, ${this.name}`;
+  },
 };
 const fn = obj.greet;
-fn();                // "Hello, undefined" (default binding)
+fn(); // "Hello, undefined" (default binding)
 
 // FIX: bind the method
 const boundFn = obj.greet.bind(obj);
-boundFn();           // "Hello, Dave"
+boundFn(); // "Hello, Dave"
 
 // PROBLEM: this in event handlers
 class Button {
@@ -326,7 +336,7 @@ class Button {
     // 'this' is the DOM element, not the Button instance
   }
 }
-const btn = new Button("Submit");
+const btn = new Button('Submit');
 // element.addEventListener("click", btn.handleClick);  // wrong this
 
 // FIX 1: Arrow function in class field
@@ -382,26 +392,26 @@ JavaScript is single-threaded. The event loop is the mechanism that allows async
                            +----------------------+
 ```
 
-*Note: `requestAnimationFrame` runs before the next repaint, which is between macrotask cycles.*
+_Note: `requestAnimationFrame` runs before the next repaint, which is between macrotask cycles._
 
 #### Microtasks vs. Macrotasks
 
 ```javascript
-console.log("1: synchronous");
+console.log('1: synchronous');
 
 setTimeout(() => {
-  console.log("2: macrotask (setTimeout)");
+  console.log('2: macrotask (setTimeout)');
 }, 0);
 
 Promise.resolve().then(() => {
-  console.log("3: microtask (Promise.then)");
+  console.log('3: microtask (Promise.then)');
 });
 
 queueMicrotask(() => {
-  console.log("4: microtask (queueMicrotask)");
+  console.log('4: microtask (queueMicrotask)');
 });
 
-console.log("5: synchronous");
+console.log('5: synchronous');
 
 // Output order:
 // 1: synchronous
@@ -431,7 +441,7 @@ function processLargeArray(items) {
       // Process item
     }
     if (index < items.length) {
-      setTimeout(processChunk, 0);  // Yield to the event loop
+      setTimeout(processChunk, 0); // Yield to the event loop
     }
   }
   processChunk();
@@ -443,6 +453,7 @@ function processLargeArray(items) {
 #### Promise States
 
 A Promise is in one of three states:
+
 - **Pending**: Initial state, not yet resolved or rejected
 - **Fulfilled**: Operation completed successfully
 - **Rejected**: Operation failed
@@ -452,12 +463,12 @@ A Promise is in one of three states:
 const fetchUser = (id) => {
   return new Promise((resolve, reject) => {
     if (!id) {
-      reject(new Error("User ID is required"));
+      reject(new Error('User ID is required'));
       return;
     }
     // Simulate async operation
     setTimeout(() => {
-      resolve({ id, name: "Alice" });
+      resolve({ id, name: 'Alice' });
     }, 1000);
   });
 };
@@ -465,7 +476,7 @@ const fetchUser = (id) => {
 // Consuming with .then/.catch
 fetchUser(1)
   .then((user) => {
-    return fetchProfile(user.id);  // Returns another Promise
+    return fetchProfile(user.id); // Returns another Promise
   })
   .then((profile) => {
     // Handle profile
@@ -504,7 +515,7 @@ async function loadDashboard(userId) {
   const [user2, posts2, notifications2] = await Promise.all([
     fetchUser(userId),
     fetchPosts(userId),
-    fetchNotifications(userId)
+    fetchNotifications(userId),
   ]);
   // Total time: max of the three
 }
@@ -544,9 +555,9 @@ function* range(start, end, step = 1) {
 }
 
 const gen = range(0, 10, 2);
-gen.next();   // { value: 0, done: false }
-gen.next();   // { value: 2, done: false }
-gen.next();   // { value: 4, done: false }
+gen.next(); // { value: 0, done: false }
+gen.next(); // { value: 2, done: false }
+gen.next(); // { value: 4, done: false }
 
 // Iterate with for...of
 for (const num of range(0, 5)) {
@@ -554,7 +565,7 @@ for (const num of range(0, 5)) {
 }
 
 // Spread into array
-const numbers = [...range(0, 5)];   // [0, 1, 2, 3, 4]
+const numbers = [...range(0, 5)]; // [0, 1, 2, 3, 4]
 ```
 
 #### Generators for Lazy Evaluation
@@ -580,7 +591,7 @@ function take(n, iterable) {
   return result;
 }
 
-take(8, fibonacci());   // [0, 1, 1, 2, 3, 5, 8, 13]
+take(8, fibonacci()); // [0, 1, 1, 2, 3, 5, 8, 13]
 ```
 
 #### Async Generators
@@ -611,7 +622,7 @@ async function getAllItems(url) {
 
 ### WeakMap and WeakSet
 
-`WeakMap` and `WeakSet` hold *weak* references to their keys/values, allowing garbage collection when there are no other references.
+`WeakMap` and `WeakSet` hold _weak_ references to their keys/values, allowing garbage collection when there are no other references.
 
 ```javascript
 // WeakMap: keys must be objects, keys are weakly held
@@ -621,7 +632,7 @@ function processElement(element) {
   // Store metadata about a DOM element
   metadata.set(element, {
     clickCount: 0,
-    lastInteraction: Date.now()
+    lastInteraction: Date.now(),
   });
 }
 
@@ -641,13 +652,13 @@ function trackVisit(user) {
 
 #### Key Differences from Map/Set
 
-| Feature | Map/Set | WeakMap/WeakSet |
-|---------|---------|-----------------|
-| Keys/Values | Any type | Objects only |
-| Enumerable | Yes (iterable) | No (not iterable) |
-| `.size` | Yes | No |
-| Garbage collection | Prevents GC | Allows GC |
-| Use case | General storage | Metadata, caching |
+| Feature            | Map/Set         | WeakMap/WeakSet   |
+| ------------------ | --------------- | ----------------- |
+| Keys/Values        | Any type        | Objects only      |
+| Enumerable         | Yes (iterable)  | No (not iterable) |
+| `.size`            | Yes             | No                |
+| Garbage collection | Prevents GC     | Allows GC         |
+| Use case           | General storage | Metadata, caching |
 
 ### Proxy and Reflect
 
@@ -663,25 +674,25 @@ const handler = {
   },
 
   set(target, property, value, receiver) {
-    if (typeof value !== "number") {
+    if (typeof value !== 'number') {
       throw new TypeError(`Expected number, got ${typeof value}`);
     }
     return Reflect.set(target, property, value, receiver);
   },
 
   deleteProperty(target, property) {
-    if (property.startsWith("_")) {
-      throw new Error("Cannot delete private properties");
+    if (property.startsWith('_')) {
+      throw new Error('Cannot delete private properties');
     }
     return Reflect.deleteProperty(target, property);
-  }
+  },
 };
 
 const scores = new Proxy({}, handler);
-scores.math = 95;        // OK
-scores.math;             // 95
-scores.english = "A";    // TypeError: Expected number
-scores.physics;          // Error: Property "physics" does not exist
+scores.math = 95; // OK
+scores.math; // 95
+scores.english = 'A'; // TypeError: Expected number
+scores.physics; // Error: Property "physics" does not exist
 ```
 
 #### Practical Proxy Use Cases
@@ -697,7 +708,7 @@ function makeObservable(target, onChange) {
         onChange(prop, value, oldValue);
       }
       return result;
-    }
+    },
   });
 }
 
@@ -714,7 +725,7 @@ function withValidation(target, schema) {
         if (!isValid) throw new Error(`Invalid value for ${String(prop)}`);
       }
       return Reflect.set(obj, prop, value);
-    }
+    },
   });
 }
 ```
@@ -724,43 +735,47 @@ function withValidation(target, schema) {
 ```javascript
 // ===== ES Modules (ESM) =====
 // Static imports (hoisted, analyzed at compile time)
-import { useState, useEffect } from "react";
-import defaultExport from "./module.js";
-import * as utils from "./utils.js";
+import { useState, useEffect } from 'react';
+import defaultExport from './module.js';
+import * as utils from './utils.js';
 
 // Named exports
-export function add(a, b) { return a + b; }
+export function add(a, b) {
+  return a + b;
+}
 export const PI = 3.14159;
 
 // Default export
-export default class Calculator { }
+export default class Calculator {}
 
 // Dynamic import (lazy loading)
-const module = await import("./heavy-module.js");
+const module = await import('./heavy-module.js');
 
 // ===== CommonJS (CJS) =====
 // Dynamic requires (evaluated at runtime)
-const fs = require("fs");
-const { join } = require("path");
+const fs = require('fs');
+const { join } = require('path');
 
 // Exports
-module.exports = function add(a, b) { return a + b; };
+module.exports = function add(a, b) {
+  return a + b;
+};
 module.exports = { add, subtract };
-exports.helper = function () { };
+exports.helper = function () {};
 ```
 
 #### Key Differences
 
-| Feature | ESM | CommonJS |
-|---------|-----|----------|
-| Syntax | `import` / `export` | `require()` / `module.exports` |
-| Loading | Static (compile-time) | Dynamic (runtime) |
-| Binding | Live bindings (reference) | Value copy (snapshot) |
-| Top-level `this` | `undefined` | `module.exports` |
-| Tree-shakeable | Yes | No (dynamic, hard to analyze) |
-| Async | Supports top-level `await` | Synchronous only |
-| Circular deps | Handled (live bindings) | Partial (snapshot at require time) |
-| Browser support | Native | Needs bundler |
+| Feature          | ESM                        | CommonJS                           |
+| ---------------- | -------------------------- | ---------------------------------- |
+| Syntax           | `import` / `export`        | `require()` / `module.exports`     |
+| Loading          | Static (compile-time)      | Dynamic (runtime)                  |
+| Binding          | Live bindings (reference)  | Value copy (snapshot)              |
+| Top-level `this` | `undefined`                | `module.exports`                   |
+| Tree-shakeable   | Yes                        | No (dynamic, hard to analyze)      |
+| Async            | Supports top-level `await` | Synchronous only                   |
+| Circular deps    | Handled (live bindings)    | Partial (snapshot at require time) |
+| Browser support  | Native                     | Needs bundler                      |
 
 ---
 
@@ -783,7 +798,7 @@ function createRateLimiter(maxCalls, windowMs) {
       calls.shift();
     }
     if (calls.length >= maxCalls) {
-      throw new Error("Rate limit exceeded");
+      throw new Error('Rate limit exceeded');
     }
     calls.push(now);
     return fn();
@@ -808,12 +823,12 @@ for (var i = 0; i < 3; i++) {
 **Answer**: `===` (strict equality) compares value and type without coercion. `==` (loose equality) performs type coercion before comparison using a complex set of rules.
 
 ```javascript
-0 == ""          // true  (both coerce to 0)
-0 === ""         // false (number vs string)
-null == undefined // true  (special case in the spec)
-null === undefined // false (different types)
-NaN == NaN       // false (NaN is not equal to anything)
-NaN === NaN      // false
+0 == ''; // true  (both coerce to 0)
+0 === ''; // false (number vs string)
+null == undefined; // true  (special case in the spec)
+null === undefined; // false (different types)
+NaN == NaN; // false (NaN is not equal to anything)
+NaN === NaN; // false
 
 // Always use === unless you specifically need coercion
 // The one acceptable use of == is checking for null/undefined:
@@ -825,15 +840,15 @@ if (value == null) {
 ### 4. "What is the event loop? Explain the execution order."
 
 ```javascript
-console.log("A");
+console.log('A');
 
-setTimeout(() => console.log("B"), 0);
+setTimeout(() => console.log('B'), 0);
 
 Promise.resolve()
-  .then(() => console.log("C"))
-  .then(() => console.log("D"));
+  .then(() => console.log('C'))
+  .then(() => console.log('D'));
 
-console.log("E");
+console.log('E');
 ```
 
 **Answer**: Output is `A, E, C, D, B`.
@@ -853,10 +868,10 @@ console.log("E");
 const obj = {
   value: 42,
   regular() {
-    return this.value;          // this = obj (implicit binding)
+    return this.value; // this = obj (implicit binding)
   },
   arrow: () => {
-    return this.value;          // this = enclosing scope (likely global/undefined)
+    return this.value; // this = enclosing scope (likely global/undefined)
   },
   delayed() {
     setTimeout(function () {
@@ -865,7 +880,7 @@ const obj = {
     setTimeout(() => {
       // this = obj (lexical, inherited from delayed())
     }, 100);
-  }
+  },
 };
 ```
 
@@ -892,7 +907,7 @@ function promiseAll(promises) {
             resolve(results);
           }
         })
-        .catch(reject);   // First rejection rejects the whole Promise
+        .catch(reject); // First rejection rejects the whole Promise
     });
   });
 }
@@ -905,15 +920,15 @@ function promiseAll(promises) {
 ```javascript
 {
   // TDZ starts
-  typeof myVar;    // ReferenceError (not undefined!)
+  typeof myVar; // ReferenceError (not undefined!)
   // TDZ continues...
-  let myVar = 10;  // TDZ ends
-  typeof myVar;    // "number"
+  let myVar = 10; // TDZ ends
+  typeof myVar; // "number"
 }
 
 // Compare with var:
 {
-  typeof myVar;    // "undefined" (hoisted, no TDZ)
+  typeof myVar; // "undefined" (hoisted, no TDZ)
   var myVar = 10;
 }
 ```
@@ -923,6 +938,7 @@ function promiseAll(promises) {
 **Answer**: In classical inheritance (Java, C++), classes are blueprints that create instances. Inheritance creates a copy of the parent class structure. In JavaScript's prototypal inheritance, objects inherit directly from other objects via the prototype chain. There is no copying -- objects delegate to their prototype at runtime.
 
 Key differences:
+
 - **No classes**: ES6 `class` is syntactic sugar over prototypes
 - **Dynamic**: You can modify prototypes at runtime and all instances reflect the change
 - **Delegation, not copying**: Property lookups walk the chain until found or `null`
@@ -969,11 +985,10 @@ function debounce(fn, delay, options = {}) {
 }
 
 // Usage
-const search = debounce(
-  (query) => fetch(`/api/search?q=${query}`),
-  300,
-  { leading: false, trailing: true }
-);
+const search = debounce((query) => fetch(`/api/search?q=${query}`), 300, {
+  leading: false,
+  trailing: true,
+});
 ```
 
 ### Event Emitter (Pub/Sub Pattern)
@@ -1016,16 +1031,16 @@ function createEventEmitter() {
       if (eventListeners) {
         eventListeners.delete(callback);
       }
-    }
+    },
   };
 }
 
 const emitter = createEventEmitter();
-const unsub = emitter.on("data", (payload) => {
+const unsub = emitter.on('data', (payload) => {
   // Handle data
 });
-emitter.emit("data", { id: 1, name: "test" });
-unsub();   // Clean up
+emitter.emit('data', { id: 1, name: 'test' });
+unsub(); // Clean up
 ```
 
 ### Deep Equality Check
@@ -1037,7 +1052,7 @@ function deepEqual(a, b) {
 
   // If either is null/undefined or not an object
   if (a == null || b == null) return false;
-  if (typeof a !== "object" || typeof b !== "object") return false;
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
 
   // Handle Date
   if (a instanceof Date && b instanceof Date) {
@@ -1057,8 +1072,9 @@ function deepEqual(a, b) {
 
   if (keysA.length !== keysB.length) return false;
 
-  return keysA.every((key) =>
-    Object.prototype.hasOwnProperty.call(b, key) && deepEqual(a[key], b[key])
+  return keysA.every(
+    (key) =>
+      Object.prototype.hasOwnProperty.call(b, key) && deepEqual(a[key], b[key])
   );
 }
 ```
@@ -1072,7 +1088,7 @@ async function retry(fn, options = {}) {
     baseDelay = 1000,
     maxDelay = 30000,
     backoffFactor = 2,
-    shouldRetry = () => true
+    shouldRetry = () => true,
   } = options;
 
   let lastError;
@@ -1103,14 +1119,15 @@ async function retry(fn, options = {}) {
 
 // Usage
 const data = await retry(
-  () => fetch("/api/data").then((r) => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
-  }),
+  () =>
+    fetch('/api/data').then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }),
   {
     maxAttempts: 3,
     baseDelay: 1000,
-    shouldRetry: (error) => !error.message.includes("401")
+    shouldRetry: (error) => !error.message.includes('401'),
   }
 );
 ```
@@ -1122,28 +1139,28 @@ const data = await retry(
 ### 1. typeof Quirks
 
 ```javascript
-typeof null          // "object"    (historical bug, never fixed)
-typeof undefined     // "undefined"
-typeof NaN           // "number"    (NaN is a numeric type)
-typeof []            // "object"    (arrays are objects)
-typeof function(){}  // "function"  (special case)
+typeof null; // "object"    (historical bug, never fixed)
+typeof undefined; // "undefined"
+typeof NaN; // "number"    (NaN is a numeric type)
+typeof []; // "object"    (arrays are objects)
+typeof function () {}; // "function"  (special case)
 
 // Use these for reliable type checking:
-Array.isArray([]);                        // true
-Number.isNaN(NaN);                        // true
-Object.prototype.toString.call(null);     // "[object Null]"
+Array.isArray([]); // true
+Number.isNaN(NaN); // true
+Object.prototype.toString.call(null); // "[object Null]"
 ```
 
 ### 2. Floating Point Precision
 
 ```javascript
-0.1 + 0.2 === 0.3           // false (0.30000000000000004)
+0.1 + 0.2 === 0.3; // false (0.30000000000000004)
 
 // Fix: compare with epsilon
-Math.abs(0.1 + 0.2 - 0.3) < Number.EPSILON;   // true
+Math.abs(0.1 + 0.2 - 0.3) < Number.EPSILON; // true
 
 // Or use integer arithmetic
-(0.1 * 10 + 0.2 * 10) / 10 === 0.3;           // true
+(0.1 * 10 + 0.2 * 10) / 10 === 0.3; // true
 ```
 
 ### 3. Implicit Coercion Surprises
@@ -1162,26 +1179,28 @@ true + true          // 2
 ```javascript
 function classic() {
   // arguments is array-like, NOT an array
-  arguments.forEach;    // undefined
-  const arr = Array.from(arguments);  // convert to real array
+  arguments.forEach; // undefined
+  const arr = Array.from(arguments); // convert to real array
 }
 
 // Prefer rest parameters
 function modern(...args) {
   // args is a real array
-  args.forEach((arg) => { /* works */ });
+  args.forEach((arg) => {
+    /* works */
+  });
 }
 
 // Arrow functions do NOT have their own arguments
 const arrow = () => {
-  arguments;   // refers to enclosing function's arguments (or ReferenceError)
+  arguments; // refers to enclosing function's arguments (or ReferenceError)
 };
 ```
 
 ### 5. Object Property Order
 
 ```javascript
-const obj = { 2: "b", 1: "a", c: "c", a: "a" };
+const obj = { 2: 'b', 1: 'a', c: 'c', a: 'a' };
 Object.keys(obj);
 // ["1", "2", "c", "a"]
 // Integer-like keys are sorted numerically FIRST,
@@ -1193,37 +1212,34 @@ Object.keys(obj);
 ```javascript
 // PROBLEM: Unhandled rejection
 async function fetchData() {
-  const data = await fetch("/api");  // If this throws, nothing catches it
+  const data = await fetch('/api'); // If this throws, nothing catches it
   return data.json();
 }
-fetchData();  // No .catch(), no try/catch around the call
+fetchData(); // No .catch(), no try/catch around the call
 
 // PROBLEM: Swallowed errors in Promise.all
 const results = await Promise.all([
-  fetch("/api/a"),
-  fetch("/api/b"),   // If this rejects, we lose the result of /api/a
+  fetch('/api/a'),
+  fetch('/api/b'), // If this rejects, we lose the result of /api/a
 ]);
 
 // FIX: Use Promise.allSettled when you need all results
-const outcomes = await Promise.allSettled([
-  fetch("/api/a"),
-  fetch("/api/b"),
-]);
+const outcomes = await Promise.allSettled([fetch('/api/a'), fetch('/api/b')]);
 const successes = outcomes
-  .filter((o) => o.status === "fulfilled")
+  .filter((o) => o.status === 'fulfilled')
   .map((o) => o.value);
 ```
 
 ### 7. Symbols Are Not Enumerable by Default
 
 ```javascript
-const sym = Symbol("id");
-const obj = { [sym]: 123, name: "Alice" };
+const sym = Symbol('id');
+const obj = { [sym]: 123, name: 'Alice' };
 
-Object.keys(obj);              // ["name"]     (no symbol)
-JSON.stringify(obj);           // '{"name":"Alice"}'  (no symbol)
-Object.getOwnPropertySymbols(obj);  // [Symbol(id)]
-Reflect.ownKeys(obj);         // ["name", Symbol(id)]  (everything)
+Object.keys(obj); // ["name"]     (no symbol)
+JSON.stringify(obj); // '{"name":"Alice"}'  (no symbol)
+Object.getOwnPropertySymbols(obj); // [Symbol(id)]
+Reflect.ownKeys(obj); // ["name", Symbol(id)]  (everything)
 ```
 
 ---
@@ -1232,74 +1248,74 @@ Reflect.ownKeys(obj);         // ["name", Symbol(id)]  (everything)
 
 ### Equality Comparison Table
 
-| Expression | `==` | `===` | `Object.is()` |
-|-----------|------|-------|---------------|
-| `NaN` vs `NaN` | false | false | **true** |
-| `+0` vs `-0` | true | true | **false** |
-| `null` vs `undefined` | true | false | false |
-| `""` vs `false` | true | false | false |
-| `""` vs `0` | true | false | false |
-| `"0"` vs `false` | true | false | false |
+| Expression            | `==`  | `===` | `Object.is()` |
+| --------------------- | ----- | ----- | ------------- |
+| `NaN` vs `NaN`        | false | false | **true**      |
+| `+0` vs `-0`          | true  | true  | **false**     |
+| `null` vs `undefined` | true  | false | false         |
+| `""` vs `false`       | true  | false | false         |
+| `""` vs `0`           | true  | false | false         |
+| `"0"` vs `false`      | true  | false | false         |
 
 ### Array Method Cheat Sheet
 
-| Method | Returns | Mutates? | Purpose |
-|--------|---------|----------|---------|
-| `map()` | New array | No | Transform each element |
-| `filter()` | New array | No | Select elements by condition |
-| `reduce()` | Single value | No | Accumulate to one value |
-| `forEach()` | undefined | No | Side effects only |
-| `find()` | Element or undefined | No | First match |
-| `findIndex()` | Index or -1 | No | Index of first match |
-| `some()` | boolean | No | At least one matches |
-| `every()` | boolean | No | All match |
-| `flat()` | New array | No | Flatten nested arrays |
-| `flatMap()` | New array | No | Map then flatten (1 level) |
-| `sort()` | Same array | **Yes** | Sort in place |
-| `splice()` | Removed items | **Yes** | Add/remove elements |
-| `push()/pop()` | Length/element | **Yes** | Add/remove from end |
-| `shift()/unshift()` | Element/length | **Yes** | Add/remove from start |
-| `toSorted()` | New array | No | Sort without mutation (ES2023) |
-| `toSpliced()` | New array | No | Splice without mutation (ES2023) |
-| `with()` | New array | No | Replace at index without mutation (ES2023) |
+| Method              | Returns              | Mutates? | Purpose                                    |
+| ------------------- | -------------------- | -------- | ------------------------------------------ |
+| `map()`             | New array            | No       | Transform each element                     |
+| `filter()`          | New array            | No       | Select elements by condition               |
+| `reduce()`          | Single value         | No       | Accumulate to one value                    |
+| `forEach()`         | undefined            | No       | Side effects only                          |
+| `find()`            | Element or undefined | No       | First match                                |
+| `findIndex()`       | Index or -1          | No       | Index of first match                       |
+| `some()`            | boolean              | No       | At least one matches                       |
+| `every()`           | boolean              | No       | All match                                  |
+| `flat()`            | New array            | No       | Flatten nested arrays                      |
+| `flatMap()`         | New array            | No       | Map then flatten (1 level)                 |
+| `sort()`            | Same array           | **Yes**  | Sort in place                              |
+| `splice()`          | Removed items        | **Yes**  | Add/remove elements                        |
+| `push()/pop()`      | Length/element       | **Yes**  | Add/remove from end                        |
+| `shift()/unshift()` | Element/length       | **Yes**  | Add/remove from start                      |
+| `toSorted()`        | New array            | No       | Sort without mutation (ES2023)             |
+| `toSpliced()`       | New array            | No       | Splice without mutation (ES2023)           |
+| `with()`            | New array            | No       | Replace at index without mutation (ES2023) |
 
 ### `this` Binding Rules (Precedence Order)
 
-| Rule | Example | `this` Value |
-|------|---------|-------------|
-| 1. `new` | `new Foo()` | New object |
-| 2. Explicit | `fn.call(obj)` | `obj` |
-| 3. Implicit | `obj.fn()` | `obj` |
-| 4. Default | `fn()` | `globalThis` (or `undefined` in strict) |
-| 5. Arrow | `() => {}` | Enclosing scope's `this` |
+| Rule        | Example        | `this` Value                            |
+| ----------- | -------------- | --------------------------------------- |
+| 1. `new`    | `new Foo()`    | New object                              |
+| 2. Explicit | `fn.call(obj)` | `obj`                                   |
+| 3. Implicit | `obj.fn()`     | `obj`                                   |
+| 4. Default  | `fn()`         | `globalThis` (or `undefined` in strict) |
+| 5. Arrow    | `() => {}`     | Enclosing scope's `this`                |
 
 ### Promise Combinator Reference
 
-| Combinator | Resolves When | Rejects When | Use Case |
-|-----------|---------------|-------------|----------|
-| `Promise.all` | All fulfill | Any rejects | All-or-nothing |
-| `Promise.allSettled` | All settle | Never | Get all outcomes |
-| `Promise.race` | First settles | First settles | Timeout pattern |
-| `Promise.any` | First fulfills | All reject | First success |
+| Combinator           | Resolves When  | Rejects When  | Use Case         |
+| -------------------- | -------------- | ------------- | ---------------- |
+| `Promise.all`        | All fulfill    | Any rejects   | All-or-nothing   |
+| `Promise.allSettled` | All settle     | Never         | Get all outcomes |
+| `Promise.race`       | First settles  | First settles | Timeout pattern  |
+| `Promise.any`        | First fulfills | All reject    | First success    |
 
 ### ES6+ Feature Reference
 
-| Feature | Version | Example |
-|---------|---------|---------|
-| Arrow functions | ES6 | `(x) => x * 2` |
-| Template literals | ES6 | `` `Hello ${name}` `` |
-| Destructuring | ES6 | `const { a, b } = obj` |
-| Spread/Rest | ES6 | `[...arr]`, `(...args)` |
-| Promises | ES6 | `new Promise((resolve) => {})` |
-| Classes | ES6 | `class Foo extends Bar {}` |
-| Modules | ES6 | `import / export` |
-| `let`/`const` | ES6 | Block-scoped variables |
-| Symbols | ES6 | `Symbol("id")` |
-| async/await | ES2017 | `async function() { await p }` |
-| Optional chaining | ES2020 | `obj?.prop?.method?.()` |
-| Nullish coalescing | ES2020 | `value ?? fallback` |
-| Logical assignment | ES2021 | `a ??= b`, `a ||= b` |
-| Top-level await | ES2022 | `await import("./mod.js")` |
-| `structuredClone` | ES2022 | `structuredClone(obj)` |
-| Array grouping | ES2024 | `Object.groupBy(arr, fn)` |
-| `toSorted/toSpliced/with` | ES2023 | Immutable array methods |
+| Feature                   | Version | Example                        |
+| ------------------------- | ------- | ------------------------------ | --- | ---- |
+| Arrow functions           | ES6     | `(x) => x * 2`                 |
+| Template literals         | ES6     | `` `Hello ${name}` ``          |
+| Destructuring             | ES6     | `const { a, b } = obj`         |
+| Spread/Rest               | ES6     | `[...arr]`, `(...args)`        |
+| Promises                  | ES6     | `new Promise((resolve) => {})` |
+| Classes                   | ES6     | `class Foo extends Bar {}`     |
+| Modules                   | ES6     | `import / export`              |
+| `let`/`const`             | ES6     | Block-scoped variables         |
+| Symbols                   | ES6     | `Symbol("id")`                 |
+| async/await               | ES2017  | `async function() { await p }` |
+| Optional chaining         | ES2020  | `obj?.prop?.method?.()`        |
+| Nullish coalescing        | ES2020  | `value ?? fallback`            |
+| Logical assignment        | ES2021  | `a ??= b`, `a                  |     | = b` |
+| Top-level await           | ES2022  | `await import("./mod.js")`     |
+| `structuredClone`         | ES2022  | `structuredClone(obj)`         |
+| Array grouping            | ES2024  | `Object.groupBy(arr, fn)`      |
+| `toSorted/toSpliced/with` | ES2023  | Immutable array methods        |

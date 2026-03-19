@@ -29,24 +29,24 @@ brief designs for Tic-Tac-Toe and Snake.
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Standard 8x8 board | Initialize with standard piece positions |
-| F2 | All piece types | King, Queen, Rook, Bishop, Knight, Pawn |
-| F3 | Move validation | Each piece type has unique movement rules |
-| F4 | Turn management | Alternating white/black turns |
-| F5 | Capture logic | Moving to opponent's square captures the piece |
-| F6 | Check detection | Detect when a king is threatened |
-| F7 | Checkmate/stalemate | End game conditions |
-| F8 | Move history | Track all moves for replay |
+| #   | Requirement         | Details                                        |
+| --- | ------------------- | ---------------------------------------------- |
+| F1  | Standard 8x8 board  | Initialize with standard piece positions       |
+| F2  | All piece types     | King, Queen, Rook, Bishop, Knight, Pawn        |
+| F3  | Move validation     | Each piece type has unique movement rules      |
+| F4  | Turn management     | Alternating white/black turns                  |
+| F5  | Capture logic       | Moving to opponent's square captures the piece |
+| F6  | Check detection     | Detect when a king is threatened               |
+| F7  | Checkmate/stalemate | End game conditions                            |
+| F8  | Move history        | Track all moves for replay                     |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
+| #   | Requirement                                                  |
+| --- | ------------------------------------------------------------ |
 | NF1 | Adding new piece types should not modify existing code (OCP) |
-| NF2 | Move validation should be polymorphic |
-| NF3 | Game state should be immutable-friendly |
+| NF2 | Move validation should be polymorphic                        |
+| NF3 | Game state should be immutable-friendly                      |
 
 ---
 

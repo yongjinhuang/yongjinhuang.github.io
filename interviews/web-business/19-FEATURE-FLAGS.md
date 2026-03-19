@@ -63,21 +63,21 @@ The most basic use of a feature flag — an emergency OFF switch for a feature t
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Feature Flag / Toggle** | A conditional switch that controls feature visibility |
-| **Flag Evaluation** | The process of determining if a flag is on or off for a specific user/request |
-| **Targeting Rule** | Conditions that determine who sees the feature (user ID, percentage, attribute) |
-| **Rollout** | Gradually increasing the percentage of users who see a feature |
-| **Canary Release** | Releasing to a tiny percentage first, monitoring, then expanding |
-| **Kill Switch** | Instantly disabling a feature in production without deploying |
-| **Variant** | One of multiple options in a flag (control, variant A, variant B) |
-| **Sticky Bucketing** | Ensuring a user always sees the same variant once assigned |
-| **Flag Debt** | Old, unused flags still in the code. Technical debt that must be cleaned up |
-| **Trunk-Based Development** | Committing to main branch frequently, using flags to hide incomplete features |
-| **Dark Launch** | Deploying a feature to production but not showing it to users (backend processing happens, UI is hidden) |
-| **Percentage Rollout** | Enabling a feature for X% of users, gradually increasing |
-| **Feature Gate** | A flag that controls access to a feature (usually tied to a plan or permission) |
+| Term                        | What It Means                                                                                            |
+| --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Feature Flag / Toggle**   | A conditional switch that controls feature visibility                                                    |
+| **Flag Evaluation**         | The process of determining if a flag is on or off for a specific user/request                            |
+| **Targeting Rule**          | Conditions that determine who sees the feature (user ID, percentage, attribute)                          |
+| **Rollout**                 | Gradually increasing the percentage of users who see a feature                                           |
+| **Canary Release**          | Releasing to a tiny percentage first, monitoring, then expanding                                         |
+| **Kill Switch**             | Instantly disabling a feature in production without deploying                                            |
+| **Variant**                 | One of multiple options in a flag (control, variant A, variant B)                                        |
+| **Sticky Bucketing**        | Ensuring a user always sees the same variant once assigned                                               |
+| **Flag Debt**               | Old, unused flags still in the code. Technical debt that must be cleaned up                              |
+| **Trunk-Based Development** | Committing to main branch frequently, using flags to hide incomplete features                            |
+| **Dark Launch**             | Deploying a feature to production but not showing it to users (backend processing happens, UI is hidden) |
+| **Percentage Rollout**      | Enabling a feature for X% of users, gradually increasing                                                 |
+| **Feature Gate**            | A flag that controls access to a feature (usually tied to a plan or permission)                          |
 
 ## Common Patterns
 
@@ -133,19 +133,19 @@ Flag has multiple variants, not just on/off. Used for experiments.
 
 ## Quick Reference
 
-| Use Case | Flag Type | Example |
-|----------|-----------|---------|
-| Hide incomplete feature | Boolean (OFF) | `new-dashboard: false` |
-| Safe feature launch | Percentage rollout | `new-search: 5% → 25% → 100%` |
-| Beta program | User segment | `advanced-analytics: enterprise-plan-only` |
-| A/B experiment | Multivariate | `checkout-layout: [control, variant-a, variant-b]` |
-| Emergency shutoff | Kill switch | `payment-processing: true → false in 2 seconds` |
-| Regional launch | Targeting rule | `new-feature: country in [US, CA]` |
+| Use Case                | Flag Type          | Example                                            |
+| ----------------------- | ------------------ | -------------------------------------------------- |
+| Hide incomplete feature | Boolean (OFF)      | `new-dashboard: false`                             |
+| Safe feature launch     | Percentage rollout | `new-search: 5% → 25% → 100%`                      |
+| Beta program            | User segment       | `advanced-analytics: enterprise-plan-only`         |
+| A/B experiment          | Multivariate       | `checkout-layout: [control, variant-a, variant-b]` |
+| Emergency shutoff       | Kill switch        | `payment-processing: true → false in 2 seconds`    |
+| Regional launch         | Targeting rule     | `new-feature: country in [US, CA]`                 |
 
-| Tool | Type | Notes |
-|------|------|-------|
-| LaunchDarkly | SaaS | Most popular. Enterprise-focused. Expensive |
-| Flagsmith | Open source / SaaS | Good balance of features and cost |
-| Unleash | Open source | Self-hosted, no vendor lock-in |
-| PostHog | SaaS + self-hosted | Feature flags + analytics + experiments |
-| Custom (database/config) | DIY | Simple, no dependencies, limited features |
+| Tool                     | Type               | Notes                                       |
+| ------------------------ | ------------------ | ------------------------------------------- |
+| LaunchDarkly             | SaaS               | Most popular. Enterprise-focused. Expensive |
+| Flagsmith                | Open source / SaaS | Good balance of features and cost           |
+| Unleash                  | Open source        | Self-hosted, no vendor lock-in              |
+| PostHog                  | SaaS + self-hosted | Feature flags + analytics + experiments     |
+| Custom (database/config) | DIY                | Simple, no dependencies, limited features   |

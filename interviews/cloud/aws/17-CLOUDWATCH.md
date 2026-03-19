@@ -6,13 +6,13 @@ AWS observability is built on three pillars: CloudWatch for metrics, logs, and a
 
 ## CloudWatch Overview
 
-| Component | What It Does |
-|-----------|-------------|
-| **Metrics** | Time-series data points (CPU, latency, custom business metrics) |
-| **Logs** | Centralized log ingestion, storage, and querying |
-| **Alarms** | Threshold or anomaly-based alerts that trigger actions |
-| **Dashboards** | Real-time visualization of metrics and logs |
-| **Synthetics** | Canary scripts that monitor endpoints and APIs |
+| Component      | What It Does                                                    |
+| -------------- | --------------------------------------------------------------- |
+| **Metrics**    | Time-series data points (CPU, latency, custom business metrics) |
+| **Logs**       | Centralized log ingestion, storage, and querying                |
+| **Alarms**     | Threshold or anomaly-based alerts that trigger actions          |
+| **Dashboards** | Real-time visualization of metrics and logs                     |
+| **Synthetics** | Canary scripts that monitor endpoints and APIs                  |
 
 ---
 
@@ -22,17 +22,17 @@ AWS observability is built on three pillars: CloudWatch for metrics, logs, and a
 
 AWS services publish built-in metrics automatically. Custom metrics are anything you publish yourself.
 
-| Built-in (examples) | Custom (you publish) |
-|----------------------|----------------------|
-| EC2: CPUUtilization, NetworkIn | Application p99 latency |
-| RDS: DatabaseConnections | Business: orders_per_minute |
-| ALB: RequestCount, TargetResponseTime | Cache hit ratio |
+| Built-in (examples)                   | Custom (you publish)        |
+| ------------------------------------- | --------------------------- |
+| EC2: CPUUtilization, NetworkIn        | Application p99 latency     |
+| RDS: DatabaseConnections              | Business: orders_per_minute |
+| ALB: RequestCount, TargetResponseTime | Cache hit ratio             |
 
 ### Metric Resolution
 
-| Resolution | Period | Cost | Use Case |
-|-----------|--------|------|----------|
-| **Standard** | 1 minute | Free for built-in | Most production monitoring |
+| Resolution          | Period   | Cost               | Use Case                                    |
+| ------------------- | -------- | ------------------ | ------------------------------------------- |
+| **Standard**        | 1 minute | Free for built-in  | Most production monitoring                  |
 | **High-resolution** | 1 second | $0.30/metric/month | Auto-scaling triggers, real-time dashboards |
 
 ```bash
@@ -65,20 +65,20 @@ Statistics: Average, Sum, Min, Max, SampleCount, and percentiles (p50, p90, p99)
 
 ### Alarm Types
 
-| Type | How It Works |
-|------|-------------|
-| **Metric alarm** | Fires when metric crosses a static threshold for N consecutive periods |
-| **Anomaly detection** | ML baseline band; fires when metric exits the band |
-| **Composite alarm** | Combines multiple alarms with AND/OR to reduce noise |
+| Type                  | How It Works                                                           |
+| --------------------- | ---------------------------------------------------------------------- |
+| **Metric alarm**      | Fires when metric crosses a static threshold for N consecutive periods |
+| **Anomaly detection** | ML baseline band; fires when metric exits the band                     |
+| **Composite alarm**   | Combines multiple alarms with AND/OR to reduce noise                   |
 
 ### Alarm Actions
 
-| Target | Example |
-|--------|---------|
-| **SNS** | Notify on-call via PagerDuty, Slack |
-| **Auto Scaling** | Scale out when CPU > 70% |
-| **EC2** | Reboot, stop, terminate, recover |
-| **Lambda** | Custom remediation logic |
+| Target           | Example                             |
+| ---------------- | ----------------------------------- |
+| **SNS**          | Notify on-call via PagerDuty, Slack |
+| **Auto Scaling** | Scale out when CPU > 70%            |
+| **EC2**          | Reboot, stop, terminate, recover    |
+| **Lambda**       | Custom remediation logic            |
 
 ```bash
 # CPU alarm: 3 consecutive 5-min periods above 80%
@@ -192,11 +192,11 @@ Records every API call in your AWS account. Answers: **who did what, when, from 
 
 ### Event Types
 
-| Type | What It Records | Default |
-|------|----------------|---------|
-| **Management events** | Control plane: CreateBucket, RunInstances | Enabled (free, 90-day lookup) |
-| **Data events** | Data plane: GetObject, PutObject, Invoke | Disabled (high volume, costs money) |
-| **Insights events** | Anomalous API activity spikes | Disabled |
+| Type                  | What It Records                           | Default                             |
+| --------------------- | ----------------------------------------- | ----------------------------------- |
+| **Management events** | Control plane: CreateBucket, RunInstances | Enabled (free, 90-day lookup)       |
+| **Data events**       | Data plane: GetObject, PutObject, Invoke  | Disabled (high volume, costs money) |
+| **Insights events**   | Anomalous API activity spikes             | Disabled                            |
 
 ### Trail Setup
 
@@ -225,13 +225,13 @@ Distributed tracing for microservices. Traces a request from ingress through eve
 
 ### Core Concepts
 
-| Concept | Description |
-|---------|-------------|
-| **Trace** | End-to-end journey of a single request |
-| **Segment** | Work done by one service |
-| **Subsegment** | Granular breakdown (a DynamoDB call, HTTP request) |
-| **Annotation** | Indexed key-value for filtering (e.g., `userId=42`) |
-| **Metadata** | Non-indexed data (e.g., full request body) |
+| Concept         | Description                                             |
+| --------------- | ------------------------------------------------------- |
+| **Trace**       | End-to-end journey of a single request                  |
+| **Segment**     | Work done by one service                                |
+| **Subsegment**  | Granular breakdown (a DynamoDB call, HTTP request)      |
+| **Annotation**  | Indexed key-value for filtering (e.g., `userId=42`)     |
+| **Metadata**    | Non-indexed data (e.g., full request body)              |
 | **Service map** | Auto-generated dependency graph with latency/error info |
 
 ### Sampling
@@ -267,12 +267,12 @@ Debugging: Alarm (CloudWatch) --> Dashboard --> Logs by trace ID (Log Insights) 
 
 ### Four Golden Signals
 
-| Signal | Metric | Example Alarm |
-|--------|--------|---------------|
-| **Latency** | p99 response time | p99 > 500ms for 5 min |
-| **Traffic** | Requests/sec | Sudden drop > 50% |
-| **Errors** | 5xx / total | Error rate > 1% for 3 min |
-| **Saturation** | CPU, memory, queue depth | CPU > 80% for 10 min |
+| Signal         | Metric                   | Example Alarm             |
+| -------------- | ------------------------ | ------------------------- |
+| **Latency**    | p99 response time        | p99 > 500ms for 5 min     |
+| **Traffic**    | Requests/sec             | Sudden drop > 50%         |
+| **Errors**     | 5xx / total              | Error rate > 1% for 3 min |
+| **Saturation** | CPU, memory, queue depth | CPU > 80% for 10 min      |
 
 ---
 

@@ -28,25 +28,25 @@ frequently asked at senior levels because logging is foundational to every produ
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Log levels | DEBUG, INFO, WARNING, ERROR, CRITICAL with filtering |
-| F2 | Logger hierarchy | root -> package -> module with level inheritance |
-| F3 | Multiple handlers | Console, File, RotatingFile, HTTP |
-| F4 | Formatters | Customizable output format (text, JSON) |
-| F5 | Log routing | Route log records through handler chain |
-| F6 | Async logging | Non-blocking with background writer thread |
-| F7 | Structured logging | JSON output with arbitrary key-value context |
-| F8 | Context propagation | Request ID, user ID across log calls |
-| F9 | Configuration | Load from dict or file |
+| #   | Requirement         | Details                                              |
+| --- | ------------------- | ---------------------------------------------------- |
+| F1  | Log levels          | DEBUG, INFO, WARNING, ERROR, CRITICAL with filtering |
+| F2  | Logger hierarchy    | root -> package -> module with level inheritance     |
+| F3  | Multiple handlers   | Console, File, RotatingFile, HTTP                    |
+| F4  | Formatters          | Customizable output format (text, JSON)              |
+| F5  | Log routing         | Route log records through handler chain              |
+| F6  | Async logging       | Non-blocking with background writer thread           |
+| F7  | Structured logging  | JSON output with arbitrary key-value context         |
+| F8  | Context propagation | Request ID, user ID across log calls                 |
+| F9  | Configuration       | Load from dict or file                               |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
+| #   | Requirement                                     |
+| --- | ----------------------------------------------- |
 | NF1 | Thread-safe (multiple threads log concurrently) |
 | NF2 | Minimal overhead when log level is filtered out |
-| NF3 | Singleton LogManager for global access |
+| NF3 | Singleton LogManager for global access          |
 | NF4 | Extensible: new handlers without modifying core |
 
 ### Clarifying Questions to Ask
@@ -844,6 +844,7 @@ json_logger.info("Order placed", order_id="ORD-100", amount="59.99")
 ### Output Examples
 
 **Text format:**
+
 ```
 [2024-03-15 10:30:45.123] INFO     app - Application started
 [2024-03-15 10:30:45.124] WARNING  app.db - Slow query detected | query=SELECT * duration=3.2s
@@ -851,8 +852,15 @@ json_logger.info("Order placed", order_id="ORD-100", amount="59.99")
 ```
 
 **JSON format:**
+
 ```json
-{"timestamp": "2024-03-15T10:30:45.126", "level": "INFO", "logger": "structured", "message": "Order placed", "context": {"order_id": "ORD-100", "amount": "59.99"}}
+{
+  "timestamp": "2024-03-15T10:30:45.126",
+  "level": "INFO",
+  "logger": "structured",
+  "message": "Order placed",
+  "context": { "order_id": "ORD-100", "amount": "59.99" }
+}
 ```
 
 ---

@@ -1,7 +1,7 @@
 # Chapter 2: CPU Performance Optimization
 
 > **Prerequisites**: Chapter 1 (Computer Architecture basics -- caches, pipelines, out-of-order execution).
-> **Goal**: Transform naive C/C++ code into high-performance code by understanding *why* hardware behaves the way it does and *how* to exploit it.
+> **Goal**: Transform naive C/C++ code into high-performance code by understanding _why_ hardware behaves the way it does and _how_ to exploit it.
 
 ---
 
@@ -53,6 +53,7 @@ That is a 100x difference. No amount of clever arithmetic can compensate for a p
 ```
 
 Key facts:
+
 - **Cache line**: The unit of transfer is 64 bytes (on x86). When you read one byte, the
   hardware fetches all 64 bytes surrounding it.
 - **Spatial locality**: Accessing addresses near each other is fast because they share a cache line.
@@ -117,10 +118,10 @@ Memory jumps:             Memory jumps:
 
 **Benchmark results** (N=4096, int matrix, Intel i7-12700K):
 
-| Traversal     | Time (ms) | L1 Miss Rate | Speedup |
-|---------------|-----------|--------------|---------|
-| Row-major     | 12        | 0.8%         | 1.0x    |
-| Column-major  | 85        | 23.4%        | 0.14x   |
+| Traversal    | Time (ms) | L1 Miss Rate | Speedup |
+| ------------ | --------- | ------------ | ------- |
+| Row-major    | 12        | 0.8%         | 1.0x    |
+| Column-major | 85        | 23.4%        | 0.14x   |
 
 That is a **7x** slowdown just from changing the loop order.
 
@@ -269,11 +270,11 @@ We process small tiles that fit in L1 cache:
 
 **Benchmark results** (N=2048, float, Intel i7-12700K):
 
-| Version       | Time (ms) | GFLOPS | L1 Miss Rate |
-|---------------|-----------|--------|--------------|
-| Naive         | 4200      | 4.1    | 24.1%        |
-| Tiled (B=32)  | 820       | 21.0   | 3.2%         |
-| Tiled (B=64)  | 680       | 25.3   | 1.8%         |
+| Version      | Time (ms) | GFLOPS | L1 Miss Rate |
+| ------------ | --------- | ------ | ------------ |
+| Naive        | 4200      | 4.1    | 24.1%        |
+| Tiled (B=32) | 820       | 21.0   | 3.2%         |
+| Tiled (B=64) | 680       | 25.3   | 1.8%         |
 
 Over **6x** speedup from tiling alone.
 
@@ -362,11 +363,12 @@ float total_kinetic_soa(const struct Particles_SoA *p, int n) {
 **Benchmark** (N=10,000,000 particles):
 
 | Layout | Time (ms) | Bandwidth Used | Speedup |
-|--------|-----------|----------------|---------|
+| ------ | --------- | -------------- | ------- |
 | AoS    | 38        | 50% wasted     | 1.0x    |
 | SoA    | 14        | ~100% useful   | 2.7x    |
 
 **When to use which**:
+
 - **SoA**: Batch processing many items, accessing few fields. Ideal for SIMD.
 - **AoS**: Individual item access, all fields used together. Simpler code.
 - **AoSoA** (hybrid): Groups of SoA tiles, balancing both. Used in game engines.
@@ -472,10 +474,10 @@ int main(void) {
 
 **Typical results** (4 cores):
 
-| Version          | Time (s) | Throughput    |
-|------------------|----------|---------------|
-| False sharing    | 2.8      | 143M ops/s    |
-| Cache-line padded| 0.3      | 1333M ops/s   |
+| Version           | Time (s) | Throughput  |
+| ----------------- | -------- | ----------- |
+| False sharing     | 2.8      | 143M ops/s  |
+| Cache-line padded | 0.3      | 1333M ops/s |
 
 **~9x** slowdown from false sharing.
 
@@ -548,6 +550,7 @@ _mm512_load_si512 => 512-bit, load, signed integer
 ```
 
 Type suffixes:
+
 - `ps` = packed single (float)
 - `pd` = packed double
 - `epi32` = packed 32-bit integers
@@ -625,12 +628,12 @@ void add_avx512(const float *a, const float *b, float *c, int n) {
 
 **Benchmark** (N=100,000,000 floats):
 
-| Version   | Time (ms) | Throughput (GB/s) | Speedup |
-|-----------|-----------|-------------------|---------|
-| Scalar    | 180       | 2.2               | 1.0x    |
-| SSE       | 48        | 8.3               | 3.75x   |
-| AVX       | 25        | 16.0              | 7.2x    |
-| AVX-512   | 14        | 28.6              | 12.9x   |
+| Version | Time (ms) | Throughput (GB/s) | Speedup |
+| ------- | --------- | ----------------- | ------- |
+| Scalar  | 180       | 2.2               | 1.0x    |
+| SSE     | 48        | 8.3               | 3.75x   |
+| AVX     | 25        | 16.0              | 7.2x    |
+| AVX-512 | 14        | 28.6              | 12.9x   |
 
 ### 2.4 Example: Dot Product
 
@@ -770,6 +773,7 @@ clang -O3 -Rpass=loop-vectorize -Rpass-missed=loop-vectorize source.c
 ```
 
 **Things that prevent auto-vectorization**:
+
 - Pointer aliasing (fix with `restrict`)
 - Complex control flow in loops
 - Function calls inside loops (fix with inlining)
@@ -804,12 +808,12 @@ Misaligned load (_mm256_loadu_ps):
 On modern x86 CPUs, misaligned access to cacheable memory incurs a **5-20% penalty** on average.
 However, crossing a cache line boundary (64-byte) or a page boundary (4096-byte) is much worse:
 
-| Scenario                  | Penalty     |
-|---------------------------|-------------|
-| Aligned access            | 0%          |
-| Misaligned, same line     | 0-5%        |
-| Misaligned, crosses line  | 10-30%      |
-| Misaligned, crosses page  | 100-300%    |
+| Scenario                 | Penalty  |
+| ------------------------ | -------- |
+| Aligned access           | 0%       |
+| Misaligned, same line    | 0-5%     |
+| Misaligned, crosses line | 10-30%   |
+| Misaligned, crosses page | 100-300% |
 
 ### 3.2 Allocating Aligned Memory
 
@@ -995,6 +999,7 @@ Pipeline with prediction:
 ```
 
 **Branch predictor accuracy**:
+
 - Simple loops: >99%
 - Sorted data: >95%
 - Random data: ~50% (worst case for 50/50 branches)
@@ -1062,10 +1067,10 @@ int main(void) {
 
 **Typical results**:
 
-| Data      | Time (s) | Branch Mispredict Rate |
-|-----------|----------|------------------------|
-| Unsorted  | 8.5      | ~25%                   |
-| Sorted    | 2.1      | ~0.1%                  |
+| Data     | Time (s) | Branch Mispredict Rate |
+| -------- | -------- | ---------------------- |
+| Unsorted | 8.5      | ~25%                   |
+| Sorted   | 2.1      | ~0.1%                  |
 
 **~4x** speedup just from sorting.
 
@@ -1163,6 +1168,7 @@ void process_cpp20(int *data, int n) {
 ```
 
 The compiler uses these hints to:
+
 1. Place the likely path as fall-through (no jump needed)
 2. Move the unlikely path to a cold section of code
 3. Optimize instruction cache usage
@@ -1183,6 +1189,7 @@ gcc -O2 -fprofile-use -o myapp_optimized myapp.c
 ```
 
 PGO typically provides a **10-20%** improvement by:
+
 - Accurate branch prediction hints
 - Optimal function layout (hot functions together)
 - Better inlining decisions
@@ -1325,6 +1332,7 @@ __attribute__((noinline)) void debug_func(void) { /* ... */ }
 
 Without LTO, the compiler optimizes each translation unit (`.c` file) independently.
 With LTO, the compiler sees the **entire program** and can:
+
 - Inline functions across files
 - Remove dead code globally
 - Optimize virtual call dispatch
@@ -1340,11 +1348,11 @@ clang -O2 -flto=thin -o myapp file1.c file2.c file3.c
 
 **Benchmark** (medium-size project, ~50 .c files):
 
-| Optimization  | Build Time | Runtime  | Binary Size |
-|---------------|------------|----------|-------------|
-| -O2           | 5 s        | 1.00x    | 240 KB      |
-| -O2 -flto     | 8 s        | 0.88x    | 210 KB      |
-| -O3 -flto     | 10 s       | 0.82x    | 260 KB      |
+| Optimization | Build Time | Runtime | Binary Size |
+| ------------ | ---------- | ------- | ----------- |
+| -O2          | 5 s        | 1.00x   | 240 KB      |
+| -O2 -flto    | 8 s        | 0.88x   | 210 KB      |
+| -O3 -flto    | 10 s       | 0.82x   | 260 KB      |
 
 ### 5.5 Checking What the Compiler Did
 
@@ -1436,6 +1444,7 @@ Random access (NOT detected, hardware prefetcher gives up):
 ```
 
 The hardware prefetcher works well for:
+
 - Array traversal (stride-1 or small fixed stride)
 - Matrix operations with tiling
 - Linked-list traversal with spatial locality
@@ -2178,11 +2187,11 @@ void pin_to_numa_node(int node) {
 
 **Benchmark -- NUMA local vs remote access** (dual-socket system):
 
-| Access Pattern     | Bandwidth (GB/s) | Latency (ns) |
-|--------------------|-------------------|---------------|
-| Local memory       | 45                | 80            |
-| Remote memory      | 22                | 130           |
-| Interleaved        | 60 (aggregate)   | 105 (avg)     |
+| Access Pattern | Bandwidth (GB/s) | Latency (ns) |
+| -------------- | ---------------- | ------------ |
+| Local memory   | 45               | 80           |
+| Remote memory  | 22               | 130          |
+| Interleaved    | 60 (aggregate)   | 105 (avg)    |
 
 Remote memory access is **~2x** slower in bandwidth and **~1.6x** higher latency.
 
@@ -2300,6 +2309,7 @@ cg_annotate cachegrind.out.<pid>
 ```
 
 **Key metrics**:
+
 - `Dr` = Data reads
 - `D1mr` = L1 data cache read misses
 - `DLmr` = Last-level cache read misses
@@ -2537,26 +2547,26 @@ int count_neighbors_v3(struct ParticlesSoA *p, float radius) {
 
 **Final benchmark** (N=10,000 particles):
 
-| Version | Description              | Time (ms) | Speedup |
-|---------|--------------------------|-----------|---------|
-| v0      | Naive AoS                | 850       | 1.0x    |
-| v1      | SoA layout               | 320       | 2.7x    |
-| v2      | + Branchless             | 210       | 4.0x    |
-| v3      | + AVX2 SIMD              | 35        | 24.3x   |
+| Version | Description  | Time (ms) | Speedup |
+| ------- | ------------ | --------- | ------- |
+| v0      | Naive AoS    | 850       | 1.0x    |
+| v1      | SoA layout   | 320       | 2.7x    |
+| v2      | + Branchless | 210       | 4.0x    |
+| v3      | + AVX2 SIMD  | 35        | 24.3x   |
 
 **24x** total speedup from systematic optimization.
 
 ### 9.7 Profiling Tools Summary
 
-| Tool       | Platform | Overhead | Detail Level | Cost  |
-|------------|----------|----------|--------------|-------|
-| `perf`     | Linux    | Low      | Hardware PMU | Free  |
-| `VTune`    | Lin/Win  | Low      | Very High    | Free* |
-| `cachegrind`| Linux   | High     | Cache sim    | Free  |
-| `gprof`    | Linux    | Medium   | Function-level| Free |
-| `Instruments`| macOS  | Low      | High         | Free  |
-| `Tracy`    | Any      | Very Low | Frame-level  | Free  |
-| `AMD uProf`| Linux   | Low      | High         | Free  |
+| Tool          | Platform | Overhead | Detail Level   | Cost   |
+| ------------- | -------- | -------- | -------------- | ------ |
+| `perf`        | Linux    | Low      | Hardware PMU   | Free   |
+| `VTune`       | Lin/Win  | Low      | Very High      | Free\* |
+| `cachegrind`  | Linux    | High     | Cache sim      | Free   |
+| `gprof`       | Linux    | Medium   | Function-level | Free   |
+| `Instruments` | macOS    | Low      | High           | Free   |
+| `Tracy`       | Any      | Very Low | Frame-level    | Free   |
+| `AMD uProf`   | Linux    | Low      | High           | Free   |
 
 `*` Intel VTune is free for all users (previously commercial).
 
@@ -2565,11 +2575,13 @@ int count_neighbors_v3(struct ParticlesSoA *p, float radius) {
 ## Practice Exercises
 
 ### Exercise 1: Cache Performance
+
 Write two versions of a function that computes the sum of all elements in a 1000x1000 matrix:
 one traversing row-major, one traversing column-major. Measure the time difference and use
 `perf stat` to compare L1 cache miss rates. Explain the results.
 
 ### Exercise 2: SIMD Dot Product
+
 Implement a dot product of two `float` arrays using:
 a) Scalar code
 b) SSE intrinsics (4-wide)
@@ -2579,21 +2591,25 @@ Benchmark all four with N=10,000,000. Verify they produce the same results (with
 floating-point tolerance).
 
 ### Exercise 3: False Sharing Detection
+
 Write a program where 4 threads increment adjacent counters in a shared array. Use `perf`
 to measure cache-line transfers. Then add padding and remeasure. Calculate the theoretical
 vs. actual speedup.
 
 ### Exercise 4: Branchless Min/Max
+
 Implement a function that finds the minimum of an array without using any branches
 (no `if`, no ternary that compiles to a branch). Verify with `objdump -d` that no branch
 instructions are generated. Compare performance against `if`-based version with random data.
 
 ### Exercise 5: Loop Tiling
+
 Implement matrix multiplication with and without loop tiling. Experiment with tile sizes
 (16, 32, 64, 128) and plot performance vs. tile size. Determine the optimal tile size for
 your L1 cache and explain why.
 
 ### Exercise 6: Memory Alignment
+
 Write a benchmark that compares:
 a) Aligned loads (`_mm256_load_ps` with 32-byte aligned data)
 b) Unaligned loads (`_mm256_loadu_ps` with deliberately misaligned data)
@@ -2602,10 +2618,12 @@ d) Loads crossing a page boundary
 Measure throughput for each case.
 
 ### Exercise 7: Lock-Free Stack
+
 Implement a lock-free stack using CAS. Test it with multiple producer and consumer threads.
 Compare throughput against a mutex-based stack. Measure with 1, 2, 4, and 8 threads.
 
 ### Exercise 8: NUMA Optimization
+
 On a multi-socket system (or using `numactl --hardware` to simulate):
 a) Allocate a large array and initialize it from one thread
 b) Access it from threads on a different NUMA node
@@ -2613,6 +2631,7 @@ c) Compare against NUMA-aware initialization (first-touch)
 d) Measure the bandwidth difference
 
 ### Exercise 9: Complete Optimization Pipeline
+
 Take this function and optimize it step by step, measuring after each change:
 
 ```c
@@ -2638,6 +2657,7 @@ Apply: SoA conversion, branchless techniques, SIMD, and prefetching. Document ea
 improvement with measurements.
 
 ### Exercise 10: PGO Comparison
+
 Take a non-trivial program (e.g., a JSON parser, compression utility, or sorting algorithm).
 Build it with `-O2`, then with `-O2 -fprofile-generate` / `-fprofile-use`. Measure the
 speedup from PGO. Identify which optimizations PGO enabled using `-fopt-info`.
@@ -2701,6 +2721,7 @@ The ABA problem occurs with CAS-based algorithms when a value changes from A to 
 **Q10: You have a hash table with 100M entries. Random lookups are slow. Walk through your optimization strategy.**
 
 First, `perf stat` will likely show high LLC miss rates since random access defeats the prefetcher. Strategy:
+
 1. Batch lookups and use software prefetching: prefetch the next N entries while processing current ones. Typical prefetch distance is 8-16 entries to hide DRAM latency.
 2. Use a cache-friendly hash table design: open addressing with linear probing keeps related entries on the same cache line. Separate chaining scatters nodes across memory.
 3. Minimize entry size: store only the hash and key/value (no pointers to next entry). Smaller entries = more entries per cache line.
@@ -2719,6 +2740,7 @@ Modern CPUs are superscalar: they can execute multiple independent instructions 
 **Q13: You are writing a high-frequency trading system. The hot path processes market data messages. What CPU optimizations are most critical?**
 
 In HFT, latency matters more than throughput:
+
 1. **Cache warming**: Pre-touch all data structures during initialization so they are in L1/L2 when a message arrives. Pin the hot path thread to a dedicated core with CPU isolation (`isolcpus`).
 2. **Lock-free messaging**: Use SPSC lock-free queues between threads. No system calls on the hot path.
 3. **Branch elimination**: Profile the hot path and eliminate all unpredictable branches. Use branchless comparisons and lookup tables.
@@ -2762,6 +2784,7 @@ NUMA awareness             | 30-100%         | Medium | Multi-socket systems
 ```
 
 **Key takeaways**:
+
 1. Always profile before optimizing. The bottleneck is rarely where you think it is.
 2. Data layout (SoA, tiling) often matters more than algorithm cleverness.
 3. The compiler is your ally: use `-O3 -march=native -flto` and check its vectorization reports.

@@ -4,41 +4,41 @@ A collaborative editor allows multiple users to simultaneously edit a document w
 
 ## Table Responsibilities
 
-| Table | Purpose | Storage | Key Characteristic |
-|-------|---------|---------|-------------------|
-| **documents** | Document metadata and ownership | PostgreSQL | Low-volume, transactional |
-| **document_ops** | Append-only log of edit operations | PostgreSQL (partitioned by doc_id) | Heart of the system: enables OT/CRDT conflict resolution |
-| **document_snapshots** | Periodic full-document state captures | PostgreSQL + S3 | Avoids replaying entire op history on document open |
-| **permissions** | Access control for documents | PostgreSQL | Supports user, group, and public sharing |
-| **named_revisions** | Named checkpoints (version history) | PostgreSQL | User-facing "Version History" feature |
+| Table                  | Purpose                               | Storage                            | Key Characteristic                                       |
+| ---------------------- | ------------------------------------- | ---------------------------------- | -------------------------------------------------------- |
+| **documents**          | Document metadata and ownership       | PostgreSQL                         | Low-volume, transactional                                |
+| **document_ops**       | Append-only log of edit operations    | PostgreSQL (partitioned by doc_id) | Heart of the system: enables OT/CRDT conflict resolution |
+| **document_snapshots** | Periodic full-document state captures | PostgreSQL + S3                    | Avoids replaying entire op history on document open      |
+| **permissions**        | Access control for documents          | PostgreSQL                         | Supports user, group, and public sharing                 |
+| **named_revisions**    | Named checkpoints (version history)   | PostgreSQL                         | User-facing "Version History" feature                    |
 
 ## Detailed Field Descriptions
 
 ### documents
 
-| Field | Type | Description |
-|-------|------|-------------|
-| doc_id | UUID, PK | Unique document identifier. UUID for URL safety and to prevent enumeration attacks (sequential IDs let attackers guess document URLs). |
-| owner_id | BIGINT, FK -> users | Document creator. Has permanent admin-level access that cannot be revoked. Used for billing (storage quotas) and ownership transfer. |
-| title | VARCHAR(512) | Document title. Stored separately from content because it appears in dashboards, search results, and sharing dialogs without loading the full document. |
-| created_at | TIMESTAMP | Document creation time. Used for "Recent documents" sorting. |
-| updated_at | TIMESTAMP, INDEX | Last edit time. Updated on every op. Indexed for "Last modified" sorting in the document list. |
-| latest_revision | BIGINT | Revision number of the most recent operation. Incremented with every accepted op. Used for optimistic concurrency: clients send their known revision with each op, and the server detects conflicts by comparing. |
-| snapshot_revision | BIGINT | Revision number of the latest snapshot. When loading a document, the server loads the snapshot and replays ops from `snapshot_revision + 1` to `latest_revision`. The closer these are, the faster the load. |
+| Field             | Type                | Description                                                                                                                                                                                                       |
+| ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| doc_id            | UUID, PK            | Unique document identifier. UUID for URL safety and to prevent enumeration attacks (sequential IDs let attackers guess document URLs).                                                                            |
+| owner_id          | BIGINT, FK -> users | Document creator. Has permanent admin-level access that cannot be revoked. Used for billing (storage quotas) and ownership transfer.                                                                              |
+| title             | VARCHAR(512)        | Document title. Stored separately from content because it appears in dashboards, search results, and sharing dialogs without loading the full document.                                                           |
+| created_at        | TIMESTAMP           | Document creation time. Used for "Recent documents" sorting.                                                                                                                                                      |
+| updated_at        | TIMESTAMP, INDEX    | Last edit time. Updated on every op. Indexed for "Last modified" sorting in the document list.                                                                                                                    |
+| latest_revision   | BIGINT              | Revision number of the most recent operation. Incremented with every accepted op. Used for optimistic concurrency: clients send their known revision with each op, and the server detects conflicts by comparing. |
+| snapshot_revision | BIGINT              | Revision number of the latest snapshot. When loading a document, the server loads the snapshot and replays ops from `snapshot_revision + 1` to `latest_revision`. The closer these are, the faster the load.      |
 
 **Why track both `latest_revision` and `snapshot_revision`?** Loading a document requires reconstructing its current state. Without snapshots, this means replaying every operation since document creation (potentially millions of ops for a heavily edited document). Snapshotting periodically (e.g., every 100 ops) limits replay to at most 100 operations. The gap between `latest_revision` and `snapshot_revision` directly determines load time.
 
 ### document_ops (Append-Only)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| doc_id | UUID, FK -> documents | Which document this operation modifies. Partition key for co-locating all ops for a document on the same storage partition. |
-| revision | BIGINT, PK (within doc) | Server-assigned sequential revision number. Each document has its own revision counter starting at 1. The server assigns revisions in the order operations are accepted, creating a total order. |
-| client_id | VARCHAR(64) | Which client instance sent this operation. Used for cursor positioning and to distinguish "my ops" from "their ops" in the UI (your cursor is blue, theirs is green). |
-| user_id | BIGINT, FK -> users | Which user made the edit. Used for "who changed this?" attribution in version history and audit logs. |
-| ops_json | JSONB | The operation payload in Delta format. Contains an array of actions: `retain(n)` (skip n characters), `insert(text, attributes)`, `delete(n)`, `format(n, attributes)`. JSONB because operation structure varies. |
-| client_revision | BIGINT | The revision the client believed was current when it generated this op. The server uses the gap between `client_revision` and the actual `latest_revision` to determine which concurrent ops need to be transformed against. |
-| created_at | TIMESTAMP | When the server accepted this operation. Used for time-based version history display. |
+| Field           | Type                    | Description                                                                                                                                                                                                                  |
+| --------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| doc_id          | UUID, FK -> documents   | Which document this operation modifies. Partition key for co-locating all ops for a document on the same storage partition.                                                                                                  |
+| revision        | BIGINT, PK (within doc) | Server-assigned sequential revision number. Each document has its own revision counter starting at 1. The server assigns revisions in the order operations are accepted, creating a total order.                             |
+| client_id       | VARCHAR(64)             | Which client instance sent this operation. Used for cursor positioning and to distinguish "my ops" from "their ops" in the UI (your cursor is blue, theirs is green).                                                        |
+| user_id         | BIGINT, FK -> users     | Which user made the edit. Used for "who changed this?" attribution in version history and audit logs.                                                                                                                        |
+| ops_json        | JSONB                   | The operation payload in Delta format. Contains an array of actions: `retain(n)` (skip n characters), `insert(text, attributes)`, `delete(n)`, `format(n, attributes)`. JSONB because operation structure varies.            |
+| client_revision | BIGINT                  | The revision the client believed was current when it generated this op. The server uses the gap between `client_revision` and the actual `latest_revision` to determine which concurrent ops need to be transformed against. |
+| created_at      | TIMESTAMP               | When the server accepted this operation. Used for time-based version history display.                                                                                                                                        |
 
 **Why append-only?** Operations are never updated or deleted because the entire collaboration model depends on a consistent, ordered history. If an operation were modified or removed, all subsequent transformations would be invalidated, potentially corrupting the document. The append-only constraint also simplifies replication and backup.
 
@@ -48,13 +48,13 @@ A collaborative editor allows multiple users to simultaneously edit a document w
 
 ### document_snapshots
 
-| Field | Type | Description |
-|-------|------|-------------|
-| doc_id | UUID, FK -> documents | Which document this snapshot represents. |
-| revision | BIGINT, PK (within doc) | The revision number at which this snapshot was taken. Multiple snapshots exist per document (one every N revisions). |
-| content_json | JSONB / TEXT | Full document state at this revision. For small documents, stored inline as JSONB. For large documents (>1MB), stored in S3 with a reference URL. |
-| byte_size | INT | Size of the snapshot in bytes. Used for storage monitoring and deciding when to externalize to S3. |
-| created_at | TIMESTAMP | When the snapshot was created. Used for garbage collection of old snapshots (keep only the last M snapshots). |
+| Field        | Type                    | Description                                                                                                                                       |
+| ------------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| doc_id       | UUID, FK -> documents   | Which document this snapshot represents.                                                                                                          |
+| revision     | BIGINT, PK (within doc) | The revision number at which this snapshot was taken. Multiple snapshots exist per document (one every N revisions).                              |
+| content_json | JSONB / TEXT            | Full document state at this revision. For small documents, stored inline as JSONB. For large documents (>1MB), stored in S3 with a reference URL. |
+| byte_size    | INT                     | Size of the snapshot in bytes. Used for storage monitoring and deciding when to externalize to S3.                                                |
+| created_at   | TIMESTAMP               | When the snapshot was created. Used for garbage collection of old snapshots (keep only the last M snapshots).                                     |
 
 **Why not snapshot after every operation?** Snapshotting is expensive: serializing the full document state on every keystroke would add significant latency and storage. Snapshotting every 100-500 ops strikes a balance: document load requires replaying at most 100-500 ops (fast), and storage grows linearly with snapshot frequency rather than with total ops.
 
@@ -62,27 +62,27 @@ A collaborative editor allows multiple users to simultaneously edit a document w
 
 ### permissions
 
-| Field | Type | Description |
-|-------|------|-------------|
-| perm_id | BIGINT, PK | Unique permission entry identifier. |
-| doc_id | UUID, FK -> documents, INDEX | Which document this permission applies to. Indexed for "who has access to this document?" queries. |
-| principal_type | ENUM('user', 'group', 'anyone') | What kind of entity is being granted access. `anyone` enables "share with anyone with the link" functionality. |
-| principal_id | BIGINT, NULLABLE | The user or group ID being granted access. Null when `principal_type = 'anyone'` (no specific principal). |
-| role | ENUM('owner', 'editor', 'commenter', 'viewer') | What level of access is granted. Editors can modify content. Commenters can add comments but not edit. Viewers are read-only. |
-| expires_at | TIMESTAMP, NULLABLE | Optional expiration for temporary access (e.g., "share with contractor for 30 days"). Null means permanent access. |
+| Field          | Type                                           | Description                                                                                                                   |
+| -------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| perm_id        | BIGINT, PK                                     | Unique permission entry identifier.                                                                                           |
+| doc_id         | UUID, FK -> documents, INDEX                   | Which document this permission applies to. Indexed for "who has access to this document?" queries.                            |
+| principal_type | ENUM('user', 'group', 'anyone')                | What kind of entity is being granted access. `anyone` enables "share with anyone with the link" functionality.                |
+| principal_id   | BIGINT, NULLABLE                               | The user or group ID being granted access. Null when `principal_type = 'anyone'` (no specific principal).                     |
+| role           | ENUM('owner', 'editor', 'commenter', 'viewer') | What level of access is granted. Editors can modify content. Commenters can add comments but not edit. Viewers are read-only. |
+| expires_at     | TIMESTAMP, NULLABLE                            | Optional expiration for temporary access (e.g., "share with contractor for 30 days"). Null means permanent access.            |
 
 **Why separate from documents table?** A document can have dozens of permission entries (individual users, groups, public link). Embedding this in the documents table would complicate queries and violate normalization. A separate table also enables efficient "list all documents I have access to" queries by indexing on (principal_type, principal_id).
 
 ### named_revisions
 
-| Field | Type | Description |
-|-------|------|-------------|
-| revision_id | BIGINT, PK | Unique revision identifier. |
-| doc_id | UUID, FK -> documents, INDEX | Which document this revision belongs to. |
-| revision | BIGINT | Links to document_ops.revision. This is the exact point in the op history that this named revision captures. |
-| name | VARCHAR(255) | User-provided name (e.g., "Final Draft", "Pre-review version") or auto-generated ("March 15, 2024 3:42 PM"). |
-| is_auto | BOOLEAN | Whether this revision was auto-created by the system (e.g., every 30 minutes of editing) or manually created by the user. Auto-revisions can be garbage-collected more aggressively. |
-| created_at | TIMESTAMP | When the revision was named/captured. Displayed in the version history UI. |
+| Field       | Type                         | Description                                                                                                                                                                          |
+| ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| revision_id | BIGINT, PK                   | Unique revision identifier.                                                                                                                                                          |
+| doc_id      | UUID, FK -> documents, INDEX | Which document this revision belongs to.                                                                                                                                             |
+| revision    | BIGINT                       | Links to document_ops.revision. This is the exact point in the op history that this named revision captures.                                                                         |
+| name        | VARCHAR(255)                 | User-provided name (e.g., "Final Draft", "Pre-review version") or auto-generated ("March 15, 2024 3:42 PM").                                                                         |
+| is_auto     | BOOLEAN                      | Whether this revision was auto-created by the system (e.g., every 30 minutes of editing) or manually created by the user. Auto-revisions can be garbage-collected more aggressively. |
+| created_at  | TIMESTAMP                    | When the revision was named/captured. Displayed in the version history UI.                                                                                                           |
 
 **Why not just use snapshots for version history?** Snapshots are an implementation detail for performance (fast document loading). Named revisions are a user-facing feature for document management. Their lifecycles differ: snapshots can be garbage-collected freely, but named revisions (especially user-created ones) should be preserved indefinitely.
 

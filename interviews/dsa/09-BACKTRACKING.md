@@ -55,14 +55,14 @@ Pruning eliminates branches that cannot lead to valid solutions:
 
 ### 1.4 Common Backtracking Categories
 
-| Category | Example | Choices at Each Step |
-|----------|---------|---------------------|
-| Subsets | Power set | Include or exclude each element |
-| Permutations | All orderings | Pick any unused element |
-| Combinations | Choose k from n | Pick elements in order |
-| Partitioning | Palindrome partition | Cut at each valid position |
-| Grid search | Word search | Move in 4 directions |
-| Constraint satisfaction | N-Queens, Sudoku | Place in valid position |
+| Category                | Example              | Choices at Each Step            |
+| ----------------------- | -------------------- | ------------------------------- |
+| Subsets                 | Power set            | Include or exclude each element |
+| Permutations            | All orderings        | Pick any unused element         |
+| Combinations            | Choose k from n      | Pick elements in order          |
+| Partitioning            | Palindrome partition | Cut at each valid position      |
+| Grid search             | Word search          | Move in 4 directions            |
+| Constraint satisfaction | N-Queens, Sudoku     | Place in valid position         |
 
 ---
 
@@ -341,6 +341,7 @@ def solve_n_queens(n: int) -> list[list[str]]:
 ```
 
 **Diagonal key insight:**
+
 - Positive diagonal (`/`): All cells on the same diagonal have the same `row + col`.
 - Negative diagonal (`\`): All cells on the same diagonal have the same `row - col`.
 
@@ -489,61 +490,66 @@ def solve_sudoku(board: list[list[str]]) -> None:
 
 ## 3. Time Complexity Analysis
 
-| Problem | # of Solutions | Time Complexity | Why |
-|---------|---------------|----------------|-----|
-| Subsets | 2^n | O(n * 2^n) | Include/exclude each element |
-| Permutations | n! | O(n * n!) | n choices, then n-1, then n-2... |
-| Combinations (k from n) | C(n,k) | O(k * C(n,k)) | Choosing k elements |
-| Combination Sum | Varies | O(n^(T/M)) | Depends on target and min value |
-| N-Queens | ~n! | O(n!) | Constrained placement |
-| Word Search | 4^L | O(m*n * 4^L) | 4 choices per cell, L depth |
-| Palindrome Partition | 2^n | O(n * 2^n) | Cut or don't cut at each position |
-| Sudoku | 9^empty | O(9^E) | 9 choices per empty cell (with pruning much less) |
+| Problem                 | # of Solutions | Time Complexity | Why                                               |
+| ----------------------- | -------------- | --------------- | ------------------------------------------------- |
+| Subsets                 | 2^n            | O(n \* 2^n)     | Include/exclude each element                      |
+| Permutations            | n!             | O(n \* n!)      | n choices, then n-1, then n-2...                  |
+| Combinations (k from n) | C(n,k)         | O(k \* C(n,k))  | Choosing k elements                               |
+| Combination Sum         | Varies         | O(n^(T/M))      | Depends on target and min value                   |
+| N-Queens                | ~n!            | O(n!)           | Constrained placement                             |
+| Word Search             | 4^L            | O(m*n * 4^L)    | 4 choices per cell, L depth                       |
+| Palindrome Partition    | 2^n            | O(n \* 2^n)     | Cut or don't cut at each position                 |
+| Sudoku                  | 9^empty        | O(9^E)          | 9 choices per empty cell (with pruning much less) |
 
 ---
 
 ## 4. Common Interview Questions
 
-| # | Problem | Difficulty | Category | Key Pruning |
-|---|---------|-----------|----------|-------------|
-| 1 | Subsets | Medium | Subsets | Start index prevents duplicates |
-| 2 | Subsets II | Medium | Subsets | Sort + skip same-level duplicates |
-| 3 | Permutations | Medium | Permutations | Used set or swap |
-| 4 | Permutations II | Medium | Permutations | Counter to avoid duplicates |
-| 5 | Combination Sum | Medium | Combinations | Sort + break when too large |
-| 6 | Combination Sum II | Medium | Combinations | Skip same-level duplicates |
-| 7 | Palindrome Partitioning | Medium | Partitioning | Only cut at palindromes |
-| 8 | Word Search | Medium | Grid search | Bounds + visited check |
-| 9 | N-Queens | Hard | Constraint | Column + diagonal sets |
-| 10 | Sudoku Solver | Hard | Constraint | Row/col/box sets |
-| 11 | Letter Combinations of Phone | Medium | Combinations | Digit-to-letter mapping |
+| #   | Problem                      | Difficulty | Category     | Key Pruning                       |
+| --- | ---------------------------- | ---------- | ------------ | --------------------------------- |
+| 1   | Subsets                      | Medium     | Subsets      | Start index prevents duplicates   |
+| 2   | Subsets II                   | Medium     | Subsets      | Sort + skip same-level duplicates |
+| 3   | Permutations                 | Medium     | Permutations | Used set or swap                  |
+| 4   | Permutations II              | Medium     | Permutations | Counter to avoid duplicates       |
+| 5   | Combination Sum              | Medium     | Combinations | Sort + break when too large       |
+| 6   | Combination Sum II           | Medium     | Combinations | Skip same-level duplicates        |
+| 7   | Palindrome Partitioning      | Medium     | Partitioning | Only cut at palindromes           |
+| 8   | Word Search                  | Medium     | Grid search  | Bounds + visited check            |
+| 9   | N-Queens                     | Hard       | Constraint   | Column + diagonal sets            |
+| 10  | Sudoku Solver                | Hard       | Constraint   | Row/col/box sets                  |
+| 11  | Letter Combinations of Phone | Medium     | Combinations | Digit-to-letter mapping           |
 
 ---
 
 ## 5. Gotchas
 
 ### 5.1 Copy vs Reference
+
 - **Always copy the current path** when adding to results: `result.append(current[:])` or
   `result.append(list(current))`. Without copying, all entries in `result` will reference the
   same (eventually empty) list.
 
 ### 5.2 Duplicate Handling
+
 - **Sort first**, then skip duplicates at the same decision level: `if i > start and nums[i] == nums[i-1]: continue`.
 - The `i > start` condition (not `i > 0`) ensures we only skip at the same recursion level.
 - For permutations with duplicates, use a Counter approach instead of a used-set approach.
 
 ### 5.3 Start Index
+
 - **Subsets/Combinations**: Pass `start` index to avoid revisiting earlier elements.
 - **Permutations**: No start index needed -- any element can go at any position.
 - **Combination Sum (unlimited use)**: Use `start = i` (same element can be reused).
 - **Combination Sum II (single use)**: Use `start = i + 1`.
 
 ### 5.4 Backtrack Step
+
 - Every mutation you make before recursing must be undone after recursing.
 - Common mutations: `append/pop`, `add/remove`, `board[r][c] = 'Q'/'.'`, `visited.add/remove`.
 - If using `board[r][c] = '#'` to mark visited cells, restore the original value.
 
 ### 5.5 Pruning Effectiveness
+
 - Sorting the input enables early termination: `if candidates[i] > remaining: break`.
 - For N-Queens, using sets for columns/diagonals makes each check O(1) instead of O(n).
 - Always prune BEFORE recursing, not after. This avoids unnecessary function calls.
@@ -552,13 +558,13 @@ def solve_sudoku(board: list[list[str]]) -> None:
 
 ## 6. Quick Reference
 
-| Pattern | When to Use | Template | Time | Key Detail |
-|---------|-------------|----------|------|------------|
-| Subsets | Generate power set | `for i in range(start, n)` | O(n * 2^n) | Start index prevents reuse |
-| Permutations | All orderings | `for num in remaining` | O(n * n!) | Track used elements |
-| Combinations | Choose k from n | `for i in range(start, n)` | O(k * C(n,k)) | Stop when `len == k` |
-| Combination Sum | Target sum, reuse allowed | `backtrack(i, ...)` | O(n^(T/M)) | Same index for reuse |
-| Combination Sum II | Target sum, no reuse | `backtrack(i+1, ...)` | O(2^n) | Skip same-level duplicates |
-| Grid search | Find path in 2D | `for dr,dc in directions` | O(4^L) | Mark/unmark visited |
-| Constraint satisfaction | Place items under rules | Check constraints before placing | Varies | Use sets for fast validation |
-| Partitioning | Split string/array | `for end in range(start+1, n+1)` | O(n * 2^n) | Validate each partition |
+| Pattern                 | When to Use               | Template                         | Time           | Key Detail                   |
+| ----------------------- | ------------------------- | -------------------------------- | -------------- | ---------------------------- |
+| Subsets                 | Generate power set        | `for i in range(start, n)`       | O(n \* 2^n)    | Start index prevents reuse   |
+| Permutations            | All orderings             | `for num in remaining`           | O(n \* n!)     | Track used elements          |
+| Combinations            | Choose k from n           | `for i in range(start, n)`       | O(k \* C(n,k)) | Stop when `len == k`         |
+| Combination Sum         | Target sum, reuse allowed | `backtrack(i, ...)`              | O(n^(T/M))     | Same index for reuse         |
+| Combination Sum II      | Target sum, no reuse      | `backtrack(i+1, ...)`            | O(2^n)         | Skip same-level duplicates   |
+| Grid search             | Find path in 2D           | `for dr,dc in directions`        | O(4^L)         | Mark/unmark visited          |
+| Constraint satisfaction | Place items under rules   | Check constraints before placing | Varies         | Use sets for fast validation |
+| Partitioning            | Split string/array        | `for end in range(start+1, n+1)` | O(n \* 2^n)    | Validate each partition      |

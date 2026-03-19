@@ -1495,79 +1495,78 @@ WGSL (WebGPU Shading Language):
 // Run in a browser with WebGPU support (Chrome 113+)
 
 async function main() {
-    // ========================================
-    // 1. INITIALIZE WebGPU
-    // ========================================
-    if (!navigator.gpu) {
-        console.error("WebGPU not supported in this browser");
-        return;
-    }
+  // ========================================
+  // 1. INITIALIZE WebGPU
+  // ========================================
+  if (!navigator.gpu) {
+    console.error('WebGPU not supported in this browser');
+    return;
+  }
 
-    const adapter = await navigator.gpu.requestAdapter();
-    if (!adapter) {
-        console.error("No GPU adapter found");
-        return;
-    }
+  const adapter = await navigator.gpu.requestAdapter();
+  if (!adapter) {
+    console.error('No GPU adapter found');
+    return;
+  }
 
-    const device = await adapter.requestDevice();
-    console.log("Using adapter:", adapter.info?.device || "GPU");
+  const device = await adapter.requestDevice();
+  console.log('Using adapter:', adapter.info?.device || 'GPU');
 
-    // ========================================
-    // 2. CREATE BUFFERS
-    // ========================================
-    const N = 1024 * 1024;
-    const bufferSize = N * Float32Array.BYTES_PER_ELEMENT;
+  // ========================================
+  // 2. CREATE BUFFERS
+  // ========================================
+  const N = 1024 * 1024;
+  const bufferSize = N * Float32Array.BYTES_PER_ELEMENT;
 
-    // Input arrays
-    const inputA = new Float32Array(N);
-    const inputB = new Float32Array(N);
-    for (let i = 0; i < N; i++) {
-        inputA[i] = i;
-        inputB[i] = i * 2;
-    }
+  // Input arrays
+  const inputA = new Float32Array(N);
+  const inputB = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    inputA[i] = i;
+    inputB[i] = i * 2;
+  }
 
-    // Create GPU buffers
-    const gpuBufferA = device.createBuffer({
-        size: bufferSize,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-        mappedAtCreation: true,
-    });
-    new Float32Array(gpuBufferA.getMappedRange()).set(inputA);
-    gpuBufferA.unmap();
+  // Create GPU buffers
+  const gpuBufferA = device.createBuffer({
+    size: bufferSize,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    mappedAtCreation: true,
+  });
+  new Float32Array(gpuBufferA.getMappedRange()).set(inputA);
+  gpuBufferA.unmap();
 
-    const gpuBufferB = device.createBuffer({
-        size: bufferSize,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-        mappedAtCreation: true,
-    });
-    new Float32Array(gpuBufferB.getMappedRange()).set(inputB);
-    gpuBufferB.unmap();
+  const gpuBufferB = device.createBuffer({
+    size: bufferSize,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    mappedAtCreation: true,
+  });
+  new Float32Array(gpuBufferB.getMappedRange()).set(inputB);
+  gpuBufferB.unmap();
 
-    // Output buffer (GPU-side)
-    const gpuBufferC = device.createBuffer({
-        size: bufferSize,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    });
+  // Output buffer (GPU-side)
+  const gpuBufferC = device.createBuffer({
+    size: bufferSize,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+  });
 
-    // Staging buffer for reading results back to CPU
-    const stagingBuffer = device.createBuffer({
-        size: bufferSize,
-        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-    });
+  // Staging buffer for reading results back to CPU
+  const stagingBuffer = device.createBuffer({
+    size: bufferSize,
+    usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+  });
 
-    // Uniform buffer for N
-    const uniformBuffer = device.createBuffer({
-        size: 4,  // uint32
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(uniformBuffer, 0,
-                             new Uint32Array([N]));
+  // Uniform buffer for N
+  const uniformBuffer = device.createBuffer({
+    size: 4, // uint32
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(uniformBuffer, 0, new Uint32Array([N]));
 
-    // ========================================
-    // 3. CREATE COMPUTE SHADER (WGSL)
-    // ========================================
-    const shaderModule = device.createShaderModule({
-        code: `
+  // ========================================
+  // 3. CREATE COMPUTE SHADER (WGSL)
+  // ========================================
+  const shaderModule = device.createShaderModule({
+    code: `
             @group(0) @binding(0) var<storage, read> A: array<f32>;
             @group(0) @binding(1) var<storage, read> B: array<f32>;
             @group(0) @binding(2) var<storage, read_write> C: array<f32>;
@@ -1581,80 +1580,92 @@ async function main() {
                 }
             }
         `,
-    });
+  });
 
-    // ========================================
-    // 4. CREATE BIND GROUP LAYOUT AND PIPELINE
-    // ========================================
-    const bindGroupLayout = device.createBindGroupLayout({
-        entries: [
-            { binding: 0, visibility: GPUShaderStage.COMPUTE,
-              buffer: { type: "read-only-storage" } },
-            { binding: 1, visibility: GPUShaderStage.COMPUTE,
-              buffer: { type: "read-only-storage" } },
-            { binding: 2, visibility: GPUShaderStage.COMPUTE,
-              buffer: { type: "storage" } },
-            { binding: 3, visibility: GPUShaderStage.COMPUTE,
-              buffer: { type: "uniform" } },
-        ],
-    });
+  // ========================================
+  // 4. CREATE BIND GROUP LAYOUT AND PIPELINE
+  // ========================================
+  const bindGroupLayout = device.createBindGroupLayout({
+    entries: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: 'read-only-storage' },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: 'read-only-storage' },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: 'storage' },
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: 'uniform' },
+      },
+    ],
+  });
 
-    const pipeline = device.createComputePipeline({
-        layout: device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout],
-        }),
-        compute: {
-            module: shaderModule,
-            entryPoint: "main",
-        },
-    });
+  const pipeline = device.createComputePipeline({
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayout],
+    }),
+    compute: {
+      module: shaderModule,
+      entryPoint: 'main',
+    },
+  });
 
-    // ========================================
-    // 5. CREATE BIND GROUP
-    // ========================================
-    const bindGroup = device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-            { binding: 0, resource: { buffer: gpuBufferA } },
-            { binding: 1, resource: { buffer: gpuBufferB } },
-            { binding: 2, resource: { buffer: gpuBufferC } },
-            { binding: 3, resource: { buffer: uniformBuffer } },
-        ],
-    });
+  // ========================================
+  // 5. CREATE BIND GROUP
+  // ========================================
+  const bindGroup = device.createBindGroup({
+    layout: bindGroupLayout,
+    entries: [
+      { binding: 0, resource: { buffer: gpuBufferA } },
+      { binding: 1, resource: { buffer: gpuBufferB } },
+      { binding: 2, resource: { buffer: gpuBufferC } },
+      { binding: 3, resource: { buffer: uniformBuffer } },
+    ],
+  });
 
-    // ========================================
-    // 6. ENCODE AND SUBMIT COMMANDS
-    // ========================================
-    const encoder = device.createCommandEncoder();
+  // ========================================
+  // 6. ENCODE AND SUBMIT COMMANDS
+  // ========================================
+  const encoder = device.createCommandEncoder();
 
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(Math.ceil(N / 256));
-    pass.end();
+  const pass = encoder.beginComputePass();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.dispatchWorkgroups(Math.ceil(N / 256));
+  pass.end();
 
-    // Copy result to staging buffer for CPU access
-    encoder.copyBufferToBuffer(gpuBufferC, 0, stagingBuffer, 0, bufferSize);
+  // Copy result to staging buffer for CPU access
+  encoder.copyBufferToBuffer(gpuBufferC, 0, stagingBuffer, 0, bufferSize);
 
-    device.queue.submit([encoder.finish()]);
+  device.queue.submit([encoder.finish()]);
 
-    // ========================================
-    // 7. READ RESULTS
-    // ========================================
-    await stagingBuffer.mapAsync(GPUMapMode.READ);
-    const result = new Float32Array(stagingBuffer.getMappedRange());
+  // ========================================
+  // 7. READ RESULTS
+  // ========================================
+  await stagingBuffer.mapAsync(GPUMapMode.READ);
+  const result = new Float32Array(stagingBuffer.getMappedRange());
 
-    // Verify
-    let correct = true;
-    for (let i = 0; i < N; i++) {
-        if (result[i] !== inputA[i] + inputB[i]) {
-            correct = false;
-            break;
-        }
+  // Verify
+  let correct = true;
+  for (let i = 0; i < N; i++) {
+    if (result[i] !== inputA[i] + inputB[i]) {
+      correct = false;
+      break;
     }
-    console.log(`Result: ${correct ? "PASS" : "FAIL"}`);
+  }
+  console.log(`Result: ${correct ? 'PASS' : 'FAIL'}`);
 
-    stagingBuffer.unmap();
+  stagingBuffer.unmap();
 }
 
 main();

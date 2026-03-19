@@ -2,7 +2,7 @@
 
 ## Overview
 
-Information Architecture (IA) is the structural design of shared information environments. It determines how content is organized, labeled, and connected so that users can find what they need and understand where they are. If user research tells you *who* your users are, IA tells you *how to arrange things* so those users succeed.
+Information Architecture (IA) is the structural design of shared information environments. It determines how content is organized, labeled, and connected so that users can find what they need and understand where they are. If user research tells you _who_ your users are, IA tells you _how to arrange things_ so those users succeed.
 
 For developers, IA is directly relevant every time you create a navigation system, organize a file structure, design an API, or structure a database schema. For frontend developers specifically, IA decisions show up in your route structure, navigation components, breadcrumbs, and content hierarchy. A well-architected portfolio site feels effortless to browse; a poorly architected one leaves visitors lost and frustrated.
 
@@ -144,6 +144,7 @@ A sitemap is a visual representation of a site's structure. It shows the hierarc
 ```
 
 **Tips for sitemaps:**
+
 - Start with content inventory (list everything that exists or will exist)
 - Group related content using card sorting (covered below)
 - Validate with users before building
@@ -154,16 +155,19 @@ A sitemap is a visual representation of a site's structure. It shows the hierarc
 Card sorting is a research method where users organize content into groups that make sense to them. It directly informs your site's navigation and categorization.
 
 **Open Card Sorting:**
+
 - Users are given cards (content items) with no predefined categories
 - They create their own groups and name them
 - Best for: Discovering how users naturally think about your content
 
 **Closed Card Sorting:**
+
 - Users are given cards AND predefined categories
 - They place cards into the existing categories
 - Best for: Validating an existing or proposed structure
 
 **Hybrid Card Sorting:**
+
 - Users have predefined categories but can also create new ones
 - Best for: Refining a structure while remaining open to surprises
 
@@ -185,6 +189,7 @@ Cards given:              User's groups:
 ```
 
 **Running a card sort as a developer:**
+
 - Use free tools like OptimalSort or UXMetrics
 - 15-30 participants is ideal for meaningful patterns
 - Analyze results using a similarity matrix (which cards are frequently grouped together)
@@ -257,9 +262,10 @@ Users always return to a central hub before navigating elsewhere. Common in mobi
 
 ### Mental Models
 
-A mental model is how a user *expects* something to work, based on their prior experience. Good IA aligns with users' existing mental models rather than forcing them to learn a new one.
+A mental model is how a user _expects_ something to work, based on their prior experience. Good IA aligns with users' existing mental models rather than forcing them to learn a new one.
 
 **Example:** Users expect a portfolio site to have:
+
 - A hero/intro section at the top
 - Navigation in a top bar or hamburger menu
 - Projects/work in a grid or card layout
@@ -306,6 +312,7 @@ CONSISTENT:                    INCONSISTENT:
 A taxonomy is a classification system for your content. It defines the vocabulary and relationships between categories.
 
 **Flat taxonomy** (tags):
+
 ```
 Project A: [React, TypeScript, Frontend, SaaS]
 Project B: [Node.js, PostgreSQL, Backend, API]
@@ -313,6 +320,7 @@ Project C: [React, Node.js, Full-stack, E-commerce]
 ```
 
 **Hierarchical taxonomy:**
+
 ```
 Technology
   +-- Frontend
@@ -328,6 +336,7 @@ Technology
 ```
 
 **Faceted taxonomy** (multiple independent dimensions):
+
 ```
 Project can be classified by:
   TYPE:       [Web App, API, Library, CLI Tool]
@@ -340,15 +349,15 @@ Faceted taxonomies are powerful for portfolio sites because they let visitors fi
 
 ### IA for Websites vs. Apps
 
-| Aspect           | Websites                        | Apps                            |
-|------------------|---------------------------------|---------------------------------|
-| Navigation       | Global nav, links, breadcrumbs  | Tab bars, drawers, bottom nav   |
-| Hierarchy        | Usually deeper (3-4 levels)     | Usually flatter (1-2 levels)    |
-| Content model    | Pages and sections              | Screens and states              |
-| User behavior    | Browse, scan, read              | Task-oriented, action-focused   |
-| Search           | Often critical                  | Sometimes optional              |
-| Entry points     | Multiple (SEO, deep links)      | Usually single (home screen)    |
-| Back navigation  | Browser back button, links      | System back, explicit buttons   |
+| Aspect          | Websites                       | Apps                          |
+| --------------- | ------------------------------ | ----------------------------- |
+| Navigation      | Global nav, links, breadcrumbs | Tab bars, drawers, bottom nav |
+| Hierarchy       | Usually deeper (3-4 levels)    | Usually flatter (1-2 levels)  |
+| Content model   | Pages and sections             | Screens and states            |
+| User behavior   | Browse, scan, read             | Task-oriented, action-focused |
+| Search          | Often critical                 | Sometimes optional            |
+| Entry points    | Multiple (SEO, deep links)     | Usually single (home screen)  |
+| Back navigation | Browser back button, links     | System back, explicit buttons |
 
 ---
 
@@ -434,7 +443,7 @@ const navItems = [
   { label: 'Projects', href: `/${lang}/projects` },
   { label: 'About', href: `/${lang}/about` },
   { label: 'Contact', href: `/${lang}/contact` },
-] as const
+] as const;
 
 function Navbar({ lang }: { lang: string }) {
   return (
@@ -459,7 +468,7 @@ function Navbar({ lang }: { lang: string }) {
         </ul>
       </div>
     </nav>
-  )
+  );
 }
 ```
 
@@ -467,16 +476,16 @@ function Navbar({ lang }: { lang: string }) {
 
 ```tsx
 // Project taxonomy as TypeScript types
-type ProjectCategory = 'web-app' | 'api' | 'library' | 'cli'
-type Technology = 'react' | 'nextjs' | 'node' | 'typescript' | 'python'
+type ProjectCategory = 'web-app' | 'api' | 'library' | 'cli';
+type Technology = 'react' | 'nextjs' | 'node' | 'typescript' | 'python';
 
 interface Project {
-  readonly slug: string
-  readonly title: string
-  readonly category: ProjectCategory
-  readonly technologies: readonly Technology[]
-  readonly year: number
-  readonly featured: boolean
+  readonly slug: string;
+  readonly title: string;
+  readonly category: ProjectCategory;
+  readonly technologies: readonly Technology[];
+  readonly year: number;
+  readonly featured: boolean;
 }
 
 // Filter component using faceted taxonomy
@@ -484,15 +493,22 @@ function ProjectFilters({
   activeFilters,
   onFilterChange,
 }: {
-  activeFilters: { category?: ProjectCategory; tech?: Technology }
-  onFilterChange: (filters: typeof activeFilters) => void
+  activeFilters: { category?: ProjectCategory; tech?: Technology };
+  onFilterChange: (filters: typeof activeFilters) => void;
 }) {
   const categories: readonly ProjectCategory[] = [
-    'web-app', 'api', 'library', 'cli',
-  ]
+    'web-app',
+    'api',
+    'library',
+    'cli',
+  ];
   const technologies: readonly Technology[] = [
-    'react', 'nextjs', 'node', 'typescript', 'python',
-  ]
+    'react',
+    'nextjs',
+    'node',
+    'typescript',
+    'python',
+  ];
 
   return (
     <div className="flex flex-wrap gap-6">
@@ -537,7 +553,7 @@ function ProjectFilters({
         ))}
       </div>
     </div>
-  )
+  );
 }
 ```
 
@@ -545,8 +561,8 @@ function ProjectFilters({
 
 ```tsx
 interface BreadcrumbItem {
-  readonly label: string
-  readonly href: string
+  readonly label: string;
+  readonly href: string;
 }
 
 function Breadcrumbs({ items }: { items: readonly BreadcrumbItem[] }) {
@@ -572,7 +588,7 @@ function Breadcrumbs({ items }: { items: readonly BreadcrumbItem[] }) {
         ))}
       </ol>
     </nav>
-  )
+  );
 }
 
 // Usage on a project detail page:
@@ -609,7 +625,7 @@ function Breadcrumbs({ items }: { items: readonly BreadcrumbItem[] }) {
 
 ### Q6: What is tree testing and how does it differ from card sorting?
 
-**Answer:** Tree testing (also called reverse card sorting) evaluates an existing or proposed navigation structure by asking users to find specific items within a text-only hierarchy. Unlike card sorting, which helps you *create* a structure, tree testing helps you *validate* one. Participants see only the navigation labels (no visual design) and are given tasks like "Where would you find information about pricing?" Their click paths reveal whether labels are clear and content is where users expect it. Tree testing is particularly valuable because it isolates IA from visual design, ensuring your structure works independently of how it looks.
+**Answer:** Tree testing (also called reverse card sorting) evaluates an existing or proposed navigation structure by asking users to find specific items within a text-only hierarchy. Unlike card sorting, which helps you _create_ a structure, tree testing helps you _validate_ one. Participants see only the navigation labels (no visual design) and are given tasks like "Where would you find information about pricing?" Their click paths reveal whether labels are clear and content is where users expect it. Tree testing is particularly valuable because it isolates IA from visual design, ensuring your structure works independently of how it looks.
 
 ### Q7: How do you handle IA for a bilingual or multilingual site?
 
@@ -657,7 +673,7 @@ If using separate pages instead of single-page:
 ### Implementing Smooth Navigation for Single-Page IA
 
 ```tsx
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
 
 // For a single-page portfolio, use section-based navigation
 // This keeps the IA flat while maintaining clear sections
@@ -667,7 +683,7 @@ const sections = [
   { id: 'projects', label: 'Projects' },
   { id: 'about', label: 'About' },
   { id: 'contact', label: 'Contact' },
-] as const
+] as const;
 
 function SectionNav({ activeSection }: { activeSection: string }) {
   return (
@@ -699,7 +715,7 @@ function SectionNav({ activeSection }: { activeSection: string }) {
         ))}
       </ul>
     </nav>
-  )
+  );
 }
 ```
 

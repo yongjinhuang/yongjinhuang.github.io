@@ -51,15 +51,15 @@ Users who install after playing:
 
 ### Playable Ad vs. Mini-Game vs. Full Game
 
-| Aspect | Playable Ad | Mini-Game | Full Game |
-|--------|-------------|-----------|-----------|
-| Size | 2-5 MB | 10-50 MB | 50-500 MB |
-| Duration | 15-30 sec | 2-10 min | Unlimited |
-| Goal | Drive installs | Engagement | Retention |
-| Assets | Heavily compressed, base64 | Moderate quality | Full quality |
-| Audio | Often none | Basic | Full soundtrack |
-| Complexity | Minimal mechanics | Few mechanics | Many mechanics |
-| Monetization | Ad revenue (for host app) | In-app/ads | In-app/ads/premium |
+| Aspect       | Playable Ad                | Mini-Game        | Full Game          |
+| ------------ | -------------------------- | ---------------- | ------------------ |
+| Size         | 2-5 MB                     | 10-50 MB         | 50-500 MB          |
+| Duration     | 15-30 sec                  | 2-10 min         | Unlimited          |
+| Goal         | Drive installs             | Engagement       | Retention          |
+| Assets       | Heavily compressed, base64 | Moderate quality | Full quality       |
+| Audio        | Often none                 | Basic            | Full soundtrack    |
+| Complexity   | Minimal mechanics          | Few mechanics    | Many mechanics     |
+| Monetization | Ad revenue (for host app)  | In-app/ads       | In-app/ads/premium |
 
 ---
 
@@ -67,75 +67,91 @@ Users who install after playing:
 
 ### Comparison Table
 
-| Network | Format | Max Size | SDK | Key Constraints |
-|---------|--------|----------|-----|-----------------|
-| **Facebook/Meta** | Single HTML | 5 MB | None (FBIG) | No external requests, no `eval()`, no `document.write()` |
-| **Google Ads** | Single HTML | 5 MB | MRAID 2.0 | No external requests, must include `<meta name="ad.size">` |
-| **Unity Ads** | Single HTML | 5 MB | mraid.js (injected) | SDK injected at runtime, cannot bundle own mraid.js |
-| **IronSource** | Single HTML | 5 MB | dapi.js | Must integrate dapi.js SDK, respect audio volume |
-| **AppLovin** | ZIP archive | 5 MB | MRAID | Can have multiple files in ZIP, index.html entry point |
-| **TikTok** | Single HTML | **2 MB** | None | Strictest size limit, no external requests |
-| **Vungle** | ZIP archive | 5 MB | MRAID/Vungle API | ZIP with index.html, supports separate asset files |
-| **Mintegral** | Single HTML | 5 MB | MRAID | Standard MRAID integration |
-| **AdColony** | ZIP archive | 5 MB | MRAID | ZIP format, Aurora Playables SDK |
+| Network           | Format      | Max Size | SDK                 | Key Constraints                                            |
+| ----------------- | ----------- | -------- | ------------------- | ---------------------------------------------------------- |
+| **Facebook/Meta** | Single HTML | 5 MB     | None (FBIG)         | No external requests, no `eval()`, no `document.write()`   |
+| **Google Ads**    | Single HTML | 5 MB     | MRAID 2.0           | No external requests, must include `<meta name="ad.size">` |
+| **Unity Ads**     | Single HTML | 5 MB     | mraid.js (injected) | SDK injected at runtime, cannot bundle own mraid.js        |
+| **IronSource**    | Single HTML | 5 MB     | dapi.js             | Must integrate dapi.js SDK, respect audio volume           |
+| **AppLovin**      | ZIP archive | 5 MB     | MRAID               | Can have multiple files in ZIP, index.html entry point     |
+| **TikTok**        | Single HTML | **2 MB** | None                | Strictest size limit, no external requests                 |
+| **Vungle**        | ZIP archive | 5 MB     | MRAID/Vungle API    | ZIP with index.html, supports separate asset files         |
+| **Mintegral**     | Single HTML | 5 MB     | MRAID               | Standard MRAID integration                                 |
+| **AdColony**      | ZIP archive | 5 MB     | MRAID               | ZIP format, Aurora Playables SDK                           |
 
 ### Facebook/Meta (Instant Games Playable Ads)
 
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,
-    maximum-scale=1.0, user-scalable=no">
-  <style>
-    /* All CSS inlined here */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; }
-    canvas { display: block; }
-    #cta-button {
-      position: absolute;
-      bottom: 20%;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 16px 48px;
-      font-size: 24px;
-      font-weight: bold;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      display: none;
-      z-index: 100;
-    }
-  </style>
-</head>
-<body>
-  <canvas id="game"></canvas>
-  <button id="cta-button">INSTALL NOW</button>
-  <script>
-    // Facebook Playable Ads API
-    // FbPlayableAd is injected by the Facebook SDK
-
-    // Initialize when the ad is loaded
-    var FbPlayableAd = FbPlayableAd || {};
-
-    FbPlayableAd.onCTAClick = function() {
-      // Called when user taps the CTA
-      // Facebook handles the redirect to app store
-    };
-
-    // CTA button handler
-    document.getElementById('cta-button').addEventListener('click', function() {
-      if (FbPlayableAd && FbPlayableAd.onCTAClick) {
-        FbPlayableAd.onCTAClick();
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0,
+    maximum-scale=1.0, user-scalable=no"
+    />
+    <style>
+      /* All CSS inlined here */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-    });
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+      #cta-button {
+        position: absolute;
+        bottom: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 16px 48px;
+        font-size: 24px;
+        font-weight: bold;
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        display: none;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <button id="cta-button">INSTALL NOW</button>
+    <script>
+      // Facebook Playable Ads API
+      // FbPlayableAd is injected by the Facebook SDK
 
-    // All game code inlined here...
-  </script>
-</body>
+      // Initialize when the ad is loaded
+      var FbPlayableAd = FbPlayableAd || {};
+
+      FbPlayableAd.onCTAClick = function () {
+        // Called when user taps the CTA
+        // Facebook handles the redirect to app store
+      };
+
+      // CTA button handler
+      document
+        .getElementById('cta-button')
+        .addEventListener('click', function () {
+          if (FbPlayableAd && FbPlayableAd.onCTAClick) {
+            FbPlayableAd.onCTAClick();
+          }
+        });
+
+      // All game code inlined here...
+    </script>
+  </body>
 </html>
 ```
 
@@ -144,34 +160,36 @@ Users who install after playing:
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="ad.size" content="width=320,height=480">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://tpc.googlesyndication.com/nicfb/niclib.js"></script>
-  <style>
-    /* Inlined CSS */
-  </style>
-</head>
-<body>
-  <canvas id="game"></canvas>
-  <script>
-    // Google requires MRAID or Enabler
-    // CTA: opens the configured exit URL
-    function handleCTA() {
-      // For MRAID
-      if (typeof mraid !== 'undefined') {
-        mraid.open('https://play.google.com/store/apps/details?id=com.example');
+  <head>
+    <meta charset="utf-8" />
+    <meta name="ad.size" content="width=320,height=480" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://tpc.googlesyndication.com/nicfb/niclib.js"></script>
+    <style>
+      /* Inlined CSS */
+    </style>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+      // Google requires MRAID or Enabler
+      // CTA: opens the configured exit URL
+      function handleCTA() {
+        // For MRAID
+        if (typeof mraid !== 'undefined') {
+          mraid.open(
+            'https://play.google.com/store/apps/details?id=com.example'
+          );
+        }
+        // For Enabler (Google Web Designer)
+        else if (typeof Enabler !== 'undefined') {
+          Enabler.exit('CTA');
+        }
       }
-      // For Enabler (Google Web Designer)
-      else if (typeof Enabler !== 'undefined') {
-        Enabler.exit('CTA');
-      }
-    }
 
-    // Game code...
-  </script>
-</body>
+      // Game code...
+    </script>
+  </body>
 </html>
 ```
 
@@ -180,54 +198,61 @@ Users who install after playing:
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,
-    maximum-scale=1.0, user-scalable=no">
-  <!-- DO NOT include mraid.js -- Unity injects it -->
-  <style>/* Inlined */</style>
-</head>
-<body>
-  <canvas id="game"></canvas>
-  <script>
-    // Unity Ads injects mraid.js into the WebView
-    // Wait for MRAID to be ready
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0,
+    maximum-scale=1.0, user-scalable=no"
+    />
+    <!-- DO NOT include mraid.js -- Unity injects it -->
+    <style>
+      /* Inlined */
+    </style>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+      // Unity Ads injects mraid.js into the WebView
+      // Wait for MRAID to be ready
 
-    function onMRAIDReady() {
-      // Check if viewable
-      if (mraid.isViewable()) {
-        startGame();
-      } else {
-        mraid.addEventListener('viewableChange', function(viewable) {
-          if (viewable) {
-            startGame();
-          }
-        });
+      function onMRAIDReady() {
+        // Check if viewable
+        if (mraid.isViewable()) {
+          startGame();
+        } else {
+          mraid.addEventListener('viewableChange', function (viewable) {
+            if (viewable) {
+              startGame();
+            }
+          });
+        }
       }
-    }
 
-    if (typeof mraid !== 'undefined') {
-      if (mraid.getState() === 'loading') {
-        mraid.addEventListener('ready', onMRAIDReady);
-      } else {
-        onMRAIDReady();
-      }
-    } else {
-      // Fallback: start without MRAID (for testing in browser)
-      startGame();
-    }
-
-    function handleCTA() {
       if (typeof mraid !== 'undefined') {
-        mraid.open('https://play.google.com/store/apps/details?id=com.example');
+        if (mraid.getState() === 'loading') {
+          mraid.addEventListener('ready', onMRAIDReady);
+        } else {
+          onMRAIDReady();
+        }
+      } else {
+        // Fallback: start without MRAID (for testing in browser)
+        startGame();
       }
-    }
 
-    function startGame() {
-      // Initialize and start the game
-    }
-  </script>
-</body>
+      function handleCTA() {
+        if (typeof mraid !== 'undefined') {
+          mraid.open(
+            'https://play.google.com/store/apps/details?id=com.example'
+          );
+        }
+      }
+
+      function startGame() {
+        // Initialize and start the game
+      }
+    </script>
+  </body>
 </html>
 ```
 
@@ -236,85 +261,87 @@ Users who install after playing:
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://imasdk.googleapis.com/nicfb/niclib.js"></script>
-  <style>/* Inlined */</style>
-</head>
-<body>
-  <canvas id="game"></canvas>
-  <script>
-    // IronSource DAPI integration
-    (function() {
-      var gameStarted = false;
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://imasdk.googleapis.com/nicfb/niclib.js"></script>
+    <style>
+      /* Inlined */
+    </style>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+      // IronSource DAPI integration
+      (function () {
+        var gameStarted = false;
 
-      function init() {
-        if (typeof dapi !== 'undefined') {
-          dapi.addEventListener('ready', onDapiReady);
-          dapi.addEventListener('viewableChange', onViewableChange);
-          dapi.addEventListener('adResized', onAdResized);
-          dapi.addEventListener('audioVolumeChange', onAudioVolumeChange);
-        } else {
-          // Testing fallback
-          startGame();
-        }
-      }
-
-      function onDapiReady() {
-        if (dapi.isViewable()) {
-          startGame();
-        }
-      }
-
-      function onViewableChange(event) {
-        if (event.isViewable) {
-          if (!gameStarted) {
-            startGame();
+        function init() {
+          if (typeof dapi !== 'undefined') {
+            dapi.addEventListener('ready', onDapiReady);
+            dapi.addEventListener('viewableChange', onViewableChange);
+            dapi.addEventListener('adResized', onAdResized);
+            dapi.addEventListener('audioVolumeChange', onAudioVolumeChange);
           } else {
-            resumeGame();
+            // Testing fallback
+            startGame();
           }
-        } else {
-          pauseGame();
         }
-      }
 
-      function onAdResized(event) {
-        var screenSize = dapi.getScreenSize();
-        resizeGame(screenSize.width, screenSize.height);
-      }
-
-      function onAudioVolumeChange(volume) {
-        setGameVolume(volume);
-      }
-
-      function startGame() {
-        gameStarted = true;
-        var screenSize = (typeof dapi !== 'undefined')
-          ? dapi.getScreenSize()
-          : { width: window.innerWidth, height: window.innerHeight };
-
-        var audioVolume = (typeof dapi !== 'undefined')
-          ? dapi.getAudioVolume()
-          : 0;
-
-        initGame(screenSize.width, screenSize.height, audioVolume);
-      }
-
-      function handleCTA() {
-        if (typeof dapi !== 'undefined') {
-          dapi.openStoreUrl();
+        function onDapiReady() {
+          if (dapi.isViewable()) {
+            startGame();
+          }
         }
-      }
 
-      // Expose CTA handler
-      window.handleCTA = handleCTA;
+        function onViewableChange(event) {
+          if (event.isViewable) {
+            if (!gameStarted) {
+              startGame();
+            } else {
+              resumeGame();
+            }
+          } else {
+            pauseGame();
+          }
+        }
 
-      // Initialize
-      init();
-    })();
-  </script>
-</body>
+        function onAdResized(event) {
+          var screenSize = dapi.getScreenSize();
+          resizeGame(screenSize.width, screenSize.height);
+        }
+
+        function onAudioVolumeChange(volume) {
+          setGameVolume(volume);
+        }
+
+        function startGame() {
+          gameStarted = true;
+          var screenSize =
+            typeof dapi !== 'undefined'
+              ? dapi.getScreenSize()
+              : { width: window.innerWidth, height: window.innerHeight };
+
+          var audioVolume =
+            typeof dapi !== 'undefined' ? dapi.getAudioVolume() : 0;
+
+          initGame(screenSize.width, screenSize.height, audioVolume);
+        }
+
+        function handleCTA() {
+          if (typeof dapi !== 'undefined') {
+            dapi.openStoreUrl();
+          }
+        }
+
+        // Expose CTA handler
+        window.handleCTA = handleCTA;
+
+        // Initialize
+        init();
+      })();
+    </script>
+  </body>
 </html>
 ```
 
@@ -330,18 +357,33 @@ MRAID (Mobile Rich Media Ad Interface Definitions) is the IAB standard for inter
 // Type declarations for MRAID
 declare namespace mraid {
   // State management
-  function getState(): 'loading' | 'default' | 'expanded' | 'resized' | 'hidden';
+  function getState():
+    | 'loading'
+    | 'default'
+    | 'expanded'
+    | 'resized'
+    | 'hidden';
   function isViewable(): boolean;
 
   // Navigation
-  function open(url: string): void;   // Open URL (CTA action)
-  function close(): void;              // Close the ad
+  function open(url: string): void; // Open URL (CTA action)
+  function close(): void; // Close the ad
 
   // Size and position
   function getScreenSize(): { width: number; height: number };
-  function getCurrentPosition(): { x: number; y: number; width: number; height: number };
+  function getCurrentPosition(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
   function getMaxSize(): { width: number; height: number };
-  function getDefaultPosition(): { x: number; y: number; width: number; height: number };
+  function getDefaultPosition(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 
   // Expansion
   function expand(url?: string): void;
@@ -495,15 +537,15 @@ declare namespace dapi {
 
 ### DAPI vs MRAID
 
-| Feature | MRAID | DAPI |
-|---------|-------|------|
-| Standard | IAB standard | IronSource proprietary |
-| Audio volume | Not provided | `getAudioVolume()` |
-| Store URL | `mraid.open(url)` | `dapi.openStoreUrl()` (auto) |
-| Screen size | `getScreenSize()` | `getScreenSize()` |
-| Viewability | `isViewable()` + event | `isViewable` via event |
-| Resize event | `sizeChange` | `adResized` |
-| Adoption | Most networks | IronSource only |
+| Feature      | MRAID                  | DAPI                         |
+| ------------ | ---------------------- | ---------------------------- |
+| Standard     | IAB standard           | IronSource proprietary       |
+| Audio volume | Not provided           | `getAudioVolume()`           |
+| Store URL    | `mraid.open(url)`      | `dapi.openStoreUrl()` (auto) |
+| Screen size  | `getScreenSize()`      | `getScreenSize()`            |
+| Viewability  | `isViewable()` + event | `isViewable` via event       |
+| Resize event | `sizeChange`           | `adResized`                  |
+| Adoption     | Most networks          | IronSource only              |
 
 ### Universal SDK Wrapper
 
@@ -599,7 +641,8 @@ function createAdSDK(): AdSDK {
   };
 }
 
-const STORE_URL = 'https://play.google.com/store/apps/details?id=com.example.game';
+const STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.example.game';
 ```
 
 ---
@@ -700,7 +743,9 @@ async function loadAudioFromBase64(
 // Spine skeletal animation data (JSON + atlas) inlined as objects
 const SPINE_DATA = {
   character: {
-    skeleton: { /* spine skeleton JSON */ },
+    skeleton: {
+      /* spine skeleton JSON */
+    },
     atlas: `
       character.png
       size: 512,512
@@ -747,7 +792,8 @@ index.html (template)──→  8. Generate per-network      ──→
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HtmlInlineScriptPlugin = require('html-inline-script-webpack-plugin');
-const HTMLInlineCSSWebpackPlugin = require('html-inline-css-webpack-plugin').default;
+const HTMLInlineCSSWebpackPlugin =
+  require('html-inline-css-webpack-plugin').default;
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
@@ -809,8 +855,8 @@ module.exports = (env) => {
           minifyJS: false, // Terser handles JS
         },
       }),
-      new HtmlInlineScriptPlugin(),      // Inlines <script> tags
-      new HTMLInlineCSSWebpackPlugin(),   // Inlines <style> tags
+      new HtmlInlineScriptPlugin(), // Inlines <script> tags
+      new HTMLInlineCSSWebpackPlugin(), // Inlines <style> tags
     ],
     optimization: {
       minimize: true,
@@ -818,13 +864,13 @@ module.exports = (env) => {
         new TerserPlugin({
           terserOptions: {
             compress: {
-              drop_console: true,     // Remove console.log
+              drop_console: true, // Remove console.log
               drop_debugger: true,
               pure_funcs: ['console.log', 'console.info', 'console.debug'],
               passes: 2,
             },
             mangle: {
-              properties: false,      // Don't mangle property names
+              properties: false, // Don't mangle property names
             },
             output: {
               comments: false,
@@ -835,9 +881,9 @@ module.exports = (env) => {
       ],
     },
     performance: {
-      maxAssetSize: 5 * 1024 * 1024,    // 5MB warning
+      maxAssetSize: 5 * 1024 * 1024, // 5MB warning
       maxEntrypointSize: 5 * 1024 * 1024,
-      hints: 'error',                    // Fail build if over 5MB
+      hints: 'error', // Fail build if over 5MB
     },
   };
 };
@@ -869,18 +915,18 @@ const fs = require('fs');
 const path = require('path');
 
 const LIMITS = {
-  'mraid': 5 * 1024 * 1024,
-  'dapi': 5 * 1024 * 1024,
-  'facebook': 5 * 1024 * 1024,
-  'google': 5 * 1024 * 1024,
-  'tiktok': 2 * 1024 * 1024, // TikTok has stricter limit
+  mraid: 5 * 1024 * 1024,
+  dapi: 5 * 1024 * 1024,
+  facebook: 5 * 1024 * 1024,
+  google: 5 * 1024 * 1024,
+  tiktok: 2 * 1024 * 1024, // TikTok has stricter limit
 };
 
 const distDir = path.resolve(__dirname, '..', 'dist');
 const files = fs.readdirSync(distDir);
 let hasError = false;
 
-files.forEach(file => {
+files.forEach((file) => {
   if (!file.endsWith('.html')) return;
 
   const network = file.replace('.html', '').replace('index-', '');
@@ -892,10 +938,14 @@ files.forEach(file => {
   const percent = ((stats.size / limit) * 100).toFixed(1);
 
   if (stats.size > limit) {
-    console.error(`FAIL: ${file} is ${sizeKB}KB (limit: ${limitKB}KB, ${percent}%)`);
+    console.error(
+      `FAIL: ${file} is ${sizeKB}KB (limit: ${limitKB}KB, ${percent}%)`
+    );
     hasError = true;
   } else {
-    console.log(`PASS: ${file} is ${sizeKB}KB (limit: ${limitKB}KB, ${percent}%)`);
+    console.log(
+      `PASS: ${file} is ${sizeKB}KB (limit: ${limitKB}KB, ${percent}%)`
+    );
   }
 });
 
@@ -1225,7 +1275,7 @@ function drawCheckeredPattern(
 ): void {
   for (let y = 0; y < height; y += tileSize) {
     for (let x = 0; x < width; x += tileSize) {
-      const isEven = ((x / tileSize) + (y / tileSize)) % 2 === 0;
+      const isEven = (x / tileSize + y / tileSize) % 2 === 0;
       ctx.fillStyle = isEven ? color1 : color2;
       ctx.fillRect(x, y, tileSize, tileSize);
     }
@@ -1263,12 +1313,17 @@ class MRAIDAdapter implements PlayableSDK {
       ? mraid.getScreenSize()
       : { width: window.innerWidth, height: window.innerHeight };
   }
-  getAudioVolume() { return 0; }
+  getAudioVolume() {
+    return 0;
+  }
   openStore() {
     if (typeof mraid !== 'undefined') mraid.open(STORE_URL);
   }
   onReady(cb: () => void) {
-    if (typeof mraid === 'undefined') { cb(); return; }
+    if (typeof mraid === 'undefined') {
+      cb();
+      return;
+    }
     if (mraid.getState() !== 'loading') cb();
     else mraid.addEventListener('ready', cb);
   }
@@ -1304,7 +1359,10 @@ class DAPIAdapter implements PlayableSDK {
     if (typeof dapi !== 'undefined') dapi.openStoreUrl();
   }
   onReady(cb: () => void) {
-    if (typeof dapi === 'undefined') { cb(); return; }
+    if (typeof dapi === 'undefined') {
+      cb();
+      return;
+    }
     if (dapi.isReady()) cb();
     else dapi.addEventListener('ready', cb);
   }
@@ -1341,7 +1399,7 @@ class MockSDK implements PlayableSDK {
   init(): void {
     // Simulate ready after a short delay
     setTimeout(() => {
-      this.readyCallbacks.forEach(cb => cb());
+      this.readyCallbacks.forEach((cb) => cb());
     }, 100);
   }
 
@@ -1349,7 +1407,9 @@ class MockSDK implements PlayableSDK {
     return { width: window.innerWidth, height: window.innerHeight };
   }
 
-  getAudioVolume() { return 1; }
+  getAudioVolume() {
+    return 1;
+  }
 
   openStore() {
     console.log('[MockSDK] Store opened');
@@ -1375,7 +1435,7 @@ class MockSDK implements PlayableSDK {
 
   // Dev tools
   simulateViewable(v: boolean): void {
-    this.viewableCallbacks.forEach(cb => cb(v));
+    this.viewableCallbacks.forEach((cb) => cb(v));
   }
 }
 ```
@@ -1386,15 +1446,15 @@ class MockSDK implements PlayableSDK {
 
 ### Common Issues and Solutions
 
-| Issue | Symptom | Solution |
-|-------|---------|----------|
-| Blank screen | White/black screen in ad preview | Check MRAID ready flow; start game after viewable |
-| No interaction | Taps don't register | Check `touch-action: none` on canvas; prevent default |
-| CTA not working | Button click does nothing | Verify `mraid.open()` or `dapi.openStoreUrl()` called |
-| Wrong size | Game doesn't fill screen | Use `getScreenSize()` from SDK, not `window.innerWidth` |
-| Audio not playing | No sound | Most networks mute by default; check DAPI volume |
-| Over size limit | Build fails validation | Compress images more, remove audio, simplify assets |
-| iOS black screen | Works on Android, blank on iOS | Check for unsupported APIs (WebGL2, etc.) |
+| Issue             | Symptom                          | Solution                                                |
+| ----------------- | -------------------------------- | ------------------------------------------------------- |
+| Blank screen      | White/black screen in ad preview | Check MRAID ready flow; start game after viewable       |
+| No interaction    | Taps don't register              | Check `touch-action: none` on canvas; prevent default   |
+| CTA not working   | Button click does nothing        | Verify `mraid.open()` or `dapi.openStoreUrl()` called   |
+| Wrong size        | Game doesn't fill screen         | Use `getScreenSize()` from SDK, not `window.innerWidth` |
+| Audio not playing | No sound                         | Most networks mute by default; check DAPI volume        |
+| Over size limit   | Build fails validation           | Compress images more, remove audio, simplify assets     |
+| iOS black screen  | Works on Android, blank on iOS   | Check for unsupported APIs (WebGL2, etc.)               |
 
 ### Debug Panel for Development
 
@@ -1446,9 +1506,7 @@ class DebugPanel {
 }
 
 // Enable only in development
-const debug = process.env.NODE_ENV === 'development'
-  ? new DebugPanel()
-  : null;
+const debug = process.env.NODE_ENV === 'development' ? new DebugPanel() : null;
 ```
 
 ### Testing Checklist
@@ -1457,6 +1515,7 @@ const debug = process.env.NODE_ENV === 'development'
 ## Pre-submission Testing Checklist
 
 ### Functionality
+
 - [ ] Game loads and starts correctly
 - [ ] Tutorial hand appears and is clear
 - [ ] Game mechanics work as expected
@@ -1466,6 +1525,7 @@ const debug = process.env.NODE_ENV === 'development'
 - [ ] CTA opens app store (test with SDK preview tool)
 
 ### Compatibility
+
 - [ ] Works in portrait orientation
 - [ ] Works in landscape orientation
 - [ ] Works on small screens (320x480)
@@ -1476,12 +1536,14 @@ const debug = process.env.NODE_ENV === 'development'
 - [ ] Works with DAPI SDK (if targeting IronSource)
 
 ### Performance
+
 - [ ] Steady 30+ FPS on mid-range devices
 - [ ] No visible lag or stutter
 - [ ] Assets load within 2 seconds
 - [ ] No memory leaks (check with dev tools)
 
 ### Size
+
 - [ ] Total file size under network limit
 - [ ] Validated with network's preview tool
 - [ ] No external HTTP requests (check network tab)
@@ -1499,7 +1561,7 @@ const debug = process.env.NODE_ENV === 'development'
 // 1. Minimize canvas state changes
 // BAD: changing fillStyle every draw call
 function renderBad(ctx: CanvasRenderingContext2D, items: any[]): void {
-  items.forEach(item => {
+  items.forEach((item) => {
     ctx.fillStyle = item.color; // State change per item
     ctx.fillRect(item.x, item.y, item.w, item.h);
   });
@@ -1509,7 +1571,7 @@ function renderBad(ctx: CanvasRenderingContext2D, items: any[]): void {
 function renderGood(ctx: CanvasRenderingContext2D, items: any[]): void {
   // Sort by color, then draw all of each color at once
   const byColor = new Map<string, any[]>();
-  items.forEach(item => {
+  items.forEach((item) => {
     const list = byColor.get(item.color) || [];
     list.push(item);
     byColor.set(item.color, list);
@@ -1517,7 +1579,7 @@ function renderGood(ctx: CanvasRenderingContext2D, items: any[]): void {
 
   byColor.forEach((list, color) => {
     ctx.fillStyle = color;
-    list.forEach(item => {
+    list.forEach((item) => {
       ctx.fillRect(item.x, item.y, item.w, item.h);
     });
   });
@@ -1659,6 +1721,7 @@ Key constraints:
 MRAID (Mobile Rich Media Ad Interface Definitions) is the IAB standard for interactive ads in mobile apps. It provides a JavaScript API for ad creatives to communicate with the ad container (SDK).
 
 **Key APIs:**
+
 - `mraid.getState()`: Returns `'loading'`, `'default'`, `'expanded'`, `'resized'`, or `'hidden'`. The ad should not start until state is not `'loading'`.
 - `mraid.isViewable()`: Returns whether the ad is currently visible on screen.
 - `mraid.open(url)`: Opens a URL, typically the app store URL. This is the CTA action.
@@ -1666,12 +1729,14 @@ MRAID (Mobile Rich Media Ad Interface Definitions) is the IAB standard for inter
 - `mraid.getScreenSize()`: Returns `{ width, height }` of the available screen area.
 
 **Key Events:**
+
 - `'ready'`: Fires when MRAID is initialized. After this, you can call `getState()`, `isViewable()`, etc.
 - `'viewableChange'`: Fires when the ad becomes visible or hidden. Start the game when viewable, pause when not.
 - `'stateChange'`: Fires when the MRAID state changes.
 - `'sizeChange'`: Fires when the ad container is resized (orientation change).
 
 **Critical flow:**
+
 1. Wait for `'ready'` event.
 2. Check `isViewable()`.
 3. If viewable, start game. If not, wait for `'viewableChange'` with `true`.
@@ -1688,10 +1753,12 @@ Important: Do NOT bundle your own `mraid.js`. The SDK injects it. If you include
 I create a common SDK interface and implement adapters for each network. The game code only interacts with the interface, never directly with MRAID or DAPI.
 
 The interface provides:
+
 - `init()`, `getScreenSize()`, `getAudioVolume()`, `openStore()`
 - `onReady()`, `onViewableChange()`, `onResize()`, `onAudioChange()`
 
 Key differences to abstract:
+
 - **CTA**: MRAID uses `mraid.open(url)` where you provide the URL. DAPI uses `dapi.openStoreUrl()` where the URL is configured in the IronSource dashboard.
 - **Audio volume**: DAPI provides `getAudioVolume()` and an `audioVolumeChange` event. MRAID does not -- you must default to muted.
 - **Readiness check**: MRAID uses `getState() !== 'loading'`. DAPI uses `dapi.isReady()`.
@@ -1810,6 +1877,7 @@ function handleResize(width: number, height: number): void {
 6. **Gameplay (3-25s)**: The core game loop runs. Difficulty ramps quickly. The experience is designed to end with the user feeling "I almost had it" (creates desire to install and try again).
 
 7. **End card (25-30s)**: Triggered by timer expiry, lives running out, or level completion. Shows:
+
    - Large CTA button ("Install Now", "Play Now")
    - Game screenshots or icon
    - Optional: social proof ("50M+ downloads")
@@ -1831,6 +1899,7 @@ Testing happens at multiple levels:
 1. **Local browser testing**: Run the playable in a regular browser using the MockSDK. Test gameplay, tutorial flow, CTA behavior, orientation changes. Use Chrome DevTools to simulate mobile viewport sizes and throttle performance.
 
 2. **Ad network preview tools**: Most networks provide preview/testing tools:
+
    - Facebook: Playable Preview tool in Ads Manager
    - Google: Google Web Designer preview
    - IronSource: IronSource DAPI testing tool
@@ -1841,12 +1910,14 @@ Testing happens at multiple levels:
 3. **Real device testing**: Sideload the HTML into a WebView on physical iOS and Android devices. Test on old devices (iPhone 8, Galaxy S8 era) for performance validation.
 
 4. **Automated checks**:
+
    - File size validation against each network's limit
    - No external HTTP requests (parse HTML for fetch/XMLHttpRequest/img src)
    - MRAID/DAPI API calls present
    - No `eval()` or `document.write()` (blocked by some networks)
 
 5. **Performance profiling**: Use Chrome DevTools remote debugging connected to an Android WebView. Check for:
+
    - Steady 30+ FPS
    - No memory leaks
    - Fast load time (< 2s to interactive)

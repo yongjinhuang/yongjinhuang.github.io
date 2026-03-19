@@ -35,13 +35,13 @@ Authentication determines **who you are**. Kubernetes does not have a built-in u
 
 ### 1.1 Authentication Methods
 
-| Method | How It Works | Used By |
-|--------|-------------|---------|
-| **X.509 client certificates** | Client presents a cert signed by the cluster CA. CN = username, O = group | kubectl (kubeconfig), kubelet |
-| **Bearer tokens** | Token in Authorization header | ServiceAccounts, bootstrap tokens |
-| **OIDC tokens** | JWT tokens from an identity provider (Google, Okta, Dex) | Human users in production |
-| **Webhook token review** | API server calls external webhook to validate token | Custom authentication systems |
-| **ServiceAccount tokens** | JWT tokens bound to a ServiceAccount, auto-mounted in pods | Pod-to-API-server communication |
+| Method                        | How It Works                                                              | Used By                           |
+| ----------------------------- | ------------------------------------------------------------------------- | --------------------------------- |
+| **X.509 client certificates** | Client presents a cert signed by the cluster CA. CN = username, O = group | kubectl (kubeconfig), kubelet     |
+| **Bearer tokens**             | Token in Authorization header                                             | ServiceAccounts, bootstrap tokens |
+| **OIDC tokens**               | JWT tokens from an identity provider (Google, Okta, Dex)                  | Human users in production         |
+| **Webhook token review**      | API server calls external webhook to validate token                       | Custom authentication systems     |
+| **ServiceAccount tokens**     | JWT tokens bound to a ServiceAccount, auto-mounted in pods                | Pod-to-API-server communication   |
 
 ### 1.2 ServiceAccount Tokens (Bound Tokens, 1.24+)
 
@@ -53,26 +53,26 @@ kind: ServiceAccount
 metadata:
   name: my-app
   namespace: production
-automountServiceAccountToken: false    # Disable auto-mount (security best practice)
+automountServiceAccountToken: false # Disable auto-mount (security best practice)
 ```
 
 ```yaml
 # Explicitly request a projected token with audience and expiration
 spec:
   containers:
-  - name: app
-    image: my-app:v1
-    volumeMounts:
-    - name: token
-      mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+    - name: app
+      image: my-app:v1
+      volumeMounts:
+        - name: token
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
   volumes:
-  - name: token
-    projected:
-      sources:
-      - serviceAccountToken:
-          path: token
-          expirationSeconds: 3600      # 1 hour (auto-rotated by kubelet)
-          audience: api                 # Token valid only for this audience
+    - name: token
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 3600 # 1 hour (auto-rotated by kubelet)
+              audience: api # Token valid only for this audience
 ```
 
 ### 1.3 OIDC Authentication
@@ -133,10 +133,10 @@ ServiceAccount        create, update,            deployments,
 
 ### 2.2 Role vs ClusterRole
 
-| Resource | Scope | Binds With |
-|----------|-------|-----------|
-| **Role** | Namespace-scoped | RoleBinding |
-| **ClusterRole** | Cluster-scoped | ClusterRoleBinding (cluster-wide) OR RoleBinding (namespace-scoped) |
+| Resource        | Scope            | Binds With                                                          |
+| --------------- | ---------------- | ------------------------------------------------------------------- |
+| **Role**        | Namespace-scoped | RoleBinding                                                         |
+| **ClusterRole** | Cluster-scoped   | ClusterRoleBinding (cluster-wide) OR RoleBinding (namespace-scoped) |
 
 **Key insight:** A ClusterRole bound with a RoleBinding grants permissions only in the RoleBinding's namespace. This pattern is used extensively — define a ClusterRole once, reuse it across namespaces with RoleBindings.
 
@@ -150,12 +150,12 @@ metadata:
   name: pod-reader
   namespace: production
 rules:
-- apiGroups: [""]               # "" = core API group (pods, services, etc.)
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources: ["pods/log"]       # Sub-resource: pod logs
-  verbs: ["get"]
+  - apiGroups: [''] # "" = core API group (pods, services, etc.)
+    resources: ['pods']
+    verbs: ['get', 'list', 'watch']
+  - apiGroups: ['']
+    resources: ['pods/log'] # Sub-resource: pod logs
+    verbs: ['get']
 
 ---
 # RoleBinding: grant pod-reader to user jane in production namespace
@@ -165,9 +165,9 @@ metadata:
   name: jane-pod-reader
   namespace: production
 subjects:
-- kind: User
-  name: jane@example.com
-  apiGroup: rbac.authorization.k8s.io
+  - kind: User
+    name: jane@example.com
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
   name: pod-reader
@@ -180,12 +180,12 @@ kind: ClusterRole
 metadata:
   name: deployment-manager
 rules:
-- apiGroups: ["apps"]
-  resources: ["deployments"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-- apiGroups: ["apps"]
-  resources: ["deployments/scale"]
-  verbs: ["update", "patch"]
+  - apiGroups: ['apps']
+    resources: ['deployments']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete']
+  - apiGroups: ['apps']
+    resources: ['deployments/scale']
+    verbs: ['update', 'patch']
 
 ---
 # ClusterRoleBinding: grant cluster-wide
@@ -194,9 +194,9 @@ kind: ClusterRoleBinding
 metadata:
   name: ops-team-deployment-manager
 subjects:
-- kind: Group
-  name: ops-team
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: ops-team
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
   name: deployment-manager
@@ -205,12 +205,12 @@ roleRef:
 
 ### 2.4 Default ClusterRoles
 
-| ClusterRole | Permissions |
-|------------|-------------|
-| `cluster-admin` | Full access to everything (superuser) |
-| `admin` | Full access within a namespace (no resource quotas or namespace itself) |
-| `edit` | Read/write most resources in a namespace (no roles, no resource quotas) |
-| `view` | Read-only access to most resources (no secrets, no roles) |
+| ClusterRole     | Permissions                                                             |
+| --------------- | ----------------------------------------------------------------------- |
+| `cluster-admin` | Full access to everything (superuser)                                   |
+| `admin`         | Full access within a namespace (no resource quotas or namespace itself) |
+| `edit`          | Read/write most resources in a namespace (no roles, no resource quotas) |
+| `view`          | Read-only access to most resources (no secrets, no roles)               |
 
 ```bash
 # Check what a user/SA can do
@@ -242,14 +242,14 @@ kind: ClusterRole
 metadata:
   name: prometheus-reader
 rules:
-- apiGroups: [""]
-  resources: ["pods", "nodes", "endpoints", "services"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources: ["nodes/metrics"]
-  verbs: ["get"]
-- nonResourceURLs: ["/metrics", "/metrics/cadvisor"]
-  verbs: ["get"]
+  - apiGroups: ['']
+    resources: ['pods', 'nodes', 'endpoints', 'services']
+    verbs: ['get', 'list', 'watch']
+  - apiGroups: ['']
+    resources: ['nodes/metrics']
+    verbs: ['get']
+  - nonResourceURLs: ['/metrics', '/metrics/cadvisor']
+    verbs: ['get']
 
 ---
 # ClusterRoleBinding: grant cluster-wide
@@ -258,9 +258,9 @@ kind: ClusterRoleBinding
 metadata:
   name: prometheus-reader-binding
 subjects:
-- kind: ServiceAccount
-  name: prometheus
-  namespace: monitoring
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: monitoring
 roleRef:
   kind: ClusterRole
   name: prometheus-reader
@@ -277,11 +277,11 @@ kind: ClusterRole
 metadata:
   name: monitoring-custom
   labels:
-    rbac.authorization.k8s.io/aggregate-to-view: "true"   # Auto-added to "view" role
+    rbac.authorization.k8s.io/aggregate-to-view: 'true' # Auto-added to "view" role
 rules:
-- apiGroups: ["monitoring.coreos.com"]
-  resources: ["prometheusrules", "servicemonitors"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: ['monitoring.coreos.com']
+    resources: ['prometheusrules', 'servicemonitors']
+    verbs: ['get', 'list', 'watch']
 ```
 
 Any ClusterRole with the label `rbac.authorization.k8s.io/aggregate-to-view: "true"` has its rules automatically merged into the built-in `view` ClusterRole. This is how operators extend default roles.
@@ -294,16 +294,16 @@ Admission controllers are the **last line of defense** before data is persisted 
 
 ### 3.1 Built-in Admission Controllers
 
-| Controller | Type | What It Does |
-|-----------|------|-------------|
-| `NamespaceLifecycle` | Validating | Prevents operations in non-existent or terminating namespaces |
-| `LimitRanger` | Mutating | Applies default resource requests/limits from LimitRange |
-| `ServiceAccount` | Mutating | Auto-mounts service account tokens, creates default SA |
-| `ResourceQuota` | Validating | Enforces namespace resource quotas |
-| `PodSecurity` | Validating | Enforces pod security standards (Privileged/Baseline/Restricted) |
-| `NodeRestriction` | Validating | Limits kubelet to modifying only its own node and pods |
-| `MutatingAdmissionWebhook` | Mutating | Calls external webhooks that can modify objects |
-| `ValidatingAdmissionWebhook` | Validating | Calls external webhooks that can reject objects |
+| Controller                   | Type       | What It Does                                                     |
+| ---------------------------- | ---------- | ---------------------------------------------------------------- |
+| `NamespaceLifecycle`         | Validating | Prevents operations in non-existent or terminating namespaces    |
+| `LimitRanger`                | Mutating   | Applies default resource requests/limits from LimitRange         |
+| `ServiceAccount`             | Mutating   | Auto-mounts service account tokens, creates default SA           |
+| `ResourceQuota`              | Validating | Enforces namespace resource quotas                               |
+| `PodSecurity`                | Validating | Enforces pod security standards (Privileged/Baseline/Restricted) |
+| `NodeRestriction`            | Validating | Limits kubelet to modifying only its own node and pods           |
+| `MutatingAdmissionWebhook`   | Mutating   | Calls external webhooks that can modify objects                  |
+| `ValidatingAdmissionWebhook` | Validating | Calls external webhooks that can reject objects                  |
 
 ### 3.2 Dynamic Admission Webhooks
 
@@ -315,22 +315,22 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: pod-policy
 webhooks:
-- name: pod-policy.example.com
-  clientConfig:
-    service:
-      name: pod-policy-webhook
-      namespace: kube-system
-      path: "/validate"
-    caBundle: <base64-CA-cert>
-  rules:
-  - operations: ["CREATE", "UPDATE"]
-    apiGroups: [""]
-    apiVersions: ["v1"]
-    resources: ["pods"]
-  failurePolicy: Fail              # Fail closed (reject if webhook is down)
-  # failurePolicy: Ignore          # Fail open (allow if webhook is down)
-  sideEffects: None
-  admissionReviewVersions: ["v1"]
+  - name: pod-policy.example.com
+    clientConfig:
+      service:
+        name: pod-policy-webhook
+        namespace: kube-system
+        path: '/validate'
+      caBundle: <base64-CA-cert>
+    rules:
+      - operations: ['CREATE', 'UPDATE']
+        apiGroups: ['']
+        apiVersions: ['v1']
+        resources: ['pods']
+    failurePolicy: Fail # Fail closed (reject if webhook is down)
+    # failurePolicy: Ignore          # Fail open (allow if webhook is down)
+    sideEffects: None
+    admissionReviewVersions: ['v1']
 ```
 
 ### 3.3 OPA Gatekeeper / Kyverno
@@ -358,15 +358,15 @@ spec:
               items:
                 type: string
   targets:
-  - target: admission.k8s.gatekeeper.sh
-    rego: |
-      package k8srequiredlabels
-      violation[{"msg": msg}] {
-        provided := input.review.object.metadata.labels
-        required := input.parameters.labels[_]
-        not provided[required]
-        msg := sprintf("Missing required label: %v", [required])
-      }
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredlabels
+        violation[{"msg": msg}] {
+          provided := input.review.object.metadata.labels
+          required := input.parameters.labels[_]
+          not provided[required]
+          msg := sprintf("Missing required label: %v", [required])
+        }
 
 ---
 # Constraint: apply the policy
@@ -377,12 +377,12 @@ metadata:
 spec:
   match:
     kinds:
-    - apiGroups: ["apps"]
-      kinds: ["Deployment"]
+      - apiGroups: ['apps']
+        kinds: ['Deployment']
   parameters:
     labels:
-    - "team"
-    - "env"
+      - 'team'
+      - 'env'
 ```
 
 **Kyverno** uses YAML-native policies (no Rego):
@@ -393,21 +393,21 @@ kind: ClusterPolicy
 metadata:
   name: require-labels
 spec:
-  validationFailureAction: Enforce    # or Audit
+  validationFailureAction: Enforce # or Audit
   rules:
-  - name: check-labels
-    match:
-      any:
-      - resources:
-          kinds:
-          - Deployment
-    validate:
-      message: "Deployment must have 'team' and 'env' labels"
-      pattern:
-        metadata:
-          labels:
-            team: "?*"
-            env: "?*"
+    - name: check-labels
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+      validate:
+        message: "Deployment must have 'team' and 'env' labels"
+        pattern:
+          metadata:
+            labels:
+              team: '?*'
+              env: '?*'
 ```
 
 ---
@@ -418,11 +418,11 @@ spec:
 
 PSA replaced PodSecurityPolicy (removed in 1.25). It enforces three security levels at the namespace level:
 
-| Level | Description | Allows |
-|-------|-------------|--------|
-| **Privileged** | Unrestricted | Everything (no restrictions) |
-| **Baseline** | Minimal restrictions | Most standard workloads (no privileged, no host network/PID/IPC) |
-| **Restricted** | Heavily restricted | Must run as non-root, drop all capabilities, read-only root filesystem |
+| Level          | Description          | Allows                                                                 |
+| -------------- | -------------------- | ---------------------------------------------------------------------- |
+| **Privileged** | Unrestricted         | Everything (no restrictions)                                           |
+| **Baseline**   | Minimal restrictions | Most standard workloads (no privileged, no host network/PID/IPC)       |
+| **Restricted** | Heavily restricted   | Must run as non-root, drop all capabilities, read-only root filesystem |
 
 ```yaml
 # Apply Restricted enforcement to a namespace
@@ -433,11 +433,12 @@ metadata:
   labels:
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/enforce-version: latest
-    pod-security.kubernetes.io/warn: restricted        # Warn on violations
-    pod-security.kubernetes.io/audit: restricted       # Audit log violations
+    pod-security.kubernetes.io/warn: restricted # Warn on violations
+    pod-security.kubernetes.io/audit: restricted # Audit log violations
 ```
 
 **Modes:**
+
 - `enforce`: Reject pods that violate the policy
 - `warn`: Allow but show a warning to the user
 - `audit`: Allow but record in audit log
@@ -452,40 +453,40 @@ kind: Pod
 metadata:
   name: secure-pod
 spec:
-  securityContext:                    # Pod-level security context
-    runAsNonRoot: true                # Reject containers that run as root
-    runAsUser: 1000                   # Run as UID 1000
-    runAsGroup: 3000                  # Run as GID 3000
-    fsGroup: 2000                     # Supplemental group for volume mounts
+  securityContext: # Pod-level security context
+    runAsNonRoot: true # Reject containers that run as root
+    runAsUser: 1000 # Run as UID 1000
+    runAsGroup: 3000 # Run as GID 3000
+    fsGroup: 2000 # Supplemental group for volume mounts
     seccompProfile:
-      type: RuntimeDefault            # Apply default seccomp profile
+      type: RuntimeDefault # Apply default seccomp profile
 
   containers:
-  - name: app
-    image: my-app:v1
-    securityContext:                  # Container-level security context
-      allowPrivilegeEscalation: false # Prevent setuid/setgid
-      readOnlyRootFilesystem: true    # Read-only root fs (write to volumes only)
-      capabilities:
-        drop:
-        - ALL                         # Drop all Linux capabilities
-        add:
-        - NET_BIND_SERVICE            # Only add what is needed
-      seccompProfile:
-        type: RuntimeDefault
+    - name: app
+      image: my-app:v1
+      securityContext: # Container-level security context
+        allowPrivilegeEscalation: false # Prevent setuid/setgid
+        readOnlyRootFilesystem: true # Read-only root fs (write to volumes only)
+        capabilities:
+          drop:
+            - ALL # Drop all Linux capabilities
+          add:
+            - NET_BIND_SERVICE # Only add what is needed
+        seccompProfile:
+          type: RuntimeDefault
 ```
 
 ### 4.3 Key Security Context Fields
 
-| Field | What It Does | Recommended Value |
-|-------|-------------|-------------------|
-| `runAsNonRoot` | Reject if container runs as UID 0 | `true` |
-| `runAsUser` | Set the UID | Non-zero (e.g., 1000) |
-| `readOnlyRootFilesystem` | Prevent writing to container filesystem | `true` |
-| `allowPrivilegeEscalation` | Prevent gaining more privileges than parent | `false` |
-| `capabilities.drop` | Remove Linux capabilities | `["ALL"]` |
-| `seccompProfile.type` | Syscall filtering | `RuntimeDefault` |
-| `privileged` | Full host access | `false` (never true in production) |
+| Field                      | What It Does                                | Recommended Value                  |
+| -------------------------- | ------------------------------------------- | ---------------------------------- |
+| `runAsNonRoot`             | Reject if container runs as UID 0           | `true`                             |
+| `runAsUser`                | Set the UID                                 | Non-zero (e.g., 1000)              |
+| `readOnlyRootFilesystem`   | Prevent writing to container filesystem     | `true`                             |
+| `allowPrivilegeEscalation` | Prevent gaining more privileges than parent | `false`                            |
+| `capabilities.drop`        | Remove Linux capabilities                   | `["ALL"]`                          |
+| `seccompProfile.type`      | Syscall filtering                           | `RuntimeDefault`                   |
+| `privileged`               | Full host access                            | `false` (never true in production) |
 
 ---
 
@@ -503,8 +504,8 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
 ```
 
 Then whitelist specific traffic:
@@ -521,15 +522,15 @@ spec:
     matchLabels:
       app: frontend
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          name: ingress-nginx
-    ports:
-    - protocol: TCP
-      port: 8080
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
 ```
 
 ### 5.2 Namespace Isolation
@@ -544,20 +545,20 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress:
-  - from:
-    - podSelector: {}            # Any pod in same namespace
+    - from:
+        - podSelector: {} # Any pod in same namespace
   egress:
-  - to:
-    - podSelector: {}            # Any pod in same namespace
-  - to:                          # Allow DNS
-    ports:
-    - protocol: UDP
-      port: 53
-    - protocol: TCP
-      port: 53
+    - to:
+        - podSelector: {} # Any pod in same namespace
+    - to: # Allow DNS
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
 ```
 
 ---
@@ -604,20 +605,20 @@ metadata:
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: validate-registries
-    match:
-      any:
-      - resources:
-          kinds:
-          - Pod
-    validate:
-      message: "Images must come from registry.example.com"
-      pattern:
-        spec:
-          containers:
-          - image: "registry.example.com/*"
-          initContainers:
-          - image: "registry.example.com/*"
+    - name: validate-registries
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: 'Images must come from registry.example.com'
+        pattern:
+          spec:
+            containers:
+              - image: 'registry.example.com/*'
+            initContainers:
+              - image: 'registry.example.com/*'
 ```
 
 ### 6.2 Image Digest Pinning
@@ -658,27 +659,28 @@ cosign sign registry.example.com/my-app:v1
 apiVersion: apiserver.config.k8s.io/v1
 kind: EncryptionConfiguration
 resources:
-- resources:
-  - secrets
-  - configmaps                 # Optionally encrypt ConfigMaps too
-  providers:
-  # Providers are tried in order. First is used for writing.
-  - aescbc:                    # AES-CBC encryption (recommended for self-managed)
-      keys:
-      - name: key1
-        secret: <base64-32-byte-key>
-  - secretbox:                 # XSalsa20-Poly1305 (faster than AES-CBC)
-      keys:
-      - name: key1
-        secret: <base64-32-byte-key>
-  - kms:                       # KMS envelope encryption (recommended for cloud)
-      apiVersion: v2
-      name: aws-kms
-      endpoint: unix:///var/run/kmsplugin/socket.sock
-  - identity: {}               # Unencrypted (fallback for reading old data)
+  - resources:
+      - secrets
+      - configmaps # Optionally encrypt ConfigMaps too
+    providers:
+      # Providers are tried in order. First is used for writing.
+      - aescbc: # AES-CBC encryption (recommended for self-managed)
+          keys:
+            - name: key1
+              secret: <base64-32-byte-key>
+      - secretbox: # XSalsa20-Poly1305 (faster than AES-CBC)
+          keys:
+            - name: key1
+              secret: <base64-32-byte-key>
+      - kms: # KMS envelope encryption (recommended for cloud)
+          apiVersion: v2
+          name: aws-kms
+          endpoint: unix:///var/run/kmsplugin/socket.sock
+      - identity: {} # Unencrypted (fallback for reading old data)
 ```
 
 **KMS envelope encryption** is the best approach for cloud:
+
 1. K8s generates a random DEK (Data Encryption Key) for each secret
 2. The DEK encrypts the secret data
 3. The DEK itself is encrypted by the cloud KMS key (KEK)
@@ -695,42 +697,43 @@ resources:
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
-# Log all secret access at RequestResponse level
-- level: RequestResponse
-  resources:
-  - group: ""
-    resources: ["secrets"]
-  # Do not log service account token reads (too noisy)
-  omitStages:
-  - RequestReceived
+  # Log all secret access at RequestResponse level
+  - level: RequestResponse
+    resources:
+      - group: ''
+        resources: ['secrets']
+    # Do not log service account token reads (too noisy)
+    omitStages:
+      - RequestReceived
 
-# Log all changes to RBAC
-- level: RequestResponse
-  resources:
-  - group: "rbac.authorization.k8s.io"
-    resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+  # Log all changes to RBAC
+  - level: RequestResponse
+    resources:
+      - group: 'rbac.authorization.k8s.io'
+        resources:
+          ['roles', 'rolebindings', 'clusterroles', 'clusterrolebindings']
 
-# Log pod creation/deletion
-- level: Metadata
-  resources:
-  - group: ""
-    resources: ["pods"]
-  verbs: ["create", "delete"]
+  # Log pod creation/deletion
+  - level: Metadata
+    resources:
+      - group: ''
+        resources: ['pods']
+    verbs: ['create', 'delete']
 
-# Log everything else at Metadata level
-- level: Metadata
-  omitStages:
-  - RequestReceived
+  # Log everything else at Metadata level
+  - level: Metadata
+    omitStages:
+      - RequestReceived
 ```
 
 **Audit levels:**
 
-| Level | What Is Logged |
-|-------|---------------|
-| `None` | Nothing |
-| `Metadata` | Request metadata (user, timestamp, resource, verb) but not body |
-| `Request` | Metadata + request body |
-| `RequestResponse` | Metadata + request body + response body |
+| Level             | What Is Logged                                                  |
+| ----------------- | --------------------------------------------------------------- |
+| `None`            | Nothing                                                         |
+| `Metadata`        | Request metadata (user, timestamp, resource, verb) but not body |
+| `Request`         | Metadata + request body                                         |
+| `RequestResponse` | Metadata + request body + response body                         |
 
 ### 8.2 Audit Backends
 
@@ -751,16 +754,16 @@ rules:
 
 The CIS Benchmark is the industry-standard security checklist for Kubernetes.
 
-| Area | Key Recommendations |
-|------|-------------------|
-| **API Server** | Enable RBAC, disable anonymous auth, use HTTPS, enable audit logging |
-| **etcd** | Encrypt at rest, restrict access (client cert auth), backup regularly |
-| **Controller Manager** | Use service account credentials, rotate signing key |
-| **Scheduler** | Bind to localhost, use HTTPS |
-| **kubelet** | Disable anonymous auth, enable authorization (webhook), rotate certs |
-| **Pods** | Run as non-root, read-only filesystem, drop all capabilities, no privileged |
-| **Network** | Default deny NetworkPolicies, separate control plane network |
-| **Secrets** | Encrypt at rest, external secret manager, RBAC restriction |
+| Area                   | Key Recommendations                                                         |
+| ---------------------- | --------------------------------------------------------------------------- |
+| **API Server**         | Enable RBAC, disable anonymous auth, use HTTPS, enable audit logging        |
+| **etcd**               | Encrypt at rest, restrict access (client cert auth), backup regularly       |
+| **Controller Manager** | Use service account credentials, rotate signing key                         |
+| **Scheduler**          | Bind to localhost, use HTTPS                                                |
+| **kubelet**            | Disable anonymous auth, enable authorization (webhook), rotate certs        |
+| **Pods**               | Run as non-root, read-only filesystem, drop all capabilities, no privileged |
+| **Network**            | Default deny NetworkPolicies, separate control plane network                |
+| **Secrets**            | Encrypt at rest, external secret manager, RBAC restriction                  |
 
 ```bash
 # Run CIS benchmark with kube-bench
@@ -790,9 +793,9 @@ RBAC controls API server access. If someone has direct etcd access (network or f
 ```yaml
 # DON'T: This grants everything
 rules:
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["*"]
+  - apiGroups: ['*']
+    resources: ['*']
+    verbs: ['*']
 ```
 
 Audit all ClusterRoles with wildcard permissions. Only `cluster-admin` should have full access.
@@ -853,20 +856,20 @@ By default, the projected ServiceAccount token is mounted with mode 0644. Any co
 
 ## 12. Quick Reference
 
-| Security Layer | Mechanism | Tools |
-|---------------|-----------|-------|
-| Authentication | X.509, OIDC, ServiceAccount tokens | Dex, Keycloak, cloud IAM |
-| Authorization | RBAC (Role, ClusterRole, Bindings) | kubectl auth can-i |
-| Admission | PSA, Webhooks | OPA Gatekeeper, Kyverno |
-| Pod Security | SecurityContext, seccomp, capabilities | Pod Security Admission |
-| Network | NetworkPolicies | Calico, Cilium |
-| Secrets | Encryption at rest, external vaults | ESO, Sealed Secrets, Vault |
-| Supply Chain | Image scanning, signing | Trivy, cosign, sigstore |
-| Runtime | Syscall monitoring, anomaly detection | Falco, KubeArmor |
-| Audit | Audit logging | ELK, Splunk, cloud logging |
+| Security Layer | Mechanism                              | Tools                      |
+| -------------- | -------------------------------------- | -------------------------- |
+| Authentication | X.509, OIDC, ServiceAccount tokens     | Dex, Keycloak, cloud IAM   |
+| Authorization  | RBAC (Role, ClusterRole, Bindings)     | kubectl auth can-i         |
+| Admission      | PSA, Webhooks                          | OPA Gatekeeper, Kyverno    |
+| Pod Security   | SecurityContext, seccomp, capabilities | Pod Security Admission     |
+| Network        | NetworkPolicies                        | Calico, Cilium             |
+| Secrets        | Encryption at rest, external vaults    | ESO, Sealed Secrets, Vault |
+| Supply Chain   | Image scanning, signing                | Trivy, cosign, sigstore    |
+| Runtime        | Syscall monitoring, anomaly detection  | Falco, KubeArmor           |
+| Audit          | Audit logging                          | ELK, Splunk, cloud logging |
 
-| PSA Level | Root Allowed | Privileged | Host Network | Capabilities |
-|-----------|-------------|-----------|-------------|-------------|
-| **Privileged** | Yes | Yes | Yes | Any |
-| **Baseline** | Yes | No | No | Subset (NET_BIND_SERVICE, etc.) |
-| **Restricted** | No | No | No | Drop ALL, add only NET_BIND_SERVICE |
+| PSA Level      | Root Allowed | Privileged | Host Network | Capabilities                        |
+| -------------- | ------------ | ---------- | ------------ | ----------------------------------- |
+| **Privileged** | Yes          | Yes        | Yes          | Any                                 |
+| **Baseline**   | Yes          | No         | No           | Subset (NET_BIND_SERVICE, etc.)     |
+| **Restricted** | No           | No         | No           | Drop ALL, add only NET_BIND_SERVICE |

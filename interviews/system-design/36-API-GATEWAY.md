@@ -6,38 +6,38 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Request Routing | Route incoming requests to the correct upstream service based on path, host, headers, or query parameters |
-| 2 | Authentication & Authorization | Validate API keys, JWT tokens, and OAuth2/OIDC tokens at the gateway before forwarding requests |
-| 3 | Rate Limiting | Enforce per-client, per-endpoint, and global rate limits using sliding window counters |
-| 4 | Load Balancing | Distribute traffic across service instances using configurable algorithms |
-| 5 | Request/Response Transformation | Add, remove, or rewrite headers; translate between REST and gRPC; reshape payloads |
-| 6 | Circuit Breaker | Detect upstream failures, open the circuit, and fail fast to prevent cascade failures |
-| 7 | Retry & Timeout | Apply retry budgets with exponential backoff and per-request deadline propagation |
-| 8 | TLS Termination | Terminate inbound TLS; optionally re-encrypt to upstream (mTLS in service mesh) |
-| 9 | Service Discovery | Dynamically resolve upstream addresses via DNS or a service registry (Consul, etcd) |
-| 10 | Observability | Emit distributed traces, metrics (latency, error rate, saturation), and structured access logs |
-| 11 | API Versioning | Support URL-path versioning (`/v1/`, `/v2/`) and header-based versioning (`Accept: application/vnd.api+json;version=2`) |
-| 12 | Plugin / Middleware Architecture | Composable filter chain so teams can add cross-cutting concerns without modifying services |
-| 13 | Canary & Traffic Splitting | Progressively shift a percentage of traffic to a new service version |
-| 14 | Service Mesh Sidecar | Inject Envoy sidecar proxies into every pod; manage the data plane from a central control plane (Istio) |
-| 15 | mTLS Between Services | Issue short-lived X.509 certificates to every workload; enforce mutual TLS for all east-west traffic |
+| #   | Requirement                      | Description                                                                                                             |
+| --- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1   | Request Routing                  | Route incoming requests to the correct upstream service based on path, host, headers, or query parameters               |
+| 2   | Authentication & Authorization   | Validate API keys, JWT tokens, and OAuth2/OIDC tokens at the gateway before forwarding requests                         |
+| 3   | Rate Limiting                    | Enforce per-client, per-endpoint, and global rate limits using sliding window counters                                  |
+| 4   | Load Balancing                   | Distribute traffic across service instances using configurable algorithms                                               |
+| 5   | Request/Response Transformation  | Add, remove, or rewrite headers; translate between REST and gRPC; reshape payloads                                      |
+| 6   | Circuit Breaker                  | Detect upstream failures, open the circuit, and fail fast to prevent cascade failures                                   |
+| 7   | Retry & Timeout                  | Apply retry budgets with exponential backoff and per-request deadline propagation                                       |
+| 8   | TLS Termination                  | Terminate inbound TLS; optionally re-encrypt to upstream (mTLS in service mesh)                                         |
+| 9   | Service Discovery                | Dynamically resolve upstream addresses via DNS or a service registry (Consul, etcd)                                     |
+| 10  | Observability                    | Emit distributed traces, metrics (latency, error rate, saturation), and structured access logs                          |
+| 11  | API Versioning                   | Support URL-path versioning (`/v1/`, `/v2/`) and header-based versioning (`Accept: application/vnd.api+json;version=2`) |
+| 12  | Plugin / Middleware Architecture | Composable filter chain so teams can add cross-cutting concerns without modifying services                              |
+| 13  | Canary & Traffic Splitting       | Progressively shift a percentage of traffic to a new service version                                                    |
+| 14  | Service Mesh Sidecar             | Inject Envoy sidecar proxies into every pod; manage the data plane from a central control plane (Istio)                 |
+| 15  | mTLS Between Services            | Issue short-lived X.509 certificates to every workload; enforce mutual TLS for all east-west traffic                    |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Added latency (gateway overhead) | < 5ms p99 |
-| 2 | Throughput | 1,000,000+ req/sec sustained |
-| 3 | Availability | 99.999% (< 5.26 min downtime/year) |
-| 4 | Horizontal scalability | Linear scale-out with no single bottleneck |
-| 5 | Configuration propagation | < 1 second from control plane to all data plane nodes |
-| 6 | Certificate rotation | Automatic rotation; zero-downtime; rotation < 24 hours |
-| 7 | Observability coverage | 100% of requests traced and metered |
-| 8 | Security | Zero-trust: every service-to-service call authenticated and authorized |
-| 9 | Fault isolation | One service failure must not cascade to others |
-| 10 | Multi-region | Active-active across at least 3 geographic regions |
+| #   | Requirement                      | Target                                                                 |
+| --- | -------------------------------- | ---------------------------------------------------------------------- |
+| 1   | Added latency (gateway overhead) | < 5ms p99                                                              |
+| 2   | Throughput                       | 1,000,000+ req/sec sustained                                           |
+| 3   | Availability                     | 99.999% (< 5.26 min downtime/year)                                     |
+| 4   | Horizontal scalability           | Linear scale-out with no single bottleneck                             |
+| 5   | Configuration propagation        | < 1 second from control plane to all data plane nodes                  |
+| 6   | Certificate rotation             | Automatic rotation; zero-downtime; rotation < 24 hours                 |
+| 7   | Observability coverage           | 100% of requests traced and metered                                    |
+| 8   | Security                         | Zero-trust: every service-to-service call authenticated and authorized |
+| 9   | Fault isolation                  | One service failure must not cascade to others                         |
+| 10  | Multi-region                     | Active-active across at least 3 geographic regions                     |
 
 ### Scale Estimation
 
@@ -122,6 +122,7 @@ DELETE /admin/v1/upstreams/{name}/targets/{targetId}  Remove a target
 ```
 
 **POST /admin/v1/routes Request:**
+
 ```json
 {
   "name": "orders-v2-route",
@@ -135,13 +136,17 @@ DELETE /admin/v1/upstreams/{name}/targets/{targetId}  Remove a target
   "strip_path": false,
   "preserve_host": true,
   "plugins": [
-    { "name": "rate-limiting", "config": { "minute": 1000, "policy": "redis" } },
+    {
+      "name": "rate-limiting",
+      "config": { "minute": 1000, "policy": "redis" }
+    },
     { "name": "jwt", "config": { "secret_is_base64": false } }
   ]
 }
 ```
 
 **POST /admin/v1/services Request:**
+
 ```json
 {
   "name": "orders-service",
@@ -174,6 +179,7 @@ GET  /debug/pprof             Go pprof profiling endpoint (admin only)
 ```
 
 **GET /metrics (Prometheus text format excerpt):**
+
 ```
 # HELP gateway_requests_total Total number of requests proxied
 # TYPE gateway_requests_total counter
@@ -604,14 +610,14 @@ Priority (highest first):
 # Route all /v1/orders/* to orders service
 routes:
   - name: orders-v1
-    paths: ["/v1/orders", "/v1/orders/.*"]
+    paths: ['/v1/orders', '/v1/orders/.*']
     service: orders-service-v1
     strip_path: false
     methods: [GET, POST, PUT, DELETE]
 
   # Rewrite path before forwarding
   - name: legacy-compat
-    paths: ["/api/(.*)"]
+    paths: ['/api/(.*)']
     service: modern-service
     path_handling: v1
     # /api/users/123 -> /users/123 (strip prefix)
@@ -623,23 +629,23 @@ routes:
 routes:
   # Route based on custom header (feature flags, A/B test)
   - name: orders-v2-beta
-    paths: ["/v1/orders"]
+    paths: ['/v1/orders']
     headers:
-      X-Beta-User: ["true"]
-      X-Version: ["2"]
+      X-Beta-User: ['true']
+      X-Version: ['2']
     service: orders-service-v2
-    priority: 100   # Higher priority wins
+    priority: 100 # Higher priority wins
 
   # Hostname-based routing (multi-tenant)
   - name: tenant-a
-    hosts: ["tenant-a.api.example.com"]
+    hosts: ['tenant-a.api.example.com']
     service: tenant-a-service
 
   # Consumer-specific routing
   - name: partner-route
-    paths: ["/v1/data"]
+    paths: ['/v1/data']
     headers:
-      X-Consumer-Groups: ["partners"]
+      X-Consumer-Groups: ['partners']
     service: partner-data-service
 ```
 
@@ -912,34 +918,34 @@ plugins:
     config:
       add:
         headers:
-          - "X-Consumer-ID: $(consumer.id)"
-          - "X-Forwarded-For: $(client.ip)"
-          - "X-Request-ID: $(uuid())"
-          - "X-Trace-ID: $(trace.id)"
+          - 'X-Consumer-ID: $(consumer.id)'
+          - 'X-Forwarded-For: $(client.ip)'
+          - 'X-Request-ID: $(uuid())'
+          - 'X-Trace-ID: $(trace.id)'
         querystring: []
         body: []
       remove:
         headers:
-          - "Authorization"          # Strip credentials before forwarding
-          - "X-Internal-Debug"       # Remove debug headers from external requests
+          - 'Authorization' # Strip credentials before forwarding
+          - 'X-Internal-Debug' # Remove debug headers from external requests
       replace:
         headers:
-          - "Host: internal.orders.svc"
+          - 'Host: internal.orders.svc'
       rename:
         headers:
-          - "X-Legacy-Auth: X-Service-Token"
+          - 'X-Legacy-Auth: X-Service-Token'
 
   - name: response-transformer
     config:
       add:
         headers:
-          - "X-Kong-Upstream-Latency: $(upstream_response_time)"
-          - "X-Kong-Proxy-Latency: $(proxy_latency)"
+          - 'X-Kong-Upstream-Latency: $(upstream_response_time)'
+          - 'X-Kong-Proxy-Latency: $(proxy_latency)'
       remove:
         headers:
-          - "Server"                 # Hide upstream server identity
-          - "X-Powered-By"
-          - "Via"
+          - 'Server' # Hide upstream server identity
+          - 'X-Powered-By'
+          - 'Via'
 ```
 
 ### Protocol Translation: REST to gRPC
@@ -2014,18 +2020,18 @@ Failure scenarios:
 
 ## 21. Trade-offs
 
-| Decision | Option A | Option B | Recommendation |
-|----------|----------|----------|----------------|
-| Auth token validation | Per-request DB lookup | JWT self-validation | JWT with short TTL (15 min) + refresh tokens; use JWT for stateless validation, introspection only for high-value ops |
-| Rate limit granularity | Global per consumer | Per consumer per endpoint | Per endpoint (more precise) but more Redis keys; use hierarchical limits (both) |
-| Rate limit on reject | Fail open (allow) | Fail closed (deny) | Fail open for Redis outage; prevents taking down entire API over infra failure |
-| Config storage | PostgreSQL (ACID) | etcd (distributed) | PostgreSQL for Kong (full relational model); etcd for Istio/Envoy xDS (designed for it) |
-| Canary routing | Header-based | Weight-based | Weight-based for gradual rollouts; header-based for internal testing / QA |
-| mTLS everywhere | Strict mode | Permissive mode | Start permissive (log only), migrate service by service to strict; sudden strict breaks unaware services |
-| Plugin execution | Inline (synchronous) | Async (event-driven) | Synchronous for auth/rate limit (must block), async for logging/analytics (non-blocking) |
-| Cross-region rate limits | Strict global | Regional buckets | Regional buckets (better latency); accept up to 3x burst in worst case (multiple regions simultaneously) |
-| Sidecar vs. SDK | Sidecar proxy (mesh) | Client library | Sidecar for language-agnostic policy enforcement; SDK for performance-critical paths where sub-millisecond matters |
-| Gateway scaling | Vertical (bigger nodes) | Horizontal (more nodes) | Horizontal always; gateway is stateless and designed for horizontal scale |
+| Decision                 | Option A                | Option B                  | Recommendation                                                                                                        |
+| ------------------------ | ----------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Auth token validation    | Per-request DB lookup   | JWT self-validation       | JWT with short TTL (15 min) + refresh tokens; use JWT for stateless validation, introspection only for high-value ops |
+| Rate limit granularity   | Global per consumer     | Per consumer per endpoint | Per endpoint (more precise) but more Redis keys; use hierarchical limits (both)                                       |
+| Rate limit on reject     | Fail open (allow)       | Fail closed (deny)        | Fail open for Redis outage; prevents taking down entire API over infra failure                                        |
+| Config storage           | PostgreSQL (ACID)       | etcd (distributed)        | PostgreSQL for Kong (full relational model); etcd for Istio/Envoy xDS (designed for it)                               |
+| Canary routing           | Header-based            | Weight-based              | Weight-based for gradual rollouts; header-based for internal testing / QA                                             |
+| mTLS everywhere          | Strict mode             | Permissive mode           | Start permissive (log only), migrate service by service to strict; sudden strict breaks unaware services              |
+| Plugin execution         | Inline (synchronous)    | Async (event-driven)      | Synchronous for auth/rate limit (must block), async for logging/analytics (non-blocking)                              |
+| Cross-region rate limits | Strict global           | Regional buckets          | Regional buckets (better latency); accept up to 3x burst in worst case (multiple regions simultaneously)              |
+| Sidecar vs. SDK          | Sidecar proxy (mesh)    | Client library            | Sidecar for language-agnostic policy enforcement; SDK for performance-critical paths where sub-millisecond matters    |
+| Gateway scaling          | Vertical (bigger nodes) | Horizontal (more nodes)   | Horizontal always; gateway is stateless and designed for horizontal scale                                             |
 
 ---
 

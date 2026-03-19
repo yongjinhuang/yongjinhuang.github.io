@@ -12,11 +12,11 @@ The core streaming service. You create a stream, producers write records to it, 
 
 A shard is the unit of capacity in a Kinesis stream.
 
-| Metric | Per Shard |
-|---|---|
-| Write capacity | 1 MB/s or 1,000 records/s |
-| Read capacity (shared) | 2 MB/s across all consumers |
-| Read capacity (enhanced fan-out) | 2 MB/s per consumer |
+| Metric                           | Per Shard                   |
+| -------------------------------- | --------------------------- |
+| Write capacity                   | 1 MB/s or 1,000 records/s   |
+| Read capacity (shared)           | 2 MB/s across all consumers |
+| Read capacity (enhanced fan-out) | 2 MB/s per consumer         |
 
 A stream with 10 shards can ingest 10 MB/s and serve 20 MB/s of reads (shared mode).
 
@@ -37,12 +37,12 @@ All records with the same partition key go to the same shard, guaranteeing order
 
 ### Producers
 
-| Producer | When to Use |
-|---|---|
-| **AWS SDK** (`PutRecord`, `PutRecords`) | Simple cases, low volume, direct control |
-| **Kinesis Producer Library (KPL)** | High throughput. Batches, aggregates, retries automatically. |
-| **Kinesis Agent** | Tail log files and send to Kinesis. No code required. |
-| **CloudWatch, IoT Core, etc.** | AWS service integrations that write directly to Kinesis |
+| Producer                                | When to Use                                                  |
+| --------------------------------------- | ------------------------------------------------------------ |
+| **AWS SDK** (`PutRecord`, `PutRecords`) | Simple cases, low volume, direct control                     |
+| **Kinesis Producer Library (KPL)**      | High throughput. Batches, aggregates, retries automatically. |
+| **Kinesis Agent**                       | Tail log files and send to Kinesis. No code required.        |
+| **CloudWatch, IoT Core, etc.**          | AWS service integrations that write directly to Kinesis      |
 
 **KPL** aggregates multiple user records into a single Kinesis record to maximize throughput and reduce cost. The tradeoff is higher latency due to buffering (`RecordMaxBufferedTime`, default 100ms).
 
@@ -59,14 +59,15 @@ aws kinesis put-records \
 
 ### Consumers
 
-| Consumer | Model | Throughput | Latency |
-|---|---|---|---|
-| **AWS SDK** (`GetRecords`) | Shared (pull) | 2 MB/s per shard shared | ~200ms per poll |
-| **KCL (Kinesis Client Library)** | Shared (pull) | 2 MB/s per shard shared | ~200ms per poll |
-| **Lambda** | Shared (pull) | 2 MB/s per shard shared | Event-driven |
-| **Enhanced Fan-Out** | Dedicated (push) | 2 MB/s per shard per consumer | ~70ms (push via HTTP/2) |
+| Consumer                         | Model            | Throughput                    | Latency                 |
+| -------------------------------- | ---------------- | ----------------------------- | ----------------------- |
+| **AWS SDK** (`GetRecords`)       | Shared (pull)    | 2 MB/s per shard shared       | ~200ms per poll         |
+| **KCL (Kinesis Client Library)** | Shared (pull)    | 2 MB/s per shard shared       | ~200ms per poll         |
+| **Lambda**                       | Shared (pull)    | 2 MB/s per shard shared       | Event-driven            |
+| **Enhanced Fan-Out**             | Dedicated (push) | 2 MB/s per shard per consumer | ~70ms (push via HTTP/2) |
 
 **KCL** is the standard choice for long-running consumer applications. It handles:
+
 - Shard assignment to worker instances
 - Checkpointing (using DynamoDB)
 - Load balancing across workers
@@ -89,11 +90,11 @@ Use enhanced fan-out when you have multiple consumers and cannot tolerate throug
 
 ### Data Retention
 
-| Setting | Value |
-|---|---|
-| Default | 24 hours |
-| Extended | Up to 365 days |
-| Cost | Longer retention = higher cost per shard-hour |
+| Setting  | Value                                         |
+| -------- | --------------------------------------------- |
+| Default  | 24 hours                                      |
+| Extended | Up to 365 days                                |
+| Cost     | Longer retention = higher cost per shard-hour |
 
 Extended retention is useful for reprocessing scenarios, but consider archiving to S3 via Firehose for long-term storage instead.
 
@@ -105,22 +106,22 @@ Fully managed service that loads streaming data into destinations. No code, no c
 
 ### Destinations
 
-| Destination | Use Case |
-|---|---|
-| S3 | Data lake, archival |
-| Redshift | Data warehousing (via S3 intermediate) |
-| OpenSearch (Elasticsearch) | Search and analytics |
-| Splunk | Log analysis |
-| HTTP endpoint | Custom destinations |
-| Third-party (Datadog, New Relic, etc.) | Monitoring platforms |
+| Destination                            | Use Case                               |
+| -------------------------------------- | -------------------------------------- |
+| S3                                     | Data lake, archival                    |
+| Redshift                               | Data warehousing (via S3 intermediate) |
+| OpenSearch (Elasticsearch)             | Search and analytics                   |
+| Splunk                                 | Log analysis                           |
+| HTTP endpoint                          | Custom destinations                    |
+| Third-party (Datadog, New Relic, etc.) | Monitoring platforms                   |
 
 ### Buffering
 
 Firehose buffers incoming data before delivering to the destination.
 
-| Parameter | Range | Default |
-|---|---|---|
-| Buffer size | 1 MB - 128 MB | 5 MB |
+| Parameter       | Range            | Default     |
+| --------------- | ---------------- | ----------- |
+| Buffer size     | 1 MB - 128 MB    | 5 MB        |
 | Buffer interval | 60 - 900 seconds | 300 seconds |
 
 Delivery happens when **either** threshold is reached (whichever comes first). For near-real-time delivery, set buffer size to 1 MB and interval to 60 seconds.
@@ -149,9 +150,9 @@ aws firehose create-delivery-stream \
 
 Run SQL queries or Apache Flink applications against streaming data in real time.
 
-| Option | Language | Use Case |
-|---|---|---|
-| SQL | SQL | Simple aggregations, filtering, windowed queries |
+| Option       | Language            | Use Case                                         |
+| ------------ | ------------------- | ------------------------------------------------ |
+| SQL          | SQL                 | Simple aggregations, filtering, windowed queries |
 | Apache Flink | Java, Scala, Python | Complex stream processing, stateful computations |
 
 Kinesis Data Analytics is being replaced by **Amazon Managed Service for Apache Flink** for new workloads. SQL-based analytics is in maintenance mode.
@@ -190,16 +191,16 @@ aws kinesis update-stream-mode \
 
 ## Kinesis vs SQS vs EventBridge
 
-| | Kinesis | SQS | EventBridge |
-|---|---|---|---|
-| Model | Ordered stream | Message queue | Event bus (pub/sub) |
-| Ordering | Per shard (partition key) | FIFO per message group | No ordering guarantee |
-| Retention | 24h - 365 days | 1 min - 14 days | Archive (configurable) |
-| Consumers | Multiple, independent | Single consumer group | Rule-based routing |
-| Throughput | Scales with shards | Nearly unlimited | 10K+ events/s per account |
-| Replay | Read from any position | No replay (delete after process) | Archive and replay |
-| Latency | ~200ms (shared), ~70ms (fan-out) | ~ms (long polling) | ~ms |
-| Best for | High-volume streaming, ordering, multiple consumers | Task queues, decoupling, request buffering | Event routing, integration, low-volume events |
+|            | Kinesis                                             | SQS                                        | EventBridge                                   |
+| ---------- | --------------------------------------------------- | ------------------------------------------ | --------------------------------------------- |
+| Model      | Ordered stream                                      | Message queue                              | Event bus (pub/sub)                           |
+| Ordering   | Per shard (partition key)                           | FIFO per message group                     | No ordering guarantee                         |
+| Retention  | 24h - 365 days                                      | 1 min - 14 days                            | Archive (configurable)                        |
+| Consumers  | Multiple, independent                               | Single consumer group                      | Rule-based routing                            |
+| Throughput | Scales with shards                                  | Nearly unlimited                           | 10K+ events/s per account                     |
+| Replay     | Read from any position                              | No replay (delete after process)           | Archive and replay                            |
+| Latency    | ~200ms (shared), ~70ms (fan-out)                    | ~ms (long polling)                         | ~ms                                           |
+| Best for   | High-volume streaming, ordering, multiple consumers | Task queues, decoupling, request buffering | Event routing, integration, low-volume events |
 
 **Use Kinesis when**: You have high-volume continuous data streams, need ordering, need multiple consumers reading the same data, or need to replay data.
 

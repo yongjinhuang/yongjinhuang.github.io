@@ -11,25 +11,25 @@ deceptively simple product.
 
 ### 1.1 Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Shorten a URL | Given a long URL, generate a unique short alias |
-| F2 | Redirect | Visiting the short URL redirects to the original long URL |
-| F3 | Custom aliases | Users can optionally pick a custom short key |
-| F4 | Expiration | URLs can have an optional time-to-live (TTL) |
-| F5 | Analytics | Track click count, referrer, geo, device (stretch goal) |
-| F6 | Delete / deactivate | Owner can remove a short URL |
+| #   | Requirement         | Details                                                   |
+| --- | ------------------- | --------------------------------------------------------- |
+| F1  | Shorten a URL       | Given a long URL, generate a unique short alias           |
+| F2  | Redirect            | Visiting the short URL redirects to the original long URL |
+| F3  | Custom aliases      | Users can optionally pick a custom short key              |
+| F4  | Expiration          | URLs can have an optional time-to-live (TTL)              |
+| F5  | Analytics           | Track click count, referrer, geo, device (stretch goal)   |
+| F6  | Delete / deactivate | Owner can remove a short URL                              |
 
 ### 1.2 Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| NF1 | High availability | 99.99% uptime (< 52 min downtime/year) |
-| NF2 | Low latency redirect | p99 < 100 ms for redirect |
-| NF3 | Not guessable | Short URLs should not be easily enumerable |
-| NF4 | Durability | Once created, a URL mapping must not be lost |
-| NF5 | Scalability | Handle billions of URLs, massive read traffic |
-| NF6 | Fault tolerance | No single point of failure |
+| #   | Requirement          | Target                                        |
+| --- | -------------------- | --------------------------------------------- |
+| NF1 | High availability    | 99.99% uptime (< 52 min downtime/year)        |
+| NF2 | Low latency redirect | p99 < 100 ms for redirect                     |
+| NF3 | Not guessable        | Short URLs should not be easily enumerable    |
+| NF4 | Durability           | Once created, a URL mapping must not be lost  |
+| NF5 | Scalability          | Handle billions of URLs, massive read traffic |
+| NF6 | Fault tolerance      | No single point of failure                    |
 
 ### 1.3 Capacity Estimation
 
@@ -284,26 +284,26 @@ CREATE TABLE clicks (
 
 ### 3.2 Index Strategy
 
-| Index | Purpose | Lookup Pattern |
-|-------|---------|----------------|
-| `idx_short_key` (UNIQUE) | Redirect lookup | `WHERE short_key = ?` |
-| `idx_long_url_hash` | Deduplication | `WHERE long_url_hash = ?` |
-| `idx_user_id` | User dashboard | `WHERE user_id = ?` |
-| `idx_expires_at` | Cleanup cron | `WHERE expires_at < NOW()` |
-| `idx_short_key_clicked` | Analytics per URL | `WHERE short_key = ? AND clicked_at BETWEEN ? AND ?` |
+| Index                    | Purpose           | Lookup Pattern                                       |
+| ------------------------ | ----------------- | ---------------------------------------------------- |
+| `idx_short_key` (UNIQUE) | Redirect lookup   | `WHERE short_key = ?`                                |
+| `idx_long_url_hash`      | Deduplication     | `WHERE long_url_hash = ?`                            |
+| `idx_user_id`            | User dashboard    | `WHERE user_id = ?`                                  |
+| `idx_expires_at`         | Cleanup cron      | `WHERE expires_at < NOW()`                           |
+| `idx_short_key_clicked`  | Analytics per URL | `WHERE short_key = ? AND clicked_at BETWEEN ? AND ?` |
 
 ### 3.3 SQL vs NoSQL
 
-| Factor | SQL (MySQL/PostgreSQL) | NoSQL (DynamoDB/Cassandra) |
-|--------|----------------------|---------------------------|
-| Schema | Fixed schema, strong types | Flexible schema |
-| Reads | Fast with proper indexes | Fast at scale with partition keys |
-| Writes | Good, may need sharding | Excellent horizontal write scaling |
-| Joins | Supported natively | Not supported |
-| ACID | Full transactions | Eventual consistency (tunable) |
-| Scaling | Vertical + read replicas + sharding | Horizontal out of the box |
-| Dedup | Easy with unique constraints | Requires conditional writes |
-| Ops complexity | Moderate | Lower at extreme scale |
+| Factor         | SQL (MySQL/PostgreSQL)              | NoSQL (DynamoDB/Cassandra)         |
+| -------------- | ----------------------------------- | ---------------------------------- |
+| Schema         | Fixed schema, strong types          | Flexible schema                    |
+| Reads          | Fast with proper indexes            | Fast at scale with partition keys  |
+| Writes         | Good, may need sharding             | Excellent horizontal write scaling |
+| Joins          | Supported natively                  | Not supported                      |
+| ACID           | Full transactions                   | Eventual consistency (tunable)     |
+| Scaling        | Vertical + read replicas + sharding | Horizontal out of the box          |
+| Dedup          | Easy with unique constraints        | Requires conditional writes        |
+| Ops complexity | Moderate                            | Lower at extreme scale             |
 
 **Recommendation: Start with SQL (PostgreSQL), migrate hot path to NoSQL at scale.**
 
@@ -347,16 +347,16 @@ CREATE TABLE clicks (
 
 ### Component Responsibilities
 
-| Component | Role |
-|-----------|------|
-| **DNS (Route53)** | Resolves `tinyurl.com` to nearest load balancer; geo-routing |
-| **Load Balancer** | Distributes traffic across app servers; health checks; SSL termination |
-| **App Servers** | Stateless services handling shorten + redirect logic; horizontally scalable |
-| **Cache (Redis)** | Stores hot URL mappings; ~70 GB for top 100M URLs; sub-millisecond lookups |
-| **Database (Primary)** | Source of truth for all URL mappings; handles writes |
-| **Database (Replicas)** | Read replicas for redirect lookups on cache miss |
-| **Analytics (Kafka)** | Async event pipeline for click tracking; decouples analytics from redirect path |
-| **Monitoring** | Tracks latency, error rates, throughput, cache hit ratio |
+| Component               | Role                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| **DNS (Route53)**       | Resolves `tinyurl.com` to nearest load balancer; geo-routing                    |
+| **Load Balancer**       | Distributes traffic across app servers; health checks; SSL termination          |
+| **App Servers**         | Stateless services handling shorten + redirect logic; horizontally scalable     |
+| **Cache (Redis)**       | Stores hot URL mappings; ~70 GB for top 100M URLs; sub-millisecond lookups      |
+| **Database (Primary)**  | Source of truth for all URL mappings; handles writes                            |
+| **Database (Replicas)** | Read replicas for redirect lookups on cache miss                                |
+| **Analytics (Kafka)**   | Async event pipeline for click tracking; decouples analytics from redirect path |
+| **Monitoring**          | Tracks latency, error rates, throughput, cache hit ratio                        |
 
 ---
 
@@ -367,6 +367,7 @@ The central challenge: given a long URL, generate a unique 7-character short key
 ### Approach 1: Hash + Collision Resolution
 
 **How it works:**
+
 1. Compute a hash of the long URL (e.g., MD5, SHA-256).
 2. Take the first 43 bits (enough for 7 Base62 characters).
 3. Encode those bits as Base62.
@@ -415,6 +416,7 @@ def shorten_with_hash(long_url):
 ### Approach 2: Base62 Conversion with Auto-Increment ID
 
 **How it works:**
+
 1. Insert the long URL into the database; get back an auto-increment ID.
 2. Convert the numeric ID to Base62.
 3. That Base62 string is the short key.
@@ -467,6 +469,7 @@ DB sequence; hard to distribute across multiple data centers.
 ### Approach 3: Pre-generated Key Service (KGS)
 
 **How it works:**
+
 1. A background service pre-generates millions of unique 7-char Base62 keys.
 2. Keys are stored in a `key_pool` table with a `used` flag.
 3. When an app server needs a key, it fetches a batch (e.g., 1000 keys) from the pool.
@@ -737,6 +740,7 @@ Example with 256 shards:
 ```
 
 **Why hash-based over range-based?**
+
 - Hash-based distributes data uniformly (no hot shards from alphabetical clustering).
 - The short_key is the primary lookup key for redirects, making it the ideal shard key.
 
@@ -828,11 +832,11 @@ App Server                Kafka               Consumer           ClickHouse
 
 **Pipeline Details:**
 
-| Component | Purpose | Config |
-|-----------|---------|--------|
-| Kafka | Event buffer | 3 brokers, 12 partitions, 7-day retention |
-| Consumer | Batch processor | 3 consumers in a group, batch size 1000 |
-| ClickHouse | Analytics DB | Columnar storage, optimized for aggregations |
+| Component  | Purpose         | Config                                       |
+| ---------- | --------------- | -------------------------------------------- |
+| Kafka      | Event buffer    | 3 brokers, 12 partitions, 7-day retention    |
+| Consumer   | Batch processor | 3 consumers in a group, batch size 1000      |
+| ClickHouse | Analytics DB    | Columnar storage, optimized for aggregations |
 
 **Click Event Schema (Kafka message):**
 
@@ -849,6 +853,7 @@ App Server                Kafka               Consumer           ClickHouse
 ```
 
 **Why ClickHouse for analytics?**
+
 - Columnar storage compresses click data 10-20x.
 - Aggregation queries (clicks per day, top countries) run in milliseconds over billions of rows.
 - Handles 100K+ inserts/sec easily.
@@ -910,15 +915,15 @@ App Server                Kafka               Consumer           ClickHouse
 
 ### 8.2 Deployment Strategy
 
-| Layer | Technology | Scaling |
-|-------|-----------|---------|
-| DNS | Route53 with latency-based routing | Automatic |
-| CDN | CloudFront / Cloudflare | Edge caching for 301 redirects |
-| Load Balancer | AWS ALB | Auto-scaling target groups |
-| App Servers | ECS Fargate or Kubernetes | HPA: scale on CPU > 60% or RPS > 5000/instance |
-| Cache | ElastiCache Redis Cluster | Add shards for capacity |
-| Database | Aurora PostgreSQL (Multi-AZ) | Read replicas per region |
-| Analytics | MSK (Kafka) + ClickHouse | Partition-based scaling |
+| Layer         | Technology                         | Scaling                                        |
+| ------------- | ---------------------------------- | ---------------------------------------------- |
+| DNS           | Route53 with latency-based routing | Automatic                                      |
+| CDN           | CloudFront / Cloudflare            | Edge caching for 301 redirects                 |
+| Load Balancer | AWS ALB                            | Auto-scaling target groups                     |
+| App Servers   | ECS Fargate or Kubernetes          | HPA: scale on CPU > 60% or RPS > 5000/instance |
+| Cache         | ElastiCache Redis Cluster          | Add shards for capacity                        |
+| Database      | Aurora PostgreSQL (Multi-AZ)       | Read replicas per region                       |
+| Analytics     | MSK (Kafka) + ClickHouse           | Partition-based scaling                        |
 
 ### 8.3 Write Routing in Multi-Region
 
@@ -961,6 +966,7 @@ rarely needed for a URL shortener since write latency is less critical than redi
 **Our choice: AP (Availability + Partition Tolerance)**
 
 Rationale:
+
 - A redirect serving a slightly stale mapping is acceptable (URLs rarely change).
 - A 404 for a URL created 100ms ago is tolerable vs. the system being unavailable.
 - Eventual consistency (replication lag < 200ms) is fine for this use case.
@@ -986,6 +992,7 @@ Rationale:
 ```
 
 **Hybrid approach recommended:**
+
 - **PostgreSQL** for the write path (creation, dedup, user management).
 - **DynamoDB / Redis** for the read path (redirects). Cache the entire hot dataset.
 - **ClickHouse** for analytics.
@@ -994,13 +1001,13 @@ Rationale:
 
 ### 9.3 Hash vs Counter vs KGS
 
-| Scenario | Best Approach | Why |
-|----------|--------------|-----|
-| Single-region, simple | Auto-increment + Base62 | Simplest, no extra service |
-| Multi-region, high scale | KGS (Pre-generated) | No coordination needed between regions |
-| Dedup is critical | Hash-based | Same URL always produces same key |
-| Non-guessable keys required | KGS with random generation | Keys have no pattern |
-| Low operational overhead | Hash-based | No background service to maintain |
+| Scenario                    | Best Approach              | Why                                    |
+| --------------------------- | -------------------------- | -------------------------------------- |
+| Single-region, simple       | Auto-increment + Base62    | Simplest, no extra service             |
+| Multi-region, high scale    | KGS (Pre-generated)        | No coordination needed between regions |
+| Dedup is critical           | Hash-based                 | Same URL always produces same key      |
+| Non-guessable keys required | KGS with random generation | Keys have no pattern                   |
+| Low operational overhead    | Hash-based                 | No background service to maintain      |
 
 ---
 
@@ -1281,6 +1288,7 @@ For a 45-minute system design interview, allocate time as follows:
 ```
 
 **Tips:**
+
 - Start with requirements; do NOT jump to solutions.
 - Draw the high-level diagram early; interviewers love visual thinkers.
 - Mention trade-offs proactively (301 vs 302, SQL vs NoSQL, hash vs counter).

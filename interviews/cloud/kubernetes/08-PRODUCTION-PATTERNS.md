@@ -47,6 +47,7 @@ Every decision — from cluster architecture to deployment strategy — involves
 ```
 
 **Minimum production setup:**
+
 - 3 control plane nodes across 3 AZs
 - 3 etcd members (or 5 for critical clusters)
 - Load balancer in front of API servers
@@ -91,12 +92,12 @@ Every decision — from cluster architecture to deployment strategy — involves
 
 ### 1.3 Namespace Strategy
 
-| Strategy | Pattern | Best For |
-|----------|---------|----------|
-| Per-team | `team-a`, `team-b` | Small orgs, strong ownership |
-| Per-environment | `dev`, `staging`, `production` | Simple apps, single team |
-| Per-app-per-env | `app1-prod`, `app1-staging` | Microservices, isolation |
-| Per-tenant | `tenant-acme`, `tenant-globex` | Multi-tenant SaaS |
+| Strategy        | Pattern                        | Best For                     |
+| --------------- | ------------------------------ | ---------------------------- |
+| Per-team        | `team-a`, `team-b`             | Small orgs, strong ownership |
+| Per-environment | `dev`, `staging`, `production` | Simple apps, single team     |
+| Per-app-per-env | `app1-prod`, `app1-staging`    | Microservices, isolation     |
+| Per-tenant      | `tenant-acme`, `tenant-globex` | Multi-tenant SaaS            |
 
 **Recommended: Per-team with environment labels:**
 
@@ -153,7 +154,7 @@ metadata:
 value: 1000000
 globalDefault: false
 preemptionPolicy: PreemptLowerPriority
-description: "System-critical pods (monitoring, ingress)"
+description: 'System-critical pods (monitoring, ingress)'
 
 ---
 # Production workloads
@@ -181,7 +182,7 @@ kind: PriorityClass
 metadata:
   name: batch-low
 value: 1000
-preemptionPolicy: Never              # Never preempt others
+preemptionPolicy: Never # Never preempt others
 ```
 
 ---
@@ -194,8 +195,8 @@ preemptionPolicy: Never              # Never preempt others
 strategy:
   type: RollingUpdate
   rollingUpdate:
-    maxSurge: 25%            # Allow 25% extra pods during update
-    maxUnavailable: 0        # Zero-downtime (never reduce below desired)
+    maxSurge: 25% # Allow 25% extra pods during update
+    maxUnavailable: 0 # Zero-downtime (never reduce below desired)
 ```
 
 **Best for:** Most stateless services. Simple, built-in, no extra tooling.
@@ -254,13 +255,13 @@ spec:
   strategy:
     canary:
       steps:
-      - setWeight: 10              # 10% traffic to canary
-      - pause: { duration: 5m }    # Wait 5 min, check metrics
-      - setWeight: 30
-      - pause: { duration: 5m }
-      - setWeight: 60
-      - pause: { duration: 5m }
-      - setWeight: 100             # Full rollout
+        - setWeight: 10 # 10% traffic to canary
+        - pause: { duration: 5m } # Wait 5 min, check metrics
+        - setWeight: 30
+        - pause: { duration: 5m }
+        - setWeight: 60
+        - pause: { duration: 5m }
+        - setWeight: 100 # Full rollout
       canaryService: web-canary
       stableService: web-stable
       trafficRouting:
@@ -268,11 +269,11 @@ spec:
           stableIngress: web-ingress
       analysis:
         templates:
-        - templateName: success-rate
+          - templateName: success-rate
         startingStep: 1
         args:
-        - name: service-name
-          value: web-canary
+          - name: service-name
+            value: web-canary
 ```
 
 **With Flagger (automated canary):**
@@ -281,11 +282,11 @@ Flagger integrates with service meshes (Istio, Linkerd) or Ingress controllers (
 
 ### 3.4 Progressive Delivery Comparison
 
-| Strategy | Rollback Speed | Resource Overhead | Complexity | Risk |
-|----------|---------------|-------------------|-----------|------|
-| Rolling Update | Minutes (undo) | Minimal (maxSurge) | Low | Medium |
-| Blue-Green | Instant (switch) | 2x during deploy | Medium | Low |
-| Canary | Instant (revert weight) | +10-20% | High | Lowest |
+| Strategy       | Rollback Speed          | Resource Overhead  | Complexity | Risk   |
+| -------------- | ----------------------- | ------------------ | ---------- | ------ |
+| Rolling Update | Minutes (undo)          | Minimal (maxSurge) | Low        | Medium |
+| Blue-Green     | Instant (switch)        | 2x during deploy   | Medium     | Low    |
+| Canary         | Instant (revert weight) | +10-20%            | High       | Lowest |
 
 ---
 
@@ -307,16 +308,16 @@ Git repository = Single source of truth for desired cluster state
 
 **The two GitOps tools:**
 
-| Feature | ArgoCD | Flux |
-|---------|--------|------|
-| UI | Rich web UI | CLI-first (optional UI) |
-| Architecture | Centralized (single ArgoCD manages all) | Decentralized (Flux per cluster) |
-| Multi-cluster | Built-in | Via Kustomize controller |
-| Drift detection | Visual diff in UI | Events and alerts |
-| Sync strategy | Auto or manual sync | Auto or manual |
-| Helm support | Native | HelmRelease CRD |
-| Kustomize support | Native | Kustomize controller |
-| RBAC | Project-based, SSO integration | Kubernetes-native RBAC |
+| Feature           | ArgoCD                                  | Flux                             |
+| ----------------- | --------------------------------------- | -------------------------------- |
+| UI                | Rich web UI                             | CLI-first (optional UI)          |
+| Architecture      | Centralized (single ArgoCD manages all) | Decentralized (Flux per cluster) |
+| Multi-cluster     | Built-in                                | Via Kustomize controller         |
+| Drift detection   | Visual diff in UI                       | Events and alerts                |
+| Sync strategy     | Auto or manual sync                     | Auto or manual                   |
+| Helm support      | Native                                  | HelmRelease CRD                  |
+| Kustomize support | Native                                  | Kustomize controller             |
+| RBAC              | Project-based, SSO integration          | Kubernetes-native RBAC           |
 
 ### 4.2 ArgoCD App-of-Apps Pattern
 
@@ -332,14 +333,14 @@ spec:
   source:
     repoURL: https://github.com/org/k8s-config
     targetRevision: main
-    path: apps                    # Directory containing Application manifests
+    path: apps # Directory containing Application manifests
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true             # Auto-fix drift
+      selfHeal: true # Auto-fix drift
 ```
 
 ```
@@ -391,14 +392,14 @@ k8s-config/
 
 ### 5.1 Why Multi-Cluster
 
-| Reason | Description |
-|--------|-------------|
-| **Blast radius** | Limit the impact of cluster-level failures |
-| **Compliance** | Data residency requirements (EU data in EU cluster) |
-| **Latency** | Deploy close to users (US, EU, APAC clusters) |
-| **Isolation** | Separate production from staging, or tenant isolation |
-| **Upgrades** | Canary cluster upgrades before rolling to all |
-| **Scale** | Single cluster limits (~5,000 nodes, ~150,000 pods) |
+| Reason           | Description                                           |
+| ---------------- | ----------------------------------------------------- |
+| **Blast radius** | Limit the impact of cluster-level failures            |
+| **Compliance**   | Data residency requirements (EU data in EU cluster)   |
+| **Latency**      | Deploy close to users (US, EU, APAC clusters)         |
+| **Isolation**    | Separate production from staging, or tenant isolation |
+| **Upgrades**     | Canary cluster upgrades before rolling to all         |
+| **Scale**        | Single cluster limits (~5,000 nodes, ~150,000 pods)   |
 
 ### 5.2 Multi-Cluster Patterns
 
@@ -437,14 +438,14 @@ Pattern 3: Service Mesh Multi-Cluster
 
 ### 6.1 What to Back Up
 
-| Component | Backup Method | Frequency | RPO |
-|-----------|--------------|-----------|-----|
-| etcd | `etcdctl snapshot save` | Every 30 min | 30 min |
-| K8s resources | Velero | Daily | 24 hours |
-| Persistent Volumes | CSI VolumeSnapshots | Hourly | 1 hour |
-| Application data | App-level backup (pg_dump) | Daily | 24 hours |
-| Git repos | Git remote | Real-time (push) | 0 |
-| Secrets vault | Vault replication / backup | Real-time | 0 |
+| Component          | Backup Method              | Frequency        | RPO      |
+| ------------------ | -------------------------- | ---------------- | -------- |
+| etcd               | `etcdctl snapshot save`    | Every 30 min     | 30 min   |
+| K8s resources      | Velero                     | Daily            | 24 hours |
+| Persistent Volumes | CSI VolumeSnapshots        | Hourly           | 1 hour   |
+| Application data   | App-level backup (pg_dump) | Daily            | 24 hours |
+| Git repos          | Git remote                 | Real-time (push) | 0        |
+| Secrets vault      | Vault replication / backup | Real-time        | 0        |
 
 ### 6.2 Velero
 
@@ -479,11 +480,11 @@ velero backup logs production-backup
 
 ### 6.3 Disaster Recovery Tiers
 
-| Tier | Strategy | RTO | RPO | Cost |
-|------|----------|-----|-----|------|
-| **Tier 1** | Active-Active multi-cluster | Minutes | 0 | Highest |
-| **Tier 2** | Warm standby (scaled-down backup cluster) | 15-30 min | 30 min | Medium |
-| **Tier 3** | Cold restore (rebuild from backups) | 1-4 hours | 1-24 hours | Lowest |
+| Tier       | Strategy                                  | RTO       | RPO        | Cost    |
+| ---------- | ----------------------------------------- | --------- | ---------- | ------- |
+| **Tier 1** | Active-Active multi-cluster               | Minutes   | 0          | Highest |
+| **Tier 2** | Warm standby (scaled-down backup cluster) | 15-30 min | 30 min     | Medium  |
+| **Tier 3** | Cold restore (rebuild from backups)       | 1-4 hours | 1-24 hours | Lowest  |
 
 ---
 
@@ -503,6 +504,7 @@ kubectl describe vpa <name>
 ```
 
 **Systematic right-sizing:**
+
 1. Deploy VPA in recommendation mode for all workloads
 2. After 7 days, compare recommendations to current requests
 3. Adjust requests to target recommendation (add 20% buffer)
@@ -520,24 +522,24 @@ spec:
   template:
     spec:
       requirements:
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: ["on-demand", "spot"]        # Use spot when possible
-      - key: kubernetes.io/arch
-        operator: In
-        values: ["amd64"]
-      - key: karpenter.k8s.aws/instance-category
-        operator: In
-        values: ["m", "c", "r"]              # General, compute, memory
-      - key: karpenter.k8s.aws/instance-generation
-        operator: Gt
-        values: ["4"]                         # 5th gen or newer
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ['on-demand', 'spot'] # Use spot when possible
+        - key: kubernetes.io/arch
+          operator: In
+          values: ['amd64']
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: ['m', 'c', 'r'] # General, compute, memory
+        - key: karpenter.k8s.aws/instance-generation
+          operator: Gt
+          values: ['4'] # 5th gen or newer
   limits:
-    cpu: "1000"                               # Max total CPU
-    memory: "2000Gi"                          # Max total memory
+    cpu: '1000' # Max total CPU
+    memory: '2000Gi' # Max total memory
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
-    consolidateAfter: 30s                     # Aggressive consolidation
+    consolidateAfter: 30s # Aggressive consolidation
 ```
 
 ### 7.3 Spot/Preemptible Instance Strategy
@@ -559,11 +561,11 @@ DON'T:
 
 ### 7.4 Cost Visibility
 
-| Tool | What It Does |
-|------|-------------|
-| **Kubecost** | Real-time cost allocation per namespace/team/workload |
-| **OpenCost** | Open-source cost monitoring (CNCF project) |
-| **Cloud billing tags** | Map K8s namespaces/labels to cloud billing |
+| Tool                   | What It Does                                          |
+| ---------------------- | ----------------------------------------------------- |
+| **Kubecost**           | Real-time cost allocation per namespace/team/workload |
+| **OpenCost**           | Open-source cost monitoring (CNCF project)            |
+| **Cloud billing tags** | Map K8s namespaces/labels to cloud billing            |
 
 ---
 
@@ -615,6 +617,7 @@ kubectl uncordon node-1
 ```
 
 **Critical details:**
+
 - Drain respects PodDisruptionBudgets — it waits if removing a pod would violate the budget
 - DaemonSet pods are not evicted (they are managed by the DaemonSet controller)
 - Pods without controllers (bare pods) are lost — always use Deployments/StatefulSets
@@ -622,12 +625,12 @@ kubectl uncordon node-1
 
 ### 8.3 Version Skew Policy
 
-| Component | Allowed Skew from API Server |
-|-----------|------------------------------|
-| kubelet | N-2 (can be up to 2 minor versions behind) |
-| kube-proxy | Same minor as kubelet |
-| kubectl | +/- 1 (one version ahead or behind) |
-| etcd | Specific version requirements per K8s release |
+| Component  | Allowed Skew from API Server                  |
+| ---------- | --------------------------------------------- |
+| kubelet    | N-2 (can be up to 2 minor versions behind)    |
+| kube-proxy | Same minor as kubelet                         |
+| kubectl    | +/- 1 (one version ahead or behind)           |
+| etcd       | Specific version requirements per K8s release |
 
 **Never skip minor versions when upgrading.** 1.26 → 1.28 is NOT supported. You must go 1.26 → 1.27 → 1.28.
 
@@ -698,22 +701,22 @@ With preStop sleep(10):
 
 ### 10.1 When You Need a Service Mesh
 
-| You NEED a mesh when: | You DON'T need a mesh when: |
-|-----------------------|---------------------------|
-| mTLS between all services is required | You have < 10 services |
-| Fine-grained traffic control (canary, A/B) | Simple load balancing suffices |
-| L7 observability without code changes | Prometheus + Grafana covers your needs |
-| Cross-service authorization policies | Kubernetes NetworkPolicies suffice |
-| Multi-cluster service discovery | Single cluster |
+| You NEED a mesh when:                      | You DON'T need a mesh when:            |
+| ------------------------------------------ | -------------------------------------- |
+| mTLS between all services is required      | You have < 10 services                 |
+| Fine-grained traffic control (canary, A/B) | Simple load balancing suffices         |
+| L7 observability without code changes      | Prometheus + Grafana covers your needs |
+| Cross-service authorization policies       | Kubernetes NetworkPolicies suffice     |
+| Multi-cluster service discovery            | Single cluster                         |
 
 ### 10.2 Service Mesh Overhead
 
-| Metric | Without Mesh | With Istio Sidecar |
-|--------|-------------|-------------------|
-| Memory per pod | 0 | +50-100 MB (Envoy) |
-| Latency per hop | 0 | +1-5 ms |
-| CPU per pod | 0 | +10-50m |
-| Network payload | Original | +TLS overhead |
+| Metric          | Without Mesh | With Istio Sidecar |
+| --------------- | ------------ | ------------------ |
+| Memory per pod  | 0            | +50-100 MB (Envoy) |
+| Latency per hop | 0            | +1-5 ms            |
+| CPU per pod     | 0            | +10-50m            |
+| Network payload | Original     | +TLS overhead      |
 
 **Rule of thumb:** If the mesh overhead is < 5% of your total resource usage and the features justify it, proceed. If overhead is significant relative to your workloads, reconsider.
 
@@ -789,21 +792,21 @@ If a mutating webhook modifies resources after ArgoCD applies them (e.g., adds d
 
 ## 13. Quick Reference
 
-| Area | Recommendation |
-|------|---------------|
-| Control plane | 3+ nodes, 3 AZs, dedicated machines |
-| etcd | Local SSDs, backup every 30 min, test restore quarterly |
-| Node pools | Separate system, workload, and specialty pools |
-| Namespaces | Per-team, with ResourceQuota + LimitRange + NetworkPolicies |
-| Deployments | Rolling update, maxUnavailable: 0, readiness probes, preStop hooks |
-| Security | Restricted PSA, OIDC auth, external secrets, image signing |
-| Observability | Prometheus, Fluent Bit + Loki, OpenTelemetry |
-| GitOps | ArgoCD app-of-apps, Kustomize overlays, manual prod approval |
-| Upgrades | Never skip versions, staging first, rolling node replacement |
-| Cost | VPA recommendations, spot instances, Karpenter, Kubecost |
+| Area          | Recommendation                                                     |
+| ------------- | ------------------------------------------------------------------ |
+| Control plane | 3+ nodes, 3 AZs, dedicated machines                                |
+| etcd          | Local SSDs, backup every 30 min, test restore quarterly            |
+| Node pools    | Separate system, workload, and specialty pools                     |
+| Namespaces    | Per-team, with ResourceQuota + LimitRange + NetworkPolicies        |
+| Deployments   | Rolling update, maxUnavailable: 0, readiness probes, preStop hooks |
+| Security      | Restricted PSA, OIDC auth, external secrets, image signing         |
+| Observability | Prometheus, Fluent Bit + Loki, OpenTelemetry                       |
+| GitOps        | ArgoCD app-of-apps, Kustomize overlays, manual prod approval       |
+| Upgrades      | Never skip versions, staging first, rolling node replacement       |
+| Cost          | VPA recommendations, spot instances, Karpenter, Kubecost           |
 
-| Deployment Strategy | Rollback | Resources | Complexity | Best For |
-|--------------------|----------|-----------|-----------|----------|
-| Rolling Update | Minutes | Low overhead | Low | Most services |
-| Blue-Green | Instant | 2x during deploy | Medium | Quick rollback needed |
-| Canary (Argo Rollouts) | Instant | 10-20% extra | High | Risk-sensitive services |
+| Deployment Strategy    | Rollback | Resources        | Complexity | Best For                |
+| ---------------------- | -------- | ---------------- | ---------- | ----------------------- |
+| Rolling Update         | Minutes  | Low overhead     | Low        | Most services           |
+| Blue-Green             | Instant  | 2x during deploy | Medium     | Quick rollback needed   |
+| Canary (Argo Rollouts) | Instant  | 10-20% extra     | High       | Risk-sensitive services |

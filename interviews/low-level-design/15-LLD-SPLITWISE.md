@@ -25,25 +25,25 @@ problem. It combines Strategy, Observer, and graph algorithms in a practical dom
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | User management | Create users with name, email, unique ID |
-| F2 | Group management | Create groups, add/remove members |
-| F3 | Add expenses | Record who paid, how much, split among whom |
-| F4 | Split types | Equal, exact amount, percentage, share-based |
-| F5 | Balance tracking | Show how much each user owes/is owed |
-| F6 | Debt simplification | Minimize number of transactions to settle |
-| F7 | Settlement | Record payments between users |
-| F8 | Expense history | View past expenses per group or between users |
+| #   | Requirement         | Details                                       |
+| --- | ------------------- | --------------------------------------------- |
+| F1  | User management     | Create users with name, email, unique ID      |
+| F2  | Group management    | Create groups, add/remove members             |
+| F3  | Add expenses        | Record who paid, how much, split among whom   |
+| F4  | Split types         | Equal, exact amount, percentage, share-based  |
+| F5  | Balance tracking    | Show how much each user owes/is owed          |
+| F6  | Debt simplification | Minimize number of transactions to settle     |
+| F7  | Settlement          | Record payments between users                 |
+| F8  | Expense history     | View past expenses per group or between users |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
-| NF1 | Thread-safe balance updates |
+| #   | Requirement                                              |
+| --- | -------------------------------------------------------- |
+| NF1 | Thread-safe balance updates                              |
 | NF2 | Extensible for new split strategies without code changes |
-| NF3 | Accurate to the cent (no floating-point drift) |
-| NF4 | Notifications when balances change |
+| NF3 | Accurate to the cent (no floating-point drift)           |
+| NF4 | Notifications when balances change                       |
 
 ### Clarifying Questions to Ask
 

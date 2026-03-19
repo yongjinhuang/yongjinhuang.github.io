@@ -1,6 +1,7 @@
 # Design a Collaborative Editor (Google Docs)
 
 ## Table of Contents
+
 1. [Requirements Clarification](#1-requirements-clarification)
 2. [API Design](#2-api-design)
 3. [Data Model](#3-data-model)
@@ -25,30 +26,30 @@
 
 ### Functional Requirements
 
-| Feature                  | Description                                                                          |
-|--------------------------|--------------------------------------------------------------------------------------|
-| Real-time co-editing     | Multiple users edit the same document simultaneously with changes visible in < 500ms |
-| Rich text formatting     | Bold, italic, underline, headings, lists, tables, inline images                      |
-| Cursor presence          | See other users' cursors and text selections in real time                            |
-| Comment and suggestion   | Inline comments, threaded replies, and suggested edits with accept/reject            |
-| Revision history         | Full version history; restore any past version; see diff between versions            |
-| Undo / Redo              | Per-user undo stack that does not undo collaborators' changes                        |
-| Sharing and permissions  | Owner, editor, commenter, viewer roles per document and per link                     |
-| Offline editing          | Continue editing while offline; sync when connection resumes                         |
-| Export                   | Export to DOCX, PDF, plain text, HTML                                                |
-| Search                   | Full-text search across all documents the user has access to                         |
+| Feature                 | Description                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------ |
+| Real-time co-editing    | Multiple users edit the same document simultaneously with changes visible in < 500ms |
+| Rich text formatting    | Bold, italic, underline, headings, lists, tables, inline images                      |
+| Cursor presence         | See other users' cursors and text selections in real time                            |
+| Comment and suggestion  | Inline comments, threaded replies, and suggested edits with accept/reject            |
+| Revision history        | Full version history; restore any past version; see diff between versions            |
+| Undo / Redo             | Per-user undo stack that does not undo collaborators' changes                        |
+| Sharing and permissions | Owner, editor, commenter, viewer roles per document and per link                     |
+| Offline editing         | Continue editing while offline; sync when connection resumes                         |
+| Export                  | Export to DOCX, PDF, plain text, HTML                                                |
+| Search                  | Full-text search across all documents the user has access to                         |
 
 ### Non-Functional Requirements
 
-| Property             | Target                                                                 |
-|----------------------|------------------------------------------------------------------------|
-| Local latency        | < 100ms: user's own keystroke appears instantly (optimistic local apply) |
-| Remote sync latency  | < 500ms for collaborators to see changes under normal network conditions|
-| Consistency          | Eventual convergence: all clients must reach identical state            |
-| Availability         | 99.99% uptime (< 53 min/year downtime)                                 |
-| Offline support      | Unbounded offline editing; merge on reconnect without data loss         |
-| Durability           | Zero data loss; every operation persisted before acknowledged           |
-| Scalability          | 100M documents, 10M DAU, 30M concurrent WebSocket connections           |
+| Property            | Target                                                                   |
+| ------------------- | ------------------------------------------------------------------------ |
+| Local latency       | < 100ms: user's own keystroke appears instantly (optimistic local apply) |
+| Remote sync latency | < 500ms for collaborators to see changes under normal network conditions |
+| Consistency         | Eventual convergence: all clients must reach identical state             |
+| Availability        | 99.99% uptime (< 53 min/year downtime)                                   |
+| Offline support     | Unbounded offline editing; merge on reconnect without data loss          |
+| Durability          | Zero data loss; every operation persisted before acknowledged            |
+| Scalability         | 100M documents, 10M DAU, 30M concurrent WebSocket connections            |
 
 ### Scale Estimation
 
@@ -718,18 +719,18 @@ Disadvantages:
 
 ## 7. OT vs CRDT Decision Matrix
 
-| Dimension                  | Operational Transform (OT)        | CRDT (e.g., Yjs)                   |
-|----------------------------|-----------------------------------|------------------------------------|
-| Server requirement         | Central server REQUIRED           | Can work P2P or server-assisted    |
-| Complexity of core logic   | High (transform function is hard) | Medium (data structure complexity) |
-| Merge correctness          | Correct if cp2 property holds     | Provably correct by construction   |
-| Metadata overhead          | Low (ops are compact)             | Higher (each char has unique ID)   |
-| Undo/redo                  | Straightforward (invert op)       | Complex (requires extra bookkeeping)|
-| Offline support            | Harder (need server to transform) | Natural (merge on reconnect)       |
-| Adoption                   | Google Docs, Quip, CKEditor       | Notion, Linear, Figma, VS Code     |
-| Performance (large docs)   | Good (ops are small deltas)       | Can degrade without GC             |
-| Rich text support          | Well-studied (Delta format)       | Excellent (Yjs Y.XmlFragment)      |
-| Network partitions         | Must buffer and retry             | Naturally handles disconnections   |
+| Dimension                | Operational Transform (OT)        | CRDT (e.g., Yjs)                     |
+| ------------------------ | --------------------------------- | ------------------------------------ |
+| Server requirement       | Central server REQUIRED           | Can work P2P or server-assisted      |
+| Complexity of core logic | High (transform function is hard) | Medium (data structure complexity)   |
+| Merge correctness        | Correct if cp2 property holds     | Provably correct by construction     |
+| Metadata overhead        | Low (ops are compact)             | Higher (each char has unique ID)     |
+| Undo/redo                | Straightforward (invert op)       | Complex (requires extra bookkeeping) |
+| Offline support          | Harder (need server to transform) | Natural (merge on reconnect)         |
+| Adoption                 | Google Docs, Quip, CKEditor       | Notion, Linear, Figma, VS Code       |
+| Performance (large docs) | Good (ops are small deltas)       | Can degrade without GC               |
+| Rich text support        | Well-studied (Delta format)       | Excellent (Yjs Y.XmlFragment)        |
+| Network partitions       | Must buffer and retry             | Naturally handles disconnections     |
 
 ### When to Choose OT
 
@@ -1389,26 +1390,25 @@ Merge notification:
 
 ```javascript
 // service-worker.js
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
   if (isDocumentApiRequest(event.request)) {
     event.respondWith(
-      fetch(event.request)
-        .catch(() => {
-          // Network failed: return cached version
-          return caches.match(event.request)
-        })
-    )
+      fetch(event.request).catch(() => {
+        // Network failed: return cached version
+        return caches.match(event.request);
+      })
+    );
   }
-})
+});
 
 // In the client app
 window.addEventListener('online', () => {
-  collabEngine.reconnect()
-})
+  collabEngine.reconnect();
+});
 
 window.addEventListener('offline', () => {
-  collabEngine.enterOfflineMode()
-})
+  collabEngine.enterOfflineMode();
+});
 ```
 
 ---
@@ -1867,16 +1867,16 @@ Scale:
 
 ## Summary: Key Design Decisions
 
-| Decision                    | Choice                              | Rationale                                         |
-|-----------------------------|-------------------------------------|---------------------------------------------------|
-| Concurrency algorithm       | OT (server-canonical ordering)      | Well-understood, works with central server model  |
-| Operation format            | Delta (retain/insert/delete/format) | Composable, invertible, supports rich text        |
-| Transport                   | WebSocket (persistent)              | Low latency, server-push, stateful session        |
-| Database                    | PostgreSQL (sharded by doc_id)      | ACID, good for sequential op log, easy to shard  |
-| Snapshot storage            | S3 / object store                   | Cheap, durable, scales to any doc size            |
-| Presence                    | Redis (ephemeral, TTL-based)        | Fast, no persistence needed for cursors           |
-| Fan-out                     | Redis Pub/Sub or Kafka              | Decouple WebSocket servers from each other        |
-| Offline support             | IndexedDB + transform on reconnect  | Works in browsers, handles gaps via replay        |
-| Undo/redo                   | Per-user undo stack + transform     | Users only undo their own changes                 |
-| Permissions                 | Role hierarchy with caching         | Flexible, fast to check, invalidated on change    |
-| Versioning                  | Append-only op log + snapshots      | Efficient storage, supports any-point-in-time     |
+| Decision              | Choice                              | Rationale                                        |
+| --------------------- | ----------------------------------- | ------------------------------------------------ |
+| Concurrency algorithm | OT (server-canonical ordering)      | Well-understood, works with central server model |
+| Operation format      | Delta (retain/insert/delete/format) | Composable, invertible, supports rich text       |
+| Transport             | WebSocket (persistent)              | Low latency, server-push, stateful session       |
+| Database              | PostgreSQL (sharded by doc_id)      | ACID, good for sequential op log, easy to shard  |
+| Snapshot storage      | S3 / object store                   | Cheap, durable, scales to any doc size           |
+| Presence              | Redis (ephemeral, TTL-based)        | Fast, no persistence needed for cursors          |
+| Fan-out               | Redis Pub/Sub or Kafka              | Decouple WebSocket servers from each other       |
+| Offline support       | IndexedDB + transform on reconnect  | Works in browsers, handles gaps via replay       |
+| Undo/redo             | Per-user undo stack + transform     | Users only undo their own changes                |
+| Permissions           | Role hierarchy with caching         | Flexible, fast to check, invalidated on change   |
+| Versioning            | Append-only op log + snapshots      | Efficient storage, supports any-point-in-time    |

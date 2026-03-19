@@ -8,81 +8,81 @@ AWS has 200+ services. You do not need all of them. This guide covers the ~25 se
 
 ### Identity & Networking Foundation
 
-| Service | One-Liner |
-|---------|-----------|
-| **IAM** | Who can do what to which resource |
-| **VPC** | Your private network in the cloud |
+| Service      | One-Liner                              |
+| ------------ | -------------------------------------- |
+| **IAM**      | Who can do what to which resource      |
+| **VPC**      | Your private network in the cloud      |
 | **Route 53** | DNS + health checks + routing policies |
 
 ### Compute
 
-| Service | One-Liner |
-|---------|-----------|
-| **EC2** | Virtual machines you fully control |
-| **Lambda** | Run code without managing servers |
+| Service       | One-Liner                                             |
+| ------------- | ----------------------------------------------------- |
+| **EC2**       | Virtual machines you fully control                    |
+| **Lambda**    | Run code without managing servers                     |
 | **ECS / EKS** | Run containers (Docker-managed vs Kubernetes-managed) |
-| **Fargate** | Serverless compute engine for containers |
+| **Fargate**   | Serverless compute engine for containers              |
 
 ### Storage & Databases
 
-| Service | One-Liner |
-|---------|-----------|
-| **S3** | Infinite object storage with 11 nines durability |
-| **RDS / Aurora** | Managed relational databases (Postgres, MySQL) |
-| **DynamoDB** | Serverless NoSQL with single-digit ms latency |
-| **ElastiCache** | Managed Redis or Memcached |
-| **Redshift** | Columnar data warehouse for analytics |
+| Service          | One-Liner                                        |
+| ---------------- | ------------------------------------------------ |
+| **S3**           | Infinite object storage with 11 nines durability |
+| **RDS / Aurora** | Managed relational databases (Postgres, MySQL)   |
+| **DynamoDB**     | Serverless NoSQL with single-digit ms latency    |
+| **ElastiCache**  | Managed Redis or Memcached                       |
+| **Redshift**     | Columnar data warehouse for analytics            |
 
 ### Networking & Content Delivery
 
-| Service | One-Liner |
-|---------|-----------|
-| **ALB / NLB** | Layer 7 (HTTP) and Layer 4 (TCP) load balancers |
-| **CloudFront** | Global CDN with edge caching |
-| **API Gateway** | Managed REST/WebSocket/HTTP API front door |
+| Service         | One-Liner                                       |
+| --------------- | ----------------------------------------------- |
+| **ALB / NLB**   | Layer 7 (HTTP) and Layer 4 (TCP) load balancers |
+| **CloudFront**  | Global CDN with edge caching                    |
+| **API Gateway** | Managed REST/WebSocket/HTTP API front door      |
 
 ### Messaging & Events
 
-| Service | One-Liner |
-|---------|-----------|
-| **SQS** | Managed message queue (decoupling) |
-| **SNS** | Pub/sub fan-out notifications |
+| Service         | One-Liner                                           |
+| --------------- | --------------------------------------------------- |
+| **SQS**         | Managed message queue (decoupling)                  |
+| **SNS**         | Pub/sub fan-out notifications                       |
 | **EventBridge** | Serverless event bus for event-driven architectures |
-| **Kinesis** | Real-time data streaming |
+| **Kinesis**     | Real-time data streaming                            |
 
 ### Security & Encryption
 
-| Service | One-Liner |
-|---------|-----------|
-| **KMS** | Managed encryption keys |
+| Service             | One-Liner                                    |
+| ------------------- | -------------------------------------------- |
+| **KMS**             | Managed encryption keys                      |
 | **Secrets Manager** | Rotate and retrieve secrets programmatically |
-| **WAF / Shield** | Web application firewall + DDoS protection |
-| **Cognito** | User sign-up, sign-in, and access control |
+| **WAF / Shield**    | Web application firewall + DDoS protection   |
+| **Cognito**         | User sign-up, sign-in, and access control    |
 
 ### Observability
 
-| Service | One-Liner |
-|---------|-----------|
-| **CloudWatch** | Metrics, logs, alarms, dashboards |
+| Service        | One-Liner                                   |
+| -------------- | ------------------------------------------- |
+| **CloudWatch** | Metrics, logs, alarms, dashboards           |
 | **CloudTrail** | Audit log of every API call in your account |
-| **X-Ray** | Distributed tracing for microservices |
+| **X-Ray**      | Distributed tracing for microservices       |
 
 ### DevOps & IaC
 
-| Service | One-Liner |
-|---------|-----------|
-| **CloudFormation** | Infrastructure as Code (YAML/JSON templates) |
-| **CDK** | IaC using real programming languages (TypeScript, Python) |
-| **CodePipeline** | Managed CI/CD pipeline |
-| **Systems Manager** | Operational hub: parameter store, patching, run commands |
-| **Step Functions** | Visual workflow orchestration for distributed apps |
+| Service             | One-Liner                                                 |
+| ------------------- | --------------------------------------------------------- |
+| **CloudFormation**  | Infrastructure as Code (YAML/JSON templates)              |
+| **CDK**             | IaC using real programming languages (TypeScript, Python) |
+| **CodePipeline**    | Managed CI/CD pipeline                                    |
+| **Systems Manager** | Operational hub: parameter store, patching, run commands  |
+| **Step Functions**  | Visual workflow orchestration for distributed apps        |
 
 ### Other Essentials
 
-| Service | One-Liner |
-|---------|-----------|
+| Service | One-Liner                         |
+| ------- | --------------------------------- |
 | **ECR** | Private Docker container registry |
-| **SES** | Transactional and bulk email |
+| **SES** | Transactional and bulk email      |
 
 ---
 

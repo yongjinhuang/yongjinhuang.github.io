@@ -56,6 +56,7 @@ Node 1 (10.0.1.5)                    Node 2 (10.0.2.8)
 ```
 
 Each node gets a **pod CIDR** (e.g., 10.244.1.0/24). The CNI plugin:
+
 1. Creates a virtual ethernet (veth) pair for each pod
 2. One end goes in the pod's network namespace, the other in the host
 3. Connects the host end to a bridge or directly routes it
@@ -69,17 +70,17 @@ CNI (Container Network Interface) is a standard that defines how container runti
 
 ### 2.1 Plugin Comparison
 
-| Feature | Calico | Cilium | Flannel | WeaveNet |
-|---------|--------|--------|---------|----------|
-| **Data plane** | iptables or eBPF | eBPF | VXLAN overlay | VXLAN overlay |
-| **Routing** | BGP (native) or IPIP/VXLAN tunnel | Direct routing or VXLAN | VXLAN only | Encrypted VXLAN |
-| **Network Policy** | Yes (full) | Yes (full + extended) | No | Yes (partial) |
-| **Encryption** | WireGuard | WireGuard or IPsec | No | IPsec (sleeve) |
-| **kube-proxy replacement** | Partial (eBPF mode) | Yes (full eBPF) | No | No |
-| **Observability** | Flow logs | Hubble (deep L3-L7) | Minimal | Minimal |
-| **Performance** | High (BGP) | Highest (eBPF) | Moderate | Moderate |
-| **Complexity** | Medium | Medium-High | Low | Low |
-| **Best for** | Production, multi-cloud | Production, security-focused | Dev/test, simple clusters | Small clusters |
+| Feature                    | Calico                            | Cilium                       | Flannel                   | WeaveNet        |
+| -------------------------- | --------------------------------- | ---------------------------- | ------------------------- | --------------- |
+| **Data plane**             | iptables or eBPF                  | eBPF                         | VXLAN overlay             | VXLAN overlay   |
+| **Routing**                | BGP (native) or IPIP/VXLAN tunnel | Direct routing or VXLAN      | VXLAN only                | Encrypted VXLAN |
+| **Network Policy**         | Yes (full)                        | Yes (full + extended)        | No                        | Yes (partial)   |
+| **Encryption**             | WireGuard                         | WireGuard or IPsec           | No                        | IPsec (sleeve)  |
+| **kube-proxy replacement** | Partial (eBPF mode)               | Yes (full eBPF)              | No                        | No              |
+| **Observability**          | Flow logs                         | Hubble (deep L3-L7)          | Minimal                   | Minimal         |
+| **Performance**            | High (BGP)                        | Highest (eBPF)               | Moderate                  | Moderate        |
+| **Complexity**             | Medium                            | Medium-High                  | Low                       | Low             |
+| **Best for**               | Production, multi-cloud           | Production, security-focused | Dev/test, simple clusters | Small clusters  |
 
 ### 2.2 Calico Deep-Dive
 
@@ -163,11 +164,11 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: web           # Matches pods with label app=web
+    app: web # Matches pods with label app=web
   ports:
-  - port: 80           # Service port (what clients connect to)
-    targetPort: 8080   # Pod port (where traffic is forwarded)
-    protocol: TCP
+    - port: 80 # Service port (what clients connect to)
+      targetPort: 8080 # Pod port (where traffic is forwarded)
+      protocol: TCP
 ```
 
 **How it works internally:**
@@ -199,9 +200,9 @@ spec:
   selector:
     app: web
   ports:
-  - port: 80
-    targetPort: 8080
-    nodePort: 30080    # Optional: auto-assigned if omitted
+    - port: 80
+      targetPort: 8080
+      nodePort: 30080 # Optional: auto-assigned if omitted
 ```
 
 **Traffic flow:**
@@ -223,15 +224,15 @@ kind: Service
 metadata:
   name: web-lb
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-type: 'nlb'
+    service.beta.kubernetes.io/aws-load-balancer-scheme: 'internet-facing'
 spec:
   type: LoadBalancer
   selector:
     app: web
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ```
 
 **Traffic flow:**
@@ -242,10 +243,10 @@ Internet → Cloud LB (public IP) → NodePort → kube-proxy → Pod
 
 **externalTrafficPolicy:**
 
-| Policy | Behavior | Pros | Cons |
-|--------|----------|------|------|
-| `Cluster` (default) | Traffic may be forwarded to pods on any node | Even distribution | Extra hop, source IP lost |
-| `Local` | Traffic only sent to pods on the receiving node | Preserves source IP, no extra hop | Uneven distribution if pods are not spread evenly |
+| Policy              | Behavior                                        | Pros                              | Cons                                              |
+| ------------------- | ----------------------------------------------- | --------------------------------- | ------------------------------------------------- |
+| `Cluster` (default) | Traffic may be forwarded to pods on any node    | Even distribution                 | Extra hop, source IP lost                         |
+| `Local`             | Traffic only sent to pods on the receiving node | Preserves source IP, no extra hop | Uneven distribution if pods are not spread evenly |
 
 ### 3.4 ExternalName
 
@@ -273,11 +274,11 @@ kind: Service
 metadata:
   name: postgres-headless
 spec:
-  clusterIP: None        # Headless
+  clusterIP: None # Headless
   selector:
     app: postgres
   ports:
-  - port: 5432
+    - port: 5432
 ```
 
 ```bash
@@ -315,6 +316,7 @@ nslookup postgres-headless.default.svc.cluster.local
 ```
 
 **Performance characteristics:**
+
 - Rule evaluation is O(n) where n = number of services
 - For 10,000 services: iptables has ~50,000 rules, adding latency
 - Backend selection is random (no round-robin, no least-connections)
@@ -338,6 +340,7 @@ ipvsadm -Ln
 ```
 
 **Advantages over iptables:**
+
 - O(1) lookup using hash tables (scales to 10,000+ services)
 - Multiple load balancing algorithms: `rr` (round-robin), `lc` (least connection), `dh` (destination hash), `sh` (source hash), `sed` (shortest expected delay)
 - Better performance for large clusters
@@ -355,6 +358,7 @@ helm install cilium cilium/cilium \
 ```
 
 **Advantages:**
+
 - No iptables rules at all (less kernel overhead)
 - O(1) lookups via eBPF hash maps
 - Preserves source IP by default
@@ -379,32 +383,32 @@ kubectl -n kube-system get cm coredns -o yaml
 
 ### 5.2 DNS Record Formats
 
-| Resource | DNS Record | Example |
-|----------|-----------|---------|
-| Service (ClusterIP) | `<svc>.<ns>.svc.cluster.local` | `web.default.svc.cluster.local` |
-| Service (Headless) | Returns pod IPs directly | `postgres-headless.default.svc.cluster.local` |
-| StatefulSet Pod | `<pod>.<svc>.<ns>.svc.cluster.local` | `postgres-0.postgres-headless.default.svc.cluster.local` |
-| Pod (if enabled) | `<pod-ip-dashed>.<ns>.pod.cluster.local` | `10-244-1-5.default.pod.cluster.local` |
-| SRV record | `_<port>._<proto>.<svc>.<ns>.svc.cluster.local` | `_http._tcp.web.default.svc.cluster.local` |
+| Resource            | DNS Record                                      | Example                                                  |
+| ------------------- | ----------------------------------------------- | -------------------------------------------------------- |
+| Service (ClusterIP) | `<svc>.<ns>.svc.cluster.local`                  | `web.default.svc.cluster.local`                          |
+| Service (Headless)  | Returns pod IPs directly                        | `postgres-headless.default.svc.cluster.local`            |
+| StatefulSet Pod     | `<pod>.<svc>.<ns>.svc.cluster.local`            | `postgres-0.postgres-headless.default.svc.cluster.local` |
+| Pod (if enabled)    | `<pod-ip-dashed>.<ns>.pod.cluster.local`        | `10-244-1-5.default.pod.cluster.local`                   |
+| SRV record          | `_<port>._<proto>.<svc>.<ns>.svc.cluster.local` | `_http._tcp.web.default.svc.cluster.local`               |
 
 ### 5.3 Pod DNS Policy
 
 ```yaml
 spec:
-  dnsPolicy: ClusterFirst      # Default: use CoreDNS, fall back to node DNS
+  dnsPolicy: ClusterFirst # Default: use CoreDNS, fall back to node DNS
   # Other options:
   # Default:       Use node's DNS (bypass CoreDNS)
   # ClusterFirstWithHostNet: Use CoreDNS even with hostNetwork: true
   # None:          Custom DNS via dnsConfig
 
-  dnsConfig:                    # Custom DNS settings (used with dnsPolicy: None)
+  dnsConfig: # Custom DNS settings (used with dnsPolicy: None)
     nameservers:
-    - 8.8.8.8
+      - 8.8.8.8
     searches:
-    - my.dns.search.suffix
+      - my.dns.search.suffix
     options:
-    - name: ndots
-      value: "5"
+      - name: ndots
+        value: '5'
 ```
 
 ### 5.4 ndots and DNS Resolution Performance
@@ -439,43 +443,43 @@ metadata:
   name: web-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
 spec:
-  ingressClassName: nginx        # Which Ingress controller handles this
+  ingressClassName: nginx # Which Ingress controller handles this
   tls:
-  - hosts:
-    - app.example.com
-    secretName: tls-secret       # TLS certificate (kubernetes.io/tls secret)
+    - hosts:
+        - app.example.com
+      secretName: tls-secret # TLS certificate (kubernetes.io/tls secret)
   rules:
-  - host: app.example.com
-    http:
-      paths:
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: api-service
-            port:
-              number: 80
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend-service
-            port:
-              number: 80
+    - host: app.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80
 ```
 
 ### 6.2 Ingress Controller Comparison
 
-| Controller | Proxy | Key Features | Best For |
-|-----------|-------|-------------|----------|
-| **NGINX Ingress** | NGINX | Most popular, rich annotations, TCP/UDP | General purpose |
-| **Traefik** | Traefik | Auto-discovery, Let's Encrypt, middleware | Simple setups, auto-TLS |
-| **AWS ALB Controller** | AWS ALB | Native AWS integration, WAF, Cognito | AWS environments |
-| **Istio Gateway** | Envoy | Service mesh integration, mTLS, traffic splitting | Service mesh users |
-| **Contour** | Envoy | HTTPProxy CRD (more expressive than Ingress) | Envoy-based routing |
-| **HAProxy Ingress** | HAProxy | High performance, TCP passthrough | Performance-critical |
+| Controller             | Proxy   | Key Features                                      | Best For                |
+| ---------------------- | ------- | ------------------------------------------------- | ----------------------- |
+| **NGINX Ingress**      | NGINX   | Most popular, rich annotations, TCP/UDP           | General purpose         |
+| **Traefik**            | Traefik | Auto-discovery, Let's Encrypt, middleware         | Simple setups, auto-TLS |
+| **AWS ALB Controller** | AWS ALB | Native AWS integration, WAF, Cognito              | AWS environments        |
+| **Istio Gateway**      | Envoy   | Service mesh integration, mTLS, traffic splitting | Service mesh users      |
+| **Contour**            | Envoy   | HTTPProxy CRD (more expressive than Ingress)      | Envoy-based routing     |
+| **HAProxy Ingress**    | HAProxy | High performance, TCP passthrough                 | Performance-critical    |
 
 ### 6.3 Traffic Flow Through Ingress
 
@@ -535,12 +539,12 @@ metadata:
 spec:
   gatewayClassName: nginx
   listeners:
-  - name: https
-    port: 443
-    protocol: HTTPS
-    tls:
-      certificateRefs:
-      - name: tls-secret
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - name: tls-secret
 
 ---
 # HTTPRoute (managed by application developer)
@@ -550,24 +554,25 @@ metadata:
   name: api-route
 spec:
   parentRefs:
-  - name: production
+    - name: production
   hostnames:
-  - "api.example.com"
+    - 'api.example.com'
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /v1
-    backendRefs:
-    - name: api-v1
-      port: 80
-      weight: 90
-    - name: api-v2
-      port: 80
-      weight: 10          # Canary: 10% to v2
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1
+      backendRefs:
+        - name: api-v1
+          port: 80
+          weight: 90
+        - name: api-v2
+          port: 80
+          weight: 10 # Canary: 10% to v2
 ```
 
 **Advantages over Ingress:**
+
 - Role-based: infrastructure, cluster, and app concerns are separated
 - Native traffic splitting (weights for canary/blue-green)
 - Protocol-specific routes: HTTPRoute, GRPCRoute, TLSRoute, TCPRoute, UDPRoute
@@ -596,9 +601,9 @@ metadata:
   name: default-deny-ingress
   namespace: production
 spec:
-  podSelector: {}           # Selects ALL pods
+  podSelector: {} # Selects ALL pods
   policyTypes:
-  - Ingress                 # No ingress rules = deny all ingress
+    - Ingress # No ingress rules = deny all ingress
 
 ---
 # Deny all egress from all pods in namespace
@@ -610,7 +615,7 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Egress                  # No egress rules = deny all egress
+    - Egress # No egress rules = deny all egress
 ```
 
 ### 8.3 Practical Network Policy Example
@@ -628,34 +633,34 @@ spec:
     matchLabels:
       app: web
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: api-gateway
-    ports:
-    - protocol: TCP
-      port: 8080
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api-gateway
+      ports:
+        - protocol: TCP
+          port: 8080
   egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          app: postgres
-    ports:
-    - protocol: TCP
-      port: 5432
-  - to:                       # Allow DNS (critical — often forgotten!)
-    - namespaceSelector: {}
-      podSelector:
-        matchLabels:
-          k8s-app: kube-dns
-    ports:
-    - protocol: UDP
-      port: 53
-    - protocol: TCP
-      port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to: # Allow DNS (critical — often forgotten!)
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
 ```
 
 ### 8.4 Namespace Isolation
@@ -670,12 +675,12 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: team-a
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: team-a
 ```
 
 ---
@@ -698,24 +703,24 @@ With mesh (sidecar):
 
 ### 9.2 Key Capabilities
 
-| Feature | Description |
-|---------|-------------|
-| **mTLS** | Automatic mutual TLS between all services (zero-trust) |
-| **Traffic management** | Retries, timeouts, circuit breaking, rate limiting |
-| **Traffic splitting** | Canary releases, A/B testing, header-based routing |
-| **Observability** | Request metrics (latency, error rate, throughput), distributed tracing |
-| **Access control** | L7 authorization policies (which service can call which endpoint) |
+| Feature                | Description                                                            |
+| ---------------------- | ---------------------------------------------------------------------- |
+| **mTLS**               | Automatic mutual TLS between all services (zero-trust)                 |
+| **Traffic management** | Retries, timeouts, circuit breaking, rate limiting                     |
+| **Traffic splitting**  | Canary releases, A/B testing, header-based routing                     |
+| **Observability**      | Request metrics (latency, error rate, throughput), distributed tracing |
+| **Access control**     | L7 authorization policies (which service can call which endpoint)      |
 
 ### 9.3 Istio vs Linkerd
 
-| Aspect | Istio | Linkerd |
-|--------|-------|---------|
-| Proxy | Envoy (feature-rich, heavier) | linkerd2-proxy (Rust, ultralight) |
-| Resource overhead | Higher (~50-100MB per sidecar) | Lower (~10-20MB per sidecar) |
-| Complexity | Higher (more features, more config) | Lower (simpler, opinionated) |
-| L7 protocols | HTTP, gRPC, TCP, MongoDB, Redis, etc. | HTTP, gRPC, TCP |
-| Multi-cluster | Yes (complex) | Yes (simpler) |
-| Best for | Complex traffic management, multi-protocol | Simplicity, performance-sensitive |
+| Aspect            | Istio                                      | Linkerd                           |
+| ----------------- | ------------------------------------------ | --------------------------------- |
+| Proxy             | Envoy (feature-rich, heavier)              | linkerd2-proxy (Rust, ultralight) |
+| Resource overhead | Higher (~50-100MB per sidecar)             | Lower (~10-20MB per sidecar)      |
+| Complexity        | Higher (more features, more config)        | Lower (simpler, opinionated)      |
+| L7 protocols      | HTTP, gRPC, TCP, MongoDB, Redis, etc.      | HTTP, gRPC, TCP                   |
+| Multi-cluster     | Yes (complex)                              | Yes (simpler)                     |
+| Best for          | Complex traffic management, multi-protocol | Simplicity, performance-sensitive |
 
 ---
 
@@ -771,7 +776,7 @@ The default ndots:5 setting means any external domain with fewer than 5 dots tri
 
 ### Q2: "Compare iptables and IPVS kube-proxy modes. When would you switch to IPVS?"
 
-**Deep answer:** iptables mode creates one chain per service and one rule per endpoint. For N services with M average endpoints, you get approximately N + N*M rules. Rule evaluation is linear — the kernel walks the chain from top to bottom. At ~5,000 services, you may notice increased latency for connection establishment. Backend selection is random (via the `--probability` flag on iptables rules), giving approximately uniform distribution but not true round-robin. IPVS uses kernel-space hash tables for O(1) lookups regardless of service count. It supports real load balancing algorithms: round-robin, least connections, source hashing. Switch to IPVS when you have more than 1,000 services, need algorithmic backend selection, or observe connection setup latency from iptables rule walking. The third option is eBPF via Cilium, which removes kube-proxy entirely, provides O(1) lookups, preserves source IP, and enables socket-level load balancing that bypasses the netfilter stack for local traffic.
+**Deep answer:** iptables mode creates one chain per service and one rule per endpoint. For N services with M average endpoints, you get approximately N + N\*M rules. Rule evaluation is linear — the kernel walks the chain from top to bottom. At ~5,000 services, you may notice increased latency for connection establishment. Backend selection is random (via the `--probability` flag on iptables rules), giving approximately uniform distribution but not true round-robin. IPVS uses kernel-space hash tables for O(1) lookups regardless of service count. It supports real load balancing algorithms: round-robin, least connections, source hashing. Switch to IPVS when you have more than 1,000 services, need algorithmic backend selection, or observe connection setup latency from iptables rule walking. The third option is eBPF via Cilium, which removes kube-proxy entirely, provides O(1) lookups, preserves source IP, and enables socket-level load balancing that bypasses the netfilter stack for local traffic.
 
 ### Q3: "What is a headless service and when would you use one?"
 
@@ -793,17 +798,17 @@ The default ndots:5 setting means any external domain with fewer than 5 dots tri
 
 ## 12. Quick Reference
 
-| Service Type | ClusterIP | External Access | Use Case |
-|-------------|-----------|-----------------|----------|
-| **ClusterIP** | Yes (virtual) | No | Internal services |
-| **NodePort** | Yes + NodePort | Via node IP:port | Dev/test, non-cloud |
-| **LoadBalancer** | Yes + NodePort + LB | Via cloud LB public IP | Production external |
-| **ExternalName** | No (CNAME) | N/A | External service alias |
-| **Headless** | None | No | StatefulSets, client-side LB |
+| Service Type     | ClusterIP           | External Access        | Use Case                     |
+| ---------------- | ------------------- | ---------------------- | ---------------------------- |
+| **ClusterIP**    | Yes (virtual)       | No                     | Internal services            |
+| **NodePort**     | Yes + NodePort      | Via node IP:port       | Dev/test, non-cloud          |
+| **LoadBalancer** | Yes + NodePort + LB | Via cloud LB public IP | Production external          |
+| **ExternalName** | No (CNAME)          | N/A                    | External service alias       |
+| **Headless**     | None                | No                     | StatefulSets, client-side LB |
 
-| CNI | Data Plane | Network Policy | kube-proxy Replacement | Best For |
-|-----|-----------|---------------|----------------------|----------|
-| **Calico** | iptables/eBPF/BGP | Yes | Partial | Production, multi-cloud |
-| **Cilium** | eBPF | Yes (extended) | Yes (full) | Security, observability |
-| **Flannel** | VXLAN | No | No | Simple clusters, dev |
-| **WeaveNet** | VXLAN | Partial | No | Small clusters |
+| CNI          | Data Plane        | Network Policy | kube-proxy Replacement | Best For                |
+| ------------ | ----------------- | -------------- | ---------------------- | ----------------------- |
+| **Calico**   | iptables/eBPF/BGP | Yes            | Partial                | Production, multi-cloud |
+| **Cilium**   | eBPF              | Yes (extended) | Yes (full)             | Security, observability |
+| **Flannel**  | VXLAN             | No             | No                     | Simple clusters, dev    |
+| **WeaveNet** | VXLAN             | Partial        | No                     | Small clusters          |

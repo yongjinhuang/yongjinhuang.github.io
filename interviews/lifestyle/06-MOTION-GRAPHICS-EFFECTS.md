@@ -39,13 +39,13 @@ Static graphics:          Motion graphics:
 
 ### 1.1 Why They Matter for YouTube
 
-| Without Motion Graphics | With Motion Graphics |
-|------------------------|---------------------|
-| Talking head only | Name/topic displayed on screen |
-| Viewer guesses who is speaking | Lower third identifies speaker |
-| Hard to follow key points | Key points appear as text |
-| Amateur feel | Professional, branded feel |
-| Viewer may miss details | Visual emphasis on important info |
+| Without Motion Graphics        | With Motion Graphics              |
+| ------------------------------ | --------------------------------- |
+| Talking head only              | Name/topic displayed on screen    |
+| Viewer guesses who is speaking | Lower third identifies speaker    |
+| Hard to follow key points      | Key points appear as text         |
+| Amateur feel                   | Professional, branded feel        |
+| Viewer may miss details        | Visual emphasis on important info |
 
 ## 2. Essential Motion Graphics for YouTube
 
@@ -80,16 +80,16 @@ Static graphics:          Motion graphics:
 
 ### 2.2 Complete YouTube Graphics Checklist
 
-| Element | When | Duration | Priority |
-|---------|------|----------|----------|
-| Title card / intro | First 3-5 seconds | 2-5 seconds | High |
-| Lower third (name) | When speaker first appears | 3-5 seconds | High |
-| Text callouts | When making key points | 2-4 seconds each | High |
-| Subscribe reminder | Once mid-video | 3-5 seconds | Medium |
-| Chapter markers | At section transitions | 2-3 seconds | Medium |
-| End screen | Last 20 seconds | 20 seconds | High |
-| Progress bar / timeline | For list/tutorial videos | Throughout | Optional |
-| Emoji / icon reactions | For emphasis | 1-2 seconds | Optional |
+| Element                 | When                       | Duration         | Priority |
+| ----------------------- | -------------------------- | ---------------- | -------- |
+| Title card / intro      | First 3-5 seconds          | 2-5 seconds      | High     |
+| Lower third (name)      | When speaker first appears | 3-5 seconds      | High     |
+| Text callouts           | When making key points     | 2-4 seconds each | High     |
+| Subscribe reminder      | Once mid-video             | 3-5 seconds      | Medium   |
+| Chapter markers         | At section transitions     | 2-3 seconds      | Medium   |
+| End screen              | Last 20 seconds            | 20 seconds       | High     |
+| Progress bar / timeline | For list/tutorial videos   | Throughout       | Optional |
+| Emoji / icon reactions  | For emphasis               | 1-2 seconds      | Optional |
 
 ## 3. Typography for Video
 
@@ -115,19 +115,19 @@ READABILITY HIERARCHY:
 
 Use at most **two fonts** in your videos:
 
-| Role | Style | Example |
-|------|-------|---------|
-| Headlines / titles | Bold, thick sans-serif | Montserrat Bold, Oswald |
-| Body text / captions | Clean, readable sans-serif | Inter, Roboto, Poppins |
+| Role                 | Style                      | Example                 |
+| -------------------- | -------------------------- | ----------------------- |
+| Headlines / titles   | Bold, thick sans-serif     | Montserrat Bold, Oswald |
+| Body text / captions | Clean, readable sans-serif | Inter, Roboto, Poppins  |
 
 ### 3.3 Text Sizing for Video
 
-| Text Type | Minimum Size (1080p) | Recommended | Maximum |
-|-----------|---------------------|-------------|---------|
-| Main title | 72px | 96-120px | 200px |
-| Subtitle / lower third | 32px | 40-56px | 72px |
-| Body text / callout | 24px | 32-48px | 56px |
-| Fine print / caption | 18px | 24-32px | 40px |
+| Text Type              | Minimum Size (1080p) | Recommended | Maximum |
+| ---------------------- | -------------------- | ----------- | ------- |
+| Main title             | 72px                 | 96-120px    | 200px   |
+| Subtitle / lower third | 32px                 | 40-56px     | 72px    |
+| Body text / callout    | 24px                 | 32-48px     | 56px    |
+| Fine print / caption   | 18px                 | 24-32px     | 40px    |
 
 > **Mobile viewers**: Remember that many people watch on phones. Text that looks fine
 > on a 27-inch monitor may be unreadable on a 6-inch phone screen. When in doubt, make
@@ -135,13 +135,13 @@ Use at most **two fonts** in your videos:
 
 ### 3.4 Text Readability Tips
 
-| Technique | How | Why |
-|-----------|-----|-----|
-| Drop shadow | Subtle dark shadow behind text | Readable on any background |
-| Background box | Semi-transparent dark box behind text | Guaranteed readability |
-| Outline/stroke | 2-3px dark outline around text | Works on varied backgrounds |
-| Contrast | Light text on dark, dark text on light | Basic readability |
-| Letter spacing | Increase tracking for all-caps text | Prevents letters from blending |
+| Technique      | How                                    | Why                            |
+| -------------- | -------------------------------------- | ------------------------------ |
+| Drop shadow    | Subtle dark shadow behind text         | Readable on any background     |
+| Background box | Semi-transparent dark box behind text  | Guaranteed readability         |
+| Outline/stroke | 2-3px dark outline around text         | Works on varied backgrounds    |
+| Contrast       | Light text on dark, dark text on light | Basic readability              |
+| Letter spacing | Increase tracking for all-caps text    | Prevents letters from blending |
 
 ## 4. Title Design
 
@@ -185,15 +185,15 @@ Style 3: Animated Text (words appear one by one)
 
 ### 4.2 Title Animation Patterns
 
-| Animation | Description | Feel |
-|-----------|-------------|------|
-| Fade in | Text gradually appears | Calm, cinematic |
-| Slide in | Text slides from left/right/bottom | Dynamic, modern |
-| Scale up | Text grows from small to full size | Impactful, bold |
-| Type on | Letters appear one by one | Tech, tutorial |
-| Bounce | Text drops in with a bounce | Fun, energetic |
-| Wipe reveal | Text revealed by a moving shape | Slick, professional |
-| Glitch | Text appears with digital glitch effect | Tech, edgy |
+| Animation   | Description                             | Feel                |
+| ----------- | --------------------------------------- | ------------------- |
+| Fade in     | Text gradually appears                  | Calm, cinematic     |
+| Slide in    | Text slides from left/right/bottom      | Dynamic, modern     |
+| Scale up    | Text grows from small to full size      | Impactful, bold     |
+| Type on     | Letters appear one by one               | Tech, tutorial      |
+| Bounce      | Text drops in with a bounce             | Fun, energetic      |
+| Wipe reveal | Text revealed by a moving shape         | Slick, professional |
+| Glitch      | Text appears with digital glitch effect | Tech, edgy          |
 
 ## 5. Lower Thirds
 
@@ -239,27 +239,27 @@ Creative Director
 
 ### 5.3 Lower Third Best Practices
 
-| Rule | Why |
-|------|-----|
-| Keep it in the lower left | Standard position, does not block face |
-| Display for 3-5 seconds | Long enough to read, not overstaying |
-| Animate in and out | Smooth entrance and exit (0.3-0.5s) |
-| Use consistent style | Same design for all lower thirds in a video |
-| Safe margins | Keep 5-10% away from screen edges (title safe zone) |
-| Match your brand | Same colors and fonts as your channel identity |
+| Rule                      | Why                                                 |
+| ------------------------- | --------------------------------------------------- |
+| Keep it in the lower left | Standard position, does not block face              |
+| Display for 3-5 seconds   | Long enough to read, not overstaying                |
+| Animate in and out        | Smooth entrance and exit (0.3-0.5s)                 |
+| Use consistent style      | Same design for all lower thirds in a video         |
+| Safe margins              | Keep 5-10% away from screen edges (title safe zone) |
+| Match your brand          | Same colors and fonts as your channel identity      |
 
 ## 6. Text Animations and Callouts
 
 ### 6.1 When to Use On-Screen Text
 
-| Situation | Text Style |
-|-----------|-----------|
-| Emphasizing a key word/phrase | Bold text popup next to speaker |
-| Listing items (Top 5, steps) | Numbered text appearing sequentially |
-| Showing data/statistics | Clean data visualization |
-| Correcting yourself | Strikethrough old text, show correction |
-| Adding humor | Comic-style text, sound effect paired |
-| Translating / clarifying | Subtitle-style at bottom |
+| Situation                     | Text Style                              |
+| ----------------------------- | --------------------------------------- |
+| Emphasizing a key word/phrase | Bold text popup next to speaker         |
+| Listing items (Top 5, steps)  | Numbered text appearing sequentially    |
+| Showing data/statistics       | Clean data visualization                |
+| Correcting yourself           | Strikethrough old text, show correction |
+| Adding humor                  | Comic-style text, sound effect paired   |
+| Translating / clarifying      | Subtitle-style at bottom                |
 
 ### 6.2 Text Callout Styles
 
@@ -305,6 +305,7 @@ Traditional subtitles:                  Modern animated captions:
 ```
 
 Tools for animated captions:
+
 - **CapCut** — Best free auto-caption with animations
 - **Descript** — AI transcription + editing
 - **Premiere Pro Auto Transcribe** — Built-in caption generation
@@ -314,27 +315,27 @@ Tools for animated captions:
 
 ### 7.1 Transitions You Should Actually Use
 
-| Transition | When | How |
-|-----------|------|-----|
-| Hard cut | 95% of cuts | Default, no effect needed |
-| J-Cut / L-Cut | Dialogue scenes, vlogs | Offset audio from video |
-| Cross dissolve | Time passage, dream sequence | 0.5-1.5 second dissolve |
-| Fade to/from black | Scene start/end | 0.5-2 seconds |
-| Zoom cut | YouTube energy, same-angle cuts | Slight zoom in between cuts |
-| Whip pan | Energetic scene change | Fast pan blur between shots |
-| Match cut | Creative storytelling | Match shapes/motion between shots |
+| Transition         | When                            | How                               |
+| ------------------ | ------------------------------- | --------------------------------- |
+| Hard cut           | 95% of cuts                     | Default, no effect needed         |
+| J-Cut / L-Cut      | Dialogue scenes, vlogs          | Offset audio from video           |
+| Cross dissolve     | Time passage, dream sequence    | 0.5-1.5 second dissolve           |
+| Fade to/from black | Scene start/end                 | 0.5-2 seconds                     |
+| Zoom cut           | YouTube energy, same-angle cuts | Slight zoom in between cuts       |
+| Whip pan           | Energetic scene change          | Fast pan blur between shots       |
+| Match cut          | Creative storytelling           | Match shapes/motion between shots |
 
 ### 7.2 Effects That Add Value
 
-| Effect | Use Case | Software |
-|--------|----------|----------|
-| Speed ramp | Dramatic slow-mo to real-time transition | All NLEs |
-| Ken Burns | Pan/zoom on still photos | All NLEs |
-| Split screen | Comparing two things, before/after | All NLEs |
-| Picture-in-picture | Facecam over screen recording | All NLEs |
-| Freeze frame | Pause for emphasis | All NLEs |
-| Zoom to detail | Draw attention to specific area | All NLEs |
-| Screen shake | Impact, earthquake, emphasis | After Effects, Resolve |
+| Effect             | Use Case                                 | Software               |
+| ------------------ | ---------------------------------------- | ---------------------- |
+| Speed ramp         | Dramatic slow-mo to real-time transition | All NLEs               |
+| Ken Burns          | Pan/zoom on still photos                 | All NLEs               |
+| Split screen       | Comparing two things, before/after       | All NLEs               |
+| Picture-in-picture | Facecam over screen recording            | All NLEs               |
+| Freeze frame       | Pause for emphasis                       | All NLEs               |
+| Zoom to detail     | Draw attention to specific area          | All NLEs               |
+| Screen shake       | Impact, earthquake, emphasis             | After Effects, Resolve |
 
 ### 7.3 Speed Ramping
 
@@ -393,27 +394,27 @@ Technique 1: Zoom to code                Technique 2: Highlight box
 
 ### 8.3 Screen Recording Tools
 
-| Tool | Platform | Key Feature | Price |
-|------|----------|-------------|-------|
-| OBS Studio | All | Free, powerful, streaming-ready | Free |
-| ScreenFlow | Mac | Best Mac screen recorder + editor | $169 |
-| Camtasia | All | Screen recording + basic editing | $250 |
-| Loom | All | Quick sharing, webcam overlay | Free tier |
-| macOS Screenshot | Mac | Built-in, Cmd+Shift+5 | Free |
-| Windows Game Bar | Windows | Built-in, Win+G | Free |
+| Tool             | Platform | Key Feature                       | Price     |
+| ---------------- | -------- | --------------------------------- | --------- |
+| OBS Studio       | All      | Free, powerful, streaming-ready   | Free      |
+| ScreenFlow       | Mac      | Best Mac screen recorder + editor | $169      |
+| Camtasia         | All      | Screen recording + basic editing  | $250      |
+| Loom             | All      | Quick sharing, webcam overlay     | Free tier |
+| macOS Screenshot | Mac      | Built-in, Cmd+Shift+5             | Free      |
+| Windows Game Bar | Windows  | Built-in, Win+G                   | Free      |
 
 ## 9. Tools for Motion Graphics
 
 ### 9.1 Tool Comparison
 
-| Tool | Difficulty | Best For | Price |
-|------|-----------|----------|-------|
-| **DaVinci Resolve Fusion** | Hard | Advanced compositing, integrated with editing | Free |
-| **Adobe After Effects** | Hard | Industry standard motion graphics | $23/mo |
-| **Canva** | Easy | Quick thumbnails, simple animations | Free/$13/mo |
-| **CapCut** | Easy | Quick text animations, auto-captions | Free |
-| **Blender** | Very hard | 3D motion graphics | Free |
-| **Motion (Apple)** | Medium | Final Cut Pro integration | $50 |
+| Tool                       | Difficulty | Best For                                      | Price       |
+| -------------------------- | ---------- | --------------------------------------------- | ----------- |
+| **DaVinci Resolve Fusion** | Hard       | Advanced compositing, integrated with editing | Free        |
+| **Adobe After Effects**    | Hard       | Industry standard motion graphics             | $23/mo      |
+| **Canva**                  | Easy       | Quick thumbnails, simple animations           | Free/$13/mo |
+| **CapCut**                 | Easy       | Quick text animations, auto-captions          | Free        |
+| **Blender**                | Very hard  | 3D motion graphics                            | Free        |
+| **Motion (Apple)**         | Medium     | Final Cut Pro integration                     | $50         |
 
 ### 9.2 Recommended Path
 
@@ -441,13 +442,13 @@ Expert:
 
 ### 9.3 Free Resources for Motion Graphics Templates
 
-| Source | What They Offer |
-|--------|----------------|
-| Mixkit | Free video templates, After Effects templates |
-| Motion Array (free section) | Premiere, Resolve, After Effects templates |
-| Envato Elements | $16.50/mo for unlimited templates (all Adobe + Resolve) |
-| Panzoid | Free 3D intro maker (web-based) |
-| Canva | Free animated social media templates |
+| Source                      | What They Offer                                         |
+| --------------------------- | ------------------------------------------------------- |
+| Mixkit                      | Free video templates, After Effects templates           |
+| Motion Array (free section) | Premiere, Resolve, After Effects templates              |
+| Envato Elements             | $16.50/mo for unlimited templates (all Adobe + Resolve) |
+| Panzoid                     | Free 3D intro maker (web-based)                         |
+| Canva                       | Free animated social media templates                    |
 
 ## 10. Building a Motion Graphics Library
 
@@ -496,14 +497,14 @@ New video:
 
 ### 10.3 Consistency Is Your Brand
 
-| Element | Keep Consistent |
-|---------|----------------|
-| Fonts | Same 1-2 fonts in every video |
-| Colors | Same 2-3 brand colors |
-| Animation style | Same entrance/exit animations |
+| Element            | Keep Consistent                    |
+| ------------------ | ---------------------------------- |
+| Fonts              | Same 1-2 fonts in every video      |
+| Colors             | Same 2-3 brand colors              |
+| Animation style    | Same entrance/exit animations      |
 | Lower third design | Identical design, just change text |
-| Music style | Similar genre and energy level |
-| Thumbnail style | Recognizable at a glance |
+| Music style        | Similar genre and energy level     |
+| Thumbnail style    | Recognizable at a glance           |
 
 > **The goal**: A viewer should be able to identify your video from the graphics alone,
 > before even seeing your face or reading the title. That is brand recognition.

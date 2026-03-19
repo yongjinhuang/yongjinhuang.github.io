@@ -60,6 +60,7 @@ Quantitative trading sits at the intersection of finance, mathematics, statistic
 ```
 
 You cannot build trading models without understanding:
+
 - **What** you are trading (stocks, futures, options, forex, crypto)
 - **Where** trades happen (exchanges, dark pools, OTC)
 - **How** prices move (supply/demand, order flow, information)
@@ -218,28 +219,31 @@ C++:    Production execution, low-latency, HFT
 ## Recommended Book List
 
 ### Beginner
-| Book | Author | Focus |
-|------|--------|-------|
-| *Options, Futures, and Other Derivatives* | John Hull | Derivatives fundamentals |
-| *A Random Walk Down Wall Street* | Burton Malkiel | Market efficiency concepts |
-| *Quantitative Trading* | Ernest Chan | Practical quant strategy intro |
-| *Python for Finance* | Yves Hilpisch | Python tooling for finance |
+
+| Book                                      | Author         | Focus                          |
+| ----------------------------------------- | -------------- | ------------------------------ |
+| _Options, Futures, and Other Derivatives_ | John Hull      | Derivatives fundamentals       |
+| _A Random Walk Down Wall Street_          | Burton Malkiel | Market efficiency concepts     |
+| _Quantitative Trading_                    | Ernest Chan    | Practical quant strategy intro |
+| _Python for Finance_                      | Yves Hilpisch  | Python tooling for finance     |
 
 ### Intermediate
-| Book | Author | Focus |
-|------|--------|-------|
-| *Advances in Financial ML* | Marcos Lopez de Prado | ML applied to finance |
-| *Algorithmic Trading* | Ernest Chan | Strategy implementation |
-| *Trading and Exchanges* | Larry Harris | Market microstructure |
-| *Paul Wilmott on Quantitative Finance* | Paul Wilmott | Quant finance theory |
+
+| Book                                   | Author                | Focus                   |
+| -------------------------------------- | --------------------- | ----------------------- |
+| _Advances in Financial ML_             | Marcos Lopez de Prado | ML applied to finance   |
+| _Algorithmic Trading_                  | Ernest Chan           | Strategy implementation |
+| _Trading and Exchanges_                | Larry Harris          | Market microstructure   |
+| _Paul Wilmott on Quantitative Finance_ | Paul Wilmott          | Quant finance theory    |
 
 ### Advanced
-| Book | Author | Focus |
-|------|--------|-------|
-| *Stochastic Calculus for Finance I & II* | Steven Shreve | Mathematical foundations |
-| *Market Microstructure Theory* | Maureen O'Hara | Microstructure deep dive |
-| *Active Portfolio Management* | Grinold & Kahn | Factor models & alpha |
-| *The Concepts and Practice of Mathematical Finance* | Mark Joshi | Derivatives pricing |
+
+| Book                                                | Author         | Focus                    |
+| --------------------------------------------------- | -------------- | ------------------------ |
+| _Stochastic Calculus for Finance I & II_            | Steven Shreve  | Mathematical foundations |
+| _Market Microstructure Theory_                      | Maureen O'Hara | Microstructure deep dive |
+| _Active Portfolio Management_                       | Grinold & Kahn | Factor models & alpha    |
+| _The Concepts and Practice of Mathematical Finance_ | Mark Joshi     | Derivatives pricing      |
 
 ---
 

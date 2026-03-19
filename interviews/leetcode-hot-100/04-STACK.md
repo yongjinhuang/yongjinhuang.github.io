@@ -7,18 +7,22 @@ Stack problems are among the most versatile in coding interviews. The key insigh
 ## Core Stack Patterns
 
 ### 1. Matching / Balancing
+
 Use a stack to match opening and closing delimiters. Push openers, pop on closers, and validate the match.
 
 ### 2. Monotonic Stack
+
 Maintain a stack where elements are in strictly increasing or decreasing order. This efficiently solves "next greater/smaller element" problems in O(n) time instead of O(n^2).
 
-- **Monotonic Decreasing Stack**: Find the *next greater* element. Pop when current > top.
-- **Monotonic Increasing Stack**: Find the *next smaller* element. Pop when current < top.
+- **Monotonic Decreasing Stack**: Find the _next greater_ element. Pop when current > top.
+- **Monotonic Increasing Stack**: Find the _next smaller_ element. Pop when current < top.
 
 ### 3. Simulation / Evaluation
+
 Use a stack to simulate processes that require backtracking or deferred evaluation (e.g., RPN, calculators).
 
 ### 4. Generation / Backtracking
+
 Use a stack (or recursion, which is an implicit stack) to generate valid combinations by tracking state.
 
 ---
@@ -56,6 +60,7 @@ def is_valid(s: str) -> bool:
 **Time**: O(n) - single pass through the string
 **Space**: O(n) - stack can hold up to n/2 openers
 **Edge Cases**:
+
 - Empty string -> True
 - Single character -> False
 - Only openers `"((("` -> False
@@ -100,6 +105,7 @@ class MinStack:
 **Time**: O(1) for all operations
 **Space**: O(n) - each element stores a tuple
 **Edge Cases**:
+
 - Push a single element then `getMin` -> returns that element
 - All elements the same -> min never changes
 - Push decreasing values then pop them -> min updates correctly on pop
@@ -115,7 +121,7 @@ class MinStack:
 
 ### Approach
 
-Walk through the tokens. If it is a number, push it. If it is an operator, pop two operands (the second popped is the *left* operand), apply the operator, and push the result. The final answer is the single value left on the stack.
+Walk through the tokens. If it is a number, push it. If it is an operator, pop two operands (the second popped is the _left_ operand), apply the operator, and push the result. The final answer is the single value left on the stack.
 
 Python's `//` rounds toward negative infinity, but the problem requires truncation toward zero, so use `int(a / b)` instead.
 
@@ -147,6 +153,7 @@ def eval_rpn(tokens: list[str]) -> int:
 **Time**: O(n) - single pass through tokens
 **Space**: O(n) - stack holds intermediate results
 **Edge Cases**:
+
 - Single number `["42"]` -> returns `42`
 - Negative numbers `["-3", "4", "+"]` -> returns `1`
 - Division truncation toward zero: `7 / -2` = `-3`, not `-4`
@@ -163,6 +170,7 @@ def eval_rpn(tokens: list[str]) -> int:
 ### Approach
 
 Use backtracking with two counters: `open_count` and `close_count`. At each step:
+
 - If `open_count < n`, we can add `(`.
 - If `close_count < open_count`, we can add `)`.
 - If `open_count == close_count == n`, we have a valid combination.
@@ -197,6 +205,7 @@ def generate_parenthesis(n: int) -> list[str]:
 **Time**: O(4^n / sqrt(n)) - the nth Catalan number bounds the valid combinations
 **Space**: O(n) - recursion depth is 2n, and each path builds a string of length 2n
 **Edge Cases**:
+
 - `n = 0` -> `[]`
 - `n = 1` -> `["()"]`
 - `n = 2` -> `["(())", "()()"]`
@@ -234,6 +243,7 @@ def daily_temperatures(temperatures: list[int]) -> list[int]:
 **Time**: O(n) - each index is pushed and popped at most once
 **Space**: O(n) - stack can hold all indices in the worst case (descending input)
 **Edge Cases**:
+
 - Strictly decreasing temperatures -> all zeros
 - Strictly increasing temperatures -> all ones except last (which is zero)
 - All temperatures identical -> all zeros
@@ -274,6 +284,7 @@ def car_fleet(target: int, position: list[int], speed: list[int]) -> int:
 **Time**: O(n log n) - dominated by the sort
 **Space**: O(n) - for the sorted pairs
 **Edge Cases**:
+
 - Single car -> 1 fleet
 - All cars at same position with same speed -> 1 fleet
 - All cars at different positions with same speed -> n fleets (no car catches another)
@@ -322,6 +333,7 @@ def largest_rectangle_area(heights: list[int]) -> int:
 **Time**: O(n) - each bar is pushed and popped at most once
 **Space**: O(n) - stack space
 **Edge Cases**:
+
 - Single bar `[5]` -> area is `5`
 - All bars same height `[3, 3, 3]` -> area is `3 * 3 = 9`
 - Strictly increasing `[1, 2, 3]` -> area is `4` (middle two bars)
@@ -333,15 +345,15 @@ def largest_rectangle_area(heights: list[int]) -> int:
 
 ## Summary Table
 
-| # | Problem | Difficulty | Pattern | Time | Space |
-|---|---------|------------|---------|------|-------|
-| 20 | Valid Parentheses | Easy | Matching | O(n) | O(n) |
-| 155 | Min Stack | Medium | Auxiliary Stack | O(1) | O(n) |
-| 150 | Evaluate RPN | Medium | Simulation | O(n) | O(n) |
-| 22 | Generate Parentheses | Medium | Backtracking | O(4^n/sqrt(n)) | O(n) |
-| 739 | Daily Temperatures | Medium | Monotonic Stack | O(n) | O(n) |
-| 853 | Car Fleet | Medium | Sort + Stack | O(n log n) | O(n) |
-| 84 | Largest Rectangle | Hard | Monotonic Stack | O(n) | O(n) |
+| #   | Problem              | Difficulty | Pattern         | Time           | Space |
+| --- | -------------------- | ---------- | --------------- | -------------- | ----- |
+| 20  | Valid Parentheses    | Easy       | Matching        | O(n)           | O(n)  |
+| 155 | Min Stack            | Medium     | Auxiliary Stack | O(1)           | O(n)  |
+| 150 | Evaluate RPN         | Medium     | Simulation      | O(n)           | O(n)  |
+| 22  | Generate Parentheses | Medium     | Backtracking    | O(4^n/sqrt(n)) | O(n)  |
+| 739 | Daily Temperatures   | Medium     | Monotonic Stack | O(n)           | O(n)  |
+| 853 | Car Fleet            | Medium     | Sort + Stack    | O(n log n)     | O(n)  |
+| 84  | Largest Rectangle    | Hard       | Monotonic Stack | O(n)           | O(n)  |
 
 ## Key Takeaways
 

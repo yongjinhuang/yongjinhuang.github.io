@@ -41,34 +41,34 @@
 
 ### 功能性需求
 
-| 类别 | 需求 |
-|------|------|
-| Agent 管理 | 创建、配置、部署和版本化 agent，支持自定义 system prompt 和工具集 |
-| 任务执行 | 向 agent 提交任务，跟踪执行状态，获取结果 |
-| 工具注册表 | 注册、版本化和调用外部工具（API、代码执行、搜索） |
-| Memory 管理 | 短期对话 memory、长期基于向量的 memory、情景回忆 |
-| Multi-Agent 编排 | 定义 agent 工作流，支持 supervisor、peer-to-peer 和层级模式 |
-| 模型路由 | 根据任务复杂度和成本目标将请求路由到合适的 LLM |
-| Streaming | 通过 Server-Sent Events 实现实时渐进式响应和 tool call streaming |
-| Human-in-the-Loop | 审批门控、升级路径、任务执行期间的反馈收集 |
-| 可观测性 | Token 用量追踪、延迟追踪、成本归因、审计日志 |
-| 评估 | 评估任务成功率、输出忠实度、tool call 准确率 |
-| Guardrails | 输入/输出验证、内容过滤、PII 检测、prompt injection 防御 |
+| 类别              | 需求                                                              |
+| ----------------- | ----------------------------------------------------------------- |
+| Agent 管理        | 创建、配置、部署和版本化 agent，支持自定义 system prompt 和工具集 |
+| 任务执行          | 向 agent 提交任务，跟踪执行状态，获取结果                         |
+| 工具注册表        | 注册、版本化和调用外部工具（API、代码执行、搜索）                 |
+| Memory 管理       | 短期对话 memory、长期基于向量的 memory、情景回忆                  |
+| Multi-Agent 编排  | 定义 agent 工作流，支持 supervisor、peer-to-peer 和层级模式       |
+| 模型路由          | 根据任务复杂度和成本目标将请求路由到合适的 LLM                    |
+| Streaming         | 通过 Server-Sent Events 实现实时渐进式响应和 tool call streaming  |
+| Human-in-the-Loop | 审批门控、升级路径、任务执行期间的反馈收集                        |
+| 可观测性          | Token 用量追踪、延迟追踪、成本归因、审计日志                      |
+| 评估              | 评估任务成功率、输出忠实度、tool call 准确率                      |
+| Guardrails        | 输入/输出验证、内容过滤、PII 检测、prompt injection 防御          |
 
 ### 非功能性需求
 
-| 需求 | 目标 |
-|------|------|
-| 任务完成延迟（简单） | < 30 秒 |
-| 任务完成延迟（复杂多步） | < 5 分钟 |
-| 可用性 | 99.9% 正常运行时间（< 8.7 小时停机/年） |
-| 吞吐量 | 10,000 并发 agent 会话 |
-| 简单 agent 任务成本 | < $0.10 |
-| 有害输出率 | < 0.1% |
-| Token 效率 | > 70% 有效 token（最小化填充上下文） |
-| 工具执行沙箱隔离 | 每次调用完全进程级隔离 |
-| 审计日志保留 | 最少 90 天 |
-| LLM 提供商故障转移 | 主提供商故障时 < 5 秒 |
+| 需求                     | 目标                                    |
+| ------------------------ | --------------------------------------- |
+| 任务完成延迟（简单）     | < 30 秒                                 |
+| 任务完成延迟（复杂多步） | < 5 分钟                                |
+| 可用性                   | 99.9% 正常运行时间（< 8.7 小时停机/年） |
+| 吞吐量                   | 10,000 并发 agent 会话                  |
+| 简单 agent 任务成本      | < $0.10                                 |
+| 有害输出率               | < 0.1%                                  |
+| Token 效率               | > 70% 有效 token（最小化填充上下文）    |
+| 工具执行沙箱隔离         | 每次调用完全进程级隔离                  |
+| 审计日志保留             | 最少 90 天                              |
+| LLM 提供商故障转移       | 主提供商故障时 < 5 秒                   |
 
 ### 规模估算
 
@@ -125,6 +125,7 @@ POST   /v1/agents/{agent_id}/versions
 ```
 
 **创建 Agent 请求：**
+
 ```json
 {
   "name": "research-assistant",
@@ -149,7 +150,7 @@ POST   /v1/agents/{agent_id}/versions
   },
   "token_budget": {
     "max_tokens_per_task": 100000,
-    "max_cost_per_task_usd": 0.10
+    "max_cost_per_task_usd": 0.1
   }
 }
 ```
@@ -180,6 +181,7 @@ POST   /v1/tasks/{task_id}/approve
 ```
 
 **提交任务请求：**
+
 ```json
 {
   "agent_id": "agent_abc123",
@@ -198,6 +200,7 @@ POST   /v1/tasks/{task_id}/approve
 ```
 
 **任务响应：**
+
 ```json
 {
   "task_id": "task_def456",
@@ -251,6 +254,7 @@ POST   /v1/tools/{tool_id}/test
 ```
 
 **注册工具请求：**
+
 ```json
 {
   "name": "web_search",
@@ -259,8 +263,8 @@ POST   /v1/tools/{tool_id}/test
   "input_schema": {
     "type": "object",
     "properties": {
-      "query": {"type": "string", "description": "Search query"},
-      "num_results": {"type": "integer", "default": 5, "maximum": 20}
+      "query": { "type": "string", "description": "Search query" },
+      "num_results": { "type": "integer", "default": 5, "maximum": 20 }
     },
     "required": ["query"]
   },
@@ -269,16 +273,16 @@ POST   /v1/tools/{tool_id}/test
     "items": {
       "type": "object",
       "properties": {
-        "title": {"type": "string"},
-        "url": {"type": "string"},
-        "snippet": {"type": "string"}
+        "title": { "type": "string" },
+        "url": { "type": "string" },
+        "snippet": { "type": "string" }
       }
     }
   },
   "execution": {
     "type": "http",
     "endpoint": "https://search-service.internal/search",
-    "auth": {"type": "api_key", "secret_ref": "secrets/search-api-key"},
+    "auth": { "type": "api_key", "secret_ref": "secrets/search-api-key" },
     "timeout_ms": 5000,
     "sandbox": "network_only"
   },
@@ -311,6 +315,7 @@ POST   /v1/memory/episodic/recall
 ```
 
 **长期 Memory 查询：**
+
 ```json
 {
   "query": "transformer efficiency techniques",
@@ -774,12 +779,12 @@ Agent 对自己的输出进行批评并迭代改进。
 
 ### 架构选择指南
 
-| 架构 | 最适合 | 模型成本 | 延迟 |
-|------|--------|---------|------|
-| ReAct | 动态、探索性任务 | 中等 | 低-中 |
-| Plan-and-Execute | 结构化、多步骤任务 | 中-高 | 中等 |
-| Tree-of-Thought | 创造性、优化任务 | 高 | 高 |
-| Reflection | 质量关键的单一输出 | 中-高 | 中-高 |
+| 架构             | 最适合             | 模型成本 | 延迟  |
+| ---------------- | ------------------ | -------- | ----- |
+| ReAct            | 动态、探索性任务   | 中等     | 低-中 |
+| Plan-and-Execute | 结构化、多步骤任务 | 中-高    | 中等  |
+| Tree-of-Thought  | 创造性、优化任务   | 高       | 高    |
+| Reflection       | 质量关键的单一输出 | 中-高    | 中-高 |
 
 ---
 
@@ -1151,14 +1156,14 @@ LLM 响应包含并行 tool call：
 
 ### 模型层级和使用场景
 
-| 模型 | 提供商 | 上下文 | 成本（每 1M token 输入/输出） | 最适合 |
-|------|--------|--------|------------------------------|--------|
-| Haiku 3.5 | Anthropic | 200K | $0.80 / $4.00 | 简单问答、分类、短文本改写 |
-| Sonnet 4 | Anthropic | 200K | $3.00 / $15.00 | 复杂推理、代码、多步骤任务 |
-| Opus 4 | Anthropic | 200K | $15.00 / $75.00 | 最困难的任务、架构决策、研究 |
-| GPT-4o mini | OpenAI | 128K | $0.15 / $0.60 | 快速、低成本响应 |
-| GPT-4o | OpenAI | 128K | $2.50 / $10.00 | 通用目的 |
-| Gemini Flash | Google | 1M | $0.075 / $0.30 | 超长上下文、低成本任务 |
+| 模型         | 提供商    | 上下文 | 成本（每 1M token 输入/输出） | 最适合                       |
+| ------------ | --------- | ------ | ----------------------------- | ---------------------------- |
+| Haiku 3.5    | Anthropic | 200K   | $0.80 / $4.00                 | 简单问答、分类、短文本改写   |
+| Sonnet 4     | Anthropic | 200K   | $3.00 / $15.00                | 复杂推理、代码、多步骤任务   |
+| Opus 4       | Anthropic | 200K   | $15.00 / $75.00               | 最困难的任务、架构决策、研究 |
+| GPT-4o mini  | OpenAI    | 128K   | $0.15 / $0.60                 | 快速、低成本响应             |
+| GPT-4o       | OpenAI    | 128K   | $2.50 / $10.00                | 通用目的                     |
+| Gemini Flash | Google    | 1M     | $0.075 / $0.30                | 超长上下文、低成本任务       |
 
 ### 模型路由决策树
 
@@ -1541,6 +1546,7 @@ POST /v1/tasks/{task_id}/feedback
 ```
 
 反馈被存储并用于：
+
 - 微调 agent system prompt（prompt 优化）
 - 调整审批阈值策略
 - 训练用于自动评估的奖励模型
@@ -2051,20 +2057,20 @@ LLM 调用量：
 
 ## 与现有平台的对比
 
-| 特性 | LangGraph | CrewAI | AutoGen | Claude Agent SDK | 我们的平台 |
-|------|-----------|--------|---------|------------------|-----------|
-| 主要抽象 | 基于图的工作流 | 基于角色的 agent | 基于对话的 | 工具使用 agent | 统一任务执行 |
-| Multi-agent | 是（图边） | 是（crew/role） | 是（对话） | 是（子 agent） | 是（所有模式） |
-| Memory | 基础（状态图） | 基础 | 基础 | 短期 | 短期/长期/情景 |
-| 模型无关 | 是 | 是 | 是 | Anthropic 优先 | 是（多提供商） |
-| Streaming | 是 | 部分 | 否 | 是 | 是（SSE） |
-| Human-in-loop | 是 | 部分 | 是 | 是 | 是（审批门控） |
-| Guardrails | 社区插件 | 有限 | 有限 | 内置 | 生产级 |
-| 可观测性 | LangSmith | 有限 | 有限 | Anthropic 控制台 | 全栈 |
-| 部署 | 自托管 | 自托管 | 自托管 | 托管 | 托管 + 自托管 |
-| 成本优化 | 手动 | 手动 | 手动 | Prompt caching | 自动级联 |
-| 工具沙箱 | 无 | 无 | 无 | 部分 | 完全隔离 |
-| 生产规模 | 取决于部署 | 取决于 | 取决于 | Anthropic 基础设施 | 设计支持 10K+ |
+| 特性          | LangGraph      | CrewAI           | AutoGen    | Claude Agent SDK   | 我们的平台     |
+| ------------- | -------------- | ---------------- | ---------- | ------------------ | -------------- |
+| 主要抽象      | 基于图的工作流 | 基于角色的 agent | 基于对话的 | 工具使用 agent     | 统一任务执行   |
+| Multi-agent   | 是（图边）     | 是（crew/role）  | 是（对话） | 是（子 agent）     | 是（所有模式） |
+| Memory        | 基础（状态图） | 基础             | 基础       | 短期               | 短期/长期/情景 |
+| 模型无关      | 是             | 是               | 是         | Anthropic 优先     | 是（多提供商） |
+| Streaming     | 是             | 部分             | 否         | 是                 | 是（SSE）      |
+| Human-in-loop | 是             | 部分             | 是         | 是                 | 是（审批门控） |
+| Guardrails    | 社区插件       | 有限             | 有限       | 内置               | 生产级         |
+| 可观测性      | LangSmith      | 有限             | 有限       | Anthropic 控制台   | 全栈           |
+| 部署          | 自托管         | 自托管           | 自托管     | 托管               | 托管 + 自托管  |
+| 成本优化      | 手动           | 手动             | 手动       | Prompt caching     | 自动级联       |
+| 工具沙箱      | 无             | 无               | 无         | 部分               | 完全隔离       |
+| 生产规模      | 取决于部署     | 取决于           | 取决于     | Anthropic 基础设施 | 设计支持 10K+  |
 
 ### 我们平台的关键差异化优势
 
@@ -2100,15 +2106,15 @@ vs. Claude Agent SDK：
 
 ### 关键设计权衡
 
-| 决策 | 选项 A | 选项 B | 选择 | 理由 |
-|------|--------|--------|------|------|
-| Agent 状态存储 | 内存中（快） | 持久化（可靠） | 持久化 + 缓存 | Agent 任务可能长时间运行；必须能够在重启后存活 |
-| 工具执行 | 进程内（快） | 沙箱化（安全） | 沙箱化 | 安全性不可妥协；工具延迟是可接受的 |
-| Memory 检索 | 总是检索 | 按需检索 | 按需（agentic） | 减少不必要的上下文膨胀和成本 |
-| LLM 路由 | 静态规则 | 基于 ML 的路由 | 静态 + 学习规则 | 从简单开始，随着数据积累添加 ML |
-| Streaming | WebSocket | SSE | SSE | SSE 更简单，足以满足单向 streaming |
-| 审批流程 | 同步（阻塞） | 异步（回调） | 异步 | 等待人类时不要占用资源 |
-| 评估 | 仅人工 | LLM-as-judge | 两者 | LLM-as-judge 用于规模化，人工用于校准 |
+| 决策           | 选项 A       | 选项 B         | 选择            | 理由                                           |
+| -------------- | ------------ | -------------- | --------------- | ---------------------------------------------- |
+| Agent 状态存储 | 内存中（快） | 持久化（可靠） | 持久化 + 缓存   | Agent 任务可能长时间运行；必须能够在重启后存活 |
+| 工具执行       | 进程内（快） | 沙箱化（安全） | 沙箱化          | 安全性不可妥协；工具延迟是可接受的             |
+| Memory 检索    | 总是检索     | 按需检索       | 按需（agentic） | 减少不必要的上下文膨胀和成本                   |
+| LLM 路由       | 静态规则     | 基于 ML 的路由 | 静态 + 学习规则 | 从简单开始，随着数据积累添加 ML                |
+| Streaming      | WebSocket    | SSE            | SSE             | SSE 更简单，足以满足单向 streaming             |
+| 审批流程       | 同步（阻塞） | 异步（回调）   | 异步            | 等待人类时不要占用资源                         |
+| 评估           | 仅人工       | LLM-as-judge   | 两者            | LLM-as-judge 用于规模化，人工用于校准          |
 
 ### 一致性 vs. 可用性权衡
 
@@ -2352,4 +2358,4 @@ vs. Claude Agent SDK：
 
 ---
 
-*本文档涵盖了反映 2025-2026 年行业最佳实践的生产级 AI Agent 编排平台设计。主题包括完整的 agentic 技术栈：从 ReAct 循环和 multi-agent 协调到 memory 系统、guardrails、成本优化和企业级部署。*
+_本文档涵盖了反映 2025-2026 年行业最佳实践的生产级 AI Agent 编排平台设计。主题包括完整的 agentic 技术栈：从 ReAct 循环和 multi-agent 协调到 memory 系统、guardrails、成本优化和企业级部署。_

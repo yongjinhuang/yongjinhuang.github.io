@@ -51,6 +51,7 @@ Think of Kubernetes as a **database-backed control loop system**:
 The API server is the **front door** to the entire cluster. It is a REST API server that exposes the Kubernetes API. Everything — kubectl, controllers, kubelet, external tools — talks to the API server via HTTPS.
 
 **What it does:**
+
 - Serves the Kubernetes REST API (CRUD on all resources)
 - Authenticates and authorizes every request
 - Runs admission controllers (mutating and validating)
@@ -132,12 +133,14 @@ etcd uses Raft to maintain consistency across multiple nodes. Here is how it wor
 ```
 
 **Why 3 or 5 nodes:**
+
 - 3 nodes: tolerates 1 failure (quorum = 2)
 - 5 nodes: tolerates 2 failures (quorum = 3)
 - 7 nodes: tolerates 3 failures but higher write latency — rarely used
 - Even numbers are NEVER recommended (split-brain risk with no benefit)
 
 **Performance requirements:**
+
 - Disk latency: < 10ms for 99th percentile (SSD strongly recommended)
 - Network latency: < 10ms between etcd members
 - Database size: default limit 2GB (can increase to 8GB, but reconsider your approach)
@@ -175,6 +178,7 @@ etcdctl defrag --cluster
 ```
 
 **etcd compaction and snapshots:**
+
 - Kubernetes automatically compacts etcd (removes old revisions)
 - Default: retains 5 minutes of history
 - Snapshots are periodic disk writes of the entire database
@@ -238,8 +242,8 @@ metadata:
 spec:
   schedulerName: my-custom-scheduler
   containers:
-  - name: app
-    image: nginx
+    - name: app
+      image: nginx
 ```
 
 ### 1.4 kube-controller-manager
@@ -259,20 +263,20 @@ while true:
 
 **Key controllers and what they do:**
 
-| Controller | Watches | Creates/Manages |
-|-----------|---------|-----------------|
-| Deployment | Deployments | ReplicaSets |
-| ReplicaSet | ReplicaSets | Pods |
-| StatefulSet | StatefulSets | Pods + PVCs |
-| DaemonSet | DaemonSets | Pods (one per node) |
-| Job | Jobs | Pods |
-| CronJob | CronJobs | Jobs |
-| Node | Nodes | Node status, eviction |
-| EndpointSlice | Services + Pods | EndpointSlices |
-| ServiceAccount | Namespaces | Default ServiceAccounts |
-| Namespace | Namespaces | Cleanup on deletion |
-| PV Binder | PVCs | PV-PVC bindings |
-| Garbage Collector | Owner references | Cascading deletions |
+| Controller        | Watches          | Creates/Manages         |
+| ----------------- | ---------------- | ----------------------- |
+| Deployment        | Deployments      | ReplicaSets             |
+| ReplicaSet        | ReplicaSets      | Pods                    |
+| StatefulSet       | StatefulSets     | Pods + PVCs             |
+| DaemonSet         | DaemonSets       | Pods (one per node)     |
+| Job               | Jobs             | Pods                    |
+| CronJob           | CronJobs         | Jobs                    |
+| Node              | Nodes            | Node status, eviction   |
+| EndpointSlice     | Services + Pods  | EndpointSlices          |
+| ServiceAccount    | Namespaces       | Default ServiceAccounts |
+| Namespace         | Namespaces       | Cleanup on deletion     |
+| PV Binder         | PVCs             | PV-PVC bindings         |
+| Garbage Collector | Owner references | Cascading deletions     |
 
 **Leader election:** In HA setups, only one controller manager instance is active (the leader). Others are on standby. Leader election uses a Lease object in kube-system.
 
@@ -301,6 +305,7 @@ This separation allows cloud providers to develop and release their controllers 
 The kubelet is an **agent that runs on every node**. It is NOT a pod — it runs as a systemd service directly on the host. It ensures that containers described in PodSpecs are running and healthy.
 
 **What the kubelet does:**
+
 - Registers the node with the API server
 - Watches the API server for pods assigned to its node
 - Pulls container images via the container runtime
@@ -347,11 +352,11 @@ kube-proxy maintains **network rules on each node** that implement Services. Whe
 
 **Three modes:**
 
-| Mode | Mechanism | Performance | When to Use |
-|------|-----------|-------------|-------------|
-| **iptables** (default) | iptables NAT rules | O(n) rules, random backend selection | Default, works everywhere |
-| **IPVS** | Linux IPVS (kernel module) | O(1) lookup, multiple algorithms (rr, lc, sh) | Large clusters (1000+ services) |
-| **nftables** (1.31+) | nftables rules | Modern replacement for iptables | New clusters on modern kernels |
+| Mode                   | Mechanism                  | Performance                                   | When to Use                     |
+| ---------------------- | -------------------------- | --------------------------------------------- | ------------------------------- |
+| **iptables** (default) | iptables NAT rules         | O(n) rules, random backend selection          | Default, works everywhere       |
+| **IPVS**               | Linux IPVS (kernel module) | O(1) lookup, multiple algorithms (rr, lc, sh) | Large clusters (1000+ services) |
+| **nftables** (1.31+)   | nftables rules             | Modern replacement for iptables               | New clusters on modern kernels  |
 
 ```bash
 # Check kube-proxy mode
@@ -367,12 +372,12 @@ iptables -t nat -L KUBE-SERVICES -n
 
 The container runtime is responsible for pulling images, creating containers, and managing their lifecycle. It implements the CRI interface.
 
-| Runtime | Description | Used By |
-|---------|-------------|---------|
-| **containerd** | Industry standard, extracted from Docker | Most K8s distributions, EKS, GKE, AKS |
-| **CRI-O** | Purpose-built for Kubernetes | OpenShift, some bare-metal deployments |
-| **gVisor (runsc)** | Sandboxed runtime (application kernel) | GKE Sandbox, security-sensitive workloads |
-| **Kata Containers** | Lightweight VM-based isolation | High-security, multi-tenant environments |
+| Runtime             | Description                              | Used By                                   |
+| ------------------- | ---------------------------------------- | ----------------------------------------- |
+| **containerd**      | Industry standard, extracted from Docker | Most K8s distributions, EKS, GKE, AKS     |
+| **CRI-O**           | Purpose-built for Kubernetes             | OpenShift, some bare-metal deployments    |
+| **gVisor (runsc)**  | Sandboxed runtime (application kernel)   | GKE Sandbox, security-sensitive workloads |
+| **Kata Containers** | Lightweight VM-based isolation           | High-security, multi-tenant environments  |
 
 ---
 
@@ -571,11 +576,11 @@ kubectl taint nodes node1 key=value:NoSchedule-
 
 **Taint effects:**
 
-| Effect | Behavior |
-|--------|----------|
-| `NoSchedule` | New pods without toleration will not be scheduled here |
+| Effect             | Behavior                                                 |
+| ------------------ | -------------------------------------------------------- |
+| `NoSchedule`       | New pods without toleration will not be scheduled here   |
 | `PreferNoSchedule` | Scheduler tries to avoid but may place if no alternative |
-| `NoExecute` | Existing pods without toleration are evicted |
+| `NoExecute`        | Existing pods without toleration are evicted             |
 
 **Built-in taints (set automatically by Kubernetes):**
 
@@ -599,16 +604,16 @@ Admission controllers intercept requests to the API server **after** authenticat
 
 **Order:** Mutating → Schema Validation → Validating
 
-| Controller | Type | What It Does |
-|-----------|------|-------------|
-| NamespaceLifecycle | Validating | Rejects requests to non-existent namespaces |
-| LimitRanger | Mutating | Sets default resource requests/limits |
-| ServiceAccount | Mutating | Adds default SA and token mount |
-| ResourceQuota | Validating | Enforces namespace resource quotas |
-| PodSecurity | Validating | Enforces pod security standards |
-| MutatingAdmissionWebhook | Mutating | Calls external webhooks that can modify objects |
+| Controller                 | Type       | What It Does                                    |
+| -------------------------- | ---------- | ----------------------------------------------- |
+| NamespaceLifecycle         | Validating | Rejects requests to non-existent namespaces     |
+| LimitRanger                | Mutating   | Sets default resource requests/limits           |
+| ServiceAccount             | Mutating   | Adds default SA and token mount                 |
+| ResourceQuota              | Validating | Enforces namespace resource quotas              |
+| PodSecurity                | Validating | Enforces pod security standards                 |
+| MutatingAdmissionWebhook   | Mutating   | Calls external webhooks that can modify objects |
 | ValidatingAdmissionWebhook | Validating | Calls external webhooks that can reject objects |
-| NodeRestriction | Validating | Limits what kubelets can modify |
+| NodeRestriction            | Validating | Limits what kubelets can modify                 |
 
 **Dynamic admission webhooks** are how external tools (Istio sidecar injection, Vault agent injection, OPA Gatekeeper) hook into the API request lifecycle.
 
@@ -688,13 +693,13 @@ If more than half of etcd members go down simultaneously (e.g., 2 of 3), the clu
 
 ## 10. Quick Reference
 
-| Component | Runs On | Stateless? | HA Method | Failure Impact |
-|-----------|---------|-----------|-----------|----------------|
-| kube-apiserver | Control plane | Yes | Load balancer + multiple instances | No API access |
-| etcd | Control plane (or dedicated) | No | Raft consensus (3 or 5 members) | No state persistence |
-| kube-scheduler | Control plane | Yes | Leader election | No new pod scheduling |
-| kube-controller-manager | Control plane | Yes | Leader election | No reconciliation |
-| cloud-controller-manager | Control plane | Yes | Leader election | No cloud resource management |
-| kubelet | Every node | Yes | One per node | Node's pods are not managed |
-| kube-proxy | Every node | Yes | One per node | Service routing breaks on that node |
-| Container runtime | Every node | Yes | One per node | Cannot create containers on that node |
+| Component                | Runs On                      | Stateless? | HA Method                          | Failure Impact                        |
+| ------------------------ | ---------------------------- | ---------- | ---------------------------------- | ------------------------------------- |
+| kube-apiserver           | Control plane                | Yes        | Load balancer + multiple instances | No API access                         |
+| etcd                     | Control plane (or dedicated) | No         | Raft consensus (3 or 5 members)    | No state persistence                  |
+| kube-scheduler           | Control plane                | Yes        | Leader election                    | No new pod scheduling                 |
+| kube-controller-manager  | Control plane                | Yes        | Leader election                    | No reconciliation                     |
+| cloud-controller-manager | Control plane                | Yes        | Leader election                    | No cloud resource management          |
+| kubelet                  | Every node                   | Yes        | One per node                       | Node's pods are not managed           |
+| kube-proxy               | Every node                   | Yes        | One per node                       | Service routing breaks on that node   |
+| Container runtime        | Every node                   | Yes        | One per node                       | Cannot create containers on that node |

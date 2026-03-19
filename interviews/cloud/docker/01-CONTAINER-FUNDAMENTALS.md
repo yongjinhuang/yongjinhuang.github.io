@@ -23,15 +23,15 @@ Virtual Machine                          Container
 +---------------------------+            +---------------------------+
 ```
 
-| Aspect | Virtual Machine | Container |
-|--------|----------------|-----------|
-| Isolation mechanism | Hardware virtualization (hypervisor) | OS-level isolation (namespaces + cgroups) |
-| Kernel | Each VM has its own kernel | All containers share the host kernel |
-| Boot time | Seconds to minutes | Milliseconds |
-| Overhead | Full OS memory + CPU for guest kernel | Near-zero (just process overhead) |
-| Image size | GBs (full OS) | MBs (just app + dependencies) |
-| Isolation strength | Strong (separate kernel, separate address space) | Weaker (shared kernel = shared attack surface) |
-| Use case | Different OS, strong isolation | Same OS, fast deployment, high density |
+| Aspect              | Virtual Machine                                  | Container                                      |
+| ------------------- | ------------------------------------------------ | ---------------------------------------------- |
+| Isolation mechanism | Hardware virtualization (hypervisor)             | OS-level isolation (namespaces + cgroups)      |
+| Kernel              | Each VM has its own kernel                       | All containers share the host kernel           |
+| Boot time           | Seconds to minutes                               | Milliseconds                                   |
+| Overhead            | Full OS memory + CPU for guest kernel            | Near-zero (just process overhead)              |
+| Image size          | GBs (full OS)                                    | MBs (just app + dependencies)                  |
+| Isolation strength  | Strong (separate kernel, separate address space) | Weaker (shared kernel = shared attack surface) |
+| Use case            | Different OS, strong isolation                   | Same OS, fast deployment, high density         |
 
 **Key insight for interviews:** VMs virtualize hardware. Containers virtualize the operating system. A VM guest cannot crash the host kernel. A container exploit that reaches the kernel affects all containers on that host.
 
@@ -43,15 +43,15 @@ Namespaces are the Linux kernel feature that make containers possible. A namespa
 
 ### 2.1 The Seven Namespace Types
 
-| Namespace | Flag | Isolates | What the Container Sees |
-|-----------|------|----------|------------------------|
-| **PID** | `CLONE_NEWPID` | Process IDs | Its own PID 1, cannot see host processes |
-| **NET** | `CLONE_NEWNET` | Network stack | Own interfaces, IPs, routes, iptables, ports |
-| **MNT** | `CLONE_NEWNS` | Mount points | Own filesystem tree (pivot_root or chroot) |
-| **UTS** | `CLONE_NEWUTS` | Hostname and domain | Own hostname (what `hostname` returns) |
-| **IPC** | `CLONE_NEWIPC` | Inter-process communication | Own semaphores, message queues, shared memory |
-| **USER** | `CLONE_NEWUSER` | User and group IDs | Can be root (UID 0) inside but unprivileged outside |
-| **CGROUP** | `CLONE_NEWCGROUP` | Cgroup root directory | Sees its cgroup as the root of the cgroup tree |
+| Namespace  | Flag              | Isolates                    | What the Container Sees                             |
+| ---------- | ----------------- | --------------------------- | --------------------------------------------------- |
+| **PID**    | `CLONE_NEWPID`    | Process IDs                 | Its own PID 1, cannot see host processes            |
+| **NET**    | `CLONE_NEWNET`    | Network stack               | Own interfaces, IPs, routes, iptables, ports        |
+| **MNT**    | `CLONE_NEWNS`     | Mount points                | Own filesystem tree (pivot_root or chroot)          |
+| **UTS**    | `CLONE_NEWUTS`    | Hostname and domain         | Own hostname (what `hostname` returns)              |
+| **IPC**    | `CLONE_NEWIPC`    | Inter-process communication | Own semaphores, message queues, shared memory       |
+| **USER**   | `CLONE_NEWUSER`   | User and group IDs          | Can be root (UID 0) inside but unprivileged outside |
+| **CGROUP** | `CLONE_NEWCGROUP` | Cgroup root directory       | Sees its cgroup as the root of the cgroup tree      |
 
 ### 2.2 PID Namespace Deep-Dive
 
@@ -90,6 +90,7 @@ NSpid: 12345  1
 ### 2.3 NET Namespace Deep-Dive
 
 Each container gets its own network namespace with its own:
+
 - Network interfaces (eth0, lo)
 - IP addresses
 - Routing table
@@ -160,27 +161,27 @@ While namespaces provide isolation (what a process can see), cgroups (control gr
 
 ### 3.1 What Cgroups Control
 
-| Resource | Cgroup Controller | What It Limits |
-|----------|------------------|----------------|
-| **CPU** | `cpu`, `cpuacct` | CPU time, CPU shares, CPU pinning |
-| **Memory** | `memory` | RAM usage, swap, OOM behavior |
-| **Block I/O** | `blkio` | Disk read/write bandwidth and IOPS |
-| **Network** | `net_cls`, `net_prio` | Network traffic classification and priority |
-| **PIDs** | `pids` | Maximum number of processes |
-| **Devices** | `devices` | Which /dev devices are accessible |
-| **Hugepages** | `hugetlb` | Huge page memory usage |
-| **CPU sets** | `cpuset` | Which CPUs and memory nodes to use |
+| Resource      | Cgroup Controller     | What It Limits                              |
+| ------------- | --------------------- | ------------------------------------------- |
+| **CPU**       | `cpu`, `cpuacct`      | CPU time, CPU shares, CPU pinning           |
+| **Memory**    | `memory`              | RAM usage, swap, OOM behavior               |
+| **Block I/O** | `blkio`               | Disk read/write bandwidth and IOPS          |
+| **Network**   | `net_cls`, `net_prio` | Network traffic classification and priority |
+| **PIDs**      | `pids`                | Maximum number of processes                 |
+| **Devices**   | `devices`             | Which /dev devices are accessible           |
+| **Hugepages** | `hugetlb`             | Huge page memory usage                      |
+| **CPU sets**  | `cpuset`              | Which CPUs and memory nodes to use          |
 
 ### 3.2 Cgroups v1 vs v2
 
-| Aspect | Cgroups v1 | Cgroups v2 |
-|--------|-----------|-----------|
-| Hierarchy | Multiple hierarchies (one per controller) | Single unified hierarchy |
-| Filesystem | `/sys/fs/cgroup/<controller>/` | `/sys/fs/cgroup/` (unified) |
-| Delegation | Complex, error-prone | Clean delegation model |
-| Pressure stall info | Not available | PSI (Pressure Stall Information) built-in |
-| Memory accounting | Per-process | Per-cgroup, more accurate |
-| Default in Docker | Pre-20.10 | 20.10+ on modern kernels |
+| Aspect              | Cgroups v1                                | Cgroups v2                                |
+| ------------------- | ----------------------------------------- | ----------------------------------------- |
+| Hierarchy           | Multiple hierarchies (one per controller) | Single unified hierarchy                  |
+| Filesystem          | `/sys/fs/cgroup/<controller>/`            | `/sys/fs/cgroup/` (unified)               |
+| Delegation          | Complex, error-prone                      | Clean delegation model                    |
+| Pressure stall info | Not available                             | PSI (Pressure Stall Information) built-in |
+| Memory accounting   | Per-process                               | Per-cgroup, more accurate                 |
+| Default in Docker   | Pre-20.10                                 | 20.10+ on modern kernels                  |
 
 ```bash
 # Check which cgroup version your system uses
@@ -267,17 +268,20 @@ A union filesystem (UnionFS) merges multiple directories (layers) into a single 
 ```
 
 **How reads work:**
+
 1. Look for the file in the upper (writable) layer
 2. If not found, look in lower layers top-to-bottom
 3. First match wins
 
 **How writes work (copy-on-write):**
+
 1. If modifying a file from a lower layer, copy it to the upper layer first
 2. Then modify the copy in the upper layer
 3. The lower layer file is untouched (it is read-only)
 4. Future reads see the upper layer version (because it is checked first)
 
 **How deletes work:**
+
 1. Create a "whiteout" file in the upper layer
 2. The whiteout hides the file in lower layers
 3. The file appears deleted in the merged view but still exists in the lower layer
@@ -355,6 +359,7 @@ containerd-shim
 ```
 
 The `containerd-shim` is a small process that:
+
 - Keeps STDIO open for the container
 - Reports exit status back to containerd
 - Allows containerd to restart without killing containers
@@ -450,28 +455,28 @@ Understanding what IS and IS NOT isolated is critical for security.
 
 ### 7.1 What IS Isolated
 
-| Resource | Mechanism | Notes |
-|----------|-----------|-------|
-| Process tree | PID namespace | Container sees only its own processes |
-| Network stack | NET namespace | Own IPs, ports, routing |
-| Filesystem | MNT namespace + overlay | Own root filesystem |
-| Hostname | UTS namespace | Own hostname |
-| IPC | IPC namespace | Own semaphores, message queues |
-| Users (optional) | USER namespace | UID remapping (not default) |
-| Resource usage | Cgroups | Memory, CPU, I/O limits |
+| Resource         | Mechanism               | Notes                                 |
+| ---------------- | ----------------------- | ------------------------------------- |
+| Process tree     | PID namespace           | Container sees only its own processes |
+| Network stack    | NET namespace           | Own IPs, ports, routing               |
+| Filesystem       | MNT namespace + overlay | Own root filesystem                   |
+| Hostname         | UTS namespace           | Own hostname                          |
+| IPC              | IPC namespace           | Own semaphores, message queues        |
+| Users (optional) | USER namespace          | UID remapping (not default)           |
+| Resource usage   | Cgroups                 | Memory, CPU, I/O limits               |
 
 ### 7.2 What is NOT Isolated
 
-| Resource | Risk | Mitigation |
-|----------|------|------------|
-| **Kernel** | All containers share one kernel. Kernel exploit = game over | Use gVisor or Kata Containers for stronger isolation |
-| **/proc, /sys** | Expose kernel parameters, hardware info | Mount read-only, use seccomp to block writes |
-| **System time** | Container can change host clock with CAP_SYS_TIME | Drop capability (dropped by default) |
-| **Kernel modules** | Container can load modules with CAP_SYS_MODULE | Drop capability (dropped by default) |
-| **Kernel keyring** | Shared across all containers | Use user namespaces |
-| **Host network** | `--net=host` exposes all host interfaces | Avoid unless necessary |
-| **Docker socket** | Mounting `/var/run/docker.sock` = root on host | Never mount in production |
-| **Syscalls** | 300+ syscalls available, some dangerous | Seccomp profiles restrict available syscalls |
+| Resource           | Risk                                                        | Mitigation                                           |
+| ------------------ | ----------------------------------------------------------- | ---------------------------------------------------- |
+| **Kernel**         | All containers share one kernel. Kernel exploit = game over | Use gVisor or Kata Containers for stronger isolation |
+| **/proc, /sys**    | Expose kernel parameters, hardware info                     | Mount read-only, use seccomp to block writes         |
+| **System time**    | Container can change host clock with CAP_SYS_TIME           | Drop capability (dropped by default)                 |
+| **Kernel modules** | Container can load modules with CAP_SYS_MODULE              | Drop capability (dropped by default)                 |
+| **Kernel keyring** | Shared across all containers                                | Use user namespaces                                  |
+| **Host network**   | `--net=host` exposes all host interfaces                    | Avoid unless necessary                               |
+| **Docker socket**  | Mounting `/var/run/docker.sock` = root on host              | Never mount in production                            |
+| **Syscalls**       | 300+ syscalls available, some dangerous                     | Seccomp profiles restrict available syscalls         |
 
 ### 7.3 Root in Container == Root on Host
 
@@ -615,15 +620,15 @@ kubelet --> CRI-O --> runc
 
 ### 9.5 Comparison Table
 
-| Feature | Docker | Podman | containerd | CRI-O |
-|---------|--------|--------|------------|-------|
-| Daemon required | Yes | No | Yes | Yes |
-| Rootless | Supported | Default | Supported | Supported |
-| Build images | Yes | Yes (Buildah) | Yes (nerdctl) | No |
-| Compose | Yes | Yes (podman-compose) | Yes (nerdctl) | No |
-| Kubernetes CRI | No (uses containerd) | Yes (via CRI-O) | Yes | Yes |
-| Swarm mode | Yes | No | No | No |
-| Docker socket | Yes | Emulated | No | No |
+| Feature         | Docker               | Podman               | containerd    | CRI-O     |
+| --------------- | -------------------- | -------------------- | ------------- | --------- |
+| Daemon required | Yes                  | No                   | Yes           | Yes       |
+| Rootless        | Supported            | Default              | Supported     | Supported |
+| Build images    | Yes                  | Yes (Buildah)        | Yes (nerdctl) | No        |
+| Compose         | Yes                  | Yes (podman-compose) | Yes (nerdctl) | No        |
+| Kubernetes CRI  | No (uses containerd) | Yes (via CRI-O)      | Yes           | Yes       |
+| Swarm mode      | Yes                  | No                   | No            | No        |
+| Docker socket   | Yes                  | Emulated             | No            | No        |
 
 ---
 
@@ -657,7 +662,7 @@ Since containers share the host kernel, you cannot run a container that requires
 
 Containers mount `/proc` from the host kernel. While the PID namespace filters process information, other files in `/proc` (like `/proc/meminfo`, `/proc/cpuinfo`) show HOST information, not container-limited information. Applications that read `/proc/meminfo` to determine available memory will see the host's total RAM, not the cgroup limit. This breaks JVM memory auto-sizing, Python memory checks, etc.
 
-### 10.8 Docker !=  containerd != OCI
+### 10.8 Docker != containerd != OCI
 
 Docker is a product. containerd is a runtime. OCI is a specification. Docker uses containerd, which uses runc (an OCI runtime). But you can use containerd without Docker, and you can use other OCI runtimes (crun, gVisor) instead of runc.
 
@@ -700,6 +705,7 @@ A VM virtualizes hardware -- a hypervisor (KVM, Xen, VMware) presents virtual CP
 A container virtualizes the operating system -- it is a regular Linux process that runs in isolated namespaces (PID, NET, MNT, UTS, IPC, USER, CGROUP), with resource limits enforced by cgroups, and a filesystem view provided by a union mount (OverlayFS). All containers on a host share the same kernel.
 
 The practical implications:
+
 - Containers start in milliseconds (no kernel boot). VMs take seconds to minutes.
 - Containers use MB of disk (app + deps). VMs use GB (full OS).
 - Containers have near-zero overhead. VMs have hypervisor overhead.
@@ -734,6 +740,7 @@ This is all standard Linux networking -- veth pairs, bridges, iptables NAT. Dock
 Cgroups (control groups) are a Linux kernel feature that limits, accounts for, and isolates resource usage of process groups. While namespaces control what a process can see, cgroups control what a process can use.
 
 Key controllers:
+
 - **memory**: Sets hard memory limits. When exceeded, the OOM killer terminates the process. Docker uses `--memory` flag.
 - **cpu**: Controls CPU time allocation via shares (relative weight) or quota (hard limit). Docker uses `--cpus` or `--cpu-shares`.
 - **pids**: Limits the number of processes (prevents fork bombs). Docker uses `--pids-limit`.
@@ -752,12 +759,14 @@ Modern systems use cgroups v2 (single unified hierarchy), which provides better 
 The application inside the container is reading `/proc/meminfo`, which shows the HOST's total memory, not the cgroup limit. This is because `/proc/meminfo` is not namespace-aware -- it reports system-wide memory information.
 
 This is a well-known problem that affects:
+
 - JVMs that auto-size heap based on available memory (fixed in Java 10+ with `-XX:+UseContainerSupport`)
 - Python applications using `os.sysconf('SC_PHYS_PAGES')`
 - Node.js `os.totalmem()`
 - Any application that reads `/proc/meminfo` or `/proc/cpuinfo`
 
 Solutions:
+
 1. Use runtimes that respect cgroup limits (modern JVM, Go runtime since 1.19)
 2. Explicitly set memory limits in the application (e.g., `-Xmx` for Java)
 3. Use LXCFS to provide cgroup-aware `/proc` files (intercepts reads to `/proc/meminfo`)
@@ -780,6 +789,7 @@ Solutions:
 Effectively, `--privileged` means the container is running ON the host, not in it. Any process in the container has equivalent access to the host as the root user.
 
 Alternatives:
+
 - Need specific capabilities? Use `--cap-add=NET_ADMIN` instead of `--privileged`
 - Need device access? Use `--device=/dev/fuse` for specific devices
 - Need Docker-in-Docker? Use rootless DinD, sysbox, or Docker-outside-of-Docker (mount the socket)
@@ -789,15 +799,15 @@ Alternatives:
 
 ## 12. Quick Reference
 
-| Concept | Command / Location |
-|---------|--------------------|
-| List namespaces | `lsns` |
-| Enter a namespace | `nsenter -t <PID> -p -n -m` |
-| Create namespaces | `unshare --pid --net --mount --fork` |
-| View cgroup limits | `cat /sys/fs/cgroup/.../memory.max` |
-| Container's host PID | `docker inspect --format '{{.State.Pid}}' <ctr>` |
-| OCI runtime spec | `config.json` in the OCI bundle |
-| Overlay mount info | `docker inspect --format '{{.GraphDriver.Data}}' <ctr>` |
-| Check cgroup version | `stat -f -c %T /sys/fs/cgroup` |
-| Docker daemon config | `/etc/docker/daemon.json` |
-| Container runtime | `docker info --format '{{.DefaultRuntime}}'` |
+| Concept              | Command / Location                                      |
+| -------------------- | ------------------------------------------------------- |
+| List namespaces      | `lsns`                                                  |
+| Enter a namespace    | `nsenter -t <PID> -p -n -m`                             |
+| Create namespaces    | `unshare --pid --net --mount --fork`                    |
+| View cgroup limits   | `cat /sys/fs/cgroup/.../memory.max`                     |
+| Container's host PID | `docker inspect --format '{{.State.Pid}}' <ctr>`        |
+| OCI runtime spec     | `config.json` in the OCI bundle                         |
+| Overlay mount info   | `docker inspect --format '{{.GraphDriver.Data}}' <ctr>` |
+| Check cgroup version | `stat -f -c %T /sys/fs/cgroup`                          |
+| Docker daemon config | `/etc/docker/daemon.json`                               |
+| Container runtime    | `docker info --format '{{.DefaultRuntime}}'`            |

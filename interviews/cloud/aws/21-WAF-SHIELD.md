@@ -15,15 +15,15 @@ Internet --> CloudFront/ALB/API Gateway --> WAF Web ACL --> Your Application
 
 ### Supported Resources
 
-| Resource | Scope |
-|----------|-------|
-| Amazon CloudFront | Global (must use us-east-1 for WAF) |
-| Application Load Balancer (ALB) | Regional |
-| Amazon API Gateway (REST API) | Regional |
-| AWS AppSync (GraphQL API) | Regional |
-| Amazon Cognito User Pool | Regional |
-| AWS App Runner | Regional |
-| AWS Verified Access | Regional |
+| Resource                        | Scope                               |
+| ------------------------------- | ----------------------------------- |
+| Amazon CloudFront               | Global (must use us-east-1 for WAF) |
+| Application Load Balancer (ALB) | Regional                            |
+| Amazon API Gateway (REST API)   | Regional                            |
+| AWS AppSync (GraphQL API)       | Regional                            |
+| Amazon Cognito User Pool        | Regional                            |
+| AWS App Runner                  | Regional                            |
+| AWS Verified Access             | Regional                            |
 
 ## Web ACLs, Rules, and Rule Groups
 
@@ -45,27 +45,27 @@ aws wafv2 create-web-acl \
 
 Rules define match conditions and actions. Each rule has a priority (lower number = higher priority = evaluated first).
 
-| Rule Type | Description | Example |
-|-----------|-------------|---------|
-| Rate-based | Threshold on requests from single IP | Block IPs exceeding 2,000 req/5 min |
-| IP match | Match against IP sets (CIDR blocks) | Allow office IPs, block known bad IPs |
-| String match | Match header, URI, body, query string | Block requests with `/admin` in URI |
-| Regex match | Pattern matching with regex | Block user agents matching bot patterns |
-| Geo match | Match by country code | Block traffic from specific countries |
-| SQL injection | Detect SQLi payloads | Inspect query strings and body |
-| XSS | Detect cross-site scripting | Inspect body and URI |
-| Size constraint | Match on request component size | Block requests with body > 8 KB |
-| Label match | Match labels added by other rules | Combine rule logic |
+| Rule Type       | Description                           | Example                                 |
+| --------------- | ------------------------------------- | --------------------------------------- |
+| Rate-based      | Threshold on requests from single IP  | Block IPs exceeding 2,000 req/5 min     |
+| IP match        | Match against IP sets (CIDR blocks)   | Allow office IPs, block known bad IPs   |
+| String match    | Match header, URI, body, query string | Block requests with `/admin` in URI     |
+| Regex match     | Pattern matching with regex           | Block user agents matching bot patterns |
+| Geo match       | Match by country code                 | Block traffic from specific countries   |
+| SQL injection   | Detect SQLi payloads                  | Inspect query strings and body          |
+| XSS             | Detect cross-site scripting           | Inspect body and URI                    |
+| Size constraint | Match on request component size       | Block requests with body > 8 KB         |
+| Label match     | Match labels added by other rules     | Combine rule logic                      |
 
 ### Rule Actions
 
-| Action | Behavior |
-|--------|----------|
-| ALLOW | Allow request to proceed |
-| BLOCK | Block request, return 403 |
-| COUNT | Count the request but take no action (monitoring mode) |
-| CAPTCHA | Require CAPTCHA challenge |
-| Challenge | Silent browser challenge (JS verification) |
+| Action    | Behavior                                               |
+| --------- | ------------------------------------------------------ |
+| ALLOW     | Allow request to proceed                               |
+| BLOCK     | Block request, return 403                              |
+| COUNT     | Count the request but take no action (monitoring mode) |
+| CAPTCHA   | Require CAPTCHA challenge                              |
+| Challenge | Silent browser challenge (JS verification)             |
 
 ### Rule Groups
 
@@ -88,20 +88,20 @@ aws wafv2 create-rule-group \
 
 AWS provides pre-built rule groups that cover common threats. These are maintained and updated by AWS.
 
-| Rule Group | WCU | What It Protects Against |
-|------------|-----|--------------------------|
-| Core Rule Set (CRS) | 700 | Common web exploits (OWASP Top 10 coverage) |
-| Known Bad Inputs | 200 | Request patterns known to be malicious |
-| SQL Injection | 200 | SQL injection attacks |
-| Linux/POSIX OS | 200 | LFI, command injection on Linux |
-| Windows OS | 200 | PowerShell, command injection on Windows |
-| PHP Application | 100 | PHP-specific exploits |
-| WordPress Application | 100 | WordPress-specific exploits |
-| Amazon IP Reputation | 25 | Known malicious IPs (AWS threat intelligence) |
-| Anonymous IP List | 50 | VPN, proxy, Tor exit nodes |
-| Bot Control | 50 | Automated bot traffic (scrapers, crawlers) |
-| Account Takeover Prevention (ATP) | 50 | Credential stuffing, brute force on login |
-| Account Creation Fraud Prevention (ACFP) | 50 | Fake account creation |
+| Rule Group                               | WCU | What It Protects Against                      |
+| ---------------------------------------- | --- | --------------------------------------------- |
+| Core Rule Set (CRS)                      | 700 | Common web exploits (OWASP Top 10 coverage)   |
+| Known Bad Inputs                         | 200 | Request patterns known to be malicious        |
+| SQL Injection                            | 200 | SQL injection attacks                         |
+| Linux/POSIX OS                           | 200 | LFI, command injection on Linux               |
+| Windows OS                               | 200 | PowerShell, command injection on Windows      |
+| PHP Application                          | 100 | PHP-specific exploits                         |
+| WordPress Application                    | 100 | WordPress-specific exploits                   |
+| Amazon IP Reputation                     | 25  | Known malicious IPs (AWS threat intelligence) |
+| Anonymous IP List                        | 50  | VPN, proxy, Tor exit nodes                    |
+| Bot Control                              | 50  | Automated bot traffic (scrapers, crawlers)    |
+| Account Takeover Prevention (ATP)        | 50  | Credential stuffing, brute force on login     |
+| Account Creation Fraud Prevention (ACFP) | 50  | Fake account creation                         |
 
 ### Using Managed Rules
 
@@ -113,12 +113,10 @@ AWS provides pre-built rule groups that cover common threats. These are maintain
     "ManagedRuleGroupStatement": {
       "VendorName": "AWS",
       "Name": "AWSManagedRulesCommonRuleSet",
-      "ExcludedRules": [
-        {"Name": "SizeRestrictions_BODY"}
-      ]
+      "ExcludedRules": [{ "Name": "SizeRestrictions_BODY" }]
     }
   },
-  "OverrideAction": {"None": {}},
+  "OverrideAction": { "None": {} },
   "VisibilityConfig": {
     "SampledRequestsEnabled": true,
     "CloudWatchMetricsEnabled": true,
@@ -143,7 +141,7 @@ Use `ExcludedRules` to override specific rules that generate false positives. St
       "AggregateKeyType": "IP"
     }
   },
-  "Action": {"Block": {}},
+  "Action": { "Block": {} },
   "VisibilityConfig": {
     "SampledRequestsEnabled": true,
     "CloudWatchMetricsEnabled": true,
@@ -163,7 +161,7 @@ Use `ExcludedRules` to override specific rules that generate false positives. St
       "CountryCodes": ["CN", "RU", "KP"]
     }
   },
-  "Action": {"Block": {}},
+  "Action": { "Block": {} },
   "VisibilityConfig": {
     "SampledRequestsEnabled": true,
     "CloudWatchMetricsEnabled": true,
@@ -192,7 +190,7 @@ aws wafv2 create-ip-set \
       "ARN": "arn:aws:wafv2:us-east-1:123456789012:regional/ipset/office-ips/abc123"
     }
   },
-  "Action": {"Allow": {}},
+  "Action": { "Allow": {} },
   "VisibilityConfig": {
     "SampledRequestsEnabled": true,
     "CloudWatchMetricsEnabled": true,
@@ -215,6 +213,7 @@ Default: ALLOW                                        --> no match, ALLOW
 ```
 
 Best practice ordering:
+
 1. Rate limiting (protect against floods first)
 2. IP allowlist (let known-good traffic through)
 3. IP blocklist (block known-bad traffic)
@@ -226,11 +225,11 @@ Best practice ordering:
 
 WAF logs every request evaluated by a Web ACL. Three log destinations:
 
-| Destination | Use Case | Prefix Requirement |
-|-------------|----------|-------------------|
-| CloudWatch Logs | Real-time monitoring, low volume | `aws-waf-logs-` |
-| S3 Bucket | Long-term storage, compliance | `aws-waf-logs-` |
-| Kinesis Data Firehose | Real-time streaming, high volume | `aws-waf-logs-` |
+| Destination           | Use Case                         | Prefix Requirement |
+| --------------------- | -------------------------------- | ------------------ |
+| CloudWatch Logs       | Real-time monitoring, low volume | `aws-waf-logs-`    |
+| S3 Bucket             | Long-term storage, compliance    | `aws-waf-logs-`    |
+| Kinesis Data Firehose | Real-time streaming, high volume | `aws-waf-logs-`    |
 
 ```bash
 # Enable logging to S3
@@ -274,19 +273,19 @@ aws wafv2 put-logging-configuration \
 
 ### Shield Standard vs Shield Advanced
 
-| Feature | Shield Standard | Shield Advanced |
-|---------|----------------|-----------------|
-| Cost | Free (included) | $3,000/month + data transfer |
-| Protection | L3/L4 DDoS (network/transport) | L3/L4 + L7 DDoS (application) |
-| Automatic | Yes, always on | Yes, with enhanced detection |
-| Resources | All AWS resources | CloudFront, ALB, EIP, Global Accelerator, Route 53 |
-| DDoS Response Team | No | Yes (24/7 DRT access) |
-| Cost protection | No | Yes (scaling credits during attack) |
-| Advanced metrics | No | Yes (real-time metrics, attack visibility) |
-| WAF integration | No | Yes (WAF included at no additional cost) |
-| Health-based detection | No | Yes (uses Route 53 health checks) |
-| SLA | No | Yes (DDoS-related downtime SLA) |
-| Commitment | None | 1-year subscription |
+| Feature                | Shield Standard                | Shield Advanced                                    |
+| ---------------------- | ------------------------------ | -------------------------------------------------- |
+| Cost                   | Free (included)                | $3,000/month + data transfer                       |
+| Protection             | L3/L4 DDoS (network/transport) | L3/L4 + L7 DDoS (application)                      |
+| Automatic              | Yes, always on                 | Yes, with enhanced detection                       |
+| Resources              | All AWS resources              | CloudFront, ALB, EIP, Global Accelerator, Route 53 |
+| DDoS Response Team     | No                             | Yes (24/7 DRT access)                              |
+| Cost protection        | No                             | Yes (scaling credits during attack)                |
+| Advanced metrics       | No                             | Yes (real-time metrics, attack visibility)         |
+| WAF integration        | No                             | Yes (WAF included at no additional cost)           |
+| Health-based detection | No                             | Yes (uses Route 53 health checks)                  |
+| SLA                    | No                             | Yes (DDoS-related downtime SLA)                    |
+| Commitment             | None                           | 1-year subscription                                |
 
 ### Shield Advanced Setup
 
@@ -381,15 +380,15 @@ aws shield list-attacks \
 
 ## Common Gotchas
 
-| Issue | Details |
-|-------|---------|
-| WCU limit: 5,000 per Web ACL | Web ACL Capacity Units limit the total rule complexity. AWS Managed Rule groups consume WCUs (e.g., Core Rule Set = 700). Plan capacity across all rules. |
-| Rule evaluation order matters | Lower priority number = evaluated first. An ALLOW rule at priority 0 will let traffic through before a BLOCK rule at priority 1 can act. |
-| Shield Advanced cost | $3,000/month is a significant commitment. Evaluate whether WAF alone with rate limiting provides sufficient protection for your threat model. |
-| WAF logs can be high volume | A busy site can generate millions of log entries. Use log filtering to capture only BLOCK actions or specific labels. Budget for S3/Firehose costs. |
-| CloudFront WAF is global scope | WAF for CloudFront distributions must be created in `us-east-1` with `--scope CLOUDFRONT`. Regional resources use `--scope REGIONAL`. |
-| Managed rule false positives | AWS Managed Rules can block legitimate traffic. Deploy in COUNT mode first, review sampled requests, then switch to BLOCK. Use `ExcludedRules` for persistent false positives. |
-| Bot Control cost | Bot Control managed rule group has additional per-request pricing ($1.00 per million requests for common bots, $10.00 for targeted bots). Can be expensive at scale. |
-| Web ACL association limits | Each resource can be associated with exactly one Web ACL. A Web ACL can protect multiple resources of the same type and region. |
-| Propagation delay | Web ACL changes can take up to a few minutes to propagate, especially for CloudFront distributions. Do not assume changes are instant. |
-| Rate-based rule minimum | Rate-based rules have a minimum threshold of 100 requests per 5 minutes. You cannot set it lower than 100. |
+| Issue                          | Details                                                                                                                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| WCU limit: 5,000 per Web ACL   | Web ACL Capacity Units limit the total rule complexity. AWS Managed Rule groups consume WCUs (e.g., Core Rule Set = 700). Plan capacity across all rules.                      |
+| Rule evaluation order matters  | Lower priority number = evaluated first. An ALLOW rule at priority 0 will let traffic through before a BLOCK rule at priority 1 can act.                                       |
+| Shield Advanced cost           | $3,000/month is a significant commitment. Evaluate whether WAF alone with rate limiting provides sufficient protection for your threat model.                                  |
+| WAF logs can be high volume    | A busy site can generate millions of log entries. Use log filtering to capture only BLOCK actions or specific labels. Budget for S3/Firehose costs.                            |
+| CloudFront WAF is global scope | WAF for CloudFront distributions must be created in `us-east-1` with `--scope CLOUDFRONT`. Regional resources use `--scope REGIONAL`.                                          |
+| Managed rule false positives   | AWS Managed Rules can block legitimate traffic. Deploy in COUNT mode first, review sampled requests, then switch to BLOCK. Use `ExcludedRules` for persistent false positives. |
+| Bot Control cost               | Bot Control managed rule group has additional per-request pricing ($1.00 per million requests for common bots, $10.00 for targeted bots). Can be expensive at scale.           |
+| Web ACL association limits     | Each resource can be associated with exactly one Web ACL. A Web ACL can protect multiple resources of the same type and region.                                                |
+| Propagation delay              | Web ACL changes can take up to a few minutes to propagate, especially for CloudFront distributions. Do not assume changes are instant.                                         |
+| Rate-based rule minimum        | Rate-based rules have a minimum threshold of 100 requests per 5 minutes. You cannot set it lower than 100.                                                                     |

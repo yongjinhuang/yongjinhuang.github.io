@@ -129,22 +129,22 @@ This prevents the nightmare of a policy change retroactively altering the approv
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Workflow** | A defined sequence of steps that a request follows from submission to completion |
-| **State Machine** | A model where the request exists in exactly one state, with defined transitions between states |
-| **Approval Chain** | The ordered list of approvers or approval stages a request must pass through |
-| **Approver** | A person or role authorized to approve, reject, or return a request at a given step |
-| **Delegation** | Temporarily transferring approval authority to another person for a defined period |
-| **Escalation** | Automatically routing a request to a higher authority when an SLA is breached |
-| **SLA (Service Level Agreement)** | The maximum allowed time for an approver to act on a request |
-| **Parallel Approval** | Multiple approvers reviewing simultaneously, with a join condition (all, any, quorum) |
-| **Conditional Branch** | A decision point where the workflow path changes based on request attributes or rules |
-| **Audit Trail** | An immutable, timestamped log of every action taken on a request |
-| **Workflow Template** | A reusable definition of steps, roles, conditions, and SLAs that new requests instantiate |
-| **Proxy Approval** | Approving on behalf of another person, with the action logged against both parties |
-| **Quorum** | The minimum number of approvers required to approve at a given step |
-| **Return / Send Back** | Sending a request back to the requester or a previous step for revision |
+| Term                              | What It Means                                                                                  |
+| --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Workflow**                      | A defined sequence of steps that a request follows from submission to completion               |
+| **State Machine**                 | A model where the request exists in exactly one state, with defined transitions between states |
+| **Approval Chain**                | The ordered list of approvers or approval stages a request must pass through                   |
+| **Approver**                      | A person or role authorized to approve, reject, or return a request at a given step            |
+| **Delegation**                    | Temporarily transferring approval authority to another person for a defined period             |
+| **Escalation**                    | Automatically routing a request to a higher authority when an SLA is breached                  |
+| **SLA (Service Level Agreement)** | The maximum allowed time for an approver to act on a request                                   |
+| **Parallel Approval**             | Multiple approvers reviewing simultaneously, with a join condition (all, any, quorum)          |
+| **Conditional Branch**            | A decision point where the workflow path changes based on request attributes or rules          |
+| **Audit Trail**                   | An immutable, timestamped log of every action taken on a request                               |
+| **Workflow Template**             | A reusable definition of steps, roles, conditions, and SLAs that new requests instantiate      |
+| **Proxy Approval**                | Approving on behalf of another person, with the action logged against both parties             |
+| **Quorum**                        | The minimum number of approvers required to approve at a given step                            |
+| **Return / Send Back**            | Sending a request back to the requester or a previous step for revision                        |
 
 ## Common Patterns
 

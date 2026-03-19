@@ -51,20 +51,20 @@ For large files, you don't want to route through your server:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Object Storage** | Cloud storage for files (S3, GCS, Azure Blob). Cheap, durable, scalable. Not a filesystem — stores objects with keys |
-| **S3** | Amazon Simple Storage Service — the most popular object storage. "S3-compatible" APIs are an industry standard |
-| **Bucket** | A container in object storage. Like a top-level folder. You might have buckets for `uploads`, `avatars`, `documents` |
-| **Presigned URL** | A temporary URL that grants permission to upload or download a specific file. Expires after a set time |
-| **CDN** | Content Delivery Network — distributes files globally. Users download from the nearest server |
-| **MIME Type** | The file type identifier (e.g., `image/jpeg`, `application/pdf`). Used for validation and serving |
-| **Multipart Upload** | Uploading large files in chunks. Allows resume after failure |
-| **Blob** | Binary Large Object — the raw file data |
-| **EXIF Data** | Metadata embedded in images (camera model, GPS location, timestamp). Privacy concern |
-| **Transcoding** | Converting files from one format to another (video: MP4 to HLS, image: PNG to WebP) |
-| **Lifecycle Policy** | Rules for automatically transitioning files between storage tiers or deleting old files |
-| **Storage Class** | Different pricing/performance tiers (S3 Standard, S3 Infrequent Access, Glacier) |
+| Term                 | What It Means                                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Object Storage**   | Cloud storage for files (S3, GCS, Azure Blob). Cheap, durable, scalable. Not a filesystem — stores objects with keys |
+| **S3**               | Amazon Simple Storage Service — the most popular object storage. "S3-compatible" APIs are an industry standard       |
+| **Bucket**           | A container in object storage. Like a top-level folder. You might have buckets for `uploads`, `avatars`, `documents` |
+| **Presigned URL**    | A temporary URL that grants permission to upload or download a specific file. Expires after a set time               |
+| **CDN**              | Content Delivery Network — distributes files globally. Users download from the nearest server                        |
+| **MIME Type**        | The file type identifier (e.g., `image/jpeg`, `application/pdf`). Used for validation and serving                    |
+| **Multipart Upload** | Uploading large files in chunks. Allows resume after failure                                                         |
+| **Blob**             | Binary Large Object — the raw file data                                                                              |
+| **EXIF Data**        | Metadata embedded in images (camera model, GPS location, timestamp). Privacy concern                                 |
+| **Transcoding**      | Converting files from one format to another (video: MP4 to HLS, image: PNG to WebP)                                  |
+| **Lifecycle Policy** | Rules for automatically transitioning files between storage tiers or deleting old files                              |
+| **Storage Class**    | Different pricing/performance tiers (S3 Standard, S3 Infrequent Access, Glacier)                                     |
 
 ## Common Patterns
 
@@ -130,16 +130,16 @@ https://cdn.example.com/images/photo.jpg?w=200&h=200&fit=crop
 
 ## Quick Reference
 
-| File Type | Best Approach |
-|-----------|---------------|
-| Small images (<5MB) | Server-side upload + background processing |
+| File Type             | Best Approach                                    |
+| --------------------- | ------------------------------------------------ |
+| Small images (<5MB)   | Server-side upload + background processing       |
 | Large images / videos | Direct upload (presigned URL) + async processing |
-| Documents (PDF, DOCX) | Server-side upload + virus scan |
-| Bulk CSV imports | Direct upload + background job for processing |
-| User avatars | Server-side upload + on-the-fly resize |
+| Documents (PDF, DOCX) | Server-side upload + virus scan                  |
+| Bulk CSV imports      | Direct upload + background job for processing    |
+| User avatars          | Server-side upload + on-the-fly resize           |
 
-| Storage Tier | Use Case | Cost (S3, approx.) |
-|-------------|----------|-------------------|
-| Standard | Frequently accessed files | $0.023/GB/month |
-| Infrequent Access | Backups, old uploads | $0.0125/GB/month |
-| Glacier | Archival, legal retention | $0.004/GB/month |
+| Storage Tier      | Use Case                  | Cost (S3, approx.) |
+| ----------------- | ------------------------- | ------------------ |
+| Standard          | Frequently accessed files | $0.023/GB/month    |
+| Infrequent Access | Backups, old uploads      | $0.0125/GB/month   |
+| Glacier           | Archival, legal retention | $0.004/GB/month    |

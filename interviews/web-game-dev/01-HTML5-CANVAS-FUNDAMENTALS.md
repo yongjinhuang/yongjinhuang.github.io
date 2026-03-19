@@ -25,27 +25,39 @@
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,
-        maximum-scale=1.0, user-scalable=no">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; }
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      touch-action: none; /* Prevent browser gestures */
-    }
-  </style>
-</head>
-<body>
-  <canvas id="game"></canvas>
-  <script>
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-  </script>
-</body>
+  <head>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0,
+        maximum-scale=1.0, user-scalable=no"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none; /* Prevent browser gestures */
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+    </script>
+  </body>
 </html>
 ```
 
@@ -82,9 +94,9 @@ canvas.style.height = '600px';
 // Result: blurry, stretched rendering
 
 // CORRECT: Setting both
-canvas.width = 800;   // Drawing buffer
+canvas.width = 800; // Drawing buffer
 canvas.height = 600;
-canvas.style.width = '800px';  // Display size
+canvas.style.width = '800px'; // Display size
 canvas.style.height = '600px';
 ```
 
@@ -114,9 +126,9 @@ function setupCanvas(canvas) {
 
   return {
     ctx,
-    width: rect.width,    // Use these for game coordinates
+    width: rect.width, // Use these for game coordinates
     height: rect.height,
-    dpr
+    dpr,
   };
 }
 ```
@@ -171,7 +183,12 @@ function createResponsiveCanvas(canvasId) {
   // Initial setup
   resize();
 
-  return { canvas, ctx, getWidth: () => gameWidth, getHeight: () => gameHeight };
+  return {
+    canvas,
+    ctx,
+    getWidth: () => gameWidth,
+    getHeight: () => gameHeight,
+  };
 }
 ```
 
@@ -186,7 +203,7 @@ function handleOrientation(canvas, ctx) {
     return {
       gameWidth: 360,
       gameHeight: 640,
-      orientation: 'portrait'
+      orientation: 'portrait',
     };
   }
 
@@ -194,7 +211,7 @@ function handleOrientation(canvas, ctx) {
   return {
     gameWidth: 640,
     gameHeight: 360,
-    orientation: 'landscape'
+    orientation: 'landscape',
   };
 }
 
@@ -204,7 +221,7 @@ function forcePortrait(canvas, ctx) {
 
   if (isLandscape) {
     // Rotate the entire canvas context 90 degrees
-    canvas.width = window.innerHeight * 2;  // Swapped
+    canvas.width = window.innerHeight * 2; // Swapped
     canvas.height = window.innerWidth * 2;
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(-Math.PI / 2);
@@ -221,9 +238,9 @@ function forcePortrait(canvas, ctx) {
 
 ```javascript
 // Three rectangle methods (the only shape primitives built in)
-ctx.fillRect(x, y, width, height);      // Filled rectangle
-ctx.strokeRect(x, y, width, height);    // Outlined rectangle
-ctx.clearRect(x, y, width, height);     // Clear (erase) rectangular area
+ctx.fillRect(x, y, width, height); // Filled rectangle
+ctx.strokeRect(x, y, width, height); // Outlined rectangle
+ctx.clearRect(x, y, width, height); // Clear (erase) rectangular area
 
 // Example: Draw a filled rectangle with border
 function drawBox(ctx, x, y, w, h, fillColor, strokeColor, lineWidth) {
@@ -290,8 +307,8 @@ function drawPieSlice(ctx, cx, cy, radius, startAngle, endAngle, color) {
 // Ring / donut shape
 function drawRing(ctx, cx, cy, innerRadius, outerRadius, color) {
   ctx.beginPath();
-  ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2);        // Outer circle
-  ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2, true);   // Inner circle (counter-clockwise)
+  ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2); // Outer circle
+  ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2, true); // Inner circle (counter-clockwise)
   ctx.fillStyle = color;
   ctx.fill();
 }
@@ -301,19 +318,19 @@ function drawRing(ctx, cx, cy, innerRadius, outerRadius, color) {
 
 ```javascript
 // Path-based drawing
-ctx.beginPath();          // Start a new path
-ctx.moveTo(x, y);        // Move pen without drawing
-ctx.lineTo(x, y);        // Draw line to point
-ctx.closePath();          // Close the path (line back to start)
-ctx.stroke();             // Draw the outline
-ctx.fill();               // Fill the shape
+ctx.beginPath(); // Start a new path
+ctx.moveTo(x, y); // Move pen without drawing
+ctx.lineTo(x, y); // Draw line to point
+ctx.closePath(); // Close the path (line back to start)
+ctx.stroke(); // Draw the outline
+ctx.fill(); // Fill the shape
 
 // Line styling
 ctx.lineWidth = 2;
-ctx.lineCap = 'round';     // 'butt' (default), 'round', 'square'
-ctx.lineJoin = 'round';    // 'miter' (default), 'round', 'bevel'
-ctx.setLineDash([5, 3]);   // Dashed line: 5px dash, 3px gap
-ctx.lineDashOffset = 0;    // Offset for dash pattern (animate for marching ants)
+ctx.lineCap = 'round'; // 'butt' (default), 'round', 'square'
+ctx.lineJoin = 'round'; // 'miter' (default), 'round', 'bevel'
+ctx.setLineDash([5, 3]); // Dashed line: 5px dash, 3px gap
+ctx.lineDashOffset = 0; // Offset for dash pattern (animate for marching ants)
 
 // Draw a triangle
 function drawTriangle(ctx, x1, y1, x2, y2, x3, y3, color) {
@@ -403,28 +420,26 @@ function drawHeart(ctx, x, y, size, color) {
   ctx.moveTo(x, y + size / 4);
 
   // Left side
+  ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + size / 4);
   ctx.bezierCurveTo(
-    x, y,
-    x - size / 2, y,
-    x - size / 2, y + size / 4
-  );
-  ctx.bezierCurveTo(
-    x - size / 2, y + size / 2,
-    x, y + size * 0.75,
-    x, y + size
+    x - size / 2,
+    y + size / 2,
+    x,
+    y + size * 0.75,
+    x,
+    y + size
   );
 
   // Right side
   ctx.bezierCurveTo(
-    x, y + size * 0.75,
-    x + size / 2, y + size / 2,
-    x + size / 2, y + size / 4
+    x,
+    y + size * 0.75,
+    x + size / 2,
+    y + size / 2,
+    x + size / 2,
+    y + size / 4
   );
-  ctx.bezierCurveTo(
-    x + size / 2, y,
-    x, y,
-    x, y + size / 4
-  );
+  ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + size / 4);
 
   ctx.fillStyle = color;
   ctx.fill();
@@ -449,7 +464,7 @@ starPath.closePath();
 // Reuse the path many times
 function drawStars(ctx, positions) {
   ctx.fillStyle = '#FFD700';
-  positions.forEach(pos => {
+  positions.forEach((pos) => {
     ctx.save();
     ctx.translate(pos.x, pos.y);
     ctx.fill(starPath);
@@ -481,12 +496,12 @@ canvas.addEventListener('click', (e) => {
 
 ```javascript
 // Color formats
-ctx.fillStyle = '#FF6600';             // Hex
-ctx.fillStyle = '#F60';                // Short hex
-ctx.fillStyle = 'rgb(255, 102, 0)';   // RGB
+ctx.fillStyle = '#FF6600'; // Hex
+ctx.fillStyle = '#F60'; // Short hex
+ctx.fillStyle = 'rgb(255, 102, 0)'; // RGB
 ctx.fillStyle = 'rgba(255, 102, 0, 0.5)'; // RGBA (with alpha)
 ctx.fillStyle = 'hsl(24, 100%, 50%)'; // HSL
-ctx.fillStyle = 'orange';             // Named color
+ctx.fillStyle = 'orange'; // Named color
 
 // Note: Setting fillStyle/strokeStyle is relatively expensive
 // Batch draws with the same style together
@@ -506,8 +521,8 @@ hGrad.addColorStop(1, '#0000FF');
 
 // Vertical gradient (top to bottom)
 const vGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-vGrad.addColorStop(0, '#87CEEB');  // Sky blue
-vGrad.addColorStop(1, '#228B22');  // Forest green
+vGrad.addColorStop(0, '#87CEEB'); // Sky blue
+vGrad.addColorStop(1, '#228B22'); // Forest green
 
 // Diagonal gradient
 const dGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
@@ -561,7 +576,14 @@ function drawVignette(ctx, width, height) {
   const cy = height / 2;
   const radius = Math.max(width, height) * 0.7;
 
-  const vignette = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius);
+  const vignette = ctx.createRadialGradient(
+    cx,
+    cy,
+    radius * 0.3,
+    cx,
+    cy,
+    radius
+  );
   vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
   vignette.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
 
@@ -632,17 +654,17 @@ ctx.font = 'italic bold 32px serif';
 ctx.font = '48px "Custom Font", sans-serif';
 
 // Text alignment
-ctx.textAlign = 'left';     // 'left', 'right', 'center', 'start', 'end'
-ctx.textBaseline = 'top';   // 'top', 'hanging', 'middle', 'alphabetic' (default), 'ideographic', 'bottom'
+ctx.textAlign = 'left'; // 'left', 'right', 'center', 'start', 'end'
+ctx.textBaseline = 'top'; // 'top', 'hanging', 'middle', 'alphabetic' (default), 'ideographic', 'bottom'
 
 // Draw text
 ctx.fillStyle = '#FFFFFF';
-ctx.fillText('Hello World', x, y);              // Filled text
-ctx.fillText('Hello World', x, y, maxWidth);    // With max width constraint
+ctx.fillText('Hello World', x, y); // Filled text
+ctx.fillText('Hello World', x, y, maxWidth); // With max width constraint
 
 ctx.strokeStyle = '#000000';
 ctx.lineWidth = 2;
-ctx.strokeText('Outlined Text', x, y);          // Outlined text
+ctx.strokeText('Outlined Text', x, y); // Outlined text
 ```
 
 ### Text Measurement
@@ -764,7 +786,15 @@ function drawTextWithShadow(ctx, text, x, y, color, shadowColor, shadowOffset) {
 }
 
 // Outlined text (common in games)
-function drawOutlinedText(ctx, text, x, y, fillColor, outlineColor, outlineWidth) {
+function drawOutlinedText(
+  ctx,
+  text,
+  x,
+  y,
+  fillColor,
+  outlineColor,
+  outlineWidth
+) {
   ctx.font = 'bold 32px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -800,9 +830,7 @@ function loadImage(src) {
 async function loadImages(sources) {
   const entries = Object.entries(sources);
   const loaded = await Promise.all(
-    entries.map(([key, src]) =>
-      loadImage(src).then(img => [key, img])
-    )
+    entries.map(([key, src]) => loadImage(src).then((img) => [key, img]))
   );
   return Object.fromEntries(loaded);
 }
@@ -816,9 +844,16 @@ ctx.drawImage(img, dx, dy);
 ctx.drawImage(img, dx, dy, dWidth, dHeight);
 
 // 3. Cropped: draw a portion of the image (sprite extraction)
-ctx.drawImage(img,
-  sx, sy, sWidth, sHeight,    // Source rectangle (from image)
-  dx, dy, dWidth, dHeight     // Destination rectangle (on canvas)
+ctx.drawImage(
+  img,
+  sx,
+  sy,
+  sWidth,
+  sHeight, // Source rectangle (from image)
+  dx,
+  dy,
+  dWidth,
+  dHeight // Destination rectangle (on canvas)
 );
 ```
 
@@ -841,14 +876,14 @@ class SpriteSheet {
 
     ctx.drawImage(
       this.image,
-      col * this.frameWidth,          // Source X
-      row * this.frameHeight,         // Source Y
-      this.frameWidth,                // Source Width
-      this.frameHeight,               // Source Height
-      x,                              // Dest X
-      y,                              // Dest Y
-      this.frameWidth * scale,        // Dest Width
-      this.frameHeight * scale        // Dest Height
+      col * this.frameWidth, // Source X
+      row * this.frameHeight, // Source Y
+      this.frameWidth, // Source Width
+      this.frameHeight, // Source Height
+      x, // Dest X
+      y, // Dest Y
+      this.frameWidth * scale, // Dest Width
+      this.frameHeight * scale // Dest Height
     );
   }
 }
@@ -904,7 +939,10 @@ class TextureAtlas {
       // Account for trimmed transparent pixels
       ctx.drawImage(
         this.image,
-        frame.x, frame.y, frame.w, frame.h,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
         x + source.x * scale,
         y + source.y * scale,
         frame.w * scale,
@@ -913,9 +951,14 @@ class TextureAtlas {
     } else {
       ctx.drawImage(
         this.image,
-        frame.x, frame.y, frame.w, frame.h,
-        x, y,
-        frame.w * scale, frame.h * scale
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        x,
+        y,
+        frame.w * scale,
+        frame.h * scale
       );
     }
   }
@@ -946,7 +989,7 @@ function loadBase64Assets(assetMap) {
         img.src = base64;
       });
     })
-  ).then(entries => Object.fromEntries(entries));
+  ).then((entries) => Object.fromEntries(entries));
 }
 
 // Usage in a playable ad
@@ -977,7 +1020,7 @@ function getPixel(imageData, x, y) {
     r: imageData.data[index],
     g: imageData.data[index + 1],
     b: imageData.data[index + 2],
-    a: imageData.data[index + 3]
+    a: imageData.data[index + 3],
   };
 }
 
@@ -1004,9 +1047,9 @@ function grayscale(ctx, x, y, width, height) {
 
   for (let i = 0; i < data.length; i += 4) {
     const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-    data[i] = avg;       // R
-    data[i + 1] = avg;   // G
-    data[i + 2] = avg;   // B
+    data[i] = avg; // R
+    data[i + 1] = avg; // G
+    data[i + 2] = avg; // B
     // data[i + 3] unchanged (alpha)
   }
 
@@ -1053,7 +1096,10 @@ function pixelate(ctx, x, y, width, height, pixelSize) {
   for (let py = 0; py < height; py += pixelSize) {
     for (let px = 0; px < width; px += pixelSize) {
       // Sample the center pixel of each block
-      const centerIdx = ((py + Math.floor(pixelSize / 2)) * width + (px + Math.floor(pixelSize / 2))) * 4;
+      const centerIdx =
+        ((py + Math.floor(pixelSize / 2)) * width +
+          (px + Math.floor(pixelSize / 2))) *
+        4;
       const r = data[centerIdx];
       const g = data[centerIdx + 1];
       const b = data[centerIdx + 2];
@@ -1094,7 +1140,7 @@ function pixelate(ctx, x, y, width, height, pixelSize) {
 // - shadowBlur, shadowColor, shadowOffsetX, shadowOffsetY
 // - imageSmoothingEnabled
 
-ctx.save();    // Push current state onto the stack
+ctx.save(); // Push current state onto the stack
 // ... modify state, draw things ...
 ctx.restore(); // Pop state from the stack (restoring previous state)
 
@@ -1129,8 +1175,8 @@ ctx.scale(sx, sy); // 1.0 = normal, 2.0 = double, -1.0 = flip
 // [b  d  f]
 // [0  0  1]
 ctx.setTransform(a, b, c, d, e, f);
-ctx.transform(a, b, c, d, e, f);    // Multiply with current matrix
-ctx.resetTransform();                 // Reset to identity
+ctx.transform(a, b, c, d, e, f); // Multiply with current matrix
+ctx.resetTransform(); // Reset to identity
 
 // Common transformation patterns:
 
@@ -1175,7 +1221,7 @@ class Camera {
   screenToWorld(screenX, screenY) {
     return {
       x: screenX / this.zoom + this.x,
-      y: screenY / this.zoom + this.y
+      y: screenY / this.zoom + this.y,
     };
   }
 
@@ -1183,7 +1229,7 @@ class Camera {
   worldToScreen(worldX, worldY) {
     return {
       x: (worldX - this.x) * this.zoom,
-      y: (worldY - this.y) * this.zoom
+      y: (worldY - this.y) * this.zoom,
     };
   }
 }
@@ -1222,7 +1268,14 @@ function drawSpotlight(ctx, canvas, lightX, lightY, radius) {
 
   // Create a dark overlay with a circular cutout
   ctx.globalCompositeOperation = 'destination-in';
-  const gradient = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, radius);
+  const gradient = ctx.createRadialGradient(
+    lightX,
+    lightY,
+    0,
+    lightX,
+    lightY,
+    radius
+  );
   gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
   gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.5)');
   gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -1279,7 +1332,7 @@ function drawGlowParticles(ctx, particles) {
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
 
-  particles.forEach(p => {
+  particles.forEach((p) => {
     const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
     gradient.addColorStop(0, `rgba(${p.r}, ${p.g}, ${p.b}, ${p.alpha})`);
     gradient.addColorStop(1, `rgba(${p.r}, ${p.g}, ${p.b}, 0)`);
@@ -1373,7 +1426,7 @@ function createOffscreenBuffer(width, height) {
   buffer.height = height;
   return {
     canvas: buffer,
-    ctx: buffer.getContext('2d')
+    ctx: buffer.getContext('2d'),
   };
 }
 
@@ -1457,8 +1510,14 @@ class TileMapRenderer {
 
         bufferCtx.drawImage(
           tilesheet,
-          srcX, srcY, tileWidth, tileHeight,
-          x * tileWidth, y * tileHeight, tileWidth, tileHeight
+          srcX,
+          srcY,
+          tileWidth,
+          tileHeight,
+          x * tileWidth,
+          y * tileHeight,
+          tileWidth,
+          tileHeight
         );
       }
     }
@@ -1470,8 +1529,14 @@ class TileMapRenderer {
     // Draw only the visible portion
     ctx.drawImage(
       this.buffer,
-      cameraX, cameraY, viewWidth, viewHeight,
-      0, 0, viewWidth, viewHeight
+      cameraX,
+      cameraY,
+      viewWidth,
+      viewHeight,
+      0,
+      0,
+      viewWidth,
+      viewHeight
     );
   }
 }
@@ -1495,7 +1560,7 @@ const worker = new Worker('render-worker.js');
 worker.postMessage({ type: 'init', canvas: offscreen }, [offscreen]);
 
 // render-worker.js
-self.onmessage = function(e) {
+self.onmessage = function (e) {
   if (e.data.type === 'init') {
     const canvas = e.data.canvas;
     const ctx = canvas.getContext('2d');
@@ -1515,7 +1580,7 @@ self.onmessage = function(e) {
 ```javascript
 // Generate textures in a Web Worker
 // worker-texture-gen.js
-self.onmessage = function(e) {
+self.onmessage = function (e) {
   const { width, height, type } = e.data;
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext('2d');
@@ -1648,13 +1713,19 @@ For playable ads: Don't rely on OffscreenCanvas
   <canvas id="game" style="position: absolute; top: 0; left: 0;"></canvas>
 
   <!-- UI overlay on top of canvas -->
-  <div id="ui-overlay" style="position: absolute; top: 0; left: 0; pointer-events: none;">
+  <div
+    id="ui-overlay"
+    style="position: absolute; top: 0; left: 0; pointer-events: none;"
+  >
     <div id="score" style="font-size: 24px; color: white;">Score: 0</div>
     <div id="tutorial-hand" style="/* CSS animation */"></div>
   </div>
 
   <!-- CTA overlay (shown at end) -->
-  <div id="cta-overlay" style="display: none; position: absolute; top: 0; left: 0;">
+  <div
+    id="cta-overlay"
+    style="display: none; position: absolute; top: 0; left: 0;"
+  >
     <button id="install-btn" onclick="installGame()">PLAY NOW!</button>
   </div>
 </div>
@@ -1710,8 +1781,8 @@ For playable ads: Don't rely on OffscreenCanvas
 ```javascript
 // BAD: Changing fillStyle for every draw
 function renderBad(ctx, objects) {
-  objects.forEach(obj => {
-    ctx.fillStyle = obj.color;  // State change every iteration
+  objects.forEach((obj) => {
+    ctx.fillStyle = obj.color; // State change every iteration
     ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
   });
 }
@@ -1719,20 +1790,20 @@ function renderBad(ctx, objects) {
 // GOOD: Group by color
 function renderGood(ctx, objects) {
   const grouped = {};
-  objects.forEach(obj => {
+  objects.forEach((obj) => {
     if (!grouped[obj.color]) grouped[obj.color] = [];
     grouped[obj.color] = [...grouped[obj.color], obj];
   });
 
   Object.entries(grouped).forEach(([color, objs]) => {
     ctx.fillStyle = color; // State change once per color
-    objs.forEach(obj => ctx.fillRect(obj.x, obj.y, obj.w, obj.h));
+    objs.forEach((obj) => ctx.fillRect(obj.x, obj.y, obj.w, obj.h));
   });
 }
 
 // BAD: Creating objects every frame
 function updateBad(particles) {
-  return particles.map(p => {
+  return particles.map((p) => {
     return { ...p, x: p.x + p.vx, y: p.y + p.vy }; // New object every frame
   });
 }
@@ -1741,7 +1812,11 @@ function updateBad(particles) {
 class ParticlePool {
   constructor(maxSize) {
     this.particles = Array.from({ length: maxSize }, () => ({
-      x: 0, y: 0, vx: 0, vy: 0, active: false
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      active: false,
     }));
     this.activeCount = 0;
   }
@@ -1749,7 +1824,10 @@ class ParticlePool {
   spawn(x, y, vx, vy) {
     for (const p of this.particles) {
       if (!p.active) {
-        p.x = x; p.y = y; p.vx = vx; p.vy = vy;
+        p.x = x;
+        p.y = y;
+        p.vx = vx;
+        p.vy = vy;
         p.active = true;
         this.activeCount++;
         return p;
@@ -1815,7 +1893,7 @@ class DirtyRectRenderer {
     // Merge overlapping rects for efficiency
     const merged = this.mergeRects(this.dirtyRects);
 
-    merged.forEach(rect => {
+    merged.forEach((rect) => {
       ctx.save();
       ctx.beginPath();
       ctx.rect(rect.x, rect.y, rect.w, rect.h);
@@ -1858,7 +1936,7 @@ function gameLoop(timestamp) {
 
 // Read results:
 const measures = performance.getEntriesByType('measure');
-measures.forEach(m => {
+measures.forEach((m) => {
   if (m.duration > 16) {
     // Frame took longer than 16ms (below 60fps target)
   }
@@ -1923,10 +2001,10 @@ class SpriteAnimation {
     // Register animations from config
     Object.entries(config).forEach(([name, anim]) => {
       this.animations[name] = {
-        frames: anim.frames,       // Array of frame indices
-        fps: anim.fps || 12,       // Playback speed
-        loop: anim.loop !== false,  // Default to looping
-        row: anim.row || 0         // Row in sprite sheet
+        frames: anim.frames, // Array of frame indices
+        fps: anim.fps || 12, // Playback speed
+        loop: anim.loop !== false, // Default to looping
+        row: anim.row || 0, // Row in sprite sheet
       };
     });
   }
@@ -1982,14 +2060,26 @@ class SpriteAnimation {
       ctx.scale(-1, 1);
       ctx.drawImage(
         this.sheet,
-        sx, sy, this.frameWidth, this.frameHeight,
-        0, 0, this.frameWidth * scale, this.frameHeight * scale
+        sx,
+        sy,
+        this.frameWidth,
+        this.frameHeight,
+        0,
+        0,
+        this.frameWidth * scale,
+        this.frameHeight * scale
       );
     } else {
       ctx.drawImage(
         this.sheet,
-        sx, sy, this.frameWidth, this.frameHeight,
-        x, y, this.frameWidth * scale, this.frameHeight * scale
+        sx,
+        sy,
+        this.frameWidth,
+        this.frameHeight,
+        x,
+        y,
+        this.frameWidth * scale,
+        this.frameHeight * scale
       );
     }
 
@@ -2002,7 +2092,7 @@ const playerAnim = new SpriteAnimation(playerSheet, 64, 64, {
   idle: { frames: [0, 1, 2, 3], fps: 8, row: 0, loop: true },
   run: { frames: [0, 1, 2, 3, 4, 5], fps: 12, row: 1, loop: true },
   jump: { frames: [0, 1, 2], fps: 10, row: 2, loop: false },
-  attack: { frames: [0, 1, 2, 3, 4], fps: 15, row: 3, loop: false }
+  attack: { frames: [0, 1, 2, 3, 4], fps: 15, row: 3, loop: false },
 });
 
 playerAnim.play('idle');
@@ -2046,14 +2136,16 @@ class InputHandler {
     canvas.style.touchAction = 'none';
 
     // Fallback for older webviews
-    canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+    canvas.addEventListener('touchstart', (e) => e.preventDefault(), {
+      passive: false,
+    });
   }
 
   getCanvasPosition(e) {
     const rect = this.canvas.getBoundingClientRect();
     return {
       x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      y: e.clientY - rect.top,
     };
   }
 
@@ -2076,6 +2168,7 @@ class InputHandler {
 ```
 
 Key considerations for playable ads:
+
 - Always use `pointer` events (unified touch/mouse) with `touch` event fallback
 - Set `touch-action: none` on the canvas to prevent browser gestures
 - Convert screen coordinates to canvas coordinates using `getBoundingClientRect()`
@@ -2109,6 +2202,7 @@ I would take a systematic approach:
 `ctx.imageSmoothingEnabled` controls whether the browser applies bilinear filtering when scaling images. When `true` (default), scaled images are smoothed/anti-aliased. When `false`, nearest-neighbor interpolation is used, preserving sharp pixel edges.
 
 **Disable it when:**
+
 - Rendering pixel art that should look crisp when scaled up
 - Drawing sprite sheets where sub-pixel bleeding between frames is an issue
 - Creating a retro/pixelated visual style
@@ -2136,6 +2230,7 @@ ctx.drawImage(pixelArtSprite, 0, 0, 64, 64);
 4. **Returns an ID**: Can be cancelled with `cancelAnimationFrame(id)`
 
 It differs from `setTimeout`/`setInterval` in that:
+
 - `setTimeout(fn, 16)` is not synced to display refresh and can drift
 - `setInterval` can queue up callbacks if a frame takes too long
 - `rAF` is guaranteed to fire at most once before each repaint
@@ -2200,6 +2295,7 @@ For playable ads specifically, some ad networks pause the playable when it's not
 **Answer:**
 
 **Canvas 2D Pros:**
+
 - Full control over rendering
 - Better performance with many moving objects
 - Consistent rendering across browsers/webviews
@@ -2207,12 +2303,14 @@ For playable ads specifically, some ad networks pause the playable when it's not
 - Single-file approach (everything in one HTML)
 
 **Canvas 2D Cons:**
+
 - No built-in hit testing (must implement manually)
 - Text rendering is less flexible than HTML
 - No accessibility (screen readers can't read canvas)
 - Must handle responsive sizing manually
 
 **DOM Manipulation Pros:**
+
 - Built-in event handling and hit testing
 - Superior text rendering (fonts, wrapping, RTL)
 - CSS animations are GPU-accelerated
@@ -2221,6 +2319,7 @@ For playable ads specifically, some ad networks pause the playable when it's not
 - Developer tools inspection
 
 **DOM Manipulation Cons:**
+
 - Poor performance with many animated elements (reflows/repaints)
 - Limited visual effects compared to canvas
 - Harder to create smooth pixel-level animations
@@ -2236,16 +2335,21 @@ For playable ads specifically, some ad networks pause the playable when it's not
 class SimpleParticleSystem {
   constructor(maxParticles = 100) {
     this.pool = Array.from({ length: maxParticles }, () => ({
-      x: 0, y: 0, vx: 0, vy: 0,
-      life: 0, maxLife: 0,
-      size: 0, color: '',
-      active: false
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      life: 0,
+      maxLife: 0,
+      size: 0,
+      color: '',
+      active: false,
     }));
   }
 
   emit(x, y, count, config) {
     for (let i = 0; i < count; i++) {
-      const particle = this.pool.find(p => !p.active);
+      const particle = this.pool.find((p) => !p.active);
       if (!particle) break;
 
       const angle = config.angle + (Math.random() - 0.5) * config.spread;
@@ -2256,7 +2360,8 @@ class SimpleParticleSystem {
       particle.vx = Math.cos(angle) * speed;
       particle.vy = Math.sin(angle) * speed;
       particle.life = 0;
-      particle.maxLife = config.lifetime + Math.random() * config.lifetimeVariance;
+      particle.maxLife =
+        config.lifetime + Math.random() * config.lifetimeVariance;
       particle.size = config.size + Math.random() * config.sizeVariance;
       particle.color = config.color;
       particle.active = true;
@@ -2283,7 +2388,7 @@ class SimpleParticleSystem {
     for (const p of this.pool) {
       if (!p.active) continue;
 
-      const alpha = 1 - (p.life / p.maxLife);
+      const alpha = 1 - p.life / p.maxLife;
       const size = p.size * alpha;
 
       ctx.globalAlpha = alpha;
@@ -2312,6 +2417,6 @@ particles.emit(100, 100, 30, {
   lifetimeVariance: 0.3,
   size: 8,
   sizeVariance: 4,
-  color: '#FF6600'
+  color: '#FF6600',
 });
 ```

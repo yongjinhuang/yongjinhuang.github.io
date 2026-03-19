@@ -1,7 +1,7 @@
 # OOP Principles for LLD Interviews
 
 Object-oriented principles are the foundation of every low-level design interview. Interviewers do
-not want textbook recitation -- they want to see you *apply* these principles to decompose problems
+not want textbook recitation -- they want to see you _apply_ these principles to decompose problems
 into clean, extensible code. This guide covers each principle with before/after refactoring examples.
 
 ---
@@ -298,7 +298,7 @@ interface Eatable {
 
 class Robot implements Workable {
   work(): void {
-    console.log("Working...");
+    console.log('Working...');
   }
   // No need to implement eat()!
 }
@@ -457,7 +457,7 @@ class User:
         self.email = email
 ```
 
-**The balance:** In interviews, design for *reasonable* extensibility (use interfaces, follow OCP),
+**The balance:** In interviews, design for _reasonable_ extensibility (use interfaces, follow OCP),
 but do not implement features the interviewer did not ask for.
 
 ---
@@ -608,6 +608,7 @@ service = CheckoutService(MockGateway())
 ## Law of Demeter
 
 > "Only talk to your immediate friends." A method should only call methods on:
+>
 > 1. Its own object (`self`)
 > 2. Its parameters
 > 3. Objects it creates
@@ -805,7 +806,7 @@ class Car:
 - **Python's duck typing** can make ISP seem unnecessary. In interviews, use ABCs (Abstract Base
   Classes) to make interfaces explicit. This shows you understand the principle even in a dynamic language.
 
-- **SRP does not mean one method per class.** It means one *reason to change*. A `UserValidator`
+- **SRP does not mean one method per class.** It means one _reason to change_. A `UserValidator`
   with 5 validation methods still has one responsibility: validating users.
 
 - **LSP violations are subtle.** Any time a subclass throws an exception the parent does not, or

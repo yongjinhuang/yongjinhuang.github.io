@@ -47,13 +47,13 @@ You have 1-2 seconds to win the click.
 
 ### 1.2 Click-Through Rate (CTR)
 
-| CTR Range | Performance | Meaning |
-|-----------|------------|---------|
-| 2-4% | Below average | Thumbnail/title not compelling enough |
-| 4-7% | Average | Standard performance |
-| 7-10% | Good | Solid thumbnail game |
-| 10-15% | Very good | Excellent packaging |
-| 15%+ | Outstanding | Viral-level curiosity gap |
+| CTR Range | Performance   | Meaning                               |
+| --------- | ------------- | ------------------------------------- |
+| 2-4%      | Below average | Thumbnail/title not compelling enough |
+| 4-7%      | Average       | Standard performance                  |
+| 7-10%     | Good          | Solid thumbnail game                  |
+| 10-15%    | Very good     | Excellent packaging                   |
+| 15%+      | Outstanding   | Viral-level curiosity gap             |
 
 > **CTR is the multiplier for everything.** If you double your CTR from 4% to 8%, you
 > effectively double your views — same impressions, twice the clicks. This is why
@@ -68,13 +68,13 @@ is about in 3 seconds? If not, simplify.
 
 ### 2.2 Key Principles
 
-| Principle | Explanation |
-|-----------|-------------|
-| **Simplicity** | Maximum 3 elements (face, text, object). Less is more |
-| **Contrast** | High contrast between foreground and background |
-| **Readability** | Text readable at thumbnail size (phone screen) |
-| **Curiosity** | Image should make viewer NEED to click |
-| **Emotion** | Show a strong, clear emotion on a human face |
+| Principle                  | Explanation                                                        |
+| -------------------------- | ------------------------------------------------------------------ |
+| **Simplicity**             | Maximum 3 elements (face, text, object). Less is more              |
+| **Contrast**               | High contrast between foreground and background                    |
+| **Readability**            | Text readable at thumbnail size (phone screen)                     |
+| **Curiosity**              | Image should make viewer NEED to click                             |
+| **Emotion**                | Show a strong, clear emotion on a human face                       |
 | **Complementary to title** | Thumbnail and title tell the story together, not repeat each other |
 
 ### 2.3 Do Not Repeat the Title
@@ -166,24 +166,24 @@ Element 3: CONTEXT OBJECT or VISUAL
 
 ### 4.1 Font Rules
 
-| Rule | Why |
-|------|-----|
-| **2-4 words maximum** | Must be readable at tiny thumbnail size |
-| **Bold, thick fonts** | Thin fonts disappear at small sizes |
-| **ALL CAPS for impact** | Easier to read quickly in thumbnails |
-| **High contrast** | White text on dark, black text on light, or outlined |
-| **One font per thumbnail** | Consistency, no visual clutter |
+| Rule                       | Why                                                  |
+| -------------------------- | ---------------------------------------------------- |
+| **2-4 words maximum**      | Must be readable at tiny thumbnail size              |
+| **Bold, thick fonts**      | Thin fonts disappear at small sizes                  |
+| **ALL CAPS for impact**    | Easier to read quickly in thumbnails                 |
+| **High contrast**          | White text on dark, black text on light, or outlined |
+| **One font per thumbnail** | Consistency, no visual clutter                       |
 
 ### 4.2 Best Fonts for Thumbnails
 
-| Font | Style | Why It Works |
-|------|-------|-------------|
+| Font             | Style                 | Why It Works                  |
+| ---------------- | --------------------- | ----------------------------- |
 | Montserrat Black | Sans-serif, very bold | Excellent readability, modern |
-| Bebas Neue | Tall, condensed | Fits more text in less space |
-| Impact | Classic bold | Time-tested thumbnail font |
-| Oswald Bold | Condensed sans-serif | Clean, professional |
-| Anton | Display sans-serif | Strong, attention-grabbing |
-| Bangers | Comic/fun style | Playful, energetic content |
+| Bebas Neue       | Tall, condensed       | Fits more text in less space  |
+| Impact           | Classic bold          | Time-tested thumbnail font    |
+| Oswald Bold      | Condensed sans-serif  | Clean, professional           |
+| Anton            | Display sans-serif    | Strong, attention-grabbing    |
+| Bangers          | Comic/fun style       | Playful, energetic content    |
 
 ### 4.3 Text Legibility Techniques
 
@@ -241,24 +241,24 @@ YouTube UI (light mode):
 
 ### 5.2 High-Impact Color Combinations
 
-| Combination | Feel | Example Use |
-|-------------|------|-------------|
-| Yellow + Black | Warning, attention | Clickbait-style, tech |
-| Red + White | Urgent, bold | News, reactions |
-| Blue + Orange | Professional, balanced | Corporate, educational |
-| Green + White | Fresh, growth | Finance, nature |
-| Purple + Yellow | Creative, premium | Design, fashion |
-| Black + Neon green | Tech, hacker | Programming, gaming |
+| Combination        | Feel                   | Example Use            |
+| ------------------ | ---------------------- | ---------------------- |
+| Yellow + Black     | Warning, attention     | Clickbait-style, tech  |
+| Red + White        | Urgent, bold           | News, reactions        |
+| Blue + Orange      | Professional, balanced | Corporate, educational |
+| Green + White      | Fresh, growth          | Finance, nature        |
+| Purple + Yellow    | Creative, premium      | Design, fashion        |
+| Black + Neon green | Tech, hacker           | Programming, gaming    |
 
 ### 5.3 Background Strategies
 
-| Strategy | How | When |
-|----------|-----|------|
-| Solid bright color | Single vivid color behind subject | Simple, bold thumbnails |
-| Gradient | Color transition (e.g., blue to purple) | Modern, polished |
-| Blurred environment | Actual location, heavily blurred | Context + simplicity |
-| Dark/dramatic | Dark background, subject lit | Serious, premium feel |
-| Contrasting split | Two colors divided diagonally | Before/after, comparison |
+| Strategy            | How                                     | When                     |
+| ------------------- | --------------------------------------- | ------------------------ |
+| Solid bright color  | Single vivid color behind subject       | Simple, bold thumbnails  |
+| Gradient            | Color transition (e.g., blue to purple) | Modern, polished         |
+| Blurred environment | Actual location, heavily blurred        | Context + simplicity     |
+| Dark/dramatic       | Dark background, subject lit            | Serious, premium feel    |
+| Contrasting split   | Two colors divided diagonally           | Before/after, comparison |
 
 ## 6. Facial Expressions and Human Psychology
 
@@ -269,46 +269,46 @@ also knows this — thumbnails with clear faces generally get higher CTR.
 
 ### 6.2 Expression Guide
 
-| Expression | Emotion | Best For |
-|-----------|---------|----------|
-| Wide eyes + open mouth | Shock, surprise | Reaction videos, reveals |
-| Genuine smile | Joy, positivity | Lifestyle, travel, tutorials |
-| Furrowed brow + slight frown | Concern, thinking | Analysis, opinion, deep-dive |
-| Confident smirk | Authority, knowing | Expert advice, reviews |
-| Exaggerated confusion | Humor, disbelief | Comedy, reaction |
-| Determined / serious | Authority, expertise | Business, finance, tech |
+| Expression                   | Emotion              | Best For                     |
+| ---------------------------- | -------------------- | ---------------------------- |
+| Wide eyes + open mouth       | Shock, surprise      | Reaction videos, reveals     |
+| Genuine smile                | Joy, positivity      | Lifestyle, travel, tutorials |
+| Furrowed brow + slight frown | Concern, thinking    | Analysis, opinion, deep-dive |
+| Confident smirk              | Authority, knowing   | Expert advice, reviews       |
+| Exaggerated confusion        | Humor, disbelief     | Comedy, reaction             |
+| Determined / serious         | Authority, expertise | Business, finance, tech      |
 
 ### 6.3 Face Photography Tips for Thumbnails
 
-| Tip | Why |
-|-----|-----|
-| Shoot face photos separately from video | Better control of expression, lighting, angle |
-| Use portrait mode or wide aperture | Blurry background isolates the face |
-| Light the face well (front lighting) | No harsh shadows hiding the expression |
-| Look at the camera | Creates direct eye contact with viewer |
-| Fill at least 30-40% of the thumbnail | Face must be clearly visible at small sizes |
-| Shoot against green screen or plain wall | Easy to cut out and place on any background |
+| Tip                                      | Why                                           |
+| ---------------------------------------- | --------------------------------------------- |
+| Shoot face photos separately from video  | Better control of expression, lighting, angle |
+| Use portrait mode or wide aperture       | Blurry background isolates the face           |
+| Light the face well (front lighting)     | No harsh shadows hiding the expression        |
+| Look at the camera                       | Creates direct eye contact with viewer        |
+| Fill at least 30-40% of the thumbnail    | Face must be clearly visible at small sizes   |
+| Shoot against green screen or plain wall | Easy to cut out and place on any background   |
 
 ## 7. Thumbnail Creation Tools
 
 ### 7.1 Tool Comparison
 
-| Tool | Difficulty | Price | Best For |
-|------|-----------|-------|----------|
-| **Canva** | Easy | Free / $13/mo | Quick thumbnails, templates |
-| **Photoshop** | Hard | $23/mo | Maximum control, professional |
-| **GIMP** | Medium | Free | Photoshop alternative |
-| **Figma** | Medium | Free tier | Template-based workflow |
-| **Photopea** | Medium | Free (web) | Photoshop clone in browser |
-| **Pixlr** | Easy | Free (web) | Quick edits, background removal |
+| Tool          | Difficulty | Price         | Best For                        |
+| ------------- | ---------- | ------------- | ------------------------------- |
+| **Canva**     | Easy       | Free / $13/mo | Quick thumbnails, templates     |
+| **Photoshop** | Hard       | $23/mo        | Maximum control, professional   |
+| **GIMP**      | Medium     | Free          | Photoshop alternative           |
+| **Figma**     | Medium     | Free tier     | Template-based workflow         |
+| **Photopea**  | Medium     | Free (web)    | Photoshop clone in browser      |
+| **Pixlr**     | Easy       | Free (web)    | Quick edits, background removal |
 
 ### 7.2 Recommended Tool by Level
 
-| Level | Tool | Why |
-|-------|------|-----|
-| Beginner | **Canva** | Templates, drag-and-drop, fast results |
-| Intermediate | **Photopea** (free) or **Canva Pro** | More control, still accessible |
-| Advanced | **Photoshop** or **Figma** | Full professional control |
+| Level        | Tool                                 | Why                                    |
+| ------------ | ------------------------------------ | -------------------------------------- |
+| Beginner     | **Canva**                            | Templates, drag-and-drop, fast results |
+| Intermediate | **Photopea** (free) or **Canva Pro** | More control, still accessible         |
+| Advanced     | **Photoshop** or **Figma**           | Full professional control              |
 
 ### 7.3 Canva Thumbnail Workflow
 
@@ -329,28 +329,28 @@ Time: 10-15 minutes once you have a template
 
 ### 7.4 Background Removal Tools
 
-| Tool | Price | Quality |
-|------|-------|---------|
-| remove.bg | Free (limited) / $9/mo | Excellent AI removal |
-| Canva background remover | Canva Pro ($13/mo) | Good, integrated |
-| Photoshop (Select Subject) | $23/mo | Excellent with manual refinement |
-| Photoroom | Free (limited) | Good mobile option |
+| Tool                       | Price                  | Quality                          |
+| -------------------------- | ---------------------- | -------------------------------- |
+| remove.bg                  | Free (limited) / $9/mo | Excellent AI removal             |
+| Canva background remover   | Canva Pro ($13/mo)     | Good, integrated                 |
+| Photoshop (Select Subject) | $23/mo                 | Excellent with manual refinement |
+| Photoroom                  | Free (limited)         | Good mobile option               |
 
 ## 8. Channel Branding
 
 ### 8.1 Brand Elements Checklist
 
-| Element | Specification | Purpose |
-|---------|--------------|---------|
-| Channel name | Memorable, searchable | Identity |
-| Logo / icon | Recognizable at 98×98px | Channel avatar |
-| Banner | 2560×1440px | Channel page header |
-| Color palette | 2-3 primary colors | Consistency |
-| Fonts | 1-2 fonts | Recognition |
-| Thumbnail style | Consistent layout template | Browse recognition |
-| Intro sequence | 2-5 seconds, branded | Opening identity |
-| Outro / end screen | Branded with links | Viewer retention |
-| Watermark | Small logo, lower right | Branding during video |
+| Element            | Specification              | Purpose               |
+| ------------------ | -------------------------- | --------------------- |
+| Channel name       | Memorable, searchable      | Identity              |
+| Logo / icon        | Recognizable at 98×98px    | Channel avatar        |
+| Banner             | 2560×1440px                | Channel page header   |
+| Color palette      | 2-3 primary colors         | Consistency           |
+| Fonts              | 1-2 fonts                  | Recognition           |
+| Thumbnail style    | Consistent layout template | Browse recognition    |
+| Intro sequence     | 2-5 seconds, branded       | Opening identity      |
+| Outro / end screen | Branded with links         | Viewer retention      |
+| Watermark          | Small logo, lower right    | Branding during video |
 
 ### 8.2 Channel Banner Design
 
@@ -382,12 +382,12 @@ Important text must fit within the mobile safe area (center 1546×423).
 
 For a personal YouTube channel, your logo can be simple:
 
-| Approach | Example | Best For |
-|----------|---------|----------|
-| Professional headshot | Your face in a circle | Personal brand, vloggers |
-| Initial/monogram | Stylized "YH" or first letter | Clean, versatile |
-| Simple icon + text | Custom icon with channel name | Niche/topic channels |
-| Wordmark | Styled channel name text only | Simple, recognizable |
+| Approach              | Example                       | Best For                 |
+| --------------------- | ----------------------------- | ------------------------ |
+| Professional headshot | Your face in a circle         | Personal brand, vloggers |
+| Initial/monogram      | Stylized "YH" or first letter | Clean, versatile         |
+| Simple icon + text    | Custom icon with channel name | Niche/topic channels     |
+| Wordmark              | Styled channel name text only | Simple, recognizable     |
 
 > **Start simple.** A clean headshot or monogram is better than an over-designed logo.
 > You can always rebrand later when you have a clearer vision.
@@ -467,14 +467,14 @@ Winner gets 100% of impressions
 
 ### 10.2 What to Test
 
-| Variable | Test Options |
-|----------|-------------|
-| Face expression | Shocked vs smiling vs serious |
-| Text vs no text | Text-heavy vs minimal vs none |
-| Color scheme | Warm vs cool vs bright |
-| Layout | Face left vs right vs centered |
-| Background | Solid color vs environment vs dark |
-| Zoom level | Close face vs medium shot vs wide |
+| Variable        | Test Options                       |
+| --------------- | ---------------------------------- |
+| Face expression | Shocked vs smiling vs serious      |
+| Text vs no text | Text-heavy vs minimal vs none      |
+| Color scheme    | Warm vs cool vs bright             |
+| Layout          | Face left vs right vs centered     |
+| Background      | Solid color vs environment vs dark |
+| Zoom level      | Close face vs medium shot vs wide  |
 
 ### 10.3 Analyzing Thumbnail Performance
 

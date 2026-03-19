@@ -89,6 +89,7 @@ Playable ads are interactive mini-games served as advertisements. Users play a 1
 Hyper-casual games are simple, instantly playable games with minimal onboarding. They are often developed for mobile platforms but increasingly built with HTML5 for cross-platform reach.
 
 **Characteristics:**
+
 - Simple one-touch or two-touch mechanics
 - No tutorial needed (intuitive gameplay)
 - Session length: 30 seconds to 2 minutes
@@ -101,6 +102,7 @@ Hyper-casual games are simple, instantly playable games with minimal onboarding.
 HTML5 games distributed through portals (Poki, CrazyGames, Newgrounds) or instant game platforms (Facebook Instant Games, Snapchat Games, LINE).
 
 **Key considerations:**
+
 - No app store approval process
 - Instant loading (progressive loading techniques)
 - Cross-platform by default
@@ -132,54 +134,54 @@ HTML5 games distributed through portals (Poki, CrazyGames, Newgrounds) or instan
 
 #### Ad Tech & Playable Platforms
 
-| Company | Role | Notable Products |
-|---------|------|-----------------|
-| **Unity (IronSource/Supersonic)** | Ad network + playable creation tools | Luna, Supersonic Studio |
-| **AppLovin** | Ad network + game publishing | MAX mediation, SparkLabs |
-| **Meta (Facebook)** | Major ad network | Playable Ads in Ads Manager |
-| **Google** | Ad network | Interactive ads in Google Ads |
-| **Mintegral** | Ad network (strong in Asia) | Playturbo playable ad platform |
-| **Mindworks** | Playable ad creative studio | Playturbo |
-| **Digital Turbine** | Ad tech | AdColony playables |
+| Company                           | Role                                 | Notable Products               |
+| --------------------------------- | ------------------------------------ | ------------------------------ |
+| **Unity (IronSource/Supersonic)** | Ad network + playable creation tools | Luna, Supersonic Studio        |
+| **AppLovin**                      | Ad network + game publishing         | MAX mediation, SparkLabs       |
+| **Meta (Facebook)**               | Major ad network                     | Playable Ads in Ads Manager    |
+| **Google**                        | Ad network                           | Interactive ads in Google Ads  |
+| **Mintegral**                     | Ad network (strong in Asia)          | Playturbo playable ad platform |
+| **Mindworks**                     | Playable ad creative studio          | Playturbo                      |
+| **Digital Turbine**               | Ad tech                              | AdColony playables             |
 
 #### Game Publishers (Hyper-Casual)
 
-| Company | Role | Notable Titles |
-|---------|------|---------------|
-| **Voodoo** | Leading hyper-casual publisher | Helix Jump, Hole.io |
-| **Supersonic (Unity)** | Publisher + monetization | Bridge Race, Join Clash |
-| **CrazyLabs** | Top hyper-casual publisher | Phone Case DIY, Tie Dye |
-| **SayGames** | Publisher | Sand Balls, Johnny Trigger |
-| **Ketchapp (Ubisoft)** | Publisher | 2048, Rider |
+| Company                | Role                           | Notable Titles             |
+| ---------------------- | ------------------------------ | -------------------------- |
+| **Voodoo**             | Leading hyper-casual publisher | Helix Jump, Hole.io        |
+| **Supersonic (Unity)** | Publisher + monetization       | Bridge Race, Join Clash    |
+| **CrazyLabs**          | Top hyper-casual publisher     | Phone Case DIY, Tie Dye    |
+| **SayGames**           | Publisher                      | Sand Balls, Johnny Trigger |
+| **Ketchapp (Ubisoft)** | Publisher                      | 2048, Rider                |
 
 #### HTML5 Game Portals
 
-| Platform | Model | Developer Revenue |
-|----------|-------|-------------------|
-| **Poki** | Ad-supported portal | Revenue share |
-| **CrazyGames** | Ad-supported portal | Revenue share |
-| **Kongregate** | Ad + IAP portal | Revenue share |
-| **itch.io** | Indie marketplace | Pay what you want |
-| **Newgrounds** | Community portal | Ad revenue share |
+| Platform       | Model               | Developer Revenue |
+| -------------- | ------------------- | ----------------- |
+| **Poki**       | Ad-supported portal | Revenue share     |
+| **CrazyGames** | Ad-supported portal | Revenue share     |
+| **Kongregate** | Ad + IAP portal     | Revenue share     |
+| **itch.io**    | Indie marketplace   | Pay what you want |
+| **Newgrounds** | Community portal    | Ad revenue share  |
 
 #### Instant Game Platforms
 
-| Platform | SDK | Max Size |
-|----------|-----|----------|
-| **Facebook Instant Games** | FBInstant SDK | 200MB (initial 1MB) |
-| **Snapchat Games** | Snap Games SDK | Varies |
-| **LINE Quick Games** | LIFF SDK | Varies |
-| **WeChat Mini Games** | WeChat SDK | 20MB |
+| Platform                   | SDK            | Max Size            |
+| -------------------------- | -------------- | ------------------- |
+| **Facebook Instant Games** | FBInstant SDK  | 200MB (initial 1MB) |
+| **Snapchat Games**         | Snap Games SDK | Varies              |
+| **LINE Quick Games**       | LIFF SDK       | Varies              |
+| **WeChat Mini Games**      | WeChat SDK     | 20MB                |
 
 #### Engine & Tool Companies
 
-| Company | Product | Focus |
-|---------|---------|-------|
-| **Cocos** | Cocos Creator | 2D/3D (strong in China) |
-| **PlayCanvas** | PlayCanvas Engine | 3D, playable ads |
-| **Phaser** | Phaser CE/3 | 2D web games |
-| **PixiJS** | PixiJS | 2D rendering |
-| **GDevelop** | GDevelop | No-code game maker |
+| Company        | Product           | Focus                   |
+| -------------- | ----------------- | ----------------------- |
+| **Cocos**      | Cocos Creator     | 2D/3D (strong in China) |
+| **PlayCanvas** | PlayCanvas Engine | 3D, playable ads        |
+| **Phaser**     | Phaser CE/3       | 2D web games            |
+| **PixiJS**     | PixiJS            | 2D rendering            |
+| **GDevelop**   | GDevelop          | No-code game maker      |
 
 ---
 
@@ -282,19 +284,19 @@ Priority 3 (Nice to Have):
 
 ### Key Differences
 
-| Aspect | Playable Ad Interview | General Game Dev Interview |
-|--------|----------------------|---------------------------|
-| **Primary focus** | Size optimization, fast loading | Gameplay depth, features |
-| **File size** | 2-5MB hard limit | Not typically a concern |
-| **Performance target** | Low-end mobile (30fps) | Target platform specific |
-| **Duration** | 15-60 second experience | Full game sessions |
-| **Architecture** | Simple, often procedural | Complex, scalable systems |
-| **Code style** | Compact, inline, single-file | Modular, maintainable |
-| **Art pipeline** | Compressed sprites, generated art | Full asset pipeline |
-| **Audio** | Minimal, often generated | Full sound design |
-| **Testing** | Cross-webview compatibility | Platform-specific QA |
-| **Metrics** | CPI, IPM, CTR, engagement | FPS, load time, crashes |
-| **Design sense** | UX compression, instant hook | Full game design |
+| Aspect                 | Playable Ad Interview             | General Game Dev Interview |
+| ---------------------- | --------------------------------- | -------------------------- |
+| **Primary focus**      | Size optimization, fast loading   | Gameplay depth, features   |
+| **File size**          | 2-5MB hard limit                  | Not typically a concern    |
+| **Performance target** | Low-end mobile (30fps)            | Target platform specific   |
+| **Duration**           | 15-60 second experience           | Full game sessions         |
+| **Architecture**       | Simple, often procedural          | Complex, scalable systems  |
+| **Code style**         | Compact, inline, single-file      | Modular, maintainable      |
+| **Art pipeline**       | Compressed sprites, generated art | Full asset pipeline        |
+| **Audio**              | Minimal, often generated          | Full sound design          |
+| **Testing**            | Cross-webview compatibility       | Platform-specific QA       |
+| **Metrics**            | CPI, IPM, CTR, engagement         | FPS, load time, crashes    |
+| **Design sense**       | UX compression, instant hook      | Full game design           |
 
 ### What Playable Ad Interviewers Look For
 
@@ -378,11 +380,13 @@ class RenderPipeline {
 ### Format 1: Take-Home Game Project (Most Common for Playable Ads)
 
 **Typical prompt:**
+
 > "Create a playable ad for [genre: match-3/runner/puzzle]. The ad should be a single HTML file under 3MB. The player should understand the core mechanic and reach the CTA within 30 seconds."
 
 **Time given:** 2-5 days
 
 **Evaluation criteria:**
+
 - Does it work on mobile?
 - Is it under the size limit?
 - Is the game fun and intuitive?
@@ -431,12 +435,14 @@ class RenderPipeline {
 **Duration:** 45-90 minutes
 
 **Typical tasks:**
+
 1. Implement a basic game mechanic (e.g., drag and drop, projectile motion)
 2. Optimize a rendering pipeline
 3. Debug a performance issue in existing code
 4. Add a feature to a simple game
 
 **Example live coding prompt:**
+
 > "Implement a simple 'tap to collect falling items' game. Items fall from the top, player moves a basket at the bottom by touch/mouse. Track score and end after 30 seconds."
 
 ```javascript
@@ -451,7 +457,12 @@ class FallingItemsGame {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.items = [];
-    this.basket = { x: canvas.width / 2, y: canvas.height - 50, width: 80, height: 40 };
+    this.basket = {
+      x: canvas.width / 2,
+      y: canvas.height - 50,
+      width: 80,
+      height: 40,
+    };
     this.score = 0;
     this.timeRemaining = 30;
     this.lastTime = 0;
@@ -472,8 +483,8 @@ class FallingItemsGame {
     }
 
     this.items = this.items
-      .map(item => ({ ...item, y: item.y + item.speed * deltaTime }))
-      .filter(item => {
+      .map((item) => ({ ...item, y: item.y + item.speed * deltaTime }))
+      .filter((item) => {
         if (this.checkCollision(item, this.basket)) {
           this.score++;
           return false;
@@ -499,7 +510,7 @@ class FallingItemsGame {
       width: 30,
       height: 30,
       speed: 100 + Math.random() * 200,
-      color: `hsl(${Math.random() * 360}, 70%, 60%)`
+      color: `hsl(${Math.random() * 360}, 70%, 60%)`,
     };
     this.items = [...this.items, newItem]; // Immutable
   }
@@ -510,10 +521,15 @@ class FallingItemsGame {
 
     // Draw basket
     ctx.fillStyle = '#4CAF50';
-    ctx.fillRect(this.basket.x, this.basket.y, this.basket.width, this.basket.height);
+    ctx.fillRect(
+      this.basket.x,
+      this.basket.y,
+      this.basket.width,
+      this.basket.height
+    );
 
     // Draw items
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
       ctx.fillStyle = item.color;
       ctx.fillRect(item.x, item.y, item.width, item.height);
     });
@@ -532,6 +548,7 @@ class FallingItemsGame {
 **Duration:** 45-60 minutes
 
 **Typical prompts:**
+
 - "Design the architecture for a playable ad creation platform"
 - "Design a system to serve and track playable ads across multiple networks"
 - "Design the architecture for a real-time multiplayer HTML5 game"
@@ -579,6 +596,7 @@ Example System Design: Playable Ad Creation Platform
 **Duration:** 30-45 minutes
 
 **Topics:**
+
 - Walk through how a rendering pipeline works
 - Explain your optimization process for a playable ad
 - Discuss trade-offs between different physics approaches
@@ -589,6 +607,7 @@ Example System Design: Playable Ad Creation Platform
 **Duration:** 30-60 minutes
 
 **What to prepare:**
+
 - 3-5 playable ad examples with metrics (CPI, IPM)
 - Before/after optimization stories
 - Technical challenges and solutions
@@ -647,32 +666,32 @@ Example System Design: Playable Ad Creation Platform
 
 ```javascript
 // 1. Not understanding the constraints
-"I'd use a 50MB 3D model for the playable ad"  // No!
+"I'd use a 50MB 3D model for the playable ad"; // No!
 
 // 2. Poor performance awareness
 function render() {
   // Creating new objects every frame
-  const gradient = ctx.createLinearGradient(0, 0, 100, 100);  // Allocate once!
+  const gradient = ctx.createLinearGradient(0, 0, 100, 100); // Allocate once!
   // Using getImageData in the game loop
-  const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);  // Never!
+  const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height); // Never!
 }
 
 // 3. Not handling mobile
-document.addEventListener('click', handler);  // What about touch?
+document.addEventListener('click', handler); // What about touch?
 // No viewport meta tag
 // No orientation handling
 // Fixed pixel sizes instead of responsive
 
 // 4. Memory leaks
 function spawnParticle() {
-  particles.push(new Particle());  // Never cleaned up!
+  particles.push(new Particle()); // Never cleaned up!
   // Event listeners added but never removed
   // Textures loaded but never disposed
 }
 
 // 5. No understanding of the business
-"What's CPI?" // You need to know the metrics
-"Why does file size matter?" // This is fundamental
+("What's CPI?"); // You need to know the metrics
+('Why does file size matter?'); // This is fundamental
 ```
 
 ### Green Flags (What Gets You Hired)
@@ -683,10 +702,12 @@ const ASSETS = {
   // Base64 inline for small assets (saves HTTP request)
   coinSound: 'data:audio/mp3;base64,...',
   // Procedural generation for backgrounds
-  drawBackground(ctx) { /* generate programmatically */ },
+  drawBackground(ctx) {
+    /* generate programmatically */
+  },
   // Sprite atlas for multiple sprites in one image
   atlas: 'data:image/png;base64,...',
-  atlasMap: { coin: [0,0,32,32], gem: [32,0,32,32] }
+  atlasMap: { coin: [0, 0, 32, 32], gem: [32, 0, 32, 32] },
 };
 
 // 2. Performance-first rendering
@@ -731,7 +752,7 @@ const GameState = Object.freeze({
   TUTORIAL: 'tutorial',
   PLAYING: 'playing',
   WIN: 'win',
-  END_CARD: 'end_card'
+  END_CARD: 'end_card',
 });
 ```
 
@@ -865,67 +886,67 @@ Community:
 
 ### Advertising & Monetization Terms
 
-| Term | Full Name | Definition |
-|------|-----------|------------|
-| **CPI** | Cost Per Install | Amount advertiser pays for each app install. Lower is better for advertiser. Typical range: $0.50-$5.00 |
-| **CPM** | Cost Per Mille | Cost per 1,000 ad impressions. Measures how much advertisers pay per 1k views |
-| **eCPM** | Effective CPM | Revenue earned per 1,000 impressions (publisher perspective). Higher is better for publisher |
-| **IPM** | Installs Per Mille | Number of installs per 1,000 impressions. Measures ad creative effectiveness. IPM = (Installs / Impressions) x 1000 |
-| **CTR** | Click-Through Rate | Percentage of users who click the CTA. CTR = (Clicks / Impressions) x 100% |
-| **CVR** | Conversion Rate | Percentage of users who install after clicking. CVR = (Installs / Clicks) x 100% |
-| **ROAS** | Return on Ad Spend | Revenue generated per dollar spent on ads. ROAS = Revenue / Ad Spend |
-| **LTV** | Lifetime Value | Total revenue a user generates over their lifetime. Critical for profitability calculation |
-| **ARPU** | Average Revenue Per User | Average revenue generated per user in a time period |
-| **ARPDAU** | Average Revenue Per Daily Active User | Revenue per DAU, key daily metric |
-| **DAU** | Daily Active Users | Number of unique users who engage per day |
-| **MAU** | Monthly Active Users | Number of unique users per month |
-| **D1/D7/D30** | Day 1/7/30 Retention | Percentage of users who return after 1/7/30 days |
-| **CTA** | Call To Action | Button/prompt that directs user to app store |
+| Term          | Full Name                             | Definition                                                                                                          |
+| ------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **CPI**       | Cost Per Install                      | Amount advertiser pays for each app install. Lower is better for advertiser. Typical range: $0.50-$5.00             |
+| **CPM**       | Cost Per Mille                        | Cost per 1,000 ad impressions. Measures how much advertisers pay per 1k views                                       |
+| **eCPM**      | Effective CPM                         | Revenue earned per 1,000 impressions (publisher perspective). Higher is better for publisher                        |
+| **IPM**       | Installs Per Mille                    | Number of installs per 1,000 impressions. Measures ad creative effectiveness. IPM = (Installs / Impressions) x 1000 |
+| **CTR**       | Click-Through Rate                    | Percentage of users who click the CTA. CTR = (Clicks / Impressions) x 100%                                          |
+| **CVR**       | Conversion Rate                       | Percentage of users who install after clicking. CVR = (Installs / Clicks) x 100%                                    |
+| **ROAS**      | Return on Ad Spend                    | Revenue generated per dollar spent on ads. ROAS = Revenue / Ad Spend                                                |
+| **LTV**       | Lifetime Value                        | Total revenue a user generates over their lifetime. Critical for profitability calculation                          |
+| **ARPU**      | Average Revenue Per User              | Average revenue generated per user in a time period                                                                 |
+| **ARPDAU**    | Average Revenue Per Daily Active User | Revenue per DAU, key daily metric                                                                                   |
+| **DAU**       | Daily Active Users                    | Number of unique users who engage per day                                                                           |
+| **MAU**       | Monthly Active Users                  | Number of unique users per month                                                                                    |
+| **D1/D7/D30** | Day 1/7/30 Retention                  | Percentage of users who return after 1/7/30 days                                                                    |
+| **CTA**       | Call To Action                        | Button/prompt that directs user to app store                                                                        |
 
 ### Technical & Ad Format Terms
 
-| Term | Full Name | Definition |
-|------|-----------|------------|
-| **MRAID** | Mobile Rich Media Ad Interface Definitions | IAB standard API for rich media ads in mobile apps. Provides methods for ad behavior (expand, resize, close) |
-| **VPAID** | Video Player Ad Interface Definition | Standard for interactive video ads. Being replaced by SIMID |
-| **SIMID** | Secure Interactive Media Interface Definition | Successor to VPAID for interactive ads |
-| **VAST** | Video Ad Serving Template | XML-based protocol for serving video ads |
-| **SDK** | Software Development Kit | Tools/libraries for integrating with a platform |
-| **Mediation** | Ad Mediation | System that manages multiple ad networks to maximize revenue |
-| **Waterfall** | Waterfall Mediation | Sequential ad network prioritization. Being replaced by bidding |
-| **Bidding** | In-App Bidding/Header Bidding | Real-time auction for ad impressions among networks |
-| **Fill Rate** | - | Percentage of ad requests that result in a displayed ad |
-| **Interstitial** | - | Full-screen ad displayed at natural transition points |
-| **Rewarded** | Rewarded Ad | Ad that gives users in-game rewards for engaging (watching video, playing playable) |
-| **Banner** | Banner Ad | Small rectangular ad, usually at top or bottom of screen |
-| **Native** | Native Ad | Ad designed to match the look and feel of the app content |
+| Term             | Full Name                                     | Definition                                                                                                   |
+| ---------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **MRAID**        | Mobile Rich Media Ad Interface Definitions    | IAB standard API for rich media ads in mobile apps. Provides methods for ad behavior (expand, resize, close) |
+| **VPAID**        | Video Player Ad Interface Definition          | Standard for interactive video ads. Being replaced by SIMID                                                  |
+| **SIMID**        | Secure Interactive Media Interface Definition | Successor to VPAID for interactive ads                                                                       |
+| **VAST**         | Video Ad Serving Template                     | XML-based protocol for serving video ads                                                                     |
+| **SDK**          | Software Development Kit                      | Tools/libraries for integrating with a platform                                                              |
+| **Mediation**    | Ad Mediation                                  | System that manages multiple ad networks to maximize revenue                                                 |
+| **Waterfall**    | Waterfall Mediation                           | Sequential ad network prioritization. Being replaced by bidding                                              |
+| **Bidding**      | In-App Bidding/Header Bidding                 | Real-time auction for ad impressions among networks                                                          |
+| **Fill Rate**    | -                                             | Percentage of ad requests that result in a displayed ad                                                      |
+| **Interstitial** | -                                             | Full-screen ad displayed at natural transition points                                                        |
+| **Rewarded**     | Rewarded Ad                                   | Ad that gives users in-game rewards for engaging (watching video, playing playable)                          |
+| **Banner**       | Banner Ad                                     | Small rectangular ad, usually at top or bottom of screen                                                     |
+| **Native**       | Native Ad                                     | Ad designed to match the look and feel of the app content                                                    |
 
 ### Game Development Terms
 
-| Term | Definition |
-|------|------------|
-| **Game Loop** | Core cycle: input processing → game state update → rendering |
-| **Delta Time** | Time elapsed between frames, used for frame-rate independent movement |
-| **Sprite** | 2D image or animation used in a game |
-| **Sprite Sheet** | Single image containing multiple sprites arranged in a grid |
-| **Texture Atlas** | Optimized sprite sheet with arbitrary sprite positions (JSON metadata) |
-| **Tween** | Smooth interpolation between two values over time |
-| **Easing** | Function that controls the acceleration curve of a tween |
-| **Particle System** | System for generating and managing many small sprites (effects) |
-| **Object Pooling** | Reusing objects instead of creating/destroying them (performance) |
-| **Draw Call** | Single GPU rendering command. Fewer is better for performance |
-| **Batching** | Combining multiple draw calls into one for performance |
-| **ECS** | Entity-Component-System architecture pattern |
-| **FSM** | Finite State Machine for managing game/entity states |
-| **AABB** | Axis-Aligned Bounding Box for collision detection |
-| **SAT** | Separating Axis Theorem for convex polygon collision |
-| **FBO** | Framebuffer Object for render-to-texture in WebGL |
-| **Shader** | GPU program (vertex shader + fragment shader) |
-| **GLSL** | OpenGL Shading Language, used to write WebGL shaders |
-| **IK** | Inverse Kinematics, calculating joint angles for skeletal animation |
-| **LOD** | Level of Detail, reducing complexity for distant objects |
-| **Quad Tree** | Spatial partitioning structure for efficient collision checks |
-| **DPR** | Device Pixel Ratio, ratio of physical to CSS pixels |
+| Term                | Definition                                                             |
+| ------------------- | ---------------------------------------------------------------------- |
+| **Game Loop**       | Core cycle: input processing → game state update → rendering           |
+| **Delta Time**      | Time elapsed between frames, used for frame-rate independent movement  |
+| **Sprite**          | 2D image or animation used in a game                                   |
+| **Sprite Sheet**    | Single image containing multiple sprites arranged in a grid            |
+| **Texture Atlas**   | Optimized sprite sheet with arbitrary sprite positions (JSON metadata) |
+| **Tween**           | Smooth interpolation between two values over time                      |
+| **Easing**          | Function that controls the acceleration curve of a tween               |
+| **Particle System** | System for generating and managing many small sprites (effects)        |
+| **Object Pooling**  | Reusing objects instead of creating/destroying them (performance)      |
+| **Draw Call**       | Single GPU rendering command. Fewer is better for performance          |
+| **Batching**        | Combining multiple draw calls into one for performance                 |
+| **ECS**             | Entity-Component-System architecture pattern                           |
+| **FSM**             | Finite State Machine for managing game/entity states                   |
+| **AABB**            | Axis-Aligned Bounding Box for collision detection                      |
+| **SAT**             | Separating Axis Theorem for convex polygon collision                   |
+| **FBO**             | Framebuffer Object for render-to-texture in WebGL                      |
+| **Shader**          | GPU program (vertex shader + fragment shader)                          |
+| **GLSL**            | OpenGL Shading Language, used to write WebGL shaders                   |
+| **IK**              | Inverse Kinematics, calculating joint angles for skeletal animation    |
+| **LOD**             | Level of Detail, reducing complexity for distant objects               |
+| **Quad Tree**       | Spatial partitioning structure for efficient collision checks          |
+| **DPR**             | Device Pixel Ratio, ratio of physical to CSS pixels                    |
 
 ### Relationship Between Key Metrics
 
@@ -975,6 +996,7 @@ IPM = CTR × CVR × 1000
 A playable ad is an interactive advertisement that lets users experience a mini version of a game before installing it. They are typically 15-60 seconds long and end with a call-to-action (CTA) directing users to the app store.
 
 They are effective because:
+
 1. **Self-selection**: Users who enjoy the playable are more likely to enjoy the full game, leading to better retention (30-40% higher D7)
 2. **Higher engagement**: Interactive content has 3-8x higher conversion than static ads
 3. **Better quality users**: Users arrive with realistic expectations, reducing churn
@@ -1074,16 +1096,16 @@ function getFileSize(htmlString) {
 
 **Answer:**
 
-| Feature | MRAID 1.0 | MRAID 2.0 | MRAID 3.0 |
-|---------|-----------|-----------|-----------|
-| **Basic operations** | open, close, expand | + resize, storePicture | + all MRAID 2.0 |
-| **Two-part creative** | No | Yes | Yes |
-| **Viewability** | No | isViewable() | Exposure change events |
-| **Audio** | No | No | Volume control |
-| **Location** | No | getLocation() | Enhanced |
-| **Video** | No | createCalendarEvent, playVideo | Enhanced |
-| **Unload** | No | No | unload() for cleanup |
-| **Resize** | expand() only | resize() + expand() | Same |
+| Feature               | MRAID 1.0           | MRAID 2.0                      | MRAID 3.0              |
+| --------------------- | ------------------- | ------------------------------ | ---------------------- |
+| **Basic operations**  | open, close, expand | + resize, storePicture         | + all MRAID 2.0        |
+| **Two-part creative** | No                  | Yes                            | Yes                    |
+| **Viewability**       | No                  | isViewable()                   | Exposure change events |
+| **Audio**             | No                  | No                             | Volume control         |
+| **Location**          | No                  | getLocation()                  | Enhanced               |
+| **Video**             | No                  | createCalendarEvent, playVideo | Enhanced               |
+| **Unload**            | No                  | No                             | unload() for cleanup   |
+| **Resize**            | expand() only       | resize() + expand()            | Same                   |
 
 ```javascript
 // MRAID integration example
@@ -1116,7 +1138,8 @@ function initMRAID() {
 
 // CTA implementation
 function onCTAClick() {
-  const storeURL = 'https://play.google.com/store/apps/details?id=com.example.game';
+  const storeURL =
+    'https://play.google.com/store/apps/details?id=com.example.game';
   if (typeof mraid !== 'undefined') {
     mraid.open(storeURL);
   } else {
@@ -1140,7 +1163,7 @@ function getDeviceTier() {
     cores: navigator.hardwareConcurrency || 2,
     gpu: gl ? gl.getParameter(gl.RENDERER) : 'unknown',
     dpr: Math.min(window.devicePixelRatio, 2),
-    isLowEnd: false
+    isLowEnd: false,
   };
 
   tier.isLowEnd = tier.memory <= 2 || tier.cores <= 2;
@@ -1152,11 +1175,11 @@ function configureQuality(tier) {
   if (tier.isLowEnd) {
     return {
       maxParticles: 20,
-      renderScale: 0.75,  // Render at 75% resolution
+      renderScale: 0.75, // Render at 75% resolution
       enableShadows: false,
       maxFPS: 30,
       useSimpleShaders: true,
-      reducedAnimations: true
+      reducedAnimations: true,
     };
   }
   return {
@@ -1165,7 +1188,7 @@ function configureQuality(tier) {
     enableShadows: true,
     maxFPS: 60,
     useSimpleShaders: false,
-    reducedAnimations: false
+    reducedAnimations: false,
   };
 }
 
@@ -1199,9 +1222,10 @@ class AdaptiveLoop {
     this.frameTimes.push(deltaTime);
     this.adaptTimer += deltaTime;
 
-    if (this.adaptTimer > 2) { // Check every 2 seconds
-      const avgFrameTime = this.frameTimes.reduce((a, b) => a + b, 0)
-                          / this.frameTimes.length;
+    if (this.adaptTimer > 2) {
+      // Check every 2 seconds
+      const avgFrameTime =
+        this.frameTimes.reduce((a, b) => a + b, 0) / this.frameTimes.length;
       const avgFPS = 1 / avgFrameTime;
 
       if (avgFPS < this.targetFPS * 0.8) {
@@ -1247,9 +1271,9 @@ function getDirection(from, to) {
 // Analytics events to track
 const AnalyticsEvents = {
   // Lifecycle events
-  AD_LOADED: 'ad_loaded',           // Playable finished loading
-  AD_STARTED: 'ad_started',         // User first interaction
-  AD_COMPLETED: 'ad_completed',     // User reached end screen
+  AD_LOADED: 'ad_loaded', // Playable finished loading
+  AD_STARTED: 'ad_started', // User first interaction
+  AD_COMPLETED: 'ad_completed', // User reached end screen
 
   // Engagement events
   TUTORIAL_COMPLETE: 'tutorial_complete',
@@ -1263,8 +1287,8 @@ const AnalyticsEvents = {
   CTA_CLICKED: 'cta_clicked',
 
   // Quality events
-  FPS_DROP: 'fps_drop',             // Performance issues
-  ERROR: 'error'                    // JavaScript errors
+  FPS_DROP: 'fps_drop', // Performance issues
+  ERROR: 'error', // JavaScript errors
 };
 
 class PlayableAnalytics {
@@ -1283,7 +1307,7 @@ class PlayableAnalytics {
       ...data,
       event: eventName,
       timestamp: Date.now() - this.startTime,
-      sessionId: this.sessionId
+      sessionId: this.sessionId,
     };
 
     this.events = [...this.events, event];
@@ -1311,15 +1335,15 @@ class PlayableAnalytics {
     return {
       totalTime: Date.now() - this.startTime,
       eventCount: this.events.length,
-      reachedCTA: this.events.some(e => e.event === 'cta_shown'),
-      clickedCTA: this.events.some(e => e.event === 'cta_clicked'),
-      completionRate: this.calculateCompletionRate()
+      reachedCTA: this.events.some((e) => e.event === 'cta_shown'),
+      clickedCTA: this.events.some((e) => e.event === 'cta_clicked'),
+      completionRate: this.calculateCompletionRate(),
     };
   }
 
   calculateCompletionRate() {
-    const started = this.events.some(e => e.event === 'ad_started');
-    const completed = this.events.some(e => e.event === 'ad_completed');
+    const started = this.events.some((e) => e.event === 'ad_started');
+    const completed = this.events.some((e) => e.event === 'ad_completed');
     if (!started) return 0;
     return completed ? 1 : 0;
   }
@@ -1330,19 +1354,20 @@ class PlayableAnalytics {
 
 **Answer:**
 
-| Factor | Canvas 2D | WebGL |
-|--------|-----------|-------|
-| **Setup complexity** | Very simple | Complex (shaders, buffers) |
-| **Bundle size** | Minimal | Larger (library needed) |
-| **Draw calls** | Each draw is a call | Can batch thousands |
-| **Sprite count** | Good up to ~200 | Good up to ~10,000+ |
-| **Effects** | Limited (composite ops) | Unlimited (shaders) |
-| **Text rendering** | Built-in | Requires SDF/bitmap fonts |
-| **Learning curve** | Low | High |
-| **Device support** | Universal | 97%+ (WebGL 1.0) |
-| **Best for** | Simple 2D games | Complex 2D / any 3D |
+| Factor               | Canvas 2D               | WebGL                      |
+| -------------------- | ----------------------- | -------------------------- |
+| **Setup complexity** | Very simple             | Complex (shaders, buffers) |
+| **Bundle size**      | Minimal                 | Larger (library needed)    |
+| **Draw calls**       | Each draw is a call     | Can batch thousands        |
+| **Sprite count**     | Good up to ~200         | Good up to ~10,000+        |
+| **Effects**          | Limited (composite ops) | Unlimited (shaders)        |
+| **Text rendering**   | Built-in                | Requires SDF/bitmap fonts  |
+| **Learning curve**   | Low                     | High                       |
+| **Device support**   | Universal               | 97%+ (WebGL 1.0)           |
+| **Best for**         | Simple 2D games         | Complex 2D / any 3D        |
 
 **Use Canvas 2D when:**
+
 - Game has < 200 sprites
 - Simple visual effects needed
 - File size is critical (no rendering library)
@@ -1350,6 +1375,7 @@ class PlayableAnalytics {
 - Target includes very old devices
 
 **Use WebGL (via PixiJS/Phaser) when:**
+
 - Many sprites or particles
 - Complex visual effects (shaders, filters)
 - Smooth animations at scale

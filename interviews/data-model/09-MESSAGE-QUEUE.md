@@ -4,26 +4,26 @@ Kafka is a distributed append-only log that achieves high throughput by treating
 
 ## Table Responsibilities
 
-| Structure | Purpose | Storage | Key Characteristic |
-|-----------|---------|---------|-------------------|
-| **topics** | Logical stream categories | Broker metadata (ZooKeeper/KRaft) | Configuration container |
-| **partitions** | Ordered, append-only logs | Disk (log segments) | Unit of parallelism and ordering |
-| **records** | Individual messages | Within partition log segments | Immutable once written |
-| **consumer_groups** | Coordinate parallel consumption | Internal topic `__consumer_offsets` | Track progress per partition |
-| **consumer_offsets** | Committed read positions | Internal topic `__consumer_offsets` | Enable resume after crash |
+| Structure            | Purpose                         | Storage                             | Key Characteristic               |
+| -------------------- | ------------------------------- | ----------------------------------- | -------------------------------- |
+| **topics**           | Logical stream categories       | Broker metadata (ZooKeeper/KRaft)   | Configuration container          |
+| **partitions**       | Ordered, append-only logs       | Disk (log segments)                 | Unit of parallelism and ordering |
+| **records**          | Individual messages             | Within partition log segments       | Immutable once written           |
+| **consumer_groups**  | Coordinate parallel consumption | Internal topic `__consumer_offsets` | Track progress per partition     |
+| **consumer_offsets** | Committed read positions        | Internal topic `__consumer_offsets` | Enable resume after crash        |
 
 ## Detailed Field Descriptions
 
 ### topics
 
-| Field | Type | Description |
-|-------|------|-------------|
-| topic_name | STRING, PK | Logical name (e.g., `user.events`, `order.created`). Naming convention typically uses dots or dashes as namespace separators. |
-| partition_count | INT | Number of partitions. Determines maximum consumer parallelism: you can have at most N consumers (in a group) for N partitions. Cannot be decreased after creation. |
-| replication_factor | INT | Number of copies across brokers (typically 3). Ensures durability: the cluster survives `replication_factor - 1` broker failures without data loss. |
-| retention_ms | BIGINT | How long to keep records (e.g., 604800000 = 7 days). After this, old log segments are deleted. -1 means infinite retention. |
-| retention_bytes | BIGINT | Max bytes per partition before old segments are deleted. -1 means no size limit. Used alongside retention_ms (whichever triggers first). |
-| cleanup_policy | ENUM('delete','compact','delete,compact') | `delete`: remove old segments by time/size. `compact`: keep only the latest value per key (like a changelog). `delete,compact`: both. |
+| Field              | Type                                      | Description                                                                                                                                                        |
+| ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| topic_name         | STRING, PK                                | Logical name (e.g., `user.events`, `order.created`). Naming convention typically uses dots or dashes as namespace separators.                                      |
+| partition_count    | INT                                       | Number of partitions. Determines maximum consumer parallelism: you can have at most N consumers (in a group) for N partitions. Cannot be decreased after creation. |
+| replication_factor | INT                                       | Number of copies across brokers (typically 3). Ensures durability: the cluster survives `replication_factor - 1` broker failures without data loss.                |
+| retention_ms       | BIGINT                                    | How long to keep records (e.g., 604800000 = 7 days). After this, old log segments are deleted. -1 means infinite retention.                                        |
+| retention_bytes    | BIGINT                                    | Max bytes per partition before old segments are deleted. -1 means no size limit. Used alongside retention_ms (whichever triggers first).                           |
+| cleanup_policy     | ENUM('delete','compact','delete,compact') | `delete`: remove old segments by time/size. `compact`: keep only the latest value per key (like a changelog). `delete,compact`: both.                              |
 
 **Why is partition_count important?** It is the most critical configuration. Too few partitions: throughput bottleneck (each partition is a single ordered stream). Too many: more file handles, longer leader elections, higher end-to-end latency. Rule of thumb: start with `max(expected_throughput_MB / 10, num_consumers)`.
 
@@ -31,13 +31,13 @@ Kafka is a distributed append-only log that achieves high throughput by treating
 
 ### partitions (Append-Only Log on Disk)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| topic | STRING | Which topic this partition belongs to. |
-| partition_id | INT | Partition number within the topic (0-indexed). |
-| log_segments | FILE[] | Sequence of segment files on disk (e.g., `00000000000000000000.log`, `00000000000000089312.log`). Each file name is the base offset of the first record in that segment. Typically 1GB each. |
-| index_files | FILE[] | Sparse offset-to-byte-position index (e.g., `00000000000000000000.index`). Maps every Nth offset to its byte position in the log file. Enables O(1) offset lookup via binary search + small scan. |
-| timeindex | FILE[] | Timestamp-to-offset index. Enables "fetch records from timestamp X" without scanning the entire log. Used for consumer time-based seeking. |
+| Field        | Type   | Description                                                                                                                                                                                       |
+| ------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| topic        | STRING | Which topic this partition belongs to.                                                                                                                                                            |
+| partition_id | INT    | Partition number within the topic (0-indexed).                                                                                                                                                    |
+| log_segments | FILE[] | Sequence of segment files on disk (e.g., `00000000000000000000.log`, `00000000000000089312.log`). Each file name is the base offset of the first record in that segment. Typically 1GB each.      |
+| index_files  | FILE[] | Sparse offset-to-byte-position index (e.g., `00000000000000000000.index`). Maps every Nth offset to its byte position in the log file. Enables O(1) offset lookup via binary search + small scan. |
+| timeindex    | FILE[] | Timestamp-to-offset index. Enables "fetch records from timestamp X" without scanning the entire log. Used for consumer time-based seeking.                                                        |
 
 **Why segment files instead of one big file?** Segmentation enables efficient cleanup: delete or compact old segments without rewriting the active segment. It also keeps file sizes manageable for OS page cache and enables parallel I/O.
 
@@ -45,37 +45,37 @@ Kafka is a distributed append-only log that achieves high throughput by treating
 
 ### records
 
-| Field | Type | Description |
-|-------|------|-------------|
-| key | BYTES, NULLABLE | Message key. Used for two purposes: (1) partition assignment via `hash(key) % partitions` ensures same-key records go to the same partition (ordering guarantee), (2) log compaction keeps the latest value per key. |
-| value | BYTES | Message payload. Kafka treats it as opaque bytes. The application chooses serialization (JSON, Avro, Protobuf). Avro with Schema Registry is common for schema evolution. |
-| timestamp | BIGINT | Epoch milliseconds. Either create-time (set by producer) or log-append-time (set by broker). Used for time-based retention and time-index seeking. |
-| offset | BIGINT | Monotonically increasing sequence number within the partition. Auto-assigned by the broker on append. The offset is the record's "address" — consumers track their position by offset. |
-| headers | MAP<STRING, BYTES> | Optional metadata key-value pairs. Used for tracing (correlation IDs), routing, or content-type hints without parsing the value. |
+| Field     | Type               | Description                                                                                                                                                                                                          |
+| --------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| key       | BYTES, NULLABLE    | Message key. Used for two purposes: (1) partition assignment via `hash(key) % partitions` ensures same-key records go to the same partition (ordering guarantee), (2) log compaction keeps the latest value per key. |
+| value     | BYTES              | Message payload. Kafka treats it as opaque bytes. The application chooses serialization (JSON, Avro, Protobuf). Avro with Schema Registry is common for schema evolution.                                            |
+| timestamp | BIGINT             | Epoch milliseconds. Either create-time (set by producer) or log-append-time (set by broker). Used for time-based retention and time-index seeking.                                                                   |
+| offset    | BIGINT             | Monotonically increasing sequence number within the partition. Auto-assigned by the broker on append. The offset is the record's "address" — consumers track their position by offset.                               |
+| headers   | MAP<STRING, BYTES> | Optional metadata key-value pairs. Used for tracing (correlation IDs), routing, or content-type hints without parsing the value.                                                                                     |
 
 **Why is the key critical for ordering?** Kafka only guarantees ordering within a partition. If you need all events for user 123 processed in order, hash the user_id as the key. All user-123 events go to the same partition and are consumed in order.
 
 ### consumer_groups
 
-| Field | Type | Description |
-|-------|------|-------------|
-| group_id | STRING | Unique name for the consumer group (e.g., `order-processing-service`). Multiple groups can independently consume the same topic. |
-| topic | STRING | Which topic this group consumes. A group can subscribe to multiple topics. |
+| Field                 | Type                             | Description                                                                                                                                                                 |
+| --------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| group_id              | STRING                           | Unique name for the consumer group (e.g., `order-processing-service`). Multiple groups can independently consume the same topic.                                            |
+| topic                 | STRING                           | Which topic this group consumes. A group can subscribe to multiple topics.                                                                                                  |
 | partition_assignments | MAP<consumer_id, partition_id[]> | Which consumer in the group reads which partitions. Rebalanced automatically when consumers join or leave. Each partition is assigned to exactly one consumer in the group. |
-| committed_offset | MAP<partition_id, BIGINT> | Last processed offset per partition. Stored in `__consumer_offsets`. On restart, the consumer resumes from this offset. |
+| committed_offset      | MAP<partition_id, BIGINT>        | Last processed offset per partition. Stored in `__consumer_offsets`. On restart, the consumer resumes from this offset.                                                     |
 
 **Why consumer groups?** They enable horizontal scaling of consumption. A topic with 12 partitions can be consumed by 12 consumers in a group, each reading 1 partition. Adding a 13th consumer is pointless (it would be idle). Removing consumers triggers rebalancing so remaining consumers pick up the orphaned partitions.
 
 ### consumer_offsets (Internal Topic: `__consumer_offsets`)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| group_id | STRING | (Part of composite key) Which consumer group. |
-| topic | STRING | (Part of composite key) Which topic. |
-| partition | INT | (Part of composite key) Which partition. |
-| offset | BIGINT | The committed offset. Records at or before this offset have been processed. |
-| metadata | STRING | Optional consumer-provided metadata (e.g., processing state). |
-| timestamp | BIGINT | When the offset was committed. Used for monitoring consumer lag. |
+| Field     | Type   | Description                                                                 |
+| --------- | ------ | --------------------------------------------------------------------------- |
+| group_id  | STRING | (Part of composite key) Which consumer group.                               |
+| topic     | STRING | (Part of composite key) Which topic.                                        |
+| partition | INT    | (Part of composite key) Which partition.                                    |
+| offset    | BIGINT | The committed offset. Records at or before this offset have been processed. |
+| metadata  | STRING | Optional consumer-provided metadata (e.g., processing state).               |
+| timestamp | BIGINT | When the offset was committed. Used for monitoring consumer lag.            |
 
 **Why store offsets in a Kafka topic?** Kafka avoids external dependencies (like ZooKeeper for offset storage, which was the old approach). Storing offsets in a compacted internal topic leverages Kafka's own replication and durability. The topic is partitioned by group_id hash for scalability.
 

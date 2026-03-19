@@ -77,13 +77,13 @@ counter += 1
 
 ### 1.4 When to Use a Heap
 
-| Scenario | Why Heap? |
-|----------|-----------|
-| Top K elements | Keep a heap of size K |
-| Kth largest/smallest | Min/max heap of size K |
-| Merge K sorted lists | Min-heap of K heads |
-| Continuous median | Two heaps (max + min) |
-| Scheduling / ordering | Process by priority |
+| Scenario                 | Why Heap?                      |
+| ------------------------ | ------------------------------ |
+| Top K elements           | Keep a heap of size K          |
+| Kth largest/smallest     | Min/max heap of size K         |
+| Merge K sorted lists     | Min-heap of K heads            |
+| Continuous median        | Two heaps (max + min)          |
+| Scheduling / ordering    | Process by priority            |
 | Shortest path (Dijkstra) | Min-heap for next closest node |
 
 ---
@@ -243,6 +243,7 @@ def merge_k_lists(lists: list[ListNode | None]) -> ListNode | None:
 **Problem:** Design a data structure that supports adding integers and finding the median.
 
 **Approach:** Maintain two heaps:
+
 - **Max-heap** (`small`): stores the smaller half
 - **Min-heap** (`large`): stores the larger half
 
@@ -473,23 +474,24 @@ def kth_smallest_matrix(matrix: list[list[int]], k: int) -> int:
 
 ## 4. Common Interview Questions
 
-| # | Problem | Difficulty | Pattern | Key Insight |
-|---|---------|-----------|---------|-------------|
-| 1 | Kth Largest Element | Medium | Min-heap of size K | Root = Kth largest |
-| 2 | Top K Frequent Elements | Medium | Min-heap of size K | Frequency as priority |
-| 3 | K Closest Points to Origin | Medium | Max-heap of size K | Negate distance for max-heap |
-| 4 | Sort Characters By Frequency | Medium | Max-heap | Frequency sorting |
-| 5 | Task Scheduler | Medium | Max-heap + cooldown | Most frequent task first |
-| 6 | Reorganize String | Medium | Max-heap + prev tracking | Alternate most frequent chars |
-| 7 | Merge K Sorted Lists | Hard | Min-heap of K heads | Counter for tie-breaking |
-| 8 | Find Median from Data Stream | Hard | Two heaps | Max-heap small, min-heap large |
-| 9 | Sliding Window Median | Hard | Two heaps + lazy deletion | Extension of median finder |
+| #   | Problem                      | Difficulty | Pattern                   | Key Insight                    |
+| --- | ---------------------------- | ---------- | ------------------------- | ------------------------------ |
+| 1   | Kth Largest Element          | Medium     | Min-heap of size K        | Root = Kth largest             |
+| 2   | Top K Frequent Elements      | Medium     | Min-heap of size K        | Frequency as priority          |
+| 3   | K Closest Points to Origin   | Medium     | Max-heap of size K        | Negate distance for max-heap   |
+| 4   | Sort Characters By Frequency | Medium     | Max-heap                  | Frequency sorting              |
+| 5   | Task Scheduler               | Medium     | Max-heap + cooldown       | Most frequent task first       |
+| 6   | Reorganize String            | Medium     | Max-heap + prev tracking  | Alternate most frequent chars  |
+| 7   | Merge K Sorted Lists         | Hard       | Min-heap of K heads       | Counter for tie-breaking       |
+| 8   | Find Median from Data Stream | Hard       | Two heaps                 | Max-heap small, min-heap large |
+| 9   | Sliding Window Median        | Hard       | Two heaps + lazy deletion | Extension of median finder     |
 
 ---
 
 ## 5. Gotchas
 
 ### 5.1 Python heapq Gotchas
+
 - **Min-heap only**: Always negate values for max-heap behavior. This is the number one
   source of bugs.
 - **No decrease-key**: Python's heapq doesn't support decrease-key. Use lazy deletion
@@ -500,6 +502,7 @@ def kth_smallest_matrix(matrix: list[list[int]], k: int) -> int:
   of pushing n elements one by one.
 
 ### 5.2 Two-Heap Gotchas
+
 - **Balance invariant**: The two heaps must differ in size by at most 1. Always rebalance
   after adding an element.
 - **Cross-heap ordering**: The max of the small heap must be <= the min of the large heap.
@@ -508,12 +511,14 @@ def kth_smallest_matrix(matrix: list[list[int]], k: int) -> int:
   sizes differ, median = top of the larger heap.
 
 ### 5.3 Top-K Gotchas
+
 - **Min-heap, not max-heap** for "top K largest": A min-heap of size K lets the smallest
   of the K largest elements bubble to the top for easy comparison.
 - **Max-heap, not min-heap** for "top K smallest": Same logic, inverted.
 - **K could be 0**: Handle edge case where K = 0 (return empty).
 
 ### 5.4 Merge K Lists Gotchas
+
 - **Empty lists**: Filter out None heads before building the initial heap.
 - **Tie-breaking**: ListNode objects are not comparable. Add a counter as the second element
   in the heap tuple.
@@ -522,12 +527,12 @@ def kth_smallest_matrix(matrix: list[list[int]], k: int) -> int:
 
 ## 6. Quick Reference
 
-| Pattern | When to Use | Time | Space | Key Detail |
-|---------|-------------|------|-------|------------|
-| Min-heap of size K | Kth largest, top K largest | O(n log k) | O(k) | Root = Kth largest |
-| Max-heap of size K | Kth smallest, top K smallest | O(n log k) | O(k) | Negate values |
-| Merge K sorted | Combine K sorted sequences | O(N log k) | O(k) | Pop min head, push next |
-| Two heaps (median) | Running median | O(log n)/add | O(n) | Max-heap small + min-heap large |
-| Max-heap + cooldown | Task scheduling | O(T) | O(k) | Process most frequent first |
-| Heap + lazy deletion | Dynamic priority changes | O(n log n) | O(n) | Skip invalid entries |
-| heapq.nsmallest/nlargest | Quick top-K (no heap mgmt) | O(n log k) | O(k) | Convenience API |
+| Pattern                  | When to Use                  | Time         | Space | Key Detail                      |
+| ------------------------ | ---------------------------- | ------------ | ----- | ------------------------------- |
+| Min-heap of size K       | Kth largest, top K largest   | O(n log k)   | O(k)  | Root = Kth largest              |
+| Max-heap of size K       | Kth smallest, top K smallest | O(n log k)   | O(k)  | Negate values                   |
+| Merge K sorted           | Combine K sorted sequences   | O(N log k)   | O(k)  | Pop min head, push next         |
+| Two heaps (median)       | Running median               | O(log n)/add | O(n)  | Max-heap small + min-heap large |
+| Max-heap + cooldown      | Task scheduling              | O(T)         | O(k)  | Process most frequent first     |
+| Heap + lazy deletion     | Dynamic priority changes     | O(n log n)   | O(n)  | Skip invalid entries            |
+| heapq.nsmallest/nlargest | Quick top-K (no heap mgmt)   | O(n log k)   | O(k)  | Convenience API                 |

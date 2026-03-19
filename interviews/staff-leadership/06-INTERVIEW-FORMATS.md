@@ -40,14 +40,14 @@ Staff+ interview loops are structurally different from IC loops. Instead of 4-5 
 
 Not every company uses all six rounds. The exact structure varies:
 
-| Company | Notable Differences |
-|---------|-------------------|
-| **Google** | "Googleyness & Leadership" round. System design expectations are higher. Packet-based hiring committee review. |
-| **Meta** | "System Design" round is the primary signal. "Behavioral / Leadership" round. Bar is calibrated to team need. |
-| **Amazon** | Leadership Principles mapped to every round. "Bar Raiser" round from a different org. Strong bias toward STAR stories. |
-| **Apple** | Heavy culture fit assessment. Technical depth is deeply valued. May include a presentation round. |
-| **Microsoft** | "As Appropriate" (AA) round with a senior leader is the final decision maker. "Design" round. |
-| **Stripe / Airbnb / Netflix** | Often include a "work sample" or take-home architecture exercise presented during the loop. |
+| Company                       | Notable Differences                                                                                                    |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Google**                    | "Googleyness & Leadership" round. System design expectations are higher. Packet-based hiring committee review.         |
+| **Meta**                      | "System Design" round is the primary signal. "Behavioral / Leadership" round. Bar is calibrated to team need.          |
+| **Amazon**                    | Leadership Principles mapped to every round. "Bar Raiser" round from a different org. Strong bias toward STAR stories. |
+| **Apple**                     | Heavy culture fit assessment. Technical depth is deeply valued. May include a presentation round.                      |
+| **Microsoft**                 | "As Appropriate" (AA) round with a senior leader is the final decision maker. "Design" round.                          |
+| **Stripe / Airbnb / Netflix** | Often include a "work sample" or take-home architecture exercise presented during the loop.                            |
 
 ---
 
@@ -60,6 +60,7 @@ You present a system you designed and built in a previous role. The interviewer 
 ### How to Prepare
 
 **Step 1: Choose your system.** Pick a system that:
+
 - You were the primary architect (not just a contributor)
 - Had meaningful scale or complexity
 - Required non-obvious trade-offs
@@ -95,22 +96,22 @@ ARCHITECTURE REVIEW PRESENTATION STRUCTURE
 
 **Step 3: Prepare for deep-dive questions.** The interviewer will spend 30-45 minutes probing your design. Be ready for:
 
-| Question Type | Example | What They Assess |
-|--------------|---------|-----------------|
-| **Why not X?** | "Why did you choose Kafka over RabbitMQ?" | Whether you explored alternatives seriously |
-| **What if Y?** | "What happens if the database goes down?" | Failure mode thinking |
-| **Scale challenge** | "How would this work at 100x the current load?" | Understanding of scaling limits |
-| **Retrospective** | "What would you change if you started over?" | Self-awareness and growth |
-| **Organizational** | "How did you get buy-in for this architecture?" | Influence and communication |
+| Question Type       | Example                                         | What They Assess                            |
+| ------------------- | ----------------------------------------------- | ------------------------------------------- |
+| **Why not X?**      | "Why did you choose Kafka over RabbitMQ?"       | Whether you explored alternatives seriously |
+| **What if Y?**      | "What happens if the database goes down?"       | Failure mode thinking                       |
+| **Scale challenge** | "How would this work at 100x the current load?" | Understanding of scaling limits             |
+| **Retrospective**   | "What would you change if you started over?"    | Self-awareness and growth                   |
+| **Organizational**  | "How did you get buy-in for this architecture?" | Influence and communication                 |
 
 ### Signals by Level
 
-| Signal | L5 (Senior) | L6 (Staff) | L7 (Principal) |
-|--------|-------------|------------|----------------|
-| **Scope** | Owned one complex component | Designed the multi-component system | Defined the architecture that multiple teams built |
-| **Trade-offs** | Understood trade-offs within their component | Made trade-offs across components and teams | Made strategic trade-offs affecting the org |
-| **Influence** | Proposed the design to their team | Got buy-in from multiple teams | Influenced company-wide technical direction |
-| **Learning** | "I learned about X technology" | "I learned about organizational dynamics" | "I reshaped how the company thinks about Y" |
+| Signal         | L5 (Senior)                                  | L6 (Staff)                                  | L7 (Principal)                                     |
+| -------------- | -------------------------------------------- | ------------------------------------------- | -------------------------------------------------- |
+| **Scope**      | Owned one complex component                  | Designed the multi-component system         | Defined the architecture that multiple teams built |
+| **Trade-offs** | Understood trade-offs within their component | Made trade-offs across components and teams | Made strategic trade-offs affecting the org        |
+| **Influence**  | Proposed the design to their team            | Got buy-in from multiple teams              | Influenced company-wide technical direction        |
+| **Learning**   | "I learned about X technology"               | "I learned about organizational dynamics"   | "I reshaped how the company thinks about Y"        |
 
 ---
 
@@ -122,14 +123,14 @@ At L5, the interviewer wants to see you design a working system. At L6+, they wa
 
 ### What Changes at Staff+ Level
 
-| Dimension | L5 System Design | L6+ System Design |
-|-----------|-----------------|-------------------|
-| **Scope** | Design one system | Design a system within an organizational context |
-| **Trade-offs** | Technical trade-offs (latency vs throughput) | Organizational trade-offs (build speed vs reusability) |
-| **Evolution** | Design for current requirements | Design for 3-year evolution with migration path |
-| **Team structure** | Implicit (one team builds it) | Explicit (how would you split this across teams?) |
-| **Buy vs build** | Assumed build | You should propose buy/build for each component |
-| **Operational** | Mentioned in wrap-up | Core to the design (SLOs, on-call, runbooks) |
+| Dimension          | L5 System Design                             | L6+ System Design                                      |
+| ------------------ | -------------------------------------------- | ------------------------------------------------------ |
+| **Scope**          | Design one system                            | Design a system within an organizational context       |
+| **Trade-offs**     | Technical trade-offs (latency vs throughput) | Organizational trade-offs (build speed vs reusability) |
+| **Evolution**      | Design for current requirements              | Design for 3-year evolution with migration path        |
+| **Team structure** | Implicit (one team builds it)                | Explicit (how would you split this across teams?)      |
+| **Buy vs build**   | Assumed build                                | You should propose buy/build for each component        |
+| **Operational**    | Mentioned in wrap-up                         | Core to the design (SLOs, on-call, runbooks)           |
 
 ### Staff+ System Design Framework
 
@@ -181,18 +182,19 @@ A behavioral round focused on how you work with people outside your team: produc
 
 ### What Strong Answers Include
 
-| Element | Why It Matters |
-|---------|---------------|
-| **Multiple stakeholders** | Shows you operate across boundaries |
-| **Different perspectives understood** | Shows empathy and strategic thinking |
-| **Specific influence tactic used** | Shows a repeatable methodology |
-| **Compromise or creative solution** | Shows you optimize for the org, not yourself |
-| **Quantified outcome** | Makes the impact concrete |
-| **Relationship maintained** | Shows long-term thinking |
+| Element                               | Why It Matters                               |
+| ------------------------------------- | -------------------------------------------- |
+| **Multiple stakeholders**             | Shows you operate across boundaries          |
+| **Different perspectives understood** | Shows empathy and strategic thinking         |
+| **Specific influence tactic used**    | Shows a repeatable methodology               |
+| **Compromise or creative solution**   | Shows you optimize for the org, not yourself |
+| **Quantified outcome**                | Makes the impact concrete                    |
+| **Relationship maintained**           | Shows long-term thinking                     |
 
 ### Preparation Strategy
 
 Prepare 3 stories that cover:
+
 - Working with Product (different incentives)
 - Working with another engineering team (shared resources, competing priorities)
 - Working with leadership (managing up, getting investment)
@@ -264,13 +266,13 @@ A technical round where the interviewer explores your depth of expertise in your
 
 ### Example Domain Deep-Dive Questions
 
-| Domain | Example Questions |
-|--------|------------------|
-| **Distributed Systems** | "How would you design a consensus protocol for our use case?" "What are the trade-offs between strong and eventual consistency in practice?" |
-| **Frontend Platform** | "How would you design a micro-frontend architecture for 10 teams?" "What is your approach to managing shared state across independently deployed applications?" |
-| **Data Infrastructure** | "How would you design a real-time feature store?" "What are the trade-offs between lambda and kappa architectures?" |
-| **ML Infrastructure** | "How would you design a model serving platform that handles 1M predictions/sec?" "How do you handle model versioning and rollback?" |
-| **Developer Experience** | "How would you measure developer productivity?" "What is the most impactful investment for improving build times?" |
+| Domain                   | Example Questions                                                                                                                                               |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Distributed Systems**  | "How would you design a consensus protocol for our use case?" "What are the trade-offs between strong and eventual consistency in practice?"                    |
+| **Frontend Platform**    | "How would you design a micro-frontend architecture for 10 teams?" "What is your approach to managing shared state across independently deployed applications?" |
+| **Data Infrastructure**  | "How would you design a real-time feature store?" "What are the trade-offs between lambda and kappa architectures?"                                             |
+| **ML Infrastructure**    | "How would you design a model serving platform that handles 1M predictions/sec?" "How do you handle model versioning and rollback?"                             |
+| **Developer Experience** | "How would you measure developer productivity?" "What is the most impactful investment for improving build times?"                                              |
 
 ---
 
@@ -282,13 +284,13 @@ A final round designed to evaluate you holistically and fill gaps from other rou
 
 ### What Makes Bar Raiser Rounds Different
 
-| Characteristic | Regular Round | Bar Raiser |
-|---------------|--------------|------------|
-| **Interviewer** | Likely from the hiring team | Often from a different org |
-| **Focus** | Specific pillar (design, leadership, etc.) | Holistic assessment |
-| **Calibration** | Team-level expectations | Company-wide bar |
-| **Power** | One signal among many | Often has veto power |
-| **Flexibility** | Follows a structured rubric | May improvise based on gaps |
+| Characteristic  | Regular Round                              | Bar Raiser                  |
+| --------------- | ------------------------------------------ | --------------------------- |
+| **Interviewer** | Likely from the hiring team                | Often from a different org  |
+| **Focus**       | Specific pillar (design, leadership, etc.) | Holistic assessment         |
+| **Calibration** | Team-level expectations                    | Company-wide bar            |
+| **Power**       | One signal among many                      | Often has veto power        |
+| **Flexibility** | Follows a structured rubric                | May improvise based on gaps |
 
 ### How to Prepare
 
@@ -336,12 +338,12 @@ SYSTEM CRITIQUE FRAMEWORK
 
 ### Common Pitfalls
 
-| Pitfall | Why It Fails | Better Approach |
-|---------|-------------|-----------------|
-| **Only criticizing** | Makes you seem negative and unaware of constraints | Start by acknowledging what works and why |
-| **Proposing a full rewrite** | Rewrites almost always fail in practice | Propose incremental improvements |
-| **Ignoring organizational context** | The "perfect" system is meaningless if the team cannot build it | Factor in team size, skills, and current velocity |
-| **Only technical improvements** | Misses process, observability, and operational improvements | Cover the full spectrum: code, architecture, process, operations |
+| Pitfall                             | Why It Fails                                                    | Better Approach                                                  |
+| ----------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **Only criticizing**                | Makes you seem negative and unaware of constraints              | Start by acknowledging what works and why                        |
+| **Proposing a full rewrite**        | Rewrites almost always fail in practice                         | Propose incremental improvements                                 |
+| **Ignoring organizational context** | The "perfect" system is meaningless if the team cannot build it | Factor in team size, skills, and current velocity                |
+| **Only technical improvements**     | Misses process, observability, and operational improvements     | Cover the full spectrum: code, architecture, process, operations |
 
 ---
 
@@ -349,23 +351,23 @@ SYSTEM CRITIQUE FRAMEWORK
 
 ### L6 (Staff) Signals
 
-| Signal | Example |
-|--------|---------|
-| **Multi-team scope** | "I coordinated the migration across 4 teams" |
-| **Influence without authority** | "I convinced the platform team to change their roadmap" |
-| **Technical strategy** | "I authored the RFC that defined our API versioning approach" |
-| **People development** | "I created a mentoring program that graduated 3 senior engineers" |
-| **Trade-off articulation** | "We chose eventual consistency because our SLA allowed 5-second staleness, and the alternative added 200ms of latency" |
+| Signal                          | Example                                                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Multi-team scope**            | "I coordinated the migration across 4 teams"                                                                           |
+| **Influence without authority** | "I convinced the platform team to change their roadmap"                                                                |
+| **Technical strategy**          | "I authored the RFC that defined our API versioning approach"                                                          |
+| **People development**          | "I created a mentoring program that graduated 3 senior engineers"                                                      |
+| **Trade-off articulation**      | "We chose eventual consistency because our SLA allowed 5-second staleness, and the alternative added 200ms of latency" |
 
 ### L7 (Principal) Signals
 
-| Signal | Example |
-|--------|---------|
-| **Company-wide scope** | "I defined the company's approach to microservice boundaries" |
-| **Executive influence** | "I presented the technology strategy to the board" |
-| **Industry awareness** | "I recognized that the industry was moving toward X and positioned us to lead" |
-| **Organizational design** | "I proposed the team structure that enabled our platform strategy" |
-| **Multi-year vision** | "I authored the 3-year technology roadmap that we are still executing" |
+| Signal                    | Example                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| **Company-wide scope**    | "I defined the company's approach to microservice boundaries"                  |
+| **Executive influence**   | "I presented the technology strategy to the board"                             |
+| **Industry awareness**    | "I recognized that the industry was moving toward X and positioned us to lead" |
+| **Organizational design** | "I proposed the team structure that enabled our platform strategy"             |
+| **Multi-year vision**     | "I authored the 3-year technology roadmap that we are still executing"         |
 
 ---
 
@@ -394,6 +396,7 @@ Staff+ candidates who present a perfect track record seem either dishonest or la
 At Staff+ level, the questions you ask your interviewer signal your seniority. Prepare 3-5 thoughtful questions about technical strategy, engineering culture, and team challenges.
 
 **Strong questions:**
+
 - "What is the biggest technical challenge your organization is facing in the next year?"
 - "How do you balance platform investment with product delivery?"
 - "What does the Staff engineer role look like day-to-day on your team?"
@@ -401,6 +404,7 @@ At Staff+ level, the questions you ask your interviewer signal your seniority. P
 - "What is the biggest thing you would want a Staff engineer to change?"
 
 **Weak questions:**
+
 - "What tech stack do you use?" (could find this on the website)
 - "What is the work-life balance like?" (save for recruiter)
 - "When is the next promotion cycle?" (focus on the role, not advancement)
@@ -417,12 +421,12 @@ At L5, the interviewer drives. At L6+, you are expected to drive. If the intervi
 
 Staff+ compensation is qualitatively different from senior engineer compensation.
 
-| Component | Senior (L5) | Staff (L6) | Principal (L7) |
-|-----------|-------------|------------|----------------|
-| **Base salary** | 60-70% of total comp | 40-50% of total comp | 30-40% of total comp |
-| **Equity** | 20-30% of total comp | 35-45% of total comp | 40-55% of total comp |
-| **Bonus** | 10-15% of total comp | 10-15% of total comp | 10-15% of total comp |
-| **Total comp (FAANG, 2024-2025)** | $250K-$400K | $400K-$650K | $600K-$1M+ |
+| Component                         | Senior (L5)          | Staff (L6)           | Principal (L7)       |
+| --------------------------------- | -------------------- | -------------------- | -------------------- |
+| **Base salary**                   | 60-70% of total comp | 40-50% of total comp | 30-40% of total comp |
+| **Equity**                        | 20-30% of total comp | 35-45% of total comp | 40-55% of total comp |
+| **Bonus**                         | 10-15% of total comp | 10-15% of total comp | 10-15% of total comp |
+| **Total comp (FAANG, 2024-2025)** | $250K-$400K          | $400K-$650K          | $600K-$1M+           |
 
 **Key insight:** At Staff+, equity is a larger percentage of total comp. This makes the equity structure (RSU vesting schedule, refresh grants, equity type) as important as the base salary number.
 
@@ -436,14 +440,14 @@ Staff+ compensation is qualitatively different from senior engineer compensation
 
 4. **Negotiate non-compensation items.** These are often easier for companies to give and can be very valuable:
 
-| Item | Value | Ease of Approval |
-|------|-------|------------------|
-| **Signing bonus** | One-time cash to offset equity vesting cliff | Medium |
-| **Level** | Being hired at L6 vs L5 affects all future comp | Hard but highest value |
-| **Equity refresh** | Guaranteed first-year refresh grant | Medium |
-| **Start date** | Flexibility on when you start | Easy |
-| **Scope of role** | Which team, what projects, what impact area | Medium |
-| **Remote work** | Flexibility on location | Varies by company |
+| Item               | Value                                           | Ease of Approval       |
+| ------------------ | ----------------------------------------------- | ---------------------- |
+| **Signing bonus**  | One-time cash to offset equity vesting cliff    | Medium                 |
+| **Level**          | Being hired at L6 vs L5 affects all future comp | Hard but highest value |
+| **Equity refresh** | Guaranteed first-year refresh grant             | Medium                 |
+| **Start date**     | Flexibility on when you start                   | Easy                   |
+| **Scope of role**  | Which team, what projects, what impact area     | Medium                 |
+| **Remote work**    | Flexibility on location                         | Varies by company      |
 
 5. **Get everything in writing.** Verbal offers mean nothing. Do not accept until you have the written offer with all negotiated items included.
 
@@ -467,35 +471,35 @@ Staff+ compensation is qualitatively different from senior engineer compensation
 
 ### 4 Weeks Before the Interview
 
-| Week | Focus | Activities |
-|------|-------|-----------|
-| **Week 1** | Story bank | Identify 6-8 stories. Map to pillars. Draft STAR outlines. |
-| **Week 2** | Architecture review | Choose your system. Prepare 15-min presentation. Practice drawing it. |
+| Week       | Focus                  | Activities                                                                        |
+| ---------- | ---------------------- | --------------------------------------------------------------------------------- |
+| **Week 1** | Story bank             | Identify 6-8 stories. Map to pillars. Draft STAR outlines.                        |
+| **Week 2** | Architecture review    | Choose your system. Prepare 15-min presentation. Practice drawing it.             |
 | **Week 3** | System design practice | Do 3-4 practice system designs at Staff+ level. Focus on strategy and trade-offs. |
-| **Week 4** | Mock interviews | 2-3 mock interviews with Staff+ engineers. Get calibration feedback. |
+| **Week 4** | Mock interviews        | 2-3 mock interviews with Staff+ engineers. Get calibration feedback.              |
 
 ### Daily Practice (30 min/day)
 
-| Day | Activity |
-|-----|----------|
-| Monday | Tell one story from your bank aloud. Time it. |
-| Tuesday | Practice your architecture presentation. |
+| Day       | Activity                                                     |
+| --------- | ------------------------------------------------------------ |
+| Monday    | Tell one story from your bank aloud. Time it.                |
+| Tuesday   | Practice your architecture presentation.                     |
 | Wednesday | Read one blog post about the company's technical challenges. |
-| Thursday | Practice one system design problem (45 min). |
-| Friday | Review this guide. Update stories based on what you learn. |
+| Thursday  | Practice one system design problem (45 min).                 |
+| Friday    | Review this guide. Update stories based on what you learn.   |
 
 ---
 
 ## Anti-patterns to Avoid
 
-| Anti-pattern | Why It Fails | What to Do Instead |
-|-------------|-------------|-------------------|
-| **Over-preparing scripts** | Sounds rehearsed, cannot handle follow-ups | Prepare frameworks and key points, not scripts |
-| **Studying only coding** | Coding is a small part of Staff+ loops | Balance: 30% coding, 30% design, 40% behavioral/leadership |
-| **Ignoring the company's context** | Generic answers do not resonate | Research the company's tech blog, challenges, and scale |
-| **Practicing alone** | Cannot calibrate without feedback | Do mock interviews with Staff+ engineers |
-| **Accepting the first offer** | Companies expect negotiation at this level | Always negotiate. Be respectful but firm. |
-| **Interviewing at only one company** | No negotiation leverage, no calibration | Interview at 2-3 companies in the same time window |
+| Anti-pattern                         | Why It Fails                               | What to Do Instead                                         |
+| ------------------------------------ | ------------------------------------------ | ---------------------------------------------------------- |
+| **Over-preparing scripts**           | Sounds rehearsed, cannot handle follow-ups | Prepare frameworks and key points, not scripts             |
+| **Studying only coding**             | Coding is a small part of Staff+ loops     | Balance: 30% coding, 30% design, 40% behavioral/leadership |
+| **Ignoring the company's context**   | Generic answers do not resonate            | Research the company's tech blog, challenges, and scale    |
+| **Practicing alone**                 | Cannot calibrate without feedback          | Do mock interviews with Staff+ engineers                   |
+| **Accepting the first offer**        | Companies expect negotiation at this level | Always negotiate. Be respectful but firm.                  |
+| **Interviewing at only one company** | No negotiation leverage, no calibration    | Interview at 2-3 companies in the same time window         |
 
 ---
 

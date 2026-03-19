@@ -165,19 +165,20 @@ Each transformer block contains two sub-layers:
 ```
 
 **Why this matters for SWEs:**
+
 - **Layer count** affects model depth/capability (more layers = more reasoning steps)
 - **Hidden dimension** affects model width (more dimensions = richer representations)
 - **Residual connections** prevent training collapse -- this is why deep models work at all
 
 ### Model Size Reference
 
-| Model | Parameters | Layers | Hidden Dim | Heads | Context |
-|-------|-----------|--------|------------|-------|---------|
-| GPT-3 | 175B | 96 | 12,288 | 96 | 4K |
-| Llama 3.1 8B | 8B | 32 | 4,096 | 32 | 128K |
-| Llama 3.1 70B | 70B | 80 | 8,192 | 64 | 128K |
-| Llama 3.1 405B | 405B | 126 | 16,384 | 128 | 128K |
-| Mistral 7B | 7.3B | 32 | 4,096 | 32 | 32K |
+| Model          | Parameters | Layers | Hidden Dim | Heads | Context |
+| -------------- | ---------- | ------ | ---------- | ----- | ------- |
+| GPT-3          | 175B       | 96     | 12,288     | 96    | 4K      |
+| Llama 3.1 8B   | 8B         | 32     | 4,096      | 32    | 128K    |
+| Llama 3.1 70B  | 70B        | 80     | 8,192      | 64    | 128K    |
+| Llama 3.1 405B | 405B       | 126    | 16,384     | 128   | 128K    |
+| Mistral 7B     | 7.3B       | 32     | 4,096      | 32    | 32K     |
 
 ---
 
@@ -234,13 +235,13 @@ print(f"Decoded tokens: {[enc.decode([t]) for t in tokens]}")
 
 ### Tokenization Gotchas for SWEs
 
-| Gotcha | Example | Impact |
-|--------|---------|--------|
-| Spaces are tokens | `" Hello"` != `"Hello"` | Prompt formatting matters |
-| Numbers split oddly | `"12345"` -> `["123", "45"]` | Math reasoning is hard for LLMs |
-| Non-English is expensive | Chinese: ~1.5-2x more tokens | Cost varies by language |
-| Code tokens vary | `function` = 1 token, `querySelector` = 3 | Code costs more than prose |
-| Special tokens | `<|endoftext|>`, `<|im_start|>` | Control flow, not visible to user |
+| Gotcha                   | Example                                   | Impact                          |
+| ------------------------ | ----------------------------------------- | ------------------------------- | ------ | -------- | --- | --------------------------------- |
+| Spaces are tokens        | `" Hello"` != `"Hello"`                   | Prompt formatting matters       |
+| Numbers split oddly      | `"12345"` -> `["123", "45"]`              | Math reasoning is hard for LLMs |
+| Non-English is expensive | Chinese: ~1.5-2x more tokens              | Cost varies by language         |
+| Code tokens vary         | `function` = 1 token, `querySelector` = 3 | Code costs more than prose      |
+| Special tokens           | `<                                        | endoftext                       | >`, `< | im_start | >`  | Control flow, not visible to user |
 
 ### Token Counting for Cost Estimation
 
@@ -348,6 +349,7 @@ projections. Each "head" can learn to attend to different patterns.
 ```
 
 **Why multi-head matters for SWEs:**
+
 - More heads = model can track more relationships simultaneously
 - This is why models handle complex, multi-part instructions
 - Head count is a key model architecture parameter
@@ -393,6 +395,7 @@ With KV cache:
 ```
 
 **Why KV cache matters for SWEs:**
+
 - KV cache is why long context windows need so much GPU memory
 - KV cache size = `2 * num_layers * num_heads * head_dim * seq_len * dtype_size`
 - A 70B model with 128K context can need 40+ GB just for KV cache
@@ -407,14 +410,14 @@ request (input + output combined).
 
 ### Context Window Sizes (2025)
 
-| Model | Context Window | Approx. Pages of Text |
-|-------|---------------|----------------------|
-| GPT-4o | 128K tokens | ~300 pages |
-| Claude 3.5 Sonnet | 200K tokens | ~500 pages |
-| Claude 3 Opus | 200K tokens | ~500 pages |
-| Gemini 1.5 Pro | 2M tokens | ~5,000 pages |
-| Llama 3.1 405B | 128K tokens | ~300 pages |
-| Mistral Large | 128K tokens | ~300 pages |
+| Model             | Context Window | Approx. Pages of Text |
+| ----------------- | -------------- | --------------------- |
+| GPT-4o            | 128K tokens    | ~300 pages            |
+| Claude 3.5 Sonnet | 200K tokens    | ~500 pages            |
+| Claude 3 Opus     | 200K tokens    | ~500 pages            |
+| Gemini 1.5 Pro    | 2M tokens      | ~5,000 pages          |
+| Llama 3.1 405B    | 128K tokens    | ~300 pages            |
+| Mistral Large     | 128K tokens    | ~300 pages            |
 
 ### The "Lost in the Middle" Problem
 
@@ -437,6 +440,7 @@ Attention: [HIGH   ................ LOW    ................ HIGH  ]
 ```
 
 **Practical implications for SWEs:**
+
 - Place important context at the beginning or end of prompts
 - Put instructions at the top, reference material in the middle, question at the end
 - For RAG: put most relevant chunks first, not in the middle
@@ -532,14 +536,14 @@ Sample from: {Paris, Lyon, Marseille} only
 
 ### Practical Parameter Combinations
 
-| Use Case | Temperature | Top-p | Top-k | Why |
-|----------|-------------|-------|-------|-----|
-| Code generation | 0 - 0.2 | 0.95 | -- | Correctness over creativity |
-| Factual Q&A | 0 | 1.0 | -- | Deterministic, reproducible |
-| Creative writing | 0.8 - 1.0 | 0.95 | 40 | Variety and surprise |
-| Chat assistant | 0.5 - 0.7 | 0.9 | -- | Balanced and natural |
-| Data extraction | 0 | 1.0 | -- | Exact, consistent output |
-| Brainstorming | 1.0 - 1.2 | 0.98 | 50 | Maximum diversity |
+| Use Case         | Temperature | Top-p | Top-k | Why                         |
+| ---------------- | ----------- | ----- | ----- | --------------------------- |
+| Code generation  | 0 - 0.2     | 0.95  | --    | Correctness over creativity |
+| Factual Q&A      | 0           | 1.0   | --    | Deterministic, reproducible |
+| Creative writing | 0.8 - 1.0   | 0.95  | 40    | Variety and surprise        |
+| Chat assistant   | 0.5 - 0.7   | 0.9   | --    | Balanced and natural        |
+| Data extraction  | 0           | 1.0   | --    | Exact, consistent output    |
+| Brainstorming    | 1.0 - 1.2   | 0.98  | 50    | Maximum diversity           |
 
 ### Sampling in Code
 
@@ -566,14 +570,14 @@ response = client.chat.completions.create(
 
 ### Other Important Parameters
 
-| Parameter | What It Does | Typical Values |
-|-----------|-------------|----------------|
-| `max_tokens` | Maximum output length | 256 - 4096 |
-| `stop` | Stop sequences to end generation | `["\n\n", "END"]` |
-| `frequency_penalty` | Penalize tokens that appear often (-2 to 2) | 0 - 0.5 |
-| `presence_penalty` | Penalize tokens that have appeared at all (-2 to 2) | 0 - 0.5 |
-| `seed` | For reproducible outputs (with temp=0) | Any integer |
-| `logprobs` | Return log probabilities of tokens | `true` / `false` |
+| Parameter           | What It Does                                        | Typical Values    |
+| ------------------- | --------------------------------------------------- | ----------------- |
+| `max_tokens`        | Maximum output length                               | 256 - 4096        |
+| `stop`              | Stop sequences to end generation                    | `["\n\n", "END"]` |
+| `frequency_penalty` | Penalize tokens that appear often (-2 to 2)         | 0 - 0.5           |
+| `presence_penalty`  | Penalize tokens that have appeared at all (-2 to 2) | 0 - 0.5           |
+| `seed`              | For reproducible outputs (with temp=0)              | Any integer       |
+| `logprobs`          | Return log probabilities of tokens                  | `true` / `false`  |
 
 ---
 
@@ -612,16 +616,16 @@ response = client.chat.completions.create(
 
 ### Model Selection Guide for SWEs
 
-| Criteria | Best Choice | Why |
-|----------|------------|-----|
-| Best overall quality | GPT-4o, Claude 3.5 Sonnet | Highest benchmarks across tasks |
-| Lowest cost at scale | GPT-4o-mini, Gemini Flash, Llama 3.1 8B | 10-50x cheaper than frontier |
-| Self-hosted / air-gapped | Llama 3.1, Mistral, Qwen | Open weights, no API dependency |
-| Long context (>100K) | Gemini 1.5 Pro (2M), Claude (200K) | Largest context windows |
-| Code generation | Claude 3.5 Sonnet, GPT-4o, Codestral | Top coding benchmarks |
-| Complex reasoning | o1/o3, Claude, DeepSeek-R1 | Chain-of-thought, reasoning models |
-| Multimodal (vision) | GPT-4o, Gemini, Claude 3.5 | Native image understanding |
-| Embedding/search | text-embedding-3-large, Cohere Embed v3 | Purpose-built for similarity |
+| Criteria                 | Best Choice                             | Why                                |
+| ------------------------ | --------------------------------------- | ---------------------------------- |
+| Best overall quality     | GPT-4o, Claude 3.5 Sonnet               | Highest benchmarks across tasks    |
+| Lowest cost at scale     | GPT-4o-mini, Gemini Flash, Llama 3.1 8B | 10-50x cheaper than frontier       |
+| Self-hosted / air-gapped | Llama 3.1, Mistral, Qwen                | Open weights, no API dependency    |
+| Long context (>100K)     | Gemini 1.5 Pro (2M), Claude (200K)      | Largest context windows            |
+| Code generation          | Claude 3.5 Sonnet, GPT-4o, Codestral    | Top coding benchmarks              |
+| Complex reasoning        | o1/o3, Claude, DeepSeek-R1              | Chain-of-thought, reasoning models |
+| Multimodal (vision)      | GPT-4o, Gemini, Claude 3.5              | Native image understanding         |
+| Embedding/search         | text-embedding-3-large, Cohere Embed v3 | Purpose-built for similarity       |
 
 ### Reasoning Models (o1, o3, DeepSeek-R1)
 
@@ -649,16 +653,16 @@ Understanding token costs is essential for production AI engineering.
 
 ### Pricing Comparison (2025, per 1M tokens)
 
-| Model | Input Price | Output Price | Notes |
-|-------|-----------|-------------|-------|
-| GPT-4o | $2.50 | $10.00 | Best OpenAI general model |
-| GPT-4o-mini | $0.15 | $0.60 | 95% of GPT-4o quality, 17x cheaper |
-| Claude 3.5 Sonnet | $3.00 | $15.00 | Strong coding and analysis |
-| Claude 3 Haiku | $0.25 | $1.25 | Fast and cheap |
-| Gemini 1.5 Pro | $1.25 | $5.00 | Best price for long context |
-| Gemini 1.5 Flash | $0.075 | $0.30 | Ultra-cheap for simple tasks |
-| Llama 3.1 70B (hosted) | ~$0.50 | ~$0.75 | Via Together/Fireworks |
-| Self-hosted Llama 70B | ~$0.20 | ~$0.20 | GPU cost only, high volume |
+| Model                  | Input Price | Output Price | Notes                              |
+| ---------------------- | ----------- | ------------ | ---------------------------------- |
+| GPT-4o                 | $2.50       | $10.00       | Best OpenAI general model          |
+| GPT-4o-mini            | $0.15       | $0.60        | 95% of GPT-4o quality, 17x cheaper |
+| Claude 3.5 Sonnet      | $3.00       | $15.00       | Strong coding and analysis         |
+| Claude 3 Haiku         | $0.25       | $1.25        | Fast and cheap                     |
+| Gemini 1.5 Pro         | $1.25       | $5.00        | Best price for long context        |
+| Gemini 1.5 Flash       | $0.075      | $0.30        | Ultra-cheap for simple tasks       |
+| Llama 3.1 70B (hosted) | ~$0.50      | ~$0.75       | Via Together/Fireworks             |
+| Self-hosted Llama 70B  | ~$0.20      | ~$0.20       | GPU cost only, high volume         |
 
 ### Cost Optimization Strategies
 
@@ -790,22 +794,22 @@ GPU memory requirements (FP16):
 
 ### Terminology Cheat Sheet
 
-| Term | Definition |
-|------|-----------|
-| **Token** | The basic unit of text processing (subword, ~4 chars in English) |
-| **Context window** | Maximum input + output tokens per request |
-| **Temperature** | Controls randomness of output (0 = deterministic, 1+ = creative) |
-| **Top-p** | Nucleus sampling -- consider tokens up to cumulative probability p |
-| **Top-k** | Only consider the k most probable tokens |
-| **Embedding** | Dense vector representation of text (for similarity search) |
-| **Fine-tuning** | Further training a model on task-specific data |
-| **RLHF** | Reinforcement Learning from Human Feedback (alignment technique) |
-| **LoRA** | Low-Rank Adaptation -- efficient fine-tuning method |
-| **Inference** | Running a trained model to generate predictions |
-| **Latency** | Time to generate a response (TTFT = time to first token) |
-| **Throughput** | Tokens generated per second |
-| **Quantization** | Reducing model precision (FP16 -> INT8/INT4) to save memory |
-| **KV cache** | Cached key/value matrices for efficient autoregressive generation |
-| **Causal masking** | Prevents tokens from attending to future tokens |
-| **GQA** | Grouped Query Attention -- shares KV heads to reduce memory |
-| **MoE** | Mixture of Experts -- activates subset of parameters per token |
+| Term               | Definition                                                         |
+| ------------------ | ------------------------------------------------------------------ |
+| **Token**          | The basic unit of text processing (subword, ~4 chars in English)   |
+| **Context window** | Maximum input + output tokens per request                          |
+| **Temperature**    | Controls randomness of output (0 = deterministic, 1+ = creative)   |
+| **Top-p**          | Nucleus sampling -- consider tokens up to cumulative probability p |
+| **Top-k**          | Only consider the k most probable tokens                           |
+| **Embedding**      | Dense vector representation of text (for similarity search)        |
+| **Fine-tuning**    | Further training a model on task-specific data                     |
+| **RLHF**           | Reinforcement Learning from Human Feedback (alignment technique)   |
+| **LoRA**           | Low-Rank Adaptation -- efficient fine-tuning method                |
+| **Inference**      | Running a trained model to generate predictions                    |
+| **Latency**        | Time to generate a response (TTFT = time to first token)           |
+| **Throughput**     | Tokens generated per second                                        |
+| **Quantization**   | Reducing model precision (FP16 -> INT8/INT4) to save memory        |
+| **KV cache**       | Cached key/value matrices for efficient autoregressive generation  |
+| **Causal masking** | Prevents tokens from attending to future tokens                    |
+| **GQA**            | Grouped Query Attention -- shares KV heads to reduce memory        |
+| **MoE**            | Mixture of Experts -- activates subset of parameters per token     |

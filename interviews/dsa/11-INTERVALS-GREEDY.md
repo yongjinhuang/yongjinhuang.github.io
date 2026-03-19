@@ -21,12 +21,14 @@ def overlaps(a: list[int], b: list[int]) -> bool:
 ```
 
 **Key sorting strategies:**
+
 - **Sort by start time**: Default for most merge/insert problems
 - **Sort by end time**: Optimal for "maximum non-overlapping" or scheduling problems
 
 ### 1.2 Greedy Algorithm Criteria
 
 A greedy approach works when:
+
 1. **Greedy choice property**: A locally optimal choice leads to a globally optimal solution
 2. **Optimal substructure**: An optimal solution contains optimal solutions to subproblems
 
@@ -34,12 +36,12 @@ If you cannot prove these properties, the problem likely requires DP instead.
 
 ### 1.3 Common Interval Patterns
 
-| Pattern | Sort By | Key Idea |
-|---------|---------|----------|
-| Merge intervals | Start time | Extend or start new interval |
-| Non-overlapping count | End time | Pick earliest-ending intervals |
-| Meeting rooms (max overlap) | Start/end events | Sweep line with events |
-| Insert interval | Already sorted | Find insertion point |
+| Pattern                     | Sort By          | Key Idea                       |
+| --------------------------- | ---------------- | ------------------------------ |
+| Merge intervals             | Start time       | Extend or start new interval   |
+| Non-overlapping count       | End time         | Pick earliest-ending intervals |
+| Meeting rooms (max overlap) | Start/end events | Sweep line with events         |
+| Insert interval             | Already sorted   | Find insertion point           |
 
 ---
 
@@ -465,25 +467,26 @@ def least_interval(tasks: list[str], n: int) -> int:
 
 ## 4. Common Interview Questions
 
-| # | Problem | Difficulty | Pattern | Key Insight |
-|---|---------|-----------|---------|-------------|
-| 1 | Merge Intervals | Medium | Sort by start | Extend or start new |
-| 2 | Insert Interval | Medium | Three-phase scan | Before, merge, after |
-| 3 | Non-Overlapping Intervals | Medium | Sort by end time | Greedy: keep earliest end |
-| 4 | Meeting Rooms | Easy | Sort + scan | Check consecutive overlaps |
-| 5 | Meeting Rooms II | Medium | Sweep line / heap | Peak concurrent meetings |
-| 6 | Jump Game | Medium | Greedy max-reach | Track farthest reachable |
-| 7 | Jump Game II | Medium | BFS-style greedy | Level-by-level expansion |
-| 8 | Gas Station | Medium | Greedy reset | If total works, solution exists |
-| 9 | Partition Labels | Medium | Last occurrence map | Extend partition to cover all chars |
-| 10 | Hand of Straights | Medium | Greedy + counter | Start from smallest card |
-| 11 | Valid Parenthesis String | Medium | Range tracking | Track min/max open count |
+| #   | Problem                   | Difficulty | Pattern             | Key Insight                         |
+| --- | ------------------------- | ---------- | ------------------- | ----------------------------------- |
+| 1   | Merge Intervals           | Medium     | Sort by start       | Extend or start new                 |
+| 2   | Insert Interval           | Medium     | Three-phase scan    | Before, merge, after                |
+| 3   | Non-Overlapping Intervals | Medium     | Sort by end time    | Greedy: keep earliest end           |
+| 4   | Meeting Rooms             | Easy       | Sort + scan         | Check consecutive overlaps          |
+| 5   | Meeting Rooms II          | Medium     | Sweep line / heap   | Peak concurrent meetings            |
+| 6   | Jump Game                 | Medium     | Greedy max-reach    | Track farthest reachable            |
+| 7   | Jump Game II              | Medium     | BFS-style greedy    | Level-by-level expansion            |
+| 8   | Gas Station               | Medium     | Greedy reset        | If total works, solution exists     |
+| 9   | Partition Labels          | Medium     | Last occurrence map | Extend partition to cover all chars |
+| 10  | Hand of Straights         | Medium     | Greedy + counter    | Start from smallest card            |
+| 11  | Valid Parenthesis String  | Medium     | Range tracking      | Track min/max open count            |
 
 ---
 
 ## 5. Gotchas
 
 ### 5.1 Interval Gotchas
+
 - **Sort direction matters**: Merge intervals -> sort by start. Non-overlapping intervals ->
   sort by end. Using the wrong sort order gives incorrect results.
 - **Overlap condition**: `[1,3]` and `[3,5]` overlap if the problem uses inclusive endpoints.
@@ -493,6 +496,7 @@ def least_interval(tasks: list[str], n: int) -> int:
 - **Empty input**: Always handle `len(intervals) == 0`.
 
 ### 5.2 Greedy Gotchas
+
 - **Greedy does NOT always work**: If you can't prove the greedy choice property, consider DP.
   Example: Coin change with arbitrary denominations requires DP, not greedy.
 - **Local vs global optimum**: Greedy works for "activity selection" (intervals) and "fractional
@@ -501,6 +505,7 @@ def least_interval(tasks: list[str], n: int) -> int:
   swapping any non-greedy choice with the greedy choice doesn't worsen the solution.
 
 ### 5.3 Meeting Rooms II Gotchas
+
 - **Event sorting with ties**: When a meeting ends at the same time another starts (e.g.,
   `[1,5]` and `[5,10]`), the end event should be processed first (they can share a room).
   Sorting by `(time, delta)` handles this since -1 < 1.
@@ -508,12 +513,14 @@ def least_interval(tasks: list[str], n: int) -> int:
   you're sure the room can be reused.
 
 ### 5.4 Jump Game Gotchas
+
 - **Jump Game I vs II**: Jump Game I asks "can you reach the end?" (boolean). Jump Game II
   asks "minimum jumps to reach the end" (count).
 - **Iterate to `n-2`** in Jump Game II (not `n-1`), because you don't need to jump FROM the
   last index.
 
 ### 5.5 Gas Station Gotchas
+
 - **Uniqueness**: The problem guarantees at most one valid starting station.
 - **Circular trip**: The total gas must be >= total cost. If not, return -1 immediately.
 - **Reset logic**: When tank goes negative, reset start to `i + 1` and tank to 0.
@@ -522,14 +529,14 @@ def least_interval(tasks: list[str], n: int) -> int:
 
 ## 6. Quick Reference
 
-| Pattern | When to Use | Sort By | Time | Key Detail |
-|---------|-------------|---------|------|------------|
-| Merge intervals | Combine overlapping ranges | Start time | O(n log n) | Extend current or start new |
-| Insert interval | Add to sorted intervals | Already sorted | O(n) | Three-phase: before, merge, after |
-| Interval scheduling | Max non-overlapping | End time | O(n log n) | Pick earliest-ending |
-| Sweep line | Count max overlap | Events by time | O(n log n) | +1 for start, -1 for end |
-| Min-heap rooms | Meeting rooms | Start time | O(n log n) | Heap of end times |
-| Greedy max-reach | Reachability (jump game) | None (ordered) | O(n) | Track farthest reachable index |
-| Greedy BFS | Min jumps | None (ordered) | O(n) | Level = current jump range |
-| Total sum check | Circular trip (gas station) | None (ordered) | O(n) | If total >= 0, solution exists |
-| Last occurrence | Partition labels | None | O(n) | Extend partition to last char |
+| Pattern             | When to Use                 | Sort By        | Time       | Key Detail                        |
+| ------------------- | --------------------------- | -------------- | ---------- | --------------------------------- |
+| Merge intervals     | Combine overlapping ranges  | Start time     | O(n log n) | Extend current or start new       |
+| Insert interval     | Add to sorted intervals     | Already sorted | O(n)       | Three-phase: before, merge, after |
+| Interval scheduling | Max non-overlapping         | End time       | O(n log n) | Pick earliest-ending              |
+| Sweep line          | Count max overlap           | Events by time | O(n log n) | +1 for start, -1 for end          |
+| Min-heap rooms      | Meeting rooms               | Start time     | O(n log n) | Heap of end times                 |
+| Greedy max-reach    | Reachability (jump game)    | None (ordered) | O(n)       | Track farthest reachable index    |
+| Greedy BFS          | Min jumps                   | None (ordered) | O(n)       | Level = current jump range        |
+| Total sum check     | Circular trip (gas station) | None (ordered) | O(n)       | If total >= 0, solution exists    |
+| Last occurrence     | Partition labels            | None           | O(n)       | Extend partition to last char     |

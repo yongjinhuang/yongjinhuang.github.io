@@ -69,20 +69,20 @@ This is surprisingly complex thanks to privacy laws:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **User Lifecycle** | The full journey from registration to deletion |
-| **Onboarding** | The initial experience after signup — welcome emails, setup wizard, guided tour |
-| **KYC** | Know Your Customer — identity verification required in finance/regulated industries |
-| **SSO Provisioning** | Automatically creating user accounts when employees are added in the company's identity provider |
-| **SCIM** | System for Cross-domain Identity Management — a protocol for syncing user data between systems |
-| **Org / Workspace / Team** | A grouping of users. One user can belong to multiple orgs |
-| **Invite Flow** | Existing user invites someone → system sends invite email → invitee signs up or joins |
-| **Impersonation** | Admin logs in "as" a user to debug their issues. Requires audit logging |
-| **Soft Delete** | Marking a record as deleted without removing it from the database |
-| **Hard Delete** | Actually removing data from the database (and backups, eventually) |
-| **PII** | Personally Identifiable Information — name, email, phone, address. Must be handled carefully |
-| **Data Subject Request (DSR)** | A user's formal request under GDPR/CCPA to access or delete their data |
+| Term                           | What It Means                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| **User Lifecycle**             | The full journey from registration to deletion                                                   |
+| **Onboarding**                 | The initial experience after signup — welcome emails, setup wizard, guided tour                  |
+| **KYC**                        | Know Your Customer — identity verification required in finance/regulated industries              |
+| **SSO Provisioning**           | Automatically creating user accounts when employees are added in the company's identity provider |
+| **SCIM**                       | System for Cross-domain Identity Management — a protocol for syncing user data between systems   |
+| **Org / Workspace / Team**     | A grouping of users. One user can belong to multiple orgs                                        |
+| **Invite Flow**                | Existing user invites someone → system sends invite email → invitee signs up or joins            |
+| **Impersonation**              | Admin logs in "as" a user to debug their issues. Requires audit logging                          |
+| **Soft Delete**                | Marking a record as deleted without removing it from the database                                |
+| **Hard Delete**                | Actually removing data from the database (and backups, eventually)                               |
+| **PII**                        | Personally Identifiable Information — name, email, phone, address. Must be handled carefully     |
+| **Data Subject Request (DSR)** | A user's formal request under GDPR/CCPA to access or delete their data                           |
 
 ## Common Patterns
 
@@ -128,13 +128,13 @@ Organizations have teams. Permissions can be at org level or team level.
 
 ## Quick Reference
 
-| Scenario | Recommended Approach |
-|----------|---------------------|
-| Simple consumer app | User + role (user/admin) |
-| B2B SaaS | User + Organization with role-per-org |
-| Enterprise | User + Org + Team with hierarchical permissions |
-| Account deletion | 30-day grace period → soft delete → hard delete PII |
-| Email verification | Required before full account access |
-| Password reset | One-time link, expires in 1 hour, invalidates all sessions |
-| User impersonation | Audit-logged, admin-only, clearly indicated in UI |
-| Profile images | Upload to S3/CDN, resize on upload, store URL in DB |
+| Scenario            | Recommended Approach                                       |
+| ------------------- | ---------------------------------------------------------- |
+| Simple consumer app | User + role (user/admin)                                   |
+| B2B SaaS            | User + Organization with role-per-org                      |
+| Enterprise          | User + Org + Team with hierarchical permissions            |
+| Account deletion    | 30-day grace period → soft delete → hard delete PII        |
+| Email verification  | Required before full account access                        |
+| Password reset      | One-time link, expires in 1 hour, invalidates all sessions |
+| User impersonation  | Audit-logged, admin-only, clearly indicated in UI          |
+| Profile images      | Upload to S3/CDN, resize on upload, store URL in DB        |

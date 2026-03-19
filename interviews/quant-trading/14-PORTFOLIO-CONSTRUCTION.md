@@ -34,7 +34,7 @@ Portfolio construction is the bridge between research and reality. A brilliant s
 
 ### Harry Markowitz and Modern Portfolio Theory (1952)
 
-In 1952, Harry Markowitz published "Portfolio Selection" in the *Journal of Finance*, launching what we now call **Modern Portfolio Theory (MPT)**. His insight was deceptively simple: investors should care not just about expected return, but about the **trade-off between return and risk** at the portfolio level.
+In 1952, Harry Markowitz published "Portfolio Selection" in the _Journal of Finance_, launching what we now call **Modern Portfolio Theory (MPT)**. His insight was deceptively simple: investors should care not just about expected return, but about the **trade-off between return and risk** at the portfolio level.
 
 Before Markowitz, the standard advice was: "buy the stock with the highest expected return." Markowitz showed this is wrong. By combining assets with imperfect correlations, you can achieve the same expected return with **lower risk** --- or higher return for the **same risk**.
 
@@ -2809,15 +2809,15 @@ METHOD SELECTION BY USE CASE:
 
 ## Further Reading
 
-| Resource | Author | Focus |
-|----------|--------|-------|
-| *Active Portfolio Management* | Grinold & Kahn | Factor models, alpha, information ratio |
-| *Advances in Financial ML* | Lopez de Prado | HRP, meta-labeling, ML for portfolios |
-| *Risk Parity Fundamentals* | Edward Qian | Risk budgeting theory and practice |
-| *Robust Portfolio Optimization* | Fabozzi, Kolm, Pachamanova | Robust methods, Black-Litterman |
-| *Quantitative Equity Portfolio Management* | Chincarini & Kim | Factor models, implementation |
-| *The Black-Litterman Model* (paper) | He & Litterman (1999) | Original BL derivation |
-| *Building Diversified Portfolios that Outperform OOS* (paper) | Lopez de Prado (2016) | HRP original paper |
+| Resource                                                      | Author                     | Focus                                   |
+| ------------------------------------------------------------- | -------------------------- | --------------------------------------- |
+| _Active Portfolio Management_                                 | Grinold & Kahn             | Factor models, alpha, information ratio |
+| _Advances in Financial ML_                                    | Lopez de Prado             | HRP, meta-labeling, ML for portfolios   |
+| _Risk Parity Fundamentals_                                    | Edward Qian                | Risk budgeting theory and practice      |
+| _Robust Portfolio Optimization_                               | Fabozzi, Kolm, Pachamanova | Robust methods, Black-Litterman         |
+| _Quantitative Equity Portfolio Management_                    | Chincarini & Kim           | Factor models, implementation           |
+| _The Black-Litterman Model_ (paper)                           | He & Litterman (1999)      | Original BL derivation                  |
+| _Building Diversified Portfolios that Outperform OOS_ (paper) | Lopez de Prado (2016)      | HRP original paper                      |
 
 ---
 

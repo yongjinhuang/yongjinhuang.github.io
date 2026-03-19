@@ -44,6 +44,7 @@ I also rewrote the hottest query path in Golang (Gin framework) as a separate mi
 **Result**: Database connections dropped from approximately 4,000 to approximately 1,000 concurrent. QPS capacity increased from 2,000 to 5,000 -- a 2.5x improvement. Zero billing-related outages during the next three flash sale events. The supply chain team stopped escalating billing issues entirely. The optimization approach and the distributed tracing setup became a template that two other teams adopted for their own performance work.
 
 **Best used for**:
+
 - "Tell me about a complex technical problem you solved"
 - "Describe a time you worked with ambiguous requirements"
 - "Tell me about your biggest technical achievement"
@@ -71,6 +72,7 @@ For junior engineers who were uncomfortable reviewing senior engineers' code, I 
 **Result**: Over two quarters, deployment-related defects decreased by approximately 30%. More importantly, the quality of technical discussions improved. Engineers started catching design issues in review before they became production problems. PR descriptions across the team became more detailed, and two junior engineers grew confident enough to push back on senior engineers' designs during review. The checklist was adopted by two neighboring teams. In my performance review, my manager specifically called out the review culture improvement as one of the most impactful things I did that year.
 
 **Best used for**:
+
 - "Tell me about a time you improved a process"
 - "How do you approach code reviews?"
 - "Describe a time you showed leadership without a management title"
@@ -96,6 +98,7 @@ Over the next year, I delivered five talks total. Topics included: connection po
 **Result**: The monthly tech talk series became self-sustaining. After I organized the first five, other engineers started volunteering to both speak and organize. Within a year, 15 engineers from six different teams had presented. Two of my talks directly led to other teams adopting the connection pooling patterns, which improved their service reliability. The series was recognized in our organization's quarterly review as a cultural highlight. For me personally, the preparation forced me to clarify my thinking, and the Q&A sessions exposed blind spots I would not have discovered otherwise. I also built relationships across teams that made future cross-team collaboration much smoother.
 
 **Best used for**:
+
 - "Tell me about a time you shared knowledge with your team"
 - "Describe a time you took initiative"
 - "How do you contribute to engineering culture?"
@@ -115,25 +118,36 @@ Fill in these templates with your own experiences. Each template is organized by
 
 **Theme**: Problem-solving, impact, technical depth
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe the system, the problem, the scale, and why it mattered.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was your specific responsibility? What was the goal or constraint?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (Walk through your approach step by step. What did you investigate? What options did you consider? What did you build? How did you validate it?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Quantify the improvement. What was the lasting impact? What did others adopt from your work?)
 
 **Best used for**:
+
 - "Tell me about a complex technical problem you solved"
 - "What is your biggest technical achievement?"
 - "Describe a time you optimized something"
@@ -145,25 +159,36 @@ _____________________________________________________________________________
 
 **Theme**: Leadership, influence, process improvement
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe the team dynamic, the problem, and why formal authority was not an option.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What did you want to change or improve? What was at stake?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you lead by example? How did you build buy-in? How did you handle resistance?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What changed? How did the team respond? What is the lasting impact?)
 
 **Best used for**:
+
 - "Tell me about a time you showed leadership"
 - "Describe a time you improved a process"
 - "How do you influence without authority?"
@@ -175,25 +200,36 @@ _____________________________________________________________________________
 
 **Theme**: Conflict, communication, collaboration
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe the disagreement, the people involved, and the stakes.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was your role? What needed to be resolved?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you listen to both sides? How did you find common ground? What compromise or solution did you propose?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (How was the conflict resolved? What was the impact on the relationship and the project?)
 
 **Best used for**:
+
 - "Tell me about a time you disagreed with a coworker"
 - "Describe a conflict on your team"
 - "How do you handle disagreements about technical decisions?"
@@ -205,25 +241,36 @@ _____________________________________________________________________________
 
 **Theme**: Resilience, learning, self-awareness
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe what went wrong and why.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What needed to be fixed or recovered?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you respond? How did you fix the immediate problem? What did you change going forward?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was the outcome? What did you learn? How did it change your approach?)
 
 **Best used for**:
+
 - "Tell me about a time you failed"
 - "Describe a mistake you made and how you handled it"
 - "Tell me about a time you received critical feedback"
@@ -235,25 +282,36 @@ _____________________________________________________________________________
 
 **Theme**: Mentoring, teamwork, leadership
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Who did you mentor? What was their situation or challenge?)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was your goal as a mentor?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you approach mentoring? What specific techniques did you use? How did you balance guidance with letting them figure things out?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (How did the person grow? What did they accomplish? What did you learn from the experience?)
 
 **Best used for**:
+
 - "Tell me about a time you mentored someone"
 - "How do you help junior engineers grow?"
 - "Describe a time you invested in someone else's development"
@@ -265,25 +323,36 @@ _____________________________________________________________________________
 
 **Theme**: Prioritization, execution, communication
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe the deadline, the scope, and why it was challenging.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was expected of you? What constraints did you face?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you prioritize? What did you cut or defer? How did you communicate with stakeholders?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Did you meet the deadline? What was shipped vs. deferred? What did stakeholders think?)
 
 **Best used for**:
+
 - "Tell me about a time you faced a tight deadline"
 - "How do you handle pressure?"
 - "Describe a time you had to negotiate scope"
@@ -295,25 +364,36 @@ _____________________________________________________________________________
 
 **Theme**: Collaboration, communication, influence
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe the teams involved, the project, and the coordination challenge.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was your role in the cross-team effort?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you align the teams? How did you handle conflicting priorities? What communication practices did you use?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was delivered? How did the collaboration go? What was the lasting impact?)
 
 **Best used for**:
+
 - "Tell me about a time you worked across teams"
 - "How do you handle dependencies on other teams?"
 - "Describe a time you built consensus"
@@ -325,25 +405,36 @@ _____________________________________________________________________________
 
 **Theme**: Problem-solving, initiative, communication
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe what was unclear and why.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What did you need to figure out?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you reduce ambiguity? What questions did you ask? How did you make progress without complete information?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What clarity did you create? What was the outcome?)
 
 **Best used for**:
+
 - "Tell me about a time you worked with unclear requirements"
 - "How do you handle ambiguity?"
 - "Describe a time you defined a problem that was not well understood"
@@ -355,25 +446,36 @@ _____________________________________________________________________________
 
 **Theme**: Adaptability, resilience, growth
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe the change: reorganization, pivot, new technology, role change.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What did you need to adapt to?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you adjust? What was difficult? How did you support others through the change?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (How did the adaptation go? What did you learn about yourself?)
 
 **Best used for**:
+
 - "Tell me about a time you had to adapt"
 - "How do you handle change?"
 - "Describe a career transition"
@@ -385,25 +487,36 @@ _____________________________________________________________________________
 
 **Theme**: Decision-making, ownership, trade-offs
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe the decision and why it was difficult.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What were the options? What were the stakes?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you evaluate the options? Who did you consult? How did you communicate your decision?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was the outcome? Would you make the same decision again?)
 
 **Best used for**:
+
 - "Tell me about a difficult decision you made"
 - "How do you make trade-offs?"
 - "Describe a time you took a risk"
@@ -415,25 +528,36 @@ _____________________________________________________________________________
 
 **Theme**: Initiative, ownership, impact
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe what you noticed that was outside your explicit responsibility.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What did you decide to do about it, even though it was not your job?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (What did you build, fix, or improve? How did you balance it with your regular responsibilities?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was the impact? How was it received?)
 
 **Best used for**:
+
 - "Tell me about a time you went above and beyond"
 - "Describe a time you took ownership"
 - "Tell me about a time you identified and solved a problem proactively"
@@ -445,25 +569,36 @@ _____________________________________________________________________________
 
 **Theme**: Empathy, product sense, impact
 
-**Situation**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Situation**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (Describe the user problem or customer pain point.)
 
-**Task**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Task**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was your role in addressing it?)
 
-**Action**: _____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
-_____________________________________________________________________________
+**Action**: ******************\*\*******************\_******************\*\*******************
+
+---
+
+---
+
+---
+
 (How did you understand the user's needs? What did you build or change? How did you validate it?)
 
-**Result**: _____________________________________________________________________________
-_____________________________________________________________________________
+**Result**: ******************\*\*******************\_******************\*\*******************
+
+---
+
 (What was the user impact? How did you measure it?)
 
 **Best used for**:
+
 - "Tell me about a time you advocated for the user"
 - "How do you balance engineering excellence with user needs?"
 - "Describe a time you improved the user experience"
@@ -475,22 +610,22 @@ _____________________________________________________________________________
 
 Use this matrix to ensure you have at least one strong story for every major question category. Put a checkmark or the story number next to each category you have covered.
 
-| Question Category | Story # | Confidence (1-5) |
-|-------------------|---------|-------------------|
-| Technical problem-solving | _____ | _____ |
-| Leadership / influence | _____ | _____ |
-| Conflict resolution | _____ | _____ |
-| Failure and recovery | _____ | _____ |
-| Mentoring / growing others | _____ | _____ |
-| Tight deadline / pressure | _____ | _____ |
-| Cross-team collaboration | _____ | _____ |
-| Ambiguity / unclear requirements | _____ | _____ |
-| Adapting to change | _____ | _____ |
-| Difficult decision / trade-offs | _____ | _____ |
-| Going above and beyond | _____ | _____ |
-| Customer / user focus | _____ | _____ |
-| Career growth / learning | _____ | _____ |
-| Why this company / why leaving | _____ | _____ |
+| Question Category                | Story # | Confidence (1-5) |
+| -------------------------------- | ------- | ---------------- |
+| Technical problem-solving        | **\_**  | **\_**           |
+| Leadership / influence           | **\_**  | **\_**           |
+| Conflict resolution              | **\_**  | **\_**           |
+| Failure and recovery             | **\_**  | **\_**           |
+| Mentoring / growing others       | **\_**  | **\_**           |
+| Tight deadline / pressure        | **\_**  | **\_**           |
+| Cross-team collaboration         | **\_**  | **\_**           |
+| Ambiguity / unclear requirements | **\_**  | **\_**           |
+| Adapting to change               | **\_**  | **\_**           |
+| Difficult decision / trade-offs  | **\_**  | **\_**           |
+| Going above and beyond           | **\_**  | **\_**           |
+| Customer / user focus            | **\_**  | **\_**           |
+| Career growth / learning         | **\_**  | **\_**           |
+| Why this company / why leaving   | **\_**  | **\_**           |
 
 **Target**: Have at least one story with confidence level 4 or 5 for every row.
 
@@ -517,14 +652,14 @@ Use this matrix to ensure you have at least one strong story for every major que
 
 The same story can answer different questions by shifting emphasis:
 
-| Question Type | Emphasize |
-|---------------|-----------|
-| Technical | The technical approach, tools, debugging process |
-| Leadership | How you influenced others, built consensus, led by example |
-| Conflict | The disagreement, how you listened, how you resolved it |
-| Failure | What went wrong, your honest reflection, what you changed |
-| Impact | The quantified result, the business value, the lasting change |
-| Growth | What you did not know before, how you learned, how you improved |
+| Question Type | Emphasize                                                       |
+| ------------- | --------------------------------------------------------------- |
+| Technical     | The technical approach, tools, debugging process                |
+| Leadership    | How you influenced others, built consensus, led by example      |
+| Conflict      | The disagreement, how you listened, how you resolved it         |
+| Failure       | What went wrong, your honest reflection, what you changed       |
+| Impact        | The quantified result, the business value, the lasting change   |
+| Growth        | What you did not know before, how you learned, how you improved |
 
 ### Story Freshness
 

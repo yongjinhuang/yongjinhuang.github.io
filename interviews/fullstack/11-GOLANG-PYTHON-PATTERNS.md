@@ -912,6 +912,7 @@ class OrderService:
 **Context:** Build a service that handles 10,000 requests/second for product search.
 
 **Go is the right choice because:**
+
 - Built-in concurrency (goroutines) handles thousands of concurrent connections efficiently
 - Low memory footprint per connection compared to thread-per-request models
 - Compiled binary with no runtime startup cost
@@ -942,6 +943,7 @@ db.SetConnMaxLifetime(5 * time.Minute)
 **Context:** Internal admin tool for managing orders, users, and reports.
 
 **Python/Django is the right choice because:**
+
 - Django Admin provides an out-of-the-box admin interface
 - Rapid development: ORM, migrations, auth, serializers are all built in
 - Complex reporting queries are easier to express with the Django ORM
@@ -952,16 +954,16 @@ db.SetConnMaxLifetime(5 * time.Minute)
 
 **Decision framework:**
 
-| Factor | Choose Go | Choose Python |
-|--------|-----------|---------------|
-| Concurrency needs | High (thousands of goroutines) | Moderate (async/await or Celery) |
-| Latency sensitivity | Sub-millisecond matters | Tens of milliseconds acceptable |
-| Team expertise | Team knows Go | Team knows Python |
-| Data processing | Not the primary concern | Heavy data wrangling, ML |
-| Deployment size | Minimal container image (~10MB) | Larger image (~200MB+) |
-| Development speed | Moderate (more boilerplate) | Fast (less boilerplate, rich stdlib) |
-| Type safety | Compile-time guarantees | Runtime checks (even with type hints) |
-| Library ecosystem | Growing, strong in infra | Massive, strong in data/ML/web |
+| Factor              | Choose Go                       | Choose Python                         |
+| ------------------- | ------------------------------- | ------------------------------------- |
+| Concurrency needs   | High (thousands of goroutines)  | Moderate (async/await or Celery)      |
+| Latency sensitivity | Sub-millisecond matters         | Tens of milliseconds acceptable       |
+| Team expertise      | Team knows Go                   | Team knows Python                     |
+| Data processing     | Not the primary concern         | Heavy data wrangling, ML              |
+| Deployment size     | Minimal container image (~10MB) | Larger image (~200MB+)                |
+| Development speed   | Moderate (more boilerplate)     | Fast (less boilerplate, rich stdlib)  |
+| Type safety         | Compile-time guarantees         | Runtime checks (even with type hints) |
+| Library ecosystem   | Growing, strong in infra        | Massive, strong in data/ML/web        |
 
 ---
 
@@ -996,23 +998,27 @@ if err != nil {
 ```
 
 **Advantages of Go's approach:**
+
 - Errors are visible in the function signature
 - Cannot forget to handle them (compiler warns about unused variables)
 - Control flow is explicit -- no hidden jump paths from exceptions
 - Error wrapping with `%w` creates an error chain that preserves context
 
 **Disadvantages:**
+
 - Verbose (the `if err != nil` pattern is repetitive)
 - No stack traces by default (must use third-party libraries or `runtime.Stack()`)
 
 Python uses exceptions, which propagate up the call stack until caught by a `try/except` block. Exceptions can carry rich information (stack traces, exception chaining).
 
 **Advantages of Python's approach:**
+
 - Less boilerplate at the call site
 - Automatic stack traces
 - Can catch exceptions at any level in the call stack
 
 **Disadvantages:**
+
 - Exceptions are invisible in function signatures (no checked exceptions in Python)
 - Easy to forget to handle them -- they silently propagate
 - Can make control flow hard to follow when exceptions are used for flow control
@@ -1022,11 +1028,13 @@ Python uses exceptions, which propagate up the call stack until caught by a `try
 **Answer:**
 
 **Django signals** are for synchronous, in-process reactions to model events. Use them when:
+
 - The reaction must happen immediately (e.g., validating a state transition before save)
 - The reaction is fast and reliable (updating a related model, invalidating a cache)
 - The reaction is tightly coupled to the model lifecycle (pre_save, post_save, post_delete)
 
 **Celery tasks** are for asynchronous, potentially long-running, or unreliable operations. Use them when:
+
 - The operation should not block the request/response cycle (sending emails, generating reports)
 - The operation might fail and needs retries (external API calls, payment processing)
 - The operation is resource-intensive (image processing, data aggregation)
@@ -1093,6 +1101,7 @@ orders = Order.objects.values("id", "status", "total_amount", "created_at")
 Both Go interfaces and Python Protocols use structural typing (duck typing) -- a type satisfies the interface if it has the required methods, without explicitly declaring that it implements the interface.
 
 **Go interfaces:**
+
 ```go
 type Writer interface {
     Write(p []byte) (n int, err error)
@@ -1101,6 +1110,7 @@ type Writer interface {
 ```
 
 **Python Protocols:**
+
 ```python
 from typing import Protocol
 
@@ -1498,19 +1508,19 @@ def test_create_order():
 
 ### Go vs Python at a Glance
 
-| Aspect | Go | Python |
-|--------|-----|--------|
-| **Type system** | Static, compiled | Dynamic, interpreted |
-| **Concurrency** | Goroutines + channels | asyncio, threading, multiprocessing |
-| **Error handling** | Explicit error returns | Exceptions |
-| **Package management** | Go modules | pip, Poetry, uv |
-| **Web frameworks** | Gin, Echo, Fiber, Chi | Django, FastAPI, Flask |
-| **ORM** | GORM, sqlx, Ent | Django ORM, SQLAlchemy |
-| **Testing** | Built-in `testing` package | pytest, unittest |
-| **Deployment** | Single static binary | Container with runtime |
-| **Memory footprint** | Low (~10-50MB typical) | Higher (~100-500MB typical) |
-| **Build time** | Seconds | N/A (interpreted) |
-| **Learning curve** | Small language, few concepts | Easy to start, deep ecosystem |
+| Aspect                 | Go                           | Python                              |
+| ---------------------- | ---------------------------- | ----------------------------------- |
+| **Type system**        | Static, compiled             | Dynamic, interpreted                |
+| **Concurrency**        | Goroutines + channels        | asyncio, threading, multiprocessing |
+| **Error handling**     | Explicit error returns       | Exceptions                          |
+| **Package management** | Go modules                   | pip, Poetry, uv                     |
+| **Web frameworks**     | Gin, Echo, Fiber, Chi        | Django, FastAPI, Flask              |
+| **ORM**                | GORM, sqlx, Ent              | Django ORM, SQLAlchemy              |
+| **Testing**            | Built-in `testing` package   | pytest, unittest                    |
+| **Deployment**         | Single static binary         | Container with runtime              |
+| **Memory footprint**   | Low (~10-50MB typical)       | Higher (~100-500MB typical)         |
+| **Build time**         | Seconds                      | N/A (interpreted)                   |
+| **Learning curve**     | Small language, few concepts | Easy to start, deep ecosystem       |
 
 ### Go Error Handling Cheat Sheet
 

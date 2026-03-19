@@ -31,6 +31,7 @@ Jakob Nielsen's heuristics are the most widely used framework for evaluating use
 The system should always keep users informed about what is going on, through appropriate feedback within reasonable time.
 
 **Good Examples:**
+
 - Progress bars during file uploads
 - Loading spinners with context ("Loading your projects...")
 - Real-time form validation (green checkmark as you type a valid email)
@@ -38,6 +39,7 @@ The system should always keep users informed about what is going on, through app
 - Read receipts in messaging apps
 
 **Bad Examples:**
+
 - A button that does nothing visually when clicked
 - No indication that a form was submitted
 - A page that takes 5 seconds to load with no spinner
@@ -56,12 +58,14 @@ GOOD:                          BAD:
 The system should speak the users' language, with words, phrases, and concepts familiar to the user, rather than system-oriented terms.
 
 **Good Examples:**
+
 - "Shopping Cart" instead of "Item Buffer"
 - Trash can icon for delete (physical metaphor)
 - Calendar widgets that look like calendars
 - "Your order is on its way" instead of "Status: IN_TRANSIT"
 
 **Bad Examples:**
+
 - "Error: ECONNREFUSED" shown to end users
 - "Null reference exception" in a user-facing dialog
 - Technical jargon in a consumer app ("Sync your OAuth token")
@@ -71,6 +75,7 @@ The system should speak the users' language, with words, phrases, and concepts f
 Users often perform actions by mistake. They need a clearly marked "emergency exit" to leave the unwanted state without having to go through an extended process.
 
 **Good Examples:**
+
 - Undo/redo functionality
 - "Cancel" buttons on all dialogs
 - Gmail's "Undo Send" feature
@@ -78,6 +83,7 @@ Users often perform actions by mistake. They need a clearly marked "emergency ex
 - Confirmation dialogs before destructive actions
 
 **Bad Examples:**
+
 - No way to cancel a multi-step form
 - Permanent deletion without confirmation
 - Forced onboarding with no skip option
@@ -87,12 +93,14 @@ Users often perform actions by mistake. They need a clearly marked "emergency ex
 Users should not have to wonder whether different words, situations, or actions mean the same thing. Follow platform conventions.
 
 **Good Examples:**
+
 - Links are always underlined or colored
 - Primary action is always on the right (in LTR layouts)
 - Icons mean the same thing across the app (gear = settings everywhere)
 - Form labels are always above inputs (consistent placement)
 
 **Bad Examples:**
+
 - "Save" button is blue on one page, green on another
 - Sometimes clicking a card navigates, sometimes it opens a modal
 - Different date formats on different pages
@@ -102,6 +110,7 @@ Users should not have to wonder whether different words, situations, or actions 
 Even better than good error messages is a careful design which prevents a problem from occurring in the first place.
 
 **Good Examples:**
+
 - Disabled submit button until required fields are filled
 - Search suggestions that prevent typos
 - Confirmation dialog: "Delete 23 files permanently?"
@@ -125,6 +134,7 @@ Free text = errors             Constrained = no errors
 Minimize the user's memory load by making objects, actions, and options visible. The user should not have to remember information from one part of the interface to another.
 
 **Good Examples:**
+
 - Recent files list in document editors
 - Autocomplete in search fields
 - Breadcrumb navigation showing current location
@@ -132,6 +142,7 @@ Minimize the user's memory load by making objects, actions, and options visible.
 - Dropdown menus showing all options rather than requiring typed input
 
 **Bad Examples:**
+
 - Error codes the user must look up in documentation
 - Form fields that require memorized account numbers
 - Navigation that requires remembering the site structure
@@ -211,6 +222,7 @@ Step 4: Report and Recommend
 ```
 
 **Severity Scale:**
+
 - **0** — Not a usability problem
 - **1** — Cosmetic problem only; fix if time permits
 - **2** — Minor usability problem; low priority
@@ -312,6 +324,7 @@ CRITICISM (unproductive):       CRITIQUE (productive):
 A/B testing compares two design variants to determine which performs better against a defined metric.
 
 **Core Concepts:**
+
 - **Control (A):** The existing design
 - **Variant (B):** The proposed change
 - **Metric:** What you are measuring (click rate, conversion, time on task)
@@ -319,6 +332,7 @@ A/B testing compares two design variants to determine which performs better agai
 - **Sample size:** Enough users to detect meaningful differences
 
 **When to A/B Test:**
+
 - Headline or copy changes
 - CTA button color, size, or placement
 - Layout variations (one column vs. two column)
@@ -326,6 +340,7 @@ A/B testing compares two design variants to determine which performs better agai
 - Pricing page structures
 
 **When NOT to A/B Test:**
+
 - Accessibility improvements (just fix them)
 - Obvious usability bugs (just fix them)
 - Brand guidelines (not negotiable)
@@ -349,6 +364,7 @@ Winner: Variant B
 ### Usability Testing Methods
 
 #### Moderated Testing
+
 A facilitator guides the participant through tasks in real-time.
 
 **Best for:** Complex flows, early prototypes, exploring "why" behind behavior.
@@ -356,6 +372,7 @@ A facilitator guides the participant through tasks in real-time.
 **Strength:** Can ask follow-up questions, observe body language.
 
 #### Unmoderated Testing
+
 Participants complete tasks independently, recorded for later analysis.
 
 **Best for:** Validating specific tasks, larger sample sizes, geographically distributed users.
@@ -363,16 +380,19 @@ Participants complete tasks independently, recorded for later analysis.
 **Strength:** Faster, cheaper, eliminates facilitator bias.
 
 #### 5-Second Test
+
 Show a design for 5 seconds, then ask what they remember.
 
 **Best for:** Testing first impressions, visual hierarchy, brand perception.
 **Questions after exposure:**
+
 - What is this page about?
 - What do you remember seeing?
 - What would you click first?
 - What is the main action this page wants you to take?
 
 #### Card Sorting
+
 Participants organize content into groups that make sense to them.
 
 **Best for:** Information architecture, navigation structure, category naming.
@@ -383,6 +403,7 @@ Participants organize content into groups that make sense to them.
 Quantitative data complements qualitative usability insights.
 
 **Key Metrics for Design Evaluation:**
+
 - **Bounce rate** — High bounce on a landing page suggests the content or design does not match user expectations
 - **Time on page** — Very short suggests lack of engagement; very long may suggest confusion
 - **Click-through rate (CTR)** — Measures effectiveness of CTAs and links
@@ -524,6 +545,7 @@ Use the "I like / I wish / What if" framework on your own site monthly:
 ### 5-Second Test Your Own Homepage
 
 Show your portfolio homepage to a friend for 5 seconds, then ask:
+
 - What does this person do?
 - What stood out most?
 - What would you click first?
@@ -534,6 +556,7 @@ If the answers do not match your intent, adjust the visual hierarchy.
 ### Analytics Integration
 
 If you add analytics to your portfolio (Plausible, Umami, or similar privacy-respecting tools):
+
 - Track which sections get the most scroll depth
 - Monitor which project cards get clicked most
 - Check if the language toggle is used

@@ -11,7 +11,7 @@ Culture fit questions are often the most subjective part of the interview, but t
 - **Professionalism about past employers** -- Can you explain why you are leaving your current role without being negative or dishonest?
 - **Long-term fit** -- Will you be engaged and productive here for a meaningful period, or are you likely to leave in three months?
 
-The core question is: *Will this person be happy, productive, and a positive influence on our team?*
+The core question is: _Will this person be happy, productive, and a positive influence on our team?_
 
 ---
 
@@ -35,18 +35,23 @@ The core question is: *Will this person be happy, productive, and a positive inf
 Culture fit questions often do not follow a strict STAR format, but you should still use specific examples rather than abstract claims. The key is **authenticity backed by evidence**.
 
 ### For "Why This Company" Questions
+
 Structure your answer in three layers:
+
 1. **Mission or product** -- What about what they do resonates with you?
 2. **Engineering culture** -- What about how they work appeals to you? (Reference specific things you know about their tech blog, open source, engineering practices)
 3. **Personal connection** -- Is there something in your experience that connects to their domain?
 
 ### For "Work Style" Questions
+
 Use the framework:
+
 1. **Claim** -- State your preference or value
 2. **Evidence** -- Give a specific example from your past
 3. **Connection** -- Explain why this role fits
 
 ### For "Why Are You Leaving" Questions
+
 Follow the rule: **Talk about what you are moving toward, not what you are running from.** Even if you are leaving a toxic environment, frame it positively.
 
 **Tip**: Research the company thoroughly before the interview. Reference specific things from their engineering blog, talks, product, or job description. Generic answers signal that you are applying everywhere without thought.
@@ -141,34 +146,34 @@ Follow the rule: **Talk about what you are moving toward, not what you are runni
 
 ### Story 1: Why This Company
 
-- **Situation**: I am interested in _______ (company) because of three things.
-- **Mission/Product**: _______ resonates with me because _______ (connect to your experience or interests).
-- **Engineering Culture**: I noticed _______ (specific thing from their blog, talks, open source, or employee conversations), which aligns with my value of _______.
-- **Personal Connection**: In my experience at _______, I _______, which makes me excited about _______.
+- **Situation**: I am interested in **\_\_\_** (company) because of three things.
+- **Mission/Product**: **\_\_\_** resonates with me because **\_\_\_** (connect to your experience or interests).
+- **Engineering Culture**: I noticed **\_\_\_** (specific thing from their blog, talks, open source, or employee conversations), which aligns with my value of **\_\_\_**.
+- **Personal Connection**: In my experience at **\_\_\_**, I **\_\_\_**, which makes me excited about **\_\_\_**.
 - **Best used for**: "Why this company?" questions
 
 ### Story 2: Why I Am Leaving
 
-- **Gratitude**: I have valued my time at _______ because _______.
-- **Growth**: Specifically, I accomplished _______ and _______.
-- **Reason for change**: I am looking for _______ (bigger scale, new challenges, different domain, stronger peers), which my current role cannot provide because _______.
-- **Connection**: This role fits because _______.
+- **Gratitude**: I have valued my time at **\_\_\_** because **\_\_\_**.
+- **Growth**: Specifically, I accomplished **\_\_\_** and **\_\_\_**.
+- **Reason for change**: I am looking for **\_\_\_** (bigger scale, new challenges, different domain, stronger peers), which my current role cannot provide because **\_\_\_**.
+- **Connection**: This role fits because **\_\_\_**.
 - **Best used for**: "Why are you leaving?" questions
 
 ### Story 3: Work Environment Preferences
 
-- **Autonomy/Collaboration balance**: I work best when _______. For example, at _______, I _______.
-- **Culture values**: I thrive in environments that value _______. An example of this in action is _______.
-- **Practical preferences**: Regarding remote/hybrid/in-office, I prefer _______ because _______.
-- **What I avoid**: I do not do my best work when _______, because _______.
+- **Autonomy/Collaboration balance**: I work best when **\_\_\_**. For example, at **\_\_\_**, I **\_\_\_**.
+- **Culture values**: I thrive in environments that value **\_\_\_**. An example of this in action is **\_\_\_**.
+- **Practical preferences**: Regarding remote/hybrid/in-office, I prefer **\_\_\_** because **\_\_\_**.
+- **What I avoid**: I do not do my best work when **\_\_\_**, because **\_\_\_**.
 - **Best used for**: "What kind of team" and "work style" questions
 
 ### Story 4: Culture Mismatch (and What I Learned)
 
-- **Situation**: At _______, the culture was _______, which did not align with my preference for _______.
-- **Impact**: This manifested as _______ (specific example).
-- **What I did**: I tried to improve the situation by _______. When that did not work, I _______.
-- **What I learned**: I learned that _______ is essential for me to do my best work. Now I look for _______ when evaluating companies.
+- **Situation**: At **\_\_\_**, the culture was **\_\_\_**, which did not align with my preference for **\_\_\_**.
+- **Impact**: This manifested as **\_\_\_** (specific example).
+- **What I did**: I tried to improve the situation by **\_\_\_**. When that did not work, I **\_\_\_**.
+- **What I learned**: I learned that **\_\_\_** is essential for me to do my best work. Now I look for **\_\_\_** when evaluating companies.
 - **Best used for**: "Tell me about a culture you did not fit," self-awareness questions
 
 ---
@@ -192,26 +197,26 @@ Do this research so your culture fit answers are specific, not generic:
 
 ### Key Phrases to Use
 
-| Do Say | Do Not Say |
-|--------|------------|
-| "I read your blog post about..." | "I have always admired your company..." |
-| "I am looking for an environment that..." | "I can work anywhere..." |
-| "At my current company, I valued..." | "My current company is terrible..." |
-| "I do my best work when..." | "I am very flexible..." |
-| "One thing I am looking for in my next role is..." | "I just need a job..." |
+| Do Say                                               | Do Not Say                                        |
+| ---------------------------------------------------- | ------------------------------------------------- |
+| "I read your blog post about..."                     | "I have always admired your company..."           |
+| "I am looking for an environment that..."            | "I can work anywhere..."                          |
+| "At my current company, I valued..."                 | "My current company is terrible..."               |
+| "I do my best work when..."                          | "I am very flexible..."                           |
+| "One thing I am looking for in my next role is..."   | "I just need a job..."                            |
 | "I spoke with someone on your team who mentioned..." | "I heard your company is a good place to work..." |
 
 ### Do's and Don'ts
 
-| Do | Don't |
-|----|-------|
-| Research the company thoroughly | Give generic answers that apply to any company |
-| Be specific about your values and preferences | Claim to thrive in every environment |
-| Frame departure from current role positively | Badmouth current or past employers |
-| Show genuine enthusiasm with evidence | Fake enthusiasm without substance |
-| Be honest about what you need to do your best work | Tell the interviewer only what they want to hear |
+| Do                                                        | Don't                                            |
+| --------------------------------------------------------- | ------------------------------------------------ |
+| Research the company thoroughly                           | Give generic answers that apply to any company   |
+| Be specific about your values and preferences             | Claim to thrive in every environment             |
+| Frame departure from current role positively              | Badmouth current or past employers               |
+| Show genuine enthusiasm with evidence                     | Fake enthusiasm without substance                |
+| Be honest about what you need to do your best work        | Tell the interviewer only what they want to hear |
 | Connect your values to the company's demonstrated culture | Reference only the company's reputation or brand |
-| Acknowledge trade-offs in your preferences | Present yourself as having no preferences |
+| Acknowledge trade-offs in your preferences                | Present yourself as having no preferences        |
 
 ### The "Why Are You Leaving" Framework
 
@@ -223,6 +228,7 @@ Structure your answer in this order:
 4. **Connection**: Tie it to the specific role you are interviewing for
 
 Avoid these traps:
+
 - Compensation as the only reason (even if it is a factor)
 - Vague "looking for new challenges" without specifics
 - Any negativity about current manager, team, or company

@@ -6,16 +6,16 @@ A customer support ticketing system must route incoming requests from multiple c
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **organizations** | Customer support organization configuration | Top-level entity defining timezone, business hours, and plan; each organization is a separate support operation |
-| **agents** | Support agents with skills and capacity | Enables skill-based routing and load balancing; tracks real-time availability |
-| **teams** | Groups of agents with assignment strategies | Organizes agents by specialty (billing, technical, etc.) and configures how work is distributed |
-| **tickets** | Core support request records | The central entity tracking each customer issue from creation to resolution |
-| **comments** | Threaded conversation on tickets | Supports both public customer-facing replies and private internal notes on the same ticket |
-| **sla_policies** | Service level agreement rules | Defines response and resolution time targets by priority; enables SLA breach alerting |
-| **automation_rules** | Event-driven business logic | Replaces manual work with automated routing, tagging, and escalation; executes on ticket events |
-| **custom_fields** | Organization-specific ticket fields | Enables each organization to capture domain-specific data without schema changes |
+| Table                | Purpose                                     | Why It Exists                                                                                                   |
+| -------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **organizations**    | Customer support organization configuration | Top-level entity defining timezone, business hours, and plan; each organization is a separate support operation |
+| **agents**           | Support agents with skills and capacity     | Enables skill-based routing and load balancing; tracks real-time availability                                   |
+| **teams**            | Groups of agents with assignment strategies | Organizes agents by specialty (billing, technical, etc.) and configures how work is distributed                 |
+| **tickets**          | Core support request records                | The central entity tracking each customer issue from creation to resolution                                     |
+| **comments**         | Threaded conversation on tickets            | Supports both public customer-facing replies and private internal notes on the same ticket                      |
+| **sla_policies**     | Service level agreement rules               | Defines response and resolution time targets by priority; enables SLA breach alerting                           |
+| **automation_rules** | Event-driven business logic                 | Replaces manual work with automated routing, tagging, and escalation; executes on ticket events                 |
+| **custom_fields**    | Organization-specific ticket fields         | Enables each organization to capture domain-specific data without schema changes                                |
 
 ---
 
@@ -23,105 +23,105 @@ A customer support ticketing system must route incoming requests from multiple c
 
 ### organizations
 
-| Field | Type | Description |
-|-------|------|-------------|
-| org_id | PK, UUID | Unique organization identifier |
-| name | VARCHAR | Organization display name |
-| timezone | VARCHAR | IANA timezone (e.g., "America/New_York"); critical for SLA calculations during business hours |
-| business_hours_json | JSONB | Per-day start/end times and holidays; SLA timers pause outside business hours |
-| plan_tier | ENUM | free, pro, enterprise; determines feature access (automations, SLA, custom fields) |
+| Field               | Type     | Description                                                                                   |
+| ------------------- | -------- | --------------------------------------------------------------------------------------------- |
+| org_id              | PK, UUID | Unique organization identifier                                                                |
+| name                | VARCHAR  | Organization display name                                                                     |
+| timezone            | VARCHAR  | IANA timezone (e.g., "America/New_York"); critical for SLA calculations during business hours |
+| business_hours_json | JSONB    | Per-day start/end times and holidays; SLA timers pause outside business hours                 |
+| plan_tier           | ENUM     | free, pro, enterprise; determines feature access (automations, SLA, custom fields)            |
 
 ### agents
 
-| Field | Type | Description |
-|-------|------|-------------|
-| agent_id | PK, UUID | Unique agent identifier |
-| org_id | FK → organizations | Which organization this agent belongs to |
-| name | VARCHAR | Agent display name |
-| email | VARCHAR | Agent email for notifications |
-| skills | ARRAY | Agent competencies (e.g., "billing", "technical", "spanish"); used for skill-based routing |
-| max_capacity | INT | Maximum number of concurrent tickets this agent can handle |
-| current_load | INT | Current number of assigned open tickets; updated in real-time |
-| status | ENUM | online, away, offline; only online agents receive new assignments |
+| Field        | Type               | Description                                                                                |
+| ------------ | ------------------ | ------------------------------------------------------------------------------------------ |
+| agent_id     | PK, UUID           | Unique agent identifier                                                                    |
+| org_id       | FK → organizations | Which organization this agent belongs to                                                   |
+| name         | VARCHAR            | Agent display name                                                                         |
+| email        | VARCHAR            | Agent email for notifications                                                              |
+| skills       | ARRAY              | Agent competencies (e.g., "billing", "technical", "spanish"); used for skill-based routing |
+| max_capacity | INT                | Maximum number of concurrent tickets this agent can handle                                 |
+| current_load | INT                | Current number of assigned open tickets; updated in real-time                              |
+| status       | ENUM               | online, away, offline; only online agents receive new assignments                          |
 
 ### teams
 
-| Field | Type | Description |
-|-------|------|-------------|
-| team_id | PK, UUID | Unique team identifier |
-| org_id | FK → organizations | Which organization this team belongs to |
-| name | VARCHAR | Team name (e.g., "Billing Support", "Technical Tier 2") |
-| assignment_mode | ENUM | round_robin (equal distribution), load_balanced (least loaded agent), skill_based (match required skills) |
+| Field           | Type               | Description                                                                                               |
+| --------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| team_id         | PK, UUID           | Unique team identifier                                                                                    |
+| org_id          | FK → organizations | Which organization this team belongs to                                                                   |
+| name            | VARCHAR            | Team name (e.g., "Billing Support", "Technical Tier 2")                                                   |
+| assignment_mode | ENUM               | round_robin (equal distribution), load_balanced (least loaded agent), skill_based (match required skills) |
 
 ### tickets
 
-| Field | Type | Description |
-|-------|------|-------------|
-| ticket_id | PK, UUID | Unique ticket identifier; often displayed as a sequential number to customers |
-| org_id | FK → organizations | Which organization handles this ticket |
-| subject | VARCHAR | Brief description of the issue |
-| description | TEXT | Full initial message from the customer |
-| status | ENUM | new (unassigned), open (assigned, working), pending (waiting on customer), solved (agent resolved), closed (confirmed resolved) |
-| priority | ENUM | low, medium, high, urgent; drives SLA deadlines and queue ordering |
-| category | VARCHAR | Issue category (billing, bug, feature_request, account); used for routing and reporting |
-| assigned_agent_id | FK → agents | Currently assigned agent; null when unassigned |
-| assigned_team_id | FK → teams | Currently assigned team; tickets are assigned to teams, then to agents within the team |
-| requester_id | FK → users | The customer who submitted the ticket |
-| requester_email | VARCHAR | Customer email (denormalized for quick display without joining users table) |
-| channel | ENUM | email, chat, web, api, phone; which channel the ticket came from |
-| sla_policy_id | FK → sla_policies | Which SLA policy applies to this ticket |
-| first_response_due | TIMESTAMP | Deadline for first agent response; calculated from SLA policy and business hours |
-| resolution_due | TIMESTAMP | Deadline for ticket resolution; calculated from SLA policy and business hours |
-| first_responded_at | TIMESTAMP | When the first agent response was sent; null until responded |
-| resolved_at | TIMESTAMP | When the ticket was marked solved; null while open |
-| tags | ARRAY | Flexible labels for categorization and automation matching (e.g., "vip", "escalated", "bug-confirmed") |
+| Field              | Type               | Description                                                                                                                     |
+| ------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| ticket_id          | PK, UUID           | Unique ticket identifier; often displayed as a sequential number to customers                                                   |
+| org_id             | FK → organizations | Which organization handles this ticket                                                                                          |
+| subject            | VARCHAR            | Brief description of the issue                                                                                                  |
+| description        | TEXT               | Full initial message from the customer                                                                                          |
+| status             | ENUM               | new (unassigned), open (assigned, working), pending (waiting on customer), solved (agent resolved), closed (confirmed resolved) |
+| priority           | ENUM               | low, medium, high, urgent; drives SLA deadlines and queue ordering                                                              |
+| category           | VARCHAR            | Issue category (billing, bug, feature_request, account); used for routing and reporting                                         |
+| assigned_agent_id  | FK → agents        | Currently assigned agent; null when unassigned                                                                                  |
+| assigned_team_id   | FK → teams         | Currently assigned team; tickets are assigned to teams, then to agents within the team                                          |
+| requester_id       | FK → users         | The customer who submitted the ticket                                                                                           |
+| requester_email    | VARCHAR            | Customer email (denormalized for quick display without joining users table)                                                     |
+| channel            | ENUM               | email, chat, web, api, phone; which channel the ticket came from                                                                |
+| sla_policy_id      | FK → sla_policies  | Which SLA policy applies to this ticket                                                                                         |
+| first_response_due | TIMESTAMP          | Deadline for first agent response; calculated from SLA policy and business hours                                                |
+| resolution_due     | TIMESTAMP          | Deadline for ticket resolution; calculated from SLA policy and business hours                                                   |
+| first_responded_at | TIMESTAMP          | When the first agent response was sent; null until responded                                                                    |
+| resolved_at        | TIMESTAMP          | When the ticket was marked solved; null while open                                                                              |
+| tags               | ARRAY              | Flexible labels for categorization and automation matching (e.g., "vip", "escalated", "bug-confirmed")                          |
 
 ### comments
 
-| Field | Type | Description |
-|-------|------|-------------|
-| comment_id | PK, UUID | Unique comment identifier |
-| ticket_id | FK → tickets | Which ticket this comment belongs to |
-| author_id | FK → users/agents | Who wrote this comment |
-| author_type | ENUM | agent, customer, system; system comments track automated actions (assignment changes, SLA breaches) |
-| body | TEXT | Comment content; supports rich text |
-| is_internal | BOOLEAN | If true, only visible to agents (internal notes); if false, visible to the customer |
-| attachments_json | JSONB | Array of attachment references (file name, size, storage URL) |
-| created_at | TIMESTAMP | When the comment was posted |
+| Field            | Type              | Description                                                                                         |
+| ---------------- | ----------------- | --------------------------------------------------------------------------------------------------- |
+| comment_id       | PK, UUID          | Unique comment identifier                                                                           |
+| ticket_id        | FK → tickets      | Which ticket this comment belongs to                                                                |
+| author_id        | FK → users/agents | Who wrote this comment                                                                              |
+| author_type      | ENUM              | agent, customer, system; system comments track automated actions (assignment changes, SLA breaches) |
+| body             | TEXT              | Comment content; supports rich text                                                                 |
+| is_internal      | BOOLEAN           | If true, only visible to agents (internal notes); if false, visible to the customer                 |
+| attachments_json | JSONB             | Array of attachment references (file name, size, storage URL)                                       |
+| created_at       | TIMESTAMP         | When the comment was posted                                                                         |
 
 ### sla_policies
 
-| Field | Type | Description |
-|-------|------|-------------|
-| sla_id | PK, UUID | Unique SLA policy identifier |
-| org_id | FK → organizations | Which organization this SLA belongs to |
-| name | VARCHAR | Policy name (e.g., "Enterprise SLA", "Standard SLA") |
-| conditions_json | JSONB | When this SLA applies (e.g., priority = urgent AND channel = phone); first matching SLA wins |
-| targets_json | JSONB | Time targets by priority: `{"urgent": {"first_response": 30, "resolution": 240}, "high": {...}}` in minutes of business time |
+| Field           | Type               | Description                                                                                                                  |
+| --------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| sla_id          | PK, UUID           | Unique SLA policy identifier                                                                                                 |
+| org_id          | FK → organizations | Which organization this SLA belongs to                                                                                       |
+| name            | VARCHAR            | Policy name (e.g., "Enterprise SLA", "Standard SLA")                                                                         |
+| conditions_json | JSONB              | When this SLA applies (e.g., priority = urgent AND channel = phone); first matching SLA wins                                 |
+| targets_json    | JSONB              | Time targets by priority: `{"urgent": {"first_response": 30, "resolution": 240}, "high": {...}}` in minutes of business time |
 
 ### automation_rules
 
-| Field | Type | Description |
-|-------|------|-------------|
-| rule_id | PK, UUID | Unique rule identifier |
-| org_id | FK → organizations | Which organization this rule belongs to |
-| name | VARCHAR | Human-readable rule name |
-| trigger | ENUM | on_create (when ticket is created), on_update (when ticket changes), time_based (periodic check) |
-| conditions_json | JSONB | When the rule fires (e.g., status = new AND category = billing); evaluated against ticket state |
-| actions_json | JSONB | What happens: assign to team/agent, add tags, send notification, change priority, escalate |
-| is_active | BOOLEAN | Toggle to enable/disable without deleting |
-| execution_order | INT | Rules are evaluated in this order; first matching rule may stop further evaluation |
+| Field           | Type               | Description                                                                                      |
+| --------------- | ------------------ | ------------------------------------------------------------------------------------------------ |
+| rule_id         | PK, UUID           | Unique rule identifier                                                                           |
+| org_id          | FK → organizations | Which organization this rule belongs to                                                          |
+| name            | VARCHAR            | Human-readable rule name                                                                         |
+| trigger         | ENUM               | on_create (when ticket is created), on_update (when ticket changes), time_based (periodic check) |
+| conditions_json | JSONB              | When the rule fires (e.g., status = new AND category = billing); evaluated against ticket state  |
+| actions_json    | JSONB              | What happens: assign to team/agent, add tags, send notification, change priority, escalate       |
+| is_active       | BOOLEAN            | Toggle to enable/disable without deleting                                                        |
+| execution_order | INT                | Rules are evaluated in this order; first matching rule may stop further evaluation               |
 
 ### custom_fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| field_id | PK, UUID | Unique field identifier |
-| org_id | FK → organizations | Which organization defined this field |
-| name | VARCHAR | Field display name (e.g., "Product Version", "Account Tier") |
-| field_type | ENUM | text, number, dropdown, checkbox, date; determines the editor widget |
-| options_json | JSONB | For dropdown fields, the list of allowed values |
-| required | BOOLEAN | Whether agents must fill this field before solving a ticket |
+| Field        | Type               | Description                                                          |
+| ------------ | ------------------ | -------------------------------------------------------------------- |
+| field_id     | PK, UUID           | Unique field identifier                                              |
+| org_id       | FK → organizations | Which organization defined this field                                |
+| name         | VARCHAR            | Field display name (e.g., "Product Version", "Account Tier")         |
+| field_type   | ENUM               | text, number, dropdown, checkbox, date; determines the editor widget |
+| options_json | JSONB              | For dropdown fields, the list of allowed values                      |
+| required     | BOOLEAN            | Whether agents must fill this field before solving a ticket          |
 
 ---
 
@@ -241,6 +241,7 @@ Relationships:
 4. **Automation Execution**: `automation_rules` with `trigger = on_create` are evaluated in `execution_order`. Rules match against ticket properties (category, priority, tags, channel) and execute actions like: assign to a team, add tags, set priority, send an auto-response, or escalate.
 
 5. **Team Routing**: The ticket is assigned to a `teams` record. Based on the team's `assignment_mode`:
+
    - **Round robin**: Next agent in rotation
    - **Load balanced**: Agent with lowest `current_load` relative to `max_capacity`
    - **Skill based**: Agent whose `skills` match the ticket's required skills (derived from category/tags)

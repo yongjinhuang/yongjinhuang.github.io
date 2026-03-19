@@ -230,6 +230,7 @@ environment=production
 ```
 
 **Dynamic Inventory** (AWS example):
+
 ```bash
 # Use AWS dynamic inventory plugin
 # ansible.cfg
@@ -260,14 +261,14 @@ hostnames:
 ---
 - name: Configure nginx web servers
   hosts: webservers
-  become: true              # sudo
+  become: true # sudo
   gather_facts: true
-  serial: "20%"             # Rolling updates: 20% of hosts at a time
-  max_fail_percentage: 10   # Abort if >10% fail
+  serial: '20%' # Rolling updates: 20% of hosts at a time
+  max_fail_percentage: 10 # Abort if >10% fail
 
   vars:
-    nginx_worker_processes: "{{ ansible_processor_vcpus }}"
-    nginx_version: "1.24.0"
+    nginx_worker_processes: '{{ ansible_processor_vcpus }}'
+    nginx_version: '1.24.0'
 
   pre_tasks:
     - name: Update apt cache
@@ -284,7 +285,7 @@ hostnames:
   post_tasks:
     - name: Verify nginx is responding
       uri:
-        url: "http://localhost/health"
+        url: 'http://localhost/health'
         status_code: 200
       retries: 3
       delay: 5
@@ -578,20 +579,20 @@ defaults:
   data_hash: yaml_data
 
 hierarchy:
-  - name: "Node-specific data"
-    path: "nodes/%{trusted.certname}.yaml"
+  - name: 'Node-specific data'
+    path: 'nodes/%{trusted.certname}.yaml'
 
-  - name: "Environment data"
-    path: "environments/%{server_facts.environment}.yaml"
+  - name: 'Environment data'
+    path: 'environments/%{server_facts.environment}.yaml'
 
-  - name: "Role data"
-    path: "roles/%{facts.role}.yaml"
+  - name: 'Role data'
+    path: 'roles/%{facts.role}.yaml'
 
-  - name: "OS family data"
-    path: "os/%{facts.os.family}.yaml"
+  - name: 'OS family data'
+    path: 'os/%{facts.os.family}.yaml'
 
-  - name: "Common data"
-    path: "common.yaml"
+  - name: 'Common data'
+    path: 'common.yaml'
 ```
 
 ```yaml
@@ -706,6 +707,7 @@ aide --check  # Compare filesystem against database
 ```
 
 **Centralized Drift Dashboard:**
+
 ```
 +--------------------------------------------+
 |          CONFIGURATION DRIFT REPORT        |
@@ -754,7 +756,7 @@ Decision Framework:
   tasks:
     - name: Enforce base configuration
       include_role:
-        name: "{{ item }}"
+        name: '{{ item }}'
       loop:
         - common
         - security-hardening
@@ -817,11 +819,11 @@ playbook or git            and when
 
 - name: Retrieve database credentials from Vault
   community.hashi_vault.vault_kv2_get:
-    url: "https://vault.internal.example.com:8200"
-    path: "prod/databases/mysql"
-    auth_method: aws_iam   # Use EC2 instance IAM role
+    url: 'https://vault.internal.example.com:8200'
+    path: 'prod/databases/mysql'
+    auth_method: aws_iam # Use EC2 instance IAM role
   register: vault_data
-  no_log: true  # Don't log the secret values
+  no_log: true # Don't log the secret values
 
 - name: Configure application with database credentials
   template:
@@ -829,7 +831,7 @@ playbook or git            and when
     dest: /etc/app/app.conf
     mode: '0600'
   vars:
-    db_password: "{{ vault_data.secret.password }}"
+    db_password: '{{ vault_data.secret.password }}'
   no_log: true
 ```
 
@@ -862,8 +864,8 @@ metadata:
   namespace: production
 spec:
   encryptedData:
-    password: AgA3m8W9Xk2...  # Encrypted with cluster's public key
-    username: AgBd7nR2Yp1...  # Only decryptable by this cluster's controller
+    password: AgA3m8W9Xk2... # Encrypted with cluster's public key
+    username: AgBd7nR2Yp1... # Only decryptable by this cluster's controller
 ```
 
 ### Rotation Strategy
@@ -1274,7 +1276,7 @@ Host Classification Strategy:
       # Always applied
 
     - include_role:
-        name: "{{ host_role }}"    # host_role from inventory/fact
+        name: '{{ host_role }}' # host_role from inventory/fact
       when: host_role is defined
 
     - include_role:
@@ -1344,7 +1346,7 @@ Canary Config Rollout Process:
 - name: Canary config deployment
   hosts: "{{ target_hosts | default('webservers') }}"
   serial:
-    - "{{ canary_count | default(2) }}"   # Start with 2 hosts
+    - '{{ canary_count | default(2) }}' # Start with 2 hosts
   vars:
     canary_wait_minutes: 30
 
@@ -1355,13 +1357,13 @@ Canary Config Rollout Process:
 
     - name: Wait for canary validation
       pause:
-        minutes: "{{ canary_wait_minutes }}"
+        minutes: '{{ canary_wait_minutes }}'
       run_once: true
       when: ansible_play_batch_size == (canary_count | default(2) | int)
 
     - name: Check canary metrics (Prometheus query)
       uri:
-        url: "http://prometheus:9090/api/v1/query"
+        url: 'http://prometheus:9090/api/v1/query'
         body_format: form-urlencoded
         body:
           query: "rate(http_requests_total{status=~'5..',job='nginx',host='{{ inventory_hostname }}'}[5m])"
@@ -1372,7 +1374,7 @@ Canary Config Rollout Process:
 
     - name: Fail if canary error rate is elevated
       fail:
-        msg: "Canary error rate too high, aborting rollout"
+        msg: 'Canary error rate too high, aborting rollout'
       when:
         - ansible_play_batch_size == (canary_count | default(2) | int)
         - (error_rate.json.data.result[0].value[1] | float) > 0.05
@@ -1410,24 +1412,24 @@ Philosophy Comparison:
 
 ```json
 {
-  "builders": [{
-    "type": "amazon-ebs",
-    "region": "us-east-1",
-    "source_ami_filter": {
-      "filters": {
-        "name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
-      }
-    },
-    "instance_type": "t3.medium",
-    "ami_name": "webapp-base-{{timestamp}}"
-  }],
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "us-east-1",
+      "source_ami_filter": {
+        "filters": {
+          "name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
+        }
+      },
+      "instance_type": "t3.medium",
+      "ami_name": "webapp-base-{{timestamp}}"
+    }
+  ],
   "provisioners": [
     {
       "type": "ansible",
       "playbook_file": "playbooks/base-image.yml",
-      "extra_arguments": [
-        "--vault-password-file", "~/.vault_pass"
-      ]
+      "extra_arguments": ["--vault-password-file", "~/.vault_pass"]
     },
     {
       "type": "shell",
@@ -1571,5 +1573,5 @@ A: Push (Ansible): ad-hoc tasks, small fleets, immediate need.
 
 ---
 
-*Part of the Cloud Operations Interview Prep Series*
-*Previous: 01-INCIDENT-RESPONSE.md | Next: 03-OBSERVABILITY.md*
+_Part of the Cloud Operations Interview Prep Series_
+_Previous: 01-INCIDENT-RESPONSE.md | Next: 03-OBSERVABILITY.md_

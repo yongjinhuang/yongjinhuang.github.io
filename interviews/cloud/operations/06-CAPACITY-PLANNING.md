@@ -70,13 +70,13 @@ Capacity planning is not about 100% utilization. It is about **headroom manageme
 
 **Target utilization guidelines by resource type:**
 
-| Resource        | Target Utilization | Max Sustained | Reasoning                        |
-|-----------------|-------------------|---------------|----------------------------------|
-| CPU (compute)   | 40-70%            | 80%           | Headroom for bursts              |
-| Memory          | 60-80%            | 90%           | GC and spike tolerance           |
-| Disk I/O        | 60-70%            | 85%           | Write buffering overhead         |
-| Network         | 50-60%            | 75%           | TCP retransmit avoidance         |
-| DB Connections  | 60-70%            | 85%           | Connection pool saturation       |
+| Resource       | Target Utilization | Max Sustained | Reasoning                  |
+| -------------- | ------------------ | ------------- | -------------------------- |
+| CPU (compute)  | 40-70%             | 80%           | Headroom for bursts        |
+| Memory         | 60-80%             | 90%           | GC and spike tolerance     |
+| Disk I/O       | 60-70%             | 85%           | Write buffering overhead   |
+| Network        | 50-60%             | 75%           | TCP retransmit avoidance   |
+| DB Connections | 60-70%             | 85%           | Connection pool saturation |
 
 ---
 
@@ -244,12 +244,12 @@ aws compute-optimizer get-ec2-instance-recommendations \
 
 **Compute Optimizer findings explained:**
 
-| Finding     | Meaning                                            | Action                      |
-|-------------|----------------------------------------------------|-----------------------------|
-| OVER_PROVISIONED | CPU/memory consistently low (< 40% avg)       | Downsize instance           |
-| UNDER_PROVISIONED | CPU/memory consistently high (> 80% avg)     | Upsize instance             |
-| OPTIMIZED   | Usage is within expected bands                     | No change needed            |
-| NOT_OPTIMIZED | Insufficient data (< 30 hours)                   | Wait or check metrics       |
+| Finding           | Meaning                                  | Action                |
+| ----------------- | ---------------------------------------- | --------------------- |
+| OVER_PROVISIONED  | CPU/memory consistently low (< 40% avg)  | Downsize instance     |
+| UNDER_PROVISIONED | CPU/memory consistently high (> 80% avg) | Upsize instance       |
+| OPTIMIZED         | Usage is within expected bands           | No change needed      |
+| NOT_OPTIMIZED     | Insufficient data (< 30 hours)           | Wait or check metrics |
 
 ### Manual Right-Sizing Analysis
 
@@ -362,15 +362,15 @@ docker buildx build --platform linux/arm64 -t myapp:arm64 .
 
 ### Comparison
 
-| Dimension          | Horizontal (Scale Out)              | Vertical (Scale Up)                 |
-|--------------------|-------------------------------------|-------------------------------------|
-| Mechanism          | Add more instances                  | Larger instance size                |
-| Downtime           | None (with load balancer)           | Brief restart required              |
-| Cost curve         | Linear                              | Non-linear (larger = less efficient)|
-| State management   | Complex (distributed state)         | Simple (shared memory)              |
-| Failure domain     | One instance failure = low impact   | One instance failure = outage       |
-| Ceiling            | Very high (theoretically unlimited) | Hard limit (largest instance size)  |
-| Best for           | Stateless services, web tier        | Databases, legacy monoliths         |
+| Dimension        | Horizontal (Scale Out)              | Vertical (Scale Up)                  |
+| ---------------- | ----------------------------------- | ------------------------------------ |
+| Mechanism        | Add more instances                  | Larger instance size                 |
+| Downtime         | None (with load balancer)           | Brief restart required               |
+| Cost curve       | Linear                              | Non-linear (larger = less efficient) |
+| State management | Complex (distributed state)         | Simple (shared memory)               |
+| Failure domain   | One instance failure = low impact   | One instance failure = outage        |
+| Ceiling          | Very high (theoretically unlimited) | Hard limit (largest instance size)   |
+| Best for         | Stateless services, web tier        | Databases, legacy monoliths          |
 
 ### When to Scale Vertically
 
@@ -431,14 +431,14 @@ aws autoscaling put-scheduled-action \
 
 **Pre-warming time estimates by service type:**
 
-| Service            | Warm-up Time | Notes                                    |
-|--------------------|-------------|------------------------------------------|
-| EC2 instance       | 3-5 min     | Plus app startup time                    |
-| ECS Fargate task   | 30-60 sec   | Plus container pull time                 |
-| Lambda (cold start)| 100-500ms   | Provisioned concurrency eliminates this  |
-| RDS Multi-AZ       | 20-30 min   | After resize, not after normal failover  |
-| ALB target         | 5-15 min    | ALB connection draining                  |
-| CloudFront         | 15-30 min   | For new distributions to propagate       |
+| Service             | Warm-up Time | Notes                                   |
+| ------------------- | ------------ | --------------------------------------- |
+| EC2 instance        | 3-5 min      | Plus app startup time                   |
+| ECS Fargate task    | 30-60 sec    | Plus container pull time                |
+| Lambda (cold start) | 100-500ms    | Provisioned concurrency eliminates this |
+| RDS Multi-AZ        | 20-30 min    | After resize, not after normal failover |
+| ALB target          | 5-15 min     | ALB connection draining                 |
+| CloudFront          | 15-30 min    | For new distributions to propagate      |
 
 ---
 
@@ -676,35 +676,35 @@ spec:
   minReplicas: 3
   maxReplicas: 50
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 60
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 75
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
   behavior:
     scaleUp:
       stabilizationWindowSeconds: 60
       policies:
-      - type: Pods
-        value: 5
-        periodSeconds: 60
-      - type: Percent
-        value: 50
-        periodSeconds: 60
+        - type: Pods
+          value: 5
+          periodSeconds: 60
+        - type: Percent
+          value: 50
+          periodSeconds: 60
       selectPolicy: Max
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
-      - type: Pods
-        value: 2
-        periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
 ```
 
 ---
@@ -726,19 +726,19 @@ const checkoutDuration = new Trend('checkout_duration');
 
 export const options = {
   stages: [
-    { duration: '2m',  target: 100  },  // Ramp up to 100 users
-    { duration: '5m',  target: 100  },  // Hold at 100 (baseline)
-    { duration: '2m',  target: 500  },  // Ramp to 500 (normal peak)
-    { duration: '5m',  target: 500  },  // Hold at 500
-    { duration: '2m',  target: 2000 },  // Ramp to 2000 (stress)
-    { duration: '5m',  target: 2000 },  // Hold at 2000
-    { duration: '2m',  target: 5000 },  // Ramp to 5000 (spike)
-    { duration: '3m',  target: 5000 },  // Hold at spike
-    { duration: '2m',  target: 0    },  // Scale down
+    { duration: '2m', target: 100 }, // Ramp up to 100 users
+    { duration: '5m', target: 100 }, // Hold at 100 (baseline)
+    { duration: '2m', target: 500 }, // Ramp to 500 (normal peak)
+    { duration: '5m', target: 500 }, // Hold at 500
+    { duration: '2m', target: 2000 }, // Ramp to 2000 (stress)
+    { duration: '5m', target: 2000 }, // Hold at 2000
+    { duration: '2m', target: 5000 }, // Ramp to 5000 (spike)
+    { duration: '3m', target: 5000 }, // Hold at spike
+    { duration: '2m', target: 0 }, // Scale down
   ],
   thresholds: {
     http_req_duration: ['p(95)<500', 'p(99)<1000'], // Latency SLOs
-    errors: ['rate<0.01'],                            // <1% error rate
+    errors: ['rate<0.01'], // <1% error rate
     http_req_failed: ['rate<0.05'],
   },
 };
@@ -751,20 +751,28 @@ export default function () {
   sleep(1); // Think time
 
   // Add to cart
-  const cartRes = http.post('https://api.example.com/cart', JSON.stringify({
-    productId: '123',
-    quantity: 1,
-  }), { headers: { 'Content-Type': 'application/json' } });
+  const cartRes = http.post(
+    'https://api.example.com/cart',
+    JSON.stringify({
+      productId: '123',
+      quantity: 1,
+    }),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
   check(cartRes, { 'cart OK': (r) => r.status === 201 });
 
   sleep(2);
 
   // Checkout
   const start = Date.now();
-  const checkoutRes = http.post('https://api.example.com/checkout', JSON.stringify({
-    cartId: cartRes.json('cartId'),
-    paymentMethod: 'card',
-  }), { headers: { 'Content-Type': 'application/json' } });
+  const checkoutRes = http.post(
+    'https://api.example.com/checkout',
+    JSON.stringify({
+      cartId: cartRes.json('cartId'),
+      paymentMethod: 'card',
+    }),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
   checkoutDuration.add(Date.now() - start);
 
   check(checkoutRes, { 'checkout OK': (r) => r.status === 200 });
@@ -948,6 +956,7 @@ result = seasonal_decompose(df['requests'],
 ### Growth Modeling
 
 For linear growth:
+
 ```
 Forecast = Current × (1 + weekly_growth_rate)^n_weeks
 
@@ -960,6 +969,7 @@ Example:
 ```
 
 For exponential growth (viral products, product launches):
+
 ```
 Forecast = Current × e^(growth_rate × time)
 
@@ -1022,16 +1032,16 @@ aws service-quotas request-service-quota-increase \
 
 **Critical limits to monitor for capacity planning:**
 
-| Service           | Limit Type                      | Default | Impact if Hit                  |
-|-------------------|---------------------------------|---------|--------------------------------|
-| EC2               | vCPUs per region (on-demand)    | 32-384  | Cannot launch new instances    |
-| ELB               | Targets per ALB                 | 1000    | Cannot register new targets    |
-| RDS               | DB instances per region         | 40      | Cannot create read replicas    |
-| ElastiCache       | Nodes per cluster               | 90      | Cannot scale cache             |
-| SQS               | Messages in flight              | 120,000 | Consumer scaling fails         |
-| Lambda            | Concurrent executions           | 1,000   | Throttling, 429 errors         |
-| DynamoDB          | Table throughput (without PAY)  | varies  | Throttled requests             |
-| VPC               | Subnets per VPC                 | 200     | No IP space for new instances  |
+| Service     | Limit Type                     | Default | Impact if Hit                 |
+| ----------- | ------------------------------ | ------- | ----------------------------- |
+| EC2         | vCPUs per region (on-demand)   | 32-384  | Cannot launch new instances   |
+| ELB         | Targets per ALB                | 1000    | Cannot register new targets   |
+| RDS         | DB instances per region        | 40      | Cannot create read replicas   |
+| ElastiCache | Nodes per cluster              | 90      | Cannot scale cache            |
+| SQS         | Messages in flight             | 120,000 | Consumer scaling fails        |
+| Lambda      | Concurrent executions          | 1,000   | Throttling, 429 errors        |
+| DynamoDB    | Table throughput (without PAY) | varies  | Throttled requests            |
+| VPC         | Subnets per VPC                | 200     | No IP space for new instances |
 
 ### Kubernetes Resource Quotas
 
@@ -1046,14 +1056,14 @@ metadata:
   namespace: production
 spec:
   hard:
-    requests.cpu: "100"          # Total CPU requests
-    requests.memory: 200Gi       # Total memory requests
-    limits.cpu: "200"            # Total CPU limits
-    limits.memory: 400Gi         # Total memory limits
-    pods: "100"                  # Max pods
-    services: "20"               # Max services
-    persistentvolumeclaims: "20" # Max PVCs
-    count/deployments.apps: "30" # Max deployments
+    requests.cpu: '100' # Total CPU requests
+    requests.memory: 200Gi # Total memory requests
+    limits.cpu: '200' # Total CPU limits
+    limits.memory: 400Gi # Total memory limits
+    pods: '100' # Max pods
+    services: '20' # Max services
+    persistentvolumeclaims: '20' # Max PVCs
+    count/deployments.apps: '30' # Max deployments
 ```
 
 ```yaml
@@ -1065,23 +1075,23 @@ metadata:
   namespace: production
 spec:
   limits:
-  - type: Container
-    default:          # Default limits if not specified
-      cpu: "500m"
-      memory: "512Mi"
-    defaultRequest:   # Default requests if not specified
-      cpu: "100m"
-      memory: "128Mi"
-    max:              # Maximum allowed per container
-      cpu: "4"
-      memory: "8Gi"
-    min:              # Minimum allowed per container
-      cpu: "50m"
-      memory: "64Mi"
-  - type: Pod
-    max:
-      cpu: "8"
-      memory: "16Gi"
+    - type: Container
+      default: # Default limits if not specified
+        cpu: '500m'
+        memory: '512Mi'
+      defaultRequest: # Default requests if not specified
+        cpu: '100m'
+        memory: '128Mi'
+      max: # Maximum allowed per container
+        cpu: '4'
+        memory: '8Gi'
+      min: # Minimum allowed per container
+        cpu: '50m'
+        memory: '64Mi'
+    - type: Pod
+      max:
+        cpu: '8'
+        memory: '16Gi'
 ```
 
 ### Kubernetes Over-Commit Ratios
@@ -1471,9 +1481,9 @@ metadata:
 provisioner: ebs.csi.aws.com
 parameters:
   type: gp3
-  iops: "3000"
-  throughput: "125"
-allowVolumeExpansion: true  # Allows online resize
+  iops: '3000'
+  throughput: '125'
+allowVolumeExpansion: true # Allows online resize
 volumeBindingMode: WaitForFirstConsumer
 
 ---
@@ -1484,7 +1494,7 @@ metadata:
   name: postgres-data
   annotations:
     # Alert when 80% full (requires custom monitoring)
-    capacity-alert-threshold: "80"
+    capacity-alert-threshold: '80'
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: fast-gp3
@@ -1737,24 +1747,28 @@ ROI on capacity investment:
 **Common capacity planning interview questions and key points to hit:**
 
 **Q: "How would you prepare your infrastructure for a 10x traffic spike?"**
+
 - Mention the full cycle: measure baseline → calculate requirements → provision ahead → validate with load test
 - Pre-warming is critical — auto-scaling has lag
 - Database is usually the hardest to scale (read replicas, connection pooling)
 - Cost justification: infrastructure cost vs. revenue at risk
 
 **Q: "What metrics do you use to determine if you need to scale?"**
+
 - Not just CPU — memory, network, IOPS, connection pool saturation, queue depth
 - P99 latency trending up is often the first meaningful signal
 - Error rate increase follows latency
 - Business metrics: revenue per hour dropping
 
 **Q: "How do you right-size instances?"**
+
 - AWS Compute Optimizer for automated recommendations
 - Rule of thumb: average CPU < 40% and max CPU < 70% → downsize
 - Consider workload pattern: burstable (t3) vs. consistent (m6i)
 - Always test after right-sizing
 
 **Q: "What is target tracking scaling and when would you NOT use it?"**
+
 - Maintains a target metric value (e.g., 60% CPU)
 - Good for: predictable workloads, stateless services
 - Bad for: metric has high variance (lots of noise), when you need minimum guarantees during known events

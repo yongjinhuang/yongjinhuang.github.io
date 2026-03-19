@@ -16,14 +16,14 @@ Structured logging means emitting log entries as key-value data (typically JSON)
 
 **Log Levels and When to Use Them:**
 
-| Level | Purpose | Example |
-|-------|---------|---------|
-| `FATAL` | Application cannot continue | Database connection pool exhausted, OOM |
-| `ERROR` | A request or operation failed | Unhandled exception, external API returned 500 |
-| `WARN` | Something unexpected but recoverable | Retry succeeded on second attempt, deprecated API call |
-| `INFO` | Normal business events | User registered, order placed, deployment completed |
-| `DEBUG` | Detailed diagnostic info | SQL queries, cache hits/misses, request payloads |
-| `TRACE` | Extremely fine-grained flow | Entering/exiting functions, loop iterations |
+| Level   | Purpose                              | Example                                                |
+| ------- | ------------------------------------ | ------------------------------------------------------ |
+| `FATAL` | Application cannot continue          | Database connection pool exhausted, OOM                |
+| `ERROR` | A request or operation failed        | Unhandled exception, external API returned 500         |
+| `WARN`  | Something unexpected but recoverable | Retry succeeded on second attempt, deprecated API call |
+| `INFO`  | Normal business events               | User registered, order placed, deployment completed    |
+| `DEBUG` | Detailed diagnostic info             | SQL queries, cache hits/misses, request payloads       |
+| `TRACE` | Extremely fine-grained flow          | Entering/exiting functions, loop iterations            |
 
 **Production Rule:** Log at `INFO` and above in production. Enable `DEBUG` temporarily via a feature flag or log-level endpoint when investigating issues.
 
@@ -72,12 +72,12 @@ Metrics are numerical measurements collected over time. Unlike logs (which recor
 
 **The Four Golden Signals (from Google SRE):**
 
-| Signal | What It Measures | Example |
-|--------|-----------------|---------|
-| **Latency** | Time to serve a request | P50 = 80ms, P95 = 300ms, P99 = 1200ms |
-| **Traffic** | Demand on the system | 2,000 requests/second |
-| **Errors** | Rate of failed requests | 0.3% of requests return 5xx |
-| **Saturation** | How full a resource is | CPU at 75%, memory at 60%, disk at 85% |
+| Signal         | What It Measures        | Example                                |
+| -------------- | ----------------------- | -------------------------------------- |
+| **Latency**    | Time to serve a request | P50 = 80ms, P95 = 300ms, P99 = 1200ms  |
+| **Traffic**    | Demand on the system    | 2,000 requests/second                  |
+| **Errors**     | Rate of failed requests | 0.3% of requests return 5xx            |
+| **Saturation** | How full a resource is  | CPU at 75%, memory at 60%, disk at 85% |
 
 **Metric Types (Prometheus model):**
 
@@ -92,13 +92,13 @@ APM tools combine traces, metrics, and logs into a unified platform. They automa
 
 **Popular APM Tools:**
 
-| Tool | Strengths | Pricing Model |
-|------|-----------|---------------|
-| **Datadog** | Broad integrations, unified platform, strong dashboards | Per host + ingestion volume |
-| **New Relic** | Full-stack observability, generous free tier | Per GB ingested |
-| **Grafana Stack** | Open-source, composable (Loki + Tempo + Mimir) | Self-hosted free, cloud paid |
-| **Elastic APM** | Integrates with ELK stack, strong search | Self-hosted free, cloud paid |
-| **AWS X-Ray** | Native AWS integration | Per trace recorded |
+| Tool              | Strengths                                               | Pricing Model                |
+| ----------------- | ------------------------------------------------------- | ---------------------------- |
+| **Datadog**       | Broad integrations, unified platform, strong dashboards | Per host + ingestion volume  |
+| **New Relic**     | Full-stack observability, generous free tier            | Per GB ingested              |
+| **Grafana Stack** | Open-source, composable (Loki + Tempo + Mimir)          | Self-hosted free, cloud paid |
+| **Elastic APM**   | Integrates with ELK stack, strong search                | Self-hosted free, cloud paid |
+| **AWS X-Ray**     | Native AWS integration                                  | Per trace recorded           |
 
 ### 5. Error Tracking
 
@@ -132,12 +132,12 @@ Good alerting is about signal-to-noise ratio. Too many alerts cause alert fatigu
 
 **Severity levels:**
 
-| Severity | Response | Example |
-|----------|----------|---------|
-| P1 - Critical | Page on-call immediately | Site is down, data loss |
-| P2 - High | Respond within 30 minutes | Feature degraded, error rate elevated |
-| P3 - Medium | Respond during business hours | Non-critical feature broken |
-| P4 - Low | Address in next sprint | Cosmetic issue, minor inefficiency |
+| Severity      | Response                      | Example                               |
+| ------------- | ----------------------------- | ------------------------------------- |
+| P1 - Critical | Page on-call immediately      | Site is down, data loss               |
+| P2 - High     | Respond within 30 minutes     | Feature degraded, error rate elevated |
+| P3 - Medium   | Respond during business hours | Non-critical feature broken           |
+| P4 - Low      | Address in next sprint        | Cosmetic issue, minor inefficiency    |
 
 ### 8. Performance Profiling
 
@@ -244,7 +244,11 @@ const logger = pino({
     env: process.env.NODE_ENV,
   },
   timestamp: pino.stdTimeFunctions.isoTime,
-  redact: ['req.headers.authorization', 'req.body.password', 'req.body.creditCard'],
+  redact: [
+    'req.headers.authorization',
+    'req.body.password',
+    'req.body.creditCard',
+  ],
 });
 
 export default logger;
@@ -275,21 +279,29 @@ import { requestContext } from '../request-context';
 
 export function requestLoggingMiddleware(req, res, next) {
   const requestId = req.headers['x-request-id'] || randomUUID();
-  const ctx = { requestId, userId: req.user?.id, traceId: req.headers['traceparent'] };
+  const ctx = {
+    requestId,
+    userId: req.user?.id,
+    traceId: req.headers['traceparent'],
+  };
 
   requestContext.run(ctx, () => {
     const startTime = process.hrtime.bigint();
 
     res.on('finish', () => {
-      const durationMs = Number(process.hrtime.bigint() - startTime) / 1_000_000;
-      logger.info({
-        ...ctx,
-        method: req.method,
-        path: req.path,
-        statusCode: res.statusCode,
-        durationMs: Math.round(durationMs),
-        userAgent: req.headers['user-agent'],
-      }, 'Request completed');
+      const durationMs =
+        Number(process.hrtime.bigint() - startTime) / 1_000_000;
+      logger.info(
+        {
+          ...ctx,
+          method: req.method,
+          path: req.path,
+          statusCode: res.statusCode,
+          durationMs: Math.round(durationMs),
+          userAgent: req.headers['user-agent'],
+        },
+        'Request completed'
+      );
     });
 
     next();
@@ -303,13 +315,13 @@ export function requestLoggingMiddleware(req, res, next) {
 
 These are the three pillars of observability, each serving a different purpose:
 
-**Logs** record discrete events with full context. Use them when you need to understand *what happened* for a specific request or operation. They are high-cardinality (every request generates entries) and high-volume.
+**Logs** record discrete events with full context. Use them when you need to understand _what happened_ for a specific request or operation. They are high-cardinality (every request generates entries) and high-volume.
 
-**Metrics** record numerical measurements over time in aggregate. Use them to understand *trends and patterns* -- is latency increasing? Is the error rate spiking? They are low-cardinality and efficient to store.
+**Metrics** record numerical measurements over time in aggregate. Use them to understand _trends and patterns_ -- is latency increasing? Is the error rate spiking? They are low-cardinality and efficient to store.
 
-**Traces** record the journey of a request across services. Use them to understand *where time is spent* in a distributed system and to pinpoint which service or operation is the bottleneck.
+**Traces** record the journey of a request across services. Use them to understand _where time is spent_ in a distributed system and to pinpoint which service or operation is the bottleneck.
 
-In practice: metrics tell you *something is wrong*, traces tell you *where it is wrong*, and logs tell you *why it is wrong*.
+In practice: metrics tell you _something is wrong_, traces tell you _where it is wrong_, and logs tell you _why it is wrong_.
 
 ### Question 3: How do you set up effective alerting without causing alert fatigue?
 
@@ -366,7 +378,7 @@ router.get('/health/ready', async (req, res) => {
     diskSpace: checkDiskSpace(),
   };
 
-  const allHealthy = Object.values(checks).every(c => c.status === 'ok');
+  const allHealthy = Object.values(checks).every((c) => c.status === 'ok');
 
   res.status(allHealthy ? 200 : 503).json({
     status: allHealthy ? 'ok' : 'degraded',
@@ -443,11 +455,13 @@ readinessProbe:
 2. **Check the bundle:** Use `webpack-bundle-analyzer` or `next build --analyze` to identify large dependencies. Look for libraries that can be replaced with smaller alternatives or lazy loaded.
 
 3. **Profile rendering:** Use React DevTools Profiler to record a session. Look for:
+
    - Components re-rendering unnecessarily (missing `memo`, unstable props)
    - Expensive computations in render (should be in `useMemo`)
    - Large component trees rendering on every state change
 
 4. **Check the network waterfall:** In Chrome DevTools Network tab, look for:
+
    - Render-blocking resources
    - Large images without lazy loading
    - Uncompressed assets
@@ -532,7 +546,13 @@ export default ErrorBoundary;
 
 ```typescript
 // metrics.ts
-import { Registry, Counter, Histogram, Gauge, collectDefaultMetrics } from 'prom-client';
+import {
+  Registry,
+  Counter,
+  Histogram,
+  Gauge,
+  collectDefaultMetrics,
+} from 'prom-client';
 
 const registry = new Registry();
 
@@ -564,11 +584,18 @@ export { registry };
 
 ```typescript
 // middleware/metrics.ts
-import { httpRequestsTotal, httpRequestDuration, activeConnections } from '../metrics';
+import {
+  httpRequestsTotal,
+  httpRequestDuration,
+  activeConnections,
+} from '../metrics';
 
 export function metricsMiddleware(req, res, next) {
   activeConnections.inc();
-  const end = httpRequestDuration.startTimer({ method: req.method, path: req.route?.path || req.path });
+  const end = httpRequestDuration.startTimer({
+    method: req.method,
+    path: req.route?.path || req.path,
+  });
 
   res.on('finish', () => {
     end();
@@ -608,7 +635,10 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { Resource } from '@opentelemetry/resources';
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+} from '@opentelemetry/semantic-conventions';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 
 const sdk = new NodeSDK({
@@ -617,11 +647,15 @@ const sdk = new NodeSDK({
     [ATTR_SERVICE_VERSION]: process.env.APP_VERSION || '0.0.0',
   }),
   traceExporter: new OTLPTraceExporter({
-    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318/v1/traces',
+    url:
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+      'http://localhost:4318/v1/traces',
   }),
   metricReader: new PeriodicExportingMetricReader({
     exporter: new OTLPMetricExporter({
-      url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318/v1/metrics',
+      url:
+        process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+        'http://localhost:4318/v1/metrics',
     }),
     exportIntervalMillis: 30000,
   }),
@@ -656,30 +690,45 @@ import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 const tracer = trace.getTracer('order-service');
 
-export async function createOrder(userId: string, items: OrderItem[]): Promise<Order> {
+export async function createOrder(
+  userId: string,
+  items: OrderItem[]
+): Promise<Order> {
   return tracer.startActiveSpan('createOrder', async (span) => {
     try {
       span.setAttribute('user.id', userId);
       span.setAttribute('order.item_count', items.length);
 
-      const inventory = await tracer.startActiveSpan('checkInventory', async (inventorySpan) => {
-        const result = await inventoryService.checkAvailability(items);
-        inventorySpan.setAttribute('inventory.all_available', result.allAvailable);
-        inventorySpan.end();
-        return result;
-      });
+      const inventory = await tracer.startActiveSpan(
+        'checkInventory',
+        async (inventorySpan) => {
+          const result = await inventoryService.checkAvailability(items);
+          inventorySpan.setAttribute(
+            'inventory.all_available',
+            result.allAvailable
+          );
+          inventorySpan.end();
+          return result;
+        }
+      );
 
       if (!inventory.allAvailable) {
-        span.setStatus({ code: SpanStatusCode.ERROR, message: 'Items out of stock' });
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: 'Items out of stock',
+        });
         throw new Error('Items out of stock');
       }
 
-      const order = await tracer.startActiveSpan('persistOrder', async (dbSpan) => {
-        const result = await orderRepository.create({ userId, items });
-        dbSpan.setAttribute('order.id', result.id);
-        dbSpan.end();
-        return result;
-      });
+      const order = await tracer.startActiveSpan(
+        'persistOrder',
+        async (dbSpan) => {
+          const result = await orderRepository.create({ userId, items });
+          dbSpan.setAttribute('order.id', result.id);
+          dbSpan.end();
+          return result;
+        }
+      );
 
       span.setAttribute('order.id', order.id);
       span.setStatus({ code: SpanStatusCode.OK });
@@ -800,9 +849,9 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "High error rate detected"
-          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
-          runbook: "https://wiki.internal/runbooks/high-error-rate"
+          summary: 'High error rate detected'
+          description: 'Error rate is {{ $value | humanizePercentage }} (threshold: 5%)'
+          runbook: 'https://wiki.internal/runbooks/high-error-rate'
 
       - alert: HighLatency
         expr: |
@@ -811,8 +860,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "P95 latency above 2 seconds"
-          description: "P95 latency is {{ $value }}s"
+          summary: 'P95 latency above 2 seconds'
+          description: 'P95 latency is {{ $value }}s'
 
       - alert: ServiceDown
         expr: up{job="order-service"} == 0
@@ -820,8 +869,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Service is down"
-          description: "{{ $labels.instance }} has been down for more than 1 minute"
+          summary: 'Service is down'
+          description: '{{ $labels.instance }} has been down for more than 1 minute'
 
       - alert: MemoryUsageHigh
         expr: |
@@ -830,8 +879,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Memory usage above 1.5GB for 15 minutes"
-          description: "Current memory: {{ $value | humanize }}GB. Possible memory leak."
+          summary: 'Memory usage above 1.5GB for 15 minutes'
+          description: 'Current memory: {{ $value | humanize }}GB. Possible memory leak.'
 ```
 
 ---
@@ -862,12 +911,12 @@ Did the request/operation FAIL?
 
 ### The Four Golden Signals
 
-| Signal | What to Track | Alert Threshold Example |
-|--------|--------------|------------------------|
-| Latency | P50, P95, P99 response time | P95 > 2s for 10 min |
-| Traffic | Requests per second | > 2x normal for 5 min |
-| Errors | 5xx rate, exception rate | > 5% for 5 min |
-| Saturation | CPU, memory, disk, connections | > 90% for 15 min |
+| Signal     | What to Track                  | Alert Threshold Example |
+| ---------- | ------------------------------ | ----------------------- |
+| Latency    | P50, P95, P99 response time    | P95 > 2s for 10 min     |
+| Traffic    | Requests per second            | > 2x normal for 5 min   |
+| Errors     | 5xx rate, exception rate       | > 5% for 5 min          |
+| Saturation | CPU, memory, disk, connections | > 90% for 15 min        |
 
 ### Debugging Checklist
 
@@ -886,12 +935,12 @@ Did the request/operation FAIL?
 
 ### Common Monitoring Stack Combinations
 
-| Stack | Components |
-|-------|------------|
-| **Grafana Stack** (OSS) | Prometheus (metrics) + Loki (logs) + Tempo (traces) + Grafana (dashboards) |
-| **ELK Stack** (OSS) | Elasticsearch (search) + Logstash (ingest) + Kibana (dashboards) + Elastic APM |
-| **AWS Native** | CloudWatch (metrics/logs) + X-Ray (traces) + SNS (alerts) |
-| **Datadog** (SaaS) | Unified platform: metrics, logs, traces, RUM, synthetics |
+| Stack                   | Components                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| **Grafana Stack** (OSS) | Prometheus (metrics) + Loki (logs) + Tempo (traces) + Grafana (dashboards)     |
+| **ELK Stack** (OSS)     | Elasticsearch (search) + Logstash (ingest) + Kibana (dashboards) + Elastic APM |
+| **AWS Native**          | CloudWatch (metrics/logs) + X-Ray (traces) + SNS (alerts)                      |
+| **Datadog** (SaaS)      | Unified platform: metrics, logs, traces, RUM, synthetics                       |
 
 ### Essential Prometheus Queries (PromQL)
 
@@ -914,11 +963,11 @@ rate(process_resident_memory_bytes[1h])
 
 ### Core Web Vitals Thresholds
 
-| Metric | Good | Needs Improvement | Poor |
-|--------|------|-------------------|------|
-| LCP (Largest Contentful Paint) | < 2.5s | 2.5s - 4.0s | > 4.0s |
-| INP (Interaction to Next Paint) | < 200ms | 200ms - 500ms | > 500ms |
-| CLS (Cumulative Layout Shift) | < 0.1 | 0.1 - 0.25 | > 0.25 |
+| Metric                          | Good    | Needs Improvement | Poor    |
+| ------------------------------- | ------- | ----------------- | ------- |
+| LCP (Largest Contentful Paint)  | < 2.5s  | 2.5s - 4.0s       | > 4.0s  |
+| INP (Interaction to Next Paint) | < 200ms | 200ms - 500ms     | > 500ms |
+| CLS (Cumulative Layout Shift)   | < 0.1   | 0.1 - 0.25        | > 0.25  |
 
 ### Key Takeaways
 

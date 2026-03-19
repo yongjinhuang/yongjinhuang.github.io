@@ -45,11 +45,11 @@ def recovery_needed(loss_pct: float) -> float:
 
 ### Historical Blowups
 
-**LTCM (1998):** Nobel laureates running convergence trades at 25:1 leverage. When Russia defaulted, correlations spiked to 1.0 across all assets. Lost $4.6B, required Fed-coordinated bailout. *Lesson: leverage amplifies model errors; correlations spike in crises.*
+**LTCM (1998):** Nobel laureates running convergence trades at 25:1 leverage. When Russia defaulted, correlations spiked to 1.0 across all assets. Lost $4.6B, required Fed-coordinated bailout. _Lesson: leverage amplifies model errors; correlations spike in crises._
 
-**Knight Capital (2012):** Software deployment activated old test code. In 45 minutes, the system bought high and sold low at massive volume. Lost $460M, firm destroyed. *Lesson: operational risk can kill faster than market risk; kill switches are non-negotiable.*
+**Knight Capital (2012):** Software deployment activated old test code. In 45 minutes, the system bought high and sold low at massive volume. Lost $460M, firm destroyed. _Lesson: operational risk can kill faster than market risk; kill switches are non-negotiable._
 
-**Archegos (2021):** Concentrated positions (50%+ of single stocks) via total return swaps at 5-8x leverage. When positions reversed, prime brokers liquidated simultaneously. $10B+ losses across banks. *Lesson: concentration kills; leverage through derivatives obscures true risk.*
+**Archegos (2021):** Concentrated positions (50%+ of single stocks) via total return swaps at 5-8x leverage. When positions reversed, prime brokers liquidated simultaneously. $10B+ losses across banks. _Lesson: concentration kills; leverage through derivatives obscures true risk._
 
 ---
 
@@ -189,7 +189,7 @@ def monte_carlo_var(
 
 ### CVaR / Expected Shortfall
 
-VaR tells you the threshold; CVaR tells you the average loss *given* the threshold is breached. CVaR is a **coherent risk measure** (satisfies subadditivity), while VaR is not.
+VaR tells you the threshold; CVaR tells you the average loss _given_ the threshold is breached. CVaR is a **coherent risk measure** (satisfies subadditivity), while VaR is not.
 
 ```
   VaR says:  "We won't lose more than $X with 95% confidence"
@@ -1024,4 +1024,4 @@ Monitor: orders/second (rate limit), daily notional, daily PnL, position sizes, 
 
 ---
 
-*Next Chapter: [Chapter 10 - Trade Execution and Order Management Systems](10-EXECUTION-SYSTEMS.md)*
+_Next Chapter: [Chapter 10 - Trade Execution and Order Management Systems](10-EXECUTION-SYSTEMS.md)_

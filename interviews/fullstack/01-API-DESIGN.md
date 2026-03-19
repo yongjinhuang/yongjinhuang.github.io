@@ -242,7 +242,12 @@ function forbidden(message = 'Insufficient permissions'): AppError {
 }
 
 // Error handling middleware
-function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+function errorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
@@ -309,7 +314,10 @@ async function handlePayment(req: Request, res: Response) {
   if (!idempotencyKey) {
     return res.status(400).json({
       success: false,
-      error: { code: 'MISSING_IDEMPOTENCY_KEY', message: 'Idempotency-Key header required' },
+      error: {
+        code: 'MISSING_IDEMPOTENCY_KEY',
+        message: 'Idempotency-Key header required',
+      },
     });
   }
 
@@ -324,7 +332,12 @@ async function handlePayment(req: Request, res: Response) {
 
   // Store the result with TTL (24 hours)
   const response = { success: true, data: result };
-  await cache.set(`idempotency:${idempotencyKey}`, JSON.stringify(response), 'EX', 86400);
+  await cache.set(
+    `idempotency:${idempotencyKey}`,
+    JSON.stringify(response),
+    'EX',
+    86400
+  );
 
   return res.status(201).json(response);
 }
@@ -511,7 +524,11 @@ function createLoaders() {
 // Resolver
 const resolvers = {
   User: {
-    posts: (parent: User, _args: unknown, context: { loaders: ReturnType<typeof createLoaders> }) => {
+    posts: (
+      parent: User,
+      _args: unknown,
+      context: { loaders: ReturnType<typeof createLoaders> }
+    ) => {
       return context.loaders.postsByUserId.load(parent.id);
     },
   },
@@ -817,44 +834,63 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new AppError(400, 'INVALID_FILE_TYPE', 'Only JPEG, PNG, and WebP images are allowed'));
+      cb(
+        new AppError(
+          400,
+          'INVALID_FILE_TYPE',
+          'Only JPEG, PNG, and WebP images are allowed'
+        )
+      );
     }
   },
 });
 
-router.post('/api/uploads', authenticate, upload.single('file'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({
-      success: false,
-      error: { code: 'NO_FILE', message: 'No file provided' },
+router.post(
+  '/api/uploads',
+  authenticate,
+  upload.single('file'),
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'NO_FILE', message: 'No file provided' },
+      });
+    }
+
+    const key = `uploads/${req.user.id}/${Date.now()}-${req.file.originalname}`;
+
+    const s3 = new S3Client({ region: process.env.AWS_REGION });
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET,
+        Key: key,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      })
+    );
+
+    const upload = await db.query(
+      'INSERT INTO uploads (key, filename, content_type, size, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [
+        key,
+        req.file.originalname,
+        req.file.mimetype,
+        req.file.size,
+        req.user.id,
+      ]
+    );
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        id: upload.rows[0].id,
+        url: `${process.env.CDN_URL}/${key}`,
+        filename: req.file.originalname,
+        size: req.file.size,
+      },
     });
   }
-
-  const key = `uploads/${req.user.id}/${Date.now()}-${req.file.originalname}`;
-
-  const s3 = new S3Client({ region: process.env.AWS_REGION });
-  await s3.send(new PutObjectCommand({
-    Bucket: process.env.S3_BUCKET,
-    Key: key,
-    Body: req.file.buffer,
-    ContentType: req.file.mimetype,
-  }));
-
-  const upload = await db.query(
-    'INSERT INTO uploads (key, filename, content_type, size, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-    [key, req.file.originalname, req.file.mimetype, req.file.size, req.user.id]
-  );
-
-  return res.status(201).json({
-    success: true,
-    data: {
-      id: upload.rows[0].id,
-      url: `${process.env.CDN_URL}/${key}`,
-      filename: req.file.originalname,
-      size: req.file.size,
-    },
-  });
-});
+);
 
 // For large files: presigned URL approach
 router.post('/api/uploads/presign', authenticate, async (req, res) => {
@@ -1232,18 +1268,22 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN?.split(',') || 'http://localhost:3000',
+    credentials: true,
+  })
+);
 
 // Rate limiting
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-}));
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
 
 // Request processing
 app.use(express.json({ limit: '10mb' }));
@@ -1306,8 +1346,17 @@ class ApiClient {
     this.token = token;
   }
 
-  async request<T>(path: string, config: RequestConfig = {}): Promise<ApiResponse<T>> {
-    const { method = 'GET', body, headers = {}, retries = 2, retryDelay = 1000 } = config;
+  async request<T>(
+    path: string,
+    config: RequestConfig = {}
+  ): Promise<ApiResponse<T>> {
+    const {
+      method = 'GET',
+      body,
+      headers = {},
+      retries = 2,
+      retryDelay = 1000,
+    } = config;
 
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -1347,7 +1396,9 @@ class ApiClient {
         lastError = error instanceof Error ? error : new Error(String(error));
 
         if (attempt < retries) {
-          await new Promise((resolve) => setTimeout(resolve, retryDelay * (attempt + 1)));
+          await new Promise((resolve) =>
+            setTimeout(resolve, retryDelay * (attempt + 1))
+          );
         }
       }
     }

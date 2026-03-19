@@ -36,6 +36,7 @@ Jane Street is famous for its game theory and trading game interviews. Citadel, 
 ### 1.1 Normal Form Games
 
 A game in normal (strategic) form consists of:
+
 - A set of **players**: N = {1, 2, ..., n}
 - For each player i, a set of **strategies**: S_i
 - For each player i, a **payoff function**: u_i(s_1, s_2, ..., s_n)
@@ -80,7 +81,7 @@ This is the central tension of the prisoner's dilemma.
 
 ### 1.3 Nash Equilibrium
 
-A strategy profile (s_1*, s_2*, ..., s_n*) is a **Nash Equilibrium** if no player can improve their payoff by unilaterally changing their strategy:
+A strategy profile (s_1*, s_2*, ..., s_n\*) is a **Nash Equilibrium** if no player can improve their payoff by unilaterally changing their strategy:
 
 ```
 u_i(s_i*, s_{-i}*) >= u_i(s_i, s_{-i}*) for all s_i in S_i, for all i
@@ -930,6 +931,7 @@ Player 1  U   | (2,1)  | (0,3) |
 ```
 
 **A:**
+
 ```
 Pure strategy NE check:
   (U,L): P1 deviates to D? 3 > 2, yes. NOT NE.
@@ -973,6 +975,7 @@ Unique NE: (D, R).
 **Q: You and 4 others are bidding on a painting. Your value is $800. Each bidder draws their value uniformly from $[0, 1000]. It is a first-price sealed-bid auction. What should you bid?**
 
 **A:**
+
 ```
 With 5 bidders and values from Uniform[0, 1000]:
 
@@ -1001,6 +1004,7 @@ Expected profit = 0.4096 * 160 = $65.54
 **Q: You are a market maker. 30% of incoming orders are from informed traders who know the true value. The asset is worth either $10 or $20 with equal probability. What bid-ask spread should you quote?**
 
 **A:**
+
 ```
 Prior: P(V=10) = P(V=20) = 0.5
 Fair value: E[V] = 15
@@ -1042,6 +1046,7 @@ compensates on average.
 **Q: In a dollar auction (two players bid for $1, both pay their bids, highest bid wins the dollar), what happens?**
 
 **A:**
+
 ```
 THE DOLLAR AUCTION (Shubik, 1971)
 ===================================
@@ -1086,6 +1091,7 @@ TRADING LESSON:
 **Q: There are three envelopes with money. You know one has $10, one has $20, one has $30. You pick an envelope and see $20. You are offered to switch to another random envelope. Should you?**
 
 **A:**
+
 ```
 You see $20. The other two envelopes contain {$10, $30}.
 
@@ -1138,4 +1144,4 @@ TRADING ANALOGY:
 
 ---
 
-*Next Chapter: [Chapter 9 - Quantitative System Design](09-QUANT-SYSTEM-DESIGN.md)*
+_Next Chapter: [Chapter 9 - Quantitative System Design](09-QUANT-SYSTEM-DESIGN.md)_

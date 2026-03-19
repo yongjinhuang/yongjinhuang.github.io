@@ -29,13 +29,13 @@ document
 
 **Node types:**
 
-| Type | nodeType | Example |
-|------|----------|---------|
-| Element | 1 | `<div>`, `<p>` |
-| Text | 3 | Text inside elements |
-| Comment | 8 | `<!-- comment -->` |
-| Document | 9 | `document` |
-| DocumentFragment | 11 | `document.createDocumentFragment()` |
+| Type             | nodeType | Example                             |
+| ---------------- | -------- | ----------------------------------- |
+| Element          | 1        | `<div>`, `<p>`                      |
+| Text             | 3        | Text inside elements                |
+| Comment          | 8        | `<!-- comment -->`                  |
+| Document         | 9        | `document`                          |
+| DocumentFragment | 11       | `document.createDocumentFragment()` |
 
 ### Selecting Elements
 
@@ -76,11 +76,11 @@ const ref = document.getElementById('reference');
 ref.parentNode.insertBefore(div, ref);
 
 // Modern insertion methods
-ref.before(div);       // Insert before ref
-ref.after(div);        // Insert after ref
-ref.prepend(div);      // Insert as first child of ref
-ref.append(div);       // Insert as last child of ref
-ref.replaceWith(div);  // Replace ref with div
+ref.before(div); // Insert before ref
+ref.after(div); // Insert after ref
+ref.prepend(div); // Insert as first child of ref
+ref.append(div); // Insert as last child of ref
+ref.replaceWith(div); // Replace ref with div
 
 // Remove element
 div.remove();
@@ -123,8 +123,8 @@ element.addEventListener('click', handler, { capture: true });
 
 // Stop propagation
 function handler(e) {
-  e.stopPropagation();           // Stops further propagation
-  e.stopImmediatePropagation();  // Also stops other handlers on same element
+  e.stopPropagation(); // Stops further propagation
+  e.stopImmediatePropagation(); // Also stops other handlers on same element
 }
 
 // Prevent default browser behavior
@@ -139,7 +139,7 @@ Instead of attaching listeners to many child elements, attach one listener to a 
 
 ```javascript
 // BAD: One listener per button
-document.querySelectorAll('.btn').forEach(btn => {
+document.querySelectorAll('.btn').forEach((btn) => {
   btn.addEventListener('click', handleClick);
 });
 
@@ -155,6 +155,7 @@ document.getElementById('toolbar').addEventListener('click', (e) => {
 ```
 
 **Benefits:**
+
 - Fewer event listeners (better memory usage)
 - Dynamically added elements are automatically handled
 - Simpler cleanup
@@ -167,7 +168,11 @@ Watches for changes to the DOM tree:
 const observer = new MutationObserver((mutations) => {
   for (const mutation of mutations) {
     if (mutation.type === 'childList') {
-      console.log('Children changed:', mutation.addedNodes, mutation.removedNodes);
+      console.log(
+        'Children changed:',
+        mutation.addedNodes,
+        mutation.removedNodes
+      );
     }
     if (mutation.type === 'attributes') {
       console.log('Attribute changed:', mutation.attributeName);
@@ -176,9 +181,9 @@ const observer = new MutationObserver((mutations) => {
 });
 
 observer.observe(document.getElementById('app'), {
-  childList: true,     // Watch for added/removed children
-  attributes: true,    // Watch for attribute changes
-  subtree: true,       // Watch entire subtree
+  childList: true, // Watch for added/removed children
+  attributes: true, // Watch for attribute changes
+  subtree: true, // Watch entire subtree
   characterData: true, // Watch text content changes
 });
 
@@ -204,9 +209,9 @@ const observer = new IntersectionObserver(
     });
   },
   {
-    root: null,          // null = viewport
-    rootMargin: '50px',  // Trigger 50px before element enters
-    threshold: 0.1,      // 10% of element must be visible
+    root: null, // null = viewport
+    rootMargin: '50px', // Trigger 50px before element enters
+    threshold: 0.1, // 10% of element must be visible
   }
 );
 
@@ -273,7 +278,11 @@ request.onsuccess = (event) => {
 
   // Write
   const tx = db.transaction('users', 'readwrite');
-  tx.objectStore('users').add({ id: 1, name: 'Alice', email: 'alice@example.com' });
+  tx.objectStore('users').add({
+    id: 1,
+    name: 'Alice',
+    email: 'alice@example.com',
+  });
 
   // Read
   const readTx = db.transaction('users', 'readonly');
@@ -282,13 +291,13 @@ request.onsuccess = (event) => {
 };
 ```
 
-| Feature | localStorage | sessionStorage | IndexedDB |
-|---------|-------------|----------------|-----------|
-| Capacity | ~5-10MB | ~5-10MB | Large (GB+) |
-| Persistence | Permanent | Tab session | Permanent |
-| API | Sync | Sync | Async |
-| Data types | Strings | Strings | Structured (objects, blobs) |
-| Transactions | No | No | Yes |
+| Feature      | localStorage | sessionStorage | IndexedDB                   |
+| ------------ | ------------ | -------------- | --------------------------- |
+| Capacity     | ~5-10MB      | ~5-10MB        | Large (GB+)                 |
+| Persistence  | Permanent    | Tab session    | Permanent                   |
+| API          | Sync         | Sync           | Async                       |
+| Data types   | Strings      | Strings        | Structured (objects, blobs) |
+| Transactions | No           | No             | Yes                         |
 
 ### Web Workers
 
@@ -333,7 +342,8 @@ A proxy between the browser and network, enabling offline support and caching:
 ```javascript
 // Register
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
+  navigator.serviceWorker
+    .register('/sw.js')
     .then((reg) => console.log('SW registered:', reg.scope))
     .catch((err) => console.error('SW registration failed:', err));
 }
@@ -385,6 +395,7 @@ function animate(element) {
 ```
 
 **Why not `setInterval`?**
+
 - `requestAnimationFrame` pauses when the tab is hidden (saves battery)
 - Syncs with display refresh rate (no tearing or jank)
 - Browser can batch and optimize paint operations
@@ -464,15 +475,15 @@ This pattern reduces memory footprint, automatically handles dynamically added e
 
 **Answer:**
 
-| Aspect | Web Worker | Service Worker |
-|--------|-----------|----------------|
-| Purpose | Offload CPU-intensive tasks | Network proxy, offline caching |
-| Lifecycle | Lives as long as the page | Persists independently of pages |
-| DOM access | No | No |
-| Network interception | No | Yes (`fetch` event) |
-| Scope | Per-page | Per-origin/scope |
-| HTTPS required | No | Yes |
-| Communication | `postMessage` | `postMessage` + events |
+| Aspect               | Web Worker                  | Service Worker                  |
+| -------------------- | --------------------------- | ------------------------------- |
+| Purpose              | Offload CPU-intensive tasks | Network proxy, offline caching  |
+| Lifecycle            | Lives as long as the page   | Persists independently of pages |
+| DOM access           | No                          | No                              |
+| Network interception | No                          | Yes (`fetch` event)             |
+| Scope                | Per-page                    | Per-origin/scope                |
+| HTTPS required       | No                          | Yes                             |
+| Communication        | `postMessage`               | `postMessage` + events          |
 
 Web Workers are for computation. Service Workers are for network control and offline experiences.
 
@@ -493,6 +504,7 @@ You must serialize with `JSON.stringify()` and deserialize with `JSON.parse()`. 
 **Answer:** `MutationObserver` watches a DOM subtree for changes -- added/removed nodes, attribute modifications, and text content changes. You configure what to observe via options (`childList`, `attributes`, `characterData`, `subtree`).
 
 Practical use cases include:
+
 - Detecting when a third-party script injects unwanted elements
 - Building a "live preview" that reacts to DOM changes
 - Implementing undo/redo by tracking mutations
@@ -614,7 +626,9 @@ animateValue(document.getElementById('counter'), 0, 10000, 2000);
 // main.js
 function processDataInWorker(data) {
   return new Promise((resolve, reject) => {
-    const blob = new Blob([`
+    const blob = new Blob(
+      [
+        `
       self.onmessage = function(e) {
         const data = e.data;
         // Simulate heavy computation
@@ -624,7 +638,10 @@ function processDataInWorker(data) {
           .sort((a, b) => b.score - a.score);
         self.postMessage(result);
       };
-    `], { type: 'application/javascript' });
+    `,
+      ],
+      { type: 'application/javascript' }
+    );
 
     const worker = new Worker(URL.createObjectURL(blob));
 
@@ -652,7 +669,7 @@ function processDataInWorker(data) {
 
 2. **`innerHTML` destroys event listeners.** Setting `element.innerHTML += '<p>new</p>'` re-parses the entire contents, removing all event listeners on existing children. Use `insertAdjacentHTML` or `appendChild` instead.
 
-3. **`localStorage` triggers events across tabs.** The `storage` event fires in *other* tabs/windows of the same origin, not in the tab that made the change. This enables cross-tab communication.
+3. **`localStorage` triggers events across tabs.** The `storage` event fires in _other_ tabs/windows of the same origin, not in the tab that made the change. This enables cross-tab communication.
 
 4. **`stopPropagation` vs `preventDefault`.** `stopPropagation` stops the event from reaching other handlers. `preventDefault` stops the browser's default action (e.g., navigating on link click, submitting a form). They are independent -- you can call one without the other.
 
@@ -672,34 +689,34 @@ function processDataInWorker(data) {
 
 ## Quick Reference
 
-| API | Purpose | Async | Browser Support |
-|-----|---------|-------|-----------------|
-| `querySelector` / `querySelectorAll` | Select elements by CSS selector | No | All modern |
-| `addEventListener` | Attach event handlers | No | All modern |
-| `MutationObserver` | Watch DOM changes | Callback-based | All modern |
-| `IntersectionObserver` | Detect element visibility | Callback-based | All modern |
-| `ResizeObserver` | Detect element size changes | Callback-based | All modern |
-| `localStorage` | Persistent key-value storage | No | All modern |
-| `sessionStorage` | Session key-value storage | No | All modern |
-| `IndexedDB` | Large structured data store | Yes | All modern |
-| `Web Worker` | Background thread computation | Message-based | All modern |
-| `Service Worker` | Network proxy / offline cache | Event-based | All modern (HTTPS) |
-| `requestAnimationFrame` | Frame-synced animation | Callback-based | All modern |
-| `Clipboard API` | Read/write clipboard | Promise-based | All modern (HTTPS) |
+| API                                  | Purpose                         | Async          | Browser Support    |
+| ------------------------------------ | ------------------------------- | -------------- | ------------------ |
+| `querySelector` / `querySelectorAll` | Select elements by CSS selector | No             | All modern         |
+| `addEventListener`                   | Attach event handlers           | No             | All modern         |
+| `MutationObserver`                   | Watch DOM changes               | Callback-based | All modern         |
+| `IntersectionObserver`               | Detect element visibility       | Callback-based | All modern         |
+| `ResizeObserver`                     | Detect element size changes     | Callback-based | All modern         |
+| `localStorage`                       | Persistent key-value storage    | No             | All modern         |
+| `sessionStorage`                     | Session key-value storage       | No             | All modern         |
+| `IndexedDB`                          | Large structured data store     | Yes            | All modern         |
+| `Web Worker`                         | Background thread computation   | Message-based  | All modern         |
+| `Service Worker`                     | Network proxy / offline cache   | Event-based    | All modern (HTTPS) |
+| `requestAnimationFrame`              | Frame-synced animation          | Callback-based | All modern         |
+| `Clipboard API`                      | Read/write clipboard            | Promise-based  | All modern (HTTPS) |
 
-| Event Method | Effect |
-|--------------|--------|
-| `e.stopPropagation()` | Stop event from reaching other elements |
+| Event Method                   | Effect                                                  |
+| ------------------------------ | ------------------------------------------------------- |
+| `e.stopPropagation()`          | Stop event from reaching other elements                 |
 | `e.stopImmediatePropagation()` | Stop event from reaching other handlers on same element |
-| `e.preventDefault()` | Cancel browser default action |
-| `e.target` | Element that originally triggered the event |
-| `e.currentTarget` | Element the handler is attached to |
-| `e.target.closest(selector)` | Find nearest ancestor matching selector |
+| `e.preventDefault()`           | Cancel browser default action                           |
+| `e.target`                     | Element that originally triggered the event             |
+| `e.currentTarget`              | Element the handler is attached to                      |
+| `e.target.closest(selector)`   | Find nearest ancestor matching selector                 |
 
-| Storage Comparison | localStorage | sessionStorage | IndexedDB | Cookies |
-|--------------------|-------------|----------------|-----------|---------|
-| Max size | ~5-10MB | ~5-10MB | GB+ | ~4KB |
-| Sent to server | No | No | No | Yes (every request) |
-| Accessible from | Same origin | Same origin + tab | Same origin | Configurable |
-| Expiration | Manual | Tab close | Manual | Configurable |
-| API style | Sync | Sync | Async | Sync (document.cookie) |
+| Storage Comparison | localStorage | sessionStorage    | IndexedDB   | Cookies                |
+| ------------------ | ------------ | ----------------- | ----------- | ---------------------- |
+| Max size           | ~5-10MB      | ~5-10MB           | GB+         | ~4KB                   |
+| Sent to server     | No           | No                | No          | Yes (every request)    |
+| Accessible from    | Same origin  | Same origin + tab | Same origin | Configurable           |
+| Expiration         | Manual       | Tab close         | Manual      | Configurable           |
+| API style          | Sync         | Sync              | Async       | Sync (document.cookie) |

@@ -26,14 +26,14 @@ variable "db_password" {
 }
 ```
 
-| Argument | Required | Purpose |
-|----------|----------|---------|
-| `type` | No (defaults to `any`) | Constrains accepted values |
-| `default` | No | Fallback value; omit to make the variable required |
-| `description` | No | Shown in `terraform plan` prompts |
-| `validation` | No | Custom rules (one or more blocks) |
-| `sensitive` | No | Redacts from CLI output; does NOT encrypt state |
-| `nullable` | No | Whether `null` is valid (default `true`) |
+| Argument      | Required               | Purpose                                            |
+| ------------- | ---------------------- | -------------------------------------------------- |
+| `type`        | No (defaults to `any`) | Constrains accepted values                         |
+| `default`     | No                     | Fallback value; omit to make the variable required |
+| `description` | No                     | Shown in `terraform plan` prompts                  |
+| `validation`  | No                     | Custom rules (one or more blocks)                  |
+| `sensitive`   | No                     | Redacts from CLI output; does NOT encrypt state    |
+| `nullable`    | No                     | Whether `null` is valid (default `true`)           |
 
 ---
 
@@ -70,13 +70,13 @@ variable "ingress_rules" {
 variable "fixed_record" { type = tuple([string, number, bool]) }
 ```
 
-| Type | Ordered | Unique | Element Types |
-|------|---------|--------|---------------|
-| `list` | Yes | No | Single type |
-| `set` | No | Yes | Single type |
-| `map` | By key | Keys unique | Single value type |
-| `object` | N/A | Keys unique | Mixed types per attribute |
-| `tuple` | Yes | No | Mixed types per position |
+| Type     | Ordered | Unique      | Element Types             |
+| -------- | ------- | ----------- | ------------------------- |
+| `list`   | Yes     | No          | Single type               |
+| `set`    | No      | Yes         | Single type               |
+| `map`    | By key  | Keys unique | Single value type         |
+| `object` | N/A     | Keys unique | Mixed types per attribute |
+| `tuple`  | Yes     | No          | Mixed types per position  |
 
 ---
 
@@ -84,14 +84,14 @@ variable "fixed_record" { type = tuple([string, number, bool]) }
 
 When the same variable is set in multiple places, the **last one wins**.
 
-| Priority | Source | Notes |
-|----------|--------|-------|
-| 1 (lowest) | `default` in declaration | Fallback only |
-| 2 | `terraform.tfvars` | Auto-loaded if present |
-| 3 | `*.auto.tfvars` (alphabetical) | Auto-loaded, lexicographic order |
-| 4 | `-var-file=foo.tfvars` | Explicit file, in order specified |
-| 5 | `-var 'key=value'` | CLI flag |
-| 6 (highest) | `TF_VAR_key` env var | Overrides everything |
+| Priority    | Source                         | Notes                             |
+| ----------- | ------------------------------ | --------------------------------- |
+| 1 (lowest)  | `default` in declaration       | Fallback only                     |
+| 2           | `terraform.tfvars`             | Auto-loaded if present            |
+| 3           | `*.auto.tfvars` (alphabetical) | Auto-loaded, lexicographic order  |
+| 4           | `-var-file=foo.tfvars`         | Explicit file, in order specified |
+| 5           | `-var 'key=value'`             | CLI flag                          |
+| 6 (highest) | `TF_VAR_key` env var           | Overrides everything              |
 
 ```bash
 export TF_VAR_region="us-west-2"                      # priority 6
@@ -202,13 +202,13 @@ output "all_instance_ips" {
 }
 ```
 
-| Argument | Required | Purpose |
-|----------|----------|---------|
-| `value` | Yes | The expression to expose |
-| `description` | No | Human-readable documentation |
-| `sensitive` | No | Redact from CLI output |
-| `depends_on` | No | Explicit dependency for timing (rare) |
-| `precondition` | No | Validate assumptions before exposing |
+| Argument       | Required | Purpose                               |
+| -------------- | -------- | ------------------------------------- |
+| `value`        | Yes      | The expression to expose              |
+| `description`  | No       | Human-readable documentation          |
+| `sensitive`    | No       | Redact from CLI output                |
+| `depends_on`   | No       | Explicit dependency for timing (rare) |
+| `precondition` | No       | Validate assumptions before exposing  |
 
 ### Outputs as Module Return Values
 
@@ -277,15 +277,15 @@ resource "aws_instance" "web" {
 
 ## When to Use Variables vs Locals
 
-| Use Case | Variables | Locals |
-|----------|-----------|--------|
-| Values that differ per deployment | Yes | No |
-| Values computed from other variables | No | Yes |
-| Values the caller provides | Yes | No |
-| Internal implementation detail | No | Yes |
-| Standard tags / naming conventions | No | Yes |
-| Conditional logic (is_production) | No | Yes |
-| Module "public API" | Yes | No |
+| Use Case                             | Variables | Locals |
+| ------------------------------------ | --------- | ------ |
+| Values that differ per deployment    | Yes       | No     |
+| Values computed from other variables | No        | Yes    |
+| Values the caller provides           | Yes       | No     |
+| Internal implementation detail       | No        | Yes    |
+| Standard tags / naming conventions   | No        | Yes    |
+| Conditional logic (is_production)    | No        | Yes    |
+| Module "public API"                  | Yes       | No     |
 
 If the caller should control it, use a variable. If it is derived or internal, use a local.
 
@@ -326,15 +326,15 @@ locals {
 
 ## Common Gotchas
 
-| Gotcha | Why It Matters |
-|--------|---------------|
-| Putting secrets in `default` values | Defaults live in `.tf` files committed to version control |
+| Gotcha                                     | Why It Matters                                                                 |
+| ------------------------------------------ | ------------------------------------------------------------------------------ |
+| Putting secrets in `default` values        | Defaults live in `.tf` files committed to version control                      |
 | Assuming `sensitive = true` encrypts state | Only redacts CLI output; state still contains plaintext. Encrypt your backend. |
-| `depends_on` on outputs | Forces Terraform to wait before evaluating, slowing plans |
-| Complex `object` without `optional()` | Callers must specify every attribute. Use `optional()` modifier. |
-| `nullable = false` with `default = null` | Terraform errors at validation |
-| Forgetting `-var-file` in CI | Variables with no default cause interactive prompts that hang |
-| Over-parameterizing modules | Not everything needs a variable. Expose only what actually varies. |
+| `depends_on` on outputs                    | Forces Terraform to wait before evaluating, slowing plans                      |
+| Complex `object` without `optional()`      | Callers must specify every attribute. Use `optional()` modifier.               |
+| `nullable = false` with `default = null`   | Terraform errors at validation                                                 |
+| Forgetting `-var-file` in CI               | Variables with no default cause interactive prompts that hang                  |
+| Over-parameterizing modules                | Not everything needs a variable. Expose only what actually varies.             |
 
 ---
 

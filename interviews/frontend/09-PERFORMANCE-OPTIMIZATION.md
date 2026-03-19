@@ -13,12 +13,14 @@ Google's Core Web Vitals are the primary metrics for measuring user-perceived pe
 **Largest Contentful Paint (LCP)** - Measures loading performance. The time it takes for the largest visible content element (image, video, text block) to render. Target: under 2.5 seconds.
 
 Causes of poor LCP:
+
 - Slow server response (TTFB)
 - Render-blocking CSS/JS
 - Slow resource load times
 - Client-side rendering delays
 
 Fixes:
+
 - Preload critical resources (`<link rel="preload">`)
 - Use a CDN for static assets
 - Optimize and compress images
@@ -28,12 +30,14 @@ Fixes:
 **Interaction to Next Paint (INP)** - Replaced First Input Delay (FID) in March 2024. Measures responsiveness across all interactions during the page lifecycle, not just the first one. Target: under 200 milliseconds.
 
 Causes of poor INP:
+
 - Long JavaScript tasks blocking the main thread
 - Excessive re-renders
 - Large DOM size
 - Heavy event handlers
 
 Fixes:
+
 - Break long tasks with `scheduler.yield()` or `setTimeout`
 - Use `startTransition` for non-urgent updates
 - Debounce/throttle expensive handlers
@@ -42,12 +46,14 @@ Fixes:
 **Cumulative Layout Shift (CLS)** - Measures visual stability. Quantifies unexpected layout shifts during the page lifecycle. Target: under 0.1.
 
 Causes of poor CLS:
+
 - Images without explicit dimensions
 - Dynamically injected content above existing content
 - Web fonts causing FOIT/FOUT
 - Ads or embeds without reserved space
 
 Fixes:
+
 - Always set `width` and `height` on images and videos
 - Use `aspect-ratio` CSS property
 - Reserve space for dynamic content with skeleton screens
@@ -63,33 +69,36 @@ Fixes:
 
 <!-- Intersection Observer approach -->
 <script>
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      const img = entry.target
-      img.src = img.dataset.src
-      img.removeAttribute('data-src')
-      observer.unobserve(img)
-    }
-  })
-}, { rootMargin: '200px' })
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.src = img.dataset.src;
+          img.removeAttribute('data-src');
+          observer.unobserve(img);
+        }
+      });
+    },
+    { rootMargin: '200px' }
+  );
 
-document.querySelectorAll('img[data-src]').forEach((img) => {
-  observer.observe(img)
-})
+  document.querySelectorAll('img[data-src]').forEach((img) => {
+    observer.observe(img);
+  });
 </script>
 ```
 
 **Component Lazy Loading** - Split code at the component level with React.lazy:
 
 ```jsx
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense } from 'react';
 
-const HeavyChart = lazy(() => import('./HeavyChart'))
-const SettingsPanel = lazy(() => import('./SettingsPanel'))
+const HeavyChart = lazy(() => import('./HeavyChart'));
+const SettingsPanel = lazy(() => import('./SettingsPanel'));
 
 function Dashboard() {
-  const [showSettings, setShowSettings] = useState(false)
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div>
@@ -103,7 +112,7 @@ function Dashboard() {
         </Suspense>
       )}
     </div>
-  )
+  );
 }
 ```
 
@@ -114,12 +123,12 @@ Code splitting breaks your bundle into smaller chunks loaded on demand.
 **Route-based splitting** - The most impactful approach:
 
 ```jsx
-import { lazy, Suspense } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
 
-const Home = lazy(() => import('./pages/Home'))
-const Profile = lazy(() => import('./pages/Profile'))
-const Settings = lazy(() => import('./pages/Settings'))
+const Home = lazy(() => import('./pages/Home'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 function App() {
   return (
@@ -130,7 +139,7 @@ function App() {
         <Route path="/settings" element={<Settings />} />
       </Routes>
     </Suspense>
-  )
+  );
 }
 ```
 
@@ -142,10 +151,10 @@ function App() {
 
 // Import only when needed:
 async function generatePDF(data) {
-  const { PDFDocument } = await import('pdf-lib')
-  const doc = await PDFDocument.create()
+  const { PDFDocument } = await import('pdf-lib');
+  const doc = await PDFDocument.create();
   // ... generate PDF
-  return doc.save()
+  return doc.save();
 }
 ```
 
@@ -166,6 +175,7 @@ ANALYZE=true npm run build
 ```
 
 Key things to look for:
+
 - Duplicate dependencies (multiple versions of the same library)
 - Oversized dependencies (moment.js full locale data, lodash entire library)
 - Unused exports that tree shaking missed
@@ -176,16 +186,17 @@ Tree shaking eliminates unused code from the final bundle. It relies on ES modul
 
 ```js
 // GOOD: Named imports allow tree shaking
-import { debounce } from 'lodash-es'
+import { debounce } from 'lodash-es';
 
 // BAD: Default import pulls in everything
-import _ from 'lodash'
+import _ from 'lodash';
 
 // GOOD: Deep import path (for libraries that don't support tree shaking)
-import debounce from 'lodash/debounce'
+import debounce from 'lodash/debounce';
 ```
 
 Requirements for tree shaking:
+
 - ES modules (`import`/`export`, not `require`/`module.exports`)
 - `"sideEffects": false` in package.json (or explicit side-effect files)
 - Production mode in the bundler (development preserves everything)
@@ -195,7 +206,7 @@ Requirements for tree shaking:
 Render only visible items in long lists. `react-window` and `@tanstack/virtual` are the popular solutions.
 
 ```jsx
-import { FixedSizeList } from 'react-window'
+import { FixedSizeList } from 'react-window';
 
 function VirtualizedList({ items }) {
   const Row = ({ index, style }) => (
@@ -203,7 +214,7 @@ function VirtualizedList({ items }) {
       <span>{items[index].name}</span>
       <span>{items[index].email}</span>
     </div>
-  )
+  );
 
   return (
     <FixedSizeList
@@ -214,7 +225,7 @@ function VirtualizedList({ items }) {
     >
       {Row}
     </FixedSizeList>
-  )
+  );
 }
 ```
 
@@ -225,7 +236,7 @@ For variable-height items, use `VariableSizeList` and provide an `itemSize` func
 Prevent unnecessary recalculations and re-renders.
 
 ```jsx
-import { memo, useMemo, useCallback } from 'react'
+import { memo, useMemo, useCallback } from 'react';
 
 // Memoize a component - skip re-render if props haven't changed
 const ExpensiveList = memo(function ExpensiveList({ items, onItemClick }) {
@@ -237,8 +248,8 @@ const ExpensiveList = memo(function ExpensiveList({ items, onItemClick }) {
         </li>
       ))}
     </ul>
-  )
-})
+  );
+});
 
 function Parent({ rawData }) {
   // Memoize expensive computation
@@ -246,19 +257,20 @@ function Parent({ rawData }) {
     return rawData
       .filter((item) => item.active)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 100)
-  }, [rawData])
+      .slice(0, 100);
+  }, [rawData]);
 
   // Memoize callback to preserve reference
   const handleItemClick = useCallback((id) => {
-    console.log('clicked', id)
-  }, [])
+    console.log('clicked', id);
+  }, []);
 
-  return <ExpensiveList items={processedItems} onItemClick={handleItemClick} />
+  return <ExpensiveList items={processedItems} onItemClick={handleItemClick} />;
 }
 ```
 
 **When NOT to memoize:**
+
 - Primitive props (strings, numbers, booleans) -- comparison is cheap
 - Components that always receive new props anyway
 - Lightweight components that render quickly
@@ -270,37 +282,37 @@ function Parent({ rawData }) {
 
 ```js
 function debounce(fn, delay) {
-  let timeoutId
+  let timeoutId;
   return function (...args) {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => fn.apply(this, args), delay)
-  }
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), delay);
+  };
 }
 
 // Usage: search input
 const handleSearch = debounce((query) => {
-  fetchResults(query)
-}, 300)
+  fetchResults(query);
+}, 300);
 ```
 
 **Throttle** - Execute at most once per specified interval:
 
 ```js
 function throttle(fn, interval) {
-  let lastTime = 0
+  let lastTime = 0;
   return function (...args) {
-    const now = Date.now()
+    const now = Date.now();
     if (now - lastTime >= interval) {
-      lastTime = now
-      fn.apply(this, args)
+      lastTime = now;
+      fn.apply(this, args);
     }
-  }
+  };
 }
 
 // Usage: scroll handler
 const handleScroll = throttle(() => {
-  updateScrollPosition()
-}, 100)
+  updateScrollPosition();
+}, 100);
 ```
 
 ### Image Optimization
@@ -315,11 +327,7 @@ const handleScroll = throttle(() => {
 
 <!-- Responsive images with srcset -->
 <img
-  srcset="
-    photo-400w.webp 400w,
-    photo-800w.webp 800w,
-    photo-1200w.webp 1200w
-  "
+  srcset="photo-400w.webp 400w, photo-800w.webp 800w, photo-1200w.webp 1200w"
   sizes="(max-width: 600px) 400px, (max-width: 900px) 800px, 1200px"
   src="photo-800w.webp"
   alt="Responsive photo"
@@ -357,16 +365,34 @@ Optimization strategies:
 <head>
   <style>
     /* Only above-the-fold styles */
-    body { margin: 0; font-family: sans-serif; }
-    .hero { height: 100vh; display: flex; align-items: center; }
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+    .hero {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+    }
   </style>
 
   <!-- Defer non-critical CSS -->
-  <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <link
+    rel="preload"
+    href="styles.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
   <noscript><link rel="stylesheet" href="styles.css" /></noscript>
 
   <!-- Preload critical resources -->
-  <link rel="preload" href="/fonts/Inter.woff2" as="font" type="font/woff2" crossorigin />
+  <link
+    rel="preload"
+    href="/fonts/Inter.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
   <link rel="preload" href="/hero-image.webp" as="image" />
 
   <!-- Prefetch resources for likely next navigation -->
@@ -414,6 +440,7 @@ body {
 ```
 
 `font-display` values:
+
 - `swap` - Show fallback immediately, swap when loaded (best for body text)
 - `optional` - Show fallback, only swap if loaded within ~100ms (best for non-critical text)
 - `block` - Invisible text for up to 3 seconds (avoid for body text)
@@ -421,13 +448,13 @@ body {
 
 ### Preload vs Prefetch vs Preconnect
 
-| Directive | Priority | When to Use |
-|---|---|---|
-| `preload` | High | Resources needed for current page (fonts, hero image, critical CSS) |
-| `prefetch` | Low | Resources likely needed for next navigation |
-| `preconnect` | High | Establish connection to a third-party origin early |
-| `dns-prefetch` | Low | Resolve DNS for a third-party domain |
-| `modulepreload` | High | Preload ES module scripts |
+| Directive       | Priority | When to Use                                                         |
+| --------------- | -------- | ------------------------------------------------------------------- |
+| `preload`       | High     | Resources needed for current page (fonts, hero image, critical CSS) |
+| `prefetch`      | Low      | Resources likely needed for next navigation                         |
+| `preconnect`    | High     | Establish connection to a third-party origin early                  |
+| `dns-prefetch`  | Low      | Resolve DNS for a third-party domain                                |
+| `modulepreload` | High     | Preload ES module scripts                                           |
 
 ## Common Interview Questions
 
@@ -456,37 +483,37 @@ Virtualization renders only the items visible in the viewport plus a small buffe
 Use an Intersection Observer on a sentinel element at the bottom of the list. When it enters the viewport, fetch the next page. Combine with virtualization so that even as the total dataset grows, only visible items are in the DOM. Use React Query's `useInfiniteQuery` for data fetching with automatic caching and deduplication.
 
 ```jsx
-import { useInfiniteQuery } from '@tanstack/react-query'
-import { useInView } from 'react-intersection-observer'
-import { useEffect } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInView } from 'react-intersection-observer';
+import { useEffect } from 'react';
 
 function InfiniteList() {
-  const { ref, inView } = useInView()
+  const { ref, inView } = useInView();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ['items'],
-    queryFn: ({ pageParam = 0 }) => fetchItems({ offset: pageParam, limit: 20 }),
-    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined
-  })
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ['items'],
+      queryFn: ({ pageParam = 0 }) =>
+        fetchItems({ offset: pageParam, limit: 20 }),
+      getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
+    });
 
   useEffect(() => {
     if (inView && hasNextPage) {
-      fetchNextPage()
+      fetchNextPage();
     }
-  }, [inView, hasNextPage, fetchNextPage])
+  }, [inView, hasNextPage, fetchNextPage]);
 
-  const allItems = data?.pages.flatMap((page) => page.items) ?? []
+  const allItems = data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div>
       {allItems.map((item) => (
         <ItemRow key={item.id} item={item} />
       ))}
-      <div ref={ref}>
-        {isFetchingNextPage ? <Spinner /> : null}
-      </div>
+      <div ref={ref}>{isFetchingNextPage ? <Spinner /> : null}</div>
     </div>
-  )
+  );
 }
 ```
 
@@ -503,7 +530,7 @@ Analyze the bundle first with `webpack-bundle-analyzer`. Replace heavy libraries
 ### Web Vitals Measurement
 
 ```js
-import { onLCP, onINP, onCLS } from 'web-vitals'
+import { onLCP, onINP, onCLS } from 'web-vitals';
 
 function sendToAnalytics(metric) {
   const body = JSON.stringify({
@@ -512,19 +539,19 @@ function sendToAnalytics(metric) {
     rating: metric.rating,
     delta: metric.delta,
     id: metric.id,
-    navigationType: metric.navigationType
-  })
+    navigationType: metric.navigationType,
+  });
 
   if (navigator.sendBeacon) {
-    navigator.sendBeacon('/analytics', body)
+    navigator.sendBeacon('/analytics', body);
   } else {
-    fetch('/analytics', { body, method: 'POST', keepalive: true })
+    fetch('/analytics', { body, method: 'POST', keepalive: true });
   }
 }
 
-onLCP(sendToAnalytics)
-onINP(sendToAnalytics)
-onCLS(sendToAnalytics)
+onLCP(sendToAnalytics);
+onINP(sendToAnalytics);
+onCLS(sendToAnalytics);
 ```
 
 ### Performance Observer for Long Tasks
@@ -536,13 +563,13 @@ const longTaskObserver = new PerformanceObserver((list) => {
       console.warn('Long task detected:', {
         duration: `${entry.duration}ms`,
         startTime: entry.startTime,
-        name: entry.name
-      })
+        name: entry.name,
+      });
     }
   }
-})
+});
 
-longTaskObserver.observe({ type: 'longtask', buffered: true })
+longTaskObserver.observe({ type: 'longtask', buffered: true });
 ```
 
 ### Yielding to the Main Thread
@@ -550,23 +577,23 @@ longTaskObserver.observe({ type: 'longtask', buffered: true })
 ```js
 // Break up long tasks so the browser can respond to user input
 async function processLargeDataset(items) {
-  const results = []
-  const CHUNK_SIZE = 100
+  const results = [];
+  const CHUNK_SIZE = 100;
 
   for (let i = 0; i < items.length; i += CHUNK_SIZE) {
-    const chunk = items.slice(i, i + CHUNK_SIZE)
+    const chunk = items.slice(i, i + CHUNK_SIZE);
 
     for (const item of chunk) {
-      results.push(transformItem(item))
+      results.push(transformItem(item));
     }
 
     // Yield to the main thread between chunks
     if (i + CHUNK_SIZE < items.length) {
-      await new Promise((resolve) => setTimeout(resolve, 0))
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
   }
 
-  return results
+  return results;
 }
 ```
 
@@ -590,23 +617,23 @@ async function processLargeDataset(items) {
 
 ## Quick Reference
 
-| Metric | Target | Tool to Measure |
-|---|---|---|
-| LCP | < 2.5s | Lighthouse, CrUX, web-vitals |
-| INP | < 200ms | Chrome DevTools, web-vitals |
-| CLS | < 0.1 | Lighthouse, Layout Shift regions in DevTools |
-| TTFB | < 800ms | WebPageTest, DevTools Network |
-| Total Bundle | < 200KB gzipped (initial) | Bundle analyzer |
+| Metric       | Target                    | Tool to Measure                              |
+| ------------ | ------------------------- | -------------------------------------------- |
+| LCP          | < 2.5s                    | Lighthouse, CrUX, web-vitals                 |
+| INP          | < 200ms                   | Chrome DevTools, web-vitals                  |
+| CLS          | < 0.1                     | Lighthouse, Layout Shift regions in DevTools |
+| TTFB         | < 800ms                   | WebPageTest, DevTools Network                |
+| Total Bundle | < 200KB gzipped (initial) | Bundle analyzer                              |
 
-| Technique | Impact | Effort | When to Use |
-|---|---|---|---|
-| Code splitting | High | Low | Always (route-level minimum) |
-| Image optimization | High | Low | Any page with images |
-| Tree shaking | Medium | Low | Ensure ESM imports |
-| Virtualization | High | Medium | Lists > 200 items |
-| Memoization | Medium | Low | Profiled expensive renders |
-| Font optimization | Medium | Low | Custom web fonts |
-| Debounce/Throttle | Medium | Low | Search, scroll, resize handlers |
-| Service Worker | High | High | Offline support, caching |
-| Web Worker | High | Medium | CPU-intensive operations |
-| SSR/SSG | High | Medium-High | SEO, initial load time |
+| Technique          | Impact | Effort      | When to Use                     |
+| ------------------ | ------ | ----------- | ------------------------------- |
+| Code splitting     | High   | Low         | Always (route-level minimum)    |
+| Image optimization | High   | Low         | Any page with images            |
+| Tree shaking       | Medium | Low         | Ensure ESM imports              |
+| Virtualization     | High   | Medium      | Lists > 200 items               |
+| Memoization        | Medium | Low         | Profiled expensive renders      |
+| Font optimization  | Medium | Low         | Custom web fonts                |
+| Debounce/Throttle  | Medium | Low         | Search, scroll, resize handlers |
+| Service Worker     | High   | High        | Offline support, caching        |
+| Web Worker         | High   | Medium      | CPU-intensive operations        |
+| SSR/SSG            | High   | Medium-High | SEO, initial load time          |

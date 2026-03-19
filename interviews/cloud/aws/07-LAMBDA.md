@@ -22,9 +22,9 @@ def handler(event, context):
 ```javascript
 // Node.js handler
 export const handler = async (event, context) => {
-    const requestId = context.awsRequestId;
-    const remainingMs = context.getRemainingTimeInMillis();
-    return { statusCode: 200, body: JSON.stringify({ requestId }) };
+  const requestId = context.awsRequestId;
+  const remainingMs = context.getRemainingTimeInMillis();
+  return { statusCode: 200, body: JSON.stringify({ requestId }) };
 };
 ```
 
@@ -52,36 +52,37 @@ def handler(event, context):
 
 ## Supported Runtimes
 
-| Runtime | Versions | Notes |
-|---------|----------|-------|
-| Node.js | 18.x, 20.x, 22.x | Most popular, fast cold starts |
-| Python | 3.9 - 3.13 | Great for scripting, data processing |
-| Java | 11, 17, 21 | Slower cold starts, use SnapStart |
-| .NET | 6, 8 | C# and PowerShell |
-| Go | `provided.al2023` | Compile to binary, use custom runtime |
-| Rust | `provided.al2023` | Custom runtime, excellent cold start performance |
-| Ruby | 3.2, 3.3 | Niche usage |
-| Custom | `provided.al2023` | Bring any language via bootstrap executable |
+| Runtime | Versions          | Notes                                            |
+| ------- | ----------------- | ------------------------------------------------ |
+| Node.js | 18.x, 20.x, 22.x  | Most popular, fast cold starts                   |
+| Python  | 3.9 - 3.13        | Great for scripting, data processing             |
+| Java    | 11, 17, 21        | Slower cold starts, use SnapStart                |
+| .NET    | 6, 8              | C# and PowerShell                                |
+| Go      | `provided.al2023` | Compile to binary, use custom runtime            |
+| Rust    | `provided.al2023` | Custom runtime, excellent cold start performance |
+| Ruby    | 3.2, 3.3          | Niche usage                                      |
+| Custom  | `provided.al2023` | Bring any language via bootstrap executable      |
 
 ---
 
 ## Triggers and Event Sources
 
-| Trigger | Invocation Type | Common Use Case |
-|---------|----------------|-----------------|
-| API Gateway | Synchronous | REST/HTTP APIs |
-| S3 | Asynchronous | File processing on upload |
-| SQS | Polling | Queue processing |
-| DynamoDB Streams | Polling | Change data capture |
-| Kinesis | Polling | Real-time stream processing |
-| EventBridge | Asynchronous | Event-driven workflows |
-| CloudWatch Events | Asynchronous | Cron jobs, scheduled tasks |
-| SNS | Asynchronous | Fan-out notifications |
-| ALB | Synchronous | Load-balanced HTTP |
-| CloudFront (Lambda@Edge) | Synchronous | Edge compute |
-| Cognito | Synchronous | Auth triggers |
+| Trigger                  | Invocation Type | Common Use Case             |
+| ------------------------ | --------------- | --------------------------- |
+| API Gateway              | Synchronous     | REST/HTTP APIs              |
+| S3                       | Asynchronous    | File processing on upload   |
+| SQS                      | Polling         | Queue processing            |
+| DynamoDB Streams         | Polling         | Change data capture         |
+| Kinesis                  | Polling         | Real-time stream processing |
+| EventBridge              | Asynchronous    | Event-driven workflows      |
+| CloudWatch Events        | Asynchronous    | Cron jobs, scheduled tasks  |
+| SNS                      | Asynchronous    | Fan-out notifications       |
+| ALB                      | Synchronous     | Load-balanced HTTP          |
+| CloudFront (Lambda@Edge) | Synchronous     | Edge compute                |
+| Cognito                  | Synchronous     | Auth triggers               |
 
 **Invocation types matter:**
+
 - **Synchronous** -- Caller waits for response. Errors return to the caller.
 - **Asynchronous** -- Lambda queues the event. Built-in retry (2 retries). Dead-letter queue for failures.
 - **Polling** -- Lambda polls the source (SQS, Kinesis, DynamoDB Streams). Batch size configurable.
@@ -94,13 +95,13 @@ def handler(event, context):
 
 CPU scales proportionally with memory. You configure memory; AWS assigns CPU.
 
-| Memory | vCPUs | Good For |
-|--------|-------|----------|
-| 128 MB | Fraction | Tiny transformations |
-| 512 MB | ~0.3 | Simple API handlers |
-| 1,769 MB | 1 full vCPU | General purpose |
-| 3,538 MB | 2 vCPUs | Compute-intensive |
-| 10,240 MB | 6 vCPUs | Heavy processing, ML inference |
+| Memory    | vCPUs       | Good For                       |
+| --------- | ----------- | ------------------------------ |
+| 128 MB    | Fraction    | Tiny transformations           |
+| 512 MB    | ~0.3        | Simple API handlers            |
+| 1,769 MB  | 1 full vCPU | General purpose                |
+| 3,538 MB  | 2 vCPUs     | Compute-intensive              |
+| 10,240 MB | 6 vCPUs     | Heavy processing, ML inference |
 
 **Cost optimization tip:** More memory often means faster execution, which can be cheaper overall. Profile with [AWS Lambda Power Tuning](https://github.com/alexcasalboni/aws-lambda-power-tuning).
 
@@ -133,24 +134,24 @@ A cold start occurs when Lambda creates a new execution environment. This includ
 
 ### Cold Start Latency by Runtime
 
-| Runtime | Typical Cold Start | Notes |
-|---------|-------------------|-------|
-| Python | 200-500 ms | Fast, lightweight |
-| Node.js | 200-500 ms | Fast, lightweight |
-| Go / Rust | 50-200 ms | Compiled binary, minimal overhead |
-| Java | 2-10 seconds | JVM startup, class loading |
-| .NET | 500 ms - 2 s | CLR initialization |
+| Runtime   | Typical Cold Start | Notes                             |
+| --------- | ------------------ | --------------------------------- |
+| Python    | 200-500 ms         | Fast, lightweight                 |
+| Node.js   | 200-500 ms         | Fast, lightweight                 |
+| Go / Rust | 50-200 ms          | Compiled binary, minimal overhead |
+| Java      | 2-10 seconds       | JVM startup, class loading        |
+| .NET      | 500 ms - 2 s       | CLR initialization                |
 
 ### Mitigation Strategies
 
-| Strategy | How It Works | Cost |
-|----------|-------------|------|
-| **Provisioned Concurrency** | Pre-warms N execution environments | Pay for idle time |
-| **SnapStart** (Java) | Snapshots initialized JVM, restores on invoke | Free, Java 11+ only |
-| **Keep-warm pings** | CloudWatch scheduled event every 5 min | Minimal, hacky |
-| **Smaller packages** | Less code to download and parse | Free |
-| **Avoid VPC** | VPC adds ENI attachment time (~1-2s) | Free (remove VPC) |
-| **ARM64 (Graviton2)** | Faster init, 20% cheaper | Architecture change |
+| Strategy                    | How It Works                                  | Cost                |
+| --------------------------- | --------------------------------------------- | ------------------- |
+| **Provisioned Concurrency** | Pre-warms N execution environments            | Pay for idle time   |
+| **SnapStart** (Java)        | Snapshots initialized JVM, restores on invoke | Free, Java 11+ only |
+| **Keep-warm pings**         | CloudWatch scheduled event every 5 min        | Minimal, hacky      |
+| **Smaller packages**        | Less code to download and parse               | Free                |
+| **Avoid VPC**               | VPC adds ENI attachment time (~1-2s)          | Free (remove VPC)   |
+| **ARM64 (Graviton2)**       | Faster init, 20% cheaper                      | Architecture change |
 
 ---
 
@@ -211,27 +212,27 @@ Use the [AWS Parameters and Secrets Lambda Extension](https://docs.aws.amazon.co
 
 ## Lambda@Edge and CloudFront Functions
 
-| Feature | Lambda@Edge | CloudFront Functions |
-|---------|------------|---------------------|
-| Runtime | Node.js, Python | JavaScript only |
-| Execution location | Regional edge caches | 400+ edge locations |
-| Max duration | 5s (viewer) / 30s (origin) | 1 ms |
-| Max memory | 128 - 10,240 MB | 2 MB |
-| Network access | Yes | No |
-| Use case | Auth, A/B testing, redirects | Header manipulation, URL rewrites |
-| Price | Higher | ~1/6 the cost |
+| Feature            | Lambda@Edge                  | CloudFront Functions              |
+| ------------------ | ---------------------------- | --------------------------------- |
+| Runtime            | Node.js, Python              | JavaScript only                   |
+| Execution location | Regional edge caches         | 400+ edge locations               |
+| Max duration       | 5s (viewer) / 30s (origin)   | 1 ms                              |
+| Max memory         | 128 - 10,240 MB              | 2 MB                              |
+| Network access     | Yes                          | No                                |
+| Use case           | Auth, A/B testing, redirects | Header manipulation, URL rewrites |
+| Price              | Higher                       | ~1/6 the cost                     |
 
 ---
 
 ## Concurrency
 
-| Concept | Description |
-|---------|-------------|
-| **Unreserved concurrency** | Shared pool across all functions in the account |
-| **Reserved concurrency** | Guarantees N instances for a function, also acts as a max cap |
-| **Provisioned concurrency** | Pre-initializes N instances (eliminates cold starts) |
-| **Account limit** | 1,000 concurrent executions (default, can request increase) |
-| **Burst limit** | 500-3,000 depending on region (initial burst capacity) |
+| Concept                     | Description                                                   |
+| --------------------------- | ------------------------------------------------------------- |
+| **Unreserved concurrency**  | Shared pool across all functions in the account               |
+| **Reserved concurrency**    | Guarantees N instances for a function, also acts as a max cap |
+| **Provisioned concurrency** | Pre-initializes N instances (eliminates cold starts)          |
+| **Account limit**           | 1,000 concurrent executions (default, can request increase)   |
+| **Burst limit**             | 500-3,000 depending on region (initial burst capacity)        |
 
 ```bash
 # Reserve concurrency (guarantees 100 instances, caps at 100)
@@ -335,15 +336,15 @@ aws lambda create-alias \
 
 ## Common Gotchas
 
-| Gotcha | Details |
-|--------|---------|
-| **/tmp persists across warm invocations** | Data from previous invocations may be in `/tmp`. Always clean up or handle stale data. |
-| **Connection reuse matters** | Initialize HTTP clients and DB connections outside the handler. Reuse across invocations to avoid connection exhaustion. |
-| **Avoid VPC unless necessary** | VPC-attached Lambdas historically had slower cold starts (~1-2s for ENI). Hyperplane has improved this, but it still adds overhead. Only use VPC if you need to access private resources. |
-| **Payload size limits** | Synchronous: 6 MB request and response. Asynchronous: 256 KB. For larger payloads, use S3 as intermediary. |
-| **Recursive invocation** | Lambda triggering itself (e.g., writing to S3 that triggers the same Lambda). Use prefixes or separate buckets. |
-| **Timeout != retry** | Synchronous timeouts return errors to the caller. Async retries happen twice, then go to DLQ. |
-| **Concurrent execution throttling** | Hitting concurrency limits returns 429 errors. Other functions in the same account share the pool. |
-| **Idempotency is your job** | Async invocations and stream polling can deliver duplicates. Design handlers to be idempotent. |
-| **ARM64 is cheaper** | Graviton2 (arm64) is 20% cheaper and often faster. No code changes needed for interpreted runtimes. |
-| **Log group not auto-deleted** | CloudWatch log group `/aws/lambda/<name>` persists after function deletion. Set retention policies. |
+| Gotcha                                    | Details                                                                                                                                                                                   |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **/tmp persists across warm invocations** | Data from previous invocations may be in `/tmp`. Always clean up or handle stale data.                                                                                                    |
+| **Connection reuse matters**              | Initialize HTTP clients and DB connections outside the handler. Reuse across invocations to avoid connection exhaustion.                                                                  |
+| **Avoid VPC unless necessary**            | VPC-attached Lambdas historically had slower cold starts (~1-2s for ENI). Hyperplane has improved this, but it still adds overhead. Only use VPC if you need to access private resources. |
+| **Payload size limits**                   | Synchronous: 6 MB request and response. Asynchronous: 256 KB. For larger payloads, use S3 as intermediary.                                                                                |
+| **Recursive invocation**                  | Lambda triggering itself (e.g., writing to S3 that triggers the same Lambda). Use prefixes or separate buckets.                                                                           |
+| **Timeout != retry**                      | Synchronous timeouts return errors to the caller. Async retries happen twice, then go to DLQ.                                                                                             |
+| **Concurrent execution throttling**       | Hitting concurrency limits returns 429 errors. Other functions in the same account share the pool.                                                                                        |
+| **Idempotency is your job**               | Async invocations and stream polling can deliver duplicates. Design handlers to be idempotent.                                                                                            |
+| **ARM64 is cheaper**                      | Graviton2 (arm64) is 20% cheaper and often faster. No code changes needed for interpreted runtimes.                                                                                       |
+| **Log group not auto-deleted**            | CloudWatch log group `/aws/lambda/<name>` persists after function deletion. Set retention policies.                                                                                       |

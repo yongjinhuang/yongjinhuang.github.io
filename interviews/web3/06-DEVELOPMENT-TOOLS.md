@@ -69,6 +69,7 @@ git --version
 ### 2.1 When to Use Remix
 
 Remix is a browser-based IDE — no installation needed. Use it for:
+
 - Quick prototyping and learning
 - Testing small contracts
 - Deploying to testnets without a local setup
@@ -124,12 +125,12 @@ my-project/
 
 ```typescript
 // hardhat.config.ts
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
+import { HardhatUserConfig } from 'hardhat/config';
+import '@nomicfoundation/hardhat-toolbox';
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.24",
+    version: '0.8.24',
     settings: {
       optimizer: {
         enabled: true,
@@ -139,12 +140,12 @@ const config: HardhatUserConfig = {
   },
   networks: {
     sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || "",
+      url: process.env.SEPOLIA_RPC_URL || '',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
     hardhat: {
       forking: {
-        url: process.env.MAINNET_RPC_URL || "",
+        url: process.env.MAINNET_RPC_URL || '',
         // Fork mainnet at a specific block for reproducible tests
         blockNumber: 19000000,
       },
@@ -394,54 +395,54 @@ anvil --fork-url $MAINNET_RPC        # Fork mainnet locally
 
 ```typescript
 // test/MyToken.test.ts
-import { expect } from "chai";
-import { ethers } from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 
-describe("MyToken", function () {
+describe('MyToken', function () {
   async function deployFixture() {
     const [owner, alice, bob] = await ethers.getSigners();
-    const MyToken = await ethers.getContractFactory("MyToken");
-    const token = await MyToken.deploy("MyToken", "MTK");
+    const MyToken = await ethers.getContractFactory('MyToken');
+    const token = await MyToken.deploy('MyToken', 'MTK');
     return { token, owner, alice, bob };
   }
 
-  describe("Deployment", function () {
-    it("should set the right name and symbol", async function () {
+  describe('Deployment', function () {
+    it('should set the right name and symbol', async function () {
       const { token } = await loadFixture(deployFixture);
-      expect(await token.name()).to.equal("MyToken");
-      expect(await token.symbol()).to.equal("MTK");
+      expect(await token.name()).to.equal('MyToken');
+      expect(await token.symbol()).to.equal('MTK');
     });
 
-    it("should mint initial supply to owner", async function () {
+    it('should mint initial supply to owner', async function () {
       const { token, owner } = await loadFixture(deployFixture);
       const balance = await token.balanceOf(owner.address);
-      expect(balance).to.equal(ethers.parseEther("1000000"));
+      expect(balance).to.equal(ethers.parseEther('1000000'));
     });
   });
 
-  describe("Transfers", function () {
-    it("should transfer tokens between accounts", async function () {
+  describe('Transfers', function () {
+    it('should transfer tokens between accounts', async function () {
       const { token, owner, alice } = await loadFixture(deployFixture);
-      const amount = ethers.parseEther("100");
+      const amount = ethers.parseEther('100');
 
       await token.transfer(alice.address, amount);
       expect(await token.balanceOf(alice.address)).to.equal(amount);
     });
 
-    it("should revert on insufficient balance", async function () {
+    it('should revert on insufficient balance', async function () {
       const { token, alice, bob } = await loadFixture(deployFixture);
       await expect(
         token.connect(alice).transfer(bob.address, 1n)
-      ).to.be.revertedWithCustomError(token, "ERC20InsufficientBalance");
+      ).to.be.revertedWithCustomError(token, 'ERC20InsufficientBalance');
     });
 
-    it("should emit Transfer event", async function () {
+    it('should emit Transfer event', async function () {
       const { token, owner, alice } = await loadFixture(deployFixture);
-      const amount = ethers.parseEther("50");
+      const amount = ethers.parseEther('50');
 
       await expect(token.transfer(alice.address, amount))
-        .to.emit(token, "Transfer")
+        .to.emit(token, 'Transfer')
         .withArgs(owner.address, alice.address, amount);
     });
   });
@@ -456,11 +457,11 @@ describe("MyToken", function () {
 
 ```typescript
 // ignition/modules/MyToken.ts
-import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+import { buildModule } from '@nomicfoundation/hardhat-ignition/modules';
 
-const MyTokenModule = buildModule("MyTokenModule", (m) => {
-  const initialOwner = m.getParameter("initialOwner");
-  const token = m.contract("MyToken", ["MyToken", "MTK"]);
+const MyTokenModule = buildModule('MyTokenModule', (m) => {
+  const initialOwner = m.getParameter('initialOwner');
+  const token = m.contract('MyToken', ['MyToken', 'MTK']);
   return { token };
 });
 
@@ -536,6 +537,7 @@ Governance:         Governor, TimelockController, Votes
 ### 7.2 OpenZeppelin Wizard
 
 Use the web-based Wizard at wizard.openzeppelin.com to generate contract boilerplate:
+
 1. Select contract type (ERC-20, ERC-721, Governor, etc.)
 2. Toggle features (Mintable, Burnable, Pausable, Permit, etc.)
 3. Copy generated code into your project

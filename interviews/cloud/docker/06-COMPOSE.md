@@ -36,15 +36,15 @@ $ docker compose up
 
 ## 2. Compose v1 vs v2
 
-| Aspect | v1 (deprecated) | v2 (current) |
-|--------|-----------------|--------------|
-| Command | `docker-compose` (Python, separate binary) | `docker compose` (Go, Docker CLI plugin) |
-| Performance | Slower | Significantly faster |
-| Container naming | `project_service_1` | `project-service-1` (hyphens) |
-| BuildKit | Opt-in | Default |
-| Profiles | Limited | Full support |
-| Watch mode | Not available | `docker compose watch` |
-| GPU support | No | Yes |
+| Aspect           | v1 (deprecated)                            | v2 (current)                             |
+| ---------------- | ------------------------------------------ | ---------------------------------------- |
+| Command          | `docker-compose` (Python, separate binary) | `docker compose` (Go, Docker CLI plugin) |
+| Performance      | Slower                                     | Significantly faster                     |
+| Container naming | `project_service_1`                        | `project-service-1` (hyphens)            |
+| BuildKit         | Opt-in                                     | Default                                  |
+| Profiles         | Limited                                    | Full support                             |
+| Watch mode       | Not available                              | `docker compose watch`                   |
+| GPU support      | No                                         | Yes                                      |
 
 ```bash
 # v1 (deprecated, do not use for new projects)
@@ -250,7 +250,7 @@ networks:
     driver: bridge
   backend:
     driver: bridge
-    internal: true    # no external access
+    internal: true # no external access
 ```
 
 ```
@@ -270,13 +270,13 @@ services:
     networks:
       backend:
         aliases:
-          - api          # reachable as "api" on backend network
+          - api # reachable as "api" on backend network
   api-v2:
     image: myapi:v2
     networks:
       backend:
         aliases:
-          - api          # also reachable as "api" (round-robin DNS)
+          - api # also reachable as "api" (round-robin DNS)
 ```
 
 ### 4.4 External Networks
@@ -308,7 +308,7 @@ services:
       - pgdata:/var/lib/postgresql/data
 
 volumes:
-  pgdata:                    # Docker-managed volume
+  pgdata: # Docker-managed volume
     driver: local
 ```
 
@@ -318,9 +318,9 @@ volumes:
 services:
   app:
     volumes:
-      - ./src:/app/src               # relative path = bind mount
-      - /absolute/path:/data          # absolute path = bind mount
-      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro  # read-only
+      - ./src:/app/src # relative path = bind mount
+      - /absolute/path:/data # absolute path = bind mount
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro # read-only
 ```
 
 ### 5.3 Volume Drivers
@@ -332,7 +332,7 @@ volumes:
     driver_opts:
       type: nfs
       o: addr=192.168.1.50,vers=4,rw
-      device: ":/exports/data"
+      device: ':/exports/data'
 ```
 
 ### 5.4 External Volumes
@@ -341,7 +341,7 @@ volumes:
 volumes:
   existing-data:
     external: true
-    name: my-existing-volume    # must already exist
+    name: my-existing-volume # must already exist
 ```
 
 ---
@@ -372,9 +372,9 @@ DB_PASSWORD=secret123
 # docker-compose.yml
 services:
   db:
-    image: postgres:${POSTGRES_VERSION}    # Interpolation from .env
+    image: postgres:${POSTGRES_VERSION} # Interpolation from .env
     ports:
-      - "${APP_PORT}:3000"
+      - '${APP_PORT}:3000'
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
 ```
@@ -385,10 +385,10 @@ services:
 services:
   api:
     env_file:
-      - .env                    # base config
-      - .env.${ENVIRONMENT}     # environment-specific overrides
+      - .env # base config
+      - .env.${ENVIRONMENT} # environment-specific overrides
     environment:
-      LOG_LEVEL: debug          # highest precedence per-var
+      LOG_LEVEL: debug # highest precedence per-var
 ```
 
 ### 6.3 Variable Substitution Syntax
@@ -420,18 +420,18 @@ services:
   debug-tools:
     image: nicolaka/netshoot
     profiles:
-      - debug                # only with: docker compose --profile debug up
+      - debug # only with: docker compose --profile debug up
 
   test-runner:
     image: myapp-test
     profiles:
-      - test                 # only with: docker compose --profile test up
+      - test # only with: docker compose --profile test up
 
   monitoring:
     image: prometheus
     profiles:
-      - monitoring           # only with --profile monitoring
-      - full                 # OR --profile full
+      - monitoring # only with --profile monitoring
+      - full # OR --profile full
 ```
 
 ```bash
@@ -459,7 +459,7 @@ services:
   db:
     image: postgres:16
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -468,7 +468,7 @@ services:
   redis:
     image: redis:7
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -477,9 +477,9 @@ services:
     image: myapi
     depends_on:
       db:
-        condition: service_healthy    # waits for db health check
+        condition: service_healthy # waits for db health check
       redis:
-        condition: service_healthy    # waits for redis health check
+        condition: service_healthy # waits for redis health check
     # api starts only after db AND redis are healthy
 ```
 
@@ -497,7 +497,7 @@ depends_on conditions:
 services:
   migrate:
     image: myapp
-    command: ["python", "manage.py", "migrate"]
+    command: ['python', 'manage.py', 'migrate']
     depends_on:
       db:
         condition: service_healthy
@@ -529,7 +529,7 @@ services:
           path: ./src
           target: /app/src
           ignore:
-            - "**/*.test.js"
+            - '**/*.test.js'
 
         # Sync + restart: copy and restart the service
         - action: sync+restart
@@ -549,11 +549,11 @@ $ docker compose watch
 $ docker compose up --watch
 ```
 
-| Action | When to Use | What Happens |
-|--------|------------|--------------|
-| `sync` | Source code changes (hot-reload) | Files copied, app's hot-reload handles restart |
-| `sync+restart` | Config changes | Files copied, container restarted |
-| `rebuild` | Dependency changes (package.json) | Full image rebuild and container recreate |
+| Action         | When to Use                       | What Happens                                   |
+| -------------- | --------------------------------- | ---------------------------------------------- |
+| `sync`         | Source code changes (hot-reload)  | Files copied, app's hot-reload handles restart |
+| `sync+restart` | Config changes                    | Files copied, container restarted              |
+| `rebuild`      | Dependency changes (package.json) | Full image rebuild and container recreate      |
 
 ---
 
@@ -657,12 +657,12 @@ services:
       context: .
       target: development
     volumes:
-      - ./src:/app/src                    # source code (hot-reload)
-      - node_modules:/app/node_modules    # deps in volume (performance)
+      - ./src:/app/src # source code (hot-reload)
+      - node_modules:/app/node_modules # deps in volume (performance)
     ports:
-      - "3000:3000"
-      - "9229:9229"                       # debugger port
-    command: ["npx", "nodemon", "--inspect=0.0.0.0:9229", "src/index.js"]
+      - '3000:3000'
+      - '9229:9229' # debugger port
+    command: ['npx', 'nodemon', '--inspect=0.0.0.0:9229', 'src/index.js']
     environment:
       NODE_ENV: development
 
@@ -679,13 +679,13 @@ services:
     volumes:
       - ./:/app
     ports:
-      - "8000:8000"
-      - "5678:5678"                       # debugpy port
+      - '8000:8000'
+      - '5678:5678' # debugpy port
     command: >
       python -m debugpy --listen 0.0.0.0:5678
       -m uvicorn app:app --reload --host 0.0.0.0
     environment:
-      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONDONTWRITEBYTECODE: '1'
 ```
 
 ### 11.3 Go Hot-Reload Setup
@@ -699,8 +699,8 @@ services:
     volumes:
       - ./:/app
     ports:
-      - "8080:8080"
-      - "2345:2345"                       # delve debugger
+      - '8080:8080'
+      - '2345:2345' # delve debugger
     command: >
       air -build.cmd "go build -gcflags='all=-N -l' -o /tmp/app ."
           -build.bin "/tmp/app"
@@ -722,7 +722,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["npm", "test"]
+    command: ['npm', 'test']
     environment:
       DATABASE_URL: postgres://postgres:test@db:5432/testdb
 
@@ -732,7 +732,7 @@ services:
       POSTGRES_PASSWORD: test
       POSTGRES_DB: testdb
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 2s
       retries: 10
 ```
@@ -764,8 +764,8 @@ services:
   gateway:
     image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
@@ -776,7 +776,7 @@ services:
       - frontend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "nginx", "-t"]
+      test: ['CMD', 'nginx', '-t']
       interval: 30s
 
   # --- Application API ---
@@ -788,7 +788,7 @@ services:
       replicas: 2
       resources:
         limits:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 512M
     environment:
       DATABASE_URL: postgres://app:${DB_PASSWORD}@db:5432/myapp
@@ -806,7 +806,7 @@ services:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
       interval: 15s
       timeout: 5s
       retries: 3
@@ -817,12 +817,12 @@ services:
     build:
       context: ./api
       target: production
-    command: ["node", "worker.js"]
+    command: ['node', 'worker.js']
     deploy:
       replicas: 3
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 256M
     environment:
       DATABASE_URL: postgres://app:${DB_PASSWORD}@db:5432/myapp
@@ -851,7 +851,7 @@ services:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d myapp"]
+      test: ['CMD-SHELL', 'pg_isready -U app -d myapp']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -864,14 +864,21 @@ services:
   # --- Cache ---
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    command:
+      [
+        'redis-server',
+        '--maxmemory',
+        '128mb',
+        '--maxmemory-policy',
+        'allkeys-lru',
+      ]
     volumes:
       - redisdata:/data
     networks:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -885,12 +892,12 @@ services:
       RABBITMQ_DEFAULT_USER: app
       RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
     ports:
-      - "15672:15672"     # management UI (dev only, remove in prod)
+      - '15672:15672' # management UI (dev only, remove in prod)
     networks:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -903,7 +910,7 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - promdata:/prometheus
     ports:
-      - "9090:9090"
+      - '9090:9090'
     networks:
       - backend
     profiles:
@@ -914,7 +921,7 @@ services:
     volumes:
       - grafanadata:/var/lib/grafana
     ports:
-      - "3001:3000"
+      - '3001:3000'
     networks:
       - backend
     profiles:
@@ -961,7 +968,7 @@ The `.env` file is read by Compose for variable interpolation in the YAML file. 
 services:
   api:
     build:
-      context: ./api    # relative to docker-compose.yml location
+      context: ./api # relative to docker-compose.yml location
 ```
 
 ### 14.6 Port Conflicts on Restart
@@ -978,8 +985,8 @@ Dollar signs in environment values must be escaped with `$$`:
 
 ```yaml
 environment:
-  REGEX: "$$USER"         # literal $USER in the container
-  INTERP: "${USER}"       # interpolated from host/env
+  REGEX: '$$USER' # literal $USER in the container
+  INTERP: '${USER}' # interpolated from host/env
 ```
 
 ### 14.9 Compose Project Name Affects Everything
@@ -1075,21 +1082,21 @@ Key differences between environments: Dev uses `build:` and bind mounts. Prod us
 
 ## 16. Quick Reference
 
-| Command | Purpose |
-|---------|---------|
-| `docker compose up -d` | Start services in background |
-| `docker compose down` | Stop and remove containers, networks |
-| `docker compose down -v` | Also remove volumes |
-| `docker compose ps` | List running services |
-| `docker compose logs -f api` | Follow logs for a service |
-| `docker compose exec api sh` | Shell into running service |
-| `docker compose build` | Build/rebuild images |
-| `docker compose pull` | Pull latest images |
-| `docker compose restart api` | Restart a service |
-| `docker compose stop` | Stop without removing |
-| `docker compose config` | Validate and view resolved config |
-| `docker compose --profile X up` | Start with profile |
-| `docker compose watch` | File sync and rebuild mode |
-| `docker compose up --scale api=3` | Scale a service |
-| `docker compose cp api:/path ./` | Copy files from service |
-| `docker compose top` | Show running processes |
+| Command                           | Purpose                              |
+| --------------------------------- | ------------------------------------ |
+| `docker compose up -d`            | Start services in background         |
+| `docker compose down`             | Stop and remove containers, networks |
+| `docker compose down -v`          | Also remove volumes                  |
+| `docker compose ps`               | List running services                |
+| `docker compose logs -f api`      | Follow logs for a service            |
+| `docker compose exec api sh`      | Shell into running service           |
+| `docker compose build`            | Build/rebuild images                 |
+| `docker compose pull`             | Pull latest images                   |
+| `docker compose restart api`      | Restart a service                    |
+| `docker compose stop`             | Stop without removing                |
+| `docker compose config`           | Validate and view resolved config    |
+| `docker compose --profile X up`   | Start with profile                   |
+| `docker compose watch`            | File sync and rebuild mode           |
+| `docker compose up --scale api=3` | Scale a service                      |
+| `docker compose cp api:/path ./`  | Copy files from service              |
+| `docker compose top`              | Show running processes               |

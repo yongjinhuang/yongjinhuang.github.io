@@ -1376,15 +1376,15 @@ Total per GPU:    112 GB    63 GB    38.5 GB  14 GB
 ```json
 // ds_config.json -- DeepSpeed ZeRO-3 with CPU offload
 {
-    "train_batch_size": 256,
-    "fp16": {"enabled": true},
-    "zero_optimization": {
-        "stage": 3,
-        "offload_param": {"device": "cpu", "pin_memory": true},
-        "offload_optimizer": {"device": "cpu", "pin_memory": true},
-        "overlap_comm": true,
-        "reduce_bucket_size": 5e7
-    }
+  "train_batch_size": 256,
+  "fp16": { "enabled": true },
+  "zero_optimization": {
+    "stage": 3,
+    "offload_param": { "device": "cpu", "pin_memory": true },
+    "offload_optimizer": { "device": "cpu", "pin_memory": true },
+    "overlap_comm": true,
+    "reduce_bucket_size": 5e7
+  }
 }
 ```
 
@@ -1900,7 +1900,7 @@ Use this checklist when designing and deploying multi-GPU and HPC workloads.
 
 ### Scaling Verification
 
-- [ ] **Measure scaling efficiency**: throughput_N_GPUs / (N * throughput_1_GPU).
+- [ ] **Measure scaling efficiency**: throughput_N_GPUs / (N \* throughput_1_GPU).
 - [ ] **Profile communication overhead** with NCCL debug or Nsight Systems.
 - [ ] **Check GPU utilization** during training (should be >80%).
 - [ ] **Monitor memory** usage: `nvidia-smi` or NVML.
@@ -1939,7 +1939,7 @@ A: **AllReduce**: every GPU contributes a buffer, they are element-wise reduced 
 
 **Q3: What is the Ring AllReduce algorithm, and why is it bandwidth-optimal?**
 
-A: Ring AllReduce arranges N GPUs in a logical ring. It has two phases: ReduceScatter (N-1 steps, each GPU sends 1/N of data to neighbor, accumulating partial reductions) and AllGather (N-1 steps, distributing the reduced chunks). Total data transferred per GPU: 2*(N-1)/N * DataSize. As N grows, this approaches 2 * DataSize per GPU regardless of the number of GPUs. This is optimal because every GPU must send its data at least once and receive the result at least once. The limitation is latency: 2*(N-1) sequential steps, which matters for small messages. Tree-based algorithms have better latency (log N steps) but worse bandwidth utilization.
+A: Ring AllReduce arranges N GPUs in a logical ring. It has two phases: ReduceScatter (N-1 steps, each GPU sends 1/N of data to neighbor, accumulating partial reductions) and AllGather (N-1 steps, distributing the reduced chunks). Total data transferred per GPU: 2*(N-1)/N * DataSize. As N grows, this approaches 2 _ DataSize per GPU regardless of the number of GPUs. This is optimal because every GPU must send its data at least once and receive the result at least once. The limitation is latency: 2_(N-1) sequential steps, which matters for small messages. Tree-based algorithms have better latency (log N steps) but worse bandwidth utilization.
 
 ### Architecture and Interconnects
 
@@ -1963,7 +1963,7 @@ A: FSDP is PyTorch's implementation of the ZeRO Stage 3 algorithm. In standard D
 
 **Q8: What is 3D parallelism? How do you decide the parallelism configuration?**
 
-A: 3D parallelism combines data parallelism (DP), tensor parallelism (TP), and pipeline parallelism (PP). TP splits individual layers across GPUs (requires frequent AllReduce, so place on NVLink within a node). PP splits the model into sequential stages across GPU groups (requires less frequent point-to-point communication). DP replicates the sharded model across groups (requires AllReduce of gradients, can overlap with compute). Configuration rules: (1) TP degree = number of GPUs per node (e.g., 8 for DGX). (2) PP degree = model_layers / layers_per_stage, chosen to balance stage compute times. (3) DP degree = total_GPUs / (TP * PP). Total GPUs = DP * TP * PP. The goal is to maximize throughput while fitting the model in memory, with TP on the fastest interconnect (NVLink) and DP on the slowest (inter-node network).
+A: 3D parallelism combines data parallelism (DP), tensor parallelism (TP), and pipeline parallelism (PP). TP splits individual layers across GPUs (requires frequent AllReduce, so place on NVLink within a node). PP splits the model into sequential stages across GPU groups (requires less frequent point-to-point communication). DP replicates the sharded model across groups (requires AllReduce of gradients, can overlap with compute). Configuration rules: (1) TP degree = number of GPUs per node (e.g., 8 for DGX). (2) PP degree = model*layers / layers_per_stage, chosen to balance stage compute times. (3) DP degree = total_GPUs / (TP * PP). Total GPUs = DP \_ TP \* PP. The goal is to maximize throughput while fitting the model in memory, with TP on the fastest interconnect (NVLink) and DP on the slowest (inter-node network).
 
 **Q9: How does communication-computation overlap work in DDP?**
 

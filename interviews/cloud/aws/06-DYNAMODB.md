@@ -86,13 +86,13 @@ The combination of partition key + sort key must be unique. The sort key enables
 
 ### RCU / WCU Calculations
 
-| Operation | Capacity | Unit |
-|-----------|----------|------|
-| One strongly consistent read, up to 4 KB | 1 RCU | Per second |
-| One eventually consistent read, up to 4 KB | 0.5 RCU | Per second |
-| One write, up to 1 KB | 1 WCU | Per second |
-| One transactional read, up to 4 KB | 2 RCU | Per second |
-| One transactional write, up to 1 KB | 2 WCU | Per second |
+| Operation                                  | Capacity | Unit       |
+| ------------------------------------------ | -------- | ---------- |
+| One strongly consistent read, up to 4 KB   | 1 RCU    | Per second |
+| One eventually consistent read, up to 4 KB | 0.5 RCU  | Per second |
+| One write, up to 1 KB                      | 1 WCU    | Per second |
+| One transactional read, up to 4 KB         | 2 RCU    | Per second |
+| One transactional write, up to 1 KB        | 2 WCU    | Per second |
 
 **Example**: Read 10 items/sec, each 8 KB, strongly consistent:
 
@@ -226,14 +226,15 @@ One query with `PK = CUSTOMER#c-100` returns the customer profile and all their 
 
 Change Data Capture (CDC) for DynamoDB. Every write (insert, update, delete) is recorded in a time-ordered stream.
 
-| View Type | What You Get |
-|-----------|-------------|
-| KEYS_ONLY | Only the key attributes of modified items |
-| NEW_IMAGE | The entire item after modification |
-| OLD_IMAGE | The entire item before modification |
-| NEW_AND_OLD_IMAGES | Both before and after |
+| View Type          | What You Get                              |
+| ------------------ | ----------------------------------------- |
+| KEYS_ONLY          | Only the key attributes of modified items |
+| NEW_IMAGE          | The entire item after modification        |
+| OLD_IMAGE          | The entire item before modification       |
+| NEW_AND_OLD_IMAGES | Both before and after                     |
 
 **Use cases:**
+
 - Trigger Lambda on item changes (event-driven)
 - Replicate data to Elasticsearch/OpenSearch for full-text search
 - Maintain materialized views or aggregates
@@ -398,17 +399,17 @@ aws dynamodb update-table \
 
 ## Common Gotchas
 
-| Gotcha | Detail |
-|--------|--------|
-| **Hot partition problem** | If one partition key value gets disproportionate traffic, that partition throttles even if overall table capacity is sufficient. Design keys for uniform distribution. |
-| **400 KB item size limit** | If your items approach this, rethink your model. Store large blobs in S3 and keep a reference in DynamoDB. |
-| **GSIs are eventually consistent** | You cannot do strongly consistent reads on a GSI. If you need consistency, query the base table. |
-| **1 MB query result limit** | A single Query or Scan call returns at most 1 MB. Paginate using `LastEvaluatedKey`. |
-| **FilterExpression runs AFTER read** | Filtering does not reduce RCU consumption. DynamoDB reads the data, charges you, then filters. Design your keys so the `KeyConditionExpression` does the heavy lifting. |
-| **LSIs cannot be added after table creation** | Plan your LSIs upfront or just use GSIs. |
-| **GSI backfill takes time** | Creating a GSI on a large table can take hours. It consumes read capacity from the base table. |
-| **No cross-table joins** | This is not SQL. Model your data for your access patterns, not for normalization. |
-| **Provisioned mode throttling** | If you exceed provisioned RCU/WCU, requests get throttled (HTTP 400 ProvisionedThroughputExceededException). Auto-scaling reacts in minutes, not seconds. |
-| **Transactions are 2x cost** | Transactional reads cost 2 RCU per 4 KB; transactional writes cost 2 WCU per 1 KB. Use transactions only when you need atomicity. |
-| **TTL deletion is not instant** | Items may persist up to 48 hours past their TTL. Do not rely on TTL for hard security boundaries -- add a filter condition in your queries. |
-| **On-demand can still throttle** | On-demand mode doubles the previous peak throughput within 30 minutes. If traffic spikes from zero to millions instantly, you can still be throttled. Pre-warm with provisioned mode for known spikes (e.g., product launches). |
+| Gotcha                                        | Detail                                                                                                                                                                                                                          |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Hot partition problem**                     | If one partition key value gets disproportionate traffic, that partition throttles even if overall table capacity is sufficient. Design keys for uniform distribution.                                                          |
+| **400 KB item size limit**                    | If your items approach this, rethink your model. Store large blobs in S3 and keep a reference in DynamoDB.                                                                                                                      |
+| **GSIs are eventually consistent**            | You cannot do strongly consistent reads on a GSI. If you need consistency, query the base table.                                                                                                                                |
+| **1 MB query result limit**                   | A single Query or Scan call returns at most 1 MB. Paginate using `LastEvaluatedKey`.                                                                                                                                            |
+| **FilterExpression runs AFTER read**          | Filtering does not reduce RCU consumption. DynamoDB reads the data, charges you, then filters. Design your keys so the `KeyConditionExpression` does the heavy lifting.                                                         |
+| **LSIs cannot be added after table creation** | Plan your LSIs upfront or just use GSIs.                                                                                                                                                                                        |
+| **GSI backfill takes time**                   | Creating a GSI on a large table can take hours. It consumes read capacity from the base table.                                                                                                                                  |
+| **No cross-table joins**                      | This is not SQL. Model your data for your access patterns, not for normalization.                                                                                                                                               |
+| **Provisioned mode throttling**               | If you exceed provisioned RCU/WCU, requests get throttled (HTTP 400 ProvisionedThroughputExceededException). Auto-scaling reacts in minutes, not seconds.                                                                       |
+| **Transactions are 2x cost**                  | Transactional reads cost 2 RCU per 4 KB; transactional writes cost 2 WCU per 1 KB. Use transactions only when you need atomicity.                                                                                               |
+| **TTL deletion is not instant**               | Items may persist up to 48 hours past their TTL. Do not rely on TTL for hard security boundaries -- add a filter condition in your queries.                                                                                     |
+| **On-demand can still throttle**              | On-demand mode doubles the previous peak throughput within 30 minutes. If traffic spikes from zero to millions instantly, you can still be throttled. Pre-warm with provisioned mode for known spikes (e.g., product launches). |

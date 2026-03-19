@@ -13,12 +13,12 @@ communication engineering.
 
 The projects are organized in four tiers of increasing complexity:
 
-| Tier | Project | Key Skills | Estimated Time |
-|------|---------|-----------|----------------|
-| 1 | Custom HTML5 Video Player | MSE, ABR, UI | 8-12 hours |
-| 2 | WebRTC Video Chat App | Peer connections, signaling, ICE | 12-16 hours |
-| 3 | Live Streaming Server | FFmpeg, HLS/DASH, transcoding | 16-24 hours |
-| 4 | Mini CDN with Edge Caching | Origin/edge, caching, load balancing | 20-30 hours |
+| Tier | Project                    | Key Skills                           | Estimated Time |
+| ---- | -------------------------- | ------------------------------------ | -------------- |
+| 1    | Custom HTML5 Video Player  | MSE, ABR, UI                         | 8-12 hours     |
+| 2    | WebRTC Video Chat App      | Peer connections, signaling, ICE     | 12-16 hours    |
+| 3    | Live Streaming Server      | FFmpeg, HLS/DASH, transcoding        | 16-24 hours    |
+| 4    | Mini CDN with Edge Caching | Origin/edge, caching, load balancing | 20-30 hours    |
 
 Each project builds on knowledge from previous ones. Tier 1 establishes client-side
 fundamentals. Tier 2 introduces real-time communication. Tier 3 moves to server-side
@@ -242,7 +242,10 @@ class SegmentPlayer {
         if (data) {
           this.appendBuffer(data);
           this.segmentIndex++;
-        } else if (this.segmentQueue.length === 0 && !this.sourceBuffer.updating) {
+        } else if (
+          this.segmentQueue.length === 0 &&
+          !this.sourceBuffer.updating
+        ) {
           this.mediaSource.endOfStream();
         }
       }
@@ -350,142 +353,144 @@ class ABRManager {
 <!-- player.html -->
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Custom ABR Video Player</title>
-  <style>
-    .player-container {
-      position: relative;
-      max-width: 960px;
-      margin: 0 auto;
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>Custom ABR Video Player</title>
+    <style>
+      .player-container {
+        position: relative;
+        max-width: 960px;
+        margin: 0 auto;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+      }
 
-    video {
-      width: 100%;
-      display: block;
-    }
+      video {
+        width: 100%;
+        display: block;
+      }
 
-    .controls {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
-      padding: 20px 16px 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
+      .controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+        padding: 20px 16px 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
 
-    .player-container:hover .controls {
-      opacity: 1;
-    }
+      .player-container:hover .controls {
+        opacity: 1;
+      }
 
-    .progress-bar {
-      flex: 1;
-      height: 4px;
-      background: rgba(255,255,255,0.3);
-      border-radius: 2px;
-      cursor: pointer;
-      position: relative;
-    }
+      .progress-bar {
+        flex: 1;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        cursor: pointer;
+        position: relative;
+      }
 
-    .progress-buffered {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      background: rgba(255,255,255,0.4);
-      border-radius: 2px;
-    }
+      .progress-buffered {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 2px;
+      }
 
-    .progress-played {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      background: #e74c3c;
-      border-radius: 2px;
-    }
+      .progress-played {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: #e74c3c;
+        border-radius: 2px;
+      }
 
-    .control-btn {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px 8px;
-    }
+      .control-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px 8px;
+      }
 
-    .quality-selector {
-      background: rgba(0,0,0,0.6);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 12px;
-    }
+      .quality-selector {
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+      }
 
-    .stats-overlay {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.7);
-      color: #0f0;
-      font-family: monospace;
-      font-size: 11px;
-      padding: 8px 12px;
-      border-radius: 4px;
-      display: none;
-      line-height: 1.6;
-    }
+      .stats-overlay {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #0f0;
+        font-family: monospace;
+        font-size: 11px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        display: none;
+        line-height: 1.6;
+      }
 
-    .stats-overlay.visible {
-      display: block;
-    }
-  </style>
-</head>
-<body>
-  <div class="player-container">
-    <video id="video" playsinline></video>
+      .stats-overlay.visible {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="player-container">
+      <video id="video" playsinline></video>
 
-    <div class="stats-overlay" id="stats">
-      <div>Quality: <span id="stat-quality">-</span></div>
-      <div>Buffer: <span id="stat-buffer">-</span>s</div>
-      <div>Bandwidth: <span id="stat-bandwidth">-</span> Mbps</div>
-      <div>Dropped Frames: <span id="stat-dropped">-</span></div>
-    </div>
-
-    <div class="controls">
-      <button class="control-btn" id="playPause">▶</button>
-
-      <div class="progress-bar" id="progressBar">
-        <div class="progress-buffered" id="buffered"></div>
-        <div class="progress-played" id="played"></div>
+      <div class="stats-overlay" id="stats">
+        <div>Quality: <span id="stat-quality">-</span></div>
+        <div>Buffer: <span id="stat-buffer">-</span>s</div>
+        <div>Bandwidth: <span id="stat-bandwidth">-</span> Mbps</div>
+        <div>Dropped Frames: <span id="stat-dropped">-</span></div>
       </div>
 
-      <span style="color:white; font-size:12px" id="timeDisplay">0:00 / 0:00</span>
+      <div class="controls">
+        <button class="control-btn" id="playPause">▶</button>
 
-      <select class="quality-selector" id="qualitySelect">
-        <option value="auto">Auto</option>
-        <option value="360p">360p</option>
-        <option value="720p">720p</option>
-        <option value="1080p">1080p</option>
-      </select>
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-buffered" id="buffered"></div>
+          <div class="progress-played" id="played"></div>
+        </div>
 
-      <button class="control-btn" id="statsToggle">📊</button>
+        <span style="color:white; font-size:12px" id="timeDisplay"
+          >0:00 / 0:00</span
+        >
+
+        <select class="quality-selector" id="qualitySelect">
+          <option value="auto">Auto</option>
+          <option value="360p">360p</option>
+          <option value="720p">720p</option>
+          <option value="1080p">1080p</option>
+        </select>
+
+        <button class="control-btn" id="statsToggle">📊</button>
+      </div>
     </div>
-  </div>
 
-  <script src="player-core.js"></script>
-  <script src="abr-manager.js"></script>
-  <script src="player-ui.js"></script>
-</body>
+    <script src="player-core.js"></script>
+    <script src="abr-manager.js"></script>
+    <script src="player-ui.js"></script>
+  </body>
 </html>
 ```
 
@@ -569,10 +574,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Stats
     document.getElementById('stat-quality').textContent = player.currentQuality;
-    document.getElementById('stat-buffer').textContent =
-      player.getBufferedAhead().toFixed(1);
-    document.getElementById('stat-bandwidth').textContent =
-      (abr.getEstimatedBandwidth() / 1000000).toFixed(2);
+    document.getElementById('stat-buffer').textContent = player
+      .getBufferedAhead()
+      .toFixed(1);
+    document.getElementById('stat-bandwidth').textContent = (
+      abr.getEstimatedBandwidth() / 1000000
+    ).toFixed(2);
 
     const quality = video.getVideoPlaybackQuality?.();
     if (quality) {
@@ -599,6 +606,7 @@ HTTPServer(('', 8080), CORSHandler).serve_forever()
 ```
 
 Open `http://localhost:8080/player.html` and verify:
+
 - Video plays smoothly
 - Progress bar and time display update correctly
 - Buffer visualization reflects actual buffer state
@@ -679,8 +687,11 @@ const path = require('path');
 
 const server = http.createServer((req, res) => {
   // Serve static files for the client
-  const filePath = path.join(__dirname, 'public',
-    req.url === '/' ? 'index.html' : req.url);
+  const filePath = path.join(
+    __dirname,
+    'public',
+    req.url === '/' ? 'index.html' : req.url
+  );
   const ext = path.extname(filePath);
   const contentTypes = {
     '.html': 'text/html',
@@ -726,19 +737,25 @@ wss.on('connection', (ws) => {
         // Notify other peers in the room
         room.forEach((peerWs, id) => {
           if (id !== peerId) {
-            peerWs.send(JSON.stringify({
-              type: 'peer-joined',
-              peerId: peerId,
-            }));
+            peerWs.send(
+              JSON.stringify({
+                type: 'peer-joined',
+                peerId: peerId,
+              })
+            );
           }
         });
 
         // Tell the joiner about existing peers
-        const existingPeers = Array.from(room.keys()).filter(id => id !== peerId);
-        ws.send(JSON.stringify({
-          type: 'room-peers',
-          peers: existingPeers,
-        }));
+        const existingPeers = Array.from(room.keys()).filter(
+          (id) => id !== peerId
+        );
+        ws.send(
+          JSON.stringify({
+            type: 'room-peers',
+            peers: existingPeers,
+          })
+        );
         break;
       }
 
@@ -750,10 +767,12 @@ wss.on('connection', (ws) => {
         if (room) {
           const targetWs = room.get(message.targetPeerId);
           if (targetWs && targetWs.readyState === WebSocket.OPEN) {
-            targetWs.send(JSON.stringify({
-              ...message,
-              fromPeerId: peerId,
-            }));
+            targetWs.send(
+              JSON.stringify({
+                ...message,
+                fromPeerId: peerId,
+              })
+            );
           }
         }
         break;
@@ -768,10 +787,12 @@ wss.on('connection', (ws) => {
 
       // Notify remaining peers
       room.forEach((peerWs) => {
-        peerWs.send(JSON.stringify({
-          type: 'peer-left',
-          peerId: peerId,
-        }));
+        peerWs.send(
+          JSON.stringify({
+            type: 'peer-left',
+            peerId: peerId,
+          })
+        );
       });
 
       if (room.size === 0) {
@@ -827,11 +848,13 @@ class WebRTCClient {
     this.ws = new WebSocket(serverUrl);
 
     this.ws.onopen = () => {
-      this.ws.send(JSON.stringify({
-        type: 'join',
-        room: room,
-        peerId: this.peerId,
-      }));
+      this.ws.send(
+        JSON.stringify({
+          type: 'join',
+          room: room,
+          peerId: this.peerId,
+        })
+      );
     };
 
     this.ws.onmessage = async (event) => {
@@ -896,11 +919,13 @@ class WebRTCClient {
     // Handle ICE candidates
     this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        this.ws.send(JSON.stringify({
-          type: 'ice-candidate',
-          candidate: event.candidate,
-          targetPeerId: this.remotePeerId,
-        }));
+        this.ws.send(
+          JSON.stringify({
+            type: 'ice-candidate',
+            candidate: event.candidate,
+            targetPeerId: this.remotePeerId,
+          })
+        );
       }
     };
 
@@ -941,11 +966,13 @@ class WebRTCClient {
     const offer = await this.peerConnection.createOffer();
     await this.peerConnection.setLocalDescription(offer);
 
-    this.ws.send(JSON.stringify({
-      type: 'offer',
-      sdp: offer,
-      targetPeerId: this.remotePeerId,
-    }));
+    this.ws.send(
+      JSON.stringify({
+        type: 'offer',
+        sdp: offer,
+        targetPeerId: this.remotePeerId,
+      })
+    );
   }
 
   async handleOffer(sdp) {
@@ -958,11 +985,13 @@ class WebRTCClient {
     const answer = await this.peerConnection.createAnswer();
     await this.peerConnection.setLocalDescription(answer);
 
-    this.ws.send(JSON.stringify({
-      type: 'answer',
-      sdp: answer,
-      targetPeerId: this.remotePeerId,
-    }));
+    this.ws.send(
+      JSON.stringify({
+        type: 'answer',
+        sdp: answer,
+        targetPeerId: this.remotePeerId,
+      })
+    );
   }
 
   async handleAnswer(sdp) {
@@ -973,9 +1002,7 @@ class WebRTCClient {
 
   async handleIceCandidate(candidate) {
     if (this.peerConnection) {
-      await this.peerConnection.addIceCandidate(
-        new RTCIceCandidate(candidate)
-      );
+      await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
     }
   }
 
@@ -991,9 +1018,9 @@ class WebRTCClient {
     });
 
     const screenTrack = screenStream.getVideoTracks()[0];
-    const sender = this.peerConnection.getSenders().find(
-      (s) => s.track?.kind === 'video'
-    );
+    const sender = this.peerConnection
+      .getSenders()
+      .find((s) => s.track?.kind === 'video');
 
     if (sender) {
       await sender.replaceTrack(screenTrack);
@@ -1111,320 +1138,357 @@ class StatsMonitor {
 <!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>WebRTC Video Chat</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #1a1a2e; color: #eee; }
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebRTC Video Chat</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: sans-serif;
+        background: #1a1a2e;
+        color: #eee;
+      }
 
-    .app {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
+      .app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
 
-    .header {
-      padding: 12px 20px;
-      background: #16213e;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+      .header {
+        padding: 12px 20px;
+        background: #16213e;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
 
-    .video-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 8px;
-    }
+      .video-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 8px;
+      }
 
-    .video-container {
-      position: relative;
-      background: #0f0f23;
-      border-radius: 8px;
-      overflow: hidden;
-    }
+      .video-container {
+        position: relative;
+        background: #0f0f23;
+        border-radius: 8px;
+        overflow: hidden;
+      }
 
-    .video-container video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+      .video-container video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
 
-    .video-label {
-      position: absolute;
-      bottom: 8px;
-      left: 8px;
-      background: rgba(0,0,0,0.6);
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
+      .video-label {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
 
-    .toolbar {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      padding: 16px;
-      background: #16213e;
-    }
+      .toolbar {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        padding: 16px;
+        background: #16213e;
+      }
 
-    .toolbar button {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 50px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
+      .toolbar button {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 50px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
 
-    .btn-primary { background: #0f3460; color: white; }
-    .btn-danger { background: #e94560; color: white; }
-    .btn-secondary { background: #333; color: white; }
+      .btn-primary {
+        background: #0f3460;
+        color: white;
+      }
+      .btn-danger {
+        background: #e94560;
+        color: white;
+      }
+      .btn-secondary {
+        background: #333;
+        color: white;
+      }
 
-    .chat-panel {
-      position: fixed;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 300px;
-      background: #16213e;
-      display: flex;
-      flex-direction: column;
-      transform: translateX(100%);
-      transition: transform 0.3s;
-    }
+      .chat-panel {
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 300px;
+        background: #16213e;
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 0.3s;
+      }
 
-    .chat-panel.open { transform: translateX(0); }
+      .chat-panel.open {
+        transform: translateX(0);
+      }
 
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-    }
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+      }
 
-    .chat-input {
-      display: flex;
-      padding: 12px;
-      gap: 8px;
-    }
+      .chat-input {
+        display: flex;
+        padding: 12px;
+        gap: 8px;
+      }
 
-    .chat-input input {
-      flex: 1;
-      padding: 8px;
-      border: 1px solid #333;
-      border-radius: 4px;
-      background: #0f0f23;
-      color: white;
-    }
+      .chat-input input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #333;
+        border-radius: 4px;
+        background: #0f0f23;
+        color: white;
+      }
 
-    .stats-panel {
-      position: fixed;
-      left: 10px;
-      bottom: 80px;
-      background: rgba(0,0,0,0.8);
-      padding: 12px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 11px;
-      display: none;
-    }
+      .stats-panel {
+        position: fixed;
+        left: 10px;
+        bottom: 80px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 12px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 11px;
+        display: none;
+      }
 
-    .stats-panel.visible { display: block; }
+      .stats-panel.visible {
+        display: block;
+      }
 
-    .join-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      gap: 16px;
-    }
+      .join-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        gap: 16px;
+      }
 
-    .join-screen input {
-      padding: 12px 20px;
-      border: 1px solid #333;
-      border-radius: 8px;
-      background: #0f0f23;
-      color: white;
-      font-size: 16px;
-      width: 300px;
-    }
-  </style>
-</head>
-<body>
-  <div id="joinScreen" class="join-screen">
-    <h1>WebRTC Video Chat</h1>
-    <input type="text" id="roomInput" placeholder="Enter room name" />
-    <button class="btn-primary" id="joinBtn" style="padding:12px 40px;font-size:16px">
-      Join Room
-    </button>
-  </div>
-
-  <div id="callScreen" class="app" style="display:none">
-    <div class="header">
-      <span>Room: <strong id="roomName"></strong></span>
-      <span id="connectionState">Waiting for peer...</span>
+      .join-screen input {
+        padding: 12px 20px;
+        border: 1px solid #333;
+        border-radius: 8px;
+        background: #0f0f23;
+        color: white;
+        font-size: 16px;
+        width: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="joinScreen" class="join-screen">
+      <h1>WebRTC Video Chat</h1>
+      <input type="text" id="roomInput" placeholder="Enter room name" />
+      <button
+        class="btn-primary"
+        id="joinBtn"
+        style="padding:12px 40px;font-size:16px"
+      >
+        Join Room
+      </button>
     </div>
 
-    <div class="video-grid">
-      <div class="video-container">
-        <video id="localVideo" autoplay playsinline muted></video>
-        <span class="video-label">You</span>
+    <div id="callScreen" class="app" style="display:none">
+      <div class="header">
+        <span>Room: <strong id="roomName"></strong></span>
+        <span id="connectionState">Waiting for peer...</span>
       </div>
-      <div class="video-container">
-        <video id="remoteVideo" autoplay playsinline></video>
-        <span class="video-label">Remote</span>
+
+      <div class="video-grid">
+        <div class="video-container">
+          <video id="localVideo" autoplay playsinline muted></video>
+          <span class="video-label">You</span>
+        </div>
+        <div class="video-container">
+          <video id="remoteVideo" autoplay playsinline></video>
+          <span class="video-label">Remote</span>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn-secondary" id="toggleAudio">Mute Audio</button>
+        <button class="btn-secondary" id="toggleVideo">Mute Video</button>
+        <button class="btn-secondary" id="shareScreen">Share Screen</button>
+        <button class="btn-secondary" id="toggleChat">Chat</button>
+        <button class="btn-secondary" id="toggleStats">Stats</button>
+        <button class="btn-danger" id="hangUp">Hang Up</button>
+      </div>
+
+      <div class="chat-panel" id="chatPanel">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+          <input type="text" id="chatInput" placeholder="Type a message..." />
+          <button class="btn-primary" id="chatSend">Send</button>
+        </div>
+      </div>
+
+      <div class="stats-panel" id="statsPanel">
+        <div>RTT: <span id="statRtt">-</span>ms</div>
+        <div>
+          Video: <span id="statResolution">-</span> @
+          <span id="statFps">-</span>fps
+        </div>
+        <div>Packets lost: <span id="statLost">-</span></div>
+        <div>Jitter: <span id="statJitter">-</span>ms</div>
       </div>
     </div>
 
-    <div class="toolbar">
-      <button class="btn-secondary" id="toggleAudio">Mute Audio</button>
-      <button class="btn-secondary" id="toggleVideo">Mute Video</button>
-      <button class="btn-secondary" id="shareScreen">Share Screen</button>
-      <button class="btn-secondary" id="toggleChat">Chat</button>
-      <button class="btn-secondary" id="toggleStats">Stats</button>
-      <button class="btn-danger" id="hangUp">Hang Up</button>
-    </div>
+    <script src="webrtc-client.js"></script>
+    <script src="stats-monitor.js"></script>
+    <script>
+      const client = new WebRTCClient();
+      const monitor = new StatsMonitor(client);
 
-    <div class="chat-panel" id="chatPanel">
-      <div class="chat-messages" id="chatMessages"></div>
-      <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="Type a message..." />
-        <button class="btn-primary" id="chatSend">Send</button>
-      </div>
-    </div>
+      const joinBtn = document.getElementById('joinBtn');
+      const roomInput = document.getElementById('roomInput');
 
-    <div class="stats-panel" id="statsPanel">
-      <div>RTT: <span id="statRtt">-</span>ms</div>
-      <div>Video: <span id="statResolution">-</span> @ <span id="statFps">-</span>fps</div>
-      <div>Packets lost: <span id="statLost">-</span></div>
-      <div>Jitter: <span id="statJitter">-</span>ms</div>
-    </div>
-  </div>
+      joinBtn.addEventListener('click', async () => {
+        const room = roomInput.value.trim();
+        if (!room) return;
 
-  <script src="webrtc-client.js"></script>
-  <script src="stats-monitor.js"></script>
-  <script>
-    const client = new WebRTCClient();
-    const monitor = new StatsMonitor(client);
+        // Capture local media
+        const stream = await client.captureMedia({
+          video: { width: 1280, height: 720 },
+          audio: true,
+        });
+        document.getElementById('localVideo').srcObject = stream;
 
-    const joinBtn = document.getElementById('joinBtn');
-    const roomInput = document.getElementById('roomInput');
+        // Connect signaling
+        const wsUrl = `ws://${window.location.host}`;
+        client.connectSignaling(wsUrl, room);
 
-    joinBtn.addEventListener('click', async () => {
-      const room = roomInput.value.trim();
-      if (!room) return;
+        // Handle remote stream
+        client.onRemoteStream = (remoteStream) => {
+          document.getElementById('remoteVideo').srcObject = remoteStream;
+        };
 
-      // Capture local media
-      const stream = await client.captureMedia({
-        video: { width: 1280, height: 720 },
-        audio: true,
+        // Handle connection state
+        client.onConnectionStateChange = (state) => {
+          document.getElementById('connectionState').textContent = state;
+        };
+
+        // Handle incoming chat messages
+        client.onDataMessage = (text) => {
+          appendChatMessage('Remote', text);
+        };
+
+        // Show call screen
+        document.getElementById('joinScreen').style.display = 'none';
+        document.getElementById('callScreen').style.display = 'flex';
+        document.getElementById('roomName').textContent = room;
+
+        // Start stats monitoring
+        monitor.onStatsUpdate = (report) => {
+          document.getElementById('statRtt').textContent =
+            report.connection.rtt.toFixed(0);
+          document.getElementById('statResolution').textContent =
+            report.video.resolution;
+          document.getElementById('statFps').textContent =
+            report.video.frameRate;
+          document.getElementById('statLost').textContent =
+            report.video.packetsLost || 0;
+          document.getElementById('statJitter').textContent = (
+            (report.video.jitter || 0) * 1000
+          ).toFixed(1);
+        };
+        monitor.start();
       });
-      document.getElementById('localVideo').srcObject = stream;
 
-      // Connect signaling
-      const wsUrl = `ws://${window.location.host}`;
-      client.connectSignaling(wsUrl, room);
+      // Toolbar handlers
+      document
+        .getElementById('toggleAudio')
+        .addEventListener('click', function () {
+          const audioTrack = client.localStream?.getAudioTracks()[0];
+          if (audioTrack) {
+            audioTrack.enabled = !audioTrack.enabled;
+            this.textContent = audioTrack.enabled
+              ? 'Mute Audio'
+              : 'Unmute Audio';
+          }
+        });
 
-      // Handle remote stream
-      client.onRemoteStream = (remoteStream) => {
-        document.getElementById('remoteVideo').srcObject = remoteStream;
-      };
+      document
+        .getElementById('toggleVideo')
+        .addEventListener('click', function () {
+          const videoTrack = client.localStream?.getVideoTracks()[0];
+          if (videoTrack) {
+            videoTrack.enabled = !videoTrack.enabled;
+            this.textContent = videoTrack.enabled
+              ? 'Mute Video'
+              : 'Unmute Video';
+          }
+        });
 
-      // Handle connection state
-      client.onConnectionStateChange = (state) => {
-        document.getElementById('connectionState').textContent = state;
-      };
+      document.getElementById('shareScreen').addEventListener('click', () => {
+        client.startScreenShare();
+      });
 
-      // Handle incoming chat messages
-      client.onDataMessage = (text) => {
-        appendChatMessage('Remote', text);
-      };
+      document.getElementById('toggleChat').addEventListener('click', () => {
+        document.getElementById('chatPanel').classList.toggle('open');
+      });
 
-      // Show call screen
-      document.getElementById('joinScreen').style.display = 'none';
-      document.getElementById('callScreen').style.display = 'flex';
-      document.getElementById('roomName').textContent = room;
+      document.getElementById('toggleStats').addEventListener('click', () => {
+        document.getElementById('statsPanel').classList.toggle('visible');
+      });
 
-      // Start stats monitoring
-      monitor.onStatsUpdate = (report) => {
-        document.getElementById('statRtt').textContent =
-          report.connection.rtt.toFixed(0);
-        document.getElementById('statResolution').textContent =
-          report.video.resolution;
-        document.getElementById('statFps').textContent =
-          report.video.frameRate;
-        document.getElementById('statLost').textContent =
-          report.video.packetsLost || 0;
-        document.getElementById('statJitter').textContent =
-          ((report.video.jitter || 0) * 1000).toFixed(1);
-      };
-      monitor.start();
-    });
+      document.getElementById('hangUp').addEventListener('click', () => {
+        monitor.stop();
+        client.disconnect();
+        window.location.reload();
+      });
 
-    // Toolbar handlers
-    document.getElementById('toggleAudio').addEventListener('click', function() {
-      const audioTrack = client.localStream?.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        this.textContent = audioTrack.enabled ? 'Mute Audio' : 'Unmute Audio';
+      // Chat
+      document.getElementById('chatSend').addEventListener('click', sendChat);
+      document.getElementById('chatInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendChat();
+      });
+
+      function sendChat() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        client.sendMessage(text);
+        appendChatMessage('You', text);
+        input.value = '';
       }
-    });
 
-    document.getElementById('toggleVideo').addEventListener('click', function() {
-      const videoTrack = client.localStream?.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        this.textContent = videoTrack.enabled ? 'Mute Video' : 'Unmute Video';
+      function appendChatMessage(sender, text) {
+        const container = document.getElementById('chatMessages');
+        const msg = document.createElement('div');
+        msg.style.marginBottom = '8px';
+        msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        container.appendChild(msg);
+        container.scrollTop = container.scrollHeight;
       }
-    });
-
-    document.getElementById('shareScreen').addEventListener('click', () => {
-      client.startScreenShare();
-    });
-
-    document.getElementById('toggleChat').addEventListener('click', () => {
-      document.getElementById('chatPanel').classList.toggle('open');
-    });
-
-    document.getElementById('toggleStats').addEventListener('click', () => {
-      document.getElementById('statsPanel').classList.toggle('visible');
-    });
-
-    document.getElementById('hangUp').addEventListener('click', () => {
-      monitor.stop();
-      client.disconnect();
-      window.location.reload();
-    });
-
-    // Chat
-    document.getElementById('chatSend').addEventListener('click', sendChat);
-    document.getElementById('chatInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendChat();
-    });
-
-    function sendChat() {
-      const input = document.getElementById('chatInput');
-      const text = input.value.trim();
-      if (!text) return;
-      client.sendMessage(text);
-      appendChatMessage('You', text);
-      input.value = '';
-    }
-
-    function appendChatMessage(sender, text) {
-      const container = document.getElementById('chatMessages');
-      const msg = document.createElement('div');
-      msg.style.marginBottom = '8px';
-      msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
-      container.appendChild(msg);
-      container.scrollTop = container.scrollHeight;
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
 ```
 
@@ -1570,40 +1634,106 @@ nms.on('postPublish', (id, streamPath) => {
 
   // FFmpeg transcoding command
   const ffmpegArgs = [
-    '-i', `rtmp://127.0.0.1:1935${streamPath}`,
+    '-i',
+    `rtmp://127.0.0.1:1935${streamPath}`,
 
     // 720p variant
-    '-map', '0:v', '-map', '0:a',
-    '-c:v:0', 'libx264', '-b:v:0', '2500k',
-    '-s:v:0', '1280x720', '-preset', 'veryfast',
-    '-g', '48', '-keyint_min', '48', '-sc_threshold', '0',
-    '-c:a:0', 'aac', '-b:a:0', '128k', '-ar', '44100',
+    '-map',
+    '0:v',
+    '-map',
+    '0:a',
+    '-c:v:0',
+    'libx264',
+    '-b:v:0',
+    '2500k',
+    '-s:v:0',
+    '1280x720',
+    '-preset',
+    'veryfast',
+    '-g',
+    '48',
+    '-keyint_min',
+    '48',
+    '-sc_threshold',
+    '0',
+    '-c:a:0',
+    'aac',
+    '-b:a:0',
+    '128k',
+    '-ar',
+    '44100',
 
     // 480p variant
-    '-map', '0:v', '-map', '0:a',
-    '-c:v:1', 'libx264', '-b:v:1', '1200k',
-    '-s:v:1', '854x480', '-preset', 'veryfast',
-    '-g', '48', '-keyint_min', '48', '-sc_threshold', '0',
-    '-c:a:1', 'aac', '-b:a:1', '96k', '-ar', '44100',
+    '-map',
+    '0:v',
+    '-map',
+    '0:a',
+    '-c:v:1',
+    'libx264',
+    '-b:v:1',
+    '1200k',
+    '-s:v:1',
+    '854x480',
+    '-preset',
+    'veryfast',
+    '-g',
+    '48',
+    '-keyint_min',
+    '48',
+    '-sc_threshold',
+    '0',
+    '-c:a:1',
+    'aac',
+    '-b:a:1',
+    '96k',
+    '-ar',
+    '44100',
 
     // 360p variant
-    '-map', '0:v', '-map', '0:a',
-    '-c:v:2', 'libx264', '-b:v:2', '600k',
-    '-s:v:2', '640x360', '-preset', 'veryfast',
-    '-g', '48', '-keyint_min', '48', '-sc_threshold', '0',
-    '-c:a:2', 'aac', '-b:a:2', '64k', '-ar', '44100',
+    '-map',
+    '0:v',
+    '-map',
+    '0:a',
+    '-c:v:2',
+    'libx264',
+    '-b:v:2',
+    '600k',
+    '-s:v:2',
+    '640x360',
+    '-preset',
+    'veryfast',
+    '-g',
+    '48',
+    '-keyint_min',
+    '48',
+    '-sc_threshold',
+    '0',
+    '-c:a:2',
+    'aac',
+    '-b:a:2',
+    '64k',
+    '-ar',
+    '44100',
 
     // HLS output with master playlist
-    '-f', 'hls',
-    '-hls_time', '4',
-    '-hls_list_size', '5',
-    '-hls_flags', 'delete_segments+independent_segments',
-    '-hls_segment_type', 'fmp4',
-    '-master_pl_name', 'master.m3u8',
+    '-f',
+    'hls',
+    '-hls_time',
+    '4',
+    '-hls_list_size',
+    '5',
+    '-hls_flags',
+    'delete_segments+independent_segments',
+    '-hls_segment_type',
+    'fmp4',
+    '-master_pl_name',
+    'master.m3u8',
 
-    '-var_stream_map', 'v:0,a:0 v:1,a:1 v:2,a:2',
+    '-var_stream_map',
+    'v:0,a:0 v:1,a:1 v:2,a:2',
 
-    '-hls_segment_filename', `${outputDir}/v%v/seg_%03d.m4s`,
+    '-hls_segment_filename',
+    `${outputDir}/v%v/seg_%03d.m4s`,
     `${outputDir}/v%v/index.m3u8`,
   ];
 
@@ -1665,19 +1795,22 @@ nms.run();
 const app = express();
 
 // Serve HLS segments with proper CORS and content types
-app.use('/live', express.static(HLS_ROOT, {
-  setHeaders: (res, filePath) => {
-    res.set('Access-Control-Allow-Origin', '*');
+app.use(
+  '/live',
+  express.static(HLS_ROOT, {
+    setHeaders: (res, filePath) => {
+      res.set('Access-Control-Allow-Origin', '*');
 
-    if (filePath.endsWith('.m3u8')) {
-      res.set('Content-Type', 'application/vnd.apple.mpegurl');
-      res.set('Cache-Control', 'no-cache');
-    } else if (filePath.endsWith('.m4s')) {
-      res.set('Content-Type', 'video/iso.segment');
-      res.set('Cache-Control', 'max-age=300');
-    }
-  },
-}));
+      if (filePath.endsWith('.m3u8')) {
+        res.set('Content-Type', 'application/vnd.apple.mpegurl');
+        res.set('Cache-Control', 'no-cache');
+      } else if (filePath.endsWith('.m4s')) {
+        res.set('Content-Type', 'video/iso.segment');
+        res.set('Cache-Control', 'max-age=300');
+      }
+    },
+  })
+);
 
 // Dashboard API
 app.get('/api/streams', (req, res) => {
@@ -1855,9 +1988,12 @@ function startRecording(streamKey, streamPath) {
   const outputFile = path.join(recordDir, `${streamKey}_${timestamp}.mp4`);
 
   const recorder = spawn('ffmpeg', [
-    '-i', `rtmp://127.0.0.1:1935${streamPath}`,
-    '-c', 'copy',
-    '-movflags', '+faststart',
+    '-i',
+    `rtmp://127.0.0.1:1935${streamPath}`,
+    '-c',
+    'copy',
+    '-movflags',
+    '+faststart',
     outputFile,
   ]);
 
@@ -1965,7 +2101,7 @@ app.get('/live/:stream/master.m3u8', (req, res) => {
 
   res.set({
     'Content-Type': 'application/vnd.apple.mpegurl',
-    'Cache-Control': 'no-cache',  // Manifest should not be cached long
+    'Cache-Control': 'no-cache', // Manifest should not be cached long
     'X-Origin-Hit': originHits.toString(),
   });
 
@@ -1974,7 +2110,10 @@ app.get('/live/:stream/master.m3u8', (req, res) => {
 
 app.get('/live/:stream/:variant/index.m3u8', (req, res) => {
   const filePath = path.join(
-    CONTENT_ROOT, req.params.stream, req.params.variant, 'index.m3u8'
+    CONTENT_ROOT,
+    req.params.stream,
+    req.params.variant,
+    'index.m3u8'
   );
 
   if (!fs.existsSync(filePath)) {
@@ -1983,7 +2122,7 @@ app.get('/live/:stream/:variant/index.m3u8', (req, res) => {
 
   res.set({
     'Content-Type': 'application/vnd.apple.mpegurl',
-    'Cache-Control': 'max-age=1',  // Short cache for live manifests
+    'Cache-Control': 'max-age=1', // Short cache for live manifests
     'X-Origin-Hit': originHits.toString(),
   });
 
@@ -1992,7 +2131,10 @@ app.get('/live/:stream/:variant/index.m3u8', (req, res) => {
 
 app.get('/live/:stream/:variant/:segment', (req, res) => {
   const filePath = path.join(
-    CONTENT_ROOT, req.params.stream, req.params.variant, req.params.segment
+    CONTENT_ROOT,
+    req.params.stream,
+    req.params.variant,
+    req.params.segment
   );
 
   if (!fs.existsSync(filePath)) {
@@ -2148,7 +2290,10 @@ function createEdgeServer(edgePort, upstreamHost, upstreamPort, cacheSizeMB) {
       const cacheControl = headers['cache-control'] || '';
       let ttl = 0;
 
-      if (cacheControl.includes('no-cache') || cacheControl.includes('no-store')) {
+      if (
+        cacheControl.includes('no-cache') ||
+        cacheControl.includes('no-store')
+      ) {
         ttl = 0;
       } else {
         const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
@@ -2232,7 +2377,9 @@ app.use(async (req, res) => {
     const stats = await Promise.all(
       edges.map(async (edge) => {
         try {
-          const resp = await fetch(`http://${edge.host}:${edge.statsPort}/stats`);
+          const resp = await fetch(
+            `http://${edge.host}:${edge.statsPort}/stats`
+          );
           return resp.json();
         } catch {
           return { edgeId: `edge-${edge.port}`, error: 'unreachable' };
@@ -2257,7 +2404,7 @@ app.use(async (req, res) => {
     res.status(response.status).send(buffer);
   } catch (err) {
     // Try next edge on failure
-    const fallback = edges[(roundRobinIndex) % edges.length];
+    const fallback = edges[roundRobinIndex % edges.length];
     const fallbackUrl = `http://${fallback.host}:${fallback.port}${req.path}`;
 
     try {
@@ -2447,12 +2594,14 @@ curl http://localhost:3000/cdn-stats
 ### Common Issues and Solutions
 
 **Video plays audio but shows black screen**:
+
 - Codec mismatch: Verify the MIME type in `addSourceBuffer()` matches the actual
   codec in the segments. Use `ffprobe -show_streams` to check.
 - Missing init segment: The initialization segment must be appended before any media
   segments.
 
 **WebRTC connection fails to establish**:
+
 - Check ICE candidates: Open `chrome://webrtc-internals` and verify candidates are
   being gathered and exchanged.
 - NAT issues: If both peers are behind symmetric NATs, STUN alone will not work.
@@ -2461,17 +2610,20 @@ curl http://localhost:3000/cdn-stats
   compare.
 
 **HLS playback has high latency**:
+
 - Reduce segment duration in FFmpeg (`-hls_time 2` or lower).
 - Reduce the playlist size (`-hls_list_size 3`).
 - Enable low-latency mode in hls.js.
 - Check that manifests are not being cached too aggressively by the CDN.
 
 **Edge cache not caching segments**:
+
 - Verify `Cache-Control` headers from origin include `max-age`.
 - Check that the edge's TTL parsing is correct.
 - Confirm the cache size limit is not being hit.
 
 **FFmpeg transcoding is too slow (real-time ratio < 1x)**:
+
 - Use `-preset veryfast` or `-preset ultrafast`.
 - Enable hardware acceleration: `-c:v h264_videotoolbox` (macOS),
   `-c:v h264_nvenc` (NVIDIA), `-c:v h264_vaapi` (Linux/Intel).
@@ -2506,13 +2658,13 @@ time curl -o /dev/null -s http://localhost:3000/live/test/v0/seg_001.m4s
 These four projects plus the integration exercise cover the full spectrum of media
 engineering:
 
-| Project | Stack Layer | Core Concepts |
-|---------|------------|---------------|
-| Video Player | Client/Render | MSE, ABR, buffering, segment parsing |
-| WebRTC Chat | Transport/Real-time | Peer connections, ICE, signaling, data channels |
-| Streaming Server | Ingest/Encode/Package | RTMP, transcoding, HLS packaging |
-| Mini CDN | Delivery/Infrastructure | Caching, routing, origin shielding |
-| Integration | Full stack | End-to-end pipeline, system design |
+| Project          | Stack Layer             | Core Concepts                                   |
+| ---------------- | ----------------------- | ----------------------------------------------- |
+| Video Player     | Client/Render           | MSE, ABR, buffering, segment parsing            |
+| WebRTC Chat      | Transport/Real-time     | Peer connections, ICE, signaling, data channels |
+| Streaming Server | Ingest/Encode/Package   | RTMP, transcoding, HLS packaging                |
+| Mini CDN         | Delivery/Infrastructure | Caching, routing, origin shielding              |
+| Integration      | Full stack              | End-to-end pipeline, system design              |
 
 By completing these projects, you have:
 

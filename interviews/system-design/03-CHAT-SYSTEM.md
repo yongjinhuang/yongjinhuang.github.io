@@ -1,6 +1,7 @@
 # Design a Chat System (WhatsApp/Slack)
 
 ## Table of Contents
+
 1. [Requirements Clarification](#1-requirements-clarification)
 2. [Communication Protocols](#2-communication-protocols)
 3. [High-Level Architecture](#3-high-level-architecture)
@@ -20,29 +21,29 @@
 
 ### Functional Requirements
 
-| Feature              | Description                                                  |
-|----------------------|--------------------------------------------------------------|
-| 1-on-1 Chat         | Real-time messaging between two users                        |
-| Group Chat           | Group conversations supporting up to 500 members             |
-| Online/Offline       | Show user presence status in real time                       |
-| Read Receipts        | Sent, delivered, and read indicators per message             |
-| Media Sharing        | Images, videos, files, voice messages                        |
-| Message History      | Persistent storage with scroll-back / search                 |
-| Push Notifications   | Notify offline users of new messages                         |
-| Multi-device Sync    | Messages available on phone, tablet, desktop simultaneously  |
-| Typing Indicators    | Show when a contact is typing                                |
+| Feature            | Description                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| 1-on-1 Chat        | Real-time messaging between two users                       |
+| Group Chat         | Group conversations supporting up to 500 members            |
+| Online/Offline     | Show user presence status in real time                      |
+| Read Receipts      | Sent, delivered, and read indicators per message            |
+| Media Sharing      | Images, videos, files, voice messages                       |
+| Message History    | Persistent storage with scroll-back / search                |
+| Push Notifications | Notify offline users of new messages                        |
+| Multi-device Sync  | Messages available on phone, tablet, desktop simultaneously |
+| Typing Indicators  | Show when a contact is typing                               |
 
 ### Non-Functional Requirements
 
-| Requirement      | Target                                                        |
-|------------------|---------------------------------------------------------------|
-| Latency          | < 200ms end-to-end for message delivery                       |
-| Reliability      | No message loss -- guaranteed delivery                        |
-| Ordering         | Messages appear in the correct order within a conversation    |
-| Offline Support  | Queue messages for offline users, deliver when they reconnect |
-| Availability     | 99.99% uptime (< 52 minutes downtime/year)                   |
-| Security         | End-to-end encryption for 1-on-1, TLS everywhere             |
-| Consistency      | Eventual consistency acceptable (within seconds)              |
+| Requirement     | Target                                                        |
+| --------------- | ------------------------------------------------------------- |
+| Latency         | < 200ms end-to-end for message delivery                       |
+| Reliability     | No message loss -- guaranteed delivery                        |
+| Ordering        | Messages appear in the correct order within a conversation    |
+| Offline Support | Queue messages for offline users, deliver when they reconnect |
+| Availability    | 99.99% uptime (< 52 minutes downtime/year)                    |
+| Security        | End-to-end encryption for 1-on-1, TLS everywhere              |
+| Consistency     | Eventual consistency acceptable (within seconds)              |
 
 ### Scale Estimates
 
@@ -95,22 +96,26 @@ Media egress (with CDN):    Distributed, ~10 GB/s at origin
 ### Why Each Falls Short (Except WebSocket)
 
 **HTTP Polling:**
+
 - Client sends requests at fixed intervals (e.g., every 3 seconds).
 - Wasteful: most responses are empty; generates enormous load at scale.
 - At 150M connections polling every 3s = 50M requests/second of pure overhead.
 
 **Long Polling:**
+
 - Client opens a request; server holds it until data is available or timeout.
 - Better than polling, but still creates a new TCP connection per message cycle.
 - Not truly bidirectional: client must send a new request after each response.
 - Timeout management is complex.
 
 **Server-Sent Events (SSE):**
+
 - Unidirectional: only server-to-client. Client still needs HTTP for sending.
 - Good for feeds/notifications, but chat requires true bidirectional flow.
 - Limited to ~6 concurrent connections per domain in older browsers.
 
 **WebSocket (Winner):**
+
 - Full-duplex, persistent TCP connection.
 - Minimal overhead after handshake (~2 bytes per frame header).
 - True bidirectional communication on a single connection.
@@ -272,19 +277,19 @@ Client                                         Server
 
 ### Component Responsibilities
 
-| Component            | Responsibility                                            |
-|----------------------|-----------------------------------------------------------|
-| Load Balancer (L4)   | Route TCP connections; sticky sessions for WebSocket      |
-| Chat Servers         | Manage WebSocket connections, relay messages in real time  |
-| API Servers          | Handle REST requests: auth, profiles, groups, uploads     |
-| Service Discovery    | Map user_id -> chat_server_id for message routing         |
-| Kafka                | Decouple producers from consumers; buffer spikes          |
-| Message Storage      | Persist messages to Cassandra; index for retrieval        |
-| Group Fan-Out        | Expand group message to individual deliveries             |
-| Presence Service     | Track online/offline; publish status changes              |
-| Push Notification    | Deliver to offline users via APNs (iOS) / FCM (Android)  |
-| Redis                | Cache sessions, presence, recent conversations            |
-| S3 + CDN             | Store and distribute media files globally                 |
+| Component          | Responsibility                                            |
+| ------------------ | --------------------------------------------------------- |
+| Load Balancer (L4) | Route TCP connections; sticky sessions for WebSocket      |
+| Chat Servers       | Manage WebSocket connections, relay messages in real time |
+| API Servers        | Handle REST requests: auth, profiles, groups, uploads     |
+| Service Discovery  | Map user_id -> chat_server_id for message routing         |
+| Kafka              | Decouple producers from consumers; buffer spikes          |
+| Message Storage    | Persist messages to Cassandra; index for retrieval        |
+| Group Fan-Out      | Expand group message to individual deliveries             |
+| Presence Service   | Track online/offline; publish status changes              |
+| Push Notification  | Deliver to offline users via APNs (iOS) / FCM (Android)   |
+| Redis              | Cache sessions, presence, recent conversations            |
+| S3 + CDN           | Store and distribute media files globally                 |
 
 ---
 
@@ -293,10 +298,10 @@ Client                                         Server
 ### Why Cassandra / HBase for Messages?
 
 | Characteristic      | Cassandra Fit                                              |
-|---------------------|------------------------------------------------------------|
+| ------------------- | ---------------------------------------------------------- |
 | Write-heavy         | 463K writes/sec -- Cassandra excels at sequential writes   |
 | Time-series data    | Messages are naturally time-ordered; perfect for LSM trees |
-| Partition tolerance  | AP system; tolerates network partitions gracefully         |
+| Partition tolerance | AP system; tolerates network partitions gracefully         |
 | Linear scalability  | Add nodes to handle more throughput, no resharding pain    |
 | No complex joins    | Chat queries are simple: get messages by conversation+time |
 | TTL support         | Auto-expire ephemeral messages (stories, disappearing)     |
@@ -369,6 +374,7 @@ CREATE TABLE messages (
 ```
 
 **Partition Strategy:**
+
 - **Partition key**: `conversation_id` -- all messages in a conversation on same node.
 - **Clustering key**: `message_id` (DESC) -- newest messages retrieved first.
 - For very active groups, use compound partition: `(conversation_id, time_bucket)` where `time_bucket = message_id / 1_000_000` to prevent hot partitions.

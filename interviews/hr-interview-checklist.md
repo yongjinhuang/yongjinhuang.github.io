@@ -272,14 +272,14 @@ Use these to buy time:
 
 Keep these on a sticky note during calls:
 
-| Metric | Details |
-|--------|---------|
-| DB connections | 4k → 1k (Shopee billing API) |
-| QPS | 2k → 5k (Shopee billing API) |
-| Deployment defects | Down 30% (Shopee code reviews) |
-| Receipt errors | Down 50% (Tarro POS) |
-| Data retrieval time | Down 30% (Tarro menu migration) |
-| New app integration | 200% faster (WildData payment module) |
-| Tech talks | 5 talks, 30-60 attendees each (Shopee) |
-| Years of experience | ~8 years full-stack |
-| Languages | Go, Python, Java, TypeScript, SQL |
+| Metric              | Details                                |
+| ------------------- | -------------------------------------- |
+| DB connections      | 4k → 1k (Shopee billing API)           |
+| QPS                 | 2k → 5k (Shopee billing API)           |
+| Deployment defects  | Down 30% (Shopee code reviews)         |
+| Receipt errors      | Down 50% (Tarro POS)                   |
+| Data retrieval time | Down 30% (Tarro menu migration)        |
+| New app integration | 200% faster (WildData payment module)  |
+| Tech talks          | 5 talks, 30-60 attendees each (Shopee) |
+| Years of experience | ~8 years full-stack                    |
+| Languages           | Go, Python, Java, TypeScript, SQL      |

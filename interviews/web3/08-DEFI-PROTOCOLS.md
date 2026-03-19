@@ -45,6 +45,7 @@ This chapter covers the core DeFi primitives: automated market makers (AMMs), le
 ### 1.1 The Problem AMMs Solve
 
 Traditional exchanges use **order books** — buyers and sellers post limit orders, and a matching engine pairs them. This requires:
+
 - High throughput (millions of orders/second)
 - Market makers to provide liquidity
 - Low latency (microseconds)
@@ -222,12 +223,12 @@ This mechanism ensures the protocol remains solvent even during crashes.
 
 ### 2.3 Key Lending Protocols
 
-| Protocol | Model | Special Feature |
-|----------|-------|-----------------|
-| Aave V3 | Pool-based | Flash loans, multi-chain, e-mode |
-| Compound V3 | Pool-based (single asset) | One borrow asset per market |
-| MakerDAO | CDP (Collateralized Debt Position) | Mints DAI stablecoin |
-| Morpho | Peer-to-peer matching | Better rates by matching lenders to borrowers |
+| Protocol    | Model                              | Special Feature                               |
+| ----------- | ---------------------------------- | --------------------------------------------- |
+| Aave V3     | Pool-based                         | Flash loans, multi-chain, e-mode              |
+| Compound V3 | Pool-based (single asset)          | One borrow asset per market                   |
+| MakerDAO    | CDP (Collateralized Debt Position) | Mints DAI stablecoin                          |
+| Morpho      | Peer-to-peer matching              | Better rates by matching lenders to borrowers |
 
 ---
 
@@ -423,13 +424,13 @@ contract MyFlashLoan is FlashLoanSimpleReceiverBase {
 
 ### 5.3 Flash Loan Use Cases
 
-| Use Case | Description |
-|----------|-------------|
-| Arbitrage | Buy low on DEX A, sell high on DEX B |
-| Liquidation | Borrow to repay undercollateralized positions |
-| Collateral swap | Change collateral type without closing position |
-| Self-liquidation | Liquidate your own position to avoid penalty |
-| Governance attacks | Borrow governance tokens, vote, repay |
+| Use Case           | Description                                     |
+| ------------------ | ----------------------------------------------- |
+| Arbitrage          | Buy low on DEX A, sell high on DEX B            |
+| Liquidation        | Borrow to repay undercollateralized positions   |
+| Collateral swap    | Change collateral type without closing position |
+| Self-liquidation   | Liquidate your own position to avoid penalty    |
+| Governance attacks | Borrow governance tokens, vote, repay           |
 
 ---
 

@@ -4,86 +4,86 @@ A recommendation system suggests relevant items (products, videos, articles) to 
 
 ## Table Responsibilities
 
-| Table | Purpose | Storage | Key Characteristic |
-|-------|---------|---------|-------------------|
-| **users** | User profiles and learned embeddings | PostgreSQL | Stores static attributes and trained embedding vectors |
-| **items** | Item catalog with embeddings and freshness | PostgreSQL | Item metadata plus ML-generated features |
-| **interactions** | Raw user-item event stream | Kafka -> PostgreSQL/S3 | Append-only event log, source of truth for training |
-| **user_features_online** | Real-time user signals | Redis | Sub-millisecond reads, updated per event |
-| **item_features_batch** | Aggregated item statistics | PostgreSQL / Redis | Hourly batch-computed, cached for serving |
-| **model_registry** | Trained model versions and metadata | PostgreSQL + S3 | Tracks model lineage, A/B test assignments |
+| Table                    | Purpose                                    | Storage                | Key Characteristic                                     |
+| ------------------------ | ------------------------------------------ | ---------------------- | ------------------------------------------------------ |
+| **users**                | User profiles and learned embeddings       | PostgreSQL             | Stores static attributes and trained embedding vectors |
+| **items**                | Item catalog with embeddings and freshness | PostgreSQL             | Item metadata plus ML-generated features               |
+| **interactions**         | Raw user-item event stream                 | Kafka -> PostgreSQL/S3 | Append-only event log, source of truth for training    |
+| **user_features_online** | Real-time user signals                     | Redis                  | Sub-millisecond reads, updated per event               |
+| **item_features_batch**  | Aggregated item statistics                 | PostgreSQL / Redis     | Hourly batch-computed, cached for serving              |
+| **model_registry**       | Trained model versions and metadata        | PostgreSQL + S3        | Tracks model lineage, A/B test assignments             |
 
 ## Detailed Field Descriptions
 
 ### users
 
-| Field | Type | Description |
-|-------|------|-------------|
-| user_id | BIGINT, PK | Unique user identifier. |
-| demographics_json | JSONB | Age range, gender, location, language. JSONB because available demographics vary by platform and privacy settings. Used as features in the ranking model. |
-| preferences | TEXT[] | Explicitly stated interests (e.g., selected categories during onboarding). Helps with cold-start recommendations before behavioral data is available. |
-| account_age | INT | Days since account creation. New users get different recommendation strategies (more exploration) than established users (more exploitation). |
-| user_embedding | VECTOR(128) | Learned user representation from the two-tower model. Updated periodically (daily) via batch training. Used for ANN candidate retrieval against item embeddings. |
+| Field             | Type        | Description                                                                                                                                                      |
+| ----------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| user_id           | BIGINT, PK  | Unique user identifier.                                                                                                                                          |
+| demographics_json | JSONB       | Age range, gender, location, language. JSONB because available demographics vary by platform and privacy settings. Used as features in the ranking model.        |
+| preferences       | TEXT[]      | Explicitly stated interests (e.g., selected categories during onboarding). Helps with cold-start recommendations before behavioral data is available.            |
+| account_age       | INT         | Days since account creation. New users get different recommendation strategies (more exploration) than established users (more exploitation).                    |
+| user_embedding    | VECTOR(128) | Learned user representation from the two-tower model. Updated periodically (daily) via batch training. Used for ANN candidate retrieval against item embeddings. |
 
 **Why store `user_embedding` directly on the user row?** During candidate generation, we need to look up the user's embedding and perform ANN search against item embeddings. Storing it on the user record avoids a join. The embedding is updated daily by the training pipeline, not in real-time, so staleness is acceptable for the candidate generation stage.
 
 ### items
 
-| Field | Type | Description |
-|-------|------|-------------|
-| item_id | BIGINT, PK | Unique item identifier. |
-| title | VARCHAR(512) | Item title. Used for content-based features (TF-IDF, title embedding) and display. |
-| category | VARCHAR(100), INDEX | Primary category. Indexed for category-filtered recommendations ("recommend me sci-fi movies"). |
-| metadata_json | JSONB | Flexible item attributes (price, duration, tags, creator, etc.). JSONB accommodates different item types (videos have duration; products have price and color). |
-| item_embedding | VECTOR(128) | Learned item representation from the two-tower model. Indexed in an ANN structure (HNSW) for fast retrieval. |
-| freshness_score | FLOAT | Decaying score based on item age. Newer items get a boost to avoid the cold-start problem where new items never get recommended because they lack interaction data. |
+| Field           | Type                | Description                                                                                                                                                         |
+| --------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| item_id         | BIGINT, PK          | Unique item identifier.                                                                                                                                             |
+| title           | VARCHAR(512)        | Item title. Used for content-based features (TF-IDF, title embedding) and display.                                                                                  |
+| category        | VARCHAR(100), INDEX | Primary category. Indexed for category-filtered recommendations ("recommend me sci-fi movies").                                                                     |
+| metadata_json   | JSONB               | Flexible item attributes (price, duration, tags, creator, etc.). JSONB accommodates different item types (videos have duration; products have price and color).     |
+| item_embedding  | VECTOR(128)         | Learned item representation from the two-tower model. Indexed in an ANN structure (HNSW) for fast retrieval.                                                        |
+| freshness_score | FLOAT               | Decaying score based on item age. Newer items get a boost to avoid the cold-start problem where new items never get recommended because they lack interaction data. |
 
 **Why 128-dimensional embeddings?** This is a common sweet spot. Higher dimensions (256, 512) capture more nuance but increase ANN index size and search latency. Lower dimensions (32, 64) are faster but lose discriminative power. 128 dimensions typically provide good recall at acceptable latency for millions of items.
 
 ### interactions
 
-| Field | Type | Description |
-|-------|------|-------------|
-| user_id | BIGINT, FK -> users, INDEX | Who performed the action. Indexed for per-user history queries during feature engineering. |
-| item_id | BIGINT, FK -> items, INDEX | Which item was interacted with. Indexed for per-item popularity computation. |
-| event_type | VARCHAR(20), INDEX | Type of interaction: view, click, purchase, like, share, add_to_cart. Different events have different weights in the training objective (purchase >> click >> view). |
-| timestamp | TIMESTAMP, INDEX | When the event occurred. Indexed for time-windowed feature computation (e.g., "clicks in the last 7 days"). |
-| duration_sec | INT, NULLABLE | How long the user engaged (e.g., video watch time, time on page). Null for instant events like clicks. A strong implicit signal: watching 90% of a video is a stronger positive than watching 5%. |
+| Field        | Type                       | Description                                                                                                                                                                                       |
+| ------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| user_id      | BIGINT, FK -> users, INDEX | Who performed the action. Indexed for per-user history queries during feature engineering.                                                                                                        |
+| item_id      | BIGINT, FK -> items, INDEX | Which item was interacted with. Indexed for per-item popularity computation.                                                                                                                      |
+| event_type   | VARCHAR(20), INDEX         | Type of interaction: view, click, purchase, like, share, add_to_cart. Different events have different weights in the training objective (purchase >> click >> view).                              |
+| timestamp    | TIMESTAMP, INDEX           | When the event occurred. Indexed for time-windowed feature computation (e.g., "clicks in the last 7 days").                                                                                       |
+| duration_sec | INT, NULLABLE              | How long the user engaged (e.g., video watch time, time on page). Null for instant events like clicks. A strong implicit signal: watching 90% of a video is a stronger positive than watching 5%. |
 
 **Why store all event types in one table?** Training data needs the full interaction sequence. Having separate tables for clicks, views, and purchases would require expensive joins during feature engineering. A single table with `event_type` column enables efficient sequential scans and simple event weighting in the loss function.
 
 ### user_features_online (Redis)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| user_id | STRING, PK | Redis key. Maps to the users table. |
-| session_count | INT | Number of sessions in the current day. Indicates engagement level; highly engaged users can receive more niche recommendations. |
-| rolling_ctr | FLOAT | Click-through rate over the last 100 impressions. Real-time signal for the ranking model. A dropping CTR suggests the current recommendation strategy is not working. |
-| recent_items | LIST | Last 20 items the user interacted with. Used for diversity filtering (do not recommend items the user already saw) and session-based signals. |
+| Field         | Type       | Description                                                                                                                                                           |
+| ------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| user_id       | STRING, PK | Redis key. Maps to the users table.                                                                                                                                   |
+| session_count | INT        | Number of sessions in the current day. Indicates engagement level; highly engaged users can receive more niche recommendations.                                       |
+| rolling_ctr   | FLOAT      | Click-through rate over the last 100 impressions. Real-time signal for the ranking model. A dropping CTR suggests the current recommendation strategy is not working. |
+| recent_items  | LIST       | Last 20 items the user interacted with. Used for diversity filtering (do not recommend items the user already saw) and session-based signals.                         |
 
 **Why Redis for online features?** The ranking model is called for every recommendation request and must return in <50ms. Feature lookups from PostgreSQL would add 5-10ms per query. Redis provides sub-millisecond reads. These features are updated by a Flink stream processor as events arrive, ensuring freshness.
 
 ### item_features_batch
 
-| Field | Type | Description |
-|-------|------|-------------|
-| item_id | BIGINT, PK | Maps to the items table. |
-| view_count | BIGINT | Total views (all time or rolling 30 days). A popularity signal for the ranking model. |
-| like_ratio | FLOAT | Likes / (likes + dislikes). Quality signal. Items with high like ratios are boosted. |
-| trending_score | FLOAT | Velocity of interactions (e.g., interactions in last 6 hours / interactions in prior 6 hours). Captures viral content that is rapidly gaining traction. |
+| Field          | Type       | Description                                                                                                                                             |
+| -------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| item_id        | BIGINT, PK | Maps to the items table.                                                                                                                                |
+| view_count     | BIGINT     | Total views (all time or rolling 30 days). A popularity signal for the ranking model.                                                                   |
+| like_ratio     | FLOAT      | Likes / (likes + dislikes). Quality signal. Items with high like ratios are boosted.                                                                    |
+| trending_score | FLOAT      | Velocity of interactions (e.g., interactions in last 6 hours / interactions in prior 6 hours). Captures viral content that is rapidly gaining traction. |
 
 **Why batch instead of real-time for item features?** Item-level aggregates (view_count, like_ratio) change gradually and do not need sub-second freshness. Hourly batch computation via Spark is more cost-effective and avoids the complexity of maintaining real-time counters for millions of items. The trending_score is the most time-sensitive feature here, but hourly updates are sufficient to capture viral trends.
 
 ### model_registry
 
-| Field | Type | Description |
-|-------|------|-------------|
-| model_id | VARCHAR(64), PK | Unique model identifier (e.g., "ranking-v3.2.1"). Versioned for reproducibility. |
-| model_type | VARCHAR(50) | Architecture type (e.g., "two_tower", "dcn_v2", "deepfm"). Enables querying which architecture performs best. |
-| version | VARCHAR(20) | Semantic version. Used for rollback if a new model degrades metrics. |
-| artifact_url | TEXT | S3 URL to the serialized model artifact. Serving infrastructure downloads from here on deployment. |
-| metrics_json | JSONB | Offline evaluation metrics (AUC, NDCG, recall@K). JSONB because different model types produce different metrics. Used to decide whether to promote a model to production. |
-| deployed_at | TIMESTAMP, NULLABLE | When this model was deployed to production. Null means not yet deployed. Used for A/B test analysis (compare metrics before and after deployment). |
+| Field        | Type                | Description                                                                                                                                                               |
+| ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| model_id     | VARCHAR(64), PK     | Unique model identifier (e.g., "ranking-v3.2.1"). Versioned for reproducibility.                                                                                          |
+| model_type   | VARCHAR(50)         | Architecture type (e.g., "two_tower", "dcn_v2", "deepfm"). Enables querying which architecture performs best.                                                             |
+| version      | VARCHAR(20)         | Semantic version. Used for rollback if a new model degrades metrics.                                                                                                      |
+| artifact_url | TEXT                | S3 URL to the serialized model artifact. Serving infrastructure downloads from here on deployment.                                                                        |
+| metrics_json | JSONB               | Offline evaluation metrics (AUC, NDCG, recall@K). JSONB because different model types produce different metrics. Used to decide whether to promote a model to production. |
+| deployed_at  | TIMESTAMP, NULLABLE | When this model was deployed to production. Null means not yet deployed. Used for A/B test analysis (compare metrics before and after deployment).                        |
 
 **Why a model registry?** ML models are retrained frequently (daily or weekly). Without a registry, it is impossible to know which model version is serving, roll back to a previous version, or compare offline metrics across versions. The registry provides model lineage and audit trail.
 

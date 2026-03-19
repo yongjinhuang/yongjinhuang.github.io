@@ -14,6 +14,7 @@ A hash map provides O(1) average-case lookup, insert, and delete. In Python, `di
 `collections.defaultdict` are your primary tools.
 
 **When to use a hash map:**
+
 - You need to count frequencies
 - You need to check membership quickly
 - You need to map one value to another
@@ -39,6 +40,7 @@ Use two pointers when the input is sorted (or can be sorted) and you need to fin
 subarrays satisfying a condition.
 
 **Patterns:**
+
 - **Opposite ends**: Left starts at 0, right starts at end. Move inward.
 - **Same direction**: Both start at 0 (or same side). Fast pointer advances; slow pointer follows.
 - **Partition**: Rearrange elements in-place based on a condition.
@@ -215,7 +217,7 @@ def group_anagrams_optimal(strs: list[str]) -> list[list[str]]:
 **Problem:** Given an unsorted array of integers, find the length of the longest consecutive
 elements sequence. Must run in O(n) time.
 
-**Approach:** Put all numbers in a set. For each number that is the *start* of a sequence
+**Approach:** Put all numbers in a set. For each number that is the _start_ of a sequence
 (i.e., `num - 1` not in set), count how far the sequence extends.
 
 ```python
@@ -450,46 +452,51 @@ def subarray_sum(nums: list[int], k: int) -> int:
 
 ## 4. Common Interview Questions
 
-| # | Problem | Difficulty | Pattern | Key Insight |
-|---|---------|-----------|---------|-------------|
-| 1 | Two Sum | Easy | Hash map | Complement lookup |
-| 2 | Valid Anagram | Easy | Hash map | Character frequency |
-| 3 | Contains Duplicate | Easy | Hash set | Set size comparison |
-| 4 | Group Anagrams | Medium | Hash map | Sorted string as key |
-| 5 | Top K Frequent Elements | Medium | Bucket sort | Frequency buckets |
-| 6 | Product of Array Except Self | Medium | Prefix/suffix | Left-right product |
-| 7 | Longest Consecutive Sequence | Medium | Hash set | Start-of-sequence check |
-| 8 | Container With Most Water | Medium | Two pointers | Move shorter side |
-| 9 | Subarray Sum Equals K | Medium | Prefix sum + map | Prefix difference |
-| 10 | Minimum Window Substring | Hard | Sliding window | Expand/contract |
+| #   | Problem                      | Difficulty | Pattern          | Key Insight             |
+| --- | ---------------------------- | ---------- | ---------------- | ----------------------- |
+| 1   | Two Sum                      | Easy       | Hash map         | Complement lookup       |
+| 2   | Valid Anagram                | Easy       | Hash map         | Character frequency     |
+| 3   | Contains Duplicate           | Easy       | Hash set         | Set size comparison     |
+| 4   | Group Anagrams               | Medium     | Hash map         | Sorted string as key    |
+| 5   | Top K Frequent Elements      | Medium     | Bucket sort      | Frequency buckets       |
+| 6   | Product of Array Except Self | Medium     | Prefix/suffix    | Left-right product      |
+| 7   | Longest Consecutive Sequence | Medium     | Hash set         | Start-of-sequence check |
+| 8   | Container With Most Water    | Medium     | Two pointers     | Move shorter side       |
+| 9   | Subarray Sum Equals K        | Medium     | Prefix sum + map | Prefix difference       |
+| 10  | Minimum Window Substring     | Hard       | Sliding window   | Expand/contract         |
 
 ---
 
 ## 5. Gotchas
 
 ### 5.1 Hash Map Key Gotchas
+
 - **Lists are not hashable** in Python. Convert to `tuple` before using as dict keys.
 - `defaultdict(int)` returns 0 for missing keys, not `None`.
 - `Counter` supports subtraction: `Counter(a) - Counter(b)` removes zero/negative counts.
 
 ### 5.2 Two Pointers Gotchas
+
 - **Sorted input required** for the opposite-ends pattern. If unsorted, sort first (adds
   O(n log n)) or use a hash map instead.
 - Off-by-one errors: be clear whether boundaries are inclusive or exclusive.
 - Duplicate handling: when the problem says "unique pairs," skip duplicate values.
 
 ### 5.3 Sliding Window Gotchas
+
 - Only works for **contiguous** subarrays/substrings.
 - **Fixed-size** window: no contraction needed, just slide.
 - **Variable-size** window: contract only when the window becomes invalid.
 - Don't forget to update the window state when contracting (removing left element).
 
 ### 5.4 Prefix Sum Gotchas
+
 - Initialize with `prefix[0] = 0` (empty prefix) to handle subarrays starting at index 0.
 - For the "count subarrays with sum k" pattern, the hash map must start with `{0: 1}`.
 - Prefix sums work for addition; for multiplication, use prefix products (watch for zeros).
 
 ### 5.5 Python-Specific Gotchas
+
 - `list.sort()` sorts in-place and returns `None`. `sorted()` returns a new list.
 - Negative indexing: `nums[-1]` is the last element.
 - `range(n-1, -1, -1)` iterates from `n-1` down to `0` inclusive.
@@ -499,13 +506,13 @@ def subarray_sum(nums: list[int], k: int) -> int:
 
 ## 6. Quick Reference
 
-| Pattern | When to Use | Time | Space | Template |
-|---------|-------------|------|-------|----------|
-| Hash map lookup | Find pairs, count frequency, check membership | O(n) | O(n) | `seen = {}; for x: check complement` |
-| Two pointers (opposite) | Sorted array, find pair with target sum | O(n) | O(1) | `left=0, right=n-1; move based on sum` |
-| Two pointers (same dir) | Remove duplicates, partition | O(n) | O(1) | `slow=0; for fast: conditionally advance slow` |
-| Sliding window (variable) | Longest/shortest subarray with condition | O(n) | O(k) | `left=0; for right: expand, contract while invalid` |
-| Sliding window (fixed) | Subarray of exact size k | O(n) | O(1) | `for right: add right, remove left when size > k` |
-| Prefix sum | Range sum queries, subarray sum = k | O(n) | O(n) | `prefix[i+1] = prefix[i] + nums[i]` |
-| Bucket sort | Top-K frequency | O(n) | O(n) | `buckets[freq].append(val)` |
-| Character count key | Group by anagram/permutation | O(n*k) | O(n*k) | `tuple(sorted(s))` or count array as key |
+| Pattern                   | When to Use                                   | Time    | Space   | Template                                            |
+| ------------------------- | --------------------------------------------- | ------- | ------- | --------------------------------------------------- |
+| Hash map lookup           | Find pairs, count frequency, check membership | O(n)    | O(n)    | `seen = {}; for x: check complement`                |
+| Two pointers (opposite)   | Sorted array, find pair with target sum       | O(n)    | O(1)    | `left=0, right=n-1; move based on sum`              |
+| Two pointers (same dir)   | Remove duplicates, partition                  | O(n)    | O(1)    | `slow=0; for fast: conditionally advance slow`      |
+| Sliding window (variable) | Longest/shortest subarray with condition      | O(n)    | O(k)    | `left=0; for right: expand, contract while invalid` |
+| Sliding window (fixed)    | Subarray of exact size k                      | O(n)    | O(1)    | `for right: add right, remove left when size > k`   |
+| Prefix sum                | Range sum queries, subarray sum = k           | O(n)    | O(n)    | `prefix[i+1] = prefix[i] + nums[i]`                 |
+| Bucket sort               | Top-K frequency                               | O(n)    | O(n)    | `buckets[freq].append(val)`                         |
+| Character count key       | Group by anagram/permutation                  | O(n\*k) | O(n\*k) | `tuple(sorted(s))` or count array as key            |

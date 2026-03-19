@@ -23,28 +23,28 @@
 
 ### Functional Requirements
 
-| Category | Requirements |
-|----------|-------------|
-| **Log Ingestion** | Collect logs from 100K+ servers, containers, and serverless functions; support structured (JSON) and unstructured (plaintext) formats; auto-parse common formats (Apache, Nginx, syslog) |
-| **Search & Query** | Full-text search across all logs; filter by service, severity, host, time range; regex and wildcard support; saved queries and views |
-| **Distributed Tracing** | Correlate requests across microservices via trace IDs; visualize request waterfall/flame chart; identify latency bottlenecks; support OpenTelemetry |
-| **Metrics** | Collect system metrics (CPU, memory, disk, network); application metrics (request rate, error rate, latency percentiles); custom business metrics; aggregation and downsampling |
-| **Alerting** | Threshold-based alerts (e.g., error rate > 5%); anomaly detection (deviation from baseline); composite alerts (multiple conditions); escalation policies and on-call rotation |
-| **Dashboards** | Real-time dashboards with auto-refresh; customizable widgets (line charts, heatmaps, tables); template variables for environment/service filtering; shareable URLs |
-| **Compliance** | Audit trail for log access; data retention policies per regulation; PII redaction; role-based access control (RBAC) |
+| Category                | Requirements                                                                                                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Log Ingestion**       | Collect logs from 100K+ servers, containers, and serverless functions; support structured (JSON) and unstructured (plaintext) formats; auto-parse common formats (Apache, Nginx, syslog) |
+| **Search & Query**      | Full-text search across all logs; filter by service, severity, host, time range; regex and wildcard support; saved queries and views                                                     |
+| **Distributed Tracing** | Correlate requests across microservices via trace IDs; visualize request waterfall/flame chart; identify latency bottlenecks; support OpenTelemetry                                      |
+| **Metrics**             | Collect system metrics (CPU, memory, disk, network); application metrics (request rate, error rate, latency percentiles); custom business metrics; aggregation and downsampling          |
+| **Alerting**            | Threshold-based alerts (e.g., error rate > 5%); anomaly detection (deviation from baseline); composite alerts (multiple conditions); escalation policies and on-call rotation            |
+| **Dashboards**          | Real-time dashboards with auto-refresh; customizable widgets (line charts, heatmaps, tables); template variables for environment/service filtering; shareable URLs                       |
+| **Compliance**          | Audit trail for log access; data retention policies per regulation; PII redaction; role-based access control (RBAC)                                                                      |
 
 ### Non-Functional Requirements
 
-| Requirement | Target |
-|-------------|--------|
-| Ingestion latency | < 5 seconds from log emission to searchability |
-| Search latency | < 2 seconds for queries spanning 1 hour of data |
-| Availability | 99.9% uptime for ingestion; 99.95% for dashboards |
-| Data retention | Hot: 7 days, Warm: 30 days, Cold: 1 year, Frozen/Archive: 7 years |
-| Durability | Zero log loss under normal operation; at-most 0.01% loss during failover |
-| Throughput | Sustain 10M+ log events/second at peak |
-| Scalability | Linear horizontal scaling for ingestion and storage |
-| Security | Encryption in transit (TLS) and at rest (AES-256); RBAC; SOC2 compliance |
+| Requirement       | Target                                                                   |
+| ----------------- | ------------------------------------------------------------------------ |
+| Ingestion latency | < 5 seconds from log emission to searchability                           |
+| Search latency    | < 2 seconds for queries spanning 1 hour of data                          |
+| Availability      | 99.9% uptime for ingestion; 99.95% for dashboards                        |
+| Data retention    | Hot: 7 days, Warm: 30 days, Cold: 1 year, Frozen/Archive: 7 years        |
+| Durability        | Zero log loss under normal operation; at-most 0.01% loss during failover |
+| Throughput        | Sustain 10M+ log events/second at peak                                   |
+| Scalability       | Linear horizontal scaling for ingestion and storage                      |
+| Security          | Encryption in transit (TLS) and at rest (AES-256); RBAC; SOC2 compliance |
 
 ### Scale Estimates
 
@@ -313,36 +313,36 @@ Response: 200 OK
 
 ```json
 {
-  "timestamp":    "datetime (nanosecond precision, UTC)",
-  "observed_at":  "datetime (when collector received it)",
-  "severity":     "enum: TRACE|DEBUG|INFO|WARN|ERROR|FATAL",
+  "timestamp": "datetime (nanosecond precision, UTC)",
+  "observed_at": "datetime (when collector received it)",
+  "severity": "enum: TRACE|DEBUG|INFO|WARN|ERROR|FATAL",
   "severity_num": "int (1-24, OpenTelemetry severity numbers)",
-  "body":         "string (the log message)",
-  "service":      "string (service name)",
-  "host":         "string (hostname or IP)",
-  "source":       "string (file path or component)",
+  "body": "string (the log message)",
+  "service": "string (service name)",
+  "host": "string (hostname or IP)",
+  "source": "string (file path or component)",
 
-  "trace_id":     "string (128-bit hex, W3C Trace Context)",
-  "span_id":      "string (64-bit hex)",
+  "trace_id": "string (128-bit hex, W3C Trace Context)",
+  "span_id": "string (64-bit hex)",
 
   "resource": {
-    "service.name":       "string",
-    "service.version":    "string",
-    "k8s.namespace":      "string",
-    "k8s.pod.name":       "string",
+    "service.name": "string",
+    "service.version": "string",
+    "k8s.namespace": "string",
+    "k8s.pod.name": "string",
     "k8s.container.name": "string",
-    "k8s.cluster.name":   "string",
-    "cloud.provider":     "string",
-    "cloud.region":       "string",
-    "host.name":          "string",
-    "host.ip":            "string"
+    "k8s.cluster.name": "string",
+    "cloud.provider": "string",
+    "cloud.region": "string",
+    "host.name": "string",
+    "host.ip": "string"
   },
 
   "attributes": {
     "key": "value (arbitrary key-value pairs)"
   },
 
-  "org_id":       "string (tenant identifier)",
+  "org_id": "string (tenant identifier)",
   "ingestion_id": "string (deduplication key)"
 }
 ```
@@ -353,29 +353,39 @@ Response: 200 OK
 {
   "mappings": {
     "properties": {
-      "timestamp":       { "type": "date", "format": "strict_date_optional_time_nanos" },
-      "observed_at":     { "type": "date" },
-      "severity":        { "type": "keyword" },
-      "severity_num":    { "type": "byte" },
-      "body":            { "type": "text", "analyzer": "standard", "fields": {
-                            "keyword": { "type": "keyword", "ignore_above": 1024 }
-                          }},
-      "service":         { "type": "keyword" },
-      "host":            { "type": "keyword" },
-      "source":          { "type": "keyword" },
-      "trace_id":        { "type": "keyword" },
-      "span_id":         { "type": "keyword" },
-      "resource":        { "type": "object", "properties": {
-                            "service.name":       { "type": "keyword" },
-                            "service.version":    { "type": "keyword" },
-                            "k8s.namespace":      { "type": "keyword" },
-                            "k8s.pod.name":       { "type": "keyword" },
-                            "k8s.cluster.name":   { "type": "keyword" },
-                            "cloud.region":       { "type": "keyword" }
-                          }},
-      "attributes":      { "type": "flattened" },
-      "org_id":          { "type": "keyword" },
-      "ingestion_id":    { "type": "keyword" }
+      "timestamp": {
+        "type": "date",
+        "format": "strict_date_optional_time_nanos"
+      },
+      "observed_at": { "type": "date" },
+      "severity": { "type": "keyword" },
+      "severity_num": { "type": "byte" },
+      "body": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 1024 }
+        }
+      },
+      "service": { "type": "keyword" },
+      "host": { "type": "keyword" },
+      "source": { "type": "keyword" },
+      "trace_id": { "type": "keyword" },
+      "span_id": { "type": "keyword" },
+      "resource": {
+        "type": "object",
+        "properties": {
+          "service.name": { "type": "keyword" },
+          "service.version": { "type": "keyword" },
+          "k8s.namespace": { "type": "keyword" },
+          "k8s.pod.name": { "type": "keyword" },
+          "k8s.cluster.name": { "type": "keyword" },
+          "cloud.region": { "type": "keyword" }
+        }
+      },
+      "attributes": { "type": "flattened" },
+      "org_id": { "type": "keyword" },
+      "ingestion_id": { "type": "keyword" }
     }
   },
   "settings": {
@@ -676,16 +686,16 @@ ORDER BY (org_id, rule_id, triggered_at);
 
 ### 5.2 Collection Agent Comparison
 
-| Feature | Fluentd | Vector | OTel Collector |
-|---------|---------|--------|----------------|
-| Language | Ruby + C | Rust | Go |
-| Memory usage | ~40 MB | ~15 MB | ~30 MB |
-| Throughput | ~10K events/s | ~50K events/s | ~30K events/s |
-| Configuration | Ruby DSL | TOML/YAML | YAML |
-| Plugin ecosystem | 800+ plugins | Built-in transforms | Growing |
-| Signals supported | Logs only | Logs + Metrics | Logs + Metrics + Traces |
-| Backpressure | Plugin-dependent | Built-in | Built-in |
-| Best for | Legacy, Kubernetes | High throughput | Unified observability |
+| Feature           | Fluentd            | Vector              | OTel Collector          |
+| ----------------- | ------------------ | ------------------- | ----------------------- |
+| Language          | Ruby + C           | Rust                | Go                      |
+| Memory usage      | ~40 MB             | ~15 MB              | ~30 MB                  |
+| Throughput        | ~10K events/s      | ~50K events/s       | ~30K events/s           |
+| Configuration     | Ruby DSL           | TOML/YAML           | YAML                    |
+| Plugin ecosystem  | 800+ plugins       | Built-in transforms | Growing                 |
+| Signals supported | Logs only          | Logs + Metrics      | Logs + Metrics + Traces |
+| Backpressure      | Plugin-dependent   | Built-in            | Built-in                |
+| Best for          | Legacy, Kubernetes | High throughput     | Unified observability   |
 
 ### 5.3 Structured Logging Best Practices
 

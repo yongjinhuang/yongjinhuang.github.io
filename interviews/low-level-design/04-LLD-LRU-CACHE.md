@@ -24,6 +24,7 @@ you combine a hash map with a doubly linked list to achieve O(1) for both get an
 ## 1. Problem Statement
 
 Design a cache that supports:
+
 - `get(key)` -- Return the value if the key exists, otherwise return -1.
 - `put(key, value)` -- Insert or update the key-value pair. If the cache is at capacity,
   evict the **least recently used** item before inserting.
@@ -32,12 +33,12 @@ Both operations must run in **O(1)** time.
 
 ### Requirements
 
-| # | Requirement | Constraint |
-|---|-------------|------------|
-| R1 | O(1) get | Must not scan the entire cache |
-| R2 | O(1) put | Must not scan to find eviction target |
-| R3 | Fixed capacity | Evict LRU item when full |
-| R4 | Track recency | Every get/put makes the item "most recent" |
+| #   | Requirement    | Constraint                                 |
+| --- | -------------- | ------------------------------------------ |
+| R1  | O(1) get       | Must not scan the entire cache             |
+| R2  | O(1) put       | Must not scan to find eviction target      |
+| R3  | Fixed capacity | Evict LRU item when full                   |
+| R4  | Track recency  | Every get/put makes the item "most recent" |
 
 ### Why Not Just Use a Dict?
 
@@ -420,6 +421,7 @@ The interviewer says: "Design an LRU Cache with O(1) get and put."
 ### Step 2: Design the Data Structure (3 minutes)
 
 Draw the hash map + doubly linked list diagram. Explain:
+
 - Hash map gives O(1) lookup by key
 - Doubly linked list gives O(1) removal and insertion
 - Sentinel nodes eliminate null-check edge cases
@@ -454,13 +456,13 @@ Use a cache-aside or write-through pattern. Mention Redis as a real-world exampl
 
 ### "What eviction policies besides LRU and LFU exist?"
 
-| Policy | Description | When to Use |
-|--------|-------------|-------------|
-| LRU | Evict least recently used | General purpose, temporal locality |
-| LFU | Evict least frequently used | Frequency matters more than recency |
-| FIFO | Evict first inserted | Simple, predictable |
-| Random | Evict random entry | Surprisingly effective, low overhead |
-| ARC | Adaptive between LRU and LFU | Self-tuning, used in databases |
+| Policy | Description                  | When to Use                          |
+| ------ | ---------------------------- | ------------------------------------ |
+| LRU    | Evict least recently used    | General purpose, temporal locality   |
+| LFU    | Evict least frequently used  | Frequency matters more than recency  |
+| FIFO   | Evict first inserted         | Simple, predictable                  |
+| Random | Evict random entry           | Surprisingly effective, low overhead |
+| ARC    | Adaptive between LRU and LFU | Self-tuning, used in databases       |
 
 ---
 

@@ -8,60 +8,65 @@ An object storage system provides durable, scalable, and highly available storag
 
 ### 1.1 Functional Requirements
 
-| Feature | Description |
-|---------|-------------|
-| **Bucket Management** | Create, delete, and list buckets; buckets are globally unique namespaces |
-| **Object CRUD** | PUT, GET, DELETE objects identified by a bucket + key |
-| **List Objects** | List objects in a bucket with prefix/delimiter filtering and pagination |
-| **Multipart Upload** | Upload large objects (> 5 GB) in parallel parts |
-| **Versioning** | Keep multiple versions of the same object key; delete markers |
-| **Access Control** | Bucket policies, ACLs, IAM-based permissions |
-| **Lifecycle Policies** | Automatically transition or expire objects based on age |
-| **Pre-signed URLs** | Time-limited URLs for unauthenticated upload/download |
-| **Cross-Region Replication** | Asynchronously replicate objects to another region |
-| **Storage Classes** | Standard, Infrequent Access, Glacier/Archive tiers |
-| **Data Integrity** | Checksums (MD5, CRC32) verified on upload and at rest |
-| **Event Notifications** | Publish events (ObjectCreated, ObjectDeleted) to queues/lambdas |
+| Feature                      | Description                                                              |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| **Bucket Management**        | Create, delete, and list buckets; buckets are globally unique namespaces |
+| **Object CRUD**              | PUT, GET, DELETE objects identified by a bucket + key                    |
+| **List Objects**             | List objects in a bucket with prefix/delimiter filtering and pagination  |
+| **Multipart Upload**         | Upload large objects (> 5 GB) in parallel parts                          |
+| **Versioning**               | Keep multiple versions of the same object key; delete markers            |
+| **Access Control**           | Bucket policies, ACLs, IAM-based permissions                             |
+| **Lifecycle Policies**       | Automatically transition or expire objects based on age                  |
+| **Pre-signed URLs**          | Time-limited URLs for unauthenticated upload/download                    |
+| **Cross-Region Replication** | Asynchronously replicate objects to another region                       |
+| **Storage Classes**          | Standard, Infrequent Access, Glacier/Archive tiers                       |
+| **Data Integrity**           | Checksums (MD5, CRC32) verified on upload and at rest                    |
+| **Event Notifications**      | Publish events (ObjectCreated, ObjectDeleted) to queues/lambdas          |
 
 ### 1.2 Non-Functional Requirements
 
-| Requirement | Target |
-|-------------|--------|
-| **Durability** | 99.999999999% (11 nines) - at most 1 object lost per 100 billion |
-| **Availability** | 99.99% (Standard class) / 99.9% (IA class) |
-| **Throughput** | 100,000+ requests/sec per bucket prefix |
-| **Object Size** | 1 byte to 5 TB per object |
-| **First-byte Latency** | < 100 ms for Standard class |
-| **Scalability** | Exabyte-scale total storage |
-| **Consistency** | Read-after-write for new objects; strong consistency for all operations (modern S3 2020+) |
-| **Security** | Encryption at rest (SSE-S3, SSE-KMS) and in transit (TLS) |
+| Requirement            | Target                                                                                    |
+| ---------------------- | ----------------------------------------------------------------------------------------- |
+| **Durability**         | 99.999999999% (11 nines) - at most 1 object lost per 100 billion                          |
+| **Availability**       | 99.99% (Standard class) / 99.9% (IA class)                                                |
+| **Throughput**         | 100,000+ requests/sec per bucket prefix                                                   |
+| **Object Size**        | 1 byte to 5 TB per object                                                                 |
+| **First-byte Latency** | < 100 ms for Standard class                                                               |
+| **Scalability**        | Exabyte-scale total storage                                                               |
+| **Consistency**        | Read-after-write for new objects; strong consistency for all operations (modern S3 2020+) |
+| **Security**           | Encryption at rest (SSE-S3, SSE-KMS) and in transit (TLS)                                 |
 
 ### 1.3 Scale Estimation
 
 **Storage Scale**
+
 - Objects stored: 1 trillion (10^12)
 - Average object size: 1 MB
 - Total storage: 1 PB = 10^15 bytes
 - Storage growth: 10 PB/year
 
 **Request Scale**
+
 - 100,000 requests/sec at peak
 - Read/write ratio: 70/30
 - Reads: 70,000/sec
 - Writes: 30,000/sec
 
 **Bandwidth**
+
 - Average object read size: 100 KB
 - Read bandwidth: 70,000 × 100 KB = 7 GB/sec
 - Write bandwidth: 30,000 × 100 KB = 3 GB/sec
 - Total network I/O: ~10 GB/sec
 
 **Metadata Scale**
+
 - Each object has ~1 KB of metadata (bucket, key, size, ETag, timestamps, ACL, storage class)
 - 1 trillion objects × 1 KB = 1 PB of metadata
 - Metadata must be indexed for fast lookup: requires distributed DB with billions of rows
 
 **Data Node Capacity**
+
 - Each data node holds 100 TB (10 × 10 TB HDDs)
 - For 100 PB of raw data: 1,000 data nodes
 - With RS(10,4) erasure coding: 1,000 × 1.4 overhead = 1,400 physical nodes
@@ -88,6 +93,7 @@ PUT /?replication        Set replication configuration
 ### 2.2 Object Operations
 
 **Upload (PUT Object)**
+
 ```
 PUT /{bucket}/{key}
 Host: {bucket}.s3.amazonaws.com
@@ -106,6 +112,7 @@ x-amz-version-id: 3/L4kqtJlcpXroDTDmJ+rmSpXd3dIbrHY+MTRCxf3vjVBH40Nr8X8gdRQBpUML
 ```
 
 **Download (GET Object)**
+
 ```
 GET /{bucket}/{key}
 Host: {bucket}.s3.amazonaws.com
@@ -122,6 +129,7 @@ x-amz-version-id: ...
 ```
 
 **Delete (DELETE Object)**
+
 ```
 DELETE /{bucket}/{key}
 DELETE /{bucket}/{key}?versionId=xxx   (specific version)
@@ -132,6 +140,7 @@ x-amz-delete-marker: true
 ```
 
 **List Objects**
+
 ```
 GET /{bucket}?list-type=2
   &prefix=images/2024/
@@ -283,8 +292,17 @@ CREATE TABLE multipart_parts (
   "bucket": "my-bucket",
   "owner": "account-123",
   "grants": [
-    { "grantee": { "type": "CanonicalUser", "id": "account-123" }, "permission": "FULL_CONTROL" },
-    { "grantee": { "type": "Group", "uri": "http://acs.amazonaws.com/groups/global/AllUsers" }, "permission": "READ" }
+    {
+      "grantee": { "type": "CanonicalUser", "id": "account-123" },
+      "permission": "FULL_CONTROL"
+    },
+    {
+      "grantee": {
+        "type": "Group",
+        "uri": "http://acs.amazonaws.com/groups/global/AllUsers"
+      },
+      "permission": "READ"
+    }
   ],
   "policy": {
     "Version": "2012-10-17",
@@ -367,17 +385,17 @@ Supporting Services:
 
 ### Object vs Block vs File Storage
 
-| Dimension | Object Storage (S3) | Block Storage (EBS) | File Storage (EFS/NFS) |
-|-----------|---------------------|---------------------|------------------------|
-| **Access Pattern** | REST API (HTTP GET/PUT) | Raw disk I/O (iSCSI/NVMe) | POSIX filesystem (read/write/seek) |
-| **Granularity** | Whole object (immutable) | Fixed-size blocks (512B-4KB) | Files and directories |
-| **Update Semantics** | Full replace; no in-place edit | Random read/write | Byte-range read/write |
-| **Namespace** | Flat key within bucket | Block address offset | Hierarchical path |
-| **Scalability** | Exabytes, virtually unlimited | Terabytes per volume | Petabytes (distributed NFS) |
-| **Durability** | 99.999999999% | 99.999% (with snapshots) | 99.999999999% (EFS) |
-| **Latency** | ms (100ms first byte) | us (< 1ms) | ms (1-10ms) |
-| **Use Cases** | Backups, media, data lake, static web | Databases, OS volumes, VMs | Shared file access, ML training data |
-| **Metadata** | Rich user-defined metadata | Minimal (block metadata only) | POSIX file attributes |
+| Dimension            | Object Storage (S3)                   | Block Storage (EBS)           | File Storage (EFS/NFS)               |
+| -------------------- | ------------------------------------- | ----------------------------- | ------------------------------------ |
+| **Access Pattern**   | REST API (HTTP GET/PUT)               | Raw disk I/O (iSCSI/NVMe)     | POSIX filesystem (read/write/seek)   |
+| **Granularity**      | Whole object (immutable)              | Fixed-size blocks (512B-4KB)  | Files and directories                |
+| **Update Semantics** | Full replace; no in-place edit        | Random read/write             | Byte-range read/write                |
+| **Namespace**        | Flat key within bucket                | Block address offset          | Hierarchical path                    |
+| **Scalability**      | Exabytes, virtually unlimited         | Terabytes per volume          | Petabytes (distributed NFS)          |
+| **Durability**       | 99.999999999%                         | 99.999% (with snapshots)      | 99.999999999% (EFS)                  |
+| **Latency**          | ms (100ms first byte)                 | us (< 1ms)                    | ms (1-10ms)                          |
+| **Use Cases**        | Backups, media, data lake, static web | Databases, OS volumes, VMs    | Shared file access, ML training data |
+| **Metadata**         | Rich user-defined metadata            | Minimal (block metadata only) | POSIX file attributes                |
 
 **Key insight**: Object storage sacrifices random-write ability and low latency in exchange for massive scalability, high durability, and a simple HTTP API. This is the fundamental trade-off.
 
@@ -413,6 +431,7 @@ Client                API Gateway         Metadata Svc       Data Nodes
 ```
 
 **Chunking large objects**:
+
 - Objects > 64 MB are split into 64 MB chunks
 - Each chunk is independently erasure-coded
 - Chunk manifest stored in metadata: `[chunk0_location, chunk1_location, ...]`
@@ -436,6 +455,7 @@ Client                API Gateway         Metadata Svc       Data Nodes
 ```
 
 **Range request optimization**:
+
 - `GET /bucket/key` with `Range: bytes=5000000-10000000`
 - API layer translates byte range to specific chunks
 - Only fetch the relevant chunks, not the whole object
@@ -497,13 +517,13 @@ Compute 4 parity shards (XOR-like): p0  p1  p2  p3
 
 ### 7.2 Storage Efficiency Comparison
 
-| Method | Overhead | Fault Tolerance | Rebuild Cost | CPU Cost |
-|--------|----------|-----------------|--------------|----------|
-| No redundancy | 1.0x | 0 failures | N/A | None |
-| 3x Replication | 3.0x | 2 failures (any) | Copy 1 replica | Low |
-| RS(6,3) | 1.5x | 3 failures | Reconstruct from 6 | Medium |
-| RS(10,4) | 1.4x | 4 failures | Reconstruct from 10 | High |
-| RS(14,2) | 1.14x | 2 failures | Reconstruct from 14 | Higher |
+| Method         | Overhead | Fault Tolerance  | Rebuild Cost        | CPU Cost |
+| -------------- | -------- | ---------------- | ------------------- | -------- |
+| No redundancy  | 1.0x     | 0 failures       | N/A                 | None     |
+| 3x Replication | 3.0x     | 2 failures (any) | Copy 1 replica      | Low      |
+| RS(6,3)        | 1.5x     | 3 failures       | Reconstruct from 6  | Medium   |
+| RS(10,4)       | 1.4x     | 4 failures       | Reconstruct from 10 | High     |
+| RS(14,2)       | 1.14x    | 2 failures       | Reconstruct from 14 | Higher   |
 
 **S3 uses RS(10,4) within an availability zone** + geographic replication across AZs.
 
@@ -542,6 +562,7 @@ Can lose entire AZ-3 (4 shards) and still reconstruct from AZ-1 + AZ-2 (10 shard
 ### 8.1 Namespace Management
 
 The metadata service is responsible for:
+
 1. **Object namespace**: mapping `(bucket, key, version) -> physical location`
 2. **Bucket namespace**: global uniqueness of bucket names
 3. **Listing**: efficient prefix-based enumeration of keys
@@ -567,9 +588,11 @@ Solution: Add random suffix for listing; or shard by (bucket, hash(key) % num_pa
 ### 8.3 Consistency: Read-After-Write
 
 **Classic S3 (pre-2020)**: eventual consistency for overwrite PUT and DELETE
+
 - Reason: distributed metadata with caching layers; stale reads possible
 
 **Modern S3 (Dec 2020+)**: strong read-after-write consistency for all operations
+
 - Implemented via: fencing tokens / conditional writes with version checks
 - Every write increments a monotonic version; reads refuse to serve stale version
 
@@ -612,14 +635,14 @@ GET /bucket/key          -> read from leader OR follower with V >= V5
 
 ### 9.1 Consistency Guarantees (Modern S3)
 
-| Operation | Consistency Guarantee |
-|-----------|----------------------|
-| PUT new object | Read-after-write: immediately visible |
-| PUT overwrite | Strong consistency: latest version always returned |
-| DELETE object | Strong consistency: object not visible after DELETE completes |
-| LIST after PUT | List reflects the new object |
-| LIST after DELETE | List does not include deleted object |
-| Concurrent PUTs (same key) | Last-writer-wins by wall clock; both writes acknowledged |
+| Operation                  | Consistency Guarantee                                         |
+| -------------------------- | ------------------------------------------------------------- |
+| PUT new object             | Read-after-write: immediately visible                         |
+| PUT overwrite              | Strong consistency: latest version always returned            |
+| DELETE object              | Strong consistency: object not visible after DELETE completes |
+| LIST after PUT             | List reflects the new object                                  |
+| LIST after DELETE          | List does not include deleted object                          |
+| Concurrent PUTs (same key) | Last-writer-wins by wall clock; both writes acknowledged      |
 
 ### 9.2 How Strong Consistency is Achieved
 
@@ -707,8 +730,8 @@ Strategy: Each version is a full copy of the object data.
       "Status": "Enabled",
       "Filter": { "Prefix": "logs/" },
       "Transitions": [
-        { "Days": 30,  "StorageClass": "STANDARD_IA" },
-        { "Days": 90,  "StorageClass": "GLACIER" },
+        { "Days": 30, "StorageClass": "STANDARD_IA" },
+        { "Days": 90, "StorageClass": "GLACIER" },
         { "Days": 365, "StorageClass": "DEEP_ARCHIVE" }
       ],
       "Expiration": { "Days": 2555 },
@@ -740,15 +763,15 @@ Performance: Process 10M objects/day = 115 objects/sec (batch processing)
 
 ### 11.3 Storage Classes
 
-| Class | Min Duration | Min Size | Retrieval Time | Use Case |
-|-------|-------------|---------|----------------|----------|
-| STANDARD | None | None | ms | Frequently accessed data |
-| STANDARD_IA | 30 days | 128 KB | ms | Monthly access, cost-sensitive |
-| ONE_ZONE_IA | 30 days | 128 KB | ms | Reproducible data, single AZ |
-| INTELLIGENT_TIERING | None | None | ms / hours | Unknown access patterns |
-| GLACIER_INSTANT | 90 days | 128 KB | ms | Archive with instant retrieval |
-| GLACIER_FLEXIBLE | 90 days | 40 KB | minutes-hours | Archive |
-| GLACIER_DEEP_ARCHIVE | 180 days | 40 KB | 12-48 hours | Long-term compliance |
+| Class                | Min Duration | Min Size | Retrieval Time | Use Case                       |
+| -------------------- | ------------ | -------- | -------------- | ------------------------------ |
+| STANDARD             | None         | None     | ms             | Frequently accessed data       |
+| STANDARD_IA          | 30 days      | 128 KB   | ms             | Monthly access, cost-sensitive |
+| ONE_ZONE_IA          | 30 days      | 128 KB   | ms             | Reproducible data, single AZ   |
+| INTELLIGENT_TIERING  | None         | None     | ms / hours     | Unknown access patterns        |
+| GLACIER_INSTANT      | 90 days      | 128 KB   | ms             | Archive with instant retrieval |
+| GLACIER_FLEXIBLE     | 90 days      | 40 KB    | minutes-hours  | Archive                        |
+| GLACIER_DEEP_ARCHIVE | 180 days     | 40 KB    | 12-48 hours    | Long-term compliance           |
 
 ---
 
@@ -953,6 +976,7 @@ S3's claim of 99.999999999% (11 nines) is conservative and backed by:
 ### 15.1 Why GC is Needed
 
 Objects are deleted lazily to maintain performance:
+
 - DELETE request: marks metadata as deleted, does NOT immediately free data nodes
 - Overwrite: old data chunks become orphaned when new version is committed
 - Multipart abort: uploaded parts need cleanup
@@ -1089,13 +1113,13 @@ No data movement at assembly time: metadata-only operation in O(1)
 
 ### 17.1 Storage Efficiency
 
-| Strategy | Savings |
-|----------|---------|
-| Erasure coding RS(10,4) vs 3x replication | 53% less storage cost |
-| Deduplication at chunk level | 10-30% for backup workloads |
-| Compression (zstd) for compressible data | 2-5x for logs, JSON |
-| Intelligent-Tiering auto-classification | 30-50% for mixed-access data |
-| Lifecycle policies to Glacier | 80% cost reduction for archival |
+| Strategy                                  | Savings                         |
+| ----------------------------------------- | ------------------------------- |
+| Erasure coding RS(10,4) vs 3x replication | 53% less storage cost           |
+| Deduplication at chunk level              | 10-30% for backup workloads     |
+| Compression (zstd) for compressible data  | 2-5x for logs, JSON             |
+| Intelligent-Tiering auto-classification   | 30-50% for mixed-access data    |
+| Lifecycle policies to Glacier             | 80% cost reduction for archival |
 
 ### 17.2 Compute Efficiency
 
@@ -1132,43 +1156,43 @@ Request optimization:
 
 ### 18.1 Consistency vs Availability
 
-| Choice | Trade-off |
-|--------|-----------|
-| **Strong consistency (modern S3)** | Slightly higher latency (leader round trip); leader unavailability causes read errors |
-| **Eventual consistency (classic S3)** | Lower latency; stale reads possible after write/delete; split-brain scenarios |
+| Choice                                | Trade-off                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------- |
+| **Strong consistency (modern S3)**    | Slightly higher latency (leader round trip); leader unavailability causes read errors |
+| **Eventual consistency (classic S3)** | Lower latency; stale reads possible after write/delete; split-brain scenarios         |
 
 **Decision**: Modern S3 chose strong consistency because users' biggest pain point was cache invalidation bugs, not the microseconds of extra latency.
 
 ### 18.2 Erasure Coding vs Replication
 
-| Trade-off | Erasure Coding (RS) | 3x Replication |
-|-----------|---------------------|----------------|
-| Storage overhead | 1.4x | 3.0x |
-| Read latency | Higher (need k shards + EC decode) | Lower (read 1 replica) |
-| Write latency | Higher (compute parity + write 14 nodes) | Lower (write 3 nodes) |
-| Rebuild time | Longer (network-intensive reconstruction) | Faster (simple copy) |
-| Small object cost | Inefficient (100B object → 14 x 100B shards) | More efficient |
+| Trade-off         | Erasure Coding (RS)                          | 3x Replication         |
+| ----------------- | -------------------------------------------- | ---------------------- |
+| Storage overhead  | 1.4x                                         | 3.0x                   |
+| Read latency      | Higher (need k shards + EC decode)           | Lower (read 1 replica) |
+| Write latency     | Higher (compute parity + write 14 nodes)     | Lower (write 3 nodes)  |
+| Rebuild time      | Longer (network-intensive reconstruction)    | Faster (simple copy)   |
+| Small object cost | Inefficient (100B object → 14 x 100B shards) | More efficient         |
 
 **S3's actual approach**: Use 3x replication for small objects (< some threshold); erasure coding for large objects. Also replication across AZs, EC within AZ.
 
 ### 18.3 Metadata Architecture
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| **Relational DB (sharded)** | ACID, SQL queries, familiar | Hard to scale horizontally |
-| **Distributed KV store** | Scales easily, fast point lookups | No range scans, weak consistency options |
-| **Wide-column (Cassandra)** | Range scans on keys, tunable consistency | Complex operations, eventual consistency by default |
-| **Dedicated metadata DB (custom)** | Optimized for object storage workload | High engineering cost |
+| Approach                           | Pros                                     | Cons                                                |
+| ---------------------------------- | ---------------------------------------- | --------------------------------------------------- |
+| **Relational DB (sharded)**        | ACID, SQL queries, familiar              | Hard to scale horizontally                          |
+| **Distributed KV store**           | Scales easily, fast point lookups        | No range scans, weak consistency options            |
+| **Wide-column (Cassandra)**        | Range scans on keys, tunable consistency | Complex operations, eventual consistency by default |
+| **Dedicated metadata DB (custom)** | Optimized for object storage workload    | High engineering cost                               |
 
 **S3 approach**: Custom distributed metadata service with Raft consensus, optimized for the (bucket, key, version) access pattern.
 
 ### 18.4 Synchronous vs Asynchronous Replication
 
-| Replication Mode | Durability | Write Latency | Use Case |
-|-----------------|------------|---------------|----------|
-| Synchronous (all AZs before ack) | Highest | ~50-100ms extra | Financial records |
-| Synchronous (2 of 3 AZs) | High | ~10-20ms extra | Standard data |
-| Asynchronous (ack after 1 AZ, replicate later) | Eventual | Minimal | High-throughput ingest |
+| Replication Mode                               | Durability | Write Latency   | Use Case               |
+| ---------------------------------------------- | ---------- | --------------- | ---------------------- |
+| Synchronous (all AZs before ack)               | Highest    | ~50-100ms extra | Financial records      |
+| Synchronous (2 of 3 AZs)                       | High       | ~10-20ms extra  | Standard data          |
+| Asynchronous (ack after 1 AZ, replicate later) | Eventual   | Minimal         | High-throughput ingest |
 
 **S3 Standard**: Synchronous write to 3 AZs before 200 OK. This is why durability is 11 nines.
 
@@ -1411,4 +1435,4 @@ Principle 6: Erasure coding beats replication at scale
 
 ---
 
-*Last updated: 2026-03-01*
+_Last updated: 2026-03-01_

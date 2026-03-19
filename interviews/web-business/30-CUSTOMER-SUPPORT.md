@@ -57,12 +57,12 @@ Service Level Agreements define how fast the team must respond and resolve:
 
 Priority determines the order of work. Severity describes the impact:
 
-| Level | Severity | Example | Typical FRT |
-|-------|----------|---------|-------------|
-| P1 / Critical | System down, all users affected | Payment processing is broken | 15 min |
-| P2 / High | Major feature broken, workaround exists | Export function fails for large datasets | 1 hour |
-| P3 / Medium | Minor feature issue, non-blocking | Formatting bug in reports | 4 hours |
-| P4 / Low | Cosmetic or nice-to-have request | Typo in UI, feature suggestion | 24 hours |
+| Level         | Severity                                | Example                                  | Typical FRT |
+| ------------- | --------------------------------------- | ---------------------------------------- | ----------- |
+| P1 / Critical | System down, all users affected         | Payment processing is broken             | 15 min      |
+| P2 / High     | Major feature broken, workaround exists | Export function fails for large datasets | 1 hour      |
+| P3 / Medium   | Minor feature issue, non-blocking       | Formatting bug in reports                | 4 hours     |
+| P4 / Low      | Cosmetic or nice-to-have request        | Typo in UI, feature suggestion           | 24 hours    |
 
 Priority can be set by the customer, auto-assigned by rules (e.g., enterprise customers always get P2+), or adjusted by the agent after triage.
 
@@ -135,43 +135,49 @@ What the support team and leadership track:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Ticket** | A tracked unit of work representing a customer issue, question, or request |
-| **SLA** | Service Level Agreement — contractual response and resolution time targets |
-| **FRT** | First Response Time — how fast the customer gets a human reply |
-| **CSAT** | Customer Satisfaction Score — post-interaction rating (1-5 scale) |
-| **NPS** | Net Promoter Score — overall loyalty metric (-100 to +100) |
-| **Escalation** | Moving a ticket to a higher-tier agent, team, or manager |
-| **Triage** | The initial assessment of a ticket's priority, category, and routing |
-| **Macro** | A pre-built response template agents can insert into replies |
-| **Deflection** | Resolving an issue via self-service (knowledge base, bot) before a ticket is created |
-| **Omnichannel** | Unified support across email, chat, phone, social, and in-app — one view for the agent |
-| **Queue** | A pool of unassigned tickets organized by team, skill, or priority |
-| **Backlog** | The accumulation of open, unresolved tickets |
-| **IVR** | Interactive Voice Response — the automated phone menu ("Press 1 for billing") |
-| **MTTR** | Mean Time to Resolution — average time from ticket creation to resolution |
-| **Reopened Rate** | Percentage of solved tickets that customers reopen. High rates indicate premature resolution |
-| **Contact Reason** | The categorized "why" behind a ticket, used for reporting and product feedback |
+| Term               | What It Means                                                                                |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| **Ticket**         | A tracked unit of work representing a customer issue, question, or request                   |
+| **SLA**            | Service Level Agreement — contractual response and resolution time targets                   |
+| **FRT**            | First Response Time — how fast the customer gets a human reply                               |
+| **CSAT**           | Customer Satisfaction Score — post-interaction rating (1-5 scale)                            |
+| **NPS**            | Net Promoter Score — overall loyalty metric (-100 to +100)                                   |
+| **Escalation**     | Moving a ticket to a higher-tier agent, team, or manager                                     |
+| **Triage**         | The initial assessment of a ticket's priority, category, and routing                         |
+| **Macro**          | A pre-built response template agents can insert into replies                                 |
+| **Deflection**     | Resolving an issue via self-service (knowledge base, bot) before a ticket is created         |
+| **Omnichannel**    | Unified support across email, chat, phone, social, and in-app — one view for the agent       |
+| **Queue**          | A pool of unassigned tickets organized by team, skill, or priority                           |
+| **Backlog**        | The accumulation of open, unresolved tickets                                                 |
+| **IVR**            | Interactive Voice Response — the automated phone menu ("Press 1 for billing")                |
+| **MTTR**           | Mean Time to Resolution — average time from ticket creation to resolution                    |
+| **Reopened Rate**  | Percentage of solved tickets that customers reopen. High rates indicate premature resolution |
+| **Contact Reason** | The categorized "why" behind a ticket, used for reporting and product feedback               |
 
 ## Common Patterns
 
 ### Tiered Support Structure
+
 Most companies use a 3-tier model. L1 agents handle 70-80% of volume using knowledge base articles and macros — password resets, order status, basic how-to questions. L2 agents handle technical troubleshooting, account issues, and anything requiring investigation. L3 involves engineering, product, or specialized teams for bugs, infrastructure issues, and edge cases. The goal is to resolve as much as possible at L1 to keep costs low and L2/L3 agents focused on hard problems.
 
 ### Tagging and Categorization
+
 Every ticket gets tagged with a category (billing, technical, account), a subcategory (refund, bug report, login issue), and sometimes a product area. These tags drive routing, reporting, and trend analysis. Auto-tagging with NLP models is common — classify the ticket based on the subject and description before an agent even sees it.
 
 ### Internal Notes vs. Public Replies
+
 Tickets have two communication threads: public replies (visible to the customer) and internal notes (visible only to agents). Agents use internal notes to document investigation steps, tag colleagues, and leave context for the next shift. Never mix up the two — an internal note accidentally sent as a public reply is a common and embarrassing mistake.
 
 ### Merge and Link
+
 Duplicate tickets happen constantly — the same customer emails twice, or contacts via chat and email about the same issue. Agents merge duplicates into a single ticket. Related tickets (multiple customers reporting the same bug) get linked so that when the bug is fixed, all linked tickets can be resolved in batch.
 
 ### SLA by Customer Tier
+
 Enterprise customers paying $100K/year get a 1-hour FRT. Free-tier users get 48 hours. SLA policies are attached to the customer's account tier, and the ticketing system automatically applies the correct SLA when a ticket is created. This is standard practice and directly tied to contract terms.
 
 ### Incident-Linked Support
+
 When a production incident occurs, hundreds of tickets may come in about the same issue. A support-engineering bridge links the incident to a parent ticket. All incoming tickets about the same issue get auto-linked. When the incident is resolved, a bulk update closes all related tickets with a single communication.
 
 ## Gotchas

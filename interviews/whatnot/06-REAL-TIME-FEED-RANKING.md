@@ -11,6 +11,7 @@ Design a feed ranking system that surfaces the most relevant live streams to use
 ## Step 1: Requirements
 
 ### Functional Requirements
+
 - Home feed shows ranked list of currently live streams
 - Personalized ranking based on user interests and behavior
 - Support new users with no history (cold-start)
@@ -19,6 +20,7 @@ Design a feed ranking system that surfaces the most relevant live streams to use
 - Search with autocomplete across live and upcoming streams
 
 ### Non-Functional Requirements
+
 - **Latency**: Feed generation < 200ms (p99)
 - **Freshness**: New streams appear in feed within 30 seconds of going live
 - **Scale**: 20M+ users, thousands of concurrent streams
@@ -26,6 +28,7 @@ Design a feed ranking system that surfaces the most relevant live streams to use
 - **Cold-start**: Usable recommendations for brand-new users
 
 ### Out of Scope
+
 - Push notification triggers
 - Seller analytics
 - Ad ranking
@@ -248,12 +251,12 @@ Stream Metadata Cache (Redis, TTL = 5 seconds):
 
 ### Trade-offs
 
-| Decision | Choice | Why |
-|----------|--------|-----|
-| Online vs batch inference | **Online** | Freshness critical for ephemeral content |
-| Precision vs latency | **Latency** (< 200ms) | Users won't wait; good-enough ranking fast > perfect ranking slow |
-| Personalization vs exploration | **Mix** (80/20) | Heavy personalization creates filter bubbles; 20% exploration surfaces new categories |
-| Feature freshness | **Tiered** (real-time + batch) | Some features need second-level freshness; others are fine daily |
+| Decision                       | Choice                         | Why                                                                                   |
+| ------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------- |
+| Online vs batch inference      | **Online**                     | Freshness critical for ephemeral content                                              |
+| Precision vs latency           | **Latency** (< 200ms)          | Users won't wait; good-enough ranking fast > perfect ranking slow                     |
+| Personalization vs exploration | **Mix** (80/20)                | Heavy personalization creates filter bubbles; 20% exploration surfaces new categories |
+| Feature freshness              | **Tiered** (real-time + batch) | Some features need second-level freshness; others are fine daily                      |
 
 ### Experimentation (Statsig)
 
@@ -266,12 +269,12 @@ Whatnot runs 400+ experiments/year on feed ranking:
 
 ### Monitoring
 
-| Metric | Target |
-|--------|--------|
-| Feed latency (p99) | < 200ms |
-| Model inference time | < 50ms |
-| Feature store read latency | < 10ms |
-| Stream-to-feed latency | < 30s (new stream appears) |
-| CTR (click-through rate) | Tracked per model version |
-| Watch time per session | Primary optimization metric |
-| Category diversity score | > 3 categories in top 10 |
+| Metric                     | Target                      |
+| -------------------------- | --------------------------- |
+| Feed latency (p99)         | < 200ms                     |
+| Model inference time       | < 50ms                      |
+| Feature store read latency | < 10ms                      |
+| Stream-to-feed latency     | < 30s (new stream appears)  |
+| CTR (click-through rate)   | Tracked per model version   |
+| Watch time per session     | Primary optimization metric |
+| Category diversity score   | > 3 categories in top 10    |

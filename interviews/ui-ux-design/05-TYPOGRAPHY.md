@@ -192,14 +192,14 @@ mathematical ratio. It brings consistency and rhythm to your typography.
 
 ```css
 :root {
-  --step--2: clamp(0.69rem, 0.66rem + 0.18vw, 0.80rem);
-  --step--1: clamp(0.83rem, 0.78rem + 0.29vw, 1.00rem);
-  --step-0:  clamp(1.00rem, 0.91rem + 0.43vw, 1.25rem);
-  --step-1:  clamp(1.20rem, 1.07rem + 0.63vw, 1.56rem);
-  --step-2:  clamp(1.44rem, 1.26rem + 0.89vw, 1.95rem);
-  --step-3:  clamp(1.73rem, 1.48rem + 1.24vw, 2.44rem);
-  --step-4:  clamp(2.07rem, 1.73rem + 1.70vw, 3.05rem);
-  --step-5:  clamp(2.49rem, 2.03rem + 2.31vw, 3.82rem);
+  --step--2: clamp(0.69rem, 0.66rem + 0.18vw, 0.8rem);
+  --step--1: clamp(0.83rem, 0.78rem + 0.29vw, 1rem);
+  --step-0: clamp(1rem, 0.91rem + 0.43vw, 1.25rem);
+  --step-1: clamp(1.2rem, 1.07rem + 0.63vw, 1.56rem);
+  --step-2: clamp(1.44rem, 1.26rem + 0.89vw, 1.95rem);
+  --step-3: clamp(1.73rem, 1.48rem + 1.24vw, 2.44rem);
+  --step-4: clamp(2.07rem, 1.73rem + 1.7vw, 3.05rem);
+  --step-5: clamp(2.49rem, 2.03rem + 2.31vw, 3.82rem);
 }
 ```
 
@@ -223,12 +223,12 @@ readability.
 **Guidelines:**
 
 | Context          | Line Height |
-|------------------|-------------|
-| Body text        | 1.5 - 1.75 |
-| Headings         | 1.1 - 1.3  |
-| Large display    | 1.0 - 1.1  |
-| Buttons / labels | 1.0 - 1.2  |
-| Captions         | 1.4 - 1.5  |
+| ---------------- | ----------- |
+| Body text        | 1.5 - 1.75  |
+| Headings         | 1.1 - 1.3   |
+| Large display    | 1.0 - 1.1   |
+| Buttons / labels | 1.0 - 1.2   |
+| Captions         | 1.4 - 1.5   |
 
 ### Line Length (Measure)
 
@@ -272,12 +272,14 @@ p {
 #### Fluid Type in Tailwind (v3.3+)
 
 ```jsx
-{/* Using arbitrary values with clamp */}
-<h1 className="text-[clamp(2rem,5vw+1rem,4rem)]">
-  Responsive Heading
-</h1>
+{
+  /* Using arbitrary values with clamp */
+}
+<h1 className="text-[clamp(2rem,5vw+1rem,4rem)]">Responsive Heading</h1>;
 
-{/* Or define in tailwind.config.js */}
+{
+  /* Or define in tailwind.config.js */
+}
 // fontSize: {
 //   'fluid-lg': 'clamp(1.5rem, 3vw + 0.5rem, 2.5rem)',
 //   'fluid-xl': 'clamp(2rem, 5vw + 1rem, 4rem)',
@@ -301,17 +303,17 @@ p {
   src: url('/fonts/Poppins-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
-  font-display: swap;    /* <- Controls loading behavior */
+  font-display: swap; /* <- Controls loading behavior */
 }
 ```
 
-| Value      | Behavior                                                     |
-|------------|--------------------------------------------------------------|
-| `auto`     | Browser decides (usually FOIT)                               |
-| `block`    | Short invisible period, then swap (FOIT with timeout)        |
-| `swap`     | Immediate fallback, swap when ready (FOUT -- recommended)    |
-| `fallback` | Very short invisible period, may not swap if too slow        |
-| `optional` | Very short invisible period, browser may skip the web font   |
+| Value      | Behavior                                                   |
+| ---------- | ---------------------------------------------------------- |
+| `auto`     | Browser decides (usually FOIT)                             |
+| `block`    | Short invisible period, then swap (FOIT with timeout)      |
+| `swap`     | Immediate fallback, swap when ready (FOUT -- recommended)  |
+| `fallback` | Very short invisible period, may not swap if too slow      |
+| `optional` | Very short invisible period, browser may skip the web font |
 
 **Recommendation:** Use `font-display: swap` for body text (content must be
 readable immediately). Use `font-display: optional` for display fonts where
@@ -382,14 +384,14 @@ Five levels of hierarchy using only size and weight -- no color needed.
 
 ### Self-Hosting vs CDN Fonts
 
-| Factor          | Self-Hosted                  | CDN (Google Fonts)          |
-|-----------------|------------------------------|-----------------------------|
-| Performance     | Fewer DNS lookups, faster    | Extra DNS + connection      |
-| Privacy         | No third-party tracking      | Google collects user data   |
-| Reliability     | Works offline / on intranet  | Depends on CDN uptime       |
-| Caching         | Your CDN / host cache rules  | Shared cache (less useful)  |
-| Setup           | More initial work            | One link tag                |
-| Updates         | Manual                       | Automatic                   |
+| Factor      | Self-Hosted                 | CDN (Google Fonts)         |
+| ----------- | --------------------------- | -------------------------- |
+| Performance | Fewer DNS lookups, faster   | Extra DNS + connection     |
+| Privacy     | No third-party tracking     | Google collects user data  |
+| Reliability | Works offline / on intranet | Depends on CDN uptime      |
+| Caching     | Your CDN / host cache rules | Shared cache (less useful) |
+| Setup       | More initial work           | One link tag               |
+| Updates     | Manual                      | Automatic                  |
 
 **Recommendation:** Self-host fonts for production sites. The performance and
 privacy benefits outweigh the extra setup effort. Use a tool like
@@ -437,7 +439,11 @@ privacy benefits outweigh the extra setup effort. Use a tool like
 }
 
 body {
-  font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Poppins',
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 ```
 
@@ -448,19 +454,19 @@ body {
 module.exports = {
   theme: {
     fontSize: {
-      'xs':     ['0.75rem',   { lineHeight: '1rem' }],
-      'sm':     ['0.875rem',  { lineHeight: '1.25rem' }],
-      'base':   ['1rem',      { lineHeight: '1.75rem' }],
-      'lg':     ['1.125rem',  { lineHeight: '1.75rem' }],
-      'xl':     ['1.25rem',   { lineHeight: '1.75rem' }],
-      '2xl':    ['1.563rem',  { lineHeight: '2rem' }],
-      '3xl':    ['1.953rem',  { lineHeight: '2.25rem' }],
-      '4xl':    ['2.441rem',  { lineHeight: '2.5rem' }],
-      '5xl':    ['3.052rem',  { lineHeight: '1.1' }],
+      xs: ['0.75rem', { lineHeight: '1rem' }],
+      sm: ['0.875rem', { lineHeight: '1.25rem' }],
+      base: ['1rem', { lineHeight: '1.75rem' }],
+      lg: ['1.125rem', { lineHeight: '1.75rem' }],
+      xl: ['1.25rem', { lineHeight: '1.75rem' }],
+      '2xl': ['1.563rem', { lineHeight: '2rem' }],
+      '3xl': ['1.953rem', { lineHeight: '2.25rem' }],
+      '4xl': ['2.441rem', { lineHeight: '2.5rem' }],
+      '5xl': ['3.052rem', { lineHeight: '1.1' }],
       // Major Third ratio (1.250) from base 16px
     },
   },
-}
+};
 ```
 
 ### Responsive Heading Component
@@ -525,7 +531,7 @@ module.exports = {
       mono: ['var(--font-mono)', 'monospace'],
     },
   },
-}
+};
 ```
 
 ---

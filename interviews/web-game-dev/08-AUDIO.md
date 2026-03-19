@@ -30,9 +30,9 @@ const audioContext = new AudioContext();
 console.log(audioContext.state); // 'suspended' (before user interaction)
 
 // Key properties
-console.log(audioContext.sampleRate);     // e.g., 44100 or 48000
-console.log(audioContext.currentTime);    // High-precision time in seconds
-console.log(audioContext.destination);    // Final output node (speakers)
+console.log(audioContext.sampleRate); // e.g., 44100 or 48000
+console.log(audioContext.currentTime); // High-precision time in seconds
+console.log(audioContext.destination); // Final output node (speakers)
 ```
 
 **Important**: There is a limit on the number of AudioContexts per page (typically 6-8). For games, you should use a single AudioContext and route all audio through it.
@@ -223,20 +223,20 @@ class GameAudioGraph {
 
 ### Node Types Summary
 
-| Node Type | Category | Purpose |
-|-----------|----------|---------|
-| `AudioBufferSourceNode` | Source | Play pre-loaded audio buffers |
-| `OscillatorNode` | Source | Generate waveforms (sine, square, etc.) |
-| `MediaElementAudioSourceNode` | Source | Stream from `<audio>`/`<video>` elements |
-| `GainNode` | Processing | Volume control |
-| `BiquadFilterNode` | Processing | Filtering (lowpass, highpass, etc.) |
-| `ConvolverNode` | Processing | Reverb via impulse response |
-| `DelayNode` | Processing | Time delay |
-| `DynamicsCompressorNode` | Processing | Dynamic range compression |
-| `StereoPannerNode` | Processing | Left/right panning |
-| `PannerNode` | Processing | 3D spatial audio |
-| `AnalyserNode` | Analysis | FFT data for visualization |
-| `AudioDestinationNode` | Destination | Output to speakers |
+| Node Type                     | Category    | Purpose                                  |
+| ----------------------------- | ----------- | ---------------------------------------- |
+| `AudioBufferSourceNode`       | Source      | Play pre-loaded audio buffers            |
+| `OscillatorNode`              | Source      | Generate waveforms (sine, square, etc.)  |
+| `MediaElementAudioSourceNode` | Source      | Stream from `<audio>`/`<video>` elements |
+| `GainNode`                    | Processing  | Volume control                           |
+| `BiquadFilterNode`            | Processing  | Filtering (lowpass, highpass, etc.)      |
+| `ConvolverNode`               | Processing  | Reverb via impulse response              |
+| `DelayNode`                   | Processing  | Time delay                               |
+| `DynamicsCompressorNode`      | Processing  | Dynamic range compression                |
+| `StereoPannerNode`            | Processing  | Left/right panning                       |
+| `PannerNode`                  | Processing  | 3D spatial audio                         |
+| `AnalyserNode`                | Analysis    | FFT data for visualization               |
+| `AudioDestinationNode`        | Destination | Output to speakers                       |
 
 ---
 
@@ -276,7 +276,7 @@ class AudioContextManager {
 
   private addResumeListeners(): void {
     const events = ['click', 'touchstart', 'touchend', 'keydown'];
-    events.forEach(event => {
+    events.forEach((event) => {
       document.addEventListener(event, this.resumeHandlerBound, {
         once: false,
         passive: true,
@@ -301,7 +301,7 @@ class AudioContextManager {
 
   private removeResumeListeners(): void {
     const events = ['click', 'touchstart', 'touchend', 'keydown'];
-    events.forEach(event => {
+    events.forEach((event) => {
       document.removeEventListener(event, this.resumeHandlerBound);
     });
   }
@@ -328,10 +328,14 @@ function createStartScreen(onStart: () => void): HTMLElement {
     display: flex; align-items: center; justify-content: center;
     background: rgba(0,0,0,0.8); color: white; cursor: pointer; z-index: 9999;
   `;
-  overlay.addEventListener('click', () => {
-    onStart();
-    overlay.remove();
-  }, { once: true });
+  overlay.addEventListener(
+    'click',
+    () => {
+      onStart();
+      overlay.remove();
+    },
+    { once: true }
+  );
   return overlay;
 }
 
@@ -486,7 +490,7 @@ class SFXPool {
 
   stopAll(fadeTime: number = 0.1): void {
     const ids = Array.from(this.activeSounds.keys());
-    ids.forEach(id => this.stop(id, fadeTime));
+    ids.forEach((id) => this.stop(id, fadeTime));
   }
 
   private evictOldest(): void {
@@ -517,8 +521,8 @@ A sound sprite is a single audio file containing multiple sound effects at known
 
 ```typescript
 interface SpriteDefinition {
-  offset: number;   // Start time in seconds
-  duration: number;  // Duration in seconds
+  offset: number; // Start time in seconds
+  duration: number; // Duration in seconds
 }
 
 interface SpriteSheet {
@@ -568,12 +572,12 @@ class SoundSprite {
 const spriteSheet: SpriteSheet = {
   buffer: null!, // loaded AudioBuffer
   sprites: {
-    'jump':      { offset: 0.0,  duration: 0.3 },
-    'coin':      { offset: 0.5,  duration: 0.2 },
-    'explosion': { offset: 1.0,  duration: 0.8 },
-    'powerup':   { offset: 2.0,  duration: 0.5 },
-    'hit':       { offset: 3.0,  duration: 0.15 },
-    'menu_click': { offset: 3.5, duration: 0.1 },
+    jump: { offset: 0.0, duration: 0.3 },
+    coin: { offset: 0.5, duration: 0.2 },
+    explosion: { offset: 1.0, duration: 0.8 },
+    powerup: { offset: 2.0, duration: 0.5 },
+    hit: { offset: 3.0, duration: 0.15 },
+    menu_click: { offset: 3.5, duration: 0.1 },
   },
 };
 ```
@@ -617,8 +621,12 @@ class SpatialAudioManager {
       // Legacy API
       this.listener.setPosition(position.x, position.y, position.z);
       this.listener.setOrientation(
-        forward.x, forward.y, forward.z,
-        up.x, up.y, up.z
+        forward.x,
+        forward.y,
+        forward.z,
+        up.x,
+        up.y,
+        up.z
       );
     }
   }
@@ -664,9 +672,9 @@ class SpatialAudioManager {
 // Usage: explosion at world position (10, 0, 5)
 const spatial = new SpatialAudioManager(audioContext);
 spatial.setListenerPosition(
-  { x: 0, y: 0, z: 0 },       // player at origin
-  { x: 0, y: 0, z: -1 },      // looking forward
-  { x: 0, y: 1, z: 0 }        // up is Y
+  { x: 0, y: 0, z: 0 }, // player at origin
+  { x: 0, y: 0, z: -1 }, // looking forward
+  { x: 0, y: 1, z: 0 } // up is Y
 );
 
 const { source, panner } = spatial.createSpatialSource(
@@ -679,11 +687,11 @@ source.start(0);
 
 ### Distance Models
 
-| Model | Formula | Use Case |
-|-------|---------|----------|
-| `linear` | `1 - rolloff * (dist - ref) / (max - ref)` | Simple 2D games |
-| `inverse` | `ref / (ref + rolloff * (dist - ref))` | Realistic falloff |
-| `exponential` | `(dist / ref) ^ -rolloff` | Dramatic falloff |
+| Model         | Formula                                    | Use Case          |
+| ------------- | ------------------------------------------ | ----------------- |
+| `linear`      | `1 - rolloff * (dist - ref) / (max - ref)` | Simple 2D games   |
+| `inverse`     | `ref / (ref + rolloff * (dist - ref))`     | Realistic falloff |
+| `exponential` | `(dist / ref) ^ -rolloff`                  | Dramatic falloff  |
 
 ---
 
@@ -733,9 +741,7 @@ class MusicPlayer {
     if (!this.currentSource || !this.currentGain) return;
 
     const now = this.context.currentTime;
-    this.currentGain.gain.setValueAtTime(
-      this.currentGain.gain.value, now
-    );
+    this.currentGain.gain.setValueAtTime(this.currentGain.gain.value, now);
     this.currentGain.gain.linearRampToValueAtTime(0, now + fadeTime);
     this.currentSource.stop(now + fadeTime);
 
@@ -764,8 +770,10 @@ class MusicPlayer {
 class MusicCrossfader {
   private context: AudioContext;
   private output: GainNode;
-  private trackA: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
-  private trackB: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
+  private trackA: { source: AudioBufferSourceNode; gain: GainNode } | null =
+    null;
+  private trackB: { source: AudioBufferSourceNode; gain: GainNode } | null =
+    null;
   private activeTrack: 'A' | 'B' = 'A';
 
   constructor(context: AudioContext, output: GainNode) {
@@ -773,9 +781,10 @@ class MusicCrossfader {
     this.output = output;
   }
 
-  private createTrack(
-    buffer: AudioBuffer
-  ): { source: AudioBufferSourceNode; gain: GainNode } {
+  private createTrack(buffer: AudioBuffer): {
+    source: AudioBufferSourceNode;
+    gain: GainNode;
+  } {
     const source = this.context.createBufferSource();
     source.buffer = buffer;
     source.loop = true;
@@ -800,9 +809,7 @@ class MusicCrossfader {
       this.trackB.gain.gain.linearRampToValueAtTime(1, now + duration);
 
       if (this.trackA) {
-        this.trackA.gain.gain.setValueAtTime(
-          this.trackA.gain.gain.value, now
-        );
+        this.trackA.gain.gain.setValueAtTime(this.trackA.gain.gain.value, now);
         this.trackA.gain.gain.linearRampToValueAtTime(0, now + duration);
         const oldSource = this.trackA.source;
         setTimeout(() => oldSource.stop(), duration * 1000 + 100);
@@ -816,9 +823,7 @@ class MusicCrossfader {
       this.trackA.gain.gain.linearRampToValueAtTime(1, now + duration);
 
       if (this.trackB) {
-        this.trackB.gain.gain.setValueAtTime(
-          this.trackB.gain.gain.value, now
-        );
+        this.trackB.gain.gain.setValueAtTime(this.trackB.gain.gain.value, now);
         this.trackB.gain.gain.linearRampToValueAtTime(0, now + duration);
         const oldSource = this.trackB.source;
         setTimeout(() => oldSource.stop(), duration * 1000 + 100);
@@ -892,7 +897,7 @@ class AdaptiveMusicSystem {
     // Quantize start to next beat
     const nextBeat = Math.ceil(now / this.beatDuration) * this.beatDuration;
 
-    this.layers.forEach(layer => {
+    this.layers.forEach((layer) => {
       const source = this.context.createBufferSource();
       source.buffer = layer.buffer;
       source.loop = true;
@@ -912,7 +917,7 @@ class AdaptiveMusicSystem {
   private updateLayerVolumes(transitionTime: number = 0.5): void {
     const now = this.context.currentTime;
 
-    this.layers.forEach(layer => {
+    this.layers.forEach((layer) => {
       let volume = 0;
 
       switch (layer.category) {
@@ -922,18 +927,18 @@ class AdaptiveMusicSystem {
           break;
         case 'percussion':
           // Fades in at 30% intensity
-          volume = layer.targetVolume *
-            Math.max(0, (this.intensity - 0.3) / 0.7);
+          volume =
+            layer.targetVolume * Math.max(0, (this.intensity - 0.3) / 0.7);
           break;
         case 'melody':
           // Fades in at 50% intensity
-          volume = layer.targetVolume *
-            Math.max(0, (this.intensity - 0.5) / 0.5);
+          volume =
+            layer.targetVolume * Math.max(0, (this.intensity - 0.5) / 0.5);
           break;
         case 'intensity':
           // Only at high intensity (70%+)
-          volume = layer.targetVolume *
-            Math.max(0, (this.intensity - 0.7) / 0.3);
+          volume =
+            layer.targetVolume * Math.max(0, (this.intensity - 0.7) / 0.3);
           break;
       }
 
@@ -944,7 +949,7 @@ class AdaptiveMusicSystem {
 
   stopAll(fadeTime: number = 2.0): void {
     const now = this.context.currentTime;
-    this.layers.forEach(layer => {
+    this.layers.forEach((layer) => {
       if (layer.source) {
         layer.gain.gain.setValueAtTime(layer.gain.gain.value, now);
         layer.gain.gain.linearRampToValueAtTime(0, now + fadeTime);
@@ -964,9 +969,9 @@ adaptiveMusic.addLayer('stinger', stingerBuffer, 'intensity', 1.0);
 adaptiveMusic.startAll();
 
 // During gameplay
-adaptiveMusic.setIntensity(0.2);  // calm exploration
-adaptiveMusic.setIntensity(0.8);  // intense combat
-adaptiveMusic.setIntensity(1.0);  // boss fight
+adaptiveMusic.setIntensity(0.2); // calm exploration
+adaptiveMusic.setIntensity(0.8); // intense combat
+adaptiveMusic.setIntensity(1.0); // boss fight
 ```
 
 ---
@@ -993,8 +998,8 @@ gain.gain.exponentialRampToValueAtTime(0.01, now + 1); // Fade out (can't go to 
 
 // Scheduled value changes
 gain.gain.setValueAtTime(1, now);
-gain.gain.setValueAtTime(0.5, now + 1);  // Drop to 50% at 1 second
-gain.gain.setValueAtTime(1, now + 2);    // Back to 100% at 2 seconds
+gain.gain.setValueAtTime(0.5, now + 1); // Drop to 50% at 1 second
+gain.gain.setValueAtTime(1, now + 2); // Back to 100% at 2 seconds
 
 // Smooth curve
 gain.gain.setTargetAtTime(0.5, now, 0.3); // Exponential approach, time constant 0.3
@@ -1007,8 +1012,8 @@ gain.gain.setTargetAtTime(0.5, now, 0.3); // Exponential approach, time constant
 function createMuffleEffect(context: AudioContext): BiquadFilterNode {
   const filter = context.createBiquadFilter();
   filter.type = 'lowpass';
-  filter.frequency.value = 500;  // Cut frequencies above 500Hz
-  filter.Q.value = 1;            // Resonance
+  filter.frequency.value = 500; // Cut frequencies above 500Hz
+  filter.Q.value = 1; // Resonance
   return filter;
 }
 
@@ -1072,8 +1077,8 @@ function createProceduralReverb(
   for (let channel = 0; channel < 2; channel++) {
     const channelData = impulse.getChannelData(channel);
     for (let i = 0; i < length; i++) {
-      channelData[i] = (Math.random() * 2 - 1) *
-        Math.pow(1 - i / length, decay);
+      channelData[i] =
+        (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
     }
   }
 
@@ -1211,7 +1216,7 @@ class ProceduralSFX {
     const gain = this.context.createGain();
 
     osc1.type = 'square';
-    osc1.frequency.setValueAtTime(987.77, now);      // B5
+    osc1.frequency.setValueAtTime(987.77, now); // B5
     osc1.frequency.setValueAtTime(1318.51, now + 0.1); // E6
 
     osc2.type = 'square';
@@ -1259,7 +1264,9 @@ class ProceduralSFX {
     // White noise burst
     const bufferSize = this.context.sampleRate * 0.1;
     const noiseBuffer = this.context.createBuffer(
-      1, bufferSize, this.context.sampleRate
+      1,
+      bufferSize,
+      this.context.sampleRate
     );
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -1299,7 +1306,9 @@ class ProceduralSFX {
     // Noise burst
     const bufferSize = this.context.sampleRate * 0.5;
     const noiseBuffer = this.context.createBuffer(
-      1, bufferSize, this.context.sampleRate
+      1,
+      bufferSize,
+      this.context.sampleRate
     );
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -1351,7 +1360,7 @@ class ProceduralSFX {
   // Success/win jingle
   success(): void {
     const now = this.context.currentTime;
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
     const duration = 0.15;
 
     notes.forEach((freq, i) => {
@@ -1363,7 +1372,8 @@ class ProceduralSFX {
       gain.gain.setValueAtTime(0, now + i * duration);
       gain.gain.linearRampToValueAtTime(0.2, now + i * duration + 0.02);
       gain.gain.exponentialRampToValueAtTime(
-        0.01, now + i * duration + duration
+        0.01,
+        now + i * duration + duration
       );
 
       osc.connect(gain);
@@ -1457,11 +1467,11 @@ jumpSound.play();
 const sfx = new Howl({
   src: ['sfx-sprite.webm', 'sfx-sprite.mp3'],
   sprite: {
-    coin:      [0, 200],      // [offset ms, duration ms]
-    jump:      [500, 300],
+    coin: [0, 200], // [offset ms, duration ms]
+    jump: [500, 300],
     explosion: [1000, 800],
-    powerup:   [2000, 500],
-    hit:       [3000, 150],
+    powerup: [2000, 500],
+    hit: [3000, 150],
   },
 });
 
@@ -1489,7 +1499,7 @@ const spatialSound = new Howl({
 });
 
 const id = spatialSound.play();
-spatialSound.pos(5, 0, -2, id);    // x, y, z position
+spatialSound.pos(5, 0, -2, id); // x, y, z position
 spatialSound.orient(0, 0, -1, id); // direction
 
 // Set listener position
@@ -1504,27 +1514,27 @@ music.fade(0, 0.5, 2000, musicId); // Fade in over 2 seconds
 // Rate (pitch) changes
 const engine = new Howl({ src: ['engine.mp3'], loop: true });
 const engineId = engine.play();
-engine.rate(0.5, engineId);  // Half speed
-engine.rate(2.0, engineId);  // Double speed
+engine.rate(0.5, engineId); // Half speed
+engine.rate(2.0, engineId); // Double speed
 
 // Global controls
-Howler.volume(0.5);  // Global volume
-Howler.mute(true);   // Mute all
-Howler.stop();       // Stop all
+Howler.volume(0.5); // Global volume
+Howler.mute(true); // Mute all
+Howler.stop(); // Stop all
 ```
 
 ### Howler.js vs Raw Web Audio API
 
-| Feature | Howler.js | Raw Web Audio API |
-|---------|-----------|-------------------|
-| File size | ~10KB gzipped | 0 (built-in) |
-| Codec fallback | Automatic | Manual |
-| Sprite support | Built-in | Manual |
-| Spatial audio | Simplified API | Full PannerNode control |
-| HTML5 streaming | Built-in toggle | Manual MediaElementSource |
-| Mobile unlock | Automatic | Manual |
-| Pool management | Automatic | Manual |
-| Best for | Most games | Playable ads, custom needs |
+| Feature         | Howler.js       | Raw Web Audio API          |
+| --------------- | --------------- | -------------------------- |
+| File size       | ~10KB gzipped   | 0 (built-in)               |
+| Codec fallback  | Automatic       | Manual                     |
+| Sprite support  | Built-in        | Manual                     |
+| Spatial audio   | Simplified API  | Full PannerNode control    |
+| HTML5 streaming | Built-in toggle | Manual MediaElementSource  |
+| Mobile unlock   | Automatic       | Manual                     |
+| Pool management | Automatic       | Manual                     |
+| Best for        | Most games      | Playable ads, custom needs |
 
 **For playable ads**, Howler.js is usually too large. Use the raw Web Audio API or procedural audio instead.
 
@@ -1534,14 +1544,14 @@ Howler.stop();       // Stop all
 
 ### Format Comparison
 
-| Format | Compression | Quality | Size | License | Browser Support |
-|--------|-------------|---------|------|---------|-----------------|
-| **MP3** | Lossy | Good | Small | Patented (free since 2017) | Universal |
-| **OGG Vorbis** | Lossy | Good | Small | Free | Chrome, Firefox, Edge (no Safari) |
-| **AAC** | Lossy | Better | Small | Patented | Safari, Chrome, Edge, Firefox |
-| **WAV** | Uncompressed | Perfect | Very Large | Free | Universal |
-| **WebM (Opus)** | Lossy | Excellent | Smallest | Free | Chrome, Firefox, Edge (no Safari) |
-| **FLAC** | Lossless | Perfect | Large | Free | Most modern browsers |
+| Format          | Compression  | Quality   | Size       | License                    | Browser Support                   |
+| --------------- | ------------ | --------- | ---------- | -------------------------- | --------------------------------- |
+| **MP3**         | Lossy        | Good      | Small      | Patented (free since 2017) | Universal                         |
+| **OGG Vorbis**  | Lossy        | Good      | Small      | Free                       | Chrome, Firefox, Edge (no Safari) |
+| **AAC**         | Lossy        | Better    | Small      | Patented                   | Safari, Chrome, Edge, Firefox     |
+| **WAV**         | Uncompressed | Perfect   | Very Large | Free                       | Universal                         |
+| **WebM (Opus)** | Lossy        | Excellent | Smallest   | Free                       | Chrome, Firefox, Edge (no Safari) |
+| **FLAC**        | Lossless     | Perfect   | Large      | Free                       | Most modern browsers              |
 
 ### Codec Detection and Fallback
 
@@ -1642,7 +1652,7 @@ class AudioResourceManager {
     assets: Array<{ name: string; url: string }>
   ): Promise<void> {
     await Promise.all(
-      assets.map(asset => this.preload(asset.name, asset.url))
+      assets.map((asset) => this.preload(asset.name, asset.url))
     );
   }
 
@@ -1686,7 +1696,7 @@ class AudioResourceManager {
   }
 
   stopAll(): void {
-    this.activeSources.forEach(source => {
+    this.activeSources.forEach((source) => {
       try {
         source.stop();
       } catch {
@@ -1698,7 +1708,7 @@ class AudioResourceManager {
 
   getMemoryUsage(): { buffers: number; totalBytes: number } {
     let totalBytes = 0;
-    this.bufferCache.forEach(buffer => {
+    this.bufferCache.forEach((buffer) => {
       // Each sample is 4 bytes (Float32)
       totalBytes += buffer.length * buffer.numberOfChannels * 4;
     });
@@ -1761,16 +1771,16 @@ async function playGood(url: string): Promise<void> {
 
 ### Performance Tips Summary
 
-| Tip | Impact | Details |
-|-----|--------|---------|
-| Cache AudioBuffers | High | Decode once, reuse many times |
-| Limit concurrent sounds | High | 16-32 max on mobile |
-| Use mono for SFX | Medium | 50% memory reduction |
-| Lower sample rate for SFX | Medium | 22050 Hz sufficient |
-| Disconnect unused nodes | Medium | Allows garbage collection |
-| Use sound sprites | Medium | Fewer HTTP requests, less overhead |
-| Avoid creating AudioContexts | High | Max 6-8 per page; use one |
-| Pre-decode during loading | Medium | Avoid decode lag during gameplay |
+| Tip                          | Impact | Details                            |
+| ---------------------------- | ------ | ---------------------------------- |
+| Cache AudioBuffers           | High   | Decode once, reuse many times      |
+| Limit concurrent sounds      | High   | 16-32 max on mobile                |
+| Use mono for SFX             | Medium | 50% memory reduction               |
+| Lower sample rate for SFX    | Medium | 22050 Hz sufficient                |
+| Disconnect unused nodes      | Medium | Allows garbage collection          |
+| Use sound sprites            | Medium | Fewer HTTP requests, less overhead |
+| Avoid creating AudioContexts | High   | Max 6-8 per page; use one          |
+| Pre-decode during loading    | Medium | Avoid decode lag during gameplay   |
 
 ---
 
@@ -1805,6 +1815,7 @@ Hybrid approach: Use `MediaElementAudioSourceNode` to stream via `<audio>` but p
 Modern browsers require user interaction (click, tap, key press) before allowing audio playback. An `AudioContext` is created in a `suspended` state and must be explicitly resumed within a user gesture event handler.
 
 Strategies:
+
 1. **Start screen**: Show a "Tap to Play" overlay. Resume AudioContext in the click handler. This is the most reliable approach.
 2. **Silent buffer trick**: On the first user interaction, play a tiny silent buffer to unlock audio on iOS Safari.
 3. **Listen for multiple gesture types**: Attach resume logic to `click`, `touchstart`, `touchend`, and `keydown` to catch any interaction.
@@ -1825,6 +1836,7 @@ Given the extreme size constraints:
 2. **Procedural audio using OscillatorNode.** Generate sound effects in code using oscillators and noise buffers. This adds zero bytes to the file size. You can create convincing coin, jump, hit, explosion, and click sounds procedurally.
 
 3. **If file-based audio is required:**
+
    - Use a single sound sprite file containing all SFX
    - Encode as MP3 mono at 32-64kbps (the lowest acceptable quality)
    - Keep total audio under 50-100KB
@@ -1843,6 +1855,7 @@ Given the extreme size constraints:
 A sound sprite is a single audio file containing multiple short sound effects concatenated together, with a metadata map defining each effect's start offset and duration. It is the audio equivalent of a texture atlas/sprite sheet.
 
 Benefits:
+
 - **Fewer HTTP requests**: One file instead of many, important for load time
 - **Required for playable ads**: Many ad networks require a single HTML file with all assets inlined
 - **Simpler caching**: One file to cache instead of many
@@ -1851,6 +1864,7 @@ Benefits:
 Implementation: Load the full AudioBuffer, then use `source.start(when, offset, duration)` to play specific segments.
 
 Drawbacks:
+
 - Editing individual sounds requires regenerating the sprite
 - Slight overhead from loading sounds you may not use
 - Cannot independently adjust sample rate per sound
@@ -1874,6 +1888,7 @@ Sources -> [UI Bus (GainNode)] ->
 Each bus is a `GainNode` that controls the volume of its category. The master bus controls overall volume. This lets the player independently adjust SFX, music, and UI volumes from a settings menu.
 
 For more complex games, I add processing nodes per bus:
+
 - Music bus might have a `DynamicsCompressorNode` for normalization
 - SFX bus might have a `ConvolverNode` for environment reverb
 - A `BiquadFilterNode` on the master bus for effects like underwater muffling
@@ -1889,6 +1904,7 @@ The key principle is that `AudioBufferSourceNode` instances are cheap and dispos
 Crossfading requires two active sources playing simultaneously during the transition period. The outgoing track fades out while the incoming track fades in.
 
 Implementation:
+
 1. Create a new `AudioBufferSourceNode` for the incoming track.
 2. Connect it through a `GainNode` set to 0.
 3. Start playback of the new source.
@@ -1933,6 +1949,7 @@ The `AudioListener` (accessed via `context.listener`) represents the player's ea
 The `PannerNode` is attached to each sound source and set to a position in the same world space. The Web Audio API calculates the relative position, applies distance attenuation, and pans the stereo output accordingly.
 
 Key `PannerNode` properties:
+
 - **`panningModel`**: `'equalpower'` (simple stereo panning) or `'HRTF'` (head-related transfer function for realistic 3D with headphones).
 - **`distanceModel`**: `'linear'`, `'inverse'`, or `'exponential'` -- controls how volume decreases with distance.
 - **`refDistance`**: Distance at which volume begins to attenuate.
@@ -2005,6 +2022,7 @@ For games specifically, this should be coupled with pausing the game loop. You s
 **Answer:**
 
 **Howler.js advantages:**
+
 - Automatic codec detection and fallback
 - Built-in sound sprite support
 - Automatic mobile audio unlock
@@ -2013,6 +2031,7 @@ For games specifically, this should be coupled with pausing the game loop. You s
 - Sound pooling built-in
 
 **Raw Web Audio API advantages:**
+
 - Zero additional file size (critical for playable ads)
 - Full control over the audio graph
 - Custom effects chains
@@ -2021,6 +2040,7 @@ For games specifically, this should be coupled with pausing the game loop. You s
 - Better TypeScript support (native types)
 
 **Decision framework:**
+
 - **Standard web game** (no strict size limits): Use Howler.js. The 10KB cost is negligible.
 - **Playable ad** (2-5MB total): Use raw Web Audio API. Every kilobyte matters.
 - **Complex audio requirements** (adaptive music, custom DSP): Use raw Web Audio API for the control it provides.

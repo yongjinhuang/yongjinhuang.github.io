@@ -33,13 +33,13 @@ determines the architecture, cost, and complexity of the system.
 
 ### Detailed Tier Breakdown
 
-| Tier | Latency | Protocol | Use Cases | Trade-offs |
-|------|---------|----------|-----------|------------|
-| **Ultra-Low** | < 100ms | Custom UDP, SRT, Rist | Financial trading, remote surgery, competitive gaming | High cost, limited scale, no ABR |
-| **Real-Time** | 100-500ms | WebRTC | Video calls, live auctions, interactive broadcasts | Complex NAT traversal, limited to ~1000 viewers per SFU |
-| **Low-Latency** | 2-5s | LL-HLS, LL-DASH, CMAF | Sports betting, live Q&A, e-sports | Requires CDN support, partial segments |
-| **Standard** | 10-30s | HLS, DASH | Live TV, concerts, news | Simple CDN, good ABR, high quality |
-| **Traditional Broadcast** | 30-60s | MPEG-TS over satellite | Cable TV, satellite broadcast | Highest quality, massive scale, one-way only |
+| Tier                      | Latency   | Protocol               | Use Cases                                             | Trade-offs                                              |
+| ------------------------- | --------- | ---------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
+| **Ultra-Low**             | < 100ms   | Custom UDP, SRT, Rist  | Financial trading, remote surgery, competitive gaming | High cost, limited scale, no ABR                        |
+| **Real-Time**             | 100-500ms | WebRTC                 | Video calls, live auctions, interactive broadcasts    | Complex NAT traversal, limited to ~1000 viewers per SFU |
+| **Low-Latency**           | 2-5s      | LL-HLS, LL-DASH, CMAF  | Sports betting, live Q&A, e-sports                    | Requires CDN support, partial segments                  |
+| **Standard**              | 10-30s    | HLS, DASH              | Live TV, concerts, news                               | Simple CDN, good ABR, high quality                      |
+| **Traditional Broadcast** | 30-60s    | MPEG-TS over satellite | Cable TV, satellite broadcast                         | Highest quality, massive scale, one-way only            |
 
 ### Choosing the Right Tier
 
@@ -97,12 +97,12 @@ Typical breakdown for a 200ms target:
 
 ### 2.1 Capture Latency
 
-| Factor | Latency | Notes |
-|--------|---------|-------|
-| Sensor readout | 1-15ms | Rolling shutter vs global shutter |
-| Frame interval | 16ms at 60fps, 33ms at 30fps | Higher fps = lower per-frame latency |
-| Camera processing | 1-5ms | White balance, exposure, noise reduction |
-| USB/HDMI transfer | 1-5ms | Depends on interface and resolution |
+| Factor            | Latency                      | Notes                                    |
+| ----------------- | ---------------------------- | ---------------------------------------- |
+| Sensor readout    | 1-15ms                       | Rolling shutter vs global shutter        |
+| Frame interval    | 16ms at 60fps, 33ms at 30fps | Higher fps = lower per-frame latency     |
+| Camera processing | 1-5ms                        | White balance, exposure, noise reduction |
+| USB/HDMI transfer | 1-5ms                        | Depends on interface and resolution      |
 
 **Optimization**: Use 60fps capture, disable unnecessary camera processing,
 prefer HDMI capture cards with passthrough mode.
@@ -149,15 +149,15 @@ Latency impact by encoder setting:
   Zerolatency preset:   Eliminates all buffering
 ```
 
-| Encoder Setting | Standard | Low-Latency |
-|----------------|----------|-------------|
-| Preset | `medium` / `slow` | `ultrafast` / `zerolatency` |
-| B-frames | 3-5 | 0 |
-| Lookahead | 20-40 frames | 0 |
-| GOP size | 2-10 seconds | 0.5-2 seconds |
-| Rate control | 2-pass VBR | CBR or capped VBR |
-| Slices | 1 | Multiple (parallel decode) |
-| Encoder type | Software (x264/x265) | Hardware (NVENC, QSV, VPU) |
+| Encoder Setting | Standard             | Low-Latency                 |
+| --------------- | -------------------- | --------------------------- |
+| Preset          | `medium` / `slow`    | `ultrafast` / `zerolatency` |
+| B-frames        | 3-5                  | 0                           |
+| Lookahead       | 20-40 frames         | 0                           |
+| GOP size        | 2-10 seconds         | 0.5-2 seconds               |
+| Rate control    | 2-pass VBR           | CBR or capped VBR           |
+| Slices          | 1                    | Multiple (parallel decode)  |
+| Encoder type    | Software (x264/x265) | Hardware (NVENC, QSV, VPU)  |
 
 ### 2.3 Network Latency
 
@@ -197,13 +197,13 @@ Typical one-way latencies:
 
 ### 2.4 Buffering Latency
 
-| Buffer Type | Purpose | Typical Size | Impact |
-|-------------|---------|-------------|--------|
-| Jitter buffer | Smooth packet timing variation | 20-200ms | Directly adds to latency |
-| ABR buffer | Adaptive bitrate switching | 3-30 seconds | Major latency contributor |
-| De-interleave buffer | Reorder out-of-order packets | 0-100ms | Necessary for reliable delivery |
-| Decode buffer | DTS/PTS reordering | 0-100ms | Depends on B-frames |
-| Render buffer | Vsync alignment | 0-16ms | One frame at 60fps |
+| Buffer Type          | Purpose                        | Typical Size | Impact                          |
+| -------------------- | ------------------------------ | ------------ | ------------------------------- |
+| Jitter buffer        | Smooth packet timing variation | 20-200ms     | Directly adds to latency        |
+| ABR buffer           | Adaptive bitrate switching     | 3-30 seconds | Major latency contributor       |
+| De-interleave buffer | Reorder out-of-order packets   | 0-100ms      | Necessary for reliable delivery |
+| Decode buffer        | DTS/PTS reordering             | 0-100ms      | Depends on B-frames             |
+| Render buffer        | Vsync alignment                | 0-16ms       | One frame at 60fps              |
 
 ### 2.5 Decoding and Rendering Latency
 
@@ -294,6 +294,7 @@ segment1.m4s
 ```
 
 **Key rules for partial segments:**
+
 - PART-TARGET should be roughly 1/6 of the target segment duration
 - Maximum part duration is the segment target duration
 - Each partial segment must be independently decodable (if it contains a keyframe)
@@ -334,7 +335,7 @@ Query parameters:
 
 ### 3.3 Preload Hints (EXT-X-PRELOAD-HINT)
 
-Preload hints tell the player about the *next* partial segment that has
+Preload hints tell the player about the _next_ partial segment that has
 not yet been produced. The player can issue a request for it immediately,
 and the server responds as soon as the data is available.
 
@@ -497,7 +498,7 @@ Key advantage: Single HTTP request receives an entire segment
 
 The MPD (Media Presentation Description) signals when segments become
 available using `availabilityTimeOffset`. This tells the player it can
-request the *current* segment before it is fully produced.
+request the _current_ segment before it is fully produced.
 
 ```xml
 <SegmentTemplate
@@ -547,18 +548,18 @@ LL-DASH Requirements (DASH-IF IOP v5):
 
 ### 4.5 LL-HLS vs LL-DASH Comparison
 
-| Feature | LL-HLS | LL-DASH |
-|---------|--------|---------|
-| Segment format | fMP4 (CMAF) | fMP4 (CMAF) |
-| Sub-segment unit | Partial Segment | CMAF Chunk |
-| Delivery mechanism | Separate HTTP request per part | Chunked transfer in single request |
-| Manifest update | Blocking playlist reload | Polling or WebSocket for MPD updates |
-| Early availability | Preload hints | availabilityTimeOffset |
-| CDN friendliness | Excellent (separate objects) | Good (requires chunked encoding support) |
-| ABR signaling | Multivariant playlist | MPD AdaptationSet |
-| Typical latency | 2-4s | 2-3s |
-| Apple device support | Native | Requires third-party player |
-| Browser support | Safari (native), others via MSE | All via MSE (dash.js, Shaka) |
+| Feature              | LL-HLS                          | LL-DASH                                  |
+| -------------------- | ------------------------------- | ---------------------------------------- |
+| Segment format       | fMP4 (CMAF)                     | fMP4 (CMAF)                              |
+| Sub-segment unit     | Partial Segment                 | CMAF Chunk                               |
+| Delivery mechanism   | Separate HTTP request per part  | Chunked transfer in single request       |
+| Manifest update      | Blocking playlist reload        | Polling or WebSocket for MPD updates     |
+| Early availability   | Preload hints                   | availabilityTimeOffset                   |
+| CDN friendliness     | Excellent (separate objects)    | Good (requires chunked encoding support) |
+| ABR signaling        | Multivariant playlist           | MPD AdaptationSet                        |
+| Typical latency      | 2-4s                            | 2-3s                                     |
+| Apple device support | Native                          | Requires third-party player              |
+| Browser support      | Safari (native), others via MSE | All via MSE (dash.js, Shaka)             |
 
 ---
 
@@ -703,13 +704,13 @@ Key differences from WHIP:
 
 ### 5.5 Scaling WebRTC to Broadcast
 
-| Challenge | Solution |
-|-----------|----------|
-| SFU CPU limits | Cascade SFUs: publisher SFU forwards to N edge SFUs |
-| Geographic latency | Deploy SFUs in regional PoPs; anycast routing |
+| Challenge            | Solution                                                |
+| -------------------- | ------------------------------------------------------- |
+| SFU CPU limits       | Cascade SFUs: publisher SFU forwards to N edge SFUs     |
+| Geographic latency   | Deploy SFUs in regional PoPs; anycast routing           |
 | Viewer scale (>100K) | Hybrid: WebRTC for ultra-low, LL-HLS fallback for scale |
-| NAT traversal | TURN server fleet with geographic distribution |
-| Bandwidth cost | Simulcast from publisher; SFU selects appropriate layer |
+| NAT traversal        | TURN server fleet with geographic distribution          |
+| Bandwidth cost       | Simulcast from publisher; SFU selects appropriate layer |
 
 ---
 
@@ -1412,13 +1413,13 @@ A systematic checklist for achieving sub-200ms end-to-end latency.
 
 ### Latency Budget Allocation by Use Case
 
-| Use Case | Capture | Encode | Network | Server | Decode | Display | Total |
-|----------|---------|--------|---------|--------|--------|---------|-------|
-| Video Call | 16ms | 20ms | 50ms | 5ms | 15ms | 8ms | 114ms |
-| Live Auction | 16ms | 30ms | 80ms | 10ms | 15ms | 8ms | 159ms |
-| Cloud Gaming | 8ms | 5ms | 20ms | 15ms | 5ms | 4ms | 57ms |
-| Remote Surgery | 8ms | 10ms | 30ms | 5ms | 5ms | 4ms | 62ms |
-| Sports Betting | 16ms | 50ms | 100ms | 20ms | 20ms | 16ms | 222ms |
+| Use Case       | Capture | Encode | Network | Server | Decode | Display | Total |
+| -------------- | ------- | ------ | ------- | ------ | ------ | ------- | ----- |
+| Video Call     | 16ms    | 20ms   | 50ms    | 5ms    | 15ms   | 8ms     | 114ms |
+| Live Auction   | 16ms    | 30ms   | 80ms    | 10ms   | 15ms   | 8ms     | 159ms |
+| Cloud Gaming   | 8ms     | 5ms    | 20ms    | 15ms   | 5ms    | 4ms     | 57ms  |
+| Remote Surgery | 8ms     | 10ms   | 30ms    | 5ms    | 5ms    | 4ms     | 62ms  |
+| Sports Betting | 16ms    | 50ms   | 100ms   | 20ms   | 20ms   | 16ms    | 222ms |
 
 ---
 
@@ -1556,18 +1557,18 @@ Twitter Spaces additions:
 
 ### 12.4 Latency Comparison Across Platforms
 
-| Platform | Protocol | Typical Latency | Max Viewers | ABR |
-|----------|----------|----------------|-------------|-----|
-| Twitch | LL-HLS | 1-3s | Millions | Yes |
-| YouTube Live | LL-HLS/LL-DASH | 2-5s | Millions | Yes |
-| Discord | WebRTC | 50-200ms | 25 video, 5000 voice | No |
-| Zoom | Custom (UDP) | 50-150ms | 1000 | Yes |
-| Clubhouse | WebRTC + relay | 100-500ms | 8000 listeners | No |
-| Twitter Spaces | WebRTC + relay | 200-600ms | Unlimited listeners | No |
-| Amazon IVS | LL-HLS | 2-5s | Millions | Yes |
-| Cloudflare Stream | LL-HLS + WHEP | 1-3s (WHEP: <500ms) | Millions | Yes |
-| Agora | Custom UDP | 100-400ms | 1M interactive | Yes |
-| LiveKit | WebRTC | 50-300ms | ~100K (cascaded SFU) | Simulcast |
+| Platform          | Protocol       | Typical Latency     | Max Viewers          | ABR       |
+| ----------------- | -------------- | ------------------- | -------------------- | --------- |
+| Twitch            | LL-HLS         | 1-3s                | Millions             | Yes       |
+| YouTube Live      | LL-HLS/LL-DASH | 2-5s                | Millions             | Yes       |
+| Discord           | WebRTC         | 50-200ms            | 25 video, 5000 voice | No        |
+| Zoom              | Custom (UDP)   | 50-150ms            | 1000                 | Yes       |
+| Clubhouse         | WebRTC + relay | 100-500ms           | 8000 listeners       | No        |
+| Twitter Spaces    | WebRTC + relay | 200-600ms           | Unlimited listeners  | No        |
+| Amazon IVS        | LL-HLS         | 2-5s                | Millions             | Yes       |
+| Cloudflare Stream | LL-HLS + WHEP  | 1-3s (WHEP: <500ms) | Millions             | Yes       |
+| Agora             | Custom UDP     | 100-400ms           | 1M interactive       | Yes       |
+| LiveKit           | WebRTC         | 50-300ms            | ~100K (cascaded SFU) | Simulcast |
 
 ---
 
@@ -1696,11 +1697,11 @@ async function monitorLatency(peerConnection) {
 
   const metrics = {};
 
-  stats.forEach(report => {
+  stats.forEach((report) => {
     if (report.type === 'inbound-rtp' && report.kind === 'video') {
       metrics.packetsReceived = report.packetsReceived;
       metrics.packetsLost = report.packetsLost;
-      metrics.jitter = report.jitter;             // seconds
+      metrics.jitter = report.jitter; // seconds
       metrics.framesDecoded = report.framesDecoded;
       metrics.framesDropped = report.framesDropped;
       metrics.totalDecodeTime = report.totalDecodeTime;
@@ -1728,14 +1729,14 @@ async function monitorLatency(peerConnection) {
 
   // Estimated E2E latency components
   const estimatedE2E =
-    metrics.currentRoundTripTime / 2 +    // One-way network
-    metrics.avgJitterBufferDelay +         // Jitter buffer
-    metrics.avgDecodeTime +                // Decode
-    16;                                     // Render (assume 60fps)
+    metrics.currentRoundTripTime / 2 + // One-way network
+    metrics.avgJitterBufferDelay + // Jitter buffer
+    metrics.avgDecodeTime + // Decode
+    16; // Render (assume 60fps)
 
   return {
     ...metrics,
-    estimatedE2ELatency: estimatedE2E
+    estimatedE2ELatency: estimatedE2E,
   };
 }
 ```
@@ -1809,6 +1810,7 @@ To achieve sub-3-second latency, adopt Low-Latency HLS (LL-HLS):
 Choose WebRTC when latency below 500ms is required and the audience is interactive. Choose LL-HLS when the audience exceeds tens of thousands and 2-5 second latency is acceptable.
 
 **WebRTC is better for:**
+
 - Bidirectional communication (video calls, live Q&A with audience participation)
 - Live auctions where 500ms+ delay means missed bids
 - Cloud gaming where controller input must reach the server in < 100ms
@@ -1816,6 +1818,7 @@ Choose WebRTC when latency below 500ms is required and the audience is interacti
 - Audiences under 10,000 (with cascaded SFUs)
 
 **LL-HLS is better for:**
+
 - One-to-many broadcasts with 100K+ viewers
 - Content requiring ABR (varied network conditions across large audiences)
 - CDN-based delivery (leverages existing HTTP CDN infrastructure)
@@ -1833,6 +1836,7 @@ Choose WebRTC when latency below 500ms is required and the audience is interacti
 An **MCU (Multipoint Control Unit)** decodes all incoming streams, composites them into a single mixed output, re-encodes, and sends one stream to each participant. An **SFU (Selective Forwarding Unit)** receives packets from each sender and forwards them to other participants without decoding or re-encoding.
 
 **SFU advantages:**
+
 - **Lower latency**: No decode-encode cycle (saves 50-200ms per hop)
 - **Lower server CPU**: Forwarding packets is orders of magnitude cheaper than transcoding
 - **Better scalability**: An SFU server can handle 10-100x more connections than an MCU
@@ -1841,6 +1845,7 @@ An **MCU (Multipoint Control Unit)** decodes all incoming streams, composites th
 - **Simulcast support**: Publisher sends multiple quality layers; SFU selects per viewer
 
 **MCU advantages (niche cases):**
+
 - Mobile clients with limited CPU (receive one pre-mixed stream)
 - Legacy systems that expect a single input stream
 - Audio mixing for very large rooms (mixing 50 audio streams on server is efficient)
@@ -1882,10 +1887,12 @@ This requires a hybrid architecture because pure WebRTC cannot scale to 1M viewe
 1. **Ingest**: Publisher sends via WHIP to the nearest origin SFU. Use hardware encoding (NVENC) with zero B-frames, zero lookahead, CBR at 4 Mbps, 1-second GOP.
 
 2. **Origin SFU**: Receives the WebRTC stream and does two things:
+
    - Forwards to cascaded edge SFUs via internal backbone
    - Feeds a transcoder for LL-HLS fallback
 
 3. **Edge SFUs** (deployed in 20+ regions):
+
    - Each edge SFU handles ~2000 WHEP viewers
    - 500 edge SFUs for 1M viewers
    - Anycast routing sends each viewer to the nearest edge
@@ -1894,6 +1901,7 @@ This requires a hybrid architecture because pure WebRTC cannot scale to 1M viewe
 4. **Fallback**: If edge SFUs reach capacity, overflow viewers get LL-HLS (2-3s latency) from CDN.
 
 5. **Congestion handling**:
+
    - GCC per viewer connection
    - Simulcast with 3 layers (720p, 360p, 180p)
    - SFU drops to lower layer on viewer congestion
@@ -1902,8 +1910,9 @@ This requires a hybrid architecture because pure WebRTC cannot scale to 1M viewe
 6. **Monitoring**: TWCC feedback from every viewer, aggregated per-region dashboards, automatic scaling of edge SFUs based on viewer count.
 
 **Cost estimation:**
-- 500 edge SFUs * $0.50/hr = $250/hr
-- Bandwidth: 1M viewers * 2 Mbps = 2 Tbps egress
+
+- 500 edge SFUs \* $0.50/hr = $250/hr
+- Bandwidth: 1M viewers \* 2 Mbps = 2 Tbps egress
 - This is expensive but achievable with services like Cloudflare Calls or a custom fleet
 
 ---
@@ -1943,6 +1952,7 @@ Jitter is the variation in packet inter-arrival times. Without a jitter buffer, 
 2. **Adaptive buffer** (preferred): Continuously estimate the jitter distribution using a histogram of inter-arrival times over the last 1-2 seconds. Set the target delay to the 95th percentile of this distribution. Adjust gradually using an exponential moving average to avoid sudden changes.
 
 3. **NetEQ** (WebRTC's implementation): Every 10ms, NetEQ makes a decision for the next audio frame:
+
    - If the next packet is available and on time: play normally
    - If the buffer is growing (delay increasing): accelerate playout using WSOLA (waveform similarity overlap-add) to speed up audio without pitch change
    - If the next packet is missing: use PLC (packet loss concealment) to generate a synthetic continuation of the audio
@@ -1959,6 +1969,7 @@ Jitter is the variation in packet inter-arrival times. Without a jitter buffer, 
 **Answer:**
 
 **RTMP limitations:**
+
 - Based on TCP, which introduces head-of-line blocking and higher latency
 - Limited to H.264 + AAC codecs (no VP9, AV1, or Opus support)
 - Proprietary Adobe protocol with aging specification
@@ -1967,6 +1978,7 @@ Jitter is the variation in packet inter-arrival times. Without a jitter buffer, 
 - Complex handshake and chunk multiplexing protocol
 
 **WHIP/WHEP advantages:**
+
 - Uses WebRTC, which runs over UDP with DTLS/SRTP encryption by default
 - Supports modern codecs: VP8, VP9, H.264, H.265, AV1, Opus
 - Simple HTTP-based signaling (single POST with SDP)
@@ -1977,6 +1989,7 @@ Jitter is the variation in packet inter-arrival times. Without a jitter buffer, 
 - Lower latency: sub-second vs 2-5 seconds for RTMP
 
 **Why the industry is migrating:**
+
 - OBS Studio now supports WHIP output
 - Cloudflare, Dolby.io, LiveKit, and Millicast support WHIP ingest
 - WHIP replaces complex WebSocket signaling servers with a single HTTP endpoint
@@ -1992,16 +2005,19 @@ Jitter is the variation in packet inter-arrival times. Without a jitter buffer, 
 B-frames (bidirectional predicted frames) reference both past and future frames, providing 20-40% better compression than P-frames alone. However, they introduce significant latency.
 
 **Latency impact:**
+
 - Each B-frame requires the encoder to buffer at least one future frame before encoding the B-frame
 - With `bf=3`, the encoder buffers 3 additional frames: at 30fps, that is 100ms of added encoding latency
 - The decoder must also reorder frames (decode order differs from display order), adding another frame of decode latency
 
 **Quality impact of removing B-frames:**
+
 - 5-10% lower PSNR at the same bitrate
 - Or 10-15% higher bitrate to maintain the same quality
 - More noticeable in static or slow-motion scenes where temporal prediction is most effective
 
 **When to use B-frames:**
+
 - Standard streaming (10-30s latency): Always use B-frames (significant quality benefit)
 - LL-HLS/LL-DASH (2-5s latency): Optional. One B-frame adds ~33ms which is acceptable
 - WebRTC (< 500ms latency): Never use B-frames. The 100ms+ penalty is unacceptable
@@ -2043,6 +2059,7 @@ Publishers → Ingest → SFU → CDN → Players
 ```
 
 **Key dashboards:**
+
 - Real-time E2E latency distribution (p50, p95, p99) by region
 - Per-stage latency breakdown (encode, network, buffer, decode)
 - Packet loss and FEC recovery rates
@@ -2050,6 +2067,7 @@ Publishers → Ingest → SFU → CDN → Players
 - Historical trends for capacity planning
 
 **Alerting rules:**
+
 - p95 E2E latency > 500ms for > 30 seconds: WARN
 - p95 E2E latency > 1000ms for > 30 seconds: CRITICAL
 - Packet loss > 5% for any region: WARN

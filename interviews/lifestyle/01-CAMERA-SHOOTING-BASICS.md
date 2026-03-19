@@ -73,13 +73,13 @@ Sensor size directly affects image quality, depth of field, and low-light perfor
 └─────────────────────────────────────────┘
 ```
 
-| Sensor Size | Typical Use | Low Light | Depth of Field |
-|-------------|-------------|-----------|----------------|
-| Full Frame | Professional photo/video | Excellent | Very shallow possible |
-| APS-C | Enthusiast/prosumer cameras | Very good | Shallow possible |
-| Micro 4/3 | Mirrorless cameras (Panasonic, OM) | Good | Moderate |
-| 1-inch | Premium compacts, drones | Decent | Moderate |
-| 1/1.7" - 1/1.3" | Flagship phones (iPhone, Pixel) | Decent | Mostly deep |
+| Sensor Size     | Typical Use                        | Low Light | Depth of Field        |
+| --------------- | ---------------------------------- | --------- | --------------------- |
+| Full Frame      | Professional photo/video           | Excellent | Very shallow possible |
+| APS-C           | Enthusiast/prosumer cameras        | Very good | Shallow possible      |
+| Micro 4/3       | Mirrorless cameras (Panasonic, OM) | Good      | Moderate              |
+| 1-inch          | Premium compacts, drones           | Decent    | Moderate              |
+| 1/1.7" - 1/1.3" | Flagship phones (iPhone, Pixel)    | Decent    | Mostly deep           |
 
 > **For beginners**: A modern flagship phone sensor (1/1.3" on iPhone Pro) is more than
 > enough. You will not need a dedicated camera until you want shallow depth of field or
@@ -108,14 +108,14 @@ Focal length determines how "zoomed in" your image appears and affects perspecti
               shots                                      compression
 ```
 
-| Focal Length | Field of View | Common Use in Video |
-|-------------|---------------|---------------------|
-| 16mm | ~107° | Establishing shots, action cams |
-| 24mm | ~84° | Wide vlogs, environmental shots |
-| 35mm | ~63° | Standard vlog, documentary |
-| 50mm | ~47° | Interviews, talking head |
-| 85mm | ~28° | Portrait close-ups, beauty |
-| 100-200mm | ~12-24° | Product shots, event coverage |
+| Focal Length | Field of View | Common Use in Video             |
+| ------------ | ------------- | ------------------------------- |
+| 16mm         | ~107°         | Establishing shots, action cams |
+| 24mm         | ~84°          | Wide vlogs, environmental shots |
+| 35mm         | ~63°          | Standard vlog, documentary      |
+| 50mm         | ~47°          | Interviews, talking head        |
+| 85mm         | ~28°          | Portrait close-ups, beauty      |
+| 100-200mm    | ~12-24°       | Product shots, event coverage   |
 
 ## 2. The Exposure Triangle
 
@@ -160,13 +160,13 @@ The aperture is the opening in the lens that lets light in. It is measured in f-
    DOF
 ```
 
-| f-stop | Light | Depth of Field | Best For |
-|--------|-------|----------------|----------|
-| f/1.4 - f/2 | Maximum | Very shallow (blurry background) | Low light, cinematic look |
-| f/2.8 - f/4 | Good | Shallow | Interviews, portraits |
-| f/5.6 - f/8 | Moderate | Medium | General video, vlogs |
-| f/11 - f/16 | Low | Deep (everything sharp) | Landscapes, architecture |
-| f/22 | Minimum | Maximum | Rarely used (diffraction) |
+| f-stop      | Light    | Depth of Field                   | Best For                  |
+| ----------- | -------- | -------------------------------- | ------------------------- |
+| f/1.4 - f/2 | Maximum  | Very shallow (blurry background) | Low light, cinematic look |
+| f/2.8 - f/4 | Good     | Shallow                          | Interviews, portraits     |
+| f/5.6 - f/8 | Moderate | Medium                           | General video, vlogs      |
+| f/11 - f/16 | Low      | Deep (everything sharp)          | Landscapes, architecture  |
+| f/22        | Minimum  | Maximum                          | Rarely used (diffraction) |
 
 ### 2.2 Shutter Speed
 
@@ -176,12 +176,12 @@ frame rate by the **180-degree shutter rule**.
 **The 180-Degree Rule**: Set shutter speed to **double your frame rate** for natural-looking
 motion blur.
 
-| Frame Rate | Ideal Shutter Speed | Result |
-|-----------|-------------------|--------|
-| 24 fps | 1/48 (use 1/50) | Cinematic, natural motion blur |
-| 30 fps | 1/60 | Standard, slightly crisper |
-| 60 fps | 1/120 | Smooth, for slow-motion |
-| 120 fps | 1/240 | Very smooth slow-motion |
+| Frame Rate | Ideal Shutter Speed | Result                         |
+| ---------- | ------------------- | ------------------------------ |
+| 24 fps     | 1/48 (use 1/50)     | Cinematic, natural motion blur |
+| 30 fps     | 1/60                | Standard, slightly crisper     |
+| 60 fps     | 1/120               | Smooth, for slow-motion        |
+| 120 fps    | 1/240               | Very smooth slow-motion        |
 
 ```
 Slow shutter (1/30):      Fast shutter (1/500):      180° rule (1/50 @ 24fps):
@@ -202,12 +202,12 @@ Dreamy/blurry              Too crisp for video         Just right
 ISO controls how much the sensor amplifies the light signal. Higher ISO = brighter image
 but more noise (grain).
 
-| ISO | Use Case | Noise Level |
-|-----|----------|-------------|
-| 100-400 | Bright daylight, studio lighting | Clean |
-| 400-1600 | Overcast, indoors with good lighting | Slight grain |
-| 1600-6400 | Dim indoors, evening | Noticeable grain |
-| 6400+ | Very low light, night | Heavy grain |
+| ISO       | Use Case                             | Noise Level      |
+| --------- | ------------------------------------ | ---------------- |
+| 100-400   | Bright daylight, studio lighting     | Clean            |
+| 400-1600  | Overcast, indoors with good lighting | Slight grain     |
+| 1600-6400 | Dim indoors, evening                 | Noticeable grain |
+| 6400+     | Very low light, night                | Heavy grain      |
 
 **Rule of thumb**: Keep ISO as low as possible. Increase aperture or add light before
 raising ISO.
@@ -240,20 +240,20 @@ Shallow DOF (f/1.8):                Deep DOF (f/11):
 
 Three factors control DOF:
 
-| Factor | Shallower DOF | Deeper DOF |
-|--------|---------------|------------|
-| Aperture | Wider (f/1.4) | Narrower (f/11) |
-| Distance to subject | Closer | Farther |
-| Focal length | Longer (85mm) | Shorter (16mm) |
+| Factor              | Shallower DOF | Deeper DOF      |
+| ------------------- | ------------- | --------------- |
+| Aperture            | Wider (f/1.4) | Narrower (f/11) |
+| Distance to subject | Closer        | Farther         |
+| Focal length        | Longer (85mm) | Shorter (16mm)  |
 
 ### 3.2 Autofocus Modes for Video
 
-| Mode | How It Works | Best For |
-|------|-------------|----------|
-| Continuous AF (AF-C) | Constantly adjusts focus | Moving subjects, vlogs |
-| Single AF (AF-S) | Locks focus once | Static interviews |
-| Face/Eye AF | Tracks faces/eyes | Talking head, vlogs |
-| Manual Focus | You control focus ring | Cinematic pulls, precise control |
+| Mode                 | How It Works             | Best For                         |
+| -------------------- | ------------------------ | -------------------------------- |
+| Continuous AF (AF-C) | Constantly adjusts focus | Moving subjects, vlogs           |
+| Single AF (AF-S)     | Locks focus once         | Static interviews                |
+| Face/Eye AF          | Tracks faces/eyes        | Talking head, vlogs              |
+| Manual Focus         | You control focus ring   | Cinematic pulls, precise control |
 
 > **For vlogging**: Always use **Face/Eye AF** with continuous tracking. Modern cameras
 > (Sony, Canon, Fuji) have excellent face tracking that rarely misses.
@@ -294,15 +294,15 @@ Color temperature is measured in **Kelvin (K)**.
 
 ### 4.2 White Balance Settings
 
-| Setting | Kelvin | When to Use |
-|---------|--------|-------------|
-| Tungsten | ~3,200K | Indoor warm bulbs |
-| Fluorescent | ~4,000K | Office lighting |
-| Daylight | ~5,500K | Outdoor sun |
-| Cloudy | ~6,500K | Overcast skies |
-| Shade | ~7,500K | Open shade outdoors |
-| Auto (AWB) | Varies | When lighting changes frequently |
-| Custom | You set | Mixed lighting, precise control |
+| Setting     | Kelvin  | When to Use                      |
+| ----------- | ------- | -------------------------------- |
+| Tungsten    | ~3,200K | Indoor warm bulbs                |
+| Fluorescent | ~4,000K | Office lighting                  |
+| Daylight    | ~5,500K | Outdoor sun                      |
+| Cloudy      | ~6,500K | Overcast skies                   |
+| Shade       | ~7,500K | Open shade outdoors              |
+| Auto (AWB)  | Varies  | When lighting changes frequently |
+| Custom      | You set | Mixed lighting, precise control  |
 
 > **For video**: Set white balance **manually** or use a preset. Auto white balance can
 > shift mid-shot, creating color inconsistency. If shooting in a controlled environment,
@@ -358,15 +358,15 @@ their intersections.
 
 ### 5.3 Shot Types
 
-| Shot Type | Framing | Emotion/Use |
-|-----------|---------|-------------|
-| Extreme Wide Shot (EWS) | Entire environment | Establishing location |
-| Wide Shot (WS) | Full body + environment | Context, walking shots |
-| Medium Shot (MS) | Waist up | Conversation, tutorials |
-| Medium Close-Up (MCU) | Chest up | Standard talking head |
-| Close-Up (CU) | Face only | Emotion, emphasis |
-| Extreme Close-Up (ECU) | Eyes or detail | Dramatic tension |
-| Over-the-Shoulder (OTS) | Behind one person | Interviews, dialogue |
+| Shot Type               | Framing                 | Emotion/Use             |
+| ----------------------- | ----------------------- | ----------------------- |
+| Extreme Wide Shot (EWS) | Entire environment      | Establishing location   |
+| Wide Shot (WS)          | Full body + environment | Context, walking shots  |
+| Medium Shot (MS)        | Waist up                | Conversation, tutorials |
+| Medium Close-Up (MCU)   | Chest up                | Standard talking head   |
+| Close-Up (CU)           | Face only               | Emotion, emphasis       |
+| Extreme Close-Up (ECU)  | Eyes or detail          | Dramatic tension        |
+| Over-the-Shoulder (OTS) | Behind one person       | Interviews, dialogue    |
 
 ```
    EWS              WS              MS             MCU             CU
@@ -405,16 +405,16 @@ between them. Crossing this line disorients the viewer.
 
 ### 6.1 Types of Movement
 
-| Movement | Description | Feeling/Use |
-|----------|-------------|-------------|
-| Static | Tripod, no movement | Stable, professional, interviews |
-| Pan | Horizontal rotation | Reveal, follow action |
-| Tilt | Vertical rotation | Reveal height, dramatic |
-| Dolly | Camera moves forward/back | Intimacy, revelation |
-| Truck | Camera moves left/right | Follow alongside subject |
-| Pedestal | Camera moves up/down | Dramatic reveal |
-| Handheld | Camera in hand | Energy, urgency, documentary feel |
-| Gimbal | Stabilized handheld | Smooth movement, professional walk-and-talk |
+| Movement | Description               | Feeling/Use                                 |
+| -------- | ------------------------- | ------------------------------------------- |
+| Static   | Tripod, no movement       | Stable, professional, interviews            |
+| Pan      | Horizontal rotation       | Reveal, follow action                       |
+| Tilt     | Vertical rotation         | Reveal height, dramatic                     |
+| Dolly    | Camera moves forward/back | Intimacy, revelation                        |
+| Truck    | Camera moves left/right   | Follow alongside subject                    |
+| Pedestal | Camera moves up/down      | Dramatic reveal                             |
+| Handheld | Camera in hand            | Energy, urgency, documentary feel           |
+| Gimbal   | Stabilized handheld       | Smooth movement, professional walk-and-talk |
 
 ### 6.2 Motivation for Movement
 
@@ -431,12 +431,12 @@ Every camera movement should have a **reason**:
 
 ### 6.3 Gimbal vs Tripod vs Handheld
 
-| Method | Stability | Energy | Best For | Cost |
-|--------|-----------|--------|----------|------|
-| Tripod | Maximum | Low (stable, calm) | Interviews, tutorials | $20-200 |
-| Gimbal | High | Medium (smooth, dynamic) | Walking vlogs, B-roll | $100-500 |
-| Handheld | Low | High (raw, energetic) | Documentary, action | Free |
-| Monopod | Medium | Medium | Events, quick setup | $30-100 |
+| Method   | Stability | Energy                   | Best For              | Cost     |
+| -------- | --------- | ------------------------ | --------------------- | -------- |
+| Tripod   | Maximum   | Low (stable, calm)       | Interviews, tutorials | $20-200  |
+| Gimbal   | High      | Medium (smooth, dynamic) | Walking vlogs, B-roll | $100-500 |
+| Handheld | Low       | High (raw, energetic)    | Documentary, action   | Free     |
+| Monopod  | Medium    | Medium                   | Events, quick setup   | $30-100  |
 
 ## 7. Lighting Fundamentals
 
@@ -473,21 +473,21 @@ The classic setup used in interviews, tutorials, and talking head videos.
                       Camera
 ```
 
-| Light | Purpose | Intensity | Position |
-|-------|---------|-----------|----------|
-| Key Light | Main illumination | Brightest (100%) | 45° to one side, slightly above |
-| Fill Light | Soften shadows from key | Dimmer (50-75%) | Opposite side of key |
-| Back Light | Separate subject from background | Variable (50-100%) | Behind subject, above |
+| Light      | Purpose                          | Intensity          | Position                        |
+| ---------- | -------------------------------- | ------------------ | ------------------------------- |
+| Key Light  | Main illumination                | Brightest (100%)   | 45° to one side, slightly above |
+| Fill Light | Soften shadows from key          | Dimmer (50-75%)    | Opposite side of key            |
+| Back Light | Separate subject from background | Variable (50-100%) | Behind subject, above           |
 
 ### 7.3 Natural Light Techniques
 
-| Technique | How | When |
-|-----------|-----|------|
-| Window light | Sit facing a large window | Daytime, any weather |
-| Golden hour | Shoot 1hr after sunrise / before sunset | Warm, flattering outdoor light |
-| Blue hour | 20-30min after sunset / before sunrise | Moody, cinematic |
-| Overcast | Clouds act as giant softbox | Even, flattering, any time |
-| Open shade | Stand in shade with open sky in front | Avoid harsh shadows |
+| Technique    | How                                     | When                           |
+| ------------ | --------------------------------------- | ------------------------------ |
+| Window light | Sit facing a large window               | Daytime, any weather           |
+| Golden hour  | Shoot 1hr after sunrise / before sunset | Warm, flattering outdoor light |
+| Blue hour    | 20-30min after sunset / before sunrise  | Moody, cinematic               |
+| Overcast     | Clouds act as giant softbox             | Even, flattering, any time     |
+| Open shade   | Stand in shade with open sky in front   | Avoid harsh shadows            |
 
 > **Best free lighting**: Sit facing a large window. The window acts as a giant softbox.
 > If one side of your face is too dark, place a white poster board on that side to
@@ -512,23 +512,23 @@ Hard Light (direct, small source):      Soft Light (diffused, large source):
 Dramatic, contrasty                     Flattering, soft, forgiving
 ```
 
-| Property | Hard Light | Soft Light |
-|----------|-----------|------------|
-| Source | Small, direct (bare bulb, sun) | Large, diffused (softbox, window) |
-| Shadows | Sharp-edged, dark | Soft-edged, gradual |
-| Mood | Dramatic, intense | Natural, flattering |
-| Best for | Dramatic scenes, product shots | Interviews, vlogs, beauty |
+| Property | Hard Light                     | Soft Light                        |
+| -------- | ------------------------------ | --------------------------------- |
+| Source   | Small, direct (bare bulb, sun) | Large, diffused (softbox, window) |
+| Shadows  | Sharp-edged, dark              | Soft-edged, gradual               |
+| Mood     | Dramatic, intense              | Natural, flattering               |
+| Best for | Dramatic scenes, product shots | Interviews, vlogs, beauty         |
 
 ## 8. Resolution, Frame Rate, and Codec Settings
 
 ### 8.1 Resolution
 
-| Resolution | Pixels | Common Name | Use |
-|-----------|--------|-------------|-----|
-| 1920×1080 | 2.1M | Full HD (1080p) | Standard YouTube, good enough |
-| 2560×1440 | 3.7M | QHD (1440p) | Sweet spot for YouTube quality |
-| 3840×2160 | 8.3M | 4K (UHD) | Future-proof, crop flexibility |
-| 7680×4320 | 33.2M | 8K | Overkill for most creators |
+| Resolution | Pixels | Common Name     | Use                            |
+| ---------- | ------ | --------------- | ------------------------------ |
+| 1920×1080  | 2.1M   | Full HD (1080p) | Standard YouTube, good enough  |
+| 2560×1440  | 3.7M   | QHD (1440p)     | Sweet spot for YouTube quality |
+| 3840×2160  | 8.3M   | 4K (UHD)        | Future-proof, crop flexibility |
+| 7680×4320  | 33.2M  | 8K              | Overkill for most creators     |
 
 > **Recommendation**: Shoot in **4K**, deliver in **1080p or 1440p**. This gives you room
 > to crop, stabilize, and reframe in post. YouTube also gives 4K uploads a higher
@@ -536,27 +536,27 @@ Dramatic, contrasty                     Flattering, soft, forgiving
 
 ### 8.2 Frame Rate
 
-| Frame Rate | Feel | Best For |
-|-----------|------|----------|
-| 24 fps | Cinematic, dreamy | Films, narrative vlogs |
-| 25 fps | PAL standard (Europe) | European broadcast |
-| 30 fps | Smooth, standard | YouTube, general content |
-| 60 fps | Very smooth | Gaming, sports, slow-mo (50%) |
-| 120 fps | Ultra smooth | Dramatic slow-motion (20-25%) |
-| 240 fps | Extremely slow | Extreme slow-motion |
+| Frame Rate | Feel                  | Best For                      |
+| ---------- | --------------------- | ----------------------------- |
+| 24 fps     | Cinematic, dreamy     | Films, narrative vlogs        |
+| 25 fps     | PAL standard (Europe) | European broadcast            |
+| 30 fps     | Smooth, standard      | YouTube, general content      |
+| 60 fps     | Very smooth           | Gaming, sports, slow-mo (50%) |
+| 120 fps    | Ultra smooth          | Dramatic slow-motion (20-25%) |
+| 240 fps    | Extremely slow        | Extreme slow-motion           |
 
 > **For YouTube**: Shoot main footage at **24 or 30 fps**. Shoot B-roll at **60 fps** so
 > you can slow it down to 50% speed for smooth slow-motion.
 
 ### 8.3 Codec and Bitrate Basics
 
-| Codec | Quality | File Size | Editing Performance |
-|-------|---------|-----------|-------------------|
-| H.264 | Good | Small | Fast to edit, widely supported |
-| H.265 (HEVC) | Better | Smaller | Slower to edit, newer hardware needed |
-| ProRes | Excellent | Very large | Fastest editing, Mac-friendly |
-| ProRes LT | Very good | Large | Good balance for editing |
-| BRAW / R3D | Maximum | Huge | Professional, needs powerful hardware |
+| Codec        | Quality   | File Size  | Editing Performance                   |
+| ------------ | --------- | ---------- | ------------------------------------- |
+| H.264        | Good      | Small      | Fast to edit, widely supported        |
+| H.265 (HEVC) | Better    | Smaller    | Slower to edit, newer hardware needed |
+| ProRes       | Excellent | Very large | Fastest editing, Mac-friendly         |
+| ProRes LT    | Very good | Large      | Good balance for editing              |
+| BRAW / R3D   | Maximum   | Huge       | Professional, needs powerful hardware |
 
 > **Practical advice**: Shoot in **H.264 or H.265** unless you need maximum color grading
 > flexibility. ProRes is great if you have the storage space. For YouTube delivery,
@@ -564,23 +564,24 @@ Dramatic, contrasty                     Flattering, soft, forgiving
 
 ### 8.4 YouTube Recommended Upload Settings
 
-| Setting | Recommended |
-|---------|-------------|
-| Container | .mp4 |
-| Codec | H.264 |
-| Frame rate | Match source (24/30/60) |
-| Resolution | 3840×2160 (4K) or 1920×1080 |
-| Bitrate (1080p 30fps) | 10-15 Mbps |
-| Bitrate (4K 30fps) | 35-68 Mbps |
-| Audio codec | AAC-LC |
-| Audio bitrate | 384 kbps (stereo) |
-| Audio sample rate | 48 kHz |
+| Setting               | Recommended                 |
+| --------------------- | --------------------------- |
+| Container             | .mp4                        |
+| Codec                 | H.264                       |
+| Frame rate            | Match source (24/30/60)     |
+| Resolution            | 3840×2160 (4K) or 1920×1080 |
+| Bitrate (1080p 30fps) | 10-15 Mbps                  |
+| Bitrate (4K 30fps)    | 35-68 Mbps                  |
+| Audio codec           | AAC-LC                      |
+| Audio bitrate         | 384 kbps (stereo)           |
+| Audio sample rate     | 48 kHz                      |
 
 ## 9. Shooting with a Smartphone
 
 ### 9.1 Why Phones Are Enough
 
 Modern flagship phones have:
+
 - Multiple focal lengths (ultra-wide, wide, telephoto)
 - Computational photography (HDR, noise reduction)
 - 4K 60fps recording
@@ -591,24 +592,24 @@ Many professional YouTubers shoot entirely on phones.
 
 ### 9.2 Phone Camera Settings for Video
 
-| Setting | Recommendation |
-|---------|---------------|
-| Resolution | 4K |
-| Frame rate | 30fps (main), 60fps (B-roll) |
-| Exposure lock | Tap and hold to lock (prevents auto-adjust) |
-| Grid overlay | Enable (for composition) |
-| HDR video | Disable for editing flexibility; enable for quick social posts |
-| Orientation | Always landscape (horizontal) for YouTube; vertical for Shorts/TikTok |
+| Setting       | Recommendation                                                        |
+| ------------- | --------------------------------------------------------------------- |
+| Resolution    | 4K                                                                    |
+| Frame rate    | 30fps (main), 60fps (B-roll)                                          |
+| Exposure lock | Tap and hold to lock (prevents auto-adjust)                           |
+| Grid overlay  | Enable (for composition)                                              |
+| HDR video     | Disable for editing flexibility; enable for quick social posts        |
+| Orientation   | Always landscape (horizontal) for YouTube; vertical for Shorts/TikTok |
 
 ### 9.3 Recommended Phone Apps
 
-| App | Platform | Key Feature | Price |
-|-----|----------|-------------|-------|
-| Filmic Pro | iOS/Android | Manual controls, log profiles | $15-30 |
-| Blackmagic Camera | iOS | Free, Blackmagic color science | Free |
-| ProTake | iOS | Professional manual controls | $5 |
-| Open Camera | Android | Free, manual controls | Free |
-| iPhone Camera (native) | iOS | Cinematic mode, action mode | Free |
+| App                    | Platform    | Key Feature                    | Price  |
+| ---------------------- | ----------- | ------------------------------ | ------ |
+| Filmic Pro             | iOS/Android | Manual controls, log profiles  | $15-30 |
+| Blackmagic Camera      | iOS         | Free, Blackmagic color science | Free   |
+| ProTake                | iOS         | Professional manual controls   | $5     |
+| Open Camera            | Android     | Free, manual controls          | Free   |
+| iPhone Camera (native) | iOS         | Cinematic mode, action mode    | Free   |
 
 ### 9.4 Phone Stabilization Tips
 
@@ -622,47 +623,47 @@ Many professional YouTubers shoot entirely on phones.
 
 ### 10.1 Exposure Mistakes
 
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| Overexposed | Blown-out whites, no detail in highlights | Lower ISO, narrow aperture, add ND filter |
-| Underexposed | Dark, noisy shadows | Raise ISO, wider aperture, add light |
-| Auto exposure hunting | Brightness changes mid-shot | Lock exposure manually |
+| Mistake               | Symptom                                   | Fix                                       |
+| --------------------- | ----------------------------------------- | ----------------------------------------- |
+| Overexposed           | Blown-out whites, no detail in highlights | Lower ISO, narrow aperture, add ND filter |
+| Underexposed          | Dark, noisy shadows                       | Raise ISO, wider aperture, add light      |
+| Auto exposure hunting | Brightness changes mid-shot               | Lock exposure manually                    |
 
 ### 10.2 Focus Mistakes
 
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| Missed focus | Subject is blurry, background is sharp | Use face/eye AF, wider aperture = less margin |
-| Focus breathing | Image zooms slightly when refocusing | Use a lens with minimal focus breathing |
-| AF hunting | Camera searches back and forth | Lock focus, switch to manual, improve contrast |
+| Mistake         | Symptom                                | Fix                                            |
+| --------------- | -------------------------------------- | ---------------------------------------------- |
+| Missed focus    | Subject is blurry, background is sharp | Use face/eye AF, wider aperture = less margin  |
+| Focus breathing | Image zooms slightly when refocusing   | Use a lens with minimal focus breathing        |
+| AF hunting      | Camera searches back and forth         | Lock focus, switch to manual, improve contrast |
 
 ### 10.3 Composition Mistakes
 
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| Centering everything | Boring, amateur look | Use rule of thirds |
-| Too much headroom | Subject looks tiny | Frame tighter, lower tripod |
-| Cluttered background | Distracting elements | Simplify background, use wider aperture |
-| Dutch angle (unintentional) | Horizon is tilted | Use grid lines, level your tripod |
-| Shooting up nostrils | Unflattering angle | Raise camera to eye level or slightly above |
+| Mistake                     | Symptom              | Fix                                         |
+| --------------------------- | -------------------- | ------------------------------------------- |
+| Centering everything        | Boring, amateur look | Use rule of thirds                          |
+| Too much headroom           | Subject looks tiny   | Frame tighter, lower tripod                 |
+| Cluttered background        | Distracting elements | Simplify background, use wider aperture     |
+| Dutch angle (unintentional) | Horizon is tilted    | Use grid lines, level your tripod           |
+| Shooting up nostrils        | Unflattering angle   | Raise camera to eye level or slightly above |
 
 ### 10.4 Lighting Mistakes
 
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| Backlighting (accidental) | Subject is a dark silhouette | Face subject toward light source |
-| Mixed color temps | Skin looks orange on one side, blue on other | Use same-temperature lights |
-| Overhead lighting only | Harsh shadows under eyes and nose | Add frontal fill light |
-| No separation from background | Subject blends into background | Add back light or rim light |
+| Mistake                       | Symptom                                      | Fix                              |
+| ----------------------------- | -------------------------------------------- | -------------------------------- |
+| Backlighting (accidental)     | Subject is a dark silhouette                 | Face subject toward light source |
+| Mixed color temps             | Skin looks orange on one side, blue on other | Use same-temperature lights      |
+| Overhead lighting only        | Harsh shadows under eyes and nose            | Add frontal fill light           |
+| No separation from background | Subject blends into background               | Add back light or rim light      |
 
 ### 10.5 Audio Mistakes (Preview — Full Coverage in 02)
 
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| Using built-in camera mic | Echoey, distant, noisy | Use external microphone close to mouth |
-| Wind noise | Rumbling, whooshing | Use windscreen/deadcat, or film indoors |
-| Room echo | Hollow, reverb sound | Add soft furnishings, or use lapel mic |
-| Audio clipping | Distorted, crunchy peaks | Lower recording levels, leave headroom |
+| Mistake                   | Symptom                  | Fix                                     |
+| ------------------------- | ------------------------ | --------------------------------------- |
+| Using built-in camera mic | Echoey, distant, noisy   | Use external microphone close to mouth  |
+| Wind noise                | Rumbling, whooshing      | Use windscreen/deadcat, or film indoors |
+| Room echo                 | Hollow, reverb sound     | Add soft furnishings, or use lapel mic  |
+| Audio clipping            | Distorted, crunchy peaks | Lower recording levels, leave headroom  |
 
 ---
 

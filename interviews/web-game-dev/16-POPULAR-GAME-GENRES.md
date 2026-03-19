@@ -32,14 +32,14 @@ The game grid is a 2D array where players swap adjacent pieces to create matches
 
 ```typescript
 interface Cell {
-  type: number;       // Gem type (0-5 for 6 colors)
+  type: number; // Gem type (0-5 for 6 colors)
   special: SpecialType;
-  x: number;          // Grid column
-  y: number;          // Grid row
-  screenX: number;    // Render position X
-  screenY: number;    // Render position Y
-  scale: number;      // For animations
-  alpha: number;      // For fade effects
+  x: number; // Grid column
+  y: number; // Grid row
+  screenX: number; // Render position X
+  screenY: number; // Render position Y
+  scale: number; // For animations
+  alpha: number; // For fade effects
 }
 
 type SpecialType = 'none' | 'lineH' | 'lineV' | 'bomb' | 'color';
@@ -195,7 +195,9 @@ class CascadeEngine {
     return steps;
   }
 
-  private removeMatches(matches: readonly Match[]): Array<{ row: number; col: number }> {
+  private removeMatches(
+    matches: readonly Match[]
+  ): Array<{ row: number; col: number }> {
     const removed: Array<{ row: number; col: number }> = [];
 
     for (const match of matches) {
@@ -309,7 +311,11 @@ interface CascadeStep {
 ### Playable Ad Hook: Start Near Big Combo
 
 ```typescript
-function createRiggedBoard(cols: number, rows: number, typeCount: number): Grid {
+function createRiggedBoard(
+  cols: number,
+  rows: number,
+  typeCount: number
+): Grid {
   // Generate a board where one swap creates a spectacular cascade
   const grid: Grid = createRandomGrid(cols, rows, typeCount);
 
@@ -384,11 +390,11 @@ function createRandomGrid(cols: number, rows: number, typeCount: number): Grid {
 
 ```typescript
 interface RunnerState {
-  readonly playerLane: number;  // 0 = left, 1 = center, 2 = right
-  readonly playerY: number;     // Vertical position (for jumps)
-  readonly speed: number;       // Current speed (increases over time)
-  readonly distance: number;    // Distance traveled
-  readonly coins: number;       // Collected coins
+  readonly playerLane: number; // 0 = left, 1 = center, 2 = right
+  readonly playerY: number; // Vertical position (for jumps)
+  readonly speed: number; // Current speed (increases over time)
+  readonly distance: number; // Distance traveled
+  readonly coins: number; // Collected coins
   readonly isAlive: boolean;
   readonly isJumping: boolean;
 }
@@ -396,7 +402,7 @@ interface RunnerState {
 interface Obstacle {
   type: 'barrier' | 'gap' | 'low';
   lane: number;
-  z: number;           // Distance along track (decreases toward player)
+  z: number; // Distance along track (decreases toward player)
   width: number;
   height: number;
   passed: boolean;
@@ -417,7 +423,7 @@ const LANE_COUNT = 3;
 
 ```typescript
 class ObstacleSpawner {
-  private readonly minGap: number = 200;  // Minimum distance between obstacles
+  private readonly minGap: number = 200; // Minimum distance between obstacles
   private readonly spawnDistance: number = 1000; // How far ahead to spawn
   private lastSpawnZ: number = 0;
 
@@ -467,8 +473,8 @@ class ObstacleSpawner {
 
     const roll = Math.random();
     if (roll < 0.6) return 'barrier';
-    if (roll < 0.85) return 'low';    // Must jump
-    return 'gap';                      // Must slide
+    if (roll < 0.85) return 'low'; // Must jump
+    return 'gap'; // Must slide
   }
 }
 ```
@@ -478,7 +484,7 @@ class ObstacleSpawner {
 ```typescript
 interface ParallaxLayer {
   readonly image: HTMLImageElement;
-  readonly speed: number;      // 0 = static, 1 = same as player
+  readonly speed: number; // 0 = static, 1 = same as player
   offset: number;
   readonly y: number;
   readonly height: number;
@@ -643,9 +649,10 @@ class RunnerPlayableHook {
   }
 
   // Option 2: Slow-mo near-miss then end card
-  createDramaticEnding(
-    state: RunnerState
-  ): { slowMo: boolean; showEndCard: boolean } {
+  createDramaticEnding(state: RunnerState): {
+    slowMo: boolean;
+    showEndCard: boolean;
+  } {
     const distanceToEnd = this.crashDistance - state.distance;
 
     if (distanceToEnd < 50 && distanceToEnd > 0) {
@@ -922,11 +929,11 @@ Drag items onto identical items to merge them into a higher-tier version. Grid-b
 
 ```typescript
 interface MergeItem {
-  type: string;        // e.g., "sword", "flower", "gem"
-  tier: number;        // 1 = basic, 2 = improved, etc.
+  type: string; // e.g., "sword", "flower", "gem"
+  tier: number; // 1 = basic, 2 = improved, etc.
   gridX: number;
   gridY: number;
-  renderX: number;     // For smooth animation
+  renderX: number; // For smooth animation
   renderY: number;
   isDragging: boolean;
 }
@@ -939,7 +946,7 @@ interface MergeGrid {
 
 // Merge rules: what each tier produces
 interface MergeRules {
-  readonly mergeCount: number;   // Items needed to merge (usually 3)
+  readonly mergeCount: number; // Items needed to merge (usually 3)
   readonly maxTier: number;
   readonly tierNames: readonly string[];
 }
@@ -1040,10 +1047,15 @@ class MergeGame {
         if (visited.has(key)) continue;
         visited.add(key);
 
-        if (nx < 0 || nx >= this.grid.width || ny < 0 || ny >= this.grid.height) continue;
+        if (nx < 0 || nx >= this.grid.width || ny < 0 || ny >= this.grid.height)
+          continue;
 
         const neighbor = this.getCell(nx, ny);
-        if (neighbor && neighbor.type === item.type && neighbor.tier === item.tier) {
+        if (
+          neighbor &&
+          neighbor.type === item.type &&
+          neighbor.tier === item.tier
+        ) {
           neighbors.push({ x: nx, y: ny });
           queue.push({ x: nx, y: ny });
         }
@@ -1201,7 +1213,18 @@ class BigNumber {
     }
 
     const suffixes = [
-      '', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc',
+      '',
+      'K',
+      'M',
+      'B',
+      'T',
+      'Qa',
+      'Qi',
+      'Sx',
+      'Sp',
+      'Oc',
+      'No',
+      'Dc',
     ];
 
     const suffixIndex = Math.floor(this.exponent / 3);
@@ -1410,7 +1433,7 @@ interface Tower {
   gridY: number;
   range: number;
   damage: number;
-  fireRate: number;    // Attacks per second
+  fireRate: number; // Attacks per second
   lastFired: number;
   target: Enemy | null;
   level: number;
@@ -1424,7 +1447,7 @@ interface Enemy {
   health: number;
   maxHealth: number;
   speed: number;
-  pathIndex: number;   // Current position on path
+  pathIndex: number; // Current position on path
   pathProgress: number; // 0-1 progress to next waypoint
   alive: boolean;
   frozen: boolean;
@@ -1451,7 +1474,7 @@ interface WaveEntry {
 }
 ```
 
-### Enemy Pathing (A*)
+### Enemy Pathing (A\*)
 
 ```typescript
 interface PathNode {
@@ -1616,9 +1639,15 @@ function createPlayableTDLevel(): {
 ```typescript
 interface DressUpItem {
   readonly id: string;
-  readonly category: 'hair' | 'top' | 'bottom' | 'shoes' | 'accessory' | 'makeup';
+  readonly category:
+    | 'hair'
+    | 'top'
+    | 'bottom'
+    | 'shoes'
+    | 'accessory'
+    | 'makeup';
   readonly spriteKey: string;
-  readonly layer: number;  // Z-order for rendering
+  readonly layer: number; // Z-order for rendering
   readonly anchorX: number;
   readonly anchorY: number;
   readonly colorizable: boolean;
@@ -1642,15 +1671,61 @@ class DressUpGame {
     };
 
     this.availableItems = new Map([
-      ['hair', [
-        { id: 'hair1', category: 'hair', spriteKey: 'hair_long', layer: 5, anchorX: 0, anchorY: -20, colorizable: true },
-        { id: 'hair2', category: 'hair', spriteKey: 'hair_short', layer: 5, anchorX: 0, anchorY: -15, colorizable: true },
-        { id: 'hair3', category: 'hair', spriteKey: 'hair_ponytail', layer: 5, anchorX: 5, anchorY: -18, colorizable: true },
-      ]],
-      ['top', [
-        { id: 'top1', category: 'top', spriteKey: 'top_tshirt', layer: 3, anchorX: 0, anchorY: 80, colorizable: true },
-        { id: 'top2', category: 'top', spriteKey: 'top_dress', layer: 3, anchorX: 0, anchorY: 80, colorizable: true },
-      ]],
+      [
+        'hair',
+        [
+          {
+            id: 'hair1',
+            category: 'hair',
+            spriteKey: 'hair_long',
+            layer: 5,
+            anchorX: 0,
+            anchorY: -20,
+            colorizable: true,
+          },
+          {
+            id: 'hair2',
+            category: 'hair',
+            spriteKey: 'hair_short',
+            layer: 5,
+            anchorX: 0,
+            anchorY: -15,
+            colorizable: true,
+          },
+          {
+            id: 'hair3',
+            category: 'hair',
+            spriteKey: 'hair_ponytail',
+            layer: 5,
+            anchorX: 5,
+            anchorY: -18,
+            colorizable: true,
+          },
+        ],
+      ],
+      [
+        'top',
+        [
+          {
+            id: 'top1',
+            category: 'top',
+            spriteKey: 'top_tshirt',
+            layer: 3,
+            anchorX: 0,
+            anchorY: 80,
+            colorizable: true,
+          },
+          {
+            id: 'top2',
+            category: 'top',
+            spriteKey: 'top_dress',
+            layer: 3,
+            anchorX: 0,
+            anchorY: 80,
+            colorizable: true,
+          },
+        ],
+      ],
       // ... more categories
     ]);
   }
@@ -1673,7 +1748,11 @@ class DressUpGame {
     return items.sort((a, b) => a.layer - b.layer);
   }
 
-  renderCharacter(ctx: CanvasRenderingContext2D, centerX: number, centerY: number): void {
+  renderCharacter(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number
+  ): void {
     // Draw body base
     this.drawBody(ctx, centerX, centerY);
 
@@ -1722,7 +1801,6 @@ class MakeoverHook {
     // Animated transition: curtain wipe, sparkle effects
     // Show the dressed-up character
     // Big "WOW!" effect
-
     // Then end card: "Create YOUR character!"
   }
 }
@@ -1826,7 +1904,12 @@ class CardDragSystem {
 
   private readonly snapTargets: SnapTarget[] = [];
 
-  beginDrag(card: Card, touchX: number, touchY: number, sourceStack: string): void {
+  beginDrag(
+    card: Card,
+    touchX: number,
+    touchY: number,
+    sourceStack: string
+  ): void {
     this.dragState = {
       isDragging: true,
       card,
@@ -1861,7 +1944,8 @@ class CardDragSystem {
       const dy = card.y - target.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance < 80 && distance < bestDistance) { // Snap radius
+      if (distance < 80 && distance < bestDistance) {
+        // Snap radius
         bestTarget = target;
         bestDistance = distance;
       }
@@ -2052,6 +2136,7 @@ function createWinnableLayout(): {
 "I'd divide the first 3 hours into setup, core mechanics, and game flow.
 
 **Hour 1: Project Setup + Grid**
+
 - TypeScript + esbuild config for single-file output
 - Canvas setup with responsive sizing
 - Grid data structure (2D array of cell types)
@@ -2059,6 +2144,7 @@ function createWinnableLayout(): {
 - Basic touch input to select cells
 
 **Hour 2: Match + Cascade**
+
 - Swap two adjacent cells on touch
 - Match detection (horizontal + vertical scan for 3+)
 - Remove matched cells (mark as empty)
@@ -2067,6 +2153,7 @@ function createWinnableLayout(): {
 - Loop: match → remove → gravity → refill → recheck
 
 **Hour 3: Game Flow**
+
 - Tutorial screen with animated hand showing first swap
 - Timer (25 seconds)
 - Score display with combo multiplier
@@ -2084,6 +2171,7 @@ At the 3-hour mark, I'd have a playable prototype with placeholder art. The next
 "JavaScript numbers are IEEE 754 doubles, which have precision up to about 2^53 (approximately 9 × 10^15 or 9 quadrillion). Idle games regularly reach numbers like 10^300 or higher.
 
 Beyond 2^53, you lose integer precision:
+
 ```typescript
 console.log(9007199254740992 + 1); // 9007199254740992 (same!)
 ```
@@ -2091,11 +2179,13 @@ console.log(9007199254740992 + 1); // 9007199254740992 (same!)
 And beyond ~1.8 × 10^308, you get Infinity.
 
 **My implementation uses mantissa + exponent:**
+
 - Store numbers as `mantissa × 10^exponent`
 - Mantissa is always between 1.0 and 9.999...
 - Exponent can be any integer
 
 **Key operations:**
+
 - Addition: Align exponents, add mantissas, renormalize
 - Multiplication: Multiply mantissas, add exponents, renormalize
 - Comparison: Compare exponents first, then mantissas
@@ -2112,6 +2202,7 @@ And beyond ~1.8 × 10^308, you get Infinity.
 "Both can work, but Match-3 is generally more effective for playable ads. Here's my analysis:
 
 **Match-3 advantages for playable ads:**
+
 - Universal recognition (nearly zero learning curve)
 - Single mechanic to demonstrate (swap to match)
 - Satisfying feedback in 5 seconds (cascade combo)
@@ -2120,6 +2211,7 @@ And beyond ~1.8 × 10^308, you get Infinity.
 - Small scope = faster production = more variants to test
 
 **Tower Defense challenges as playable ad:**
+
 - More complex concept (place towers, enemies path, damage)
 - Needs 5-10 seconds just to explain the mechanic
 - Strategic depth requires more time than 15-30 seconds allows
@@ -2127,6 +2219,7 @@ And beyond ~1.8 × 10^308, you get Infinity.
 - Harder to create a satisfying arc in short time
 
 **When Tower Defense works:**
+
 - If the advertised game IS a tower defense game
 - If you simplify to 'place 2 towers, watch the action'
 - If you focus on the visual spectacle (explosions, effects)
@@ -2199,11 +2292,13 @@ The key insight: the best genre for the playable ad is the one that creates the 
 **My framework for designing hooks:**
 
 1. **Match-3: The Pre-Loaded Combo**
+
    - Rig the board so the first swap the tutorial guides them to creates a 4-5 chain cascade
    - The screen fills with points, effects, and satisfying sounds
    - Emotion: 'I'm SO good at this game!'
 
 2. **Endless Runner: The Near-Miss Crash**
+
    - Let them run successfully, collecting coins, feeling fast
    - Speed increases gradually
    - At 10-12 seconds, spawn an unavoidable wall
@@ -2211,12 +2306,14 @@ The key insight: the best genre for the playable ad is the one that creates the 
    - Emotion: 'I was doing so well! I want to try again!'
 
 3. **Puzzle (Pull the Pin): The Obvious Solution**
+
    - Show a puzzle where the solution is immediately visible
    - When they solve it, balls cascade satisfyingly into the goal
    - Then show a harder puzzle they can't quite solve
    - Emotion: 'I can figure this out, let me keep going!'
 
 4. **Idle/Clicker: The Exponential Ramp**
+
    - Compress 30 minutes of progression into 10 seconds
    - Numbers go from 1 → 100 → 10K → 1M visually
    - Auto-unlock upgrades in rapid succession

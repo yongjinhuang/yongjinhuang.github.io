@@ -8,10 +8,10 @@ Route 53 is AWS's managed Domain Name System (DNS) service that combines three f
 
 A hosted zone is a container for DNS records for a domain. It defines how traffic is routed for that domain and its subdomains.
 
-| Type | Purpose | Accessible From |
-|------|---------|----------------|
-| Public | Routes internet traffic | Anywhere on the internet |
-| Private | Routes traffic within VPCs | Associated VPCs only |
+| Type    | Purpose                    | Accessible From          |
+| ------- | -------------------------- | ------------------------ |
+| Public  | Routes internet traffic    | Anywhere on the internet |
+| Private | Routes traffic within VPCs | Associated VPCs only     |
 
 ```bash
 # Create a public hosted zone
@@ -33,18 +33,18 @@ Each hosted zone gets four NS records and one SOA record automatically. Public h
 
 ## Record Types
 
-| Record Type | Purpose | Example |
-|-------------|---------|---------|
-| A | Maps domain to IPv4 address | `example.com -> 93.184.216.34` |
-| AAAA | Maps domain to IPv6 address | `example.com -> 2001:db8::1` |
-| CNAME | Maps domain to another domain | `www.example.com -> example.com` |
-| Alias | Maps domain to AWS resource (AWS-specific) | `example.com -> d123.cloudfront.net` |
-| MX | Mail server routing | `example.com -> 10 mail.example.com` |
-| TXT | Arbitrary text (SPF, DKIM, verification) | `example.com -> "v=spf1 ..."` |
-| NS | Name server delegation | `example.com -> ns-123.awsdns-45.com` |
-| SOA | Start of authority | Zone metadata |
-| SRV | Service locator | `_sip._tcp.example.com -> 10 5 5060 sip.example.com` |
-| CAA | Certificate authority authorization | `example.com -> 0 issue "letsencrypt.org"` |
+| Record Type | Purpose                                    | Example                                              |
+| ----------- | ------------------------------------------ | ---------------------------------------------------- |
+| A           | Maps domain to IPv4 address                | `example.com -> 93.184.216.34`                       |
+| AAAA        | Maps domain to IPv6 address                | `example.com -> 2001:db8::1`                         |
+| CNAME       | Maps domain to another domain              | `www.example.com -> example.com`                     |
+| Alias       | Maps domain to AWS resource (AWS-specific) | `example.com -> d123.cloudfront.net`                 |
+| MX          | Mail server routing                        | `example.com -> 10 mail.example.com`                 |
+| TXT         | Arbitrary text (SPF, DKIM, verification)   | `example.com -> "v=spf1 ..."`                        |
+| NS          | Name server delegation                     | `example.com -> ns-123.awsdns-45.com`                |
+| SOA         | Start of authority                         | Zone metadata                                        |
+| SRV         | Service locator                            | `_sip._tcp.example.com -> 10 5 5060 sip.example.com` |
+| CAA         | Certificate authority authorization        | `example.com -> 0 issue "letsencrypt.org"`           |
 
 ---
 
@@ -54,13 +54,13 @@ Alias records are a Route 53-specific extension to DNS. They look like A or AAAA
 
 ### Alias vs CNAME
 
-| Feature | Alias | CNAME |
-|---------|-------|-------|
-| Zone apex (naked domain) | Yes | No |
-| DNS query charge | Free for AWS targets | Standard charges |
-| Target | AWS resources only | Any domain |
-| Record type | A or AAAA | CNAME |
-| TTL | Set by Route 53 automatically | You configure |
+| Feature                  | Alias                         | CNAME            |
+| ------------------------ | ----------------------------- | ---------------- |
+| Zone apex (naked domain) | Yes                           | No               |
+| DNS query charge         | Free for AWS targets          | Standard charges |
+| Target                   | AWS resources only            | Any domain       |
+| Record type              | A or AAAA                     | CNAME            |
+| TTL                      | Set by Route 53 automatically | You configure    |
 
 ### Valid Alias Targets
 
@@ -111,10 +111,7 @@ Returns one or more values randomly. No health checks attached to individual rec
   "Name": "app.example.com",
   "Type": "A",
   "TTL": 300,
-  "ResourceRecords": [
-    { "Value": "1.2.3.4" },
-    { "Value": "5.6.7.8" }
-  ]
+  "ResourceRecords": [{ "Value": "1.2.3.4" }, { "Value": "5.6.7.8" }]
 }
 ```
 
@@ -177,21 +174,21 @@ Route 53 health checks monitor endpoints and can trigger DNS failover.
 
 ### Types
 
-| Type | What It Checks |
-|------|---------------|
-| Endpoint | HTTP, HTTPS, or TCP to a specific IP/domain |
-| Calculated | Combines multiple health checks with AND, OR, or NOT logic |
-| CloudWatch Alarm | State of a CloudWatch alarm (for private resources) |
+| Type             | What It Checks                                             |
+| ---------------- | ---------------------------------------------------------- |
+| Endpoint         | HTTP, HTTPS, or TCP to a specific IP/domain                |
+| Calculated       | Combines multiple health checks with AND, OR, or NOT logic |
+| CloudWatch Alarm | State of a CloudWatch alarm (for private resources)        |
 
 ### Endpoint Health Check Parameters
 
-| Parameter | Default | Notes |
-|-----------|---------|-------|
-| Protocol | HTTP | HTTP, HTTPS, or TCP |
-| Request interval | 30s | 10s available (higher cost) |
-| Failure threshold | 3 | Consecutive failures before unhealthy |
-| String matching | Disabled | Check first 5120 bytes of response for a string |
-| Regions | All | Choose which Route 53 checker regions to use |
+| Parameter         | Default  | Notes                                           |
+| ----------------- | -------- | ----------------------------------------------- |
+| Protocol          | HTTP     | HTTP, HTTPS, or TCP                             |
+| Request interval  | 30s      | 10s available (higher cost)                     |
+| Failure threshold | 3        | Consecutive failures before unhealthy           |
+| String matching   | Disabled | Check first 5120 bytes of response for a string |
+| Regions           | All      | Choose which Route 53 checker regions to use    |
 
 ```bash
 # Create a health check
@@ -267,6 +264,7 @@ For cross-account VPC association, the hosted zone owner must create an authoriz
 Route 53 supports DNSSEC for both domain registration and DNS resolution. DNSSEC adds cryptographic signatures to DNS records to prevent spoofing.
 
 Enabling DNSSEC on a hosted zone:
+
 1. Create a KSK (Key Signing Key) backed by a KMS key in us-east-1
 2. Route 53 generates ZSK (Zone Signing Key) automatically
 3. Add the DS record to the parent zone (done automatically if domain is registered with Route 53)

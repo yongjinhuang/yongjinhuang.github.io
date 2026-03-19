@@ -20,10 +20,10 @@ Interviewers assess whether you can:
 
 ### Level Expectations
 
-| Level | System Thinking Signal |
-|-------|----------------------|
-| L5 (Senior) | Understands how their system fits into the broader architecture. Identifies upstream/downstream dependencies. |
-| L6 (Staff) | Maps organizational bottlenecks across teams. Proposes platform investments that accelerate multiple teams. Defines SLOs for their domain. |
+| Level          | System Thinking Signal                                                                                                                               |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L5 (Senior)    | Understands how their system fits into the broader architecture. Identifies upstream/downstream dependencies.                                        |
+| L6 (Staff)     | Maps organizational bottlenecks across teams. Proposes platform investments that accelerate multiple teams. Defines SLOs for their domain.           |
 | L7 (Principal) | Shapes company-wide platform strategy. Makes capacity investments that anticipate 2-3 year growth. Defines reliability culture for the organization. |
 
 ---
@@ -105,14 +105,14 @@ Every engineering organization has one (or a few) constraints that limit overall
 
 ### Common Engineering Bottleneck Patterns
 
-| Bottleneck | Symptoms | Typical Root Cause |
-|-----------|---------|-------------------|
-| **Shared service team** | Every team is waiting on one team for API changes, reviews, or deployments | Centralized ownership of a critical capability |
-| **CI/CD pipeline** | Builds take 30+ minutes, developers batch changes, feedback loops are slow | Underinvestment in build infrastructure, monorepo without proper caching |
-| **Code review** | PRs sit for 2+ days waiting for review from overloaded senior engineers | Too few qualified reviewers, no review SLOs, unclear ownership |
-| **On-call burden** | Key engineers spend 30%+ time on incidents, reducing feature velocity | Underinvestment in reliability, no error budgets, reactive firefighting |
-| **Data team** | Product teams wait weeks for data pipeline changes or new metrics | Centralized data ownership, no self-serve analytics |
-| **Environment provisioning** | Teams wait days for test environments or staging resources | Manual provisioning, shared environments with contention |
+| Bottleneck                   | Symptoms                                                                   | Typical Root Cause                                                       |
+| ---------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **Shared service team**      | Every team is waiting on one team for API changes, reviews, or deployments | Centralized ownership of a critical capability                           |
+| **CI/CD pipeline**           | Builds take 30+ minutes, developers batch changes, feedback loops are slow | Underinvestment in build infrastructure, monorepo without proper caching |
+| **Code review**              | PRs sit for 2+ days waiting for review from overloaded senior engineers    | Too few qualified reviewers, no review SLOs, unclear ownership           |
+| **On-call burden**           | Key engineers spend 30%+ time on incidents, reducing feature velocity      | Underinvestment in reliability, no error budgets, reactive firefighting  |
+| **Data team**                | Product teams wait weeks for data pipeline changes or new metrics          | Centralized data ownership, no self-serve analytics                      |
+| **Environment provisioning** | Teams wait days for test environments or staging resources                 | Manual provisioning, shared environments with contention                 |
 
 ### How to Present Bottleneck Analysis in Interviews
 
@@ -154,13 +154,13 @@ One of the most important and recurring decisions for Staff+ engineers: how much
 
 ### When to Invest in Platform
 
-| Signal | Invest in Platform | Keep in Product Teams |
-|--------|-------------------|----------------------|
-| **Number of teams affected** | 3+ teams building similar things | Only 1 team needs it |
-| **Rate of change** | Stable, well-understood domain | Rapidly evolving requirements |
-| **Operational burden** | Centralized ops reduces total cost | Each team can manage their own |
-| **Expertise required** | Specialized knowledge (security, ML infra) | General engineering skills |
-| **Consistency requirements** | Must work the same everywhere (auth, logging) | Can vary by team |
+| Signal                       | Invest in Platform                            | Keep in Product Teams          |
+| ---------------------------- | --------------------------------------------- | ------------------------------ |
+| **Number of teams affected** | 3+ teams building similar things              | Only 1 team needs it           |
+| **Rate of change**           | Stable, well-understood domain                | Rapidly evolving requirements  |
+| **Operational burden**       | Centralized ops reduces total cost            | Each team can manage their own |
+| **Expertise required**       | Specialized knowledge (security, ML infra)    | General engineering skills     |
+| **Consistency requirements** | Must work the same everywhere (auth, logging) | Can vary by team               |
 
 ### The Platform Tax Conversation
 
@@ -180,12 +180,12 @@ Technical debt is inevitable. The Staff+ skill is not eliminating all debt -- it
 
 Evaluate tech debt by the cost of NOT addressing it, measured over time.
 
-| Debt Item | Monthly Cost If Ignored | Fix Effort | Payback Period | Priority |
-|-----------|------------------------|------------|----------------|----------|
-| Flaky test suite | $15K (wasted CI, manual retries, missed bugs) | 3 engineer-weeks | 2 months | High |
-| Monolith coupling | $40K (slow feature delivery, merge conflicts) | 3 engineer-months | 7.5 months | Medium |
-| Legacy auth system | $5K (workarounds) but $500K if breached | 2 engineer-months | Depends on risk tolerance | Depends |
-| Outdated documentation | $3K (onboarding delays) | 2 engineer-weeks | 6.7 months | Low |
+| Debt Item              | Monthly Cost If Ignored                       | Fix Effort        | Payback Period            | Priority |
+| ---------------------- | --------------------------------------------- | ----------------- | ------------------------- | -------- |
+| Flaky test suite       | $15K (wasted CI, manual retries, missed bugs) | 3 engineer-weeks  | 2 months                  | High     |
+| Monolith coupling      | $40K (slow feature delivery, merge conflicts) | 3 engineer-months | 7.5 months                | Medium   |
+| Legacy auth system     | $5K (workarounds) but $500K if breached       | 2 engineer-months | Depends on risk tolerance | Depends  |
+| Outdated documentation | $3K (onboarding delays)                       | 2 engineer-weeks  | 6.7 months                | Low      |
 
 **Prioritization rule:** Pay back debt with the shortest payback period first, unless risk-based items have catastrophic downside.
 
@@ -220,12 +220,12 @@ For debt items where the cost is probabilistic (security vulnerabilities, scalab
 
 Not all tech debt is created equal. Different types require different strategies.
 
-| Type | Description | Strategy |
-|------|------------|----------|
-| **Deliberate-Prudent** | "We know this is a shortcut, and we will fix it after launch" | Track on the roadmap. Fix within the committed timeline. |
-| **Deliberate-Reckless** | "We do not have time for testing" | This is not debt -- it is negligence. Push back in the moment. |
-| **Inadvertent-Prudent** | "Now that we have shipped, we see a better design" | Normal evolution. Refactor when the area is next touched. |
-| **Inadvertent-Reckless** | "We did not know what we were doing" | Invest in education and code review. Fix highest-risk areas. |
+| Type                     | Description                                                   | Strategy                                                       |
+| ------------------------ | ------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Deliberate-Prudent**   | "We know this is a shortcut, and we will fix it after launch" | Track on the roadmap. Fix within the committed timeline.       |
+| **Deliberate-Reckless**  | "We do not have time for testing"                             | This is not debt -- it is negligence. Push back in the moment. |
+| **Inadvertent-Prudent**  | "Now that we have shipped, we see a better design"            | Normal evolution. Refactor when the area is next touched.      |
+| **Inadvertent-Reckless** | "We did not know what we were doing"                          | Invest in education and code review. Fix highest-risk areas.   |
 
 ---
 
@@ -270,11 +270,11 @@ Capacity planning is the practice of ensuring your systems can handle expected l
 
 ### Capacity Planning Table
 
-| Resource | Current Usage | Growth Rate | Limit | Exhaustion Date | Action Required By |
-|----------|-------------|-------------|-------|-----------------|-------------------|
-| Database IOPS | 8K/s | +15%/month | 15K/s | 4 months | 2 months (migration takes 8 weeks) |
-| Storage | 2.1 TB | +200 GB/month | 5 TB | 14 months | 10 months |
-| API connections | 12K concurrent | +10%/month | 20K | 5 months | 3 months |
+| Resource        | Current Usage  | Growth Rate   | Limit | Exhaustion Date | Action Required By                 |
+| --------------- | -------------- | ------------- | ----- | --------------- | ---------------------------------- |
+| Database IOPS   | 8K/s           | +15%/month    | 15K/s | 4 months        | 2 months (migration takes 8 weeks) |
+| Storage         | 2.1 TB         | +200 GB/month | 5 TB  | 14 months       | 10 months                          |
+| API connections | 12K concurrent | +10%/month    | 20K   | 5 months        | 3 months                           |
 
 ---
 
@@ -284,12 +284,12 @@ Staff+ engineers do not just respond to incidents -- they build the systems and 
 
 ### Incident Severity Framework
 
-| Severity | Definition | Response Time | Who Responds |
-|----------|-----------|---------------|-------------|
-| **SEV-1** | Complete outage or data loss affecting all users | Immediate (< 5 min) | Incident commander + on-call from all affected teams |
-| **SEV-2** | Major feature degraded or affecting large subset of users | < 15 min | On-call engineer + team lead |
-| **SEV-3** | Minor feature broken or small user subset affected | < 1 hour | On-call engineer |
-| **SEV-4** | Cosmetic issue or workaround available | Next business day | Assigned engineer |
+| Severity  | Definition                                                | Response Time       | Who Responds                                         |
+| --------- | --------------------------------------------------------- | ------------------- | ---------------------------------------------------- |
+| **SEV-1** | Complete outage or data loss affecting all users          | Immediate (< 5 min) | Incident commander + on-call from all affected teams |
+| **SEV-2** | Major feature degraded or affecting large subset of users | < 15 min            | On-call engineer + team lead                         |
+| **SEV-3** | Minor feature broken or small user subset affected        | < 1 hour            | On-call engineer                                     |
+| **SEV-4** | Cosmetic issue or workaround available                    | Next business day   | Assigned engineer                                    |
 
 ### The Blameless Postmortem
 
@@ -351,13 +351,13 @@ processes, or culture?]
 
 ### Building Postmortem Culture
 
-| Practice | Why It Matters |
-|----------|---------------|
-| **No blame, ever** | If people fear punishment, they hide information. Hiding information makes incidents worse. |
-| **Action items tracked to completion** | Postmortems without follow-through are theater. Track completion rates. |
-| **Share widely** | Send postmortems to all of engineering. Normalize learning from failure. |
-| **Celebrate thorough postmortems** | Reward the quality of the investigation, not the severity of the incident. |
-| **Review action item completion quarterly** | If action items are not getting done, the postmortem process is not working. |
+| Practice                                    | Why It Matters                                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **No blame, ever**                          | If people fear punishment, they hide information. Hiding information makes incidents worse. |
+| **Action items tracked to completion**      | Postmortems without follow-through are theater. Track completion rates.                     |
+| **Share widely**                            | Send postmortems to all of engineering. Normalize learning from failure.                    |
+| **Celebrate thorough postmortems**          | Reward the quality of the investigation, not the severity of the incident.                  |
+| **Review action item completion quarterly** | If action items are not getting done, the postmortem process is not working.                |
 
 ---
 
@@ -367,12 +367,12 @@ Defining reliability targets is how Staff+ engineers balance the tension between
 
 ### Definitions
 
-| Term | Definition | Example |
-|------|-----------|---------|
-| **SLI (Service Level Indicator)** | A quantitative measure of a service attribute | Percentage of requests completed in < 200ms |
-| **SLO (Service Level Objective)** | A target value for an SLI | 99.9% of requests complete in < 200ms |
-| **SLA (Service Level Agreement)** | A contract with consequences for missing an SLO | If uptime drops below 99.9%, customer gets credits |
-| **Error Budget** | The allowed amount of unreliability (100% - SLO) | 0.1% = 43.8 minutes of downtime per month |
+| Term                              | Definition                                       | Example                                            |
+| --------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
+| **SLI (Service Level Indicator)** | A quantitative measure of a service attribute    | Percentage of requests completed in < 200ms        |
+| **SLO (Service Level Objective)** | A target value for an SLI                        | 99.9% of requests complete in < 200ms              |
+| **SLA (Service Level Agreement)** | A contract with consequences for missing an SLO  | If uptime drops below 99.9%, customer gets credits |
+| **Error Budget**                  | The allowed amount of unreliability (100% - SLO) | 0.1% = 43.8 minutes of downtime per month          |
 
 ### Choosing SLOs
 
@@ -406,13 +406,13 @@ Defining reliability targets is how Staff+ engineers balance the tension between
 
 ### Error Budget Policy Example
 
-| Error Budget Status | Engineering Response |
-|--------------------|---------------------|
-| **> 50% remaining** | Normal development velocity. Ship features. Take calculated risks. |
-| **25-50% remaining** | Increase caution. Require additional review for risky changes. Run more thorough testing. |
-| **10-25% remaining** | Slow down. Prioritize reliability work. No risky deployments without explicit approval. |
-| **< 10% remaining** | Feature freeze. All engineering effort goes to reliability until budget recovers. |
-| **Exhausted** | Full stop on features. Postmortem on budget consumption. Recovery plan required before resuming. |
+| Error Budget Status  | Engineering Response                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| **> 50% remaining**  | Normal development velocity. Ship features. Take calculated risks.                               |
+| **25-50% remaining** | Increase caution. Require additional review for risky changes. Run more thorough testing.        |
+| **10-25% remaining** | Slow down. Prioritize reliability work. No risky deployments without explicit approval.          |
+| **< 10% remaining**  | Feature freeze. All engineering effort goes to reliability until budget recovers.                |
+| **Exhausted**        | Full stop on features. Postmortem on budget consumption. Recovery plan required before resuming. |
 
 ---
 
@@ -476,16 +476,16 @@ The critical nuance is that I always present tech debt priorities alongside prod
 
 ## Anti-patterns to Avoid
 
-| Anti-pattern | Why It Fails | What to Do Instead |
-|-------------|-------------|-------------------|
-| **Local optimization** | Speeding up one team while slowing the org | Map the entire value stream before optimizing |
-| **Platform for platform's sake** | Building shared infrastructure nobody asked for | Start from product team pain points, not from what seems elegant |
-| **Zero tech debt tolerance** | Spending all time on perfection, shipping nothing | Tech debt is a tool. Deliberate, managed debt is acceptable. |
-| **Reactive capacity planning** | Scaling only after outages | Build a capacity model. Scale 3 months ahead of demand. |
-| **Blame-driven postmortems** | Engineers hide information, incidents repeat | Blameless postmortems, systemic root causes, tracked action items |
-| **SLOs as aspirations** | Setting targets you cannot meet, budget always exhausted | Set SLOs based on current performance, tighten over time |
-| **Ignoring organizational dynamics** | Proposing a perfect system that requires reorgs nobody will approve | Design solutions that work with the current org structure |
-| **Treating every problem as technical** | Building tools when the problem is process or communication | Ask "is this a people, process, or technology problem?" first |
+| Anti-pattern                            | Why It Fails                                                        | What to Do Instead                                                |
+| --------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| **Local optimization**                  | Speeding up one team while slowing the org                          | Map the entire value stream before optimizing                     |
+| **Platform for platform's sake**        | Building shared infrastructure nobody asked for                     | Start from product team pain points, not from what seems elegant  |
+| **Zero tech debt tolerance**            | Spending all time on perfection, shipping nothing                   | Tech debt is a tool. Deliberate, managed debt is acceptable.      |
+| **Reactive capacity planning**          | Scaling only after outages                                          | Build a capacity model. Scale 3 months ahead of demand.           |
+| **Blame-driven postmortems**            | Engineers hide information, incidents repeat                        | Blameless postmortems, systemic root causes, tracked action items |
+| **SLOs as aspirations**                 | Setting targets you cannot meet, budget always exhausted            | Set SLOs based on current performance, tighten over time          |
+| **Ignoring organizational dynamics**    | Proposing a perfect system that requires reorgs nobody will approve | Design solutions that work with the current org structure         |
+| **Treating every problem as technical** | Building tools when the problem is process or communication         | Ask "is this a people, process, or technology problem?" first     |
 
 ---
 

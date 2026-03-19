@@ -503,11 +503,11 @@ import { Pool } from 'pg';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20,                    // Maximum connections in pool
-  min: 5,                     // Minimum idle connections
-  idleTimeoutMillis: 30000,   // Close idle connections after 30s
+  max: 20, // Maximum connections in pool
+  min: 5, // Minimum idle connections
+  idleTimeoutMillis: 30000, // Close idle connections after 30s
   connectionTimeoutMillis: 5000, // Error if no connection available in 5s
-  maxUses: 7500,              // Close after 7500 queries (prevent memory leaks)
+  maxUses: 7500, // Close after 7500 queries (prevent memory leaks)
 });
 
 // Use pool directly (automatically manages connections)
@@ -521,8 +521,14 @@ async function transferMoney(fromId: string, toId: string, amount: number) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    await client.query('UPDATE accounts SET balance = balance - $1 WHERE id = $2', [amount, fromId]);
-    await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [amount, toId]);
+    await client.query(
+      'UPDATE accounts SET balance = balance - $1 WHERE id = $2',
+      [amount, fromId]
+    );
+    await client.query(
+      'UPDATE accounts SET balance = balance + $1 WHERE id = $2',
+      [amount, toId]
+    );
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');
@@ -565,9 +571,16 @@ export async function up(knex: Knex): Promise<void> {
 
   await knex.schema.createTable('orders', (table) => {
     table.uuid('id').primary().defaultTo(knex.fn.uuid());
-    table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
+    table
+      .uuid('user_id')
+      .notNullable()
+      .references('id')
+      .inTable('users')
+      .onDelete('CASCADE');
     table.decimal('total', 10, 2).notNullable();
-    table.enum('status', ['pending', 'paid', 'shipped', 'delivered', 'cancelled']).defaultTo('pending');
+    table
+      .enum('status', ['pending', 'paid', 'shipped', 'delivered', 'cancelled'])
+      .defaultTo('pending');
     table.timestamps(true, true);
     table.index(['user_id', 'status']);
   });
@@ -1205,9 +1218,10 @@ Step-by-step debugging process:
 import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development'
-    ? ['query', 'error', 'warn']
-    : ['error'],
+  log:
+    process.env.NODE_ENV === 'development'
+      ? ['query', 'error', 'warn']
+      : ['error'],
 });
 
 interface PostFilters {
@@ -1291,7 +1305,10 @@ interface CacheOptions {
   prefix?: string;
 }
 
-async function cacheGet<T>(key: string, options: CacheOptions = {}): Promise<T | null> {
+async function cacheGet<T>(
+  key: string,
+  options: CacheOptions = {}
+): Promise<T | null> {
   const fullKey = options.prefix ? `${options.prefix}:${key}` : key;
   const cached = await redis.get(fullKey);
 
@@ -1306,7 +1323,11 @@ async function cacheGet<T>(key: string, options: CacheOptions = {}): Promise<T |
   }
 }
 
-async function cacheSet<T>(key: string, value: T, options: CacheOptions = {}): Promise<void> {
+async function cacheSet<T>(
+  key: string,
+  value: T,
+  options: CacheOptions = {}
+): Promise<void> {
   const fullKey = options.prefix ? `${options.prefix}:${key}` : key;
   const serialized = JSON.stringify(value);
   const ttl = options.ttl || 300; // Default 5 minutes
@@ -1314,7 +1335,10 @@ async function cacheSet<T>(key: string, value: T, options: CacheOptions = {}): P
   await redis.set(fullKey, serialized, 'EX', ttl);
 }
 
-async function cacheDelete(key: string, options: CacheOptions = {}): Promise<void> {
+async function cacheDelete(
+  key: string,
+  options: CacheOptions = {}
+): Promise<void> {
   const fullKey = options.prefix ? `${options.prefix}:${key}` : key;
   await redis.del(fullKey);
 }

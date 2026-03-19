@@ -127,6 +127,7 @@ $$P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}$$
 This is the foundation of Bayesian inference: updating beliefs with new evidence.
 
 **Worked Example**: A quant model classifies days as "trending" or "mean-reverting." Historically:
+
 - 30% of days are trending: $P(T) = 0.30$
 - On trending days, the model correctly says "trending" 80% of the time: $P(\text{Signal}_T | T) = 0.80$
 - On mean-reverting days, the model incorrectly says "trending" 15% of the time: $P(\text{Signal}_T | MR) = 0.15$
@@ -341,6 +342,7 @@ $$E[X] = \int_{-\infty}^{\infty} x \, f(x) \, dx \quad \text{(continuous)}$$
 $$E[X] = \sum_i x_i \, P(X = x_i) \quad \text{(discrete)}$$
 
 Properties:
+
 - $E[aX + b] = aE[X] + b$ (linearity)
 - $E[X + Y] = E[X] + E[Y]$ (always true, even if dependent)
 
@@ -349,6 +351,7 @@ Properties:
 $$\text{Var}(X) = E[(X - \mu)^2] = E[X^2] - (E[X])^2$$
 
 Properties:
+
 - $\text{Var}(aX + b) = a^2 \text{Var}(X)$
 - $\text{Var}(X + Y) = \text{Var}(X) + \text{Var}(Y) + 2\text{Cov}(X, Y)$
 
@@ -462,6 +465,7 @@ This is why risk models based on normality are dangerous.
 ```
 
 **Key examples**:
+
 - **Black Monday (1987)**: The S&P 500 dropped 20.5% in one day. Under a normal model with daily sigma of ~1%, this was a 20+ sigma event. The probability under normal assumptions: essentially zero. It happened.
 - **2008 Financial Crisis**: Multiple "impossible" daily moves occurred in succession.
 - **COVID Crash (2020)**: Several days with 10%+ moves in the S&P 500.
@@ -476,13 +480,13 @@ This is why risk models based on normality are dangerous.
 
 #### Better Models for Fat Tails
 
-| Model | Description | Use Case |
-|-------|-------------|----------|
-| Student's t | Heavier tails parameterized by $\nu$ | General-purpose |
+| Model                | Description                          | Use Case              |
+| -------------------- | ------------------------------------ | --------------------- |
+| Student's t          | Heavier tails parameterized by $\nu$ | General-purpose       |
 | Stable distributions | Generalize CLT for infinite variance | Extreme tail modeling |
-| GARCH | Time-varying volatility | Volatility clustering |
-| Jump-diffusion | Normal + Poisson jumps | Options pricing |
-| Extreme Value Theory | Models only the tail | VaR, stress testing |
+| GARCH                | Time-varying volatility              | Volatility clustering |
+| Jump-diffusion       | Normal + Poisson jumps               | Options pricing       |
+| Extreme Value Theory | Models only the tail                 | VaR, stress testing   |
 
 ### 1.7 The Central Limit Theorem and Its Limits
 
@@ -569,13 +573,13 @@ where $C$ is the copula function and $F_X, F_Y$ are the marginal CDFs.
 
 **Key copula families**:
 
-| Copula | Tail Dependence | Use Case |
-|--------|----------------|----------|
-| Gaussian | None | Default (but dangerous in crises) |
-| Student's t | Symmetric tail | Better for financial data |
-| Clayton | Lower tail | Crash modeling (joint downside) |
-| Gumbel | Upper tail | Joint booms |
-| Frank | None (symmetric) | Moderate dependence |
+| Copula      | Tail Dependence  | Use Case                          |
+| ----------- | ---------------- | --------------------------------- |
+| Gaussian    | None             | Default (but dangerous in crises) |
+| Student's t | Symmetric tail   | Better for financial data         |
+| Clayton     | Lower tail       | Crash modeling (joint downside)   |
+| Gumbel      | Upper tail       | Joint booms                       |
+| Frank       | None (symmetric) | Moderate dependence               |
 
 **Why copulas matter in finance**: The 2008 financial crisis was partly caused by the widespread use of the Gaussian copula (David Li's model) to price CDOs. The Gaussian copula underestimates the probability that many assets default simultaneously. When the housing market crashed, correlated defaults were far more common than the model predicted.
 
@@ -665,6 +669,7 @@ For large n, the difference is negligible.
 ```
 
 **Properties of MLE**:
+
 - **Consistent**: Converges to true parameter as $n \to \infty$
 - **Asymptotically efficient**: Achieves the Cramer-Rao lower bound
 - **Asymptotically normal**: $\hat{\theta} \xrightarrow{d} N(\theta_0, I(\theta_0)^{-1}/n)$
@@ -900,19 +905,20 @@ OLS solution: $\hat{\boldsymbol{\beta}} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X
 5. **No autocorrelation**: $\text{Cov}(\epsilon_i, \epsilon_j) = 0$ for $i \neq j$
 
 **In finance, ALL of these are frequently violated**:
+
 - Returns exhibit **heteroscedasticity** (GARCH effects): use robust standard errors (White, Newey-West)
 - Returns exhibit **autocorrelation**: use Newey-West standard errors or GLS
 - Factor returns are often **correlated**: use regularization (Ridge, LASSO) or PCA
 
 #### Regression Diagnostics
 
-| Diagnostic | Tests For | Method |
-|-----------|-----------|--------|
-| Durbin-Watson | Autocorrelation in residuals | DW statistic near 2 = good |
-| Breusch-Pagan | Heteroscedasticity | Regress squared residuals on X |
-| VIF | Multicollinearity | $\text{VIF}_j > 10$ is concerning |
-| Cook's Distance | Influential observations | Points that shift regression |
-| Jarque-Bera | Normality of residuals | Tests skewness + kurtosis |
+| Diagnostic      | Tests For                    | Method                            |
+| --------------- | ---------------------------- | --------------------------------- |
+| Durbin-Watson   | Autocorrelation in residuals | DW statistic near 2 = good        |
+| Breusch-Pagan   | Heteroscedasticity           | Regress squared residuals on X    |
+| VIF             | Multicollinearity            | $\text{VIF}_j > 10$ is concerning |
+| Cook's Distance | Influential observations     | Points that shift regression      |
+| Jarque-Bera     | Normality of residuals       | Tests skewness + kurtosis         |
 
 ### 2.6 Correlation vs. Causation
 
@@ -1026,6 +1032,7 @@ but there is still meaningful uncertainty.
 ```
 
 **Bayesian vs. Frequentist in Quant Finance**:
+
 - Bayesian is natural for combining prior market knowledge with new data
 - Bayesian shrinkage estimators improve covariance matrix estimation
 - Bayesian model averaging handles model uncertainty
@@ -1170,11 +1177,13 @@ Any $m \times n$ matrix $\mathbf{A}$ can be decomposed as:
 $$\mathbf{A} = \mathbf{U}\boldsymbol{\Sigma}\mathbf{V}^T$$
 
 where:
+
 - $\mathbf{U}$ is $m \times m$ orthogonal (left singular vectors)
 - $\boldsymbol{\Sigma}$ is $m \times n$ diagonal (singular values)
 - $\mathbf{V}$ is $n \times n$ orthogonal (right singular vectors)
 
 **In finance**: SVD is used for:
+
 - Dimensionality reduction of return data
 - Stable computation of pseudo-inverses (when covariance matrices are near-singular)
 - Factor extraction from return matrices
@@ -1289,13 +1298,13 @@ $$\hat{\Sigma} = \frac{1}{n-1} \sum_{i=1}^n (\mathbf{r}_i - \bar{\mathbf{r}})(\m
 
 **Solutions**:
 
-| Method | Description | When to Use |
-|--------|-------------|-------------|
-| Shrinkage (Ledoit-Wolf) | Shrink sample covariance toward a structured target | Default choice |
-| Factor Models | $\Sigma = B F B^T + D$ (few factors + diagonal) | When factors are known |
-| EWMA | Exponentially weighted (recent data matters more) | Fast-moving markets |
-| DCC-GARCH | Dynamic Conditional Correlation | Time-varying correlations |
-| Random Matrix Theory | Filter eigenvalues using Marcenko-Pastur law | Noise filtering |
+| Method                  | Description                                         | When to Use               |
+| ----------------------- | --------------------------------------------------- | ------------------------- |
+| Shrinkage (Ledoit-Wolf) | Shrink sample covariance toward a structured target | Default choice            |
+| Factor Models           | $\Sigma = B F B^T + D$ (few factors + diagonal)     | When factors are known    |
+| EWMA                    | Exponentially weighted (recent data matters more)   | Fast-moving markets       |
+| DCC-GARCH               | Dynamic Conditional Correlation                     | Time-varying correlations |
+| Random Matrix Theory    | Filter eigenvalues using Marcenko-Pastur law        | Noise filtering           |
 
 **Ledoit-Wolf Shrinkage**:
 
@@ -1314,6 +1323,7 @@ The **derivative** measures the instantaneous rate of change:
 $$f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$$
 
 Key rules:
+
 - Power rule: $(x^n)' = nx^{n-1}$
 - Chain rule: $(f(g(x)))' = f'(g(x)) \cdot g'(x)$
 - Product rule: $(fg)' = f'g + fg'$
@@ -1358,6 +1368,7 @@ The Hessian is the matrix of second partial derivatives:
 $$\mathbf{H}_{ij} = \frac{\partial^2 f}{\partial x_i \partial x_j}$$
 
 **Key properties**:
+
 - If $\mathbf{H}$ is positive definite at a point where $\nabla f = 0$: **local minimum**
 - If $\mathbf{H}$ is negative definite: **local maximum**
 - If $\mathbf{H}$ is indefinite: **saddle point**
@@ -1443,6 +1454,7 @@ Gradient Descent Path on a Contour Plot:
 ```
 
 **Variants**:
+
 - **Stochastic Gradient Descent (SGD)**: Uses random subsets of data per iteration (for ML)
 - **Adam**: Adaptive learning rate (most popular for deep learning)
 - **L-BFGS**: Quasi-Newton method (uses approximate Hessian, fast for smooth problems)
@@ -1594,6 +1606,7 @@ Three Sample Paths of Brownian Motion:
 **Why Brownian Motion for finance?**
 
 Stock prices are driven by the continuous arrival of unpredictable information. Brownian motion captures:
+
 - Continuous paths (prices do not teleport)
 - Random fluctuations (information is unpredictable)
 - Independent increments (new information is unrelated to old)
@@ -1752,13 +1765,13 @@ $$dX(t) = \mu(X, t) \, dt + \sigma(X, t) \, dW(t)$$
 
 **Common SDEs in Finance**:
 
-| Model | SDE | Use |
-|-------|-----|-----|
-| GBM | $dS = \mu S \, dt + \sigma S \, dW$ | Stock prices |
-| Ornstein-Uhlenbeck | $dX = \theta(\mu - X) \, dt + \sigma \, dW$ | Mean-reverting rates |
-| CIR (Cox-Ingersoll-Ross) | $dr = \kappa(\theta - r) \, dt + \sigma\sqrt{r} \, dW$ | Interest rates |
-| Heston | $dv = \kappa(\theta - v) \, dt + \xi\sqrt{v} \, dW_v$ | Stochastic volatility |
-| SABR | $dF = \sigma F^\beta \, dW_1$, $d\sigma = \alpha\sigma \, dW_2$ | Vol smile modeling |
+| Model                    | SDE                                                             | Use                   |
+| ------------------------ | --------------------------------------------------------------- | --------------------- |
+| GBM                      | $dS = \mu S \, dt + \sigma S \, dW$                             | Stock prices          |
+| Ornstein-Uhlenbeck       | $dX = \theta(\mu - X) \, dt + \sigma \, dW$                     | Mean-reverting rates  |
+| CIR (Cox-Ingersoll-Ross) | $dr = \kappa(\theta - r) \, dt + \sigma\sqrt{r} \, dW$          | Interest rates        |
+| Heston                   | $dv = \kappa(\theta - v) \, dt + \xi\sqrt{v} \, dW_v$           | Stochastic volatility |
+| SABR                     | $dF = \sigma F^\beta \, dW_1$, $d\sigma = \alpha\sigma \, dW_2$ | Vol smile modeling    |
 
 ```
 Mean-Reverting Process (Ornstein-Uhlenbeck):
@@ -1793,6 +1806,7 @@ Mean-Reverting Process (Ornstein-Uhlenbeck):
 The Ito integral $\int_0^T f(t) \, dW(t)$ extends ordinary integration to stochastic processes.
 
 **Key properties**:
+
 - $E\left[\int_0^T f(t) \, dW(t)\right] = 0$ (the integral is a martingale)
 - $E\left[\left(\int_0^T f(t) \, dW(t)\right)^2\right] = \int_0^T E[f(t)^2] \, dt$ (Ito isometry)
 
@@ -2020,6 +2034,7 @@ Convergence:
 ```
 
 **When to use Monte Carlo**:
+
 - Path-dependent options (Asian, barrier, lookback)
 - Multi-asset derivatives (basket options, rainbow options)
 - Complex payoff structures
@@ -2097,11 +2112,11 @@ Finite Difference Grid:
 
 **Methods**:
 
-| Method | Stability | Accuracy | Complexity |
-|--------|-----------|----------|------------|
-| Explicit | Conditional ($\Delta t < \Delta S^2 / \sigma^2 S^2$) | $O(\Delta t, \Delta S^2)$ | Simple |
-| Implicit | Unconditional | $O(\Delta t, \Delta S^2)$ | Tridiagonal solve |
-| Crank-Nicolson | Unconditional | $O(\Delta t^2, \Delta S^2)$ | Tridiagonal solve |
+| Method         | Stability                                            | Accuracy                    | Complexity        |
+| -------------- | ---------------------------------------------------- | --------------------------- | ----------------- |
+| Explicit       | Conditional ($\Delta t < \Delta S^2 / \sigma^2 S^2$) | $O(\Delta t, \Delta S^2)$   | Simple            |
+| Implicit       | Unconditional                                        | $O(\Delta t, \Delta S^2)$   | Tridiagonal solve |
+| Crank-Nicolson | Unconditional                                        | $O(\Delta t^2, \Delta S^2)$ | Tridiagonal solve |
 
 **Advantages over Monte Carlo**: Gives option values for all $S$ at once (the entire "option value surface"), handles American options naturally (free boundary problem), and can be very fast for low-dimensional problems.
 
@@ -2193,10 +2208,12 @@ $$C = e^{-rT} \int_K^{\infty} (S - K) f_Q(S) \, dS$$
 All Monte Carlo methods depend on high-quality random number generators (RNGs).
 
 **Pseudo-random number generators (PRNGs)**:
+
 - Mersenne Twister (MT19937): Standard in most programming languages, period $2^{19937} - 1$
 - PCG family: More modern, better statistical properties
 
 **Quasi-random sequences** (low-discrepancy sequences):
+
 - Sobol sequences: Fill the space more uniformly than pseudo-random
 - Halton sequences: Simple to implement
 
@@ -2282,6 +2299,7 @@ Entropy vs. Probability (Binary):
 $$I(X; Y) = H(X) + H(Y) - H(X, Y) = \sum_{x,y} P(x,y) \log \frac{P(x,y)}{P(x)P(y)}$$
 
 Properties:
+
 - $I(X; Y) \geq 0$ (knowing $Y$ never hurts)
 - $I(X; Y) = 0$ if and only if $X$ and $Y$ are independent
 - $I(X; Y) = I(Y; X)$ (symmetric)
@@ -2314,6 +2332,7 @@ Mutual information detects what correlation misses!
 ```
 
 **In finance**: Use mutual information for:
+
 - Feature selection: Which features carry genuine information about future returns?
 - Non-linear dependencies: Detect relationships that correlation misses
 - Signal quality assessment: How much information does a trading signal contain?
@@ -2327,6 +2346,7 @@ $$D_{KL}(P \| Q) = \sum_i P(x_i) \log \frac{P(x_i)}{Q(x_i)} \quad \text{(discret
 $$D_{KL}(P \| Q) = \int p(x) \ln \frac{p(x)}{q(x)} \, dx \quad \text{(continuous)}$$
 
 **Properties**:
+
 - $D_{KL}(P \| Q) \geq 0$ (Gibbs' inequality)
 - $D_{KL}(P \| Q) = 0$ if and only if $P = Q$
 - **NOT symmetric**: $D_{KL}(P \| Q) \neq D_{KL}(Q \| P)$ in general
@@ -2355,6 +2375,7 @@ underestimates the probability.
 ```
 
 **Applications in Finance**:
+
 - **Model validation**: How well does a fitted model match the empirical distribution?
 - **Relative entropy pricing**: Pricing derivatives by minimizing KL divergence from a prior
 - **Information-theoretic feature selection**: Features that minimize KL divergence between conditional and unconditional return distributions
@@ -2437,16 +2458,16 @@ Example Results:
 
 ### Key Formulas to Memorize
 
-| Formula | Expression | Use |
-|---------|-----------|-----|
-| Bayes' Theorem | $P(A|B) = P(B|A)P(A)/P(B)$ | Updating beliefs |
-| Portfolio Variance | $\sigma_p^2 = w^T \Sigma w$ | Risk calculation |
-| OLS Estimator | $\hat{\beta} = (X^TX)^{-1}X^Ty$ | Regression |
-| Ito's Lemma | $df = f_t dt + f_S dS + \frac{1}{2}f_{SS}(dS)^2$ | Stochastic chain rule |
-| Black-Scholes | $C = SN(d_1) - Ke^{-rT}N(d_2)$ | European call pricing |
-| GBM Solution | $S(t) = S(0)e^{(\mu-\sigma^2/2)t + \sigma W(t)}$ | Stock price model |
-| KL Divergence | $D_{KL}(P\|Q) = \sum P \log(P/Q)$ | Distribution comparison |
-| Sharpe Ratio SE | $\text{SE} \approx \sqrt{(1+SR^2/2)/n}$ | Statistical significance |
+| Formula            | Expression                                       | Use                      |
+| ------------------ | ------------------------------------------------ | ------------------------ | ------------ | ---------------- |
+| Bayes' Theorem     | $P(A                                             | B) = P(B                 | A)P(A)/P(B)$ | Updating beliefs |
+| Portfolio Variance | $\sigma_p^2 = w^T \Sigma w$                      | Risk calculation         |
+| OLS Estimator      | $\hat{\beta} = (X^TX)^{-1}X^Ty$                  | Regression               |
+| Ito's Lemma        | $df = f_t dt + f_S dS + \frac{1}{2}f_{SS}(dS)^2$ | Stochastic chain rule    |
+| Black-Scholes      | $C = SN(d_1) - Ke^{-rT}N(d_2)$                   | European call pricing    |
+| GBM Solution       | $S(t) = S(0)e^{(\mu-\sigma^2/2)t + \sigma W(t)}$ | Stock price model        |
+| KL Divergence      | $D_{KL}(P\|Q) = \sum P \log(P/Q)$                | Distribution comparison  |
+| Sharpe Ratio SE    | $\text{SE} \approx \sqrt{(1+SR^2/2)/n}$          | Statistical significance |
 
 ### Study Recommendations
 

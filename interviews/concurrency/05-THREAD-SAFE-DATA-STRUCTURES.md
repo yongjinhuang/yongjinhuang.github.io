@@ -497,7 +497,7 @@ def get_singleton() -> Singleton:
     return _singleton
 ```
 
-### Thread-Safe Singleton with __new__
+### Thread-Safe Singleton with **new**
 
 ```python
 import threading

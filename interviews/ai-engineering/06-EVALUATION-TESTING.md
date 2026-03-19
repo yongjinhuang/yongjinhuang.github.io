@@ -49,17 +49,17 @@ stochastic and produce free-form text. This makes evaluation fundamentally diffe
 
 ### Evaluation Dimensions
 
-| Dimension | What It Measures | How to Evaluate |
-|-----------|-----------------|-----------------|
-| **Correctness** | Is the answer factually right? | Ground truth comparison, LLM-as-judge |
-| **Relevance** | Does it answer the question? | Semantic similarity, LLM-as-judge |
-| **Faithfulness** | Is it grounded in given context? | NLI models, RAGAS |
-| **Coherence** | Is it well-written and logical? | LLM-as-judge, human eval |
-| **Helpfulness** | Is it useful to the user? | Human eval, user feedback |
-| **Safety** | Is it harmful or biased? | Safety classifiers, red teaming |
-| **Format** | Does it match required structure? | Regex, schema validation |
-| **Latency** | How fast is the response? | p50, p95, p99 measurements |
-| **Cost** | How much does it cost? | Token counting |
+| Dimension        | What It Measures                  | How to Evaluate                       |
+| ---------------- | --------------------------------- | ------------------------------------- |
+| **Correctness**  | Is the answer factually right?    | Ground truth comparison, LLM-as-judge |
+| **Relevance**    | Does it answer the question?      | Semantic similarity, LLM-as-judge     |
+| **Faithfulness** | Is it grounded in given context?  | NLI models, RAGAS                     |
+| **Coherence**    | Is it well-written and logical?   | LLM-as-judge, human eval              |
+| **Helpfulness**  | Is it useful to the user?         | Human eval, user feedback             |
+| **Safety**       | Is it harmful or biased?          | Safety classifiers, red teaming       |
+| **Format**       | Does it match required structure? | Regex, schema validation              |
+| **Latency**      | How fast is the response?         | p50, p95, p99 measurements            |
+| **Cost**         | How much does it cost?            | Token counting                        |
 
 ---
 
@@ -436,13 +436,13 @@ def pairwise_judge(
 
 ### LLM-as-Judge Pitfalls
 
-| Pitfall | Description | Mitigation |
-|---------|------------|------------|
-| **Position bias** | Prefers first answer in comparisons | Randomize order, run twice |
-| **Verbosity bias** | Prefers longer answers | Explicitly instruct to ignore length |
-| **Self-bias** | GPT-4 prefers GPT-4 outputs | Use different model as judge |
-| **Leniency** | Scores too generously | Use strict rubric, anchor examples |
-| **Inconsistency** | Different scores for same input | Use temp=0, average multiple runs |
+| Pitfall            | Description                         | Mitigation                           |
+| ------------------ | ----------------------------------- | ------------------------------------ |
+| **Position bias**  | Prefers first answer in comparisons | Randomize order, run twice           |
+| **Verbosity bias** | Prefers longer answers              | Explicitly instruct to ignore length |
+| **Self-bias**      | GPT-4 prefers GPT-4 outputs         | Use different model as judge         |
+| **Leniency**       | Scores too generously               | Use strict rubric, anchor examples   |
+| **Inconsistency**  | Different scores for same input     | Use temp=0, average multiple runs    |
 
 ---
 
@@ -843,21 +843,21 @@ class LLMABTest:
 
 ### Key Benchmarks for SWEs
 
-| Benchmark | What It Tests | Models Use It For |
-|-----------|--------------|-------------------|
-| **MMLU** | Multitask knowledge (57 subjects) | General capability |
-| **HumanEval** | Code generation (Python) | Coding ability |
-| **MBPP** | Code generation (entry-level) | Coding ability |
-| **GSM8K** | Grade school math | Math reasoning |
-| **MATH** | Competition math | Advanced reasoning |
-| **HellaSwag** | Commonsense reasoning | General intelligence |
-| **TruthfulQA** | Truthfulness / hallucination | Factual accuracy |
-| **MT-Bench** | Multi-turn conversation | Chat quality |
-| **GPQA** | Graduate-level Q&A | Expert knowledge |
+| Benchmark      | What It Tests                     | Models Use It For    |
+| -------------- | --------------------------------- | -------------------- |
+| **MMLU**       | Multitask knowledge (57 subjects) | General capability   |
+| **HumanEval**  | Code generation (Python)          | Coding ability       |
+| **MBPP**       | Code generation (entry-level)     | Coding ability       |
+| **GSM8K**      | Grade school math                 | Math reasoning       |
+| **MATH**       | Competition math                  | Advanced reasoning   |
+| **HellaSwag**  | Commonsense reasoning             | General intelligence |
+| **TruthfulQA** | Truthfulness / hallucination      | Factual accuracy     |
+| **MT-Bench**   | Multi-turn conversation           | Chat quality         |
+| **GPQA**       | Graduate-level Q&A                | Expert knowledge     |
 
 ### Running HumanEval
 
-```python
+````python
 def evaluate_code_generation(
     client,
     model: str,
@@ -901,7 +901,7 @@ def evaluate_code_generation(
 
     results["pass_rate"] = results["passed"] / max(results["total"], 1)
     return results
-```
+````
 
 ---
 
@@ -1070,21 +1070,21 @@ What are you evaluating?
 
 ### Metric Targets by Application
 
-| Application | Key Metric | Target |
-|------------|-----------|--------|
-| Customer support bot | Task resolution rate | > 70% |
-| Document Q&A | Faithfulness (RAGAS) | > 0.90 |
-| Code generation | pass@1 (HumanEval) | > 0.80 |
-| Content moderation | Precision (false positive rate) | > 0.95 |
-| Text classification | F1 score | > 0.85 |
-| Summarization | LLM-judge quality score (1-5) | > 4.0 |
+| Application          | Key Metric                      | Target |
+| -------------------- | ------------------------------- | ------ |
+| Customer support bot | Task resolution rate            | > 70%  |
+| Document Q&A         | Faithfulness (RAGAS)            | > 0.90 |
+| Code generation      | pass@1 (HumanEval)              | > 0.80 |
+| Content moderation   | Precision (false positive rate) | > 0.95 |
+| Text classification  | F1 score                        | > 0.85 |
+| Summarization        | LLM-judge quality score (1-5)   | > 4.0  |
 
 ### Cost of Evaluation Methods
 
-| Method | Cost per 100 Evaluations | Speed | Reliability |
-|--------|------------------------|-------|-------------|
-| Regex/schema check | ~$0 | Instant | High (for format) |
-| NLI model | ~$0.01 | Seconds | Medium |
-| LLM-as-judge (GPT-4o-mini) | ~$0.50 | Minutes | Medium-High |
-| LLM-as-judge (GPT-4o) | ~$5.00 | Minutes | High |
-| Human evaluation | ~$50-200 | Hours-Days | Highest |
+| Method                     | Cost per 100 Evaluations | Speed      | Reliability       |
+| -------------------------- | ------------------------ | ---------- | ----------------- |
+| Regex/schema check         | ~$0                      | Instant    | High (for format) |
+| NLI model                  | ~$0.01                   | Seconds    | Medium            |
+| LLM-as-judge (GPT-4o-mini) | ~$0.50                   | Minutes    | Medium-High       |
+| LLM-as-judge (GPT-4o)      | ~$5.00                   | Minutes    | High              |
+| Human evaluation           | ~$50-200                 | Hours-Days | Highest           |

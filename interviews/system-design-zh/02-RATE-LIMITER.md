@@ -8,25 +8,25 @@ Rate Limiter 控制客户端或服务发送的流量速率。当请求数量在�
 
 ### 功能需求
 
-| # | 需求 | 详情 |
-|---|------|------|
-| FR1 | 限制每个时间窗口的请求数 | 例如，每用户每分钟 100 个请求 |
-| FR2 | 不同 API 端点的不同规则 | 例如，`/login` = 5/min，`/search` = 30/min |
-| FR3 | 不同用户等级的不同规则 | Free = 100/hr，Premium = 10,000/hr |
-| FR4 | 通知客户端限流状态 | 在响应头中返回剩余配额 |
-| FR5 | 超出限制时返回 429 | 标准 HTTP 429 Too Many Requests |
-| FR6 | 可配置规则 | 规则可以无需重新部署即可更新 |
+| #   | 需求                     | 详情                                       |
+| --- | ------------------------ | ------------------------------------------ |
+| FR1 | 限制每个时间窗口的请求数 | 例如，每用户每分钟 100 个请求              |
+| FR2 | 不同 API 端点的不同规则  | 例如，`/login` = 5/min，`/search` = 30/min |
+| FR3 | 不同用户等级的不同规则   | Free = 100/hr，Premium = 10,000/hr         |
+| FR4 | 通知客户端限流状态       | 在响应头中返回剩余配额                     |
+| FR5 | 超出限制时返回 429       | 标准 HTTP 429 Too Many Requests            |
+| FR6 | 可配置规则               | 规则可以无需重新部署即可更新               |
 
 ### 非功能需求
 
-| # | 需求 | 目标 |
-|---|------|------|
-| NFR1 | 低延迟 | 每个请求 < 1ms 开销 |
+| #    | 需求     | 目标                |
+| ---- | -------- | ------------------- |
+| NFR1 | 低延迟   | 每个请求 < 1ms 开销 |
 | NFR2 | 高可用性 | 99.99% 正常运行时间 |
-| NFR3 | 分布式 | 跨多服务器/区域工作 |
-| NFR4 | 容错性 | 故障时优雅降级 |
-| NFR5 | 内存高效 | 最小化每客户端存储 |
-| NFR6 | 准确性 | 最小化多计或少计 |
+| NFR3 | 分布式   | 跨多服务器/区域工作 |
+| NFR4 | 容错性   | 故障时优雅降级      |
+| NFR5 | 内存高效 | 最小化每客户端存储  |
+| NFR6 | 准确性   | 最小化多计或少计    |
 
 ### Rate Limiter 的放置位置
 
@@ -59,6 +59,7 @@ Option C: Middleware / API Gateway (Recommended)
 ### 粗略估算
 
 假设：
+
 - 1000 万活跃用户
 - 高峰期平均每用户每分钟 10 个请求
 - 高峰期每分钟 1 亿请求
@@ -157,12 +158,12 @@ redis.call('EXPIRE', key, math.ceil(capacity / refill_rate) * 2)
 return { allowed, math.floor(tokens) }
 ```
 
-| 优点 | 缺点 |
-|------|------|
-| 允许突发流量，最多到桶的大小 | 需要调整两个参数（capacity + rate） |
-| 内存高效（每个 key 仅 2 个值） | 桶边界处可能出现突发 |
-| 平滑的限流 | 比 Fixed Window 稍复杂 |
-| 被 AWS、Stripe 和大多数 API 提供商使用 | - |
+| 优点                                   | 缺点                                |
+| -------------------------------------- | ----------------------------------- |
+| 允许突发流量，最多到桶的大小           | 需要调整两个参数（capacity + rate） |
+| 内存高效（每个 key 仅 2 个值）         | 桶边界处可能出现突发                |
+| 平滑的限流                             | 比 Fixed Window 稍复杂              |
+| 被 AWS、Stripe 和大多数 API 提供商使用 | -                                   |
 
 ---
 
@@ -215,12 +216,12 @@ class LeakingBucket:
         self.last_leak = now()
 ```
 
-| 优点 | 缺点 |
-|------|------|
+| 优点                     | 缺点                           |
+| ------------------------ | ------------------------------ |
 | 平滑的输出速率（无突发） | 突发流量填满队列；新请求被丢弃 |
-| 内存高效 | 不保证处理最近的请求 |
-| 可预测的处理速率 | 旧请求可能饿死新请求 |
-| 被 Shopify 使用 | 当突发是可接受的时候不适用 |
+| 内存高效                 | 不保证处理最近的请求           |
+| 可预测的处理速率         | 旧请求可能饿死新请求           |
+| 被 Shopify 使用          | 当突发是可接受的时候不适用     |
 
 ---
 
@@ -295,12 +296,12 @@ end
 return { 1, limit - count }  -- allowed, remaining
 ```
 
-| 优点 | 缺点 |
-|------|------|
-| 实现非常简单 | 边界突发问题（边缘处 2 倍速率） |
-| 内存高效（每个窗口 1 个计数器） | 不平滑；突然重置 |
-| 易于理解 | 窗口边界处出现尖峰 |
-| 快速 O(1) 操作 | 对窗口后期到达的用户不公平 |
+| 优点                            | 缺点                            |
+| ------------------------------- | ------------------------------- |
+| 实现非常简单                    | 边界突发问题（边缘处 2 倍速率） |
+| 内存高效（每个窗口 1 个计数器） | 不平滑；突然重置                |
+| 易于理解                        | 窗口边界处出现尖峰              |
+| 快速 O(1) 操作                  | 对窗口后期到达的用户不公平      |
 
 ---
 
@@ -385,12 +386,12 @@ end
 return { 0, 0 }  -- rejected
 ```
 
-| 优点 | 缺点 |
-|------|------|
+| 优点                 | 缺点                         |
+| -------------------- | ---------------------------- |
 | 非常准确，无边界问题 | 高内存使用（存储每个时间戳） |
-| 平滑的滑动窗口 | 每个请求 O(N) 的清理开销 |
-| 精确的每用户跟踪 | 不适合高流量端点 |
-| 边界处无突发 | 存储随请求量增长 |
+| 平滑的滑动窗口       | 每个请求 O(N) 的清理开销     |
+| 精确的每用户跟踪     | 不适合高流量端点             |
+| 边界处无突发         | 存储随请求量增长             |
 
 ---
 
@@ -464,12 +465,12 @@ class SlidingWindowCounter:
         return True
 ```
 
-| 优点 | 缺点 |
-|------|------|
-| 内存高效（每个 key 2 个计数器） | 只是近似值（不精确） |
-| 平滑边界尖峰 | 比 Fixed Window 稍复杂 |
-| 准确性和性能的良好平衡 | 加权计数是估算值 |
-| 被 Cloudflare 推荐 | 极少数边缘情况可能略微超出限制 |
+| 优点                            | 缺点                           |
+| ------------------------------- | ------------------------------ |
+| 内存高效（每个 key 2 个计数器） | 只是近似值（不精确）           |
+| 平滑边界尖峰                    | 比 Fixed Window 稍复杂         |
+| 准确性和性能的良好平衡          | 加权计数是估算值               |
+| 被 Cloudflare 推荐              | 极少数边缘情况可能略微超出限制 |
 
 ---
 
@@ -554,13 +555,13 @@ Request Flow:
 
 ### 组件职责
 
-| 组件 | 职责 |
-|------|------|
-| API Gateway | 入口点、路由、TLS 终止 |
-| Rate Limiter | 执行限流、设置响应头 |
-| Redis Cluster | 存储计数器/Token、原子操作 |
-| Rules Engine | 存储和提供限流配置 |
-| App Servers | 处理业务逻辑（仅接收被允许的请求） |
+| 组件          | 职责                               |
+| ------------- | ---------------------------------- |
+| API Gateway   | 入口点、路由、TLS 终止             |
+| Rate Limiter  | 执行限流、设置响应头               |
+| Redis Cluster | 存储计数器/Token、原子操作         |
+| Rules Engine  | 存储和提供限流配置                 |
+| App Servers   | 处理业务逻辑（仅接收被允许的请求） |
 
 ---
 
@@ -619,63 +620,63 @@ Sliding Window Counter:
 ```yaml
 # rate_limit_rules.yaml
 rules:
-  - id: "global-default"
-    description: "Default rate limit for all endpoints"
+  - id: 'global-default'
+    description: 'Default rate limit for all endpoints'
     match:
-      scope: "global"
+      scope: 'global'
     limit: 1000
-    window: 60          # seconds
-    algorithm: "sliding_window_counter"
-    action: "reject"    # reject | queue | throttle
+    window: 60 # seconds
+    algorithm: 'sliding_window_counter'
+    action: 'reject' # reject | queue | throttle
 
-  - id: "auth-strict"
-    description: "Strict limit on authentication endpoints"
+  - id: 'auth-strict'
+    description: 'Strict limit on authentication endpoints'
     match:
       endpoints:
-        - "/api/v1/login"
-        - "/api/v1/register"
-        - "/api/v1/password-reset"
-      scope: "per_ip"
+        - '/api/v1/login'
+        - '/api/v1/register'
+        - '/api/v1/password-reset'
+      scope: 'per_ip'
     limit: 5
     window: 60
-    algorithm: "sliding_window_log"
-    action: "reject"
+    algorithm: 'sliding_window_log'
+    action: 'reject'
     response:
       status: 429
-      message: "Too many authentication attempts. Please try again later."
+      message: 'Too many authentication attempts. Please try again later.'
 
-  - id: "search-api"
-    description: "Search endpoint rate limit"
+  - id: 'search-api'
+    description: 'Search endpoint rate limit'
     match:
       endpoints:
-        - "/api/v1/search"
-      scope: "per_user"
+        - '/api/v1/search'
+      scope: 'per_user'
     limit: 30
     window: 60
-    algorithm: "token_bucket"
+    algorithm: 'token_bucket'
     token_bucket:
       capacity: 30
-      refill_rate: 0.5   # tokens per second
-    action: "reject"
+      refill_rate: 0.5 # tokens per second
+    action: 'reject'
 
-  - id: "premium-tier"
-    description: "Higher limits for premium users"
+  - id: 'premium-tier'
+    description: 'Higher limits for premium users'
     match:
-      user_tier: "premium"
-      scope: "per_user"
+      user_tier: 'premium'
+      scope: 'per_user'
     limit: 10000
-    window: 3600        # 1 hour
-    algorithm: "sliding_window_counter"
-    priority: 10        # Higher priority overrides lower
+    window: 3600 # 1 hour
+    algorithm: 'sliding_window_counter'
+    priority: 10 # Higher priority overrides lower
 
-  - id: "free-tier"
-    description: "Standard limits for free users"
+  - id: 'free-tier'
+    description: 'Standard limits for free users'
     match:
-      user_tier: "free"
-      scope: "per_user"
+      user_tier: 'free'
+      scope: 'per_user'
     limit: 100
     window: 3600
-    algorithm: "sliding_window_counter"
+    algorithm: 'sliding_window_counter'
     priority: 5
 ```
 
@@ -823,11 +824,11 @@ Content-Type: application/json
 
 ```typescript
 interface RateLimitResult {
-  allowed: boolean
-  limit: number
-  remaining: number
-  resetAt: number
-  retryAfter: number
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  resetAt: number;
+  retryAfter: number;
 }
 
 async function rateLimiterMiddleware(
@@ -835,21 +836,25 @@ async function rateLimiterMiddleware(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const clientId = extractClientId(req)  // user ID, API key, or IP
-  const endpoint = req.path
-  const rule = await getRuleForRequest(clientId, endpoint)
+  const clientId = extractClientId(req); // user ID, API key, or IP
+  const endpoint = req.path;
+  const rule = await getRuleForRequest(clientId, endpoint);
 
-  const result: RateLimitResult = await checkRateLimit(clientId, endpoint, rule)
+  const result: RateLimitResult = await checkRateLimit(
+    clientId,
+    endpoint,
+    rule
+  );
 
   // Always set rate limit headers
   res.set({
     'X-Ratelimit-Limit': String(result.limit),
     'X-Ratelimit-Remaining': String(Math.max(0, result.remaining)),
     'X-Ratelimit-Reset': String(result.resetAt),
-  })
+  });
 
   if (!result.allowed) {
-    res.set('Retry-After', String(result.retryAfter))
+    res.set('Retry-After', String(result.retryAfter));
     res.status(429).json({
       error: {
         code: 'RATE_LIMIT_EXCEEDED',
@@ -858,22 +863,22 @@ async function rateLimiterMiddleware(
         limit: result.limit,
         window: rule.window,
       },
-    })
-    return
+    });
+    return;
   }
 
-  next()
+  next();
 }
 
 function extractClientId(req: Request): string {
   // Priority: API Key > User ID (JWT) > IP Address
   if (req.headers['x-api-key']) {
-    return `apikey:${req.headers['x-api-key']}`
+    return `apikey:${req.headers['x-api-key']}`;
   }
   if (req.user?.id) {
-    return `user:${req.user.id}`
+    return `user:${req.user.id}`;
   }
-  return `ip:${req.ip}`
+  return `ip:${req.ip}`;
 }
 ```
 
@@ -979,11 +984,13 @@ Centralized Redis Solution
 ```
 
 **优势**：
+
 - 单一数据源
 - 通过 Lua 脚本实现原子操作
 - 易于理解和推理
 
 **劣势**：
+
 - Redis 成为单点故障（通过 Redis Cluster 缓解）
 - 每次请求的 Redis 网络延迟（约 0.5ms）
 - Redis 吞吐量限制（每个分片约 100K ops/sec）
@@ -1009,10 +1016,12 @@ Sticky Sessions (Session Affinity)
 ```
 
 **优势**：
+
 - 无外部依赖（不需要 Redis）
 - 非常低的延迟（本地内存）
 
 **劣势**：
+
 - 负载分布不均匀
 - 实例扩缩容时失效（需要重新哈希）
 - 实例重启时丢失计数
@@ -1041,11 +1050,13 @@ Eventual Consistency Model
 ```
 
 **优势**：
+
 - 无单点故障
 - 非常低的延迟（本地决策）
 - 可容忍网络分区
 
 **劣势**：
+
 - 在同步间隔期间可能超出限流限制
 - 实现更复杂
 - 最终一致性（非强一致性）
@@ -1109,6 +1120,7 @@ return { allowed, math.floor(remaining), retry_after }
 ```
 
 **为什么 Lua 脚本能解决竞态条件**：
+
 1. Redis 以原子方式执行 Lua 脚本（单线程）
 2. 在执行期间没有其他命令可以交错
 3. 读取-检查-更新作为一个不可分割的操作发生
@@ -1184,13 +1196,13 @@ Local Cache + Redis Sync
 
 **权衡取舍**：
 
-| 方面 | 本地缓存 | 直接 Redis |
-|------|----------|------------|
-| 延迟 | 约 1 微秒 | 约 0.5 毫秒 |
-| 准确性 | 近似��在同步间隔内） | 精确 |
+| 方面     | 本地缓存             | 直接 Redis       |
+| -------- | -------------------- | ---------------- |
+| 延迟     | 约 1 微秒            | 约 0.5 毫秒      |
+| 准确性   | 近似��在同步间隔内） | 精确             |
 | 故障模式 | 使用本地数据继续运行 | Redis 宕机则失败 |
-| 内存 | 使用实例内存 | 集中式 |
-| 一致性 | 最终一致性 | 强一致性 |
+| 内存     | 使用实例内存         | 集中式           |
+| 一致性   | 最终一致性           | 强一致性         |
 
 ### 7.3 监控与告警
 
@@ -1199,34 +1211,34 @@ Local Cache + Redis Sync
 ```yaml
 metrics:
   counters:
-    - rate_limit_requests_total          # Total requests checked
-    - rate_limit_rejected_total          # Total 429 responses
-    - rate_limit_allowed_total           # Total allowed requests
-    - rate_limit_errors_total            # Errors in rate limiter
+    - rate_limit_requests_total # Total requests checked
+    - rate_limit_rejected_total # Total 429 responses
+    - rate_limit_allowed_total # Total allowed requests
+    - rate_limit_errors_total # Errors in rate limiter
 
   histograms:
-    - rate_limit_check_duration_seconds  # Time to check rate limit
-    - rate_limit_redis_latency_seconds   # Redis operation latency
+    - rate_limit_check_duration_seconds # Time to check rate limit
+    - rate_limit_redis_latency_seconds # Redis operation latency
 
   gauges:
-    - rate_limit_current_usage_ratio     # Current usage as % of limit
-    - rate_limit_redis_connection_pool   # Active Redis connections
+    - rate_limit_current_usage_ratio # Current usage as % of limit
+    - rate_limit_redis_connection_pool # Active Redis connections
 
 alerts:
   - name: HighRejectionRate
     condition: rate(rate_limit_rejected_total[5m]) / rate(rate_limit_requests_total[5m]) > 0.1
     severity: warning
-    message: "More than 10% of requests are being rate limited"
+    message: 'More than 10% of requests are being rate limited'
 
   - name: RedisLatencyHigh
     condition: histogram_quantile(0.99, rate_limit_redis_latency_seconds) > 0.005
     severity: critical
-    message: "Redis p99 latency exceeds 5ms"
+    message: 'Redis p99 latency exceeds 5ms'
 
   - name: RateLimiterErrors
     condition: rate(rate_limit_errors_total[1m]) > 0
     severity: critical
-    message: "Rate limiter encountering errors"
+    message: 'Rate limiter encountering errors'
 ```
 
 ---

@@ -12,7 +12,7 @@ Every major frontend interview in 2025-2026 includes RSC questions. Interviewers
 
 ### The Server Component Mental Model
 
-In traditional React, every component runs in the browser. Even with SSR, the component code is sent to the client and re-executed (hydration). Server Components break this assumption: some components run *only* on the server and their JavaScript is never sent to the client.
+In traditional React, every component runs in the browser. Even with SSR, the component code is sent to the client and re-executed (hydration). Server Components break this assumption: some components run _only_ on the server and their JavaScript is never sent to the client.
 
 Think of it as two React trees:
 
@@ -27,12 +27,14 @@ Server Tree (runs on server)          Client Tree (runs in browser)
 ```
 
 Server components can:
+
 - Access databases, file systems, and internal APIs directly
 - Use `async/await` at the component level
 - Import large libraries without affecting bundle size
 - Read environment variables and secrets safely
 
 Server components cannot:
+
 - Use `useState`, `useEffect`, or any hooks that depend on browser APIs
 - Attach event handlers (`onClick`, `onChange`, etc.)
 - Access `window`, `document`, or other browser globals
@@ -44,12 +46,12 @@ The `"use client"` directive marks the boundary between the server and client wo
 
 ```tsx
 // components/SearchBar.tsx
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
 export function SearchBar() {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
 
   return (
     <input
@@ -69,14 +71,14 @@ The `"use server"` directive marks functions that can be called from the client 
 
 ```tsx
 // actions/comments.ts
-"use server";
+'use server';
 
-import { db } from "@/lib/database";
-import { revalidatePath } from "next/cache";
+import { db } from '@/lib/database';
+import { revalidatePath } from 'next/cache';
 
 export async function addComment(formData: FormData) {
-  const text = formData.get("text") as string;
-  const postId = formData.get("postId") as string;
+  const text = formData.get('text') as string;
+  const postId = formData.get('postId') as string;
 
   await db.comments.create({
     data: { text, postId },
@@ -88,9 +90,9 @@ export async function addComment(formData: FormData) {
 
 ```tsx
 // components/CommentForm.tsx
-"use client";
+'use client';
 
-import { addComment } from "@/actions/comments";
+import { addComment } from '@/actions/comments';
 
 export function CommentForm({ postId }: { postId: string }) {
   return (
@@ -136,19 +138,19 @@ Does the component need...
 
 ### Composition Pattern: Server Wrapping Client
 
-Server components can import and render client components. Client components **cannot** import server components -- but they can *accept* server components as children or props.
+Server components can import and render client components. Client components **cannot** import server components -- but they can _accept_ server components as children or props.
 
 ```tsx
 // ServerLayout.tsx (server component -- no directive needed)
-import { ClientTabs } from "./ClientTabs";
-import { ServerExpensiveChart } from "./ServerExpensiveChart";
+import { ClientTabs } from './ClientTabs';
+import { ServerExpensiveChart } from './ServerExpensiveChart';
 
 export async function ServerLayout() {
   const data = await fetchDashboardData();
 
   return (
     <ClientTabs
-      tabs={["Overview", "Analytics"]}
+      tabs={['Overview', 'Analytics']}
       // Server component passed as a prop
       analyticsPanel={<ServerExpensiveChart data={data} />}
     >
@@ -161,9 +163,9 @@ export async function ServerLayout() {
 
 ```tsx
 // ClientTabs.tsx
-"use client";
+'use client';
 
-import { useState, ReactNode } from "react";
+import { useState, ReactNode } from 'react';
 
 interface Props {
   tabs: string[];
@@ -197,8 +199,8 @@ Server components make data fetching dramatically simpler. No `useEffect`, no lo
 
 ```tsx
 // app/posts/[id]/page.tsx (server component by default in Next.js App Router)
-import { db } from "@/lib/database";
-import { CommentForm } from "@/components/CommentForm";
+import { db } from '@/lib/database';
+import { CommentForm } from '@/components/CommentForm';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -242,7 +244,7 @@ export default async function PostPage({ params }: Props) {
 Server components integrate with React Suspense to enable streaming. Instead of waiting for all data before sending any HTML, the server streams chunks as they become ready.
 
 ```tsx
-import { Suspense } from "react";
+import { Suspense } from 'react';
 
 export default async function DashboardPage() {
   return (
@@ -287,6 +289,7 @@ async function ActivityFeed() {
 ```
 
 **How streaming works under the hood:**
+
 1. Server sends the initial HTML shell with skeleton fallbacks
 2. As each async component resolves, the server sends an HTML chunk
 3. A small inline `<script>` replaces the skeleton with the real content
@@ -294,18 +297,18 @@ async function ActivityFeed() {
 
 ### RSC vs SSR vs SSG vs ISR
 
-| Aspect | SSG | ISR | SSR | RSC |
-|--------|-----|-----|-----|-----|
-| **When it runs** | Build time | Build + revalidation | Every request | Every request (server components) |
-| **JavaScript shipped** | All component code | All component code | All component code | Only client component code |
-| **Data freshness** | Stale until rebuild | Stale within revalidation window | Always fresh | Always fresh |
-| **TTFB** | Instant (CDN) | Instant (CDN, may be stale) | Slow (server render) | Can stream progressively |
-| **Interactivity** | After hydration | After hydration | After hydration | Immediate for server parts |
-| **Database access** | At build time only | At revalidation time | Via API routes | Direct in components |
-| **Bundle size** | Full app | Full app | Full app | Only client components |
-| **Caching** | CDN-cacheable | CDN-cacheable with TTL | Per-request | Per-component with cache() |
+| Aspect                 | SSG                 | ISR                              | SSR                  | RSC                               |
+| ---------------------- | ------------------- | -------------------------------- | -------------------- | --------------------------------- |
+| **When it runs**       | Build time          | Build + revalidation             | Every request        | Every request (server components) |
+| **JavaScript shipped** | All component code  | All component code               | All component code   | Only client component code        |
+| **Data freshness**     | Stale until rebuild | Stale within revalidation window | Always fresh         | Always fresh                      |
+| **TTFB**               | Instant (CDN)       | Instant (CDN, may be stale)      | Slow (server render) | Can stream progressively          |
+| **Interactivity**      | After hydration     | After hydration                  | After hydration      | Immediate for server parts        |
+| **Database access**    | At build time only  | At revalidation time             | Via API routes       | Direct in components              |
+| **Bundle size**        | Full app            | Full app                         | Full app             | Only client components            |
+| **Caching**            | CDN-cacheable       | CDN-cacheable with TTL           | Per-request          | Per-component with cache()        |
 
-**Key insight:** RSC is not a replacement for SSR -- they are complementary. RSC determines *what* JavaScript ships to the client. SSR determines *when* HTML is generated. You can have RSC with SSR (the common case in Next.js App Router), RSC with SSG, or RSC with ISR.
+**Key insight:** RSC is not a replacement for SSR -- they are complementary. RSC determines _what_ JavaScript ships to the client. SSR determines _when_ HTML is generated. You can have RSC with SSR (the common case in Next.js App Router), RSC with SSG, or RSC with ISR.
 
 ### Server Actions In Depth
 
@@ -313,7 +316,7 @@ Server Actions are the mutation counterpart to server component data fetching. T
 
 ```tsx
 // app/settings/page.tsx
-import { updateProfile } from "@/actions/profile";
+import { updateProfile } from '@/actions/profile';
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -330,16 +333,16 @@ export default async function SettingsPage() {
 
 ```tsx
 // components/SubmitButton.tsx
-"use client";
+'use client';
 
-import { useFormStatus } from "react-dom";
+import { useFormStatus } from 'react-dom';
 
 export function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
     <button type="submit" disabled={pending}>
-      {pending ? "Saving..." : "Save Changes"}
+      {pending ? 'Saving...' : 'Save Changes'}
     </button>
   );
 }
@@ -347,11 +350,11 @@ export function SubmitButton() {
 
 ```tsx
 // actions/profile.ts
-"use server";
+'use server';
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 const ProfileSchema = z.object({
   name: z.string().min(1).max(100),
@@ -360,8 +363,8 @@ const ProfileSchema = z.object({
 
 export async function updateProfile(formData: FormData) {
   const parsed = ProfileSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
+    name: formData.get('name'),
+    email: formData.get('email'),
   });
 
   if (!parsed.success) {
@@ -373,8 +376,8 @@ export async function updateProfile(formData: FormData) {
     data: parsed.data,
   });
 
-  revalidatePath("/settings");
-  redirect("/settings");
+  revalidatePath('/settings');
+  redirect('/settings');
 }
 ```
 
@@ -385,6 +388,7 @@ export async function updateProfile(formData: FormData) {
 The App Router is the primary production implementation of RSC. Key patterns:
 
 **Layout nesting:**
+
 ```
 app/
   layout.tsx          # Root layout (server component)
@@ -397,6 +401,7 @@ app/
 ```
 
 **Route groups:**
+
 ```
 app/
   (marketing)/        # Group without URL segment
@@ -409,12 +414,13 @@ app/
 ```
 
 **Parallel routes:**
+
 ```tsx
 // app/dashboard/layout.tsx
 export default function DashboardLayout({
   children,
-  analytics,  // @analytics/page.tsx
-  activity,   // @activity/page.tsx
+  analytics, // @analytics/page.tsx
+  activity, // @activity/page.tsx
 }: {
   children: React.ReactNode;
   analytics: React.ReactNode;
@@ -433,6 +439,7 @@ export default function DashboardLayout({
 ```
 
 **Intercepting routes (modals):**
+
 ```
 app/
   feed/
@@ -470,7 +477,7 @@ A practical heuristic: if you grep the component for `useState`, `useEffect`, `o
 
 **Answer:** This is not supported and will cause a build error. Client components cannot import server components because client component code runs in the browser, which has no access to the server environment.
 
-However, client components can *render* server components if they receive them as children or props. The server component is rendered on the server and the result is passed as serialized React elements. The client component treats them as opaque nodes -- it does not need to execute their code.
+However, client components can _render_ server components if they receive them as children or props. The server component is rendered on the server and the result is passed as serialized React elements. The client component treats them as opaque nodes -- it does not need to execute their code.
 
 This is the "donut pattern": a server component wraps a client component and passes other server components as children, creating a server-client-server sandwich.
 
@@ -528,46 +535,46 @@ However, there is a nuance: the RSC payload (serialized component output) is sen
 
 ## Quick Reference
 
-| Directive | Meaning | Where It Goes |
-|-----------|---------|---------------|
-| (none) | Server component (default) | N/A -- this is the default in App Router |
-| `"use client"` | Client component entry point | Top of the file, before imports |
-| `"use server"` | Server action | Top of the file (all exports are actions) or inline in a function |
+| Directive      | Meaning                      | Where It Goes                                                     |
+| -------------- | ---------------------------- | ----------------------------------------------------------------- |
+| (none)         | Server component (default)   | N/A -- this is the default in App Router                          |
+| `"use client"` | Client component entry point | Top of the file, before imports                                   |
+| `"use server"` | Server action                | Top of the file (all exports are actions) or inline in a function |
 
-| Feature | Server Component | Client Component |
-|---------|-----------------|-----------------|
-| `async/await` | Yes | No |
-| `useState` / `useReducer` | No | Yes |
-| `useEffect` / `useLayoutEffect` | No | Yes |
-| Event handlers | No | Yes |
-| Browser APIs | No | Yes |
-| Direct DB access | Yes | No |
-| Import server components | Yes | No (receive as children/props) |
-| Import client components | Yes | Yes |
-| `fetch` with caching | Yes (extended fetch) | Yes (standard fetch) |
-| Bundle size impact | Zero | Full |
+| Feature                         | Server Component     | Client Component               |
+| ------------------------------- | -------------------- | ------------------------------ |
+| `async/await`                   | Yes                  | No                             |
+| `useState` / `useReducer`       | No                   | Yes                            |
+| `useEffect` / `useLayoutEffect` | No                   | Yes                            |
+| Event handlers                  | No                   | Yes                            |
+| Browser APIs                    | No                   | Yes                            |
+| Direct DB access                | Yes                  | No                             |
+| Import server components        | Yes                  | No (receive as children/props) |
+| Import client components        | Yes                  | Yes                            |
+| `fetch` with caching            | Yes (extended fetch) | Yes (standard fetch)           |
+| Bundle size impact              | Zero                 | Full                           |
 
-| Pattern | Description |
-|---------|-------------|
-| Default server | Start everything as server components |
-| Leaf client | Push `"use client"` to leaf components only |
-| Donut pattern | Server > Client > Server (via children) |
-| Parallel data | Use `Promise.all` in server components for parallel fetches |
-| Streaming | Wrap async components in `<Suspense>` for progressive loading |
-| Server actions | Use `"use server"` functions for mutations |
-| Progressive forms | `<form action={serverAction}>` works without JS |
+| Pattern            | Description                                                   |
+| ------------------ | ------------------------------------------------------------- |
+| Default server     | Start everything as server components                         |
+| Leaf client        | Push `"use client"` to leaf components only                   |
+| Donut pattern      | Server > Client > Server (via children)                       |
+| Parallel data      | Use `Promise.all` in server components for parallel fetches   |
+| Streaming          | Wrap async components in `<Suspense>` for progressive loading |
+| Server actions     | Use `"use server"` functions for mutations                    |
+| Progressive forms  | `<form action={serverAction}>` works without JS               |
 | Optimistic updates | `useOptimistic` hook in client components with server actions |
 
-| Next.js App Router Feature | Purpose |
-|----------------------------|---------|
-| `page.tsx` | Route entry point |
-| `layout.tsx` | Persistent layout wrapping child routes |
-| `loading.tsx` | Automatic Suspense boundary |
-| `error.tsx` | Error boundary with retry |
-| `not-found.tsx` | 404 page |
-| `route.ts` | API route handler |
-| `(group)` | Route group without URL segment |
-| `@slot` | Parallel route slot |
-| `(.)intercepted` | Intercepting route |
-| `[param]` | Dynamic segment |
-| `[...params]` | Catch-all segment |
+| Next.js App Router Feature | Purpose                                 |
+| -------------------------- | --------------------------------------- |
+| `page.tsx`                 | Route entry point                       |
+| `layout.tsx`               | Persistent layout wrapping child routes |
+| `loading.tsx`              | Automatic Suspense boundary             |
+| `error.tsx`                | Error boundary with retry               |
+| `not-found.tsx`            | 404 page                                |
+| `route.ts`                 | API route handler                       |
+| `(group)`                  | Route group without URL segment         |
+| `@slot`                    | Parallel route slot                     |
+| `(.)intercepted`           | Intercepting route                      |
+| `[param]`                  | Dynamic segment                         |
+| `[...params]`              | Catch-all segment                       |

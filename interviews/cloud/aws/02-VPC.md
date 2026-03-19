@@ -10,11 +10,11 @@ A VPC is your **isolated, private network** inside AWS. Think of it as your own 
 
 When you create a VPC, you assign it a **CIDR block** (Classless Inter-Domain Routing) -- the range of private IP addresses available to your resources.
 
-| CIDR Block | IP Range | Hosts |
-|-----------|----------|-------|
+| CIDR Block    | IP Range                | Hosts   |
+| ------------- | ----------------------- | ------- |
 | `10.0.0.0/16` | 10.0.0.0 - 10.0.255.255 | ~65,536 |
-| `10.0.0.0/20` | 10.0.0.0 - 10.0.15.255 | ~4,096 |
-| `10.0.0.0/24` | 10.0.0.0 - 10.0.0.255 | ~256 |
+| `10.0.0.0/20` | 10.0.0.0 - 10.0.15.255  | ~4,096  |
+| `10.0.0.0/24` | 10.0.0.0 - 10.0.0.255   | ~256    |
 
 **Rules of thumb:**
 
@@ -33,12 +33,12 @@ aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications \
 
 In every subnet, AWS reserves 5 IP addresses:
 
-| Address | Purpose |
-|---------|---------|
-| `.0` | Network address |
-| `.1` | VPC router |
-| `.2` | DNS server |
-| `.3` | Reserved for future use |
+| Address       | Purpose                                |
+| ------------- | -------------------------------------- |
+| `.0`          | Network address                        |
+| `.1`          | VPC router                             |
+| `.2`          | DNS server                             |
+| `.3`          | Reserved for future use                |
 | `.255` (last) | Broadcast (not supported but reserved) |
 
 A `/24` subnet gives you 256 IPs minus 5 = **251 usable IPs**.
@@ -51,12 +51,12 @@ A subnet is a **segment of a VPC's CIDR** that lives in a **single Availability 
 
 ### 2.1 Public vs Private Subnets
 
-| Aspect | Public Subnet | Private Subnet |
-|--------|--------------|----------------|
-| Route to internet | Route table has `0.0.0.0/0 -> Internet Gateway` | No direct internet route (or routes through NAT Gateway) |
-| Public IPs | Instances can have public/Elastic IPs | Instances have only private IPs |
-| Use case | Load balancers, bastion hosts, NAT Gateways | Application servers, databases, internal services |
-| Reachable from internet | Yes (if security groups allow) | No |
+| Aspect                  | Public Subnet                                   | Private Subnet                                           |
+| ----------------------- | ----------------------------------------------- | -------------------------------------------------------- |
+| Route to internet       | Route table has `0.0.0.0/0 -> Internet Gateway` | No direct internet route (or routes through NAT Gateway) |
+| Public IPs              | Instances can have public/Elastic IPs           | Instances have only private IPs                          |
+| Use case                | Load balancers, bastion hosts, NAT Gateways     | Application servers, databases, internal services        |
+| Reachable from internet | Yes (if security groups allow)                  | No                                                       |
 
 ### 2.2 Subnet Design Pattern
 
@@ -143,32 +143,32 @@ A route table contains **rules (routes)** that determine where network traffic i
 
 ### 4.1 Main vs Custom Route Tables
 
-| Type | Scope | Notes |
-|------|-------|-------|
-| Main route table | Created automatically with VPC | Default for all subnets that do not have an explicit association |
-| Custom route table | You create and associate explicitly | Best practice: always use custom route tables |
+| Type               | Scope                               | Notes                                                            |
+| ------------------ | ----------------------------------- | ---------------------------------------------------------------- |
+| Main route table   | Created automatically with VPC      | Default for all subnets that do not have an explicit association |
+| Custom route table | You create and associate explicitly | Best practice: always use custom route tables                    |
 
 ### 4.2 Example Route Tables
 
 **Public subnet route table:**
 
-| Destination | Target | Purpose |
-|-------------|--------|---------|
-| `10.0.0.0/16` | local | Traffic within the VPC |
-| `0.0.0.0/0` | igw-abc123 | All other traffic goes to internet |
+| Destination   | Target     | Purpose                            |
+| ------------- | ---------- | ---------------------------------- |
+| `10.0.0.0/16` | local      | Traffic within the VPC             |
+| `0.0.0.0/0`   | igw-abc123 | All other traffic goes to internet |
 
 **Private subnet route table:**
 
-| Destination | Target | Purpose |
-|-------------|--------|---------|
-| `10.0.0.0/16` | local | Traffic within the VPC |
-| `0.0.0.0/0` | nat-abc123 | Outbound internet via NAT Gateway |
+| Destination   | Target     | Purpose                           |
+| ------------- | ---------- | --------------------------------- |
+| `10.0.0.0/16` | local      | Traffic within the VPC            |
+| `0.0.0.0/0`   | nat-abc123 | Outbound internet via NAT Gateway |
 
 **Isolated subnet route table:**
 
-| Destination | Target | Purpose |
-|-------------|--------|---------|
-| `10.0.0.0/16` | local | Traffic within the VPC only |
+| Destination   | Target | Purpose                     |
+| ------------- | ------ | --------------------------- |
+| `10.0.0.0/16` | local  | Traffic within the VPC only |
 
 ```bash
 # Create a route table
@@ -196,14 +196,14 @@ These are your two layers of network firewall. They work at different levels and
 
 Security groups are **stateful** firewalls attached at the **instance level** (ENI).
 
-| Aspect | Detail |
-|--------|--------|
-| Level | Instance (network interface) |
-| Statefulness | **Stateful** -- if you allow inbound, the response is automatically allowed outbound |
-| Default behavior | All inbound DENIED, all outbound ALLOWED |
-| Rules | Allow rules only (no deny rules) |
-| Evaluation | All rules evaluated together |
-| Referencing | Can reference other security groups by ID |
+| Aspect           | Detail                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| Level            | Instance (network interface)                                                         |
+| Statefulness     | **Stateful** -- if you allow inbound, the response is automatically allowed outbound |
+| Default behavior | All inbound DENIED, all outbound ALLOWED                                             |
+| Rules            | Allow rules only (no deny rules)                                                     |
+| Evaluation       | All rules evaluated together                                                         |
+| Referencing      | Can reference other security groups by ID                                            |
 
 ```bash
 # Create a security group
@@ -234,26 +234,26 @@ aws ec2 describe-security-groups --group-ids sg-0abc123
 
 NACLs are **stateless** firewalls attached at the **subnet level**.
 
-| Aspect | Detail |
-|--------|--------|
-| Level | Subnet |
-| Statefulness | **Stateless** -- you must explicitly allow both inbound AND outbound |
-| Default behavior | Allow all inbound and outbound |
-| Rules | Both allow AND deny rules |
-| Evaluation | Rules evaluated in **order** (lowest number first), first match wins |
-| Use case | Broad subnet-level blocking (e.g., block a known malicious IP range) |
+| Aspect           | Detail                                                               |
+| ---------------- | -------------------------------------------------------------------- |
+| Level            | Subnet                                                               |
+| Statefulness     | **Stateless** -- you must explicitly allow both inbound AND outbound |
+| Default behavior | Allow all inbound and outbound                                       |
+| Rules            | Both allow AND deny rules                                            |
+| Evaluation       | Rules evaluated in **order** (lowest number first), first match wins |
+| Use case         | Broad subnet-level blocking (e.g., block a known malicious IP range) |
 
 **Most teams rely on security groups and leave NACLs at their defaults.** NACLs are useful as a second line of defense or for compliance requirements.
 
 ### 5.3 Comparison Table
 
-| Feature | Security Group | NACL |
-|---------|---------------|------|
-| Scope | Instance | Subnet |
-| Stateful | Yes | No |
-| Allow/Deny | Allow only | Both |
-| Rule evaluation | All rules | Ordered by number |
-| Applied to | ENI | All traffic in/out of subnet |
+| Feature         | Security Group | NACL                         |
+| --------------- | -------------- | ---------------------------- |
+| Scope           | Instance       | Subnet                       |
+| Stateful        | Yes            | No                           |
+| Allow/Deny      | Allow only     | Both                         |
+| Rule evaluation | All rules      | Ordered by number            |
+| Applied to      | ENI            | All traffic in/out of subnet |
 
 ---
 
@@ -285,13 +285,13 @@ aws ec2 accept-vpc-peering-connection \
 
 Transit Gateway is a **hub-and-spoke** network hub. Connect many VPCs and on-premises networks through a single gateway.
 
-| Feature | VPC Peering | Transit Gateway |
-|---------|------------|-----------------|
-| Topology | Point-to-point | Hub-and-spoke |
-| Transitive routing | No | Yes |
-| Scale | Dozens of connections | Thousands of VPCs |
-| Cost | Free (data transfer only) | Hourly + per-GB |
-| Complexity | Simple | More complex but more scalable |
+| Feature            | VPC Peering               | Transit Gateway                |
+| ------------------ | ------------------------- | ------------------------------ |
+| Topology           | Point-to-point            | Hub-and-spoke                  |
+| Transitive routing | No                        | Yes                            |
+| Scale              | Dozens of connections     | Thousands of VPCs              |
+| Cost               | Free (data transfer only) | Hourly + per-GB                |
+| Complexity         | Simple                    | More complex but more scalable |
 
 Use VPC peering for simple 2-3 VPC setups. Use Transit Gateway when you have many VPCs, multiple accounts, or hybrid connectivity.
 
@@ -342,10 +342,10 @@ aws ec2 create-vpc-endpoint \
 
 Two VPC settings control DNS behavior:
 
-| Setting | Default | Purpose |
-|---------|---------|---------|
-| `enableDnsSupport` | true | VPC provides a DNS server at `169.254.169.253` (the +2 address) |
-| `enableDnsHostnames` | false | Instances with public IPs get public DNS hostnames |
+| Setting              | Default | Purpose                                                         |
+| -------------------- | ------- | --------------------------------------------------------------- |
+| `enableDnsSupport`   | true    | VPC provides a DNS server at `169.254.169.253` (the +2 address) |
+| `enableDnsHostnames` | false   | Instances with public IPs get public DNS hostnames              |
 
 **Both must be true** for VPC endpoints with private DNS to work, and for Route 53 private hosted zones.
 
@@ -380,11 +380,11 @@ This is the most common production network architecture:
           +----------------------------+
 ```
 
-| Tier | Subnet Type | Internet Access | Contains |
-|------|------------|-----------------|----------|
-| Web/Edge | Public | Full (inbound + outbound) | ALB, NAT Gateway, bastion |
-| Application | Private | Outbound only (via NAT) | App servers, containers |
-| Data | Isolated | None | Databases, caches |
+| Tier        | Subnet Type | Internet Access           | Contains                  |
+| ----------- | ----------- | ------------------------- | ------------------------- |
+| Web/Edge    | Public      | Full (inbound + outbound) | ALB, NAT Gateway, bastion |
+| Application | Private     | Outbound only (via NAT)   | App servers, containers   |
+| Data        | Isolated    | None                      | Databases, caches         |
 
 ### Security Group Chaining
 

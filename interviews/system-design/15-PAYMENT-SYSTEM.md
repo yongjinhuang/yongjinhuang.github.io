@@ -687,19 +687,19 @@ CREATE INDEX idx_audit_created ON audit_log(created_at);
 
 ### State Transitions
 
-| From State | To State | Trigger | Side Effects |
-|---|---|---|---|
-| `created` | `processing` | Confirm payment | Lock idempotency key |
-| `created` | `canceled` | Cancel by merchant | Release held funds |
-| `processing` | `authorized` | Processor approves | Record auth code |
-| `processing` | `failed` | Processor declines | Record failure reason |
-| `processing` | `requires_action` | 3DS required | Return next_action URL |
-| `requires_action` | `processing` | Customer completes 3DS | Re-submit to processor |
-| `authorized` | `captured` | Auto or manual capture | Create ledger entries |
-| `authorized` | `canceled` | Auth voided | Void with processor |
-| `captured` | `settled` | End-of-day settlement | Update ledger |
-| `captured` | `refunded` | Refund processed | Create refund ledger entries |
-| `settled` | `refunded` | Refund after settlement | Create refund + payout adjustment |
+| From State        | To State          | Trigger                 | Side Effects                      |
+| ----------------- | ----------------- | ----------------------- | --------------------------------- |
+| `created`         | `processing`      | Confirm payment         | Lock idempotency key              |
+| `created`         | `canceled`        | Cancel by merchant      | Release held funds                |
+| `processing`      | `authorized`      | Processor approves      | Record auth code                  |
+| `processing`      | `failed`          | Processor declines      | Record failure reason             |
+| `processing`      | `requires_action` | 3DS required            | Return next_action URL            |
+| `requires_action` | `processing`      | Customer completes 3DS  | Re-submit to processor            |
+| `authorized`      | `captured`        | Auto or manual capture  | Create ledger entries             |
+| `authorized`      | `canceled`        | Auth voided             | Void with processor               |
+| `captured`        | `settled`         | End-of-day settlement   | Update ledger                     |
+| `captured`        | `refunded`        | Refund processed        | Create refund ledger entries      |
+| `settled`         | `refunded`        | Refund after settlement | Create refund + payout adjustment |
 
 ### Timeout Handling
 
@@ -888,6 +888,7 @@ Compensation:      Void Auth <----------------+
 ### What is Double-Entry Bookkeeping?
 
 Every financial transaction is recorded as two entries:
+
 - A **debit** (money coming in to an account)
 - A **credit** (money going out of an account)
 
@@ -1097,13 +1098,13 @@ Customer        Merchant         Our System       Card Network    Issuing Bank
 
 ### Real-time vs Batch Fraud Detection
 
-| Aspect | Real-time | Batch |
-|---|---|---|
-| Latency | < 50ms | Hours |
-| Scope | Individual transaction | Cross-merchant patterns |
-| Data | Transaction features | Aggregate statistics |
-| Actions | Block/allow/3DS | Flag for review, update models |
-| Examples | Velocity checks, geo | Ring fraud, merchant collusion |
+| Aspect   | Real-time              | Batch                          |
+| -------- | ---------------------- | ------------------------------ |
+| Latency  | < 50ms                 | Hours                          |
+| Scope    | Individual transaction | Cross-merchant patterns        |
+| Data     | Transaction features   | Aggregate statistics           |
+| Actions  | Block/allow/3DS        | Flag for review, update models |
+| Examples | Velocity checks, geo   | Ring fraud, merchant collusion |
 
 ---
 

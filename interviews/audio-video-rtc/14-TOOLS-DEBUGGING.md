@@ -135,27 +135,27 @@ mediainfo --Inform="General;%Duration/String3%" input.mp4
 
 ### Key Information MediaInfo Excels At
 
-| Category           | Details MediaInfo Reveals                                   |
-| ------------------ | ----------------------------------------------------------- |
-| Container          | Profile, compatibility flags, writing application           |
-| Color space        | Matrix coefficients, transfer characteristics, primaries    |
-| HDR metadata       | MaxCLL, MaxFALL, mastering display info                     |
-| Audio details      | Channel layout names, compression mode, dialog norm         |
-| Subtitle tracks    | Format, language, forced flags, default flags               |
-| Encoding settings  | x264/x265 encoding options string (if preserved)            |
+| Category          | Details MediaInfo Reveals                                |
+| ----------------- | -------------------------------------------------------- |
+| Container         | Profile, compatibility flags, writing application        |
+| Color space       | Matrix coefficients, transfer characteristics, primaries |
+| HDR metadata      | MaxCLL, MaxFALL, mastering display info                  |
+| Audio details     | Channel layout names, compression mode, dialog norm      |
+| Subtitle tracks   | Format, language, forced flags, default flags            |
+| Encoding settings | x264/x265 encoding options string (if preserved)         |
 
 ### MediaInfo vs. FFprobe
 
-| Aspect                | FFprobe                        | MediaInfo                      |
-| --------------------- | ------------------------------ | ------------------------------ |
-| Best for              | Scripting, frame-level data    | Human-readable reports         |
-| JSON output           | Native support                 | Supported but less granular    |
-| Frame analysis        | Full per-frame data            | Summary statistics only        |
-| HDR metadata          | Basic                          | Comprehensive                  |
-| Container internals   | Good                           | Excellent (edit lists, atoms)  |
-| Encoding settings     | Not shown                      | Preserved x264/x265 options    |
-| Speed                 | Fast                           | Very fast (no decode needed)   |
-| GUI                   | None                           | Cross-platform GUI available   |
+| Aspect              | FFprobe                     | MediaInfo                     |
+| ------------------- | --------------------------- | ----------------------------- |
+| Best for            | Scripting, frame-level data | Human-readable reports        |
+| JSON output         | Native support              | Supported but less granular   |
+| Frame analysis      | Full per-frame data         | Summary statistics only       |
+| HDR metadata        | Basic                       | Comprehensive                 |
+| Container internals | Good                        | Excellent (edit lists, atoms) |
+| Encoding settings   | Not shown                   | Preserved x264/x265 options   |
+| Speed               | Fast                        | Very fast (no decode needed)  |
+| GUI                 | None                        | Cross-platform GUI available  |
 
 ### Practical Use Cases
 
@@ -389,6 +389,7 @@ Common patterns visible in webrtc-internals:
 ### getUserMedia Requests
 
 The internals page shows all `getUserMedia()` calls with:
+
 - Requested constraints (resolution, frame rate, audio settings)
 - Actual track settings after constraint resolution
 - Errors (NotAllowedError, NotFoundError, OverconstrainedError)
@@ -402,22 +403,22 @@ webrtc-internals through systematic metric analysis and automation.
 
 ### Key Metrics to Monitor
 
-| Metric                              | Location                | Healthy Range          |
-| ----------------------------------- | ----------------------- | ---------------------- |
-| `framesPerSecond` (send)            | outbound-rtp            | 24-30 fps              |
-| `framesPerSecond` (receive)         | inbound-rtp             | 24-30 fps              |
-| `qualityLimitationReason`           | outbound-rtp            | "none"                 |
-| `qualityLimitationDurations`        | outbound-rtp            | cpu: 0, bandwidth: 0   |
-| `nackCount`                         | outbound-rtp            | Low (< 5/sec)          |
-| `pliCount`                          | outbound-rtp            | Low (< 1/sec)          |
-| `firCount`                          | outbound-rtp            | 0 ideally              |
-| `jitterBufferDelay`                 | inbound-rtp             | < 100ms                |
-| `jitterBufferTargetDelay`           | inbound-rtp             | Adaptive               |
-| `totalDecodeTime`                   | inbound-rtp             | < frame_interval       |
-| `keyFramesDecoded`                  | inbound-rtp             | Infrequent             |
-| `freezeCount`                       | inbound-rtp             | 0                      |
-| `totalFreezesDuration`              | inbound-rtp             | 0                      |
-| `availableOutgoingBitrate`          | candidate-pair          | > target bitrate       |
+| Metric                       | Location       | Healthy Range        |
+| ---------------------------- | -------------- | -------------------- |
+| `framesPerSecond` (send)     | outbound-rtp   | 24-30 fps            |
+| `framesPerSecond` (receive)  | inbound-rtp    | 24-30 fps            |
+| `qualityLimitationReason`    | outbound-rtp   | "none"               |
+| `qualityLimitationDurations` | outbound-rtp   | cpu: 0, bandwidth: 0 |
+| `nackCount`                  | outbound-rtp   | Low (< 5/sec)        |
+| `pliCount`                   | outbound-rtp   | Low (< 1/sec)        |
+| `firCount`                   | outbound-rtp   | 0 ideally            |
+| `jitterBufferDelay`          | inbound-rtp    | < 100ms              |
+| `jitterBufferTargetDelay`    | inbound-rtp    | Adaptive             |
+| `totalDecodeTime`            | inbound-rtp    | < frame_interval     |
+| `keyFramesDecoded`           | inbound-rtp    | Infrequent           |
+| `freezeCount`                | inbound-rtp    | 0                    |
+| `totalFreezesDuration`       | inbound-rtp    | 0                    |
+| `availableOutgoingBitrate`   | candidate-pair | > target bitrate     |
 
 ### Common Failure Patterns
 
@@ -1469,7 +1470,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Average packet loss exceeds 5%"
+          summary: 'Average packet loss exceeds 5%'
 
       - alert: CriticalPacketLoss
         expr: avg(media_packet_loss_ratio) > 0.15
@@ -1483,7 +1484,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Average jitter exceeds 100ms"
+          summary: 'Average jitter exceeds 100ms'
 
       - alert: HighRTT
         expr: histogram_quantile(0.95, media_round_trip_time_seconds) > 0.3
@@ -1491,7 +1492,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "P95 RTT exceeds 300ms"
+          summary: 'P95 RTT exceeds 300ms'
 
       - alert: LowFrameRate
         expr: avg(media_frame_rate) < 15
@@ -1880,10 +1881,12 @@ align with the segment duration, segments will either be misaligned (requiring e
 data) or will not start with a keyframe (causing decode errors on segment boundaries).
 
 The fix is to re-encode with a forced keyframe interval:
+
 ```bash
 ffmpeg -i input.mp4 -c:v libx264 -g 60 -keyint_min 60 \
   -sc_threshold 0 -c:a copy output.mp4
 ```
+
 Here, `-g 60` sets the GOP size to 60 frames (2 seconds at 30fps), and
 `-sc_threshold 0` disables scene-change detection keyframes that would create
 irregular intervals.
@@ -1904,6 +1907,7 @@ media servers degrade non-linearly above that threshold.
 Expose per-session metrics from the SFU: packet loss ratio, jitter, RTT, bitrate,
 and frame rate for every forwarded stream. The SFU has access to RTCP Receiver Reports
 and can compute these server-side. Key alerts:
+
 - Average packet loss > 3% for more than 1 minute
 - P95 RTT > 200ms
 - Average frame rate < 15fps
@@ -1916,6 +1920,7 @@ This captures the true end-user experience, including last-mile network issues
 invisible to the SFU.
 
 **Dashboards (Grafana)**:
+
 - Real-time overview: active sessions, aggregate quality score
 - Drill-down per session: timeline of quality metrics with event annotations
 - Geographic heatmap: quality by region to identify ISP or CDN issues
@@ -1935,32 +1940,42 @@ below the hard alert threshold.
 Browsers are stricter than VLC about MP4 conformance. Systematic diagnosis:
 
 1. **Check codec support**:
+
    ```javascript
    // Test in browser console
-   document.createElement('video').canPlayType('video/mp4; codecs="avc1.64001f"')
+   document
+     .createElement('video')
+     .canPlayType('video/mp4; codecs="avc1.64001f"');
    // "probably" = supported, "" = not supported
    ```
+
    VLC supports virtually any codec. Browsers support H.264 Baseline/Main/High,
    VP8/VP9, and AV1. HEVC support varies (Safari yes, Chrome only with hardware).
 
 2. **Inspect container structure**:
+
    ```bash
    mp4dump input.mp4 | head -20
    ```
+
    Check if `moov` box is before `mdat` (required for progressive download). If `moov`
    is at the end, run `ffmpeg -i input.mp4 -c copy -movflags +faststart output.mp4`.
 
 3. **Check for edit lists**:
+
    ```bash
    ffprobe -v quiet -show_entries stream=start_time input.mp4
    ```
+
    Non-zero start times or complex edit lists can confuse browser demuxers.
 
 4. **Verify H.264 profile**:
+
    ```bash
    ffprobe -v error -select_streams v:0 \
      -show_entries stream=profile,level -of default=nw=1 input.mp4
    ```
+
    If the profile is "High 4:4:4 Predictive" or uses features outside the browser's
    decoder capability, it will fail.
 
@@ -1988,12 +2003,14 @@ Robotic audio in WebRTC typically indicates packet loss, excessive jitter, or FE
    (111 for Opus is common), and packet rate (~50 pps for 20ms Opus frames).
 
 3. **Analyze the stream**: Select the audio stream and click "Analyze." Key metrics:
+
    - **Lost packets**: Any loss > 1% is audible with Opus
    - **Max delta**: Values > 40ms indicate jitter spikes
    - **Sequence errors**: Out-of-order packets that arrived after the jitter buffer
      playout deadline are effectively lost
 
 4. **Check the jitter graph**: Click "Graph" in the stream analysis. Look for:
+
    - Periodic spikes (indicates network path oscillation)
    - Sustained high jitter (indicates congestion)
    - Gaps in packets (indicates route failure or firewall drops)
@@ -2026,12 +2043,14 @@ PTS), while packets may be in decode order (by DTS) -- these differ when B-frame
 present.
 
 **Use packets when**:
+
 - Analyzing container-level timing (DTS/PTS gaps, discontinuities)
 - Measuring bitrate distribution over time
 - Debugging muxing issues (wrong packet interleaving)
 - Checking if packets are in decode order
 
 **Use frames when**:
+
 - Analyzing GOP structure (I/P/B frame pattern)
 - Finding keyframe positions and intervals
 - Verifying frame types for encoding quality analysis
@@ -2044,6 +2063,7 @@ present.
 **Answer:**
 
 **Setup (Linux)**:
+
 ```bash
 # Simulate 3G: 100ms latency, 30ms jitter, 3% loss, 1 Mbps bandwidth
 sudo tc qdisc add dev eth0 root handle 1: netem \
@@ -2093,6 +2113,7 @@ does not have a native DASH player (unlike its native HLS support). Debugging st
 
 3. **Check fMP4 compatibility**: Use mp4dump to verify the init segment structure.
    Safari requires:
+
    - `ftyp` with `isom` brand
    - Correct `avcC` or `hvcC` box in `stsd`
    - No features Safari's demuxer does not understand
@@ -2116,23 +2137,27 @@ does not have a native DASH player (unlike its native HLS support). Debugging st
 At 100K concurrent viewers, monitoring must be automated, layered, and actionable:
 
 **Ingestion monitoring**:
+
 - Source health: Is the encoder connected? Bitrate stable? Keyframe interval correct?
 - Use FFprobe on the ingest server to continuously verify stream parameters
 - Alert if keyframe interval drifts from the configured GOP size
 - Alert if source bitrate drops below minimum threshold
 
 **Origin/packaging monitoring**:
+
 - Transcoding pipeline health: queue depth, encoding speed vs real-time ratio
 - Segment generation: verify each quality variant produces segments on schedule
 - Manifest correctness: periodic synthetic fetch of master and variant playlists
 
 **CDN monitoring**:
+
 - Cache hit ratio per edge POP (target > 95%)
 - Segment download latency from synthetic probes in multiple regions
 - 4xx/5xx error rates on segment and manifest requests
 - Bandwidth per POP to detect capacity issues
 
 **Client-side telemetry** (most important layer):
+
 - Beacon every 30 seconds with: buffer health, current bitrate, rebuffer events,
   startup time, error codes
 - Aggregate into real-time dashboards: rebuffer ratio (should be < 1%), average
@@ -2140,6 +2165,7 @@ At 100K concurrent viewers, monitoring must be automated, layered, and actionabl
 - Segment by: ISP, device type, geographic region, CDN POP
 
 **Alerting chain**:
+
 - P1 (page on-call): Rebuffer ratio > 5% across all viewers, or complete stream failure
 - P2 (Slack alert): Rebuffer ratio > 2%, any quality variant failing, CDN error spike
 - P3 (daily review): Startup time regression, quality distribution shifts
@@ -2155,29 +2181,36 @@ the last mile between CDN edge and viewer.
 **Answer:**
 
 1. **Start with GST_DEBUG=3** for warnings and errors:
+
    ```bash
    GST_DEBUG=3 gst-launch-1.0 filesrc location=input.mp4 ! decodebin ! \
      x264enc ! mp4mux ! filesink location=output.mp4
    ```
+
    Look for negotiation failures, format mismatches, or buffer errors.
 
 2. **Generate dot graphs** at each state transition:
+
    ```bash
    GST_DEBUG_DUMP_DOT_DIR=/tmp/dots gst-launch-1.0 ...
    ```
+
    Convert to images and verify that capabilities (caps) negotiated between elements
    are consistent. A common corruption cause is mismatched color spaces (for example,
    NV12 going into an element expecting I420).
 
 3. **Increase debug on specific elements**:
+
    ```bash
    GST_DEBUG=x264enc:5,videoconvert:5 gst-launch-1.0 ...
    ```
+
    Check if the encoder is receiving the expected resolution, frame rate, and pixel
    format.
 
 4. **Insert identity elements** with `signal-handoffs=true` to inspect buffers at
    specific points in the pipeline:
+
    ```bash
    gst-launch-1.0 ... ! identity signal-handoffs=true name=probe ! ...
    ```

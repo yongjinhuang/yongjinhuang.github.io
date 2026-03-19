@@ -222,22 +222,27 @@ const { execSync } = require('child_process');
 const branchName = process.env.PR_BRANCH;
 
 // Create Neon branch via API
-const response = await fetch('https://console.neon.tech/api/v2/projects/my-project/branches', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${process.env.NEON_API_KEY}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    branch: {
-      name: `pr-${branchName}`,
-      parent_id: 'main-branch-id',
+const response = await fetch(
+  'https://console.neon.tech/api/v2/projects/my-project/branches',
+  {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.NEON_API_KEY}`,
+      'Content-Type': 'application/json',
     },
-    endpoints: [{
-      type: 'read_write',
-    }],
-  }),
-});
+    body: JSON.stringify({
+      branch: {
+        name: `pr-${branchName}`,
+        parent_id: 'main-branch-id',
+      },
+      endpoints: [
+        {
+          type: 'read_write',
+        },
+      ],
+    }),
+  }
+);
 
 const { branch, endpoints } = await response.json();
 const connectionString = endpoints[0].connection_uri;
@@ -429,10 +434,10 @@ Turso extends SQLite with replication, making it suitable for distributed applic
 import { createClient } from '@libsql/client';
 
 const db = createClient({
-  url: 'file:local-replica.db',       // Local embedded replica
-  syncUrl: process.env.TURSO_URL,     // Remote primary for sync
+  url: 'file:local-replica.db', // Local embedded replica
+  syncUrl: process.env.TURSO_URL, // Remote primary for sync
   authToken: process.env.TURSO_TOKEN,
-  syncInterval: 60,                    // Sync every 60 seconds
+  syncInterval: 60, // Sync every 60 seconds
 });
 
 // Reads: instant (local file)
@@ -448,16 +453,19 @@ await db.execute({
 await db.sync();
 
 // Batch operations (single network round trip)
-const result = await db.batch([
-  {
-    sql: 'INSERT INTO orders (user_id, total) VALUES (?, ?)',
-    args: [userId, total],
-  },
-  {
-    sql: 'UPDATE inventory SET quantity = quantity - ? WHERE product_id = ?',
-    args: [qty, productId],
-  },
-], 'write'); // 'write' means these execute in a transaction
+const result = await db.batch(
+  [
+    {
+      sql: 'INSERT INTO orders (user_id, total) VALUES (?, ?)',
+      args: [userId, total],
+    },
+    {
+      sql: 'UPDATE inventory SET quantity = quantity - ? WHERE product_id = ?',
+      args: [qty, productId],
+    },
+  ],
+  'write'
+); // 'write' means these execute in a transaction
 ```
 
 ### DuckDB for Analytics
@@ -535,7 +543,15 @@ Drizzle's philosophy: "If you know SQL, you know Drizzle." It maps SQL concepts 
 
 ```typescript
 // drizzle/schema.ts
-import { pgTable, uuid, text, timestamp, integer, boolean, pgEnum } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  integer,
+  boolean,
+  pgEnum,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enum
@@ -548,8 +564,12 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   role: userRoleEnum('role').notNull().default('user'),
   active: boolean('active').notNull().default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 // Posts table
@@ -558,8 +578,12 @@ export const posts = pgTable('posts', {
   title: text('title').notNull(),
   content: text('content').notNull(),
   published: boolean('published').notNull().default(false),
-  authorId: uuid('author_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  authorId: uuid('author_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 // Relations (for query builder relational queries)
@@ -657,15 +681,12 @@ async function createPostWithTags(
   tagNames: string[]
 ) {
   return db.transaction(async (tx) => {
-    const [post] = await tx
-      .insert(posts)
-      .values(postData)
-      .returning();
+    const [post] = await tx.insert(posts).values(postData).returning();
 
     if (tagNames.length > 0) {
-      await tx.insert(postTags).values(
-        tagNames.map(name => ({ postId: post.id, tagName: name }))
-      );
+      await tx
+        .insert(postTags)
+        .values(tagNames.map((name) => ({ postId: post.id, tagName: name })));
     }
 
     return post;
@@ -874,18 +895,32 @@ LIMIT 5;
 
 ```typescript
 // pgvector with Drizzle ORM
-import { pgTable, uuid, text, jsonb, timestamp, index } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  jsonb,
+  timestamp,
+  index,
+} from 'drizzle-orm/pg-core';
 import { vector } from 'drizzle-orm/pg-core'; // pgvector support in Drizzle
 
-const documents = pgTable('documents', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  content: text('content').notNull(),
-  metadata: jsonb('metadata').default({}),
-  embedding: vector('embedding', { dimensions: 1536 }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-}, (table) => ({
-  embeddingIdx: index('embedding_idx').using('hnsw', table.embedding.op('vector_cosine_ops')),
-}));
+const documents = pgTable(
+  'documents',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    content: text('content').notNull(),
+    metadata: jsonb('metadata').default({}),
+    embedding: vector('embedding', { dimensions: 1536 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    embeddingIdx: index('embedding_idx').using(
+      'hnsw',
+      table.embedding.op('vector_cosine_ops')
+    ),
+  })
+);
 
 // RAG pipeline implementation
 async function searchDocuments(query: string, topK: number = 5) {
@@ -911,7 +946,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
   const response = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -1136,7 +1171,7 @@ ORDER BY hour DESC;
 
 ### Q: How would you implement a RAG (Retrieval Augmented Generation) pipeline with pgvector?
 
-**Strong answer**: The pipeline has two phases. In the indexing phase, I chunk documents into ~500 token segments with 50 token overlap (overlap prevents losing context at chunk boundaries), generate embeddings using OpenAI's text-embedding-3-small (1536 dimensions, $0.02/M tokens), and store chunks with their embeddings and metadata in a Postgres table with a pgvector column and an HNSW index for approximate nearest neighbor search. In the query phase, I embed the user's query with the same model, perform a cosine similarity search (`<=>` operator) with a LIMIT of 5-10 chunks, optionally pre-filter by metadata (category, date range) using a WHERE clause *before* the vector search for efficiency, then inject the retrieved chunks into the LLM prompt as context. Key implementation details: (1) HNSW index parameters -- `m=16, ef_construction=64` for good recall/speed balance, (2) chunk size affects quality -- too large loses precision, too small loses context, (3) metadata filtering should use B-tree indexes alongside the HNSW index, (4) for hybrid search, combine pgvector similarity with Postgres full-text search (`tsvector`) using reciprocal rank fusion. The system scales to ~5M vectors on a single Postgres instance; beyond that, I would evaluate Qdrant or Pinecone for dedicated vector infrastructure.
+**Strong answer**: The pipeline has two phases. In the indexing phase, I chunk documents into ~500 token segments with 50 token overlap (overlap prevents losing context at chunk boundaries), generate embeddings using OpenAI's text-embedding-3-small (1536 dimensions, $0.02/M tokens), and store chunks with their embeddings and metadata in a Postgres table with a pgvector column and an HNSW index for approximate nearest neighbor search. In the query phase, I embed the user's query with the same model, perform a cosine similarity search (`<=>` operator) with a LIMIT of 5-10 chunks, optionally pre-filter by metadata (category, date range) using a WHERE clause _before_ the vector search for efficiency, then inject the retrieved chunks into the LLM prompt as context. Key implementation details: (1) HNSW index parameters -- `m=16, ef_construction=64` for good recall/speed balance, (2) chunk size affects quality -- too large loses precision, too small loses context, (3) metadata filtering should use B-tree indexes alongside the HNSW index, (4) for hybrid search, combine pgvector similarity with Postgres full-text search (`tsvector`) using reciprocal rank fusion. The system scales to ~5M vectors on a single Postgres instance; beyond that, I would evaluate Qdrant or Pinecone for dedicated vector infrastructure.
 
 ### Q: Explain the trade-offs of CockroachDB's serializable isolation.
 

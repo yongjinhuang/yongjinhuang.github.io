@@ -6,13 +6,13 @@ A product analytics platform ingests billions of user events, resolves user iden
 
 ## Table Responsibilities
 
-| Table | Purpose | Storage | Why It Exists |
-|-------|---------|---------|---------------|
-| **events** | Raw event stream | ClickHouse | The atomic unit of analytics; every user action is an event with properties |
-| **user_profiles** | Merged user identity with traits | ClickHouse (ReplacingMergeTree) | Deduplicated user records; last-write-wins for profile properties |
-| **event_counts_minutely** | Pre-aggregated event metrics | ClickHouse (AggregatingMergeTree) | Avoids scanning billions of raw events for simple count/unique queries |
-| **identity_graph** | Cross-device identity resolution | Redis | Real-time mapping of anonymous_id and device_id to canonical distinct_id |
-| **experiment_assignments** | A/B test variant tracking | ClickHouse | Links users to experiment variants for statistical analysis of feature impact |
+| Table                      | Purpose                          | Storage                           | Why It Exists                                                                 |
+| -------------------------- | -------------------------------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| **events**                 | Raw event stream                 | ClickHouse                        | The atomic unit of analytics; every user action is an event with properties   |
+| **user_profiles**          | Merged user identity with traits | ClickHouse (ReplacingMergeTree)   | Deduplicated user records; last-write-wins for profile properties             |
+| **event_counts_minutely**  | Pre-aggregated event metrics     | ClickHouse (AggregatingMergeTree) | Avoids scanning billions of raw events for simple count/unique queries        |
+| **identity_graph**         | Cross-device identity resolution | Redis                             | Real-time mapping of anonymous_id and device_id to canonical distinct_id      |
+| **experiment_assignments** | A/B test variant tracking        | ClickHouse                        | Links users to experiment variants for statistical analysis of feature impact |
 
 ---
 
@@ -20,23 +20,23 @@ A product analytics platform ingests billions of user events, resolves user iden
 
 ### events (ClickHouse)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| project_id | UUID | Multi-tenant isolation; all queries are scoped by project |
-| distinct_id | STRING | Canonical user identifier (resolved from anonymous_id after identification) |
-| anonymous_id | STRING | Client-generated ID before user identifies (e.g., UUID stored in cookie) |
-| device_id | STRING | Device fingerprint or hardware ID for cross-device linking |
-| session_id | STRING | Groups events into sessions (based on 30-min inactivity timeout) |
-| event_name | STRING | What happened: page_view, button_click, purchase, signup |
-| insert_id | STRING | Client-generated unique ID for deduplication (idempotent ingestion) |
-| event_time | DATETIME | When the event actually occurred (client time, adjusted for clock skew) |
-| properties_json | STRING | Event-specific properties: page_url, button_name, product_id, revenue |
-| ip | STRING | Client IP for geo enrichment |
-| geo | OBJECT | Derived: country, region, city (from IP lookup) |
-| device_info | OBJECT | Derived: os, os_version, browser, browser_version, device_type |
-| utm_params | OBJECT | Marketing attribution: utm_source, utm_medium, utm_campaign, utm_content |
-| experiment_id | STRING | Which experiment was active when this event fired |
-| variant_id | STRING | Which variant the user was assigned to |
+| Field           | Type     | Description                                                                 |
+| --------------- | -------- | --------------------------------------------------------------------------- |
+| project_id      | UUID     | Multi-tenant isolation; all queries are scoped by project                   |
+| distinct_id     | STRING   | Canonical user identifier (resolved from anonymous_id after identification) |
+| anonymous_id    | STRING   | Client-generated ID before user identifies (e.g., UUID stored in cookie)    |
+| device_id       | STRING   | Device fingerprint or hardware ID for cross-device linking                  |
+| session_id      | STRING   | Groups events into sessions (based on 30-min inactivity timeout)            |
+| event_name      | STRING   | What happened: page_view, button_click, purchase, signup                    |
+| insert_id       | STRING   | Client-generated unique ID for deduplication (idempotent ingestion)         |
+| event_time      | DATETIME | When the event actually occurred (client time, adjusted for clock skew)     |
+| properties_json | STRING   | Event-specific properties: page_url, button_name, product_id, revenue       |
+| ip              | STRING   | Client IP for geo enrichment                                                |
+| geo             | OBJECT   | Derived: country, region, city (from IP lookup)                             |
+| device_info     | OBJECT   | Derived: os, os_version, browser, browser_version, device_type              |
+| utm_params      | OBJECT   | Marketing attribution: utm_source, utm_medium, utm_campaign, utm_content    |
+| experiment_id   | STRING   | Which experiment was active when this event fired                           |
+| variant_id      | STRING   | Which variant the user was assigned to                                      |
 
 **Why distinct_id vs anonymous_id?** Before a user logs in, the SDK generates an anonymous_id (stored in a cookie). After login, the user is "identified" with a distinct_id (e.g., user_id from your database). The identity_graph links these, so pre-login and post-login activity is attributed to the same person.
 
@@ -46,16 +46,16 @@ A product analytics platform ingests billions of user events, resolves user iden
 
 ### user_profiles (ClickHouse ReplacingMergeTree)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| project_id | UUID | Multi-tenant isolation |
-| distinct_id | STRING | Canonical user identifier (primary key with project_id) |
-| anonymous_ids | STRING[] | All anonymous IDs that have been linked to this user |
-| traits_json | STRING | User properties: name, email, plan, company, custom attributes |
-| first_seen_at | DATETIME | When this user first appeared (earliest event_time) |
-| last_seen_at | DATETIME | Most recent event_time |
-| total_events | INT | Lifetime event count |
-| is_identified | BOOLEAN | Whether the user has been explicitly identified (vs still anonymous) |
+| Field         | Type     | Description                                                          |
+| ------------- | -------- | -------------------------------------------------------------------- |
+| project_id    | UUID     | Multi-tenant isolation                                               |
+| distinct_id   | STRING   | Canonical user identifier (primary key with project_id)              |
+| anonymous_ids | STRING[] | All anonymous IDs that have been linked to this user                 |
+| traits_json   | STRING   | User properties: name, email, plan, company, custom attributes       |
+| first_seen_at | DATETIME | When this user first appeared (earliest event_time)                  |
+| last_seen_at  | DATETIME | Most recent event_time                                               |
+| total_events  | INT      | Lifetime event count                                                 |
+| is_identified | BOOLEAN  | Whether the user has been explicitly identified (vs still anonymous) |
 
 **Why ReplacingMergeTree?** User profiles are updated frequently (last_seen_at changes on every event, traits change on profile updates). ReplacingMergeTree deduplicates rows with the same primary key during background merges, keeping only the latest version. This provides last-write-wins semantics without explicit UPDATE operations.
 
@@ -63,13 +63,13 @@ A product analytics platform ingests billions of user events, resolves user iden
 
 ### event_counts_minutely (ClickHouse AggregatingMergeTree)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| project_id | UUID | Multi-tenant isolation |
-| event_name | STRING | Event name being aggregated |
-| minute_bucket | DATETIME | Truncated to the minute |
-| count | AggregateFunction(count) | Total event count for this event_name in this minute |
-| unique_users | AggregateFunction(uniq, distinct_id) | Approximate unique user count (HyperLogLog) |
+| Field         | Type                                 | Description                                          |
+| ------------- | ------------------------------------ | ---------------------------------------------------- |
+| project_id    | UUID                                 | Multi-tenant isolation                               |
+| event_name    | STRING                               | Event name being aggregated                          |
+| minute_bucket | DATETIME                             | Truncated to the minute                              |
+| count         | AggregateFunction(count)             | Total event count for this event_name in this minute |
+| unique_users  | AggregateFunction(uniq, distinct_id) | Approximate unique user count (HyperLogLog)          |
 
 **Why pre-aggregate?** A dashboard showing "page views in the last 24 hours" would scan 1440 minutes x N events per minute of raw data. The pre-aggregated table has at most 1440 rows to scan. For hourly/daily views, further rollups are trivial.
 
@@ -77,11 +77,11 @@ A product analytics platform ingests billions of user events, resolves user iden
 
 ### identity_graph (Redis)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| anonymous_id | KEY | Maps to the canonical distinct_id |
-| device_id | KEY | Maps to the canonical distinct_id |
-| distinct_id | VALUE | The resolved canonical user identifier |
+| Field        | Type  | Description                            |
+| ------------ | ----- | -------------------------------------- |
+| anonymous_id | KEY   | Maps to the canonical distinct_id      |
+| device_id    | KEY   | Maps to the canonical distinct_id      |
+| distinct_id  | VALUE | The resolved canonical user identifier |
 
 **Why Redis for identity resolution?** Identity lookups happen on every incoming event (to resolve anonymous_id to distinct_id). At 100K events/second, this must be sub-millisecond. Redis hash lookups provide O(1) performance. The identity graph is relatively small (one entry per anonymous_id or device_id, not per event).
 
@@ -89,17 +89,17 @@ A product analytics platform ingests billions of user events, resolves user iden
 
 ### experiment_assignments (ClickHouse)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| project_id | UUID | Multi-tenant isolation |
-| experiment_id | STRING | Which experiment (e.g., "new_checkout_flow") |
-| variant_id | STRING | Which variant (e.g., "control", "variant_a", "variant_b") |
-| distinct_id | STRING | Which user was assigned |
-| assigned_at | DATETIME | When the assignment was made |
-| converted | BOOLEAN | Whether the user completed the conversion goal |
-| converted_at | DATETIME | When the conversion happened |
+| Field         | Type     | Description                                               |
+| ------------- | -------- | --------------------------------------------------------- |
+| project_id    | UUID     | Multi-tenant isolation                                    |
+| experiment_id | STRING   | Which experiment (e.g., "new_checkout_flow")              |
+| variant_id    | STRING   | Which variant (e.g., "control", "variant_a", "variant_b") |
+| distinct_id   | STRING   | Which user was assigned                                   |
+| assigned_at   | DATETIME | When the assignment was made                              |
+| converted     | BOOLEAN  | Whether the user completed the conversion goal            |
+| converted_at  | DATETIME | When the conversion happened                              |
 
-**Why a separate table instead of embedding in events?** Experiment analysis requires comparing conversion rates between variants. A dedicated table makes this query simple: group by (experiment_id, variant_id), compute conversion_rate = SUM(converted) / COUNT(*). Embedding this in the events table would require complex filtering and joining.
+**Why a separate table instead of embedding in events?** Experiment analysis requires comparing conversion rates between variants. A dedicated table makes this query simple: group by (experiment_id, variant_id), compute conversion_rate = SUM(converted) / COUNT(\*). Embedding this in the events table would require complex filtering and joining.
 
 ---
 
@@ -192,6 +192,7 @@ user_profiles   1───* events           (one user produces many events)
 1. **Client SDK sends event** -- The SDK (web, iOS, Android) captures a user action and sends it to the collector endpoint with anonymous_id, device_id, event_name, properties, and a client-generated insert_id. Events are batched and sent every 10-30 seconds.
 
 2. **Collector validates and enriches** -- The collector server:
+
    - Validates the event schema (required fields, types)
    - Performs geo-IP lookup to derive country/region/city
    - Parses user agent for device_info
@@ -199,11 +200,13 @@ user_profiles   1───* events           (one user produces many events)
    - Writes the event to Kafka for downstream processing
 
 3. **Identity resolution** -- The stream processor queries the `identity_graph` in Redis:
+
    - If anonymous_id has a mapping, set distinct_id to the mapped value
    - If no mapping exists, use anonymous_id as a temporary distinct_id
    - When an `identify` call arrives (linking anonymous_id to a known user), update Redis and retroactively update recent events
 
 4. **Sessionization** -- The stream processor groups events into sessions:
+
    - Events from the same distinct_id within 30 minutes of inactivity are assigned the same session_id
    - A gap of >30 minutes starts a new session
    - This is computed in the stream processor, not in the database
@@ -213,12 +216,14 @@ user_profiles   1───* events           (one user produces many events)
 6. **Write to ClickHouse** -- Deduplicated, enriched events are batch-inserted into the `events` table. ClickHouse handles millions of inserts per second with columnar compression.
 
 7. **User profile update** -- The stream processor updates `user_profiles`:
+
    - Update last_seen_at and total_events
    - Merge new traits from `identify` or `set_profile` calls
    - Add newly discovered anonymous_ids to the array
    - ClickHouse ReplacingMergeTree handles deduplication on (project_id, distinct_id)
 
 8. **Pre-aggregation** -- Materialized views in ClickHouse continuously aggregate new events into `event_counts_minutely`:
+
    - Group by (project_id, event_name, minute_bucket)
    - Increment count
    - Merge into unique_users HyperLogLog sketch

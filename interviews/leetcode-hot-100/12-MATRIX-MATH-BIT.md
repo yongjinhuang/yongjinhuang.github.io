@@ -32,16 +32,16 @@ This section covers three distinct but frequently tested categories: matrix trav
 
 ## Common Bit Manipulation Tricks
 
-| Operation | Expression | Purpose |
-|---|---|---|
-| Check if bit `i` is set | `n & (1 << i)` | Bit testing |
-| Set bit `i` | `n \| (1 << i)` | Bit setting |
-| Clear bit `i` | `n & ~(1 << i)` | Bit clearing |
-| Toggle bit `i` | `n ^ (1 << i)` | Bit flipping |
-| Clear lowest set bit | `n & (n - 1)` | Count bits, power-of-2 check |
-| Isolate lowest set bit | `n & (-n)` | Fenwick trees, LSB extraction |
-| Check power of 2 | `n & (n - 1) == 0` | Single bit check |
-| XOR cancel | `a ^ a == 0` | Find unique element |
+| Operation               | Expression         | Purpose                       |
+| ----------------------- | ------------------ | ----------------------------- |
+| Check if bit `i` is set | `n & (1 << i)`     | Bit testing                   |
+| Set bit `i`             | `n \| (1 << i)`    | Bit setting                   |
+| Clear bit `i`           | `n & ~(1 << i)`    | Bit clearing                  |
+| Toggle bit `i`          | `n ^ (1 << i)`     | Bit flipping                  |
+| Clear lowest set bit    | `n & (n - 1)`      | Count bits, power-of-2 check  |
+| Isolate lowest set bit  | `n & (-n)`         | Fenwick trees, LSB extraction |
+| Check power of 2        | `n & (n - 1) == 0` | Single bit check              |
+| XOR cancel              | `a ^ a == 0`       | Find unique element           |
 
 **Key insight**: XOR is its own inverse. XORing all elements cancels duplicates, leaving the unique value.
 
@@ -89,7 +89,7 @@ def set_zeroes(matrix: list[list[int]]) -> None:
             matrix[i][0] = 0
 ```
 
-**Time**: O(m * n)
+**Time**: O(m \* n)
 **Space**: O(1)
 **Edge Cases**: Single row or column matrix; matrix with all zeros; no zeros at all.
 
@@ -139,7 +139,7 @@ def spiral_order(matrix: list[list[int]]) -> list[int]:
     return result
 ```
 
-**Time**: O(m * n)
+**Time**: O(m \* n)
 **Space**: O(1) excluding the output list
 **Edge Cases**: Single element matrix; single row; single column; tall narrow matrix.
 
@@ -451,17 +451,17 @@ def is_palindrome(x: int) -> bool:
 
 ## Quick Reference
 
-| # | Problem | Difficulty | Key Technique | Time |
-|---|---------|-----------|---------------|------|
-| 73 | Set Matrix Zeroes | Medium | First row/col as flags | O(mn) |
-| 54 | Spiral Matrix | Medium | Boundary shrinking | O(mn) |
-| 48 | Rotate Image | Medium | Transpose + reverse | O(n^2) |
-| 202 | Happy Number | Easy | Floyd's cycle detection | O(log n) |
-| 66 | Plus One | Easy | Carry propagation | O(n) |
-| 50 | Pow(x, n) | Medium | Binary exponentiation | O(log n) |
-| 136 | Single Number | Easy | XOR cancellation | O(n) |
-| 191 | Number of 1 Bits | Easy | Kernighan's trick | O(k) |
-| 338 | Counting Bits | Easy | DP with bit clearing | O(n) |
-| 268 | Missing Number | Easy | Gauss sum / XOR | O(n) |
-| 190 | Reverse Bits | Easy | Bit-by-bit reversal | O(1) |
-| 9 | Palindrome Number | Easy | Reverse half digits | O(log n) |
+| #   | Problem           | Difficulty | Key Technique           | Time     |
+| --- | ----------------- | ---------- | ----------------------- | -------- |
+| 73  | Set Matrix Zeroes | Medium     | First row/col as flags  | O(mn)    |
+| 54  | Spiral Matrix     | Medium     | Boundary shrinking      | O(mn)    |
+| 48  | Rotate Image      | Medium     | Transpose + reverse     | O(n^2)   |
+| 202 | Happy Number      | Easy       | Floyd's cycle detection | O(log n) |
+| 66  | Plus One          | Easy       | Carry propagation       | O(n)     |
+| 50  | Pow(x, n)         | Medium     | Binary exponentiation   | O(log n) |
+| 136 | Single Number     | Easy       | XOR cancellation        | O(n)     |
+| 191 | Number of 1 Bits  | Easy       | Kernighan's trick       | O(k)     |
+| 338 | Counting Bits     | Easy       | DP with bit clearing    | O(n)     |
+| 268 | Missing Number    | Easy       | Gauss sum / XOR         | O(n)     |
+| 190 | Reverse Bits      | Easy       | Bit-by-bit reversal     | O(1)     |
+| 9   | Palindrome Number | Easy       | Reverse half digits     | O(log n) |

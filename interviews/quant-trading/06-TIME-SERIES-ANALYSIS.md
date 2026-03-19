@@ -349,7 +349,7 @@ White Noise:                   Random Walk (differenced):
 
 ### PACF (Partial Autocorrelation Function)
 
-The PACF measures the correlation between X_t and X_{t+k} **after removing the linear dependence on X_{t+1}, ..., X_{t+k-1}**.
+The PACF measures the correlation between X*t and X*{t+k} **after removing the linear dependence on X*{t+1}, ..., X*{t+k-1}**.
 
 ```
 PACF KEY INSIGHT:
@@ -2768,12 +2768,12 @@ Spectral density:     S(f) = |FFT(X)|^2 / N
 
 The canonical references for each topic covered in this chapter:
 
-- **Stationarity and Unit Roots**: Hamilton, *Time Series Analysis* (1994), Chapters 15-17
-- **ARIMA**: Box, Jenkins, Reinsel, Ljung, *Time Series Analysis* (5th ed., 2015)
+- **Stationarity and Unit Roots**: Hamilton, _Time Series Analysis_ (1994), Chapters 15-17
+- **ARIMA**: Box, Jenkins, Reinsel, Ljung, _Time Series Analysis_ (5th ed., 2015)
 - **GARCH**: Engle, "Autoregressive Conditional Heteroscedasticity" (1982); Bollerslev, "Generalized ARCH" (1986)
-- **Cointegration**: Engle & Granger, "Co-integration and Error Correction" (1987); Johansen, *Likelihood-Based Inference in Cointegrated VAR Models* (1995)
+- **Cointegration**: Engle & Granger, "Co-integration and Error Correction" (1987); Johansen, _Likelihood-Based Inference in Cointegrated VAR Models_ (1995)
 - **Regime Switching**: Hamilton, "A New Approach to the Economic Analysis of Nonstationary Time Series" (1989)
-- **Fractional Differencing**: de Prado, *Advances in Financial Machine Learning* (2018), Chapter 5
-- **Wavelets**: Percival & Walden, *Wavelet Methods for Time Series Analysis* (2000)
-- **Kalman Filter**: Durbin & Koopman, *Time Series Analysis by State Space Methods* (2012)
-- **Applied Finance**: Tsay, *Analysis of Financial Time Series* (3rd ed., 2010)
+- **Fractional Differencing**: de Prado, _Advances in Financial Machine Learning_ (2018), Chapter 5
+- **Wavelets**: Percival & Walden, _Wavelet Methods for Time Series Analysis_ (2000)
+- **Kalman Filter**: Durbin & Koopman, _Time Series Analysis by State Space Methods_ (2012)
+- **Applied Finance**: Tsay, _Analysis of Financial Time Series_ (3rd ed., 2010)

@@ -1840,4 +1840,4 @@ print(f"Selected assets: {chosen_assets}")
 
 ---
 
-*Next Chapter: [Chapter 7 - Options & Derivatives](07-OPTIONS-AND-DERIVATIVES.md)*
+_Next Chapter: [Chapter 7 - Options & Derivatives](07-OPTIONS-AND-DERIVATIVES.md)_

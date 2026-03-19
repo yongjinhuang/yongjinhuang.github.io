@@ -59,20 +59,20 @@ too small or disappears before being read.
 
 ### Input Types and When to Use Each
 
-| Input Type        | Use For                          | Mobile Keyboard       |
-|-------------------|----------------------------------|-----------------------|
-| `text`            | Names, general short text        | Standard              |
-| `email`           | Email addresses                  | @ and . prominent     |
-| `tel`             | Phone numbers                    | Numeric pad           |
-| `url`             | Website URLs                     | .com and / prominent  |
-| `number`          | Quantities (not IDs or zips)     | Numeric pad           |
-| `password`        | Passwords                        | Standard              |
-| `search`          | Search queries                   | Search button         |
-| `date`            | Dates                            | Native date picker    |
-| Radio buttons     | 2-5 mutually exclusive options   | N/A                   |
-| Checkboxes        | Multiple selections              | N/A                   |
-| Select / dropdown | 5-15 options                     | Native picker         |
-| Toggle switch     | Binary on/off settings           | N/A                   |
+| Input Type        | Use For                        | Mobile Keyboard      |
+| ----------------- | ------------------------------ | -------------------- |
+| `text`            | Names, general short text      | Standard             |
+| `email`           | Email addresses                | @ and . prominent    |
+| `tel`             | Phone numbers                  | Numeric pad          |
+| `url`             | Website URLs                   | .com and / prominent |
+| `number`          | Quantities (not IDs or zips)   | Numeric pad          |
+| `password`        | Passwords                      | Standard             |
+| `search`          | Search queries                 | Search button        |
+| `date`            | Dates                          | Native date picker   |
+| Radio buttons     | 2-5 mutually exclusive options | N/A                  |
+| Checkboxes        | Multiple selections            | N/A                  |
+| Select / dropdown | 5-15 options                   | Native picker        |
+| Toggle switch     | Binary on/off settings         | N/A                  |
 
 **Common mistakes:** Using `number` for phone/credit cards/zip codes (use `tel` or
 `inputmode="numeric"` instead, since `number` adds spinners and strips leading zeros).
@@ -132,7 +132,7 @@ async validations (username availability), and password strength reaching "stron
 ### Required vs Optional Field Indicators
 
 - **Most fields required:** Mark optional fields with "(optional)"
-- **Most fields optional:** Mark required with asterisk (*) plus legend
+- **Most fields optional:** Mark required with asterisk (\*) plus legend
 
 **Best practice:** Eliminate optional fields entirely. Every field removed increases
 completion rates.
@@ -180,12 +180,12 @@ Never use placeholder as the only label.
 
 **Key ARIA attributes:**
 
-| Attribute            | Purpose                                    |
-|----------------------|--------------------------------------------|
-| `aria-required`      | Indicates a required field                 |
-| `aria-invalid`       | Indicates a field with an error            |
-| `aria-describedby`   | Links input to help text or error message  |
-| `aria-live="polite"` | Announces dynamic validation changes       |
+| Attribute            | Purpose                                   |
+| -------------------- | ----------------------------------------- |
+| `aria-required`      | Indicates a required field                |
+| `aria-invalid`       | Indicates a field with an error           |
+| `aria-describedby`   | Links input to help text or error message |
+| `aria-live="polite"` | Announces dynamic validation changes      |
 
 **Focus management:** On error, focus the first invalid field. After step changes,
 focus the first field of the new step. Tab order must match visual order.
@@ -221,7 +221,9 @@ design (browsers apply yellow backgrounds by default).
 ```tsx
 function ContactForm() {
   const [formState, setFormState] = useState<FormState>({
-    name: "", email: "", message: "",
+    name: '',
+    email: '',
+    message: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
@@ -243,26 +245,28 @@ function ContactForm() {
     <form onSubmit={handleSubmit} noValidate>
       <FormField
         label="Name"
-        error={touched.has("name") ? errors.name : undefined}
+        error={touched.has('name') ? errors.name : undefined}
         required
       >
         <input
           type="text"
           value={formState.name}
-          onChange={(e) => updateField("name", e.target.value)}
-          onBlur={() => handleBlur("name")}
+          onChange={(e) => updateField('name', e.target.value)}
+          onBlur={() => handleBlur('name')}
           autoComplete="name"
-          aria-invalid={touched.has("name") && !!errors.name}
+          aria-invalid={touched.has('name') && !!errors.name}
           className={cn(
-            "w-full rounded-lg border px-4 py-2 outline-none",
-            "focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-            touched.has("name") && errors.name
-              ? "border-red-400" : "border-gray-300"
+            'w-full rounded-lg border px-4 py-2 outline-none',
+            'focus:border-blue-500 focus:ring-2 focus:ring-blue-200',
+            touched.has('name') && errors.name
+              ? 'border-red-400'
+              : 'border-gray-300'
           )}
         />
       </FormField>
       {/* Similar fields for email and message */}
-      <button type="submit"
+      <button
+        type="submit"
         className="mt-4 w-full rounded-lg bg-blue-600 py-3 text-white
                    font-medium hover:bg-blue-700 transition-colors"
       >
@@ -276,21 +280,30 @@ function ContactForm() {
 ### Reusable Form Field Component
 
 ```tsx
-function FormField({ label, error, required, children, helpText }: FormFieldProps) {
+function FormField({
+  label,
+  error,
+  required,
+  children,
+  helpText,
+}: FormFieldProps) {
   const id = useId();
   const errorId = `${id}-error`;
 
   return (
     <div className="mb-4">
-      <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">
+      <label
+        htmlFor={id}
+        className="mb-1 block text-sm font-medium text-gray-700"
+      >
         {label}
         {required && <span className="ml-1 text-red-500">*</span>}
       </label>
 
       {React.cloneElement(children as React.ReactElement, {
         id,
-        "aria-describedby": error ? errorId : undefined,
-        "aria-invalid": !!error,
+        'aria-describedby': error ? errorId : undefined,
+        'aria-invalid': !!error,
       })}
 
       {error && (
@@ -313,18 +326,24 @@ function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
         <div key={step} className="flex items-center">
           <div
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium",
-              index < currentStep ? "bg-blue-600 text-white"
-                : index === currentStep ? "border-2 border-blue-600 text-blue-600"
-                : "border-2 border-gray-300 text-gray-400"
+              'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium',
+              index < currentStep
+                ? 'bg-blue-600 text-white'
+                : index === currentStep
+                  ? 'border-2 border-blue-600 text-blue-600'
+                  : 'border-2 border-gray-300 text-gray-400'
             )}
-            aria-current={index === currentStep ? "step" : undefined}
+            aria-current={index === currentStep ? 'step' : undefined}
           >
-            {index < currentStep ? "✓" : index + 1}
+            {index < currentStep ? '✓' : index + 1}
           </div>
           {index < steps.length - 1 && (
-            <div className={cn("mx-2 h-0.5 w-16",
-              index < currentStep ? "bg-blue-600" : "bg-gray-300")} />
+            <div
+              className={cn(
+                'mx-2 h-0.5 w-16',
+                index < currentStep ? 'bg-blue-600' : 'bg-gray-300'
+              )}
+            />
           )}
         </div>
       ))}
@@ -408,7 +427,7 @@ transitions:
   {error && (
     <motion.p
       initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
+      animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
       className="text-sm text-red-600"
       role="alert"
@@ -423,11 +442,11 @@ transitions:
 
 ```tsx
 const inputClasses = cn(
-  "w-full rounded-lg border px-4 py-3",
-  "bg-white dark:bg-gray-900",
-  "border-gray-300 dark:border-gray-600",
-  "focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-  "placeholder:text-gray-400 transition-colors outline-none"
+  'w-full rounded-lg border px-4 py-3',
+  'bg-white dark:bg-gray-900',
+  'border-gray-300 dark:border-gray-600',
+  'focus:border-blue-500 focus:ring-2 focus:ring-blue-200',
+  'placeholder:text-gray-400 transition-colors outline-none'
 );
 ```
 
@@ -435,20 +454,20 @@ const inputClasses = cn(
 
 ## Quick Reference
 
-| Principle                | Best Practice                                           |
-|--------------------------|---------------------------------------------------------|
-| Layout                   | Single column default; multi-column only for related fields |
-| Labels                   | Top-aligned, always visible, never placeholder-only     |
-| Validation timing        | On blur, then on keystroke after error, always on submit |
-| Error placement          | Directly below the field, specific and helpful           |
-| Error tone               | Instructional, not blaming                              |
-| Required fields          | Mark whichever type is less common                      |
-| Progressive disclosure   | Show fields only when relevant                          |
-| Multi-step               | 5+ fields, save progress, show progress indicator       |
-| Accessibility            | label + for, aria-invalid, aria-describedby, focus mgmt |
-| Password                 | Show/hide toggle, strength meter, allow paste           |
-| Autofill                 | Use autocomplete attributes, never disable              |
-| Mobile                   | Correct input types for correct keyboards               |
+| Principle              | Best Practice                                               |
+| ---------------------- | ----------------------------------------------------------- |
+| Layout                 | Single column default; multi-column only for related fields |
+| Labels                 | Top-aligned, always visible, never placeholder-only         |
+| Validation timing      | On blur, then on keystroke after error, always on submit    |
+| Error placement        | Directly below the field, specific and helpful              |
+| Error tone             | Instructional, not blaming                                  |
+| Required fields        | Mark whichever type is less common                          |
+| Progressive disclosure | Show fields only when relevant                              |
+| Multi-step             | 5+ fields, save progress, show progress indicator           |
+| Accessibility          | label + for, aria-invalid, aria-describedby, focus mgmt     |
+| Password               | Show/hide toggle, strength meter, allow paste               |
+| Autofill               | Use autocomplete attributes, never disable                  |
+| Mobile                 | Correct input types for correct keyboards                   |
 
 **The golden rule of form design:** Every field you remove increases your completion
 rate. Ask only for what you truly need.

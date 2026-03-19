@@ -96,33 +96,33 @@ Z-index           z-dropdown (1000), z-modal (1400)
   /* Primitive tokens (raw values) */
   --blue-500: #3b82f6;
   --blue-600: #2563eb;
-  --gray-50:  #f9fafb;
+  --gray-50: #f9fafb;
   --gray-900: #111827;
 
   /* Semantic tokens (intent-based) */
-  --color-primary:     var(--blue-500);
+  --color-primary: var(--blue-500);
   --color-primary-hover: var(--blue-600);
-  --color-bg:          var(--gray-50);
-  --color-text:        var(--gray-900);
+  --color-bg: var(--gray-50);
+  --color-text: var(--gray-900);
 
   /* Spacing scale */
-  --space-1:  0.25rem;  /* 4px */
-  --space-2:  0.5rem;   /* 8px */
-  --space-3:  0.75rem;  /* 12px */
-  --space-4:  1rem;     /* 16px */
-  --space-6:  1.5rem;   /* 24px */
-  --space-8:  2rem;     /* 32px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
 
   /* Typography */
   --font-sans: 'Poppins', system-ui, sans-serif;
-  --font-size-sm:   0.875rem;
+  --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
-  --font-size-lg:   1.125rem;
-  --font-size-xl:   1.25rem;
-  --font-size-2xl:  1.5rem;
-  --font-size-3xl:  1.875rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -131,8 +131,8 @@ Z-index           z-dropdown (1000), z-modal (1400)
 }
 
 /* Dark mode overrides (only semantic tokens change) */
-[data-theme="dark"] {
-  --color-bg:   var(--gray-900);
+[data-theme='dark'] {
+  --color-bg: var(--gray-900);
   --color-text: var(--gray-50);
 }
 ```
@@ -373,16 +373,16 @@ Key governance decisions:
 
 ### Popular Design Systems to Study
 
-| System        | By       | Strengths                                    |
-|---------------|----------|----------------------------------------------|
-| Material Design | Google | Comprehensive, motion-focused, well-documented |
-| Ant Design    | Alibaba  | Enterprise-grade, extensive component set      |
-| Radix UI      | WorkOS   | Unstyled primitives, accessibility-first       |
-| shadcn/ui     | shadcn   | Copy-paste components, Tailwind-native         |
-| Carbon        | IBM      | Enterprise, accessibility, data visualization  |
-| Polaris       | Shopify  | Great content guidelines, commerce-focused     |
-| Chakra UI     | Open source | Composable, accessible, developer-friendly  |
-| Spectrum      | Adobe    | Cross-platform, design token architecture      |
+| System          | By          | Strengths                                      |
+| --------------- | ----------- | ---------------------------------------------- |
+| Material Design | Google      | Comprehensive, motion-focused, well-documented |
+| Ant Design      | Alibaba     | Enterprise-grade, extensive component set      |
+| Radix UI        | WorkOS      | Unstyled primitives, accessibility-first       |
+| shadcn/ui       | shadcn      | Copy-paste components, Tailwind-native         |
+| Carbon          | IBM         | Enterprise, accessibility, data visualization  |
+| Polaris         | Shopify     | Great content guidelines, commerce-focused     |
+| Chakra UI       | Open source | Composable, accessible, developer-friendly     |
+| Spectrum        | Adobe       | Cross-platform, design token architecture      |
 
 #### shadcn/ui: The Modern Approach
 
@@ -428,16 +428,19 @@ Keeping design and code in sync is one of the hardest problems in design systems
 **Strategies:**
 
 1. **Design tokens as the source of truth**
+
    - Export tokens from Figma using tools like Tokens Studio
    - Generate CSS variables, Tailwind config, and platform-specific files from tokens
    - Automate with CI/CD pipelines
 
 2. **Component parity**
+
    - Every Figma component should have a code counterpart
    - Maintain a parity tracker (spreadsheet or tool)
    - Regularly audit for drift
 
 3. **Naming alignment**
+
    - Use identical names in Figma and code
    - `Button/Primary/Medium` in Figma = `<Button variant="primary" size="md" />`
 
@@ -473,7 +476,7 @@ Design-Dev Sync Pipeline:
 const designTokens = {
   colors: {
     primary: {
-      50:  '#eff6ff',
+      50: '#eff6ff',
       100: '#dbeafe',
       500: '#3b82f6',
       600: '#2563eb',
@@ -491,16 +494,16 @@ const designTokens = {
     },
   },
   spacing: {
-    'section': '5rem',
+    section: '5rem',
     'card-padding': '1.5rem',
   },
   borderRadius: {
-    'card': '0.75rem',
-    'button': '0.5rem',
-    'pill': '9999px',
+    card: '0.75rem',
+    button: '0.5rem',
+    pill: '9999px',
   },
   boxShadow: {
-    'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    card: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
     'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
   },
 };
@@ -616,6 +619,7 @@ Think of it this way: a component library answers "what components exist?" A des
 Design tokens are named values that represent design decisions -- colors, spacing, typography, shadows, etc. They create an abstraction layer between design intent and implementation.
 
 Why they matter:
+
 - **Consistency**: One source of truth for all visual values
 - **Theming**: Change tokens to switch themes (light/dark, brand A/brand B)
 - **Platform agnostic**: Same tokens can generate CSS, iOS, Android values
@@ -661,6 +665,7 @@ This hierarchy helps teams think systematically about component composition and 
 ### Q7: What is the role of Storybook in a design system?
 
 Storybook serves as:
+
 - **Development environment**: Build components in isolation without running the full app
 - **Documentation**: Interactive API docs with controls for every prop
 - **Testing**: Visual regression, accessibility, and interaction testing
@@ -684,25 +689,30 @@ Storybook serves as:
 ### For a Next.js + Tailwind + Framer Motion Portfolio
 
 1. **Centralize your design tokens**
+
    - Your `lib/design-system.ts` already defines colors, shadows, and animations
    - Extend it with a complete spacing scale and typography scale
    - Use these tokens in your Tailwind config for a single source of truth
 
 2. **Apply atomic design to your component structure**
+
    - Your `components/ui/` folder already contains atoms (Button, Card, SkillTag)
    - Your `components/sections/` contains organisms (Intro, Experience, Skills)
    - Document this hierarchy for portfolio visitors to see your architectural thinking
 
 3. **Add a design system page to your portfolio**
+
    - Showcase your token system (colors, spacing, typography)
    - Show component variants (buttons, cards in different states)
    - This demonstrates system thinking to potential employers
 
 4. **Implement consistent theming**
+
    - Your dark/light mode should be driven by semantic tokens
    - Switching themes should only change token values, not component logic
 
 5. **Use shadcn/ui patterns as inspiration**
+
    - Your `cn()` utility already follows the shadcn pattern
    - Consider adopting their variant pattern using `class-variance-authority`
 

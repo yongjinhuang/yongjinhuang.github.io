@@ -6,33 +6,33 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Listing Management | Hosts create/update listings with availability calendars, pricing rules, and amenities |
-| 2 | Availability Search | Guests search by date range, location, capacity, amenities, and price range |
-| 3 | Booking Creation | Guest selects time slot, places hold (TTL), completes payment to confirm |
-| 4 | Temporary Hold | System holds slot for 15 minutes while guest completes checkout |
-| 5 | Booking Management | View, modify, or cancel a booking; apply refund policy at cancellation |
-| 6 | Waitlist | Join waitlist when slot is full; auto-promote on cancellation |
-| 7 | Recurring Bookings | Create repeating bookings (weekly, monthly) with exception handling |
-| 8 | Notifications | Confirmation, 24h reminder, post-stay review request |
-| 9 | Calendar Sync | Export/import iCal; two-way sync with Google Calendar |
-| 10 | Dynamic Pricing | Yield management: peak/off-peak, early-bird, last-minute pricing |
-| 11 | Multi-Resource Booking | Book room + equipment + catering in single atomic transaction |
-| 12 | Reviews & Ratings | Post-stay reviews for both guest and host |
+| #   | Requirement            | Description                                                                            |
+| --- | ---------------------- | -------------------------------------------------------------------------------------- |
+| 1   | Listing Management     | Hosts create/update listings with availability calendars, pricing rules, and amenities |
+| 2   | Availability Search    | Guests search by date range, location, capacity, amenities, and price range            |
+| 3   | Booking Creation       | Guest selects time slot, places hold (TTL), completes payment to confirm               |
+| 4   | Temporary Hold         | System holds slot for 15 minutes while guest completes checkout                        |
+| 5   | Booking Management     | View, modify, or cancel a booking; apply refund policy at cancellation                 |
+| 6   | Waitlist               | Join waitlist when slot is full; auto-promote on cancellation                          |
+| 7   | Recurring Bookings     | Create repeating bookings (weekly, monthly) with exception handling                    |
+| 8   | Notifications          | Confirmation, 24h reminder, post-stay review request                                   |
+| 9   | Calendar Sync          | Export/import iCal; two-way sync with Google Calendar                                  |
+| 10  | Dynamic Pricing        | Yield management: peak/off-peak, early-bird, last-minute pricing                       |
+| 11  | Multi-Resource Booking | Book room + equipment + catering in single atomic transaction                          |
+| 12  | Reviews & Ratings      | Post-stay reviews for both guest and host                                              |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Booking creation latency | < 500ms (p99) |
-| 2 | Double-booking rate | Zero (strong consistency) |
-| 3 | Availability | 99.99% (< 53 min downtime/year) |
-| 4 | Search latency | < 200ms (p95) |
-| 5 | Calendar sync delay | < 30 seconds end-to-end |
-| 6 | Hold TTL accuracy | +/- 1 second (expired holds released within 1s) |
-| 7 | Durability | Zero booking loss (at-least-once processing, idempotent confirmation) |
-| 8 | Consistency | Serializable isolation for booking writes; eventual consistency for search reads |
+| #   | Requirement              | Target                                                                           |
+| --- | ------------------------ | -------------------------------------------------------------------------------- |
+| 1   | Booking creation latency | < 500ms (p99)                                                                    |
+| 2   | Double-booking rate      | Zero (strong consistency)                                                        |
+| 3   | Availability             | 99.99% (< 53 min downtime/year)                                                  |
+| 4   | Search latency           | < 200ms (p95)                                                                    |
+| 5   | Calendar sync delay      | < 30 seconds end-to-end                                                          |
+| 6   | Hold TTL accuracy        | +/- 1 second (expired holds released within 1s)                                  |
+| 7   | Durability               | Zero booking loss (at-least-once processing, idempotent confirmation)            |
+| 8   | Consistency              | Serializable isolation for booking writes; eventual consistency for search reads |
 
 ### Scale Estimates
 
@@ -49,6 +49,7 @@ Calendar sync events:  ~50M/day (external calendar updates)
 ### Back-of-Envelope Calculations
 
 **Booking Write Throughput:**
+
 ```
 Bookings per day:         5M
 Peak bookings/sec:        10,000/min = ~167/sec (steady),
@@ -58,6 +59,7 @@ Hold timeout events/sec:  334 holds/sec * 70% abandon rate = 234 releases/sec
 ```
 
 **Availability Read Throughput:**
+
 ```
 Concurrent searches:      500K
 Avg search duration:      3 seconds
@@ -67,6 +69,7 @@ DB read QPS:              167K * 10% = 16,700 QPS
 ```
 
 **Data Storage:**
+
 ```
 Per listing:
   Availability calendar: 365 days * ~4 bytes/day = 1.46 KB/year
@@ -82,6 +85,7 @@ Blocked slots index:
 ```
 
 **Notification Volume:**
+
 ```
 Confirmations:        5M/day
 24h reminders:        5M/day (for next day's check-ins)
@@ -983,9 +987,9 @@ Stored in-memory per listing (Redis sorted set):
   "rating": 4.87,
   "review_count": 142,
   "available_ranges": [
-    {"gte": "2026-07-01", "lte": "2026-07-31"},
-    {"gte": "2026-09-01", "lte": "2026-09-30"}
-  ],  // updated on every booking/cancellation via Kafka consumer
+    { "gte": "2026-07-01", "lte": "2026-07-31" },
+    { "gte": "2026-09-01", "lte": "2026-09-30" }
+  ], // updated on every booking/cancellation via Kafka consumer
   "instant_book": true,
   "property_type": "entire_home",
   "updated_at": "2026-03-01T12:00:00Z"
@@ -998,7 +1002,12 @@ Stored in-memory per listing (Redis sorted set):
   "query": {
     "bool": {
       "filter": [
-        { "geo_distance": { "distance": "50km", "geo": { "lat": 37.78, "lon": -122.41 } } },
+        {
+          "geo_distance": {
+            "distance": "50km",
+            "geo": { "lat": 37.78, "lon": -122.41 }
+          }
+        },
         { "range": { "base_price": { "gte": 50, "lte": 300 } } },
         { "terms": { "amenities": ["wifi", "parking"] } },
         { "range": { "max_guests": { "gte": 2 } } },
@@ -1008,8 +1017,12 @@ Stored in-memory per listing (Redis sorted set):
             "query": {
               "bool": {
                 "filter": [
-                  { "range": { "available_ranges.gte": { "lte": "2026-07-01" } } },
-                  { "range": { "available_ranges.lte": { "gte": "2026-07-07" } } }
+                  {
+                    "range": { "available_ranges.gte": { "lte": "2026-07-01" } }
+                  },
+                  {
+                    "range": { "available_ranges.lte": { "gte": "2026-07-07" } }
+                  }
                 ]
               }
             }
@@ -1509,16 +1522,16 @@ Geo-partitioned Elasticsearch:
 
 ## 20. Trade-offs
 
-| Decision | Choice Made | Alternative | Reason |
-|----------|-------------|-------------|--------|
-| Availability storage | Per-date rows (PostgreSQL) | Interval ranges | Simpler queries, easier lock granularity |
-| Double-booking prevention | Redis SETNX + SELECT FOR UPDATE | Pure optimistic locking | Fail-fast without DB roundtrip for conflicts |
-| Hold mechanism | Redis TTL + DB record | DB-only scheduled cleanup | Sub-second expiry accuracy vs 1-min cron lag |
-| Search index | Elasticsearch | PostgreSQL full-text | ES scales horizontally; better geo + faceted search |
-| Availability cache | Redis bitmap | Materialized view | 46 bytes/year vs 365 rows, 1000x smaller |
-| Consistency model | Strong for writes, eventual for reads | Full strong consistency | Performance: read replicas/ES lag is acceptable |
-| Overbooking | Configurable per property type | Always exact capacity | Revenue optimization for hotels; off for Airbnb |
-| Calendar sync | iCal polling + Google push | Push-only | iCal standard doesn't support push; polling is necessary |
+| Decision                  | Choice Made                           | Alternative               | Reason                                                   |
+| ------------------------- | ------------------------------------- | ------------------------- | -------------------------------------------------------- |
+| Availability storage      | Per-date rows (PostgreSQL)            | Interval ranges           | Simpler queries, easier lock granularity                 |
+| Double-booking prevention | Redis SETNX + SELECT FOR UPDATE       | Pure optimistic locking   | Fail-fast without DB roundtrip for conflicts             |
+| Hold mechanism            | Redis TTL + DB record                 | DB-only scheduled cleanup | Sub-second expiry accuracy vs 1-min cron lag             |
+| Search index              | Elasticsearch                         | PostgreSQL full-text      | ES scales horizontally; better geo + faceted search      |
+| Availability cache        | Redis bitmap                          | Materialized view         | 46 bytes/year vs 365 rows, 1000x smaller                 |
+| Consistency model         | Strong for writes, eventual for reads | Full strong consistency   | Performance: read replicas/ES lag is acceptable          |
+| Overbooking               | Configurable per property type        | Always exact capacity     | Revenue optimization for hotels; off for Airbnb          |
+| Calendar sync             | iCal polling + Google push            | Push-only                 | iCal standard doesn't support push; polling is necessary |
 
 ---
 
@@ -1527,6 +1540,7 @@ Geo-partitioned Elasticsearch:
 **Q: How do you guarantee zero double-bookings at 10K bookings/min peak?**
 
 A: Three-layer defense:
+
 1. Redis SETNX as fast pre-check (< 1ms, no DB hit for clear conflicts)
 2. PostgreSQL SELECT FOR UPDATE NOWAIT at the DB layer (serializable write)
 3. Unique constraint on `(listing_id, date)` with `status='BOOKED'` as DB safety net
@@ -1544,6 +1558,7 @@ A: Horizontally scaled Elasticsearch (geo-partitioned) handles the search query 
 **Q: How do you handle the thundering herd when a popular listing becomes available (e.g., celebrity home cancellation)?**
 
 A: Three mechanisms:
+
 1. Waitlist promotion is serialized - only 1 person is notified at a time, with a 30-minute response window
 2. For non-waitlisted guests, availability updates propagate to Elasticsearch within 5 seconds, but Redis SETNX ensures only one hold succeeds
 3. Rate-limit hold creation for the same listing: max 1 successful hold per (listing_id, date_range) at any time
@@ -1555,6 +1570,7 @@ A: Booking dates are stored as DATE type (timezone-agnostic). "July 1" always me
 **Q: How do you prevent a guest from gaming the hold system to block a popular listing?**
 
 A: Rate limiting on hold creation:
+
 - Max 3 active holds per guest at any time
 - Max 1 active hold per (guest_id, listing_id) at any time
 - Hold frequency: max 5 holds/hour per guest
@@ -1564,6 +1580,7 @@ A: Rate limiting on hold creation:
 **Q: How does your system handle a recurring weekly booking when the host blocks one specific occurrence?**
 
 A: The recurring template stores an `exception_dates` array. When the host blocks a specific occurrence:
+
 1. Cancel the pre-generated individual booking for that date (refund applied)
 2. Add the date to `exception_dates` in the template
 3. Future occurrence generation skips exception_dates
@@ -1574,6 +1591,7 @@ The template itself continues generating all other occurrences normally.
 **Q: Walk me through the data flow when a guest cancels a booking that has waitlisted guests.**
 
 A:
+
 ```
 Guest cancels → POST /v1/bookings/{id} (DELETE)
   ↓
@@ -1608,6 +1626,7 @@ Payment Service (consumes booking.cancelled):
 **Q: How do you size your database connection pool for peak booking load?**
 
 A:
+
 ```
 Peak load: 167 booking confirmations/sec
 Each booking: ~50ms DB time (hold + confirm = 2 transactions)
@@ -1622,4 +1641,4 @@ This is deliberately small - most booking latency is payment API (external), not
 
 ---
 
-*Last updated: 2026-03-01*
+_Last updated: 2026-03-01_

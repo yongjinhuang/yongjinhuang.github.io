@@ -28,35 +28,35 @@ A feature flag system (also called feature toggles) allows engineering teams to 
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Flag Creation & Management | Create boolean, string, number, and JSON multivariate flags with default values per environment |
-| 2 | Targeting Rules | Evaluate flags against user attributes (email, country, plan, custom attributes) with AND/OR conditions |
-| 3 | Percentage Rollout | Gradually roll out a flag to a percentage of users with consistent assignment (same user always sees the same value) |
-| 4 | A/B Testing / Experimentation | Assign users to experiment variants, track events, and calculate statistical significance |
-| 5 | Kill Switch | Instantly disable a flag globally across all environments and SDKs within seconds |
-| 6 | Audit Log | Immutable record of every flag change, who made it, when, and what the previous value was |
-| 7 | Segments | Define reusable groups of users (e.g., "Beta Testers", "Enterprise Customers") and target flags to segments |
-| 8 | Scheduled Rollouts | Schedule flag state changes for a future date/time (e.g., launch at midnight) |
-| 9 | Flag Dependencies | Define prerequisite flags — flag B only evaluates if flag A is enabled |
-| 10 | Webhooks & Integrations | Notify external systems (Slack, Datadog, CI/CD) when flags change |
-| 11 | SDK Support | Provide server-side SDKs (Node, Python, Go, Java) and client-side SDKs (JavaScript, React, iOS, Android) |
-| 12 | Multi-Environment | Separate flag configurations for development, staging, and production environments |
+| #   | Requirement                   | Description                                                                                                          |
+| --- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1   | Flag Creation & Management    | Create boolean, string, number, and JSON multivariate flags with default values per environment                      |
+| 2   | Targeting Rules               | Evaluate flags against user attributes (email, country, plan, custom attributes) with AND/OR conditions              |
+| 3   | Percentage Rollout            | Gradually roll out a flag to a percentage of users with consistent assignment (same user always sees the same value) |
+| 4   | A/B Testing / Experimentation | Assign users to experiment variants, track events, and calculate statistical significance                            |
+| 5   | Kill Switch                   | Instantly disable a flag globally across all environments and SDKs within seconds                                    |
+| 6   | Audit Log                     | Immutable record of every flag change, who made it, when, and what the previous value was                            |
+| 7   | Segments                      | Define reusable groups of users (e.g., "Beta Testers", "Enterprise Customers") and target flags to segments          |
+| 8   | Scheduled Rollouts            | Schedule flag state changes for a future date/time (e.g., launch at midnight)                                        |
+| 9   | Flag Dependencies             | Define prerequisite flags — flag B only evaluates if flag A is enabled                                               |
+| 10  | Webhooks & Integrations       | Notify external systems (Slack, Datadog, CI/CD) when flags change                                                    |
+| 11  | SDK Support                   | Provide server-side SDKs (Node, Python, Go, Java) and client-side SDKs (JavaScript, React, iOS, Android)             |
+| 12  | Multi-Environment             | Separate flag configurations for development, staging, and production environments                                   |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Flag evaluation latency (server-side SDK) | < 1ms (local evaluation, no network call) |
-| 2 | Flag evaluation latency (client-side SDK) | < 10ms (bootstrap from cache, then streaming updates) |
-| 3 | Flag update propagation | < 500ms from save to all connected SDKs |
-| 4 | Availability | 99.99% (< 52.6 min downtime/year) |
-| 5 | SDK resilience | Graceful degradation to cached/default values when service is unreachable |
-| 6 | Consistency | Same user always gets same flag value for a given flag configuration (sticky bucketing) |
-| 7 | Scalability | 100K connected SDKs, 1B flag evaluations/day |
-| 8 | Audit retention | 2 years hot, 7 years cold storage |
-| 9 | Security | RBAC on projects/environments, API key scoping, no PII in flag rules |
-| 10 | Multi-tenancy | Isolated projects per team with separate API keys and permissions |
+| #   | Requirement                               | Target                                                                                  |
+| --- | ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| 1   | Flag evaluation latency (server-side SDK) | < 1ms (local evaluation, no network call)                                               |
+| 2   | Flag evaluation latency (client-side SDK) | < 10ms (bootstrap from cache, then streaming updates)                                   |
+| 3   | Flag update propagation                   | < 500ms from save to all connected SDKs                                                 |
+| 4   | Availability                              | 99.99% (< 52.6 min downtime/year)                                                       |
+| 5   | SDK resilience                            | Graceful degradation to cached/default values when service is unreachable               |
+| 6   | Consistency                               | Same user always gets same flag value for a given flag configuration (sticky bucketing) |
+| 7   | Scalability                               | 100K connected SDKs, 1B flag evaluations/day                                            |
+| 8   | Audit retention                           | 2 years hot, 7 years cold storage                                                       |
+| 9   | Security                                  | RBAC on projects/environments, API key scoping, no PII in flag rules                    |
+| 10  | Multi-tenancy                             | Isolated projects per team with separate API keys and permissions                       |
 
 ### Capacity Estimation
 
@@ -129,6 +129,7 @@ GET    /api/v1/projects/{projectId}/flags/{flagKey}/audit
 ```
 
 **POST /api/v1/projects/{projectId}/flags Request:**
+
 ```json
 {
   "key": "new-checkout-flow",
@@ -138,7 +139,11 @@ GET    /api/v1/projects/{projectId}/flags/{flagKey}/audit
   "flagType": "boolean",
   "variations": [
     { "value": true, "name": "Enabled", "description": "Show new checkout" },
-    { "value": false, "name": "Disabled", "description": "Show legacy checkout" }
+    {
+      "value": false,
+      "name": "Disabled",
+      "description": "Show legacy checkout"
+    }
   ],
   "defaults": {
     "onVariation": 0,
@@ -149,6 +154,7 @@ GET    /api/v1/projects/{projectId}/flags/{flagKey}/audit
 ```
 
 **PATCH /api/v1/projects/{projectId}/flags/{flagKey}/environments/{envKey} Request:**
+
 ```json
 {
   "enabled": true,
@@ -163,9 +169,7 @@ GET    /api/v1/projects/{projectId}/flags/{flagKey}/audit
         }
       ],
       "rollout": {
-        "variations": [
-          { "variation": 0, "weight": 100000 }
-        ]
+        "variations": [{ "variation": 0, "weight": 100000 }]
       }
     },
     {
@@ -197,6 +201,7 @@ DELETE /api/v1/projects/{projectId}/segments/{segKey}   Delete segment
 ```
 
 **POST /api/v1/projects/{projectId}/segments Request:**
+
 ```json
 {
   "key": "beta-testers",
@@ -210,7 +215,11 @@ DELETE /api/v1/projects/{projectId}/segments/{segKey}   Delete segment
     },
     {
       "clauses": [
-        { "attribute": "plan", "op": "in", "values": ["enterprise", "business"] },
+        {
+          "attribute": "plan",
+          "op": "in",
+          "values": ["enterprise", "business"]
+        },
         { "attribute": "betaOptIn", "op": "eq", "values": [true] }
       ]
     }
@@ -254,6 +263,7 @@ POST   /sdk/v1/events/client
 ```
 
 **GET /sdk/v1/flags/{envKey} Response:**
+
 ```json
 {
   "flags": {
@@ -265,7 +275,11 @@ POST   /sdk/v1/events/client
       "rules": [
         {
           "clauses": [
-            { "attribute": "segment", "op": "segmentMatch", "values": ["beta-testers"] }
+            {
+              "attribute": "segment",
+              "op": "segmentMatch",
+              "values": ["beta-testers"]
+            }
           ],
           "rollout": { "variations": [{ "variation": 0, "weight": 100000 }] }
         },
@@ -293,7 +307,11 @@ POST   /sdk/v1/events/client
       "rules": [
         {
           "clauses": [
-            { "attribute": "email", "op": "endsWith", "values": ["@company.com"] }
+            {
+              "attribute": "email",
+              "op": "endsWith",
+              "values": ["@company.com"]
+            }
           ]
         }
       ]
@@ -499,9 +517,7 @@ TTL:     None (entries expire via score-based cleanup)
       }
     ],
     "rollout": {
-      "variations": [
-        { "variation": 0, "weight": 100000 }
-      ]
+      "variations": [{ "variation": 0, "weight": 100000 }]
     }
   },
   {
@@ -799,15 +815,15 @@ Key property: Changing the rollout from 30% → 50% only ADDS users.
 
 ### Evaluation Reason Codes
 
-| Reason | Description |
-|--------|-------------|
-| `FLAG_NOT_FOUND` | Flag key does not exist in the configuration |
-| `FLAG_DISABLED` | Flag is toggled off; returns off variation |
+| Reason                | Description                                          |
+| --------------------- | ---------------------------------------------------- |
+| `FLAG_NOT_FOUND`      | Flag key does not exist in the configuration         |
+| `FLAG_DISABLED`       | Flag is toggled off; returns off variation           |
 | `PREREQUISITE_FAILED` | A prerequisite flag did not match expected variation |
-| `TARGET_MATCH` | User matched an individual targeting list |
-| `RULE_MATCH` | User matched a targeting rule |
-| `FALLTHROUGH` | No rules matched; default variation used |
-| `ERROR` | Evaluation error; returns application default |
+| `TARGET_MATCH`        | User matched an individual targeting list            |
+| `RULE_MATCH`          | User matched a targeting rule                        |
+| `FALLTHROUGH`         | No rules matched; default variation used             |
+| `ERROR`               | Evaluation error; returns application default        |
 
 ---
 
@@ -846,21 +862,21 @@ Key property: Changing the rollout from 30% → 50% only ADDS users.
 
 ### Supported Operators
 
-| Operator | Type | Description | Example |
-|----------|------|-------------|---------|
-| `in` | String, Number | Exact match in list | `country in ["US", "CA"]` |
-| `notIn` | String, Number | Not in list | `plan notIn ["free"]` |
-| `endsWith` | String | String suffix match | `email endsWith ["@company.com"]` |
-| `startsWith` | String | String prefix match | `email startsWith ["admin"]` |
-| `contains` | String | Substring match | `userAgent contains ["Mobile"]` |
-| `regex` | String | Regular expression | `email regex ["^test.*@example"]` |
-| `greaterThan` | Number | Numeric comparison | `age greaterThan 18` |
-| `lessThan` | Number | Numeric comparison | `loginCount lessThan 5` |
-| `before` | Date | Date comparison | `signupDate before "2026-01-01"` |
-| `after` | Date | Date comparison | `signupDate after "2025-06-01"` |
-| `semVerEqual` | SemVer | Semantic version eq | `appVersion semVerEqual "2.1.0"` |
-| `semVerGreaterThan` | SemVer | Semantic version gt | `appVersion semVerGreaterThan "2.0.0"` |
-| `segmentMatch` | Segment | User is in segment | `segment segmentMatch ["beta-testers"]` |
+| Operator            | Type           | Description         | Example                                 |
+| ------------------- | -------------- | ------------------- | --------------------------------------- |
+| `in`                | String, Number | Exact match in list | `country in ["US", "CA"]`               |
+| `notIn`             | String, Number | Not in list         | `plan notIn ["free"]`                   |
+| `endsWith`          | String         | String suffix match | `email endsWith ["@company.com"]`       |
+| `startsWith`        | String         | String prefix match | `email startsWith ["admin"]`            |
+| `contains`          | String         | Substring match     | `userAgent contains ["Mobile"]`         |
+| `regex`             | String         | Regular expression  | `email regex ["^test.*@example"]`       |
+| `greaterThan`       | Number         | Numeric comparison  | `age greaterThan 18`                    |
+| `lessThan`          | Number         | Numeric comparison  | `loginCount lessThan 5`                 |
+| `before`            | Date           | Date comparison     | `signupDate before "2026-01-01"`        |
+| `after`             | Date           | Date comparison     | `signupDate after "2025-06-01"`         |
+| `semVerEqual`       | SemVer         | Semantic version eq | `appVersion semVerEqual "2.1.0"`        |
+| `semVerGreaterThan` | SemVer         | Semantic version gt | `appVersion semVerGreaterThan "2.0.0"`  |
+| `segmentMatch`      | Segment        | User is in segment  | `segment segmentMatch ["beta-testers"]` |
 
 ### Segment-Based Targeting
 
@@ -890,6 +906,7 @@ Evaluation:
 ### Percentage Rollout Strategies
 
 **Simple Percentage Rollout:**
+
 ```json
 {
   "description": "Gradual rollout to 25% of users",
@@ -905,12 +922,11 @@ Evaluation:
 ```
 
 **Targeted Percentage Rollout:**
+
 ```json
 {
   "description": "50% of enterprise users get new feature",
-  "clauses": [
-    { "attribute": "plan", "op": "in", "values": ["enterprise"] }
-  ],
+  "clauses": [{ "attribute": "plan", "op": "in", "values": ["enterprise"] }],
   "rollout": {
     "variations": [
       { "variation": 0, "weight": 50000 },
@@ -922,6 +938,7 @@ Evaluation:
 ```
 
 **Canary Release Pattern (multi-rule):**
+
 ```json
 {
   "rules": [
@@ -936,9 +953,7 @@ Evaluation:
     },
     {
       "description": "Step 2: 5% canary to pro users",
-      "clauses": [
-        { "attribute": "plan", "op": "in", "values": ["pro"] }
-      ],
+      "clauses": [{ "attribute": "plan", "op": "in", "values": ["pro"] }],
       "rollout": {
         "variations": [
           { "variation": 0, "weight": 5000 },
@@ -1012,10 +1027,10 @@ import { FeatureFlagClient } from '@flags/node-sdk';
 const client = FeatureFlagClient.init({
   sdkKey: 'sdk-prod-xxxx',
   baseUrl: 'https://flags.example.com',
-  updateMode: 'streaming',       // 'streaming' | 'polling'
-  pollingInterval: 30_000,       // fallback polling interval (ms)
+  updateMode: 'streaming', // 'streaming' | 'polling'
+  pollingInterval: 30_000, // fallback polling interval (ms)
   connectTimeout: 5_000,
-  flushInterval: 5_000,          // event flush interval (ms)
+  flushInterval: 5_000, // event flush interval (ms)
   flushBatchSize: 500,
   offlineMode: false,
 });
@@ -1038,15 +1053,11 @@ const user = {
 const showNewCheckout = client.boolVariation(
   'new-checkout-flow',
   user,
-  false  // default value if flag not found
+  false // default value if flag not found
 );
 
 // Get evaluation details for debugging
-const detail = client.boolVariationDetail(
-  'new-checkout-flow',
-  user,
-  false
-);
+const detail = client.boolVariationDetail('new-checkout-flow', user, false);
 // detail = {
 //   value: true,
 //   variationIndex: 0,
@@ -1061,7 +1072,7 @@ client.track('checkout_completed', user, {
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  await client.close();  // Flushes pending events, closes SSE
+  await client.close(); // Flushes pending events, closes SSE
 });
 ```
 
@@ -1110,7 +1121,7 @@ function App() {
       clientId="client-prod-xxxx"
       user={userContext}
       options={{
-        bootstrap: 'localStorage',  // Use cached values while loading
+        bootstrap: 'localStorage', // Use cached values while loading
         streaming: true,
       }}
     >
@@ -1125,23 +1136,21 @@ function CheckoutPage() {
 
   if (loading) return <Skeleton />;
 
-  return showNewCheckout
-    ? <NewCheckoutFlow />
-    : <LegacyCheckoutFlow />;
+  return showNewCheckout ? <NewCheckoutFlow /> : <LegacyCheckoutFlow />;
 }
 ```
 
 ### Local Evaluation vs. Remote Evaluation
 
-| Aspect | Local (Server-Side SDK) | Remote (Client-Side SDK) |
-|--------|------------------------|--------------------------|
-| Where rules execute | In-process (SDK) | On the flag service |
-| Data sent to SDK | Full ruleset + segments | Pre-evaluated values only |
-| Latency | < 1ms | Network RTT + evaluation |
-| Security | Rules visible in process memory | Rules never leave server |
-| Network dependency | Only for updates | Every evaluation (or cached) |
-| Use case | Backend services | Browsers, mobile apps |
-| Offline support | Full (uses cached rules) | Partial (uses cached values) |
+| Aspect              | Local (Server-Side SDK)         | Remote (Client-Side SDK)     |
+| ------------------- | ------------------------------- | ---------------------------- |
+| Where rules execute | In-process (SDK)                | On the flag service          |
+| Data sent to SDK    | Full ruleset + segments         | Pre-evaluated values only    |
+| Latency             | < 1ms                           | Network RTT + evaluation     |
+| Security            | Rules visible in process memory | Rules never leave server     |
+| Network dependency  | Only for updates                | Every evaluation (or cached) |
+| Use case            | Backend services                | Browsers, mobile apps        |
+| Offline support     | Full (uses cached rules)        | Partial (uses cached values) |
 
 ### Caching Strategy
 
@@ -1360,13 +1369,13 @@ class UpdateProcessor {
 
 ### Consistency Guarantees
 
-| Guarantee | Mechanism |
-|-----------|-----------|
-| Ordering | Monotonic version numbers; SDK rejects updates with version <= current |
-| Atomicity | Full flag config updated as single JSON document; no partial states |
-| Delivery | SSE with automatic reconnection + polling fallback |
-| Convergence | Version-based: SDK fetches full config if version gap detected |
-| Consistency window | < 500ms typical (Redis Pub/Sub + SSE); < 30s worst case (polling) |
+| Guarantee          | Mechanism                                                              |
+| ------------------ | ---------------------------------------------------------------------- |
+| Ordering           | Monotonic version numbers; SDK rejects updates with version <= current |
+| Atomicity          | Full flag config updated as single JSON document; no partial states    |
+| Delivery           | SSE with automatic reconnection + polling fallback                     |
+| Convergence        | Version-based: SDK fetches full config if version gap detected         |
+| Consistency window | < 500ms typical (Redis Pub/Sub + SSE); < 30s worst case (polling)      |
 
 ---
 
@@ -2021,15 +2030,15 @@ Optimization Strategy:
 
 ### Horizontal Scaling Plan
 
-| Component | Scaling Strategy | Instances |
-|-----------|-----------------|-----------|
-| Flag Management API | Stateless, behind LB | 3-6 per region |
-| SDK Service | Stateless, behind LB | 6-12 per region |
-| SSE Gateway | Stateful (connections), shard by env key | 10-15 per region |
-| PostgreSQL | Primary + read replicas | 1 primary + 2 replicas |
-| Redis Cluster | Sharded by environment key | 6 shards, 3 replicas each |
-| Event Collector | Stateless, auto-scaling | 3-10 per region |
-| ClickHouse | Sharded by time | 3-node cluster |
+| Component           | Scaling Strategy                         | Instances                 |
+| ------------------- | ---------------------------------------- | ------------------------- |
+| Flag Management API | Stateless, behind LB                     | 3-6 per region            |
+| SDK Service         | Stateless, behind LB                     | 6-12 per region           |
+| SSE Gateway         | Stateful (connections), shard by env key | 10-15 per region          |
+| PostgreSQL          | Primary + read replicas                  | 1 primary + 2 replicas    |
+| Redis Cluster       | Sharded by environment key               | 6 shards, 3 replicas each |
+| Event Collector     | Stateless, auto-scaling                  | 3-10 per region           |
+| ClickHouse          | Sharded by time                          | 3-node cluster            |
 
 ---
 
@@ -2186,28 +2195,28 @@ Anonymous users need stable identifiers for consistent bucketing. The approach: 
 
 ### Key Architecture Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Evaluation location | Local (in SDK) for server-side; server-evaluated for client-side | Sub-millisecond latency; no network dependency for hot path |
-| Update propagation | SSE streaming with polling fallback | Real-time updates (< 500ms); works through firewalls |
-| Consistency model | Deterministic hashing (no stored state) | Same user always gets same value; no per-user storage; O(1) evaluation |
-| Rule storage | JSON in PostgreSQL | Flexible schema for rules; ACID for flag changes; good enough for write volume |
-| Caching | Redis for config + CDN for client bootstrap | Config fits in memory; CDN offloads client traffic |
-| Event pipeline | Kafka + ClickHouse | High-throughput event ingestion; fast analytical queries for experiment results |
-| Multi-environment | Separate config per environment, shared flag definition | Isolation prevents cross-environment incidents; promotion workflow for consistency |
-| Client-side security | Server-evaluated values only (no rules exposed) | Prevents exposing targeting logic, segments, and rollout percentages |
+| Decision             | Choice                                                           | Rationale                                                                          |
+| -------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Evaluation location  | Local (in SDK) for server-side; server-evaluated for client-side | Sub-millisecond latency; no network dependency for hot path                        |
+| Update propagation   | SSE streaming with polling fallback                              | Real-time updates (< 500ms); works through firewalls                               |
+| Consistency model    | Deterministic hashing (no stored state)                          | Same user always gets same value; no per-user storage; O(1) evaluation             |
+| Rule storage         | JSON in PostgreSQL                                               | Flexible schema for rules; ACID for flag changes; good enough for write volume     |
+| Caching              | Redis for config + CDN for client bootstrap                      | Config fits in memory; CDN offloads client traffic                                 |
+| Event pipeline       | Kafka + ClickHouse                                               | High-throughput event ingestion; fast analytical queries for experiment results    |
+| Multi-environment    | Separate config per environment, shared flag definition          | Isolation prevents cross-environment incidents; promotion workflow for consistency |
+| Client-side security | Server-evaluated values only (no rules exposed)                  | Prevents exposing targeting logic, segments, and rollout percentages               |
 
 ### Trade-offs
 
-| Decision | Option A | Option B | Recommendation |
-|----------|----------|----------|----------------|
-| Local vs. remote evaluation | Local (full rules in SDK) | Remote (server evaluates per request) | Local for server SDKs (performance); remote for client SDKs (security) |
-| SSE vs. WebSocket | SSE (unidirectional, HTTP-based) | WebSocket (bidirectional) | SSE — simpler, works through HTTP proxies/CDNs, unidirectional is sufficient for flag updates |
-| Polling interval | Short (5s) — faster updates | Long (60s) — less server load | 30s default with SSE as primary; polling is fallback only |
-| Flag storage format | Relational (normalized tables) | Document (JSON blob per flag) | Hybrid — relational for metadata/search, JSON for rules (flexible schema) |
-| Consistency on rollout change | Repartition all users | Monotonic expansion only | Monotonic — increasing rollout never moves users out of treatment group |
-| Client-side bootstrap | Network fetch | localStorage cache | localStorage first (instant), then SSE stream for updates (no flash of wrong content) |
-| Experiment assignment | Real-time (on evaluation) | Pre-computed (batch) | Real-time — no batch job dependency; deterministic hash is O(1) |
-| Stale flag cleanup | Manual | Automated removal | Semi-automated — detect and notify automatically, require human approval to remove |
-| Multi-region config | Single primary, async replicate | Multi-primary with conflict resolution | Single primary — flag changes are low-volume; avoid conflict resolution complexity |
-| Audit log storage | Same DB (PostgreSQL) | Dedicated append-only store | Same DB for volume under 10K changes/day; separate store (e.g., S3 + Athena) for compliance archive |
+| Decision                      | Option A                         | Option B                               | Recommendation                                                                                      |
+| ----------------------------- | -------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Local vs. remote evaluation   | Local (full rules in SDK)        | Remote (server evaluates per request)  | Local for server SDKs (performance); remote for client SDKs (security)                              |
+| SSE vs. WebSocket             | SSE (unidirectional, HTTP-based) | WebSocket (bidirectional)              | SSE — simpler, works through HTTP proxies/CDNs, unidirectional is sufficient for flag updates       |
+| Polling interval              | Short (5s) — faster updates      | Long (60s) — less server load          | 30s default with SSE as primary; polling is fallback only                                           |
+| Flag storage format           | Relational (normalized tables)   | Document (JSON blob per flag)          | Hybrid — relational for metadata/search, JSON for rules (flexible schema)                           |
+| Consistency on rollout change | Repartition all users            | Monotonic expansion only               | Monotonic — increasing rollout never moves users out of treatment group                             |
+| Client-side bootstrap         | Network fetch                    | localStorage cache                     | localStorage first (instant), then SSE stream for updates (no flash of wrong content)               |
+| Experiment assignment         | Real-time (on evaluation)        | Pre-computed (batch)                   | Real-time — no batch job dependency; deterministic hash is O(1)                                     |
+| Stale flag cleanup            | Manual                           | Automated removal                      | Semi-automated — detect and notify automatically, require human approval to remove                  |
+| Multi-region config           | Single primary, async replicate  | Multi-primary with conflict resolution | Single primary — flag changes are low-volume; avoid conflict resolution complexity                  |
+| Audit log storage             | Same DB (PostgreSQL)             | Dedicated append-only store            | Same DB for volume under 10K changes/day; separate store (e.g., S3 + Athena) for compliance archive |

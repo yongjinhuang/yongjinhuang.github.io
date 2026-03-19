@@ -10,11 +10,11 @@ Amazon EventBridge is a serverless event bus that connects applications using ev
 
 An event bus receives events and routes them to targets based on rules.
 
-| Bus Type | Description |
-|---|---|
+| Bus Type    | Description                                                                 |
+| ----------- | --------------------------------------------------------------------------- |
 | **Default** | Every AWS account has one. Receives events from AWS services automatically. |
-| **Custom** | You create these for your application events. Isolate event domains. |
-| **Partner** | Receive events from SaaS providers (Datadog, Auth0, Shopify, etc.) |
+| **Custom**  | You create these for your application events. Isolate event domains.        |
+| **Partner** | Receive events from SaaS providers (Datadog, Auth0, Shopify, etc.)          |
 
 You can have multiple custom buses to separate concerns (e.g., `orders-bus`, `payments-bus`).
 
@@ -56,7 +56,7 @@ Rules match incoming events and route them to one or more targets.
   "source": ["com.myapp.orders"],
   "detail-type": ["OrderPlaced"],
   "detail": {
-    "total": [{"numeric": [">=", 100]}]
+    "total": [{ "numeric": [">=", 100] }]
   }
 }
 ```
@@ -83,19 +83,19 @@ Pattern matching supports: exact values, prefix, numeric comparisons, IP address
 
 A rule can have up to **5 targets**. Each target receives the matched event.
 
-| Target | Common Use |
-|---|---|
-| Lambda | Serverless event processing |
-| SQS | Buffer events for async processing |
-| SNS | Fan-out to multiple subscribers |
-| Step Functions | Start a workflow |
-| API Gateway | Trigger an API endpoint |
-| ECS Task | Run a container |
-| Kinesis Data Stream | Stream processing |
-| CodePipeline | Trigger deployments |
-| CloudWatch Log Group | Event logging/debugging |
-| Another Event Bus | Cross-account or cross-region routing |
-| Redshift, Batch, Inspector, Systems Manager, Incident Manager | Various AWS service integrations |
+| Target                                                        | Common Use                            |
+| ------------------------------------------------------------- | ------------------------------------- |
+| Lambda                                                        | Serverless event processing           |
+| SQS                                                           | Buffer events for async processing    |
+| SNS                                                           | Fan-out to multiple subscribers       |
+| Step Functions                                                | Start a workflow                      |
+| API Gateway                                                   | Trigger an API endpoint               |
+| ECS Task                                                      | Run a container                       |
+| Kinesis Data Stream                                           | Stream processing                     |
+| CodePipeline                                                  | Trigger deployments                   |
+| CloudWatch Log Group                                          | Event logging/debugging               |
+| Another Event Bus                                             | Cross-account or cross-region routing |
+| Redshift, Batch, Inspector, Systems Manager, Incident Manager | Various AWS service integrations      |
 
 ### Input Transformation
 
@@ -217,13 +217,13 @@ aws scheduler create-schedule \
 
 ### Choreography vs Orchestration
 
-| | Choreography | Orchestration |
-|---|---|---|
-| Coordination | Services react to events independently | Central coordinator (Step Functions) manages flow |
-| Coupling | Very loose | Tighter (coordinator knows the steps) |
-| Visibility | Harder to trace end-to-end flow | Easy to see full workflow in state machine |
-| Error handling | Each service handles its own errors | Coordinator handles retries, compensation |
-| Best for | Loosely coupled microservices | Complex multi-step workflows with error handling |
+|                | Choreography                           | Orchestration                                     |
+| -------------- | -------------------------------------- | ------------------------------------------------- |
+| Coordination   | Services react to events independently | Central coordinator (Step Functions) manages flow |
+| Coupling       | Very loose                             | Tighter (coordinator knows the steps)             |
+| Visibility     | Harder to trace end-to-end flow        | Easy to see full workflow in state machine        |
+| Error handling | Each service handles its own errors    | Coordinator handles retries, compensation         |
+| Best for       | Loosely coupled microservices          | Complex multi-step workflows with error handling  |
 
 **Choreography** (EventBridge): OrderPlaced event published. Inventory service, payment service, notification service each react independently.
 

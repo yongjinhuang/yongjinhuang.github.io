@@ -20,11 +20,13 @@ skeletons where applicable.
 ### Q1: What is a race condition? Give an example.
 
 **Key Points:**
+
 - A race condition occurs when the outcome depends on the timing/ordering of thread execution
 - Happens when multiple threads access shared data and at least one writes
 - The result is non-deterministic
 
 **Answer Framework:**
+
 ```python
 # Classic race condition: check-then-act
 class BrokenCounter:
@@ -41,6 +43,7 @@ class BrokenCounter:
 ```
 
 **Follow-ups:**
+
 - How do you fix it? (Lock, atomic operations)
 - Is `list.append()` in Python thread-safe? (Yes, due to GIL, but do not rely on it)
 - What is a TOCTOU race condition? (Time-of-check to time-of-use)
@@ -50,11 +53,13 @@ class BrokenCounter:
 ### Q2: What is the difference between a process and a thread?
 
 **Key Points:**
+
 - Process: separate memory space, heavier, isolated
 - Thread: shared memory space within a process, lighter, needs synchronization
 - Processes communicate via IPC, threads via shared memory
 
 **Follow-ups:**
+
 - When would you use processes over threads? (CPU-bound in Python, need isolation)
 - What is a daemon thread? (Killed when main thread exits)
 
@@ -63,11 +68,13 @@ class BrokenCounter:
 ### Q3: What is a mutex and when do you use one?
 
 **Key Points:**
+
 - Mutual exclusion lock: only one thread can hold it at a time
 - Protects critical sections (shared mutable state)
 - Always use with context manager (`with lock:`) for safety
 
 **Answer Framework:**
+
 ```python
 import threading
 
@@ -80,6 +87,7 @@ def safe_append(item):
 ```
 
 **Follow-ups:**
+
 - What is the difference between a mutex and a semaphore? (Ownership, count)
 - What is a reentrant lock? (Same thread can acquire multiple times)
 
@@ -88,12 +96,14 @@ def safe_append(item):
 ### Q4: What is the GIL in Python?
 
 **Key Points:**
+
 - Global Interpreter Lock in CPython allows only one thread to execute Python bytecode
 - Exists because CPython's memory management is not thread-safe
 - Threads still useful for I/O-bound work (GIL released during I/O)
 - Bypass with multiprocessing, C extensions, or asyncio
 
 **Follow-ups:**
+
 - Does the GIL mean Python threads are useless? (No, I/O-bound work benefits)
 - How does Go avoid this problem? (No GIL, goroutines are truly parallel)
 - Will the GIL be removed? (PEP 703 is working on a free-threaded Python)
@@ -103,12 +113,14 @@ def safe_append(item):
 ### Q5: What is the difference between concurrency and parallelism?
 
 **Key Points:**
+
 - Concurrency: dealing with multiple things at once (structure)
 - Parallelism: doing multiple things at once (execution)
 - You can have concurrency without parallelism (single core)
 - Rob Pike: "Concurrency is about dealing with lots of things. Parallelism is about doing."
 
 **Follow-ups:**
+
 - Give an example of concurrency without parallelism (single-core multitasking)
 - Give an example of parallelism without concurrency (SIMD instructions)
 
@@ -117,11 +129,13 @@ def safe_append(item):
 ### Q6: What is a deadlock?
 
 **Key Points:**
+
 - Two or more threads are blocked forever, each waiting for the other to release a resource
 - Requires all four Coffman conditions: mutual exclusion, hold-and-wait, no preemption,
   circular wait
 
 **Answer Framework:**
+
 ```python
 # Deadlock: Thread 1 holds A, waits for B
 #           Thread 2 holds B, waits for A
@@ -140,6 +154,7 @@ def thread_2():
 ```
 
 **Follow-ups:**
+
 - How do you prevent deadlock? (Lock ordering, timeout, all-or-nothing)
 - How do you detect deadlock? (Wait-for graph, cycle detection)
 
@@ -148,11 +163,13 @@ def thread_2():
 ### Q7: What is a semaphore?
 
 **Key Points:**
+
 - Counter-based synchronization primitive
 - Binary semaphore (0/1): similar to mutex but no ownership
 - Counting semaphore (0..N): limits concurrent access to N
 
 **Answer Framework:**
+
 ```python
 # Limit to 5 concurrent database connections
 semaphore = threading.Semaphore(5)
@@ -163,6 +180,7 @@ def query_db():
 ```
 
 **Follow-ups:**
+
 - Difference between semaphore and mutex? (Ownership, count)
 - What is a BoundedSemaphore? (Prevents over-release)
 
@@ -171,6 +189,7 @@ def query_db():
 ### Q8: What is the difference between `notify()` and `notify_all()`?
 
 **Key Points:**
+
 - `notify()`: wakes ONE waiting thread (arbitrary)
 - `notify_all()`: wakes ALL waiting threads
 - Use `notify_all()` when multiple threads wait for different conditions on the same
@@ -178,6 +197,7 @@ def query_db():
 - Use `notify()` when any one waiter can handle the event (slightly more efficient)
 
 **Follow-ups:**
+
 - Why must you use a while loop with `wait()`? (Spurious wakeups)
 - When is `notify()` safe vs. `notify_all()`?
 
@@ -186,12 +206,14 @@ def query_db():
 ### Q9: What is a condition variable?
 
 **Key Points:**
+
 - Allows threads to wait for a specific condition to become true
 - Always used with a lock
 - `wait()` atomically releases the lock and suspends the thread
 - `notify()` wakes waiting threads, which then re-acquire the lock
 
 **Answer Framework:**
+
 ```python
 condition = threading.Condition()
 queue = []
@@ -209,6 +231,7 @@ def producer(item):
 ```
 
 **Follow-ups:**
+
 - Why `while` instead of `if`? (Spurious wakeups, multiple waiters)
 - How does this relate to the producer-consumer pattern?
 
@@ -217,11 +240,13 @@ def producer(item):
 ### Q10: What is thread-local storage?
 
 **Key Points:**
+
 - Each thread gets its own copy of a variable
 - No synchronization needed (each copy is independent)
 - Used for per-thread state: database connections, request context
 
 **Answer Framework:**
+
 ```python
 import threading
 
@@ -233,6 +258,7 @@ def worker():
 ```
 
 **Follow-ups:**
+
 - When would you use thread-local vs. passing context explicitly?
 - How does this work with async code? (contextvars module in Python)
 
@@ -243,11 +269,13 @@ def worker():
 ### Q11: Implement a thread-safe singleton.
 
 **Key Points:**
+
 - Naive check-then-create has a race condition
 - Double-checked locking: check without lock, then with lock
 - In Python, module-level instance is simplest (import lock is thread-safe)
 
 **Code Skeleton:**
+
 ```python
 import threading
 
@@ -265,6 +293,7 @@ class Singleton:
 ```
 
 **Follow-ups:**
+
 - Why is double-checked locking broken in Java without volatile?
 - What is the Pythonic way? (Module-level instance, `__new__` override)
 
@@ -273,11 +302,13 @@ class Singleton:
 ### Q12: Design a thread-safe blocking queue.
 
 **Key Points:**
+
 - `put()` blocks when full, `get()` blocks when empty
 - Use two condition variables: not_full, not_empty
 - Always use while loop for condition checks
 
 **Code Skeleton:**
+
 ```python
 class BlockingQueue:
     def __init__(self, capacity):
@@ -304,6 +335,7 @@ class BlockingQueue:
 ```
 
 **Follow-ups:**
+
 - How would you add timeout support?
 - How would you add a `close()` method for graceful shutdown?
 
@@ -312,6 +344,7 @@ class BlockingQueue:
 ### Q13: What causes deadlock and how do you prevent it?
 
 **Key Points:**
+
 - Four Coffman conditions (all required): mutual exclusion, hold-and-wait, no preemption,
   circular wait
 - Prevention: break any one condition
@@ -321,6 +354,7 @@ class BlockingQueue:
 - Detection: wait-for graph with cycle detection
 
 **Follow-ups:**
+
 - What is the difference between deadlock prevention and avoidance?
 - Explain the Banker's Algorithm
 - How do databases handle deadlocks? (Detect + abort victim)
@@ -330,11 +364,13 @@ class BlockingQueue:
 ### Q14: Explain the difference between optimistic and pessimistic locking.
 
 **Key Points:**
+
 - Pessimistic: lock before reading (SELECT FOR UPDATE), safe but slow
 - Optimistic: read freely, check version at write time, retry on conflict
 - Pessimistic for high contention, optimistic for low contention
 
 **Follow-ups:**
+
 - How do you implement optimistic locking in a REST API? (ETags, If-Match)
 - What happens under high contention with optimistic locking? (Many retries, livelock risk)
 
@@ -343,12 +379,14 @@ class BlockingQueue:
 ### Q15: What is the async/await pattern and how does it work?
 
 **Key Points:**
+
 - `async def` declares a coroutine, `await` yields control to the event loop
 - Event loop uses OS I/O multiplexing (epoll/kqueue) to monitor many sockets with one thread
 - Cooperative multitasking: coroutines explicitly yield at await points
 - Blocking calls (time.sleep, synchronous I/O) freeze the event loop
 
 **Follow-ups:**
+
 - How is asyncio different from threading? (Single thread, cooperative vs preemptive)
 - What is structured concurrency? (TaskGroup, tasks cannot outlive their scope)
 - How do you call blocking code from async? (run_in_executor)
@@ -358,6 +396,7 @@ class BlockingQueue:
 ### Q16: Explain Go's goroutines and channels.
 
 **Key Points:**
+
 - Goroutines: lightweight threads (2KB stack), M:N scheduled by Go runtime
 - Channels: typed conduits for communication between goroutines
 - Unbuffered channel: synchronous handshake (sender blocks until receiver ready)
@@ -365,6 +404,7 @@ class BlockingQueue:
 - Philosophy: "Share memory by communicating"
 
 **Follow-ups:**
+
 - What is the select statement? (Multiplex channel operations)
 - How do you prevent goroutine leaks? (Context cancellation)
 - What is the difference between sync.Mutex and channels? (When to use each)
@@ -374,6 +414,7 @@ class BlockingQueue:
 ### Q17: What is priority inversion and how do you fix it?
 
 **Key Points:**
+
 - High-priority thread blocked by low-priority thread, while medium-priority thread runs
 - Effectively inverts the priority ordering
 - Fix 1: Priority inheritance (boost low-priority thread's priority)
@@ -381,6 +422,7 @@ class BlockingQueue:
 - Real-world: Mars Pathfinder bug (1997)
 
 **Follow-ups:**
+
 - Can priority inversion happen in user-space schedulers?
 - What is the priority ceiling protocol?
 
@@ -389,12 +431,14 @@ class BlockingQueue:
 ### Q18: How does the event loop handle I/O internally?
 
 **Key Points:**
+
 - Uses OS-level I/O multiplexing: epoll (Linux), kqueue (macOS), IOCP (Windows)
 - One thread can monitor thousands of file descriptors simultaneously
 - When I/O completes, the corresponding coroutine is moved to the ready queue
 - No thread per connection, very low memory overhead
 
 **Follow-ups:**
+
 - What is the C10K problem? (Handling 10K concurrent connections)
 - Why can a single-threaded event loop outperform multithreaded servers for I/O?
 
@@ -403,6 +447,7 @@ class BlockingQueue:
 ### Q19: What is a livelock?
 
 **Key Points:**
+
 - Threads are not blocked but cannot make progress
 - They repeatedly respond to each other (like two people in a hallway stepping aside
   in sync)
@@ -410,6 +455,7 @@ class BlockingQueue:
 - Fix: random backoff to desynchronize
 
 **Code Skeleton:**
+
 ```python
 # Livelock: both threads keep yielding to each other
 def thread_1():
@@ -424,6 +470,7 @@ def thread_1():
 ```
 
 **Follow-ups:**
+
 - How is livelock different from starvation?
 - How do you detect livelock? (Monitor forward progress, not just thread state)
 
@@ -432,11 +479,13 @@ def thread_1():
 ### Q20: Implement a reader-writer lock.
 
 **Key Points:**
+
 - Multiple concurrent readers OR single exclusive writer
 - Basic version has writer starvation (readers keep arriving)
 - Writer-preference version blocks new readers when writer is waiting
 
 **Code Skeleton:**
+
 ```python
 class ReadWriteLock:
     def __init__(self):
@@ -464,6 +513,7 @@ class ReadWriteLock:
 ```
 
 **Follow-ups:**
+
 - How do you prevent writer starvation? (Writer-preference: block new readers when writer waits)
 - When is a RWLock worse than a plain mutex? (Short critical sections, write-heavy workloads)
 
@@ -474,6 +524,7 @@ class ReadWriteLock:
 ### Q21: Design a thread pool from scratch.
 
 **Key Points:**
+
 - Fixed number of worker threads
 - Shared task queue (blocking queue)
 - Workers pull tasks from queue and execute them
@@ -481,6 +532,7 @@ class ReadWriteLock:
 - Return results via Futures
 
 **Code Skeleton:**
+
 ```python
 import threading
 import queue
@@ -544,6 +596,7 @@ class ThreadPool:
 ```
 
 **Follow-ups:**
+
 - How do you handle task timeouts?
 - How do you implement a dynamic thread pool (auto-scaling)?
 - What is the difference between your implementation and Java's ExecutorService?
@@ -553,12 +606,14 @@ class ThreadPool:
 ### Q22: Implement a read-write lock with writer preference AND no starvation.
 
 **Key Points:**
+
 - Writers have priority over new readers
 - But readers already inside the critical section are not preempted
 - Use waiting_writers counter to block new readers
 - Fair version: use a FIFO queue for ordering
 
 **Follow-ups:**
+
 - What is the performance implication of writer preference under read-heavy load?
 - How would you implement this in Go? (sync.RWMutex already provides this)
 
@@ -567,12 +622,14 @@ class ThreadPool:
 ### Q23: Design a rate limiter using concurrency primitives.
 
 **Key Points:**
+
 - Token bucket: bucket holds N tokens, refilled at rate R
 - Sliding window: count requests in recent time window
 - Semaphore-based: simple concurrent request limiter
 - For distributed: Redis-based with Lua script
 
 **Code Skeleton:**
+
 ```python
 import threading
 import time
@@ -603,6 +660,7 @@ class TokenBucketRateLimiter:
 ```
 
 **Follow-ups:**
+
 - How do you make this distributed? (Redis + Lua for atomic token operations)
 - Token bucket vs leaky bucket vs sliding window?
 - How do you rate limit per user in a multi-threaded server?
@@ -612,12 +670,14 @@ class TokenBucketRateLimiter:
 ### Q24: Implement a concurrent web crawler.
 
 **Key Points:**
+
 - Maintain a set of visited URLs (thread-safe)
 - Worker pool fetches URLs, extracts links, adds unvisited to queue
 - Respect robots.txt and rate limits
 - Graceful shutdown with max depth or max pages
 
 **Code Skeleton:**
+
 ```python
 import threading
 import queue
@@ -682,6 +742,7 @@ class ConcurrentCrawler:
 ```
 
 **Follow-ups:**
+
 - How would you implement this with asyncio instead of threads?
 - How do you handle politeness (rate limiting per domain)?
 - How would you distribute this across multiple machines?
@@ -691,12 +752,14 @@ class ConcurrentCrawler:
 ### Q25: Design a task scheduler with dependency resolution.
 
 **Key Points:**
+
 - Tasks have dependencies (DAG: directed acyclic graph)
 - A task can only run when ALL its dependencies have completed
 - Maximize parallelism: run independent tasks concurrently
 - Detect cycles (invalid dependency graph)
 
 **Code Skeleton:**
+
 ```python
 import threading
 from collections import defaultdict, deque
@@ -756,6 +819,7 @@ class TaskScheduler:
 ```
 
 **Follow-ups:**
+
 - How do you detect cycles in the dependency graph?
 - How do you handle task failures (retry, skip dependents)?
 - How would you implement this in a distributed system?
@@ -765,12 +829,14 @@ class TaskScheduler:
 ### Q26: Implement a distributed lock with fencing tokens.
 
 **Key Points:**
+
 - Basic distributed locks have a flaw: client A gets lock, pauses (GC), lock expires,
   client B gets lock, client A resumes and thinks it still has the lock
 - Fencing token: monotonically increasing number issued with each lock acquisition
 - Resource server rejects requests with stale (lower) fencing tokens
 
 **Follow-ups:**
+
 - Why is TTL alone not sufficient for distributed locks?
 - How does ZooKeeper solve this? (Sequential ephemeral nodes provide ordering)
 
@@ -779,12 +845,14 @@ class TaskScheduler:
 ### Q27: Design a concurrent LRU cache with bounded concurrency.
 
 **Key Points:**
+
 - O(1) get and put (OrderedDict or HashMap + doubly-linked list)
 - Thread-safe with lock
 - For higher concurrency: shard the cache (N independent LRU caches)
 - Each shard has its own lock
 
 **Follow-ups:**
+
 - How does sharding affect the global LRU ordering?
 - How would you implement cache warming in a multi-threaded environment?
 - What is the thundering herd problem and how do you prevent it? (Single-flight pattern)
@@ -794,12 +862,14 @@ class TaskScheduler:
 ### Q28: Explain and implement the producer-consumer pattern with multiple producers and consumers.
 
 **Key Points:**
+
 - Thread-safe bounded queue connects producers to consumers
 - Multiple producers submit work, multiple consumers process it
 - Graceful shutdown: poison pill / sentinel value / close signal
 - Handle backpressure (bounded queue size)
 
 **Follow-ups:**
+
 - How do you ensure each item is processed exactly once?
 - How do you handle consumer failures?
 - How does this pattern scale to distributed systems? (Kafka, RabbitMQ)
@@ -809,6 +879,7 @@ class TaskScheduler:
 ### Q29: How would you debug a concurrency bug in production?
 
 **Key Points:**
+
 - Concurrency bugs are non-deterministic and hard to reproduce
 - Tools: thread dumps, logging with thread IDs, race detectors (Go: `-race`, Python: TSan)
 - Strategies: add logging at lock acquire/release, use timeout on all locks, thread-safe
@@ -817,6 +888,7 @@ class TaskScheduler:
   minimize shared mutable state
 
 **Follow-ups:**
+
 - How do you reproduce a Heisenbug? (Stress testing, thread sanitizers, fuzzing)
 - What is a Heisenbug? (Bug that changes behavior when you try to observe it)
 - How do you add observability to concurrent systems?
@@ -826,12 +898,14 @@ class TaskScheduler:
 ### Q30: Design a thread-safe task queue with task priorities, retries, and dead-letter queue.
 
 **Key Points:**
+
 - Priority queue with thread-safe access
 - Retry logic: exponential backoff, max retries
 - Dead-letter queue: after max retries, move to DLQ for manual inspection
 - Metrics: queue depth, processing latency, error rate
 
 **Code Skeleton:**
+
 ```python
 import threading
 import heapq
@@ -911,6 +985,7 @@ class RobustTaskQueue:
 ```
 
 **Follow-ups:**
+
 - How do you persist tasks across restarts?
 - How do you ensure at-least-once vs at-most-once processing?
 - How does this compare to Celery or RabbitMQ?

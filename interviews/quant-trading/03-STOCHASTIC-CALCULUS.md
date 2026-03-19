@@ -50,7 +50,7 @@ This is the fundamental identity that makes Ito calculus differ from ordinary ca
 
 ### Levy's Characterization
 
-A continuous martingale M(t) with M(0) = 0 and quadratic variation [M,M]_t = t is a standard Brownian motion. This provides a powerful way to identify Brownian motion.
+A continuous martingale M(t) with M(0) = 0 and quadratic variation [M,M]\_t = t is a standard Brownian motion. This provides a powerful way to identify Brownian motion.
 
 ### Non-differentiability
 
@@ -88,6 +88,7 @@ Key visual properties:
 ### Motivation
 
 If f(x) is a smooth function and X(t) is a smooth deterministic function:
+
 ```
 df(X(t)) = f'(X(t)) * dX(t)     (chain rule)
 ```
@@ -122,6 +123,7 @@ The extra (1/2) σ^2 f'' dt term is the "Ito correction" that makes stochastic c
 If S(t) follows GBM: dS = μS dt + σS dW, what is d(ln S)?
 
 Apply Ito's lemma with f(x) = ln(x):
+
 ```
 f'(x) = 1/x,  f''(x) = -1/x^2
 
@@ -131,6 +133,7 @@ d(ln S) = (1/S)(μS dt + σS dW) + (1/2)(-1/S^2)(σS)^2 dt
 ```
 
 Therefore:
+
 ```
 ln S(T) - ln S(0) = (μ - σ^2/2)T + σW(T)
 S(T) = S(0) * exp((μ - σ^2/2)T + σW(T))
@@ -165,6 +168,7 @@ Solution: S(t) = S(0) exp((μ - σ^2/2)t + σW(t))
 ```
 
 **Properties**:
+
 - S(t) > 0 always (prices cannot go negative)
 - E[S(t)] = S(0) exp(μt) (grows exponentially in expectation)
 - Returns are normally distributed: ln(S(t)/S(0)) ~ N((μ-σ^2/2)t, σ^2 t)
@@ -183,17 +187,20 @@ dX = θ(μ - X) dt + σ dW
 ```
 
 **Solution**:
+
 ```
 X(t) = μ + (X(0) - μ)e^(-θt) + σ ∫_0^t e^(-θ(t-s)) dW(s)
 ```
 
 **Properties**:
+
 - E[X(t)] = μ + (X(0) - μ)e^(-θt) → μ as t → ∞
 - Var(X(t)) = (σ^2/(2θ))(1 - e^(-2θt)) → σ^2/(2θ) as t → ∞
 - Stationary distribution: N(μ, σ^2/(2θ))
-- Half-life of deviation: t_{1/2} = ln(2)/θ
+- Half-life of deviation: t\_{1/2} = ln(2)/θ
 
 **Applications in trading**:
+
 - Modeling interest rates (Vasicek model)
 - Pairs trading: spread between two cointegrated assets
 - Mean-reverting alpha signals
@@ -312,11 +319,13 @@ P(sup_{0<=s<=t} M(s) >= λ) <= E[M(t)] / λ
 ### The Key Idea
 
 In the real world ("P-measure"), a stock has drift μ:
+
 ```
 dS = μS dt + σS dW^P
 ```
 
 Under the risk-neutral measure ("Q-measure"), the stock drifts at the risk-free rate r:
+
 ```
 dS = rS dt + σS dW^Q
 ```
@@ -326,11 +335,13 @@ The volatility σ is the SAME under both measures. Only the drift changes.
 ### Girsanov's Theorem (Simplified)
 
 If we define a new Brownian motion:
+
 ```
 W^Q(t) = W^P(t) + ((μ - r)/σ) * t
 ```
 
 Then under the measure Q (defined by the Radon-Nikodym derivative):
+
 ```
 dQ/dP = exp(-((μ-r)/σ)W^P(T) - (1/2)((μ-r)/σ)^2 T)
 ```
@@ -362,6 +373,7 @@ Pricing Workflow:
 ### Why It Works
 
 Under Q, the discounted stock price S(t)/e^(rt) is a martingale. This means:
+
 - There is no "free lunch" (no arbitrage)
 - The expected discounted return of any asset is 0 (risk-free rate)
 - We can price derivatives by computing expectations under Q
@@ -391,6 +403,7 @@ For a derivative V(S, t) on the stock:
 ```
 
 **Derivation sketch** (Delta hedging):
+
 1. Create a portfolio: long 1 derivative, short Δ = ∂V/∂S shares
 2. The portfolio is locally riskless (the dW terms cancel)
 3. A riskless portfolio must earn the risk-free rate
@@ -550,7 +563,7 @@ Tree:
 ```
 
 **Pricing**: Work backwards from the terminal payoffs.
-At each node: V = e^(-rΔt) * [q * V_up + (1-q) * V_down]
+At each node: V = e^(-rΔt) _ [q _ V_up + (1-q) \* V_down]
 
 For American options: V = max(exercise_value, continuation_value)
 
@@ -630,6 +643,7 @@ print(f"MC Price: {mc['price']:.4f} ± {mc['std_error']:.4f}")
 ```
 
 **Variance reduction techniques**:
+
 - **Antithetic variates**: For each random path Z, also use -Z. Reduces variance for monotone payoffs.
 - **Control variates**: Use a correlated known-expectation variable to reduce variance.
 - **Importance sampling**: Change the sampling distribution to oversample important regions.
@@ -679,6 +693,7 @@ IV
 ```
 
 **Why the smile exists**:
+
 1. Fat tails in real return distributions (more extreme moves than normal predicts)
 2. Leverage effect (stock drops -> firm becomes more leveraged -> more volatile)
 3. Demand for downside protection (OTM puts) drives up their prices
@@ -757,6 +772,7 @@ Relationship: P(t,T) = exp(-∫_t^T f(t,s) ds)
 **Solution for E[W(t)^3]**:
 
 Apply Ito's lemma to f(x) = x^3:
+
 ```
 d(W^3) = 3W^2 dW + (1/2)(6W)(dW)^2 = 3W^2 dW + 3W dt
 
@@ -769,6 +785,7 @@ E[W(t)^3] = 3∫_0^t E[W(s)] ds = 3∫_0^t 0 ds = 0
 **Solution for E[W(t)^4]**:
 
 Apply Ito's lemma to f(x) = x^4:
+
 ```
 d(W^4) = 4W^3 dW + (1/2)(12W^2)(dW)^2 = 4W^3 dW + 6W^2 dt
 
@@ -809,18 +826,18 @@ Method 2 (Ito): d(W^2 - t) = 2W dW + dt - dt = 2W dW. This is a pure stochastic 
 
 **Solution**:
 
-(a) E[S(1)] = S(0) * e^(μ*1) = 100 * e^(0.10) = 100 * 1.1052 = **110.52**
+(a) E[S(1)] = S(0) * e^(μ*1) = 100 _ e^(0.10) = 100 _ 1.1052 = **110.52**
 
-(b) Median: ln(S(1)) ~ N(ln(100) + (0.10 - 0.09/2)*1, 0.09)
-    = N(ln(100) + 0.055, 0.09)
-    Median of ln(S(1)) = ln(100) + 0.055 = 4.6602
-    Median of S(1) = e^(4.6602) = 100 * e^(0.055) = **105.65**
+(b) Median: ln(S(1)) ~ N(ln(100) + (0.10 - 0.09/2)_1, 0.09)
+= N(ln(100) + 0.055, 0.09)
+Median of ln(S(1)) = ln(100) + 0.055 = 4.6602
+Median of S(1) = e^(4.6602) = 100 _ e^(0.055) = **105.65**
 
 (c) P(S(1) > 100) = P(ln(S(1)) > ln(100))
-    = P(Z > (ln(100) - (ln(100) + 0.055))/0.30)
-    = P(Z > -0.055/0.30)
-    = P(Z > -0.1833)
-    = N(0.1833) ≈ **0.5727**
+= P(Z > (ln(100) - (ln(100) + 0.055))/0.30)
+= P(Z > -0.055/0.30)
+= P(Z > -0.1833)
+= N(0.1833) ≈ **0.5727**
 
 **Key insight**: The mean (110.52) exceeds the median (105.65) because log-normal distributions are right-skewed.
 
@@ -955,6 +972,7 @@ Annualized Sharpe = daily Sharpe * √(252) = 0.05 * 15.87 = 0.794
 ```
 
 **Important caveat**: The √(252) scaling assumes daily returns are i.i.d. In practice:
+
 - Positive autocorrelation in returns (momentum) -> understates annualized vol
 - Negative autocorrelation (mean reversion) -> overstates annualized vol
 - For Sharpe ratio, serial correlation matters too (Lo, 2002)

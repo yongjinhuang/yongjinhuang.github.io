@@ -1,7 +1,7 @@
 # Chapter 3: Classical Control Theory -- Making Robots Obey
 
-> A robot's kinematics tells us where it *should* go. Control theory tells us how
-> to *make* it go there -- and stay there -- in the presence of disturbances,
+> A robot's kinematics tells us where it _should_ go. Control theory tells us how
+> to _make_ it go there -- and stay there -- in the presence of disturbances,
 > model errors, and physical limitations. This chapter covers the classical
 > (frequency-domain) control toolkit that every robotics engineer must master.
 
@@ -21,6 +21,7 @@ Apply a pre-computed input and hope for the best. No feedback, no correction.
 Example: sending a fixed PWM signal to a motor to rotate "about 90 degrees."
 
 Problems:
+
 - No correction for disturbances (friction, load changes).
 - No way to know if the output matches the reference.
 - Accuracy depends entirely on model fidelity.
@@ -42,13 +43,13 @@ foundation of all practical control systems.
 
 ### 1.3 Why Feedback?
 
-| Property              | Open-Loop | Closed-Loop         |
-|----------------------|-----------|---------------------|
-| Disturbance rejection | None      | Automatic           |
-| Sensitivity to model  | High      | Reduced             |
-| Stability risk        | Low       | Can become unstable |
-| Complexity            | Simple    | More complex        |
-| Accuracy              | Model-dependent | Can be very high |
+| Property              | Open-Loop       | Closed-Loop         |
+| --------------------- | --------------- | ------------------- |
+| Disturbance rejection | None            | Automatic           |
+| Sensitivity to model  | High            | Reduced             |
+| Stability risk        | Low             | Can become unstable |
+| Complexity            | Simple          | More complex        |
+| Accuracy              | Model-dependent | Can be very high    |
 
 The fundamental trade-off: feedback improves performance but introduces the
 possibility of instability. The rest of this chapter is about navigating that
@@ -61,7 +62,7 @@ trade-off.
 ### 2.1 The Laplace Transform
 
 The Laplace transform converts a time-domain signal f(t) into a complex
-frequency-domain function F(s), where s = sigma + j*omega:
+frequency-domain function F(s), where s = sigma + j\*omega:
 
 ```
 F(s) = integral from 0 to infinity of f(t) * e^{-st} dt
@@ -69,14 +70,14 @@ F(s) = integral from 0 to infinity of f(t) * e^{-st} dt
 
 Key transforms:
 
-| Time domain f(t) | Laplace domain F(s)    |
-|-------------------|------------------------|
-| delta(t)          | 1                      |
-| step u(t)         | 1/s                    |
-| e^{-at}           | 1/(s+a)                |
-| t * e^{-at}       | 1/(s+a)^2              |
-| sin(omega*t)      | omega/(s^2 + omega^2)  |
-| cos(omega*t)      | s/(s^2 + omega^2)      |
+| Time domain f(t) | Laplace domain F(s)   |
+| ---------------- | --------------------- |
+| delta(t)         | 1                     |
+| step u(t)        | 1/s                   |
+| e^{-at}          | 1/(s+a)               |
+| t \* e^{-at}     | 1/(s+a)^2             |
+| sin(omega\*t)    | omega/(s^2 + omega^2) |
+| cos(omega\*t)    | s/(s^2 + omega^2)     |
 
 ### 2.2 Transfer Functions
 
@@ -161,11 +162,11 @@ C(s) = Kp + Ki/s + Kd*s
 
 ### 3.2 What Each Term Does
 
-| Term | Response to... | Effect                        | Pathology if too high |
-|------|----------------|-------------------------------|-----------------------|
-| P    | Current error  | Fast response, proportional   | Oscillation           |
-| I    | Accumulated error | Eliminates steady-state error | Windup, slow oscillation |
-| D    | Rate of error change | Damping, predictive      | Noise amplification   |
+| Term | Response to...       | Effect                        | Pathology if too high    |
+| ---- | -------------------- | ----------------------------- | ------------------------ |
+| P    | Current error        | Fast response, proportional   | Oscillation              |
+| I    | Accumulated error    | Eliminates steady-state error | Windup, slow oscillation |
+| D    | Rate of error change | Damping, predictive           | Noise amplification      |
 
 ### 3.3 Intuitive Understanding
 
@@ -320,6 +321,7 @@ PID        | 0.6 * Ku  | 1.2*Ku/Tu     | 0.075*Ku*Tu
 ```
 
 Key metrics:
+
 - **Rise time**: time to first reach the setpoint.
 - **Overshoot**: how far past the setpoint the output goes (as a percentage).
 - **Settling time**: time until the output stays within a band (e.g., 2%) of the
@@ -381,7 +383,7 @@ s-plane).
 
 ### 5.2 Routh-Hurwitz Criterion
 
-A quick algebraic test for stability *without* computing the poles. Given the
+A quick algebraic test for stability _without_ computing the poles. Given the
 characteristic polynomial:
 
 ```
@@ -450,13 +452,14 @@ The **frequency response** G(j*omega) of a system describes how it responds to
 sinusoidal inputs at different frequencies. Evaluate the transfer function along
 the imaginary axis (s = j*omega):
 
-- **Magnitude** |G(j*omega)|: how much the input amplitude is scaled.
-- **Phase** angle(G(j*omega)): how much the output is shifted in time.
+- **Magnitude** |G(j\*omega)|: how much the input amplitude is scaled.
+- **Phase** angle(G(j\*omega)): how much the output is shifted in time.
 
 ### 6.2 Bode Plots
 
 Two plots stacked vertically:
-1. **Magnitude plot**: 20*log10(|G(jw)|) in dB vs. log(omega).
+
+1. **Magnitude plot**: 20\*log10(|G(jw)|) in dB vs. log(omega).
 2. **Phase plot**: angle(G(jw)) in degrees vs. log(omega).
 
 ```
@@ -519,6 +522,7 @@ GM = -20*log10(|G(j*w_pc)|) dB
 ```
 
 **Rules of thumb** for good design:
+
 - Phase margin > 45 degrees (60 degrees is excellent).
 - Gain margin > 6 dB (12 dB is excellent).
 
@@ -563,7 +567,7 @@ T(s) = ---------------
         1 + K * G(s)
 ```
 
-The closed-loop poles are the roots of: 1 + K * G(s) = 0.
+The closed-loop poles are the roots of: 1 + K \* G(s) = 0.
 
 ### 7.2 Key Rules for Sketching
 
@@ -572,7 +576,7 @@ The closed-loop poles are the roots of: 1 + K * G(s) = 0.
 3. **Number of branches**: equals the number of open-loop poles.
 4. **Real-axis segments**: to the left of an odd number of real-axis poles+zeros.
 5. **Asymptotes**: (n-m) branches go to infinity along asymptotes at angles
-   (2k+1)*180/(n-m) degrees, where n = number of poles, m = number of zeros.
+   (2k+1)\*180/(n-m) degrees, where n = number of poles, m = number of zeros.
 
 ### 7.3 ASCII Root Locus Example
 
@@ -626,7 +630,7 @@ for k_val in [0.5, 1.0, 2.0, 5.0, 10.0]:
 
 ### 8.1 The Nyquist Plot
 
-A Nyquist plot is a parametric plot of G(j*omega) in the complex plane as omega
+A Nyquist plot is a parametric plot of G(j\*omega) in the complex plane as omega
 goes from -infinity to +infinity (or equivalently, from 0 to infinity with the
 reflection).
 
@@ -647,7 +651,7 @@ reflection).
 
 ### 8.2 The Nyquist Stability Criterion
 
-For an open-loop transfer function L(s) = C(s)*G(s):
+For an open-loop transfer function L(s) = C(s)\*G(s):
 
 ```
 Z = N + P
@@ -757,6 +761,7 @@ leading to large overshoot when the saturation ends.
 ```
 
 **Solutions**:
+
 - **Clamping**: stop integrating when output is saturated (shown in the PID code
   above).
 - **Back-calculation**: reduce the integral by the difference between the desired
@@ -769,7 +774,7 @@ infinite for a step). Solutions:
 
 - **Derivative on measurement**: differentiate -y(t) instead of e(t). The
   measurement changes smoothly even when the setpoint steps.
-- **Filtered derivative**: D(s) = Kd * s / (1 + tau_f * s), where tau_f is a
+- **Filtered derivative**: D(s) = Kd _ s / (1 + tau_f _ s), where tau_f is a
   small filter time constant.
 
 ### 10.3 Discretization
@@ -899,12 +904,12 @@ Classical PID and frequency-domain methods form the foundation, but modern
 robotics increasingly uses:
 
 | Method                    | When to use                              |
-|--------------------------|------------------------------------------|
-| State-space / LQR        | Multi-input, multi-output (MIMO) systems |
+| ------------------------- | ---------------------------------------- |
+| State-space / LQR         | Multi-input, multi-output (MIMO) systems |
 | Model Predictive Control  | Constraints, preview of future reference |
 | Adaptive control          | Unknown or changing plant parameters     |
 | Robust control (H-inf)    | Guaranteed performance with uncertainty  |
-| Computed torque control    | Nonlinear robot dynamics compensation   |
+| Computed torque control   | Nonlinear robot dynamics compensation    |
 | Impedance/admittance ctrl | Contact tasks, human-robot interaction   |
 
 These are the subject of future chapters.
@@ -964,7 +969,7 @@ well-designed system?
 **Q7.** Draw a Bode plot for G(s) = 10 / (s + 1)(s + 10). What are the key
 features?
 
-> **A:** DC gain = 10/(1*10) = 1 = 0 dB. Two poles at s=-1 (break at 1 rad/s)
+> **A:** DC gain = 10/(1\*10) = 1 = 0 dB. Two poles at s=-1 (break at 1 rad/s)
 > and s=-10 (break at 10 rad/s). Magnitude: flat at 0 dB until 1 rad/s, then
 > -20 dB/decade, then -40 dB/decade after 10 rad/s. Phase: starts at 0 degrees,
 > -45 degrees at 1 rad/s, -90 degrees between the breaks, -135 degrees at 10

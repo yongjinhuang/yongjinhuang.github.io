@@ -36,7 +36,7 @@ This chapter takes you from first principles through to production-ready pricing
 
 ### What Is a Derivative?
 
-A **derivative** is a financial contract whose value is *derived* from an underlying asset, rate, or index. The underlying can be a stock, bond, commodity, currency, interest rate, or even another derivative.
+A **derivative** is a financial contract whose value is _derived_ from an underlying asset, rate, or index. The underlying can be a stock, bond, commodity, currency, interest rate, or even another derivative.
 
 ```
 DERIVATIVE VALUE CHAIN
@@ -284,7 +284,7 @@ for i, pmt in enumerate(net):
 
 ### Call and Put Options
 
-An **option** gives the holder the *right but not the obligation* to buy (call) or sell (put) an underlying asset at a specified price (strike) on or before a specified date (expiry).
+An **option** gives the holder the _right but not the obligation_ to buy (call) or sell (put) an underlying asset at a specified price (strike) on or before a specified date (expiry).
 
 ```
 OPTION TERMINOLOGY
@@ -2770,6 +2770,6 @@ The ability to price, hedge, and trade derivatives is what separates a quantitat
 
 ---
 
-*Next Chapter: [14-PORTFOLIO-CONSTRUCTION](./14-PORTFOLIO-CONSTRUCTION.md)*
-*Previous Chapter: [12-HFT-LOW-LATENCY](./12-HFT-LOW-LATENCY.md)*
-*[Return to Roadmap](./00-ROADMAP.md)*
+_Next Chapter: [14-PORTFOLIO-CONSTRUCTION](./14-PORTFOLIO-CONSTRUCTION.md)_
+_Previous Chapter: [12-HFT-LOW-LATENCY](./12-HFT-LOW-LATENCY.md)_
+_[Return to Roadmap](./00-ROADMAP.md)_

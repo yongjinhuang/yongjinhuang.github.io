@@ -6,17 +6,17 @@ A feature flag system enables teams to decouple deployment from release by toggl
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **organizations** | Top-level account grouping | Billing, access control, and plan tier are organization-level concerns |
-| **projects** | Logical grouping of flags | Separates flags by product or team; prevents one team's flags from cluttering another's |
-| **environments** | Deployment stages (dev/staging/prod) | A flag may be enabled in dev but disabled in prod; environments provide per-stage configuration |
-| **flags** | Core flag definition | Defines what the flag is and its type; separated from environment-specific state |
-| **flag_environments** | Per-environment flag state and targeting | The actual toggle and targeting rules; composite PK ensures one config per flag per environment |
-| **segments** | Reusable user groups | Named user groups (e.g., "beta_testers", "enterprise_customers") that can be referenced across multiple flags |
-| **experiments** | A/B test configurations tied to flags | Enables data-driven decisions by measuring the impact of flag variations on business metrics |
-| **audit_log** | Change history for all flag operations | Compliance and debugging; answers "who changed what, when, and why" |
-| **sdk_connections** | Live SDK connection tracking (Redis) | Monitors connected SDKs for health and enables targeted pushes |
+| Table                 | Purpose                                  | Why It Exists                                                                                                 |
+| --------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **organizations**     | Top-level account grouping               | Billing, access control, and plan tier are organization-level concerns                                        |
+| **projects**          | Logical grouping of flags                | Separates flags by product or team; prevents one team's flags from cluttering another's                       |
+| **environments**      | Deployment stages (dev/staging/prod)     | A flag may be enabled in dev but disabled in prod; environments provide per-stage configuration               |
+| **flags**             | Core flag definition                     | Defines what the flag is and its type; separated from environment-specific state                              |
+| **flag_environments** | Per-environment flag state and targeting | The actual toggle and targeting rules; composite PK ensures one config per flag per environment               |
+| **segments**          | Reusable user groups                     | Named user groups (e.g., "beta_testers", "enterprise_customers") that can be referenced across multiple flags |
+| **experiments**       | A/B test configurations tied to flags    | Enables data-driven decisions by measuring the impact of flag variations on business metrics                  |
+| **audit_log**         | Change history for all flag operations   | Compliance and debugging; answers "who changed what, when, and why"                                           |
+| **sdk_connections**   | Live SDK connection tracking (Redis)     | Monitors connected SDKs for health and enables targeted pushes                                                |
 
 ---
 
@@ -24,99 +24,99 @@ A feature flag system enables teams to decouple deployment from release by toggl
 
 ### organizations
 
-| Field | Type | Description |
-|-------|------|-------------|
-| org_id | PK, UUID | Unique organization identifier |
-| name | VARCHAR | Organization display name |
-| plan_tier | ENUM | free, pro, enterprise; determines feature access (segments, experiments, SSO) |
+| Field     | Type     | Description                                                                   |
+| --------- | -------- | ----------------------------------------------------------------------------- |
+| org_id    | PK, UUID | Unique organization identifier                                                |
+| name      | VARCHAR  | Organization display name                                                     |
+| plan_tier | ENUM     | free, pro, enterprise; determines feature access (segments, experiments, SSO) |
 
 ### projects
 
-| Field | Type | Description |
-|-------|------|-------------|
-| project_id | PK, UUID | Unique project identifier |
-| org_id | FK → organizations | Which organization owns this project |
-| name | VARCHAR | Project name (e.g., "Web App", "Mobile App", "API") |
+| Field      | Type               | Description                                         |
+| ---------- | ------------------ | --------------------------------------------------- |
+| project_id | PK, UUID           | Unique project identifier                           |
+| org_id     | FK → organizations | Which organization owns this project                |
+| name       | VARCHAR            | Project name (e.g., "Web App", "Mobile App", "API") |
 
 ### environments
 
-| Field | Type | Description |
-|-------|------|-------------|
-| env_id | PK, UUID | Unique environment identifier |
-| project_id | FK → projects | Which project this environment belongs to |
-| name | VARCHAR | Environment name: dev, staging, prod; custom names also supported |
+| Field      | Type          | Description                                                       |
+| ---------- | ------------- | ----------------------------------------------------------------- |
+| env_id     | PK, UUID      | Unique environment identifier                                     |
+| project_id | FK → projects | Which project this environment belongs to                         |
+| name       | VARCHAR       | Environment name: dev, staging, prod; custom names also supported |
 
 ### flags
 
-| Field | Type | Description |
-|-------|------|-------------|
-| flag_id | PK, UUID | Unique flag identifier |
-| project_id | FK → projects | Which project this flag belongs to |
-| key | VARCHAR, UNIQUE per project | Machine-readable flag key used in code (e.g., "new_checkout_flow") |
-| name | VARCHAR | Human-readable flag name shown in the dashboard |
-| description | TEXT | What this flag controls and why it exists |
-| flag_type | ENUM | boolean, string, number, json; determines what values the flag can return |
-| default_value | JSONB | Fallback value when targeting rules do not match or SDK cannot connect |
-| is_archived | BOOLEAN | Soft-delete; archived flags are hidden from UI but preserved for audit history |
+| Field         | Type                        | Description                                                                    |
+| ------------- | --------------------------- | ------------------------------------------------------------------------------ |
+| flag_id       | PK, UUID                    | Unique flag identifier                                                         |
+| project_id    | FK → projects               | Which project this flag belongs to                                             |
+| key           | VARCHAR, UNIQUE per project | Machine-readable flag key used in code (e.g., "new_checkout_flow")             |
+| name          | VARCHAR                     | Human-readable flag name shown in the dashboard                                |
+| description   | TEXT                        | What this flag controls and why it exists                                      |
+| flag_type     | ENUM                        | boolean, string, number, json; determines what values the flag can return      |
+| default_value | JSONB                       | Fallback value when targeting rules do not match or SDK cannot connect         |
+| is_archived   | BOOLEAN                     | Soft-delete; archived flags are hidden from UI but preserved for audit history |
 
 ### flag_environments
 
-| Field | Type | Description |
-|-------|------|-------------|
-| flag_id | FK, composite PK | Which flag this configuration applies to |
-| env_id | FK, composite PK | Which environment this configuration applies to |
-| enabled | BOOLEAN | Master toggle; if false, the off_variation is returned for all users |
-| targeting_rules_json | JSONB | Ordered list of targeting rules, each with: clauses (attribute/operator/values), rollout percentage, bucketing key, and the variation to serve |
-| fallthrough_variation | JSONB | The variation returned when the flag is enabled but no targeting rules match |
-| off_variation | JSONB | The variation returned when the flag is disabled (enabled = false) |
+| Field                 | Type             | Description                                                                                                                                    |
+| --------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| flag_id               | FK, composite PK | Which flag this configuration applies to                                                                                                       |
+| env_id                | FK, composite PK | Which environment this configuration applies to                                                                                                |
+| enabled               | BOOLEAN          | Master toggle; if false, the off_variation is returned for all users                                                                           |
+| targeting_rules_json  | JSONB            | Ordered list of targeting rules, each with: clauses (attribute/operator/values), rollout percentage, bucketing key, and the variation to serve |
+| fallthrough_variation | JSONB            | The variation returned when the flag is enabled but no targeting rules match                                                                   |
+| off_variation         | JSONB            | The variation returned when the flag is disabled (enabled = false)                                                                             |
 
 ### segments
 
-| Field | Type | Description |
-|-------|------|-------------|
-| segment_id | PK, UUID | Unique segment identifier |
-| project_id | FK → projects | Which project this segment belongs to |
-| name | VARCHAR | Segment name (e.g., "beta_testers", "internal_employees") |
-| rules_json | JSONB | Attribute-based rules for dynamic membership (e.g., email ends with @company.com) |
-| included_users | ARRAY | Explicitly included user keys; always in the segment regardless of rules |
-| excluded_users | ARRAY | Explicitly excluded user keys; never in the segment regardless of rules |
+| Field          | Type          | Description                                                                       |
+| -------------- | ------------- | --------------------------------------------------------------------------------- |
+| segment_id     | PK, UUID      | Unique segment identifier                                                         |
+| project_id     | FK → projects | Which project this segment belongs to                                             |
+| name           | VARCHAR       | Segment name (e.g., "beta_testers", "internal_employees")                         |
+| rules_json     | JSONB         | Attribute-based rules for dynamic membership (e.g., email ends with @company.com) |
+| included_users | ARRAY         | Explicitly included user keys; always in the segment regardless of rules          |
+| excluded_users | ARRAY         | Explicitly excluded user keys; never in the segment regardless of rules           |
 
 ### experiments
 
-| Field | Type | Description |
-|-------|------|-------------|
-| experiment_id | PK, UUID | Unique experiment identifier |
-| flag_id | FK → flags | Which flag this experiment is testing |
-| env_id | FK → environments | Which environment the experiment runs in (typically prod) |
-| metric_name | VARCHAR | What metric is being measured (e.g., "conversion_rate", "latency_p99") |
-| variants_json | JSONB | Experiment variants with traffic allocation percentages |
-| status | ENUM | draft, running, concluded; controls whether data is being collected |
-| start_date | TIMESTAMP | When the experiment started; data before this is excluded from analysis |
-| end_date | TIMESTAMP | When the experiment ended; null while running |
-| results_json | JSONB | Statistical results: per-variant metrics, confidence intervals, p-values |
+| Field         | Type              | Description                                                              |
+| ------------- | ----------------- | ------------------------------------------------------------------------ |
+| experiment_id | PK, UUID          | Unique experiment identifier                                             |
+| flag_id       | FK → flags        | Which flag this experiment is testing                                    |
+| env_id        | FK → environments | Which environment the experiment runs in (typically prod)                |
+| metric_name   | VARCHAR           | What metric is being measured (e.g., "conversion_rate", "latency_p99")   |
+| variants_json | JSONB             | Experiment variants with traffic allocation percentages                  |
+| status        | ENUM              | draft, running, concluded; controls whether data is being collected      |
+| start_date    | TIMESTAMP         | When the experiment started; data before this is excluded from analysis  |
+| end_date      | TIMESTAMP         | When the experiment ended; null while running                            |
+| results_json  | JSONB             | Statistical results: per-variant metrics, confidence intervals, p-values |
 
 ### audit_log
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | PK, UUID | Unique audit entry identifier |
-| org_id | FK → organizations | Which organization this event belongs to |
-| user_id | UUID | Who made the change |
-| action | VARCHAR | What happened (flag.created, flag.updated, flag.toggled, segment.updated) |
-| resource_type | VARCHAR | Type of resource changed (flag, segment, environment) |
-| resource_id | UUID | Which specific resource was changed |
-| old_value_json | JSONB | State before the change; enables diff view and rollback |
-| new_value_json | JSONB | State after the change |
-| created_at | TIMESTAMP | When the change was made |
+| Field          | Type               | Description                                                               |
+| -------------- | ------------------ | ------------------------------------------------------------------------- |
+| id             | PK, UUID           | Unique audit entry identifier                                             |
+| org_id         | FK → organizations | Which organization this event belongs to                                  |
+| user_id        | UUID               | Who made the change                                                       |
+| action         | VARCHAR            | What happened (flag.created, flag.updated, flag.toggled, segment.updated) |
+| resource_type  | VARCHAR            | Type of resource changed (flag, segment, environment)                     |
+| resource_id    | UUID               | Which specific resource was changed                                       |
+| old_value_json | JSONB              | State before the change; enables diff view and rollback                   |
+| new_value_json | JSONB              | State after the change                                                    |
+| created_at     | TIMESTAMP          | When the change was made                                                  |
 
 ### sdk_connections (Redis)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| connection_id | KEY | Unique connection identifier |
-| env_id | VARCHAR | Which environment this SDK is connected to; determines which flags it receives |
-| last_heartbeat | TIMESTAMP | Last time this SDK sent a heartbeat; stale connections are cleaned up |
-| sdk_version | VARCHAR | SDK version for compatibility tracking and deprecation management |
+| Field          | Type      | Description                                                                    |
+| -------------- | --------- | ------------------------------------------------------------------------------ |
+| connection_id  | KEY       | Unique connection identifier                                                   |
+| env_id         | VARCHAR   | Which environment this SDK is connected to; determines which flags it receives |
+| last_heartbeat | TIMESTAMP | Last time this SDK sent a heartbeat; stale connections are cleaned up          |
+| sdk_version    | VARCHAR   | SDK version for compatibility tracking and deprecation management              |
 
 ---
 
@@ -234,6 +234,7 @@ Relationships:
 4. **Flag Update & Propagation**: When a flag or its targeting rules change, a version counter is incremented on the flag_environments record. A Redis pub/sub message is broadcast to all connected SDKs for that environment. SDKs receive the update within 500ms.
 
 5. **SDK Evaluation (Local)**: Connected SDKs maintain a local cache of all flag configurations for their environment. When application code calls `getFlag("new_checkout_flow", user)`, the SDK evaluates locally with no network call:
+
    - Check if flag is enabled → if not, return off_variation
    - Evaluate targeting_rules in order → check user attributes against clauses
    - If a rule matches, use the rule's rollout percentage with consistent hashing (bucketing key) to determine the variation

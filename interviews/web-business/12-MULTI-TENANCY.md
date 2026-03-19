@@ -55,21 +55,21 @@ Your code needs to check the tenant's plan before allowing access to gated featu
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Tenant** | A customer organization using your SaaS product |
-| **Tenant Isolation** | Ensuring one tenant cannot access another tenant's data |
-| **Single-Tenant** | Each customer gets their own instance of the application (separate servers, databases) |
-| **Multi-Tenant** | All customers share the same infrastructure with logical isolation |
-| **Shared Database** | All tenants' data in one database, separated by a `tenant_id` column |
-| **Database per Tenant** | Each tenant gets their own database (stronger isolation, more operational complexity) |
-| **Schema per Tenant** | Each tenant gets their own schema within a shared database (middle ground) |
-| **Tenant Context** | The current tenant, resolved from the request and available throughout the request lifecycle |
-| **Cross-Tenant** | Anything that spans multiple tenants (reporting, admin operations). Rare and carefully controlled |
-| **Noisy Neighbor** | One tenant's heavy usage degrading performance for others |
-| **Custom Domain** | Enterprise tenants want `app.acme.com` instead of `acme.yourapp.com` |
-| **White-Labeling** | Tenant's branding (logo, colors, domain) on your product, so it looks like theirs |
-| **Data Residency** | Requirement to store tenant data in a specific geographic region (EU, US, etc.) |
+| Term                    | What It Means                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------- |
+| **Tenant**              | A customer organization using your SaaS product                                                   |
+| **Tenant Isolation**    | Ensuring one tenant cannot access another tenant's data                                           |
+| **Single-Tenant**       | Each customer gets their own instance of the application (separate servers, databases)            |
+| **Multi-Tenant**        | All customers share the same infrastructure with logical isolation                                |
+| **Shared Database**     | All tenants' data in one database, separated by a `tenant_id` column                              |
+| **Database per Tenant** | Each tenant gets their own database (stronger isolation, more operational complexity)             |
+| **Schema per Tenant**   | Each tenant gets their own schema within a shared database (middle ground)                        |
+| **Tenant Context**      | The current tenant, resolved from the request and available throughout the request lifecycle      |
+| **Cross-Tenant**        | Anything that spans multiple tenants (reporting, admin operations). Rare and carefully controlled |
+| **Noisy Neighbor**      | One tenant's heavy usage degrading performance for others                                         |
+| **Custom Domain**       | Enterprise tenants want `app.acme.com` instead of `acme.yourapp.com`                              |
+| **White-Labeling**      | Tenant's branding (logo, colors, domain) on your product, so it looks like theirs                 |
+| **Data Residency**      | Requirement to store tenant data in a specific geographic region (EU, US, etc.)                   |
 
 ## Common Patterns
 
@@ -118,11 +118,11 @@ Most tenants share infrastructure. Enterprise tenants get dedicated databases or
 
 ## Quick Reference
 
-| Factor | Shared DB | Schema per Tenant | DB per Tenant |
-|--------|-----------|-------------------|---------------|
-| Cost | Low | Medium | High |
-| Isolation | Logical (tenant_id) | Schema-level | Full |
-| Operations | Simple | Medium complexity | Complex |
-| Compliance | May need RLS | Better for audits | Best for compliance |
-| Scale | Millions of tenants | Thousands | Hundreds |
-| Best for | Startups, self-serve SaaS | Mid-market SaaS | Enterprise, regulated |
+| Factor     | Shared DB                 | Schema per Tenant | DB per Tenant         |
+| ---------- | ------------------------- | ----------------- | --------------------- |
+| Cost       | Low                       | Medium            | High                  |
+| Isolation  | Logical (tenant_id)       | Schema-level      | Full                  |
+| Operations | Simple                    | Medium complexity | Complex               |
+| Compliance | May need RLS              | Better for audits | Best for compliance   |
+| Scale      | Millions of tenants       | Thousands         | Hundreds              |
+| Best for   | Startups, self-serve SaaS | Mid-market SaaS   | Enterprise, regulated |

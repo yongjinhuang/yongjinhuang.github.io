@@ -20,10 +20,10 @@ Interviewers assess whether you can:
 
 ### Level Expectations
 
-| Level | Technical Strategy Signal |
-|-------|--------------------------|
-| L5 (Senior) | Writes design docs for team-level systems. Evaluates 2-3 options with trade-offs. Proposes solutions to tech leads. |
-| L6 (Staff) | Authors RFCs that shape org direction. Defines architecture for cross-team systems. Creates technology evaluation frameworks others use. |
+| Level          | Technical Strategy Signal                                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L5 (Senior)    | Writes design docs for team-level systems. Evaluates 2-3 options with trade-offs. Proposes solutions to tech leads.                               |
+| L6 (Staff)     | Authors RFCs that shape org direction. Defines architecture for cross-team systems. Creates technology evaluation frameworks others use.          |
 | L7 (Principal) | Sets company-wide technical strategy. Makes technology bets. Defines standards that last 3-5 years. Represents engineering in exec conversations. |
 
 ---
@@ -80,68 +80,82 @@ RFCs are the primary vehicle for driving technical decisions at Staff+ level. A 
 **Decision Deadline:** [Date]
 
 ## Summary
+
 [2-3 sentences. What are you proposing and why?]
 
 ## Motivation
+
 [Why is this needed now? What problem does this solve?
 What is the cost of NOT doing this?]
 
 ## Current State
+
 [Describe the existing system/process. Include metrics
 if available. What are the pain points?]
 
 ## Proposed Solution
+
 [Detailed description of the proposed approach.
 Include architecture diagrams, data flow, and
 interface contracts.]
 
 ## Alternatives Considered
+
 [For each alternative:]
+
 ### Alternative A: [Name]
+
 - **Description:** [What is it?]
 - **Pros:** [Why it could work]
 - **Cons:** [Why it was not chosen]
 - **Reason for rejection:** [Specific reason]
 
 ### Alternative B: [Name]
+
 [Same structure]
 
 ## Trade-offs and Risks
-| Trade-off | Accepted Risk | Mitigation |
-|-----------|---------------|------------|
+
+| Trade-off     | Accepted Risk         | Mitigation         |
+| ------------- | --------------------- | ------------------ |
 | [Trade-off 1] | [What could go wrong] | [How we handle it] |
 | [Trade-off 2] | [What could go wrong] | [How we handle it] |
 
 ## Migration Plan
+
 [How do we get from current state to proposed state?
 Phases, rollback strategy, feature flags.]
 
 ## Success Metrics
+
 [How do we know this worked? Specific, measurable criteria.]
 
 ## Open Questions
+
 [Things that still need to be resolved before implementation.]
 
 ## Timeline
-| Phase | Duration | Deliverable |
-|-------|----------|-------------|
+
+| Phase   | Duration  | Deliverable         |
+| ------- | --------- | ------------------- |
 | Phase 1 | [X weeks] | [What is delivered] |
 | Phase 2 | [X weeks] | [What is delivered] |
 
 ## References
+
 [Links to related RFCs, design docs, external resources.]
 ```
 
 ### RFC Anti-patterns
 
-| Anti-pattern | Why It Fails | Better Approach |
-|-------------|-------------|-----------------|
-| RFC as rubber stamp | Decision already made, RFC is theater | Write the RFC before you have a preferred solution |
-| No alternatives | Looks like you did not explore the space | Always include 2-3 genuine alternatives |
-| Implementation detail overload | Readers lose the forest for the trees | Lead with the "why" and defer implementation to design docs |
-| No migration plan | Great destination, no path to get there | Migration plan is as important as the solution |
-| Infinite review cycle | RFC never gets decided | Set a decision deadline. Silence is consent. |
-| Solo authorship at L7 | Looks like you are not building consensus | Co-author with key stakeholders to build ownership |
+| Anti-pattern                   | Why It Fails                              | Better Approach                                             |
+| ------------------------------ | ----------------------------------------- | ----------------------------------------------------------- |
+| RFC as rubber stamp            | Decision already made, RFC is theater     | Write the RFC before you have a preferred solution          |
+| No alternatives                | Looks like you did not explore the space  | Always include 2-3 genuine alternatives                     |
+| Implementation detail overload | Readers lose the forest for the trees     | Lead with the "why" and defer implementation to design docs |
+| No migration plan              | Great destination, no path to get there   | Migration plan is as important as the solution              |
+| Infinite review cycle          | RFC never gets decided                    | Set a decision deadline. Silence is consent.                |
+| Solo authorship at L7          | Looks like you are not building consensus | Co-author with key stakeholders to build ownership          |
 
 ---
 
@@ -160,47 +174,56 @@ ADRs are lightweight documents that capture **why** a decision was made. They ar
 **Context Level:** Team | Org | Company
 
 ## Context
+
 [What is the situation that requires a decision?
 What forces are at play? What constraints exist?]
 
 ## Decision
+
 [What did we decide? State it clearly and directly.]
 
 ## Rationale
+
 [Why this decision? What were the key factors?
 What trade-offs did we accept?]
 
 ## Alternatives Rejected
+
 | Alternative | Reason Rejected |
-|-------------|----------------|
-| [Option A] | [Why not] |
-| [Option B] | [Why not] |
+| ----------- | --------------- |
+| [Option A]  | [Why not]       |
+| [Option B]  | [Why not]       |
 
 ## Consequences
+
 ### Positive
+
 - [Expected benefit 1]
 - [Expected benefit 2]
 
 ### Negative
+
 - [Accepted downside 1]
 - [Accepted downside 2]
 
 ### Risks
+
 - [Risk 1 and mitigation]
 
 ## Review Date
+
 [When should this decision be revisited?]
 ```
 
 ### When to Write an ADR
 
-| Write an ADR | Do Not Write an ADR |
-|-------------|---------------------|
-| Choosing a database technology | Picking a variable name |
-| Defining an API versioning strategy | Refactoring internal code |
-| Setting a testing strategy | Fixing a bug |
-| Adopting a new framework | Updating a dependency version |
-| Changing deployment topology | Adding a feature within existing architecture |
+| Write an ADR                        | Do Not Write an ADR                           |
+| ----------------------------------- | --------------------------------------------- |
+| Choosing a database technology      | Picking a variable name                       |
+| Defining an API versioning strategy | Refactoring internal code                     |
+| Setting a testing strategy          | Fixing a bug                                  |
+| Adopting a new framework            | Updating a dependency version                 |
+| Changing deployment topology        | Adding a feature within existing architecture |
 
 ---
 
@@ -210,24 +233,24 @@ When evaluating technologies for adoption, use a structured scoring framework ra
 
 ### Evaluation Criteria Matrix
 
-| Criterion | Weight | Description |
-|-----------|--------|-------------|
-| **Fitness for purpose** | 25% | Does it solve the actual problem well? |
-| **Operational maturity** | 20% | Can we run it in production? Monitoring, debugging, on-call? |
-| **Team capability** | 15% | Does our team know it or can they learn it quickly? |
-| **Community & ecosystem** | 15% | Is there a healthy community? Good documentation? Libraries? |
-| **Total cost of ownership** | 15% | Licensing, infrastructure, training, maintenance over 3 years |
-| **Strategic alignment** | 10% | Does it fit our existing stack? Does it move us toward our target architecture? |
+| Criterion                   | Weight | Description                                                                     |
+| --------------------------- | ------ | ------------------------------------------------------------------------------- |
+| **Fitness for purpose**     | 25%    | Does it solve the actual problem well?                                          |
+| **Operational maturity**    | 20%    | Can we run it in production? Monitoring, debugging, on-call?                    |
+| **Team capability**         | 15%    | Does our team know it or can they learn it quickly?                             |
+| **Community & ecosystem**   | 15%    | Is there a healthy community? Good documentation? Libraries?                    |
+| **Total cost of ownership** | 15%    | Licensing, infrastructure, training, maintenance over 3 years                   |
+| **Strategic alignment**     | 10%    | Does it fit our existing stack? Does it move us toward our target architecture? |
 
 ### Scoring Guide
 
-| Score | Meaning |
-|-------|---------|
-| 1 | Unacceptable. Blocking issue. |
-| 2 | Below average. Significant effort to make it work. |
-| 3 | Acceptable. Meets requirements with some caveats. |
-| 4 | Good. Exceeds requirements in most areas. |
-| 5 | Excellent. Best-in-class for this criterion. |
+| Score | Meaning                                            |
+| ----- | -------------------------------------------------- |
+| 1     | Unacceptable. Blocking issue.                      |
+| 2     | Below average. Significant effort to make it work. |
+| 3     | Acceptable. Meets requirements with some caveats.  |
+| 4     | Good. Exceeds requirements in most areas.          |
+| 5     | Excellent. Best-in-class for this criterion.       |
 
 ### Example: Evaluating Message Queue Technologies
 
@@ -287,16 +310,16 @@ One of the most common and highest-impact decisions Staff+ engineers make. The w
 
 ### Build vs Buy Evaluation Table
 
-| Factor | Favors Build | Favors Buy |
-|--------|-------------|------------|
-| **Differentiation** | Core to competitive advantage | Commodity capability |
-| **Control** | Need full control over behavior and roadmap | Standard behavior is sufficient |
-| **Integration** | Deep integration with proprietary systems | Standard integrations available |
-| **Timeline** | Have time to build | Need it yesterday |
-| **Team expertise** | Domain experts on staff | Would need to hire |
-| **Maintenance burden** | Have ops capacity | Do not want to maintain |
-| **Vendor risk** | Vendor could sunset, raise prices, or pivot | Vendor is stable and well-funded |
-| **Data sensitivity** | Regulatory or security constraints on third parties | Standard data handling |
+| Factor                 | Favors Build                                        | Favors Buy                       |
+| ---------------------- | --------------------------------------------------- | -------------------------------- |
+| **Differentiation**    | Core to competitive advantage                       | Commodity capability             |
+| **Control**            | Need full control over behavior and roadmap         | Standard behavior is sufficient  |
+| **Integration**        | Deep integration with proprietary systems           | Standard integrations available  |
+| **Timeline**           | Have time to build                                  | Need it yesterday                |
+| **Team expertise**     | Domain experts on staff                             | Would need to hire               |
+| **Maintenance burden** | Have ops capacity                                   | Do not want to maintain          |
+| **Vendor risk**        | Vendor could sunset, raise prices, or pivot         | Vendor is stable and well-funded |
+| **Data sensitivity**   | Regulatory or security constraints on third parties | Standard data handling           |
 
 ---
 
@@ -397,14 +420,14 @@ Week 4:  [Expand to 100%    ] ████████████████�
 
 ### Migration Planning Checklist
 
-| Phase | Tasks |
-|-------|-------|
-| **Discovery** | Map all dependencies on the old system. Identify data migration needs. Catalog all consumers. |
-| **Design** | Choose migration pattern. Define rollback triggers. Set success metrics. |
-| **Preparation** | Build observability for old and new systems. Create runbooks. Communicate timeline. |
-| **Execution** | Migrate incrementally. Monitor closely. Hold go/no-go checkpoints. |
-| **Validation** | Compare outputs. Run integration tests. Validate performance under load. |
-| **Cleanup** | Decommission old system. Remove feature flags. Update documentation. |
+| Phase           | Tasks                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| **Discovery**   | Map all dependencies on the old system. Identify data migration needs. Catalog all consumers. |
+| **Design**      | Choose migration pattern. Define rollback triggers. Set success metrics.                      |
+| **Preparation** | Build observability for old and new systems. Create runbooks. Communicate timeline.           |
+| **Execution**   | Migrate incrementally. Monitor closely. Hold go/no-go checkpoints.                            |
+| **Validation**  | Compare outputs. Run integration tests. Validate performance under load.                      |
+| **Cleanup**     | Decommission old system. Remove feature flags. Update documentation.                          |
 
 ---
 
@@ -450,19 +473,19 @@ This is the skill that separates Staff engineers from Principals. If you cannot 
 
 ### The Three Audiences
 
-| Audience | They Care About | Speak In Terms Of |
-|----------|----------------|-------------------|
-| **Engineering** | Architecture, patterns, correctness | Systems, latency, throughput, reliability |
-| **Product** | Features, timelines, user impact | Capabilities, velocity, customer experience |
-| **Executive** | Revenue, risk, competitive advantage | Investment, ROI, strategic positioning |
+| Audience        | They Care About                      | Speak In Terms Of                           |
+| --------------- | ------------------------------------ | ------------------------------------------- |
+| **Engineering** | Architecture, patterns, correctness  | Systems, latency, throughput, reliability   |
+| **Product**     | Features, timelines, user impact     | Capabilities, velocity, customer experience |
+| **Executive**   | Revenue, risk, competitive advantage | Investment, ROI, strategic positioning      |
 
 ### Translation Examples
 
-| Technical Concept | For Product | For Executives |
-|-------------------|-------------|----------------|
-| "We need to decompose the monolith into microservices" | "This will let us ship features 3x faster because teams can deploy independently" | "This reduces our time-to-market from 3 months to 1 month per feature, directly impacting our competitive response time" |
-| "We should adopt event-driven architecture" | "This means different parts of the product can react to changes in real-time without us building custom integrations for each one" | "This reduces integration cost for each new product line from 2 engineer-months to 2 engineer-weeks" |
-| "Our test coverage is at 30%, we need to reach 80%" | "Right now, one in three releases has a bug that reaches customers. This investment cuts that to one in ten" | "Our current defect rate costs us approximately $200K/quarter in support escalations and customer churn" |
+| Technical Concept                                      | For Product                                                                                                                        | For Executives                                                                                                           |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| "We need to decompose the monolith into microservices" | "This will let us ship features 3x faster because teams can deploy independently"                                                  | "This reduces our time-to-market from 3 months to 1 month per feature, directly impacting our competitive response time" |
+| "We should adopt event-driven architecture"            | "This means different parts of the product can react to changes in real-time without us building custom integrations for each one" | "This reduces integration cost for each new product line from 2 engineer-months to 2 engineer-weeks"                     |
+| "Our test coverage is at 30%, we need to reach 80%"    | "Right now, one in three releases has a bug that reaches customers. This investment cuts that to one in ten"                       | "Our current defect rate costs us approximately $200K/quarter in support escalations and customer churn"                 |
 
 ---
 
@@ -548,16 +571,16 @@ I always bring a one-page summary with a visual timeline, and I prepare for the 
 
 ## Anti-patterns to Avoid
 
-| Anti-pattern | Why It Fails | What to Do Instead |
-|-------------|-------------|-------------------|
-| **Resume-driven architecture** | Choosing tech because it looks good on your resume | Use the evaluation framework. Choose boring technology for non-differentiating systems. |
-| **Boiling the ocean** | Trying to fix everything at once | Phase your strategy. Ship value incrementally. |
-| **Ivory tower architecture** | Designing without input from the teams who will build it | Co-author RFCs with tech leads. Run design reviews before finalizing. |
-| **Analysis paralysis** | Evaluating forever, never deciding | Set decision deadlines. "Reversible decisions should be made quickly." |
-| **Not invented here syndrome** | Building everything custom when great solutions exist | Apply the build vs buy framework honestly. |
-| **Hype-driven development** | Adopting every new framework | Ask "what problem does this solve for us specifically?" |
-| **Strategy without execution plan** | Vision document with no migration path | Every strategy document must include a phased execution plan. |
-| **Ignoring organizational context** | Technically optimal but organizationally impossible | Factor in team skills, political dynamics, and change capacity. |
+| Anti-pattern                        | Why It Fails                                             | What to Do Instead                                                                      |
+| ----------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| **Resume-driven architecture**      | Choosing tech because it looks good on your resume       | Use the evaluation framework. Choose boring technology for non-differentiating systems. |
+| **Boiling the ocean**               | Trying to fix everything at once                         | Phase your strategy. Ship value incrementally.                                          |
+| **Ivory tower architecture**        | Designing without input from the teams who will build it | Co-author RFCs with tech leads. Run design reviews before finalizing.                   |
+| **Analysis paralysis**              | Evaluating forever, never deciding                       | Set decision deadlines. "Reversible decisions should be made quickly."                  |
+| **Not invented here syndrome**      | Building everything custom when great solutions exist    | Apply the build vs buy framework honestly.                                              |
+| **Hype-driven development**         | Adopting every new framework                             | Ask "what problem does this solve for us specifically?"                                 |
+| **Strategy without execution plan** | Vision document with no migration path                   | Every strategy document must include a phased execution plan.                           |
+| **Ignoring organizational context** | Technically optimal but organizationally impossible      | Factor in team skills, political dynamics, and change capacity.                         |
 
 ---
 

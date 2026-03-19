@@ -43,13 +43,13 @@ The most relevant principles for UI work:
 
 **Duration guidelines:**
 
-| Animation Type         | Duration      |
-|------------------------|---------------|
-| Micro-interaction      | 100-200ms     |
-| Hover / focus state    | 150-250ms     |
-| Component entrance     | 200-400ms     |
-| Modal / overlay        | 250-350ms     |
-| Page transition        | 300-500ms     |
+| Animation Type      | Duration  |
+| ------------------- | --------- |
+| Micro-interaction   | 100-200ms |
+| Hover / focus state | 150-250ms |
+| Component entrance  | 200-400ms |
+| Modal / overlay     | 250-350ms |
+| Page transition     | 300-500ms |
 
 **Easing functions:**
 
@@ -64,9 +64,9 @@ spring:      Overshoots then settles  → Playful, natural interactions
 **CSS cubic-bezier values:**
 
 ```css
---ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
---ease-in: cubic-bezier(0.4, 0.0, 1, 1);
---ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+--ease-out: cubic-bezier(0, 0, 0.2, 1);
+--ease-in: cubic-bezier(0.4, 0, 1, 1);
+--ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 ```
 
@@ -80,8 +80,12 @@ simple toggles.
   transform: scale(1);
   transition: transform 200ms ease-out;
 }
-.button:hover { transform: scale(1.05); }
-.button:active { transform: scale(0.95); }
+.button:hover {
+  transform: scale(1.05);
+}
+.button:active {
+  transform: scale(0.95);
+}
 ```
 
 **CSS Animations** use `@keyframes` for multi-step sequences. Use for spinners,
@@ -89,22 +93,30 @@ entrances, continuous effects.
 
 ```css
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.card { animation: slideIn 400ms ease-out forwards; }
+.card {
+  animation: slideIn 400ms ease-out forwards;
+}
 ```
 
 **JS Animations** provide dynamic control: start, stop, reverse, chain, respond to
 input. Use for gestures, complex orchestration, runtime-dependent values.
 
 | Capability               | CSS Transition | CSS Animation | JS Animation |
-|--------------------------|:--------------:|:-------------:|:------------:|
-| Simple state changes     | Yes            |               |              |
-| Multi-step sequences     |                | Yes           | Yes          |
-| Dynamic/gesture-driven   |                |               | Yes          |
-| Mount/unmount animations |                |               | Yes          |
-| GPU performance          | Yes            | Yes           | Depends      |
+| ------------------------ | :------------: | :-----------: | :----------: |
+| Simple state changes     |      Yes       |               |              |
+| Multi-step sequences     |                |      Yes      |     Yes      |
+| Dynamic/gesture-driven   |                |               |     Yes      |
+| Mount/unmount animations |                |               |     Yes      |
+| GPU performance          |      Yes       |      Yes      |   Depends    |
 
 ### Framer Motion Basics
 
@@ -114,7 +126,7 @@ input. Use for gestures, complex orchestration, runtime-dependent values.
 <motion.div
   initial={{ opacity: 0, y: 20 }}
   animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.4, ease: "easeOut" }}
+  transition={{ duration: 0.4, ease: 'easeOut' }}
   className="rounded-xl bg-white p-6 shadow-md"
 >
   Content here
@@ -134,8 +146,12 @@ const item = {
 };
 
 <motion.ul variants={container} initial="hidden" animate="visible">
-  {items.map((i) => <motion.li key={i} variants={item}>{i}</motion.li>)}
-</motion.ul>
+  {items.map((i) => (
+    <motion.li key={i} variants={item}>
+      {i}
+    </motion.li>
+  ))}
+</motion.ul>;
 ```
 
 **AnimatePresence** enables exit animations on unmount:
@@ -171,7 +187,7 @@ Small, contained animations responding to user actions.
 <motion.button
   whileHover={{ scale: 1.05, y: -2 }}
   whileTap={{ scale: 0.95 }}
-  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
   className="rounded-lg bg-blue-600 px-6 py-3 text-white"
 >
   Click me
@@ -183,13 +199,19 @@ Small, contained animations responding to user actions.
 ```tsx
 function Toggle({ isOn, onToggle }: ToggleProps) {
   return (
-    <button onClick={onToggle} role="switch" aria-checked={isOn}
-      className={cn("relative h-7 w-12 rounded-full transition-colors",
-        isOn ? "bg-blue-600" : "bg-gray-300")}>
+    <button
+      onClick={onToggle}
+      role="switch"
+      aria-checked={isOn}
+      className={cn(
+        'relative h-7 w-12 rounded-full transition-colors',
+        isOn ? 'bg-blue-600' : 'bg-gray-300'
+      )}
+    >
       <motion.div
         className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-md"
         animate={{ x: isOn ? 22 : 2 }}
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
       />
     </button>
   );
@@ -204,8 +226,8 @@ function Toggle({ isOn, onToggle }: ToggleProps) {
 <motion.div
   initial={{ opacity: 0, y: 40 }}
   whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true, margin: "-100px" }}
-  transition={{ duration: 0.6, ease: "easeOut" }}
+  viewport={{ once: true, margin: '-100px' }}
+  transition={{ duration: 0.6, ease: 'easeOut' }}
 >
   {children}
 </motion.div>
@@ -239,7 +261,7 @@ function PageTransition({ children }: { children: React.ReactNode }) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
         {children}
       </motion.div>
@@ -248,12 +270,12 @@ function PageTransition({ children }: { children: React.ReactNode }) {
 }
 ```
 
-| Pattern       | Effect                       | When to Use              |
-|---------------|------------------------------|--------------------------|
-| Fade          | Opacity 0 to 1               | Default, always works    |
-| Slide         | Translate X or Y             | Linear navigation flows  |
-| Scale         | Scale from 0.95 to 1         | Modal-like page reveals  |
-| Shared layout | Element morphs between pages | Detail views, galleries  |
+| Pattern       | Effect                       | When to Use             |
+| ------------- | ---------------------------- | ----------------------- |
+| Fade          | Opacity 0 to 1               | Default, always works   |
+| Slide         | Translate X or Y             | Linear navigation flows |
+| Scale         | Scale from 0.95 to 1         | Modal-like page reveals |
+| Shared layout | Element morphs between pages | Detail views, galleries |
 
 ### Loading Animations
 
@@ -261,13 +283,18 @@ function PageTransition({ children }: { children: React.ReactNode }) {
 
 ```css
 .spinner {
-  width: 24px; height: 24px;
+  width: 24px;
+  height: 24px;
   border: 3px solid #e5e7eb;
   border-top-color: #3b82f6;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 ```
 
 **Skeleton shimmer (CSS):**
@@ -279,8 +306,12 @@ function PageTransition({ children }: { children: React.ReactNode }) {
   animation: shimmer 1.5s ease-in-out infinite;
 }
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 ```
 
@@ -311,7 +342,9 @@ The `prefers-reduced-motion` media query is not optional.
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
@@ -328,7 +361,7 @@ const shouldReduceMotion = useReducedMotion();
   initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
   animate={{ opacity: 1, y: 0 }}
   transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.4 }}
-/>
+/>;
 ```
 
 - Reduce motion, do not remove state changes (opacity fades are fine)
@@ -349,16 +382,31 @@ const container = {
 };
 const item = {
   hidden: { opacity: 0, x: -20 },
-  show: { opacity: 1, x: 0,
-    transition: { type: "spring", stiffness: 300, damping: 24 } },
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: { type: 'spring', stiffness: 300, damping: 24 },
+  },
 };
 
-function ExperienceTimeline({ experiences }: { experiences: readonly Experience[] }) {
+function ExperienceTimeline({
+  experiences,
+}: {
+  experiences: readonly Experience[];
+}) {
   return (
-    <motion.div variants={container} initial="hidden" whileInView="show"
-      viewport={{ once: true }}>
+    <motion.div
+      variants={container}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true }}
+    >
       {experiences.map((exp) => (
-        <motion.div key={exp.id} variants={item} className="mb-8 rounded-xl border p-6">
+        <motion.div
+          key={exp.id}
+          variants={item}
+          className="mb-8 rounded-xl border p-6"
+        >
           <h3 className="text-lg font-semibold">{exp.title}</h3>
           <p className="text-gray-500">{exp.company}</p>
         </motion.div>
@@ -373,17 +421,21 @@ function ExperienceTimeline({ experiences }: { experiences: readonly Experience[
 ```tsx
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
 
   return (
-    <button onClick={() => setTheme(isDark ? "light" : "dark")}
-      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}>
+    <button
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+    >
       <AnimatePresence mode="wait">
-        <motion.div key={isDark ? "moon" : "sun"}
+        <motion.div
+          key={isDark ? 'moon' : 'sun'}
           initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
           animate={{ rotate: 0, opacity: 1, scale: 1 }}
           exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
-          transition={{ duration: 0.2 }}>
+          transition={{ duration: 0.2 }}
+        >
           {isDark ? <MoonIcon /> : <SunIcon />}
         </motion.div>
       </AnimatePresence>
@@ -396,8 +448,12 @@ function ThemeToggle() {
 
 ```tsx
 <motion.div
-  whileHover={{ y: -8, rotateX: 2, rotateY: -2,
-    transition: { type: "spring", stiffness: 300, damping: 20 } }}
+  whileHover={{
+    y: -8,
+    rotateX: 2,
+    rotateY: -2,
+    transition: { type: 'spring', stiffness: 300, damping: 20 },
+  }}
   className="cursor-pointer rounded-xl border bg-white p-6 shadow-sm"
   style={{ transformPerspective: 800 }}
 >
@@ -464,8 +520,8 @@ Wrap sections in scroll-triggered fade-ins with staggered children:
 <motion.section
   initial={{ opacity: 0, y: 30 }}
   whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true, margin: "-50px" }}
-  transition={{ duration: 0.5, ease: "easeOut" }}
+  viewport={{ once: true, margin: '-50px' }}
+  transition={{ duration: 0.5, ease: 'easeOut' }}
 >
   {/* Section content */}
 </motion.section>
@@ -490,21 +546,21 @@ the eye through your career history.
 
 ## Quick Reference
 
-| Concept                  | Key Point                                           |
-|--------------------------|-----------------------------------------------------|
-| Animation purpose        | Feedback, orientation, delight, continuity          |
-| Cheap properties         | `transform`, `opacity` (GPU composited)             |
-| Expensive properties     | `width`, `height`, `top`, `left` (trigger layout)   |
-| Micro-interaction timing | 100-200ms                                           |
-| Entrance timing          | 200-400ms                                           |
-| Page transition timing   | 300-500ms                                           |
-| Ease-out                 | Elements entering (decelerate in)                   |
-| Ease-in                  | Elements leaving (accelerate out)                   |
-| Spring                   | Natural, playful, overshoots then settles           |
-| AnimatePresence          | Exit animations for unmounting components           |
-| Layout animations        | Auto-animate position/size changes                  |
-| Reduced motion           | Always check and respect `prefers-reduced-motion`   |
-| Framer Motion variants   | Named states with staggerChildren orchestration     |
+| Concept                  | Key Point                                         |
+| ------------------------ | ------------------------------------------------- |
+| Animation purpose        | Feedback, orientation, delight, continuity        |
+| Cheap properties         | `transform`, `opacity` (GPU composited)           |
+| Expensive properties     | `width`, `height`, `top`, `left` (trigger layout) |
+| Micro-interaction timing | 100-200ms                                         |
+| Entrance timing          | 200-400ms                                         |
+| Page transition timing   | 300-500ms                                         |
+| Ease-out                 | Elements entering (decelerate in)                 |
+| Ease-in                  | Elements leaving (accelerate out)                 |
+| Spring                   | Natural, playful, overshoots then settles         |
+| AnimatePresence          | Exit animations for unmounting components         |
+| Layout animations        | Auto-animate position/size changes                |
+| Reduced motion           | Always check and respect `prefers-reduced-motion` |
+| Framer Motion variants   | Named states with staggerChildren orchestration   |
 
 **The golden rule of UI animation:** If the user notices the animation itself rather
 than the content it reveals, the animation is too much. Motion should be felt, not seen.

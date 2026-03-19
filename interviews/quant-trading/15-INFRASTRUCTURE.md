@@ -70,13 +70,13 @@ DATA FLOW: INGESTION --> PROCESSING --> SIGNALS --> EXECUTION --> RISK
 
 ### Monolith vs. Microservices
 
-| Aspect | Monolith | Microservices |
-|---|---|---|
-| Latency | Lower (no network hops) | Higher (serialization overhead) |
-| Deployment | All-or-nothing | Independent per service |
-| Debugging | Easier (single process) | Harder (distributed tracing) |
-| Scaling | Vertical only | Horizontal per component |
-| Best for | HFT, small teams | Multi-strategy, large teams |
+| Aspect     | Monolith                | Microservices                   |
+| ---------- | ----------------------- | ------------------------------- |
+| Latency    | Lower (no network hops) | Higher (serialization overhead) |
+| Deployment | All-or-nothing          | Independent per service         |
+| Debugging  | Easier (single process) | Harder (distributed tracing)    |
+| Scaling    | Vertical only           | Horizontal per component        |
+| Best for   | HFT, small teams        | Multi-strategy, large teams     |
 
 Most quant firms use a **hybrid**: a monolithic trading core (for latency) with microservices for research, risk, and reporting.
 
@@ -211,13 +211,13 @@ MARKET DATA FEED ARCHITECTURE
 
 Choosing the right storage format is critical. Here is a comparison:
 
-| Format | Read Speed | Write Speed | Compression | Query | Best For |
-|---|---|---|---|---|---|
-| HDF5 | Fast | Fast | Good | Limited | Research, fixed schemas |
-| Parquet | Very fast | Moderate | Excellent | Column-level | Large datasets, analytics |
-| TimescaleDB | Fast | Fast | Good | Full SQL | Production, real-time queries |
-| Arctic (MongoDB) | Moderate | Fast | Good | Flexible | Versioned data, notebooks |
-| CSV | Slow | Slow | None | None | Never in production |
+| Format           | Read Speed | Write Speed | Compression | Query        | Best For                      |
+| ---------------- | ---------- | ----------- | ----------- | ------------ | ----------------------------- |
+| HDF5             | Fast       | Fast        | Good        | Limited      | Research, fixed schemas       |
+| Parquet          | Very fast  | Moderate    | Excellent   | Column-level | Large datasets, analytics     |
+| TimescaleDB      | Fast       | Fast        | Good        | Full SQL     | Production, real-time queries |
+| Arctic (MongoDB) | Moderate   | Fast        | Good        | Flexible     | Versioned data, notebooks     |
+| CSV              | Slow       | Slow        | None        | None         | Never in production           |
 
 ```python
 import pandas as pd
@@ -776,22 +776,22 @@ DEPLOYMENT MODEL COMPARISON
 
 ```yaml
 # docker-compose.yml - Development trading stack
-version: "3.9"
+version: '3.9'
 services:
   timescaledb:
     image: timescale/timescaledb:latest-pg16
     environment:
-      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
       POSTGRES_DB: trading
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - tsdb_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
 
   kafka:
@@ -811,14 +811,14 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - grafana_data:/var/lib/grafana
 
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9090:9090"
+      - '9090:9090'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
@@ -972,8 +972,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Trading engine is down"
-          runbook: "https://wiki/runbooks/trading-engine-down"
+          summary: 'Trading engine is down'
+          runbook: 'https://wiki/runbooks/trading-engine-down'
 
       # High: Latency spike
       - alert: HighLatency
@@ -982,7 +982,7 @@ groups:
         labels:
           severity: high
         annotations:
-          summary: "P99 latency exceeds 1ms"
+          summary: 'P99 latency exceeds 1ms'
 
       # High: P&L drawdown
       - alert: PnLDrawdown
@@ -991,7 +991,7 @@ groups:
         labels:
           severity: high
         annotations:
-          summary: "Strategy P&L below -$50K threshold"
+          summary: 'Strategy P&L below -$50K threshold'
 
       # Medium: High rejection rate
       - alert: HighRejectionRate
@@ -1000,7 +1000,7 @@ groups:
         labels:
           severity: medium
         annotations:
-          summary: "Order rejection rate exceeds 5%"
+          summary: 'Order rejection rate exceeds 5%'
 
       # Medium: Data feed gap
       - alert: DataFeedGap
@@ -1009,7 +1009,7 @@ groups:
         labels:
           severity: medium
         annotations:
-          summary: "No ticks received for 30+ seconds"
+          summary: 'No ticks received for 30+ seconds'
 ```
 
 ### Grafana Dashboard Layout
@@ -2038,6 +2038,6 @@ A: Research and production have fundamentally different requirements. Research o
 
 ## Navigation
 
-| Previous | Up | Next |
-|---|---|---|
+| Previous                                                      | Up                       | Next                                                    |
+| ------------------------------------------------------------- | ------------------------ | ------------------------------------------------------- |
 | [Ch 14: Portfolio Construction](14-PORTFOLIO-CONSTRUCTION.md) | [Roadmap](00-ROADMAP.md) | [Ch 16: Regulatory and Ethics](16-REGULATORY-ETHICS.md) |

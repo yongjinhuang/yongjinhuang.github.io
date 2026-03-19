@@ -6,17 +6,17 @@ A loyalty program must track points earning, redemption, expiration, and tier qu
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **members** | Loyalty program membership with tier tracking | Links a user to the loyalty program with lifetime aggregates and current tier status |
-| **points_balances** | Real-time point balance by type | Provides instant balance lookups with optimistic locking to prevent race conditions on concurrent transactions |
-| **points_ledger** | Append-only record of every point movement | Immutable audit trail; the source of truth for all point operations; analogous to a financial ledger |
-| **point_lots** | Individual batches of earned points with expiration dates | Enables FIFO expiration and redemption -- oldest points are used/expired first |
-| **tiers** | Tier definitions with thresholds and benefits | Defines the tier structure (bronze through platinum) with qualification rules and multipliers |
-| **tier_history** | Records every tier change | Audit trail for tier upgrades, downgrades, and renewals; enables dispute resolution |
-| **earning_rules** | Configurable rules for how points are earned | Decouples earning logic from code; enables marketing to launch campaigns without engineering changes |
-| **rewards** | Catalog of redeemable items | What members can spend points on; includes inventory tracking and tier-gating |
-| **redemptions** | Records of point-for-reward exchanges | Tracks the full lifecycle of a redemption from hold through fulfillment or cancellation |
+| Table               | Purpose                                                   | Why It Exists                                                                                                  |
+| ------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **members**         | Loyalty program membership with tier tracking             | Links a user to the loyalty program with lifetime aggregates and current tier status                           |
+| **points_balances** | Real-time point balance by type                           | Provides instant balance lookups with optimistic locking to prevent race conditions on concurrent transactions |
+| **points_ledger**   | Append-only record of every point movement                | Immutable audit trail; the source of truth for all point operations; analogous to a financial ledger           |
+| **point_lots**      | Individual batches of earned points with expiration dates | Enables FIFO expiration and redemption -- oldest points are used/expired first                                 |
+| **tiers**           | Tier definitions with thresholds and benefits             | Defines the tier structure (bronze through platinum) with qualification rules and multipliers                  |
+| **tier_history**    | Records every tier change                                 | Audit trail for tier upgrades, downgrades, and renewals; enables dispute resolution                            |
+| **earning_rules**   | Configurable rules for how points are earned              | Decouples earning logic from code; enables marketing to launch campaigns without engineering changes           |
+| **rewards**         | Catalog of redeemable items                               | What members can spend points on; includes inventory tracking and tier-gating                                  |
+| **redemptions**     | Records of point-for-reward exchanges                     | Tracks the full lifecycle of a redemption from hold through fulfillment or cancellation                        |
 
 ---
 
@@ -24,116 +24,116 @@ A loyalty program must track points earning, redemption, expiration, and tier qu
 
 ### members
 
-| Field | Type | Description |
-|-------|------|-------------|
-| member_id | PK, UUID | Unique loyalty member identifier |
-| user_id | FK → users | Links to the user account; a user may have one loyalty membership |
-| enrollment_status | ENUM | active, suspended, closed; suspended members cannot earn or redeem |
-| current_tier_id | FK → tiers | Current tier level; determines earn multiplier and reward eligibility |
-| tier_qualified_until | DATE | When current tier status expires; if not re-qualified, member is downgraded |
-| lifetime_earned | BIGINT | Total points ever earned; used for lifetime tier qualification and analytics |
-| lifetime_redeemed | BIGINT | Total points ever redeemed; part of the liability calculation |
-| lifetime_expired | BIGINT | Total points that expired unused; important for financial reporting |
-| joined_at | TIMESTAMP | When the member enrolled in the loyalty program |
+| Field                | Type       | Description                                                                  |
+| -------------------- | ---------- | ---------------------------------------------------------------------------- |
+| member_id            | PK, UUID   | Unique loyalty member identifier                                             |
+| user_id              | FK → users | Links to the user account; a user may have one loyalty membership            |
+| enrollment_status    | ENUM       | active, suspended, closed; suspended members cannot earn or redeem           |
+| current_tier_id      | FK → tiers | Current tier level; determines earn multiplier and reward eligibility        |
+| tier_qualified_until | DATE       | When current tier status expires; if not re-qualified, member is downgraded  |
+| lifetime_earned      | BIGINT     | Total points ever earned; used for lifetime tier qualification and analytics |
+| lifetime_redeemed    | BIGINT     | Total points ever redeemed; part of the liability calculation                |
+| lifetime_expired     | BIGINT     | Total points that expired unused; important for financial reporting          |
+| joined_at            | TIMESTAMP  | When the member enrolled in the loyalty program                              |
 
 ### points_balances
 
-| Field | Type | Description |
-|-------|------|-------------|
-| member_id | FK, composite PK | Which member's balance |
-| point_type | VARCHAR, composite PK | base, bonus, promotional; different types may have different expiration rules |
-| balance | BIGINT | Current available point balance |
-| held_amount | BIGINT | Points currently held (reserved) for pending redemptions; cannot be spent or expired |
-| version | INT | Optimistic locking; prevents race conditions when two transactions try to deduct simultaneously |
+| Field       | Type                  | Description                                                                                     |
+| ----------- | --------------------- | ----------------------------------------------------------------------------------------------- |
+| member_id   | FK, composite PK      | Which member's balance                                                                          |
+| point_type  | VARCHAR, composite PK | base, bonus, promotional; different types may have different expiration rules                   |
+| balance     | BIGINT                | Current available point balance                                                                 |
+| held_amount | BIGINT                | Points currently held (reserved) for pending redemptions; cannot be spent or expired            |
+| version     | INT                   | Optimistic locking; prevents race conditions when two transactions try to deduct simultaneously |
 
 ### points_ledger (append-only, immutable)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| entry_id | PK, UUID | Unique ledger entry identifier |
-| member_id | FK → members | Which member this entry affects |
-| point_type | VARCHAR | base, bonus, promotional; matches points_balances.point_type |
-| operation | ENUM | earn, redeem, expire, adjust, hold, release; every point movement has a named operation |
-| amount | BIGINT | Positive for earn/release, negative for redeem/expire/hold; signed amount |
-| running_balance | BIGINT | Balance after this operation; enables point-in-time balance reconstruction |
-| reference_id | UUID | Links to the source (transaction_id, redemption_id, earning_rule_id); enables tracing |
-| idempotency_key | VARCHAR, UNIQUE | Prevents double-crediting from retried events |
-| created_at | TIMESTAMP | When this entry was recorded; immutable |
+| Field           | Type            | Description                                                                             |
+| --------------- | --------------- | --------------------------------------------------------------------------------------- |
+| entry_id        | PK, UUID        | Unique ledger entry identifier                                                          |
+| member_id       | FK → members    | Which member this entry affects                                                         |
+| point_type      | VARCHAR         | base, bonus, promotional; matches points_balances.point_type                            |
+| operation       | ENUM            | earn, redeem, expire, adjust, hold, release; every point movement has a named operation |
+| amount          | BIGINT          | Positive for earn/release, negative for redeem/expire/hold; signed amount               |
+| running_balance | BIGINT          | Balance after this operation; enables point-in-time balance reconstruction              |
+| reference_id    | UUID            | Links to the source (transaction_id, redemption_id, earning_rule_id); enables tracing   |
+| idempotency_key | VARCHAR, UNIQUE | Prevents double-crediting from retried events                                           |
+| created_at      | TIMESTAMP       | When this entry was recorded; immutable                                                 |
 
 ### point_lots (FIFO expiration)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| lot_id | PK, UUID | Unique lot identifier |
-| member_id | FK → members | Which member earned this lot |
-| earned_amount | BIGINT | Original points in this lot; never changes after creation |
-| remaining_amount | BIGINT | Points still available in this lot; decremented on redemption or expiration |
-| earned_at | TIMESTAMP | When these points were earned; determines FIFO order |
-| expires_at | TIMESTAMP | When these points expire if not used; typically 12-24 months after earning |
-| source_rule_id | FK → earning_rules | Which rule generated these points; useful for analytics and dispute resolution |
+| Field            | Type               | Description                                                                    |
+| ---------------- | ------------------ | ------------------------------------------------------------------------------ |
+| lot_id           | PK, UUID           | Unique lot identifier                                                          |
+| member_id        | FK → members       | Which member earned this lot                                                   |
+| earned_amount    | BIGINT             | Original points in this lot; never changes after creation                      |
+| remaining_amount | BIGINT             | Points still available in this lot; decremented on redemption or expiration    |
+| earned_at        | TIMESTAMP          | When these points were earned; determines FIFO order                           |
+| expires_at       | TIMESTAMP          | When these points expire if not used; typically 12-24 months after earning     |
+| source_rule_id   | FK → earning_rules | Which rule generated these points; useful for analytics and dispute resolution |
 
 ### tiers
 
-| Field | Type | Description |
-|-------|------|-------------|
-| tier_id | PK, UUID | Unique tier identifier |
-| name | ENUM | bronze, silver, gold, platinum; display name and sort order |
-| qualification_threshold | BIGINT | Points required to qualify for this tier within the qualification window |
-| retention_threshold | BIGINT | Points required to retain this tier at renewal; typically lower than qualification |
-| earn_multiplier | DECIMAL | Multiplier applied to base earning (e.g., gold = 1.5x, platinum = 2x) |
-| benefits_json | JSONB | Tier-specific perks (free shipping, priority support, exclusive access) |
+| Field                   | Type     | Description                                                                        |
+| ----------------------- | -------- | ---------------------------------------------------------------------------------- |
+| tier_id                 | PK, UUID | Unique tier identifier                                                             |
+| name                    | ENUM     | bronze, silver, gold, platinum; display name and sort order                        |
+| qualification_threshold | BIGINT   | Points required to qualify for this tier within the qualification window           |
+| retention_threshold     | BIGINT   | Points required to retain this tier at renewal; typically lower than qualification |
+| earn_multiplier         | DECIMAL  | Multiplier applied to base earning (e.g., gold = 1.5x, platinum = 2x)              |
+| benefits_json           | JSONB    | Tier-specific perks (free shipping, priority support, exclusive access)            |
 
 ### tier_history
 
-| Field | Type | Description |
-|-------|------|-------------|
-| member_id | FK → members | Which member changed tier |
-| old_tier_id | FK → tiers | Previous tier; null for initial enrollment |
-| new_tier_id | FK → tiers | New tier after the change |
-| change_type | ENUM | upgrade, downgrade, renewal; categorizes the reason for the change |
-| qualifying_points | BIGINT | Points accumulated during the qualification window; evidence for the tier decision |
-| qualification_window_start | DATE | Start of the evaluation period |
-| qualification_window_end | DATE | End of the evaluation period |
-| changed_at | TIMESTAMP | When the tier change took effect |
+| Field                      | Type         | Description                                                                        |
+| -------------------------- | ------------ | ---------------------------------------------------------------------------------- |
+| member_id                  | FK → members | Which member changed tier                                                          |
+| old_tier_id                | FK → tiers   | Previous tier; null for initial enrollment                                         |
+| new_tier_id                | FK → tiers   | New tier after the change                                                          |
+| change_type                | ENUM         | upgrade, downgrade, renewal; categorizes the reason for the change                 |
+| qualifying_points          | BIGINT       | Points accumulated during the qualification window; evidence for the tier decision |
+| qualification_window_start | DATE         | Start of the evaluation period                                                     |
+| qualification_window_end   | DATE         | End of the evaluation period                                                       |
+| changed_at                 | TIMESTAMP    | When the tier change took effect                                                   |
 
 ### earning_rules
 
-| Field | Type | Description |
-|-------|------|-------------|
-| rule_id | PK, UUID | Unique rule identifier |
-| name | VARCHAR | Human-readable rule name (e.g., "Standard Purchase", "Double Points Weekend") |
-| rule_type | ENUM | spend (per dollar), activity (per action), partner (partner transactions), campaign (promotional) |
-| points_per_unit | INT | Base points earned per unit (e.g., 1 point per dollar spent) |
-| tier_multiplier_json | JSONB | Tier-specific multipliers: `{"bronze": 1, "silver": 1.25, "gold": 1.5, "platinum": 2}` |
-| daily_cap | INT | Maximum points earnable per day under this rule; prevents gaming and limits liability |
-| effective_from | TIMESTAMP | When this rule becomes active; enables scheduling promotional campaigns |
-| effective_until | TIMESTAMP | When this rule expires; null for permanent rules |
+| Field                | Type      | Description                                                                                       |
+| -------------------- | --------- | ------------------------------------------------------------------------------------------------- |
+| rule_id              | PK, UUID  | Unique rule identifier                                                                            |
+| name                 | VARCHAR   | Human-readable rule name (e.g., "Standard Purchase", "Double Points Weekend")                     |
+| rule_type            | ENUM      | spend (per dollar), activity (per action), partner (partner transactions), campaign (promotional) |
+| points_per_unit      | INT       | Base points earned per unit (e.g., 1 point per dollar spent)                                      |
+| tier_multiplier_json | JSONB     | Tier-specific multipliers: `{"bronze": 1, "silver": 1.25, "gold": 1.5, "platinum": 2}`            |
+| daily_cap            | INT       | Maximum points earnable per day under this rule; prevents gaming and limits liability             |
+| effective_from       | TIMESTAMP | When this rule becomes active; enables scheduling promotional campaigns                           |
+| effective_until      | TIMESTAMP | When this rule expires; null for permanent rules                                                  |
 
 ### rewards
 
-| Field | Type | Description |
-|-------|------|-------------|
-| reward_id | PK, UUID | Unique reward identifier |
-| name | VARCHAR | Reward display name (e.g., "Free Coffee", "$10 Voucher", "Lounge Access") |
-| description | TEXT | Detailed reward description |
-| points_cost | BIGINT | How many points this reward costs to redeem |
-| reward_type | ENUM | product (physical item), voucher (discount code), experience (event/lounge), partner (third-party reward) |
-| inventory_count | INT | Available quantity; null for unlimited digital rewards |
-| daily_limit | INT | Maximum redemptions per day across all members; prevents stock-outs from bot attacks |
-| tier_eligibility | ARRAY | Which tiers can redeem this reward (e.g., ["gold", "platinum"] for exclusive rewards) |
+| Field            | Type     | Description                                                                                               |
+| ---------------- | -------- | --------------------------------------------------------------------------------------------------------- |
+| reward_id        | PK, UUID | Unique reward identifier                                                                                  |
+| name             | VARCHAR  | Reward display name (e.g., "Free Coffee", "$10 Voucher", "Lounge Access")                                 |
+| description      | TEXT     | Detailed reward description                                                                               |
+| points_cost      | BIGINT   | How many points this reward costs to redeem                                                               |
+| reward_type      | ENUM     | product (physical item), voucher (discount code), experience (event/lounge), partner (third-party reward) |
+| inventory_count  | INT      | Available quantity; null for unlimited digital rewards                                                    |
+| daily_limit      | INT      | Maximum redemptions per day across all members; prevents stock-outs from bot attacks                      |
+| tier_eligibility | ARRAY    | Which tiers can redeem this reward (e.g., ["gold", "platinum"] for exclusive rewards)                     |
 
 ### redemptions
 
-| Field | Type | Description |
-|-------|------|-------------|
-| redemption_id | PK, UUID | Unique redemption identifier |
-| member_id | FK → members | Who redeemed |
-| reward_id | FK → rewards | What was redeemed |
-| points_spent | BIGINT | Points deducted for this redemption |
-| status | ENUM | held (points reserved), confirmed (order placed), fulfilled (delivered), cancelled (points returned) |
-| hold_id | UUID | References the points_ledger hold entry; used to release points if cancelled |
-| voucher_code | VARCHAR | Generated voucher/discount code; null for physical rewards |
-| fulfilled_at | TIMESTAMP | When the reward was delivered; null until fulfilled |
+| Field         | Type         | Description                                                                                          |
+| ------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
+| redemption_id | PK, UUID     | Unique redemption identifier                                                                         |
+| member_id     | FK → members | Who redeemed                                                                                         |
+| reward_id     | FK → rewards | What was redeemed                                                                                    |
+| points_spent  | BIGINT       | Points deducted for this redemption                                                                  |
+| status        | ENUM         | held (points reserved), confirmed (order placed), fulfilled (delivered), cancelled (points returned) |
+| hold_id       | UUID         | References the points_ledger hold entry; used to release points if cancelled                         |
+| voucher_code  | VARCHAR      | Generated voucher/discount code; null for physical rewards                                           |
+| fulfilled_at  | TIMESTAMP    | When the reward was delivered; null until fulfilled                                                  |
 
 ---
 

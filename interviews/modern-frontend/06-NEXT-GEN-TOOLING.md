@@ -58,8 +58,8 @@ Vite has become the default frontend build tool. Vite 6 introduces Rolldown as i
 
 ```typescript
 // vite.config.ts -- Vite 6
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc"; // SWC-based React plugin
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc'; // SWC-based React plugin
 
 export default defineConfig({
   plugins: [react()],
@@ -67,13 +67,13 @@ export default defineConfig({
   build: {
     // Rolldown is now the default bundler
     // No separate config for dev vs prod
-    target: "esnext",
-    minify: "terser", // or "esbuild"
+    target: 'esnext',
+    minify: 'terser', // or "esbuild"
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ["react", "react-dom"],
-          ui: ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu"],
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
         },
       },
     },
@@ -83,17 +83,17 @@ export default defineConfig({
   environments: {
     client: {
       build: {
-        outDir: "dist/client",
+        outDir: 'dist/client',
         rollupOptions: {
-          input: "src/entry-client.tsx",
+          input: 'src/entry-client.tsx',
         },
       },
     },
     ssr: {
       build: {
-        outDir: "dist/server",
+        outDir: 'dist/server',
         rollupOptions: {
-          input: "src/entry-server.tsx",
+          input: 'src/entry-server.tsx',
         },
       },
     },
@@ -102,6 +102,7 @@ export default defineConfig({
 ```
 
 **Why Vite 6 matters:**
+
 - **Rolldown unification.** One bundler for dev and prod means consistent behavior. No more "works in dev but breaks in prod" bundler discrepancies
 - **Environment API.** First-class support for building client and server bundles in one config
 - **Performance.** Rolldown is written in Rust and handles bundling, tree-shaking, and code splitting at native speed
@@ -140,14 +141,14 @@ const nextConfig = {
   // For customization:
   turbopack: {
     rules: {
-      "*.svg": {
-        loaders: ["@svgr/webpack"],
-        as: "*.js",
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
     resolve: {
       alias: {
-        "@": "./src",
+        '@': './src',
       },
     },
   },
@@ -158,15 +159,15 @@ export default nextConfig;
 
 **Turbopack vs Vite:**
 
-| Aspect | Turbopack | Vite 6 |
-|--------|-----------|--------|
-| **Language** | Rust | JS (Rust bundler via Rolldown) |
-| **Framework** | Next.js only | Framework-agnostic |
-| **Dev approach** | Incremental bundling | Unbundled ESM |
-| **Caching** | Persistent (survives restart) | In-memory |
-| **HMR speed** | <15ms | <50ms |
-| **Production** | Yes (Next.js 15+) | Yes (Rolldown) |
-| **Plugin ecosystem** | Growing (webpack-compatible) | Large (Rollup-compatible) |
+| Aspect               | Turbopack                     | Vite 6                         |
+| -------------------- | ----------------------------- | ------------------------------ |
+| **Language**         | Rust                          | JS (Rust bundler via Rolldown) |
+| **Framework**        | Next.js only                  | Framework-agnostic             |
+| **Dev approach**     | Incremental bundling          | Unbundled ESM                  |
+| **Caching**          | Persistent (survives restart) | In-memory                      |
+| **HMR speed**        | <15ms                         | <50ms                          |
+| **Production**       | Yes (Next.js 15+)             | Yes (Rolldown)                 |
+| **Plugin ecosystem** | Growing (webpack-compatible)  | Large (Rollup-compatible)      |
 
 ### SWC (Speedy Web Compiler)
 
@@ -200,6 +201,7 @@ SWC replaces Babel for JavaScript/TypeScript compilation. Written in Rust, it is
 ```
 
 **What SWC does:**
+
 - TypeScript/JSX compilation (replaces `@babel/preset-typescript`, `@babel/preset-react`)
 - JavaScript minification (replaces Terser, 7x faster)
 - Module transformation (ESM to CJS and vice versa)
@@ -207,6 +209,7 @@ SWC replaces Babel for JavaScript/TypeScript compilation. Written in Rust, it is
 - Dead code elimination
 
 **What SWC does NOT do:**
+
 - Type checking (still need `tsc` or an IDE)
 - Custom Babel plugins (some have SWC equivalents, many do not)
 
@@ -250,15 +253,15 @@ npx oxlint --deny-warnings -D correctness -D perf ./src
 
 **oxlint vs ESLint:**
 
-| Aspect | ESLint | oxlint |
-|--------|--------|--------|
-| **Speed** | ~10s for large project | ~0.1s for same project |
-| **Language** | JavaScript | Rust |
-| **Plugin ecosystem** | Massive (2000+) | Growing (~200 rules) |
-| **Config** | Complex (flat config) | Simple JSON |
-| **Custom rules** | JavaScript | Rust (or WASM) |
-| **TypeScript-aware** | Via @typescript-eslint | Built-in |
-| **Auto-fix** | Yes | Yes (partial) |
+| Aspect               | ESLint                 | oxlint                 |
+| -------------------- | ---------------------- | ---------------------- |
+| **Speed**            | ~10s for large project | ~0.1s for same project |
+| **Language**         | JavaScript             | Rust                   |
+| **Plugin ecosystem** | Massive (2000+)        | Growing (~200 rules)   |
+| **Config**           | Complex (flat config)  | Simple JSON            |
+| **Custom rules**     | JavaScript             | Rust (or WASM)         |
+| **TypeScript-aware** | Via @typescript-eslint | Built-in               |
+| **Auto-fix**         | Yes                    | Yes (partial)          |
 
 **Recommended approach:** Use oxlint for the rules it supports (correctness, performance, best practices) and ESLint only for rules oxlint does not cover (framework-specific rules, custom team rules). oxlint is designed to complement ESLint, not fully replace it yet.
 
@@ -319,15 +322,15 @@ npx biome ci ./src
 
 **Biome vs Prettier + ESLint:**
 
-| Aspect | Prettier + ESLint | Biome |
-|--------|------------------|-------|
-| **Speed (format)** | ~3.5s | ~0.08s (44x faster) |
-| **Speed (lint)** | ~10s | ~0.15s (67x faster) |
-| **Config files** | 2+ (.prettierrc, .eslintrc) | 1 (biome.json) |
-| **Dependencies** | ~100 npm packages | 1 binary |
-| **Install size** | ~50MB node_modules | ~10MB |
-| **Prettier compatibility** | Is Prettier | 97%+ compatible |
-| **ESLint rules** | 2000+ | ~300 (growing) |
+| Aspect                     | Prettier + ESLint           | Biome               |
+| -------------------------- | --------------------------- | ------------------- |
+| **Speed (format)**         | ~3.5s                       | ~0.08s (44x faster) |
+| **Speed (lint)**           | ~10s                        | ~0.15s (67x faster) |
+| **Config files**           | 2+ (.prettierrc, .eslintrc) | 1 (biome.json)      |
+| **Dependencies**           | ~100 npm packages           | 1 binary            |
+| **Install size**           | ~50MB node_modules          | ~10MB               |
+| **Prettier compatibility** | Is Prettier                 | 97%+ compatible     |
+| **ESLint rules**           | 2000+                       | ~300 (growing)      |
 
 ### rspack
 
@@ -335,41 +338,41 @@ rspack is a Rust-based webpack replacement with near-complete webpack API compat
 
 ```javascript
 // rspack.config.js -- looks like webpack config
-const { defineConfig } = require("@rspack/cli");
+const { defineConfig } = require('@rspack/cli');
 
 module.exports = defineConfig({
-  entry: "./src/index.tsx",
+  entry: './src/index.tsx',
   output: {
-    path: "./dist",
-    filename: "[name].[contenthash].js",
+    path: './dist',
+    filename: '[name].[contenthash].js',
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         use: {
-          loader: "builtin:swc-loader",
+          loader: 'builtin:swc-loader',
           options: {
             jsc: {
-              parser: { syntax: "typescript", tsx: true },
-              transform: { react: { runtime: "automatic" } },
+              parser: { syntax: 'typescript', tsx: true },
+              transform: { react: { runtime: 'automatic' } },
             },
           },
         },
       },
       {
         test: /\.css$/,
-        type: "css", // Native CSS handling
+        type: 'css', // Native CSS handling
       },
     ],
   },
   plugins: [
     // Most webpack plugins work with rspack
-    new (require("html-webpack-plugin"))({ template: "./index.html" }),
+    new (require('html-webpack-plugin'))({ template: './index.html' }),
   ],
   optimization: {
     splitChunks: {
-      chunks: "all",
+      chunks: 'all',
     },
   },
 });
@@ -383,11 +386,11 @@ Lightning CSS is a Rust-based CSS parser, transformer, bundler, and minifier. It
 
 ```javascript
 // Using Lightning CSS with Vite
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   css: {
-    transformer: "lightningcss", // Use Lightning CSS instead of PostCSS
+    transformer: 'lightningcss', // Use Lightning CSS instead of PostCSS
     lightningcss: {
       targets: { chrome: 100, firefox: 100, safari: 16 },
       drafts: {
@@ -400,6 +403,7 @@ export default defineConfig({
 ```
 
 **What Lightning CSS handles:**
+
 - CSS nesting (native, no PostCSS plugin needed)
 - Browser target transpilation (like Autoprefixer but faster)
 - CSS Modules (built-in)
@@ -505,17 +509,17 @@ nx build my-app --cloud
 
 **Monorepo tool comparison:**
 
-| Feature | Turborepo | Nx | moon |
-|---------|-----------|-----|------|
-| **Language** | Go/Rust | TypeScript/Rust | Rust |
-| **Config** | turbo.json | nx.json + project.json | .moon/*.yml |
-| **Task orchestration** | Yes | Yes | Yes |
-| **Remote caching** | Vercel (paid) | Nx Cloud (free tier) | moonbase |
-| **Affected analysis** | File hash based | Project graph based | Project graph based |
-| **Code generation** | No | Yes (generators) | Yes (templates) |
-| **Constraint enforcement** | No | Yes (module boundaries) | Yes (project constraints) |
-| **Learning curve** | Low | Medium | Medium |
-| **Best for** | Simple monorepos | Large enterprise | Polyglot monorepos |
+| Feature                    | Turborepo        | Nx                      | moon                      |
+| -------------------------- | ---------------- | ----------------------- | ------------------------- |
+| **Language**               | Go/Rust          | TypeScript/Rust         | Rust                      |
+| **Config**                 | turbo.json       | nx.json + project.json  | .moon/\*.yml              |
+| **Task orchestration**     | Yes              | Yes                     | Yes                       |
+| **Remote caching**         | Vercel (paid)    | Nx Cloud (free tier)    | moonbase                  |
+| **Affected analysis**      | File hash based  | Project graph based     | Project graph based       |
+| **Code generation**        | No               | Yes (generators)        | Yes (templates)           |
+| **Constraint enforcement** | No               | Yes (module boundaries) | Yes (project constraints) |
+| **Learning curve**         | Low              | Medium                  | Medium                    |
+| **Best for**               | Simple monorepos | Large enterprise        | Polyglot monorepos        |
 
 ### Package Managers: pnpm and Bun
 
@@ -534,11 +538,12 @@ pnpm -r lint                        # Run lint recursively
 ```yaml
 # pnpm-workspace.yaml
 packages:
-  - "packages/*"
-  - "apps/*"
+  - 'packages/*'
+  - 'apps/*'
 ```
 
 **pnpm advantages:**
+
 - **Disk space:** Content-addressable store means packages are stored once globally, symlinked into projects. A project with 100 dependencies might use 90% less disk space than npm
 - **Strict by default:** Packages can only access their declared dependencies (no phantom dependencies)
 - **Speed:** Parallel installation, efficient caching
@@ -560,20 +565,22 @@ Module Federation enables independently deployed micro-frontends to share depend
 
 ```javascript
 // Host application -- rspack.config.js
-const { ModuleFederationPlugin } = require("@module-federation/enhanced/rspack");
+const {
+  ModuleFederationPlugin,
+} = require('@module-federation/enhanced/rspack');
 
 module.exports = {
   plugins: [
     new ModuleFederationPlugin({
-      name: "host",
+      name: 'host',
       remotes: {
         // Load remote module at runtime
-        checkout: "checkout@https://checkout.example.com/remoteEntry.js",
-        catalog: "catalog@https://catalog.example.com/remoteEntry.js",
+        checkout: 'checkout@https://checkout.example.com/remoteEntry.js',
+        catalog: 'catalog@https://catalog.example.com/remoteEntry.js',
       },
       shared: {
-        react: { singleton: true, requiredVersion: "^19.0.0" },
-        "react-dom": { singleton: true, requiredVersion: "^19.0.0" },
+        react: { singleton: true, requiredVersion: '^19.0.0' },
+        'react-dom': { singleton: true, requiredVersion: '^19.0.0' },
       },
     }),
   ],
@@ -582,20 +589,22 @@ module.exports = {
 
 ```javascript
 // Remote application (checkout) -- rspack.config.js
-const { ModuleFederationPlugin } = require("@module-federation/enhanced/rspack");
+const {
+  ModuleFederationPlugin,
+} = require('@module-federation/enhanced/rspack');
 
 module.exports = {
   plugins: [
     new ModuleFederationPlugin({
-      name: "checkout",
-      filename: "remoteEntry.js",
+      name: 'checkout',
+      filename: 'remoteEntry.js',
       exposes: {
-        "./CheckoutForm": "./src/components/CheckoutForm",
-        "./CartWidget": "./src/components/CartWidget",
+        './CheckoutForm': './src/components/CheckoutForm',
+        './CartWidget': './src/components/CartWidget',
       },
       shared: {
-        react: { singleton: true, requiredVersion: "^19.0.0" },
-        "react-dom": { singleton: true, requiredVersion: "^19.0.0" },
+        react: { singleton: true, requiredVersion: '^19.0.0' },
+        'react-dom': { singleton: true, requiredVersion: '^19.0.0' },
       },
     }),
   ],
@@ -604,10 +613,10 @@ module.exports = {
 
 ```tsx
 // Host app consuming remote component
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy } from 'react';
 
-const CheckoutForm = lazy(() => import("checkout/CheckoutForm"));
-const CartWidget = lazy(() => import("catalog/CartWidget"));
+const CheckoutForm = lazy(() => import('checkout/CheckoutForm'));
+const CartWidget = lazy(() => import('catalog/CartWidget'));
 
 function App() {
   return (
@@ -625,6 +634,7 @@ function App() {
 ```
 
 **Module Federation 2.0 improvements:**
+
 - **Type safety:** Automatically generates and consumes TypeScript types across remotes
 - **Runtime API:** Dynamic remote loading without build-time configuration
 - **Version negotiation:** Smarter shared dependency resolution
@@ -781,36 +791,36 @@ My default recommendation is pnpm for most teams: it balances speed, correctness
 
 ## Quick Reference
 
-| Tool | Replaces | Language | Speed Improvement |
-|------|----------|----------|------------------|
-| SWC | Babel | Rust | 20-70x |
-| Turbopack | webpack (for Next.js) | Rust | 5-80x |
-| Vite 6 (Rolldown) | webpack | JS + Rust | 5-10x (build), instant (dev) |
-| rspack | webpack (drop-in) | Rust | 5-10x |
-| oxlint | ESLint (partial) | Rust | 50-100x |
-| Biome | ESLint + Prettier | Rust | 40-70x |
-| Lightning CSS | PostCSS + Autoprefixer + cssnano | Rust | 100x+ |
-| Vitest | Jest | JS (uses Vite) | 2-5x |
-| pnpm | npm/yarn | JS | 2-3x install, 90% less disk |
-| bun | Node.js + npm | Zig/C++ | 10x install, 3-5x runtime |
+| Tool              | Replaces                         | Language       | Speed Improvement            |
+| ----------------- | -------------------------------- | -------------- | ---------------------------- |
+| SWC               | Babel                            | Rust           | 20-70x                       |
+| Turbopack         | webpack (for Next.js)            | Rust           | 5-80x                        |
+| Vite 6 (Rolldown) | webpack                          | JS + Rust      | 5-10x (build), instant (dev) |
+| rspack            | webpack (drop-in)                | Rust           | 5-10x                        |
+| oxlint            | ESLint (partial)                 | Rust           | 50-100x                      |
+| Biome             | ESLint + Prettier                | Rust           | 40-70x                       |
+| Lightning CSS     | PostCSS + Autoprefixer + cssnano | Rust           | 100x+                        |
+| Vitest            | Jest                             | JS (uses Vite) | 2-5x                         |
+| pnpm              | npm/yarn                         | JS             | 2-3x install, 90% less disk  |
+| bun               | Node.js + npm                    | Zig/C++        | 10x install, 3-5x runtime    |
 
-| Decision | Recommendation |
-|----------|---------------|
-| New React project (no Next.js) | Vite + SWC + Biome |
-| New Next.js project | Turbopack (default) + Biome |
-| Migrating large webpack project | rspack (drop-in) or Vite (if feasible) |
-| Monorepo orchestration | Turborepo (simple) or Nx (enterprise) |
-| Package manager | pnpm (general) or bun (speed-focused) |
-| Linting (new project) | Biome (unified) |
-| Linting (existing ESLint) | Add oxlint, keep ESLint for custom rules |
-| CSS processing | Lightning CSS (via Vite) |
-| Formatting | Biome (if using Biome for lint) or dprint |
+| Decision                        | Recommendation                            |
+| ------------------------------- | ----------------------------------------- |
+| New React project (no Next.js)  | Vite + SWC + Biome                        |
+| New Next.js project             | Turbopack (default) + Biome               |
+| Migrating large webpack project | rspack (drop-in) or Vite (if feasible)    |
+| Monorepo orchestration          | Turborepo (simple) or Nx (enterprise)     |
+| Package manager                 | pnpm (general) or bun (speed-focused)     |
+| Linting (new project)           | Biome (unified)                           |
+| Linting (existing ESLint)       | Add oxlint, keep ESLint for custom rules  |
+| CSS processing                  | Lightning CSS (via Vite)                  |
+| Formatting                      | Biome (if using Biome for lint) or dprint |
 
-| Bundler | Best For | Plugin Compat |
-|---------|---------|--------------|
-| Vite 6 (Rolldown) | Framework-agnostic projects | Rollup plugins |
-| Turbopack | Next.js projects | webpack loaders (partial) |
-| rspack | webpack migration | webpack plugins (most) |
-| esbuild | Simple builds, libraries | Limited |
-| Rollup | Library bundling | Rollup plugins |
-| Parcel | Zero-config prototyping | Custom plugins |
+| Bundler           | Best For                    | Plugin Compat             |
+| ----------------- | --------------------------- | ------------------------- |
+| Vite 6 (Rolldown) | Framework-agnostic projects | Rollup plugins            |
+| Turbopack         | Next.js projects            | webpack loaders (partial) |
+| rspack            | webpack migration           | webpack plugins (most)    |
+| esbuild           | Simple builds, libraries    | Limited                   |
+| Rollup            | Library bundling            | Rollup plugins            |
+| Parcel            | Zero-config prototyping     | Custom plugins            |

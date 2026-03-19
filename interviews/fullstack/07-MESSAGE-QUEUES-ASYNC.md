@@ -15,6 +15,7 @@ For full-stack engineers, understanding message queues and asynchronous patterns
 Synchronous processing means the client waits for the entire operation to complete before receiving a response. This creates problems at scale:
 
 **Problems with synchronous-only architectures:**
+
 - Long response times when operations are slow (sending email, calling external APIs)
 - Cascading failures when downstream services are unavailable
 - Inability to handle traffic spikes (every request needs immediate processing)
@@ -22,6 +23,7 @@ Synchronous processing means the client waits for the entire operation to comple
 - Tight coupling between services
 
 **What async processing solves:**
+
 - **Responsiveness**: Return a 202 Accepted immediately; process in the background
 - **Resilience**: If a downstream service is down, queue the work and retry later
 - **Scalability**: Process messages at your own pace; add more consumers when needed
@@ -53,6 +55,7 @@ Synchronous processing means the client waits for the entire operation to comple
 Kafka is a distributed event streaming platform designed for high-throughput, fault-tolerant message processing.
 
 **Architecture:**
+
 ```
 Producers -> Brokers (Cluster) -> Consumers
               |
@@ -61,6 +64,7 @@ Producers -> Brokers (Cluster) -> Consumers
 ```
 
 **Key concepts:**
+
 - **Broker**: A Kafka server. A cluster has multiple brokers for fault tolerance.
 - **Topic**: A logical channel for messages. Has one or more partitions.
 - **Partition**: An ordered, immutable sequence of messages. Each partition is replicated across brokers.
@@ -69,11 +73,13 @@ Producers -> Brokers (Cluster) -> Consumers
 - **Replication factor**: Number of copies of each partition across brokers.
 
 **Delivery semantics:**
+
 - **At-most-once**: Messages may be lost but never delivered twice. Consumer commits offset before processing.
 - **At-least-once**: Messages are never lost but may be delivered multiple times. Consumer commits offset after processing.
 - **Exactly-once**: Messages are delivered exactly once. Requires idempotent producers and transactional consumers.
 
 **When to use Kafka:**
+
 - High-throughput event streaming (millions of messages per second)
 - Event sourcing and event-driven architectures
 - Log aggregation and metrics collection
@@ -81,6 +87,7 @@ Producers -> Brokers (Cluster) -> Consumers
 - Data pipeline between systems (CDC, ETL)
 
 **When NOT to use Kafka:**
+
 - Simple task queues (use RabbitMQ or SQS instead)
 - Low volume messaging (Kafka overhead is not justified)
 - When you need complex routing logic (RabbitMQ excels here)
@@ -91,17 +98,20 @@ Producers -> Brokers (Cluster) -> Consumers
 RabbitMQ is a traditional message broker that implements AMQP (Advanced Message Queuing Protocol).
 
 **Architecture:**
+
 ```
 Producers -> Exchange -> Bindings -> Queues -> Consumers
 ```
 
 **Exchange types:**
+
 - **Direct**: Routes messages to queues by exact routing key match
 - **Fanout**: Routes messages to all bound queues (broadcast)
 - **Topic**: Routes messages by routing key pattern matching (wildcards)
 - **Headers**: Routes messages based on header attributes
 
 **Key features:**
+
 - **Message acknowledgment**: Consumers explicitly acknowledge message processing
 - **Message persistence**: Messages can be stored on disk for durability
 - **Dead letter exchanges**: Failed messages are routed to a DLX for inspection
@@ -110,6 +120,7 @@ Producers -> Exchange -> Bindings -> Queues -> Consumers
 - **Prefetch count**: Controls how many unacknowledged messages a consumer can hold
 
 **When to use RabbitMQ:**
+
 - Task queues and work distribution
 - Complex routing logic (topic-based, header-based)
 - Request-reply patterns (RPC over messaging)
@@ -122,17 +133,20 @@ Producers -> Exchange -> Bindings -> Queues -> Consumers
 Event-driven architecture (EDA) is a design pattern where system components communicate through events.
 
 **Event types:**
+
 - **Domain events**: Something that happened in the business domain (OrderPlaced, UserRegistered, PaymentCompleted)
 - **Integration events**: Events shared between bounded contexts or services
 - **Command events**: Requests to perform an action (ProcessPayment, SendEmail)
 
 **Benefits:**
+
 - Loose coupling: services do not directly call each other
 - Extensibility: new consumers can subscribe without modifying producers
 - Auditability: events provide a natural audit log
 - Temporal decoupling: producer and consumer do not need to be available simultaneously
 
 **Challenges:**
+
 - Eventual consistency: consumers process events asynchronously
 - Event ordering: events may arrive out of order
 - Debugging: tracing a request across multiple services is harder
@@ -143,21 +157,25 @@ Event-driven architecture (EDA) is a design pattern where system components comm
 CQRS separates the write model (commands) from the read model (queries).
 
 **Why CQRS:**
+
 - Read and write workloads often have different characteristics
 - Reads can be optimized with denormalized views
 - Writes can be optimized with event sourcing
 - Scales reads and writes independently
 
 **How it works:**
+
 1. Commands (writes) go through the command model and are persisted as events
 2. Events are published to consumers that build read-optimized projections
 3. Queries (reads) are served from the read model (projections)
 
 **Example:**
+
 - Write: `PlaceOrder` command -> validate -> persist -> publish `OrderPlaced` event
 - Read: `OrderPlaced` event -> update `OrderSummaryView` projection -> serve via `GET /orders`
 
 **Trade-offs:**
+
 - Increased complexity (two models instead of one)
 - Eventual consistency between write and read models
 - More infrastructure to manage (event store, projections)
@@ -169,6 +187,7 @@ The saga pattern manages distributed transactions across multiple services witho
 **Two types of sagas:**
 
 **Choreography-based saga:**
+
 - Each service listens for events and publishes events
 - No central coordinator
 - Services react autonomously to events
@@ -182,6 +201,7 @@ ShippingService -> listens for StockReserved -> creates shipment -> publishes Sh
 ```
 
 **Orchestration-based saga:**
+
 - A central orchestrator (saga coordinator) directs the workflow
 - Orchestrator tells each service what to do and when
 - Easier to understand and debug for complex workflows
@@ -196,6 +216,7 @@ SagaOrchestrator:
 
 **Compensating transactions:**
 When a step in a saga fails, you must undo the work done by previous steps:
+
 - If payment fails: no compensation needed (first step)
 - If inventory reservation fails: refund payment
 - If shipping fails: release inventory, refund payment
@@ -205,12 +226,14 @@ When a step in a saga fails, you must undo the work done by previous steps:
 A dead letter queue captures messages that cannot be successfully processed.
 
 **When messages go to DLQ:**
+
 - Consumer throws an unrecoverable error
 - Message exceeds the maximum retry count
 - Message TTL expires
 - Message is rejected by the consumer
 
 **What to do with DLQ messages:**
+
 1. Set up monitoring alerts when DLQ depth increases
 2. Inspect messages to understand failure patterns
 3. Fix the bug in the consumer
@@ -222,26 +245,31 @@ A dead letter queue captures messages that cannot be successfully processed.
 Failed messages should be retried with appropriate strategies.
 
 **Immediate retry:**
+
 - Retry immediately a fixed number of times
 - Good for transient errors (network blip)
 - Bad for persistent errors (overwhelms the failing service)
 
 **Fixed delay retry:**
+
 - Wait a fixed time between retries (e.g., 5 seconds)
 - Simple to implement
 - Does not adapt to the nature of the failure
 
 **Exponential backoff:**
+
 - Increase the delay exponentially: 1s, 2s, 4s, 8s, 16s...
 - Reduces load on failing services
 - Prevents thundering herd when service recovers
 
 **Exponential backoff with jitter:**
+
 - Add randomness to the backoff delay
 - Prevents multiple consumers from retrying at the same time
 - Formula: `min(cap, base * 2^attempt + random(0, base))`
 
 **Retry budget:**
+
 - Limit the total number of retries per time window
 - Prevents retry amplification (where retries cause more retries)
 - Example: "no more than 10% of requests should be retries"
@@ -251,11 +279,13 @@ Failed messages should be retried with appropriate strategies.
 An idempotent consumer can process the same message multiple times without side effects beyond the first processing.
 
 **Why idempotency matters:**
+
 - At-least-once delivery means messages may be delivered more than once
 - Network failures can cause duplicate message delivery
 - Consumer crashes after processing but before acknowledging
 
 **Implementation strategies:**
+
 - **Idempotency key**: Store a unique message ID in the database. Before processing, check if the ID already exists. If it does, skip processing.
 - **Upsert operations**: Use INSERT ... ON CONFLICT DO UPDATE instead of INSERT
 - **Conditional updates**: Use WHERE clauses to prevent duplicate state transitions (e.g., `UPDATE orders SET status = 'paid' WHERE status = 'pending'`)
@@ -266,6 +296,7 @@ An idempotent consumer can process the same message multiple times without side 
 Background job processors manage async work outside of message queues.
 
 **Celery (Python):**
+
 - Distributed task queue
 - Supports multiple brokers (Redis, RabbitMQ)
 - Task routing, scheduling, rate limiting
@@ -273,6 +304,7 @@ Background job processors manage async work outside of message queues.
 - Result backend for task results
 
 **Bull / BullMQ (Node.js):**
+
 - Redis-based queue
 - Job scheduling (cron-like)
 - Rate limiting and concurrency control
@@ -281,12 +313,14 @@ Background job processors manage async work outside of message queues.
 - Sandboxed processors (separate processes)
 
 **Sidekiq (Ruby):**
+
 - Redis-based background job processor
 - Multi-threaded for efficiency
 - Built-in retry with exponential backoff
 - Web UI for monitoring
 
 **Common patterns across all:**
+
 - Enqueue a job with a payload
 - Worker picks up the job and processes it
 - On success, the job is marked complete
@@ -302,6 +336,7 @@ Background job processors manage async work outside of message queues.
 An e-commerce order involves multiple steps: payment, inventory, shipping, and notifications.
 
 **Approach:**
+
 1. User places order -> API returns 202 Accepted with order ID
 2. Publish `OrderCreated` event to Kafka
 3. PaymentService consumes the event, processes payment
@@ -317,6 +352,7 @@ An e-commerce order involves multiple steps: payment, inventory, shipping, and n
 You need to send transactional emails (welcome, password reset, order confirmation) without blocking API responses.
 
 **Approach:**
+
 1. API endpoint publishes a message to an email queue (RabbitMQ or SQS)
 2. Email worker consumes messages and sends via email provider (SendGrid, SES)
 3. Use exponential backoff for retries (email providers may rate-limit)
@@ -330,6 +366,7 @@ You need to send transactional emails (welcome, password reset, order confirmati
 You need to process millions of clickstream events for real-time dashboards.
 
 **Approach:**
+
 1. Client sends events to an API endpoint
 2. API publishes events to Kafka (high-throughput)
 3. Stream processor (Kafka Streams or Flink) aggregates events in real-time
@@ -343,6 +380,7 @@ You need to process millions of clickstream events for real-time dashboards.
 Users upload images that need to be resized into multiple formats.
 
 **Approach:**
+
 1. Upload API saves the original image to S3
 2. S3 event triggers a Lambda function (or publishes to SQS)
 3. Worker generates thumbnails, medium, and large versions
@@ -361,6 +399,7 @@ Users upload images that need to be resized into multiple formats.
 **Answer:**
 
 **Use a message queue when:**
+
 - The operation does not need to complete before responding to the user (sending emails, generating reports, processing images)
 - The downstream service may be temporarily unavailable (decoupling)
 - You need to handle traffic spikes by buffering work (load leveling)
@@ -369,6 +408,7 @@ Users upload images that need to be resized into multiple formats.
 - The operation is expensive and should be rate-limited
 
 **Use a direct API call when:**
+
 - The response depends on the result of the operation (user login, search)
 - Latency must be minimal (real-time data)
 - The operation is simple and fast
@@ -383,6 +423,7 @@ Many systems use both. For example, an order API validates input and checks inve
 **Answer:**
 
 **Kafka:**
+
 - Designed for high-throughput event streaming
 - Messages are persisted on disk and retained for a configurable period
 - Consumer groups enable parallel processing with partition assignment
@@ -392,6 +433,7 @@ Many systems use both. For example, an order API validates input and checks inve
 - Better for: event sourcing, log aggregation, stream processing, data pipelines
 
 **RabbitMQ:**
+
 - Designed for traditional message queuing
 - Messages are deleted after acknowledgment
 - Rich routing capabilities (exchanges, bindings, routing keys)
@@ -402,14 +444,14 @@ Many systems use both. For example, an order API validates input and checks inve
 
 **Decision framework:**
 
-| Factor | Kafka | RabbitMQ |
-|--------|-------|----------|
-| Throughput | Millions/sec | Tens of thousands/sec |
-| Message retention | Configurable (days/weeks) | Until consumed |
-| Routing complexity | Simple (topic-based) | Rich (exchange types) |
-| Ordering guarantee | Per partition | Per queue |
-| Replay capability | Yes (offset-based) | No (once consumed, gone) |
-| Protocol | Custom binary | AMQP (standard) |
+| Factor             | Kafka                     | RabbitMQ                 |
+| ------------------ | ------------------------- | ------------------------ |
+| Throughput         | Millions/sec              | Tens of thousands/sec    |
+| Message retention  | Configurable (days/weeks) | Until consumed           |
+| Routing complexity | Simple (topic-based)      | Rich (exchange types)    |
+| Ordering guarantee | Per partition             | Per queue                |
+| Replay capability  | Yes (offset-based)        | No (once consumed, gone) |
+| Protocol           | Custom binary             | AMQP (standard)          |
 
 ### Q3: Explain the saga pattern and when you would use it.
 
@@ -418,6 +460,7 @@ Many systems use both. For example, an order API validates input and checks inve
 The saga pattern manages distributed transactions across multiple services. Instead of a single ACID transaction spanning multiple databases, a saga is a sequence of local transactions where each step publishes an event that triggers the next step.
 
 **When to use sagas:**
+
 - When a business transaction spans multiple microservices
 - When you cannot use a distributed two-phase commit (which you should avoid in microservices)
 - When you need to maintain consistency across service boundaries
@@ -429,11 +472,13 @@ Choreography: each service reacts to events and publishes its own events. No cen
 Orchestration: a central saga coordinator directs the workflow. It tells each service what to do and handles compensation on failure. Easier to understand and maintain for complex workflows. The orchestrator becomes a single point of failure (mitigated by making it highly available).
 
 **Compensating transactions** are the key challenge. Each step must have a corresponding compensation action that undoes its work:
+
 - Payment processed -> Compensation: refund payment
 - Inventory reserved -> Compensation: release reservation
 - Shipment created -> Compensation: cancel shipment
 
 **Important considerations:**
+
 - Compensating transactions may not be perfectly reversible (a sent email cannot be unsent)
 - Design compensations carefully; some are "semantic" (issue a credit) rather than "exact" (undo)
 - Keep compensating transactions idempotent (they may be triggered more than once)
@@ -445,16 +490,19 @@ Orchestration: a central saga coordinator directs the workflow. It tells each se
 True exactly-once delivery is impossible in distributed systems (due to the Two Generals Problem). What we achieve in practice is "effectively exactly-once" through a combination of at-least-once delivery and idempotent processing.
 
 **At-least-once delivery:**
+
 - The message broker guarantees every message is delivered at least once
 - Messages may be delivered more than once due to network issues or consumer failures
 - Achieved by not acknowledging a message until it is fully processed
 
 **Idempotent processing:**
+
 - The consumer can process the same message multiple times without side effects
 - Implementation: store a unique message ID in the database within the same transaction as the business logic
 - Before processing, check if the message ID already exists
 
 **Pattern:**
+
 ```
 1. Receive message with ID "msg-123"
 2. BEGIN TRANSACTION
@@ -476,6 +524,7 @@ Kafka provides exactly-once within the Kafka ecosystem using idempotent producer
 A dead letter queue (DLQ) is a separate queue where messages that cannot be successfully processed are sent after exhausting all retry attempts.
 
 **Messages end up in the DLQ when:**
+
 - The consumer throws an unrecoverable error (invalid data, business rule violation)
 - The maximum retry count is exceeded
 - The message TTL expires before being consumed
@@ -494,6 +543,7 @@ A dead letter queue (DLQ) is a separate queue where messages that cannot be succ
 5. **Archival**: Move old DLQ messages to cold storage for audit purposes. Do not let the DLQ grow unbounded.
 
 **DLQ best practices:**
+
 - Always set up a DLQ for every queue
 - Include metadata in DLQ messages (original queue, error message, retry count, timestamp)
 - Set up alerts on DLQ depth
@@ -507,6 +557,7 @@ A dead letter queue (DLQ) is a separate queue where messages that cannot be succ
 An idempotent consumer produces the same result regardless of how many times it processes the same message.
 
 **Strategy 1: Idempotency key in database**
+
 ```
 BEGIN TRANSACTION
   SELECT 1 FROM processed_messages WHERE idempotency_key = ?
@@ -519,6 +570,7 @@ COMMIT
 ```
 
 **Strategy 2: Conditional database updates**
+
 ```sql
 -- Only transitions from pending to paid (idempotent)
 UPDATE orders SET status = 'paid' WHERE id = ? AND status = 'pending'
@@ -526,6 +578,7 @@ UPDATE orders SET status = 'paid' WHERE id = ? AND status = 'pending'
 ```
 
 **Strategy 3: Upsert operations**
+
 ```sql
 INSERT INTO user_preferences (user_id, theme)
 VALUES (?, ?)
@@ -534,15 +587,18 @@ ON CONFLICT (user_id) DO UPDATE SET theme = EXCLUDED.theme
 
 **Strategy 4: Natural idempotency**
 Some operations are naturally idempotent:
+
 - Setting a value (SET, not INCREMENT)
 - Deleting a resource (deleting twice has the same effect)
 - Upserting data
 
 **Strategy 5: Deduplication window**
 Track processed message IDs in Redis with a TTL:
+
 ```
 SET processed:msg-123 1 EX 86400  # 24-hour dedup window
 ```
+
 Before processing, check if the key exists. This is cheaper than a database check but has a finite dedup window.
 
 ### Q7: Explain CQRS and when it makes sense to use it.
@@ -552,17 +608,20 @@ Before processing, check if the key exists. This is cheaper than a database chec
 CQRS (Command Query Responsibility Segregation) separates the data model for writes (commands) from the data model for reads (queries).
 
 **How it works:**
+
 - **Command side**: Handles writes. Validates commands, persists events or records, and publishes events.
 - **Query side**: Handles reads. Maintains denormalized projections optimized for specific query patterns.
 - Events flow from the command side to the query side, which updates its projections.
 
 **When CQRS makes sense:**
+
 - Read and write workloads have very different characteristics (read-heavy, write-heavy, or different query patterns)
 - You need to scale reads and writes independently
 - Complex queries require denormalized views that differ significantly from the write model
 - Combined with event sourcing for full audit trail and temporal queries
 
 **When CQRS is overkill:**
+
 - Simple CRUD applications
 - Read and write models are nearly identical
 - Team is small and the added complexity is not justified
@@ -580,22 +639,26 @@ In distributed systems, messages may arrive out of order due to partitioning, re
 
 **Kafka ordering:**
 Kafka guarantees ordering within a partition. To ensure related messages are ordered:
+
 - Use a partition key that groups related messages (e.g., user ID)
 - All messages with the same key go to the same partition
 - One consumer per partition ensures sequential processing
 
 **RabbitMQ ordering:**
 RabbitMQ guarantees FIFO order within a single queue with a single consumer. With multiple consumers, ordering is not guaranteed. Solutions:
+
 - Use a single consumer (limits throughput)
 - Use consistent hashing exchange to route related messages to the same queue
 
 **Application-level ordering:**
 When infrastructure-level ordering is insufficient:
+
 - Include a sequence number in each message
 - Consumer buffers out-of-order messages and processes them in sequence
 - Use version numbers in the database (optimistic concurrency control)
 
 **Design around ordering:**
+
 - Make operations commutative when possible (order does not matter)
 - Use event timestamps to determine the "latest" state
 - Design events to carry complete state rather than incremental changes
@@ -633,9 +696,7 @@ interface OrderEvent {
   readonly timestamp: string;
 }
 
-export const publishOrderCreated = async (
-  event: OrderEvent
-): Promise<void> => {
+export const publishOrderCreated = async (event: OrderEvent): Promise<void> => {
   await producer.connect();
 
   await producer.send({
@@ -714,9 +775,7 @@ const handleOrderCreated = async (
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Payment processing failed';
-    throw new Error(
-      `Failed to process order ${event.orderId}: ${message}`
-    );
+    throw new Error(`Failed to process order ${event.orderId}: ${message}`);
   }
 };
 
@@ -764,11 +823,7 @@ export const setupRabbitMQ = async (): Promise<RabbitMQConnection> => {
     durable: true,
   });
 
-  await channel.bindQueue(
-    'order-events-dlq',
-    'order-events-dlx',
-    '#'
-  );
+  await channel.bindQueue('order-events-dlq', 'order-events-dlx', '#');
 
   // Payment processing queue
   await channel.assertQueue('payment-processing', {
@@ -795,11 +850,7 @@ export const setupRabbitMQ = async (): Promise<RabbitMQConnection> => {
     },
   });
 
-  await channel.bindQueue(
-    'email-notifications',
-    'order-events',
-    'order.*'
-  );
+  await channel.bindQueue('email-notifications', 'order-events', 'order.*');
 
   // Prefetch: process one message at a time
   await channel.prefetch(1);
@@ -837,9 +888,7 @@ import { Channel, ConsumeMessage } from 'amqplib';
 
 const MAX_RETRIES = 3;
 
-export const startPaymentConsumer = async (
-  channel: Channel
-): Promise<void> => {
+export const startPaymentConsumer = async (channel: Channel): Promise<void> => {
   await channel.consume(
     'payment-processing',
     async (msg: ConsumeMessage | null) => {
@@ -847,9 +896,7 @@ export const startPaymentConsumer = async (
         return;
       }
 
-      const retryCount = Number(
-        msg.properties.headers?.['x-retry-count'] ?? 0
-      );
+      const retryCount = Number(msg.properties.headers?.['x-retry-count'] ?? 0);
 
       try {
         const event = JSON.parse(msg.content.toString());
@@ -864,18 +911,13 @@ export const startPaymentConsumer = async (
           const delay = Math.pow(2, retryCount) * 1000;
 
           setTimeout(() => {
-            channel.publish(
-              'order-events',
-              'order.created',
-              msg.content,
-              {
-                ...msg.properties,
-                headers: {
-                  ...msg.properties.headers,
-                  'x-retry-count': retryCount + 1,
-                },
-              }
-            );
+            channel.publish('order-events', 'order.created', msg.content, {
+              ...msg.properties,
+              headers: {
+                ...msg.properties.headers,
+                'x-retry-count': retryCount + 1,
+              },
+            });
             channel.ack(msg);
           }, delay);
         } else {
@@ -1080,8 +1122,7 @@ const executeSaga = async <T>(
       context = await step.execute(context);
       completedSteps.push(step);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unknown error';
 
       // Compensate completed steps in reverse order
       for (const completedStep of [...completedSteps].reverse()) {
@@ -1187,23 +1228,23 @@ export const processOrder = async (
 
 ### Message Queue Comparison
 
-| Feature | Kafka | RabbitMQ | AWS SQS |
-|---------|-------|----------|---------|
-| Throughput | Very High | High | Medium |
-| Ordering | Per partition | Per queue | FIFO mode |
-| Retention | Configurable | Until consumed | 14 days max |
-| Replay | Yes | No | No |
-| Routing | Simple | Rich | Simple |
-| Protocol | Custom | AMQP | HTTP |
-| Managed option | MSK, Confluent | CloudAMQP | Native AWS |
+| Feature        | Kafka          | RabbitMQ       | AWS SQS     |
+| -------------- | -------------- | -------------- | ----------- |
+| Throughput     | Very High      | High           | Medium      |
+| Ordering       | Per partition  | Per queue      | FIFO mode   |
+| Retention      | Configurable   | Until consumed | 14 days max |
+| Replay         | Yes            | No             | No          |
+| Routing        | Simple         | Rich           | Simple      |
+| Protocol       | Custom         | AMQP           | HTTP        |
+| Managed option | MSK, Confluent | CloudAMQP      | Native AWS  |
 
 ### Delivery Guarantees
 
-| Guarantee | Message Loss | Duplicates | Use Case |
-|-----------|-------------|------------|----------|
-| At-most-once | Possible | Never | Metrics, logs |
-| At-least-once | Never | Possible | Most applications |
-| Exactly-once | Never | Never | Financial transactions |
+| Guarantee     | Message Loss | Duplicates | Use Case               |
+| ------------- | ------------ | ---------- | ---------------------- |
+| At-most-once  | Possible     | Never      | Metrics, logs          |
+| At-least-once | Never        | Possible   | Most applications      |
+| Exactly-once  | Never        | Never      | Financial transactions |
 
 ### Retry Strategy Cheat Sheet
 
@@ -1216,12 +1257,12 @@ Exp + jitter:  attempt 1 -> 1.3s -> attempt 2 -> 2.7s -> attempt 3 -> 5.1s -> DL
 
 ### Idempotency Patterns
 
-| Pattern | Pros | Cons |
-|---------|------|------|
-| DB idempotency key | Durable, precise | Requires DB write per message |
-| Conditional update | Natural, efficient | Limited to state transitions |
-| Redis dedup window | Fast, simple | Finite window, not durable |
-| Upsert | Natural for writes | Not suitable for all operations |
+| Pattern            | Pros               | Cons                            |
+| ------------------ | ------------------ | ------------------------------- |
+| DB idempotency key | Durable, precise   | Requires DB write per message   |
+| Conditional update | Natural, efficient | Limited to state transitions    |
+| Redis dedup window | Fast, simple       | Finite window, not durable      |
+| Upsert             | Natural for writes | Not suitable for all operations |
 
 ### Event-Driven Architecture Checklist
 

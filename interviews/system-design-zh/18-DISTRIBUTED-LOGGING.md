@@ -23,28 +23,28 @@
 
 ### 功能性需求
 
-| 类别 | 需求 |
-|----------|-------------|
-| **日志摄入** | 从 100K+ 服务器、容器和 Serverless 函数收集日志；支持结构化（JSON）和非结构化（纯文本）格式；自动解析常见格式（Apache、Nginx、syslog） |
-| **搜索与查询** | 跨所有日志的全文搜索；按服务、严重级别、主机、时间范围过滤；支持正则表达式和通配符；保存查询和视图 |
-| **分布式追踪** | 通过 trace ID 关联跨微服务请求；可视化请求瀑布图/火焰图；识别延迟瓶颈；支持 OpenTelemetry |
-| **指标** | 收集系统指标（CPU、内存、磁盘、网络）；应用指标（请求速率、错误率、延迟百分位）；自定义业务指标；聚合和降采样 |
-| **告警** | 基于阈值的告警（例如错误率 > 5%）；异常检测（偏离基线）；复合告警（多条件）；升级策略和值班轮换 |
-| **仪表盘** | 自动刷新的实时仪表盘；可自定义的组件（折线图、热力图、表格）；环境/服务过滤的模板变量；可分享的 URL |
-| **合规性** | 日志访问审计追踪；按法规制定的数据保留策略；PII 脱敏；基于角色的访问控制（RBAC） |
+| 类别           | 需求                                                                                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **日志摄入**   | 从 100K+ 服务器、容器和 Serverless 函数收集日志；支持结构化（JSON）和非结构化（纯文本）格式；自动解析常见格式（Apache、Nginx、syslog） |
+| **搜索与查询** | 跨所有日志的全文搜索；按服务、严重级别、主机、时间范围过滤；支持正则表达式和通配符；保存查询和视图                                     |
+| **分布式追踪** | 通过 trace ID 关联跨微服务请求；可视化请求瀑布图/火焰图；识别延迟瓶颈；支持 OpenTelemetry                                              |
+| **指标**       | 收集系统指标（CPU、内存、磁盘、网络）；应用指标（请求速率、错误率、延迟百分位）；自定义业务指标；聚合和降采样                          |
+| **告警**       | 基于阈值的告警（例如错误率 > 5%）；异常检测（偏离基线）；复合告警（多条件）；升级策略和值班轮换                                        |
+| **仪表盘**     | 自动刷新的实时仪表盘；可自定义的组件（折线图、热力图、表格）；环境/服务过滤的模板变量；可分享的 URL                                    |
+| **合规性**     | 日志访问审计追踪；按法规制定的数据保留策略；PII 脱敏；基于角色的访问控制（RBAC）                                                       |
 
 ### 非功能性需求
 
-| 需求 | 目标 |
-|-------------|--------|
-| 摄入延迟 | 从日志产生到可搜索 < 5 秒 |
-| 搜索延迟 | 查询 1 小时数据范围 < 2 秒 |
-| 可用性 | 摄入 99.9% 正常运行时间；仪表盘 99.95% |
+| 需求     | 目标                                                       |
+| -------- | ---------------------------------------------------------- |
+| 摄入延迟 | 从日志产生到可搜索 < 5 秒                                  |
+| 搜索延迟 | 查询 1 小时数据范围 < 2 秒                                 |
+| 可用性   | 摄入 99.9% 正常运行时间；仪表盘 99.95%                     |
 | 数据保留 | 热存储：7 天，温存储：30 天，冷存储：1 年，冻结/归档：7 年 |
-| 持久性 | 正常运行时零日志丢失；故障转移期间最多 0.01% 丢失 |
-| 吞吐量 | 峰值时持续 10M+ 日志事件/秒 |
-| 可扩展性 | 摄入和存储线性水平扩展 |
-| 安全性 | 传输中加密（TLS）和静态加密（AES-256）；RBAC；SOC2 合规 |
+| 持久性   | 正常运行时零日志丢失；故障转移期间最多 0.01% 丢失          |
+| 吞吐量   | 峰值时持续 10M+ 日志事件/秒                                |
+| 可扩展性 | 摄入和存储线性水平扩展                                     |
+| 安全性   | 传输中加密（TLS）和静态加密（AES-256）；RBAC；SOC2 合规    |
 
 ### 规模估算
 
@@ -313,36 +313,36 @@ Response: 200 OK
 
 ```json
 {
-  "timestamp":    "datetime（纳秒精度，UTC）",
-  "observed_at":  "datetime（收集器接收时间）",
-  "severity":     "enum: TRACE|DEBUG|INFO|WARN|ERROR|FATAL",
+  "timestamp": "datetime（纳秒精度，UTC）",
+  "observed_at": "datetime（收集器接收时间）",
+  "severity": "enum: TRACE|DEBUG|INFO|WARN|ERROR|FATAL",
   "severity_num": "int (1-24, OpenTelemetry 严重级别编号)",
-  "body":         "string（日志消息）",
-  "service":      "string（服务名称）",
-  "host":         "string（主机名或 IP）",
-  "source":       "string（文件路径或组件）",
+  "body": "string（日志消息）",
+  "service": "string（服务名称）",
+  "host": "string（主机名或 IP）",
+  "source": "string（文件路径或组件）",
 
-  "trace_id":     "string（128 位十六进制，W3C Trace Context）",
-  "span_id":      "string（64 位十六进制）",
+  "trace_id": "string（128 位十六进制，W3C Trace Context）",
+  "span_id": "string（64 位十六进制）",
 
   "resource": {
-    "service.name":       "string",
-    "service.version":    "string",
-    "k8s.namespace":      "string",
-    "k8s.pod.name":       "string",
+    "service.name": "string",
+    "service.version": "string",
+    "k8s.namespace": "string",
+    "k8s.pod.name": "string",
     "k8s.container.name": "string",
-    "k8s.cluster.name":   "string",
-    "cloud.provider":     "string",
-    "cloud.region":       "string",
-    "host.name":          "string",
-    "host.ip":            "string"
+    "k8s.cluster.name": "string",
+    "cloud.provider": "string",
+    "cloud.region": "string",
+    "host.name": "string",
+    "host.ip": "string"
   },
 
   "attributes": {
     "key": "value（任意键值对）"
   },
 
-  "org_id":       "string（租户标识符）",
+  "org_id": "string（租户标识符）",
   "ingestion_id": "string（去重键）"
 }
 ```
@@ -353,29 +353,39 @@ Response: 200 OK
 {
   "mappings": {
     "properties": {
-      "timestamp":       { "type": "date", "format": "strict_date_optional_time_nanos" },
-      "observed_at":     { "type": "date" },
-      "severity":        { "type": "keyword" },
-      "severity_num":    { "type": "byte" },
-      "body":            { "type": "text", "analyzer": "standard", "fields": {
-                            "keyword": { "type": "keyword", "ignore_above": 1024 }
-                          }},
-      "service":         { "type": "keyword" },
-      "host":            { "type": "keyword" },
-      "source":          { "type": "keyword" },
-      "trace_id":        { "type": "keyword" },
-      "span_id":         { "type": "keyword" },
-      "resource":        { "type": "object", "properties": {
-                            "service.name":       { "type": "keyword" },
-                            "service.version":    { "type": "keyword" },
-                            "k8s.namespace":      { "type": "keyword" },
-                            "k8s.pod.name":       { "type": "keyword" },
-                            "k8s.cluster.name":   { "type": "keyword" },
-                            "cloud.region":       { "type": "keyword" }
-                          }},
-      "attributes":      { "type": "flattened" },
-      "org_id":          { "type": "keyword" },
-      "ingestion_id":    { "type": "keyword" }
+      "timestamp": {
+        "type": "date",
+        "format": "strict_date_optional_time_nanos"
+      },
+      "observed_at": { "type": "date" },
+      "severity": { "type": "keyword" },
+      "severity_num": { "type": "byte" },
+      "body": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 1024 }
+        }
+      },
+      "service": { "type": "keyword" },
+      "host": { "type": "keyword" },
+      "source": { "type": "keyword" },
+      "trace_id": { "type": "keyword" },
+      "span_id": { "type": "keyword" },
+      "resource": {
+        "type": "object",
+        "properties": {
+          "service.name": { "type": "keyword" },
+          "service.version": { "type": "keyword" },
+          "k8s.namespace": { "type": "keyword" },
+          "k8s.pod.name": { "type": "keyword" },
+          "k8s.cluster.name": { "type": "keyword" },
+          "cloud.region": { "type": "keyword" }
+        }
+      },
+      "attributes": { "type": "flattened" },
+      "org_id": { "type": "keyword" },
+      "ingestion_id": { "type": "keyword" }
     }
   },
   "settings": {
@@ -676,16 +686,16 @@ ORDER BY (org_id, rule_id, triggered_at);
 
 ### 5.2 收集 Agent 对比
 
-| 特性 | Fluentd | Vector | OTel Collector |
-|---------|---------|--------|----------------|
-| 语言 | Ruby + C | Rust | Go |
-| 内存使用 | ~40 MB | ~15 MB | ~30 MB |
-| 吞吐量 | ~10K 事件/秒 | ~50K 事件/秒 | ~30K 事件/秒 |
-| 配置方式 | Ruby DSL | TOML/YAML | YAML |
-| 插件生态 | 800+ 插件 | 内置转换 | 持续增长中 |
-| 支持的信号 | 仅日志 | 日志 + 指标 | 日志 + 指标 + 追踪 |
-| 背压处理 | 依赖插件 | 内置 | 内置 |
-| 最适合 | 遗留系统、Kubernetes | 高吞吐量 | 统一可观测性 |
+| 特性       | Fluentd              | Vector       | OTel Collector     |
+| ---------- | -------------------- | ------------ | ------------------ |
+| 语言       | Ruby + C             | Rust         | Go                 |
+| 内存使用   | ~40 MB               | ~15 MB       | ~30 MB             |
+| 吞吐量     | ~10K 事件/秒         | ~50K 事件/秒 | ~30K 事件/秒       |
+| 配置方式   | Ruby DSL             | TOML/YAML    | YAML               |
+| 插件生态   | 800+ 插件            | 内置转换     | 持续增长中         |
+| 支持的信号 | 仅日志               | 日志 + 指标  | 日志 + 指标 + 追踪 |
+| 背压处理   | 依赖插件             | 内置         | 内置               |
+| 最适合     | 遗留系统、Kubernetes | 高吞吐量     | 统一可观测性       |
 
 ### 5.3 结构化日志最佳实践
 

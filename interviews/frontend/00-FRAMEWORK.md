@@ -12,23 +12,23 @@ Whether you are targeting a startup or a FAANG-level company, the fundamentals r
 
 This series covers 15 essential frontend interview topics. Each guide follows the same structure: Overview, Core Concepts, Common Interview Questions, Code Examples, Gotchas, and a Quick Reference cheat sheet.
 
-| # | Topic | File | Key Areas |
-|---|-------|------|-----------|
-| 01 | [HTML Semantics & Accessibility](./01-HTML-SEMANTICS-ACCESSIBILITY.md) | `01-HTML-SEMANTICS-ACCESSIBILITY.md` | Semantic elements, ARIA, a11y, screen readers, keyboard nav |
-| 02 | [CSS Layout & Responsive Design](./02-CSS-LAYOUT.md) | `02-CSS-LAYOUT.md` | Box model, Flexbox, Grid, positioning, media queries, specificity |
-| 03 | [JavaScript Core Concepts](./03-JAVASCRIPT-CORE.md) | `03-JAVASCRIPT-CORE.md` | Closures, event loop, prototypes, `this`, Promises, modules |
-| 04 | [DOM Manipulation & Events](./04-DOM-EVENTS.md) | `04-DOM-EVENTS.md` | DOM API, event delegation, bubbling/capturing, mutation observers |
-| 05 | [TypeScript Essentials](./05-TYPESCRIPT.md) | `05-TYPESCRIPT.md` | Type system, generics, utility types, type guards, declaration files |
-| 06 | [React Fundamentals](./06-REACT-FUNDAMENTALS.md) | `06-REACT-FUNDAMENTALS.md` | Components, hooks, state management, lifecycle, reconciliation |
-| 07 | [React Advanced Patterns](./07-REACT-ADVANCED.md) | `07-REACT-ADVANCED.md` | HOCs, render props, compound components, suspense, server components |
-| 08 | [State Management](./08-STATE-MANAGEMENT.md) | `08-STATE-MANAGEMENT.md` | Context, Redux, Zustand, signals, state machines, derived state |
-| 09 | [Testing Frontend Applications](./09-TESTING.md) | `09-TESTING.md` | Unit testing, integration testing, E2E, mocking, test strategies |
-| 10 | [Web Performance](./10-PERFORMANCE.md) | `10-PERFORMANCE.md` | Core Web Vitals, lazy loading, code splitting, caching, profiling |
-| 11 | [Browser Internals & Networking](./11-BROWSER-NETWORKING.md) | `11-BROWSER-NETWORKING.md` | Rendering pipeline, HTTP/2/3, CORS, cookies, service workers |
-| 12 | [Security](./12-SECURITY.md) | `12-SECURITY.md` | XSS, CSRF, CSP, HTTPS, auth patterns, input sanitization |
-| 13 | [Build Tools & Bundling](./13-BUILD-TOOLS.md) | `13-BUILD-TOOLS.md` | Webpack, Vite, tree shaking, code splitting, module federation |
-| 14 | [System Design for Frontend](./14-SYSTEM-DESIGN.md) | `14-SYSTEM-DESIGN.md` | Component architecture, data flow, API design, scaling UI |
-| 15 | [Coding Challenges & Algorithms](./15-CODING-CHALLENGES.md) | `15-CODING-CHALLENGES.md` | Common patterns, DOM-based problems, async challenges, data structures |
+| #   | Topic                                                                  | File                                 | Key Areas                                                              |
+| --- | ---------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------- |
+| 01  | [HTML Semantics & Accessibility](./01-HTML-SEMANTICS-ACCESSIBILITY.md) | `01-HTML-SEMANTICS-ACCESSIBILITY.md` | Semantic elements, ARIA, a11y, screen readers, keyboard nav            |
+| 02  | [CSS Layout & Responsive Design](./02-CSS-LAYOUT.md)                   | `02-CSS-LAYOUT.md`                   | Box model, Flexbox, Grid, positioning, media queries, specificity      |
+| 03  | [JavaScript Core Concepts](./03-JAVASCRIPT-CORE.md)                    | `03-JAVASCRIPT-CORE.md`              | Closures, event loop, prototypes, `this`, Promises, modules            |
+| 04  | [DOM Manipulation & Events](./04-DOM-EVENTS.md)                        | `04-DOM-EVENTS.md`                   | DOM API, event delegation, bubbling/capturing, mutation observers      |
+| 05  | [TypeScript Essentials](./05-TYPESCRIPT.md)                            | `05-TYPESCRIPT.md`                   | Type system, generics, utility types, type guards, declaration files   |
+| 06  | [React Fundamentals](./06-REACT-FUNDAMENTALS.md)                       | `06-REACT-FUNDAMENTALS.md`           | Components, hooks, state management, lifecycle, reconciliation         |
+| 07  | [React Advanced Patterns](./07-REACT-ADVANCED.md)                      | `07-REACT-ADVANCED.md`               | HOCs, render props, compound components, suspense, server components   |
+| 08  | [State Management](./08-STATE-MANAGEMENT.md)                           | `08-STATE-MANAGEMENT.md`             | Context, Redux, Zustand, signals, state machines, derived state        |
+| 09  | [Testing Frontend Applications](./09-TESTING.md)                       | `09-TESTING.md`                      | Unit testing, integration testing, E2E, mocking, test strategies       |
+| 10  | [Web Performance](./10-PERFORMANCE.md)                                 | `10-PERFORMANCE.md`                  | Core Web Vitals, lazy loading, code splitting, caching, profiling      |
+| 11  | [Browser Internals & Networking](./11-BROWSER-NETWORKING.md)           | `11-BROWSER-NETWORKING.md`           | Rendering pipeline, HTTP/2/3, CORS, cookies, service workers           |
+| 12  | [Security](./12-SECURITY.md)                                           | `12-SECURITY.md`                     | XSS, CSRF, CSP, HTTPS, auth patterns, input sanitization               |
+| 13  | [Build Tools & Bundling](./13-BUILD-TOOLS.md)                          | `13-BUILD-TOOLS.md`                  | Webpack, Vite, tree shaking, code splitting, module federation         |
+| 14  | [System Design for Frontend](./14-SYSTEM-DESIGN.md)                    | `14-SYSTEM-DESIGN.md`                | Component architecture, data flow, API design, scaling UI              |
+| 15  | [Coding Challenges & Algorithms](./15-CODING-CHALLENGES.md)            | `15-CODING-CHALLENGES.md`            | Common patterns, DOM-based problems, async challenges, data structures |
 
 ---
 
@@ -39,26 +39,31 @@ This series covers 15 essential frontend interview topics. Each guide follows th
 Frontend interviews are not just about getting the right answer. Interviewers evaluate candidates across multiple dimensions:
 
 **1. Technical Depth**
-- Can you explain *why* something works, not just *that* it works?
+
+- Can you explain _why_ something works, not just _that_ it works?
 - Do you understand the tradeoffs behind design decisions?
 - Can you reason about edge cases without being prompted?
 
 **2. Communication**
+
 - Do you think out loud and explain your reasoning?
 - Can you break down complex concepts for different audiences?
 - Do you ask clarifying questions before diving into code?
 
 **3. Problem-Solving Process**
+
 - Do you start with a plan or immediately start coding?
 - How do you handle ambiguity?
 - Can you iterate on a solution when requirements change?
 
 **4. Code Quality**
+
 - Is your code readable and well-organized?
 - Do you handle errors and edge cases?
 - Are you consistent with naming and patterns?
 
 **5. Practical Experience**
+
 - Have you built and shipped real products?
 - Can you discuss architectural decisions from past projects?
 - Do you understand the full lifecycle (dev, test, deploy, monitor)?
@@ -70,6 +75,7 @@ Frontend interviews typically span six major categories. Most companies weight t
 #### Category 1: HTML & CSS (15-20% of interviews)
 
 This is often underestimated by candidates. Questions test:
+
 - Semantic markup and accessibility
 - CSS layout (Flexbox, Grid)
 - Responsive design patterns
@@ -81,6 +87,7 @@ This is often underestimated by candidates. Questions test:
 #### Category 2: JavaScript Fundamentals (25-30% of interviews)
 
 The core of most frontend interviews. Questions test:
+
 - Closures, scope, hoisting
 - Prototypal inheritance and `this`
 - Asynchronous programming (Promises, async/await, event loop)
@@ -92,6 +99,7 @@ The core of most frontend interviews. Questions test:
 #### Category 3: Framework Knowledge (20-25% of interviews)
 
 Usually React, but sometimes Vue or Angular. Questions test:
+
 - Component lifecycle and rendering
 - State management patterns
 - Hooks (or equivalent)
@@ -103,6 +111,7 @@ Usually React, but sometimes Vue or Angular. Questions test:
 #### Category 4: Web Performance (10-15% of interviews)
 
 Critical for senior roles. Questions test:
+
 - Core Web Vitals (LCP, FID, CLS)
 - Bundle optimization (code splitting, tree shaking)
 - Rendering performance (layout thrashing, paint optimization)
@@ -114,6 +123,7 @@ Critical for senior roles. Questions test:
 #### Category 5: System Design (10-15% of interviews)
 
 Expected for mid-senior and above. Questions test:
+
 - Component architecture and data flow
 - API design and integration
 - Scalability considerations
@@ -125,6 +135,7 @@ Expected for mid-senior and above. Questions test:
 #### Category 6: Coding Challenges (15-20% of interviews)
 
 Live coding, either on a whiteboard or in a shared editor. Questions test:
+
 - Algorithm implementation
 - DOM manipulation
 - Async programming patterns
@@ -140,6 +151,7 @@ Live coding, either on a whiteboard or in a shared editor. Questions test:
 ### 1. "Tell me about a technically challenging project you worked on."
 
 **How to answer**: Use the STAR method (Situation, Task, Action, Result). Focus on:
+
 - The technical constraint or problem (not just the business context)
 - The options you considered and why you chose your approach
 - The implementation details that were tricky
@@ -156,6 +168,7 @@ Live coding, either on a whiteboard or in a shared editor. Questions test:
 ### 3. "Walk me through how a browser renders a page."
 
 **Key points to cover**:
+
 1. DNS resolution and TCP/TLS handshake
 2. HTML parsing into DOM tree
 3. CSS parsing into CSSOM
@@ -167,6 +180,7 @@ Live coding, either on a whiteboard or in a shared editor. Questions test:
 ### 4. "What is your approach to debugging a production issue?"
 
 **Strong answer structure**:
+
 1. Reproduce the issue (check error monitoring, logs)
 2. Isolate the scope (which component, which browser, which data)
 3. Form a hypothesis
@@ -177,6 +191,7 @@ Live coding, either on a whiteboard or in a shared editor. Questions test:
 ### 5. "How do you decide between building a component from scratch vs. using a library?"
 
 **Evaluation criteria to mention**:
+
 - Bundle size impact
 - Customization requirements
 - Maintenance burden
@@ -192,50 +207,50 @@ Live coding, either on a whiteboard or in a shared editor. Questions test:
 
 #### Week 1: Foundations (HTML, CSS, JavaScript)
 
-| Day | Focus | Time |
-|-----|-------|------|
-| Mon | HTML semantics, accessibility | 2-3 hrs |
-| Tue | CSS Box Model, Flexbox | 2-3 hrs |
-| Wed | CSS Grid, responsive design | 2-3 hrs |
-| Thu | JavaScript: closures, scope, hoisting | 2-3 hrs |
-| Fri | JavaScript: `this`, prototypes, classes | 2-3 hrs |
+| Day | Focus                                         | Time    |
+| --- | --------------------------------------------- | ------- |
+| Mon | HTML semantics, accessibility                 | 2-3 hrs |
+| Tue | CSS Box Model, Flexbox                        | 2-3 hrs |
+| Wed | CSS Grid, responsive design                   | 2-3 hrs |
+| Thu | JavaScript: closures, scope, hoisting         | 2-3 hrs |
+| Fri | JavaScript: `this`, prototypes, classes       | 2-3 hrs |
 | Sat | JavaScript: Promises, async/await, event loop | 3-4 hrs |
-| Sun | Review + practice problems | 2-3 hrs |
+| Sun | Review + practice problems                    | 2-3 hrs |
 
 #### Week 2: Framework & Tooling
 
-| Day | Focus | Time |
-|-----|-------|------|
-| Mon | React: components, JSX, props | 2-3 hrs |
+| Day | Focus                                      | Time    |
+| --- | ------------------------------------------ | ------- |
+| Mon | React: components, JSX, props              | 2-3 hrs |
 | Tue | React: hooks (useState, useEffect, useRef) | 2-3 hrs |
-| Wed | React: advanced hooks, custom hooks | 2-3 hrs |
+| Wed | React: advanced hooks, custom hooks        | 2-3 hrs |
 | Thu | State management (Context, Redux, Zustand) | 2-3 hrs |
-| Fri | TypeScript essentials | 2-3 hrs |
-| Sat | Testing (Jest, React Testing Library) | 3-4 hrs |
-| Sun | Review + build a small project | 3-4 hrs |
+| Fri | TypeScript essentials                      | 2-3 hrs |
+| Sat | Testing (Jest, React Testing Library)      | 3-4 hrs |
+| Sun | Review + build a small project             | 3-4 hrs |
 
 #### Week 3: Performance & Architecture
 
-| Day | Focus | Time |
-|-----|-------|------|
-| Mon | Web performance & Core Web Vitals | 2-3 hrs |
-| Tue | Browser internals & networking | 2-3 hrs |
-| Wed | Security (XSS, CSRF, CSP) | 2-3 hrs |
-| Thu | Build tools (Webpack, Vite) | 2-3 hrs |
+| Day | Focus                                 | Time    |
+| --- | ------------------------------------- | ------- |
+| Mon | Web performance & Core Web Vitals     | 2-3 hrs |
+| Tue | Browser internals & networking        | 2-3 hrs |
+| Wed | Security (XSS, CSRF, CSP)             | 2-3 hrs |
+| Thu | Build tools (Webpack, Vite)           | 2-3 hrs |
 | Fri | System design: component architecture | 2-3 hrs |
-| Sat | System design: practice problems | 3-4 hrs |
-| Sun | Review + mock interview | 3-4 hrs |
+| Sat | System design: practice problems      | 3-4 hrs |
+| Sun | Review + mock interview               | 3-4 hrs |
 
 #### Week 4: Practice & Polish
 
-| Day | Focus | Time |
-|-----|-------|------|
-| Mon | Coding challenge: DOM problems | 2-3 hrs |
-| Tue | Coding challenge: async patterns | 2-3 hrs |
-| Wed | Coding challenge: component building | 2-3 hrs |
-| Thu | Behavioral interview prep | 2-3 hrs |
-| Fri | Mock interviews (pair with a friend) | 3-4 hrs |
-| Sat | Weak area deep-dive | 3-4 hrs |
+| Day | Focus                                   | Time    |
+| --- | --------------------------------------- | ------- |
+| Mon | Coding challenge: DOM problems          | 2-3 hrs |
+| Tue | Coding challenge: async patterns        | 2-3 hrs |
+| Wed | Coding challenge: component building    | 2-3 hrs |
+| Thu | Behavioral interview prep               | 2-3 hrs |
+| Fri | Mock interviews (pair with a friend)    | 3-4 hrs |
+| Sat | Weak area deep-dive                     | 3-4 hrs |
 | Sun | Light review, rest, confidence building | 1-2 hrs |
 
 ### Daily Practice Routine
@@ -288,7 +303,7 @@ function throttle(fn, interval) {
 
 // 3. Deep Clone (simplified)
 function deepClone(obj) {
-  if (obj === null || typeof obj !== "object") return obj;
+  if (obj === null || typeof obj !== 'object') return obj;
   if (obj instanceof Date) return new Date(obj);
   if (obj instanceof RegExp) return new RegExp(obj);
   if (Array.isArray(obj)) return obj.map(deepClone);
@@ -337,6 +352,7 @@ Result:    [Quantifiable outcome. Numbers matter.]
 
 **1. Not asking clarifying questions**
 Interviewers intentionally leave problems vague. Jumping straight to code signals poor communication skills. Always ask:
+
 - What browsers/devices do we need to support?
 - What is the expected data volume?
 - Are there accessibility requirements?
@@ -350,6 +366,7 @@ Adding `role`, `aria-label`, and keyboard support shows maturity. Many candidate
 
 **4. Not testing edge cases verbally**
 After writing code, walk through it with:
+
 - Empty input
 - Single element
 - Very large input
@@ -362,7 +379,7 @@ Thinking out loud is critical. Say what you are considering, what you have ruled
 Production code needs error boundaries, try/catch, and graceful degradation. Show this awareness even in interview code.
 
 **7. Memorizing answers instead of understanding concepts**
-Interviewers can tell. They will ask follow-up questions that expose rote memorization. Focus on *why* things work.
+Interviewers can tell. They will ask follow-up questions that expose rote memorization. Focus on _why_ things work.
 
 **8. Skipping the system design round preparation**
 Many frontend engineers underestimate this. Practice designing: news feed, chat application, spreadsheet, design system, real-time dashboard.
@@ -373,38 +390,38 @@ Many frontend engineers underestimate this. Practice designing: news feed, chat 
 
 ### Interview Evaluation Rubric
 
-| Dimension | Junior | Mid | Senior |
-|-----------|--------|-----|--------|
-| HTML/CSS | Semantic markup, basic layouts | Responsive design, animations, a11y | Design systems, complex layouts, performance |
-| JavaScript | Core syntax, DOM basics | Closures, async, ES6+, error handling | Engine internals, metaprogramming, patterns |
-| Framework | Component basics, props, state | Hooks, lifecycle, state management | Architecture, performance, testing strategy |
-| Performance | Awareness of concepts | Can measure and optimize | Systematic approach, tooling mastery |
-| System Design | N/A | Basic component architecture | Full frontend system design |
-| Communication | Explains code | Explains tradeoffs | Drives technical discussions |
+| Dimension     | Junior                         | Mid                                   | Senior                                       |
+| ------------- | ------------------------------ | ------------------------------------- | -------------------------------------------- |
+| HTML/CSS      | Semantic markup, basic layouts | Responsive design, animations, a11y   | Design systems, complex layouts, performance |
+| JavaScript    | Core syntax, DOM basics        | Closures, async, ES6+, error handling | Engine internals, metaprogramming, patterns  |
+| Framework     | Component basics, props, state | Hooks, lifecycle, state management    | Architecture, performance, testing strategy  |
+| Performance   | Awareness of concepts          | Can measure and optimize              | Systematic approach, tooling mastery         |
+| System Design | N/A                            | Basic component architecture          | Full frontend system design                  |
+| Communication | Explains code                  | Explains tradeoffs                    | Drives technical discussions                 |
 
 ### Signal Words Interviewers Use
 
-| They Say | They Mean |
-|----------|-----------|
-| "Walk me through..." | Explain your thought process, not just the answer |
-| "What are the tradeoffs?" | Discuss pros AND cons, show you can think critically |
-| "How would you improve this?" | The current solution is intentionally basic; show depth |
-| "What if the data set is 10x larger?" | Think about scalability and performance |
-| "How would you test this?" | Show you think about quality, not just features |
-| "Tell me about a time when..." | Use the STAR method, be specific |
+| They Say                              | They Mean                                               |
+| ------------------------------------- | ------------------------------------------------------- |
+| "Walk me through..."                  | Explain your thought process, not just the answer       |
+| "What are the tradeoffs?"             | Discuss pros AND cons, show you can think critically    |
+| "How would you improve this?"         | The current solution is intentionally basic; show depth |
+| "What if the data set is 10x larger?" | Think about scalability and performance                 |
+| "How would you test this?"            | Show you think about quality, not just features         |
+| "Tell me about a time when..."        | Use the STAR method, be specific                        |
 
 ### Resources
 
-| Resource | Type | Best For |
-|----------|------|----------|
-| MDN Web Docs | Reference | HTML, CSS, JavaScript fundamentals |
-| javascript.info | Tutorial | Deep JavaScript understanding |
-| web.dev | Guide | Performance, best practices |
-| Frontend Masters | Course | Structured learning paths |
-| Patterns.dev | Guide | Design patterns, rendering patterns |
-| GreatFrontEnd | Practice | Frontend-specific interview questions |
-| Leetcode | Practice | Algorithm challenges |
-| BigFrontEnd.dev | Practice | Frontend coding challenges |
+| Resource         | Type      | Best For                              |
+| ---------------- | --------- | ------------------------------------- |
+| MDN Web Docs     | Reference | HTML, CSS, JavaScript fundamentals    |
+| javascript.info  | Tutorial  | Deep JavaScript understanding         |
+| web.dev          | Guide     | Performance, best practices           |
+| Frontend Masters | Course    | Structured learning paths             |
+| Patterns.dev     | Guide     | Design patterns, rendering patterns   |
+| GreatFrontEnd    | Practice  | Frontend-specific interview questions |
+| Leetcode         | Practice  | Algorithm challenges                  |
+| BigFrontEnd.dev  | Practice  | Frontend coding challenges            |
 
 ---
 

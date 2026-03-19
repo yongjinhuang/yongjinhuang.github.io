@@ -8,11 +8,11 @@ IAM is the service that controls **who** can do **what** to **which resources** 
 
 IAM boils down to three concepts:
 
-| Concept | What It Is | Example |
-|---------|-----------|---------|
-| **Principal** | The entity making the request | IAM user, IAM role, AWS service, federated user |
-| **Action** | The API operation being attempted | `s3:GetObject`, `ec2:RunInstances` |
-| **Resource** | The AWS resource being acted upon | `arn:aws:s3:::my-bucket/*`, `arn:aws:ec2:us-east-1:123456789012:instance/*` |
+| Concept       | What It Is                        | Example                                                                     |
+| ------------- | --------------------------------- | --------------------------------------------------------------------------- |
+| **Principal** | The entity making the request     | IAM user, IAM role, AWS service, federated user                             |
+| **Action**    | The API operation being attempted | `s3:GetObject`, `ec2:RunInstances`                                          |
+| **Resource**  | The AWS resource being acted upon | `arn:aws:s3:::my-bucket/*`, `arn:aws:ec2:us-east-1:123456789012:instance/*` |
 
 A **policy** is the glue: it defines which principals can perform which actions on which resources, under what conditions.
 
@@ -75,13 +75,13 @@ aws iam attach-role-policy \
 
 **When to use:**
 
-| Scenario | Role Type |
-|----------|----------|
-| EC2 instance needs to call AWS APIs | Instance profile (role attached to EC2) |
-| Lambda function needs DynamoDB access | Execution role |
-| ECS task needs to pull from S3 | Task role |
-| Cross-account access | AssumeRole with external trust |
-| Federated users (SSO, SAML) | Identity provider role |
+| Scenario                              | Role Type                               |
+| ------------------------------------- | --------------------------------------- |
+| EC2 instance needs to call AWS APIs   | Instance profile (role attached to EC2) |
+| Lambda function needs DynamoDB access | Execution role                          |
+| ECS task needs to pull from S3        | Task role                               |
+| Cross-account access                  | AssumeRole with external trust          |
+| Federated users (SSO, SAML)           | Identity provider role                  |
 
 ---
 
@@ -96,10 +96,7 @@ Every IAM policy is a JSON document with this structure:
     {
       "Sid": "AllowS3ReadWrite",
       "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject"
-      ],
+      "Action": ["s3:GetObject", "s3:PutObject"],
       "Resource": "arn:aws:s3:::my-app-bucket/*",
       "Condition": {
         "IpAddress": {
@@ -113,36 +110,36 @@ Every IAM policy is a JSON document with this structure:
 
 ### 3.1 Statement Fields
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `Effect` | Yes | `Allow` or `Deny` |
-| `Action` | Yes | API actions (supports wildcards: `s3:Get*`) |
-| `Resource` | Yes | ARN(s) the statement applies to (`*` = all) |
-| `Condition` | No | Conditions that must be true (IP range, MFA, time, tags) |
-| `Sid` | No | Human-readable identifier for the statement |
-| `Principal` | Only in resource-based policies | Who this statement applies to |
+| Field       | Required                        | Description                                              |
+| ----------- | ------------------------------- | -------------------------------------------------------- |
+| `Effect`    | Yes                             | `Allow` or `Deny`                                        |
+| `Action`    | Yes                             | API actions (supports wildcards: `s3:Get*`)              |
+| `Resource`  | Yes                             | ARN(s) the statement applies to (`*` = all)              |
+| `Condition` | No                              | Conditions that must be true (IP range, MFA, time, tags) |
+| `Sid`       | No                              | Human-readable identifier for the statement              |
+| `Principal` | Only in resource-based policies | Who this statement applies to                            |
 
 ### 3.2 Common Condition Keys
 
-| Condition Key | Use Case |
-|---------------|----------|
-| `aws:SourceIp` | Restrict by IP address |
-| `aws:MultiFactorAuthPresent` | Require MFA |
-| `aws:PrincipalOrgID` | Restrict to your AWS Organization |
-| `aws:RequestedRegion` | Restrict to specific regions |
-| `s3:prefix` | Restrict S3 access to a key prefix |
-| `aws:TagKeys` | Enforce tagging on resource creation |
+| Condition Key                | Use Case                             |
+| ---------------------------- | ------------------------------------ |
+| `aws:SourceIp`               | Restrict by IP address               |
+| `aws:MultiFactorAuthPresent` | Require MFA                          |
+| `aws:PrincipalOrgID`         | Restrict to your AWS Organization    |
+| `aws:RequestedRegion`        | Restrict to specific regions         |
+| `s3:prefix`                  | Restrict S3 access to a key prefix   |
+| `aws:TagKeys`                | Enforce tagging on resource creation |
 
 ---
 
 ## 4. Identity-Based vs Resource-Based Policies
 
-| Aspect | Identity-Based | Resource-Based |
-|--------|---------------|----------------|
-| Attached to | User, group, or role | The resource itself (S3 bucket, SQS queue, KMS key) |
-| Has `Principal` field | No (implicit -- it's whoever the policy is attached to) | Yes (specifies who is allowed) |
-| Cross-account | Requires role assumption on both sides | Can grant access directly to external account |
-| Example | IAM user policy allowing `s3:GetObject` | S3 bucket policy allowing account B to read |
+| Aspect                | Identity-Based                                          | Resource-Based                                      |
+| --------------------- | ------------------------------------------------------- | --------------------------------------------------- |
+| Attached to           | User, group, or role                                    | The resource itself (S3 bucket, SQS queue, KMS key) |
+| Has `Principal` field | No (implicit -- it's whoever the policy is attached to) | Yes (specifies who is allowed)                      |
+| Cross-account         | Requires role assumption on both sides                  | Can grant access directly to external account       |
+| Example               | IAM user policy allowing `s3:GetObject`                 | S3 bucket policy allowing account B to read         |
 
 **Cross-account access tip:** Resource-based policies are simpler for cross-account because the external principal does not need to assume a role. They just call the API directly and the resource policy grants access.
 
@@ -222,10 +219,10 @@ aws iam attach-role-policy \
 
 ECS has two role types:
 
-| Role | Purpose |
-|------|---------|
+| Role                    | Purpose                                                          |
+| ----------------------- | ---------------------------------------------------------------- |
 | **Task execution role** | Lets ECS agent pull images from ECR and write logs to CloudWatch |
-| **Task role** | Lets your application code inside the container call AWS APIs |
+| **Task role**           | Lets your application code inside the container call AWS APIs    |
 
 Do not confuse them. The execution role is for the infrastructure; the task role is for your code.
 

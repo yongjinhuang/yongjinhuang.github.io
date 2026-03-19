@@ -979,6 +979,7 @@ Example: Trading $1M of a stock with ADV = $50M, sigma = 2%
 **Q: You discover that Coca-Cola (KO) and PepsiCo (PEP) are cointegrated. Design a full pairs trading strategy. What could go wrong?**
 
 **A:**
+
 ```
 Strategy Design:
 1. Estimate hedge ratio via rolling OLS (60-day window)
@@ -1005,6 +1006,7 @@ Risk factors:
 **Q: You run a regression of stock returns on Fama-French factors and get alpha = 0.3% per month with t-stat = 1.8. Is this significant?**
 
 **A:**
+
 ```
 At 5% significance, we need |t| > 1.96 for a two-sided test.
 t = 1.8 < 1.96, so NOT significant at 5%.
@@ -1032,6 +1034,7 @@ However, we must consider:
 **Q: Your backtest shows a Sharpe ratio of 2.5 over 3 years. How confident should you be?**
 
 **A:**
+
 ```
 The standard error of the Sharpe ratio is approximately:
 
@@ -1058,6 +1061,7 @@ Additional concerns:
 **Q: Can mean reversion and momentum both be true simultaneously?**
 
 **A:**
+
 ```
 Yes! They operate at different frequencies and asset levels:
 
@@ -1084,6 +1088,7 @@ appropriate horizons and horizon-specific portfolio construction.
 **Q: You test 1000 parameter combinations and select the best Sharpe. How do you adjust for overfitting?**
 
 **A:**
+
 ```
 Multiple testing correction approaches:
 
@@ -1119,6 +1124,7 @@ Multiple testing correction approaches:
 **Q: How would you decompose a portfolio's risk into factor risk and idiosyncratic risk?**
 
 **A:**
+
 ```
 Using the factor model: r = X * f + epsilon
 
@@ -1150,6 +1156,7 @@ is essentially a factor bet, not true alpha.
 **Q: Your strategy trades US mid-cap stocks and generates 15% annual alpha with $100M. How do you estimate capacity?**
 
 **A:**
+
 ```
 Capacity analysis:
 
@@ -1183,6 +1190,7 @@ Capacity analysis:
 **Q: Why do correlations increase during market crises, and how does this affect portfolio construction?**
 
 **A:**
+
 ```
 Correlations increase in crises due to:
 
@@ -1237,4 +1245,4 @@ Formal: if rho_calm = 0.3 and rho_crisis = 0.8,
 
 ---
 
-*Next Chapter: [Chapter 6 - Coding Challenges for Quant Interviews](06-CODING-CHALLENGES.md)*
+_Next Chapter: [Chapter 6 - Coding Challenges for Quant Interviews](06-CODING-CHALLENGES.md)_

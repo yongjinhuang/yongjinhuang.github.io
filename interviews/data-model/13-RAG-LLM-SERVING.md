@@ -4,41 +4,41 @@ A Retrieval-Augmented Generation (RAG) system grounds LLM responses in factual d
 
 ## Table Responsibilities
 
-| Table | Purpose | Storage | Key Characteristic |
-|-------|---------|---------|-------------------|
-| **documents** | Source document metadata and access control | PostgreSQL | Source of truth for document lifecycle |
-| **chunks** | Document segments with embeddings | PostgreSQL + Vector DB | Core retrieval unit, sized for LLM context windows |
-| **embedding_index** | ANN search index over chunk vectors | Vector DB (Pinecone/pgvector/Milvus) | Enables sub-100ms similarity search over millions of vectors |
-| **retrieval_logs** | Query audit trail and feedback loop | PostgreSQL (partitioned by date) | Powers retrieval quality evaluation and model fine-tuning |
+| Table               | Purpose                                     | Storage                              | Key Characteristic                                           |
+| ------------------- | ------------------------------------------- | ------------------------------------ | ------------------------------------------------------------ |
+| **documents**       | Source document metadata and access control | PostgreSQL                           | Source of truth for document lifecycle                       |
+| **chunks**          | Document segments with embeddings           | PostgreSQL + Vector DB               | Core retrieval unit, sized for LLM context windows           |
+| **embedding_index** | ANN search index over chunk vectors         | Vector DB (Pinecone/pgvector/Milvus) | Enables sub-100ms similarity search over millions of vectors |
+| **retrieval_logs**  | Query audit trail and feedback loop         | PostgreSQL (partitioned by date)     | Powers retrieval quality evaluation and model fine-tuning    |
 
 ## Detailed Field Descriptions
 
 ### documents
 
-| Field | Type | Description |
-|-------|------|-------------|
-| document_id | UUID, PK | Unique document identifier. UUID avoids sequential guessing and works across distributed ingestion workers. |
-| source | VARCHAR(100), INDEX | Where the document came from (e.g., "confluence", "gdrive", "github"). Indexed for source-specific re-ingestion and filtering. |
-| title | VARCHAR(512) | Document title. Included in chunk metadata to provide context to the LLM (a chunk from "API Security Guide" is interpreted differently than one from "Cooking Recipes"). |
-| author | VARCHAR(255) | Document author. Used for access control checks and attribution in generated responses. |
-| category | VARCHAR(100), INDEX | Topic category. Enables scoped retrieval ("search only engineering docs") to improve precision. |
-| access_level | VARCHAR(50), INDEX | Access control tag (e.g., "public", "internal", "confidential"). Filtered at query time to ensure users only retrieve documents they are authorized to see. |
-| raw_content_url | TEXT | S3 URL to the original document. Kept for re-chunking if the chunking strategy changes (e.g., switching from fixed-size to semantic chunking). |
-| created_at | TIMESTAMP | Document creation/upload time. Used for freshness-weighted retrieval. |
+| Field           | Type                | Description                                                                                                                                                              |
+| --------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| document_id     | UUID, PK            | Unique document identifier. UUID avoids sequential guessing and works across distributed ingestion workers.                                                              |
+| source          | VARCHAR(100), INDEX | Where the document came from (e.g., "confluence", "gdrive", "github"). Indexed for source-specific re-ingestion and filtering.                                           |
+| title           | VARCHAR(512)        | Document title. Included in chunk metadata to provide context to the LLM (a chunk from "API Security Guide" is interpreted differently than one from "Cooking Recipes"). |
+| author          | VARCHAR(255)        | Document author. Used for access control checks and attribution in generated responses.                                                                                  |
+| category        | VARCHAR(100), INDEX | Topic category. Enables scoped retrieval ("search only engineering docs") to improve precision.                                                                          |
+| access_level    | VARCHAR(50), INDEX  | Access control tag (e.g., "public", "internal", "confidential"). Filtered at query time to ensure users only retrieve documents they are authorized to see.              |
+| raw_content_url | TEXT                | S3 URL to the original document. Kept for re-chunking if the chunking strategy changes (e.g., switching from fixed-size to semantic chunking).                           |
+| created_at      | TIMESTAMP           | Document creation/upload time. Used for freshness-weighted retrieval.                                                                                                    |
 
 **Why store `raw_content_url` separately?** Chunking strategies evolve. When you switch from 512-token fixed chunks to semantic paragraph-based chunks, you need to re-process the original document. Storing the raw content in S3 avoids data loss and enables re-ingestion without re-crawling sources.
 
 ### chunks
 
-| Field | Type | Description |
-|-------|------|-------------|
-| chunk_id | UUID, PK | Unique chunk identifier. Used as the key in the vector index for mapping search results back to text. |
-| document_id | UUID, FK -> documents | Parent document. Enables fetching neighboring chunks for expanded context ("retrieve the chunk before and after the match"). |
-| chunk_index | INT | Position of this chunk within the document (0-indexed). Enables ordering chunks and fetching surrounding context. |
-| text | TEXT, NOT NULL | The actual text content of the chunk. This is what gets injected into the LLM prompt as context. |
-| token_count | INT | Number of tokens in this chunk (model-specific tokenizer). Ensures chunks fit within the LLM's context window and enables precise token budget management. |
-| embedding | VECTOR(1536) | Dense vector representation of the text (e.g., OpenAI text-embedding-3-small produces 1536 dimensions). The core data for similarity search. |
-| metadata_json | JSONB | Flexible metadata (section headers, page numbers, table flags, etc.). Passed to the LLM alongside the text for richer context. Stored as JSONB because metadata structure varies by source. |
+| Field         | Type                  | Description                                                                                                                                                                                 |
+| ------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| chunk_id      | UUID, PK              | Unique chunk identifier. Used as the key in the vector index for mapping search results back to text.                                                                                       |
+| document_id   | UUID, FK -> documents | Parent document. Enables fetching neighboring chunks for expanded context ("retrieve the chunk before and after the match").                                                                |
+| chunk_index   | INT                   | Position of this chunk within the document (0-indexed). Enables ordering chunks and fetching surrounding context.                                                                           |
+| text          | TEXT, NOT NULL        | The actual text content of the chunk. This is what gets injected into the LLM prompt as context.                                                                                            |
+| token_count   | INT                   | Number of tokens in this chunk (model-specific tokenizer). Ensures chunks fit within the LLM's context window and enables precise token budget management.                                  |
+| embedding     | VECTOR(1536)          | Dense vector representation of the text (e.g., OpenAI text-embedding-3-small produces 1536 dimensions). The core data for similarity search.                                                |
+| metadata_json | JSONB                 | Flexible metadata (section headers, page numbers, table flags, etc.). Passed to the LLM alongside the text for richer context. Stored as JSONB because metadata structure varies by source. |
 
 **Why track `token_count`?** LLMs have fixed context windows (e.g., 128K tokens). When assembling the prompt, we need to pack as many relevant chunks as possible without exceeding the limit. Pre-computed token counts enable greedy packing without re-tokenizing at query time.
 
@@ -46,10 +46,10 @@ A Retrieval-Augmented Generation (RAG) system grounds LLM responses in factual d
 
 ### embedding_index (Vector DB)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| chunk_id | UUID, PK | Maps directly to chunks table. The vector DB stores the vector and returns chunk_ids, which are then used to fetch full text from the chunks table. |
-| vector | FLOAT[1536] | The embedding vector, indexed for Approximate Nearest Neighbor (ANN) search. Index type (HNSW or IVF) is chosen based on the recall-vs-latency trade-off. |
+| Field    | Type        | Description                                                                                                                                               |
+| -------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| chunk_id | UUID, PK    | Maps directly to chunks table. The vector DB stores the vector and returns chunk_ids, which are then used to fetch full text from the chunks table.       |
+| vector   | FLOAT[1536] | The embedding vector, indexed for Approximate Nearest Neighbor (ANN) search. Index type (HNSW or IVF) is chosen based on the recall-vs-latency trade-off. |
 
 **Why a separate vector index instead of pgvector?** Dedicated vector databases (Pinecone, Milvus, Qdrant) are optimized for ANN search at scale. pgvector works well under ~1M vectors but degrades at larger scale. A dedicated vector DB provides better recall, lower latency, and independent scaling of the search tier.
 
@@ -57,17 +57,17 @@ A Retrieval-Augmented Generation (RAG) system grounds LLM responses in factual d
 
 ### retrieval_logs
 
-| Field | Type | Description |
-|-------|------|-------------|
-| query_id | UUID, PK | Unique identifier for each query. Enables end-to-end tracing. |
-| user_id | BIGINT, INDEX | Who issued the query. Used for personalization analysis and access auditing. |
-| query_text | TEXT | The original user question. Stored for query analysis, clustering common questions, and fine-tuning. |
-| query_embedding | VECTOR(1536) | The embedded query vector. Cached to avoid re-embedding for analytics (e.g., "what queries produce poor results?"). |
-| retrieved_chunk_ids | UUID[] | Chunk IDs returned by vector search (before reranking). Enables measuring raw retrieval recall. |
-| reranked_chunk_ids | UUID[] | Chunk IDs after cross-encoder reranking. Comparing with retrieved_chunk_ids shows how much reranking helps. |
-| llm_response | TEXT | The generated answer. Stored for quality evaluation and hallucination detection. |
-| latency_ms | INT | End-to-end query latency. Broken down by stage (embedding, retrieval, reranking, generation) for bottleneck identification. |
-| feedback | SMALLINT, NULLABLE | User feedback (thumbs up/down or 1-5 rating). The most valuable signal for improving retrieval quality. |
+| Field               | Type               | Description                                                                                                                 |
+| ------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| query_id            | UUID, PK           | Unique identifier for each query. Enables end-to-end tracing.                                                               |
+| user_id             | BIGINT, INDEX      | Who issued the query. Used for personalization analysis and access auditing.                                                |
+| query_text          | TEXT               | The original user question. Stored for query analysis, clustering common questions, and fine-tuning.                        |
+| query_embedding     | VECTOR(1536)       | The embedded query vector. Cached to avoid re-embedding for analytics (e.g., "what queries produce poor results?").         |
+| retrieved_chunk_ids | UUID[]             | Chunk IDs returned by vector search (before reranking). Enables measuring raw retrieval recall.                             |
+| reranked_chunk_ids  | UUID[]             | Chunk IDs after cross-encoder reranking. Comparing with retrieved_chunk_ids shows how much reranking helps.                 |
+| llm_response        | TEXT               | The generated answer. Stored for quality evaluation and hallucination detection.                                            |
+| latency_ms          | INT                | End-to-end query latency. Broken down by stage (embedding, retrieval, reranking, generation) for bottleneck identification. |
+| feedback            | SMALLINT, NULLABLE | User feedback (thumbs up/down or 1-5 rating). The most valuable signal for improving retrieval quality.                     |
 
 **Why log both `retrieved_chunk_ids` and `reranked_chunk_ids`?** This lets you measure the value of the reranker. If reranking consistently promotes chunk X from position 8 to position 1, the retrieval stage needs improvement. If reranking rarely changes the order, you might remove it to save latency.
 

@@ -50,17 +50,17 @@ HTML5 introduced native media playback without plugins. Before HTML5, browsers r
 
 ### Key Attributes
 
-| Attribute   | Description                                                                 |
-|-------------|-----------------------------------------------------------------------------|
-| `src`       | URL of the media resource. Can also be set via `<source>` children.         |
-| `controls`  | Boolean. Shows built-in browser playback controls.                          |
-| `autoplay`  | Boolean. Begins playback automatically. Most browsers block unmuted auto.   |
-| `muted`     | Boolean. Starts with audio muted. Required for autoplay in most browsers.   |
-| `loop`      | Boolean. Restarts playback when the media reaches the end.                  |
-| `preload`   | Hint: `none`, `metadata`, or `auto`. Controls how much data to fetch early. |
-| `poster`    | (Video only) URL of image shown before playback starts.                     |
-| `crossorigin` | `anonymous` or `use-credentials`. Required for CORS-restricted resources. |
-| `playsinline` | (Mobile) Allows inline playback instead of forcing fullscreen.            |
+| Attribute     | Description                                                                 |
+| ------------- | --------------------------------------------------------------------------- |
+| `src`         | URL of the media resource. Can also be set via `<source>` children.         |
+| `controls`    | Boolean. Shows built-in browser playback controls.                          |
+| `autoplay`    | Boolean. Begins playback automatically. Most browsers block unmuted auto.   |
+| `muted`       | Boolean. Starts with audio muted. Required for autoplay in most browsers.   |
+| `loop`        | Boolean. Restarts playback when the media reaches the end.                  |
+| `preload`     | Hint: `none`, `metadata`, or `auto`. Controls how much data to fetch early. |
+| `poster`      | (Video only) URL of image shown before playback starts.                     |
+| `crossorigin` | `anonymous` or `use-credentials`. Required for CORS-restricted resources.   |
+| `playsinline` | (Mobile) Allows inline playback instead of forcing fullscreen.              |
 
 ### Autoplay Policy
 
@@ -183,31 +183,33 @@ The API provides full programmatic control over media playback:
 const video = document.querySelector('video');
 
 // Playback control
-video.play();           // Returns a Promise
+video.play(); // Returns a Promise
 video.pause();
-video.load();           // Reloads the media resource
+video.load(); // Reloads the media resource
 
 // Position and duration
 video.currentTime = 30; // Seek to 30 seconds
-console.log(video.duration);     // Total duration in seconds
-console.log(video.paused);       // Boolean: is paused?
-console.log(video.ended);        // Boolean: has ended?
+console.log(video.duration); // Total duration in seconds
+console.log(video.paused); // Boolean: is paused?
+console.log(video.ended); // Boolean: has ended?
 
 // Playback rate
 video.playbackRate = 1.5; // 1.5x speed
 video.defaultPlaybackRate = 1.0;
 
 // Volume control
-video.volume = 0.8;     // 0.0 to 1.0
+video.volume = 0.8; // 0.0 to 1.0
 video.muted = false;
 
 // Network state
 console.log(video.networkState); // NETWORK_EMPTY, NETWORK_IDLE, NETWORK_LOADING, NETWORK_NO_SOURCE
-console.log(video.readyState);  // HAVE_NOTHING through HAVE_ENOUGH_DATA
+console.log(video.readyState); // HAVE_NOTHING through HAVE_ENOUGH_DATA
 
 // Buffered ranges (TimeRanges object)
 for (let i = 0; i < video.buffered.length; i++) {
-  console.log(`Buffered: ${video.buffered.start(i)} - ${video.buffered.end(i)}`);
+  console.log(
+    `Buffered: ${video.buffered.start(i)} - ${video.buffered.end(i)}`
+  );
 }
 
 // Text tracks (subtitles, captions)
@@ -251,7 +253,10 @@ Network (fetch/XHR)
 
 ```javascript
 // Check support
-if (!('MediaSource' in window) || !MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E, mp4a.40.2"')) {
+if (
+  !('MediaSource' in window) ||
+  !MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E, mp4a.40.2"')
+) {
   console.error('MSE not supported for this codec');
 }
 
@@ -342,7 +347,7 @@ ABR is the killer feature of MSE. The player monitors network speed and buffer h
 
 ```javascript
 const qualityLevels = [
-  { bitrate: 500000,  url: (seg) => `/360p/segment_${seg}.m4s` },
+  { bitrate: 500000, url: (seg) => `/360p/segment_${seg}.m4s` },
   { bitrate: 1500000, url: (seg) => `/720p/segment_${seg}.m4s` },
   { bitrate: 4000000, url: (seg) => `/1080p/segment_${seg}.m4s` },
 ];
@@ -403,11 +408,11 @@ EME provides a standard API for browsers to interact with Content Decryption Mod
 
 Common CDMs:
 
-| CDM         | Browser         | DRM System      |
-|-------------|-----------------|-----------------|
-| Widevine    | Chrome, Firefox | Google Widevine |
-| FairPlay    | Safari          | Apple FairPlay  |
-| PlayReady   | Edge            | Microsoft       |
+| CDM       | Browser         | DRM System      |
+| --------- | --------------- | --------------- |
+| Widevine  | Chrome, Firefox | Google Widevine |
+| FairPlay  | Safari          | Apple FairPlay  |
+| PlayReady | Edge            | Microsoft       |
 
 ### EME Flow Overview
 
@@ -439,17 +444,26 @@ video.addEventListener('encrypted', async (event) => {
 
 async function setupEME(initDataType, initData) {
   // Step 2: Request access to the key system
-  const config = [{
-    initDataTypes: [initDataType],
-    videoCapabilities: [{
-      contentType: 'video/mp4; codecs="avc1.42E01E"',
-    }],
-    audioCapabilities: [{
-      contentType: 'audio/mp4; codecs="mp4a.40.2"',
-    }],
-  }];
+  const config = [
+    {
+      initDataTypes: [initDataType],
+      videoCapabilities: [
+        {
+          contentType: 'video/mp4; codecs="avc1.42E01E"',
+        },
+      ],
+      audioCapabilities: [
+        {
+          contentType: 'audio/mp4; codecs="mp4a.40.2"',
+        },
+      ],
+    },
+  ];
 
-  const keySystemAccess = await navigator.requestMediaKeySystemAccess(KEY_SYSTEM, config);
+  const keySystemAccess = await navigator.requestMediaKeySystemAccess(
+    KEY_SYSTEM,
+    config
+  );
 
   // Step 3: Create and attach MediaKeys
   const mediaKeys = await keySystemAccess.createMediaKeys();
@@ -523,6 +537,7 @@ Source Node(s) --> Processing Node(s) --> Destination Node
 ```
 
 Every audio pipeline has:
+
 - **Source nodes**: Generate or inject audio data.
 - **Processing nodes**: Transform audio (gain, filter, delay, etc.).
 - **Destination node**: The final output (usually speakers).
@@ -626,8 +641,8 @@ Implements common audio filters:
 const filter = audioCtx.createBiquadFilter();
 filter.type = 'lowpass'; // 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'peaking', 'notch', 'allpass'
 filter.frequency.value = 1000; // Cutoff frequency in Hz
-filter.Q.value = 1.0;         // Quality factor
-filter.gain.value = 0;        // Used with shelving and peaking types
+filter.Q.value = 1.0; // Quality factor
+filter.gain.value = 0; // Used with shelving and peaking types
 
 source.connect(filter);
 filter.connect(audioCtx.destination);
@@ -664,11 +679,11 @@ Reduces the dynamic range of audio (loud parts quieter, quiet parts louder):
 
 ```javascript
 const compressor = audioCtx.createDynamicsCompressor();
-compressor.threshold.value = -24;  // dB above which compression starts
-compressor.knee.value = 30;        // dB range for smooth transition
-compressor.ratio.value = 12;       // compression ratio
-compressor.attack.value = 0.003;   // seconds
-compressor.release.value = 0.25;   // seconds
+compressor.threshold.value = -24; // dB above which compression starts
+compressor.knee.value = 30; // dB range for smooth transition
+compressor.ratio.value = 12; // compression ratio
+compressor.attack.value = 0.003; // seconds
+compressor.release.value = 0.25; // seconds
 
 source.connect(compressor);
 compressor.connect(audioCtx.destination);
@@ -788,13 +803,15 @@ This runs on the audio thread. It must process 128 frames (one render quantum) p
 // processor.js - runs on the audio worklet thread
 class GainProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
-    return [{
-      name: 'gain',
-      defaultValue: 1.0,
-      minValue: 0.0,
-      maxValue: 2.0,
-      automationRate: 'a-rate', // 'a-rate' (per-sample) or 'k-rate' (per-block)
-    }];
+    return [
+      {
+        name: 'gain',
+        defaultValue: 1.0,
+        minValue: 0.0,
+        maxValue: 2.0,
+        automationRate: 'a-rate', // 'a-rate' (per-sample) or 'k-rate' (per-block)
+      },
+    ];
   }
 
   process(inputs, outputs, parameters) {
@@ -953,7 +970,9 @@ function chromaKey(ctx, width, height, bgImage) {
   const data = imageData.data;
 
   // Target green color and tolerance
-  const targetR = 0, targetG = 255, targetB = 0;
+  const targetR = 0,
+    targetG = 255,
+    targetB = 0;
   const threshold = 100;
 
   for (let i = 0; i < data.length; i += 4) {
@@ -963,9 +982,7 @@ function chromaKey(ctx, width, height, bgImage) {
 
     // Calculate distance from target green
     const distance = Math.sqrt(
-      (r - targetR) ** 2 +
-      (g - targetG) ** 2 +
-      (b - targetB) ** 2
+      (r - targetR) ** 2 + (g - targetG) ** 2 + (b - targetB) ** 2
     );
 
     if (distance < threshold) {
@@ -1072,8 +1089,8 @@ decoder.configure({
 
 // Feed encoded data
 const chunk = new EncodedVideoChunk({
-  type: 'key',    // 'key' or 'delta'
-  timestamp: 0,   // microseconds
+  type: 'key', // 'key' or 'delta'
+  timestamp: 0, // microseconds
   data: encodedData, // ArrayBuffer
 });
 
@@ -1154,16 +1171,16 @@ audioEncoder.configure({
 
 ### WebCodecs vs MSE Comparison
 
-| Feature              | MSE                                    | WebCodecs                               |
-|----------------------|----------------------------------------|-----------------------------------------|
-| Abstraction level    | Container-level (MP4, WebM)            | Codec-level (raw frames/samples)        |
-| Latency              | Seconds (buffering required)           | Sub-frame (direct decode)               |
-| Encoding support     | No                                     | Yes                                     |
-| Frame access         | No (opaque pipeline)                   | Yes (VideoFrame objects)                |
-| Browser integration  | Feeds `<video>` element                | Canvas, WebGPU, or custom rendering     |
-| Container support    | Built-in (MP4, WebM, fMP4)             | None (bring your own demuxer)           |
-| DRM support          | Yes (via EME)                          | No                                      |
-| Use case             | Standard VOD/live streaming            | Custom pipelines, ultra-low latency     |
+| Feature             | MSE                          | WebCodecs                           |
+| ------------------- | ---------------------------- | ----------------------------------- |
+| Abstraction level   | Container-level (MP4, WebM)  | Codec-level (raw frames/samples)    |
+| Latency             | Seconds (buffering required) | Sub-frame (direct decode)           |
+| Encoding support    | No                           | Yes                                 |
+| Frame access        | No (opaque pipeline)         | Yes (VideoFrame objects)            |
+| Browser integration | Feeds `<video>` element      | Canvas, WebGPU, or custom rendering |
+| Container support   | Built-in (MP4, WebM, fMP4)   | None (bring your own demuxer)       |
+| DRM support         | Yes (via EME)                | No                                  |
+| Use case            | Standard VOD/live streaming  | Custom pipelines, ultra-low latency |
 
 ---
 
@@ -1209,11 +1226,11 @@ const videoTrack = stream.getVideoTracks()[0];
 const audioTrack = stream.getAudioTracks()[0];
 
 // Track properties
-console.log(videoTrack.kind);       // 'video'
-console.log(videoTrack.label);      // e.g., 'FaceTime HD Camera'
+console.log(videoTrack.kind); // 'video'
+console.log(videoTrack.label); // e.g., 'FaceTime HD Camera'
 console.log(videoTrack.readyState); // 'live' or 'ended'
-console.log(videoTrack.enabled);    // true/false (mute without stopping)
-console.log(videoTrack.muted);      // true if track is not providing data
+console.log(videoTrack.enabled); // true/false (mute without stopping)
+console.log(videoTrack.muted); // true if track is not providing data
 
 // Get current settings
 const settings = videoTrack.getSettings();
@@ -1269,9 +1286,9 @@ oldVideoTrack.stop();
 ```javascript
 const devices = await navigator.mediaDevices.enumerateDevices();
 
-const cameras = devices.filter(d => d.kind === 'videoinput');
-const microphones = devices.filter(d => d.kind === 'audioinput');
-const speakers = devices.filter(d => d.kind === 'audiooutput');
+const cameras = devices.filter((d) => d.kind === 'videoinput');
+const microphones = devices.filter((d) => d.kind === 'audioinput');
+const speakers = devices.filter((d) => d.kind === 'audiooutput');
 
 // Listen for device changes (plug/unplug)
 navigator.mediaDevices.addEventListener('devicechange', async () => {
@@ -1308,12 +1325,14 @@ const mimeTypes = [
   'video/mp4',
 ];
 
-const supportedMimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+const supportedMimeType = mimeTypes.find((type) =>
+  MediaRecorder.isTypeSupported(type)
+);
 
 const recorder = new MediaRecorder(stream, {
   mimeType: supportedMimeType,
-  videoBitsPerSecond: 2500000,  // 2.5 Mbps
-  audioBitsPerSecond: 128000,   // 128 kbps
+  videoBitsPerSecond: 2500000, // 2.5 Mbps
+  audioBitsPerSecond: 128000, // 128 kbps
 });
 
 const chunks = [];
@@ -1466,10 +1485,16 @@ navigator.mediaSession.metadata = new MediaMetadata({
 navigator.mediaSession.setActionHandler('play', () => video.play());
 navigator.mediaSession.setActionHandler('pause', () => video.pause());
 navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-  video.currentTime = Math.max(video.currentTime - (details.seekOffset || 10), 0);
+  video.currentTime = Math.max(
+    video.currentTime - (details.seekOffset || 10),
+    0
+  );
 });
 navigator.mediaSession.setActionHandler('seekforward', (details) => {
-  video.currentTime = Math.min(video.currentTime + (details.seekOffset || 10), video.duration);
+  video.currentTime = Math.min(
+    video.currentTime + (details.seekOffset || 10),
+    video.duration
+  );
 });
 navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
 navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
@@ -1488,7 +1513,7 @@ const pipWindow = await documentPictureInPicture.requestWindow({
 // Copy stylesheets
 for (const sheet of document.styleSheets) {
   try {
-    const cssRules = [...sheet.cssRules].map(rule => rule.cssText).join('');
+    const cssRules = [...sheet.cssRules].map((rule) => rule.cssText).join('');
     const style = pipWindow.document.createElement('style');
     style.textContent = cssRules;
     pipWindow.document.head.appendChild(style);
@@ -1543,11 +1568,13 @@ const streamWriter = stream.writable.getWriter();
 const streamReader = stream.readable.getReader();
 
 // Handle connection close
-transport.closed.then(() => {
-  console.log('Connection closed gracefully');
-}).catch((error) => {
-  console.error('Connection closed with error:', error);
-});
+transport.closed
+  .then(() => {
+    console.log('Connection closed gracefully');
+  })
+  .catch((error) => {
+    console.error('Connection closed with error:', error);
+  });
 ```
 
 ### Receiving and Decoding Video via WebTransport + WebCodecs
@@ -1643,12 +1670,12 @@ encodeFrames();
 
 ### Latency Comparison
 
-| Stack                        | Typical Latency | Use Case                    |
-|------------------------------|-----------------|-----------------------------|
-| HLS/DASH + MSE              | 6-30 seconds    | VOD, live events            |
-| Low-Latency HLS/DASH        | 2-5 seconds     | Sports, news                |
-| WebRTC                       | 200-500ms       | Video calls, small audience |
-| WebTransport + WebCodecs     | 50-150ms        | Cloud gaming, interactive   |
+| Stack                    | Typical Latency | Use Case                    |
+| ------------------------ | --------------- | --------------------------- |
+| HLS/DASH + MSE           | 6-30 seconds    | VOD, live events            |
+| Low-Latency HLS/DASH     | 2-5 seconds     | Sports, news                |
+| WebRTC                   | 200-500ms       | Video calls, small audience |
+| WebTransport + WebCodecs | 50-150ms        | Cloud gaming, interactive   |
 
 ---
 
@@ -1698,7 +1725,9 @@ class CustomMSEPlayer {
   }
 
   setupSourceBuffer() {
-    this.sourceBuffer = this.mediaSource.addSourceBuffer(this.manifest.mimeType);
+    this.sourceBuffer = this.mediaSource.addSourceBuffer(
+      this.manifest.mimeType
+    );
 
     this.sourceBuffer.addEventListener('updateend', () => {
       this.isAppending = false;
@@ -1744,7 +1773,9 @@ class CustomMSEPlayer {
     for (let i = qualities.length - 1; i >= 0; i--) {
       if (qualities[i].bitrate <= safeSpeed) {
         if (this.currentQuality !== i) {
-          console.log(`Switching quality: ${qualities[this.currentQuality].bitrate} -> ${qualities[i].bitrate}`);
+          console.log(
+            `Switching quality: ${qualities[this.currentQuality].bitrate} -> ${qualities[i].bitrate}`
+          );
           this.currentQuality = i;
         }
         break;
@@ -2052,29 +2083,73 @@ class AudioEffectsChain {
   }
 
   setEQ(low, mid, high) {
-    this.nodes.lowShelf.gain.setTargetAtTime(low, this.audioCtx.currentTime, 0.01);
-    this.nodes.midPeak.gain.setTargetAtTime(mid, this.audioCtx.currentTime, 0.01);
-    this.nodes.highShelf.gain.setTargetAtTime(high, this.audioCtx.currentTime, 0.01);
+    this.nodes.lowShelf.gain.setTargetAtTime(
+      low,
+      this.audioCtx.currentTime,
+      0.01
+    );
+    this.nodes.midPeak.gain.setTargetAtTime(
+      mid,
+      this.audioCtx.currentTime,
+      0.01
+    );
+    this.nodes.highShelf.gain.setTargetAtTime(
+      high,
+      this.audioCtx.currentTime,
+      0.01
+    );
   }
 
   setDelay(time, feedback, mix) {
-    this.nodes.delay.delayTime.setTargetAtTime(time, this.audioCtx.currentTime, 0.01);
-    this.nodes.delayFeedback.gain.setTargetAtTime(feedback, this.audioCtx.currentTime, 0.01);
-    this.nodes.delayWet.gain.setTargetAtTime(mix, this.audioCtx.currentTime, 0.01);
+    this.nodes.delay.delayTime.setTargetAtTime(
+      time,
+      this.audioCtx.currentTime,
+      0.01
+    );
+    this.nodes.delayFeedback.gain.setTargetAtTime(
+      feedback,
+      this.audioCtx.currentTime,
+      0.01
+    );
+    this.nodes.delayWet.gain.setTargetAtTime(
+      mix,
+      this.audioCtx.currentTime,
+      0.01
+    );
   }
 
   setCompressor(threshold, ratio) {
-    this.nodes.compressor.threshold.setTargetAtTime(threshold, this.audioCtx.currentTime, 0.01);
-    this.nodes.compressor.ratio.setTargetAtTime(ratio, this.audioCtx.currentTime, 0.01);
+    this.nodes.compressor.threshold.setTargetAtTime(
+      threshold,
+      this.audioCtx.currentTime,
+      0.01
+    );
+    this.nodes.compressor.ratio.setTargetAtTime(
+      ratio,
+      this.audioCtx.currentTime,
+      0.01
+    );
   }
 
   setPan(value) {
-    this.nodes.panner.pan.setTargetAtTime(value, this.audioCtx.currentTime, 0.01);
+    this.nodes.panner.pan.setTargetAtTime(
+      value,
+      this.audioCtx.currentTime,
+      0.01
+    );
   }
 
   setVolume(input, output) {
-    this.nodes.inputGain.gain.setTargetAtTime(input, this.audioCtx.currentTime, 0.01);
-    this.nodes.outputGain.gain.setTargetAtTime(output, this.audioCtx.currentTime, 0.01);
+    this.nodes.inputGain.gain.setTargetAtTime(
+      input,
+      this.audioCtx.currentTime,
+      0.01
+    );
+    this.nodes.outputGain.gain.setTargetAtTime(
+      output,
+      this.audioCtx.currentTime,
+      0.01
+    );
   }
 
   getAnalyserData() {
@@ -2137,7 +2212,10 @@ class VideoRecordingApp {
     };
 
     this.chunks = [];
-    this.recorder = new MediaRecorder(this.stream, { ...defaultOptions, ...options });
+    this.recorder = new MediaRecorder(this.stream, {
+      ...defaultOptions,
+      ...options,
+    });
 
     this.recorder.addEventListener('dataavailable', (event) => {
       if (event.data.size > 0) {
@@ -2202,18 +2280,19 @@ class VideoRecordingApp {
       'video/webm',
       'video/mp4',
     ];
-    return types.find(type => MediaRecorder.isTypeSupported(type)) || '';
+    return types.find((type) => MediaRecorder.isTypeSupported(type)) || '';
   }
 
   async switchCamera() {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    const cameras = devices.filter(d => d.kind === 'videoinput');
+    const cameras = devices.filter((d) => d.kind === 'videoinput');
 
     if (cameras.length < 2) return;
 
     const currentTrack = this.stream.getVideoTracks()[0];
     const currentDeviceId = currentTrack.getSettings().deviceId;
-    const nextCamera = cameras.find(c => c.deviceId !== currentDeviceId) || cameras[0];
+    const nextCamera =
+      cameras.find((c) => c.deviceId !== currentDeviceId) || cameras[0];
 
     const newStream = await navigator.mediaDevices.getUserMedia({
       video: { deviceId: { exact: nextCamera.deviceId } },
@@ -2232,7 +2311,7 @@ class VideoRecordingApp {
 
   stopCamera() {
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      this.stream.getTracks().forEach((track) => track.stop());
       this.stream = null;
     }
     this.preview.srcObject = null;
@@ -2240,7 +2319,7 @@ class VideoRecordingApp {
 
   cleanup() {
     this.stopCamera();
-    this.recordings.forEach(r => URL.revokeObjectURL(r.url));
+    this.recordings.forEach((r) => URL.revokeObjectURL(r.url));
     this.recordings = [];
   }
 }

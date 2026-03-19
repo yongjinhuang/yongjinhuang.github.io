@@ -6,12 +6,12 @@ Event sourcing stores every state change as an immutable event rather than overw
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **events** | Append-only log of all state changes | The single source of truth; every mutation is an immutable fact |
-| **snapshots** | Periodic aggregate state captures | Avoids replaying thousands of events to rebuild current state |
-| **read_projections** | Denormalized read-optimized views | Serves queries without touching the event store; tailored per use case |
-| **projection_checkpoints** | Tracks each projection's processing position | Enables reliable, resumable projection rebuilds after failures |
+| Table                      | Purpose                                      | Why It Exists                                                          |
+| -------------------------- | -------------------------------------------- | ---------------------------------------------------------------------- |
+| **events**                 | Append-only log of all state changes         | The single source of truth; every mutation is an immutable fact        |
+| **snapshots**              | Periodic aggregate state captures            | Avoids replaying thousands of events to rebuild current state          |
+| **read_projections**       | Denormalized read-optimized views            | Serves queries without touching the event store; tailored per use case |
+| **projection_checkpoints** | Tracks each projection's processing position | Enables reliable, resumable projection rebuilds after failures         |
 
 ---
 
@@ -19,18 +19,18 @@ Event sourcing stores every state change as an immutable event rather than overw
 
 ### events (append-only)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| event_id | UUID (PK) | Globally unique event identifier |
-| aggregate_type | VARCHAR | Type of aggregate (e.g., Order, Account, Inventory) |
-| aggregate_id | UUID | The specific aggregate instance this event belongs to |
-| version | INT | Per-aggregate sequence number; used for optimistic concurrency |
-| event_type | VARCHAR | Descriptive event name (e.g., OrderPlaced, ItemAdded, PaymentReceived) |
-| schema_version | INT | Version of the event payload schema; enables backward-compatible evolution |
-| payload_json | JSONB | The event data itself (what changed) |
-| metadata_json | JSONB | Contextual data: user_id, correlation_id, causation_id, IP address |
-| global_position | BIGINT | Monotonically increasing sequence across ALL events; used by projections |
-| occurred_at | TIMESTAMP | When the event actually happened (business time, not insert time) |
+| Field           | Type      | Description                                                                |
+| --------------- | --------- | -------------------------------------------------------------------------- |
+| event_id        | UUID (PK) | Globally unique event identifier                                           |
+| aggregate_type  | VARCHAR   | Type of aggregate (e.g., Order, Account, Inventory)                        |
+| aggregate_id    | UUID      | The specific aggregate instance this event belongs to                      |
+| version         | INT       | Per-aggregate sequence number; used for optimistic concurrency             |
+| event_type      | VARCHAR   | Descriptive event name (e.g., OrderPlaced, ItemAdded, PaymentReceived)     |
+| schema_version  | INT       | Version of the event payload schema; enables backward-compatible evolution |
+| payload_json    | JSONB     | The event data itself (what changed)                                       |
+| metadata_json   | JSONB     | Contextual data: user_id, correlation_id, causation_id, IP address         |
+| global_position | BIGINT    | Monotonically increasing sequence across ALL events; used by projections   |
+| occurred_at     | TIMESTAMP | When the event actually happened (business time, not insert time)          |
 
 **Why version + global_position?** `version` is scoped to one aggregate and enforces ordering within it (optimistic concurrency). `global_position` is system-wide and tells projections "process events in this exact order." Two different concerns, two different sequences.
 
@@ -38,38 +38,38 @@ Event sourcing stores every state change as an immutable event rather than overw
 
 ### snapshots
 
-| Field | Type | Description |
-|-------|------|-------------|
-| snapshot_id | UUID (PK) | Unique snapshot identifier |
-| aggregate_type | VARCHAR | Type of aggregate being snapshotted |
-| aggregate_id | UUID | Which aggregate instance |
-| version | INT | The aggregate version at snapshot time |
-| state_json | JSONB | Full serialized aggregate state at this version |
-| schema_version | INT | Schema version of the state representation |
+| Field          | Type      | Description                                     |
+| -------------- | --------- | ----------------------------------------------- |
+| snapshot_id    | UUID (PK) | Unique snapshot identifier                      |
+| aggregate_type | VARCHAR   | Type of aggregate being snapshotted             |
+| aggregate_id   | UUID      | Which aggregate instance                        |
+| version        | INT       | The aggregate version at snapshot time          |
+| state_json     | JSONB     | Full serialized aggregate state at this version |
+| schema_version | INT       | Schema version of the state representation      |
 
 **Why snapshots?** Without them, rebuilding an aggregate with 10,000 events means replaying all 10,000 on every command. A snapshot at version 9,950 means you only replay 50 events. Snapshots are created every N events (typically 100-500).
 
 ### read_projections (example: order_summary)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| order_id | UUID (PK) | The aggregate ID being projected |
-| customer_id | UUID | Denormalized from OrderPlaced event |
-| status | VARCHAR | Current order status, updated by each status-change event |
-| item_count | INT | Running count, incremented by ItemAdded/ItemRemoved events |
-| total_amount | DECIMAL | Running total, updated by pricing events |
-| last_event_version | INT | The aggregate version this projection reflects |
+| Field              | Type      | Description                                                |
+| ------------------ | --------- | ---------------------------------------------------------- |
+| order_id           | UUID (PK) | The aggregate ID being projected                           |
+| customer_id        | UUID      | Denormalized from OrderPlaced event                        |
+| status             | VARCHAR   | Current order status, updated by each status-change event  |
+| item_count         | INT       | Running count, incremented by ItemAdded/ItemRemoved events |
+| total_amount       | DECIMAL   | Running total, updated by pricing events                   |
+| last_event_version | INT       | The aggregate version this projection reflects             |
 
 **Why denormalized?** Read projections exist to serve queries fast. A single row with pre-computed fields eliminates joins. You build different projections for different query patterns (e.g., order_summary for dashboards, order_timeline for detailed history).
 
 ### projection_checkpoints
 
-| Field | Type | Description |
-|-------|------|-------------|
-| projection_name | VARCHAR (PK) | Unique name of the projection (e.g., "order_summary_v2") |
-| last_processed_position | BIGINT | The global_position of the last event this projection consumed |
-| status | ENUM | running, paused, rebuilding, failed |
-| updated_at | TIMESTAMP | Last checkpoint update time |
+| Field                   | Type         | Description                                                    |
+| ----------------------- | ------------ | -------------------------------------------------------------- |
+| projection_name         | VARCHAR (PK) | Unique name of the projection (e.g., "order_summary_v2")       |
+| last_processed_position | BIGINT       | The global_position of the last event this projection consumed |
+| status                  | ENUM         | running, paused, rebuilding, failed                            |
+| updated_at              | TIMESTAMP    | Last checkpoint update time                                    |
 
 **Why track checkpoints?** If a projection crashes at global_position 50,000, it resumes from 50,000 instead of reprocessing from the beginning. Also enables monitoring -- if a projection falls behind, you can alert.
 
@@ -142,6 +142,7 @@ Note: These are not traditional FK relationships. Event sourcing uses aggregate_
 1. **Command received** -- A command (e.g., PlaceOrder) arrives at the command handler.
 
 2. **Load aggregate** -- The system loads the aggregate by:
+
    - Finding the latest snapshot for (aggregate_type, aggregate_id)
    - Loading all events with version > snapshot.version
    - Replaying those events on top of the snapshot state

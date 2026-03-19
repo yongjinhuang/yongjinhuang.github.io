@@ -51,13 +51,13 @@ This entire flow happens before the page finishes loading. At scale, billions of
 
 ### Pricing Models
 
-| Model | How You Pay | Best For |
-|-------|------------|----------|
-| **CPM** (Cost Per Mille) | Per 1,000 impressions | Brand awareness campaigns |
-| **CPC** (Cost Per Click) | Per click on the ad | Traffic and engagement |
-| **CPA** (Cost Per Action) | Per conversion (signup, purchase) | Performance marketing |
-| **CPV** (Cost Per View) | Per video view (usually 30s or completion) | Video campaigns |
-| **CPL** (Cost Per Lead) | Per lead form submission | B2B lead generation |
+| Model                     | How You Pay                                | Best For                  |
+| ------------------------- | ------------------------------------------ | ------------------------- |
+| **CPM** (Cost Per Mille)  | Per 1,000 impressions                      | Brand awareness campaigns |
+| **CPC** (Cost Per Click)  | Per click on the ad                        | Traffic and engagement    |
+| **CPA** (Cost Per Action) | Per conversion (signup, purchase)          | Performance marketing     |
+| **CPV** (Cost Per View)   | Per video view (usually 30s or completion) | Video campaigns           |
+| **CPL** (Cost Per Lead)   | Per lead form submission                   | B2B lead generation       |
 
 ### Targeting
 
@@ -95,22 +95,22 @@ Platforms like Google Ads and Meta Ads Manager handle much of this, but understa
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Impression** | One instance of an ad being displayed to a user |
-| **Click-Through Rate (CTR)** | Clicks divided by impressions. A 2% CTR means 2 clicks per 100 impressions |
-| **Conversion** | The desired action — a purchase, signup, download, or form submission |
-| **ROAS** | Return On Ad Spend — revenue generated divided by ad cost. ROAS of 5x means $5 revenue per $1 spent |
-| **ROI** | Return On Investment — net profit divided by total cost, broader than ROAS |
-| **Fill Rate** | Percentage of ad requests that actually get filled with an ad. 80% fill rate means 20% of slots go empty |
-| **eCPM** | Effective CPM — total earnings divided by impressions times 1000. Normalizes across pricing models |
-| **Ad Creative** | The actual ad content — image, video, text, HTML |
-| **Pixel** | A tiny piece of tracking code placed on a webpage to record conversions or build retargeting audiences |
-| **Frequency Cap** | Limit on how many times one user sees the same ad. Prevents ad fatigue |
-| **Viewability** | Whether an ad was actually visible on screen (not below the fold, loaded but never scrolled to) |
-| **Ad Inventory** | The total ad slots a publisher has available to sell |
-| **Header Bidding** | A technique where publishers offer inventory to multiple exchanges simultaneously before calling their ad server, increasing competition and revenue |
-| **Consent Management Platform (CMP)** | Tool that collects and manages user consent for tracking and personalized ads (required by GDPR/CCPA) |
+| Term                                  | What It Means                                                                                                                                        |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Impression**                        | One instance of an ad being displayed to a user                                                                                                      |
+| **Click-Through Rate (CTR)**          | Clicks divided by impressions. A 2% CTR means 2 clicks per 100 impressions                                                                           |
+| **Conversion**                        | The desired action — a purchase, signup, download, or form submission                                                                                |
+| **ROAS**                              | Return On Ad Spend — revenue generated divided by ad cost. ROAS of 5x means $5 revenue per $1 spent                                                  |
+| **ROI**                               | Return On Investment — net profit divided by total cost, broader than ROAS                                                                           |
+| **Fill Rate**                         | Percentage of ad requests that actually get filled with an ad. 80% fill rate means 20% of slots go empty                                             |
+| **eCPM**                              | Effective CPM — total earnings divided by impressions times 1000. Normalizes across pricing models                                                   |
+| **Ad Creative**                       | The actual ad content — image, video, text, HTML                                                                                                     |
+| **Pixel**                             | A tiny piece of tracking code placed on a webpage to record conversions or build retargeting audiences                                               |
+| **Frequency Cap**                     | Limit on how many times one user sees the same ad. Prevents ad fatigue                                                                               |
+| **Viewability**                       | Whether an ad was actually visible on screen (not below the fold, loaded but never scrolled to)                                                      |
+| **Ad Inventory**                      | The total ad slots a publisher has available to sell                                                                                                 |
+| **Header Bidding**                    | A technique where publishers offer inventory to multiple exchanges simultaneously before calling their ad server, increasing competition and revenue |
+| **Consent Management Platform (CMP)** | Tool that collects and manages user consent for tracking and personalized ads (required by GDPR/CCPA)                                                |
 
 ## Common Patterns
 
@@ -160,15 +160,15 @@ With cookie deprecation (Chrome phasing out third-party cookies), IDFA changes (
 
 ## Quick Reference
 
-| Task | Tool / Approach | Notes |
-|------|----------------|-------|
-| Run paid search ads | Google Ads, Microsoft Ads | Intent-based — user is actively searching |
-| Run social media ads | Meta Ads, TikTok Ads, LinkedIn Ads | Interest/demographic-based targeting |
-| Monetize a website with ads | Google AdSense, Prebid.js + GAM | Header bidding for higher revenue |
-| Programmatic buying at scale | DSP (The Trade Desk, DV360) | Access to multiple ad exchanges |
-| Track conversions | Pixels + server-side APIs | Use both for maximum accuracy |
-| Attribution | Google Analytics 4, AppsFlyer, Adjust | GA4 is free; mobile needs dedicated tools |
-| Fraud detection | HUMAN, DoubleVerify, IAS | Monitor click-to-conversion ratios |
-| Consent management | OneTrust, Cookiebot, custom CMP | Required before loading any tracking |
-| Measure ad viewability | MOAT, IAS, DoubleVerify | Industry standard: 50% of pixels visible for 1 second |
-| A/B test ad creatives | Platform-native tools or Optimizely | Let tests run to statistical significance |
+| Task                         | Tool / Approach                       | Notes                                                 |
+| ---------------------------- | ------------------------------------- | ----------------------------------------------------- |
+| Run paid search ads          | Google Ads, Microsoft Ads             | Intent-based — user is actively searching             |
+| Run social media ads         | Meta Ads, TikTok Ads, LinkedIn Ads    | Interest/demographic-based targeting                  |
+| Monetize a website with ads  | Google AdSense, Prebid.js + GAM       | Header bidding for higher revenue                     |
+| Programmatic buying at scale | DSP (The Trade Desk, DV360)           | Access to multiple ad exchanges                       |
+| Track conversions            | Pixels + server-side APIs             | Use both for maximum accuracy                         |
+| Attribution                  | Google Analytics 4, AppsFlyer, Adjust | GA4 is free; mobile needs dedicated tools             |
+| Fraud detection              | HUMAN, DoubleVerify, IAS              | Monitor click-to-conversion ratios                    |
+| Consent management           | OneTrust, Cookiebot, custom CMP       | Required before loading any tracking                  |
+| Measure ad viewability       | MOAT, IAS, DoubleVerify               | Industry standard: 50% of pixels visible for 1 second |
+| A/B test ad creatives        | Platform-native tools or Optimizely   | Let tests run to statistical significance             |

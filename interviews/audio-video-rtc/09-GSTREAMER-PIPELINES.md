@@ -45,16 +45,16 @@ Every GStreamer element is a GObject subclass. Properties are set via `g_object_
 
 ### GStreamer vs FFmpeg at a Glance
 
-| Aspect | GStreamer | FFmpeg |
-|--------|-----------|--------|
-| Architecture | Pipeline graph of elements | Monolithic library + CLI tool |
-| Primary use | Real-time streaming, applications | Transcoding, file conversion |
-| API style | GObject-based, event-driven | C function calls, procedural |
-| Extensibility | Plugin system, dynamic loading | Compile-time codec selection |
-| Language bindings | Excellent (GI-based) | Limited (C API, wrappers exist) |
-| WebRTC support | Built-in (webrtcbin) | None |
-| Latency control | Fine-grained pipeline tuning | Moderate |
-| Learning curve | Steeper (concepts to learn) | Lower for simple tasks |
+| Aspect            | GStreamer                         | FFmpeg                          |
+| ----------------- | --------------------------------- | ------------------------------- |
+| Architecture      | Pipeline graph of elements        | Monolithic library + CLI tool   |
+| Primary use       | Real-time streaming, applications | Transcoding, file conversion    |
+| API style         | GObject-based, event-driven       | C function calls, procedural    |
+| Extensibility     | Plugin system, dynamic loading    | Compile-time codec selection    |
+| Language bindings | Excellent (GI-based)              | Limited (C API, wrappers exist) |
+| WebRTC support    | Built-in (webrtcbin)              | None                            |
+| Latency control   | Fine-grained pipeline tuning      | Moderate                        |
+| Learning curve    | Steeper (concepts to learn)       | Lower for simple tasks          |
 
 Use **FFmpeg** when you need a quick command-line transcode or batch file conversion. Use **GStreamer** when you are building an application that needs real-time media processing, dynamic pipeline reconfiguration, or WebRTC integration.
 
@@ -83,11 +83,11 @@ gst_element_factory_make("filesrc", "my-source");
 
 Pad availability types:
 
-| Type | Description | Example |
-|------|-------------|---------|
-| **Always** | Exists as long as the element exists | `filesrc` has an always src pad |
-| **Sometimes** | Created dynamically based on media content | `qtdemux` creates src pads when it discovers streams |
-| **Request** | Created on demand when requested by the application | `tee` creates src pads when you request them |
+| Type          | Description                                         | Example                                              |
+| ------------- | --------------------------------------------------- | ---------------------------------------------------- |
+| **Always**    | Exists as long as the element exists                | `filesrc` has an always src pad                      |
+| **Sometimes** | Created dynamically based on media content          | `qtdemux` creates src pads when it discovers streams |
+| **Request**   | Created on demand when requested by the application | `tee` creates src pads when you request them         |
 
 "Sometimes" pads are the most common source of confusion. A demuxer does not know how many streams exist until it reads the container header. You must connect to the `pad-added` signal to link these pads dynamically.
 
@@ -128,12 +128,12 @@ NULL  -->  READY  -->  PAUSED  -->  PLAYING
 NULL  <--  READY  <--  PAUSED  <------+
 ```
 
-| State | Description |
-|-------|-------------|
-| **NULL** | Default state. No resources allocated. |
-| **READY** | Resources allocated (devices opened, buffers created), but no data flowing. |
-| **PAUSED** | Data is pre-rolled (first buffer has reached sinks), but clock is not running. |
-| **PLAYING** | Clock is running, data flows and is rendered in real time. |
+| State       | Description                                                                    |
+| ----------- | ------------------------------------------------------------------------------ |
+| **NULL**    | Default state. No resources allocated.                                         |
+| **READY**   | Resources allocated (devices opened, buffers created), but no data flowing.    |
+| **PAUSED**  | Data is pre-rolled (first buffer has reached sinks), but clock is not running. |
+| **PLAYING** | Clock is running, data flows and is rendered in real time.                     |
 
 State changes are **asynchronous**. When you call `gst_element_set_state(pipeline, GST_STATE_PLAYING)`, the return value is `GST_STATE_CHANGE_ASYNC` if the change has not completed yet. The transition from NULL to PLAYING passes through READY and PAUSED along the way.
 
@@ -143,16 +143,16 @@ A key property: in the **PAUSED** state, sinks have pre-rolled (they hold one bu
 
 The **bus** is the message delivery system. Elements post messages to the bus, and the application reads them. Important message types:
 
-| Message | Meaning |
-|---------|---------|
-| `GST_MESSAGE_EOS` | End of stream. All data has been processed. |
-| `GST_MESSAGE_ERROR` | A fatal error occurred. Contains GError and debug string. |
-| `GST_MESSAGE_WARNING` | A non-fatal warning. |
-| `GST_MESSAGE_STATE_CHANGED` | An element changed state. |
-| `GST_MESSAGE_BUFFERING` | Network stream is buffering. Contains percentage. |
-| `GST_MESSAGE_TAG` | Metadata tags discovered (title, artist, etc.). |
-| `GST_MESSAGE_LATENCY` | Latency has changed; pipeline should recalculate. |
-| `GST_MESSAGE_QOS` | Quality of service event (dropped frames, etc.). |
+| Message                     | Meaning                                                   |
+| --------------------------- | --------------------------------------------------------- |
+| `GST_MESSAGE_EOS`           | End of stream. All data has been processed.               |
+| `GST_MESSAGE_ERROR`         | A fatal error occurred. Contains GError and debug string. |
+| `GST_MESSAGE_WARNING`       | A non-fatal warning.                                      |
+| `GST_MESSAGE_STATE_CHANGED` | An element changed state.                                 |
+| `GST_MESSAGE_BUFFERING`     | Network stream is buffering. Contains percentage.         |
+| `GST_MESSAGE_TAG`           | Metadata tags discovered (title, artist, etc.).           |
+| `GST_MESSAGE_LATENCY`       | Latency has changed; pipeline should recalculate.         |
+| `GST_MESSAGE_QOS`           | Quality of service event (dropped frames, etc.).          |
 
 In a typical application loop:
 
@@ -172,91 +172,91 @@ Or using a GMainLoop with `gst_bus_add_watch()` for asynchronous handling.
 
 Sources produce data. They have only **src pads** (no sink pads).
 
-| Element | Description |
-|---------|-------------|
-| `filesrc` | Reads from a local file. Property: `location`. |
-| `v4l2src` | Captures from a Video4Linux2 camera device. Property: `device=/dev/video0`. |
-| `pulsesrc` | Captures audio from PulseAudio. |
-| `alsasrc` | Captures audio from ALSA directly. |
-| `udpsrc` | Receives UDP packets. Properties: `port`, `address`, `caps`. |
-| `rtspsrc` | RTSP client source. Handles SDP, RTCP, and transport negotiation. Property: `location=rtsp://...`. |
-| `souphttpsrc` | HTTP/HTTPS source using libsoup. Property: `location=https://...`. |
-| `videotestsrc` | Generates test video patterns. Property: `pattern`. |
-| `audiotestsrc` | Generates test audio tones. Properties: `freq`, `wave`. |
-| `appsrc` | Application-provided data source (push or pull mode). Used for custom data injection. |
-| `ximagesrc` | Captures the X11 screen. |
+| Element        | Description                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| `filesrc`      | Reads from a local file. Property: `location`.                                                     |
+| `v4l2src`      | Captures from a Video4Linux2 camera device. Property: `device=/dev/video0`.                        |
+| `pulsesrc`     | Captures audio from PulseAudio.                                                                    |
+| `alsasrc`      | Captures audio from ALSA directly.                                                                 |
+| `udpsrc`       | Receives UDP packets. Properties: `port`, `address`, `caps`.                                       |
+| `rtspsrc`      | RTSP client source. Handles SDP, RTCP, and transport negotiation. Property: `location=rtsp://...`. |
+| `souphttpsrc`  | HTTP/HTTPS source using libsoup. Property: `location=https://...`.                                 |
+| `videotestsrc` | Generates test video patterns. Property: `pattern`.                                                |
+| `audiotestsrc` | Generates test audio tones. Properties: `freq`, `wave`.                                            |
+| `appsrc`       | Application-provided data source (push or pull mode). Used for custom data injection.              |
+| `ximagesrc`    | Captures the X11 screen.                                                                           |
 
 ### Sinks
 
 Sinks consume data. They have only **sink pads** (no src pads).
 
-| Element | Description |
-|---------|-------------|
-| `filesink` | Writes to a local file. Property: `location`. |
+| Element         | Description                                                         |
+| --------------- | ------------------------------------------------------------------- |
+| `filesink`      | Writes to a local file. Property: `location`.                       |
 | `autovideosink` | Automatically selects the best video output (X11, Wayland, OpenGL). |
-| `autoaudiosink` | Automatically selects the best audio output. |
-| `ximagesink` | Renders video to an X11 window. |
-| `waylandsink` | Renders video to a Wayland surface. |
-| `pulsesink` | Plays audio through PulseAudio. |
-| `alsasink` | Plays audio through ALSA directly. |
-| `udpsink` | Sends data as UDP packets. Properties: `host`, `port`. |
-| `appsink` | Delivers buffers to the application (pull mode or callbacks). |
-| `fakesink` | Discards all data. Useful for benchmarking and debugging. |
+| `autoaudiosink` | Automatically selects the best audio output.                        |
+| `ximagesink`    | Renders video to an X11 window.                                     |
+| `waylandsink`   | Renders video to a Wayland surface.                                 |
+| `pulsesink`     | Plays audio through PulseAudio.                                     |
+| `alsasink`      | Plays audio through ALSA directly.                                  |
+| `udpsink`       | Sends data as UDP packets. Properties: `host`, `port`.              |
+| `appsink`       | Delivers buffers to the application (pull mode or callbacks).       |
+| `fakesink`      | Discards all data. Useful for benchmarking and debugging.           |
 
 ### Filters and Converters
 
 These elements transform data, having both sink and src pads.
 
-| Element | Description |
-|---------|-------------|
-| `videoconvert` | Converts between video color formats (e.g., I420 to BGRA). |
-| `videoscale` | Scales video resolution. |
-| `videorate` | Adjusts frame rate by duplicating or dropping frames. |
-| `audioconvert` | Converts between audio formats (int to float, channel count, etc.). |
-| `audioresample` | Resamples audio to a different sample rate. |
-| `capsfilter` | Forces specific caps on the link. No data transformation occurs. |
-| `volume` | Adjusts audio volume. Property: `volume` (1.0 = 100%). |
-| `videoflip` | Flips or rotates video. Property: `method`. |
-| `videocrop` | Crops video. Properties: `top`, `bottom`, `left`, `right`. |
-| `deinterlace` | Deinterlaces video. |
+| Element         | Description                                                         |
+| --------------- | ------------------------------------------------------------------- |
+| `videoconvert`  | Converts between video color formats (e.g., I420 to BGRA).          |
+| `videoscale`    | Scales video resolution.                                            |
+| `videorate`     | Adjusts frame rate by duplicating or dropping frames.               |
+| `audioconvert`  | Converts between audio formats (int to float, channel count, etc.). |
+| `audioresample` | Resamples audio to a different sample rate.                         |
+| `capsfilter`    | Forces specific caps on the link. No data transformation occurs.    |
+| `volume`        | Adjusts audio volume. Property: `volume` (1.0 = 100%).              |
+| `videoflip`     | Flips or rotates video. Property: `method`.                         |
+| `videocrop`     | Crops video. Properties: `top`, `bottom`, `left`, `right`.          |
+| `deinterlace`   | Deinterlaces video.                                                 |
 
 ### Muxers and Demuxers
 
-| Element | Description |
-|---------|-------------|
-| `qtdemux` | Demuxes MP4/QuickTime containers. |
-| `matroskademux` | Demuxes Matroska/WebM containers. |
-| `tsdemux` | Demuxes MPEG-TS streams. |
-| `mp4mux` | Muxes into MP4 container. |
-| `matroskamux` | Muxes into Matroska container. |
-| `webmmux` | Muxes into WebM container. |
-| `mpegtsmux` | Muxes into MPEG-TS container. |
-| `flvmux` | Muxes into FLV container (for RTMP). |
+| Element         | Description                          |
+| --------------- | ------------------------------------ |
+| `qtdemux`       | Demuxes MP4/QuickTime containers.    |
+| `matroskademux` | Demuxes Matroska/WebM containers.    |
+| `tsdemux`       | Demuxes MPEG-TS streams.             |
+| `mp4mux`        | Muxes into MP4 container.            |
+| `matroskamux`   | Muxes into Matroska container.       |
+| `webmmux`       | Muxes into WebM container.           |
+| `mpegtsmux`     | Muxes into MPEG-TS container.        |
+| `flvmux`        | Muxes into FLV container (for RTMP). |
 
 ### Encoders and Decoders
 
-| Element | Description |
-|---------|-------------|
-| `x264enc` | Encodes video to H.264 (software, libx264). |
-| `x265enc` | Encodes video to H.265/HEVC (software). |
-| `vp8enc` / `vp9enc` | Encodes video to VP8/VP9. |
-| `av1enc` | Encodes video to AV1 (software, libaom). |
-| `avdec_h264` | Decodes H.264 (via libav/FFmpeg). |
-| `vaapih264dec` | Decodes H.264 using VA-API (hardware). |
-| `opusenc` / `opusdec` | Encodes/decodes Opus audio. |
-| `vorbisenc` / `vorbisdec` | Encodes/decodes Vorbis audio. |
-| `lamemp3enc` | Encodes audio to MP3. |
-| `faac` / `faad` | Encodes/decodes AAC audio. |
-| `avenc_aac` | Encodes AAC audio (via libav). |
+| Element                   | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| `x264enc`                 | Encodes video to H.264 (software, libx264). |
+| `x265enc`                 | Encodes video to H.265/HEVC (software).     |
+| `vp8enc` / `vp9enc`       | Encodes video to VP8/VP9.                   |
+| `av1enc`                  | Encodes video to AV1 (software, libaom).    |
+| `avdec_h264`              | Decodes H.264 (via libav/FFmpeg).           |
+| `vaapih264dec`            | Decodes H.264 using VA-API (hardware).      |
+| `opusenc` / `opusdec`     | Encodes/decodes Opus audio.                 |
+| `vorbisenc` / `vorbisdec` | Encodes/decodes Vorbis audio.               |
+| `lamemp3enc`              | Encodes audio to MP3.                       |
+| `faac` / `faad`           | Encodes/decodes AAC audio.                  |
+| `avenc_aac`               | Encodes AAC audio (via libav).              |
 
 ### Tees and Queues
 
-| Element | Description |
-|---------|-------------|
-| `tee` | Splits a single stream into multiple outputs (request src pads). |
-| `queue` | Adds a buffer and creates a new thread boundary. Essential for multi-threaded pipelines. |
-| `queue2` | Enhanced queue with buffering support (ring buffer, temp file). Used for network streams. |
-| `multiqueue` | Manages multiple queues for synchronized streams. Used internally by many elements. |
+| Element      | Description                                                                               |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| `tee`        | Splits a single stream into multiple outputs (request src pads).                          |
+| `queue`      | Adds a buffer and creates a new thread boundary. Essential for multi-threaded pipelines.  |
+| `queue2`     | Enhanced queue with buffering support (ring buffer, temp file). Used for network streams. |
+| `multiqueue` | Manages multiple queues for synchronized streams. Used internally by many elements.       |
 
 ---
 
@@ -409,13 +409,13 @@ gst-launch-1.0 filesrc location=video.mp4 ! qtdemux ! aacparse ! avdec_aac ! \
 
 GStreamer plugins are distributed in separate packages based on licensing and quality:
 
-| Package | Description | Examples |
-|---------|-------------|----------|
-| **gst-plugins-base** | Essential elements, always installed | `playbin`, `decodebin`, `videoconvert`, `audioconvert`, `typefind` |
-| **gst-plugins-good** | High-quality plugins with good licenses (LGPL) | `v4l2src`, `pulsesrc`, `rtpmanager`, `isomp4`, `matroska`, `flv` |
-| **gst-plugins-bad** | Decent quality but lacking something (docs, tests, maintainer, license) | `webrtcbin`, `x265enc`, `tsdemux`, `hls`, `dash` |
-| **gst-plugins-ugly** | Good quality but problematic licenses (patent-encumbered) | `x264enc`, `mpg123audiodec`, `a52dec` |
-| **gst-libav** | Wraps FFmpeg/libav codecs as GStreamer elements | `avdec_h264`, `avdec_aac`, `avenc_*` |
+| Package              | Description                                                             | Examples                                                           |
+| -------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **gst-plugins-base** | Essential elements, always installed                                    | `playbin`, `decodebin`, `videoconvert`, `audioconvert`, `typefind` |
+| **gst-plugins-good** | High-quality plugins with good licenses (LGPL)                          | `v4l2src`, `pulsesrc`, `rtpmanager`, `isomp4`, `matroska`, `flv`   |
+| **gst-plugins-bad**  | Decent quality but lacking something (docs, tests, maintainer, license) | `webrtcbin`, `x265enc`, `tsdemux`, `hls`, `dash`                   |
+| **gst-plugins-ugly** | Good quality but problematic licenses (patent-encumbered)               | `x264enc`, `mpg123audiodec`, `a52dec`                              |
+| **gst-libav**        | Wraps FFmpeg/libav codecs as GStreamer elements                         | `avdec_h264`, `avdec_aac`, `avenc_*`                               |
 
 ### Installing Plugins
 
@@ -505,14 +505,14 @@ Custom GStreamer plugins follow a standard structure. The minimal implementation
 
 For most use cases, you should subclass one of the base classes rather than `GstElement` directly:
 
-| Base Class | Use Case |
-|------------|----------|
-| `GstBaseSrc` | Custom data sources |
-| `GstBaseSink` | Custom data sinks |
-| `GstBaseTransform` | 1-to-1 element transforms (in-place or copy) |
-| `GstVideoFilter` | Video-specific filters (extends GstBaseTransform) |
-| `GstAudioFilter` | Audio-specific filters |
-| `GstAggregator` | Mixing or combining multiple inputs |
+| Base Class         | Use Case                                          |
+| ------------------ | ------------------------------------------------- |
+| `GstBaseSrc`       | Custom data sources                               |
+| `GstBaseSink`      | Custom data sinks                                 |
+| `GstBaseTransform` | 1-to-1 element transforms (in-place or copy)      |
+| `GstVideoFilter`   | Video-specific filters (extends GstBaseTransform) |
+| `GstAudioFilter`   | Audio-specific filters                            |
+| `GstAggregator`    | Mixing or combining multiple inputs               |
 
 ---
 
@@ -657,13 +657,13 @@ Pad probes are callbacks invoked when data passes through a pad. They are the pr
 
 Probe types:
 
-| Type | When invoked |
-|------|-------------|
-| `GST_PAD_PROBE_TYPE_BUFFER` | When a buffer passes through |
-| `GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM` | When a downstream event passes |
-| `GST_PAD_PROBE_TYPE_EVENT_UPSTREAM` | When an upstream event passes |
-| `GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM` | Blocks data flow (for safe manipulation) |
-| `GST_PAD_PROBE_TYPE_IDLE` | Called when the pad is idle (no data flowing) |
+| Type                                  | When invoked                                  |
+| ------------------------------------- | --------------------------------------------- |
+| `GST_PAD_PROBE_TYPE_BUFFER`           | When a buffer passes through                  |
+| `GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM` | When a downstream event passes                |
+| `GST_PAD_PROBE_TYPE_EVENT_UPSTREAM`   | When an upstream event passes                 |
+| `GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM` | Blocks data flow (for safe manipulation)      |
+| `GST_PAD_PROBE_TYPE_IDLE`             | Called when the pad is idle (no data flowing) |
 
 ### Handling Dynamic Pads (Sometimes Pads)
 
@@ -1228,16 +1228,16 @@ webrtc.connect('on-data-channel', on_data_channel)
 
 ### How GStreamer WebRTC Differs from Browser WebRTC
 
-| Aspect | Browser WebRTC | GStreamer WebRTC |
-|--------|---------------|------------------|
-| Signaling | Built-in patterns (perfect negotiation) | You implement everything |
-| Codecs | Browser-chosen, limited set | Any codec GStreamer supports |
-| Media processing | Limited (insertable streams) | Full pipeline before/after transport |
-| Hardware access | getUserMedia API | v4l2src, pulsesrc, etc. directly |
-| Scalability | One browser = one peer | Server-side SFU/MCU with full control |
-| Data channels | Full API | Supported via SCTP |
-| SRTP | Mandatory, automatic | Mandatory, automatic (via libnice/dtls) |
-| NAT traversal | ICE/STUN/TURN built-in | ICE/STUN/TURN via libnice |
+| Aspect           | Browser WebRTC                          | GStreamer WebRTC                        |
+| ---------------- | --------------------------------------- | --------------------------------------- |
+| Signaling        | Built-in patterns (perfect negotiation) | You implement everything                |
+| Codecs           | Browser-chosen, limited set             | Any codec GStreamer supports            |
+| Media processing | Limited (insertable streams)            | Full pipeline before/after transport    |
+| Hardware access  | getUserMedia API                        | v4l2src, pulsesrc, etc. directly        |
+| Scalability      | One browser = one peer                  | Server-side SFU/MCU with full control   |
+| Data channels    | Full API                                | Supported via SCTP                      |
+| SRTP             | Mandatory, automatic                    | Mandatory, automatic (via libnice/dtls) |
+| NAT traversal    | ICE/STUN/TURN built-in                  | ICE/STUN/TURN via libnice               |
 
 GStreamer's WebRTC implementation is particularly useful for:
 
@@ -1354,17 +1354,17 @@ GST_DEBUG=category:level,category:level,...
 
 Debug levels:
 
-| Level | Name | Description |
-|-------|------|-------------|
-| 0 | none | No output |
-| 1 | ERROR | Fatal errors |
-| 2 | WARNING | Non-fatal warnings |
-| 3 | FIXME | Known issues that need fixing |
-| 4 | INFO | Informational messages |
-| 5 | DEBUG | Detailed debug messages |
-| 6 | LOG | Verbose logging |
-| 7 | TRACE | Full trace (extremely verbose) |
-| 9 | MEMDUMP | Memory dump (hex dump of buffers) |
+| Level | Name    | Description                       |
+| ----- | ------- | --------------------------------- |
+| 0     | none    | No output                         |
+| 1     | ERROR   | Fatal errors                      |
+| 2     | WARNING | Non-fatal warnings                |
+| 3     | FIXME   | Known issues that need fixing     |
+| 4     | INFO    | Informational messages            |
+| 5     | DEBUG   | Detailed debug messages           |
+| 6     | LOG     | Verbose logging                   |
+| 7     | TRACE   | Full trace (extremely verbose)    |
+| 9     | MEMDUMP | Memory dump (hex dump of buffers) |
 
 Examples:
 
@@ -1486,29 +1486,29 @@ GST_TRACERS="latency;stats;leaks" GST_DEBUG=GST_TRACER:7 gst-launch-1.0 ...
 
 ### Detailed Feature Comparison
 
-| Feature | GStreamer | FFmpeg |
-|---------|-----------|--------|
-| **Architecture** | Plugin-based pipeline graph | Monolithic libraries (libavcodec, libavformat, etc.) |
-| **CLI tool** | `gst-launch-1.0` (prototyping) | `ffmpeg` (production-grade) |
-| **API paradigm** | Object-oriented (GObject), event-driven | Procedural C API |
-| **Pipeline model** | DAG of elements with negotiated caps | Linear filter graph (`-filter_complex` for non-linear) |
-| **Real-time focus** | Primary design goal (live sources, clocks) | Primarily offline; live possible but secondary |
-| **WebRTC** | Built-in (`webrtcbin`) | Not supported |
-| **RTSP server** | `gst-rtsp-server` library | Not directly (use live555 separately) |
-| **Hardware acceleration** | VA-API, VDPAU, NVCODEC, V4L2, QSV plugins | VA-API, NVCODEC, QSV, VideoToolbox, MediaCodec |
-| **Language bindings** | Excellent via GObject Introspection (Python, Rust, JS, C#) | Primarily C; wrappers exist but are unofficial |
-| **Dynamic reconfiguration** | First-class support (pad probes, dynamic linking) | Very limited at runtime |
-| **State management** | Full state machine (NULL/READY/PAUSED/PLAYING) | Manual seek/flush/drain |
-| **Plugin ecosystem** | base/good/bad/ugly/libav packages | All codecs compiled in |
-| **Container support** | Via plugins (qtdemux, matroskademux, etc.) | Comprehensive built-in (libavformat) |
-| **Codec coverage** | Good; gaps filled by gst-libav (wraps FFmpeg) | Most comprehensive codec library available |
-| **Subtitle support** | Limited | Excellent (burn-in, extraction, conversion) |
-| **Stream copy** | Possible but less ergonomic | First-class (`-c copy`) |
-| **Batch processing** | Not its strength | Excellent |
-| **Community** | Centricular, Collabora, GNOME ecosystem | Enormous open-source community |
-| **Documentation** | Good tutorials, some gaps in reference docs | Extensive wiki and man pages |
-| **License** | LGPL 2.1 (core), plugins vary | LGPL 2.1 (or GPL if enabled) |
-| **Cross-platform** | Linux (best), macOS, Windows, Android, iOS | All platforms well-supported |
+| Feature                     | GStreamer                                                  | FFmpeg                                                 |
+| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------ |
+| **Architecture**            | Plugin-based pipeline graph                                | Monolithic libraries (libavcodec, libavformat, etc.)   |
+| **CLI tool**                | `gst-launch-1.0` (prototyping)                             | `ffmpeg` (production-grade)                            |
+| **API paradigm**            | Object-oriented (GObject), event-driven                    | Procedural C API                                       |
+| **Pipeline model**          | DAG of elements with negotiated caps                       | Linear filter graph (`-filter_complex` for non-linear) |
+| **Real-time focus**         | Primary design goal (live sources, clocks)                 | Primarily offline; live possible but secondary         |
+| **WebRTC**                  | Built-in (`webrtcbin`)                                     | Not supported                                          |
+| **RTSP server**             | `gst-rtsp-server` library                                  | Not directly (use live555 separately)                  |
+| **Hardware acceleration**   | VA-API, VDPAU, NVCODEC, V4L2, QSV plugins                  | VA-API, NVCODEC, QSV, VideoToolbox, MediaCodec         |
+| **Language bindings**       | Excellent via GObject Introspection (Python, Rust, JS, C#) | Primarily C; wrappers exist but are unofficial         |
+| **Dynamic reconfiguration** | First-class support (pad probes, dynamic linking)          | Very limited at runtime                                |
+| **State management**        | Full state machine (NULL/READY/PAUSED/PLAYING)             | Manual seek/flush/drain                                |
+| **Plugin ecosystem**        | base/good/bad/ugly/libav packages                          | All codecs compiled in                                 |
+| **Container support**       | Via plugins (qtdemux, matroskademux, etc.)                 | Comprehensive built-in (libavformat)                   |
+| **Codec coverage**          | Good; gaps filled by gst-libav (wraps FFmpeg)              | Most comprehensive codec library available             |
+| **Subtitle support**        | Limited                                                    | Excellent (burn-in, extraction, conversion)            |
+| **Stream copy**             | Possible but less ergonomic                                | First-class (`-c copy`)                                |
+| **Batch processing**        | Not its strength                                           | Excellent                                              |
+| **Community**               | Centricular, Collabora, GNOME ecosystem                    | Enormous open-source community                         |
+| **Documentation**           | Good tutorials, some gaps in reference docs                | Extensive wiki and man pages                           |
+| **License**                 | LGPL 2.1 (core), plugins vary                              | LGPL 2.1 (or GPL if enabled)                           |
+| **Cross-platform**          | Linux (best), macOS, Windows, Android, iOS                 | All platforms well-supported                           |
 
 ### When to Use GStreamer
 

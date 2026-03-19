@@ -75,26 +75,26 @@ CSS custom properties (variables) are the foundation of modern theming:
 ```css
 /* Define tokens at the root level */
 :root {
-  --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: #F5F5F5;
-  --color-bg-elevated: #FFFFFF;
-  --color-text-primary: #1A1A2E;
-  --color-text-secondary: #6B7280;
-  --color-border: #E5E7EB;
-  --color-accent: #6C63FF;
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f5f5f5;
+  --color-bg-elevated: #ffffff;
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+  --color-accent: #6c63ff;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Override tokens for dark theme */
-[data-theme="dark"] {
-  --color-bg-primary: #1A1A2E;
-  --color-bg-secondary: #16213E;
+[data-theme='dark'] {
+  --color-bg-primary: #1a1a2e;
+  --color-bg-secondary: #16213e;
   --color-bg-elevated: #222244;
-  --color-text-primary: #E0E0E0;
-  --color-text-secondary: #9CA3AF;
-  --color-border: #2D2D5E;
-  --color-accent: #8B83FF;
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #9ca3af;
+  --color-border: #2d2d5e;
+  --color-accent: #8b83ff;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
@@ -122,6 +122,7 @@ Component Tokens (scoped)
 ```
 
 This three-tier approach means you can:
+
 - Change your entire palette without touching semantic tokens
 - Add new themes (high contrast, sepia) by adding new semantic mappings
 - Keep components completely theme-agnostic
@@ -133,9 +134,7 @@ Tailwind provides a `dark:` variant prefix that applies styles when dark mode is
 ```jsx
 <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
   <h1 className="text-2xl font-bold">Hello</h1>
-  <p className="text-gray-600 dark:text-gray-400">
-    This adapts to the theme.
-  </p>
+  <p className="text-gray-600 dark:text-gray-400">This adapts to the theme.</p>
 </div>
 ```
 
@@ -145,12 +144,12 @@ Tailwind supports two dark mode strategies in `tailwind.config.ts`:
 // Strategy 1: Media query (follows OS preference)
 module.exports = {
   darkMode: 'media',
-}
+};
 
 // Strategy 2: Class-based (manual toggle, recommended)
 module.exports = {
   darkMode: 'class',
-}
+};
 ```
 
 Class-based is recommended because it allows user override of OS preference and works with next-themes.
@@ -161,7 +160,7 @@ Class-based is recommended because it allows user override of OS preference and 
 
 ```tsx
 // app/layout.tsx (or providers wrapper)
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider } from 'next-themes';
 
 export default function RootLayout({ children }) {
   return (
@@ -172,11 +171,12 @@ export default function RootLayout({ children }) {
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
 ```
 
 Key `ThemeProvider` props:
+
 - `attribute="class"` — adds `dark` class to `<html>`, works with Tailwind
 - `defaultTheme="system"` — respects OS preference initially
 - `enableSystem` — enables OS preference detection (default true)
@@ -226,12 +226,24 @@ Each elevation level adds a semi-transparent white overlay:
 
 ```css
 /* Dark mode elevation surfaces */
-.surface-0  { background: #1A1A2E; }                          /* dp 0  */
-.surface-1  { background: color-mix(in srgb, #1A1A2E, white 5%); }  /* dp 1  */
-.surface-2  { background: color-mix(in srgb, #1A1A2E, white 7%); }  /* dp 3  */
-.surface-3  { background: color-mix(in srgb, #1A1A2E, white 8%); }  /* dp 6  */
-.surface-4  { background: color-mix(in srgb, #1A1A2E, white 9%); }  /* dp 8  */
-.surface-5  { background: color-mix(in srgb, #1A1A2E, white 11%); } /* dp 12 */
+.surface-0 {
+  background: #1a1a2e;
+} /* dp 0  */
+.surface-1 {
+  background: color-mix(in srgb, #1a1a2e, white 5%);
+} /* dp 1  */
+.surface-2 {
+  background: color-mix(in srgb, #1a1a2e, white 7%);
+} /* dp 3  */
+.surface-3 {
+  background: color-mix(in srgb, #1a1a2e, white 8%);
+} /* dp 6  */
+.surface-4 {
+  background: color-mix(in srgb, #1a1a2e, white 9%);
+} /* dp 8  */
+.surface-5 {
+  background: color-mix(in srgb, #1a1a2e, white 11%);
+} /* dp 12 */
 ```
 
 ### Dark Mode Typography
@@ -266,7 +278,7 @@ function Logo({ theme }) {
       src={theme === 'dark' ? '/logo-light.svg' : '/logo-dark.svg'}
       alt="Logo"
     />
-  )
+  );
 }
 
 // CSS approach for SVGs
@@ -283,10 +295,11 @@ html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
 html.theme-transition *::after {
-  transition: background-color 0.3s ease,
-              color 0.3s ease,
-              border-color 0.3s ease,
-              box-shadow 0.3s ease !important;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease !important;
 }
 ```
 
@@ -294,11 +307,11 @@ Apply the class during theme change and remove it after the transition:
 
 ```typescript
 function toggleTheme() {
-  document.documentElement.classList.add('theme-transition')
+  document.documentElement.classList.add('theme-transition');
   // ... change theme
   setTimeout(() => {
-    document.documentElement.classList.remove('theme-transition')
-  }, 300)
+    document.documentElement.classList.remove('theme-transition');
+  }, 300);
 }
 ```
 
@@ -317,22 +330,22 @@ The dreaded white flash when loading a dark-themed page happens because the HTML
 ### Complete Theme Toggle Component (Next.js + Tailwind)
 
 ```tsx
-'use client'
+'use client';
 
-import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
-import { FiSun, FiMoon } from 'react-icons/fi'
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import { FiSun, FiMoon } from 'react-icons/fi';
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
-    return <div className="w-9 h-9" /> // Placeholder to prevent layout shift
+    return <div className="w-9 h-9" />; // Placeholder to prevent layout shift
   }
 
   return (
@@ -349,7 +362,7 @@ export function ThemeToggle() {
         <FiMoon className="w-5 h-5 text-gray-700" />
       )}
     </button>
-  )
+  );
 }
 ```
 
@@ -357,7 +370,7 @@ export function ThemeToggle() {
 
 ```typescript
 // tailwind.config.ts
-import type { Config } from 'tailwindcss'
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   darkMode: 'class',
@@ -380,9 +393,9 @@ const config: Config = {
       },
     },
   },
-}
+};
 
-export default config
+export default config;
 ```
 
 ### Elevation Card in Dark Mode
@@ -442,21 +455,21 @@ Define a comprehensive token system in your `globals.css` that covers all UI ele
 
 ```css
 :root {
-  --portfolio-bg: #F5F5F5;
-  --portfolio-surface: #FFFFFF;
-  --portfolio-text: #1A1A2E;
-  --portfolio-text-muted: #6B7280;
-  --portfolio-accent: #6C63FF;
-  --portfolio-border: #E5E7EB;
+  --portfolio-bg: #f5f5f5;
+  --portfolio-surface: #ffffff;
+  --portfolio-text: #1a1a2e;
+  --portfolio-text-muted: #6b7280;
+  --portfolio-accent: #6c63ff;
+  --portfolio-border: #e5e7eb;
 }
 
 .dark {
-  --portfolio-bg: #0F0F23;
-  --portfolio-surface: #1A1A2E;
-  --portfolio-text: #E0E0E0;
-  --portfolio-text-muted: #9CA3AF;
-  --portfolio-accent: #8B83FF;
-  --portfolio-border: #2D2D5E;
+  --portfolio-bg: #0f0f23;
+  --portfolio-surface: #1a1a2e;
+  --portfolio-text: #e0e0e0;
+  --portfolio-text-muted: #9ca3af;
+  --portfolio-accent: #8b83ff;
+  --portfolio-border: #2d2d5e;
 }
 ```
 
@@ -469,12 +482,14 @@ Your animated background should respond to theme changes. Adjust particle colors
 Your glass card component can use different glass properties:
 
 ```tsx
-<div className="
+<div
+  className="
   bg-white/70 dark:bg-gray-900/50
   backdrop-blur-md
   border border-gray-200/50 dark:border-gray-700/30
   shadow-lg dark:shadow-none
-">
+"
+>
   {/* Card content */}
 </div>
 ```

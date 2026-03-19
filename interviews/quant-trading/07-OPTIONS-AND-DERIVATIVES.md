@@ -1176,6 +1176,7 @@ print(np.round(recovered_iv * 100, 2))
 **Q: A European call on a non-dividend stock is priced at $12. The stock is at $100, strike is $95, risk-free rate is 5%, and expiry is 6 months. What should the put cost? If the put is trading at $4, is there an arbitrage?**
 
 **A:**
+
 ```
 Put-Call Parity: C - P = S - K * e^{-rT}
 
@@ -1204,6 +1205,7 @@ At expiry:
 **Q: You are long 100 ATM calls with delta 0.50 and gamma 0.02. The stock is at $100. You delta-hedge. The stock moves to $103. What is your P&L? What if it then moves back to $100?**
 
 **A:**
+
 ```
 Initial position: Long 100 calls, Short 50 shares (delta hedge)
 
@@ -1241,6 +1243,7 @@ The cost is theta (not shown here).
 **Q: Why is the implied volatility for deep OTM puts higher than for ATM options on equity indices?**
 
 **A:**
+
 ```
 Multiple explanations (all contribute):
 
@@ -1276,6 +1279,7 @@ Multiple explanations (all contribute):
 **Q: An ATM straddle is priced at $8. The stock is at $100. What is the market implying about the expected move?**
 
 **A:**
+
 ```
 A straddle costs the sum of ATM call + ATM put premiums.
 
@@ -1313,6 +1317,7 @@ the straddle has a non-linear payoff (convexity benefit).
 **Q: You have sold 1000 contracts of an at-the-money call option with the stock at $50 and the option expires tomorrow. What risks do you face?**
 
 **A:**
+
 ```
 PIN RISK SCENARIO
 ==================
@@ -1352,6 +1357,7 @@ Mitigation:
 **Q: You believe volatility will increase in 2 months but not immediately. What options strategy would you use?**
 
 **A:**
+
 ```
 LONG CALENDAR SPREAD (Long Vega, Short Gamma near-term)
 
@@ -1409,4 +1415,4 @@ Alternative: DIAGONAL SPREAD (calendar + directional view)
 
 ---
 
-*Next Chapter: [Chapter 8 - Game Theory, Auctions & Strategic Thinking](08-GAME-THEORY-AND-AUCTIONS.md)*
+_Next Chapter: [Chapter 8 - Game Theory, Auctions & Strategic Thinking](08-GAME-THEORY-AND-AUCTIONS.md)_

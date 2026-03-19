@@ -28,32 +28,32 @@ A multi-tenant SaaS platform serves multiple customer organizations (tenants) fr
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| FR1 | Tenant onboarding | Self-service signup, workspace provisioning within seconds |
-| FR2 | User management | Invite users, roles (owner/admin/member/guest), SSO integration |
-| FR3 | Data isolation | Tenant A cannot see or access Tenant B's data under any circumstance |
-| FR4 | Custom configuration | Per-tenant branding, feature flags, workflow customization |
-| FR5 | Usage tracking | Track API calls, storage, seats per tenant for billing |
-| FR6 | Multi-workspace | A user can belong to multiple tenant workspaces |
-| FR7 | Admin console | Platform-level admin for tenant management, health monitoring |
-| FR8 | API access | Per-tenant API keys with scoped permissions |
-| FR9 | Data export | Tenants can export all their data (GDPR portability) |
-| FR10 | Audit logging | Track all data access and modifications per tenant |
+| #    | Requirement          | Details                                                              |
+| ---- | -------------------- | -------------------------------------------------------------------- |
+| FR1  | Tenant onboarding    | Self-service signup, workspace provisioning within seconds           |
+| FR2  | User management      | Invite users, roles (owner/admin/member/guest), SSO integration      |
+| FR3  | Data isolation       | Tenant A cannot see or access Tenant B's data under any circumstance |
+| FR4  | Custom configuration | Per-tenant branding, feature flags, workflow customization           |
+| FR5  | Usage tracking       | Track API calls, storage, seats per tenant for billing               |
+| FR6  | Multi-workspace      | A user can belong to multiple tenant workspaces                      |
+| FR7  | Admin console        | Platform-level admin for tenant management, health monitoring        |
+| FR8  | API access           | Per-tenant API keys with scoped permissions                          |
+| FR9  | Data export          | Tenants can export all their data (GDPR portability)                 |
+| FR10 | Audit logging        | Track all data access and modifications per tenant                   |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| NFR1 | Data isolation | Zero data leakage between tenants |
-| NFR2 | Performance isolation | One tenant's load spike must not degrade others |
-| NFR3 | Availability | 99.99% uptime (< 52 min downtime/year) |
-| NFR4 | Latency | p99 API response < 200ms |
-| NFR5 | Scalability | Support 100K+ tenants, 10M+ users |
-| NFR6 | Compliance | SOC 2, GDPR, HIPAA (for enterprise tier) |
-| NFR7 | Data residency | Store data in tenant-specified region |
-| NFR8 | Elasticity | Handle 10x traffic spikes per tenant |
-| NFR9 | Tenant deletion | Full data purge within 30 days (GDPR) |
+| #     | Requirement            | Target                                           |
+| ----- | ---------------------- | ------------------------------------------------ |
+| NFR1  | Data isolation         | Zero data leakage between tenants                |
+| NFR2  | Performance isolation  | One tenant's load spike must not degrade others  |
+| NFR3  | Availability           | 99.99% uptime (< 52 min downtime/year)           |
+| NFR4  | Latency                | p99 API response < 200ms                         |
+| NFR5  | Scalability            | Support 100K+ tenants, 10M+ users                |
+| NFR6  | Compliance             | SOC 2, GDPR, HIPAA (for enterprise tier)         |
+| NFR7  | Data residency         | Store data in tenant-specified region            |
+| NFR8  | Elasticity             | Handle 10x traffic spikes per tenant             |
+| NFR9  | Tenant deletion        | Full data purge within 30 days (GDPR)            |
 | NFR10 | Backward compatibility | API versioning without breaking existing tenants |
 
 ### Capacity Estimation
@@ -304,18 +304,18 @@ tenant_initech_db -> PostgreSQL Instance 3 (us-east-1)
 
 ### Comparison Matrix
 
-| Dimension | Shared Schema (Row-Level) | Separate Schema | Separate Database |
-|-----------|--------------------------|-----------------|-------------------|
-| **Data isolation** | Logical (WHERE clause) | Logical (schema boundary) | Physical |
-| **Onboarding speed** | Instant (insert row) | Seconds (CREATE SCHEMA) | Minutes (provision DB) |
-| **Max tenants** | 1M+ | ~10,000 (schema limit) | ~1,000 (operational limit) |
-| **Cross-tenant queries** | Easy (platform admin) | Moderate (query across schemas) | Hard (federated queries) |
-| **Migration complexity** | Low (shared migrations) | Medium (per-schema migration) | High (per-DB migration) |
-| **Noisy neighbor risk** | High (shared indexes) | Medium (shared buffer pool) | Low (dedicated resources) |
-| **Compliance (HIPAA)** | Harder to certify | Moderate | Easiest to certify |
-| **Cost per tenant** | Lowest | Low-Medium | Highest |
-| **Backup/restore** | All-or-nothing | Per-schema possible | Per-tenant trivial |
-| **Data residency** | Hard (same DB) | Hard (same DB) | Easy (DB per region) |
+| Dimension                | Shared Schema (Row-Level) | Separate Schema                 | Separate Database          |
+| ------------------------ | ------------------------- | ------------------------------- | -------------------------- |
+| **Data isolation**       | Logical (WHERE clause)    | Logical (schema boundary)       | Physical                   |
+| **Onboarding speed**     | Instant (insert row)      | Seconds (CREATE SCHEMA)         | Minutes (provision DB)     |
+| **Max tenants**          | 1M+                       | ~10,000 (schema limit)          | ~1,000 (operational limit) |
+| **Cross-tenant queries** | Easy (platform admin)     | Moderate (query across schemas) | Hard (federated queries)   |
+| **Migration complexity** | Low (shared migrations)   | Medium (per-schema migration)   | High (per-DB migration)    |
+| **Noisy neighbor risk**  | High (shared indexes)     | Medium (shared buffer pool)     | Low (dedicated resources)  |
+| **Compliance (HIPAA)**   | Harder to certify         | Moderate                        | Easiest to certify         |
+| **Cost per tenant**      | Lowest                    | Low-Medium                      | Highest                    |
+| **Backup/restore**       | All-or-nothing            | Per-schema possible             | Per-tenant trivial         |
+| **Data residency**       | Hard (same DB)            | Hard (same DB)                  | Easy (DB per region)       |
 
 ### Decision Matrix
 
@@ -552,16 +552,16 @@ class TenantConnectionManager:
 
 ### Per-Tenant Limits
 
-| Resource | Free | Professional | Enterprise |
-|----------|------|-------------|------------|
-| API calls/month | 10,000 | 1,000,000 | Unlimited |
-| Storage | 1 GB | 100 GB | Custom |
-| Users | 5 | 500 | Unlimited |
-| Projects | 3 | Unlimited | Unlimited |
-| Webhooks | 1 | 10 | 100 |
-| API rate limit | 10 req/s | 100 req/s | 1,000 req/s |
-| Export size | 100 MB | 10 GB | Unlimited |
-| Retention | 90 days | 1 year | Custom |
+| Resource        | Free     | Professional | Enterprise  |
+| --------------- | -------- | ------------ | ----------- |
+| API calls/month | 10,000   | 1,000,000    | Unlimited   |
+| Storage         | 1 GB     | 100 GB       | Custom      |
+| Users           | 5        | 500          | Unlimited   |
+| Projects        | 3        | Unlimited    | Unlimited   |
+| Webhooks        | 1        | 10           | 100         |
+| API rate limit  | 10 req/s | 100 req/s    | 1,000 req/s |
+| Export size     | 100 MB   | 10 GB        | Unlimited   |
+| Retention       | 90 days  | 1 year       | Custom      |
 
 ### Rate Limiting Implementation
 
@@ -958,11 +958,11 @@ class UsageEnforcer:
 
 ### Database Scaling
 
-| Tier | Strategy | Details |
-|------|----------|---------|
-| **Free** | Shared tables, shared pool | RLS, 500 connections shared across all free tenants |
-| **Professional** | Shared DB, separate schema | Dedicated schema, shared connection pool per region |
-| **Enterprise** | Dedicated DB per tenant | Full isolation, dedicated connection pool, custom region |
+| Tier             | Strategy                   | Details                                                  |
+| ---------------- | -------------------------- | -------------------------------------------------------- |
+| **Free**         | Shared tables, shared pool | RLS, 500 connections shared across all free tenants      |
+| **Professional** | Shared DB, separate schema | Dedicated schema, shared connection pool per region      |
+| **Enterprise**   | Dedicated DB per tenant    | Full isolation, dedicated connection pool, custom region |
 
 ### Connection Pooling (PgBouncer)
 
@@ -1077,11 +1077,12 @@ class HotTenantDetector:
 **Q: How do you prevent data leakage between tenants?**
 
 Defense in depth with 4 layers:
+
 1. **API Gateway**: Extract and validate tenant context on every request
 2. **Middleware**: Set PostgreSQL session variable (`app.current_tenant_id`)
 3. **Row-Level Security**: Database enforces tenant_id filter automatically
 4. **Query Builder**: Application code always includes `WHERE tenant_id = ?` as a safety net
-Additionally, run automated penetration tests that attempt cross-tenant data access.
+   Additionally, run automated penetration tests that attempt cross-tenant data access.
 
 ---
 
@@ -1099,11 +1100,13 @@ Additionally, run automated penetration tests that attempt cross-tenant data acc
 
 For shared schema (row-level): Standard migrations apply to all tenants at once.
 For separate schemas: Use a migration orchestrator that iterates through schemas:
+
 ```python
 for schema in get_all_tenant_schemas():
     await run_migration(schema, migration_file)
     # Rate limit: 10 schemas/second to avoid overloading DB
 ```
+
 For dedicated databases: Rolling deployment with canary -- migrate 1% of DBs, validate, then proceed.
 
 ---
@@ -1125,7 +1128,7 @@ For dedicated databases: Rolling deployment with canary -- migrate 1% of DBs, va
 3. **Custom fields**: EAV or JSONB pattern for user-defined fields on entities
 4. **Webhooks**: Allow tenants to react to events with their own systems
 5. **Plugin system**: Define extension points where tenants can inject custom logic (e.g., custom validation rules stored as JSON-based DSL)
-Never fork the codebase -- all tenants run the same version.
+   Never fork the codebase -- all tenants run the same version.
 
 ---
 
@@ -1145,13 +1148,14 @@ Never fork the codebase -- all tenants run the same version.
 2. **Restricted mode** (30 days): Read-only access, no new data creation
 3. **Suspended** (60 days): All access blocked, data preserved
 4. **Scheduled deletion** (90 days): Notify tenant, then purge all data
-At each stage, send escalating notifications. Allow instant reactivation upon payment.
+   At each stage, send escalating notifications. Allow instant reactivation upon payment.
 
 ---
 
 **Q: How do you scale search (Elasticsearch) for multi-tenant?**
 
 Two strategies:
+
 1. **Index-per-tenant** (enterprise): Full isolation, easy to delete, but limited to ~1000 tenants
 2. **Shared index with routing** (free/pro): Use `_routing=tenant_id` for query isolation and shard locality. Apply a `term` filter on `tenant_id` in every query. Set `index.routing.allocation.total_shards_per_node` to prevent hot spots.
 
@@ -1163,27 +1167,27 @@ Use index templates with tenant-specific settings (analyzers, field limits) for 
 
 ### Key Architecture Decisions
 
-| Decision | Choice | Alternative | Reasoning |
-|----------|--------|-------------|-----------|
-| Isolation strategy | Hybrid (3-tier) | Single strategy | Balances cost for small tenants and isolation for large ones |
-| Tenant identification | JWT claim + subdomain | API key only | Supports both web apps and API clients |
-| Data isolation (free) | Row-Level Security (RLS) | Application-level filtering | Database-enforced, prevents developer mistakes |
-| Data isolation (enterprise) | Dedicated database | Shared with encryption | Strongest isolation, easiest compliance certification |
-| Metadata cache | Redis with 5-min TTL | In-process cache only | Shared across pods, consistent, fast invalidation |
-| Connection pooling | PgBouncer (transaction mode) | Application-level pooling | Handles 100K+ tenants with limited DB connections |
-| Usage metering | Kafka + Flink aggregation | Synchronous counting | Decoupled, handles burst traffic, exactly-once processing |
-| Custom fields | JSONB on entity + EAV table | Dynamic DDL per tenant | No DDL at runtime, flexible querying, schema-safe |
-| Feature flags | Per-tenant override > plan default | Global flags only | Allows gradual rollout and tenant-specific enablement |
-| Search | Shared Elasticsearch with routing | Index-per-tenant | Scales to 100K tenants without index explosion |
-| Billing | Event-sourced usage metering | Synchronous quota check | Accurate, auditable, no lost events |
-| Multi-region | Region-per-tenant routing | Single region | GDPR data residency compliance |
+| Decision                    | Choice                             | Alternative                 | Reasoning                                                    |
+| --------------------------- | ---------------------------------- | --------------------------- | ------------------------------------------------------------ |
+| Isolation strategy          | Hybrid (3-tier)                    | Single strategy             | Balances cost for small tenants and isolation for large ones |
+| Tenant identification       | JWT claim + subdomain              | API key only                | Supports both web apps and API clients                       |
+| Data isolation (free)       | Row-Level Security (RLS)           | Application-level filtering | Database-enforced, prevents developer mistakes               |
+| Data isolation (enterprise) | Dedicated database                 | Shared with encryption      | Strongest isolation, easiest compliance certification        |
+| Metadata cache              | Redis with 5-min TTL               | In-process cache only       | Shared across pods, consistent, fast invalidation            |
+| Connection pooling          | PgBouncer (transaction mode)       | Application-level pooling   | Handles 100K+ tenants with limited DB connections            |
+| Usage metering              | Kafka + Flink aggregation          | Synchronous counting        | Decoupled, handles burst traffic, exactly-once processing    |
+| Custom fields               | JSONB on entity + EAV table        | Dynamic DDL per tenant      | No DDL at runtime, flexible querying, schema-safe            |
+| Feature flags               | Per-tenant override > plan default | Global flags only           | Allows gradual rollout and tenant-specific enablement        |
+| Search                      | Shared Elasticsearch with routing  | Index-per-tenant            | Scales to 100K tenants without index explosion               |
+| Billing                     | Event-sourced usage metering       | Synchronous quota check     | Accurate, auditable, no lost events                          |
+| Multi-region                | Region-per-tenant routing          | Single region               | GDPR data residency compliance                               |
 
 ### Trade-offs
 
-| Trade-off | Option A | Option B | Our Choice |
-|-----------|----------|----------|------------|
-| Isolation vs. cost | Dedicated DB (safe, expensive) | Shared tables (cheap, riskier) | Hybrid: tier-based |
-| Onboarding speed vs. isolation | Instant (shared) | Minutes (provisioned) | Fast for free, provisioned for enterprise |
-| Customization vs. complexity | Everything configurable | Opinionated defaults | Config for common needs, webhooks for edge cases |
-| Consistency vs. performance | Strong consistency per write | Eventual consistency + cache | Strong writes, cached reads with 5-min TTL |
-| Migration simplicity vs. flexibility | Single schema (one migration) | Per-tenant schemas (N migrations) | Shared for most, per-schema only when needed |
+| Trade-off                            | Option A                       | Option B                          | Our Choice                                       |
+| ------------------------------------ | ------------------------------ | --------------------------------- | ------------------------------------------------ |
+| Isolation vs. cost                   | Dedicated DB (safe, expensive) | Shared tables (cheap, riskier)    | Hybrid: tier-based                               |
+| Onboarding speed vs. isolation       | Instant (shared)               | Minutes (provisioned)             | Fast for free, provisioned for enterprise        |
+| Customization vs. complexity         | Everything configurable        | Opinionated defaults              | Config for common needs, webhooks for edge cases |
+| Consistency vs. performance          | Strong consistency per write   | Eventual consistency + cache      | Strong writes, cached reads with 5-min TTL       |
+| Migration simplicity vs. flexibility | Single schema (one migration)  | Per-tenant schemas (N migrations) | Shared for most, per-schema only when needed     |

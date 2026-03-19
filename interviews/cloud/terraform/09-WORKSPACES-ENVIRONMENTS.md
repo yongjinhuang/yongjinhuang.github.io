@@ -91,22 +91,22 @@ backend "s3" {
 
 ### When Workspaces Work Well
 
-| Scenario | Why |
-|----------|-----|
-| Same config, different scale | Just change instance counts/sizes per workspace |
-| Ephemeral test environments | Quick to create and destroy |
-| Single developer iterating | Low overhead, no directory duplication |
-| Simple projects with < 20 resources | Workspace switching is fast and manageable |
+| Scenario                            | Why                                             |
+| ----------------------------------- | ----------------------------------------------- |
+| Same config, different scale        | Just change instance counts/sizes per workspace |
+| Ephemeral test environments         | Quick to create and destroy                     |
+| Single developer iterating          | Low overhead, no directory duplication          |
+| Simple projects with < 20 resources | Workspace switching is fast and manageable      |
 
 ### When Workspaces Do NOT Work
 
-| Scenario | Why |
-|----------|-----|
-| Environments need different resources | You end up with `count = terraform.workspace == "prod" ? 1 : 0` everywhere |
-| Different providers per environment | Backend config is shared; you cannot vary provider config per workspace |
-| Different backend configs per environment | All workspaces share the same backend block |
-| Team workflows with CI/CD | Workspace selection is imperative; easy to apply to the wrong workspace |
-| Environments in different AWS accounts | Provider config cannot vary by workspace without ugly hacks |
+| Scenario                                  | Why                                                                        |
+| ----------------------------------------- | -------------------------------------------------------------------------- |
+| Environments need different resources     | You end up with `count = terraform.workspace == "prod" ? 1 : 0` everywhere |
+| Different providers per environment       | Backend config is shared; you cannot vary provider config per workspace    |
+| Different backend configs per environment | All workspaces share the same backend block                                |
+| Team workflows with CI/CD                 | Workspace selection is imperative; easy to apply to the wrong workspace    |
+| Environments in different AWS accounts    | Provider config cannot vary by workspace without ugly hacks                |
 
 The fundamental limitation: workspaces share the same backend configuration and provider configuration. If your environments differ in anything beyond variable values, workspaces become painful.
 
@@ -224,14 +224,14 @@ Terragrunt is a thin wrapper around Terraform that eliminates duplication in mul
 
 ### What Terragrunt Adds
 
-| Feature | How |
-|---------|-----|
-| DRY backend config | Define backend once in a parent `terragrunt.hcl`, inherited by children |
-| DRY provider config | Same inheritance pattern for providers |
-| Dependency management | `dependency` blocks pass outputs between modules |
-| `run-all` command | Apply/plan across all modules in a directory tree |
-| Before/after hooks | Run scripts before or after Terraform commands |
-| Auto-init and auto-retry | Reduces boilerplate in CI/CD |
+| Feature                  | How                                                                     |
+| ------------------------ | ----------------------------------------------------------------------- |
+| DRY backend config       | Define backend once in a parent `terragrunt.hcl`, inherited by children |
+| DRY provider config      | Same inheritance pattern for providers                                  |
+| Dependency management    | `dependency` blocks pass outputs between modules                        |
+| `run-all` command        | Apply/plan across all modules in a directory tree                       |
+| Before/after hooks       | Run scripts before or after Terraform commands                          |
+| Auto-init and auto-retry | Reduces boilerplate in CI/CD                                            |
 
 ### Directory Structure with Terragrunt
 
@@ -319,13 +319,13 @@ inputs = {
 
 ### When to Use Terragrunt vs Native Terraform
 
-| Use Terragrunt When | Use Native Terraform When |
-|---------------------|--------------------------|
-| 3+ environments with similar structure | 1-2 environments |
-| Backend config duplication is painful | Backend config differences are minimal |
-| Cross-module dependencies are complex | Modules are independent |
-| You want `run-all` for multi-module applies | You apply modules individually |
-| Team is comfortable with the extra abstraction | Team prefers fewer tools in the stack |
+| Use Terragrunt When                            | Use Native Terraform When              |
+| ---------------------------------------------- | -------------------------------------- |
+| 3+ environments with similar structure         | 1-2 environments                       |
+| Backend config duplication is painful          | Backend config differences are minimal |
+| Cross-module dependencies are complex          | Modules are independent                |
+| You want `run-all` for multi-module applies    | You apply modules individually         |
+| Team is comfortable with the extra abstraction | Team prefers fewer tools in the stack  |
 
 ---
 
@@ -428,12 +428,12 @@ Feature Branch --> dev (auto-apply on push)
 
 ### Promotion Strategies
 
-| Strategy | How | Trade-off |
-|----------|-----|-----------|
-| Same code, different vars | One module, `-var-file` per env | Simple but limited divergence |
-| Branch-per-environment | `dev` branch -> dev, `main` -> staging, tag -> prod | Merge conflicts, drift between branches |
-| Directory-per-environment | `cd environments/prod && terraform apply` | Some duplication, but clear isolation |
-| Artifact promotion | Build plan artifact in staging, adapt for prod | Complex but most reliable |
+| Strategy                  | How                                                 | Trade-off                               |
+| ------------------------- | --------------------------------------------------- | --------------------------------------- |
+| Same code, different vars | One module, `-var-file` per env                     | Simple but limited divergence           |
+| Branch-per-environment    | `dev` branch -> dev, `main` -> staging, tag -> prod | Merge conflicts, drift between branches |
+| Directory-per-environment | `cd environments/prod && terraform apply`           | Some duplication, but clear isolation   |
+| Artifact promotion        | Build plan artifact in staging, adapt for prod      | Complex but most reliable               |
 
 The directory-per-environment approach with shared modules is the most common pattern in mature teams. Branch-per-environment is almost universally considered an anti-pattern due to merge drift.
 
@@ -441,29 +441,29 @@ The directory-per-environment approach with shared modules is the most common pa
 
 ## Common Gotchas
 
-| Gotcha | Why It Happens | How to Avoid |
-|--------|----------------|--------------|
-| Applied to wrong workspace | `terraform workspace select` is imperative and easy to forget | Use directory-per-environment instead; or name resources with `terraform.workspace` |
-| Workspace state not isolated enough | All workspaces share the same backend and credentials | Use separate accounts or at minimum separate state buckets |
-| Terragrunt learning curve | Extra layer of abstraction, `find_in_parent_folders`, HCL-in-HCL | Start with directory-per-environment; adopt Terragrunt when duplication becomes painful |
-| Environment parity drift | Environments diverge over time as hotfixes go to prod only | Enforce promotion flow; never apply directly to prod without going through lower environments |
-| Branch-per-environment merge conflicts | Dev and prod branches diverge; merges become painful | Use directory-per-environment or var-file approach instead |
-| Terraform Cloud cost at scale | Per-resource pricing adds up with many workspaces | Evaluate open-source alternatives (Atlantis, custom CI/CD) |
-| Shared state across environments | Using one state file for all environments | Always separate state per environment; this is non-negotiable |
+| Gotcha                                 | Why It Happens                                                   | How to Avoid                                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Applied to wrong workspace             | `terraform workspace select` is imperative and easy to forget    | Use directory-per-environment instead; or name resources with `terraform.workspace`           |
+| Workspace state not isolated enough    | All workspaces share the same backend and credentials            | Use separate accounts or at minimum separate state buckets                                    |
+| Terragrunt learning curve              | Extra layer of abstraction, `find_in_parent_folders`, HCL-in-HCL | Start with directory-per-environment; adopt Terragrunt when duplication becomes painful       |
+| Environment parity drift               | Environments diverge over time as hotfixes go to prod only       | Enforce promotion flow; never apply directly to prod without going through lower environments |
+| Branch-per-environment merge conflicts | Dev and prod branches diverge; merges become painful             | Use directory-per-environment or var-file approach instead                                    |
+| Terraform Cloud cost at scale          | Per-resource pricing adds up with many workspaces                | Evaluate open-source alternatives (Atlantis, custom CI/CD)                                    |
+| Shared state across environments       | Using one state file for all environments                        | Always separate state per environment; this is non-negotiable                                 |
 
 ---
 
 ## Comparison Summary
 
-| Criteria | CLI Workspaces | Directory-per-env | Terragrunt | TF Cloud Workspaces |
-|----------|---------------|-------------------|------------|-------------------|
-| State isolation | Same backend, different keys | Fully separate | Fully separate | Fully separate |
-| Config variation | `terraform.workspace` conditionals | Different var files | `inputs` in HCL | Workspace variables |
-| Backend flexibility | Shared | Independent | DRY + independent | Managed by TF Cloud |
-| CI/CD integration | Requires workspace selection step | Natural (`cd` into dir) | `run-all` support | Built-in VCS triggers |
-| Duplication | Minimal | Some (root modules) | Minimal | Some (workspace config) |
-| Learning curve | Low | Low | Medium | Medium |
-| Team scale | Small | Medium-Large | Large | Large |
-| Cost | Free | Free | Free (OSS) | Paid at scale |
+| Criteria            | CLI Workspaces                     | Directory-per-env       | Terragrunt        | TF Cloud Workspaces     |
+| ------------------- | ---------------------------------- | ----------------------- | ----------------- | ----------------------- |
+| State isolation     | Same backend, different keys       | Fully separate          | Fully separate    | Fully separate          |
+| Config variation    | `terraform.workspace` conditionals | Different var files     | `inputs` in HCL   | Workspace variables     |
+| Backend flexibility | Shared                             | Independent             | DRY + independent | Managed by TF Cloud     |
+| CI/CD integration   | Requires workspace selection step  | Natural (`cd` into dir) | `run-all` support | Built-in VCS triggers   |
+| Duplication         | Minimal                            | Some (root modules)     | Minimal           | Some (workspace config) |
+| Learning curve      | Low                                | Low                     | Medium            | Medium                  |
+| Team scale          | Small                              | Medium-Large            | Large             | Large                   |
+| Cost                | Free                               | Free                    | Free (OSS)        | Paid at scale           |
 
 For most teams starting out: **directory-per-environment with shared modules**. Adopt Terragrunt or Terraform Cloud when the duplication or coordination overhead justifies the additional tooling.

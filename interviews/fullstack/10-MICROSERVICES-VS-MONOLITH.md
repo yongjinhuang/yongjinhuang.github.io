@@ -76,26 +76,28 @@ Services need to talk to each other. There are two fundamental approaches.
 
 **Synchronous (Request/Response):**
 
-| Protocol | When to Use | Trade-offs |
-|----------|-------------|------------|
-| **REST/HTTP** | Standard CRUD operations, broad compatibility | Simple, well-understood; couples caller to callee |
-| **gRPC** | Internal service-to-service, performance-critical | Strongly typed (protobuf), efficient binary protocol; harder to debug |
-| **GraphQL** | API gateway to frontend, flexible queries | Client gets exactly the data it needs; complex server implementation |
+| Protocol      | When to Use                                       | Trade-offs                                                            |
+| ------------- | ------------------------------------------------- | --------------------------------------------------------------------- |
+| **REST/HTTP** | Standard CRUD operations, broad compatibility     | Simple, well-understood; couples caller to callee                     |
+| **gRPC**      | Internal service-to-service, performance-critical | Strongly typed (protobuf), efficient binary protocol; harder to debug |
+| **GraphQL**   | API gateway to frontend, flexible queries         | Client gets exactly the data it needs; complex server implementation  |
 
 **Asynchronous (Event-Driven):**
 
-| Pattern | When to Use | Trade-offs |
-|---------|-------------|------------|
-| **Message Queue** (RabbitMQ, SQS) | Task dispatch, work distribution | Decoupled, reliable delivery; more complex to reason about |
-| **Event Streaming** (Kafka) | Event sourcing, real-time data pipelines | High throughput, replay capability; operational complexity |
-| **Pub/Sub** (SNS, Redis Pub/Sub) | Notifications, broadcasting | Simple fan-out; no persistence (except Kafka) |
+| Pattern                           | When to Use                              | Trade-offs                                                 |
+| --------------------------------- | ---------------------------------------- | ---------------------------------------------------------- |
+| **Message Queue** (RabbitMQ, SQS) | Task dispatch, work distribution         | Decoupled, reliable delivery; more complex to reason about |
+| **Event Streaming** (Kafka)       | Event sourcing, real-time data pipelines | High throughput, replay capability; operational complexity |
+| **Pub/Sub** (SNS, Redis Pub/Sub)  | Notifications, broadcasting              | Simple fan-out; no persistence (except Kafka)              |
 
 **When to use synchronous:**
+
 - The caller needs the result immediately to proceed
 - Simple request/response patterns
 - Low latency requirement
 
 **When to use asynchronous:**
+
 - The caller does not need an immediate result
 - Multiple services need to react to the same event
 - You need to buffer work during traffic spikes
@@ -139,9 +141,9 @@ A saga is a sequence of local transactions. Each service performs its transactio
 
 **Two saga coordination styles:**
 
-| Style | How It Works | When to Use |
-|-------|-------------|-------------|
-| **Choreography** | Each service listens for events and decides what to do next | Simple flows, few services |
+| Style             | How It Works                                                  | When to Use                                     |
+| ----------------- | ------------------------------------------------------------- | ----------------------------------------------- |
+| **Choreography**  | Each service listens for events and decides what to do next   | Simple flows, few services                      |
 | **Orchestration** | A central orchestrator tells each service what to do and when | Complex flows, many steps, easier to understand |
 
 **Example: Order Placement Saga (Orchestration)**
@@ -181,10 +183,10 @@ A distributed transaction protocol where a coordinator asks all participants to 
 
 ### 9. Database Per Service vs Shared Database
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| **Database per service** | Full autonomy, independent scaling, technology choice per service | No cross-service joins, eventual consistency, data duplication |
-| **Shared database** | Simple queries, strong consistency, no data duplication | Tight coupling, schema changes affect all services, scaling bottleneck |
+| Approach                 | Pros                                                              | Cons                                                                   |
+| ------------------------ | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Database per service** | Full autonomy, independent scaling, technology choice per service | No cross-service joins, eventual consistency, data duplication         |
+| **Shared database**      | Simple queries, strong consistency, no data duplication           | Tight coupling, schema changes affect all services, scaling bottleneck |
 
 **Recommendation:** For true microservices, use database-per-service. A shared database defeats the purpose of independent deployment -- schema changes become coordination nightmares.
 
@@ -231,6 +233,7 @@ Named after a vine that gradually envelops a tree, this pattern lets you increme
 **Recommendation:** Monolith (specifically, a modular monolith).
 
 **Reasoning:**
+
 - Team is too small for the operational overhead of microservices
 - Requirements are changing rapidly; you do not know the domain boundaries yet
 - Deployment simplicity lets you iterate faster
@@ -243,6 +246,7 @@ Named after a vine that gradually envelops a tree, this pattern lets you increme
 **Recommendation:** Microservices, extracted from the original monolith.
 
 **Reasoning:**
+
 - Search needs to scale independently (heavy read load)
 - Checkout and payments need independent deployment (high reliability requirements, PCI compliance)
 - Recommendations benefit from a different technology stack (ML models, Python)
@@ -270,6 +274,7 @@ Recommendation Service   -- owns ML models, personalization
 **Recommendation:** Extract chat as a separate service.
 
 **Reasoning:**
+
 - Chat requires persistent WebSocket connections (different runtime characteristics)
 - Chat needs to scale independently based on concurrent users
 - Chat technology stack differs (WebSocket server, Redis Pub/Sub for presence)
@@ -395,6 +400,7 @@ The Strangler Fig pattern is an incremental approach to migrating from a monolit
 6. **Repeat:** Choose the next bounded context and repeat.
 
 **Key principles:**
+
 - Never rewrite from scratch ("big bang" rewrites almost always fail)
 - Run old and new in parallel during migration
 - Use feature flags to gradually shift traffic
@@ -498,10 +504,17 @@ class SagaOrchestrator {
             await completedStep.compensate(context);
           } catch (compensateError) {
             // Log compensation failure for manual intervention
-            console.error(`Compensation failed for ${completedStep.name}:`, compensateError);
+            console.error(
+              `Compensation failed for ${completedStep.name}:`,
+              compensateError
+            );
           }
         }
-        throw new SagaError(`Saga failed at step: ${step.name}`, error, completed.map(s => s.name));
+        throw new SagaError(
+          `Saga failed at step: ${step.name}`,
+          error,
+          completed.map((s) => s.name)
+        );
       }
     }
 
@@ -538,7 +551,10 @@ const orderSaga = new SagaOrchestrator()
   .addStep({
     name: 'createShipment',
     execute: async (ctx) => {
-      const result = await shippingService.createShipment(ctx.orderId, ctx.items);
+      const result = await shippingService.createShipment(
+        ctx.orderId,
+        ctx.items
+      );
       ctx.shipmentId = result.shipmentId;
     },
     compensate: async (ctx) => {
@@ -657,9 +673,9 @@ async function processOutbox() {
 type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
 interface CircuitBreakerOptions {
-  failureThreshold: number;    // Failures before opening
-  recoveryTimeout: number;     // Milliseconds before trying again
-  successThreshold: number;    // Successes in half-open before closing
+  failureThreshold: number; // Failures before opening
+  recoveryTimeout: number; // Milliseconds before trying again
+  successThreshold: number; // Successes in half-open before closing
 }
 
 class CircuitBreaker {
@@ -779,21 +795,23 @@ router.get('/api/dashboard', async (req, res) => {
     const [user, recentOrders, recommendations] = await Promise.allSettled([
       fetch(`${process.env.USER_SERVICE_URL}/profile`, {
         headers: { Authorization: req.headers.authorization },
-      }).then(r => r.json()),
+      }).then((r) => r.json()),
 
       fetch(`${process.env.ORDER_SERVICE_URL}/recent?limit=5`, {
         headers: { Authorization: req.headers.authorization },
-      }).then(r => r.json()),
+      }).then((r) => r.json()),
 
       fetch(`${process.env.RECOMMENDATION_SERVICE_URL}/for-user`, {
         headers: { Authorization: req.headers.authorization },
-      }).then(r => r.json()),
+      }).then((r) => r.json()),
     ]);
 
     res.json({
       user: user.status === 'fulfilled' ? user.value : null,
-      recentOrders: recentOrders.status === 'fulfilled' ? recentOrders.value : [],
-      recommendations: recommendations.status === 'fulfilled' ? recommendations.value : [],
+      recentOrders:
+        recentOrders.status === 'fulfilled' ? recentOrders.value : [],
+      recommendations:
+        recommendations.status === 'fulfilled' ? recommendations.value : [],
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to load dashboard' });
@@ -896,24 +914,24 @@ Does the caller need an immediate response?
 
 ### Saga Decision: Choreography vs Orchestration
 
-| Factor | Choreography | Orchestration |
-|--------|-------------|---------------|
-| Number of steps | 2-3 | 4+ |
-| Complexity | Simple | Complex |
-| Visibility | Hard to trace | Easy to trace |
-| Coupling | Loosely coupled | Central coordinator |
-| Debugging | Follow events across services | Look at orchestrator state |
-| Error handling | Distributed | Centralized |
+| Factor          | Choreography                  | Orchestration              |
+| --------------- | ----------------------------- | -------------------------- |
+| Number of steps | 2-3                           | 4+                         |
+| Complexity      | Simple                        | Complex                    |
+| Visibility      | Hard to trace                 | Easy to trace              |
+| Coupling        | Loosely coupled               | Central coordinator        |
+| Debugging       | Follow events across services | Look at orchestrator state |
+| Error handling  | Distributed                   | Centralized                |
 
 ### Data Consistency Patterns
 
-| Pattern | Use When | Trade-off |
-|---------|----------|-----------|
-| Event-driven updates | Data needs to propagate across services | Eventual consistency, delay |
-| Outbox pattern | Need atomicity between DB write and event | Additional table, polling process |
-| CQRS | Read and write patterns differ significantly | Complexity, eventual consistency on reads |
-| Saga | Multi-step transaction across services | Compensating transactions required |
-| 2PC | Strong consistency required (rare) | Performance, availability trade-offs |
+| Pattern              | Use When                                     | Trade-off                                 |
+| -------------------- | -------------------------------------------- | ----------------------------------------- |
+| Event-driven updates | Data needs to propagate across services      | Eventual consistency, delay               |
+| Outbox pattern       | Need atomicity between DB write and event    | Additional table, polling process         |
+| CQRS                 | Read and write patterns differ significantly | Complexity, eventual consistency on reads |
+| Saga                 | Multi-step transaction across services       | Compensating transactions required        |
+| 2PC                  | Strong consistency required (rare)           | Performance, availability trade-offs      |
 
 ### Key Takeaways
 

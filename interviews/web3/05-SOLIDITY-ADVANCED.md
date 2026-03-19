@@ -39,6 +39,7 @@ This chapter covers the advanced patterns that separate a junior Solidity develo
 ### 1.1 When to Use Assembly
 
 Inline assembly gives you direct access to EVM opcodes. Use it when:
+
 - Gas savings are critical (hot paths in DeFi protocols)
 - You need operations not exposed by Solidity (e.g., `CREATE2`, `RETURNDATASIZE`)
 - You need to interact with non-standard contracts
@@ -274,13 +275,13 @@ bytes32 constant IMPL_SLOT = keccak256("eip1967.proxy.implementation") - 1;
 
 ### 2.6 Proxy Pattern Comparison
 
-| Pattern | Proxy Gas | Upgrade Auth | Storage Risk | Use Case |
-|---------|-----------|-------------|-------------|----------|
-| Transparent | Higher | ProxyAdmin contract | Low (separated) | General purpose |
-| UUPS | Lower | Implementation contract | Medium | Gas-sensitive |
-| Beacon | Medium | Beacon contract | Low | Many identical proxies |
-| Diamond (2535) | Higher | Configurable | Complex | Large protocols |
-| Minimal (1167) | Very Low | None (not upgradeable) | None | Cheap clones |
+| Pattern        | Proxy Gas | Upgrade Auth            | Storage Risk    | Use Case               |
+| -------------- | --------- | ----------------------- | --------------- | ---------------------- |
+| Transparent    | Higher    | ProxyAdmin contract     | Low (separated) | General purpose        |
+| UUPS           | Lower     | Implementation contract | Medium          | Gas-sensitive          |
+| Beacon         | Medium    | Beacon contract         | Low             | Many identical proxies |
+| Diamond (2535) | Higher    | Configurable            | Complex         | Large protocols        |
+| Minimal (1167) | Very Low  | None (not upgradeable)  | None            | Cheap clones           |
 
 ---
 
@@ -624,24 +625,24 @@ contract MyToken is ERC20Permit {
 
 ```javascript
 // Off-chain: user signs the permit
-const { ethers } = require("ethers");
+const { ethers } = require('ethers');
 
 async function signPermit(token, signer, spender, value, deadline) {
   const nonce = await token.nonces(signer.address);
   const domain = {
     name: await token.name(),
-    version: "1",
+    version: '1',
     chainId: (await signer.provider.getNetwork()).chainId,
     verifyingContract: await token.getAddress(),
   };
 
   const types = {
     Permit: [
-      { name: "owner", type: "address" },
-      { name: "spender", type: "address" },
-      { name: "value", type: "uint256" },
-      { name: "nonce", type: "uint256" },
-      { name: "deadline", type: "uint256" },
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' },
     ],
   };
 

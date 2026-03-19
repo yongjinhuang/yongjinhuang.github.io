@@ -6,14 +6,14 @@ An AI agent orchestration platform manages the lifecycle of autonomous agents th
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **agents** | Agent configuration and versioning | Separates agent identity from execution; allows A/B testing different prompts/models |
-| **tasks** | Top-level task lifecycle tracking | One row per user request; tracks status, cost, and links agent to session |
-| **task_steps** | Step-by-step execution log (ReAct loop) | Full observability into think/tool_call/tool_result/response cycle; debugging and replay |
-| **tools** | Tool registry with schemas | Decouples tools from agents; enables schema validation and sandbox enforcement |
-| **memory_chunks** | Vector-stored memory (short/long-term) | Gives agents persistent context across sessions via embedding similarity search |
-| **guardrails** | Input/output safety rules | Centralizes toxicity, PII, and prompt-injection checks; reusable across agents |
+| Table             | Purpose                                 | Why It Exists                                                                            |
+| ----------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **agents**        | Agent configuration and versioning      | Separates agent identity from execution; allows A/B testing different prompts/models     |
+| **tasks**         | Top-level task lifecycle tracking       | One row per user request; tracks status, cost, and links agent to session                |
+| **task_steps**    | Step-by-step execution log (ReAct loop) | Full observability into think/tool_call/tool_result/response cycle; debugging and replay |
+| **tools**         | Tool registry with schemas              | Decouples tools from agents; enables schema validation and sandbox enforcement           |
+| **memory_chunks** | Vector-stored memory (short/long-term)  | Gives agents persistent context across sessions via embedding similarity search          |
+| **guardrails**    | Input/output safety rules               | Centralizes toxicity, PII, and prompt-injection checks; reusable across agents           |
 
 ---
 
@@ -21,91 +21,91 @@ An AI agent orchestration platform manages the lifecycle of autonomous agents th
 
 ### agents
 
-| Field | Type | Description |
-|-------|------|-------------|
-| agent_id | UUID (PK) | Unique agent identifier |
-| name | VARCHAR | Human-readable agent name |
-| system_prompt | TEXT | The system prompt defining agent behavior and persona |
-| primary_model | VARCHAR | Preferred LLM model (e.g., claude-opus-4-20250514) |
-| fallback_model | VARCHAR | Cheaper/faster model used when token_budget is tight |
-| tool_ids | UUID[] | Array of tool IDs this agent can invoke |
-| memory_config_json | JSONB | Memory settings: window size, retrieval top-k, decay rate |
-| guardrail_id | UUID (FK) | References guardrails for input/output filtering |
-| token_budget | INT | Max tokens per task before switching to fallback_model |
-| status | ENUM | active, paused, deprecated |
-| version | INT | Monotonically increasing; enables rollback and A/B comparison |
+| Field              | Type      | Description                                                   |
+| ------------------ | --------- | ------------------------------------------------------------- |
+| agent_id           | UUID (PK) | Unique agent identifier                                       |
+| name               | VARCHAR   | Human-readable agent name                                     |
+| system_prompt      | TEXT      | The system prompt defining agent behavior and persona         |
+| primary_model      | VARCHAR   | Preferred LLM model (e.g., claude-opus-4-20250514)            |
+| fallback_model     | VARCHAR   | Cheaper/faster model used when token_budget is tight          |
+| tool_ids           | UUID[]    | Array of tool IDs this agent can invoke                       |
+| memory_config_json | JSONB     | Memory settings: window size, retrieval top-k, decay rate     |
+| guardrail_id       | UUID (FK) | References guardrails for input/output filtering              |
+| token_budget       | INT       | Max tokens per task before switching to fallback_model        |
+| status             | ENUM      | active, paused, deprecated                                    |
+| version            | INT       | Monotonically increasing; enables rollback and A/B comparison |
 
 **Why array for tool_ids?** Agents need different tool subsets. An array avoids a join table for what is a read-heavy, write-rare config. For larger systems, a many-to-many join table would be preferable.
 
 ### tasks
 
-| Field | Type | Description |
-|-------|------|-------------|
-| task_id | UUID (PK) | Unique task identifier |
-| agent_id | UUID (FK) | Which agent is executing this task |
-| session_id | UUID | Groups multiple tasks in a conversation session |
-| user_id | UUID | The user who initiated the task |
-| status | ENUM | queued, running, completed, failed |
-| priority | INT | Higher priority tasks are dequeued first |
-| input_json | JSONB | The user's input payload |
-| output_json | JSONB | The agent's final response |
-| total_tokens | INT | Sum of all tokens consumed across all steps |
-| total_cost | DECIMAL | Computed cost based on model pricing |
-| created_at | TIMESTAMP | Task creation time |
+| Field        | Type      | Description                                     |
+| ------------ | --------- | ----------------------------------------------- |
+| task_id      | UUID (PK) | Unique task identifier                          |
+| agent_id     | UUID (FK) | Which agent is executing this task              |
+| session_id   | UUID      | Groups multiple tasks in a conversation session |
+| user_id      | UUID      | The user who initiated the task                 |
+| status       | ENUM      | queued, running, completed, failed              |
+| priority     | INT       | Higher priority tasks are dequeued first        |
+| input_json   | JSONB     | The user's input payload                        |
+| output_json  | JSONB     | The agent's final response                      |
+| total_tokens | INT       | Sum of all tokens consumed across all steps     |
+| total_cost   | DECIMAL   | Computed cost based on model pricing            |
+| created_at   | TIMESTAMP | Task creation time                              |
 
 **Why separate input/output JSON?** Keeps the original request immutable for audit, while output captures the final result after the full ReAct loop.
 
 ### task_steps
 
-| Field | Type | Description |
-|-------|------|-------------|
-| task_id | UUID (FK) | Parent task reference |
-| step_index | INT | Ordered step within the task (composite PK with task_id) |
-| step_type | ENUM | think, tool_call, tool_result, response |
-| content | TEXT | The actual content of this step (thought, tool args, tool output, final response) |
-| model_used | VARCHAR | Which model produced this step (primary or fallback) |
-| latency_ms | INT | Wall-clock time for this step |
-| tokens_used | INT | Tokens consumed by this step |
+| Field       | Type      | Description                                                                       |
+| ----------- | --------- | --------------------------------------------------------------------------------- |
+| task_id     | UUID (FK) | Parent task reference                                                             |
+| step_index  | INT       | Ordered step within the task (composite PK with task_id)                          |
+| step_type   | ENUM      | think, tool_call, tool_result, response                                           |
+| content     | TEXT      | The actual content of this step (thought, tool args, tool output, final response) |
+| model_used  | VARCHAR   | Which model produced this step (primary or fallback)                              |
+| latency_ms  | INT       | Wall-clock time for this step                                                     |
+| tokens_used | INT       | Tokens consumed by this step                                                      |
 
 **Why composite PK (task_id + step_index)?** Steps are always accessed in task context, never independently. The composite key enforces ordering and enables efficient range scans for "show me all steps of task X."
 
 ### tools
 
-| Field | Type | Description |
-|-------|------|-------------|
-| tool_id | UUID (PK) | Unique tool identifier |
-| name | VARCHAR | Tool name (e.g., web_search, code_executor) |
-| description | TEXT | Shown to the LLM in tool-use prompts |
-| input_schema_json | JSONB | JSON Schema for validating tool inputs |
-| output_schema_json | JSONB | JSON Schema for expected tool outputs |
-| execution_type | ENUM | function (in-process), api (HTTP call), sandbox (isolated execution) |
-| sandbox_level | ENUM | none, container, vm -- isolation level for code execution tools |
-| rate_limit | INT | Max invocations per minute per agent |
+| Field              | Type      | Description                                                          |
+| ------------------ | --------- | -------------------------------------------------------------------- |
+| tool_id            | UUID (PK) | Unique tool identifier                                               |
+| name               | VARCHAR   | Tool name (e.g., web_search, code_executor)                          |
+| description        | TEXT      | Shown to the LLM in tool-use prompts                                 |
+| input_schema_json  | JSONB     | JSON Schema for validating tool inputs                               |
+| output_schema_json | JSONB     | JSON Schema for expected tool outputs                                |
+| execution_type     | ENUM      | function (in-process), api (HTTP call), sandbox (isolated execution) |
+| sandbox_level      | ENUM      | none, container, vm -- isolation level for code execution tools      |
+| rate_limit         | INT       | Max invocations per minute per agent                                 |
 
 **Why execution_type matters:** Interview signal -- shows you understand that a "calculator" tool can run in-process, a "web_search" calls an API, but a "code_executor" needs sandbox isolation for security.
 
 ### memory_chunks (Vector DB)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| chunk_id | UUID (PK) | Unique chunk identifier |
-| agent_id | UUID (FK) | Which agent owns this memory |
-| session_id | UUID | Nullable; NULL means long-term cross-session memory |
-| content | TEXT | The actual memory content |
-| embedding | VECTOR(1536) | Dense vector embedding for similarity search |
-| memory_type | ENUM | short_term (session-scoped), long_term (persisted), episodic (task summaries) |
-| created_at | TIMESTAMP | When this memory was stored |
+| Field       | Type         | Description                                                                   |
+| ----------- | ------------ | ----------------------------------------------------------------------------- |
+| chunk_id    | UUID (PK)    | Unique chunk identifier                                                       |
+| agent_id    | UUID (FK)    | Which agent owns this memory                                                  |
+| session_id  | UUID         | Nullable; NULL means long-term cross-session memory                           |
+| content     | TEXT         | The actual memory content                                                     |
+| embedding   | VECTOR(1536) | Dense vector embedding for similarity search                                  |
+| memory_type | ENUM         | short_term (session-scoped), long_term (persisted), episodic (task summaries) |
+| created_at  | TIMESTAMP    | When this memory was stored                                                   |
 
 **Why three memory types?** Short-term gives conversation context within a session. Long-term persists facts across sessions. Episodic stores task summaries for "what did I do last time?" retrieval. This mirrors cognitive architecture patterns.
 
 ### guardrails
 
-| Field | Type | Description |
-|-------|------|-------------|
-| guardrail_id | UUID (PK) | Unique guardrail identifier |
-| name | VARCHAR | Human-readable name (e.g., "strict_safety") |
-| input_rules_json | JSONB | Rules applied to user inputs: prompt injection detection, topic blocklist |
-| output_rules_json | JSONB | Rules applied to agent outputs: toxicity threshold, PII regex patterns, hallucination checks |
+| Field             | Type      | Description                                                                                  |
+| ----------------- | --------- | -------------------------------------------------------------------------------------------- |
+| guardrail_id      | UUID (PK) | Unique guardrail identifier                                                                  |
+| name              | VARCHAR   | Human-readable name (e.g., "strict_safety")                                                  |
+| input_rules_json  | JSONB     | Rules applied to user inputs: prompt injection detection, topic blocklist                    |
+| output_rules_json | JSONB     | Rules applied to agent outputs: toxicity threshold, PII regex patterns, hallucination checks |
 
 **Why separate input vs output rules?** Input rules prevent adversarial prompts from reaching the model. Output rules catch harmful content the model generates. Different failure modes require different rule sets.
 
@@ -205,6 +205,7 @@ agents ····*···· tools         (many-to-many via tool_ids array)
 5. **Model selection** -- If the estimated token usage fits within `token_budget`, use `primary_model`. Otherwise, fall back to `fallback_model`. This is logged in each task_step.
 
 6. **ReAct loop execution** -- The agent enters a think-act-observe loop:
+
    - **Think**: Model reasons about the next action → logged as task_step (step_type=think)
    - **Tool call**: Model selects a tool and provides arguments → logged as task_step (step_type=tool_call), validated against tool's input_schema_json
    - **Tool result**: Tool executes and returns result → logged as task_step (step_type=tool_result)

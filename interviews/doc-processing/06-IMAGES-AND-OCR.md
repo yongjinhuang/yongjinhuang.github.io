@@ -66,13 +66,13 @@ table detection from scanned documents.
 
 ### 1.1 Common Formats Compared
 
-| Format | Compression  | Transparency | Lossless | Typical Use               |
-|--------|-------------|-------------|----------|---------------------------|
-| JPEG   | Lossy       | No          | No       | Photos, scanned docs      |
-| PNG    | Lossless    | Yes (alpha) | Yes      | Screenshots, diagrams     |
-| TIFF   | Both        | Yes         | Both     | Archival, multi-page docs |
-| BMP    | None        | No          | Yes      | Legacy Windows bitmaps    |
-| WebP   | Both        | Yes         | Both     | Web-optimized images      |
+| Format | Compression | Transparency | Lossless | Typical Use               |
+| ------ | ----------- | ------------ | -------- | ------------------------- |
+| JPEG   | Lossy       | No           | No       | Photos, scanned docs      |
+| PNG    | Lossless    | Yes (alpha)  | Yes      | Screenshots, diagrams     |
+| TIFF   | Both        | Yes          | Both     | Archival, multi-page docs |
+| BMP    | None        | No           | Yes      | Legacy Windows bitmaps    |
+| WebP   | Both        | Yes          | Both     | Web-optimized images      |
 
 **Key takeaway for OCR**: TIFF (uncompressed or LZW) and PNG are preferred for
 OCR pipelines because they avoid JPEG compression artifacts that degrade text
@@ -147,13 +147,13 @@ binary_img = img.convert("1")      # Binary (1-bit, black/white)
 cmyk_img = img.convert("CMYK")     # For print workflows
 ```
 
-| Mode   | Channels | Bits/Pixel | Use Case              |
-|--------|----------|------------|-----------------------|
-| `1`    | 1        | 1          | Binary OCR input      |
-| `L`    | 1        | 8          | Grayscale processing  |
-| `RGB`  | 3        | 24         | Standard color        |
-| `RGBA` | 4        | 32         | Color + transparency  |
-| `CMYK` | 4        | 32         | Print color space     |
+| Mode   | Channels | Bits/Pixel | Use Case             |
+| ------ | -------- | ---------- | -------------------- |
+| `1`    | 1        | 1          | Binary OCR input     |
+| `L`    | 1        | 8          | Grayscale processing |
+| `RGB`  | 3        | 24         | Standard color       |
+| `RGBA` | 4        | 32         | Color + transparency |
+| `CMYK` | 4        | 32         | Print color space    |
 
 ---
 
@@ -343,6 +343,7 @@ def adaptive_threshold(img: Image.Image, block_size: int = 11, c: int = 2) -> Im
 ```
 
 **When to use which:**
+
 - **Simple threshold**: Uniform lighting, clean scans.
 - **Otsu**: Unknown optimal threshold, bimodal histogram.
 - **Adaptive**: Shadows, uneven illumination, photographed documents.
@@ -529,20 +530,20 @@ text_multi = pytesseract.image_to_string(img, lang="eng+fra")  # English + Frenc
 
 The PSM tells Tesseract how to interpret the layout of the image.
 
-| PSM | Description                                   | Use Case                     |
-|-----|-----------------------------------------------|------------------------------|
-| 0   | Orientation and script detection only          | Detecting rotation           |
-| 1   | Automatic with OSD                             | General documents            |
-| 3   | Fully automatic (default)                      | Most documents               |
-| 4   | Assume single column of variable-sized text    | Single-column articles       |
-| 6   | Assume a single uniform block of text          | Cropped text regions         |
-| 7   | Treat the image as a single text line          | Single lines, captions       |
-| 8   | Treat the image as a single word               | License plates, labels       |
-| 9   | Treat the image as a single word in a circle   | Circular stamps              |
-| 10  | Treat the image as a single character          | CAPTCHA characters           |
-| 11  | Sparse text -- find as much text as possible   | Mixed layout, forms          |
-| 12  | Sparse text with OSD                           | Rotated sparse text          |
-| 13  | Raw line -- treat as single line, no hacks     | Raw neural network mode      |
+| PSM | Description                                  | Use Case                |
+| --- | -------------------------------------------- | ----------------------- |
+| 0   | Orientation and script detection only        | Detecting rotation      |
+| 1   | Automatic with OSD                           | General documents       |
+| 3   | Fully automatic (default)                    | Most documents          |
+| 4   | Assume single column of variable-sized text  | Single-column articles  |
+| 6   | Assume a single uniform block of text        | Cropped text regions    |
+| 7   | Treat the image as a single text line        | Single lines, captions  |
+| 8   | Treat the image as a single word             | License plates, labels  |
+| 9   | Treat the image as a single word in a circle | Circular stamps         |
+| 10  | Treat the image as a single character        | CAPTCHA characters      |
+| 11  | Sparse text -- find as much text as possible | Mixed layout, forms     |
+| 12  | Sparse text with OSD                         | Rotated sparse text     |
+| 13  | Raw line -- treat as single line, no hacks   | Raw neural network mode |
 
 ```python
 import pytesseract
@@ -564,12 +565,12 @@ text = pytesseract.image_to_string(form_img, config="--psm 11")
 
 ### 4.4 OCR Engine Modes (OEM)
 
-| OEM | Description                            |
-|-----|----------------------------------------|
-| 0   | Legacy engine only                     |
-| 1   | LSTM neural network only               |
-| 2   | Legacy + LSTM                          |
-| 3   | Default (best available)               |
+| OEM | Description              |
+| --- | ------------------------ |
+| 0   | Legacy engine only       |
+| 1   | LSTM neural network only |
+| 2   | Legacy + LSTM            |
+| 3   | Default (best available) |
 
 ```python
 # Use LSTM engine explicitly
@@ -756,18 +757,18 @@ results = reader.readtext(
 
 ### 5.4 Tesseract vs. EasyOCR Comparison
 
-| Feature           | Tesseract           | EasyOCR              |
-|-------------------|---------------------|----------------------|
-| Engine            | LSTM + legacy       | CRAFT + CRNN (DL)    |
-| Languages         | 100+                | 80+                  |
-| GPU support       | No                  | Yes (CUDA)           |
-| Speed (CPU)       | Fast                | Slower               |
-| Speed (GPU)       | N/A                 | Very fast            |
-| Handwriting       | Poor                | Moderate             |
-| Noisy images      | Needs preprocessing | More robust          |
-| Bounding boxes    | Yes (HOCR/data)     | Yes (native)         |
-| Install size      | Small               | Large (DL models)    |
-| Batch processing  | Manual              | Built-in batching    |
+| Feature          | Tesseract           | EasyOCR           |
+| ---------------- | ------------------- | ----------------- |
+| Engine           | LSTM + legacy       | CRAFT + CRNN (DL) |
+| Languages        | 100+                | 80+               |
+| GPU support      | No                  | Yes (CUDA)        |
+| Speed (CPU)      | Fast                | Slower            |
+| Speed (GPU)      | N/A                 | Very fast         |
+| Handwriting      | Poor                | Moderate          |
+| Noisy images     | Needs preprocessing | More robust       |
+| Bounding boxes   | Yes (HOCR/data)     | Yes (native)      |
+| Install size     | Small               | Large (DL models) |
+| Batch processing | Manual              | Built-in batching |
 
 **Recommendation**: Use Tesseract for clean, well-preprocessed documents.
 Use EasyOCR for noisy images, mixed languages, or when GPU is available.
@@ -1519,13 +1520,13 @@ Wrong EXIF orientation    Auto-orient                 ImageOps.exif_transpose
 
 ### Common Pitfalls and Fixes
 
-| Problem                          | Cause                           | Fix                                       |
-|----------------------------------|---------------------------------|-------------------------------------------|
-| Garbled output                   | Low DPI or heavy compression    | Upscale to 300+ DPI, use PNG/TIFF         |
-| Missing characters               | Over-aggressive binarization    | Adjust threshold, try adaptive            |
-| Merged words                     | Low resolution                  | Upscale, increase spacing detection       |
-| Wrong language detected          | Default to English              | Set `lang` parameter explicitly           |
-| Rotated text not detected        | Wrong PSM mode                  | Use PSM 0 for OSD, then correct rotation  |
-| Slow processing                  | Large images, no GPU            | Downscale to 300 DPI, use Tesseract       |
-| Tables extracted as text soup    | No structure detection          | Use img2table or line detection first     |
-| Confidence scores all -1         | Empty regions being scored      | Filter `conf > 0` and non-empty text      |
+| Problem                       | Cause                        | Fix                                      |
+| ----------------------------- | ---------------------------- | ---------------------------------------- |
+| Garbled output                | Low DPI or heavy compression | Upscale to 300+ DPI, use PNG/TIFF        |
+| Missing characters            | Over-aggressive binarization | Adjust threshold, try adaptive           |
+| Merged words                  | Low resolution               | Upscale, increase spacing detection      |
+| Wrong language detected       | Default to English           | Set `lang` parameter explicitly          |
+| Rotated text not detected     | Wrong PSM mode               | Use PSM 0 for OSD, then correct rotation |
+| Slow processing               | Large images, no GPU         | Downscale to 300 DPI, use Tesseract      |
+| Tables extracted as text soup | No structure detection       | Use img2table or line detection first    |
+| Confidence scores all -1      | Empty regions being scored   | Filter `conf > 0` and non-empty text     |

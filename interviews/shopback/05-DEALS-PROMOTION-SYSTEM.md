@@ -5,6 +5,7 @@
 ## 1. Requirements
 
 ### Functional
+
 - Merchants create deals/promotions with cashback rates, validity periods, and terms
 - Users browse, search, and filter deals by category, merchant, and market
 - Featured/flash deals with countdown timers and limited quantities
@@ -12,6 +13,7 @@
 - Push notifications for deal alerts
 
 ### Non-Functional
+
 - **Low latency**: Deal pages load < 200ms (API response)
 - **High availability**: 99.99% during sale events
 - **Scale**: 100K+ concurrent users during flash sales (10x normal)
@@ -19,6 +21,7 @@
 - **Freshness**: New deals visible within 30 seconds
 
 ### Out of Scope
+
 - Cashback tracking (separate system)
 - Payment processing
 
@@ -155,6 +158,7 @@ User ──→ CDN (static assets) ──→   │ API     │
 ```
 
 **Cache Keys:**
+
 ```
 deals:sg:electronics:popular:1  → Paginated deal list
 deal:12345                      → Individual deal detail
@@ -183,6 +187,7 @@ Flash sales require special handling due to limited inventory and traffic spikes
 ```
 
 **Atomic Counter in Redis:**
+
 ```
 -- Claim a flash deal
 DECR flash:deal:12345:remaining
@@ -191,6 +196,7 @@ DECR flash:deal:12345:remaining
 ```
 
 **Race Condition Prevention:**
+
 ```lua
 -- Redis Lua script for atomic claim
 local remaining = redis.call('GET', KEYS[1])
@@ -226,6 +232,7 @@ Index: deals
 ```
 
 **Relevance scoring** combines:
+
 - Text match score
 - Cashback rate (higher = better)
 - Popularity (click-through rate)
@@ -255,6 +262,7 @@ Strategy:
 ```
 
 ### Traffic Shaping
+
 - **Countdown page**: Absorbs early traffic with static content
 - **Staggered start**: Different categories start at different times
 - **Waiting room**: Queue users when capacity is reached (virtual queue)
@@ -274,21 +282,21 @@ Processing:
 5. Send notifications per market timezone
 ```
 
-| Aspect | Approach |
-|--------|----------|
-| Currency | Store in merchant currency, display in user currency |
-| Timezone | Schedule in UTC, display in local time |
-| Language | Deal titles stored per locale in JSONB field |
-| Regulations | Market-specific terms and conditions |
+| Aspect      | Approach                                             |
+| ----------- | ---------------------------------------------------- |
+| Currency    | Store in merchant currency, display in user currency |
+| Timezone    | Schedule in UTC, display in local time               |
+| Language    | Deal titles stored per locale in JSONB field         |
+| Regulations | Market-specific terms and conditions                 |
 
 ---
 
 ## 6. Key Trade-offs
 
-| Decision | Trade-off |
-|----------|-----------|
-| Redis counter vs DB lock | Speed vs durability (use both: Redis for speed, DB as source of truth) |
-| Elasticsearch vs DB queries | Flexibility vs operational complexity |
-| CDN caching deal pages | Freshness vs latency (30s TTL is acceptable) |
-| Pre-computed vs real-time ranking | Stale recommendations vs compute cost |
-| Single vs per-market DB | Simplicity vs data isolation |
+| Decision                          | Trade-off                                                              |
+| --------------------------------- | ---------------------------------------------------------------------- |
+| Redis counter vs DB lock          | Speed vs durability (use both: Redis for speed, DB as source of truth) |
+| Elasticsearch vs DB queries       | Flexibility vs operational complexity                                  |
+| CDN caching deal pages            | Freshness vs latency (30s TTL is acceptable)                           |
+| Pre-computed vs real-time ranking | Stale recommendations vs compute cost                                  |
+| Single vs per-market DB           | Simplicity vs data isolation                                           |

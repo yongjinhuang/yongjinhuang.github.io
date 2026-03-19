@@ -28,33 +28,33 @@ A loyalty and rewards system incentivizes repeat customer behavior by awarding p
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Points Earning | Award points on qualifying purchases and activities; support base earn rates, multipliers, and promotional bonuses |
-| 2 | Points Redemption | Redeem points for rewards from a catalog (products, discounts, gift cards, experiences); support partial redemption |
-| 3 | Tier Management | Classify members into tiers (e.g., Silver, Gold, Platinum) based on qualifying activity over a rolling window; auto-upgrade and downgrade |
-| 4 | Rewards Catalog | Maintain a catalog of redeemable rewards with point costs, inventory, availability windows, and eligibility rules |
-| 5 | Transaction History | Provide members with a complete, paginated ledger of all earn/redeem/expire/adjust events |
-| 6 | Partner Integrations | Earn and burn points with partner merchants; support points transfer between loyalty programs |
-| 7 | Points Expiration | Expire unused points based on configurable policies; notify members before expiry; extend expiration on qualifying activity |
-| 8 | Balance Inquiry | Real-time points balance with breakdown by point type (base, bonus, promotional) and expiration date |
-| 9 | Bonus Campaigns | Time-limited promotions (2x points weekends, birthday bonuses, sign-up bonuses) |
-| 10 | Account Linking | Link loyalty accounts to payment methods, partner accounts, and household/family sharing |
+| #   | Requirement          | Description                                                                                                                               |
+| --- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Points Earning       | Award points on qualifying purchases and activities; support base earn rates, multipliers, and promotional bonuses                        |
+| 2   | Points Redemption    | Redeem points for rewards from a catalog (products, discounts, gift cards, experiences); support partial redemption                       |
+| 3   | Tier Management      | Classify members into tiers (e.g., Silver, Gold, Platinum) based on qualifying activity over a rolling window; auto-upgrade and downgrade |
+| 4   | Rewards Catalog      | Maintain a catalog of redeemable rewards with point costs, inventory, availability windows, and eligibility rules                         |
+| 5   | Transaction History  | Provide members with a complete, paginated ledger of all earn/redeem/expire/adjust events                                                 |
+| 6   | Partner Integrations | Earn and burn points with partner merchants; support points transfer between loyalty programs                                             |
+| 7   | Points Expiration    | Expire unused points based on configurable policies; notify members before expiry; extend expiration on qualifying activity               |
+| 8   | Balance Inquiry      | Real-time points balance with breakdown by point type (base, bonus, promotional) and expiration date                                      |
+| 9   | Bonus Campaigns      | Time-limited promotions (2x points weekends, birthday bonuses, sign-up bonuses)                                                           |
+| 10  | Account Linking      | Link loyalty accounts to payment methods, partner accounts, and household/family sharing                                                  |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Points consistency | Zero double-spend; balance must never go negative |
-| 2 | Availability | 99.99% uptime (< 1 hour downtime/year) |
-| 3 | Earning latency | < 500ms for points posting after transaction (p99) |
-| 4 | Redemption latency | < 300ms for redemption confirmation (p99) |
-| 5 | Fraud prevention | Real-time fraud scoring on every earn/redeem event |
-| 6 | Auditability | Complete, immutable audit trail for every points movement |
-| 7 | Idempotency | Duplicate transaction submissions must not double-award points |
-| 8 | Scalability | Support 200M members, 500M earn events/day, 50M redemptions/day |
-| 9 | Expiration accuracy | Points must expire on the correct date, never early, at-most 1 hour late |
-| 10 | Partner settlement | Daily reconciliation with partner systems; discrepancies flagged within 24 hours |
+| #   | Requirement         | Target                                                                           |
+| --- | ------------------- | -------------------------------------------------------------------------------- |
+| 1   | Points consistency  | Zero double-spend; balance must never go negative                                |
+| 2   | Availability        | 99.99% uptime (< 1 hour downtime/year)                                           |
+| 3   | Earning latency     | < 500ms for points posting after transaction (p99)                               |
+| 4   | Redemption latency  | < 300ms for redemption confirmation (p99)                                        |
+| 5   | Fraud prevention    | Real-time fraud scoring on every earn/redeem event                               |
+| 6   | Auditability        | Complete, immutable audit trail for every points movement                        |
+| 7   | Idempotency         | Duplicate transaction submissions must not double-award points                   |
+| 8   | Scalability         | Support 200M members, 500M earn events/day, 50M redemptions/day                  |
+| 9   | Expiration accuracy | Points must expire on the correct date, never early, at-most 1 hour late         |
+| 10  | Partner settlement  | Daily reconciliation with partner systems; discrepancies flagged within 24 hours |
 
 ### Capacity Estimation
 
@@ -106,6 +106,7 @@ GET    /v1/earn/preview                         Preview points before purchase
 ```
 
 **POST /v1/earn Request:**
+
 ```json
 {
   "idempotencyKey": "earn_550e8400-e29b-41d4-a716-446655440000",
@@ -124,6 +125,7 @@ GET    /v1/earn/preview                         Preview points before purchase
 ```
 
 **POST /v1/earn Response (201 Created):**
+
 ```json
 {
   "earnId": "ern_7a8b9c0d",
@@ -158,6 +160,7 @@ GET    /v1/redemptions/{redemptionId}           Get redemption status
 ```
 
 **POST /v1/redemptions Request:**
+
 ```json
 {
   "idempotencyKey": "rdm_660e9400-f29c-51e4-b826-557766551111",
@@ -173,6 +176,7 @@ GET    /v1/redemptions/{redemptionId}           Get redemption status
 ```
 
 **POST /v1/redemptions Response (201 Created):**
+
 ```json
 {
   "redemptionId": "red_4e5f6g7h",
@@ -180,8 +184,16 @@ GET    /v1/redemptions/{redemptionId}           Get redemption status
   "rewardId": "rwd_coffee_free",
   "pointsDeducted": 400,
   "pointsBreakdown": [
-    { "ledgerEntryId": "led_oldest_001", "points": 200, "expiresAt": "2024-06-01" },
-    { "ledgerEntryId": "led_oldest_002", "points": 200, "expiresAt": "2024-09-01" }
+    {
+      "ledgerEntryId": "led_oldest_001",
+      "points": 200,
+      "expiresAt": "2024-06-01"
+    },
+    {
+      "ledgerEntryId": "led_oldest_002",
+      "points": 200,
+      "expiresAt": "2024-09-01"
+    }
   ],
   "newBalance": 12080,
   "voucher": {
@@ -202,6 +214,7 @@ GET    /v1/members/{memberId}/balance/expiring    Get points expiring soon
 ```
 
 **GET /v1/members/{memberId}/balance Response:**
+
 ```json
 {
   "memberId": "mbr_a1b2c3d4",
@@ -221,6 +234,7 @@ GET    /v1/members/{memberId}/balance/expiring    Get points expiring soon
 ```
 
 **GET /v1/members/{memberId}/tier Response:**
+
 ```json
 {
   "memberId": "mbr_a1b2c3d4",
@@ -261,6 +275,7 @@ PATCH  /v1/rewards/{rewardId}                   (admin: update reward)
 ```
 
 **GET /v1/rewards Response:**
+
 ```json
 {
   "rewards": [
@@ -293,6 +308,7 @@ GET    /v1/transactions/{transactionId}
 ```
 
 **GET /v1/members/{memberId}/transactions Response:**
+
 ```json
 {
   "transactions": [
@@ -721,16 +737,16 @@ CREATE INDEX idx_idem_expiry ON idempotency_keys(expires_at);
 
 ### Service Responsibilities
 
-| Service | Responsibility | Data Store |
-|---------|---------------|------------|
-| Points Engine | Core earn/redeem/balance operations, ledger writes | PostgreSQL (primary), Redis (balance cache) |
-| Tier Engine | Calculate tier qualification, upgrade/downgrade | PostgreSQL, Redis (tier cache) |
-| Rewards Catalog Service | Manage reward inventory, eligibility | PostgreSQL, Elasticsearch (search) |
-| Earning Rules Engine | Evaluate rules, calculate points per transaction | PostgreSQL, Redis (rules cache) |
-| Partner Gateway | Partner API translation, rate conversion, auth | PostgreSQL (partner config) |
-| Fraud Detection Service | Real-time scoring, velocity checks | Redis (counters), ML model serving |
-| Settlement Engine | Daily reconciliation, net settlement calculation | PostgreSQL (settlement tables) |
-| Notification Service | Push, email, SMS for earn/redeem/expire events | Kafka consumer, push gateway |
+| Service                 | Responsibility                                     | Data Store                                  |
+| ----------------------- | -------------------------------------------------- | ------------------------------------------- |
+| Points Engine           | Core earn/redeem/balance operations, ledger writes | PostgreSQL (primary), Redis (balance cache) |
+| Tier Engine             | Calculate tier qualification, upgrade/downgrade    | PostgreSQL, Redis (tier cache)              |
+| Rewards Catalog Service | Manage reward inventory, eligibility               | PostgreSQL, Elasticsearch (search)          |
+| Earning Rules Engine    | Evaluate rules, calculate points per transaction   | PostgreSQL, Redis (rules cache)             |
+| Partner Gateway         | Partner API translation, rate conversion, auth     | PostgreSQL (partner config)                 |
+| Fraud Detection Service | Real-time scoring, velocity checks                 | Redis (counters), ML model serving          |
+| Settlement Engine       | Daily reconciliation, net settlement calculation   | PostgreSQL (settlement tables)              |
+| Notification Service    | Push, email, SMS for earn/redeem/expire events     | Kafka consumer, push gateway                |
 
 ---
 
@@ -1774,20 +1790,20 @@ A: Settlement accuracy is ensured through a three-step reconciliation process. (
 
 ### Key Architecture Decisions
 
-| Decision | Chosen Approach | Alternative | Reason |
-|----------|-----------------|-------------|--------|
-| Points ledger | Immutable append-only log + materialized balance | Compute balance from ledger on read | O(1) balance reads at 8K+ TPS; nightly reconciliation catches drift |
-| FIFO expiration | Point lots table tracking remaining per-earn-batch | Single balance with earliest-expire pointer | Lot-level tracking enables precise FIFO consumption and partial expiration |
-| Tier evaluation | Real-time on earn + nightly batch for downgrades | Purely batch (nightly) | Instant upgrade gratification; batch is sufficient for downgrades (not time-sensitive) |
-| Earning rules | Configurable rule engine with priority + stacking | Hardcoded earn rates | Business needs frequent rule changes (campaigns, partner deals) without code deploys |
-| Shard key | member_id | partner_id or composite | All core operations are member-scoped; avoids cross-shard transactions for earn/redeem |
-| Redemption model | Two-phase (hold + confirm) | Direct deduction | Supports fulfillment failures, physical rewards, and partner burn confirmation |
-| Fraud detection | Synchronous scoring (< 50ms) on earn/redeem | Async post-transaction analysis | Prevents fraudulent points from entering the system; async analysis for pattern detection |
-| Partner integration | Adapter pattern per partner | Universal API | Partners have different formats, auth, categories; adapters isolate translation logic |
-| Expiration processing | Hourly batch with SKIP LOCKED | Real-time on balance read | Batch is cheaper; hourly granularity is acceptable (NFR: at-most 1 hour late) |
-| Balance caching | Multi-level (client, CDN, Redis, replica, primary) | Redis only | Reduces Redis load by 60% with CDN layer; 5-second staleness acceptable for display |
-| Cross-member transfer | Saga pattern | 2PC | Saga tolerates partial failures gracefully; 2PC would block across shards |
-| Settlement | Daily batch reconciliation with dispute window | Real-time settlement | Daily batch is simpler, aligns with financial reporting cycles, tolerates temporary discrepancies |
+| Decision              | Chosen Approach                                    | Alternative                                 | Reason                                                                                            |
+| --------------------- | -------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Points ledger         | Immutable append-only log + materialized balance   | Compute balance from ledger on read         | O(1) balance reads at 8K+ TPS; nightly reconciliation catches drift                               |
+| FIFO expiration       | Point lots table tracking remaining per-earn-batch | Single balance with earliest-expire pointer | Lot-level tracking enables precise FIFO consumption and partial expiration                        |
+| Tier evaluation       | Real-time on earn + nightly batch for downgrades   | Purely batch (nightly)                      | Instant upgrade gratification; batch is sufficient for downgrades (not time-sensitive)            |
+| Earning rules         | Configurable rule engine with priority + stacking  | Hardcoded earn rates                        | Business needs frequent rule changes (campaigns, partner deals) without code deploys              |
+| Shard key             | member_id                                          | partner_id or composite                     | All core operations are member-scoped; avoids cross-shard transactions for earn/redeem            |
+| Redemption model      | Two-phase (hold + confirm)                         | Direct deduction                            | Supports fulfillment failures, physical rewards, and partner burn confirmation                    |
+| Fraud detection       | Synchronous scoring (< 50ms) on earn/redeem        | Async post-transaction analysis             | Prevents fraudulent points from entering the system; async analysis for pattern detection         |
+| Partner integration   | Adapter pattern per partner                        | Universal API                               | Partners have different formats, auth, categories; adapters isolate translation logic             |
+| Expiration processing | Hourly batch with SKIP LOCKED                      | Real-time on balance read                   | Batch is cheaper; hourly granularity is acceptable (NFR: at-most 1 hour late)                     |
+| Balance caching       | Multi-level (client, CDN, Redis, replica, primary) | Redis only                                  | Reduces Redis load by 60% with CDN layer; 5-second staleness acceptable for display               |
+| Cross-member transfer | Saga pattern                                       | 2PC                                         | Saga tolerates partial failures gracefully; 2PC would block across shards                         |
+| Settlement            | Daily batch reconciliation with dispute window     | Real-time settlement                        | Daily batch is simpler, aligns with financial reporting cycles, tolerates temporary discrepancies |
 
 ### Key Trade-offs
 
@@ -1800,4 +1816,4 @@ Availability vs. Accuracy:     99.99% availability with nightly reconciliation a
 
 ---
 
-*Covers: double-entry points ledger, FIFO expiration with lot tracking, configurable earning rules engine, tier qualification with rolling windows, two-phase redemption, fraud detection pipeline, partner integration with settlement reconciliation, horizontal sharding by member, flash promotion buffering, multi-level balance caching.*
+_Covers: double-entry points ledger, FIFO expiration with lot tracking, configurable earning rules engine, tier qualification with rolling windows, two-phase redemption, fraud detection pipeline, partner integration with settlement reconciliation, horizontal sharding by member, flash promotion buffering, multi-level balance caching._

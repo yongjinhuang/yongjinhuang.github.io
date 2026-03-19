@@ -12,7 +12,7 @@ Ambiguity questions test whether you can be productive when the path forward is 
 - **Communication of uncertainty** -- Can you explain what you know, what you do not know, and what your plan is to find out?
 - **Adaptability** -- When new information invalidates your assumptions, do you pivot gracefully or dig in?
 
-The core question is: *Can this person make meaningful progress on hard problems without constant hand-holding?*
+The core question is: _Can this person make meaningful progress on hard problems without constant hand-holding?_
 
 ---
 
@@ -36,13 +36,17 @@ The core question is: *Can this person make meaningful progress on hard problems
 For ambiguity questions, the STAR method should emphasize your **thought process** more than any other category. Interviewers care less about the final answer and more about how you navigated from confusion to clarity.
 
 ### Situation
+
 Describe the ambiguity explicitly. What was unclear? Why was it unclear? What were the stakes of getting it wrong?
 
 ### Task
+
 What was your responsibility? Were you expected to define the problem, propose a solution, or both?
 
 ### Action
+
 Walk through your thinking step by step:
+
 - What questions did you ask, and to whom?
 - How did you decompose the problem?
 - What research, prototyping, or experimentation did you do?
@@ -50,6 +54,7 @@ Walk through your thinking step by step:
 - How did you communicate your approach and findings to others?
 
 ### Result
+
 Describe the outcome, but also describe what you learned about navigating ambiguity. Did your approach work? Would you do anything differently?
 
 **Tip**: Show intellectual humility. The best answers acknowledge that the first approach was not always correct, and describe how you adapted.
@@ -156,34 +161,34 @@ Describe the outcome, but also describe what you learned about navigating ambigu
 
 ### Story 1: Unclear Requirements
 
-- **Situation**: I was asked to build _______ but the requirements were vague because _______.
+- **Situation**: I was asked to build **\_\_\_** but the requirements were vague because **\_\_\_**.
 - **Task**: I needed to define the problem before I could solve it.
-- **Action**: I investigated by _______ (shadowing users, analyzing data, interviewing stakeholders). I discovered that the real problem was _______. I wrote up _______ and validated it with _______. I proposed a phased approach: _______.
-- **Result**: Phase 1 delivered _______. The discovery work also uncovered _______, which led to _______.
+- **Action**: I investigated by **\_\_\_** (shadowing users, analyzing data, interviewing stakeholders). I discovered that the real problem was **\_\_\_**. I wrote up **\_\_\_** and validated it with **\_\_\_**. I proposed a phased approach: **\_\_\_**.
+- **Result**: Phase 1 delivered **\_\_\_**. The discovery work also uncovered **\_\_\_**, which led to **\_\_\_**.
 - **Best used for**: Ambiguity, requirements gathering, stakeholder communication
 
 ### Story 2: Technical Evaluation
 
-- **Situation**: The team needed to choose between _______ options for _______.
+- **Situation**: The team needed to choose between **\_\_\_** options for **\_\_\_**.
 - **Task**: I led the evaluation and needed to make a recommendation.
-- **Action**: I defined criteria by _______. I validated each option by _______ (benchmarks, prototypes, talking to other teams). I compiled results into _______ and shared them _______ (timeframe) before the decision meeting. When a teammate challenged _______, I _______.
-- **Result**: We chose _______ and the migration/implementation took _______. The evaluation framework was reused for _______.
+- **Action**: I defined criteria by **\_\_\_**. I validated each option by **\_\_\_** (benchmarks, prototypes, talking to other teams). I compiled results into **\_\_\_** and shared them **\_\_\_** (timeframe) before the decision meeting. When a teammate challenged **\_\_\_**, I **\_\_\_**.
+- **Result**: We chose **\_\_\_** and the migration/implementation took **\_\_\_**. The evaluation framework was reused for **\_\_\_**.
 - **Best used for**: Technical decision-making, research, building consensus
 
 ### Story 3: Wrong Initial Approach
 
-- **Situation**: I was working on _______ and my initial hypothesis was _______.
+- **Situation**: I was working on **\_\_\_** and my initial hypothesis was **\_\_\_**.
 - **Task**: I needed to find the right solution after discovering my first approach was wrong.
-- **Action**: I realized my approach was wrong when _______. I stepped back and _______ (re-analyzed, used different tools, consulted others). The actual root cause was _______. I pivoted to _______.
-- **Result**: The new approach achieved _______, exceeding the original goal. I shared the lesson with the team by _______. We changed our process to _______.
+- **Action**: I realized my approach was wrong when **\_\_\_**. I stepped back and **\_\_\_** (re-analyzed, used different tools, consulted others). The actual root cause was **\_\_\_**. I pivoted to **\_\_\_**.
+- **Result**: The new approach achieved **\_\_\_**, exceeding the original goal. I shared the lesson with the team by **\_\_\_**. We changed our process to **\_\_\_**.
 - **Best used for**: Problem-solving, intellectual humility, learning from mistakes
 
 ### Story 4: Breaking Down a Complex Problem
 
-- **Situation**: I faced _______, a large and complex problem with many unknowns.
+- **Situation**: I faced **\_\_\_**, a large and complex problem with many unknowns.
 - **Task**: I needed to make it manageable and deliver incrementally.
-- **Action**: I decomposed it into _______ (number) phases by _______. The first phase focused on _______ because _______. I validated each phase with _______ before moving to the next.
-- **Result**: The phased approach allowed us to _______. We discovered _______ in phase _______ that changed our plan for subsequent phases.
+- **Action**: I decomposed it into **\_\_\_** (number) phases by **\_\_\_**. The first phase focused on **\_\_\_** because **\_\_\_**. I validated each phase with **\_\_\_** before moving to the next.
+- **Result**: The phased approach allowed us to **\_\_\_**. We discovered **\_\_\_** in phase **\_\_\_** that changed our plan for subsequent phases.
 - **Best used for**: Problem decomposition, iterative delivery, managing complexity
 
 ---
@@ -203,37 +208,37 @@ Use this framework when telling stories about ambiguity:
 
 ### Key Phrases to Use
 
-| Do Say | Do Not Say |
-|--------|------------|
-| "I started by understanding the problem..." | "I started coding right away..." |
-| "I broke it down into..." | "It was a huge problem..." |
-| "I built a prototype to validate..." | "I researched for three weeks..." |
-| "My initial assumption was wrong, so I..." | "My approach is always correct..." |
-| "I asked the stakeholders..." | "I waited for them to tell me..." |
+| Do Say                                        | Do Not Say                            |
+| --------------------------------------------- | ------------------------------------- |
+| "I started by understanding the problem..."   | "I started coding right away..."      |
+| "I broke it down into..."                     | "It was a huge problem..."            |
+| "I built a prototype to validate..."          | "I researched for three weeks..."     |
+| "My initial assumption was wrong, so I..."    | "My approach is always correct..."    |
+| "I asked the stakeholders..."                 | "I waited for them to tell me..."     |
 | "I documented my findings and shared them..." | "I just figured it out in my head..." |
 
 ### Do's and Don'ts
 
-| Do | Don't |
-|----|-------|
-| Show comfort with uncertainty | Pretend everything was always clear |
-| Describe your question-asking process | Wait passively for someone to define the problem |
-| Demonstrate a bias toward action and experimentation | Spend excessive time in analysis without building |
-| Be honest when your first approach was wrong | Claim you always get it right the first time |
-| Show how you validated assumptions | Skip validation and assume correctness |
-| Describe iterative, phased approaches | Present everything as a single big-bang delivery |
+| Do                                                       | Don't                                                            |
+| -------------------------------------------------------- | ---------------------------------------------------------------- |
+| Show comfort with uncertainty                            | Pretend everything was always clear                              |
+| Describe your question-asking process                    | Wait passively for someone to define the problem                 |
+| Demonstrate a bias toward action and experimentation     | Spend excessive time in analysis without building                |
+| Be honest when your first approach was wrong             | Claim you always get it right the first time                     |
+| Show how you validated assumptions                       | Skip validation and assume correctness                           |
+| Describe iterative, phased approaches                    | Present everything as a single big-bang delivery                 |
 | Explain how you communicated uncertainty to stakeholders | Hide uncertainty or pretend to have more confidence than you did |
 
 ### Problem-Solving Toolkit
 
 Reference these techniques in your stories to show depth:
 
-| Technique | When to Use | Example |
-|-----------|-------------|---------|
-| Shadowing / User observation | Requirements are vague | Sat with ops team for two days |
-| Data analysis | Need to quantify the problem | Analyzed six months of error logs |
-| Proof of concept | Technical feasibility is unknown | Built a one-week spike |
-| Benchmark testing | Choosing between technologies | Standardized load test across three options |
-| Whiteboard decomposition | Problem is large and interconnected | Broke into dependency graph with team |
-| Time-boxed research | Need to learn a new domain | Allocated three days, then decided |
-| Stakeholder interviews | Multiple perspectives exist | Talked to five different users |
+| Technique                    | When to Use                         | Example                                     |
+| ---------------------------- | ----------------------------------- | ------------------------------------------- |
+| Shadowing / User observation | Requirements are vague              | Sat with ops team for two days              |
+| Data analysis                | Need to quantify the problem        | Analyzed six months of error logs           |
+| Proof of concept             | Technical feasibility is unknown    | Built a one-week spike                      |
+| Benchmark testing            | Choosing between technologies       | Standardized load test across three options |
+| Whiteboard decomposition     | Problem is large and interconnected | Broke into dependency graph with team       |
+| Time-boxed research          | Need to learn a new domain          | Allocated three days, then decided          |
+| Stakeholder interviews       | Multiple perspectives exist         | Talked to five different users              |

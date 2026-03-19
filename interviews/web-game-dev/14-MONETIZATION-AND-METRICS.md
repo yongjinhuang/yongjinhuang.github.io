@@ -64,13 +64,13 @@ Example flow:
 
 ### Ad Formats
 
-| Format | Description | Typical CPM | User Experience |
-|--------|-------------|-------------|-----------------|
-| Banner | Small bar at top/bottom | $0.50 - $2 | Low disruption, low engagement |
-| Interstitial | Full-screen static/video | $5 - $15 | Medium disruption |
-| Rewarded Video | User chooses to watch for reward | $10 - $30 | Good UX (opt-in) |
-| Playable | Interactive mini-game | $15 - $50 | Best UX, highest engagement |
-| Native | Blends with app content | $3 - $10 | Low disruption |
+| Format         | Description                      | Typical CPM | User Experience                |
+| -------------- | -------------------------------- | ----------- | ------------------------------ |
+| Banner         | Small bar at top/bottom          | $0.50 - $2  | Low disruption, low engagement |
+| Interstitial   | Full-screen static/video         | $5 - $15    | Medium disruption              |
+| Rewarded Video | User chooses to watch for reward | $10 - $30   | Good UX (opt-in)               |
+| Playable       | Interactive mini-game            | $15 - $50   | Best UX, highest engagement    |
+| Native         | Blends with app content          | $3 - $10    | Low disruption                 |
 
 ### Real-Time Bidding (RTB)
 
@@ -713,7 +713,9 @@ function normalCDF(x: number): number {
   const p =
     d *
     Math.exp((-x * x) / 2) *
-    (t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))));
+    (t *
+      (0.3193815 +
+        t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))));
   return x > 0 ? 1 - p : p;
 }
 
@@ -1009,7 +1011,12 @@ interface BuildVsBuyFactors {
 }
 
 function recommendModel(factors: BuildVsBuyFactors): string {
-  const { monthlyUASpend, creativesPerMonth, gameLifespan, inHouseDevAvailable } = factors;
+  const {
+    monthlyUASpend,
+    creativesPerMonth,
+    gameLifespan,
+    inHouseDevAvailable,
+  } = factors;
 
   // In-house team justified at scale
   if (monthlyUASpend > 500000 && gameLifespan > 24 && creativesPerMonth > 15) {
@@ -1046,6 +1053,7 @@ function recommendModel(factors: BuildVsBuyFactors): string {
 "Let me work through this step by step.
 
 First, I'll calculate IPM (installs per 1000 impressions):
+
 ```
 IPM = CTR × CVR × 1000
 IPM = 0.04 × 0.30 × 1000
@@ -1053,6 +1061,7 @@ IPM = 12
 ```
 
 Then CPI:
+
 ```
 CPI = CPM / IPM
 CPI = $15 / 12
@@ -1097,6 +1106,7 @@ If ad spend was, say, $10,000:
 ```
 
 **Analysis:**
+
 - CTR of 5% is strong, indicating high engagement
 - 40% D1 retention is excellent (above industry average of 35%)
 - 5% D30 retention is solid
@@ -1120,6 +1130,7 @@ A $0.50 CPI user who opens the app once and never returns generates $0 revenue. 
 A $5.00 CPI user who plays daily for 6 months and spends $20 on IAP generates great returns. ROAS = 400%.
 
 **ROAS accounts for the full picture:**
+
 ```
 ROAS = Revenue from acquired users / Ad spend × 100%
 
@@ -1131,6 +1142,7 @@ It incorporates:
 ```
 
 **ROAS targets by timeline:**
+
 ```
 D0:  5-10%   (install day revenue)
 D7:  25-40%  (first week)
@@ -1140,6 +1152,7 @@ D180: 120%+  (breakeven + profit)
 ```
 
 **In practice, studios use ROAS to:**
+
 1. Decide which ad networks to scale (high ROAS networks get more budget)
 2. Choose which creatives to keep running (best ROAS wins)
 3. Set CPI bids (LTV prediction × target ROAS margin = max CPI bid)
@@ -1158,11 +1171,13 @@ The nuance is that you need enough data (typically 1000+ installs) and enough ti
 **eCPM** is what the **publisher earns** per 1,000 impressions. It's a revenue metric.
 
 They can differ because:
+
 - Ad networks take a cut (typically 30-40%)
 - Fill rates vary (not every ad request gets filled)
 - Different ad formats in the same slot earn differently
 
 **Formula comparison:**
+
 ```
 CPM (advertiser) = Ad spend / Impressions × 1000
 eCPM (publisher) = Publisher earnings / Impressions × 1000
@@ -1179,6 +1194,7 @@ eCPM (publisher) = Publisher earnings / Impressions × 1000
 4. **Session length preservation**: Users who enjoy an ad feel positive about the experience, and are more likely to continue using the publisher's app.
 
 However, there's a tradeoff: playable ads take longer to load and consume more data. Smart publishers implement:
+
 - Loading playable ads during natural pauses (between levels)
 - WiFi-only for larger creatives
 - Fallback to video if playable fails to load"
@@ -1192,6 +1208,7 @@ However, there's a tradeoff: playable ads take longer to load and consume more d
 "I evaluate creatives across three dimensions: efficiency, quality, and sustainability.
 
 **1. Efficiency metrics (is it cost-effective?):**
+
 ```
 - IPM > 15 (installs per mille)
 - CPI within target for genre (e.g., < $2 for casual)
@@ -1199,6 +1216,7 @@ However, there's a tradeoff: playable ads take longer to load and consume more d
 ```
 
 **2. Quality metrics (are we getting good users?):**
+
 ```
 - D1 retention ≥ 35% (users stick around)
 - D7 retention ≥ 15%
@@ -1207,6 +1225,7 @@ However, there's a tradeoff: playable ads take longer to load and consume more d
 ```
 
 **3. Sustainability metrics (how long will it last?):**
+
 ```
 - Frequency < 3 per user per day
 - CTR trend stable or declining <5% per week
@@ -1214,6 +1233,7 @@ However, there's a tradeoff: playable ads take longer to load and consume more d
 ```
 
 **Decision framework:**
+
 ```
                     Good User Quality    Poor User Quality
                     (D1 > 35%)          (D1 < 30%)
@@ -1241,6 +1261,7 @@ I also compare against the portfolio: is this creative in the top 25% of all act
 **Analysis (what I'd do):**
 
 1. **Play their ad repeatedly** and note:
+
    - What's the hook? (First 3 seconds)
    - How long is the gameplay?
    - How difficult is it?
@@ -1248,6 +1269,7 @@ I also compare against the portfolio: is this creative in the top 25% of all act
    - What emotional trigger are they using? (Satisfaction, curiosity, frustration)
 
 2. **Deconstruct the design patterns:**
+
    - Is the game simpler? (Simplicity often wins)
    - Are they using fake gameplay? (Showing impossible/enhanced scenarios)
    - Is the end card more compelling?
@@ -1256,15 +1278,18 @@ I also compare against the portfolio: is this creative in the top 25% of all act
 3. **Systematic response:**
 
    Week 1: Quick wins
+
    - Test their CTA style on our existing creative
    - Test their game length on our creative
    - A/B test 3 variants inspired by their approach
 
    Week 2: New concepts
+
    - Build a new creative using their best elements + our unique twist
    - Test different hooks (the first 3 seconds matter most)
 
    Week 3: Differentiate
+
    - Find an angle they're NOT doing
    - Test completely different emotional triggers
    - Try a different game genre that showcases our game better
@@ -1280,6 +1305,7 @@ I also compare against the portfolio: is this creative in the top 25% of all act
 "Creative fatigue occurs when an ad's performance declines because the target audience has seen it too many times. It's the natural lifecycle of every ad creative.
 
 **Detection signals:**
+
 - CTR declining 5%+ week-over-week
 - CPM rising (network detects lower engagement, charges more to serve it)
 - Frequency (avg views per user) exceeding 3 per day
@@ -1288,23 +1314,27 @@ I also compare against the portfolio: is this creative in the top 25% of all act
 **My management strategy operates on three time horizons:**
 
 **Daily: Monitor and react**
+
 - Dashboard tracking CTR, CPI, ROAS by creative
 - Automated alerts when any metric drops >15% from 7-day average
 - Pause underperforming creatives before they waste budget
 
 **Weekly: Iterate and test**
+
 - Always have 3-5 active creatives per campaign
 - Launch 1-2 new variants per week
 - Variants test: colors, difficulty, CTA text, game length
 - Kill bottom 20% performers, scale top 20%
 
 **Monthly: Refresh and innovate**
+
 - Completely new creative concepts every 3-4 weeks
 - Different game genres, new hooks, fresh themes
 - Seasonal updates (holidays, events, trending topics)
 - Competitor analysis for new ideas
 
 **Budget allocation:**
+
 ```
 70% - Proven performers (scale what works)
 20% - Variants of winners (iterate)
@@ -1370,11 +1400,13 @@ The key is making it actionable. Every slide/section should answer 'So what? Wha
 **Calculation methods:**
 
 **1. Simple projection:**
+
 ```
 LTV = ARPU_daily × Σ(retention_day_n) for n = 0 to N
 ```
 
 **2. Cohort-based (more accurate):**
+
 ```
 For each cohort (users acquired on the same day):
 Track their cumulative revenue over 30, 60, 90, 180 days
@@ -1382,6 +1414,7 @@ LTV_D30 = Total cohort revenue at D30 / Cohort size
 ```
 
 **3. Predictive (most useful, hardest):**
+
 ```
 Use D7 retention + D7 revenue to predict D180 LTV
 Models: logarithmic decay, power law, custom ML
@@ -1402,6 +1435,7 @@ Models: logarithmic decay, power law, custom ML
 6. **Attribution windows:** Post-install events (purchases) need to be attributed back to the original ad. Different networks use different attribution windows (7-day, 28-day).
 
 **Practical approach:**
+
 - Use D7 LTV as a proxy for early decisions (well-correlated with D180)
 - Build a predictive model using historical cohort data
 - Always compare cohort-to-cohort, not absolute numbers
@@ -1424,6 +1458,7 @@ To cut CPI by 30%, I need IPM to increase by ~43% (or CPM to decrease by 30%).
 ```
 
 Actions:
+
 - Analyze top 10% performing creatives across ALL competitors in the genre (use creative intelligence tools like Sensor Tower, AppMagic)
 - Build 5 new concepts testing radically different hooks
 - A/B test aggressively: test 3-4 variables per week
@@ -1431,6 +1466,7 @@ Actions:
 - Test shorter gameplay duration (15s vs 25s)
 
 **2. Targeting and network optimization (medium lever):**
+
 - Identify which GEOs have lowest CPI (often Southeast Asia, LATAM, Eastern Europe)
 - Shift budget to high-IPM networks (some networks have 2x performance difference)
 - Use lookalike audiences based on highest-LTV users (not just any installers)
@@ -1438,12 +1474,14 @@ Actions:
 - Increase bids during low-competition times (late night, weekday mornings)
 
 **3. Funnel optimization (smaller but compounds):**
+
 - Improve app store page (better screenshots, video, description) to boost CVR
 - Test different CTA text and end card designs
 - Reduce ad load time (faster first frame = lower abandonment)
 - Ensure seamless App Store redirect
 
 **Timeline:**
+
 - Week 1: Launch 5 new creative concepts, start testing
 - Week 2: Analyze results, cut losers, double down on winners
 - Week 3: Targeting adjustments based on network data

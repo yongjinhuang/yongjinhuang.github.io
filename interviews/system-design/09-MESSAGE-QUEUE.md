@@ -21,29 +21,29 @@
 
 ### Functional Requirements
 
-| Requirement             | Description                                                     |
-|-------------------------|-----------------------------------------------------------------|
-| Publish messages        | Producers send messages to named topics                         |
-| Subscribe to topics     | Consumers read messages from one or more topics                 |
-| Topic-based routing     | Messages are organized into logical topics                      |
-| Message retention       | Messages persist for a configurable duration (e.g., 7 days)     |
-| Message replay          | Consumers can re-read old messages by resetting offset          |
+| Requirement             | Description                                                      |
+| ----------------------- | ---------------------------------------------------------------- |
+| Publish messages        | Producers send messages to named topics                          |
+| Subscribe to topics     | Consumers read messages from one or more topics                  |
+| Topic-based routing     | Messages are organized into logical topics                       |
+| Message retention       | Messages persist for a configurable duration (e.g., 7 days)      |
+| Message replay          | Consumers can re-read old messages by resetting offset           |
 | Consumer groups         | Multiple consumers share work; each message delivered once/group |
 | Ordering guarantees     | Messages within a partition are strictly ordered                 |
-| At-least-once delivery  | Default delivery guarantee with consumer acknowledgment         |
-| Exactly-once (optional) | Transactional support for critical workloads                    |
+| At-least-once delivery  | Default delivery guarantee with consumer acknowledgment          |
+| Exactly-once (optional) | Transactional support for critical workloads                     |
 
 ### Non-Functional Requirements
 
-| Requirement    | Target                                                            |
-|----------------|-------------------------------------------------------------------|
-| Throughput     | Millions of messages per second (aggregate across cluster)        |
-| Latency        | < 10ms for 99th percentile end-to-end (producer to consumer)     |
-| Durability     | No message loss once acknowledged (replication factor >= 3)       |
-| Availability   | 99.99% uptime; survive single broker failure with zero downtime   |
-| Scalability    | Horizontal scaling by adding brokers and partitions               |
-| Ordering       | Strict ordering within a partition                                |
-| Retention      | Configurable; default 7 days; support infinite retention          |
+| Requirement  | Target                                                          |
+| ------------ | --------------------------------------------------------------- |
+| Throughput   | Millions of messages per second (aggregate across cluster)      |
+| Latency      | < 10ms for 99th percentile end-to-end (producer to consumer)    |
+| Durability   | No message loss once acknowledged (replication factor >= 3)     |
+| Availability | 99.99% uptime; survive single broker failure with zero downtime |
+| Scalability  | Horizontal scaling by adding brokers and partitions             |
+| Ordering     | Strict ordering within a partition                              |
+| Retention    | Configurable; default 7 days; support infinite retention        |
 
 ### Scale Estimates
 
@@ -123,22 +123,22 @@ Producer --> [ Append-Only Log ] --> Consumer A (offset 5)
 
 ### Comparison Table
 
-| Feature                | Traditional MQ (RabbitMQ)     | Event Streaming (Kafka)         |
-|------------------------|-------------------------------|---------------------------------|
-| Message lifecycle      | Deleted after consumption     | Retained for configured period  |
-| Delivery model         | Push to consumers             | Pull by consumers               |
-| Replay capability      | No (message gone)             | Yes (reset offset)              |
-| Routing complexity     | Rich (exchanges, bindings)    | Simple (topic + partition key)  |
-| Consumer groups        | Competing consumers           | Consumer groups with offsets    |
-| Ordering               | Per-queue (not guaranteed)    | Per-partition (guaranteed)      |
-| Throughput             | ~50K msgs/sec per node        | ~1M+ msgs/sec per node         |
-| Latency                | Sub-millisecond               | Single-digit milliseconds       |
-| Protocol               | AMQP, STOMP, MQTT             | Custom binary protocol          |
-| Backpressure           | Queue depth / consumer prefetch | Consumer-controlled pull rate |
-| Message priorities     | Yes (built-in)                | No (must be designed around)    |
-| Dead letter queue      | Built-in                      | Must implement manually         |
-| Exactly-once           | Via transactions              | Idempotent producer + EOS       |
-| Storage                | In-memory + optional disk     | Always disk (append-only log)   |
+| Feature            | Traditional MQ (RabbitMQ)       | Event Streaming (Kafka)        |
+| ------------------ | ------------------------------- | ------------------------------ |
+| Message lifecycle  | Deleted after consumption       | Retained for configured period |
+| Delivery model     | Push to consumers               | Pull by consumers              |
+| Replay capability  | No (message gone)               | Yes (reset offset)             |
+| Routing complexity | Rich (exchanges, bindings)      | Simple (topic + partition key) |
+| Consumer groups    | Competing consumers             | Consumer groups with offsets   |
+| Ordering           | Per-queue (not guaranteed)      | Per-partition (guaranteed)     |
+| Throughput         | ~50K msgs/sec per node          | ~1M+ msgs/sec per node         |
+| Latency            | Sub-millisecond                 | Single-digit milliseconds      |
+| Protocol           | AMQP, STOMP, MQTT               | Custom binary protocol         |
+| Backpressure       | Queue depth / consumer prefetch | Consumer-controlled pull rate  |
+| Message priorities | Yes (built-in)                  | No (must be designed around)   |
+| Dead letter queue  | Built-in                        | Must implement manually        |
+| Exactly-once       | Via transactions                | Idempotent producer + EOS      |
+| Storage            | In-memory + optional disk       | Always disk (append-only log)  |
 
 ### When to Use Which
 
@@ -318,12 +318,12 @@ Example:
 
 **Partition Assignment Strategies:**
 
-| Strategy     | Description                                      | Use Case                     |
-|-------------|--------------------------------------------------|------------------------------|
-| Round-robin  | Distribute evenly across partitions              | No ordering requirement      |
-| Key-based    | hash(key) % partitions; same key -> same partition | Ordering per entity         |
-| Custom       | Application-defined partitioner                  | Geography, priority, etc.    |
-| Sticky       | Batch to same partition until batch full          | Improve batching efficiency  |
+| Strategy    | Description                                        | Use Case                    |
+| ----------- | -------------------------------------------------- | --------------------------- |
+| Round-robin | Distribute evenly across partitions                | No ordering requirement     |
+| Key-based   | hash(key) % partitions; same key -> same partition | Ordering per entity         |
+| Custom      | Application-defined partitioner                    | Geography, priority, etc.   |
+| Sticky      | Batch to same partition until batch full           | Improve batching efficiency |
 
 ### 4.2 Producers
 
@@ -1021,11 +1021,11 @@ Scenario: Broker 1 (leader of P0) crashes
 
 ### Comparison Table
 
-| Semantic       | Producer Config                  | Consumer Config               | Data Loss | Duplicates | Throughput | Use Case                    |
-|----------------|----------------------------------|-------------------------------|-----------|------------|------------|-----------------------------|
-| At-most-once   | acks=0, no retries               | Commit before process         | Yes       | No         | Highest    | Metrics, logs               |
-| At-least-once  | acks=all, retries=MAX            | Commit after process          | No        | Yes        | High       | Most applications           |
-| Exactly-once   | Idempotent + transactional       | Transactional consumer        | No        | No         | Medium     | Financial, billing          |
+| Semantic      | Producer Config            | Consumer Config        | Data Loss | Duplicates | Throughput | Use Case           |
+| ------------- | -------------------------- | ---------------------- | --------- | ---------- | ---------- | ------------------ |
+| At-most-once  | acks=0, no retries         | Commit before process  | Yes       | No         | Highest    | Metrics, logs      |
+| At-least-once | acks=all, retries=MAX      | Commit after process   | No        | Yes        | High       | Most applications  |
+| Exactly-once  | Idempotent + transactional | Transactional consumer | No        | No         | Medium     | Financial, billing |
 
 ### Idempotent Producer Deep Dive
 

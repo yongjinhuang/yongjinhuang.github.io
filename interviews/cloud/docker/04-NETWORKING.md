@@ -43,12 +43,12 @@ $ docker run -d --name api --network mynet python-api
 # web and api can reach each other by container name
 ```
 
-| Aspect | Default Bridge | User-Defined Bridge |
-|--------|---------------|-------------------|
-| DNS resolution | No (IP only or --link, deprecated) | Yes (by container name) |
-| Isolation | All containers on same bridge | Only containers on same network |
-| Connect/disconnect live | No | Yes (`docker network connect`) |
-| Automatic DNS | No | Yes |
+| Aspect                  | Default Bridge                     | User-Defined Bridge             |
+| ----------------------- | ---------------------------------- | ------------------------------- |
+| DNS resolution          | No (IP only or --link, deprecated) | Yes (by container name)         |
+| Isolation               | All containers on same bridge      | Only containers on same network |
+| Connect/disconnect live | No                                 | Yes (`docker network connect`)  |
+| Automatic DNS           | No                                 | Yes                             |
 
 **Rule: always use user-defined bridge networks. Never rely on the default bridge.**
 
@@ -61,13 +61,13 @@ $ docker run -d --network host nginx
 # Container binds directly to host ports
 ```
 
-| Aspect | Detail |
-|--------|--------|
-| Performance | No NAT overhead, no bridge, bare-metal speed |
-| Port conflicts | Container ports conflict with host ports |
-| Use case | Performance-critical apps, apps that need to see all host interfaces |
-| Isolation | None (shared network stack) |
-| macOS/Windows | Does not work as expected (Docker runs in a VM) |
+| Aspect         | Detail                                                               |
+| -------------- | -------------------------------------------------------------------- |
+| Performance    | No NAT overhead, no bridge, bare-metal speed                         |
+| Port conflicts | Container ports conflict with host ports                             |
+| Use case       | Performance-critical apps, apps that need to see all host interfaces |
+| Isolation      | None (shared network stack)                                          |
+| macOS/Windows  | Does not work as expected (Docker runs in a VM)                      |
 
 ### 2.3 None
 
@@ -102,12 +102,12 @@ $ docker run -d --network my-macvlan --ip=192.168.1.50 nginx
 # Gets its own MAC address, directly on the LAN
 ```
 
-| Aspect | Detail |
-|--------|--------|
-| Use case | Legacy apps that need to be on the LAN, DHCP integration |
-| Requirement | NIC must support promiscuous mode |
-| Gotcha | Container cannot communicate with host (by design) |
-| Workaround | Create a macvlan sub-interface on host for host-container traffic |
+| Aspect      | Detail                                                            |
+| ----------- | ----------------------------------------------------------------- |
+| Use case    | Legacy apps that need to be on the LAN, DHCP integration          |
+| Requirement | NIC must support promiscuous mode                                 |
+| Gotcha      | Container cannot communicate with host (by design)                |
+| Workaround  | Create a macvlan sub-interface on host for host-container traffic |
 
 ### 2.6 IPvlan
 
@@ -121,6 +121,7 @@ $ docker network create -d ipvlan \
 ```
 
 Like macvlan but shares the parent's MAC address. Two modes:
+
 - **L2 mode**: Containers on same subnet, switching at Layer 2
 - **L3 mode**: Routing between containers, no broadcast
 
@@ -384,6 +385,7 @@ Host A                                    Host B
 ### 6.2 Control Plane
 
 Docker Swarm uses a gossip protocol (based on SWIM) and Raft consensus to:
+
 - Distribute network membership information
 - Share container IP-to-host mappings
 - Propagate routing information
@@ -659,6 +661,7 @@ $ docker network create --ipv6 --subnet "2001:db8:1::/64" ipv6net
 ### 10.4 Network Plugins
 
 Docker supports third-party network plugins via the Docker Plugin API:
+
 - **Calico**: BGP-based networking, network policies (popular in Kubernetes)
 - **Weave**: Mesh networking with encryption
 - **Flannel**: Simple overlay networking
@@ -735,31 +738,40 @@ $ docker run -p 127.0.0.1:8080:80 nginx    # localhost only
 Systematic debugging approach:
 
 1. **Check they are on the same network:**
+
    ```bash
    $ docker inspect --format '{{json .NetworkSettings.Networks}}' containerA
    $ docker inspect --format '{{json .NetworkSettings.Networks}}' containerB
    ```
+
    If they are on different networks, either connect one to the other's network or create a shared network.
 
 2. **Check DNS resolution:**
+
    ```bash
    $ docker exec containerA nslookup containerB
    ```
+
    If DNS fails, check if they are on the default bridge (no DNS) or a user-defined bridge (has DNS). Containers on the default bridge cannot resolve each other by name.
 
 3. **Check the service is actually listening:**
+
    ```bash
    $ docker exec containerB ss -tlnp
    ```
+
    Verify the port and binding address (0.0.0.0, not 127.0.0.1).
 
 4. **Test connectivity at the IP level:**
+
    ```bash
    $ docker exec containerA ping <containerB_IP>
    ```
+
    If ping works but the service connection fails, the issue is at the application/port level.
 
 5. **Check for firewall rules:**
+
    ```bash
    $ sudo iptables -L -n -v | grep DROP
    ```
@@ -800,6 +812,7 @@ When Docker creates a container on a bridge network:
 Host networking (`--network host`) makes the container share the host's network namespace. There is no network isolation, no NAT, no bridge -- the container's processes bind directly to the host's interfaces and ports.
 
 Use cases:
+
 - **Performance-critical applications** where the NAT overhead matters (high-throughput, low-latency network services). The performance difference is typically 1-3% for TCP and more significant for UDP.
 - **Applications that need to see raw network traffic** (monitoring, packet capture).
 - **Applications that bind to many ports dynamically** (like a SIP server that needs thousands of UDP ports).
@@ -816,6 +829,7 @@ Trade-offs: no port mapping means port conflicts with host services and other co
 On user-defined networks, Docker runs an embedded DNS server at `127.0.0.11` inside each container. The container's `/etc/resolv.conf` points to this address.
 
 When a process inside the container makes a DNS query:
+
 1. The query goes to `127.0.0.11` (Docker's embedded DNS).
 2. Docker checks if the name matches a container name or network alias on any shared network.
 3. If it matches, Docker returns the container's IP address. For multiple containers with the same alias, it returns all IPs (round-robin DNS).
@@ -862,19 +876,19 @@ The control plane (how hosts learn which container is on which host) uses Docker
 
 ## 13. Quick Reference
 
-| Command | Purpose |
-|---------|---------|
-| `docker network ls` | List all networks |
-| `docker network create <name>` | Create user-defined bridge |
-| `docker network inspect <name>` | Network details and connected containers |
-| `docker network connect <net> <ctr>` | Connect running container to network |
-| `docker network disconnect <net> <ctr>` | Disconnect container from network |
-| `docker network prune` | Remove unused networks |
-| `docker port <ctr>` | Show port mappings |
-| `docker run --network <net>` | Specify network at creation |
-| `docker run -p host:ctr` | Publish port |
-| `docker run --dns 8.8.8.8` | Set custom DNS server |
-| `docker run --network host` | Use host networking |
-| `docker run --network none` | No networking |
-| `nsenter -t <PID> -n <cmd>` | Run command in container's network namespace |
-| `iptables -t nat -L DOCKER -n` | Show Docker NAT rules |
+| Command                                 | Purpose                                      |
+| --------------------------------------- | -------------------------------------------- |
+| `docker network ls`                     | List all networks                            |
+| `docker network create <name>`          | Create user-defined bridge                   |
+| `docker network inspect <name>`         | Network details and connected containers     |
+| `docker network connect <net> <ctr>`    | Connect running container to network         |
+| `docker network disconnect <net> <ctr>` | Disconnect container from network            |
+| `docker network prune`                  | Remove unused networks                       |
+| `docker port <ctr>`                     | Show port mappings                           |
+| `docker run --network <net>`            | Specify network at creation                  |
+| `docker run -p host:ctr`                | Publish port                                 |
+| `docker run --dns 8.8.8.8`              | Set custom DNS server                        |
+| `docker run --network host`             | Use host networking                          |
+| `docker run --network none`             | No networking                                |
+| `nsenter -t <PID> -n <cmd>`             | Run command in container's network namespace |
+| `iptables -t nat -L DOCKER -n`          | Show Docker NAT rules                        |

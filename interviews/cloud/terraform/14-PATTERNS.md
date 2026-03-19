@@ -169,12 +169,12 @@ resource "aws_lb" "this"             { name = "${local.name_prefix}-alb-public" 
 resource "aws_s3_bucket" "this"      { bucket = "${local.name_prefix}-s3-uploads" }
 ```
 
-| Component | Convention | Example |
-|-----------|-----------|---------|
-| Project | lowercase, short | `acme` |
-| Environment | dev, staging, prod | `prod` |
-| Resource type | abbreviated | `sg`, `alb`, `svc`, `s3` |
-| Full name | hyphen-separated | `acme-prod-sg-web` |
+| Component     | Convention         | Example                  |
+| ------------- | ------------------ | ------------------------ |
+| Project       | lowercase, short   | `acme`                   |
+| Environment   | dev, staging, prod | `prod`                   |
+| Resource type | abbreviated        | `sg`, `alb`, `svc`, `s3` |
+| Full name     | hyphen-separated   | `acme-prod-sg-web`       |
 
 ---
 
@@ -436,15 +436,15 @@ resource "aws_instance" "web" {
 
 ## Decision Matrix
 
-| Situation | Pattern | Anti-Pattern |
-|-----------|---------|-------------|
-| Multiple similar resources | `for_each` with maps | `count` with lists |
-| Toggle a resource on/off | `count` with boolean | Commenting out code |
-| Cross-layer references | `terraform_remote_state` | Hardcoded IDs |
-| Renaming/moving resources | `moved` blocks | Manual `state mv` |
-| Environment-specific config | Separate dirs or var-files | `terraform.workspace` |
-| Software on instances | Packer AMIs or cloud-init | `remote-exec` provisioners |
-| Secrets | Secrets Manager data sources | Values in tfvars |
-| Complex conditionals | Map lookups | Nested ternaries |
-| Module design | Small, composable | Mega-modules |
-| State organization | One state per layer | God state file |
+| Situation                   | Pattern                      | Anti-Pattern               |
+| --------------------------- | ---------------------------- | -------------------------- |
+| Multiple similar resources  | `for_each` with maps         | `count` with lists         |
+| Toggle a resource on/off    | `count` with boolean         | Commenting out code        |
+| Cross-layer references      | `terraform_remote_state`     | Hardcoded IDs              |
+| Renaming/moving resources   | `moved` blocks               | Manual `state mv`          |
+| Environment-specific config | Separate dirs or var-files   | `terraform.workspace`      |
+| Software on instances       | Packer AMIs or cloud-init    | `remote-exec` provisioners |
+| Secrets                     | Secrets Manager data sources | Values in tfvars           |
+| Complex conditionals        | Map lookups                  | Nested ternaries           |
+| Module design               | Small, composable            | Mega-modules               |
+| State organization          | One state per layer          | God state file             |

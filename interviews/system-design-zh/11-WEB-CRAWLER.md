@@ -8,28 +8,28 @@
 
 ### 功能需求
 
-| 需求                 | 描述                                                         |
-|----------------------|--------------------------------------------------------------|
-| 抓取网页             | 从数十亿个 URL 下载 HTML 内容                                |
-| 存储内容             | 持久化原始 HTML 和解析内容供下游消费者使用                   |
-| 提取链接             | 解析下载的页面并发现新的 URL                                 |
-| 检测重复 URL         | 避免重复抓取相同的 URL                                       |
-| 检测重复内容         | 识别近似重复的页面（镜像站、内容聚合）                       |
-| 遵守 robots.txt      | 遵循站点所有者声明的抓取规则                                 |
-| 处理内容类型         | 处理 HTML、PDF、图片和其他媒体                               |
-| 增量抓取             | 根据变更频率重新抓取页面                                     |
-| URL 规范化           | 规范化 URL 以避免冗余抓取                                    |
+| 需求            | 描述                                       |
+| --------------- | ------------------------------------------ |
+| 抓取网页        | 从数十亿个 URL 下载 HTML 内容              |
+| 存储内容        | 持久化原始 HTML 和解析内容供下游消费者使用 |
+| 提取链接        | 解析下载的页面并发现新的 URL               |
+| 检测重复 URL    | 避免重复抓取相同的 URL                     |
+| 检测重复内容    | 识别近似重复的页面（镜像站、内容聚合）     |
+| 遵守 robots.txt | 遵循站点所有者声明的抓取规则               |
+| 处理内容类型    | 处理 HTML、PDF、图片和其他媒体             |
+| 增量抓取        | 根据变更频率重新抓取页面                   |
+| URL 规范化      | 规范化 URL 以避免冗余抓取                  |
 
 ### 非功能需求
 
-| 需求         | 目标                                                          |
-|--------------|---------------------------------------------------------------|
-| 可扩展性     | 每月 10 亿页面                                                |
-| 礼貌性       | 遵守每域名速率限制、crawl-delay、robots.txt                   |
-| 健壮性       | 处理蜘蛛陷阱、畸形 HTML、超时、服务器错误                     |
-| 可扩展性     | 插件架构支持新内容类型和提取逻辑                              |
-| 新鲜度       | 在重要页面变更后数小时内重新抓取                              |
-| 容错性       | 无单点故障；崩溃后可恢复                                      |
+| 需求     | 目标                                        |
+| -------- | ------------------------------------------- |
+| 可扩展性 | 每月 10 亿页面                              |
+| 礼貌性   | 遵守每域名速率限制、crawl-delay、robots.txt |
+| 健壮性   | 处理蜘蛛陷阱、畸形 HTML、超时、服务器错误   |
+| 可扩展性 | 插件架构支持新内容类型和提取逻辑            |
+| 新鲜度   | 在重要页面变更后数小时内重新抓取            |
+| 容错性   | 无单点故障；崩溃后可恢复                    |
 
 ### 规模估算
 
@@ -160,6 +160,7 @@ URL 元数据存储：       1B * 500 字节 = 500 GB / 月
 Seed URL 用于引导抓取过程。种子的选择对覆盖范围和效率有极大影响。
 
 **基于域名的种子：**
+
 ```
 - 来自 Alexa/Similarweb 排名的顶级站点（前 10K 域名）
 - 特定国家的顶级域名（.uk, .de, .jp）
@@ -167,6 +168,7 @@ Seed URL 用于引导抓取过程。种子的选择对覆盖范围和效率有�
 ```
 
 **基于主题的种子：**
+
 ```
 - 每个垂直领域的精选列表（新闻、电商、学术）
 - 主要站点的站点地图（sitemap.xml）
@@ -199,13 +201,13 @@ def generate_seeds():
 
 **起始点优先级排序：**
 
-| 层级 | 来源                | 优先级  | 理由                               |
-|------|---------------------|---------|-----------------------------------|
-| 1    | 前 10K 域名         | 最高    | 最大外链覆盖                       |
-| 2    | 国家 TLD 领先者     | 高      | 地理覆盖                           |
-| 3    | 主题垂直领域        | 中      | 特定领域深度                       |
-| 4    | 站点地图            | 中      | 直接 URL 发现                      |
-| 5    | 重新抓取积压        | 可变    | 基于新鲜度需求                     |
+| 层级 | 来源            | 优先级 | 理由           |
+| ---- | --------------- | ------ | -------------- |
+| 1    | 前 10K 域名     | 最高   | 最大外链覆盖   |
+| 2    | 国家 TLD 领先者 | 高     | 地理覆盖       |
+| 3    | 主题垂直领域    | 中     | 特定领域深度   |
+| 4    | 站点地图        | 中     | 直接 URL 发现  |
+| 5    | 重新抓取积压    | 可变   | 基于新鲜度需求 |
 
 ---
 
@@ -1708,18 +1710,18 @@ s3://crawler-raw/
 {
   "mappings": {
     "properties": {
-      "url":            { "type": "keyword" },
-      "url_hash":       { "type": "long" },
-      "domain":         { "type": "keyword" },
-      "title":          { "type": "text", "analyzer": "standard" },
-      "description":    { "type": "text", "analyzer": "standard" },
-      "body_text":      { "type": "text", "analyzer": "standard" },
-      "language":       { "type": "keyword" },
+      "url": { "type": "keyword" },
+      "url_hash": { "type": "long" },
+      "domain": { "type": "keyword" },
+      "title": { "type": "text", "analyzer": "standard" },
+      "description": { "type": "text", "analyzer": "standard" },
+      "body_text": { "type": "text", "analyzer": "standard" },
+      "language": { "type": "keyword" },
       "content_length": { "type": "integer" },
-      "crawl_time":     { "type": "date" },
-      "simhash":        { "type": "long" },
-      "outlink_count":  { "type": "integer" },
-      "inlink_count":   { "type": "integer" }
+      "crawl_time": { "type": "date" },
+      "simhash": { "type": "long" },
+      "outlink_count": { "type": "integer" },
+      "inlink_count": { "type": "integer" }
     }
   }
 }
@@ -2040,7 +2042,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "抓取速率低于阈值"
+          summary: '抓取速率低于阈值'
 
       - alert: HighErrorRate
         expr: >
@@ -2050,7 +2052,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "抓取错误率超过 5%"
+          summary: '抓取错误率超过 5%'
 
       - alert: FrontierQueueOverflow
         expr: frontier_queue_depth > 10000000
@@ -2058,7 +2060,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "URL Frontier 队列深度超过 1000 万"
+          summary: 'URL Frontier 队列深度超过 1000 万'
 
       - alert: StorageNearCapacity
         expr: storage_used_bytes / storage_capacity_bytes > 0.9
@@ -2066,7 +2068,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "存储容量达到 90%"
+          summary: '存储容量达到 90%'
 
       - alert: BloomFilterHighFPRate
         expr: bloom_filter_false_positive_rate > 0.02
@@ -2074,7 +2076,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Bloom filter 假阳性率超过 2%"
+          summary: 'Bloom filter 假阳性率超过 2%'
 ```
 
 ### 健康检查端点

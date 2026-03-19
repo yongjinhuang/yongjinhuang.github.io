@@ -55,26 +55,26 @@ Compression   Rarefaction   Compression   Rarefaction
             v
 ```
 
-| Property        | Symbol | Unit            | Definition                                              |
-|-----------------|--------|-----------------|---------------------------------------------------------|
-| Frequency       | f      | Hertz (Hz)      | Number of complete cycles per second                    |
-| Period          | T      | Seconds (s)     | Duration of one cycle; T = 1/f                          |
-| Amplitude       | A      | Pascals (Pa)    | Maximum displacement from equilibrium (perceived volume)|
-| Wavelength      | lambda | Meters (m)      | Physical length of one cycle; lambda = v/f              |
-| Speed of sound  | v      | m/s             | ~343 m/s in air at 20 C                                 |
-| Phase           | phi    | Radians / Degrees | Position within one cycle at a given time              |
+| Property       | Symbol | Unit              | Definition                                               |
+| -------------- | ------ | ----------------- | -------------------------------------------------------- |
+| Frequency      | f      | Hertz (Hz)        | Number of complete cycles per second                     |
+| Period         | T      | Seconds (s)       | Duration of one cycle; T = 1/f                           |
+| Amplitude      | A      | Pascals (Pa)      | Maximum displacement from equilibrium (perceived volume) |
+| Wavelength     | lambda | Meters (m)        | Physical length of one cycle; lambda = v/f               |
+| Speed of sound | v      | m/s               | ~343 m/s in air at 20 C                                  |
+| Phase          | phi    | Radians / Degrees | Position within one cycle at a given time                |
 
 ### 1.3 Frequency and Pitch
 
 Frequency determines what humans perceive as **pitch**.
 
-| Frequency     | Approximate Pitch           |
-|---------------|-----------------------------|
-| 27.5 Hz       | Lowest note on a piano (A0) |
-| 261.6 Hz      | Middle C (C4)               |
-| 440 Hz        | Concert A (A4) - tuning ref |
-| 4,186 Hz      | Highest note on a piano (C8)|
-| 20,000 Hz     | Upper limit of human hearing|
+| Frequency | Approximate Pitch            |
+| --------- | ---------------------------- |
+| 27.5 Hz   | Lowest note on a piano (A0)  |
+| 261.6 Hz  | Middle C (C4)                |
+| 440 Hz    | Concert A (A4) - tuning ref  |
+| 4,186 Hz  | Highest note on a piano (C8) |
+| 20,000 Hz | Upper limit of human hearing |
 
 **Human hearing range: 20 Hz to 20 kHz.** In practice, adults lose sensitivity above
 ~15-16 kHz due to natural aging (presbycusis). Infrasound (< 20 Hz) and ultrasound
@@ -91,24 +91,24 @@ dB SPL = 20 * log10(P / P_ref)
 
 where `P_ref = 20 micropascals` (threshold of human hearing).
 
-| dB SPL | Example                        |
-|--------|--------------------------------|
-| 0      | Threshold of hearing           |
-| 30     | Quiet whisper                  |
-| 60     | Normal conversation            |
-| 85     | Heavy traffic (damage begins)  |
-| 110    | Rock concert                   |
-| 130    | Threshold of pain              |
-| 140    | Jet engine at 30 m             |
+| dB SPL | Example                       |
+| ------ | ----------------------------- |
+| 0      | Threshold of hearing          |
+| 30     | Quiet whisper                 |
+| 60     | Normal conversation           |
+| 85     | Heavy traffic (damage begins) |
+| 110    | Rock concert                  |
+| 130    | Threshold of pain             |
+| 140    | Jet engine at 30 m            |
 
 ### 1.5 Speed of Sound in Different Media
 
-| Medium         | Speed (m/s) |
-|----------------|-------------|
-| Air (20 C)     | 343         |
-| Water (25 C)   | 1,497       |
-| Steel          | 5,960       |
-| Vacuum         | 0 (N/A)     |
+| Medium       | Speed (m/s) |
+| ------------ | ----------- |
+| Air (20 C)   | 343         |
+| Water (25 C) | 1,497       |
+| Steel        | 5,960       |
+| Vacuum       | 0 (N/A)     |
 
 The speed of sound in air varies with temperature:
 
@@ -128,6 +128,7 @@ raw physical measurements.
   than a 3 kHz tone to be perceived at the same loudness.
 
 - **Masking:** A loud sound can make a quieter sound inaudible. This has two forms:
+
   - **Simultaneous masking:** Both sounds at the same time. A loud 1 kHz tone masks
     quiet tones near 1 kHz.
   - **Temporal masking:** A loud sound masks quiet sounds slightly before (pre-masking,
@@ -188,23 +189,23 @@ intervals.
 
 **Sample rate (fs):** The number of samples captured per second, measured in Hertz.
 
-| Sample Rate | Common Use                                     |
-|-------------|------------------------------------------------|
-| 8,000 Hz    | Telephone, narrow-band VoIP                    |
-| 16,000 Hz   | Wideband VoIP, speech recognition               |
-| 22,050 Hz   | AM radio quality                                |
-| 44,100 Hz   | CD audio (Red Book standard)                    |
-| 48,000 Hz   | Professional audio, video production, Blu-ray   |
-| 88,200 Hz   | High-resolution audio (2x CD)                   |
-| 96,000 Hz   | High-resolution audio, studio recording          |
-| 192,000 Hz  | Ultra high-resolution (diminishing returns)      |
+| Sample Rate | Common Use                                    |
+| ----------- | --------------------------------------------- |
+| 8,000 Hz    | Telephone, narrow-band VoIP                   |
+| 16,000 Hz   | Wideband VoIP, speech recognition             |
+| 22,050 Hz   | AM radio quality                              |
+| 44,100 Hz   | CD audio (Red Book standard)                  |
+| 48,000 Hz   | Professional audio, video production, Blu-ray |
+| 88,200 Hz   | High-resolution audio (2x CD)                 |
+| 96,000 Hz   | High-resolution audio, studio recording       |
+| 192,000 Hz  | Ultra high-resolution (diminishing returns)   |
 
 ### 2.3 The Nyquist-Shannon Sampling Theorem
 
 > To perfectly reconstruct a continuous band-limited signal, the sampling rate must be
 > **at least twice** the highest frequency present in the signal.
 >
-> **fs >= 2 * f_max**
+> **fs >= 2 \* f_max**
 
 The frequency `fs/2` is called the **Nyquist frequency**.
 
@@ -251,14 +252,14 @@ amplitude range to a finite set of discrete levels.
 
 **Bit depth** determines how many levels are available:
 
-| Bit Depth | Levels        | Dynamic Range (approx) | Common Use             |
-|-----------|---------------|------------------------|------------------------|
-| 8-bit     | 256           | ~48 dB                 | Telephony, retro games |
-| 16-bit    | 65,536        | ~96 dB                 | CD audio               |
-| 24-bit    | 16,777,216    | ~144 dB                | Professional recording |
-| 32-bit float | ~infinite* | ~1528 dB (theoretical) | Internal processing    |
+| Bit Depth    | Levels      | Dynamic Range (approx) | Common Use             |
+| ------------ | ----------- | ---------------------- | ---------------------- |
+| 8-bit        | 256         | ~48 dB                 | Telephony, retro games |
+| 16-bit       | 65,536      | ~96 dB                 | CD audio               |
+| 24-bit       | 16,777,216  | ~144 dB                | Professional recording |
+| 32-bit float | ~infinite\* | ~1528 dB (theoretical) | Internal processing    |
 
-*32-bit float uses IEEE 754 floating point, which provides enormous headroom.
+\*32-bit float uses IEEE 754 floating point, which provides enormous headroom.
 
 **Quantization error (noise):** The difference between the actual analog value and the
 nearest quantization level. This is an unavoidable artifact. Its theoretical maximum
@@ -315,14 +316,14 @@ ADCs produce and DACs consume.
 
 A PCM stream is fully described by:
 
-| Parameter      | Description                                    | Example         |
-|----------------|------------------------------------------------|-----------------|
-| Sample rate    | Samples per second per channel                 | 48000 Hz        |
-| Bit depth      | Bits per sample                                | 16              |
-| Channels       | Number of audio channels                       | 2 (stereo)      |
-| Sample format  | Integer or float, signed or unsigned           | Signed 16-bit   |
-| Byte order     | Little-endian or big-endian                    | Little-endian   |
-| Channel layout | Interleaved or planar                          | Interleaved     |
+| Parameter      | Description                          | Example       |
+| -------------- | ------------------------------------ | ------------- |
+| Sample rate    | Samples per second per channel       | 48000 Hz      |
+| Bit depth      | Bits per sample                      | 16            |
+| Channels       | Number of audio channels             | 2 (stereo)    |
+| Sample format  | Integer or float, signed or unsigned | Signed 16-bit |
+| Byte order     | Little-endian or big-endian          | Little-endian |
+| Channel layout | Interleaved or planar                | Interleaved   |
 
 ### 3.3 Interleaved vs. Planar
 
@@ -351,13 +352,13 @@ Planar stereo:
 
 **Trade-offs:**
 
-| Aspect              | Interleaved                  | Planar                        |
-|---------------------|------------------------------|-------------------------------|
-| Hardware I/O        | Native format for most DACs  | Requires interleaving for I/O |
-| SIMD processing     | Harder (data is mixed)       | Easier (contiguous per channel)|
-| File formats        | WAV, AIFF (standard)         | FFmpeg internal, some APIs    |
-| Memory access       | Good locality for playback   | Good locality for DSP         |
-| Mixing/processing   | Must skip stride              | Direct sequential access      |
+| Aspect            | Interleaved                 | Planar                          |
+| ----------------- | --------------------------- | ------------------------------- |
+| Hardware I/O      | Native format for most DACs | Requires interleaving for I/O   |
+| SIMD processing   | Harder (data is mixed)      | Easier (contiguous per channel) |
+| File formats      | WAV, AIFF (standard)        | FFmpeg internal, some APIs      |
+| Memory access     | Good locality for playback  | Good locality for DSP           |
+| Mixing/processing | Must skip stride            | Direct sequential access        |
 
 ### 3.4 Signed vs. Unsigned
 
@@ -410,15 +411,15 @@ Multi-byte samples can be stored in:
 
 These short codes are used by FFmpeg, GStreamer, ALSA, PulseAudio, and other tools:
 
-| Code     | Description                          | Bytes/Sample | Range                  |
-|----------|--------------------------------------|--------------|------------------------|
-| U8       | Unsigned 8-bit integer               | 1            | 0 to 255              |
-| S16LE    | Signed 16-bit integer, little-endian | 2            | -32768 to 32767       |
-| S16BE    | Signed 16-bit integer, big-endian    | 2            | -32768 to 32767       |
-| S24LE    | Signed 24-bit integer, little-endian | 3            | -8388608 to 8388607   |
-| S32LE    | Signed 32-bit integer, little-endian | 4            | -2^31 to 2^31 - 1    |
-| F32LE    | 32-bit IEEE float, little-endian     | 4            | nominally -1.0 to 1.0 |
-| F64LE    | 64-bit IEEE float, little-endian     | 8            | nominally -1.0 to 1.0 |
+| Code  | Description                          | Bytes/Sample | Range                 |
+| ----- | ------------------------------------ | ------------ | --------------------- |
+| U8    | Unsigned 8-bit integer               | 1            | 0 to 255              |
+| S16LE | Signed 16-bit integer, little-endian | 2            | -32768 to 32767       |
+| S16BE | Signed 16-bit integer, big-endian    | 2            | -32768 to 32767       |
+| S24LE | Signed 24-bit integer, little-endian | 3            | -8388608 to 8388607   |
+| S32LE | Signed 32-bit integer, little-endian | 4            | -2^31 to 2^31 - 1     |
+| F32LE | 32-bit IEEE float, little-endian     | 4            | nominally -1.0 to 1.0 |
+| F64LE | 64-bit IEEE float, little-endian     | 8            | nominally -1.0 to 1.0 |
 
 ### 3.8 Calculating PCM Data Size
 
@@ -433,14 +434,14 @@ Example: CD audio (44100 Hz, 16-bit, stereo)
   = ~605 MB/hour
 ```
 
-| Format                    | Bytes/sec  | MB/min | MB/hour |
-|---------------------------|------------|--------|---------|
-| 8 kHz, 8-bit, mono       | 8,000      | 0.46   | 27.5    |
-| 16 kHz, 16-bit, mono     | 32,000     | 1.83   | 110     |
-| 44.1 kHz, 16-bit, stereo | 176,400    | 10.1   | 605     |
-| 48 kHz, 24-bit, stereo   | 288,000    | 16.5   | 989     |
-| 48 kHz, 32-bit float, stereo | 384,000| 22.0   | 1,318   |
-| 96 kHz, 24-bit, stereo   | 576,000    | 33.0   | 1,978   |
+| Format                       | Bytes/sec | MB/min | MB/hour |
+| ---------------------------- | --------- | ------ | ------- |
+| 8 kHz, 8-bit, mono           | 8,000     | 0.46   | 27.5    |
+| 16 kHz, 16-bit, mono         | 32,000    | 1.83   | 110     |
+| 44.1 kHz, 16-bit, stereo     | 176,400   | 10.1   | 605     |
+| 48 kHz, 24-bit, stereo       | 288,000   | 16.5   | 989     |
+| 48 kHz, 32-bit float, stereo | 384,000   | 22.0   | 1,318   |
+| 96 kHz, 24-bit, stereo       | 576,000   | 33.0   | 1,978   |
 
 ---
 
@@ -449,7 +450,7 @@ Example: CD audio (44100 Hz, 16-bit, stereo)
 ### 4.1 Channel Configurations
 
 | Configuration   | Channels | Common Use                      |
-|-----------------|----------|---------------------------------|
+| --------------- | -------- | ------------------------------- |
 | Mono            | 1        | Phone calls, AM radio, podcasts |
 | Stereo          | 2        | Music, most media               |
 | 2.1             | 3        | Stereo + subwoofer              |
@@ -501,12 +502,12 @@ Index:  0    1    2    3     4    5    6    7
 
 Different frameworks use different channel orderings. Always check the documentation.
 
-| Framework    | 5.1 Order                              |
-|--------------|----------------------------------------|
-| WAV/WAVEFORMATEXTENSIBLE | FL, FR, C, LFE, SL, SR    |
-| AAC          | C, FL, FR, SL, SR, LFE                |
-| Vorbis       | FL, C, FR, SL, SR, LFE                |
-| FLAC         | FL, FR, C, LFE, SL, SR (same as WAV)  |
+| Framework                | 5.1 Order                            |
+| ------------------------ | ------------------------------------ |
+| WAV/WAVEFORMATEXTENSIBLE | FL, FR, C, LFE, SL, SR               |
+| AAC                      | C, FL, FR, SL, SR, LFE               |
+| Vorbis                   | FL, C, FR, SL, SR, LFE               |
+| FLAC                     | FL, FR, C, LFE, SL, SR (same as WAV) |
 
 **This inconsistency is a common source of bugs.** Always verify channel mapping when
 transcoding between formats.
@@ -612,14 +613,14 @@ The decoded output is bit-for-bit identical to the original PCM.
 
 #### Comparison of Lossless Codecs
 
-| Feature        | FLAC       | ALAC       | WavPack    | APE        |
-|----------------|------------|------------|------------|------------|
-| Compression    | 50-60%     | 50-60%     | 50-70%     | 45-55%     |
-| Decode speed   | Fast       | Fast       | Fast       | Slow       |
-| Streaming      | Yes        | Yes        | Yes        | Limited    |
-| Open source    | Yes        | Yes        | Yes        | Yes        |
-| Hardware support| Wide      | Apple only | Rare       | Rare       |
-| Metadata       | Vorbis     | MP4/iTunes | APEv2      | APEv2      |
+| Feature          | FLAC   | ALAC       | WavPack | APE     |
+| ---------------- | ------ | ---------- | ------- | ------- |
+| Compression      | 50-60% | 50-60%     | 50-70%  | 45-55%  |
+| Decode speed     | Fast   | Fast       | Fast    | Slow    |
+| Streaming        | Yes    | Yes        | Yes     | Limited |
+| Open source      | Yes    | Yes        | Yes     | Yes     |
+| Hardware support | Wide   | Apple only | Rare    | Rare    |
+| Metadata         | Vorbis | MP4/iTunes | APEv2   | APEv2   |
 
 ### 5.4 Lossy Compressed Formats
 
@@ -668,26 +669,27 @@ imperceptible at sufficient bitrates.
 
 ### 5.5 Comprehensive Format Comparison
 
-| Feature              | MP3        | AAC-LC     | Opus       | Vorbis     | FLAC       |
-|----------------------|------------|------------|------------|------------|------------|
-| Type                 | Lossy      | Lossy      | Lossy      | Lossy      | Lossless   |
-| Year                 | 1993       | 1997       | 2012       | 2000       | 2001       |
-| Royalty-free         | Yes*       | No         | Yes        | Yes        | Yes        |
-| Typical bitrate      | 128-320    | 96-256     | 64-256     | 96-320     | ~800-1200  |
-| Transparent quality  | ~192 kbps  | ~128 kbps  | ~96 kbps   | ~160 kbps  | Lossless   |
-| Max channels         | 2          | 48         | 255        | 255        | 8          |
-| Codec latency        | ~100 ms    | ~20-90 ms  | 2.5-60 ms  | ~10 ms     | ~4-46 ms   |
-| Streaming friendly   | Yes        | Yes        | Yes        | Yes        | Yes        |
-| Hardware support     | Universal  | Wide       | Growing    | Limited    | Moderate   |
-| VoIP/RTC suitable    | No         | Marginal   | Excellent  | No         | No         |
-| Music quality        | Good       | Very Good  | Excellent  | Very Good  | Perfect    |
-| Speech quality       | Fair       | Good       | Excellent  | Fair       | Perfect    |
-| Browser support      | Universal  | Wide       | Wide       | Some       | Limited    |
-| Container            | MP3        | MP4/ADTS   | OGG/WebM   | OGG        | FLAC/OGG   |
+| Feature             | MP3       | AAC-LC    | Opus      | Vorbis    | FLAC      |
+| ------------------- | --------- | --------- | --------- | --------- | --------- |
+| Type                | Lossy     | Lossy     | Lossy     | Lossy     | Lossless  |
+| Year                | 1993      | 1997      | 2012      | 2000      | 2001      |
+| Royalty-free        | Yes\*     | No        | Yes       | Yes       | Yes       |
+| Typical bitrate     | 128-320   | 96-256    | 64-256    | 96-320    | ~800-1200 |
+| Transparent quality | ~192 kbps | ~128 kbps | ~96 kbps  | ~160 kbps | Lossless  |
+| Max channels        | 2         | 48        | 255       | 255       | 8         |
+| Codec latency       | ~100 ms   | ~20-90 ms | 2.5-60 ms | ~10 ms    | ~4-46 ms  |
+| Streaming friendly  | Yes       | Yes       | Yes       | Yes       | Yes       |
+| Hardware support    | Universal | Wide      | Growing   | Limited   | Moderate  |
+| VoIP/RTC suitable   | No        | Marginal  | Excellent | No        | No        |
+| Music quality       | Good      | Very Good | Excellent | Very Good | Perfect   |
+| Speech quality      | Fair      | Good      | Excellent | Fair      | Perfect   |
+| Browser support     | Universal | Wide      | Wide      | Some      | Limited   |
+| Container           | MP3       | MP4/ADTS  | OGG/WebM  | OGG       | FLAC/OGG  |
 
-*MP3 patents expired; was previously royalty-encumbered.
+\*MP3 patents expired; was previously royalty-encumbered.
 
 **Recommendation for new projects:**
+
 - **Real-time communication:** Opus (mandatory for WebRTC)
 - **Music streaming:** AAC or Opus
 - **Archival/mastering:** FLAC
@@ -742,15 +744,15 @@ EQ adjusts the gain of specific frequency ranges. It is implemented using filter
 
 Common EQ types:
 
-| Type          | Description                                      |
-|---------------|--------------------------------------------------|
-| Low shelf     | Boost/cut all frequencies below a threshold      |
-| High shelf    | Boost/cut all frequencies above a threshold      |
-| Peaking/Bell  | Boost/cut around a center frequency (with Q)     |
-| Low-pass      | Pass frequencies below cutoff, attenuate above   |
-| High-pass     | Pass frequencies above cutoff, attenuate below   |
-| Band-pass     | Pass a range, attenuate above and below          |
-| Notch         | Attenuate a narrow band (opposite of band-pass)  |
+| Type         | Description                                     |
+| ------------ | ----------------------------------------------- |
+| Low shelf    | Boost/cut all frequencies below a threshold     |
+| High shelf   | Boost/cut all frequencies above a threshold     |
+| Peaking/Bell | Boost/cut around a center frequency (with Q)    |
+| Low-pass     | Pass frequencies below cutoff, attenuate above  |
+| High-pass    | Pass frequencies above cutoff, attenuate below  |
+| Band-pass    | Pass a range, attenuate above and below         |
+| Notch        | Attenuate a narrow band (opposite of band-pass) |
 
 ### 6.3 Filters
 
@@ -794,11 +796,13 @@ Filters are the fundamental building blocks of audio processing.
 ```
 
 **Key parameters:**
+
 - **Cutoff frequency (fc):** The -3 dB point where the filter transitions
 - **Q factor (resonance):** Controls the steepness of the transition
 - **Order:** Higher order = steeper roll-off (6 dB/octave per order for Butterworth)
 
 **Common filter implementations:**
+
 - **Biquad filter:** 2nd-order IIR filter. The workhorse of audio DSP. Configurable
   as LPF, HPF, BPF, notch, shelf, or peaking EQ.
 - **FIR filter:** Finite Impulse Response. Linear phase, higher latency, often used
@@ -846,15 +850,16 @@ interpolation.
 
 **Methods (increasing quality and cost):**
 
-| Method                | Quality | CPU Cost | Description                           |
-|-----------------------|---------|----------|---------------------------------------|
-| Nearest-neighbor      | Poor    | Low      | Pick closest sample                   |
-| Linear interpolation  | Fair    | Low      | Straight line between samples         |
-| Cubic interpolation   | Good    | Medium   | Smooth curve through 4 points         |
-| Polyphase FIR         | Excellent| High    | Band-limited interpolation (libsamplerate) |
-| Sinc interpolation    | Ideal   | Very high| Theoretically perfect reconstruction  |
+| Method               | Quality   | CPU Cost  | Description                                |
+| -------------------- | --------- | --------- | ------------------------------------------ |
+| Nearest-neighbor     | Poor      | Low       | Pick closest sample                        |
+| Linear interpolation | Fair      | Low       | Straight line between samples              |
+| Cubic interpolation  | Good      | Medium    | Smooth curve through 4 points              |
+| Polyphase FIR        | Excellent | High      | Band-limited interpolation (libsamplerate) |
+| Sinc interpolation   | Ideal     | Very high | Theoretically perfect reconstruction       |
 
 **Libraries:**
+
 - **libsamplerate (Secret Rabbit Code):** High-quality resampling in C
 - **SoX resampler:** Very high quality
 - **speex_resampler:** Good quality, low latency, used in WebRTC
@@ -900,16 +905,17 @@ difference between the loudest and quietest parts of a signal.
 
 **Parameters:**
 
-| Parameter    | Description                                       |
-|--------------|---------------------------------------------------|
-| Threshold    | Level above which compression begins              |
-| Ratio        | Amount of compression (e.g., 4:1 means 4 dB in = 1 dB out) |
-| Attack       | How quickly compression engages (ms)              |
-| Release      | How quickly compression disengages (ms)           |
-| Makeup gain  | Boost applied after compression to restore level  |
-| Knee         | Hard (abrupt) or soft (gradual) transition        |
+| Parameter   | Description                                                |
+| ----------- | ---------------------------------------------------------- |
+| Threshold   | Level above which compression begins                       |
+| Ratio       | Amount of compression (e.g., 4:1 means 4 dB in = 1 dB out) |
+| Attack      | How quickly compression engages (ms)                       |
+| Release     | How quickly compression disengages (ms)                    |
+| Makeup gain | Boost applied after compression to restore level           |
+| Knee        | Hard (abrupt) or soft (gradual) transition                 |
 
 **Special cases:**
+
 - **Limiter:** Compressor with infinite (or very high) ratio. Prevents signal from
   exceeding a ceiling.
 - **Noise gate:** Opposite of compressor. Silences signal below a threshold.
@@ -940,13 +946,13 @@ In real-time applications (VoIP, gaming, live performance), low latency is criti
 
 **Total round-trip latency budget for real-time communication:**
 
-| Latency        | Perception                                |
-|----------------|-------------------------------------------|
-| < 20 ms        | Imperceptible, ideal for music monitoring |
-| 20-50 ms       | Acceptable for live performance           |
-| 50-150 ms      | Noticeable, acceptable for VoIP           |
-| 150-300 ms     | Distracting, marginal for conversation    |
-| > 300 ms       | Unacceptable for real-time interaction     |
+| Latency    | Perception                                |
+| ---------- | ----------------------------------------- |
+| < 20 ms    | Imperceptible, ideal for music monitoring |
+| 20-50 ms   | Acceptable for live performance           |
+| 50-150 ms  | Noticeable, acceptable for VoIP           |
+| 150-300 ms | Distracting, marginal for conversation    |
+| > 300 ms   | Unacceptable for real-time interaction    |
 
 ### 7.3 Buffer Sizes
 
@@ -958,15 +964,15 @@ the minimum latency:
 ```
 
 | Buffer Size (samples) | Latency at 48 kHz | Latency at 44.1 kHz |
-|-----------------------|--------------------|----------------------|
-| 32                    | 0.67 ms            | 0.73 ms              |
-| 64                    | 1.33 ms            | 1.45 ms              |
-| 128                   | 2.67 ms            | 2.90 ms              |
-| 256                   | 5.33 ms            | 5.80 ms              |
-| 512                   | 10.67 ms           | 11.61 ms             |
-| 1024                  | 21.33 ms           | 23.22 ms             |
-| 2048                  | 42.67 ms           | 46.44 ms             |
-| 4096                  | 85.33 ms           | 92.88 ms             |
+| --------------------- | ----------------- | ------------------- |
+| 32                    | 0.67 ms           | 0.73 ms             |
+| 64                    | 1.33 ms           | 1.45 ms             |
+| 128                   | 2.67 ms           | 2.90 ms             |
+| 256                   | 5.33 ms           | 5.80 ms             |
+| 512                   | 10.67 ms          | 11.61 ms            |
+| 1024                  | 21.33 ms          | 23.22 ms            |
+| 2048                  | 42.67 ms          | 46.44 ms            |
+| 4096                  | 85.33 ms          | 92.88 ms            |
 
 **The fundamental trade-off:**
 
@@ -1009,6 +1015,7 @@ reads from the other, without locks in the single-producer, single-consumer case
 ```
 
 **Properties:**
+
 - Fixed-size buffer, wraps around
 - Lock-free in single-producer, single-consumer (SPSC) scenario using atomic
   read/write pointers
@@ -1016,6 +1023,7 @@ reads from the other, without locks in the single-producer, single-consumer case
 - Used by JACK, PortAudio, and virtually all real-time audio systems
 
 **Implementation considerations:**
+
 - Power-of-2 buffer sizes enable efficient modular arithmetic (bitwise AND instead
   of modulo)
 - Memory barrier / atomic operations are needed for cross-thread safety
@@ -1028,6 +1036,7 @@ runs on a high-priority, deadline-driven thread. Violating these constraints cau
 audible glitches:
 
 **NEVER do these in the audio callback:**
+
 - Allocate or free memory (malloc/free, new/delete)
 - Lock a mutex (risk of priority inversion)
 - File I/O or network I/O
@@ -1035,6 +1044,7 @@ audible glitches:
 - Log to console (may block on I/O)
 
 **ALWAYS:**
+
 - Pre-allocate all buffers before the stream starts
 - Use lock-free data structures for cross-thread communication
 - Keep processing deterministic and bounded in time
@@ -1081,12 +1091,12 @@ audible glitches:
   [ Kernel Driver / Hardware ]
 ```
 
-| Layer      | Purpose                                  | Latency    |
-|------------|------------------------------------------|------------|
-| ALSA       | Kernel-level audio; direct hardware access| Very low   |
-| PulseAudio | Desktop audio server; mixing, routing     | Moderate   |
-| PipeWire   | Modern replacement for PulseAudio + JACK  | Low        |
-| JACK       | Pro audio server; low-latency, routing     | Very low   |
+| Layer      | Purpose                                    | Latency  |
+| ---------- | ------------------------------------------ | -------- |
+| ALSA       | Kernel-level audio; direct hardware access | Very low |
+| PulseAudio | Desktop audio server; mixing, routing      | Moderate |
+| PipeWire   | Modern replacement for PulseAudio + JACK   | Low      |
+| JACK       | Pro audio server; low-latency, routing     | Very low |
 
 ### 8.3 macOS / iOS: CoreAudio
 
@@ -1139,15 +1149,15 @@ audible glitches:
 
 ### 8.5 Cross-Platform Libraries
 
-| Library     | Language | License     | Notes                                     |
-|-------------|----------|-------------|-------------------------------------------|
-| PortAudio   | C        | MIT         | Mature, widely used, callback-based        |
-| SDL Audio   | C        | zlib        | Part of SDL; simple, good for games        |
-| RtAudio     | C++      | MIT         | C++ alternative to PortAudio               |
-| miniaudio   | C        | MIT/Public  | Single-header, excellent for small projects|
-| libsoundio  | C        | MIT         | Modern design, supports PipeWire           |
-| JUCE        | C++      | Dual (GPL/commercial) | Full audio app framework          |
-| Oboe        | C++      | Apache 2.0  | Android-specific, low-latency              |
+| Library    | Language | License               | Notes                                       |
+| ---------- | -------- | --------------------- | ------------------------------------------- |
+| PortAudio  | C        | MIT                   | Mature, widely used, callback-based         |
+| SDL Audio  | C        | zlib                  | Part of SDL; simple, good for games         |
+| RtAudio    | C++      | MIT                   | C++ alternative to PortAudio                |
+| miniaudio  | C        | MIT/Public            | Single-header, excellent for small projects |
+| libsoundio | C        | MIT                   | Modern design, supports PipeWire            |
+| JUCE       | C++      | Dual (GPL/commercial) | Full audio app framework                    |
+| Oboe       | C++      | Apache 2.0            | Android-specific, low-latency               |
 
 ### 8.6 Web Audio API (Brief)
 
@@ -1168,6 +1178,7 @@ oscillator.start();
 ```
 
 **Key concepts:**
+
 - **AudioContext:** The main entry point; manages all audio operations
 - **AudioNode:** Processing nodes connected in a graph (source -> effects -> destination)
 - **AudioWorklet:** Custom processing in a dedicated audio thread (replaces
@@ -1667,20 +1678,21 @@ static inline uint32_t ring_buffer_read(ring_buffer_t *rb,
 
 **A:** The Nyquist-Shannon sampling theorem states that to perfectly reconstruct a
 band-limited analog signal from its digital samples, the sampling rate must be at
-least twice the highest frequency component in the signal (fs >= 2 * f_max).
+least twice the highest frequency component in the signal (fs >= 2 \* f_max).
 The frequency fs/2 is called the Nyquist frequency.
 
 This matters because:
+
 - It determines the minimum sample rate for faithful digitization
 - Violating it causes aliasing (high frequencies masquerading as low frequencies)
-- It explains why CD audio uses 44.1 kHz (just above 2 * 20 kHz human hearing limit)
+- It explains why CD audio uses 44.1 kHz (just above 2 \* 20 kHz human hearing limit)
 - Anti-aliasing filters are required before the ADC to enforce this constraint
 
 ---
 
 ### Q2: Why is CD audio sampled at 44.1 kHz specifically, not 40 kHz?
 
-**A:** The theoretical minimum is 40 kHz (2 * 20 kHz). However, real anti-aliasing
+**A:** The theoretical minimum is 40 kHz (2 \* 20 kHz). However, real anti-aliasing
 filters cannot have an infinitely sharp cutoff. The extra 4.1 kHz provides a
 transition band for the filter to roll off from passband to stopband. The specific
 value of 44,100 Hz was also influenced by its compatibility with video frame rates
@@ -1700,7 +1712,7 @@ random hiss. Dithering (adding small random noise before quantization) breaks th
 correlation, converting the distortion into uncorrelated noise that is perceptually
 less objectionable.
 
-The SNR from quantization is approximately 6.02 * N + 1.76 dB, where N is the bit
+The SNR from quantization is approximately 6.02 \* N + 1.76 dB, where N is the bit
 depth. So 16-bit gives ~96 dB SNR and 24-bit gives ~144 dB SNR.
 
 ---
@@ -1836,11 +1848,13 @@ TPDF), the quantization error becomes uncorrelated random noise, which is
 perceptually much less objectionable than distortion.
 
 **When to use dithering:**
+
 - Converting from 24-bit to 16-bit for CD mastering
 - Converting from 32-bit float to any integer format for final output
 - Any time you reduce bit depth in the signal chain
 
 **When NOT to use dithering:**
+
 - If more processing will follow (dither only at the final stage)
 - If the signal is already at the target bit depth
 
@@ -1910,6 +1924,7 @@ def is_silence(samples: list[float], threshold_db: float = -40.0) -> bool:
 ```
 
 Considerations:
+
 - The threshold depends on the application (~-40 dBFS for speech detection,
   ~-60 dBFS for noise gate)
 - Use a hold time to avoid rapid toggling (e.g., require 200+ ms of silence)
@@ -1922,17 +1937,17 @@ Considerations:
 
 **A:**
 
-| Aspect          | PulseAudio                    | PipeWire                        |
-|-----------------|-------------------------------|---------------------------------|
-| Purpose         | Desktop audio server          | Unified audio/video server      |
-| Latency         | ~20-50 ms typical             | ~5-10 ms typical                |
-| Pro audio       | Not suitable                  | Replaces JACK for pro audio     |
-| Video           | Audio only                    | Audio and video (screen sharing)|
-| Compatibility   | PulseAudio API only           | PulseAudio + JACK compat layers |
-| Session handling| Per-user daemon               | Per-user daemon                 |
-| Sandbox support | Limited                       | First-class (Flatpak, portals)  |
-| Status          | Maintenance mode              | Active development, default in  |
-|                 |                               | Fedora, Ubuntu 22.10+           |
+| Aspect           | PulseAudio           | PipeWire                         |
+| ---------------- | -------------------- | -------------------------------- |
+| Purpose          | Desktop audio server | Unified audio/video server       |
+| Latency          | ~20-50 ms typical    | ~5-10 ms typical                 |
+| Pro audio        | Not suitable         | Replaces JACK for pro audio      |
+| Video            | Audio only           | Audio and video (screen sharing) |
+| Compatibility    | PulseAudio API only  | PulseAudio + JACK compat layers  |
+| Session handling | Per-user daemon      | Per-user daemon                  |
+| Sandbox support  | Limited              | First-class (Flatpak, portals)   |
+| Status           | Maintenance mode     | Active development, default in   |
+|                  |                      | Fedora, Ubuntu 22.10+            |
 
 PipeWire is the modern replacement that unifies PulseAudio (desktop audio),
 JACK (pro audio), and video handling into a single low-latency framework.
@@ -1959,4 +1974,4 @@ internals, WebRTC, or audio DSP.
 
 ---
 
-*Next: 02-DIGITAL-VIDEO-FUNDAMENTALS.md*
+_Next: 02-DIGITAL-VIDEO-FUNDAMENTALS.md_

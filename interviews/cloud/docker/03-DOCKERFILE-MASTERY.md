@@ -21,6 +21,7 @@ This is the build context
 ```
 
 **This is why you see:**
+
 ```
 Sending build context to Docker daemon  2.4GB
 ```
@@ -53,10 +54,10 @@ dist/
 
 **Performance impact:**
 
-| Scenario | Build Context Size | Build Time |
-|----------|-------------------|------------|
-| No `.dockerignore`, large project | 2.4GB | 45 seconds just to send context |
-| With `.dockerignore` | 12MB | <1 second to send context |
+| Scenario                          | Build Context Size | Build Time                      |
+| --------------------------------- | ------------------ | ------------------------------- |
+| No `.dockerignore`, large project | 2.4GB              | 45 seconds just to send context |
+| With `.dockerignore`              | 12MB               | <1 second to send context       |
 
 ### 1.3 Remote Build Contexts
 
@@ -101,13 +102,13 @@ FROM ${BASE_IMAGE}
 
 **Base image selection matrix:**
 
-| Base | Size | Shell | Package Manager | Use Case |
-|------|------|-------|-----------------|----------|
-| `ubuntu:24.04` | ~77MB | Yes | apt | Full-featured, familiar |
-| `debian:bookworm-slim` | ~74MB | Yes | apt | Debian minimal |
-| `alpine:3.19` | ~7MB | Yes (ash) | apk | Tiny, but uses musl libc |
-| `distroless` | ~2-25MB | No | No | Maximum security, minimal surface |
-| `scratch` | 0MB | No | No | Static Go/Rust binaries |
+| Base                   | Size    | Shell     | Package Manager | Use Case                          |
+| ---------------------- | ------- | --------- | --------------- | --------------------------------- |
+| `ubuntu:24.04`         | ~77MB   | Yes       | apt             | Full-featured, familiar           |
+| `debian:bookworm-slim` | ~74MB   | Yes       | apt             | Debian minimal                    |
+| `alpine:3.19`          | ~7MB    | Yes (ash) | apk             | Tiny, but uses musl libc          |
+| `distroless`           | ~2-25MB | No        | No              | Maximum security, minimal surface |
+| `scratch`              | 0MB     | No        | No              | Static Go/Rust binaries           |
 
 ### 2.2 RUN: Shell vs Exec Form
 
@@ -182,13 +183,13 @@ FROM ${BASE}
 ARG BUILD_ENV=production  # must redeclare after FROM
 ```
 
-| Aspect | ARG | ENV |
-|--------|-----|-----|
-| Available at build time | Yes | Yes |
-| Available at runtime | No | Yes |
-| Can be overridden | `--build-arg` | `-e` or `--env` |
-| Persisted in image | No (but leaks in `docker history`) | Yes |
-| Use for secrets | Never (visible in history) | Never (visible in inspect) |
+| Aspect                  | ARG                                | ENV                        |
+| ----------------------- | ---------------------------------- | -------------------------- |
+| Available at build time | Yes                                | Yes                        |
+| Available at runtime    | No                                 | Yes                        |
+| Can be overridden       | `--build-arg`                      | `-e` or `--env`            |
+| Persisted in image      | No (but leaks in `docker history`) | Yes                        |
+| Use for secrets         | Never (visible in history)         | Never (visible in inspect) |
 
 ### 2.5 ENTRYPOINT vs CMD: The Interaction Matrix
 
@@ -214,11 +215,11 @@ CMD ["app.py"]
 
 **The Full Interaction Matrix:**
 
-| | No ENTRYPOINT | ENTRYPOINT exec_entry p1_entry | ENTRYPOINT ["exec_entry", "p1_entry"] |
-|---|---|---|---|
-| **No CMD** | Error (not allowed) | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry |
-| **CMD ["exec_cmd", "p1_cmd"]** | exec_cmd p1_cmd | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry exec_cmd p1_cmd |
-| **CMD exec_cmd p1_cmd** | /bin/sh -c exec_cmd p1_cmd | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry /bin/sh -c exec_cmd p1_cmd |
+|                                | No ENTRYPOINT              | ENTRYPOINT exec_entry p1_entry | ENTRYPOINT ["exec_entry", "p1_entry"]          |
+| ------------------------------ | -------------------------- | ------------------------------ | ---------------------------------------------- |
+| **No CMD**                     | Error (not allowed)        | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry                            |
+| **CMD ["exec_cmd", "p1_cmd"]** | exec_cmd p1_cmd            | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry exec_cmd p1_cmd            |
+| **CMD exec_cmd p1_cmd**        | /bin/sh -c exec_cmd p1_cmd | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry /bin/sh -c exec_cmd p1_cmd |
 
 **Critical distinction: shell form vs exec form:**
 
@@ -273,12 +274,12 @@ HEALTHCHECK --interval=15s --timeout=3s \
 HEALTHCHECK NONE
 ```
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `--interval` | 30s | Time between checks |
-| `--timeout` | 30s | Time to wait for check to succeed |
-| `--start-period` | 0s | Grace period for startup (failures not counted) |
-| `--retries` | 3 | Consecutive failures before unhealthy |
+| Parameter        | Default | Description                                     |
+| ---------------- | ------- | ----------------------------------------------- |
+| `--interval`     | 30s     | Time between checks                             |
+| `--timeout`      | 30s     | Time to wait for check to succeed               |
+| `--start-period` | 0s      | Grace period for startup (failures not counted) |
+| `--retries`      | 3       | Consecutive failures before unhealthy           |
 
 ### 2.9 EXPOSE
 
@@ -670,16 +671,16 @@ Dockerfile:15 DL3025 Use arguments JSON notation for CMD and ENTRYPOINT
 
 ### Key Hadolint Rules
 
-| Rule | Description | Fix |
-|------|-------------|-----|
-| DL3008 | Pin versions in apt-get | `apt-get install -y curl=7.88.1-10` |
-| DL3013 | Pin versions in pip | `pip install flask==3.0.0` |
-| DL3018 | Pin versions in apk | `apk add --no-cache curl=8.5.0-r0` |
-| DL3025 | Use JSON for CMD/ENTRYPOINT | `CMD ["node", "app.js"]` not `CMD node app.js` |
-| DL4006 | Set pipefail before pipe | `SHELL ["/bin/bash", "-o", "pipefail", "-c"]` |
-| DL3003 | Use WORKDIR instead of cd | `WORKDIR /app` not `RUN cd /app` |
-| DL3020 | Use COPY instead of ADD | `COPY file.txt /app/` |
-| DL3009 | Delete apt lists after install | `rm -rf /var/lib/apt/lists/*` |
+| Rule   | Description                    | Fix                                            |
+| ------ | ------------------------------ | ---------------------------------------------- |
+| DL3008 | Pin versions in apt-get        | `apt-get install -y curl=7.88.1-10`            |
+| DL3013 | Pin versions in pip            | `pip install flask==3.0.0`                     |
+| DL3018 | Pin versions in apk            | `apk add --no-cache curl=8.5.0-r0`             |
+| DL3025 | Use JSON for CMD/ENTRYPOINT    | `CMD ["node", "app.js"]` not `CMD node app.js` |
+| DL4006 | Set pipefail before pipe       | `SHELL ["/bin/bash", "-o", "pipefail", "-c"]`  |
+| DL3003 | Use WORKDIR instead of cd      | `WORKDIR /app` not `RUN cd /app`               |
+| DL3020 | Use COPY instead of ADD        | `COPY file.txt /app/`                          |
+| DL3009 | Delete apt lists after install | `rm -rf /var/lib/apt/lists/*`                  |
 
 ---
 
@@ -900,21 +901,21 @@ CMD python3 app.py
 
 ### Everything Wrong With It
 
-| Line | Problem | Severity |
-|------|---------|----------|
-| `FROM ubuntu:latest` | Unpinned tag, full OS image (~77MB base) | Medium |
-| `MAINTAINER` | Deprecated, use LABEL | Low |
-| `ADD . /app` | ADD instead of COPY, no .dockerignore | Medium |
-| Separate `RUN apt-get update` | Cache invalidation: update cached, install gets stale packages | High |
-| Multiple `RUN` for apt | Multiple layers, apt cache bloat | Medium |
-| `build-essential` left in | Build tools in final image, wasted space | Medium |
-| `pip3 install` as root | Running as root | Medium |
-| No `--no-cache-dir` for pip | Pip cache in layer | Low |
-| `ENV API_KEY=sk-...` | **SECRET IN IMAGE** (visible in `docker inspect`!) | **CRITICAL** |
-| `CMD python3 app.py` | Shell form (PID 1 is /bin/sh, signals broken) | High |
-| No HEALTHCHECK | No health monitoring | Medium |
-| No USER instruction | Running as root at runtime | High |
-| No multi-stage | Build tools and dev deps in production image | Medium |
+| Line                          | Problem                                                        | Severity     |
+| ----------------------------- | -------------------------------------------------------------- | ------------ |
+| `FROM ubuntu:latest`          | Unpinned tag, full OS image (~77MB base)                       | Medium       |
+| `MAINTAINER`                  | Deprecated, use LABEL                                          | Low          |
+| `ADD . /app`                  | ADD instead of COPY, no .dockerignore                          | Medium       |
+| Separate `RUN apt-get update` | Cache invalidation: update cached, install gets stale packages | High         |
+| Multiple `RUN` for apt        | Multiple layers, apt cache bloat                               | Medium       |
+| `build-essential` left in     | Build tools in final image, wasted space                       | Medium       |
+| `pip3 install` as root        | Running as root                                                | Medium       |
+| No `--no-cache-dir` for pip   | Pip cache in layer                                             | Low          |
+| `ENV API_KEY=sk-...`          | **SECRET IN IMAGE** (visible in `docker inspect`!)             | **CRITICAL** |
+| `CMD python3 app.py`          | Shell form (PID 1 is /bin/sh, signals broken)                  | High         |
+| No HEALTHCHECK                | No health monitoring                                           | Medium       |
+| No USER instruction           | Running as root at runtime                                     | High         |
+| No multi-stage                | Build tools and dev deps in production image                   | Medium       |
 
 ### The Fixed Dockerfile
 
@@ -1099,17 +1100,17 @@ Sixth, check if stages can be parallelized. BuildKit does this automatically for
 
 ## 12. Quick Reference
 
-| Command | Purpose |
-|---------|---------|
-| `docker build -t name:tag .` | Build image from Dockerfile in current directory |
-| `docker build --target stage .` | Build specific stage only |
-| `docker build --no-cache .` | Build without cache |
-| `docker build --build-arg KEY=VALUE .` | Pass build-time argument |
-| `docker build --secret id=x,src=file .` | Pass secret for BuildKit |
-| `docker build --ssh default .` | Forward SSH agent for BuildKit |
-| `docker build --platform linux/amd64 .` | Build for specific platform |
-| `docker buildx build --push .` | Build and push in one step |
-| `docker history image:tag` | Show layer history |
-| `docker image inspect image:tag` | Full image metadata |
-| `hadolint Dockerfile` | Lint Dockerfile |
-| `dive image:tag` | Interactive layer analysis |
+| Command                                 | Purpose                                          |
+| --------------------------------------- | ------------------------------------------------ |
+| `docker build -t name:tag .`            | Build image from Dockerfile in current directory |
+| `docker build --target stage .`         | Build specific stage only                        |
+| `docker build --no-cache .`             | Build without cache                              |
+| `docker build --build-arg KEY=VALUE .`  | Pass build-time argument                         |
+| `docker build --secret id=x,src=file .` | Pass secret for BuildKit                         |
+| `docker build --ssh default .`          | Forward SSH agent for BuildKit                   |
+| `docker build --platform linux/amd64 .` | Build for specific platform                      |
+| `docker buildx build --push .`          | Build and push in one step                       |
+| `docker history image:tag`              | Show layer history                               |
+| `docker image inspect image:tag`        | Full image metadata                              |
+| `hadolint Dockerfile`                   | Lint Dockerfile                                  |
+| `dive image:tag`                        | Interactive layer analysis                       |

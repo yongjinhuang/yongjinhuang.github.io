@@ -6,15 +6,15 @@ A digital wallet system must guarantee that money never appears or disappears --
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **wallets** | Represents a money container for a user or system entity | Separates the concept of "who holds money" from the user account; supports multiple wallet types (personal, business, escrow) |
-| **wallet_balances** | Current balance per wallet per currency | Separates balance tracking from wallet metadata; composite PK enables multi-currency support |
-| **transactions** | Records each money movement as a business event | The user-facing record of what happened; links sender and receiver wallets |
-| **ledger_entries** | Append-only double-entry bookkeeping records | The source of truth for all money movement; immutable for audit compliance; every transaction produces balanced debit/credit pairs |
-| **payment_methods** | External funding sources (bank accounts, cards) | Links wallets to the outside financial system for top-ups and withdrawals |
-| **idempotency_keys** | Prevents duplicate transaction processing | Critical for distributed systems where retries are inevitable; guarantees exactly-once semantics |
-| **audit_log** | Append-only record of all state changes | Regulatory requirement for financial systems; enables forensic investigation |
+| Table                | Purpose                                                  | Why It Exists                                                                                                                      |
+| -------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **wallets**          | Represents a money container for a user or system entity | Separates the concept of "who holds money" from the user account; supports multiple wallet types (personal, business, escrow)      |
+| **wallet_balances**  | Current balance per wallet per currency                  | Separates balance tracking from wallet metadata; composite PK enables multi-currency support                                       |
+| **transactions**     | Records each money movement as a business event          | The user-facing record of what happened; links sender and receiver wallets                                                         |
+| **ledger_entries**   | Append-only double-entry bookkeeping records             | The source of truth for all money movement; immutable for audit compliance; every transaction produces balanced debit/credit pairs |
+| **payment_methods**  | External funding sources (bank accounts, cards)          | Links wallets to the outside financial system for top-ups and withdrawals                                                          |
+| **idempotency_keys** | Prevents duplicate transaction processing                | Critical for distributed systems where retries are inevitable; guarantees exactly-once semantics                                   |
+| **audit_log**        | Append-only record of all state changes                  | Regulatory requirement for financial systems; enables forensic investigation                                                       |
 
 ---
 
@@ -22,90 +22,90 @@ A digital wallet system must guarantee that money never appears or disappears --
 
 ### wallets
 
-| Field | Type | Description |
-|-------|------|-------------|
-| wallet_id | PK, UUID | Unique wallet identifier |
-| user_id | FK → users | The owner of this wallet |
-| wallet_type | ENUM | personal, business, escrow, fee_pool; escrow holds funds during disputes, fee_pool collects platform fees |
-| status | ENUM | active, frozen, closed; frozen wallets block all transactions (fraud response) |
-| kyc_tier | INT | 0=unverified, 1=email, 2=ID verified, 3=enhanced due diligence; higher tiers unlock higher transaction limits |
-| currency | VARCHAR(3) | Primary currency (ISO 4217); determines default display currency |
-| created_at | TIMESTAMP | Wallet creation time |
+| Field       | Type       | Description                                                                                                   |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| wallet_id   | PK, UUID   | Unique wallet identifier                                                                                      |
+| user_id     | FK → users | The owner of this wallet                                                                                      |
+| wallet_type | ENUM       | personal, business, escrow, fee_pool; escrow holds funds during disputes, fee_pool collects platform fees     |
+| status      | ENUM       | active, frozen, closed; frozen wallets block all transactions (fraud response)                                |
+| kyc_tier    | INT        | 0=unverified, 1=email, 2=ID verified, 3=enhanced due diligence; higher tiers unlock higher transaction limits |
+| currency    | VARCHAR(3) | Primary currency (ISO 4217); determines default display currency                                              |
+| created_at  | TIMESTAMP  | Wallet creation time                                                                                          |
 
 ### wallet_balances
 
-| Field | Type | Description |
-|-------|------|-------------|
-| wallet_id | FK, composite PK | Which wallet this balance belongs to |
-| currency | VARCHAR(3), composite PK | ISO 4217 currency code; composite PK with wallet_id enables multi-currency |
-| available_amount | DECIMAL(19,4) | Funds available for immediate use; this is what the user sees |
-| pending_amount | DECIMAL(19,4) | Funds in transit (e.g., incoming bank transfer not yet cleared) |
-| reserved_amount | DECIMAL(19,4) | Funds held for pending transactions (e.g., authorized but not captured payments) |
-| version | INT | Optimistic locking version; UPDATE fails if version changed since read, preventing race conditions |
+| Field            | Type                     | Description                                                                                        |
+| ---------------- | ------------------------ | -------------------------------------------------------------------------------------------------- |
+| wallet_id        | FK, composite PK         | Which wallet this balance belongs to                                                               |
+| currency         | VARCHAR(3), composite PK | ISO 4217 currency code; composite PK with wallet_id enables multi-currency                         |
+| available_amount | DECIMAL(19,4)            | Funds available for immediate use; this is what the user sees                                      |
+| pending_amount   | DECIMAL(19,4)            | Funds in transit (e.g., incoming bank transfer not yet cleared)                                    |
+| reserved_amount  | DECIMAL(19,4)            | Funds held for pending transactions (e.g., authorized but not captured payments)                   |
+| version          | INT                      | Optimistic locking version; UPDATE fails if version changed since read, preventing race conditions |
 
 ### transactions
 
-| Field | Type | Description |
-|-------|------|-------------|
-| transaction_id | PK, UUID | Unique transaction identifier |
-| type | ENUM | p2p_transfer, topup, withdrawal, payment, refund, reversal; categorizes the business intent |
-| sender_wallet_id | FK → wallets | Source of funds; null for top-ups from external sources |
-| receiver_wallet_id | FK → wallets | Destination of funds; null for withdrawals to external accounts |
-| amount | DECIMAL(19,4) | Transaction amount in source currency |
-| currency | VARCHAR(3) | Transaction currency |
-| fx_rate | DECIMAL(12,8) | Foreign exchange rate if cross-currency; null for same-currency transactions |
-| status | ENUM | pending, completed, failed, reversed; reversed links to a new reversal transaction |
-| idempotency_key | VARCHAR, UNIQUE | Client-provided key ensuring the same request is not processed twice |
-| metadata_json | JSONB | Flexible field for notes, merchant info, or integration-specific data |
-| created_at | TIMESTAMP | When the transaction was initiated |
+| Field              | Type            | Description                                                                                 |
+| ------------------ | --------------- | ------------------------------------------------------------------------------------------- |
+| transaction_id     | PK, UUID        | Unique transaction identifier                                                               |
+| type               | ENUM            | p2p_transfer, topup, withdrawal, payment, refund, reversal; categorizes the business intent |
+| sender_wallet_id   | FK → wallets    | Source of funds; null for top-ups from external sources                                     |
+| receiver_wallet_id | FK → wallets    | Destination of funds; null for withdrawals to external accounts                             |
+| amount             | DECIMAL(19,4)   | Transaction amount in source currency                                                       |
+| currency           | VARCHAR(3)      | Transaction currency                                                                        |
+| fx_rate            | DECIMAL(12,8)   | Foreign exchange rate if cross-currency; null for same-currency transactions                |
+| status             | ENUM            | pending, completed, failed, reversed; reversed links to a new reversal transaction          |
+| idempotency_key    | VARCHAR, UNIQUE | Client-provided key ensuring the same request is not processed twice                        |
+| metadata_json      | JSONB           | Flexible field for notes, merchant info, or integration-specific data                       |
+| created_at         | TIMESTAMP       | When the transaction was initiated                                                          |
 
 ### ledger_entries
 
-| Field | Type | Description |
-|-------|------|-------------|
-| entry_id | PK, UUID | Unique ledger entry identifier |
-| transaction_id | FK → transactions | Links this entry to its parent transaction; every transaction has exactly 2+ entries |
-| wallet_id | FK → wallets | Which wallet this entry affects |
-| entry_type | ENUM | debit or credit; debits decrease balance, credits increase balance |
-| amount | DECIMAL(19,4) | Always positive; the direction is determined by entry_type |
-| running_balance | DECIMAL(19,4) | Balance after this entry; enables point-in-time balance queries without scanning |
-| created_at | TIMESTAMP | Immutable timestamp; append-only table means no updates or deletes ever |
+| Field           | Type              | Description                                                                          |
+| --------------- | ----------------- | ------------------------------------------------------------------------------------ |
+| entry_id        | PK, UUID          | Unique ledger entry identifier                                                       |
+| transaction_id  | FK → transactions | Links this entry to its parent transaction; every transaction has exactly 2+ entries |
+| wallet_id       | FK → wallets      | Which wallet this entry affects                                                      |
+| entry_type      | ENUM              | debit or credit; debits decrease balance, credits increase balance                   |
+| amount          | DECIMAL(19,4)     | Always positive; the direction is determined by entry_type                           |
+| running_balance | DECIMAL(19,4)     | Balance after this entry; enables point-in-time balance queries without scanning     |
+| created_at      | TIMESTAMP         | Immutable timestamp; append-only table means no updates or deletes ever              |
 
 ### payment_methods
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | PK, UUID | Unique payment method identifier |
-| wallet_id | FK → wallets | Which wallet this payment method is attached to |
-| type | ENUM | bank_account, card; determines the processing flow for top-ups and withdrawals |
-| token | VARCHAR | Tokenized reference from payment processor; raw PAN/account numbers are never stored (PCI compliance) |
-| is_default | BOOLEAN | Whether this is the default funding source for the wallet |
-| last_four | VARCHAR(4) | Last four digits of card/account for display purposes only |
-| brand | VARCHAR | Card brand (visa, mastercard) or bank name for display |
+| Field      | Type         | Description                                                                                           |
+| ---------- | ------------ | ----------------------------------------------------------------------------------------------------- |
+| id         | PK, UUID     | Unique payment method identifier                                                                      |
+| wallet_id  | FK → wallets | Which wallet this payment method is attached to                                                       |
+| type       | ENUM         | bank_account, card; determines the processing flow for top-ups and withdrawals                        |
+| token      | VARCHAR      | Tokenized reference from payment processor; raw PAN/account numbers are never stored (PCI compliance) |
+| is_default | BOOLEAN      | Whether this is the default funding source for the wallet                                             |
+| last_four  | VARCHAR(4)   | Last four digits of card/account for display purposes only                                            |
+| brand      | VARCHAR      | Card brand (visa, mastercard) or bank name for display                                                |
 
 ### idempotency_keys
 
-| Field | Type | Description |
-|-------|------|-------------|
-| key | PK, VARCHAR | Client-provided idempotency key; primary key for fast lookup |
-| transaction_id | FK → transactions | The transaction that was created for this key |
-| response_json | JSONB | Cached response body; returned on duplicate requests without re-processing |
-| created_at | TIMESTAMP | When the key was first seen |
-| expires_at | TIMESTAMP | 24-hour TTL; keys are cleaned up after expiration to prevent unbounded table growth |
+| Field          | Type              | Description                                                                         |
+| -------------- | ----------------- | ----------------------------------------------------------------------------------- |
+| key            | PK, VARCHAR       | Client-provided idempotency key; primary key for fast lookup                        |
+| transaction_id | FK → transactions | The transaction that was created for this key                                       |
+| response_json  | JSONB             | Cached response body; returned on duplicate requests without re-processing          |
+| created_at     | TIMESTAMP         | When the key was first seen                                                         |
+| expires_at     | TIMESTAMP         | 24-hour TTL; keys are cleaned up after expiration to prevent unbounded table growth |
 
 ### audit_log
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | PK, UUID | Unique audit entry identifier |
-| entity_type | VARCHAR | What type of entity changed (wallet, transaction, payment_method) |
-| entity_id | UUID | The ID of the changed entity |
-| action | VARCHAR | What happened (create, update, freeze, close) |
-| actor_id | UUID | Who performed the action (user, system, admin) |
-| old_state_json | JSONB | Entity state before the change; null for creates |
-| new_state_json | JSONB | Entity state after the change; null for deletes |
-| ip_address | INET | IP address of the actor; used for fraud investigation |
-| created_at | TIMESTAMP | Immutable; append-only table |
+| Field          | Type      | Description                                                       |
+| -------------- | --------- | ----------------------------------------------------------------- |
+| id             | PK, UUID  | Unique audit entry identifier                                     |
+| entity_type    | VARCHAR   | What type of entity changed (wallet, transaction, payment_method) |
+| entity_id      | UUID      | The ID of the changed entity                                      |
+| action         | VARCHAR   | What happened (create, update, freeze, close)                     |
+| actor_id       | UUID      | Who performed the action (user, system, admin)                    |
+| old_state_json | JSONB     | Entity state before the change; null for creates                  |
+| new_state_json | JSONB     | Entity state after the change; null for deletes                   |
+| ip_address     | INET      | IP address of the actor; used for fraud investigation             |
+| created_at     | TIMESTAMP | Immutable; append-only table                                      |
 
 ---
 

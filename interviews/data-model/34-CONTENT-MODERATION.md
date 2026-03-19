@@ -6,15 +6,15 @@ A content moderation system must handle billions of posts daily across multiple 
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **content** | Stores all user-generated content with metadata | Central entity; every moderation action references back to a specific piece of content |
-| **moderation_jobs** | Records each moderation decision (ML or human) | Separates the decision record from the content itself; supports auditability and model performance tracking |
-| **review_queue** | Manages human reviewer work assignments | Enables SLA-driven prioritization and fair workload distribution across reviewers |
-| **content_hashes** | Known-bad content fingerprint database | Enables O(1) lookup to instantly block known CSAM, terrorism, or spam content without re-analysis |
-| **reports** | User-submitted content reports | Crowdsources safety signals; report quality scoring prevents abuse of the reporting system |
-| **appeals** | Multi-tier appeal process for removed content | Provides due process; tiered review prevents one reviewer's bias from being final |
-| **policies** | Versioned moderation policy rules | Decouples policy from code; enables A/B testing of policies and auditable policy history |
+| Table               | Purpose                                         | Why It Exists                                                                                               |
+| ------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **content**         | Stores all user-generated content with metadata | Central entity; every moderation action references back to a specific piece of content                      |
+| **moderation_jobs** | Records each moderation decision (ML or human)  | Separates the decision record from the content itself; supports auditability and model performance tracking |
+| **review_queue**    | Manages human reviewer work assignments         | Enables SLA-driven prioritization and fair workload distribution across reviewers                           |
+| **content_hashes**  | Known-bad content fingerprint database          | Enables O(1) lookup to instantly block known CSAM, terrorism, or spam content without re-analysis           |
+| **reports**         | User-submitted content reports                  | Crowdsources safety signals; report quality scoring prevents abuse of the reporting system                  |
+| **appeals**         | Multi-tier appeal process for removed content   | Provides due process; tiered review prevents one reviewer's bias from being final                           |
+| **policies**        | Versioned moderation policy rules               | Decouples policy from code; enables A/B testing of policies and auditable policy history                    |
 
 ---
 
@@ -22,94 +22,94 @@ A content moderation system must handle billions of posts daily across multiple 
 
 ### content
 
-| Field | Type | Description |
-|-------|------|-------------|
-| content_id | PK, UUID | Unique identifier for every piece of content |
-| author_id | FK → users | The user who created this content; used for repeat-offender analysis |
-| content_type | ENUM | One of text, image, video, audio, live_stream; determines which ML pipeline processes it |
-| body_text | TEXT | Text content or transcript; nullable for pure media posts |
-| media_url | VARCHAR | S3/CDN reference for media content; nullable for text-only posts |
-| status | ENUM | pending, published, removed, appealed; drives visibility to end users |
-| geo_country | VARCHAR(2) | ISO country code from IP geolocation; critical because moderation policies vary by jurisdiction |
-| device_fingerprint | VARCHAR | Device hash for detecting ban-evasion accounts creating content from the same device |
-| created_at | TIMESTAMP | Submission time; used for SLA calculations and time-based policy application |
+| Field              | Type       | Description                                                                                     |
+| ------------------ | ---------- | ----------------------------------------------------------------------------------------------- |
+| content_id         | PK, UUID   | Unique identifier for every piece of content                                                    |
+| author_id          | FK → users | The user who created this content; used for repeat-offender analysis                            |
+| content_type       | ENUM       | One of text, image, video, audio, live_stream; determines which ML pipeline processes it        |
+| body_text          | TEXT       | Text content or transcript; nullable for pure media posts                                       |
+| media_url          | VARCHAR    | S3/CDN reference for media content; nullable for text-only posts                                |
+| status             | ENUM       | pending, published, removed, appealed; drives visibility to end users                           |
+| geo_country        | VARCHAR(2) | ISO country code from IP geolocation; critical because moderation policies vary by jurisdiction |
+| device_fingerprint | VARCHAR    | Device hash for detecting ban-evasion accounts creating content from the same device            |
+| created_at         | TIMESTAMP  | Submission time; used for SLA calculations and time-based policy application                    |
 
 ### moderation_jobs
 
-| Field | Type | Description |
-|-------|------|-------------|
-| job_id | PK, UUID | Unique identifier for each moderation decision |
-| content_id | FK → content | Links decision back to the content being moderated |
-| priority | INT | Numeric priority; higher = reviewed sooner. Calculated from content type, author risk, and report volume |
-| decision | ENUM | approve, remove, escalate; escalate means confidence was too low for auto-decision |
-| confidence_score | FLOAT | ML model confidence (0.0-1.0); drives auto-approve threshold (e.g., >0.95 = auto-approve) |
-| model_version | VARCHAR | Which ML model version made the decision; essential for debugging model regressions |
-| processing_time_ms | INT | Latency of the ML inference; used for performance monitoring and SLA compliance |
-| reviewer_id | FK → agents | Null for automated decisions; populated when a human makes the call |
-| reviewed_at | TIMESTAMP | When the decision was made; null for pending jobs |
+| Field              | Type         | Description                                                                                              |
+| ------------------ | ------------ | -------------------------------------------------------------------------------------------------------- |
+| job_id             | PK, UUID     | Unique identifier for each moderation decision                                                           |
+| content_id         | FK → content | Links decision back to the content being moderated                                                       |
+| priority           | INT          | Numeric priority; higher = reviewed sooner. Calculated from content type, author risk, and report volume |
+| decision           | ENUM         | approve, remove, escalate; escalate means confidence was too low for auto-decision                       |
+| confidence_score   | FLOAT        | ML model confidence (0.0-1.0); drives auto-approve threshold (e.g., >0.95 = auto-approve)                |
+| model_version      | VARCHAR      | Which ML model version made the decision; essential for debugging model regressions                      |
+| processing_time_ms | INT          | Latency of the ML inference; used for performance monitoring and SLA compliance                          |
+| reviewer_id        | FK → agents  | Null for automated decisions; populated when a human makes the call                                      |
+| reviewed_at        | TIMESTAMP    | When the decision was made; null for pending jobs                                                        |
 
 ### review_queue
 
-| Field | Type | Description |
-|-------|------|-------------|
-| queue_id | PK, UUID | Unique queue entry identifier |
-| content_id | FK → content | The content awaiting human review |
-| job_id | FK → moderation_jobs | Links to the moderation job that created this queue entry |
-| priority_score | FLOAT | Composite score combining severity, report count, author history, and virality |
-| assigned_reviewer_id | FK → agents | Null until assigned; prevents two reviewers working the same item |
-| sla_deadline | TIMESTAMP | When this item must be reviewed by; calculated from priority and content type |
-| language | VARCHAR | Content language; used to route to reviewers who speak that language |
-| region | VARCHAR | Geographic region; used to route to reviewers familiar with local cultural context |
-| status | ENUM | pending, in_review, completed; prevents double-assignment |
+| Field                | Type                 | Description                                                                        |
+| -------------------- | -------------------- | ---------------------------------------------------------------------------------- |
+| queue_id             | PK, UUID             | Unique queue entry identifier                                                      |
+| content_id           | FK → content         | The content awaiting human review                                                  |
+| job_id               | FK → moderation_jobs | Links to the moderation job that created this queue entry                          |
+| priority_score       | FLOAT                | Composite score combining severity, report count, author history, and virality     |
+| assigned_reviewer_id | FK → agents          | Null until assigned; prevents two reviewers working the same item                  |
+| sla_deadline         | TIMESTAMP            | When this item must be reviewed by; calculated from priority and content type      |
+| language             | VARCHAR              | Content language; used to route to reviewers who speak that language               |
+| region               | VARCHAR              | Geographic region; used to route to reviewers familiar with local cultural context |
+| status               | ENUM                 | pending, in_review, completed; prevents double-assignment                          |
 
 ### content_hashes
 
-| Field | Type | Description |
-|-------|------|-------------|
-| hash_id | PK, UUID | Unique identifier for each known-bad hash |
-| hash_type | ENUM | photodna (image fingerprint), phash (perceptual hash), sha256 (exact match); different algorithms for different evasion resistance |
-| hash_value | VARCHAR | The actual hash value; indexed for O(1) lookup |
-| content_category | ENUM | csam, terrorism, spam; categorization determines action severity (CSAM = instant remove + report to NCMEC) |
-| source | VARCHAR | Where this hash came from (e.g., NCMEC, internal discovery, partner exchange) |
-| created_at | TIMESTAMP | When the hash was added to the database |
+| Field            | Type      | Description                                                                                                                        |
+| ---------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| hash_id          | PK, UUID  | Unique identifier for each known-bad hash                                                                                          |
+| hash_type        | ENUM      | photodna (image fingerprint), phash (perceptual hash), sha256 (exact match); different algorithms for different evasion resistance |
+| hash_value       | VARCHAR   | The actual hash value; indexed for O(1) lookup                                                                                     |
+| content_category | ENUM      | csam, terrorism, spam; categorization determines action severity (CSAM = instant remove + report to NCMEC)                         |
+| source           | VARCHAR   | Where this hash came from (e.g., NCMEC, internal discovery, partner exchange)                                                      |
+| created_at       | TIMESTAMP | When the hash was added to the database                                                                                            |
 
 ### reports
 
-| Field | Type | Description |
-|-------|------|-------------|
-| report_id | PK, UUID | Unique report identifier |
-| content_id | FK → content | The content being reported |
-| reporter_id | FK → users | Who filed the report; tracked for quality scoring and anti-abuse |
-| reason | VARCHAR | Category of the report (hate speech, harassment, spam, etc.) |
-| evidence_text | TEXT | Optional description from the reporter explaining the violation |
-| quality_score | FLOAT | Reporter credibility score (0.0-1.0); built from historical accuracy of their reports |
-| status | ENUM | new, triaged, actioned, dismissed; tracks report lifecycle |
+| Field         | Type         | Description                                                                           |
+| ------------- | ------------ | ------------------------------------------------------------------------------------- |
+| report_id     | PK, UUID     | Unique report identifier                                                              |
+| content_id    | FK → content | The content being reported                                                            |
+| reporter_id   | FK → users   | Who filed the report; tracked for quality scoring and anti-abuse                      |
+| reason        | VARCHAR      | Category of the report (hate speech, harassment, spam, etc.)                          |
+| evidence_text | TEXT         | Optional description from the reporter explaining the violation                       |
+| quality_score | FLOAT        | Reporter credibility score (0.0-1.0); built from historical accuracy of their reports |
+| status        | ENUM         | new, triaged, actioned, dismissed; tracks report lifecycle                            |
 
 ### appeals
 
-| Field | Type | Description |
-|-------|------|-------------|
-| appeal_id | PK, UUID | Unique appeal identifier |
-| content_id | FK → content | The content whose removal is being appealed |
-| appellant_id | FK → users | The user filing the appeal (usually the content author) |
-| tier | ENUM | 1, 2, 3, policy_committee; each tier is a more senior review. Tier 3 and policy committee handle edge cases |
-| status | ENUM | pending, under_review, upheld, overturned; tracks appeal outcome |
-| original_decision | VARCHAR | What the original moderation decision was (for context) |
-| appeal_decision | VARCHAR | The outcome of this appeal tier |
-| reviewer_id | FK → agents | The reviewer handling this appeal; must be different from the original reviewer |
-| resolved_at | TIMESTAMP | When the appeal was decided |
+| Field             | Type         | Description                                                                                                 |
+| ----------------- | ------------ | ----------------------------------------------------------------------------------------------------------- |
+| appeal_id         | PK, UUID     | Unique appeal identifier                                                                                    |
+| content_id        | FK → content | The content whose removal is being appealed                                                                 |
+| appellant_id      | FK → users   | The user filing the appeal (usually the content author)                                                     |
+| tier              | ENUM         | 1, 2, 3, policy_committee; each tier is a more senior review. Tier 3 and policy committee handle edge cases |
+| status            | ENUM         | pending, under_review, upheld, overturned; tracks appeal outcome                                            |
+| original_decision | VARCHAR      | What the original moderation decision was (for context)                                                     |
+| appeal_decision   | VARCHAR      | The outcome of this appeal tier                                                                             |
+| reviewer_id       | FK → agents  | The reviewer handling this appeal; must be different from the original reviewer                             |
+| resolved_at       | TIMESTAMP    | When the appeal was decided                                                                                 |
 
 ### policies
 
-| Field | Type | Description |
-|-------|------|-------------|
-| policy_id | PK, UUID | Unique policy identifier |
-| name | VARCHAR | Human-readable policy name (e.g., "Hate Speech Policy") |
-| version | INT | Monotonically increasing version; enables rollback and A/B testing |
-| conditions_json | JSONB | Machine-readable conditions (content type, geo, severity thresholds) |
-| action | VARCHAR | What happens when policy matches (remove, age_gate, reduce_distribution) |
-| severity | ENUM | low, medium, high, critical; drives SLA and escalation behavior |
-| effective_from | TIMESTAMP | When this policy version takes effect; supports scheduled policy rollouts |
+| Field           | Type      | Description                                                               |
+| --------------- | --------- | ------------------------------------------------------------------------- |
+| policy_id       | PK, UUID  | Unique policy identifier                                                  |
+| name            | VARCHAR   | Human-readable policy name (e.g., "Hate Speech Policy")                   |
+| version         | INT       | Monotonically increasing version; enables rollback and A/B testing        |
+| conditions_json | JSONB     | Machine-readable conditions (content type, geo, severity thresholds)      |
+| action          | VARCHAR   | What happens when policy matches (remove, age_gate, reduce_distribution)  |
+| severity        | ENUM      | low, medium, high, critical; drives SLA and escalation behavior           |
+| effective_from  | TIMESTAMP | When this policy version takes effect; supports scheduled policy rollouts |
 
 ---
 

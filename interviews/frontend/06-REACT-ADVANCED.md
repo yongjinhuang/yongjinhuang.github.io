@@ -67,6 +67,7 @@ function SearchPage({ query }) {
 ```
 
 **When to use which:**
+
 - `useTransition`: When you control the state update (e.g., inside an event handler)
 - `useDeferredValue`: When you receive a value from above (props) and want to defer its downstream effects
 
@@ -92,13 +93,13 @@ function UserProfile() {
 
 **Suspense capabilities by React version:**
 
-| Feature | React 16 | React 18 | React 19 |
-|---------|----------|----------|----------|
-| `React.lazy` code splitting | Yes | Yes | Yes |
-| Data fetching | No | Framework-only | Yes (`use` API) |
-| Streaming SSR | No | Yes | Yes |
-| Nested Suspense boundaries | Partial | Yes | Yes |
-| SuspenseList | No | Experimental | In progress |
+| Feature                     | React 16 | React 18       | React 19        |
+| --------------------------- | -------- | -------------- | --------------- |
+| `React.lazy` code splitting | Yes      | Yes            | Yes             |
+| Data fetching               | No       | Framework-only | Yes (`use` API) |
+| Streaming SSR               | No       | Yes            | Yes             |
+| Nested Suspense boundaries  | Partial  | Yes            | Yes             |
+| SuspenseList                | No       | Experimental   | In progress     |
 
 **Suspense boundaries** can be nested. Each boundary catches the nearest suspended child. This enables granular loading states:
 
@@ -168,8 +169,8 @@ async function ProductPage({ id }) {
     <div>
       <h1>{product.name}</h1>
       <p>{product.description}</p>
-      <AddToCartButton productId={id} />  {/* Client Component */}
-      <ReviewList reviews={reviews} />     {/* Server Component */}
+      <AddToCartButton productId={id} /> {/* Client Component */}
+      <ReviewList reviews={reviews} /> {/* Server Component */}
     </div>
   );
 }
@@ -194,17 +195,18 @@ export default function AddToCartButton({ productId }) {
 
 **Server vs Client Components:**
 
-| Aspect | Server Component | Client Component |
-|--------|-----------------|------------------|
-| Directive | Default (no directive) | `'use client'` at top |
-| Runs on | Server only | Server (SSR) + Client |
-| Bundle impact | Zero JS sent to client | Included in client bundle |
-| State/hooks | No `useState`, `useEffect`, etc. | Full hook support |
-| Event handlers | No `onClick`, etc. | Full interactivity |
-| Data access | Direct DB, file system, APIs | Fetch from client |
-| Re-rendering | Never | On state/prop changes |
+| Aspect         | Server Component                 | Client Component          |
+| -------------- | -------------------------------- | ------------------------- |
+| Directive      | Default (no directive)           | `'use client'` at top     |
+| Runs on        | Server only                      | Server (SSR) + Client     |
+| Bundle impact  | Zero JS sent to client           | Included in client bundle |
+| State/hooks    | No `useState`, `useEffect`, etc. | Full hook support         |
+| Event handlers | No `onClick`, etc.               | Full interactivity        |
+| Data access    | Direct DB, file system, APIs     | Fetch from client         |
+| Re-rendering   | Never                            | On state/prop changes     |
 
 **Composition rules:**
+
 - Server Components can import Client Components
 - Client Components cannot import Server Components directly
 - Client Components can receive Server Components as `children` props
@@ -216,7 +218,7 @@ function ServerParent() {
 }
 
 // VALID: Client Component receives Server Component as children
-'use client';
+('use client');
 function ClientLayout({ children }) {
   const [theme, setTheme] = useState('light');
   return <div className={theme}>{children}</div>;
@@ -224,8 +226,8 @@ function ClientLayout({ children }) {
 
 // Server usage:
 <ClientLayout>
-  <ServerComponent />  {/* Passed as children prop */}
-</ClientLayout>
+  <ServerComponent /> {/* Passed as children prop */}
+</ClientLayout>;
 ```
 
 ### Streaming SSR
@@ -254,6 +256,7 @@ app.get('*', (req, res) => {
 ```
 
 **How streaming works:**
+
 1. Server renders the shell (non-suspended content) immediately
 2. Browser starts parsing and displaying the shell
 3. Server continues rendering Suspense boundaries in parallel
@@ -309,6 +312,7 @@ export default function ProfileForm() {
 ```
 
 **Server Actions can be:**
+
 - Passed as `action` prop to `<form>`
 - Called directly from event handlers
 - Used with `useActionState` for pending/error states
@@ -322,39 +326,44 @@ The React Compiler automatically memoizes components and hooks, eliminating the 
 // Before: Manual memoization
 function TodoList({ todos, filter }) {
   const filteredTodos = useMemo(
-    () => todos.filter(t => t.status === filter),
+    () => todos.filter((t) => t.status === filter),
     [todos, filter]
   );
 
-  const handleToggle = useCallback((id) => {
-    dispatch({ type: 'toggle', id });
-  }, [dispatch]);
+  const handleToggle = useCallback(
+    (id) => {
+      dispatch({ type: 'toggle', id });
+    },
+    [dispatch]
+  );
 
-  return filteredTodos.map(todo => (
+  return filteredTodos.map((todo) => (
     <TodoItem key={todo.id} todo={todo} onToggle={handleToggle} />
   ));
 }
 
 // After: React Compiler handles memoization automatically
 function TodoList({ todos, filter }) {
-  const filteredTodos = todos.filter(t => t.status === filter);
+  const filteredTodos = todos.filter((t) => t.status === filter);
 
   const handleToggle = (id) => {
     dispatch({ type: 'toggle', id });
   };
 
-  return filteredTodos.map(todo => (
+  return filteredTodos.map((todo) => (
     <TodoItem key={todo.id} todo={todo} onToggle={handleToggle} />
   ));
 }
 ```
 
 **Requirements for the compiler:**
+
 - Code must follow the Rules of React (pure rendering, no mutation during render)
 - Hooks must follow the rules of hooks
 - Side effects must be in `useEffect` or event handlers
 
 **What the compiler does:**
+
 - Analyzes data flow at build time
 - Inserts memoization only where it provides benefit
 - Handles the dependency tracking automatically
@@ -368,10 +377,13 @@ Components share implicit state through context, providing a flexible API:
 const SelectContext = React.createContext(null);
 
 function Select({ value, onChange, children }) {
-  const contextValue = useMemo(() => ({
-    value,
-    onChange,
-  }), [value, onChange]);
+  const contextValue = useMemo(
+    () => ({
+      value,
+      onChange,
+    }),
+    [value, onChange]
+  );
 
   return (
     <SelectContext.Provider value={contextValue}>
@@ -403,7 +415,7 @@ Select.Option = Option;
   <Select.Option value="red">Red</Select.Option>
   <Select.Option value="blue">Blue</Select.Option>
   <Select.Option value="green">Green</Select.Option>
-</Select>
+</Select>;
 ```
 
 ### Render Props Pattern
@@ -428,9 +440,11 @@ function MouseTracker({ render }) {
 // Usage
 <MouseTracker
   render={({ x, y }) => (
-    <div>Cursor: {x}, {y}</div>
+    <div>
+      Cursor: {x}, {y}
+    </div>
   )}
-/>
+/>;
 ```
 
 **Modern alternative:** Custom hooks have largely replaced render props for logic sharing. Use render props when you need to invert control of rendering (the parent decides what to render with the data).
@@ -466,7 +480,7 @@ const ProtectedDashboard = withAuth(Dashboard);
 
 **SSR** renders the full component tree to HTML on the server, then sends it to the client. The client downloads all the JavaScript, parses it, and hydrates the HTML to make it interactive. The JavaScript bundle contains every component. SSR improves initial load time (you see content faster), but the Time to Interactive depends on the full bundle download.
 
-**Server Components** render on the server and send a serialized description (not HTML) to the client. Their JavaScript is *never* sent to the client. Only Client Components (marked with `'use client'`) are included in the bundle. This fundamentally reduces bundle size. Server Components can also access server-side resources directly (databases, file systems).
+**Server Components** render on the server and send a serialized description (not HTML) to the client. Their JavaScript is _never_ sent to the client. Only Client Components (marked with `'use client'`) are included in the bundle. This fundamentally reduces bundle size. Server Components can also access server-side resources directly (databases, file systems).
 
 They complement each other: a Server Component tree is SSR'd on initial page load, and subsequent navigations send the serialized RSC payload for client-side rendering.
 
@@ -499,6 +513,7 @@ function UserProfile({ userPromise }) {
 ```
 
 Important nuances:
+
 - You should not create promises during render (this causes infinite loops). Pass them from a parent, route loader, or cache.
 - Frameworks like Next.js integrate Suspense with their data fetching mechanisms.
 - Error handling works via Error Boundaries wrapping the Suspense boundary.
@@ -508,6 +523,7 @@ Important nuances:
 **Answer:** The React Compiler (formerly React Forget) is a build-time tool that automatically adds memoization to your components. It analyzes the data flow of your components and inserts the equivalent of `useMemo`, `useCallback`, and `React.memo` where beneficial.
 
 For developers, this means:
+
 - No more manually writing `useMemo`/`useCallback`
 - No more stale closure bugs from incorrect dependency arrays
 - Simpler, more readable code
@@ -547,12 +563,14 @@ This improves TTFB, First Contentful Paint, and perceived performance without sa
 **Answer:** The core rule is the **serialization boundary**: Server Components can pass data to Client Components, but only serializable data (strings, numbers, booleans, arrays, plain objects, Dates, Maps, Sets, and JSX elements/Server Components as children).
 
 You cannot pass:
+
 - Functions (except Server Actions)
 - Class instances
 - DOM nodes
 - Symbols (except well-known ones)
 
 **Composition rules:**
+
 1. Server Components can render Client Components (import and use them normally)
 2. Client Components cannot import Server Components directly
 3. Client Components can accept Server Components as `children` or other JSX props
@@ -566,8 +584,12 @@ async function Page() {
   return (
     <ClientTabs>
       {/* These Server Components are serialized and passed as children */}
-      <TabPanel label="Overview"><Overview data={data} /></TabPanel>
-      <TabPanel label="Details"><Details data={data} /></TabPanel>
+      <TabPanel label="Overview">
+        <Overview data={data} />
+      </TabPanel>
+      <TabPanel label="Details">
+        <Details data={data} />
+      </TabPanel>
     </ClientTabs>
   );
 }
@@ -593,7 +615,12 @@ function CommentList({ comments }) {
 
   async function handleSubmit(formData) {
     const text = formData.get('text');
-    const optimistic = { id: crypto.randomUUID(), text, author: 'You', pending: true };
+    const optimistic = {
+      id: crypto.randomUUID(),
+      text,
+      author: 'You',
+      pending: true,
+    };
     addOptimisticComment(optimistic);
     await addComment(formData);
   }
@@ -601,7 +628,7 @@ function CommentList({ comments }) {
   return (
     <div>
       <ul>
-        {optimisticComments.map(comment => (
+        {optimisticComments.map((comment) => (
           <li key={comment.id} style={{ opacity: comment.pending ? 0.6 : 1 }}>
             <strong>{comment.author}</strong>: {comment.text}
           </li>
@@ -636,7 +663,7 @@ function DataDisplay({ dataPromise }) {
 
   return (
     <ul>
-      {data.map(item => (
+      {data.map((item) => (
         <li key={item.id}>{item.name}</li>
       ))}
     </ul>
@@ -658,9 +685,10 @@ function FilterableList({ items }) {
     setQuery(value);
 
     startTransition(() => {
-      const result = items.filter(item =>
-        item.name.toLowerCase().includes(value.toLowerCase()) ||
-        item.description.toLowerCase().includes(value.toLowerCase())
+      const result = items.filter(
+        (item) =>
+          item.name.toLowerCase().includes(value.toLowerCase()) ||
+          item.description.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredItems(result);
     });
@@ -668,13 +696,9 @@ function FilterableList({ items }) {
 
   return (
     <div>
-      <input
-        value={query}
-        onChange={handleSearch}
-        placeholder="Search..."
-      />
+      <input value={query} onChange={handleSearch} placeholder="Search..." />
       <div style={{ opacity: isPending ? 0.7 : 1, transition: 'opacity 0.2s' }}>
-        {filteredItems.map(item => (
+        {filteredItems.map((item) => (
           <ItemCard key={item.id} item={item} />
         ))}
       </div>
@@ -691,10 +715,13 @@ const TabsContext = React.createContext(null);
 function Tabs({ defaultValue, children }) {
   const [activeTab, setActiveTab] = useState(defaultValue);
 
-  const contextValue = useMemo(() => ({
-    activeTab,
-    setActiveTab,
-  }), [activeTab]);
+  const contextValue = useMemo(
+    () => ({
+      activeTab,
+      setActiveTab,
+    }),
+    [activeTab]
+  );
 
   return (
     <TabsContext.Provider value={contextValue}>
@@ -739,10 +766,16 @@ Tabs.Panel = TabPanel;
     <Tabs.Tab value="details">Details</Tabs.Tab>
     <Tabs.Tab value="reviews">Reviews</Tabs.Tab>
   </Tabs.List>
-  <Tabs.Panel value="overview"><Overview /></Tabs.Panel>
-  <Tabs.Panel value="details"><Details /></Tabs.Panel>
-  <Tabs.Panel value="reviews"><Reviews /></Tabs.Panel>
-</Tabs>
+  <Tabs.Panel value="overview">
+    <Overview />
+  </Tabs.Panel>
+  <Tabs.Panel value="details">
+    <Details />
+  </Tabs.Panel>
+  <Tabs.Panel value="reviews">
+    <Reviews />
+  </Tabs.Panel>
+</Tabs>;
 ```
 
 ---
@@ -773,41 +806,41 @@ Tabs.Panel = TabPanel;
 
 ## Quick Reference
 
-| React 18 Feature | Purpose |
-|-------------------|---------|
-| Automatic batching | Batch state updates everywhere (promises, timeouts) |
-| `useTransition` | Mark state updates as non-urgent |
-| `useDeferredValue` | Defer a value during heavy renders |
-| `Suspense` for SSR | Streaming server rendering |
+| React 18 Feature    | Purpose                                               |
+| ------------------- | ----------------------------------------------------- |
+| Automatic batching  | Batch state updates everywhere (promises, timeouts)   |
+| `useTransition`     | Mark state updates as non-urgent                      |
+| `useDeferredValue`  | Defer a value during heavy renders                    |
+| `Suspense` for SSR  | Streaming server rendering                            |
 | Selective hydration | Hydrate components based on user interaction priority |
-| `useId` | Generate stable unique IDs for SSR |
+| `useId`             | Generate stable unique IDs for SSR                    |
 
-| React 19 Feature | Purpose |
-|-------------------|---------|
-| `use` API | Read promises and context in render |
-| Server Actions | Call server functions from Client Components |
-| `useActionState` | Track form action state (pending, error) |
-| `useOptimistic` | Optimistic UI updates during async actions |
-| React Compiler | Automatic memoization at build time |
-| `ref` as prop | No more `forwardRef` wrapper needed |
+| React 19 Feature  | Purpose                                                 |
+| ----------------- | ------------------------------------------------------- |
+| `use` API         | Read promises and context in render                     |
+| Server Actions    | Call server functions from Client Components            |
+| `useActionState`  | Track form action state (pending, error)                |
+| `useOptimistic`   | Optimistic UI updates during async actions              |
+| React Compiler    | Automatic memoization at build time                     |
+| `ref` as prop     | No more `forwardRef` wrapper needed                     |
 | Document metadata | `<title>`, `<meta>` in components (hoisted to `<head>`) |
 
-| Pattern | Use Case | Modern Alternative |
-|---------|----------|-------------------|
-| Compound components | Flexible UI primitives (tabs, selects) | Still preferred |
-| Render props | Consumer-controlled rendering | Custom hooks (for logic) |
-| HOC | Cross-cutting concerns | Custom hooks |
-| Provider pattern | Dependency injection | Context + custom hook |
-| State reducer | Customizable component logic | `useReducer` + context |
-| Controlled props | Parent-managed component state | Still preferred |
+| Pattern             | Use Case                               | Modern Alternative       |
+| ------------------- | -------------------------------------- | ------------------------ |
+| Compound components | Flexible UI primitives (tabs, selects) | Still preferred          |
+| Render props        | Consumer-controlled rendering          | Custom hooks (for logic) |
+| HOC                 | Cross-cutting concerns                 | Custom hooks             |
+| Provider pattern    | Dependency injection                   | Context + custom hook    |
+| State reducer       | Customizable component logic           | `useReducer` + context   |
+| Controlled props    | Parent-managed component state         | Still preferred          |
 
-| Server vs Client | Server Component | Client Component |
-|------------------|-----------------|------------------|
-| `useState` | No | Yes |
-| `useEffect` | No | Yes |
-| `onClick` | No | Yes |
-| `async/await` | Yes (in component) | Yes (in effects/handlers) |
-| Database access | Yes | No (use API/action) |
-| Bundle size | 0 KB | Included |
-| Re-renders | Never | On state/prop change |
-| Children from server | N/A | Yes (via props) |
+| Server vs Client     | Server Component   | Client Component          |
+| -------------------- | ------------------ | ------------------------- |
+| `useState`           | No                 | Yes                       |
+| `useEffect`          | No                 | Yes                       |
+| `onClick`            | No                 | Yes                       |
+| `async/await`        | Yes (in component) | Yes (in effects/handlers) |
+| Database access      | Yes                | No (use API/action)       |
+| Bundle size          | 0 KB               | Included                  |
+| Re-renders           | Never              | On state/prop change      |
+| Children from server | N/A                | Yes (via props)           |

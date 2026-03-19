@@ -9,6 +9,7 @@
 ### The Core Problem
 
 When you have 5000 servers, you need answers to:
+
 - What hardware/instance types are running right now?
 - Which servers are running which application version?
 - Which are unpatched against CVE-2024-XXXX?
@@ -46,15 +47,15 @@ Tagging is the foundation of fleet management. Without disciplined tagging, cost
 
 **Mandatory tag schema:**
 
-| Tag Key         | Example Value          | Purpose                      |
-|-----------------|------------------------|------------------------------|
-| `env`           | `prod`, `staging`      | Environment classification   |
-| `app`           | `checkout-api`         | Application identifier       |
-| `team`          | `payments-eng`         | Ownership for alerts/billing |
-| `cost-center`   | `CC-1042`              | Finance allocation           |
-| `managed-by`    | `terraform`            | IaC tracking                 |
-| `ami-id`        | `ami-0abc123`          | Image version tracking       |
-| `patch-group`   | `linux-prod-weekly`    | SSM Patch Manager grouping   |
+| Tag Key       | Example Value       | Purpose                      |
+| ------------- | ------------------- | ---------------------------- |
+| `env`         | `prod`, `staging`   | Environment classification   |
+| `app`         | `checkout-api`      | Application identifier       |
+| `team`        | `payments-eng`      | Ownership for alerts/billing |
+| `cost-center` | `CC-1042`           | Finance allocation           |
+| `managed-by`  | `terraform`         | IaC tracking                 |
+| `ami-id`      | `ami-0abc123`       | Image version tracking       |
+| `patch-group` | `linux-prod-weekly` | SSM Patch Manager grouping   |
 
 **Enforce tags via AWS Config rule:**
 
@@ -262,6 +263,7 @@ build {
 ```
 
 **Run the pipeline:**
+
 ```bash
 # Validate template
 packer validate -var "app_version=2.4.1" golden-ami.pkr.hcl
@@ -335,15 +337,15 @@ Works until it doesn't                 Fails fast, replaces fast
 
 ### Why Immutable Wins at Scale
 
-| Factor              | Mutable (Pets)              | Immutable (Cattle)              |
-|---------------------|-----------------------------|---------------------------------|
-| Config drift        | Grows over time             | Zero — every instance is fresh  |
-| Patch rollout       | Run chef/ansible on all     | Roll new AMI via ASG            |
-| Incident response   | SSH in and debug            | Terminate + replace             |
-| Reproducibility     | "Works on this server"      | Same everywhere, always         |
-| Security posture    | Patching lag accumulates    | New AMI = fully patched         |
-| Rollback            | Hope the runbook works      | Roll back launch template ver.  |
-| Audit compliance    | Drift makes audits hard     | Immutable state = clean audits  |
+| Factor            | Mutable (Pets)           | Immutable (Cattle)             |
+| ----------------- | ------------------------ | ------------------------------ |
+| Config drift      | Grows over time          | Zero — every instance is fresh |
+| Patch rollout     | Run chef/ansible on all  | Roll new AMI via ASG           |
+| Incident response | SSH in and debug         | Terminate + replace            |
+| Reproducibility   | "Works on this server"   | Same everywhere, always        |
+| Security posture  | Patching lag accumulates | New AMI = fully patched        |
+| Rollback          | Hope the runbook works   | Roll back launch template ver. |
+| Audit compliance  | Drift makes audits hard  | Immutable state = clean audits |
 
 ### Blue-Green Infrastructure Replacement
 
@@ -500,6 +502,7 @@ Scale-Out Event
 ```
 
 **Cooldown recommendations:**
+
 - Scale-out cooldown: 60-120s (you want fast scale-out)
 - Scale-in cooldown: 300-600s (scale-in slowly to avoid premature termination)
 - Instance warm-up: time for new instance to start contributing to metrics
@@ -584,6 +587,7 @@ aws autoscaling create-auto-scaling-group \
 ```
 
 **Cost breakdown with mixed instances:**
+
 - On-demand base (10 instances): always available, predictable cost
 - 30% of remaining on-demand: buffer for critical headroom
 - 70% spot: ~70% cheaper, tolerate interruptions with graceful draining
@@ -751,12 +755,12 @@ aws ssm list-command-invocations \
 
 ```yaml
 # ssm-documents/rotate-tls-cert.yaml
-schemaVersion: "2.2"
-description: "Rotate TLS certificate across fleet"
+schemaVersion: '2.2'
+description: 'Rotate TLS certificate across fleet'
 parameters:
   CertArn:
     type: String
-    description: "ACM cert ARN to deploy"
+    description: 'ACM cert ARN to deploy'
 mainSteps:
   - action: aws:runShellScript
     name: downloadCert
@@ -1013,11 +1017,11 @@ resource "aws_autoscaling_group" "checkout_api" {
 
 ### Placement Groups
 
-| Type      | Use Case                                  | Tradeoff                          |
-|-----------|-------------------------------------------|-----------------------------------|
-| Cluster   | HPC, ML training, low latency networking  | All in single AZ, no HA           |
-| Spread    | Critical instances — must not fail together | Max 7 instances per AZ per group |
-| Partition | Kafka, Cassandra, Hadoop — rack-aware     | Partition = separate physical rack|
+| Type      | Use Case                                    | Tradeoff                           |
+| --------- | ------------------------------------------- | ---------------------------------- |
+| Cluster   | HPC, ML training, low latency networking    | All in single AZ, no HA            |
+| Spread    | Critical instances — must not fail together | Max 7 instances per AZ per group   |
+| Partition | Kafka, Cassandra, Hadoop — rack-aware       | Partition = separate physical rack |
 
 ```bash
 # Cluster placement group: maximum network throughput
@@ -1093,15 +1097,15 @@ Complexity      Very high        Moderate         High (orchestration)
 
 **Decision guide:**
 
-| Workload                              | Recommendation            | Reasoning                                    |
-|---------------------------------------|---------------------------|----------------------------------------------|
-| ML training (GPU-intensive)           | Bare metal / p4d.24xlarge | No hypervisor overhead on GPU ops            |
-| High-frequency trading                | Bare metal                | Microsecond latency, no jitter               |
-| Standard web services                 | EC2 + containers (ECS/EKS)| Cost efficiency, fast scaling                |
-| Stateful databases (Postgres, MySQL)  | EC2 (large instances)     | Persistent storage, memory control           |
-| Stateless microservices               | Containers on ECS/EKS     | Density, fast deploys, easy scaling          |
-| Batch jobs                            | Spot containers (Fargate) | Cheapest, disposable                         |
-| Legacy apps needing full OS           | EC2 VMs                   | Compatibility, can't containerize easily     |
+| Workload                             | Recommendation             | Reasoning                                |
+| ------------------------------------ | -------------------------- | ---------------------------------------- |
+| ML training (GPU-intensive)          | Bare metal / p4d.24xlarge  | No hypervisor overhead on GPU ops        |
+| High-frequency trading               | Bare metal                 | Microsecond latency, no jitter           |
+| Standard web services                | EC2 + containers (ECS/EKS) | Cost efficiency, fast scaling            |
+| Stateful databases (Postgres, MySQL) | EC2 (large instances)      | Persistent storage, memory control       |
+| Stateless microservices              | Containers on ECS/EKS      | Density, fast deploys, easy scaling      |
+| Batch jobs                           | Spot containers (Fargate)  | Cheapest, disposable                     |
+| Legacy apps needing full OS          | EC2 VMs                    | Compatibility, can't containerize easily |
 
 ---
 
@@ -1146,14 +1150,14 @@ Steady state: 1000 instances per region
 
 ### ASG Configuration per Tier
 
-| ASG Name              | Min | Desired | Max  | Instance Type     | Spot % |
-|-----------------------|-----|---------|------|-------------------|--------|
-| web-frontend-prod     | 30  | 120     | 600  | m5.large          | 70%    |
-| checkout-api-prod     | 15  | 90      | 300  | m5.xlarge         | 50%    |
-| inventory-api-prod    | 10  | 30      | 150  | m5.large          | 60%    |
-| search-api-prod       | 6   | 24      | 60   | r5.2xlarge        | 40%    |
-| order-worker-prod     | 5   | 30      | 200  | m5.large          | 80%    |
-| session-cache-prod    | 3   | 9       | 9    | r6g.2xlarge       | 0%     |
+| ASG Name           | Min | Desired | Max | Instance Type | Spot % |
+| ------------------ | --- | ------- | --- | ------------- | ------ |
+| web-frontend-prod  | 30  | 120     | 600 | m5.large      | 70%    |
+| checkout-api-prod  | 15  | 90      | 300 | m5.xlarge     | 50%    |
+| inventory-api-prod | 10  | 30      | 150 | m5.large      | 60%    |
+| search-api-prod    | 6   | 24      | 60  | r5.2xlarge    | 40%    |
+| order-worker-prod  | 5   | 30      | 200 | m5.large      | 80%    |
+| session-cache-prod | 3   | 9       | 9   | r6g.2xlarge   | 0%     |
 
 Note: Session cache uses 0% spot — cache loss would degrade all users.
 
@@ -1343,15 +1347,15 @@ aws autoscaling resume-processes \
 
 ## Summary: Fleet Management Principles
 
-| Principle                     | Implementation                                           |
-|-------------------------------|----------------------------------------------------------|
-| Every server is tagged        | Enforce with AWS Config rules and IAM SCPs               |
-| Images are immutable          | Golden AMIs via Packer/Image Builder, never patch in-place|
-| State is in launch templates  | Version controlled, rollback is changing default version |
-| Scale horizontally            | ASGs with mixed instances, target tracking policies      |
-| Patch via image replacement   | New AMI + rolling ASG update instead of SSM patching     |
-| Audit everything              | SSM Inventory + Athena for fleet-wide queries            |
-| Graceful shutdown everywhere  | Lifecycle hooks + SIGTERM handlers in every service      |
-| Spread across AZs             | Min 2 AZs, ideally 3, capacity divisible by AZ count     |
-| Spot for stateless, on-demand for stateful | Session stores, DBs never on spot       |
-| Automate runbooks             | SSM Documents replace manual SSH runbooks                |
+| Principle                                  | Implementation                                             |
+| ------------------------------------------ | ---------------------------------------------------------- |
+| Every server is tagged                     | Enforce with AWS Config rules and IAM SCPs                 |
+| Images are immutable                       | Golden AMIs via Packer/Image Builder, never patch in-place |
+| State is in launch templates               | Version controlled, rollback is changing default version   |
+| Scale horizontally                         | ASGs with mixed instances, target tracking policies        |
+| Patch via image replacement                | New AMI + rolling ASG update instead of SSM patching       |
+| Audit everything                           | SSM Inventory + Athena for fleet-wide queries              |
+| Graceful shutdown everywhere               | Lifecycle hooks + SIGTERM handlers in every service        |
+| Spread across AZs                          | Min 2 AZs, ideally 3, capacity divisible by AZ count       |
+| Spot for stateless, on-demand for stateful | Session stores, DBs never on spot                          |
+| Automate runbooks                          | SSM Documents replace manual SSH runbooks                  |

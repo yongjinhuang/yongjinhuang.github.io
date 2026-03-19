@@ -856,13 +856,13 @@ Rule of Thumb:
 
 ### When to Use Constant Memory
 
-| Use Case | Constant Memory? | Why |
-|----------|:-:|---|
-| Convolution filter coefficients | Yes | All threads read same coefficient per step |
-| Physical constants (gravity, pi) | Yes | Uniform across all threads |
-| Lookup tables indexed by thread ID | NO | Different addresses per thread = serialized |
-| Transformation matrices | Yes | Same matrix applied to all elements |
-| Kernel configuration parameters | Yes | Read once, same for all |
+| Use Case                           | Constant Memory? | Why                                         |
+| ---------------------------------- | :--------------: | ------------------------------------------- |
+| Convolution filter coefficients    |       Yes        | All threads read same coefficient per step  |
+| Physical constants (gravity, pi)   |       Yes        | Uniform across all threads                  |
+| Lookup tables indexed by thread ID |        NO        | Different addresses per thread = serialized |
+| Transformation matrices            |       Yes        | Same matrix applied to all elements         |
+| Kernel configuration parameters    |       Yes        | Read once, same for all                     |
 
 ---
 
@@ -964,20 +964,20 @@ When you access pixel (x,y), neighbors (x+1,y), (x,y+1),
 
 ### When Texture Memory Helps
 
-| Scenario | Benefit |
-|----------|---------|
-| Image processing (convolution, blur) | 2D spatial locality cache exploited |
-| Terrain sampling in ray tracing | Non-uniform 2D access patterns |
-| Free bilinear interpolation | Hardware interpolation saves compute |
-| Read-only data with spatial access | Texture cache is separate from L1, adds bandwidth |
-| Normalized coordinate access | Automatic [0,1] mapping |
+| Scenario                             | Benefit                                           |
+| ------------------------------------ | ------------------------------------------------- |
+| Image processing (convolution, blur) | 2D spatial locality cache exploited               |
+| Terrain sampling in ray tracing      | Non-uniform 2D access patterns                    |
+| Free bilinear interpolation          | Hardware interpolation saves compute              |
+| Read-only data with spatial access   | Texture cache is separate from L1, adds bandwidth |
+| Normalized coordinate access         | Automatic [0,1] mapping                           |
 
-| Scenario | NOT Beneficial |
-|----------|----------------|
-| Purely linear (1D) sequential access | L1/L2 cache works fine |
-| Write-heavy data | Texture is read-only |
-| Small data that fits in shared memory | Shared memory is faster |
-| Random access with no spatial locality | No cache reuse |
+| Scenario                               | NOT Beneficial          |
+| -------------------------------------- | ----------------------- |
+| Purely linear (1D) sequential access   | L1/L2 cache works fine  |
+| Write-heavy data                       | Texture is read-only    |
+| Small data that fits in shared memory  | Shared memory is faster |
+| Random access with no spatial locality | No cache reuse          |
 
 ---
 
@@ -986,6 +986,7 @@ When you access pixel (x,y), neighbors (x+1,y), (x,y+1),
 ### Why Pinned Memory Is Faster
 
 Regular `malloc` memory is **pageable** -- the OS can swap it to disk at any time. Before DMA transfer to the GPU, the CUDA driver must:
+
 1. Allocate a temporary pinned buffer
 2. Copy data from pageable to pinned
 3. DMA from pinned to GPU
@@ -2430,16 +2431,16 @@ Use **SoA layout** with 6 separate arrays (x, y, z, vx, vy, vz), each of 100M fl
 
 For transfer: allocate host arrays with `cudaMallocHost` (pinned memory). Use **double-buffered async transfers** with 2 CUDA streams: while chunk N is being processed, chunk N+1 is being transferred H2D, and chunk N-1 is being transferred D2H. Split the 100M particles into 4-8 chunks for good overlap.
 
-For the kernel: if the update reads all 6 fields and writes 3 (position), arithmetic intensity is 6 FLOPs / (9 * 4 bytes) = 0.17 FLOPs/byte -- extremely memory-bound. Focus entirely on maximizing memory bandwidth: ensure coalesced access (SoA achieves this), consider fusing the update with any subsequent kernel to avoid an extra pass over memory, and potentially use FP16 for velocity if precision permits, doubling effective bandwidth.
+For the kernel: if the update reads all 6 fields and writes 3 (position), arithmetic intensity is 6 FLOPs / (9 \* 4 bytes) = 0.17 FLOPs/byte -- extremely memory-bound. Focus entirely on maximizing memory bandwidth: ensure coalesced access (SoA achieves this), consider fusing the update with any subsequent kernel to avoid an extra pass over memory, and potentially use FP16 for velocity if precision permits, doubling effective bandwidth.
 
 **Q12: Compare and contrast the following GPU memory optimization techniques: shared memory tiling, constant memory broadcast, texture cache, and L1/L2 cache. When would you choose each?**
 
-| Technique | Best For | Capacity | Latency | Programmer Effort |
-|-----------|----------|----------|---------|-------------------|
-| Shared memory tiling | Data reused within a block, known access patterns | ~100 KB/SM | ~20 cycles | High (explicit load, sync, index) |
-| Constant memory | Small read-only data, uniform access across warp | 64 KB total | ~4 cycles (hit) | Low (declare `__constant__`, use `cudaMemcpyToSymbol`) |
-| Texture cache | 2D spatial locality, interpolation needed | Implicit (backed by global) | ~100 cycles (hit) | Medium (create texture object) |
-| L1/L2 cache | General read-heavy access, varies per thread | 192 KB L1, 40 MB L2 | ~30/~200 cycles | None (automatic, use `__ldg()` hint) |
+| Technique            | Best For                                          | Capacity                    | Latency           | Programmer Effort                                      |
+| -------------------- | ------------------------------------------------- | --------------------------- | ----------------- | ------------------------------------------------------ |
+| Shared memory tiling | Data reused within a block, known access patterns | ~100 KB/SM                  | ~20 cycles        | High (explicit load, sync, index)                      |
+| Constant memory      | Small read-only data, uniform access across warp  | 64 KB total                 | ~4 cycles (hit)   | Low (declare `__constant__`, use `cudaMemcpyToSymbol`) |
+| Texture cache        | 2D spatial locality, interpolation needed         | Implicit (backed by global) | ~100 cycles (hit) | Medium (create texture object)                         |
+| L1/L2 cache          | General read-heavy access, varies per thread      | 192 KB L1, 40 MB L2         | ~30/~200 cycles   | None (automatic, use `__ldg()` hint)                   |
 
 Choose shared memory when you can predict reuse patterns and control the data lifecycle. Choose constant memory for small lookup tables accessed uniformly by all threads. Choose texture for image processing or other 2D access patterns. Rely on L1/L2 when access patterns are irregular but have some locality, or when shared memory is already fully utilized. These techniques are not mutually exclusive -- a well-optimized kernel may use all four simultaneously.
 
@@ -2481,4 +2482,4 @@ Key Takeaways:
 
 ---
 
-*Next chapter: [Chapter 8 - Multi-GPU and HPC](08-MULTI-GPU-HPC.md) -- scaling beyond a single GPU with multi-GPU programming, NCCL, MPI+CUDA, and GPU-Direct RDMA.*
+_Next chapter: [Chapter 8 - Multi-GPU and HPC](08-MULTI-GPU-HPC.md) -- scaling beyond a single GPU with multi-GPU programming, NCCL, MPI+CUDA, and GPU-Direct RDMA._

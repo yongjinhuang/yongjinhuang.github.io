@@ -33,27 +33,27 @@ monotonicity, clock safety) interact deeply with distributed systems concerns.
 
 ### 1.1 Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Generate unique IDs | Each generated ID must be globally unique across all nodes |
-| F2 | Time-ordered | IDs generated later should sort after earlier IDs (k-sortable) |
-| F3 | Numeric | IDs should fit in a 64-bit integer (compatible with most databases) |
-| F4 | High throughput | Support generating IDs at very high rates per node |
-| F5 | Low latency | Generation must be near-instantaneous, no network round-trips |
-| F6 | Decentralized | No central coordination required at ID generation time |
-| F7 | Embeddable metadata | Extract datacenter, machine, and timestamp from the ID itself |
+| #   | Requirement         | Details                                                             |
+| --- | ------------------- | ------------------------------------------------------------------- |
+| F1  | Generate unique IDs | Each generated ID must be globally unique across all nodes          |
+| F2  | Time-ordered        | IDs generated later should sort after earlier IDs (k-sortable)      |
+| F3  | Numeric             | IDs should fit in a 64-bit integer (compatible with most databases) |
+| F4  | High throughput     | Support generating IDs at very high rates per node                  |
+| F5  | Low latency         | Generation must be near-instantaneous, no network round-trips       |
+| F6  | Decentralized       | No central coordination required at ID generation time              |
+| F7  | Embeddable metadata | Extract datacenter, machine, and timestamp from the ID itself       |
 
 ### 1.2 Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| NF1 | Throughput | 100,000+ IDs/second per node |
-| NF2 | Latency | p99 < 1 ms for ID generation |
-| NF3 | Uniqueness | Zero collisions guaranteed under normal operation |
-| NF4 | Ordering | Time-sortable (k-sorted) across the cluster |
-| NF5 | Availability | 99.999% (< 5 min downtime/year) |
+| #   | Requirement  | Target                                               |
+| --- | ------------ | ---------------------------------------------------- |
+| NF1 | Throughput   | 100,000+ IDs/second per node                         |
+| NF2 | Latency      | p99 < 1 ms for ID generation                         |
+| NF3 | Uniqueness   | Zero collisions guaranteed under normal operation    |
+| NF4 | Ordering     | Time-sortable (k-sorted) across the cluster          |
+| NF5 | Availability | 99.999% (< 5 min downtime/year)                      |
 | NF6 | Clock safety | Handle NTP clock drift and backward jumps gracefully |
-| NF7 | Compactness | IDs must fit in 64 bits (long/int64) |
+| NF7 | Compactness  | IDs must fit in 64 bits (long/int64)                 |
 
 ### 1.3 Scale Estimation
 
@@ -383,16 +383,16 @@ Key properties:
 
 ### 5.1 Scheme Comparison Table
 
-| Scheme | Size | Format | Time-Ordered | Globally Unique | Coordination | DB Performance |
-|--------|------|--------|--------------|-----------------|--------------|----------------|
-| DB Auto-Increment | 64-bit | Integer | Yes (per shard) | No (multi-shard) | Required | Excellent |
-| UUID v4 | 128-bit | Hex string | No | Yes (probabilistic) | None | Poor (random inserts) |
-| UUID v7 | 128-bit | Hex string | Yes | Yes (probabilistic) | None | Good |
-| Ticket Server (Flickr) | 64-bit | Integer | Partial | Yes | Required (central DB) | Good |
-| Twitter Snowflake | 64-bit | Integer | Yes (k-sorted) | Yes (guaranteed) | Startup only | Excellent |
-| ULID | 128-bit | Base32 | Yes (k-sorted) | Yes (probabilistic) | None | Good |
-| TSID | 64-bit | Integer | Yes (k-sorted) | Yes (guaranteed) | Startup only | Excellent |
-| MongoDB ObjectID | 96-bit | Hex string | Yes | Yes (probabilistic) | None | Good |
+| Scheme                 | Size    | Format     | Time-Ordered    | Globally Unique     | Coordination          | DB Performance        |
+| ---------------------- | ------- | ---------- | --------------- | ------------------- | --------------------- | --------------------- |
+| DB Auto-Increment      | 64-bit  | Integer    | Yes (per shard) | No (multi-shard)    | Required              | Excellent             |
+| UUID v4                | 128-bit | Hex string | No              | Yes (probabilistic) | None                  | Poor (random inserts) |
+| UUID v7                | 128-bit | Hex string | Yes             | Yes (probabilistic) | None                  | Good                  |
+| Ticket Server (Flickr) | 64-bit  | Integer    | Partial         | Yes                 | Required (central DB) | Good                  |
+| Twitter Snowflake      | 64-bit  | Integer    | Yes (k-sorted)  | Yes (guaranteed)    | Startup only          | Excellent             |
+| ULID                   | 128-bit | Base32     | Yes (k-sorted)  | Yes (probabilistic) | None                  | Good                  |
+| TSID                   | 64-bit  | Integer    | Yes (k-sorted)  | Yes (guaranteed)    | Startup only          | Excellent             |
+| MongoDB ObjectID       | 96-bit  | Hex string | Yes             | Yes (probabilistic) | None                  | Good                  |
 
 ### 5.2 Decision Matrix for Interview
 
@@ -595,14 +595,14 @@ Maximum per-node throughput:
 
 ### 7.1 UUID Versions Comparison
 
-| Version | Format | Timestamp | Randomness | Time-Ordered | Use Case |
-|---------|--------|-----------|------------|--------------|----------|
-| v1 | time-based | 100ns since 1582 | 48-bit MAC | Yes | Legacy systems |
-| v3 | name-based | None | MD5 hash | No | Deterministic namespaced IDs |
-| v4 | random | None | 122 bits | No | General purpose, stateless |
-| v5 | name-based | None | SHA-1 hash | No | Deterministic namespaced IDs |
-| v6 | reordered v1 | 100ns (reordered) | 48-bit MAC | Yes | Improved v1 |
-| v7 | Unix timestamp | Unix ms epoch | 74 bits | Yes | Modern, DB-friendly |
+| Version | Format         | Timestamp         | Randomness | Time-Ordered | Use Case                     |
+| ------- | -------------- | ----------------- | ---------- | ------------ | ---------------------------- |
+| v1      | time-based     | 100ns since 1582  | 48-bit MAC | Yes          | Legacy systems               |
+| v3      | name-based     | None              | MD5 hash   | No           | Deterministic namespaced IDs |
+| v4      | random         | None              | 122 bits   | No           | General purpose, stateless   |
+| v5      | name-based     | None              | SHA-1 hash | No           | Deterministic namespaced IDs |
+| v6      | reordered v1   | 100ns (reordered) | 48-bit MAC | Yes          | Improved v1                  |
+| v7      | Unix timestamp | Unix ms epoch     | 74 bits    | Yes          | Modern, DB-friendly          |
 
 ### 7.2 UUID Structure
 
@@ -1060,19 +1060,19 @@ spec:
   template:
     spec:
       containers:
-      - name: id-generator
-        env:
-        - name: POD_INDEX
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.annotations['apps.kubernetes.io/pod-index']
-        - name: DATACENTER_ID
-          value: "2"
-        - name: MACHINE_ID
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.annotations['apps.kubernetes.io/pod-index']
-        # Pod 0 -> machine_id=0, Pod 1 -> machine_id=1, etc.
+        - name: id-generator
+          env:
+            - name: POD_INDEX
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['apps.kubernetes.io/pod-index']
+            - name: DATACENTER_ID
+              value: '2'
+            - name: MACHINE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['apps.kubernetes.io/pod-index']
+          # Pod 0 -> machine_id=0, Pod 1 -> machine_id=1, etc.
 ```
 
 ---
