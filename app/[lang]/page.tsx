@@ -10,7 +10,7 @@ import {
   Experience,
 } from '@/components/sections';
 import { JsonLd } from '@/components/JsonLd';
-import { BASE_URL, META, OG_IMAGE, SITE_NAME } from '@/lib/seo';
+import { BASE_URL, META, OG_IMAGE, SELFIE_IMAGE, SITE_NAME } from '@/lib/seo';
 
 interface Props {
   params: Promise<{ lang: string }>;
@@ -37,15 +37,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: meta.homeDescription,
       siteName: SITE_NAME,
       images: [
-        { url: OG_IMAGE, width: 800, height: 800, alt: 'Yongjin Huang' },
+        {
+          url: OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: 'Yongjin Huang — Software Engineer',
+        },
       ],
       locale: lang === 'zh' ? 'zh_CN' : 'en_US',
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: meta.homeTitle,
       description: meta.homeDescription,
-      images: [OG_IMAGE],
+      images: [{ url: OG_IMAGE, alt: 'Yongjin Huang — Software Engineer' }],
     },
   };
 }
@@ -62,18 +67,41 @@ export default async function Home({ params }: Props) {
     jobTitle: t.intro.tagline,
     description: t.intro.introduction,
     url: `${BASE_URL}/${lang}`,
-    image: OG_IMAGE,
+    image: SELFIE_IMAGE,
     sameAs: [t.intro.links.github, t.intro.links.linkedin],
     knowsAbout: [
       ...t.skills.languages.value,
       ...t.skills.frameworks.value,
       ...t.skills.tools.value,
     ],
+    alumniOf: {
+      '@type': 'CollegeOrUniversity',
+      name: t.education.university,
+    },
+    worksFor: Object.values(t.experience.company)
+      .slice(0, 1)
+      .map((c) => ({
+        '@type': 'Organization',
+        name: c.name,
+      }))[0],
+  };
+
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: BASE_URL,
+    inLanguage: [lang === 'zh' ? 'zh-CN' : 'en'],
+    author: {
+      '@type': 'Person',
+      name: `${t.intro.name.first} ${t.intro.name.last}`,
+    },
   };
 
   return (
     <PageTransition>
       <JsonLd data={personSchema} />
+      <JsonLd data={websiteSchema} />
       <div className="max-w-7xl mx-auto">
         {/* Two-column layout: left stacks info sections, right has Experience */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">

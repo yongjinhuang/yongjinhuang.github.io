@@ -9,13 +9,33 @@ export const metadata: Metadata = {
     template: '%s | Yongjin Huang',
   },
   description:
-    'Personal website of Yongjin Huang, a software engineer based in China. Work experience and skills.',
+    'Full-stack engineer with experience at Shopee, Huawei & startups. Go, TypeScript, Python, React, distributed systems.',
+  keywords: [
+    'Yongjin Huang',
+    'software engineer',
+    'full-stack developer',
+    'Shopee',
+    'Huawei',
+    'Java',
+    'Go',
+    'TypeScript',
+    'React',
+    'distributed systems',
+    'Shenzhen',
+  ],
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
-    images: [{ url: OG_IMAGE }],
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: 'Yongjin Huang — Software Engineer',
+      },
+    ],
   },
-  twitter: { card: 'summary' },
+  twitter: { card: 'summary_large_image' },
   manifest: '/manifest.json',
 };
 

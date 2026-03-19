@@ -58,10 +58,7 @@ export function SplitPaneViewer({
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="flex h-[calc(100vh-12rem)]"
-    >
+    <div ref={containerRef} className="flex h-[calc(100vh-12rem)]">
       {/* Left pane */}
       <div
         className="overflow-y-auto scrollbar-thin"
