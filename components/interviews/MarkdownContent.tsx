@@ -8,7 +8,7 @@ import type { InterviewFile } from '@/types';
 import type { Components } from 'react-markdown';
 import { MermaidDiagram } from './MermaidDiagram';
 
-const INTERVIEWS_BASE = '/interviews';
+const DEFAULT_VAULT = 'interviews';
 
 type FileSelectHandler = (slug: string) => void;
 
@@ -38,7 +38,7 @@ function getTextContent(children: React.ReactNode): string {
   return '';
 }
 
-function resolveImageSrc(src: string | undefined): string {
+function resolveImageSrc(src: string | undefined, vaultName: string): string {
   if (!src) return '';
   if (
     src.startsWith('http://') ||
@@ -47,12 +47,13 @@ function resolveImageSrc(src: string | undefined): string {
   ) {
     return src;
   }
-  return `${INTERVIEWS_BASE}/${src}`;
+  return `/vaults/${vaultName}/${src}`;
 }
 
 function createMarkdownComponents(
   onFileSelect?: FileSelectHandler,
-  fileCategory?: string
+  fileCategory?: string,
+  vaultName: string = DEFAULT_VAULT
 ): Components {
   return {
     h1: ({ children }) => (
@@ -136,7 +137,7 @@ function createMarkdownComponents(
     img: ({ src, alt }) => (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={resolveImageSrc(src)}
+        src={resolveImageSrc(src, vaultName)}
         alt={alt || ''}
         className="max-w-full h-auto rounded-lg my-4 border-2 border-gray-200 dark:border-white/10"
         loading="lazy"
@@ -221,14 +222,20 @@ interface MarkdownContentProps {
   readonly file: InterviewFile;
   readonly onFileSelect?: FileSelectHandler;
   readonly codeTheme?: string;
+  readonly vaultName?: string;
 }
 
 export function MarkdownContent({
   file,
   onFileSelect,
   codeTheme = 'github',
+  vaultName = DEFAULT_VAULT,
 }: MarkdownContentProps) {
-  const components = createMarkdownComponents(onFileSelect, file.category);
+  const components = createMarkdownComponents(
+    onFileSelect,
+    file.category,
+    vaultName
+  );
 
   return (
     <article

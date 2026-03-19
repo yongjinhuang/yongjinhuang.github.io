@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import type { InterviewCategory } from '@/types';
+import type { InterviewCategory, VaultInfo } from '@/types';
 import { SidebarItem } from './SidebarItem';
 import {
   HiChevronDown,
@@ -14,14 +14,25 @@ import {
   HiMinus,
   HiBars3BottomLeft,
 } from 'react-icons/hi2';
+import { HiArchiveBox } from 'react-icons/hi2';
 
 interface SidebarProps {
   readonly categories: readonly InterviewCategory[];
   readonly selectedSlug: string;
   readonly onSelect: (slug: string) => void;
+  readonly vaults?: readonly VaultInfo[];
+  readonly currentVault?: string;
+  readonly onVaultChange?: (vault: string) => void;
 }
 
-export function Sidebar({ categories, selectedSlug, onSelect }: SidebarProps) {
+export function Sidebar({
+  categories,
+  selectedSlug,
+  onSelect,
+  vaults,
+  currentVault,
+  onVaultChange,
+}: SidebarProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [locateTrigger, setLocateTrigger] = useState(0);
   const [query, setQuery] = useState('');
@@ -81,6 +92,36 @@ export function Sidebar({ categories, selectedSlug, onSelect }: SidebarProps) {
 
   return (
     <div className="glass-card p-4 h-full overflow-y-auto max-h-[calc(100vh-8rem)]">
+      {/* Vault selector */}
+      {vaults && vaults.length > 1 && onVaultChange && (
+        <div className="mb-3 px-1">
+          <div className="flex items-center gap-2 mb-1 px-2">
+            <HiArchiveBox className="w-3.5 h-3.5 text-accent" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              Vault
+            </span>
+          </div>
+          <select
+            value={currentVault}
+            onChange={(e) => onVaultChange(e.target.value)}
+            className={cn(
+              'w-full px-3 py-2 text-sm font-semibold rounded-lg',
+              'bg-gray-100 dark:bg-white/5',
+              'border border-gray-200 dark:border-white/10',
+              'text-gray-800 dark:text-gray-200',
+              'focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent',
+              'transition-colors duration-200 cursor-pointer'
+            )}
+          >
+            {vaults.map((v) => (
+              <option key={v.name} value={v.name}>
+                {v.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-3 px-3">
         <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
           Files

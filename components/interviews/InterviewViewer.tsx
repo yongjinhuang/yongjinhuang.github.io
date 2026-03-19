@@ -9,7 +9,7 @@ import {
   HiArrowDownTray,
 } from 'react-icons/hi2';
 import { cn } from '@/lib/utils';
-import type { InterviewFile, InterviewCategory } from '@/types';
+import type { InterviewFile, InterviewCategory, VaultInfo } from '@/types';
 import { useFileSelection } from '@/lib/useFileSelection';
 import { Sidebar } from './Sidebar';
 import { MarkdownContent } from './MarkdownContent';
@@ -19,16 +19,40 @@ import { SplitPaneViewer } from './SplitPaneViewer';
 import { CodeThemePicker, type CodeThemeId } from './CodeThemePicker';
 
 const MAX_TABS = 10;
+const DEFAULT_VAULT = 'interviews';
 
-interface InterviewViewerProps {
-  readonly files: readonly InterviewFile[];
+interface VaultData {
   readonly categories: readonly InterviewCategory[];
+  readonly files: readonly InterviewFile[];
 }
 
-export function InterviewViewer({ files, categories }: InterviewViewerProps) {
-  const defaultSlug = files.length > 0 ? files[0].slug : '';
-  const { activeTab, splitSlug, setActiveTab, setSplitSlug } = useFileSelection(
-    { defaultSlug }
+interface InterviewViewerProps {
+  readonly vaults: readonly VaultInfo[];
+  readonly vaultData: Record<string, VaultData>;
+}
+
+export function InterviewViewer({ vaults, vaultData }: InterviewViewerProps) {
+  const firstVault =
+    vaults.find((v) => v.name === DEFAULT_VAULT)?.name ??
+    vaults[0]?.name ??
+    DEFAULT_VAULT;
+  const firstFiles = vaultData[firstVault]?.files ?? [];
+  const defaultSlug = firstFiles.length > 0 ? firstFiles[0].slug : '';
+
+  const {
+    activeTab,
+    splitSlug,
+    vault: currentVault,
+    setActiveTab,
+    setSplitSlug,
+    setVault,
+  } = useFileSelection({ defaultSlug, defaultVault: firstVault });
+
+  const currentData = vaultData[currentVault];
+  const files = useMemo(() => currentData?.files ?? [], [currentData]);
+  const categories = useMemo(
+    () => currentData?.categories ?? [],
+    [currentData]
   );
 
   const [openTabs, setOpenTabs] = useState<string[]>([defaultSlug]);
@@ -37,6 +61,16 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
   const [codeTheme, setCodeTheme] = useState<CodeThemeId>('github-dark');
+
+  // When vault changes, reset tabs to first file in new vault
+  useEffect(() => {
+    const vaultFiles = vaultData[currentVault]?.files ?? [];
+    const firstSlug = vaultFiles.length > 0 ? vaultFiles[0].slug : '';
+    if (firstSlug && !vaultFiles.some((f) => f.slug === activeTab)) {
+      setActiveTab(firstSlug);
+      setOpenTabs([firstSlug]);
+    }
+  }, [currentVault, vaultData, activeTab, setActiveTab]);
 
   const selectedFile = useMemo(
     () => files.find((f) => f.slug === activeTab) ?? null,
@@ -49,7 +83,7 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
     [files, splitSlug]
   );
 
-  // Sync active tab into openTabs on mount (URL may have a file not in initial tabs)
+  // Sync active tab into openTabs on mount
   useEffect(() => {
     if (activeTab && !openTabs.includes(activeTab)) {
       setOpenTabs((prev) => [...prev, activeTab]);
@@ -114,13 +148,19 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
     [splitSlug, setSplitSlug]
   );
 
+  const handleVaultChange = useCallback(
+    (vaultName: string) => {
+      setVault(vaultName);
+    },
+    [setVault]
+  );
+
   const handleExportPdf = useCallback(() => {
     if (!contentRef.current || !selectedFile) return;
 
     const article = contentRef.current.querySelector('article');
     if (!article) return;
 
-    // Open a new window with just the article content for clean printing
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
@@ -170,11 +210,9 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
 </html>`);
 
     printWindow.document.close();
-    // Wait for content to render before triggering print
     printWindow.addEventListener('load', () => {
       printWindow.print();
     });
-    // Fallback if load doesn't fire
     setTimeout(() => {
       printWindow.print();
     }, 500);
@@ -184,7 +222,7 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
     return (
       <div className="glass-card p-8 text-center">
         <p className="text-gray-500 dark:text-gray-400">
-          No interview files found.
+          No files found in this vault.
         </p>
       </div>
     );
@@ -210,6 +248,9 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
           categories={categories}
           selectedSlug={activeTab}
           onSelect={handleFileSelect}
+          vaults={vaults}
+          currentVault={currentVault}
+          onVaultChange={handleVaultChange}
         />
       </div>
 
@@ -230,6 +271,9 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
             categories={categories}
             selectedSlug={activeTab}
             onSelect={handleFileSelect}
+            vaults={vaults}
+            currentVault={currentVault}
+            onVaultChange={handleVaultChange}
           />
         </div>
       </div>
@@ -309,7 +353,7 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
           onSplitTab={handleSplitTab}
         />
 
-        {/* Content — each tab gets its own scrollable container */}
+        {/* Content */}
         <div className="mt-2 relative">
           {splitFile && selectedFile ? (
             <SplitPaneViewer
@@ -318,6 +362,7 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
               onFileSelect={handleFileSelect}
               onCloseSplit={() => setSplitSlug(null)}
               codeTheme={codeTheme}
+              vaultName={currentVault}
             />
           ) : (
             <div className="relative h-[calc(100vh-12rem)]">
@@ -340,6 +385,7 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
                       file={file}
                       onFileSelect={handleFileSelect}
                       codeTheme={codeTheme}
+                      vaultName={currentVault}
                     />
                   </div>
                 );

@@ -74,6 +74,7 @@ export default function ColorSchemePicker() {
         <span
           className="w-5 h-5 rounded-full"
           style={{ backgroundColor: SCHEME_DISPLAY_COLORS[scheme] }}
+          suppressHydrationWarning
         />
       </button>
 

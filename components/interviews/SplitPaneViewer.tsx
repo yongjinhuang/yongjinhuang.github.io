@@ -12,6 +12,7 @@ interface SplitPaneViewerProps {
   readonly onFileSelect: (slug: string) => void;
   readonly onCloseSplit: () => void;
   readonly codeTheme?: string;
+  readonly vaultName?: string;
 }
 
 const MIN_PANE_PCT = 25;
@@ -24,6 +25,7 @@ export function SplitPaneViewer({
   onFileSelect,
   onCloseSplit,
   codeTheme,
+  vaultName,
 }: SplitPaneViewerProps) {
   const [leftPct, setLeftPct] = useState(DEFAULT_PCT);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,6 +70,7 @@ export function SplitPaneViewer({
           file={mainFile}
           onFileSelect={onFileSelect}
           codeTheme={codeTheme}
+          vaultName={vaultName}
         />
       </div>
 
@@ -99,6 +102,7 @@ export function SplitPaneViewer({
           file={splitFile}
           onFileSelect={onFileSelect}
           codeTheme={codeTheme}
+          vaultName={vaultName}
         />
       </div>
     </div>

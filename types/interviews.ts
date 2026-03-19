@@ -1,3 +1,8 @@
+export interface VaultInfo {
+  readonly name: string;
+  readonly label: string;
+}
+
 export interface InterviewFile {
   readonly slug: string;
   readonly filename: string;

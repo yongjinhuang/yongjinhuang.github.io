@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import type { InterviewFile, InterviewCategory } from '@/types';
+import type { InterviewFile, InterviewCategory, VaultInfo } from '@/types';
+
+const VAULTS_DIR = path.join(process.cwd(), 'public', 'vaults');
 
 const CATEGORY_LABELS: Record<string, string> = {
   general: 'General',
@@ -13,6 +15,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   behavioral: 'Behavioral',
   'cloud/aws': 'Cloud - AWS',
   'cloud/terraform': 'Cloud - Terraform',
+  'cloud/cloudflare': 'Cloud - Cloudflare',
+  'cloud/databases': 'Cloud - Databases',
+  'cloud/caching': 'Cloud - Caching',
+  'cloud/message-queues': 'Cloud - Message Queues',
+  'cloud/gcp': 'Cloud - GCP',
+  'cloud/azure': 'Cloud - Azure',
+  'cloud/operations': 'Cloud - Operations',
   dsa: 'DSA (Python)',
   'ai-engineering': 'AI/ML Engineering',
   'low-level-design': 'Low-Level Design',
@@ -31,6 +40,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   'embedded-iot': 'Embedded Systems & IoT',
   'data-model': 'Data Model',
   'web-game-dev': 'Web Game Development',
+  'agentic-engineering': 'Agentic Engineering',
+  'audio-video-rtc': 'Audio/Video/RTC',
+  'leetcode-hot-100': 'LeetCode Hot 100',
+  'ui-ux-design': 'UI/UX Design',
+  shopback: 'ShopBack',
+  whatnot: 'Whatnot',
 };
 
 function extractTitle(content: string, filename: string): string {
@@ -58,8 +73,7 @@ function readMarkdownFiles(
       const filePath = path.join(dir, filename);
       const content = fs.readFileSync(filePath, 'utf-8');
       const slugBase = filename.replace(/\.md$/, '');
-      const slug =
-        category === 'general' ? slugBase : `${category}/${slugBase}`;
+      const slug = `${category}/${slugBase}`;
       const title = extractTitle(content, filename);
 
       return { slug, filename, title, content, category };
@@ -69,20 +83,37 @@ function readMarkdownFiles(
   }
 }
 
-export function getInterviewFiles(): readonly InterviewFile[] {
-  const interviewsDir = path.join(process.cwd(), 'public', 'interviews');
+export function getAvailableVaults(): readonly VaultInfo[] {
+  try {
+    const entries = fs.readdirSync(VAULTS_DIR, { withFileTypes: true });
+    return entries
+      .filter((e) => e.isDirectory())
+      .map((e) => ({
+        name: e.name,
+        label: e.name
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase()),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  } catch {
+    return [];
+  }
+}
+
+export function getVaultFiles(vaultName: string): readonly InterviewFile[] {
+  const vaultDir = path.join(VAULTS_DIR, vaultName);
 
   try {
-    const topLevelFiles = readMarkdownFiles(interviewsDir, 'general');
+    // Top-level .md files (flat vault structure)
+    const topLevelFiles = readMarkdownFiles(vaultDir, vaultName);
 
-    const entries = fs.readdirSync(interviewsDir, { withFileTypes: true });
+    const entries = fs.readdirSync(vaultDir, { withFileTypes: true });
     const subdirFiles = entries
       .filter((entry) => entry.isDirectory() && entry.name !== 'imgs')
       .flatMap((entry) => {
-        const subDir = path.join(interviewsDir, entry.name);
+        const subDir = path.join(vaultDir, entry.name);
         const mdFiles = readMarkdownFiles(subDir, entry.name);
 
-        // Scan nested subdirectories (e.g., cloud/aws)
         const nestedEntries = fs
           .readdirSync(subDir, { withFileTypes: true })
           .filter((e) => e.isDirectory());
@@ -97,13 +128,15 @@ export function getInterviewFiles(): readonly InterviewFile[] {
 
     return [...topLevelFiles, ...subdirFiles];
   } catch (error) {
-    console.error('Failed to read interviews directory:', error);
+    console.error(`Failed to read vault "${vaultName}":`, error);
     return [];
   }
 }
 
-export function getInterviewCategories(): readonly InterviewCategory[] {
-  const files = getInterviewFiles();
+export function getVaultCategories(
+  vaultName: string
+): readonly InterviewCategory[] {
+  const files = getVaultFiles(vaultName);
   const categoryMap = new Map<string, InterviewFile[]>();
 
   for (const file of files) {
