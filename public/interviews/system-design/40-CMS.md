@@ -38,37 +38,37 @@ A Content Management System (CMS) provides a platform for creating, managing, an
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Content Modeling | Define custom content types with typed fields (text, rich text, number, date, media, reference, JSON) |
-| 2 | CRUD Operations | Create, read, update, delete content entries with validation against content type schema |
-| 3 | Content Versioning | Maintain full version history of every entry; compare and rollback to any version |
-| 4 | Publishing Workflow | Draft/review/published/archived lifecycle with scheduled publishing and unpublishing |
-| 5 | Media Management | Upload, store, transform (resize, crop, format conversion), and deliver media assets via CDN |
-| 6 | API Delivery | Serve content via REST and GraphQL APIs; support filtering, pagination, and field selection |
-| 7 | Localization | Per-field localization with locale fallback chains; translation workflow support |
-| 8 | Webhooks | Notify external systems on content lifecycle events (create, publish, unpublish, delete) |
-| 9 | Search | Full-text search across all content with faceted filtering and relevance ranking |
-| 10 | Access Control | Role-based permissions (author, editor, admin) with per-content-type and per-field granularity |
-| 11 | Preview | Generate preview URLs for unpublished content for editorial review |
-| 12 | Audit Trail | Log all content mutations with actor, timestamp, and changeset for compliance |
+| #   | Requirement         | Description                                                                                           |
+| --- | ------------------- | ----------------------------------------------------------------------------------------------------- |
+| 1   | Content Modeling    | Define custom content types with typed fields (text, rich text, number, date, media, reference, JSON) |
+| 2   | CRUD Operations     | Create, read, update, delete content entries with validation against content type schema              |
+| 3   | Content Versioning  | Maintain full version history of every entry; compare and rollback to any version                     |
+| 4   | Publishing Workflow | Draft/review/published/archived lifecycle with scheduled publishing and unpublishing                  |
+| 5   | Media Management    | Upload, store, transform (resize, crop, format conversion), and deliver media assets via CDN          |
+| 6   | API Delivery        | Serve content via REST and GraphQL APIs; support filtering, pagination, and field selection           |
+| 7   | Localization        | Per-field localization with locale fallback chains; translation workflow support                      |
+| 8   | Webhooks            | Notify external systems on content lifecycle events (create, publish, unpublish, delete)              |
+| 9   | Search              | Full-text search across all content with faceted filtering and relevance ranking                      |
+| 10  | Access Control      | Role-based permissions (author, editor, admin) with per-content-type and per-field granularity        |
+| 11  | Preview             | Generate preview URLs for unpublished content for editorial review                                    |
+| 12  | Audit Trail         | Log all content mutations with actor, timestamp, and changeset for compliance                         |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Content Delivery API latency | < 50ms P99 (CDN cache hit), < 200ms P99 (origin) |
-| 2 | Content Management API latency | < 500ms P99 for CRUD operations |
-| 3 | Availability | 99.99% for delivery API, 99.9% for management API |
-| 4 | Throughput (delivery) | 100K requests/second at peak |
-| 5 | Throughput (management) | 1K writes/second at peak |
-| 6 | Media upload | Support files up to 500MB; process within 60 seconds |
-| 7 | Search latency | < 100ms for full-text queries |
-| 8 | Scalability | Support 10K content types, 100M entries, 50M assets |
-| 9 | SEO-friendly | Clean URLs, structured data (JSON-LD), sitemap generation |
-| 10 | Data consistency | Strong consistency for management API, eventual for delivery API |
-| 11 | Multi-locale | Support 50+ locales with per-field localization |
-| 12 | Webhook delivery | At-least-once delivery within 30 seconds of event |
+| #   | Requirement                    | Target                                                           |
+| --- | ------------------------------ | ---------------------------------------------------------------- |
+| 1   | Content Delivery API latency   | < 50ms P99 (CDN cache hit), < 200ms P99 (origin)                 |
+| 2   | Content Management API latency | < 500ms P99 for CRUD operations                                  |
+| 3   | Availability                   | 99.99% for delivery API, 99.9% for management API                |
+| 4   | Throughput (delivery)          | 100K requests/second at peak                                     |
+| 5   | Throughput (management)        | 1K writes/second at peak                                         |
+| 6   | Media upload                   | Support files up to 500MB; process within 60 seconds             |
+| 7   | Search latency                 | < 100ms for full-text queries                                    |
+| 8   | Scalability                    | Support 10K content types, 100M entries, 50M assets              |
+| 9   | SEO-friendly                   | Clean URLs, structured data (JSON-LD), sitemap generation        |
+| 10  | Data consistency               | Strong consistency for management API, eventual for delivery API |
+| 11  | Multi-locale                   | Support 50+ locales with per-field localization                  |
+| 12  | Webhook delivery               | At-least-once delivery within 30 seconds of event                |
 
 ### Scale Estimation
 
@@ -379,9 +379,27 @@ input ImageTransformInput {
   focus: FocusArea
 }
 
-enum ImageFormat { WEBP AVIF JPG PNG }
-enum ImageFit { FILL FIT CROP PAD SCALE }
-enum Locale { en zh fr de ja es }
+enum ImageFormat {
+  WEBP
+  AVIF
+  JPG
+  PNG
+}
+enum ImageFit {
+  FILL
+  FIT
+  CROP
+  PAD
+  SCALE
+}
+enum Locale {
+  en
+  zh
+  fr
+  de
+  ja
+  es
+}
 
 type SystemMetadata {
   id: ID!
@@ -2535,7 +2553,7 @@ For basic conflict prevention, use optimistic locking: each entry update include
 
 **Q: How do you handle reference integrity when deleting a published entry that other entries link to?**
 
-Implement a reference graph check before deletion. Query the entry_references table: SELECT COUNT(*) FROM entry_references WHERE target_entry_id = $1. If references exist, return HTTP 409 with a list of referencing entries. Offer the user three options: (1) Cancel deletion; (2) Remove all references first (batch update referencing entries to null out the field); (3) Force delete with cascade (admin only, removes references). For the delivery API, handle dangling references gracefully -- if a referenced entry is not found, return null for that reference field rather than failing the entire response. Run a weekly background job to detect orphaned references and alert content editors.
+Implement a reference graph check before deletion. Query the entry_references table: SELECT COUNT(\*) FROM entry_references WHERE target_entry_id = $1. If references exist, return HTTP 409 with a list of referencing entries. Offer the user three options: (1) Cancel deletion; (2) Remove all references first (batch update referencing entries to null out the field); (3) Force delete with cascade (admin only, removes references). For the delivery API, handle dangling references gracefully -- if a referenced entry is not found, return null for that reference field rather than failing the entire response. Run a weekly background job to detect orphaned references and alert content editors.
 
 **Q: How would you design the preview system for unpublished content?**
 
@@ -2567,31 +2585,31 @@ Several AI integration points: (1) Content generation: integrate LLM APIs for dr
 
 ### Key Architecture Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Content storage | JSONB columns in PostgreSQL | Flexible schema per content type without EAV complexity; GIN indexes for queries |
-| Schema definition | Runtime-defined content types | Business users can create and modify content models without code deploys |
-| API style | REST (management) + REST/GraphQL (delivery) | REST for CRUD simplicity; GraphQL for flexible content fetching by frontend teams |
-| Versioning | Append-only version table with full snapshots | Simple to implement; efficient rollback; delta compression for storage optimization |
-| Publishing | Separate draft/published fields on entry | Live content unaffected by draft edits; atomic publish operation |
-| Caching | CDN + Redis + Read Replicas (3 layers) | 90%+ CDN hit rate; Redis catches common queries; replicas handle the rest |
-| CDN invalidation | Surrogate key purging | Targeted invalidation without TTL waiting; sub-second global purge |
-| Search | Elasticsearch with async indexing | Full-text search with facets; decoupled from write path for performance |
-| Media processing | Async pipeline with pre-generated + on-the-fly variants | Pre-generate common sizes; on-the-fly for long tail; CDN caches all |
-| Localization | Per-field localization with fallback chains | Granular control; only localize what needs it; fallback prevents empty content |
-| Webhooks | At-least-once delivery with exponential backoff | Reliable notification; consumers handle idempotency |
-| Multi-tenancy | Shared database with space_id partitioning | Cost efficient; row-level isolation; partition by space for performance |
-| Workflow | Configurable state machine per content type | Flexible approval pipelines; different workflows for different content |
-| Deployment | Multi-region with single write primary | Simplifies consistency; delivery API reads from local replicas |
+| Decision          | Choice                                                  | Rationale                                                                           |
+| ----------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Content storage   | JSONB columns in PostgreSQL                             | Flexible schema per content type without EAV complexity; GIN indexes for queries    |
+| Schema definition | Runtime-defined content types                           | Business users can create and modify content models without code deploys            |
+| API style         | REST (management) + REST/GraphQL (delivery)             | REST for CRUD simplicity; GraphQL for flexible content fetching by frontend teams   |
+| Versioning        | Append-only version table with full snapshots           | Simple to implement; efficient rollback; delta compression for storage optimization |
+| Publishing        | Separate draft/published fields on entry                | Live content unaffected by draft edits; atomic publish operation                    |
+| Caching           | CDN + Redis + Read Replicas (3 layers)                  | 90%+ CDN hit rate; Redis catches common queries; replicas handle the rest           |
+| CDN invalidation  | Surrogate key purging                                   | Targeted invalidation without TTL waiting; sub-second global purge                  |
+| Search            | Elasticsearch with async indexing                       | Full-text search with facets; decoupled from write path for performance             |
+| Media processing  | Async pipeline with pre-generated + on-the-fly variants | Pre-generate common sizes; on-the-fly for long tail; CDN caches all                 |
+| Localization      | Per-field localization with fallback chains             | Granular control; only localize what needs it; fallback prevents empty content      |
+| Webhooks          | At-least-once delivery with exponential backoff         | Reliable notification; consumers handle idempotency                                 |
+| Multi-tenancy     | Shared database with space_id partitioning              | Cost efficient; row-level isolation; partition by space for performance             |
+| Workflow          | Configurable state machine per content type             | Flexible approval pipelines; different workflows for different content              |
+| Deployment        | Multi-region with single write primary                  | Simplifies consistency; delivery API reads from local replicas                      |
 
 ### Trade-offs
 
-| Trade-off | Our Choice | Alternative | When to Reconsider |
-|-----------|-----------|-------------|-------------------|
-| JSONB vs normalized tables | JSONB for content fields | Normalized EAV | If complex SQL reporting on individual fields is critical |
-| Separate delivery API vs unified | Separate (read-only) | Single API | If operational complexity budget is limited; small-scale CMS |
-| Pre-generated vs on-the-fly images | Both (hybrid) | On-the-fly only | If storage cost is a bigger concern than compute cost |
-| Strong vs eventual consistency (delivery) | Eventual (via CDN + replicas) | Strong consistency | If content accuracy is life-safety critical (medical, legal) |
-| Per-field vs per-entry localization | Per-field | Per-entry (duplicate entry per locale) | If most fields are localized; per-entry simplifies the model |
-| GraphQL vs REST-only delivery | Both supported | REST-only | If team lacks GraphQL expertise; REST-only is simpler to cache |
-| Single-region vs multi-region writes | Single write region | Multi-region with conflict resolution | If write latency from non-primary regions becomes unacceptable (> 300ms) |
+| Trade-off                                 | Our Choice                    | Alternative                            | When to Reconsider                                                       |
+| ----------------------------------------- | ----------------------------- | -------------------------------------- | ------------------------------------------------------------------------ |
+| JSONB vs normalized tables                | JSONB for content fields      | Normalized EAV                         | If complex SQL reporting on individual fields is critical                |
+| Separate delivery API vs unified          | Separate (read-only)          | Single API                             | If operational complexity budget is limited; small-scale CMS             |
+| Pre-generated vs on-the-fly images        | Both (hybrid)                 | On-the-fly only                        | If storage cost is a bigger concern than compute cost                    |
+| Strong vs eventual consistency (delivery) | Eventual (via CDN + replicas) | Strong consistency                     | If content accuracy is life-safety critical (medical, legal)             |
+| Per-field vs per-entry localization       | Per-field                     | Per-entry (duplicate entry per locale) | If most fields are localized; per-entry simplifies the model             |
+| GraphQL vs REST-only delivery             | Both supported                | REST-only                              | If team lacks GraphQL expertise; REST-only is simpler to cache           |
+| Single-region vs multi-region writes      | Single write region           | Multi-region with conflict resolution  | If write latency from non-primary regions becomes unacceptable (> 300ms) |

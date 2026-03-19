@@ -167,13 +167,13 @@ ESP-IDF provides `esp_websocket_client` for outbound WebSocket connections. For 
 
 Classic Bluetooth (BR/EDR) was designed for continuous streaming (audio, file transfer). BLE (Bluetooth Low Energy), introduced in Bluetooth 4.0, is optimized for intermittent, low-bandwidth data exchange. A BLE device can run for months or years on a coin cell battery.
 
-| Feature              | Classic Bluetooth    | BLE                  |
-|----------------------|----------------------|----------------------|
-| Data rate            | 1-3 Mbps             | 1-2 Mbps (125 Kbps coded) |
-| Range                | ~10-100 m            | ~10-100 m (up to 1 km coded) |
-| Power consumption    | High                 | Very low             |
-| Connection setup     | Seconds              | Milliseconds         |
-| Use cases            | Audio, file transfer | Sensors, beacons, wearables |
+| Feature           | Classic Bluetooth    | BLE                          |
+| ----------------- | -------------------- | ---------------------------- |
+| Data rate         | 1-3 Mbps             | 1-2 Mbps (125 Kbps coded)    |
+| Range             | ~10-100 m            | ~10-100 m (up to 1 km coded) |
+| Power consumption | High                 | Very low                     |
+| Connection setup  | Seconds              | Milliseconds                 |
+| Use cases         | Audio, file transfer | Sensors, beacons, wearables  |
 
 ### 2.2 GAP: Generic Access Profile
 
@@ -356,10 +356,10 @@ LoRa (Long Range) uses Chirp Spread Spectrum (CSS) modulation. Unlike FSK or OOK
 
 LoRa achieves remarkable range at the expense of data rate:
 
-| Spreading Factor | Bit Rate   | Approx Range (urban) | Approx Range (rural) |
-|------------------|------------|----------------------|----------------------|
-| SF7              | 5.5 kbps   | 2 km                 | 10 km                |
-| SF12             | 0.29 kbps  | 5 km                 | 15+ km               |
+| Spreading Factor | Bit Rate  | Approx Range (urban) | Approx Range (rural) |
+| ---------------- | --------- | -------------------- | -------------------- |
+| SF7              | 5.5 kbps  | 2 km                 | 10 km                |
+| SF12             | 0.29 kbps | 5 km                 | 15+ km               |
 
 Maximum payload per message is typically 51-222 bytes depending on SF and region. This makes LoRa ideal for small sensor readings (temperature, GPS coordinates, soil moisture) sent infrequently.
 
@@ -557,14 +557,14 @@ void tcp_client_task(void *pvParameters) {
 
 For devices deployed far from WiFi or where LoRa gateways are not available, cellular IoT provides wide-area connectivity using existing mobile networks.
 
-| Feature        | NB-IoT              | LTE-M (Cat-M1)       |
-|----------------|----------------------|-----------------------|
-| Bandwidth      | 180 kHz              | 1.4 MHz               |
-| Peak data rate | ~60 kbps DL          | ~1 Mbps DL            |
-| Latency        | 1.5-10 s             | 50-100 ms             |
-| Mobility       | Limited              | Full handover support |
-| Voice           | No                   | VoLTE support         |
-| Power saving   | PSM, eDRX            | PSM, eDRX             |
+| Feature        | NB-IoT                 | LTE-M (Cat-M1)            |
+| -------------- | ---------------------- | ------------------------- |
+| Bandwidth      | 180 kHz                | 1.4 MHz                   |
+| Peak data rate | ~60 kbps DL            | ~1 Mbps DL                |
+| Latency        | 1.5-10 s               | 50-100 ms                 |
+| Mobility       | Limited                | Full handover support     |
+| Voice          | No                     | VoLTE support             |
+| Power saving   | PSM, eDRX              | PSM, eDRX                 |
 | Use cases      | Static sensors, meters | Asset tracking, wearables |
 
 **PSM (Power Save Mode)**: Device enters deep sleep, unreachable by network, wakes on schedule.

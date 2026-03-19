@@ -4,42 +4,42 @@ Search autocomplete suggests completions as the user types, requiring sub-50ms l
 
 ## Table Responsibilities
 
-| Table/Structure | Purpose | Storage | Key Characteristic |
-|----------------|---------|---------|-------------------|
-| **search_logs** | Raw search event stream | Kafka → Data Warehouse | Append-only, high volume |
-| **query_frequencies** | Aggregated query popularity | PostgreSQL or DynamoDB | Updated in batches, read by Trie builder |
-| **trie_nodes** | In-memory prefix tree | Application memory | O(L) prefix lookup, precomputed suggestions |
-| **trie_snapshots** | Serialized Trie for deployment | S3 | Versioned, loaded on service startup |
+| Table/Structure       | Purpose                        | Storage                | Key Characteristic                          |
+| --------------------- | ------------------------------ | ---------------------- | ------------------------------------------- |
+| **search_logs**       | Raw search event stream        | Kafka → Data Warehouse | Append-only, high volume                    |
+| **query_frequencies** | Aggregated query popularity    | PostgreSQL or DynamoDB | Updated in batches, read by Trie builder    |
+| **trie_nodes**        | In-memory prefix tree          | Application memory     | O(L) prefix lookup, precomputed suggestions |
+| **trie_snapshots**    | Serialized Trie for deployment | S3                     | Versioned, loaded on service startup        |
 
 ## Detailed Field Descriptions
 
 ### search_logs (Kafka → Data Warehouse)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| user_id | BIGINT | Who searched. Used for personalization and spam filtering. Anonymous users get a session ID. |
-| query_text | VARCHAR(500) | The full query the user submitted. Lowercased and trimmed before logging. |
-| timestamp | TIMESTAMP | When the search occurred. Used for time-decay weighting (recent searches count more). |
-| result_count | INT | Number of results returned. Queries with 0 results may be excluded from autocomplete to avoid suggesting dead-end queries. |
+| Field        | Type         | Description                                                                                                                |
+| ------------ | ------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| user_id      | BIGINT       | Who searched. Used for personalization and spam filtering. Anonymous users get a session ID.                               |
+| query_text   | VARCHAR(500) | The full query the user submitted. Lowercased and trimmed before logging.                                                  |
+| timestamp    | TIMESTAMP    | When the search occurred. Used for time-decay weighting (recent searches count more).                                      |
+| result_count | INT          | Number of results returned. Queries with 0 results may be excluded from autocomplete to avoid suggesting dead-end queries. |
 
 **Why log result_count?** A query like "asdfghjkl" might be searched often by accident but returns 0 results. Filtering out zero-result queries prevents suggesting useless completions.
 
 ### query_frequencies (PostgreSQL or DynamoDB)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| query_text | VARCHAR(500), PK | The normalized search query. Serves as the primary key for upsert operations. |
-| frequency_count | BIGINT | How many times this query was searched. Aggregated from search_logs, potentially with time decay (e.g., recent searches weighted 2x). |
-| last_updated | TIMESTAMP | When this count was last refreshed. Used to identify stale entries that should be re-aggregated. |
+| Field           | Type             | Description                                                                                                                           |
+| --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| query_text      | VARCHAR(500), PK | The normalized search query. Serves as the primary key for upsert operations.                                                         |
+| frequency_count | BIGINT           | How many times this query was searched. Aggregated from search_logs, potentially with time decay (e.g., recent searches weighted 2x). |
+| last_updated    | TIMESTAMP        | When this count was last refreshed. Used to identify stale entries that should be re-aggregated.                                      |
 
 **Why a separate table instead of querying search_logs directly?** Raw logs might contain billions of rows. Pre-aggregating into query_frequencies reduces the Trie build job's input from billions of rows to millions of unique queries.
 
 ### trie_nodes (In-Memory)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| prefix | STRING | The character prefix this node represents (e.g., "fac" for the path f→a→c). Implicit in the tree structure, not stored explicitly. |
-| children | MAP<CHAR, trie_node> | Pointers to child nodes, one per next character. In practice, an array of 26-36 slots (a-z, 0-9) for O(1) child lookup. |
+| Field             | Type                 | Description                                                                                                                                 |
+| ----------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| prefix            | STRING               | The character prefix this node represents (e.g., "fac" for the path f→a→c). Implicit in the tree structure, not stored explicitly.          |
+| children          | MAP<CHAR, trie_node> | Pointers to child nodes, one per next character. In practice, an array of 26-36 slots (a-z, 0-9) for O(1) child lookup.                     |
 | top_k_suggestions | LIST<{query, score}> | Precomputed top-K (typically K=10) most popular queries that start with this prefix. Stored at every node to avoid traversal at query time. |
 
 **Why precompute top-K at each node?** Without precomputation, finding suggestions for prefix "fac" requires traversing all descendants (potentially millions of nodes). Precomputing bubbles up the best suggestions during build time, making query-time O(L) regardless of how many queries share the prefix.
@@ -48,12 +48,12 @@ Search autocomplete suggests completions as the user types, requiring sub-50ms l
 
 ### trie_snapshots (S3)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| snapshot_id | VARCHAR(50) | Unique identifier for this snapshot (e.g., UUID or timestamp-based). |
-| serialized_trie_blob | BYTES | The entire Trie serialized (e.g., via Protocol Buffers or custom binary format). Typically 1-5 GB for a large-scale system. |
-| built_at | TIMESTAMP | When this Trie was built. Used to determine freshness and for rollback. |
-| version | INT | Monotonically increasing version number. Services load the latest version on startup. |
+| Field                | Type        | Description                                                                                                                 |
+| -------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------- |
+| snapshot_id          | VARCHAR(50) | Unique identifier for this snapshot (e.g., UUID or timestamp-based).                                                        |
+| serialized_trie_blob | BYTES       | The entire Trie serialized (e.g., via Protocol Buffers or custom binary format). Typically 1-5 GB for a large-scale system. |
+| built_at             | TIMESTAMP   | When this Trie was built. Used to determine freshness and for rollback.                                                     |
+| version              | INT         | Monotonically increasing version number. Services load the latest version on startup.                                       |
 
 **Why serialize to S3?** Building a Trie takes minutes to hours. We build it once offline and distribute the artifact. Trie Service instances load the snapshot on startup, avoiding repeated builds. S3 provides durable, versioned storage with easy rollback.
 

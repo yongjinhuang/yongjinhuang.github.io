@@ -41,34 +41,34 @@
 
 ### Functional Requirements
 
-| Category | Requirement |
-|----------|-------------|
-| Agent Management | Create, configure, deploy, and version agents with custom system prompts and tool sets |
-| Task Execution | Submit tasks to agents, track execution state, retrieve results |
-| Tool Registry | Register, version, and invoke external tools (APIs, code execution, search) |
-| Memory Management | Short-term conversation memory, long-term vector-based memory, episodic recall |
-| Multi-Agent Orchestration | Define agent workflows with supervisor, peer-to-peer, and hierarchical patterns |
-| Model Routing | Route requests to appropriate LLMs based on task complexity and cost targets |
-| Streaming | Server-sent events for real-time progressive responses and tool call streaming |
-| Human-in-the-Loop | Approval gates, escalation paths, feedback collection during task execution |
-| Observability | Token usage tracking, latency tracing, cost attribution, audit logging |
-| Evaluation | Assess task success rate, output faithfulness, tool call accuracy |
-| Guardrails | Input/output validation, content filtering, PII detection, prompt injection defense |
+| Category                  | Requirement                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| Agent Management          | Create, configure, deploy, and version agents with custom system prompts and tool sets |
+| Task Execution            | Submit tasks to agents, track execution state, retrieve results                        |
+| Tool Registry             | Register, version, and invoke external tools (APIs, code execution, search)            |
+| Memory Management         | Short-term conversation memory, long-term vector-based memory, episodic recall         |
+| Multi-Agent Orchestration | Define agent workflows with supervisor, peer-to-peer, and hierarchical patterns        |
+| Model Routing             | Route requests to appropriate LLMs based on task complexity and cost targets           |
+| Streaming                 | Server-sent events for real-time progressive responses and tool call streaming         |
+| Human-in-the-Loop         | Approval gates, escalation paths, feedback collection during task execution            |
+| Observability             | Token usage tracking, latency tracing, cost attribution, audit logging                 |
+| Evaluation                | Assess task success rate, output faithfulness, tool call accuracy                      |
+| Guardrails                | Input/output validation, content filtering, PII detection, prompt injection defense    |
 
 ### Non-Functional Requirements
 
-| Requirement | Target |
-|-------------|--------|
-| Task completion latency (simple) | < 30 seconds |
-| Task completion latency (complex multi-step) | < 5 minutes |
-| Availability | 99.9% uptime (< 8.7 hours downtime/year) |
-| Throughput | 10,000 concurrent agent sessions |
-| Cost per simple agent task | < $0.10 |
-| Harmful output rate | < 0.1% |
-| Token efficiency | > 70% useful tokens (minimize filler context) |
-| Tool execution sandbox isolation | Full process-level isolation per invocation |
-| Audit log retention | 90 days minimum |
-| LLM provider failover | < 5 seconds on primary failure |
+| Requirement                                  | Target                                        |
+| -------------------------------------------- | --------------------------------------------- |
+| Task completion latency (simple)             | < 30 seconds                                  |
+| Task completion latency (complex multi-step) | < 5 minutes                                   |
+| Availability                                 | 99.9% uptime (< 8.7 hours downtime/year)      |
+| Throughput                                   | 10,000 concurrent agent sessions              |
+| Cost per simple agent task                   | < $0.10                                       |
+| Harmful output rate                          | < 0.1%                                        |
+| Token efficiency                             | > 70% useful tokens (minimize filler context) |
+| Tool execution sandbox isolation             | Full process-level isolation per invocation   |
+| Audit log retention                          | 90 days minimum                               |
+| LLM provider failover                        | < 5 seconds on primary failure                |
 
 ### Scale Estimation
 
@@ -125,6 +125,7 @@ POST   /v1/agents/{agent_id}/versions
 ```
 
 **Create Agent Request:**
+
 ```json
 {
   "name": "research-assistant",
@@ -149,7 +150,7 @@ POST   /v1/agents/{agent_id}/versions
   },
   "token_budget": {
     "max_tokens_per_task": 100000,
-    "max_cost_per_task_usd": 0.10
+    "max_cost_per_task_usd": 0.1
   }
 }
 ```
@@ -180,6 +181,7 @@ POST   /v1/tasks/{task_id}/approve
 ```
 
 **Submit Task Request:**
+
 ```json
 {
   "agent_id": "agent_abc123",
@@ -198,6 +200,7 @@ POST   /v1/tasks/{task_id}/approve
 ```
 
 **Task Response:**
+
 ```json
 {
   "task_id": "task_def456",
@@ -251,6 +254,7 @@ POST   /v1/tools/{tool_id}/test
 ```
 
 **Register Tool Request:**
+
 ```json
 {
   "name": "web_search",
@@ -259,8 +263,8 @@ POST   /v1/tools/{tool_id}/test
   "input_schema": {
     "type": "object",
     "properties": {
-      "query": {"type": "string", "description": "Search query"},
-      "num_results": {"type": "integer", "default": 5, "maximum": 20}
+      "query": { "type": "string", "description": "Search query" },
+      "num_results": { "type": "integer", "default": 5, "maximum": 20 }
     },
     "required": ["query"]
   },
@@ -269,16 +273,16 @@ POST   /v1/tools/{tool_id}/test
     "items": {
       "type": "object",
       "properties": {
-        "title": {"type": "string"},
-        "url": {"type": "string"},
-        "snippet": {"type": "string"}
+        "title": { "type": "string" },
+        "url": { "type": "string" },
+        "snippet": { "type": "string" }
       }
     }
   },
   "execution": {
     "type": "http",
     "endpoint": "https://search-service.internal/search",
-    "auth": {"type": "api_key", "secret_ref": "secrets/search-api-key"},
+    "auth": { "type": "api_key", "secret_ref": "secrets/search-api-key" },
     "timeout_ms": 5000,
     "sandbox": "network_only"
   },
@@ -311,6 +315,7 @@ POST   /v1/memory/episodic/recall
 ```
 
 **Long-Term Memory Query:**
+
 ```json
 {
   "query": "transformer efficiency techniques",
@@ -774,12 +779,12 @@ The agent critiques its own output and iteratively improves it.
 
 ### Architecture Selection Guide
 
-| Architecture | Best For | Model Cost | Latency |
-|---|---|---|---|
-| ReAct | Dynamic, exploratory tasks | Medium | Low-Medium |
-| Plan-and-Execute | Structured, multi-step tasks | Medium-High | Medium |
-| Tree-of-Thought | Creative, optimization tasks | High | High |
-| Reflection | Quality-critical single outputs | Medium-High | Medium-High |
+| Architecture     | Best For                        | Model Cost  | Latency     |
+| ---------------- | ------------------------------- | ----------- | ----------- |
+| ReAct            | Dynamic, exploratory tasks      | Medium      | Low-Medium  |
+| Plan-and-Execute | Structured, multi-step tasks    | Medium-High | Medium      |
+| Tree-of-Thought  | Creative, optimization tasks    | High        | High        |
+| Reflection       | Quality-critical single outputs | Medium-High | Medium-High |
 
 ---
 
@@ -1151,14 +1156,14 @@ CONVERSATION COMPACTION:
 
 ### Model Tiers and Use Cases
 
-| Model | Provider | Context | Cost (input/output per 1M tok) | Best For |
-|---|---|---|---|---|
-| Haiku 3.5 | Anthropic | 200K | $0.80 / $4.00 | Simple Q&A, classification, short rewrites |
-| Sonnet 4 | Anthropic | 200K | $3.00 / $15.00 | Complex reasoning, code, multi-step tasks |
-| Opus 4 | Anthropic | 200K | $15.00 / $75.00 | Hardest tasks, architecture decisions, research |
-| GPT-4o mini | OpenAI | 128K | $0.15 / $0.60 | Fast, cheap responses |
-| GPT-4o | OpenAI | 128K | $2.50 / $10.00 | General purpose |
-| Gemini Flash | Google | 1M | $0.075 / $0.30 | Very long contexts, cheap tasks |
+| Model        | Provider  | Context | Cost (input/output per 1M tok) | Best For                                        |
+| ------------ | --------- | ------- | ------------------------------ | ----------------------------------------------- |
+| Haiku 3.5    | Anthropic | 200K    | $0.80 / $4.00                  | Simple Q&A, classification, short rewrites      |
+| Sonnet 4     | Anthropic | 200K    | $3.00 / $15.00                 | Complex reasoning, code, multi-step tasks       |
+| Opus 4       | Anthropic | 200K    | $15.00 / $75.00                | Hardest tasks, architecture decisions, research |
+| GPT-4o mini  | OpenAI    | 128K    | $0.15 / $0.60                  | Fast, cheap responses                           |
+| GPT-4o       | OpenAI    | 128K    | $2.50 / $10.00                 | General purpose                                 |
+| Gemini Flash | Google    | 1M      | $0.075 / $0.30                 | Very long contexts, cheap tasks                 |
 
 ### Model Routing Decision Tree
 
@@ -1541,6 +1546,7 @@ POST /v1/tasks/{task_id}/feedback
 ```
 
 Feedback is stored and used for:
+
 - Fine-tuning agent system prompts (prompt optimization)
 - Adjusting approval threshold policies
 - Training reward models for automated evaluation
@@ -2051,20 +2057,20 @@ Refined (5% complex use Sonnet with reflection, not Opus):
 
 ## Comparison with Existing Platforms
 
-| Feature | LangGraph | CrewAI | AutoGen | Claude Agent SDK | Our Platform |
-|---|---|---|---|---|---|
-| Primary Abstraction | Graph-based workflows | Role-based agents | Conversation-based | Tool-using agents | Unified task execution |
-| Multi-agent | Yes (graph edges) | Yes (crew/role) | Yes (conversations) | Yes (subagents) | Yes (all patterns) |
-| Memory | Basic (state graph) | Basic | Basic | Short-term | Short/Long/Episodic |
-| Model Agnostic | Yes | Yes | Yes | Anthropic-first | Yes (multi-provider) |
-| Streaming | Yes | Partial | No | Yes | Yes (SSE) |
-| Human-in-loop | Yes | Partial | Yes | Yes | Yes (approval gates) |
-| Guardrails | Community plugins | Limited | Limited | Built-in | Production-grade |
-| Observability | LangSmith | Limited | Limited | Anthropic console | Full stack |
-| Deployment | Self-hosted | Self-hosted | Self-hosted | Managed | Managed + self-hosted |
-| Cost Optimization | Manual | Manual | Manual | Prompt caching | Automated cascading |
-| Tool Sandbox | None | None | None | Partial | Full isolation |
-| Production Scale | Depends on deploy | Depends | Depends | Anthropic infra | Designed for 10K+ |
+| Feature             | LangGraph             | CrewAI            | AutoGen             | Claude Agent SDK  | Our Platform           |
+| ------------------- | --------------------- | ----------------- | ------------------- | ----------------- | ---------------------- |
+| Primary Abstraction | Graph-based workflows | Role-based agents | Conversation-based  | Tool-using agents | Unified task execution |
+| Multi-agent         | Yes (graph edges)     | Yes (crew/role)   | Yes (conversations) | Yes (subagents)   | Yes (all patterns)     |
+| Memory              | Basic (state graph)   | Basic             | Basic               | Short-term        | Short/Long/Episodic    |
+| Model Agnostic      | Yes                   | Yes               | Yes                 | Anthropic-first   | Yes (multi-provider)   |
+| Streaming           | Yes                   | Partial           | No                  | Yes               | Yes (SSE)              |
+| Human-in-loop       | Yes                   | Partial           | Yes                 | Yes               | Yes (approval gates)   |
+| Guardrails          | Community plugins     | Limited           | Limited             | Built-in          | Production-grade       |
+| Observability       | LangSmith             | Limited           | Limited             | Anthropic console | Full stack             |
+| Deployment          | Self-hosted           | Self-hosted       | Self-hosted         | Managed           | Managed + self-hosted  |
+| Cost Optimization   | Manual                | Manual            | Manual              | Prompt caching    | Automated cascading    |
+| Tool Sandbox        | None                  | None              | None                | Partial           | Full isolation         |
+| Production Scale    | Depends on deploy     | Depends           | Depends             | Anthropic infra   | Designed for 10K+      |
 
 ### Key Differentiators of Our Platform
 
@@ -2100,15 +2106,15 @@ vs. Claude Agent SDK:
 
 ### Key Design Trade-offs
 
-| Decision | Option A | Option B | Choice | Rationale |
-|---|---|---|---|---|
-| Agent state storage | In-memory (fast) | Persistent (durable) | Persistent with cache | Agent tasks can be long-running; must survive restarts |
-| Tool execution | In-process (fast) | Sandboxed (safe) | Sandboxed | Security is non-negotiable; tool latency is acceptable |
-| Memory retrieval | Always retrieve | On-demand retrieval | On-demand (agentic) | Reduces unnecessary context bloat and cost |
-| LLM routing | Static rules | ML-based routing | Static + learned rules | Start simple, add ML as data accumulates |
-| Streaming | WebSocket | SSE | SSE | SSE is simpler, sufficient for unidirectional streaming |
-| Approval flow | Synchronous (block) | Async (callback) | Async | Don't hold resources while waiting for human |
-| Evaluation | Human only | LLM-as-judge | Both | LLM-as-judge for scale, human for calibration |
+| Decision            | Option A            | Option B             | Choice                 | Rationale                                               |
+| ------------------- | ------------------- | -------------------- | ---------------------- | ------------------------------------------------------- |
+| Agent state storage | In-memory (fast)    | Persistent (durable) | Persistent with cache  | Agent tasks can be long-running; must survive restarts  |
+| Tool execution      | In-process (fast)   | Sandboxed (safe)     | Sandboxed              | Security is non-negotiable; tool latency is acceptable  |
+| Memory retrieval    | Always retrieve     | On-demand retrieval  | On-demand (agentic)    | Reduces unnecessary context bloat and cost              |
+| LLM routing         | Static rules        | ML-based routing     | Static + learned rules | Start simple, add ML as data accumulates                |
+| Streaming           | WebSocket           | SSE                  | SSE                    | SSE is simpler, sufficient for unidirectional streaming |
+| Approval flow       | Synchronous (block) | Async (callback)     | Async                  | Don't hold resources while waiting for human            |
+| Evaluation          | Human only          | LLM-as-judge         | Both                   | LLM-as-judge for scale, human for calibration           |
 
 ### Consistency vs. Availability Trade-off
 
@@ -2352,4 +2358,4 @@ Provider diversity targets:
 
 ---
 
-*This document covers the design of a production-grade AI Agent Orchestration Platform reflecting 2025-2026 industry best practices. Topics include the full agentic stack: from ReAct loops and multi-agent coordination to memory systems, guardrails, cost optimization, and enterprise-scale deployment.*
+_This document covers the design of a production-grade AI Agent Orchestration Platform reflecting 2025-2026 industry best practices. Topics include the full agentic stack: from ReAct loops and multi-agent coordination to memory systems, guardrails, cost optimization, and enterprise-scale deployment._

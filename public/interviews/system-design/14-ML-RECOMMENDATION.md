@@ -4,28 +4,28 @@
 
 ### Functional Requirements
 
-| Requirement                  | Description                                                        |
-|------------------------------|--------------------------------------------------------------------|
-| Personalized recommendations | Tailored content for each user based on history and preferences    |
-| Multiple recommendation types| Homepage feed, "Related Items", "Trending", "Because You Watched"  |
-| Real-time interaction tracking| Capture clicks, views, watch time, likes, shares in real time     |
-| Multi-format content         | Support videos, articles, products, music depending on platform    |
-| A/B testing                  | Run experiments on models, features, and ranking strategies        |
-| Explainability               | Provide reasons for recommendations ("Because you watched X")      |
-| Search integration           | Personalized search results blended with recommendations           |
+| Requirement                    | Description                                                       |
+| ------------------------------ | ----------------------------------------------------------------- |
+| Personalized recommendations   | Tailored content for each user based on history and preferences   |
+| Multiple recommendation types  | Homepage feed, "Related Items", "Trending", "Because You Watched" |
+| Real-time interaction tracking | Capture clicks, views, watch time, likes, shares in real time     |
+| Multi-format content           | Support videos, articles, products, music depending on platform   |
+| A/B testing                    | Run experiments on models, features, and ranking strategies       |
+| Explainability                 | Provide reasons for recommendations ("Because you watched X")     |
+| Search integration             | Personalized search results blended with recommendations          |
 
 ### Non-Functional Requirements
 
-| Requirement     | Target                                                             |
-|-----------------|--------------------------------------------------------------------|
-| Latency         | < 200ms end-to-end for serving recommendations (p99)               |
-| Availability    | 99.99% uptime for serving path                                     |
-| Scale           | 500M monthly active users                                          |
-| Throughput      | Handle 10B interaction events per day                              |
-| Cold start      | Provide reasonable recommendations for brand new users/items       |
-| Freshness       | Incorporate user actions within minutes                            |
-| Diversity       | Avoid filter bubbles; surface varied content                       |
-| Fairness        | Avoid bias amplification across demographics                       |
+| Requirement  | Target                                                       |
+| ------------ | ------------------------------------------------------------ |
+| Latency      | < 200ms end-to-end for serving recommendations (p99)         |
+| Availability | 99.99% uptime for serving path                               |
+| Scale        | 500M monthly active users                                    |
+| Throughput   | Handle 10B interaction events per day                        |
+| Cold start   | Provide reasonable recommendations for brand new users/items |
+| Freshness    | Incorporate user actions within minutes                      |
+| Diversity    | Avoid filter bubbles; surface varied content                 |
+| Fairness     | Avoid bias amplification across demographics                 |
 
 ### Scale Estimates
 
@@ -201,20 +201,21 @@ Predicted rating: r(u,i) = U[u] . V[i]^T
 
 ### 2.4 Comparison Table
 
-| Approach             | Complexity | Cold Start | Scale     | Latency | Quality |
-|----------------------|-----------|------------|-----------|---------|---------|
-| Content-Based        | Low       | Item: Good | Good      | Low     | Medium  |
-|                      |           | User: Poor |           |         |         |
-| User-Based CF        | Medium    | Poor       | Poor (N^2)| Medium  | Medium  |
-| Item-Based CF        | Medium    | Poor       | Moderate  | Medium  | Medium  |
-| Matrix Factorization | Medium    | Poor       | Good      | Low     | Good    |
-| Two-Tower            | High      | Moderate   | Excellent | Low     | Good    |
-| Wide & Deep          | High      | Moderate   | Good      | Medium  | V.Good  |
-| DeepFM               | High      | Moderate   | Good      | Medium  | V.Good  |
-| BERT4Rec             | Very High | Poor       | Moderate  | High    | V.Good  |
-| Hybrid               | Very High | Good       | Good      | Medium  | Best    |
+| Approach             | Complexity | Cold Start | Scale      | Latency | Quality |
+| -------------------- | ---------- | ---------- | ---------- | ------- | ------- |
+| Content-Based        | Low        | Item: Good | Good       | Low     | Medium  |
+|                      |            | User: Poor |            |         |         |
+| User-Based CF        | Medium     | Poor       | Poor (N^2) | Medium  | Medium  |
+| Item-Based CF        | Medium     | Poor       | Moderate   | Medium  | Medium  |
+| Matrix Factorization | Medium     | Poor       | Good       | Low     | Good    |
+| Two-Tower            | High       | Moderate   | Excellent  | Low     | Good    |
+| Wide & Deep          | High       | Moderate   | Good       | Medium  | V.Good  |
+| DeepFM               | High       | Moderate   | Good       | Medium  | V.Good  |
+| BERT4Rec             | Very High  | Poor       | Moderate   | High    | V.Good  |
+| Hybrid               | Very High  | Good       | Good       | Medium  | Best    |
 
 **Industry choices:**
+
 - **Netflix**: Two-Tower for candidate gen + Deep ranking model
 - **YouTube**: Two-Tower (candidate gen) + Wide & Deep (ranking)
 - **TikTok**: Multi-gate mixture of experts + real-time features
@@ -349,15 +350,15 @@ ANN Index Structure (HNSW):
 
 #### Multiple Retrieval Channels
 
-| Channel              | Source             | Count | Latency |
-|----------------------|--------------------|-------|---------|
-| Two-Tower ANN        | User embedding     | 200   | 5ms     |
-| Item-Based CF        | Recent interactions| 200   | 3ms     |
-| User-Based CF        | Similar users      | 100   | 5ms     |
-| Popularity           | Global trending    | 100   | 1ms     |
-| Content-Based        | Liked item features| 100   | 3ms     |
-| Editor's Picks       | Curated lists      | 50    | 1ms     |
-| Geo/Context          | Location, time     | 50    | 2ms     |
+| Channel        | Source              | Count | Latency |
+| -------------- | ------------------- | ----- | ------- |
+| Two-Tower ANN  | User embedding      | 200   | 5ms     |
+| Item-Based CF  | Recent interactions | 200   | 3ms     |
+| User-Based CF  | Similar users       | 100   | 5ms     |
+| Popularity     | Global trending     | 100   | 1ms     |
+| Content-Based  | Liked item features | 100   | 3ms     |
+| Editor's Picks | Curated lists       | 50    | 1ms     |
+| Geo/Context    | Location, time      | 50    | 2ms     |
 
 All channels execute in **parallel**, results are merged and deduplicated.
 

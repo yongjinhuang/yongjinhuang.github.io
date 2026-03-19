@@ -4,51 +4,51 @@ A URL shortener maps short keys (e.g., `abc123`) to long URLs, enabling compact 
 
 ## Table Responsibilities
 
-| Table | Purpose | Storage | Key Characteristic |
-|-------|---------|---------|-------------------|
-| **urls** | Core mapping from short key to long URL | PostgreSQL | Read-heavy, cached in Redis |
-| **users** | Account management and API access | PostgreSQL | Ties URLs to owners, enforces rate limits |
-| **clicks** | Analytics for each redirect event | PostgreSQL (partitioned by date) | Append-only, high write volume |
+| Table      | Purpose                                 | Storage                          | Key Characteristic                        |
+| ---------- | --------------------------------------- | -------------------------------- | ----------------------------------------- |
+| **urls**   | Core mapping from short key to long URL | PostgreSQL                       | Read-heavy, cached in Redis               |
+| **users**  | Account management and API access       | PostgreSQL                       | Ties URLs to owners, enforces rate limits |
+| **clicks** | Analytics for each redirect event       | PostgreSQL (partitioned by date) | Append-only, high write volume            |
 
 ## Detailed Field Descriptions
 
 ### urls
 
-| Field | Type | Description |
-|-------|------|-------------|
-| short_key | VARCHAR(10), PK | Base62-encoded short key (e.g., `a9Xk3m`). Serves as the primary lookup key for redirects. Using the short key as PK avoids a secondary index lookup. |
-| long_url | TEXT, NOT NULL | The original destination URL. Stored as-is to preserve query params and fragments. |
-| long_url_hash | VARCHAR(64), INDEX | SHA-256 hash of the long URL. Enables O(1) duplicate detection without scanning full URLs. Indexed for fast lookups. |
-| user_id | BIGINT, FK → users.id | Owner of this short URL. Nullable for anonymous shortening. |
-| created_at | TIMESTAMP | Creation time. Used for TTL enforcement and analytics. |
-| expires_at | TIMESTAMP, NULLABLE | Optional expiration. Null means the link never expires. A background job cleans up expired links. |
-| is_active | BOOLEAN, DEFAULT true | Soft-delete flag. Allows deactivation without losing analytics data. |
+| Field         | Type                  | Description                                                                                                                                           |
+| ------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| short_key     | VARCHAR(10), PK       | Base62-encoded short key (e.g., `a9Xk3m`). Serves as the primary lookup key for redirects. Using the short key as PK avoids a secondary index lookup. |
+| long_url      | TEXT, NOT NULL        | The original destination URL. Stored as-is to preserve query params and fragments.                                                                    |
+| long_url_hash | VARCHAR(64), INDEX    | SHA-256 hash of the long URL. Enables O(1) duplicate detection without scanning full URLs. Indexed for fast lookups.                                  |
+| user_id       | BIGINT, FK → users.id | Owner of this short URL. Nullable for anonymous shortening.                                                                                           |
+| created_at    | TIMESTAMP             | Creation time. Used for TTL enforcement and analytics.                                                                                                |
+| expires_at    | TIMESTAMP, NULLABLE   | Optional expiration. Null means the link never expires. A background job cleans up expired links.                                                     |
+| is_active     | BOOLEAN, DEFAULT true | Soft-delete flag. Allows deactivation without losing analytics data.                                                                                  |
 
 **Why `long_url_hash`?** Comparing full URLs (potentially thousands of chars) is expensive. Hashing lets us quickly check if a URL was already shortened. The hash is indexed, so duplicate detection is a single index scan.
 
 ### users
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | BIGINT, PK | Auto-incrementing user identifier. |
-| email | VARCHAR(255), UNIQUE | Login credential and contact info. Unique constraint prevents duplicate accounts. |
-| api_key | VARCHAR(64), UNIQUE | API authentication token. Generated on account creation, rotatable. |
-| tier | ENUM('free','pro','enterprise') | Determines rate limits and feature access. Free users get lower limits. |
-| rate_limit | INT | Max requests per minute. Derived from tier but overridable for custom enterprise deals. |
+| Field      | Type                            | Description                                                                             |
+| ---------- | ------------------------------- | --------------------------------------------------------------------------------------- |
+| id         | BIGINT, PK                      | Auto-incrementing user identifier.                                                      |
+| email      | VARCHAR(255), UNIQUE            | Login credential and contact info. Unique constraint prevents duplicate accounts.       |
+| api_key    | VARCHAR(64), UNIQUE             | API authentication token. Generated on account creation, rotatable.                     |
+| tier       | ENUM('free','pro','enterprise') | Determines rate limits and feature access. Free users get lower limits.                 |
+| rate_limit | INT                             | Max requests per minute. Derived from tier but overridable for custom enterprise deals. |
 
 **Why store `rate_limit` separately from `tier`?** Enterprise clients often negotiate custom limits. Storing it explicitly avoids hardcoding tier-to-limit mappings and allows per-user overrides.
 
 ### clicks
 
-| Field | Type | Description |
-|-------|------|-------------|
-| short_key | VARCHAR(10), FK → urls.short_key | Which short URL was clicked. Partitioned by time, so this is not a traditional FK constraint. |
-| clicked_at | TIMESTAMP, NOT NULL | When the click occurred. Used as the partition key for time-range queries. |
-| ip_address | VARCHAR(45) | Client IP (supports IPv6). Used for geo-lookup and fraud detection. |
-| user_agent | TEXT | Browser/device info. Parsed for device_type analytics. |
-| referrer | TEXT | HTTP Referer header. Shows where traffic comes from. |
-| country | VARCHAR(2) | ISO country code, derived from IP via GeoIP lookup at write time. Pre-computed to avoid runtime lookups during analytics queries. |
-| device_type | VARCHAR(20) | Derived from user_agent (mobile/desktop/tablet/bot). Pre-computed for fast aggregation. |
+| Field       | Type                             | Description                                                                                                                       |
+| ----------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| short_key   | VARCHAR(10), FK → urls.short_key | Which short URL was clicked. Partitioned by time, so this is not a traditional FK constraint.                                     |
+| clicked_at  | TIMESTAMP, NOT NULL              | When the click occurred. Used as the partition key for time-range queries.                                                        |
+| ip_address  | VARCHAR(45)                      | Client IP (supports IPv6). Used for geo-lookup and fraud detection.                                                               |
+| user_agent  | TEXT                             | Browser/device info. Parsed for device_type analytics.                                                                            |
+| referrer    | TEXT                             | HTTP Referer header. Shows where traffic comes from.                                                                              |
+| country     | VARCHAR(2)                       | ISO country code, derived from IP via GeoIP lookup at write time. Pre-computed to avoid runtime lookups during analytics queries. |
+| device_type | VARCHAR(20)                      | Derived from user_agent (mobile/desktop/tablet/bot). Pre-computed for fast aggregation.                                           |
 
 **Why pre-compute `country` and `device_type`?** Analytics queries aggregate by these dimensions constantly. Computing them at write time (once) is far cheaper than parsing user_agent and doing GeoIP lookups at query time (many times).
 

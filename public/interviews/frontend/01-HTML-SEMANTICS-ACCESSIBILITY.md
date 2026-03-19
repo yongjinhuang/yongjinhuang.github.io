@@ -5,6 +5,7 @@
 HTML semantics and accessibility (a11y) are foundational topics that separate junior developers from experienced ones in interviews. Semantic HTML means using the right elements for the right purpose -- a `<nav>` for navigation, a `<button>` for actions, a `<table>` for tabular data. Accessibility means ensuring that everyone, including people using screen readers, keyboard-only navigation, or other assistive technologies, can use your application.
 
 Interviewers test this because:
+
 - It reveals whether you understand the web platform, not just your framework
 - It shows empathy for users and awareness of legal requirements (WCAG, ADA)
 - Semantic HTML directly impacts SEO, performance, and maintainability
@@ -21,36 +22,70 @@ Semantic elements communicate meaning to both the browser and assistive technolo
 #### Document Structure Elements
 
 ```html
-<header>    <!-- Introductory content, navigation aids -->
-<nav>       <!-- Navigation links -->
-<main>      <!-- Dominant content of the document (only one per page) -->
-<article>   <!-- Self-contained composition (blog post, comment, widget) -->
-<section>   <!-- Thematic grouping of content -->
-<aside>     <!-- Tangentially related content (sidebar, pull quote) -->
-<footer>    <!-- Footer for its nearest sectioning content -->
+<header>
+  <!-- Introductory content, navigation aids -->
+  <nav>
+    <!-- Navigation links -->
+    <main>
+      <!-- Dominant content of the document (only one per page) -->
+      <article>
+        <!-- Self-contained composition (blog post, comment, widget) -->
+        <section>
+          <!-- Thematic grouping of content -->
+          <aside>
+            <!-- Tangentially related content (sidebar, pull quote) -->
+            <footer><!-- Footer for its nearest sectioning content --></footer>
+          </aside>
+        </section>
+      </article>
+    </main>
+  </nav>
+</header>
 ```
 
 #### Text-Level Semantics
 
 ```html
-<strong>    <!-- Strong importance (not just bold) -->
-<em>        <!-- Stress emphasis (not just italic) -->
-<mark>      <!-- Highlighted/relevant text -->
-<time>      <!-- Machine-readable date/time -->
-<abbr>      <!-- Abbreviation with expansion -->
-<cite>      <!-- Title of a creative work -->
-<code>      <!-- Inline code -->
-<kbd>       <!-- Keyboard input -->
-<samp>      <!-- Sample output -->
+<strong>
+  <!-- Strong importance (not just bold) -->
+  <em>
+    <!-- Stress emphasis (not just italic) -->
+    <mark>
+      <!-- Highlighted/relevant text -->
+      <time>
+        <!-- Machine-readable date/time -->
+        <abbr>
+          <!-- Abbreviation with expansion -->
+          <cite>
+            <!-- Title of a creative work -->
+            <code>
+              <!-- Inline code -->
+              <kbd>
+                <!-- Keyboard input -->
+                <samp> <!-- Sample output --></samp></kbd
+              ></code
+            ></cite
+          ></abbr
+        ></time
+      ></mark
+    ></em
+  ></strong
+>
 ```
 
 #### Interactive Elements
 
 ```html
-<details>   <!-- Disclosure widget (expandable) -->
-<summary>   <!-- Caption for <details> -->
-<dialog>    <!-- Dialog box or modal -->
-<menu>      <!-- Toolbar or context menu -->
+<details>
+  <!-- Disclosure widget (expandable) -->
+  <summary>
+    <!-- Caption for <details> -->
+    <dialog>
+      <!-- Dialog box or modal -->
+      <menu><!-- Toolbar or context menu --></menu>
+    </dialog>
+  </summary>
+</details>
 ```
 
 ### The Heading Hierarchy
@@ -60,17 +95,18 @@ Headings (`<h1>` through `<h6>`) create an outline of the document. Screen reade
 ```html
 <!-- CORRECT: Logical hierarchy -->
 <h1>Company Name</h1>
-  <h2>Products</h2>
-    <h3>Software</h3>
-    <h3>Hardware</h3>
-  <h2>About Us</h2>
-    <h3>Team</h3>
-    <h3>History</h3>
+<h2>Products</h2>
+<h3>Software</h3>
+<h3>Hardware</h3>
+<h2>About Us</h2>
+<h3>Team</h3>
+<h3>History</h3>
 
 <!-- WRONG: Skipping levels -->
 <h1>Company Name</h1>
-  <h4>Products</h4>  <!-- Skipped h2 and h3 -->
-  <h2>About Us</h2>
+<h4>Products</h4>
+<!-- Skipped h2 and h3 -->
+<h2>About Us</h2>
 ```
 
 **Rule**: Never skip heading levels. Each page should have exactly one `<h1>`. Headings should nest logically, not be chosen for visual size (use CSS for that).
@@ -79,15 +115,15 @@ Headings (`<h1>` through `<h6>`) create an outline of the document. Screen reade
 
 Landmark regions allow screen reader users to jump directly to sections of a page. HTML5 semantic elements automatically create landmarks:
 
-| HTML Element | Implicit ARIA Role | Purpose |
-|-------------|-------------------|---------|
-| `<header>` (top-level) | `banner` | Site-wide header |
-| `<nav>` | `navigation` | Navigation links |
-| `<main>` | `main` | Primary content |
-| `<aside>` | `complementary` | Related content |
-| `<footer>` (top-level) | `contentinfo` | Site-wide footer |
-| `<form>` (with name) | `form` | Form region |
-| `<section>` (with label) | `region` | Generic landmark |
+| HTML Element             | Implicit ARIA Role | Purpose          |
+| ------------------------ | ------------------ | ---------------- |
+| `<header>` (top-level)   | `banner`           | Site-wide header |
+| `<nav>`                  | `navigation`       | Navigation links |
+| `<main>`                 | `main`             | Primary content  |
+| `<aside>`                | `complementary`    | Related content  |
+| `<footer>` (top-level)   | `contentinfo`      | Site-wide footer |
+| `<form>` (with name)     | `form`             | Form region      |
+| `<section>` (with label) | `region`           | Generic landmark |
 
 ### ARIA (Accessible Rich Internet Applications)
 
@@ -95,13 +131,15 @@ ARIA provides attributes that supplement HTML semantics, especially for custom i
 
 #### ARIA Roles
 
-Roles define what an element *is*:
+Roles define what an element _is_:
 
 ```html
 <!-- Custom tab interface -->
 <div role="tablist">
   <button role="tab" aria-selected="true" aria-controls="panel-1">Tab 1</button>
-  <button role="tab" aria-selected="false" aria-controls="panel-2">Tab 2</button>
+  <button role="tab" aria-selected="false" aria-controls="panel-2">
+    Tab 2
+  </button>
 </div>
 <div role="tabpanel" id="panel-1">Content 1</div>
 <div role="tabpanel" id="panel-2" hidden>Content 2</div>
@@ -111,22 +149,36 @@ Roles define what an element *is*:
 
 ```html
 <!-- States (change dynamically) -->
-aria-expanded="true|false"     <!-- Expandable sections -->
-aria-selected="true|false"     <!-- Selected item in a list -->
-aria-checked="true|false"      <!-- Checkbox state -->
-aria-disabled="true|false"     <!-- Disabled state -->
-aria-hidden="true|false"       <!-- Hidden from assistive tech -->
-aria-pressed="true|false"      <!-- Toggle button state -->
-aria-invalid="true|false"      <!-- Form validation state -->
+aria-expanded="true|false"
+<!-- Expandable sections -->
+aria-selected="true|false"
+<!-- Selected item in a list -->
+aria-checked="true|false"
+<!-- Checkbox state -->
+aria-disabled="true|false"
+<!-- Disabled state -->
+aria-hidden="true|false"
+<!-- Hidden from assistive tech -->
+aria-pressed="true|false"
+<!-- Toggle button state -->
+aria-invalid="true|false"
+<!-- Form validation state -->
 
 <!-- Properties (generally static) -->
-aria-label="Close dialog"      <!-- Accessible name -->
-aria-labelledby="heading-id"   <!-- References labeling element -->
-aria-describedby="desc-id"     <!-- References describing element -->
-aria-controls="panel-id"       <!-- References controlled element -->
-aria-live="polite|assertive"   <!-- Live region announcements -->
-aria-required="true"           <!-- Required form field -->
-aria-haspopup="true"           <!-- Has popup menu -->
+aria-label="Close dialog"
+<!-- Accessible name -->
+aria-labelledby="heading-id"
+<!-- References labeling element -->
+aria-describedby="desc-id"
+<!-- References describing element -->
+aria-controls="panel-id"
+<!-- References controlled element -->
+aria-live="polite|assertive"
+<!-- Live region announcements -->
+aria-required="true"
+<!-- Required form field -->
+aria-haspopup="true"
+<!-- Has popup menu -->
 ```
 
 #### aria-live Regions
@@ -156,28 +208,31 @@ Live regions announce dynamic content changes to screen readers:
 
 All interactive elements must be operable with a keyboard alone. The key interactions are:
 
-| Key | Expected Behavior |
-|-----|-------------------|
-| `Tab` | Move focus to next focusable element |
-| `Shift+Tab` | Move focus to previous focusable element |
-| `Enter` | Activate buttons, links, submit forms |
-| `Space` | Activate buttons, toggle checkboxes |
-| `Escape` | Close modals, dismiss popups |
+| Key          | Expected Behavior                                   |
+| ------------ | --------------------------------------------------- |
+| `Tab`        | Move focus to next focusable element                |
+| `Shift+Tab`  | Move focus to previous focusable element            |
+| `Enter`      | Activate buttons, links, submit forms               |
+| `Space`      | Activate buttons, toggle checkboxes                 |
+| `Escape`     | Close modals, dismiss popups                        |
 | `Arrow keys` | Navigate within widgets (tabs, menus, radio groups) |
-| `Home/End` | Jump to first/last item in a list |
+| `Home/End`   | Jump to first/last item in a list                   |
 
 #### Focus Management
 
 ```html
 <!-- tabindex values -->
-tabindex="0"    <!-- Element is focusable in natural tab order -->
-tabindex="-1"   <!-- Focusable via JavaScript, but NOT in tab order -->
-tabindex="1+"   <!-- AVOID: overrides natural order, creates confusion -->
+tabindex="0"
+<!-- Element is focusable in natural tab order -->
+tabindex="-1"
+<!-- Focusable via JavaScript, but NOT in tab order -->
+tabindex="1+"
+<!-- AVOID: overrides natural order, creates confusion -->
 ```
 
 ```javascript
 // Moving focus programmatically (e.g., after opening a modal)
-const modal = document.getElementById("modal");
+const modal = document.getElementById('modal');
 modal.focus();
 
 // Trapping focus inside a modal
@@ -189,8 +244,8 @@ function trapFocus(element) {
   const firstFocusable = focusableElements[0];
   const lastFocusable = focusableElements[focusableElements.length - 1];
 
-  element.addEventListener("keydown", (e) => {
-    if (e.key !== "Tab") return;
+  element.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
 
     if (e.shiftKey) {
       if (document.activeElement === firstFocusable) {
@@ -214,10 +269,14 @@ Forms are one of the most important areas for accessibility. Every input needs a
 ```html
 <!-- CORRECT: Explicit label association -->
 <label for="email">Email Address</label>
-<input type="email" id="email" name="email"
-       aria-required="true"
-       aria-describedby="email-hint email-error"
-       aria-invalid="false" />
+<input
+  type="email"
+  id="email"
+  name="email"
+  aria-required="true"
+  aria-describedby="email-hint email-error"
+  aria-invalid="false"
+/>
 <p id="email-hint" class="hint">We will never share your email.</p>
 <p id="email-error" class="error" role="alert" hidden>
   Please enter a valid email address.
@@ -270,19 +329,24 @@ Group related fields using `<fieldset>` and `<legend>`:
 
 <!-- Complex image: use longer description -->
 <figure>
-  <img src="architecture.png" alt="System architecture diagram"
-       aria-describedby="arch-desc" />
+  <img
+    src="architecture.png"
+    alt="System architecture diagram"
+    aria-describedby="arch-desc"
+  />
   <figcaption id="arch-desc">
-    The system consists of three layers: a React frontend communicating
-    with a Node.js API server, which connects to a PostgreSQL database.
-    A Redis cache sits between the API and database layers.
+    The system consists of three layers: a React frontend communicating with a
+    Node.js API server, which connects to a PostgreSQL database. A Redis cache
+    sits between the API and database layers.
   </figcaption>
 </figure>
 
 <!-- SVG accessibility -->
 <svg role="img" aria-labelledby="svg-title svg-desc">
   <title id="svg-title">Monthly Revenue</title>
-  <desc id="svg-desc">Line chart showing revenue growth from January to December</desc>
+  <desc id="svg-desc">
+    Line chart showing revenue growth from January to December
+  </desc>
   <!-- SVG content -->
 </svg>
 
@@ -317,15 +381,20 @@ Group related fields using `<fieldset>` and `<legend>`:
 ### 2. "What is the difference between `aria-label`, `aria-labelledby`, and `aria-describedby`?"
 
 **Answer**:
+
 - **`aria-label`**: Provides a string directly as the accessible name. Used when there is no visible text label.
 - **`aria-labelledby`**: Points to the `id` of another element whose text content becomes the accessible name. Takes precedence over `aria-label` and native labels.
-- **`aria-describedby`**: Points to the `id` of an element that provides a supplementary description. This is announced *after* the name, giving additional context.
+- **`aria-describedby`**: Points to the `id` of an element that provides a supplementary description. This is announced _after_ the name, giving additional context.
 
 ```html
 <button aria-label="Close">X</button>
 
 <h2 id="dialog-title">Confirm Deletion</h2>
-<div role="dialog" aria-labelledby="dialog-title" aria-describedby="dialog-desc">
+<div
+  role="dialog"
+  aria-labelledby="dialog-title"
+  aria-describedby="dialog-desc"
+>
   <p id="dialog-desc">This action cannot be undone. Are you sure?</p>
 </div>
 ```
@@ -355,6 +424,7 @@ Group related fields using `<fieldset>` and `<legend>`:
 ```
 
 Key requirements:
+
 - `role="combobox"` on the trigger, `role="listbox"` on the list, `role="option"` on items
 - `aria-expanded` toggles with open/close state
 - `aria-activedescendant` tracks the currently highlighted option
@@ -368,6 +438,7 @@ Key requirements:
 ### 5. "What is the purpose of `role="presentation"` and `aria-hidden="true"`?"
 
 **Answer**:
+
 - **`role="presentation"`** (or `role="none"`): Removes the semantic meaning of an element, but its content and children remain visible and accessible. Used when an element is used purely for layout.
 - **`aria-hidden="true"`**: Completely hides the element and all its children from assistive technologies. The element remains visually visible. Used for decorative content.
 
@@ -376,7 +447,10 @@ Key requirements:
 ```html
 <!-- Table used for layout (not data) -->
 <table role="presentation">
-  <tr><td>Column 1</td><td>Column 2</td></tr>
+  <tr>
+    <td>Column 1</td>
+    <td>Column 2</td>
+  </tr>
 </table>
 
 <!-- Decorative icon next to text -->
@@ -400,11 +474,13 @@ Key requirements:
 ### 7. "What are the WCAG conformance levels?"
 
 **Answer**:
+
 - **Level A**: Minimum accessibility. Basic requirements that must be met.
 - **Level AA**: The standard most organizations target. Addresses the most common barriers. Required by many laws (ADA, Section 508, EAA).
 - **Level AAA**: Highest level. Not required as a general policy because it is not possible to satisfy all AAA criteria for some content.
 
 Key WCAG principles (POUR):
+
 - **Perceivable**: Content must be presentable in ways users can perceive (alt text, captions, contrast)
 - **Operable**: UI must be operable (keyboard access, enough time, no seizure triggers)
 - **Understandable**: Content must be understandable (readable, predictable, input assistance)
@@ -461,8 +537,8 @@ Without this, a keyboard user must press Tab through every navigation link on ev
   >
     <h2 id="modal-title">Confirm Account Deletion</h2>
     <p id="modal-description">
-      This will permanently delete your account and all associated data.
-      This action cannot be undone.
+      This will permanently delete your account and all associated data. This
+      action cannot be undone.
     </p>
     <div class="modal-actions">
       <button id="confirm-delete" class="btn-danger">Delete My Account</button>
@@ -473,18 +549,20 @@ Without this, a keyboard user must press Tab through every navigation link on ev
 ```
 
 ```javascript
-const openButton = document.getElementById("open-modal");
-const overlay = document.getElementById("modal-overlay");
-const modal = document.getElementById("modal");
-const cancelButton = document.getElementById("cancel-delete");
+const openButton = document.getElementById('open-modal');
+const overlay = document.getElementById('modal-overlay');
+const modal = document.getElementById('modal');
+const cancelButton = document.getElementById('cancel-delete');
 let previouslyFocused = null;
 
 function openModal() {
   previouslyFocused = document.activeElement;
   overlay.hidden = false;
-  document.body.style.overflow = "hidden";
+  document.body.style.overflow = 'hidden';
   // Focus the first focusable element inside the modal
-  const firstFocusable = modal.querySelector("button, [href], input, select, textarea");
+  const firstFocusable = modal.querySelector(
+    'button, [href], input, select, textarea'
+  );
   if (firstFocusable) {
     firstFocusable.focus();
   }
@@ -493,25 +571,25 @@ function openModal() {
 
 function closeModal() {
   overlay.hidden = true;
-  document.body.style.overflow = "";
+  document.body.style.overflow = '';
   // Return focus to the element that opened the modal
   if (previouslyFocused) {
     previouslyFocused.focus();
   }
 }
 
-openButton.addEventListener("click", openModal);
-cancelButton.addEventListener("click", closeModal);
+openButton.addEventListener('click', openModal);
+cancelButton.addEventListener('click', closeModal);
 
 // Close on Escape
-overlay.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
+overlay.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
     closeModal();
   }
 });
 
 // Close on overlay click (but not modal click)
-overlay.addEventListener("click", (e) => {
+overlay.addEventListener('click', (e) => {
   if (e.target === overlay) {
     closeModal();
   }
@@ -525,8 +603,8 @@ overlay.addEventListener("click", (e) => {
   <caption>
     Quarterly Revenue by Region (in millions USD)
     <span class="sr-only">
-      Table has 4 columns: Region, Q1, Q2, Q3, and Q4.
-      Data is sorted by Q4 revenue descending.
+      Table has 4 columns: Region, Q1, Q2, Q3, and Q4. Data is sorted by Q4
+      revenue descending.
     </span>
   </caption>
   <thead>
@@ -561,6 +639,7 @@ overlay.addEventListener("click", (e) => {
 ```
 
 Key points:
+
 - `<caption>` provides the table's accessible name
 - `scope="col"` and `scope="row"` connect headers to data cells
 - `aria-sort` indicates sorting state for sortable columns
@@ -601,29 +680,29 @@ Key points:
 ```javascript
 // Create a live region for dynamic announcements
 function createAnnouncer() {
-  const announcer = document.createElement("div");
-  announcer.setAttribute("role", "status");
-  announcer.setAttribute("aria-live", "polite");
-  announcer.setAttribute("aria-atomic", "true");
-  announcer.classList.add("sr-only");
+  const announcer = document.createElement('div');
+  announcer.setAttribute('role', 'status');
+  announcer.setAttribute('aria-live', 'polite');
+  announcer.setAttribute('aria-atomic', 'true');
+  announcer.classList.add('sr-only');
   document.body.appendChild(announcer);
   return announcer;
 }
 
 const announcer = createAnnouncer();
 
-function announce(message, priority = "polite") {
-  announcer.setAttribute("aria-live", priority);
+function announce(message, priority = 'polite') {
+  announcer.setAttribute('aria-live', priority);
   // Clear and re-set to trigger announcement
-  announcer.textContent = "";
+  announcer.textContent = '';
   requestAnimationFrame(() => {
     announcer.textContent = message;
   });
 }
 
 // Usage
-announce("Item added to cart. Cart total: 3 items.");
-announce("Error: Invalid credit card number.", "assertive");
+announce('Item added to cart. Cart total: 3 items.');
+announce('Error: Invalid credit card number.', 'assertive');
 ```
 
 ---
@@ -633,6 +712,7 @@ announce("Error: Invalid credit card number.", "assertive");
 ### 1. Implicit vs. Explicit Roles
 
 Some semantic elements have implicit roles that are conditional:
+
 - `<header>` is `banner` only when it is a direct child of `<body>`. Nested in `<article>`, it has no implicit role.
 - `<footer>` is `contentinfo` only at the top level.
 - `<section>` is `region` only when it has an accessible name (via `aria-label` or `aria-labelledby`).
@@ -655,8 +735,15 @@ Using the wrong element confuses assistive technology users, even if it "looks r
 <div class="btn" onclick="save()">Save</div>
 
 <!-- CORRECT: If you must use a div (avoid this) -->
-<div class="btn" role="button" tabindex="0"
-     onclick="save()" onkeydown="if(event.key==='Enter')save()">Save</div>
+<div
+  class="btn"
+  role="button"
+  tabindex="0"
+  onclick="save()"
+  onkeydown="if(event.key==='Enter')save()"
+>
+  Save
+</div>
 ```
 
 ### 3. Color Is Not Enough
@@ -687,7 +774,7 @@ Never remove the focus outline without providing an alternative:
 
 /* CORRECT: custom focus styles */
 *:focus-visible {
-  outline: 2px solid #4A90D9;
+  outline: 2px solid #4a90d9;
   outline-offset: 2px;
 }
 
@@ -698,6 +785,7 @@ Never remove the focus outline without providing an alternative:
 ### 5. Dynamic Content and Screen Readers
 
 When content changes dynamically (AJAX loading, SPA navigation), screen readers do not automatically announce the change. You must:
+
 - Use `aria-live` regions for content updates
 - Manage focus when navigating between "pages" in an SPA
 - Announce loading states and completion
@@ -712,37 +800,37 @@ WCAG 2.2 requires touch targets to be at least 24x24 CSS pixels (Level AA) with 
 
 ### Semantic Element Cheat Sheet
 
-| Element | Use For | Instead Of |
-|---------|---------|------------|
-| `<nav>` | Navigation links | `<div class="nav">` |
-| `<main>` | Primary content | `<div id="main">` |
-| `<article>` | Independent content | `<div class="post">` |
-| `<section>` | Thematic grouping | `<div class="section">` |
-| `<aside>` | Sidebar/supplementary | `<div class="sidebar">` |
-| `<header>` | Introductory content | `<div class="header">` |
-| `<footer>` | Footer content | `<div class="footer">` |
-| `<figure>` | Image with caption | `<div class="image-wrapper">` |
-| `<time>` | Dates/times | `<span class="date">` |
-| `<address>` | Contact information | `<div class="contact">` |
-| `<button>` | Interactive actions | `<div onclick="...">` |
-| `<details>` | Expandable content | Custom accordion div |
+| Element     | Use For               | Instead Of                    |
+| ----------- | --------------------- | ----------------------------- |
+| `<nav>`     | Navigation links      | `<div class="nav">`           |
+| `<main>`    | Primary content       | `<div id="main">`             |
+| `<article>` | Independent content   | `<div class="post">`          |
+| `<section>` | Thematic grouping     | `<div class="section">`       |
+| `<aside>`   | Sidebar/supplementary | `<div class="sidebar">`       |
+| `<header>`  | Introductory content  | `<div class="header">`        |
+| `<footer>`  | Footer content        | `<div class="footer">`        |
+| `<figure>`  | Image with caption    | `<div class="image-wrapper">` |
+| `<time>`    | Dates/times           | `<span class="date">`         |
+| `<address>` | Contact information   | `<div class="contact">`       |
+| `<button>`  | Interactive actions   | `<div onclick="...">`         |
+| `<details>` | Expandable content    | Custom accordion div          |
 
 ### ARIA Quick Reference
 
-| Attribute | Purpose | Example |
-|-----------|---------|---------|
-| `role` | Define element type | `role="dialog"` |
-| `aria-label` | Accessible name (string) | `aria-label="Close"` |
-| `aria-labelledby` | Accessible name (reference) | `aria-labelledby="title-id"` |
-| `aria-describedby` | Additional description | `aria-describedby="hint-id"` |
-| `aria-expanded` | Expandable state | `aria-expanded="true"` |
-| `aria-hidden` | Hide from AT | `aria-hidden="true"` |
-| `aria-live` | Announce changes | `aria-live="polite"` |
-| `aria-required` | Required field | `aria-required="true"` |
-| `aria-invalid` | Validation state | `aria-invalid="true"` |
-| `aria-current` | Current item | `aria-current="page"` |
-| `aria-controls` | Controlled element | `aria-controls="panel-1"` |
-| `aria-modal` | Modal dialog | `aria-modal="true"` |
+| Attribute          | Purpose                     | Example                      |
+| ------------------ | --------------------------- | ---------------------------- |
+| `role`             | Define element type         | `role="dialog"`              |
+| `aria-label`       | Accessible name (string)    | `aria-label="Close"`         |
+| `aria-labelledby`  | Accessible name (reference) | `aria-labelledby="title-id"` |
+| `aria-describedby` | Additional description      | `aria-describedby="hint-id"` |
+| `aria-expanded`    | Expandable state            | `aria-expanded="true"`       |
+| `aria-hidden`      | Hide from AT                | `aria-hidden="true"`         |
+| `aria-live`        | Announce changes            | `aria-live="polite"`         |
+| `aria-required`    | Required field              | `aria-required="true"`       |
+| `aria-invalid`     | Validation state            | `aria-invalid="true"`        |
+| `aria-current`     | Current item                | `aria-current="page"`        |
+| `aria-controls`    | Controlled element          | `aria-controls="panel-1"`    |
+| `aria-modal`       | Modal dialog                | `aria-modal="true"`          |
 
 ### Keyboard Testing Checklist
 
@@ -758,18 +846,18 @@ WCAG 2.2 requires touch targets to be at least 24x24 CSS pixels (Level AA) with 
 
 ### Common WCAG 2.2 Success Criteria
 
-| Criterion | Level | Requirement |
-|-----------|-------|-------------|
-| 1.1.1 Non-text Content | A | All images have text alternatives |
-| 1.3.1 Info and Relationships | A | Structure conveyed through markup |
-| 1.4.3 Contrast (Minimum) | AA | 4.5:1 for text, 3:1 for large text |
-| 1.4.11 Non-text Contrast | AA | 3:1 for UI components and graphics |
-| 2.1.1 Keyboard | A | All functionality via keyboard |
-| 2.1.2 No Keyboard Trap | A | Focus can always be moved away |
-| 2.4.1 Bypass Blocks | A | Skip navigation mechanism |
-| 2.4.3 Focus Order | A | Logical and meaningful |
-| 2.4.7 Focus Visible | AA | Focus indicator is visible |
-| 2.5.8 Target Size | AA | Minimum 24x24 CSS pixels |
-| 3.3.1 Error Identification | A | Errors described in text |
-| 3.3.2 Labels or Instructions | A | Labels for user input |
-| 4.1.2 Name, Role, Value | A | Custom widgets have accessible names/roles |
+| Criterion                    | Level | Requirement                                |
+| ---------------------------- | ----- | ------------------------------------------ |
+| 1.1.1 Non-text Content       | A     | All images have text alternatives          |
+| 1.3.1 Info and Relationships | A     | Structure conveyed through markup          |
+| 1.4.3 Contrast (Minimum)     | AA    | 4.5:1 for text, 3:1 for large text         |
+| 1.4.11 Non-text Contrast     | AA    | 3:1 for UI components and graphics         |
+| 2.1.1 Keyboard               | A     | All functionality via keyboard             |
+| 2.1.2 No Keyboard Trap       | A     | Focus can always be moved away             |
+| 2.4.1 Bypass Blocks          | A     | Skip navigation mechanism                  |
+| 2.4.3 Focus Order            | A     | Logical and meaningful                     |
+| 2.4.7 Focus Visible          | AA    | Focus indicator is visible                 |
+| 2.5.8 Target Size            | AA    | Minimum 24x24 CSS pixels                   |
+| 3.3.1 Error Identification   | A     | Errors described in text                   |
+| 3.3.2 Labels or Instructions | A     | Labels for user input                      |
+| 4.1.2 Name, Role, Value      | A     | Custom widgets have accessible names/roles |

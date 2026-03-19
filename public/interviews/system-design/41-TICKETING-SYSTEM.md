@@ -39,36 +39,36 @@ A customer support ticketing system is the backbone of enterprise customer servi
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Ticket CRUD | Create, read, update, close tickets with rich metadata (priority, category, tags, custom fields) |
-| 2 | Multi-Channel Intake | Ingest tickets from email, live chat, web forms, REST API, and social media channels |
-| 3 | Assignment & Routing | Automatically route tickets to the correct team/agent based on rules, skills, and workload |
-| 4 | SLA Tracking | Define SLA policies with first response and resolution time targets; track compliance in real time |
-| 5 | Agent Workspace | Unified inbox with filters, views, bulk actions, and keyboard shortcuts for agent productivity |
-| 6 | Internal Collaboration | Internal notes, @mentions, ticket followers, collision detection for concurrent edits |
-| 7 | Customer Portal | Self-service portal where customers can submit, track, and respond to tickets |
-| 8 | Knowledge Base | Article management system with search, categorization, and AI-powered suggestions |
-| 9 | Macros & Templates | Pre-built response templates and multi-step automation macros for common scenarios |
-| 10 | Automation Rules | Trigger-based rules (on create, on update, time-based) to automate ticket workflows |
-| 11 | Reporting & Analytics | Agent performance, SLA compliance, CSAT scores, queue health, and custom dashboards |
-| 12 | AI Features | Auto-classification, sentiment analysis, suggested responses, chatbot handoff |
-| 13 | Audit Trail | Complete history of every action on every ticket for compliance and debugging |
+| #   | Requirement            | Description                                                                                        |
+| --- | ---------------------- | -------------------------------------------------------------------------------------------------- |
+| 1   | Ticket CRUD            | Create, read, update, close tickets with rich metadata (priority, category, tags, custom fields)   |
+| 2   | Multi-Channel Intake   | Ingest tickets from email, live chat, web forms, REST API, and social media channels               |
+| 3   | Assignment & Routing   | Automatically route tickets to the correct team/agent based on rules, skills, and workload         |
+| 4   | SLA Tracking           | Define SLA policies with first response and resolution time targets; track compliance in real time |
+| 5   | Agent Workspace        | Unified inbox with filters, views, bulk actions, and keyboard shortcuts for agent productivity     |
+| 6   | Internal Collaboration | Internal notes, @mentions, ticket followers, collision detection for concurrent edits              |
+| 7   | Customer Portal        | Self-service portal where customers can submit, track, and respond to tickets                      |
+| 8   | Knowledge Base         | Article management system with search, categorization, and AI-powered suggestions                  |
+| 9   | Macros & Templates     | Pre-built response templates and multi-step automation macros for common scenarios                 |
+| 10  | Automation Rules       | Trigger-based rules (on create, on update, time-based) to automate ticket workflows                |
+| 11  | Reporting & Analytics  | Agent performance, SLA compliance, CSAT scores, queue health, and custom dashboards                |
+| 12  | AI Features            | Auto-classification, sentiment analysis, suggested responses, chatbot handoff                      |
+| 13  | Audit Trail            | Complete history of every action on every ticket for compliance and debugging                      |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Real-time update latency | < 500ms for ticket changes visible to all viewers |
-| 2 | Availability | 99.99% (< 52 minutes downtime/year) |
-| 3 | Search latency | < 200ms for full-text ticket search |
-| 4 | Ticket creation throughput | 50,000 tickets/minute at peak |
-| 5 | API response latency | < 100ms p95 for reads, < 300ms p95 for writes |
-| 6 | Data retention | 7 years for audit compliance |
-| 7 | Multi-tenancy | 100,000+ tenants with strict data isolation |
-| 8 | SLA timer accuracy | < 1 second drift |
-| 9 | Email processing latency | < 30 seconds from receipt to ticket creation |
-| 10 | Horizontal scalability | Linear scale-out with no single bottleneck |
+| #   | Requirement                | Target                                            |
+| --- | -------------------------- | ------------------------------------------------- |
+| 1   | Real-time update latency   | < 500ms for ticket changes visible to all viewers |
+| 2   | Availability               | 99.99% (< 52 minutes downtime/year)               |
+| 3   | Search latency             | < 200ms for full-text ticket search               |
+| 4   | Ticket creation throughput | 50,000 tickets/minute at peak                     |
+| 5   | API response latency       | < 100ms p95 for reads, < 300ms p95 for writes     |
+| 6   | Data retention             | 7 years for audit compliance                      |
+| 7   | Multi-tenancy              | 100,000+ tenants with strict data isolation       |
+| 8   | SLA timer accuracy         | < 1 second drift                                  |
+| 9   | Email processing latency   | < 30 seconds from receipt to ticket creation      |
+| 10  | Horizontal scalability     | Linear scale-out with no single bottleneck        |
 
 ### Scale Estimation
 
@@ -2359,38 +2359,38 @@ Cache Layers:
 
 ### Push vs. Pull for Agent Queue
 
-| Dimension | Push (auto-assign) | Pull (agent picks from queue) |
-|-----------|-------------------|-------------------------------|
-| Agent autonomy | Low - system decides | High - agent chooses |
-| Fairness | Even distribution guaranteed | Some agents cherry-pick easy tickets |
-| Response time | Faster (immediate assignment) | Slower (depends on agent initiative) |
-| Agent satisfaction | Lower (feeling of being "fed") | Higher (sense of control) |
-| SLA compliance | Better (system optimizes for SLA) | Riskier (hard tickets ignored) |
+| Dimension          | Push (auto-assign)                | Pull (agent picks from queue)        |
+| ------------------ | --------------------------------- | ------------------------------------ |
+| Agent autonomy     | Low - system decides              | High - agent chooses                 |
+| Fairness           | Even distribution guaranteed      | Some agents cherry-pick easy tickets |
+| Response time      | Faster (immediate assignment)     | Slower (depends on agent initiative) |
+| Agent satisfaction | Lower (feeling of being "fed")    | Higher (sense of control)            |
+| SLA compliance     | Better (system optimizes for SLA) | Riskier (hard tickets ignored)       |
 
 **Decision: Hybrid -- auto-assign urgent/high priority tickets; let agents pull normal/low from queue**
 
 ### Relational DB vs. NoSQL for Tickets
 
-| Dimension | PostgreSQL (chosen) | MongoDB / DynamoDB |
-|-----------|--------------------|--------------------|
-| Schema flexibility | Moderate (JSONB for custom fields) | High (schemaless) |
-| Complex queries | Excellent (SQL joins, aggregations) | Limited (denormalized reads) |
-| Transactions | Full ACID | Limited / eventual consistency |
-| Multi-tenant partitioning | Row-level security + sharding | Collection-per-tenant or partition key |
-| Reporting | Native SQL analytics | Requires ETL to analytics DB |
-| Operational maturity | Very high | High |
+| Dimension                 | PostgreSQL (chosen)                 | MongoDB / DynamoDB                     |
+| ------------------------- | ----------------------------------- | -------------------------------------- |
+| Schema flexibility        | Moderate (JSONB for custom fields)  | High (schemaless)                      |
+| Complex queries           | Excellent (SQL joins, aggregations) | Limited (denormalized reads)           |
+| Transactions              | Full ACID                           | Limited / eventual consistency         |
+| Multi-tenant partitioning | Row-level security + sharding       | Collection-per-tenant or partition key |
+| Reporting                 | Native SQL analytics                | Requires ETL to analytics DB           |
+| Operational maturity      | Very high                           | High                                   |
 
 **Decision: PostgreSQL with JSONB for custom fields -- best balance of structure and flexibility for a multi-tenant ticketing system**
 
 ### Synchronous vs. Asynchronous Processing
 
-| Dimension | Synchronous | Asynchronous (event-driven) |
-|-----------|-------------|----------------------------|
-| Latency | Lower for simple operations | Higher (queue processing) |
-| Reliability | Coupled failure modes | Decoupled, resilient |
-| Throughput | Limited by slowest step | Each service scales independently |
-| Consistency | Strong | Eventually consistent |
-| Complexity | Simple | Higher (event ordering, idempotency) |
+| Dimension   | Synchronous                 | Asynchronous (event-driven)          |
+| ----------- | --------------------------- | ------------------------------------ |
+| Latency     | Lower for simple operations | Higher (queue processing)            |
+| Reliability | Coupled failure modes       | Decoupled, resilient                 |
+| Throughput  | Limited by slowest step     | Each service scales independently    |
+| Consistency | Strong                      | Eventually consistent                |
+| Complexity  | Simple                      | Higher (event ordering, idempotency) |
 
 **Decision: Synchronous for ticket CRUD (users expect immediate feedback); asynchronous for SLA monitoring, search indexing, notifications, AI enrichment**
 
@@ -2436,20 +2436,20 @@ The dashboard does not query the database directly. Instead: (1) A Kafka Streams
 
 ### Key Architecture Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Primary Database | PostgreSQL (Citus sharding) | ACID transactions, complex queries, JSONB for custom fields, mature ecosystem |
-| Multi-tenancy | Shared schema with org_id + RLS | Operational simplicity; dedicated shards for enterprise |
-| Event Streaming | Apache Kafka | Decouples services, enables async processing, reliable event sourcing |
-| Search | Elasticsearch | Full-text search, faceted filtering, near-real-time indexing |
-| Caching | Redis Cluster | Session data, pub/sub for WebSockets, round-robin counters, hot ticket cache |
-| Real-time | WebSockets via Redis Pub/Sub | Agent collaboration, live ticket updates, presence detection |
-| SLA Monitoring | Polling-based with catch-up | Simple, reliable, sub-minute detection; no complex timer scheduling |
-| AI Integration | Async pipeline via Kafka | Non-blocking enrichment; human-in-the-loop for responses |
-| Email Processing | Webhook-based (SendGrid/SES) | No SMTP server to manage; reliable delivery with retry |
-| Attachment Storage | S3 (object storage) | Cost-effective, durable, CDN-friendly for serving |
-| Deployment | Multi-region Kubernetes | Regional data residency, disaster recovery, low latency |
-| Routing | Rule-based + skill-based hybrid | Flexible for diverse org needs; AI-assisted for advanced tenants |
+| Decision           | Choice                          | Rationale                                                                     |
+| ------------------ | ------------------------------- | ----------------------------------------------------------------------------- |
+| Primary Database   | PostgreSQL (Citus sharding)     | ACID transactions, complex queries, JSONB for custom fields, mature ecosystem |
+| Multi-tenancy      | Shared schema with org_id + RLS | Operational simplicity; dedicated shards for enterprise                       |
+| Event Streaming    | Apache Kafka                    | Decouples services, enables async processing, reliable event sourcing         |
+| Search             | Elasticsearch                   | Full-text search, faceted filtering, near-real-time indexing                  |
+| Caching            | Redis Cluster                   | Session data, pub/sub for WebSockets, round-robin counters, hot ticket cache  |
+| Real-time          | WebSockets via Redis Pub/Sub    | Agent collaboration, live ticket updates, presence detection                  |
+| SLA Monitoring     | Polling-based with catch-up     | Simple, reliable, sub-minute detection; no complex timer scheduling           |
+| AI Integration     | Async pipeline via Kafka        | Non-blocking enrichment; human-in-the-loop for responses                      |
+| Email Processing   | Webhook-based (SendGrid/SES)    | No SMTP server to manage; reliable delivery with retry                        |
+| Attachment Storage | S3 (object storage)             | Cost-effective, durable, CDN-friendly for serving                             |
+| Deployment         | Multi-region Kubernetes         | Regional data residency, disaster recovery, low latency                       |
+| Routing            | Rule-based + skill-based hybrid | Flexible for diverse org needs; AI-assisted for advanced tenants              |
 
 ### Critical Trade-offs Summary
 

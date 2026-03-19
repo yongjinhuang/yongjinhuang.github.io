@@ -8,15 +8,15 @@ A User Pool is a user directory that provides sign-up and sign-in functionality.
 
 ### Core Features
 
-| Feature | Details |
-|---------|---------|
-| Sign-up/Sign-in | Email, phone, username-based registration |
-| MFA | SMS, TOTP (authenticator apps), email |
-| Password policies | Min length, require uppercase/lowercase/numbers/symbols |
-| Account recovery | Email or phone verification codes |
-| Email/Phone verification | Confirm ownership before activation |
-| User migration | Lambda trigger to migrate users from existing directories |
-| Custom attributes | Up to 50 custom attributes per user pool |
+| Feature                  | Details                                                   |
+| ------------------------ | --------------------------------------------------------- |
+| Sign-up/Sign-in          | Email, phone, username-based registration                 |
+| MFA                      | SMS, TOTP (authenticator apps), email                     |
+| Password policies        | Min length, require uppercase/lowercase/numbers/symbols   |
+| Account recovery         | Email or phone verification codes                         |
+| Email/Phone verification | Confirm ownership before activation                       |
+| User migration           | Lambda trigger to migrate users from existing directories |
+| Custom attributes        | Up to 50 custom attributes per user pool                  |
 
 ### User Pool Configuration
 
@@ -47,18 +47,18 @@ aws cognito-idp create-user-pool-client \
 
 User Pool triggers let you customize authentication flows with Lambda functions.
 
-| Trigger | When It Fires | Common Use Cases |
-|---------|--------------|------------------|
-| Pre sign-up | Before user creation | Validate email domain, auto-confirm users, deny sign-up |
-| Post confirmation | After user confirms | Send welcome email, create downstream records |
-| Pre authentication | Before sign-in | Block users, check custom conditions |
-| Post authentication | After successful sign-in | Log analytics, sync user data |
-| Pre token generation | Before tokens are issued | Add/remove claims, modify groups in token |
-| Custom message | Before sending verification/MFA code | Custom email/SMS templates |
-| User migration | When user signs in but does not exist | Migrate from legacy auth system |
-| Define auth challenge | Custom auth flow steps | Define challenge sequence |
-| Create auth challenge | Generate challenge | Send custom challenge (CAPTCHA, etc.) |
-| Verify auth challenge | Validate response | Verify custom challenge answer |
+| Trigger               | When It Fires                         | Common Use Cases                                        |
+| --------------------- | ------------------------------------- | ------------------------------------------------------- |
+| Pre sign-up           | Before user creation                  | Validate email domain, auto-confirm users, deny sign-up |
+| Post confirmation     | After user confirms                   | Send welcome email, create downstream records           |
+| Pre authentication    | Before sign-in                        | Block users, check custom conditions                    |
+| Post authentication   | After successful sign-in              | Log analytics, sync user data                           |
+| Pre token generation  | Before tokens are issued              | Add/remove claims, modify groups in token               |
+| Custom message        | Before sending verification/MFA code  | Custom email/SMS templates                              |
+| User migration        | When user signs in but does not exist | Migrate from legacy auth system                         |
+| Define auth challenge | Custom auth flow steps                | Define challenge sequence                               |
+| Create auth challenge | Generate challenge                    | Send custom challenge (CAPTCHA, etc.)                   |
+| Verify auth challenge | Validate response                     | Verify custom challenge answer                          |
 
 ### Trigger Example: Pre Token Generation
 
@@ -105,14 +105,14 @@ Credentials --> Access S3, DynamoDB, etc.
 
 ### User Pool vs Identity Pool
 
-| Aspect | User Pool | Identity Pool |
-|--------|-----------|---------------|
-| Purpose | Authentication (who are you?) | Authorization (what can you access?) |
-| Output | JWT tokens (ID, access, refresh) | Temporary AWS credentials (access key, secret key, session token) |
-| User directory | Yes | No |
-| Social sign-in | Yes (as IdP) | Yes (exchanges social tokens) |
-| Direct AWS access | No (tokens only) | Yes (IAM credentials) |
-| MFA | Yes | No (relies on upstream IdP) |
+| Aspect            | User Pool                        | Identity Pool                                                     |
+| ----------------- | -------------------------------- | ----------------------------------------------------------------- |
+| Purpose           | Authentication (who are you?)    | Authorization (what can you access?)                              |
+| Output            | JWT tokens (ID, access, refresh) | Temporary AWS credentials (access key, secret key, session token) |
+| User directory    | Yes                              | No                                                                |
+| Social sign-in    | Yes (as IdP)                     | Yes (exchanges social tokens)                                     |
+| Direct AWS access | No (tokens only)                 | Yes (IAM credentials)                                             |
+| MFA               | Yes                              | No (relies on upstream IdP)                                       |
 
 Typical architecture uses both: User Pool authenticates the user and issues tokens, Identity Pool exchanges those tokens for AWS credentials.
 
@@ -147,14 +147,14 @@ This policy scopes access to the user's own data using their Cognito identity ID
 
 ### Supported Providers
 
-| Provider | Type | Configuration |
-|----------|------|---------------|
-| Google | Social (OIDC) | Client ID, Client Secret |
-| Facebook | Social (OAuth) | App ID, App Secret |
-| Apple | Social (OIDC) | Service ID, Team ID, Key ID |
-| Amazon | Social (OAuth) | Client ID, Client Secret |
-| SAML 2.0 | Enterprise | Metadata document (XML) |
-| OIDC | Generic | Issuer URL, Client ID |
+| Provider | Type           | Configuration               |
+| -------- | -------------- | --------------------------- |
+| Google   | Social (OIDC)  | Client ID, Client Secret    |
+| Facebook | Social (OAuth) | App ID, App Secret          |
+| Apple    | Social (OIDC)  | Service ID, Team ID, Key ID |
+| Amazon   | Social (OAuth) | Client ID, Client Secret    |
+| SAML 2.0 | Enterprise     | Metadata document (XML)     |
+| OIDC     | Generic        | Issuer URL, Client ID       |
 
 ```bash
 # Add Google as identity provider
@@ -168,14 +168,14 @@ aws cognito-idp create-identity-provider \
 
 ## Hosted UI vs Custom UI
 
-| Aspect | Hosted UI | Custom UI |
-|--------|-----------|-----------|
-| Implementation | Zero-code, AWS-hosted | Build your own login pages |
-| Customization | Logo, CSS (limited) | Full control |
-| Social login | Built-in buttons | Manual integration |
-| OAuth flows | Fully managed | Implement with SDK |
-| Time to ship | Minutes | Days to weeks |
-| Production use | Prototyping, internal apps | Consumer-facing apps |
+| Aspect         | Hosted UI                  | Custom UI                  |
+| -------------- | -------------------------- | -------------------------- |
+| Implementation | Zero-code, AWS-hosted      | Build your own login pages |
+| Customization  | Logo, CSS (limited)        | Full control               |
+| Social login   | Built-in buttons           | Manual integration         |
+| OAuth flows    | Fully managed              | Implement with SDK         |
+| Time to ship   | Minutes                    | Days to weeks              |
+| Production use | Prototyping, internal apps | Consumer-facing apps       |
 
 ```bash
 # Configure hosted UI domain
@@ -193,11 +193,11 @@ aws cognito-idp create-user-pool-domain \
 
 Cognito issues three tokens upon successful authentication:
 
-| Token | Purpose | Default Expiry | Contains |
-|-------|---------|---------------|----------|
-| ID Token | User identity claims | 1 hour | User attributes, groups, custom claims |
-| Access Token | API authorization | 1 hour | Scopes, groups, client ID |
-| Refresh Token | Obtain new ID/access tokens | 30 days (configurable 1 hour - 10 years) | Opaque token, not a JWT |
+| Token         | Purpose                     | Default Expiry                           | Contains                               |
+| ------------- | --------------------------- | ---------------------------------------- | -------------------------------------- |
+| ID Token      | User identity claims        | 1 hour                                   | User attributes, groups, custom claims |
+| Access Token  | API authorization           | 1 hour                                   | Scopes, groups, client ID              |
+| Refresh Token | Obtain new ID/access tokens | 30 days (configurable 1 hour - 10 years) | Opaque token, not a JWT                |
 
 ### Token Size Considerations
 
@@ -208,12 +208,12 @@ Cognito issues three tokens upon successful authentication:
 
 ## OAuth 2.0 Flows
 
-| Flow | Use Case | Security Level |
-|------|----------|---------------|
-| Authorization Code | Server-side web apps | Highest (uses client secret) |
-| Authorization Code + PKCE | SPAs, mobile apps | High (no client secret needed) |
-| Implicit | Legacy SPAs (deprecated) | Lower (tokens in URL fragment) |
-| Client Credentials | Machine-to-machine | Service-level (no user context) |
+| Flow                      | Use Case                 | Security Level                  |
+| ------------------------- | ------------------------ | ------------------------------- |
+| Authorization Code        | Server-side web apps     | Highest (uses client secret)    |
+| Authorization Code + PKCE | SPAs, mobile apps        | High (no client secret needed)  |
+| Implicit                  | Legacy SPAs (deprecated) | Lower (tokens in URL fragment)  |
+| Client Credentials        | Machine-to-machine       | Service-level (no user context) |
 
 Always use **Authorization Code with PKCE** for browser-based applications.
 
@@ -241,13 +241,13 @@ Groups appear in the `cognito:groups` claim in both ID and access tokens. When u
 
 Available with the Plus or Essentials feature plan:
 
-| Feature | Description |
-|---------|-------------|
-| Adaptive authentication | Risk-based MFA (low/medium/high risk scoring) |
-| Compromised credentials | Checks sign-in credentials against breached databases |
-| IP address blocking | Block or allow sign-in from specific IP ranges |
-| Advanced metrics | CloudWatch metrics for sign-in attempts, risk levels |
-| Account takeover protection | Detect and respond to suspicious sign-in patterns |
+| Feature                     | Description                                           |
+| --------------------------- | ----------------------------------------------------- |
+| Adaptive authentication     | Risk-based MFA (low/medium/high risk scoring)         |
+| Compromised credentials     | Checks sign-in credentials against breached databases |
+| IP address blocking         | Block or allow sign-in from specific IP ranges        |
+| Advanced metrics            | CloudWatch metrics for sign-in attempts, risk levels  |
+| Account takeover protection | Detect and respond to suspicious sign-in patterns     |
 
 ```bash
 # Enable advanced security
@@ -310,15 +310,15 @@ aws cognito-idp delete-user-pool --user-pool-id us-east-1_ABC123
 
 ## Common Gotchas
 
-| Issue | Details |
-|-------|---------|
-| Cannot rename a user pool | User pool names are immutable. Must create a new pool and migrate users. |
-| 50 custom attributes max | Cannot add more than 50 custom attributes. Custom attributes cannot be removed after creation (only marked unused). |
-| Token size limits | ID and access tokens max out around 8 KB. Users in many groups or with many custom attributes can hit this. |
-| Refresh token rotation | Old refresh tokens remain valid until expiry even after new ones are issued (no automatic revocation). Enable token revocation in app client settings. |
-| User migration Lambda | Only triggered on sign-in, not sign-up. Users must attempt to log in for migration to occur. Cannot bulk-migrate via Lambda trigger. |
-| Hosted UI limitations | Limited CSS customization. No JavaScript injection. Cannot change layout or add custom components. |
-| Email sending limits | Default: 50 emails/day with Cognito email. Must configure SES for production workloads. |
-| Username immutability | Once a user picks a username, it cannot be changed. Use email or phone as alias if flexibility is needed. |
-| Case sensitivity | Usernames are case-sensitive by default. Set `UsernameConfiguration.CaseSensitive=false` at pool creation. Cannot change after creation. |
-| Quotas | Default: 10 user pools per account. UserCreation: 50 req/sec. Authentication: 120 req/sec. Request increases for production loads. |
+| Issue                     | Details                                                                                                                                                |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cannot rename a user pool | User pool names are immutable. Must create a new pool and migrate users.                                                                               |
+| 50 custom attributes max  | Cannot add more than 50 custom attributes. Custom attributes cannot be removed after creation (only marked unused).                                    |
+| Token size limits         | ID and access tokens max out around 8 KB. Users in many groups or with many custom attributes can hit this.                                            |
+| Refresh token rotation    | Old refresh tokens remain valid until expiry even after new ones are issued (no automatic revocation). Enable token revocation in app client settings. |
+| User migration Lambda     | Only triggered on sign-in, not sign-up. Users must attempt to log in for migration to occur. Cannot bulk-migrate via Lambda trigger.                   |
+| Hosted UI limitations     | Limited CSS customization. No JavaScript injection. Cannot change layout or add custom components.                                                     |
+| Email sending limits      | Default: 50 emails/day with Cognito email. Must configure SES for production workloads.                                                                |
+| Username immutability     | Once a user picks a username, it cannot be changed. Use email or phone as alias if flexibility is needed.                                              |
+| Case sensitivity          | Usernames are case-sensitive by default. Set `UsernameConfiguration.CaseSensitive=false` at pool creation. Cannot change after creation.               |
+| Quotas                    | Default: 10 user pools per account. UserCreation: 50 req/sec. Authentication: 120 req/sec. Request increases for production loads.                     |

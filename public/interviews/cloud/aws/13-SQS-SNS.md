@@ -10,14 +10,14 @@ SQS eliminates the complexity of managing your own message broker. You send mess
 
 ### Queue Types
 
-| Feature | Standard Queue | FIFO Queue |
-|---|---|---|
-| Throughput | Nearly unlimited | 300 msg/s (3,000 with batching) |
-| Ordering | Best-effort | Strict within message group |
-| Delivery | At-least-once (possible duplicates) | Exactly-once processing |
-| Name suffix | Any | Must end in `.fifo` |
-| Deduplication | None built-in | Content-based or explicit dedup ID |
-| Cost | Lower | ~25% more expensive |
+| Feature       | Standard Queue                      | FIFO Queue                         |
+| ------------- | ----------------------------------- | ---------------------------------- |
+| Throughput    | Nearly unlimited                    | 300 msg/s (3,000 with batching)    |
+| Ordering      | Best-effort                         | Strict within message group        |
+| Delivery      | At-least-once (possible duplicates) | Exactly-once processing            |
+| Name suffix   | Any                                 | Must end in `.fifo`                |
+| Deduplication | None built-in                       | Content-based or explicit dedup ID |
+| Cost          | Lower                               | ~25% more expensive                |
 
 **Use Standard** when throughput matters more than ordering. **Use FIFO** when you need strict ordering or exactly-once semantics (financial transactions, command sequences).
 
@@ -70,12 +70,12 @@ Messages that fail processing repeatedly get moved to a DLQ after exceeding `max
 
 ### Long Polling vs Short Polling
 
-| | Short Polling | Long Polling |
-|---|---|---|
-| Behavior | Returns immediately, even if empty | Waits up to `WaitTimeSeconds` |
-| Empty responses | Many | Fewer |
-| Cost | Higher (more API calls) | Lower |
-| Latency | Higher average | Lower (returns as soon as message arrives) |
+|                 | Short Polling                      | Long Polling                               |
+| --------------- | ---------------------------------- | ------------------------------------------ |
+| Behavior        | Returns immediately, even if empty | Waits up to `WaitTimeSeconds`              |
+| Empty responses | Many                               | Fewer                                      |
+| Cost            | Higher (more API calls)            | Lower                                      |
+| Latency         | Higher average                     | Lower (returns as soon as message arrives) |
 
 **Always use long polling.** Set `WaitTimeSeconds` to 20 (max) at the queue level or per-request.
 
@@ -120,24 +120,24 @@ SNS is a pub/sub service. You publish a message to a **topic**, and all **subscr
 
 ### Topic Types
 
-| Feature | Standard Topic | FIFO Topic |
-|---|---|---|
-| Throughput | Nearly unlimited | 300 publishes/s (3,000 with batching) |
-| Ordering | No guarantee | Strict within message group |
-| Deduplication | None | Content-based or message dedup ID |
-| Subscribers | SQS, Lambda, HTTP/S, Email, SMS, mobile push | SQS FIFO only |
+| Feature       | Standard Topic                               | FIFO Topic                            |
+| ------------- | -------------------------------------------- | ------------------------------------- |
+| Throughput    | Nearly unlimited                             | 300 publishes/s (3,000 with batching) |
+| Ordering      | No guarantee                                 | Strict within message group           |
+| Deduplication | None                                         | Content-based or message dedup ID     |
+| Subscribers   | SQS, Lambda, HTTP/S, Email, SMS, mobile push | SQS FIFO only                         |
 
 ### Subscription Protocols
 
-| Protocol | Use Case |
-|---|---|
-| SQS | Decouple processing, fan-out to multiple queues |
-| Lambda | Serverless event processing |
-| HTTP/HTTPS | Webhook integrations |
-| Email/Email-JSON | Notifications to humans |
-| SMS | Text message alerts |
-| Kinesis Data Firehose | Stream events to S3, Redshift |
-| Mobile push (APNs, FCM) | Push notifications to devices |
+| Protocol                | Use Case                                        |
+| ----------------------- | ----------------------------------------------- |
+| SQS                     | Decouple processing, fan-out to multiple queues |
+| Lambda                  | Serverless event processing                     |
+| HTTP/HTTPS              | Webhook integrations                            |
+| Email/Email-JSON        | Notifications to humans                         |
+| SMS                     | Text message alerts                             |
+| Kinesis Data Firehose   | Stream events to S3, Redshift                   |
+| Mobile push (APNs, FCM) | Push notifications to devices                   |
 
 ### SNS + SQS Fan-Out Pattern
 

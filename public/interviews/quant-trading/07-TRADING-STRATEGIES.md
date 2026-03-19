@@ -33,7 +33,7 @@ those tools into complete trading strategies.
 Every strategy rests on a single belief about price behavior. Momentum bets that
 trends persist. Mean reversion bets they reverse. Arbitrage bets that identical
 things should have identical prices. Market making bets that the bid-ask spread
-compensates you for providing liquidity. Understanding the *why* behind each
+compensates you for providing liquidity. Understanding the _why_ behind each
 strategy matters more than memorizing the mechanics.
 
 ```
@@ -268,12 +268,12 @@ Price / MA
 
 **Types of Moving Averages**:
 
-| Type | Formula | Characteristics |
-|------|---------|-----------------|
-| SMA  | (1/N) * sum(P_i) | Equal weight, laggy |
-| EMA  | alpha * P + (1-alpha) * EMA_prev | Exponential decay, responsive |
-| DEMA | 2*EMA - EMA(EMA) | Double smoothing, less lag |
-| WMA  | Linearly weighted | Recent prices weighted more |
+| Type | Formula                          | Characteristics               |
+| ---- | -------------------------------- | ----------------------------- |
+| SMA  | (1/N) \* sum(P_i)                | Equal weight, laggy           |
+| EMA  | alpha _ P + (1-alpha) _ EMA_prev | Exponential decay, responsive |
+| DEMA | 2\*EMA - EMA(EMA)                | Double smoothing, less lag    |
+| WMA  | Linearly weighted                | Recent prices weighted more   |
 
 ```python
 import pandas as pd
@@ -989,7 +989,7 @@ def zscore_strategy(spread: pd.Series,
 
 Statistical arbitrage (stat arb) exploits temporary mispricings between
 related securities. Unlike pure arbitrage (risk-free profit), stat arb
-profits are *statistical* -- they hold on average but not on every trade.
+profits are _statistical_ -- they hold on average but not on every trade.
 
 ```
 Pure Arbitrage vs. Statistical Arbitrage:
@@ -3114,6 +3114,7 @@ Starting point for different profiles:
 
 **Chapter 8: Backtesting Frameworks** will cover how to rigorously test
 these strategies before risking real capital. Topics include:
+
 - Event-driven vs. vectorized backtesting
 - Walk-forward analysis
 - Overfitting detection (combinatorial purged cross-validation)

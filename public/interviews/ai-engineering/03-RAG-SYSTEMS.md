@@ -48,6 +48,7 @@ memorized during training, RAG grounds answers in specific, up-to-date sources.
 ```
 
 **When to use RAG:**
+
 - Enterprise knowledge bases (internal docs, wikis, policies)
 - Customer support with product-specific knowledge
 - Legal/medical/financial domain Q&A
@@ -171,15 +172,15 @@ def parse_html(file_path: str) -> ParsedDocument:
 
 ### Document Parsing Tools Comparison
 
-| Tool | Best For | Strengths | Weaknesses |
-|------|----------|-----------|------------|
-| **PyMuPDF (fitz)** | PDF | Fast, handles most PDFs | Struggles with scanned docs |
-| **pdfplumber** | PDF with tables | Great table extraction | Slower than PyMuPDF |
-| **Unstructured** | Multi-format | Handles 20+ formats | Heavy dependency |
-| **LlamaParse** | Complex PDFs | AI-powered parsing | API cost, latency |
-| **BeautifulSoup** | HTML | Flexible, well-known | Manual boilerplate removal |
-| **Trafilatura** | Web pages | Auto-extracts main content | May miss structured data |
-| **python-docx** | DOCX | Native Word support | No complex layouts |
+| Tool               | Best For        | Strengths                  | Weaknesses                  |
+| ------------------ | --------------- | -------------------------- | --------------------------- |
+| **PyMuPDF (fitz)** | PDF             | Fast, handles most PDFs    | Struggles with scanned docs |
+| **pdfplumber**     | PDF with tables | Great table extraction     | Slower than PyMuPDF         |
+| **Unstructured**   | Multi-format    | Handles 20+ formats        | Heavy dependency            |
+| **LlamaParse**     | Complex PDFs    | AI-powered parsing         | API cost, latency           |
+| **BeautifulSoup**  | HTML            | Flexible, well-known       | Manual boilerplate removal  |
+| **Trafilatura**    | Web pages       | Auto-extracts main content | May miss structured data    |
+| **python-docx**    | DOCX            | Native Word support        | No complex layouts          |
 
 ---
 
@@ -362,13 +363,13 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
 
 ### Chunk Size Guidelines
 
-| Document Type | Recommended Size | Overlap | Reasoning |
-|--------------|-----------------|---------|-----------|
-| Technical docs | 512-1024 tokens | 50-100 | Dense info, need context |
-| Legal contracts | 256-512 tokens | 100-150 | Precise retrieval needed |
-| Customer support FAQs | 128-256 tokens | 20-50 | Short, focused answers |
-| Long-form articles | 512-1024 tokens | 100-200 | Preserve narrative flow |
-| Code documentation | 256-512 tokens | 50 | Function-level granularity |
+| Document Type         | Recommended Size | Overlap | Reasoning                  |
+| --------------------- | ---------------- | ------- | -------------------------- |
+| Technical docs        | 512-1024 tokens  | 50-100  | Dense info, need context   |
+| Legal contracts       | 256-512 tokens   | 100-150 | Precise retrieval needed   |
+| Customer support FAQs | 128-256 tokens   | 20-50   | Short, focused answers     |
+| Long-form articles    | 512-1024 tokens  | 100-200 | Preserve narrative flow    |
+| Code documentation    | 256-512 tokens   | 50      | Function-level granularity |
 
 ---
 
@@ -379,15 +380,15 @@ similar texts are close together.
 
 ### Popular Embedding Models (2025)
 
-| Model | Dimensions | Max Tokens | MTEB Score | Cost (per 1M tokens) |
-|-------|-----------|-----------|-----------|---------------------|
-| text-embedding-3-large (OpenAI) | 3072 | 8191 | 64.6 | $0.13 |
-| text-embedding-3-small (OpenAI) | 1536 | 8191 | 62.3 | $0.02 |
-| Cohere Embed v3 | 1024 | 512 | 64.5 | $0.10 |
-| BGE-large-en-v1.5 | 1024 | 512 | 63.5 | Free (self-hosted) |
-| E5-mistral-7b-instruct | 4096 | 32768 | 66.6 | Free (self-hosted) |
-| Voyage-3 | 1024 | 32000 | 67.1 | $0.06 |
-| Jina Embeddings v3 | 1024 | 8192 | 65.5 | $0.02 |
+| Model                           | Dimensions | Max Tokens | MTEB Score | Cost (per 1M tokens) |
+| ------------------------------- | ---------- | ---------- | ---------- | -------------------- |
+| text-embedding-3-large (OpenAI) | 3072       | 8191       | 64.6       | $0.13                |
+| text-embedding-3-small (OpenAI) | 1536       | 8191       | 62.3       | $0.02                |
+| Cohere Embed v3                 | 1024       | 512        | 64.5       | $0.10                |
+| BGE-large-en-v1.5               | 1024       | 512        | 63.5       | Free (self-hosted)   |
+| E5-mistral-7b-instruct          | 4096       | 32768      | 66.6       | Free (self-hosted)   |
+| Voyage-3                        | 1024       | 32000      | 67.1       | $0.06                |
+| Jina Embeddings v3              | 1024       | 8192       | 65.5       | $0.02                |
 
 ### Generating Embeddings
 
@@ -578,11 +579,11 @@ for match in results["matches"]:
 
 ### Distance Metrics
 
-| Metric | Formula | Range | Best For | Notes |
-|--------|---------|-------|----------|-------|
-| **Cosine** | 1 - (A . B)/(||A|| * ||B||) | [0, 2] | Most text embeddings | Normalized, direction-based |
-| **Dot Product** | A . B | (-inf, inf) | When magnitude matters | Faster than cosine |
-| **L2 (Euclidean)** | sqrt(sum((A-B)^2)) | [0, inf) | Spatial similarity | Sensitive to magnitude |
+| Metric             | Formula            | Range       | Best For               | Notes                  |
+| ------------------ | ------------------ | ----------- | ---------------------- | ---------------------- | --- | --- | --- | --- | --- | ------ | -------------------- | --------------------------- |
+| **Cosine**         | 1 - (A . B)/(      |             | A                      |                        | \*  |     | B   |     | )   | [0, 2] | Most text embeddings | Normalized, direction-based |
+| **Dot Product**    | A . B              | (-inf, inf) | When magnitude matters | Faster than cosine     |
+| **L2 (Euclidean)** | sqrt(sum((A-B)^2)) | [0, inf)    | Spatial similarity     | Sensitive to magnitude |
 
 **Rule of thumb:** Use cosine similarity for text embeddings. Most embedding models are
 designed to work best with cosine distance.
@@ -604,6 +605,7 @@ speed, enabling sub-millisecond search over billions of vectors.
 ```
 
 **HNSW (Hierarchical Navigable Small World)** is the most popular for production:
+
 - Build time: O(n log n)
 - Query time: O(log n)
 - Recall: 95-99%+ with proper tuning
@@ -1021,13 +1023,13 @@ for source in result.sources:
 
 ### Retrieval Metrics
 
-| Metric | What It Measures | Formula |
-|--------|-----------------|---------|
-| **Recall@k** | Fraction of relevant docs retrieved in top k | relevant_retrieved / total_relevant |
-| **Precision@k** | Fraction of retrieved docs that are relevant | relevant_retrieved / k |
-| **MRR** | Rank of first relevant result | 1 / rank_of_first_relevant |
-| **nDCG@k** | Ranked relevance quality | normalized discounted cumulative gain |
-| **Hit Rate** | Whether any relevant doc appears in top k | 1 if any relevant in top k, else 0 |
+| Metric          | What It Measures                             | Formula                               |
+| --------------- | -------------------------------------------- | ------------------------------------- |
+| **Recall@k**    | Fraction of relevant docs retrieved in top k | relevant_retrieved / total_relevant   |
+| **Precision@k** | Fraction of retrieved docs that are relevant | relevant_retrieved / k                |
+| **MRR**         | Rank of first relevant result                | 1 / rank_of_first_relevant            |
+| **nDCG@k**      | Ranked relevance quality                     | normalized discounted cumulative gain |
+| **Hit Rate**    | Whether any relevant doc appears in top k    | 1 if any relevant in top k, else 0    |
 
 ### Generation Metrics (RAGAS Framework)
 
@@ -1069,12 +1071,12 @@ print(results)
 
 ### Key RAGAS Metrics Explained
 
-| Metric | What It Measures | Good Score |
-|--------|-----------------|-----------|
-| **Faithfulness** | Is the answer grounded in the context? (no hallucination) | > 0.85 |
-| **Answer Relevancy** | Is the answer relevant to the question? | > 0.80 |
-| **Context Precision** | Are retrieved docs relevant to the question? | > 0.80 |
-| **Context Recall** | Does context contain all info needed for ground truth? | > 0.85 |
+| Metric                | What It Measures                                          | Good Score |
+| --------------------- | --------------------------------------------------------- | ---------- |
+| **Faithfulness**      | Is the answer grounded in the context? (no hallucination) | > 0.85     |
+| **Answer Relevancy**  | Is the answer relevant to the question?                   | > 0.80     |
+| **Context Precision** | Are retrieved docs relevant to the question?              | > 0.80     |
+| **Context Recall**    | Does context contain all info needed for ground truth?    | > 0.85     |
 
 ---
 

@@ -49,14 +49,14 @@ Raw Footage (hours)         Edited Video (minutes)
 Film editor Walter Murch (The Godfather, Apocalypse Now) defined six criteria for making
 a cut, in order of priority:
 
-| Priority | Criterion | What It Means |
-|----------|-----------|---------------|
-| 1 (51%) | **Emotion** | Does the cut feel right emotionally? |
-| 2 (23%) | **Story** | Does it advance the narrative? |
-| 3 (10%) | **Rhythm** | Does it happen at the right moment musically? |
-| 4 (7%) | **Eye-trace** | Does it respect where the viewer is looking? |
-| 5 (5%) | **Two-dimensional screen** | Does it respect the flat plane of the screen? |
-| 6 (4%) | **Three-dimensional space** | Does it maintain spatial continuity? |
+| Priority | Criterion                   | What It Means                                 |
+| -------- | --------------------------- | --------------------------------------------- |
+| 1 (51%)  | **Emotion**                 | Does the cut feel right emotionally?          |
+| 2 (23%)  | **Story**                   | Does it advance the narrative?                |
+| 3 (10%)  | **Rhythm**                  | Does it happen at the right moment musically? |
+| 4 (7%)   | **Eye-trace**               | Does it respect where the viewer is looking?  |
+| 5 (5%)   | **Two-dimensional screen**  | Does it respect the flat plane of the screen? |
+| 6 (4%)   | **Three-dimensional space** | Does it maintain spatial continuity?          |
 
 > **Key insight**: Emotion and story matter far more than technical perfection. A
 > slightly "wrong" cut that feels emotionally right is better than a technically
@@ -80,17 +80,17 @@ a cut, in order of priority:
 
 ### 2.2 Step-by-Step
 
-| Step | What to Do | Time Spent |
-|------|-----------|-----------|
-| **Import** | Transfer footage to editing drive, create project | 5% |
-| **Organize** | Label clips, create bins/folders, review all footage | 10% |
-| **Assembly** | Lay down all usable clips in rough order | 15% |
-| **Rough cut** | Trim clips, arrange sequence, basic structure | 25% |
-| **Fine cut** | Tighten timing, add B-roll, transitions, titles | 25% |
-| **Color grade** | Correct and stylize colors | 10% |
-| **Sound design** | Mix music, SFX, clean dialog | 5% |
-| **Review & polish** | Watch full video, fix issues, get feedback | 3% |
-| **Export** | Render final file for upload | 2% |
+| Step                | What to Do                                           | Time Spent |
+| ------------------- | ---------------------------------------------------- | ---------- |
+| **Import**          | Transfer footage to editing drive, create project    | 5%         |
+| **Organize**        | Label clips, create bins/folders, review all footage | 10%        |
+| **Assembly**        | Lay down all usable clips in rough order             | 15%        |
+| **Rough cut**       | Trim clips, arrange sequence, basic structure        | 25%        |
+| **Fine cut**        | Tighten timing, add B-roll, transitions, titles      | 25%        |
+| **Color grade**     | Correct and stylize colors                           | 10%        |
+| **Sound design**    | Mix music, SFX, clean dialog                         | 5%         |
+| **Review & polish** | Watch full video, fix issues, get feedback           | 3%         |
+| **Export**          | Render final file for upload                         | 2%         |
 
 ## 3. Timeline Anatomy
 
@@ -117,18 +117,18 @@ A = Audio tracks
 
 ### 3.2 Key Timeline Concepts
 
-| Concept | Definition | Analogy |
-|---------|-----------|---------|
-| **Track** | A horizontal lane for clips | Like a layer in Photoshop |
-| **Clip** | A piece of footage on the timeline | A paragraph in a document |
-| **Playhead** | The vertical line showing current position | The cursor in a text editor |
-| **In/Out points** | Start and end markers for a clip | Selection range |
-| **Razor/Blade** | Tool to split a clip into two | Splitting a string in code |
-| **Ripple** | Cut that closes the gap automatically | Array splice vs delete |
-| **Roll** | Adjusting the edit point between two adjacent clips | Moving a boundary |
-| **Slip** | Changing which part of a clip is visible without moving it | Changing offset |
-| **Slide** | Moving a clip between two others, adjusting their edges | Reordering |
-| **Snap** | Clips magnetically align to other clips/playhead | Snap-to-grid |
+| Concept           | Definition                                                 | Analogy                     |
+| ----------------- | ---------------------------------------------------------- | --------------------------- |
+| **Track**         | A horizontal lane for clips                                | Like a layer in Photoshop   |
+| **Clip**          | A piece of footage on the timeline                         | A paragraph in a document   |
+| **Playhead**      | The vertical line showing current position                 | The cursor in a text editor |
+| **In/Out points** | Start and end markers for a clip                           | Selection range             |
+| **Razor/Blade**   | Tool to split a clip into two                              | Splitting a string in code  |
+| **Ripple**        | Cut that closes the gap automatically                      | Array splice vs delete      |
+| **Roll**          | Adjusting the edit point between two adjacent clips        | Moving a boundary           |
+| **Slip**          | Changing which part of a clip is visible without moving it | Changing offset             |
+| **Slide**         | Moving a clip between two others, adjusting their edges    | Reordering                  |
+| **Snap**          | Clips magnetically align to other clips/playhead           | Snap-to-grid                |
 
 ### 3.3 Three-Point Editing
 
@@ -253,15 +253,15 @@ Scene A: "This will be easy..."       Scene B: TOTAL CHAOS
 
 ### 5.1 When to Use Transitions
 
-| Transition | When | When NOT |
-|-----------|------|----------|
-| Hard cut | 95% of the time | Almost never wrong |
-| Dissolve (crossfade) | Passage of time, dream sequence | Between dialogue cuts |
-| Fade to black | End of scene/chapter, end of video | Random mid-scene |
-| Fade from black | Start of scene/video | Randomly |
-| Wipe | Stylistic choice, Star Wars homage | Unless intentional style |
-| Zoom/push | Emphasis, energy (YouTube style) | Overuse kills impact |
-| Whip pan | Energetic scene change | When it feels forced |
+| Transition           | When                               | When NOT                 |
+| -------------------- | ---------------------------------- | ------------------------ |
+| Hard cut             | 95% of the time                    | Almost never wrong       |
+| Dissolve (crossfade) | Passage of time, dream sequence    | Between dialogue cuts    |
+| Fade to black        | End of scene/chapter, end of video | Random mid-scene         |
+| Fade from black      | Start of scene/video               | Randomly                 |
+| Wipe                 | Stylistic choice, Star Wars homage | Unless intentional style |
+| Zoom/push            | Emphasis, energy (YouTube style)   | Overuse kills impact     |
+| Whip pan             | Energetic scene change             | When it feels forced     |
 
 ### 5.2 The Rule of Transitions
 
@@ -305,15 +305,15 @@ Slow pacing (10-30+ sec clips):
 
 ### 6.2 Pacing by Content Type
 
-| Content Type | Average Shot Length | Cuts Per Minute |
-|-------------|--------------------|-----------------|
-| Action/sports highlight | 1-2 seconds | 30-60 |
-| YouTube vlog (energetic) | 2-4 seconds | 15-30 |
-| Tutorial/educational | 5-15 seconds | 4-12 |
-| Interview/podcast | 10-30 seconds | 2-6 |
-| Documentary | 5-15 seconds | 4-12 |
-| Cinematic/film | 5-30+ seconds | 2-12 |
-| ASMR/ambient | 30-60+ seconds | 1-2 |
+| Content Type             | Average Shot Length | Cuts Per Minute |
+| ------------------------ | ------------------- | --------------- |
+| Action/sports highlight  | 1-2 seconds         | 30-60           |
+| YouTube vlog (energetic) | 2-4 seconds         | 15-30           |
+| Tutorial/educational     | 5-15 seconds        | 4-12            |
+| Interview/podcast        | 10-30 seconds       | 2-6             |
+| Documentary              | 5-15 seconds        | 4-12            |
+| Cinematic/film           | 5-30+ seconds       | 2-12            |
+| ASMR/ambient             | 30-60+ seconds      | 1-2             |
 
 ### 6.3 Rhythm and Music
 
@@ -368,24 +368,24 @@ B-Roll makes the video visually interesting while the voice continues.
 
 ### 7.2 Types of B-Roll
 
-| Type | Examples | When to Shoot |
-|------|---------|---------------|
-| Establishing | Building exterior, city skyline | Before/after main shoot |
-| Process | Hands typing, cooking, making coffee | During activity |
-| Detail | Close-up of product, hands, tools | Anytime |
-| Reaction | Audience reactions, person listening | During events |
-| Atmospheric | Rain on window, traffic, nature | Anytime (stock works too) |
-| Screen recording | App demo, website, code | Screen capture software |
+| Type             | Examples                             | When to Shoot             |
+| ---------------- | ------------------------------------ | ------------------------- |
+| Establishing     | Building exterior, city skyline      | Before/after main shoot   |
+| Process          | Hands typing, cooking, making coffee | During activity           |
+| Detail           | Close-up of product, hands, tools    | Anytime                   |
+| Reaction         | Audience reactions, person listening | During events             |
+| Atmospheric      | Rain on window, traffic, nature      | Anytime (stock works too) |
+| Screen recording | App demo, website, code              | Screen capture software   |
 
 ### 7.3 How Much B-Roll Do You Need?
 
-| Content Type | B-Roll Percentage | Why |
-|-------------|-------------------|-----|
-| Vlog | 30-50% | Keeps viewer visually engaged |
-| Tutorial | 50-70% | Viewers need to see what you are showing |
-| Documentary | 40-60% | Illustrates the narrative |
-| Podcast (video) | 10-20% | Mostly talking, occasional cutaways |
-| Product review | 50-70% | Viewers want to see the product |
+| Content Type    | B-Roll Percentage | Why                                      |
+| --------------- | ----------------- | ---------------------------------------- |
+| Vlog            | 30-50%            | Keeps viewer visually engaged            |
+| Tutorial        | 50-70%            | Viewers need to see what you are showing |
+| Documentary     | 40-60%            | Illustrates the narrative                |
+| Podcast (video) | 10-20%            | Mostly talking, occasional cutaways      |
+| Product review  | 50-70%            | Viewers want to see the product          |
 
 > **Rule of thumb**: For every 1 minute of talking head, shoot 2-3 minutes of B-roll.
 > You will not use it all, but having more options makes editing much easier.
@@ -465,13 +465,13 @@ Actions:
 
 ### 9.1 Key Audio Editing Techniques
 
-| Technique | What It Is | When to Use |
-|-----------|-----------|-------------|
-| Trim silence | Remove dead air between sentences | Jump cut vlogs |
-| Crossfade | Brief audio dissolve between clips | Smooth dialogue transitions |
-| Ducking | Lower music volume when voice is present | Always with background music |
-| Room tone fill | Fill gaps with consistent ambient sound | Prevent jarring silence |
-| J/L cut | Offset audio from video cut | Natural conversation flow |
+| Technique      | What It Is                               | When to Use                  |
+| -------------- | ---------------------------------------- | ---------------------------- |
+| Trim silence   | Remove dead air between sentences        | Jump cut vlogs               |
+| Crossfade      | Brief audio dissolve between clips       | Smooth dialogue transitions  |
+| Ducking        | Lower music volume when voice is present | Always with background music |
+| Room tone fill | Fill gaps with consistent ambient sound  | Prevent jarring silence      |
+| J/L cut        | Offset audio from video cut              | Natural conversation flow    |
 
 ### 9.2 Audio Ducking
 
@@ -514,29 +514,29 @@ Professional editors rarely use the mouse for cuts. Learning keyboard shortcuts 
 
 ### 10.2 Universal Shortcuts (Most Editors)
 
-| Action | Common Shortcut | What It Does |
-|--------|----------------|--------------|
-| Play/Pause | Space | Toggle playback |
-| Cut/Razor | C or B | Split clip at playhead |
-| Ripple delete | Shift+Delete | Delete clip and close gap |
-| Undo | Cmd/Ctrl+Z | Undo last action |
-| In point | I | Mark start of selection |
-| Out point | O | Mark end of selection |
-| Next edit | Down arrow | Jump to next cut point |
-| Previous edit | Up arrow | Jump to previous cut point |
-| Nudge clip | , and . | Move selected clip by one frame |
-| Zoom timeline | +/- or scroll | Zoom in/out on timeline |
-| Select all after | Shift+click | Select all clips after cursor |
-| Delete and ripple | Backspace | Remove and close gap |
+| Action            | Common Shortcut | What It Does                    |
+| ----------------- | --------------- | ------------------------------- |
+| Play/Pause        | Space           | Toggle playback                 |
+| Cut/Razor         | C or B          | Split clip at playhead          |
+| Ripple delete     | Shift+Delete    | Delete clip and close gap       |
+| Undo              | Cmd/Ctrl+Z      | Undo last action                |
+| In point          | I               | Mark start of selection         |
+| Out point         | O               | Mark end of selection           |
+| Next edit         | Down arrow      | Jump to next cut point          |
+| Previous edit     | Up arrow        | Jump to previous cut point      |
+| Nudge clip        | , and .         | Move selected clip by one frame |
+| Zoom timeline     | +/- or scroll   | Zoom in/out on timeline         |
+| Select all after  | Shift+click     | Select all clips after cursor   |
+| Delete and ripple | Backspace       | Remove and close gap            |
 
 ### 10.3 Editing Speed Tiers
 
-| Level | Speed | How |
-|-------|-------|-----|
-| Beginner | 4-8 hours per minute of output | Mouse-based, trial and error |
-| Intermediate | 1-3 hours per minute | Keyboard shortcuts, established workflow |
-| Advanced | 30-60 min per minute | Templates, presets, keyboard-first |
-| Expert | 15-30 min per minute | Muscle memory, proxies, assembly-line |
+| Level        | Speed                          | How                                      |
+| ------------ | ------------------------------ | ---------------------------------------- |
+| Beginner     | 4-8 hours per minute of output | Mouse-based, trial and error             |
+| Intermediate | 1-3 hours per minute           | Keyboard shortcuts, established workflow |
+| Advanced     | 30-60 min per minute           | Templates, presets, keyboard-first       |
+| Expert       | 15-30 min per minute           | Muscle memory, proxies, assembly-line    |
 
 > **Target**: Aim to get to "Intermediate" level within your first month. The jump from
 > mouse-based to keyboard-first editing is the single biggest speed improvement.
@@ -545,28 +545,28 @@ Professional editors rarely use the mouse for cuts. Learning keyboard shortcuts 
 
 ### 11.1 YouTube Recommended Export
 
-| Setting | Value |
-|---------|-------|
-| Format | H.264 (.mp4) |
-| Resolution | 3840×2160 (4K) or 1920×1080 |
-| Frame rate | Match source |
-| Bitrate mode | VBR (Variable Bit Rate) |
-| Target bitrate (1080p) | 10-16 Mbps |
-| Target bitrate (4K) | 35-68 Mbps |
-| Audio codec | AAC |
-| Audio bitrate | 320 kbps |
-| Audio sample rate | 48 kHz |
+| Setting                | Value                       |
+| ---------------------- | --------------------------- |
+| Format                 | H.264 (.mp4)                |
+| Resolution             | 3840×2160 (4K) or 1920×1080 |
+| Frame rate             | Match source                |
+| Bitrate mode           | VBR (Variable Bit Rate)     |
+| Target bitrate (1080p) | 10-16 Mbps                  |
+| Target bitrate (4K)    | 35-68 Mbps                  |
+| Audio codec            | AAC                         |
+| Audio bitrate          | 320 kbps                    |
+| Audio sample rate      | 48 kHz                      |
 
 ### 11.2 Export for Different Platforms
 
-| Platform | Resolution | Aspect Ratio | Max Duration |
-|----------|-----------|--------------|--------------|
-| YouTube (standard) | 1080p-4K | 16:9 | 12 hours |
-| YouTube Shorts | 1080×1920 | 9:16 | 60 seconds |
-| Instagram Reels | 1080×1920 | 9:16 | 90 seconds |
-| TikTok | 1080×1920 | 9:16 | 10 minutes |
-| Twitter/X | 1080p | 16:9 or 1:1 | 2:20 |
-| LinkedIn | 1080p | 16:9 or 1:1 | 10 minutes |
+| Platform           | Resolution | Aspect Ratio | Max Duration |
+| ------------------ | ---------- | ------------ | ------------ |
+| YouTube (standard) | 1080p-4K   | 16:9         | 12 hours     |
+| YouTube Shorts     | 1080×1920  | 9:16         | 60 seconds   |
+| Instagram Reels    | 1080×1920  | 9:16         | 90 seconds   |
+| TikTok             | 1080×1920  | 9:16         | 10 minutes   |
+| Twitter/X          | 1080p      | 16:9 or 1:1  | 2:20         |
+| LinkedIn           | 1080p      | 16:9 or 1:1  | 10 minutes   |
 
 ### 11.3 Proxy Workflow
 
@@ -593,18 +593,18 @@ All major NLEs (DaVinci Resolve, Premiere Pro, Final Cut) support proxy workflow
 
 ## 12. Common Beginner Mistakes
 
-| Mistake | Why It Is Bad | Fix |
-|---------|--------------|-----|
-| Keeping every second of footage | Boring, slow, viewers leave | Cut ruthlessly — if in doubt, cut it out |
-| Over-using transitions | Distracting, amateurish | Use hard cuts 95% of the time |
-| Music too loud | Cannot hear dialogue | Music should be -18 to -24 dB below voice |
-| No B-roll | Visually boring talking head | Shoot 2-3x more B-roll than you think you need |
-| Inconsistent volume | Viewer adjusts volume constantly | Normalize audio levels across all clips |
-| Too many fonts/colors | Messy, unprofessional | Pick 1-2 fonts and 2-3 colors, stick to them |
-| No hook in first 5 seconds | Viewers leave immediately | Start with your most interesting moment |
-| Exporting at wrong settings | Blurry or blocky video | Use recommended YouTube settings above |
-| Not watching the final export | Miss export artifacts or errors | Always watch the full exported video |
-| Editing without a plan | Wasted hours, confused narrative | Outline your video structure before editing |
+| Mistake                         | Why It Is Bad                    | Fix                                            |
+| ------------------------------- | -------------------------------- | ---------------------------------------------- |
+| Keeping every second of footage | Boring, slow, viewers leave      | Cut ruthlessly — if in doubt, cut it out       |
+| Over-using transitions          | Distracting, amateurish          | Use hard cuts 95% of the time                  |
+| Music too loud                  | Cannot hear dialogue             | Music should be -18 to -24 dB below voice      |
+| No B-roll                       | Visually boring talking head     | Shoot 2-3x more B-roll than you think you need |
+| Inconsistent volume             | Viewer adjusts volume constantly | Normalize audio levels across all clips        |
+| Too many fonts/colors           | Messy, unprofessional            | Pick 1-2 fonts and 2-3 colors, stick to them   |
+| No hook in first 5 seconds      | Viewers leave immediately        | Start with your most interesting moment        |
+| Exporting at wrong settings     | Blurry or blocky video           | Use recommended YouTube settings above         |
+| Not watching the final export   | Miss export artifacts or errors  | Always watch the full exported video           |
+| Editing without a plan          | Wasted hours, confused narrative | Outline your video structure before editing    |
 
 ---
 

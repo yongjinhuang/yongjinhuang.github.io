@@ -76,6 +76,7 @@ This guide takes you from having zero blockchain knowledge to understanding and 
 ```
 
 You cannot write secure smart contracts without understanding:
+
 - **What** a blockchain actually is (not just "distributed ledger")
 - **How** transactions get from your wallet to finalized on-chain
 - **Why** gas exists and how EIP-1559 changed fee markets
@@ -231,28 +232,31 @@ You cannot write secure smart contracts without understanding:
 ## Recommended Book List
 
 ### Beginner
-| Book | Author | Focus |
-|------|--------|-------|
-| *Mastering Ethereum* | Andreas Antonopoulos & Gavin Wood | Ethereum fundamentals (free on GitHub) |
-| *Mastering Bitcoin* | Andreas Antonopoulos | Bitcoin & blockchain foundations |
-| *The Infinite Machine* | Camila Russo | Ethereum history (narrative) |
-| *How to DeFi: Beginner* | CoinGecko | DeFi protocols explained simply |
+
+| Book                    | Author                            | Focus                                  |
+| ----------------------- | --------------------------------- | -------------------------------------- |
+| _Mastering Ethereum_    | Andreas Antonopoulos & Gavin Wood | Ethereum fundamentals (free on GitHub) |
+| _Mastering Bitcoin_     | Andreas Antonopoulos              | Bitcoin & blockchain foundations       |
+| _The Infinite Machine_  | Camila Russo                      | Ethereum history (narrative)           |
+| _How to DeFi: Beginner_ | CoinGecko                         | DeFi protocols explained simply        |
 
 ### Intermediate
-| Book | Author | Focus |
-|------|--------|-------|
-| *Ethereum Smart Contract Development* | Solidity documentation | Official language reference |
-| *How to DeFi: Advanced* | CoinGecko | Advanced DeFi mechanisms |
-| *Blockchain and the Law* | De Filippi & Wright | Legal and regulatory landscape |
-| *Token Economy* | Shermin Voshmgir | Tokenomics and mechanism design |
+
+| Book                                  | Author                 | Focus                           |
+| ------------------------------------- | ---------------------- | ------------------------------- |
+| _Ethereum Smart Contract Development_ | Solidity documentation | Official language reference     |
+| _How to DeFi: Advanced_               | CoinGecko              | Advanced DeFi mechanisms        |
+| _Blockchain and the Law_              | De Filippi & Wright    | Legal and regulatory landscape  |
+| _Token Economy_                       | Shermin Voshmgir       | Tokenomics and mechanism design |
 
 ### Advanced
-| Book | Author | Focus |
-|------|--------|-------|
-| *Proofs, Arguments, and Zero-Knowledge* | Justin Thaler | ZK proof theory |
-| *Flash Boys 2.0 (MEV paper)* | Daian et al. | MEV research paper |
-| *Foundations of Distributed Consensus* | Heidi Howard | Consensus protocol theory |
-| *Decentralized Finance: On Blockchain and Smart Contract-Based Financial Markets* | Fabian Schär | Academic DeFi analysis |
+
+| Book                                                                              | Author        | Focus                     |
+| --------------------------------------------------------------------------------- | ------------- | ------------------------- |
+| _Proofs, Arguments, and Zero-Knowledge_                                           | Justin Thaler | ZK proof theory           |
+| _Flash Boys 2.0 (MEV paper)_                                                      | Daian et al.  | MEV research paper        |
+| _Foundations of Distributed Consensus_                                            | Heidi Howard  | Consensus protocol theory |
+| _Decentralized Finance: On Blockchain and Smart Contract-Based Financial Markets_ | Fabian Schär  | Academic DeFi analysis    |
 
 ---
 

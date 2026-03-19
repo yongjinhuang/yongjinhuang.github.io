@@ -152,7 +152,11 @@ async function build(options: BuildOptions): Promise<void> {
   }
 }
 
-function generateHTML(js: string, atlasBase64: string, atlasJson: string): string {
+function generateHTML(
+  js: string,
+  atlasBase64: string,
+  atlasJson: string
+): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -482,13 +486,27 @@ export class Game {
   }
 
   // Accessors for subsystems
-  getInput(): InputHandler { return this.input; }
-  getTweens(): TweenManager { return this.tweenManager; }
-  getParticles(): ParticleSystem { return this.particleSystem; }
-  getAudio(): AudioManager { return this.audio; }
-  getRenderer(): Renderer { return this.renderer; }
-  getBridge(): MraidBridge { return this.bridge; }
-  getCanvas(): HTMLCanvasElement { return this.canvas; }
+  getInput(): InputHandler {
+    return this.input;
+  }
+  getTweens(): TweenManager {
+    return this.tweenManager;
+  }
+  getParticles(): ParticleSystem {
+    return this.particleSystem;
+  }
+  getAudio(): AudioManager {
+    return this.audio;
+  }
+  getRenderer(): Renderer {
+    return this.renderer;
+  }
+  getBridge(): MraidBridge {
+    return this.bridge;
+  }
+  getCanvas(): HTMLCanvasElement {
+    return this.canvas;
+  }
 }
 ```
 
@@ -523,7 +541,8 @@ export class InputHandler {
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.current = {
-      x: 0, y: 0,
+      x: 0,
+      y: 0,
       isDown: false,
       justPressed: false,
       justReleased: false,
@@ -537,22 +556,34 @@ export class InputHandler {
     const canvas = this.canvas;
 
     // Touch events
-    canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      this.onPointerDown(touch.clientX, touch.clientY);
-    }, { passive: false });
+    canvas.addEventListener(
+      'touchstart',
+      (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        this.onPointerDown(touch.clientX, touch.clientY);
+      },
+      { passive: false }
+    );
 
-    canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      this.onPointerMove(touch.clientX, touch.clientY);
-    }, { passive: false });
+    canvas.addEventListener(
+      'touchmove',
+      (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        this.onPointerMove(touch.clientX, touch.clientY);
+      },
+      { passive: false }
+    );
 
-    canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      this.onPointerUp();
-    }, { passive: false });
+    canvas.addEventListener(
+      'touchend',
+      (e) => {
+        e.preventDefault();
+        this.onPointerUp();
+      },
+      { passive: false }
+    );
 
     // Mouse events (for desktop testing)
     canvas.addEventListener('mousedown', (e) => {
@@ -588,7 +619,10 @@ export class InputHandler {
       const dx = x - this.startX;
       const dy = y - this.startY;
 
-      if (Math.abs(dx) > this.swipeThreshold || Math.abs(dy) > this.swipeThreshold) {
+      if (
+        Math.abs(dx) > this.swipeThreshold ||
+        Math.abs(dy) > this.swipeThreshold
+      ) {
         if (Math.abs(dx) > Math.abs(dy)) {
           this.swipe = dx > 0 ? 'right' : 'left';
         } else {
@@ -692,12 +726,14 @@ interface ActiveTween {
 export class TweenManager {
   private readonly tweens: ActiveTween[] = [];
 
-  create(config: Partial<TweenConfig> & {
-    target: Record<string, number>;
-    property: string;
-    to: number;
-    duration: number;
-  }): ActiveTween {
+  create(
+    config: Partial<TweenConfig> & {
+      target: Record<string, number>;
+      property: string;
+      to: number;
+      duration: number;
+    }
+  ): ActiveTween {
     const fullConfig: TweenConfig = {
       from: config.target[config.property],
       easing: Easing.easeOutQuad,
@@ -838,7 +874,7 @@ export class ObjectPool<T> {
 // src/Grid.ts
 
 export interface Cell {
-  type: number;         // -1 = empty, 0-5 = gem types
+  type: number; // -1 = empty, 0-5 = gem types
   special: SpecialType;
   row: number;
   col: number;
@@ -847,7 +883,7 @@ export interface Cell {
   screenY: number;
   scale: number;
   alpha: number;
-  angle: number;        // For spin effects
+  angle: number; // For spin effects
 }
 
 export type SpecialType = 'none' | 'lineH' | 'lineV' | 'bomb';
@@ -1400,8 +1436,10 @@ class GameScene implements Scene {
 
     // Position all cells
     for (const cell of this.grid.getAllCells()) {
-      cell.screenX = this.gridOffsetX + cell.col * this.cellSize + this.cellSize / 2;
-      cell.screenY = this.gridOffsetY + cell.row * this.cellSize + this.cellSize / 2;
+      cell.screenX =
+        this.gridOffsetX + cell.col * this.cellSize + this.cellSize / 2;
+      cell.screenY =
+        this.gridOffsetY + cell.row * this.cellSize + this.cellSize / 2;
     }
   }
 
@@ -1443,7 +1481,12 @@ class GameScene implements Scene {
       const col = Math.floor((startPos.x - this.gridOffsetX) / this.cellSize);
       const row = Math.floor((startPos.y - this.gridOffsetY) / this.cellSize);
 
-      if (row >= 0 && row < this.grid.rows && col >= 0 && col < this.grid.cols) {
+      if (
+        row >= 0 &&
+        row < this.grid.rows &&
+        col >= 0 &&
+        col < this.grid.cols
+      ) {
         this.selectedRow = row;
         this.selectedCol = col;
       }
@@ -1454,14 +1497,27 @@ class GameScene implements Scene {
       let targetCol = this.selectedCol;
 
       switch (state.swipeDir) {
-        case 'up': targetRow--; break;
-        case 'down': targetRow++; break;
-        case 'left': targetCol--; break;
-        case 'right': targetCol++; break;
+        case 'up':
+          targetRow--;
+          break;
+        case 'down':
+          targetRow++;
+          break;
+        case 'left':
+          targetCol--;
+          break;
+        case 'right':
+          targetCol++;
+          break;
       }
 
       if (this.grid.getCell(targetRow, targetCol)) {
-        this.performSwap(this.selectedRow, this.selectedCol, targetRow, targetCol);
+        this.performSwap(
+          this.selectedRow,
+          this.selectedCol,
+          targetRow,
+          targetCol
+        );
       }
 
       this.selectedRow = -1;
@@ -1508,8 +1564,10 @@ class GameScene implements Scene {
     // Simplified: in production, animate each step with delays
     // For now, just update cell positions and call complete
     for (const cell of this.grid.getAllCells()) {
-      cell.screenX = this.gridOffsetX + cell.col * this.cellSize + this.cellSize / 2;
-      cell.screenY = this.gridOffsetY + cell.row * this.cellSize + this.cellSize / 2;
+      cell.screenX =
+        this.gridOffsetX + cell.col * this.cellSize + this.cellSize / 2;
+      cell.screenY =
+        this.gridOffsetY + cell.row * this.cellSize + this.cellSize / 2;
       cell.scale = 1;
     }
 
@@ -1525,8 +1583,10 @@ class GameScene implements Scene {
     for (const step of steps) {
       if (step.type === 'remove') {
         for (const cell of step.affectedCells) {
-          const x = this.gridOffsetX + cell.col * this.cellSize + this.cellSize / 2;
-          const y = this.gridOffsetY + cell.row * this.cellSize + this.cellSize / 2;
+          const x =
+            this.gridOffsetX + cell.col * this.cellSize + this.cellSize / 2;
+          const y =
+            this.gridOffsetY + cell.row * this.cellSize + this.cellSize / 2;
           this.game.getParticles().emit(x, y, 10);
         }
       }
@@ -1552,14 +1612,26 @@ class GameScene implements Scene {
 
     // Timer bar
     const timerWidth = (this.timeRemaining / this.totalTime) * (w * 0.8);
-    const timerColor = this.timeRemaining > 10 ? '#4ecdc4' : this.timeRemaining > 5 ? '#ffd93d' : '#ff6b6b';
+    const timerColor =
+      this.timeRemaining > 10
+        ? '#4ecdc4'
+        : this.timeRemaining > 5
+          ? '#ffd93d'
+          : '#ff6b6b';
     ctx.fillStyle = '#333';
     ctx.fillRect(w * 0.1, 60, w * 0.8, 8);
     ctx.fillStyle = timerColor;
     ctx.fillRect(w * 0.1, 60, timerWidth, 8);
 
     // Grid
-    const GEM_COLORS = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#9b59b6', '#ff9f43'];
+    const GEM_COLORS = [
+      '#ff6b6b',
+      '#ffd93d',
+      '#6bcb77',
+      '#4d96ff',
+      '#9b59b6',
+      '#ff9f43',
+    ];
 
     for (const cell of this.grid.getAllCells()) {
       if (cell.type < 0) continue;
@@ -1711,7 +1783,12 @@ class EndCardScene implements Scene {
       ctx.fill();
 
       // Button
-      const gradient = ctx.createLinearGradient(scaledX, scaledY, scaledX, scaledY + scaledH);
+      const gradient = ctx.createLinearGradient(
+        scaledX,
+        scaledY,
+        scaledX,
+        scaledY + scaledH
+      );
       gradient.addColorStop(0, '#4ecdc4');
       gradient.addColorStop(1, '#45b7aa');
       ctx.fillStyle = gradient;
@@ -1760,8 +1837,14 @@ export class ParticleSystem {
   private readonly maxParticles: number;
 
   private static readonly COLORS = [
-    '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#9b59b6', '#ff9f43',
-    '#ffffff', '#ffaaaa',
+    '#ff6b6b',
+    '#ffd93d',
+    '#6bcb77',
+    '#4d96ff',
+    '#9b59b6',
+    '#ff9f43',
+    '#ffffff',
+    '#ffaaaa',
   ];
 
   constructor(maxParticles: number) {
@@ -1771,9 +1854,15 @@ export class ParticleSystem {
     // Pre-allocate
     for (let i = 0; i < maxParticles; i++) {
       this.particles.push({
-        x: 0, y: 0, vx: 0, vy: 0,
-        life: 0, maxLife: 0, size: 0,
-        color: '#fff', active: false,
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        life: 0,
+        maxLife: 0,
+        size: 0,
+        color: '#fff',
+        active: false,
       });
     }
   }
@@ -1793,9 +1882,10 @@ export class ParticleSystem {
       particle.life = 0.3 + Math.random() * 0.5;
       particle.maxLife = particle.life;
       particle.size = 2 + Math.random() * 4;
-      particle.color = ParticleSystem.COLORS[
-        Math.floor(Math.random() * ParticleSystem.COLORS.length)
-      ];
+      particle.color =
+        ParticleSystem.COLORS[
+          Math.floor(Math.random() * ParticleSystem.COLORS.length)
+        ];
       particle.active = true;
     }
   }
@@ -1820,7 +1910,7 @@ export class ParticleSystem {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.vy += 200 * dt; // Gravity
-      p.vx *= 0.98;     // Drag
+      p.vx *= 0.98; // Drag
     }
   }
 
@@ -2063,11 +2153,11 @@ function checkSize(filePath: string, limits: Record<string, number>): void {
 }
 
 checkSize('dist/index.html', {
-  'Facebook': 5,
-  'Unity': 5,
-  'ironSource': 5,
-  'Google': 2.5,
-  'Target': 3,
+  Facebook: 5,
+  Unity: 5,
+  ironSource: 5,
+  Google: 2.5,
+  Target: 3,
 });
 ```
 

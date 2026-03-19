@@ -19,13 +19,13 @@
 
 HikariCP maintains a fixed-size pool of reusable JDBC connections. Key parameters:
 
-| Parameter | Purpose | Suppr Value | Recommended |
-|-----------|---------|-------------|-------------|
-| `maximumPoolSize` | Max concurrent connections | 2 | 20–30 |
-| `minimumIdle` | Idle connections kept warm | — | Same as max |
-| `maxLifetime` | Connection recycled after this | 30min | 25–28min (< MySQL `wait_timeout`) |
-| `connectionTimeout` | How long to wait for a connection | 30s | 5–10s |
-| `leakDetectionThreshold` | Log warning if connection held too long | 0 (off) | 60s |
+| Parameter                | Purpose                                 | Suppr Value | Recommended                       |
+| ------------------------ | --------------------------------------- | ----------- | --------------------------------- |
+| `maximumPoolSize`        | Max concurrent connections              | 2           | 20–30                             |
+| `minimumIdle`            | Idle connections kept warm              | —           | Same as max                       |
+| `maxLifetime`            | Connection recycled after this          | 30min       | 25–28min (< MySQL `wait_timeout`) |
+| `connectionTimeout`      | How long to wait for a connection       | 30s         | 5–10s                             |
+| `leakDetectionThreshold` | Log warning if connection held too long | 0 (off)     | 60s                               |
 
 **Why pool=2 is dangerous**: With 2 connections, a single slow query blocks all other requests. Under load, threads queue up waiting for a connection, causing cascading timeouts.
 
@@ -33,13 +33,13 @@ HikariCP maintains a fixed-size pool of reusable JDBC connections. Key parameter
 
 #### Q2: Explain MySQL index types and when each is used.
 
-| Index Type | Use Case | Example |
-|------------|----------|---------|
-| B+Tree (default) | Range queries, sorting, prefix matching | `WHERE created_at > '2024-01-01'` |
-| Hash | Exact match only (Memory engine) | `WHERE api_key = 'abc123'` |
-| Composite | Multi-column filtering | `INDEX(user_id, status, created_at)` |
-| Covering | Query answered entirely from index | `SELECT status FROM orders WHERE user_id=1` with `INDEX(user_id, status)` |
-| Prefix | Long text columns | `INDEX(email(20))` |
+| Index Type       | Use Case                                | Example                                                                   |
+| ---------------- | --------------------------------------- | ------------------------------------------------------------------------- |
+| B+Tree (default) | Range queries, sorting, prefix matching | `WHERE created_at > '2024-01-01'`                                         |
+| Hash             | Exact match only (Memory engine)        | `WHERE api_key = 'abc123'`                                                |
+| Composite        | Multi-column filtering                  | `INDEX(user_id, status, created_at)`                                      |
+| Covering         | Query answered entirely from index      | `SELECT status FROM orders WHERE user_id=1` with `INDEX(user_id, status)` |
+| Prefix           | Long text columns                       | `INDEX(email(20))`                                                        |
 
 **Leftmost prefix rule**: Composite index `(A, B, C)` serves queries on `(A)`, `(A, B)`, `(A, B, C)` but NOT `(B, C)` alone.
 
@@ -72,20 +72,21 @@ ALTER TABLE point_records ADD INDEX idx_user_status_expire (user_id, status, exp
 
 #### Q4: How does InnoDB handle transactions and what isolation levels matter?
 
-| Isolation Level | Dirty Read | Non-Repeatable Read | Phantom Read | Performance |
-|-----------------|-----------|---------------------|--------------|-------------|
-| READ UNCOMMITTED | Yes | Yes | Yes | Fastest |
-| READ COMMITTED | No | Yes | Yes | Fast |
-| **REPEATABLE READ** (MySQL default) | No | No | Possible* | Good |
-| SERIALIZABLE | No | No | No | Slowest |
+| Isolation Level                     | Dirty Read | Non-Repeatable Read | Phantom Read | Performance |
+| ----------------------------------- | ---------- | ------------------- | ------------ | ----------- |
+| READ UNCOMMITTED                    | Yes        | Yes                 | Yes          | Fastest     |
+| READ COMMITTED                      | No         | Yes                 | Yes          | Fast        |
+| **REPEATABLE READ** (MySQL default) | No         | No                  | Possible\*   | Good        |
+| SERIALIZABLE                        | No         | No                  | No           | Slowest     |
 
-*InnoDB uses **gap locking** to mostly prevent phantom reads even at REPEATABLE READ.
+\*InnoDB uses **gap locking** to mostly prevent phantom reads even at REPEATABLE READ.
 
 **Suppr relevance**: Point freeze/consume pattern relies on transaction isolation. Without `SELECT ... FOR UPDATE` (pessimistic) or version column (optimistic), concurrent mutations can cause double-spending.
 
 #### Q5: How do deadlocks happen and how do you resolve them?
 
 **Common deadlock pattern**:
+
 ```
 Transaction A: UPDATE points SET amount=90 WHERE id=1  -- locks row 1
 Transaction B: UPDATE points SET amount=80 WHERE id=2  -- locks row 2
@@ -94,6 +95,7 @@ Transaction B: UPDATE points SET amount=60 WHERE id=1  -- waits for row 1 (held 
 ```
 
 **Solutions**:
+
 1. **Consistent lock ordering** — Always lock rows in the same order (e.g., ascending ID)
 2. **Shorter transactions** — Minimize time between lock acquisition and commit
 3. **Retry logic** — Catch `DeadlockLoserDataAccessException`, retry 2–3 times
@@ -106,18 +108,20 @@ Transaction B: UPDATE points SET amount=60 WHERE id=1  -- waits for row 1 (held 
 **Symptom**: `HikariPool-1 - Connection is not available, request timed out after 30000ms`
 
 **Root cause checklist**:
+
 1. Pool too small (Suppr: max=2)
 2. Long-running queries holding connections
 3. Missing `@Transactional` timeout — transaction never closes
 4. Connection leak — code path doesn't return connection to pool
 
 **Fix**:
+
 ```yaml
 spring:
   datasource:
     hikari:
       maximum-pool-size: 20
-      leak-detection-threshold: 60000  # warn after 60s
+      leak-detection-threshold: 60000 # warn after 60s
       connection-timeout: 5000
 ```
 
@@ -136,6 +140,7 @@ spring:
 **Root cause**: `ALTER TABLE` on large table acquires metadata lock
 
 **Fix**: Use `pt-online-schema-change` (Percona) or MySQL 8.0+ instant DDL:
+
 ```sql
 ALTER TABLE point_records ADD COLUMN memo VARCHAR(255), ALGORITHM=INSTANT;
 ```
@@ -156,6 +161,7 @@ ALTER TABLE point_records ADD COLUMN memo VARCHAR(255), ALGORITHM=INSTANT;
 #### Q1: How do pre-signed URLs work and why use them?
 
 **Flow**:
+
 ```
 Client → API Server: "I want to upload/download file X"
 API Server → MinIO: GeneratePresignedUrl(bucket, key, expiry=24h, method=PUT/GET)
@@ -164,12 +170,14 @@ Client → MinIO: Direct upload/download (bypasses API server)
 ```
 
 **Benefits**:
+
 - API server doesn't proxy large files — reduces bandwidth and memory pressure
 - Fine-grained access control without exposing credentials
 - Time-limited — URL expires after configured duration
 - Method-specific — PUT URL can't be used for GET
 
 **Security considerations**:
+
 - Never set expiry > 7 days (S3 hard limit)
 - Use separate URLs for upload vs download
 - Validate file type/size on the server side after upload via S3 event notification
@@ -183,11 +191,13 @@ Client → MinIO: Direct upload/download (bypasses API server)
 ```
 
 **Why it matters**:
+
 - Retryable — failed parts don't restart entire upload
 - Parallelizable — multiple parts upload concurrently
 - Required for files > 5GB
 
 **Cleanup pitfall**: Incomplete multipart uploads consume storage. Configure lifecycle rule:
+
 ```xml
 <AbortIncompleteMultipartUpload>
   <DaysAfterInitiation>7</DaysAfterInitiation>
@@ -197,6 +207,7 @@ Client → MinIO: Direct upload/download (bypasses API server)
 #### Q3: How does S3 consistency model work?
 
 As of December 2020, S3 provides **strong read-after-write consistency** for all operations:
+
 - PUT new object → immediately readable
 - PUT overwrite → immediately returns new version
 - DELETE → immediately reflected
@@ -207,18 +218,19 @@ MinIO also provides strong consistency since it's built on top of erasure coding
 
 #### Q4: Private vs public bucket — when to use each?
 
-| Aspect | Private Bucket | Public Bucket |
-|--------|---------------|---------------|
-| Access | Pre-signed URLs only | Direct URL |
-| Use case | User uploads, translated docs | Static assets, shared templates |
-| Security | Time-limited, per-object | Open read, write-protected |
-| CDN | Pre-signed URL + CloudFront signed cookies | CloudFront direct |
+| Aspect   | Private Bucket                             | Public Bucket                   |
+| -------- | ------------------------------------------ | ------------------------------- |
+| Access   | Pre-signed URLs only                       | Direct URL                      |
+| Use case | User uploads, translated docs              | Static assets, shared templates |
+| Security | Time-limited, per-object                   | Open read, write-protected      |
+| CDN      | Pre-signed URL + CloudFront signed cookies | CloudFront direct               |
 
 ### Real-Life Debugging Scenarios
 
 #### Scenario 1: Pre-signed URL returns 403 Forbidden
 
 **Checklist**:
+
 1. URL expired (check `X-Amz-Expires` parameter)
 2. Clock skew > 15 minutes between server and S3 (use NTP)
 3. Bucket policy denies access despite valid signature
@@ -228,12 +240,14 @@ MinIO also provides strong consistency since it's built on top of erasure coding
 #### Scenario 2: Upload succeeds but download returns corrupted file
 
 **Root cause checklist**:
+
 1. Missing `Content-Type` header during upload — browser can't interpret
 2. Middleware/proxy truncated the response (check `Content-Length` header)
 3. Multipart upload — parts assembled in wrong order
 4. Client used gzip encoding but S3 returned raw bytes
 
 **Fix**: Always set `Content-Type` and `Content-Disposition` during upload:
+
 ```java
 PutObjectArgs.builder()
     .bucket("private")
@@ -249,6 +263,7 @@ PutObjectArgs.builder()
 **Symptom**: `XMinioStorageFull: Storage backend has reached its minimum free drive threshold`
 
 **Immediate fix**: Clear incomplete multipart uploads and expired objects:
+
 ```bash
 mc rm --recursive --force --incomplete myminio/private
 mc ilm rule list myminio/private  # check lifecycle rules
@@ -282,6 +297,7 @@ Consumer Group "translation-workers":
 ```
 
 **Key rules**:
+
 - Each partition is consumed by exactly ONE consumer in a group
 - Adding consumers > partitions = idle consumers
 - Messages within a partition are strictly ordered
@@ -289,17 +305,18 @@ Consumer Group "translation-workers":
 
 #### Q2: What's the difference between at-most-once, at-least-once, and exactly-once?
 
-| Guarantee | How | Trade-off |
-|-----------|-----|-----------|
-| At-most-once | Auto-commit offset before processing | Fast, may lose messages |
-| **At-least-once** (Suppr) | Commit offset after successful processing | Safe, may duplicate |
-| Exactly-once | Transactional producer + consumer `read_committed` | Slowest, most complex |
+| Guarantee                 | How                                                | Trade-off               |
+| ------------------------- | -------------------------------------------------- | ----------------------- |
+| At-most-once              | Auto-commit offset before processing               | Fast, may lose messages |
+| **At-least-once** (Suppr) | Commit offset after successful processing          | Safe, may duplicate     |
+| Exactly-once              | Transactional producer + consumer `read_committed` | Slowest, most complex   |
 
 **Suppr approach**: Manual ACK after processing + idempotent consumers. If a translation task fails mid-way, the message is redelivered and the consumer checks if work was already done (via DB status check).
 
 #### Q3: How do you handle consumer lag and slow consumers?
 
 **Monitoring**:
+
 ```bash
 kafka-consumer-groups.sh --bootstrap-server localhost:9092 \
   --describe --group translation-workers
@@ -307,6 +324,7 @@ kafka-consumer-groups.sh --bootstrap-server localhost:9092 \
 ```
 
 **Solutions for high lag**:
+
 1. **Scale horizontally** — Add consumers (up to partition count)
 2. **Increase partitions** — Allows more parallel consumers
 3. **Optimize processing** — Profile the consumer's bottleneck
@@ -318,12 +336,14 @@ kafka-consumer-groups.sh --bootstrap-server localhost:9092 \
 **Triggers**: Consumer joins/leaves group, new partition added, consumer heartbeat timeout
 
 **Stop-the-world rebalancing** (default):
+
 1. All consumers stop fetching
 2. Group coordinator revokes all partitions
 3. Reassigns partitions using configured strategy
 4. Consumers resume — processing paused during rebalance
 
 **Solutions**:
+
 - **Cooperative sticky assignor** — Incremental rebalancing, only moves affected partitions
 - **Static group membership** — `group.instance.id` prevents rebalance on transient disconnects
 - Tune `session.timeout.ms` (default 45s) and `heartbeat.interval.ms` (default 3s)
@@ -353,6 +373,7 @@ public void consume(ConsumerRecord<String, String> record, Acknowledgment ack) {
 #### Q6: How does Kafka guarantee ordering, and when does it break?
 
 **Ordering guaranteed within a single partition**. Breaks when:
+
 1. Producer retries with `max.in.flight.requests.per.connection > 1` (out-of-order delivery)
 2. Messages for same entity sent to different partitions (missing/wrong partition key)
 3. Consumer processes messages from multiple partitions in parallel
@@ -366,12 +387,14 @@ public void consume(ConsumerRecord<String, String> record, Acknowledgment ack) {
 **Symptom**: Consumer is alive but no messages consumed, lag keeps growing
 
 **Checklist**:
+
 1. `max.poll.interval.ms` exceeded — consumer kicked from group silently
 2. Consumer stuck in long processing (Suppr: 12h timeout helps but verify)
 3. Rebalancing loop — consumer keeps joining and leaving
 4. All partitions assigned to a different consumer instance
 
 **Debug**:
+
 ```bash
 kafka-consumer-groups.sh --describe --group translation-workers
 # Check: Is this consumer listed? Does it have assigned partitions?
@@ -384,6 +407,7 @@ kafka-consumer-groups.sh --describe --group translation-workers
 **Root cause**: At-least-once delivery + non-idempotent consumer
 
 **Fix**:
+
 ```java
 // Idempotent consumer pattern
 public void processTranslation(TranslationMessage msg) {
@@ -402,6 +426,7 @@ public void processTranslation(TranslationMessage msg) {
 #### Scenario 3: Producer sends succeed but consumer never receives
 
 **Checklist**:
+
 1. Topic name mismatch (typo, case sensitivity)
 2. Consumer subscribed to wrong topic
 3. Message serialization error on consumer side (check `value.deserializer`)
@@ -413,6 +438,7 @@ public void processTranslation(TranslationMessage msg) {
 **Symptom**: `NotEnoughReplicasException` or broker crashes
 
 **Immediate actions**:
+
 1. Check disk: `kafka-log-dirs.sh --describe` — find largest topics
 2. Reduce retention: `kafka-configs.sh --alter --topic big-topic --add-config retention.ms=86400000`
 3. Delete old segments: `kafka-delete-records.sh`
@@ -433,30 +459,33 @@ public void processTranslation(TranslationMessage msg) {
 
 #### Q1: When should you use MongoDB vs MySQL?
 
-| Criteria | MongoDB | MySQL |
-|----------|---------|-------|
-| Schema | Flexible, evolving | Strict, relational |
-| Queries | Document-oriented, nested | SQL joins, complex relations |
-| Transactions | Multi-doc ACID (4.0+) | Full ACID |
-| Scaling | Horizontal (sharding) | Vertical (read replicas) |
-| Best for | Content, logs, catalogs, search | Orders, payments, ledgers |
+| Criteria     | MongoDB                         | MySQL                        |
+| ------------ | ------------------------------- | ---------------------------- |
+| Schema       | Flexible, evolving              | Strict, relational           |
+| Queries      | Document-oriented, nested       | SQL joins, complex relations |
+| Transactions | Multi-doc ACID (4.0+)           | Full ACID                    |
+| Scaling      | Horizontal (sharding)           | Vertical (read replicas)     |
+| Best for     | Content, logs, catalogs, search | Orders, payments, ledgers    |
 
 **Suppr choice**: MySQL for transactional data (payments, points), MongoDB for document content and search indexes — correct separation of concerns.
 
 #### Q2: How do you design MongoDB schemas — embedding vs referencing?
 
 **Embed when**:
+
 - Data is always accessed together (1:1 or 1:few)
 - Child data doesn't make sense without parent
 - Example: Translation task with its sentence-level results
 
 **Reference when**:
+
 - Data is accessed independently
 - Many-to-many relationships
 - Child documents are large or frequently updated
 - Example: User ↔ Translation tasks (reference user by `userId`)
 
 **Anti-pattern**: Unbounded arrays. Never embed an ever-growing list:
+
 ```javascript
 // BAD: Array grows forever
 { userId: 1, translations: [{...}, {...}, /* thousands */] }
@@ -467,14 +496,14 @@ public void processTranslation(TranslationMessage msg) {
 
 #### Q3: How do MongoDB indexes work and what types are there?
 
-| Index Type | Use Case | Example |
-|------------|----------|---------|
-| Single field | Basic lookups | `{ userId: 1 }` |
-| Compound | Multi-field queries | `{ userId: 1, createdAt: -1 }` |
-| Text | Full-text search | `{ content: "text" }` |
-| TTL | Auto-expire documents | `{ createdAt: 1 }, { expireAfterSeconds: 86400 }` |
-| Hashed | Shard key distribution | `{ userId: "hashed" }` |
-| Wildcard | Dynamic schema fields | `{ "metadata.$**": 1 }` |
+| Index Type   | Use Case               | Example                                           |
+| ------------ | ---------------------- | ------------------------------------------------- |
+| Single field | Basic lookups          | `{ userId: 1 }`                                   |
+| Compound     | Multi-field queries    | `{ userId: 1, createdAt: -1 }`                    |
+| Text         | Full-text search       | `{ content: "text" }`                             |
+| TTL          | Auto-expire documents  | `{ createdAt: 1 }, { expireAfterSeconds: 86400 }` |
+| Hashed       | Shard key distribution | `{ userId: "hashed" }`                            |
+| Wildcard     | Dynamic schema fields  | `{ "metadata.$**": 1 }`                           |
 
 **Important**: MongoDB uses only ONE index per query (except `$or` which can use index per clause). Use `explain()` to verify.
 
@@ -482,22 +511,31 @@ public void processTranslation(TranslationMessage msg) {
 
 ```javascript
 db.translations.aggregate([
-  { $match: { userId: ObjectId("..."), status: "COMPLETED" } },  // filter early
-  { $lookup: {                                                    // join
-      from: "users", localField: "userId",
-      foreignField: "_id", as: "user"
-  }},
-  { $unwind: "$user" },                                          // flatten array
-  { $group: {                                                     // aggregate
-      _id: "$user.plan",
-      totalPages: { $sum: "$pageCount" },
-      avgDuration: { $avg: "$durationMs" }
-  }},
-  { $sort: { totalPages: -1 } }                                  // sort
-])
+  { $match: { userId: ObjectId('...'), status: 'COMPLETED' } }, // filter early
+  {
+    $lookup: {
+      // join
+      from: 'users',
+      localField: 'userId',
+      foreignField: '_id',
+      as: 'user',
+    },
+  },
+  { $unwind: '$user' }, // flatten array
+  {
+    $group: {
+      // aggregate
+      _id: '$user.plan',
+      totalPages: { $sum: '$pageCount' },
+      avgDuration: { $avg: '$durationMs' },
+    },
+  },
+  { $sort: { totalPages: -1 } }, // sort
+]);
 ```
 
 **Performance rules**:
+
 1. `$match` and `$sort` first — uses indexes
 2. `$project` early to reduce document size in pipeline
 3. `$lookup` is expensive — equivalent to SQL JOIN
@@ -510,12 +548,14 @@ db.translations.aggregate([
 **Symptom**: Aggregation takes 30s+, high CPU
 
 **Debug**:
+
 ```javascript
 db.translations.aggregate([...]).explain("executionStats")
 // Check: "stage": "COLLSCAN" means no index hit
 ```
 
 **Fixes**:
+
 1. Add index matching `$match` + `$sort` fields
 2. Move `$match` to first stage
 3. Add `$project` to drop unneeded fields
@@ -528,6 +568,7 @@ db.translations.aggregate([...]).explain("executionStats")
 **Root cause**: Two threads updating the same document simultaneously
 
 **Fix**: Use atomic operators instead of read-modify-write:
+
 ```javascript
 // BAD: Read-modify-write (race condition)
 doc = db.tasks.findOne({ _id: taskId });
@@ -548,17 +589,19 @@ db.tasks.updateOne(
 **Explanation**: MongoDB's WiredTiger cache defaults to `(RAM - 1GB) / 2`. This is by design — the OS page cache handles the rest.
 
 **Actual problems**:
+
 1. Too many open connections (each uses ~1MB stack)
 2. Large `sort()` without index — in-memory sort exceeds 100MB limit
 3. Unbounded queries returning millions of documents
 
 **Fix**:
+
 ```yaml
 # mongod.conf
 storage:
   wiredTiger:
     engineConfig:
-      cacheSizeGB: 4  # explicit limit
+      cacheSizeGB: 4 # explicit limit
 net:
   maxIncomingConnections: 200
 ```
@@ -580,19 +623,20 @@ net:
 
 #### Q1: Explain Redis data structures and when to use each.
 
-| Structure | Commands | Use Case in Suppr |
-|-----------|----------|-------------------|
-| String | `GET`, `SET`, `INCR`, `SETNX` | Counters, locks, stop signals, cache values |
-| Hash | `HGET`, `HSET`, `HGETALL` | Structured cache (user profiles, session data) |
-| List | `LPUSH`, `RPOP`, `LRANGE` | Task queues (though Kafka is primary) |
-| Set | `SADD`, `SISMEMBER`, `SINTER` | Unique collections, dedup sets |
-| Sorted Set | `ZADD`, `ZRANGEBYSCORE` | Leaderboards, rate limiting sliding windows |
-| Stream | `XADD`, `XREADGROUP` | Event sourcing, SSE improvement over pub/sub |
-| Pub/Sub | `PUBLISH`, `SUBSCRIBE` | Real-time SSE relay (current Suppr approach) |
+| Structure  | Commands                      | Use Case in Suppr                              |
+| ---------- | ----------------------------- | ---------------------------------------------- |
+| String     | `GET`, `SET`, `INCR`, `SETNX` | Counters, locks, stop signals, cache values    |
+| Hash       | `HGET`, `HSET`, `HGETALL`     | Structured cache (user profiles, session data) |
+| List       | `LPUSH`, `RPOP`, `LRANGE`     | Task queues (though Kafka is primary)          |
+| Set        | `SADD`, `SISMEMBER`, `SINTER` | Unique collections, dedup sets                 |
+| Sorted Set | `ZADD`, `ZRANGEBYSCORE`       | Leaderboards, rate limiting sliding windows    |
+| Stream     | `XADD`, `XREADGROUP`          | Event sourcing, SSE improvement over pub/sub   |
+| Pub/Sub    | `PUBLISH`, `SUBSCRIBE`        | Real-time SSE relay (current Suppr approach)   |
 
 #### Q2: How do you implement a distributed lock in Redis?
 
 **Simple lock (Suppr approach)**:
+
 ```java
 // Acquire
 Boolean acquired = redisTemplate.opsForValue()
@@ -616,13 +660,13 @@ redisTemplate.execute(new DefaultRedisScript<>(script, Long.class),
 
 #### Q3: Redis persistence — RDB vs AOF.
 
-| Aspect | RDB (Snapshotting) | AOF (Append-Only File) |
-|--------|-------------------|----------------------|
-| How | Point-in-time snapshot via `fork()` | Log every write command |
-| Data loss | Up to last snapshot interval | Up to last `fsync` (1s with `everysec`) |
-| Recovery speed | Fast (load binary) | Slower (replay commands) |
-| Disk usage | Compact | Grows, needs rewrite |
-| CPU impact | Spike during `BGSAVE` | Steady with `everysec` |
+| Aspect         | RDB (Snapshotting)                  | AOF (Append-Only File)                  |
+| -------------- | ----------------------------------- | --------------------------------------- |
+| How            | Point-in-time snapshot via `fork()` | Log every write command                 |
+| Data loss      | Up to last snapshot interval        | Up to last `fsync` (1s with `everysec`) |
+| Recovery speed | Fast (load binary)                  | Slower (replay commands)                |
+| Disk usage     | Compact                             | Grows, needs rewrite                    |
+| CPU impact     | Spike during `BGSAVE`               | Steady with `everysec`                  |
 
 **Best practice**: Use both. RDB for fast restarts, AOF for minimal data loss. In Suppr, if Redis is purely a cache (not source of truth), RDB alone is sufficient.
 
@@ -630,31 +674,32 @@ redisTemplate.execute(new DefaultRedisScript<>(script, Long.class),
 
 Controlled by `maxmemory-policy`:
 
-| Policy | Behavior | When to Use |
-|--------|----------|-------------|
-| `noeviction` | Return error on writes | Data must not be lost |
-| `allkeys-lru` | Evict least recently used | General cache |
+| Policy         | Behavior                      | When to Use                   |
+| -------------- | ----------------------------- | ----------------------------- |
+| `noeviction`   | Return error on writes        | Data must not be lost         |
+| `allkeys-lru`  | Evict least recently used     | General cache                 |
 | `volatile-lru` | Evict LRU among keys with TTL | Mix of cache + permanent data |
-| `allkeys-lfu` | Evict least frequently used | Hot/cold access patterns |
-| `volatile-ttl` | Evict keys closest to expiry | TTL-based cache |
+| `allkeys-lfu`  | Evict least frequently used   | Hot/cold access patterns      |
+| `volatile-ttl` | Evict keys closest to expiry  | TTL-based cache               |
 
 **Suppr recommendation**: `allkeys-lru` for cache workload, but ensure counters and locks have TTLs to prevent unbounded growth.
 
 #### Q5: How does Redis pub/sub differ from Kafka, and what are its limitations?
 
-| Aspect | Redis Pub/Sub | Kafka |
-|--------|--------------|-------|
-| Persistence | None — fire-and-forget | Persisted on disk |
-| Delivery | At-most-once | At-least-once / exactly-once |
-| Consumer offline | Messages lost | Consumer catches up from offset |
-| Throughput | Very high (~1M msg/s) | High (~100K msg/s per partition) |
-| Use case | Real-time notifications, SSE relay | Durable event processing |
+| Aspect           | Redis Pub/Sub                      | Kafka                            |
+| ---------------- | ---------------------------------- | -------------------------------- |
+| Persistence      | None — fire-and-forget             | Persisted on disk                |
+| Delivery         | At-most-once                       | At-least-once / exactly-once     |
+| Consumer offline | Messages lost                      | Consumer catches up from offset  |
+| Throughput       | Very high (~1M msg/s)              | High (~100K msg/s per partition) |
+| Use case         | Real-time notifications, SSE relay | Durable event processing         |
 
 **Suppr risk**: If an API pod restarts, all pub/sub messages during downtime are lost. SSE clients must reconnect and replay from `last_event_id`. Better alternative: **Redis Streams** (`XADD`/`XREADGROUP`) which persist messages and support consumer groups.
 
 #### Q6: How does Redis-backed rate limiting work?
 
 **Token bucket (Suppr's `@RateLimit`)**:
+
 ```lua
 -- Lua script for atomic token bucket
 local key = KEYS[1]
@@ -691,12 +736,14 @@ end
 **Symptom**: Consumer publishes translation progress but client SSE stream is silent
 
 **Checklist**:
+
 1. Channel name mismatch (check dynamic channel naming pattern)
 2. API pod subscribed after message was published (race condition)
 3. Redis connection dropped and Lettuce didn't auto-reconnect
 4. `SseEmitter` already timed out (Suppr: 50-min timeout)
 
 **Debug**:
+
 ```bash
 redis-cli SUBSCRIBE "translation:progress:*"
 # Manually verify messages are being published
@@ -711,6 +758,7 @@ redis-cli PUBSUB CHANNELS "translation:*"
 **Root cause**: `INCR` executed but `DECR` skipped due to exception before reaching the decrement code
 
 **Fix pattern**:
+
 ```java
 try {
     redis.opsForValue().increment(counterKey);
@@ -728,6 +776,7 @@ try {
 **Symptom**: Spike in DB queries every time a popular cache key expires
 
 **Solutions**:
+
 1. **Lock-based rebuild**: Only one thread rebuilds; others wait or return stale
 2. **Probabilistic early expiry**: Randomly refresh before TTL hits
 3. **Background refresh**: Separate thread refreshes cache before expiry
@@ -762,6 +811,7 @@ public SearchResult getSearchResults(String query) {
 **Root cause**: One key (e.g., popular search result) receiving millions of reads
 
 **Solutions**:
+
 1. **Local cache (L1)**: Caffeine in-memory cache with short TTL (5–30s)
 2. **Key replication**: Replicate hot key across `key:1`, `key:2`, ..., `key:N`, randomly read
 3. **Read replicas**: Route reads to Redis replicas
@@ -776,6 +826,7 @@ public SearchResult getSearchResults(String query) {
 **What**: LibreOffice/Chromium-based PDF conversion service
 
 **Interview Q**: How do you handle conversion failures?
+
 - Timeout configuration (conversion can take minutes for large files)
 - Health check before submitting jobs
 - Retry with backoff for transient failures
@@ -786,6 +837,7 @@ public SearchResult getSearchResults(String query) {
 ### External Translation Services
 
 **Interview Q**: How do you handle third-party API failures?
+
 - **RetryTemplate**: 3 attempts, 1s fixed backoff
 - **Health gate**: Check `/health-check` before starting work
 - **Fallback chain**: Primary service → Proxy → Direct download
@@ -806,6 +858,7 @@ public void expirePoints() {
 ```
 
 **Debugging**: If cron never runs, check:
+
 1. `shedlock` table exists with correct schema
 2. Clock skew between nodes (> `lockAtLeastFor` causes missed executions)
 3. Previous execution still holds lock (check `locked_until` column)
@@ -816,14 +869,14 @@ public void expirePoints() {
 
 ### Dependency Failure Matrix
 
-| Dependency Down | Impact | Mitigation |
-|----------------|--------|------------|
-| MySQL | Total outage — core data unavailable | Read replica failover, connection pool retry |
-| Redis | Cache miss storm, no locks, no SSE relay | Caffeine L1 fallback, graceful degradation |
-| Kafka | No async processing, translations queue up | In-memory queue fallback, retry on reconnect |
-| MongoDB | Search/document features unavailable | Cached results, feature flag to disable |
-| MinIO | File upload/download fails | Pre-signed URL retry, fallback to local temp storage |
-| Gotenberg | PDF conversion fails | Queue for retry, notify user |
+| Dependency Down | Impact                                     | Mitigation                                           |
+| --------------- | ------------------------------------------ | ---------------------------------------------------- |
+| MySQL           | Total outage — core data unavailable       | Read replica failover, connection pool retry         |
+| Redis           | Cache miss storm, no locks, no SSE relay   | Caffeine L1 fallback, graceful degradation           |
+| Kafka           | No async processing, translations queue up | In-memory queue fallback, retry on reconnect         |
+| MongoDB         | Search/document features unavailable       | Cached results, feature flag to disable              |
+| MinIO           | File upload/download fails                 | Pre-signed URL retry, fallback to local temp storage |
+| Gotenberg       | PDF conversion fails                       | Queue for retry, notify user                         |
 
 ### Observability Checklist (What Suppr Needs)
 
@@ -843,6 +896,7 @@ public void expirePoints() {
 ```
 
 **Key metrics to track**:
+
 - HikariCP: active connections, pending threads, connection wait time
 - Redis: connected clients, memory usage, hit rate, command latency
 - Kafka: consumer lag, produce rate, rebalance count
@@ -851,10 +905,10 @@ public void expirePoints() {
 
 ### Capacity Planning Rules of Thumb
 
-| Resource | Sizing Guideline |
-|----------|-----------------|
-| MySQL connections | `(2 × CPU) + spindle_count` per node, typically 20–30 |
-| Redis memory | Data size × 2 (fragmentation) + 30% headroom |
-| Kafka partitions | Target throughput / per-partition throughput, minimum = consumer count |
-| MongoDB WiredTiger cache | 50% of RAM (default), tune per workload |
-| MinIO storage | Current usage × growth rate × retention period + 30% buffer |
+| Resource                 | Sizing Guideline                                                       |
+| ------------------------ | ---------------------------------------------------------------------- |
+| MySQL connections        | `(2 × CPU) + spindle_count` per node, typically 20–30                  |
+| Redis memory             | Data size × 2 (fragmentation) + 30% headroom                           |
+| Kafka partitions         | Target throughput / per-partition throughput, minimum = consumer count |
+| MongoDB WiredTiger cache | 50% of RAM (default), tune per workload                                |
+| MinIO storage            | Current usage × growth rate × retention period + 30% buffer            |

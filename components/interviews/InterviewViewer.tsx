@@ -1,18 +1,24 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   HiBars3,
   HiXMark,
   HiChevronLeft,
   HiChevronRight,
+  HiArrowDownTray,
 } from 'react-icons/hi2';
 import { cn } from '@/lib/utils';
 import type { InterviewFile, InterviewCategory } from '@/types';
+import { useFileSelection } from '@/lib/useFileSelection';
 import { Sidebar } from './Sidebar';
 import { MarkdownContent } from './MarkdownContent';
 import { TableOfContents } from './TableOfContents';
+import { TabBar } from './TabBar';
+import { SplitPaneViewer } from './SplitPaneViewer';
+import { CodeThemePicker, type CodeThemeId } from './CodeThemePicker';
+
+const MAX_TABS = 10;
 
 interface InterviewViewerProps {
   readonly files: readonly InterviewFile[];
@@ -20,17 +26,35 @@ interface InterviewViewerProps {
 }
 
 export function InterviewViewer({ files, categories }: InterviewViewerProps) {
-  const [selectedSlug, setSelectedSlug] = useState<string>(
-    files.length > 0 ? files[0].slug : ''
+  const defaultSlug = files.length > 0 ? files[0].slug : '';
+  const { activeTab, splitSlug, setActiveTab, setSplitSlug } = useFileSelection(
+    { defaultSlug }
   );
+
+  const [openTabs, setOpenTabs] = useState<string[]>([defaultSlug]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [codeTheme, setCodeTheme] = useState<CodeThemeId>('github-dark');
 
   const selectedFile = useMemo(
-    () => files.find((f) => f.slug === selectedSlug) ?? null,
-    [files, selectedSlug]
+    () => files.find((f) => f.slug === activeTab) ?? null,
+    [files, activeTab]
   );
+
+  const splitFile = useMemo(
+    () =>
+      splitSlug ? (files.find((f) => f.slug === splitSlug) ?? null) : null,
+    [files, splitSlug]
+  );
+
+  // Sync active tab into openTabs on mount (URL may have a file not in initial tabs)
+  useEffect(() => {
+    if (activeTab && !openTabs.includes(activeTab)) {
+      setOpenTabs((prev) => [...prev, activeTab]);
+    }
+  }, [activeTab, openTabs]);
 
   useEffect(() => {
     const width = window.innerWidth;
@@ -38,10 +62,72 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
     if (width < 1280) setLeftPanelOpen(false);
   }, []);
 
-  const handleFileSelect = (slug: string) => {
-    setSelectedSlug(slug);
-    setMobileSidebarOpen(false);
-  };
+  const handleFileSelect = useCallback(
+    (slug: string) => {
+      setActiveTab(slug);
+      setOpenTabs((prev) => {
+        if (prev.includes(slug)) return prev;
+        const next = [...prev, slug];
+        if (next.length > MAX_TABS) {
+          const evictIndex = next.findIndex((s) => s !== slug);
+          if (evictIndex >= 0) {
+            return [
+              ...next.slice(0, evictIndex),
+              ...next.slice(evictIndex + 1),
+            ];
+          }
+        }
+        return next;
+      });
+      setMobileSidebarOpen(false);
+    },
+    [setActiveTab]
+  );
+
+  const handleCloseTab = useCallback(
+    (slug: string) => {
+      setOpenTabs((prev) => {
+        const next = prev.filter((s) => s !== slug);
+        if (next.length === 0) return prev;
+        if (slug === activeTab) {
+          const closedIndex = prev.indexOf(slug);
+          const newActive = next[Math.min(closedIndex, next.length - 1)];
+          setActiveTab(newActive);
+        }
+        return next;
+      });
+      if (slug === splitSlug) {
+        setSplitSlug(null);
+      }
+    },
+    [activeTab, splitSlug, setActiveTab, setSplitSlug]
+  );
+
+  const handleSplitTab = useCallback(
+    (slug: string) => {
+      if (splitSlug === slug) {
+        setSplitSlug(null);
+      } else {
+        setSplitSlug(slug);
+      }
+    },
+    [splitSlug, setSplitSlug]
+  );
+
+  const handleExportPdf = useCallback(async () => {
+    if (!contentRef.current || !selectedFile) return;
+    const html2pdf = (await import('html2pdf.js')).default;
+    html2pdf()
+      .set({
+        margin: [10, 10, 10, 10],
+        filename: `${selectedFile.title}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      })
+      .from(contentRef.current)
+      .save();
+  }, [selectedFile]);
 
   if (files.length === 0) {
     return (
@@ -71,7 +157,7 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
       >
         <Sidebar
           categories={categories}
-          selectedSlug={selectedSlug}
+          selectedSlug={activeTab}
           onSelect={handleFileSelect}
         />
       </div>
@@ -91,7 +177,7 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
         >
           <Sidebar
             categories={categories}
-            selectedSlug={selectedSlug}
+            selectedSlug={activeTab}
             onSelect={handleFileSelect}
           />
         </div>
@@ -100,7 +186,7 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
       {/* ===== Main Content ===== */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Toggle bar */}
-        <div className="flex items-center mb-4">
+        <div className="flex items-center gap-2 mb-2">
           {/* Mobile: hamburger toggle */}
           <button
             onClick={() => setMobileSidebarOpen((prev) => !prev)}
@@ -130,6 +216,19 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
 
           <div className="flex-1" />
 
+          {/* Code theme picker */}
+          <CodeThemePicker value={codeTheme} onChange={setCodeTheme} />
+
+          {/* PDF export */}
+          <button
+            onClick={handleExportPdf}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-accent hover:bg-accent/10 transition-colors"
+            title="Download as PDF"
+          >
+            <HiArrowDownTray className="w-4 h-4" />
+            <span className="hidden sm:inline">PDF</span>
+          </button>
+
           {/* Desktop: right panel arrow toggle */}
           <button
             onClick={() => setRightPanelOpen((prev) => !prev)}
@@ -148,23 +247,55 @@ export function InterviewViewer({ files, categories }: InterviewViewerProps) {
           </button>
         </div>
 
-        {/* Content */}
-        <AnimatePresence mode="wait">
-          {selectedFile && (
-            <motion.div
-              key={selectedFile.slug}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <MarkdownContent
-                file={selectedFile}
-                onFileSelect={handleFileSelect}
-              />
-            </motion.div>
+        {/* Tab Bar */}
+        <TabBar
+          tabs={openTabs}
+          activeTab={activeTab}
+          splitSlug={splitSlug}
+          files={files}
+          onSelectTab={handleFileSelect}
+          onCloseTab={handleCloseTab}
+          onSplitTab={handleSplitTab}
+        />
+
+        {/* Content — each tab gets its own scrollable container */}
+        <div className="mt-2 relative">
+          {splitFile && selectedFile ? (
+            <SplitPaneViewer
+              mainFile={selectedFile}
+              splitFile={splitFile}
+              onFileSelect={handleFileSelect}
+              onCloseSplit={() => setSplitSlug(null)}
+              codeTheme={codeTheme}
+            />
+          ) : (
+            <div className="relative h-[calc(100vh-12rem)]">
+              {openTabs.map((slug) => {
+                const file = files.find((f) => f.slug === slug);
+                if (!file) return null;
+                const isActive = slug === activeTab;
+                return (
+                  <div
+                    key={slug}
+                    ref={isActive ? contentRef : undefined}
+                    className={cn(
+                      'absolute inset-0 overflow-y-auto scrollbar-thin',
+                      isActive
+                        ? 'visible z-10'
+                        : 'invisible z-0 pointer-events-none'
+                    )}
+                  >
+                    <MarkdownContent
+                      file={file}
+                      onFileSelect={handleFileSelect}
+                      codeTheme={codeTheme}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
 
       {/* ===== Desktop Right Panel (collapsible, sticky TOC) ===== */}

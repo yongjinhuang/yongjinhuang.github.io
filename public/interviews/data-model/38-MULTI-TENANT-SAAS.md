@@ -6,14 +6,14 @@ A multi-tenant SaaS platform serves hundreds to millions of organizations from a
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **tenants** | Organization-level configuration and limits | Central entity defining each tenant's plan, quotas, and settings; every other table references back to tenant_id |
-| **users** | Individual users within a tenant | Users belong to exactly one tenant; role-based access within the tenant |
-| **resources** | Tenant-owned business objects (e.g., projects) | Example of a tenant-scoped entity; every resource table follows the same tenant_id pattern |
-| **usage_tracking** | Metered resource consumption per tenant | Enables quota enforcement and usage-based billing; tracked per metric to support flexible billing models |
-| **audit_logs** | Tenant-scoped activity records | Regulatory and debugging requirement; must be tenant-isolated so one tenant cannot see another's activity |
-| **feature_flags** | Per-tenant feature toggles | Enables gradual rollout, plan-based feature gating, and custom enterprise configurations |
+| Table              | Purpose                                        | Why It Exists                                                                                                    |
+| ------------------ | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **tenants**        | Organization-level configuration and limits    | Central entity defining each tenant's plan, quotas, and settings; every other table references back to tenant_id |
+| **users**          | Individual users within a tenant               | Users belong to exactly one tenant; role-based access within the tenant                                          |
+| **resources**      | Tenant-owned business objects (e.g., projects) | Example of a tenant-scoped entity; every resource table follows the same tenant_id pattern                       |
+| **usage_tracking** | Metered resource consumption per tenant        | Enables quota enforcement and usage-based billing; tracked per metric to support flexible billing models         |
+| **audit_logs**     | Tenant-scoped activity records                 | Regulatory and debugging requirement; must be tenant-isolated so one tenant cannot see another's activity        |
+| **feature_flags**  | Per-tenant feature toggles                     | Enables gradual rollout, plan-based feature gating, and custom enterprise configurations                         |
 
 ---
 
@@ -21,73 +21,73 @@ A multi-tenant SaaS platform serves hundreds to millions of organizations from a
 
 ### tenants
 
-| Field | Type | Description |
-|-------|------|-------------|
-| tenant_id | PK, UUID | Unique tenant identifier; appears as FK in every other table (the RLS column) |
-| name | VARCHAR | Organization display name |
-| slug | VARCHAR, UNIQUE | URL-safe identifier used in subdomain routing (e.g., acme.app.com) |
-| plan_tier | ENUM | free, pro, enterprise; determines feature access, quotas, and SLA level |
-| status | ENUM | active, suspended, deactivated; suspended tenants can read but not write |
-| custom_domain | VARCHAR | Enterprise tenants can configure a custom domain (e.g., app.acme.com) |
-| config_json | JSONB | Tenant-specific configuration (branding, SSO settings, default timezone) |
-| max_users | INT | User seat limit based on plan_tier; enforced at user creation |
-| max_storage_gb | INT | Storage quota based on plan_tier; enforced at upload time |
-| created_at | TIMESTAMP | Tenant creation time; used for trial period calculations |
+| Field          | Type            | Description                                                                   |
+| -------------- | --------------- | ----------------------------------------------------------------------------- |
+| tenant_id      | PK, UUID        | Unique tenant identifier; appears as FK in every other table (the RLS column) |
+| name           | VARCHAR         | Organization display name                                                     |
+| slug           | VARCHAR, UNIQUE | URL-safe identifier used in subdomain routing (e.g., acme.app.com)            |
+| plan_tier      | ENUM            | free, pro, enterprise; determines feature access, quotas, and SLA level       |
+| status         | ENUM            | active, suspended, deactivated; suspended tenants can read but not write      |
+| custom_domain  | VARCHAR         | Enterprise tenants can configure a custom domain (e.g., app.acme.com)         |
+| config_json    | JSONB           | Tenant-specific configuration (branding, SSO settings, default timezone)      |
+| max_users      | INT             | User seat limit based on plan_tier; enforced at user creation                 |
+| max_storage_gb | INT             | Storage quota based on plan_tier; enforced at upload time                     |
+| created_at     | TIMESTAMP       | Tenant creation time; used for trial period calculations                      |
 
 ### users
 
-| Field | Type | Description |
-|-------|------|-------------|
-| user_id | PK, UUID | Unique user identifier |
-| tenant_id | FK → tenants | RLS column; every query is filtered by this automatically |
-| email | VARCHAR | User email; unique within a tenant but may exist in multiple tenants |
-| display_name | VARCHAR | User's chosen display name |
-| role | ENUM | owner (one per tenant), admin, member, guest; determines permissions within the tenant |
-| status | ENUM | active, invited, suspended, deactivated |
-| last_login_at | TIMESTAMP | Last successful login; used for inactive user cleanup and security auditing |
+| Field         | Type         | Description                                                                            |
+| ------------- | ------------ | -------------------------------------------------------------------------------------- |
+| user_id       | PK, UUID     | Unique user identifier                                                                 |
+| tenant_id     | FK → tenants | RLS column; every query is filtered by this automatically                              |
+| email         | VARCHAR      | User email; unique within a tenant but may exist in multiple tenants                   |
+| display_name  | VARCHAR      | User's chosen display name                                                             |
+| role          | ENUM         | owner (one per tenant), admin, member, guest; determines permissions within the tenant |
+| status        | ENUM         | active, invited, suspended, deactivated                                                |
+| last_login_at | TIMESTAMP    | Last successful login; used for inactive user cleanup and security auditing            |
 
 ### resources (example: projects)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| resource_id | PK, UUID | Unique resource identifier |
-| tenant_id | FK → tenants | RLS column; ensures tenant isolation at the database level |
-| name | VARCHAR | Resource name |
-| description | TEXT | Resource description |
-| owner_id | FK → users | Which user created/owns this resource |
-| status | ENUM | active, archived, deleted; soft-delete to support recovery |
-| created_at | TIMESTAMP | Creation timestamp |
+| Field       | Type         | Description                                                |
+| ----------- | ------------ | ---------------------------------------------------------- |
+| resource_id | PK, UUID     | Unique resource identifier                                 |
+| tenant_id   | FK → tenants | RLS column; ensures tenant isolation at the database level |
+| name        | VARCHAR      | Resource name                                              |
+| description | TEXT         | Resource description                                       |
+| owner_id    | FK → users   | Which user created/owns this resource                      |
+| status      | ENUM         | active, archived, deleted; soft-delete to support recovery |
+| created_at  | TIMESTAMP    | Creation timestamp                                         |
 
 ### usage_tracking
 
-| Field | Type | Description |
-|-------|------|-------------|
-| tenant_id | FK → tenants | Which tenant's usage this tracks |
-| metric_name | VARCHAR | What is being measured: api_calls, storage_bytes, active_users, etc. |
-| metric_value | BIGINT | Current value for this metric |
-| recorded_at | TIMESTAMP | When this measurement was taken; enables time-series analysis |
+| Field        | Type         | Description                                                          |
+| ------------ | ------------ | -------------------------------------------------------------------- |
+| tenant_id    | FK → tenants | Which tenant's usage this tracks                                     |
+| metric_name  | VARCHAR      | What is being measured: api_calls, storage_bytes, active_users, etc. |
+| metric_value | BIGINT       | Current value for this metric                                        |
+| recorded_at  | TIMESTAMP    | When this measurement was taken; enables time-series analysis        |
 
 ### audit_logs
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | PK, UUID | Unique audit entry identifier |
-| tenant_id | FK → tenants | RLS column; tenants can only see their own audit trail |
-| user_id | FK → users | Who performed the action |
-| action | VARCHAR | What happened (create, update, delete, login, export) |
-| resource_type | VARCHAR | What type of entity was affected |
-| resource_id | UUID | Which specific entity was affected |
-| metadata_json | JSONB | Action-specific details (old values, new values, IP address) |
-| created_at | TIMESTAMP | When the action occurred; immutable, append-only |
+| Field         | Type         | Description                                                  |
+| ------------- | ------------ | ------------------------------------------------------------ |
+| id            | PK, UUID     | Unique audit entry identifier                                |
+| tenant_id     | FK → tenants | RLS column; tenants can only see their own audit trail       |
+| user_id       | FK → users   | Who performed the action                                     |
+| action        | VARCHAR      | What happened (create, update, delete, login, export)        |
+| resource_type | VARCHAR      | What type of entity was affected                             |
+| resource_id   | UUID         | Which specific entity was affected                           |
+| metadata_json | JSONB        | Action-specific details (old values, new values, IP address) |
+| created_at    | TIMESTAMP    | When the action occurred; immutable, append-only             |
 
 ### feature_flags
 
-| Field | Type | Description |
-|-------|------|-------------|
-| tenant_id | FK, composite PK | Which tenant this flag applies to |
-| feature_name | VARCHAR, composite PK | The feature being toggled (e.g., "advanced_analytics", "sso_login") |
-| enabled | BOOLEAN | Whether this feature is active for this tenant |
-| config_json | JSONB | Feature-specific configuration (e.g., usage limits, variant selection) |
+| Field        | Type                  | Description                                                            |
+| ------------ | --------------------- | ---------------------------------------------------------------------- |
+| tenant_id    | FK, composite PK      | Which tenant this flag applies to                                      |
+| feature_name | VARCHAR, composite PK | The feature being toggled (e.g., "advanced_analytics", "sso_login")    |
+| enabled      | BOOLEAN               | Whether this feature is active for this tenant                         |
+| config_json  | JSONB                 | Feature-specific configuration (e.g., usage limits, variant selection) |
 
 ---
 
@@ -221,6 +221,7 @@ ALL tables include tenant_id for RLS enforcement
 ## Data Flow
 
 1. **Request Arrives**: Every API request includes tenant identification. This is extracted from one of three sources:
+
    - Subdomain: `acme.app.com` → resolve `slug = "acme"` to `tenant_id`
    - Header: `X-Tenant-ID` header (for API clients)
    - JWT claim: `tenant_id` embedded in the authentication token

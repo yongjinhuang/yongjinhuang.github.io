@@ -65,9 +65,9 @@ metadata:
   name: app-config
   namespace: production
 data:
-  DATABASE_HOST: "postgres.production.svc.cluster.local"
-  DATABASE_PORT: "5432"
-  LOG_LEVEL: "info"
+  DATABASE_HOST: 'postgres.production.svc.cluster.local'
+  DATABASE_PORT: '5432'
+  LOG_LEVEL: 'info'
   config.yaml: |
     server:
       port: 8080
@@ -75,7 +75,7 @@ data:
     features:
       caching: true
       rateLimit: 100
-binaryData:                    # For binary content (base64 encoded in YAML)
+binaryData: # For binary content (base64 encoded in YAML)
   logo.png: <base64-data>
 ```
 
@@ -86,23 +86,23 @@ binaryData:                    # For binary content (base64 encoded in YAML)
 ```yaml
 spec:
   containers:
-  - name: app
-    image: my-app:v1
-    env:
-    # Individual key
-    - name: DB_HOST
-      valueFrom:
-        configMapKeyRef:
-          name: app-config
-          key: DATABASE_HOST
-          optional: false          # Pod fails to start if key missing
+    - name: app
+      image: my-app:v1
+      env:
+        # Individual key
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DATABASE_HOST
+              optional: false # Pod fails to start if key missing
 
-    # All keys from a ConfigMap as env vars
-    envFrom:
-    - configMapRef:
-        name: app-config
-        optional: false
-      prefix: "APP_"              # Optional prefix: APP_DATABASE_HOST, APP_LOG_LEVEL
+      # All keys from a ConfigMap as env vars
+      envFrom:
+        - configMapRef:
+            name: app-config
+            optional: false
+          prefix: 'APP_' # Optional prefix: APP_DATABASE_HOST, APP_LOG_LEVEL
 ```
 
 **As volume mount (files):**
@@ -110,22 +110,22 @@ spec:
 ```yaml
 spec:
   containers:
-  - name: app
-    image: my-app:v1
-    volumeMounts:
-    - name: config-volume
-      mountPath: /etc/config       # Each key becomes a file
-      readOnly: true
+    - name: app
+      image: my-app:v1
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config # Each key becomes a file
+          readOnly: true
   volumes:
-  - name: config-volume
-    configMap:
-      name: app-config
-      items:                       # Optional: select specific keys
-      - key: config.yaml
-        path: config.yaml          # /etc/config/config.yaml
-      - key: LOG_LEVEL
-        path: log-level            # /etc/config/log-level
-      defaultMode: 0644            # File permissions
+    - name: config-volume
+      configMap:
+        name: app-config
+        items: # Optional: select specific keys
+          - key: config.yaml
+            path: config.yaml # /etc/config/config.yaml
+          - key: LOG_LEVEL
+            path: log-level # /etc/config/log-level
+        defaultMode: 0644 # File permissions
 ```
 
 ### 1.3 Immutable ConfigMaps
@@ -135,13 +135,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: app-config-v2
-immutable: true                    # Cannot be modified after creation
+immutable: true # Cannot be modified after creation
 data:
   config.yaml: |
     version: 2
 ```
 
 **Benefits of immutable ConfigMaps:**
+
 - Protects against accidental changes
 - Performance: kubelet does not need to watch for updates
 - Scale: reduces API server load (no watches for this ConfigMap)
@@ -157,14 +158,14 @@ ConfigMaps have a **1 MiB** size limit. For larger configuration, use a Persiste
 
 ### 2.1 Secret Types
 
-| Type | Usage |
-|------|-------|
-| `Opaque` (default) | Arbitrary key-value data |
-| `kubernetes.io/tls` | TLS certificate and private key |
-| `kubernetes.io/dockerconfigjson` | Docker registry credentials |
+| Type                                  | Usage                                         |
+| ------------------------------------- | --------------------------------------------- |
+| `Opaque` (default)                    | Arbitrary key-value data                      |
+| `kubernetes.io/tls`                   | TLS certificate and private key               |
+| `kubernetes.io/dockerconfigjson`      | Docker registry credentials                   |
 | `kubernetes.io/service-account-token` | ServiceAccount token (legacy, auto-generated) |
-| `kubernetes.io/basic-auth` | Username and password |
-| `kubernetes.io/ssh-auth` | SSH private key |
+| `kubernetes.io/basic-auth`            | Username and password                         |
+| `kubernetes.io/ssh-auth`              | SSH private key                               |
 
 ### 2.2 Creating Secrets
 
@@ -195,8 +196,8 @@ metadata:
   name: db-creds
 type: Opaque
 data:
-  username: YWRtaW4=          # echo -n "admin" | base64
-  password: czNjcjN0IUAj      # echo -n "s3cr3t!@#" | base64
+  username: YWRtaW4= # echo -n "admin" | base64
+  password: czNjcjN0IUAj # echo -n "s3cr3t!@#" | base64
 
 ---
 # Using stringData (plaintext, auto-encoded to base64)
@@ -207,7 +208,7 @@ metadata:
 type: Opaque
 stringData:
   username: admin
-  password: "s3cr3t!@#"
+  password: 's3cr3t!@#'
 ```
 
 ### 2.3 Consuming Secrets
@@ -217,24 +218,24 @@ Identical to ConfigMaps — as environment variables or volume mounts:
 ```yaml
 spec:
   containers:
-  - name: app
-    env:
-    - name: DB_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: db-creds
-          key: password
-    volumeMounts:
-    - name: certs
-      mountPath: /etc/tls
-      readOnly: true
+    - name: app
+      env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-creds
+              key: password
+      volumeMounts:
+        - name: certs
+          mountPath: /etc/tls
+          readOnly: true
   volumes:
-  - name: certs
-    secret:
-      secretName: tls-cert
-      defaultMode: 0400       # Read-only for owner
-  imagePullSecrets:            # For private registries
-  - name: regcred
+    - name: certs
+      secret:
+        secretName: tls-cert
+        defaultMode: 0400 # Read-only for owner
+  imagePullSecrets: # For private registries
+    - name: regcred
 ```
 
 ---
@@ -271,14 +272,14 @@ Configure the API server to encrypt Secrets in etcd:
 apiVersion: apiserver.config.k8s.io/v1
 kind: EncryptionConfiguration
 resources:
-- resources:
-  - secrets
-  providers:
-  - aescbc:                        # AES-CBC encryption
-      keys:
-      - name: key1
-        secret: <base64-encoded-32-byte-key>
-  - identity: {}                   # Fallback: unencrypted (for reading old secrets)
+  - resources:
+      - secrets
+    providers:
+      - aescbc: # AES-CBC encryption
+          keys:
+            - name: key1
+              secret: <base64-encoded-32-byte-key>
+      - identity: {} # Fallback: unencrypted (for reading old secrets)
 ```
 
 ```bash
@@ -330,7 +331,7 @@ spec:
       auth:
         jwt:
           serviceAccountRef:
-            name: external-secrets-sa    # IRSA for AWS auth
+            name: external-secrets-sa # IRSA for AWS auth
 
 ---
 # ExternalSecret: which secret to fetch
@@ -340,22 +341,22 @@ metadata:
   name: db-creds
   namespace: production
 spec:
-  refreshInterval: 1h               # Sync frequency
+  refreshInterval: 1h # Sync frequency
   secretStoreRef:
     name: aws-secrets
     kind: SecretStore
   target:
-    name: db-creds                   # K8s Secret name to create
+    name: db-creds # K8s Secret name to create
     creationPolicy: Owner
   data:
-  - secretKey: username              # Key in K8s Secret
-    remoteRef:
-      key: production/database       # Path in Secrets Manager
-      property: username             # JSON property
-  - secretKey: password
-    remoteRef:
-      key: production/database
-      property: password
+    - secretKey: username # Key in K8s Secret
+      remoteRef:
+        key: production/database # Path in Secrets Manager
+        property: username # JSON property
+    - secretKey: password
+      remoteRef:
+        key: production/database
+        property: password
 ```
 
 **Sealed Secrets (Bitnami):**
@@ -382,6 +383,7 @@ kubeseal --format=yaml < secret.yaml > sealed-secret.yaml
 ```
 
 **HashiCorp Vault:**
+
 - Vault Agent Injector: sidecar that fetches secrets and writes to a shared volume
 - CSI Secrets Store Driver: mounts Vault secrets as a volume
 - Direct API: application fetches secrets from Vault API directly
@@ -410,44 +412,44 @@ Expose pod and container metadata as environment variables:
 
 ```yaml
 env:
-- name: POD_NAME
-  valueFrom:
-    fieldRef:
-      fieldPath: metadata.name
-- name: POD_NAMESPACE
-  valueFrom:
-    fieldRef:
-      fieldPath: metadata.namespace
-- name: POD_IP
-  valueFrom:
-    fieldRef:
-      fieldPath: status.podIP
-- name: NODE_NAME
-  valueFrom:
-    fieldRef:
-      fieldPath: spec.nodeName
-- name: CPU_LIMIT
-  valueFrom:
-    resourceFieldRef:
-      containerName: app
-      resource: limits.cpu
-- name: MEMORY_REQUEST
-  valueFrom:
-    resourceFieldRef:
-      containerName: app
-      resource: requests.memory
+  - name: POD_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: POD_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.podIP
+  - name: NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+  - name: CPU_LIMIT
+    valueFrom:
+      resourceFieldRef:
+        containerName: app
+        resource: limits.cpu
+  - name: MEMORY_REQUEST
+    valueFrom:
+      resourceFieldRef:
+        containerName: app
+        resource: requests.memory
 ```
 
 ### 4.2 Dependent Environment Variables
 
 ```yaml
 env:
-- name: DB_HOST
-  value: "postgres"
-- name: DB_PORT
-  value: "5432"
-- name: DB_URL
-  value: "postgresql://$(DB_HOST):$(DB_PORT)/mydb"    # References other env vars
+  - name: DB_HOST
+    value: 'postgres'
+  - name: DB_PORT
+    value: '5432'
+  - name: DB_URL
+    value: 'postgresql://$(DB_HOST):$(DB_PORT)/mydb' # References other env vars
 ```
 
 ---
@@ -457,6 +459,7 @@ env:
 ### 5.1 Volume-Mounted ConfigMaps
 
 When a ConfigMap is updated, the kubelet updates the mounted files. The delay depends on:
+
 - kubelet sync period (default: ~60 seconds)
 - ConfigMap cache TTL
 - Total delay: up to ~2 minutes
@@ -539,17 +542,17 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- deployment.yaml
-- service.yaml
+  - deployment.yaml
+  - service.yaml
 
 commonLabels:
   app: my-app
 
 configMapGenerator:
-- name: app-config
-  literals:
-  - LOG_LEVEL=info
-  - CACHE_TTL=300
+  - name: app-config
+    literals:
+      - LOG_LEVEL=info
+      - CACHE_TTL=300
 ```
 
 ### 6.3 Production Overlay
@@ -560,8 +563,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- ../../base
-- hpa.yaml
+  - ../../base
+  - hpa.yaml
 
 namespace: production
 
@@ -571,25 +574,25 @@ commonLabels:
   env: production
 
 replicas:
-- name: my-app
-  count: 5
+  - name: my-app
+    count: 5
 
 images:
-- name: my-app
-  newTag: v2.1.0
+  - name: my-app
+    newTag: v2.1.0
 
 patches:
-- path: production-patch.yaml
-  target:
-    kind: Deployment
-    name: my-app
+  - path: production-patch.yaml
+    target:
+      kind: Deployment
+      name: my-app
 
 configMapGenerator:
-- name: app-config
-  behavior: merge
-  literals:
-  - LOG_LEVEL=warn
-  - CACHE_TTL=3600
+  - name: app-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=warn
+      - CACHE_TTL=3600
 ```
 
 ```bash
@@ -605,19 +608,19 @@ kubectl diff -k overlays/production/
 
 ### 6.4 Kustomize Features
 
-| Feature | Description |
-|---------|-------------|
-| `resources` | Base manifests to include |
-| `patches` | Strategic merge or JSON patches to modify resources |
-| `configMapGenerator` | Generate ConfigMaps with content hash suffix |
-| `secretGenerator` | Generate Secrets with content hash suffix |
-| `namePrefix`/`nameSuffix` | Add prefix/suffix to all resource names |
-| `namespace` | Set namespace for all resources |
-| `commonLabels` | Add labels to all resources |
-| `commonAnnotations` | Add annotations to all resources |
-| `images` | Override image names/tags |
-| `replicas` | Override replica counts |
-| `components` | Reusable sets of patches |
+| Feature                   | Description                                         |
+| ------------------------- | --------------------------------------------------- |
+| `resources`               | Base manifests to include                           |
+| `patches`                 | Strategic merge or JSON patches to modify resources |
+| `configMapGenerator`      | Generate ConfigMaps with content hash suffix        |
+| `secretGenerator`         | Generate Secrets with content hash suffix           |
+| `namePrefix`/`nameSuffix` | Add prefix/suffix to all resource names             |
+| `namespace`               | Set namespace for all resources                     |
+| `commonLabels`            | Add labels to all resources                         |
+| `commonAnnotations`       | Add annotations to all resources                    |
+| `images`                  | Override image names/tags                           |
+| `replicas`                | Override replica counts                             |
+| `components`              | Reusable sets of patches                            |
 
 **Content hash suffix:** ConfigMap and Secret generators append a hash of the content to the name (e.g., `app-config-m9d7f8g`). When the content changes, the name changes, which triggers a Deployment rolling update. This ensures pods always use the correct config version.
 
@@ -702,7 +705,7 @@ replicaCount: 1
 
 image:
   repository: my-app
-  tag: ""                    # Default to Chart.appVersion
+  tag: '' # Default to Chart.appVersion
   pullPolicy: IfNotPresent
 
 service:
@@ -781,29 +784,29 @@ kind: Job
 metadata:
   name: db-migrate
   annotations:
-    "helm.sh/hook": pre-upgrade
-    "helm.sh/hook-weight": "5"           # Lower runs first
-    "helm.sh/hook-delete-policy": hook-succeeded
+    'helm.sh/hook': pre-upgrade
+    'helm.sh/hook-weight': '5' # Lower runs first
+    'helm.sh/hook-delete-policy': hook-succeeded
 spec:
   template:
     spec:
       restartPolicy: Never
       containers:
-      - name: migrate
-        image: my-app:v2
-        command: ["./migrate", "--up"]
+        - name: migrate
+          image: my-app:v2
+          command: ['./migrate', '--up']
 ```
 
-| Hook | When It Runs |
-|------|-------------|
-| `pre-install` | Before any resources are installed |
-| `post-install` | After all resources are installed |
-| `pre-upgrade` | Before any resources are upgraded |
-| `post-upgrade` | After all resources are upgraded |
-| `pre-delete` | Before any resources are deleted |
-| `post-delete` | After all resources are deleted |
-| `pre-rollback` | Before rollback |
-| `post-rollback` | After rollback |
+| Hook            | When It Runs                       |
+| --------------- | ---------------------------------- |
+| `pre-install`   | Before any resources are installed |
+| `post-install`  | After all resources are installed  |
+| `pre-upgrade`   | Before any resources are upgraded  |
+| `post-upgrade`  | After all resources are upgraded   |
+| `pre-delete`    | Before any resources are deleted   |
+| `post-delete`   | After all resources are deleted    |
+| `pre-rollback`  | Before rollback                    |
+| `post-rollback` | After rollback                     |
 
 ### 7.6 Helm OCI Registries
 
@@ -902,20 +905,20 @@ A Sealed Secret encrypted for namespace `production` cannot be used in namespace
 
 ## 10. Quick Reference
 
-| Feature | ConfigMap | Secret |
-|---------|-----------|--------|
-| Data format | Plain text | Base64 encoded |
-| Size limit | 1 MiB | 1 MiB |
-| Encryption at rest | No | Yes (if configured) |
-| Immutable option | Yes (1.21+) | Yes (1.21+) |
-| Auto-update (volume) | Yes (~1-2 min delay) | Yes (~1-2 min delay) |
-| Auto-update (env var) | No (requires restart) | No (requires restart) |
-| RBAC | Standard | Can be restricted separately |
+| Feature               | ConfigMap             | Secret                       |
+| --------------------- | --------------------- | ---------------------------- |
+| Data format           | Plain text            | Base64 encoded               |
+| Size limit            | 1 MiB                 | 1 MiB                        |
+| Encryption at rest    | No                    | Yes (if configured)          |
+| Immutable option      | Yes (1.21+)           | Yes (1.21+)                  |
+| Auto-update (volume)  | Yes (~1-2 min delay)  | Yes (~1-2 min delay)         |
+| Auto-update (env var) | No (requires restart) | No (requires restart)        |
+| RBAC                  | Standard              | Can be restricted separately |
 
-| Tool | Approach | Best For |
-|------|----------|----------|
-| **Kustomize** | Template-free overlays | Internal apps, env overlays |
-| **Helm** | Templated charts | Reusable packages, third-party apps |
-| **External Secrets Operator** | Sync from vault | Production secret management |
-| **Sealed Secrets** | Encrypted for git | Secrets in GitOps repos |
-| **Stakater Reloader** | Auto-restart on change | Apps that cannot hot-reload |
+| Tool                          | Approach               | Best For                            |
+| ----------------------------- | ---------------------- | ----------------------------------- |
+| **Kustomize**                 | Template-free overlays | Internal apps, env overlays         |
+| **Helm**                      | Templated charts       | Reusable packages, third-party apps |
+| **External Secrets Operator** | Sync from vault        | Production secret management        |
+| **Sealed Secrets**            | Encrypted for git      | Secrets in GitOps repos             |
+| **Stakater Reloader**         | Auto-restart on change | Apps that cannot hot-reload         |

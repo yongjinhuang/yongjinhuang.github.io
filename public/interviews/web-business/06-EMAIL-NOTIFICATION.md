@@ -59,21 +59,21 @@ These are initiated by the business, not by user actions:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Transactional Email** | Triggered by user action, expected and necessary (receipts, password resets) |
-| **Marketing Email** | Sent to promote something. Requires opt-in and unsubscribe |
-| **Bounce** | Email failed to deliver. Soft bounce = temporary (mailbox full). Hard bounce = permanent (address doesn't exist) |
-| **Complaint / Spam Report** | Recipient marked your email as spam. Very bad for your sender reputation |
-| **Sender Reputation** | A score that email providers assign to your sending domain. Low reputation = emails go to spam |
-| **SPF / DKIM / DMARC** | Email authentication protocols that prove your emails are legitimately from your domain. Essential for deliverability |
-| **Open Rate** | Percentage of recipients who opened the email. Increasingly unreliable (Apple Mail Privacy Protection) |
-| **Click-Through Rate (CTR)** | Percentage who clicked a link in the email |
-| **Unsubscribe Rate** | Percentage who opt out after receiving an email. High rate = you're sending too much or irrelevant content |
-| **CAN-SPAM** | US law requiring unsubscribe links in commercial emails. Violations = $50K+ fines |
-| **GDPR Consent** | In the EU, you need explicit opt-in before sending marketing emails |
-| **Notification Preferences** | User settings for what they want to receive and on which channels |
-| **Quiet Hours** | Time window when notifications are suppressed (e.g., no push notifications between 10pm-8am) |
+| Term                         | What It Means                                                                                                         |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Transactional Email**      | Triggered by user action, expected and necessary (receipts, password resets)                                          |
+| **Marketing Email**          | Sent to promote something. Requires opt-in and unsubscribe                                                            |
+| **Bounce**                   | Email failed to deliver. Soft bounce = temporary (mailbox full). Hard bounce = permanent (address doesn't exist)      |
+| **Complaint / Spam Report**  | Recipient marked your email as spam. Very bad for your sender reputation                                              |
+| **Sender Reputation**        | A score that email providers assign to your sending domain. Low reputation = emails go to spam                        |
+| **SPF / DKIM / DMARC**       | Email authentication protocols that prove your emails are legitimately from your domain. Essential for deliverability |
+| **Open Rate**                | Percentage of recipients who opened the email. Increasingly unreliable (Apple Mail Privacy Protection)                |
+| **Click-Through Rate (CTR)** | Percentage who clicked a link in the email                                                                            |
+| **Unsubscribe Rate**         | Percentage who opt out after receiving an email. High rate = you're sending too much or irrelevant content            |
+| **CAN-SPAM**                 | US law requiring unsubscribe links in commercial emails. Violations = $50K+ fines                                     |
+| **GDPR Consent**             | In the EU, you need explicit opt-in before sending marketing emails                                                   |
+| **Notification Preferences** | User settings for what they want to receive and on which channels                                                     |
+| **Quiet Hours**              | Time window when notifications are suppressed (e.g., no push notifications between 10pm-8am)                          |
 
 ## Common Patterns
 
@@ -122,10 +122,10 @@ Order shipped → User prefers: email ✓, push ✓, SMS ✗ → send email + pu
 
 ## Quick Reference
 
-| Channel | Best For | Cost | Engagement |
-|---------|----------|------|------------|
-| Email (transactional) | Receipts, password resets, critical alerts | Low ($0.001/email) | Medium |
-| Email (marketing) | Newsletters, promos, feature updates | Low | Low-Medium |
-| Push notification | Time-sensitive updates, new messages | Free | High |
-| SMS | 2FA, critical alerts, delivery updates | High ($0.01-0.05) | Very High |
-| In-app | Non-urgent updates, activity feed | Free | Medium |
+| Channel               | Best For                                   | Cost               | Engagement |
+| --------------------- | ------------------------------------------ | ------------------ | ---------- |
+| Email (transactional) | Receipts, password resets, critical alerts | Low ($0.001/email) | Medium     |
+| Email (marketing)     | Newsletters, promos, feature updates       | Low                | Low-Medium |
+| Push notification     | Time-sensitive updates, new messages       | Free               | High       |
+| SMS                   | 2FA, critical alerts, delivery updates     | High ($0.01-0.05)  | Very High  |
+| In-app                | Non-urgent updates, activity feed          | Free               | Medium     |

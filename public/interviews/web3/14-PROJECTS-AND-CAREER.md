@@ -405,15 +405,15 @@ FEATURES:
 
 ### 6.2 Learning Platforms
 
-| Platform | Type | Best For |
-|----------|------|----------|
-| CryptoZombies | Interactive tutorial | Solidity beginners |
-| Ethernaut (OpenZeppelin) | Security CTF | Smart contract security |
-| Damn Vulnerable DeFi | Security CTF | DeFi-specific attacks |
-| Speedrun Ethereum | Project-based | Building DApps end-to-end |
-| Alchemy University | Full curriculum | Structured Web3 education |
-| Updraft (Cyfrin) | Video courses | Patrick Collins teaching |
-| Node Guardians | Gamified quests | Intermediate Solidity |
+| Platform                 | Type                 | Best For                  |
+| ------------------------ | -------------------- | ------------------------- |
+| CryptoZombies            | Interactive tutorial | Solidity beginners        |
+| Ethernaut (OpenZeppelin) | Security CTF         | Smart contract security   |
+| Damn Vulnerable DeFi     | Security CTF         | DeFi-specific attacks     |
+| Speedrun Ethereum        | Project-based        | Building DApps end-to-end |
+| Alchemy University       | Full curriculum      | Structured Web3 education |
+| Updraft (Cyfrin)         | Video courses        | Patrick Collins teaching  |
+| Node Guardians           | Gamified quests      | Intermediate Solidity     |
 
 ### 6.3 Communities and Job Boards
 

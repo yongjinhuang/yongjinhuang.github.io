@@ -58,13 +58,13 @@ Subscribers │ Revenue Potential │ What to Focus On
 
 Requirements to earn ad revenue on YouTube:
 
-| Requirement | Threshold |
-|-------------|-----------|
-| Subscribers | 1,000 |
-| Watch hours (last 12 months) | 4,000 hours |
-| OR Shorts views (last 90 days) | 10 million views |
-| Account standing | No active community guideline strikes |
-| 2FA enabled | Required |
+| Requirement                    | Threshold                             |
+| ------------------------------ | ------------------------------------- |
+| Subscribers                    | 1,000                                 |
+| Watch hours (last 12 months)   | 4,000 hours                           |
+| OR Shorts views (last 90 days) | 10 million views                      |
+| Account standing               | No active community guideline strikes |
+| 2FA enabled                    | Required                              |
 
 > **Do not obsess over YPP.** Ad revenue is typically the smallest income stream for
 > creators. Focus on making great content; monetization follows.
@@ -97,26 +97,26 @@ Paid monthly via Google AdSense (min $100 payout)
 CPM (Cost Per Mille) = what advertisers pay per 1,000 ad impressions.
 RPM (Revenue Per Mille) = what you earn per 1,000 views (after YouTube's cut).
 
-| Niche | Average CPM | Average RPM | Why |
-|-------|------------|------------|-----|
-| Personal Finance | $15-40 | $8-20 | High-value advertisers (banks, investing) |
-| Business / B2B | $12-30 | $6-15 | High-value advertisers |
-| Technology | $8-20 | $4-10 | Tech companies spend heavily on ads |
-| Education | $6-15 | $3-8 | Course platforms, software |
-| Health & Fitness | $5-15 | $3-8 | Supplements, programs |
-| Lifestyle / Vlogs | $3-8 | $1.50-4 | Broad audience, lower ad value |
-| Gaming | $2-6 | $1-3 | Younger audience, lower purchasing power |
-| Entertainment | $2-5 | $1-2.50 | Very broad, low intent to buy |
+| Niche             | Average CPM | Average RPM | Why                                       |
+| ----------------- | ----------- | ----------- | ----------------------------------------- |
+| Personal Finance  | $15-40      | $8-20       | High-value advertisers (banks, investing) |
+| Business / B2B    | $12-30      | $6-15       | High-value advertisers                    |
+| Technology        | $8-20       | $4-10       | Tech companies spend heavily on ads       |
+| Education         | $6-15       | $3-8        | Course platforms, software                |
+| Health & Fitness  | $5-15       | $3-8        | Supplements, programs                     |
+| Lifestyle / Vlogs | $3-8        | $1.50-4     | Broad audience, lower ad value            |
+| Gaming            | $2-6        | $1-3        | Younger audience, lower purchasing power  |
+| Entertainment     | $2-5        | $1-2.50     | Very broad, low intent to buy             |
 
 ### 2.3 Maximizing Ad Revenue
 
-| Strategy | How |
-|----------|-----|
-| Longer videos (8+ min) | Enables mid-roll ads (extra ad placements) |
-| Place mid-rolls at natural breaks | Viewers are less likely to leave during natural pauses |
-| Higher CPM topics | Cover topics advertisers pay more for |
-| US/UK/CA/AU audience | These countries have highest ad rates |
-| Avoid demonetization triggers | No excessive profanity, violence, or controversial content in first 30 seconds |
+| Strategy                          | How                                                                            |
+| --------------------------------- | ------------------------------------------------------------------------------ |
+| Longer videos (8+ min)            | Enables mid-roll ads (extra ad placements)                                     |
+| Place mid-rolls at natural breaks | Viewers are less likely to leave during natural pauses                         |
+| Higher CPM topics                 | Cover topics advertisers pay more for                                          |
+| US/UK/CA/AU audience              | These countries have highest ad rates                                          |
+| Avoid demonetization triggers     | No excessive profanity, violence, or controversial content in first 30 seconds |
 
 ## 3. Sponsorships and Brand Deals
 
@@ -135,12 +135,12 @@ Sponsorships are the primary income for most full-time creators.
 
 ### 3.2 Types of Sponsorships
 
-| Type | Description | Typical Rate (per 1K views) |
-|------|------------|---------------------------|
-| **Pre-roll** | 30-60 sec ad read at start | $15-30 |
-| **Mid-roll** | 60-90 sec integration in the middle | $20-50 |
-| **Dedicated** | Entire video about the sponsor's product | $40-100+ |
-| **Affiliate deal** | Paid per conversion/sign-up | Varies (CPA) |
+| Type               | Description                              | Typical Rate (per 1K views) |
+| ------------------ | ---------------------------------------- | --------------------------- |
+| **Pre-roll**       | 30-60 sec ad read at start               | $15-30                      |
+| **Mid-roll**       | 60-90 sec integration in the middle      | $20-50                      |
+| **Dedicated**      | Entire video about the sponsor's product | $40-100+                    |
+| **Affiliate deal** | Paid per conversion/sign-up              | Varies (CPA)                |
 
 ### 3.3 Sponsorship Rate Calculation
 
@@ -160,32 +160,32 @@ Adjustments:
 
 ### 3.4 Getting Sponsorships
 
-| Stage | How to Get Sponsors |
-|-------|-------------------|
+| Stage      | How to Get Sponsors                                                      |
+| ---------- | ------------------------------------------------------------------------ |
 | 0-10K subs | Reach out to small brands yourself, or use platforms like Grin, AspireIQ |
-| 10K-50K | Brands start reaching out; also join influencer platforms |
-| 50K+ | Dedicated sponsorship manager or agency handles inbound |
+| 10K-50K    | Brands start reaching out; also join influencer platforms                |
+| 50K+       | Dedicated sponsorship manager or agency handles inbound                  |
 
 **Platforms that connect creators with sponsors:**
 
-| Platform | Best For |
-|----------|----------|
-| Grin | Mid-size creators |
-| AspireIQ | Various sizes |
-| Channel Pages | YouTube-specific |
-| Social Bluebook | Rate calculator |
-| Creator.co | Micro-influencers |
+| Platform        | Best For          |
+| --------------- | ----------------- |
+| Grin            | Mid-size creators |
+| AspireIQ        | Various sizes     |
+| Channel Pages   | YouTube-specific  |
+| Social Bluebook | Rate calculator   |
+| Creator.co      | Micro-influencers |
 
 ### 3.5 Sponsorship Best Practices
 
-| Practice | Why |
-|----------|-----|
-| Only promote products you actually use/believe in | Authenticity = viewer trust = long-term career |
-| Clearly disclose sponsorship ("Sponsored by...") | Legal requirement (FTC) and ethical obligation |
-| Integrate naturally into content | Hard-sell reads perform poorly and annoy viewers |
-| Negotiate usage rights | Do not give unlimited rights to your content |
-| Get paid before or at delivery, not net-60 | Protect yourself financially |
-| Keep a sponsor kit (media kit) ready | Makes it easy for brands to work with you |
+| Practice                                          | Why                                              |
+| ------------------------------------------------- | ------------------------------------------------ |
+| Only promote products you actually use/believe in | Authenticity = viewer trust = long-term career   |
+| Clearly disclose sponsorship ("Sponsored by...")  | Legal requirement (FTC) and ethical obligation   |
+| Integrate naturally into content                  | Hard-sell reads perform poorly and annoy viewers |
+| Negotiate usage rights                            | Do not give unlimited rights to your content     |
+| Get paid before or at delivery, not net-60        | Protect yourself financially                     |
+| Keep a sponsor kit (media kit) ready              | Makes it easy for brands to work with you        |
 
 ### 3.6 Media Kit Template
 
@@ -243,24 +243,24 @@ Commission tracked automatically, paid monthly
 
 ### 4.2 Major Affiliate Programs
 
-| Program | Commission | Cookie Window | Best For |
-|---------|-----------|---------------|----------|
-| Amazon Associates | 1-10% | 24 hours | Physical products, gear |
-| Impact (various brands) | Varies | 30+ days | Software, services |
-| ShareASale | Varies | 30+ days | Various niches |
-| Skillshare | $7 per free trial | 30 days | Education content |
-| Epidemic Sound | 50% of first month | 30 days | Music for creators |
-| Software affiliates (direct) | 20-50% recurring | Varies | SaaS tools |
+| Program                      | Commission         | Cookie Window | Best For                |
+| ---------------------------- | ------------------ | ------------- | ----------------------- |
+| Amazon Associates            | 1-10%              | 24 hours      | Physical products, gear |
+| Impact (various brands)      | Varies             | 30+ days      | Software, services      |
+| ShareASale                   | Varies             | 30+ days      | Various niches          |
+| Skillshare                   | $7 per free trial  | 30 days       | Education content       |
+| Epidemic Sound               | 50% of first month | 30 days       | Music for creators      |
+| Software affiliates (direct) | 20-50% recurring   | Varies        | SaaS tools              |
 
 ### 4.3 Affiliate Best Practices
 
-| Practice | Why |
-|----------|-----|
-| Only recommend products you use and trust | Viewers trust honest recommendations |
-| Disclose affiliate links | FTC requirement: "Links below are affiliate links" |
-| Focus on problem-solving, not selling | "This solves X problem" > "Buy this product" |
-| Use link shorteners or landing pages | Cleaner links, better tracking |
-| Create "best of" and review content | Highest intent viewers = most conversions |
+| Practice                                  | Why                                                |
+| ----------------------------------------- | -------------------------------------------------- |
+| Only recommend products you use and trust | Viewers trust honest recommendations               |
+| Disclose affiliate links                  | FTC requirement: "Links below are affiliate links" |
+| Focus on problem-solving, not selling     | "This solves X problem" > "Buy this product"       |
+| Use link shorteners or landing pages      | Cleaner links, better tracking                     |
+| Create "best of" and review content       | Highest intent viewers = most conversions          |
 
 ## 5. Digital Products
 
@@ -283,16 +283,16 @@ No inventory, no shipping, no per-unit cost.
 
 ### 5.2 Types of Digital Products
 
-| Product | Price Range | Effort to Create | Best For |
-|---------|------------|-------------------|----------|
-| **LUTs / presets** | $10-50 | Low | Video/photo channels |
-| **Templates** (Premiere, Resolve) | $10-80 | Low-Medium | Editing channels |
-| **E-books / guides** | $10-50 | Medium | Educational channels |
-| **Online courses** | $50-500 | High | Any teaching channel |
-| **Notion / productivity templates** | $5-30 | Low | Productivity channels |
-| **Audio packs / music** | $10-50 | Medium | Audio/music channels |
-| **Membership site content** | $5-50/month | Ongoing | Any channel with loyal fans |
-| **Consulting calls** | $50-500/hour | None (your time) | Expert channels |
+| Product                             | Price Range  | Effort to Create | Best For                    |
+| ----------------------------------- | ------------ | ---------------- | --------------------------- |
+| **LUTs / presets**                  | $10-50       | Low              | Video/photo channels        |
+| **Templates** (Premiere, Resolve)   | $10-80       | Low-Medium       | Editing channels            |
+| **E-books / guides**                | $10-50       | Medium           | Educational channels        |
+| **Online courses**                  | $50-500      | High             | Any teaching channel        |
+| **Notion / productivity templates** | $5-30        | Low              | Productivity channels       |
+| **Audio packs / music**             | $10-50       | Medium           | Audio/music channels        |
+| **Membership site content**         | $5-50/month  | Ongoing          | Any channel with loyal fans |
+| **Consulting calls**                | $50-500/hour | None (your time) | Expert channels             |
 
 ### 5.3 Course Creation Basics
 
@@ -332,25 +332,25 @@ Course creation pipeline:
 
 ### 5.4 Selling Platforms
 
-| Platform | Best For | Fees |
-|----------|----------|------|
-| Gumroad | Simple digital products | 10% + processing |
-| Teachable | Full courses | $39-119/mo |
-| Podia | Courses + memberships | $39-89/mo |
-| Sellfy | Physical + digital | $29-99/mo |
-| Payhip | Budget-friendly | 5% free tier |
-| Self-hosted (WooCommerce) | Maximum control | Hosting costs only |
+| Platform                  | Best For                | Fees               |
+| ------------------------- | ----------------------- | ------------------ |
+| Gumroad                   | Simple digital products | 10% + processing   |
+| Teachable                 | Full courses            | $39-119/mo         |
+| Podia                     | Courses + memberships   | $39-89/mo          |
+| Sellfy                    | Physical + digital      | $29-99/mo          |
+| Payhip                    | Budget-friendly         | 5% free tier       |
+| Self-hosted (WooCommerce) | Maximum control         | Hosting costs only |
 
 ## 6. Memberships and Patronage
 
 ### 6.1 Platform Options
 
-| Platform | Integration | Features | Fees |
-|----------|-------------|----------|------|
-| YouTube Memberships | Native YouTube | Badges, emojis, member posts | 30% YouTube cut |
-| Patreon | External link | Tiers, posts, community | 5-12% + processing |
-| Ko-fi | External link | Tips + memberships | 0% (tips), 0% (Gold $6/mo) |
-| Buy Me a Coffee | External link | Tips + memberships | 5% |
+| Platform            | Integration    | Features                     | Fees                       |
+| ------------------- | -------------- | ---------------------------- | -------------------------- |
+| YouTube Memberships | Native YouTube | Badges, emojis, member posts | 30% YouTube cut            |
+| Patreon             | External link  | Tiers, posts, community      | 5-12% + processing         |
+| Ko-fi               | External link  | Tips + memberships           | 0% (tips), 0% (Gold $6/mo) |
+| Buy Me a Coffee     | External link  | Tips + memberships           | 5%                         |
 
 ### 6.2 Membership Tier Structure
 
@@ -399,16 +399,16 @@ Sweet spot indicators:
 
 Your content creation skills are valuable services:
 
-| Service | Rate | Who Pays |
-|---------|------|----------|
-| Video editing for other creators | $30-150/hour | YouTubers, businesses |
-| Thumbnail design | $25-100/thumbnail | YouTubers |
-| Color grading | $50-200/hour | Filmmakers, creators |
-| Channel consulting | $100-500/hour | Brands, new creators |
-| Corporate video production | $500-5,000/project | Businesses |
-| Social media management | $500-3,000/month | Brands, businesses |
-| Wedding/event videography | $1,000-5,000/event | Individuals |
-| Course creation for brands | $2,000-10,000/course | Companies |
+| Service                          | Rate                 | Who Pays              |
+| -------------------------------- | -------------------- | --------------------- |
+| Video editing for other creators | $30-150/hour         | YouTubers, businesses |
+| Thumbnail design                 | $25-100/thumbnail    | YouTubers             |
+| Color grading                    | $50-200/hour         | Filmmakers, creators  |
+| Channel consulting               | $100-500/hour        | Brands, new creators  |
+| Corporate video production       | $500-5,000/project   | Businesses            |
+| Social media management          | $500-3,000/month     | Brands, businesses    |
+| Wedding/event videography        | $1,000-5,000/event   | Individuals           |
+| Course creation for brands       | $2,000-10,000/course | Companies             |
 
 ### 7.2 The Freelance Funnel
 
@@ -437,14 +437,14 @@ Your channel IS your portfolio. Every video is a demo reel.
 
 ### 7.3 Where to Find Freelance Clients
 
-| Source | Type of Work |
-|--------|-------------|
-| YouTube comments/DMs | Direct inquiries from viewers |
-| Fiverr / Upwork | Marketplace clients (lower rates, high volume) |
-| LinkedIn | Corporate and B2B clients |
-| Twitter / X | Creator community connections |
-| Local business networking | Small business video needs |
-| Creator communities (Discord, Reddit) | Collaboration and referrals |
+| Source                                | Type of Work                                   |
+| ------------------------------------- | ---------------------------------------------- |
+| YouTube comments/DMs                  | Direct inquiries from viewers                  |
+| Fiverr / Upwork                       | Marketplace clients (lower rates, high volume) |
+| LinkedIn                              | Corporate and B2B clients                      |
+| Twitter / X                           | Creator community connections                  |
+| Local business networking             | Small business video needs                     |
+| Creator communities (Discord, Reddit) | Collaboration and referrals                    |
 
 ## 8. Merchandise
 
@@ -452,12 +452,12 @@ Your channel IS your portfolio. Every video is a demo reel.
 
 No inventory needed — products are printed when ordered.
 
-| Platform | Products | Fees |
-|----------|----------|------|
-| Spring (formerly Teespring) | T-shirts, hoodies, mugs, phone cases | They set base price, you set markup |
-| Printful + Shopify | Wider product range, custom storefront | Printful costs + Shopify $39/mo |
-| Merch by Amazon | T-shirts (Amazon distribution) | Application required, Amazon takes cut |
-| Redbubble | Stickers, art prints, apparel | They set base price, you set markup |
+| Platform                    | Products                               | Fees                                   |
+| --------------------------- | -------------------------------------- | -------------------------------------- |
+| Spring (formerly Teespring) | T-shirts, hoodies, mugs, phone cases   | They set base price, you set markup    |
+| Printful + Shopify          | Wider product range, custom storefront | Printful costs + Shopify $39/mo        |
+| Merch by Amazon             | T-shirts (Amazon distribution)         | Application required, Amazon takes cut |
+| Redbubble                   | Stickers, art prints, apparel          | They set base price, you set markup    |
 
 ### 8.2 When Merch Makes Sense
 
@@ -475,12 +475,12 @@ If < 3 → Focus on other revenue streams first
 
 ### 8.3 Merch That Actually Sells
 
-| What Sells | Why | What Doesn't |
-|-----------|-----|-------------|
-| Simple, wearable designs | People want to wear it in public | Your face on a t-shirt |
-| Inside jokes / catchphrases | Community identity | Generic designs |
-| Stickers | Low price = easy impulse buy | Complex products |
-| High-quality basics | People appreciate quality | Cheap quality |
+| What Sells                  | Why                              | What Doesn't           |
+| --------------------------- | -------------------------------- | ---------------------- |
+| Simple, wearable designs    | People want to wear it in public | Your face on a t-shirt |
+| Inside jokes / catchphrases | Community identity               | Generic designs        |
+| Stickers                    | Low price = easy impulse buy     | Complex products       |
+| High-quality basics         | People appreciate quality        | Cheap quality          |
 
 ## 9. Revenue Diversification Strategy
 
@@ -552,15 +552,15 @@ Insurance:         Health insurance plan (if applicable)
 
 ### 10.2 The Decision Matrix
 
-| Factor | Stay at Job | Go Full-Time |
-|--------|------------|-------------|
-| Creator income | < 50% of salary | > 100% of expenses |
-| Growth trend | Flat or declining | Consistent growth 6+ months |
-| Savings | < 3 months expenses | 6+ months expenses |
-| Revenue sources | 1-2 streams | 3+ diverse streams |
-| Time limitation | Can still create enough content | Job significantly limits content quality/quantity |
-| Risk tolerance | Low | Moderate to high |
-| Family obligations | High fixed costs | Flexible |
+| Factor             | Stay at Job                     | Go Full-Time                                      |
+| ------------------ | ------------------------------- | ------------------------------------------------- |
+| Creator income     | < 50% of salary                 | > 100% of expenses                                |
+| Growth trend       | Flat or declining               | Consistent growth 6+ months                       |
+| Savings            | < 3 months expenses             | 6+ months expenses                                |
+| Revenue sources    | 1-2 streams                     | 3+ diverse streams                                |
+| Time limitation    | Can still create enough content | Job significantly limits content quality/quantity |
+| Risk tolerance     | Low                             | Moderate to high                                  |
+| Family obligations | High fixed costs                | Flexible                                          |
 
 ### 10.3 The Hybrid Path
 
@@ -586,14 +586,14 @@ The hybrid path is the safest:
 
 ### 10.4 Tax and Business Basics
 
-| Task | Why | When |
-|------|-----|------|
-| Track all income and expenses | Tax deductions, business insight | From day 1 |
-| Save 25-30% of creator income for taxes | Self-employment tax is higher | Every payment received |
-| Register as sole proprietor or LLC | Legal protection, professional image | When income becomes significant |
-| Get a business bank account | Separate personal and business finances | When registered |
-| Consider hiring an accountant | Creator taxes are complex | When earning $10K+/year |
-| Keep receipts for gear, software, travel | Tax deductible business expenses | Always |
+| Task                                     | Why                                     | When                            |
+| ---------------------------------------- | --------------------------------------- | ------------------------------- |
+| Track all income and expenses            | Tax deductions, business insight        | From day 1                      |
+| Save 25-30% of creator income for taxes  | Self-employment tax is higher           | Every payment received          |
+| Register as sole proprietor or LLC       | Legal protection, professional image    | When income becomes significant |
+| Get a business bank account              | Separate personal and business finances | When registered                 |
+| Consider hiring an accountant            | Creator taxes are complex               | When earning $10K+/year         |
+| Keep receipts for gear, software, travel | Tax deductible business expenses        | Always                          |
 
 ### 10.5 The Long Game
 

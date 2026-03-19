@@ -3,7 +3,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import './hljs-theme.css';
+import './hljs-themes.css';
 import type { InterviewFile } from '@/types';
 import type { Components } from 'react-markdown';
 import { MermaidDiagram } from './MermaidDiagram';
@@ -111,11 +111,7 @@ function createMarkdownComponents(
     },
     pre: ({ children }) => {
       const child = Array.isArray(children) ? children[0] : children;
-      if (
-        child &&
-        typeof child === 'object' &&
-        'props' in child
-      ) {
+      if (child && typeof child === 'object' && 'props' in child) {
         const codeElement = child as React.ReactElement<{
           className?: string;
           children?: React.ReactNode;
@@ -132,7 +128,7 @@ function createMarkdownComponents(
         }
       }
       return (
-        <pre className="font-mono rounded-lg p-4 overflow-x-auto my-5 text-[13px] leading-[1.65] border-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0d1117] [&>code]:bg-transparent">
+        <pre className="font-mono rounded-lg p-4 overflow-x-auto my-5 text-[13px] leading-[1.65] border-2 border-gray-200 dark:border-white/10 [&>code]:bg-transparent">
           {children}
         </pre>
       );
@@ -224,18 +220,24 @@ function createMarkdownComponents(
 interface MarkdownContentProps {
   readonly file: InterviewFile;
   readonly onFileSelect?: FileSelectHandler;
+  readonly codeTheme?: string;
 }
 
-export function MarkdownContent({ file, onFileSelect }: MarkdownContentProps) {
+export function MarkdownContent({
+  file,
+  onFileSelect,
+  codeTheme = 'github',
+}: MarkdownContentProps) {
   const components = createMarkdownComponents(onFileSelect, file.category);
 
   return (
-    <article className="glass-card p-6 md:p-8 lg:p-10 max-w-none">
+    <article
+      className="glass-card p-6 md:p-8 lg:p-10 max-w-none"
+      data-code-theme={codeTheme}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[
-          [rehypeHighlight, { ignoreMissing: true }],
-        ]}
+        rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
         components={components}
       >
         {file.content}

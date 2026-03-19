@@ -109,6 +109,7 @@ Block 0 (Genesis)       Block 1              Block 2
 ```
 
 **Tamper resistance**: If an attacker changes Transaction 2 in Block 1:
+
 1. Block 1's Merkle root changes
 2. Block 1's hash changes
 3. Block 2's `prevHash` no longer matches Block 1's new hash
@@ -130,6 +131,7 @@ A Merkle tree is a binary tree of hashes that lets you efficiently prove a trans
 ```
 
 **Merkle proof for Tx3**: To prove Tx3 is in the block, you only need:
+
 - H4 (sibling)
 - H12 (uncle)
 - Merkle Root (in block header)
@@ -179,6 +181,7 @@ print(f"Merkle root: {root.hex()}")
 ### 3.1 Why Consensus Is Hard
 
 In a distributed system with no central coordinator, nodes must answer three questions:
+
 1. **Which transactions are valid?** (validation rules)
 2. **In what order do they appear?** (ordering / sequencing)
 3. **Which version of history is canonical?** (fork choice)
@@ -220,6 +223,7 @@ for nonce in 0, 1, 2, 3, ...:
 ```
 
 **Key properties**:
+
 - **Sybil resistance**: Creating fake identities doesn't help — you need real computational power
 - **Probabilistic finality**: The deeper a block is buried, the harder it is to reverse. After 6 confirmations (~60 min), Bitcoin transactions are considered final
 - **Energy cost**: Bitcoin uses ~150 TWh/year (comparable to a small country), which is the fundamental criticism of PoW
@@ -278,26 +282,26 @@ Slashing Conditions:
 
 **PoW vs PoS comparison**:
 
-| Property | Proof of Work | Proof of Stake |
-|----------|---------------|----------------|
-| Security basis | Computational power | Economic stake |
-| Energy usage | Very high | Very low (~99.95% less) |
-| Hardware | Specialized ASICs | Standard servers |
-| Finality | Probabilistic (~60 min) | Deterministic (~13 min) |
-| Attack cost | 51% of hashrate | 33% of staked ETH |
-| Entry barrier | Capital for hardware | Capital for stake |
+| Property         | Proof of Work             | Proof of Stake             |
+| ---------------- | ------------------------- | -------------------------- |
+| Security basis   | Computational power       | Economic stake             |
+| Energy usage     | Very high                 | Very low (~99.95% less)    |
+| Hardware         | Specialized ASICs         | Standard servers           |
+| Finality         | Probabilistic (~60 min)   | Deterministic (~13 min)    |
+| Attack cost      | 51% of hashrate           | 33% of staked ETH          |
+| Entry barrier    | Capital for hardware      | Capital for stake          |
 | Decentralization | Tends toward mining pools | Tends toward large stakers |
 
 ### 3.4 Other Consensus Mechanisms
 
-| Mechanism | Used By | How It Works |
-|-----------|---------|--------------|
-| Delegated PoS (DPoS) | EOS, Tron | Token holders vote for a fixed set of validators |
-| Proof of History (PoH) | Solana | Cryptographic clock provides ordering before consensus |
-| Proof of Authority (PoA) | Private chains | Known, trusted validators (not decentralized) |
-| Tendermint BFT | Cosmos | Practical BFT with instant finality, 2/3 majority |
-| Avalanche | Avalanche | Repeated random subsampling for probabilistic consensus |
-| Nakamoto + BFT hybrid | Ethereum | PoS with Casper FFG finality gadget on top |
+| Mechanism                | Used By        | How It Works                                            |
+| ------------------------ | -------------- | ------------------------------------------------------- |
+| Delegated PoS (DPoS)     | EOS, Tron      | Token holders vote for a fixed set of validators        |
+| Proof of History (PoH)   | Solana         | Cryptographic clock provides ordering before consensus  |
+| Proof of Authority (PoA) | Private chains | Known, trusted validators (not decentralized)           |
+| Tendermint BFT           | Cosmos         | Practical BFT with instant finality, 2/3 majority       |
+| Avalanche                | Avalanche      | Repeated random subsampling for probabilistic consensus |
+| Nakamoto + BFT hybrid    | Ethereum       | PoS with Casper FFG finality gadget on top              |
 
 ---
 
@@ -369,14 +373,14 @@ Transaction:
 
 **Comparison**:
 
-| Property | UTXO (Bitcoin) | Account (Ethereum) |
-|----------|----------------|-------------------|
-| State representation | Set of unspent outputs | Map of address -> state |
-| Balance tracking | Sum of UTXOs | Direct balance field |
-| Smart contracts | Very limited (Bitcoin Script) | Full Turing-complete (EVM) |
-| Parallelism | Natural (independent UTXOs) | Harder (shared state) |
-| Privacy | New address per tx (easy) | Address reuse (harder) |
-| Simplicity | Complex change handling | Simple state transitions |
+| Property             | UTXO (Bitcoin)                | Account (Ethereum)         |
+| -------------------- | ----------------------------- | -------------------------- |
+| State representation | Set of unspent outputs        | Map of address -> state    |
+| Balance tracking     | Sum of UTXOs                  | Direct balance field       |
+| Smart contracts      | Very limited (Bitcoin Script) | Full Turing-complete (EVM) |
+| Parallelism          | Natural (independent UTXOs)   | Harder (shared state)      |
+| Privacy              | New address per tx (easy)     | Address reuse (harder)     |
+| Simplicity           | Complex change handling       | Simple state transitions   |
 
 ---
 
@@ -385,6 +389,7 @@ Transaction:
 ### 5.1 What Causes Forks
 
 A fork occurs when the blockchain diverges into two or more paths. This can happen:
+
 - **Naturally**: Two miners find a block at nearly the same time (resolved in 1-2 blocks)
 - **Intentionally**: Protocol upgrade that changes consensus rules
 
@@ -582,6 +587,7 @@ Block Header:
 ```
 
 **Solution**:
+
 1. Check `prevHash` matches the previous block's hash: `0x00003a7f...` matches
 2. Check `hash` starts with 4 zeros (meets difficulty): `0x000072b1...` has 4 leading zeros
 3. Verify by recomputing: `H(prevHash + merkleRoot + timestamp + nonce)` should equal `hash`
@@ -606,12 +612,14 @@ If all checks pass, the block is valid.
 ```
 
 **Solution**: To prove Tx5, you need:
+
 1. **H6** (sibling of H5)
 2. **H78** (sibling of H56)
 3. **H1234** (sibling of H5678)
 4. **Root** (from block header, already known)
 
 Verification:
+
 - Compute `H5 = H(Tx5)`
 - Compute `H56 = H(H5 + H6)`
 - Compute `H5678 = H(H56 + H78)`
@@ -625,6 +633,7 @@ Proof size: 3 hashes for 8 transactions. For `n` transactions: `log2(n)` hashes.
 **Question**: Bitcoin's network hashrate is 500 EH/s (exahashes/second). Each Antminer S21 produces 200 TH/s and costs $5,000. How much would a 51% attack cost in hardware alone?
 
 **Solution**:
+
 ```
 Required hashrate:   500 EH/s * 0.51 = 255 EH/s = 255,000,000 TH/s
 Miners needed:       255,000,000 / 200 = 1,275,000 miners

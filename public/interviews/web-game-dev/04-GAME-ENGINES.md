@@ -48,110 +48,116 @@ Phaser.Game
 
 ```typescript
 class GameScene extends Phaser.Scene {
-    private player!: Phaser.Physics.Arcade.Sprite;
-    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-    private score: number = 0;
+  private player!: Phaser.Physics.Arcade.Sprite;
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private score: number = 0;
 
-    constructor() {
-        super({ key: 'GameScene' });
+  constructor() {
+    super({ key: 'GameScene' });
+  }
+
+  // Load assets
+  preload(): void {
+    this.load.spritesheet('player', 'assets/player.png', {
+      frameWidth: 32,
+      frameHeight: 48,
+    });
+    this.load.image('platform', 'assets/platform.png');
+    this.load.image('coin', 'assets/coin.png');
+  }
+
+  // Create game objects
+  create(): void {
+    // Physics-enabled sprite
+    this.player = this.physics.add.sprite(100, 300, 'player');
+    this.player.setCollideWorldBounds(true);
+    this.player.setBounce(0.2);
+
+    // Static physics group (platforms)
+    const platforms = this.physics.add.staticGroup();
+    platforms.create(400, 568, 'platform').setScale(2).refreshBody();
+    platforms.create(600, 400, 'platform');
+    platforms.create(50, 250, 'platform');
+
+    // Collisions
+    this.physics.add.collider(this.player, platforms);
+
+    // Collectibles
+    const coins = this.physics.add.group({
+      key: 'coin',
+      repeat: 11,
+      setXY: { x: 12, y: 0, stepX: 70 },
+    });
+
+    this.physics.add.collider(coins, platforms);
+    this.physics.add.overlap(
+      this.player,
+      coins,
+      this.collectCoin,
+      undefined,
+      this
+    );
+
+    // Animations
+    this.anims.create({
+      key: 'walk',
+      frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'idle',
+      frames: [{ key: 'player', frame: 4 }],
+      frameRate: 20,
+    });
+
+    // Input
+    this.cursors = this.input.keyboard!.createCursorKeys();
+  }
+
+  // Game loop (runs every frame)
+  update(): void {
+    if (this.cursors.left.isDown) {
+      this.player.setVelocityX(-160);
+      this.player.anims.play('walk', true);
+      this.player.flipX = true;
+    } else if (this.cursors.right.isDown) {
+      this.player.setVelocityX(160);
+      this.player.anims.play('walk', true);
+      this.player.flipX = false;
+    } else {
+      this.player.setVelocityX(0);
+      this.player.anims.play('idle', true);
     }
 
-    // Load assets
-    preload(): void {
-        this.load.spritesheet('player', 'assets/player.png', {
-            frameWidth: 32,
-            frameHeight: 48,
-        });
-        this.load.image('platform', 'assets/platform.png');
-        this.load.image('coin', 'assets/coin.png');
+    if (this.cursors.up.isDown && this.player.body!.touching.down) {
+      this.player.setVelocityY(-330);
     }
+  }
 
-    // Create game objects
-    create(): void {
-        // Physics-enabled sprite
-        this.player = this.physics.add.sprite(100, 300, 'player');
-        this.player.setCollideWorldBounds(true);
-        this.player.setBounce(0.2);
-
-        // Static physics group (platforms)
-        const platforms = this.physics.add.staticGroup();
-        platforms.create(400, 568, 'platform').setScale(2).refreshBody();
-        platforms.create(600, 400, 'platform');
-        platforms.create(50, 250, 'platform');
-
-        // Collisions
-        this.physics.add.collider(this.player, platforms);
-
-        // Collectibles
-        const coins = this.physics.add.group({
-            key: 'coin',
-            repeat: 11,
-            setXY: { x: 12, y: 0, stepX: 70 },
-        });
-
-        this.physics.add.collider(coins, platforms);
-        this.physics.add.overlap(this.player, coins, this.collectCoin, undefined, this);
-
-        // Animations
-        this.anims.create({
-            key: 'walk',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
-            frameRate: 10,
-            repeat: -1,
-        });
-
-        this.anims.create({
-            key: 'idle',
-            frames: [{ key: 'player', frame: 4 }],
-            frameRate: 20,
-        });
-
-        // Input
-        this.cursors = this.input.keyboard!.createCursorKeys();
-    }
-
-    // Game loop (runs every frame)
-    update(): void {
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-160);
-            this.player.anims.play('walk', true);
-            this.player.flipX = true;
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(160);
-            this.player.anims.play('walk', true);
-            this.player.flipX = false;
-        } else {
-            this.player.setVelocityX(0);
-            this.player.anims.play('idle', true);
-        }
-
-        if (this.cursors.up.isDown && this.player.body!.touching.down) {
-            this.player.setVelocityY(-330);
-        }
-    }
-
-    private collectCoin(
-        player: Phaser.GameObjects.GameObject,
-        coin: Phaser.GameObjects.GameObject
-    ): void {
-        (coin as Phaser.Physics.Arcade.Sprite).disableBody(true, true);
-        this.score += 10;
-    }
+  private collectCoin(
+    player: Phaser.GameObjects.GameObject,
+    coin: Phaser.GameObjects.GameObject
+  ): void {
+    (coin as Phaser.Physics.Arcade.Sprite).disableBody(true, true);
+    this.score += 10;
+  }
 }
 
 // Game configuration
 const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.AUTO,          // WebGL with Canvas fallback
-    width: 800,
-    height: 600,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { x: 0, y: 300 },
-            debug: false,
-        },
+  type: Phaser.AUTO, // WebGL with Canvas fallback
+  width: 800,
+  height: 600,
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { x: 0, y: 300 },
+      debug: false,
     },
-    scene: [GameScene],
+  },
+  scene: [GameScene],
 };
 
 const game = new Phaser.Game(config);
@@ -161,27 +167,29 @@ const game = new Phaser.Game(config);
 
 Phaser provides many built-in game objects:
 
-| Object | Use |
-|--------|-----|
-| `Sprite` | Textured object with animation support |
-| `Image` | Static sprite (no animation, lighter) |
-| `Text` | Dynamic text rendering |
-| `BitmapText` | GPU-rendered text from font atlas |
-| `Graphics` | Procedural shapes (lines, circles, rects) |
-| `Container` | Groups objects, applies shared transform |
-| `TileSprite` | Scrolling/repeating texture (parallax) |
-| `Particles` | Particle emitter system |
-| `Video` | Video playback in game |
+| Object       | Use                                       |
+| ------------ | ----------------------------------------- |
+| `Sprite`     | Textured object with animation support    |
+| `Image`      | Static sprite (no animation, lighter)     |
+| `Text`       | Dynamic text rendering                    |
+| `BitmapText` | GPU-rendered text from font atlas         |
+| `Graphics`   | Procedural shapes (lines, circles, rects) |
+| `Container`  | Groups objects, applies shared transform  |
+| `TileSprite` | Scrolling/repeating texture (parallax)    |
+| `Particles`  | Particle emitter system                   |
+| `Video`      | Video playback in game                    |
 
 ### Physics: Arcade vs Matter
 
 **Arcade Physics** (built-in, lightweight):
+
 - AABB collision only (rectangles and circles)
 - No rotation physics, no polygon colliders
 - Very fast — suitable for hundreds of bodies
 - Perfect for platformers, top-down games, casual games
 
 **Matter.js** (integrated):
+
 - Full rigid body physics with polygon colliders
 - Joints, constraints, compound bodies
 - Rotation, friction, restitution
@@ -193,20 +201,20 @@ Phaser provides many built-in game objects:
 ```typescript
 // Phaser tween system
 this.tweens.add({
-    targets: sprite,
-    x: 400,
-    y: 300,
-    scaleX: 2,
-    scaleY: 2,
-    alpha: 0.5,
-    duration: 1000,
-    ease: 'Power2',        // easeInOut by default
-    yoyo: true,            // reverse back to start
-    repeat: -1,            // infinite
-    delay: 500,
-    onComplete: () => {
-        // Tween finished
-    },
+  targets: sprite,
+  x: 400,
+  y: 300,
+  scaleX: 2,
+  scaleY: 2,
+  alpha: 0.5,
+  duration: 1000,
+  ease: 'Power2', // easeInOut by default
+  yoyo: true, // reverse back to start
+  repeat: -1, // infinite
+  delay: 500,
+  onComplete: () => {
+    // Tween finished
+  },
 });
 
 // Timeline (sequential tweens)
@@ -220,6 +228,7 @@ timeline.play();
 ### Pros and Cons
 
 **Pros:**
+
 - Feature-complete: everything a 2D game needs out of the box
 - Excellent documentation and large community
 - Huge plugin ecosystem
@@ -227,6 +236,7 @@ timeline.play();
 - TypeScript definitions included
 
 **Cons:**
+
 - Large bundle size (~1MB minified, ~300KB gzipped) — too heavy for playable ads
 - Opinionated architecture — hard to use only parts of it
 - Performance ceiling: not ideal for 10,000+ entities (Arcade physics overhead)
@@ -269,10 +279,10 @@ import * as PIXI from 'pixi.js';
 
 const app = new PIXI.Application();
 await app.init({
-    width: 800,
-    height: 600,
-    backgroundColor: 0x222222,
-    antialias: true,
+  width: 800,
+  height: 600,
+  backgroundColor: 0x222222,
+  antialias: true,
 });
 document.body.appendChild(app.canvas);
 
@@ -285,7 +295,7 @@ app.stage.addChild(uiLayer); // UI renders on top
 // Sprite
 const texture = await PIXI.Assets.load('hero.png');
 const hero = new PIXI.Sprite(texture);
-hero.anchor.set(0.5, 1.0);  // bottom center
+hero.anchor.set(0.5, 1.0); // bottom center
 hero.x = 400;
 hero.y = 500;
 hero.scale.set(2);
@@ -313,15 +323,15 @@ gameWorld.addChild(enemy);
 // Animated sprite
 const explosionFrames: PIXI.Texture[] = [];
 for (let i = 0; i < 16; i++) {
-    const frameName = `explosion_${String(i).padStart(4, '0')}.png`;
-    explosionFrames.push(sheet.textures[frameName]);
+  const frameName = `explosion_${String(i).padStart(4, '0')}.png`;
+  explosionFrames.push(sheet.textures[frameName]);
 }
 
 const explosion = new PIXI.AnimatedSprite(explosionFrames);
 explosion.animationSpeed = 0.4;
 explosion.loop = false;
 explosion.onComplete = () => {
-    explosion.destroy();
+  explosion.destroy();
 };
 explosion.play();
 gameWorld.addChild(explosion);
@@ -334,14 +344,18 @@ PixiJS filters apply GPU shaders to any display object:
 ```typescript
 // Built-in filters
 const blur = new PIXI.BlurFilter({ strength: 8 });
-const glow = new PIXI.GlowFilter({ distance: 15, outerStrength: 2, color: 0xffff00 });
+const glow = new PIXI.GlowFilter({
+  distance: 15,
+  outerStrength: 2,
+  color: 0xffff00,
+});
 
 hero.filters = [blur];
 
 // Custom filter
 class WaveFilter extends PIXI.Filter {
-    constructor() {
-        const fragmentSrc = `
+  constructor() {
+    const fragmentSrc = `
             precision mediump float;
             varying vec2 vTextureCoord;
             uniform sampler2D uTexture;
@@ -355,24 +369,24 @@ class WaveFilter extends PIXI.Filter {
             }
         `;
 
-        super({
-            glProgram: new PIXI.GlProgram({ fragment: fragmentSrc }),
-            resources: {
-                waveUniforms: {
-                    uTime: { value: 0, type: 'f32' },
-                    uAmplitude: { value: 0.02, type: 'f32' },
-                },
-            },
-        });
-    }
+    super({
+      glProgram: new PIXI.GlProgram({ fragment: fragmentSrc }),
+      resources: {
+        waveUniforms: {
+          uTime: { value: 0, type: 'f32' },
+          uAmplitude: { value: 0.02, type: 'f32' },
+        },
+      },
+    });
+  }
 
-    get time(): number {
-        return this.resources.waveUniforms.uniforms.uTime;
-    }
+  get time(): number {
+    return this.resources.waveUniforms.uniforms.uTime;
+  }
 
-    set time(value: number) {
-        this.resources.waveUniforms.uniforms.uTime = value;
-    }
+  set time(value: number) {
+    this.resources.waveUniforms.uniforms.uTime = value;
+  }
 }
 ```
 
@@ -381,20 +395,20 @@ class WaveFilter extends PIXI.Filter {
 ```typescript
 // PixiJS provides a Ticker for the game loop
 app.ticker.add((ticker) => {
-    const dt = ticker.deltaTime; // 1.0 at 60fps, 2.0 at 30fps (normalized)
-    const deltaMS = ticker.deltaMS; // actual ms since last frame
-    const deltaSec = ticker.deltaMS / 1000; // seconds
+  const dt = ticker.deltaTime; // 1.0 at 60fps, 2.0 at 30fps (normalized)
+  const deltaMS = ticker.deltaMS; // actual ms since last frame
+  const deltaSec = ticker.deltaMS / 1000; // seconds
 
-    hero.x += speed * deltaSec;
-    hero.rotation += 0.01 * ticker.deltaTime;
+  hero.x += speed * deltaSec;
+  hero.rotation += 0.01 * ticker.deltaTime;
 });
 
 // Or use your own loop
 app.ticker.stop();
 function customLoop(timestamp: number): void {
-    // ... your game loop ...
-    app.renderer.render(app.stage);
-    requestAnimationFrame(customLoop);
+  // ... your game loop ...
+  app.renderer.render(app.stage);
+  requestAnimationFrame(customLoop);
 }
 requestAnimationFrame(customLoop);
 ```
@@ -402,6 +416,7 @@ requestAnimationFrame(customLoop);
 ### Pros and Cons
 
 **Pros:**
+
 - Fastest 2D WebGL renderer available
 - Excellent sprite batching (thousands of sprites in one draw call)
 - Small footprint when tree-shaken (~100KB for core rendering)
@@ -411,6 +426,7 @@ requestAnimationFrame(customLoop);
 - Can be used as a rendering backend for custom engines
 
 **Cons:**
+
 - Not a game engine — no physics, scene management, or audio
 - Must build or integrate game systems yourself
 - Steeper initial setup for a complete game
@@ -462,56 +478,60 @@ PlayerController.attributes.add('speed', { type: 'number', default: 5 });
 PlayerController.attributes.add('jumpForce', { type: 'number', default: 400 });
 
 PlayerController.prototype.initialize = function () {
-    this.force = new pc.Vec3();
-    this.onGround = false;
+  this.force = new pc.Vec3();
+  this.onGround = false;
 
-    // Collision events
-    this.entity.collision.on('collisionstart', this.onCollisionStart, this);
-    this.entity.collision.on('collisionend', this.onCollisionEnd, this);
+  // Collision events
+  this.entity.collision.on('collisionstart', this.onCollisionStart, this);
+  this.entity.collision.on('collisionend', this.onCollisionEnd, this);
 
-    // Keyboard input
-    this.app.keyboard.on(pc.EVENT_KEYDOWN, this.onKeyDown, this);
+  // Keyboard input
+  this.app.keyboard.on(pc.EVENT_KEYDOWN, this.onKeyDown, this);
 };
 
 PlayerController.prototype.update = function (dt: number) {
-    this.force.set(0, 0, 0);
+  this.force.set(0, 0, 0);
 
-    // Movement
-    if (this.app.keyboard.isPressed(pc.KEY_LEFT)) {
-        this.force.x -= this.speed;
-    }
-    if (this.app.keyboard.isPressed(pc.KEY_RIGHT)) {
-        this.force.x += this.speed;
-    }
-    if (this.app.keyboard.isPressed(pc.KEY_UP)) {
-        this.force.z -= this.speed;
-    }
-    if (this.app.keyboard.isPressed(pc.KEY_DOWN)) {
-        this.force.z += this.speed;
-    }
+  // Movement
+  if (this.app.keyboard.isPressed(pc.KEY_LEFT)) {
+    this.force.x -= this.speed;
+  }
+  if (this.app.keyboard.isPressed(pc.KEY_RIGHT)) {
+    this.force.x += this.speed;
+  }
+  if (this.app.keyboard.isPressed(pc.KEY_UP)) {
+    this.force.z -= this.speed;
+  }
+  if (this.app.keyboard.isPressed(pc.KEY_DOWN)) {
+    this.force.z += this.speed;
+  }
 
-    // Apply force via rigid body
-    if (this.entity.rigidbody) {
-        this.entity.rigidbody.applyForce(this.force);
-    }
+  // Apply force via rigid body
+  if (this.entity.rigidbody) {
+    this.entity.rigidbody.applyForce(this.force);
+  }
 };
 
 PlayerController.prototype.onKeyDown = function (event: { key: number }) {
-    if (event.key === pc.KEY_SPACE && this.onGround) {
-        this.entity.rigidbody.applyImpulse(0, this.jumpForce, 0);
-    }
+  if (event.key === pc.KEY_SPACE && this.onGround) {
+    this.entity.rigidbody.applyImpulse(0, this.jumpForce, 0);
+  }
 };
 
-PlayerController.prototype.onCollisionStart = function (result: { other: pc.Entity }) {
-    if (result.other.tags.has('ground')) {
-        this.onGround = true;
-    }
+PlayerController.prototype.onCollisionStart = function (result: {
+  other: pc.Entity;
+}) {
+  if (result.other.tags.has('ground')) {
+    this.onGround = true;
+  }
 };
 
-PlayerController.prototype.onCollisionEnd = function (result: { other: pc.Entity }) {
-    if (result.other.tags.has('ground')) {
-        this.onGround = false;
-    }
+PlayerController.prototype.onCollisionEnd = function (result: {
+  other: pc.Entity;
+}) {
+  if (result.other.tags.has('ground')) {
+    this.onGround = false;
+  }
 };
 ```
 
@@ -520,8 +540,8 @@ PlayerController.prototype.onCollisionEnd = function (result: { other: pc.Entity
 ```typescript
 const canvas = document.getElementById('application') as HTMLCanvasElement;
 const app = new pc.Application(canvas, {
-    mouse: new pc.Mouse(canvas),
-    keyboard: new pc.Keyboard(window),
+  mouse: new pc.Mouse(canvas),
+  keyboard: new pc.Keyboard(window),
 });
 
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -530,7 +550,7 @@ app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 // Create camera
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.15),
+  clearColor: new pc.Color(0.1, 0.1, 0.15),
 });
 camera.setPosition(0, 5, 10);
 camera.lookAt(0, 0, 0);
@@ -539,9 +559,9 @@ app.root.addChild(camera);
 // Create light
 const light = new pc.Entity('light');
 light.addComponent('light', {
-    type: 'directional',
-    color: new pc.Color(1, 1, 1),
-    intensity: 1,
+  type: 'directional',
+  color: new pc.Color(1, 1, 1),
+  intensity: 1,
 });
 light.setEulerAngles(45, 30, 0);
 app.root.addChild(light);
@@ -560,6 +580,7 @@ app.start();
 ### Pros and Cons
 
 **Pros:**
+
 - Cloud-based visual editor (collaborative, no install)
 - True ECS architecture — clean separation of data and behavior
 - Built-in physics (ammo.js), audio, and animation
@@ -568,6 +589,7 @@ app.start();
 - WebGPU support
 
 **Cons:**
+
 - Primarily 3D — limited 2D tooling
 - Editor requires cloud account (engine itself is open source)
 - Smaller community than Three.js or Phaser
@@ -613,106 +635,115 @@ Scene
 
 ```typescript
 import {
-    _decorator, Component, Node, Vec3, input, Input,
-    KeyCode, RigidBody2D, PhysicsSystem2D, Contact2DType,
-    Collider2D, IPhysics2DContact
+  _decorator,
+  Component,
+  Node,
+  Vec3,
+  input,
+  Input,
+  KeyCode,
+  RigidBody2D,
+  PhysicsSystem2D,
+  Contact2DType,
+  Collider2D,
+  IPhysics2DContact,
 } from 'cc';
 
 const { ccclass, property } = _decorator;
 
 @ccclass('PlayerController')
 export class PlayerController extends Component {
-    @property({ type: Number })
-    speed: number = 300;
+  @property({ type: Number })
+  speed: number = 300;
 
-    @property({ type: Number })
-    jumpForce: number = 600;
+  @property({ type: Number })
+  jumpForce: number = 600;
 
-    private rigidBody: RigidBody2D | null = null;
-    private moveDir: number = 0;
-    private canJump: boolean = false;
+  private rigidBody: RigidBody2D | null = null;
+  private moveDir: number = 0;
+  private canJump: boolean = false;
 
-    onLoad(): void {
-        this.rigidBody = this.getComponent(RigidBody2D);
+  onLoad(): void {
+    this.rigidBody = this.getComponent(RigidBody2D);
 
-        // Register input
-        input.on(Input.EventType.KEY_DOWN, this.onKeyDown, this);
-        input.on(Input.EventType.KEY_UP, this.onKeyUp, this);
+    // Register input
+    input.on(Input.EventType.KEY_DOWN, this.onKeyDown, this);
+    input.on(Input.EventType.KEY_UP, this.onKeyUp, this);
 
-        // Collision detection
-        const collider = this.getComponent(Collider2D);
-        if (collider) {
-            collider.on(Contact2DType.BEGIN_CONTACT, this.onBeginContact, this);
-            collider.on(Contact2DType.END_CONTACT, this.onEndContact, this);
+    // Collision detection
+    const collider = this.getComponent(Collider2D);
+    if (collider) {
+      collider.on(Contact2DType.BEGIN_CONTACT, this.onBeginContact, this);
+      collider.on(Contact2DType.END_CONTACT, this.onEndContact, this);
+    }
+  }
+
+  update(dt: number): void {
+    if (!this.rigidBody) return;
+
+    // Apply horizontal velocity
+    const velocity = this.rigidBody.linearVelocity;
+    velocity.x = this.moveDir * this.speed;
+    this.rigidBody.linearVelocity = velocity;
+  }
+
+  private onKeyDown(event: { keyCode: KeyCode }): void {
+    switch (event.keyCode) {
+      case KeyCode.ARROW_LEFT:
+        this.moveDir = -1;
+        break;
+      case KeyCode.ARROW_RIGHT:
+        this.moveDir = 1;
+        break;
+      case KeyCode.SPACE:
+        if (this.canJump) {
+          this.jump();
         }
+        break;
     }
+  }
 
-    update(dt: number): void {
-        if (!this.rigidBody) return;
-
-        // Apply horizontal velocity
-        const velocity = this.rigidBody.linearVelocity;
-        velocity.x = this.moveDir * this.speed;
-        this.rigidBody.linearVelocity = velocity;
+  private onKeyUp(event: { keyCode: KeyCode }): void {
+    if (event.keyCode === KeyCode.ARROW_LEFT && this.moveDir === -1) {
+      this.moveDir = 0;
     }
-
-    private onKeyDown(event: { keyCode: KeyCode }): void {
-        switch (event.keyCode) {
-            case KeyCode.ARROW_LEFT:
-                this.moveDir = -1;
-                break;
-            case KeyCode.ARROW_RIGHT:
-                this.moveDir = 1;
-                break;
-            case KeyCode.SPACE:
-                if (this.canJump) {
-                    this.jump();
-                }
-                break;
-        }
+    if (event.keyCode === KeyCode.ARROW_RIGHT && this.moveDir === 1) {
+      this.moveDir = 0;
     }
+  }
 
-    private onKeyUp(event: { keyCode: KeyCode }): void {
-        if (event.keyCode === KeyCode.ARROW_LEFT && this.moveDir === -1) {
-            this.moveDir = 0;
-        }
-        if (event.keyCode === KeyCode.ARROW_RIGHT && this.moveDir === 1) {
-            this.moveDir = 0;
-        }
-    }
+  private jump(): void {
+    if (!this.rigidBody) return;
+    const velocity = this.rigidBody.linearVelocity;
+    velocity.y = this.jumpForce;
+    this.rigidBody.linearVelocity = velocity;
+    this.canJump = false;
+  }
 
-    private jump(): void {
-        if (!this.rigidBody) return;
-        const velocity = this.rigidBody.linearVelocity;
-        velocity.y = this.jumpForce;
-        this.rigidBody.linearVelocity = velocity;
-        this.canJump = false;
+  private onBeginContact(
+    selfCollider: Collider2D,
+    otherCollider: Collider2D,
+    contact: IPhysics2DContact | null
+  ): void {
+    if (otherCollider.node.name === 'Ground') {
+      this.canJump = true;
     }
+  }
 
-    private onBeginContact(
-        selfCollider: Collider2D,
-        otherCollider: Collider2D,
-        contact: IPhysics2DContact | null
-    ): void {
-        if (otherCollider.node.name === 'Ground') {
-            this.canJump = true;
-        }
+  private onEndContact(
+    selfCollider: Collider2D,
+    otherCollider: Collider2D,
+    contact: IPhysics2DContact | null
+  ): void {
+    if (otherCollider.node.name === 'Ground') {
+      this.canJump = false;
     }
+  }
 
-    private onEndContact(
-        selfCollider: Collider2D,
-        otherCollider: Collider2D,
-        contact: IPhysics2DContact | null
-    ): void {
-        if (otherCollider.node.name === 'Ground') {
-            this.canJump = false;
-        }
-    }
-
-    onDestroy(): void {
-        input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
-        input.off(Input.EventType.KEY_UP, this.onKeyUp, this);
-    }
+  onDestroy(): void {
+    input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
+    input.off(Input.EventType.KEY_UP, this.onKeyUp, this);
+  }
 }
 ```
 
@@ -727,32 +758,33 @@ const { ccclass } = _decorator;
 
 @ccclass('AnimController')
 export class AnimController extends Component {
-    private anim: Animation | null = null;
+  private anim: Animation | null = null;
 
-    onLoad(): void {
-        this.anim = this.getComponent(Animation);
-    }
+  onLoad(): void {
+    this.anim = this.getComponent(Animation);
+  }
 
-    playIdle(): void {
-        this.anim?.play('idle');
-    }
+  playIdle(): void {
+    this.anim?.play('idle');
+  }
 
-    playRun(): void {
-        this.anim?.crossFade('run', 0.2); // Blend over 0.2s
-    }
+  playRun(): void {
+    this.anim?.crossFade('run', 0.2); // Blend over 0.2s
+  }
 
-    playAttack(): void {
-        this.anim?.play('attack');
-        this.anim?.once(Animation.EventType.FINISHED, () => {
-            this.playIdle();
-        });
-    }
+  playAttack(): void {
+    this.anim?.play('attack');
+    this.anim?.once(Animation.EventType.FINISHED, () => {
+      this.playIdle();
+    });
+  }
 }
 ```
 
 ### Pros and Cons
 
 **Pros:**
+
 - Full-featured visual editor with scene, animation, and UI editors
 - Strong 2D and 3D support in one engine
 - TypeScript-first with decorators for editor integration
@@ -762,6 +794,7 @@ export class AnimController extends Component {
 - Large community in Asia, many tutorials in Chinese
 
 **Cons:**
+
 - Smaller Western community and English documentation
 - Web builds can be large (~2-5MB+) — not ideal for playable ads
 - Editor has a learning curve
@@ -805,14 +838,14 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 // --- Setup ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB); // sky blue
-scene.fog = new THREE.Fog(0x87CEEB, 50, 200);
+scene.background = new THREE.Color(0x87ceeb); // sky blue
+scene.fog = new THREE.Fog(0x87ceeb, 50, 200);
 
 const camera = new THREE.PerspectiveCamera(
-    60,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
+  60,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
 );
 camera.position.set(0, 10, 20);
 
@@ -837,8 +870,8 @@ scene.add(directionalLight);
 // --- Ground ---
 const groundGeometry = new THREE.PlaneGeometry(100, 100);
 const groundMaterial = new THREE.MeshStandardMaterial({
-    color: 0x228B22,
-    roughness: 0.8,
+  color: 0x228b22,
+  roughness: 0.8,
 });
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.rotation.x = -Math.PI / 2;
@@ -851,26 +884,26 @@ let playerModel: THREE.Group | null = null;
 let mixer: THREE.AnimationMixer | null = null;
 
 loader.load('models/character.glb', (gltf) => {
-    playerModel = gltf.scene;
-    playerModel.scale.set(2, 2, 2);
-    playerModel.castShadow = true;
+  playerModel = gltf.scene;
+  playerModel.scale.set(2, 2, 2);
+  playerModel.castShadow = true;
 
-    // Traverse to enable shadows on all meshes
-    playerModel.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-        }
-    });
-
-    scene.add(playerModel);
-
-    // Animation
-    if (gltf.animations.length > 0) {
-        mixer = new THREE.AnimationMixer(playerModel);
-        const idleAction = mixer.clipAction(gltf.animations[0]);
-        idleAction.play();
+  // Traverse to enable shadows on all meshes
+  playerModel.traverse((child) => {
+    if ((child as THREE.Mesh).isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
     }
+  });
+
+  scene.add(playerModel);
+
+  // Animation
+  if (gltf.animations.length > 0) {
+    mixer = new THREE.AnimationMixer(playerModel);
+    const idleAction = mixer.clipAction(gltf.animations[0]);
+    idleAction.play();
+  }
 });
 
 // --- Raycaster for click detection ---
@@ -878,65 +911,66 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 window.addEventListener('click', (event) => {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(scene.children, true);
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(scene.children, true);
 
-    if (intersects.length > 0) {
-        const clickedObject = intersects[0].object;
-        // Handle click on game object
-    }
+  if (intersects.length > 0) {
+    const clickedObject = intersects[0].object;
+    // Handle click on game object
+  }
 });
 
 // --- Game Loop ---
 const clock = new THREE.Clock();
 
 function animate(): void {
-    requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
 
-    const dt = clock.getDelta();
+  const dt = clock.getDelta();
 
-    // Update animation mixer
-    if (mixer) {
-        mixer.update(dt);
-    }
+  // Update animation mixer
+  if (mixer) {
+    mixer.update(dt);
+  }
 
-    // Update game logic
-    if (playerModel) {
-        // Move player based on input
-    }
+  // Update game logic
+  if (playerModel) {
+    // Move player based on input
+  }
 
-    renderer.render(scene, camera);
+  renderer.render(scene, camera);
 }
 
 animate();
 
 // --- Resize handling ---
 window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 });
 ```
 
 ### Key Concepts for Games
 
-| Concept | Details |
-|---------|---------|
-| **Geometry** | `BoxGeometry`, `SphereGeometry`, `PlaneGeometry`, or custom `BufferGeometry` |
-| **Materials** | `MeshBasicMaterial` (unlit), `MeshStandardMaterial` (PBR), `ShaderMaterial` (custom) |
-| **Raycaster** | GPU-accurate click/hover detection through the camera |
-| **AnimationMixer** | Plays skeletal animations from GLTF/FBX models |
-| **InstancedMesh** | Draw thousands of identical meshes in one draw call |
-| **EffectComposer** | Post-processing pipeline (bloom, SSAO, outline, etc.) |
-| **Texture** | Supports images, canvas, video, render targets |
-| **Group** | Transform hierarchy — children inherit parent transform |
+| Concept            | Details                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| **Geometry**       | `BoxGeometry`, `SphereGeometry`, `PlaneGeometry`, or custom `BufferGeometry`         |
+| **Materials**      | `MeshBasicMaterial` (unlit), `MeshStandardMaterial` (PBR), `ShaderMaterial` (custom) |
+| **Raycaster**      | GPU-accurate click/hover detection through the camera                                |
+| **AnimationMixer** | Plays skeletal animations from GLTF/FBX models                                       |
+| **InstancedMesh**  | Draw thousands of identical meshes in one draw call                                  |
+| **EffectComposer** | Post-processing pipeline (bloom, SSAO, outline, etc.)                                |
+| **Texture**        | Supports images, canvas, video, render targets                                       |
+| **Group**          | Transform hierarchy — children inherit parent transform                              |
 
 ### Pros and Cons
 
 **Pros:**
+
 - Largest 3D web community and ecosystem
 - Extensive examples (hundreds of official examples)
 - Flexible — no assumptions about your game architecture
@@ -946,6 +980,7 @@ window.addEventListener('resize', () => {
 - Lightweight for a 3D library (~150KB gzipped)
 
 **Cons:**
+
 - Not a game engine — no physics, audio, UI, scene management
 - Must integrate external libraries (cannon-es, rapier, howler.js)
 - API surface is large and sometimes inconsistent
@@ -1003,121 +1038,130 @@ const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const engine = new BABYLON.Engine(canvas, true);
 
 const createScene = async (): Promise<BABYLON.Scene> => {
-    const scene = new BABYLON.Scene(engine);
+  const scene = new BABYLON.Scene(engine);
 
-    // Camera
-    const camera = new BABYLON.ArcRotateCamera(
-        'camera',
-        Math.PI / 4,
-        Math.PI / 3,
-        15,
-        BABYLON.Vector3.Zero(),
-        scene
+  // Camera
+  const camera = new BABYLON.ArcRotateCamera(
+    'camera',
+    Math.PI / 4,
+    Math.PI / 3,
+    15,
+    BABYLON.Vector3.Zero(),
+    scene
+  );
+  camera.attachControl(canvas, true);
+  camera.lowerRadiusLimit = 5;
+  camera.upperRadiusLimit = 30;
+
+  // Lighting
+  const hemisphericLight = new BABYLON.HemisphericLight(
+    'light',
+    new BABYLON.Vector3(0, 1, 0),
+    scene
+  );
+  hemisphericLight.intensity = 0.7;
+
+  const directionalLight = new BABYLON.DirectionalLight(
+    'dirLight',
+    new BABYLON.Vector3(-1, -2, -1),
+    scene
+  );
+  directionalLight.position = new BABYLON.Vector3(10, 20, 10);
+
+  // Ground
+  const ground = BABYLON.MeshBuilder.CreateGround(
+    'ground',
+    {
+      width: 50,
+      height: 50,
+    },
+    scene
+  );
+
+  const groundMat = new BABYLON.PBRMaterial('groundMat', scene);
+  groundMat.albedoColor = new BABYLON.Color3(0.2, 0.5, 0.2);
+  groundMat.roughness = 0.8;
+  ground.material = groundMat;
+
+  // Physics
+  const havokInstance = await BABYLON.HavokPlugin.InitializeAsync();
+  scene.enablePhysics(
+    new BABYLON.Vector3(0, -9.81, 0),
+    new BABYLON.HavokPlugin(true, havokInstance)
+  );
+
+  // Ground physics
+  const groundAggregate = new BABYLON.PhysicsAggregate(
+    ground,
+    BABYLON.PhysicsShapeType.BOX,
+    { mass: 0 },
+    scene
+  );
+
+  // Spawn boxes
+  for (let i = 0; i < 20; i++) {
+    const box = BABYLON.MeshBuilder.CreateBox(`box${i}`, { size: 1 }, scene);
+    box.position = new BABYLON.Vector3(
+      Math.random() * 10 - 5,
+      5 + Math.random() * 10,
+      Math.random() * 10 - 5
     );
-    camera.attachControl(canvas, true);
-    camera.lowerRadiusLimit = 5;
-    camera.upperRadiusLimit = 30;
 
-    // Lighting
-    const hemisphericLight = new BABYLON.HemisphericLight(
-        'light',
-        new BABYLON.Vector3(0, 1, 0),
-        scene
+    const boxMat = new BABYLON.PBRMaterial(`boxMat${i}`, scene);
+    boxMat.albedoColor = new BABYLON.Color3(
+      Math.random(),
+      Math.random(),
+      Math.random()
     );
-    hemisphericLight.intensity = 0.7;
+    box.material = boxMat;
 
-    const directionalLight = new BABYLON.DirectionalLight(
-        'dirLight',
-        new BABYLON.Vector3(-1, -2, -1),
-        scene
+    const boxAggregate = new BABYLON.PhysicsAggregate(
+      box,
+      BABYLON.PhysicsShapeType.BOX,
+      { mass: 1, restitution: 0.5 },
+      scene
     );
-    directionalLight.position = new BABYLON.Vector3(10, 20, 10);
+  }
 
-    // Ground
-    const ground = BABYLON.MeshBuilder.CreateGround('ground', {
-        width: 50,
-        height: 50,
-    }, scene);
+  // GUI
+  const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
 
-    const groundMat = new BABYLON.PBRMaterial('groundMat', scene);
-    groundMat.albedoColor = new BABYLON.Color3(0.2, 0.5, 0.2);
-    groundMat.roughness = 0.8;
-    ground.material = groundMat;
+  const scoreText = new TextBlock();
+  scoreText.text = 'Score: 0';
+  scoreText.color = 'white';
+  scoreText.fontSize = 24;
+  scoreText.textHorizontalAlignment = TextBlock.HORIZONTAL_ALIGNMENT_LEFT;
+  scoreText.textVerticalAlignment = TextBlock.VERTICAL_ALIGNMENT_TOP;
+  scoreText.left = '20px';
+  scoreText.top = '20px';
+  advancedTexture.addControl(scoreText);
 
-    // Physics
-    const havokInstance = await BABYLON.HavokPlugin.InitializeAsync();
-    scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.HavokPlugin(true, havokInstance));
+  const resetButton = Button.CreateSimpleButton('reset', 'Reset');
+  resetButton.width = '150px';
+  resetButton.height = '40px';
+  resetButton.color = 'white';
+  resetButton.background = 'green';
+  resetButton.top = '-20px';
+  resetButton.verticalAlignment = TextBlock.VERTICAL_ALIGNMENT_BOTTOM;
+  resetButton.onPointerClickObservable.add(() => {
+    // Reset game
+  });
+  advancedTexture.addControl(resetButton);
 
-    // Ground physics
-    const groundAggregate = new BABYLON.PhysicsAggregate(
-        ground,
-        BABYLON.PhysicsShapeType.BOX,
-        { mass: 0 },
-        scene
-    );
+  // Inspector (debugging — remove in production)
+  // scene.debugLayer.show();
 
-    // Spawn boxes
-    for (let i = 0; i < 20; i++) {
-        const box = BABYLON.MeshBuilder.CreateBox(`box${i}`, { size: 1 }, scene);
-        box.position = new BABYLON.Vector3(
-            Math.random() * 10 - 5,
-            5 + Math.random() * 10,
-            Math.random() * 10 - 5
-        );
-
-        const boxMat = new BABYLON.PBRMaterial(`boxMat${i}`, scene);
-        boxMat.albedoColor = new BABYLON.Color3(
-            Math.random(), Math.random(), Math.random()
-        );
-        box.material = boxMat;
-
-        const boxAggregate = new BABYLON.PhysicsAggregate(
-            box,
-            BABYLON.PhysicsShapeType.BOX,
-            { mass: 1, restitution: 0.5 },
-            scene
-        );
-    }
-
-    // GUI
-    const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
-
-    const scoreText = new TextBlock();
-    scoreText.text = 'Score: 0';
-    scoreText.color = 'white';
-    scoreText.fontSize = 24;
-    scoreText.textHorizontalAlignment = TextBlock.HORIZONTAL_ALIGNMENT_LEFT;
-    scoreText.textVerticalAlignment = TextBlock.VERTICAL_ALIGNMENT_TOP;
-    scoreText.left = '20px';
-    scoreText.top = '20px';
-    advancedTexture.addControl(scoreText);
-
-    const resetButton = Button.CreateSimpleButton('reset', 'Reset');
-    resetButton.width = '150px';
-    resetButton.height = '40px';
-    resetButton.color = 'white';
-    resetButton.background = 'green';
-    resetButton.top = '-20px';
-    resetButton.verticalAlignment = TextBlock.VERTICAL_ALIGNMENT_BOTTOM;
-    resetButton.onPointerClickObservable.add(() => {
-        // Reset game
-    });
-    advancedTexture.addControl(resetButton);
-
-    // Inspector (debugging — remove in production)
-    // scene.debugLayer.show();
-
-    return scene;
+  return scene;
 };
 
 createScene().then((scene) => {
-    engine.runRenderLoop(() => {
-        scene.render();
-    });
+  engine.runRenderLoop(() => {
+    scene.render();
+  });
 });
 
 window.addEventListener('resize', () => {
-    engine.resize();
+  engine.resize();
 });
 ```
 
@@ -1128,12 +1172,13 @@ Babylon.js includes a powerful in-browser Inspector (debugger) accessible at run
 ```typescript
 // Toggle inspector
 scene.debugLayer.show({
-    embedMode: true,
-    overlay: true,
+  embedMode: true,
+  overlay: true,
 });
 ```
 
 The Inspector allows you to:
+
 - Browse the scene graph
 - Modify material properties in real time
 - Inspect and edit meshes, lights, cameras
@@ -1148,6 +1193,7 @@ Babylon.js includes a visual shader editor (Node Material Editor) accessible at 
 ### Pros and Cons
 
 **Pros:**
+
 - Complete game engine: physics, audio, GUI, animation, particles, all built in
 - Inspector/debugger is exceptional — best debugging experience in web 3D
 - PBR materials out of the box (physically accurate rendering)
@@ -1159,6 +1205,7 @@ Babylon.js includes a visual shader editor (Node Material Editor) accessible at 
 - Backed by Microsoft
 
 **Cons:**
+
 - Large bundle size (~500KB+ gzipped for full engine)
 - Heavier runtime than Three.js
 - Smaller community than Three.js (though growing)
@@ -1186,184 +1233,190 @@ Building a custom game engine makes sense when:
 
 // === Renderer ===
 class Renderer {
-    private readonly gl: WebGL2RenderingContext;
-    private readonly batcher: SpriteBatcher;
+  private readonly gl: WebGL2RenderingContext;
+  private readonly batcher: SpriteBatcher;
 
-    constructor(canvas: HTMLCanvasElement) {
-        const gl = canvas.getContext('webgl2');
-        if (!gl) throw new Error('WebGL2 not supported');
-        this.gl = gl;
-        this.batcher = new SpriteBatcher(gl, 1000);
-    }
+  constructor(canvas: HTMLCanvasElement) {
+    const gl = canvas.getContext('webgl2');
+    if (!gl) throw new Error('WebGL2 not supported');
+    this.gl = gl;
+    this.batcher = new SpriteBatcher(gl, 1000);
+  }
 
-    begin(): void {
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-    }
+  begin(): void {
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+  }
 
-    drawSprite(
-        texture: WebGLTexture,
-        x: number, y: number,
-        w: number, h: number,
-        u0: number, v0: number,
-        u1: number, v1: number,
-        tint: number = 0xFFFFFF,
-        alpha: number = 1
-    ): void {
-        this.batcher.add(texture, x, y, w, h, u0, v0, u1, v1, tint, alpha);
-    }
+  drawSprite(
+    texture: WebGLTexture,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    u0: number,
+    v0: number,
+    u1: number,
+    v1: number,
+    tint: number = 0xffffff,
+    alpha: number = 1
+  ): void {
+    this.batcher.add(texture, x, y, w, h, u0, v0, u1, v1, tint, alpha);
+  }
 
-    end(): void {
-        this.batcher.flush();
-    }
+  end(): void {
+    this.batcher.flush();
+  }
 }
 
 // === Tween System ===
 interface Tween {
-    readonly target: Record<string, number>;
-    readonly property: string;
-    readonly from: number;
-    readonly to: number;
-    readonly duration: number;
-    elapsed: number;
-    readonly ease: (t: number) => number;
-    readonly onComplete?: () => void;
+  readonly target: Record<string, number>;
+  readonly property: string;
+  readonly from: number;
+  readonly to: number;
+  readonly duration: number;
+  elapsed: number;
+  readonly ease: (t: number) => number;
+  readonly onComplete?: () => void;
 }
 
 class TweenManager {
-    private tweens: Tween[] = [];
+  private tweens: Tween[] = [];
 
-    to(
-        target: Record<string, number>,
-        property: string,
-        to: number,
-        duration: number,
-        ease: (t: number) => number = (t) => t,
-        onComplete?: () => void
-    ): void {
-        this.tweens.push({
-            target,
-            property,
-            from: target[property],
-            to,
-            duration,
-            elapsed: 0,
-            ease,
-            onComplete,
-        });
+  to(
+    target: Record<string, number>,
+    property: string,
+    to: number,
+    duration: number,
+    ease: (t: number) => number = (t) => t,
+    onComplete?: () => void
+  ): void {
+    this.tweens.push({
+      target,
+      property,
+      from: target[property],
+      to,
+      duration,
+      elapsed: 0,
+      ease,
+      onComplete,
+    });
+  }
+
+  update(dt: number): void {
+    const completed: number[] = [];
+
+    this.tweens.forEach((tween, index) => {
+      tween.elapsed += dt;
+      const t = Math.min(tween.elapsed / tween.duration, 1);
+      const easedT = tween.ease(t);
+
+      tween.target[tween.property] =
+        tween.from + (tween.to - tween.from) * easedT;
+
+      if (t >= 1) {
+        completed.push(index);
+        tween.onComplete?.();
+      }
+    });
+
+    // Remove completed tweens (iterate in reverse to maintain indices)
+    for (let i = completed.length - 1; i >= 0; i--) {
+      this.tweens.splice(completed[i], 1);
     }
-
-    update(dt: number): void {
-        const completed: number[] = [];
-
-        this.tweens.forEach((tween, index) => {
-            tween.elapsed += dt;
-            const t = Math.min(tween.elapsed / tween.duration, 1);
-            const easedT = tween.ease(t);
-
-            tween.target[tween.property] = tween.from + (tween.to - tween.from) * easedT;
-
-            if (t >= 1) {
-                completed.push(index);
-                tween.onComplete?.();
-            }
-        });
-
-        // Remove completed tweens (iterate in reverse to maintain indices)
-        for (let i = completed.length - 1; i >= 0; i--) {
-            this.tweens.splice(completed[i], 1);
-        }
-    }
+  }
 }
 
 // === Input ===
 class InputManager {
-    private readonly keys: Set<string> = new Set();
-    private touches: Array<{ x: number; y: number }> = [];
+  private readonly keys: Set<string> = new Set();
+  private touches: Array<{ x: number; y: number }> = [];
 
-    constructor(canvas: HTMLCanvasElement) {
-        window.addEventListener('keydown', (e) => this.keys.add(e.code));
-        window.addEventListener('keyup', (e) => this.keys.delete(e.code));
+  constructor(canvas: HTMLCanvasElement) {
+    window.addEventListener('keydown', (e) => this.keys.add(e.code));
+    window.addEventListener('keyup', (e) => this.keys.delete(e.code));
 
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.touches = Array.from(e.touches).map(t => ({
-                x: t.clientX,
-                y: t.clientY,
-            }));
-        });
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.touches = Array.from(e.touches).map((t) => ({
+        x: t.clientX,
+        y: t.clientY,
+      }));
+    });
 
-        canvas.addEventListener('touchend', (e) => {
-            this.touches = Array.from(e.touches).map(t => ({
-                x: t.clientX,
-                y: t.clientY,
-            }));
-        });
-    }
+    canvas.addEventListener('touchend', (e) => {
+      this.touches = Array.from(e.touches).map((t) => ({
+        x: t.clientX,
+        y: t.clientY,
+      }));
+    });
+  }
 
-    isKeyDown(code: string): boolean {
-        return this.keys.has(code);
-    }
+  isKeyDown(code: string): boolean {
+    return this.keys.has(code);
+  }
 
-    getTouches(): ReadonlyArray<{ x: number; y: number }> {
-        return this.touches;
-    }
+  getTouches(): ReadonlyArray<{ x: number; y: number }> {
+    return this.touches;
+  }
 }
 
 // === Game Class ===
 class Game {
-    private readonly renderer: Renderer;
-    private readonly tweens: TweenManager;
-    private readonly input: InputManager;
-    private readonly canvas: HTMLCanvasElement;
-    private previousTime: number = 0;
-    private running: boolean = false;
+  private readonly renderer: Renderer;
+  private readonly tweens: TweenManager;
+  private readonly input: InputManager;
+  private readonly canvas: HTMLCanvasElement;
+  private previousTime: number = 0;
+  private running: boolean = false;
 
-    constructor(canvasId: string) {
-        this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-        this.renderer = new Renderer(this.canvas);
-        this.tweens = new TweenManager();
-        this.input = new InputManager(this.canvas);
-    }
+  constructor(canvasId: string) {
+    this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+    this.renderer = new Renderer(this.canvas);
+    this.tweens = new TweenManager();
+    this.input = new InputManager(this.canvas);
+  }
 
-    start(): void {
-        this.running = true;
-        this.previousTime = performance.now();
-        requestAnimationFrame((t) => this.loop(t));
-    }
+  start(): void {
+    this.running = true;
+    this.previousTime = performance.now();
+    requestAnimationFrame((t) => this.loop(t));
+  }
 
-    private loop(timestamp: number): void {
-        if (!this.running) return;
+  private loop(timestamp: number): void {
+    if (!this.running) return;
 
-        const dt = Math.min((timestamp - this.previousTime) / 1000, 0.1);
-        this.previousTime = timestamp;
+    const dt = Math.min((timestamp - this.previousTime) / 1000, 0.1);
+    this.previousTime = timestamp;
 
-        this.tweens.update(dt);
-        this.update(dt);
+    this.tweens.update(dt);
+    this.update(dt);
 
-        this.renderer.begin();
-        this.render();
-        this.renderer.end();
+    this.renderer.begin();
+    this.render();
+    this.renderer.end();
 
-        requestAnimationFrame((t) => this.loop(t));
-    }
+    requestAnimationFrame((t) => this.loop(t));
+  }
 
-    // Override in subclass
-    protected update(dt: number): void {}
-    protected render(): void {}
+  // Override in subclass
+  protected update(dt: number): void {}
+  protected render(): void {}
 }
 ```
 
 ### Playable Ad Size Targets
 
-| Component | Budget |
-|-----------|--------|
-| Engine code | 10-30KB |
-| Game logic | 5-20KB |
-| Textures | 100-500KB |
-| Audio | 50-200KB |
-| **Total** | **200KB - 1MB** |
+| Component   | Budget          |
+| ----------- | --------------- |
+| Engine code | 10-30KB         |
+| Game logic  | 5-20KB          |
+| Textures    | 100-500KB       |
+| Audio       | 50-200KB        |
+| **Total**   | **200KB - 1MB** |
 
 Major ad networks enforce strict size limits:
+
 - Facebook: 2MB (single HTML file)
 - Google Ads: 1MB (multi-file) or 150KB (single file)
 - Unity Ads: 5MB
@@ -1373,6 +1426,7 @@ Major ad networks enforce strict size limits:
 ### Pros and Cons
 
 **Pros:**
+
 - Smallest possible bundle size
 - Exactly the features you need, nothing more
 - Maximum performance (no abstraction overhead)
@@ -1380,6 +1434,7 @@ Major ad networks enforce strict size limits:
 - No dependency on external project's roadmap or bugs
 
 **Cons:**
+
 - Significant development time
 - Must solve common problems that engines already solved
 - Testing burden — every feature must be tested from scratch
@@ -1390,21 +1445,21 @@ Major ad networks enforce strict size limits:
 
 ## Comparison Table
 
-| Feature | Phaser 3 | PixiJS | PlayCanvas | Cocos Creator | Three.js | Babylon.js | Custom |
-|---------|----------|--------|------------|---------------|----------|------------|--------|
-| **Type** | 2D Engine | 2D Renderer | 3D Engine | 2D/3D Engine | 3D Library | 3D Engine | Varies |
-| **Bundle Size** (gzip) | ~300KB | ~100KB (core) | ~300KB | ~500KB+ | ~150KB | ~500KB+ | 5-30KB |
-| **2D Support** | Excellent | Excellent | Limited | Good | Basic | Basic | Custom |
-| **3D Support** | None | None | Excellent | Good | Excellent | Excellent | Custom |
-| **Physics** | Built-in (Arcade/Matter) | None | Built-in (Ammo) | Built-in (Box2D) | None | Built-in (Havok) | None |
-| **Audio** | Built-in | None | Built-in | Built-in | None | Built-in | None |
-| **Visual Editor** | None | None | Cloud-based | Desktop | None | Inspector | None |
-| **Shader Support** | Limited | Filters | Node-based | Shader graph | ShaderMaterial | Node Material | Raw GLSL |
-| **Learning Curve** | Low | Low-Medium | Medium | Medium | Medium | Medium-High | High |
-| **Community** | Very Large | Large | Medium | Large (Asia) | Very Large | Medium-Large | N/A |
-| **TypeScript** | Types included | Written in TS | Types included | First-class | Types included | Written in TS | Custom |
-| **Playable Ad Fit** | Poor (too large) | Good (tree-shake) | Good (3D) | Poor (too large) | Possible | Poor (too large) | Excellent |
-| **License** | MIT | MIT | MIT (engine) | MIT (engine) | MIT | Apache 2.0 | N/A |
+| Feature                | Phaser 3                 | PixiJS            | PlayCanvas      | Cocos Creator    | Three.js       | Babylon.js       | Custom    |
+| ---------------------- | ------------------------ | ----------------- | --------------- | ---------------- | -------------- | ---------------- | --------- |
+| **Type**               | 2D Engine                | 2D Renderer       | 3D Engine       | 2D/3D Engine     | 3D Library     | 3D Engine        | Varies    |
+| **Bundle Size** (gzip) | ~300KB                   | ~100KB (core)     | ~300KB          | ~500KB+          | ~150KB         | ~500KB+          | 5-30KB    |
+| **2D Support**         | Excellent                | Excellent         | Limited         | Good             | Basic          | Basic            | Custom    |
+| **3D Support**         | None                     | None              | Excellent       | Good             | Excellent      | Excellent        | Custom    |
+| **Physics**            | Built-in (Arcade/Matter) | None              | Built-in (Ammo) | Built-in (Box2D) | None           | Built-in (Havok) | None      |
+| **Audio**              | Built-in                 | None              | Built-in        | Built-in         | None           | Built-in         | None      |
+| **Visual Editor**      | None                     | None              | Cloud-based     | Desktop          | None           | Inspector        | None      |
+| **Shader Support**     | Limited                  | Filters           | Node-based      | Shader graph     | ShaderMaterial | Node Material    | Raw GLSL  |
+| **Learning Curve**     | Low                      | Low-Medium        | Medium          | Medium           | Medium         | Medium-High      | High      |
+| **Community**          | Very Large               | Large             | Medium          | Large (Asia)     | Very Large     | Medium-Large     | N/A       |
+| **TypeScript**         | Types included           | Written in TS     | Types included  | First-class      | Types included | Written in TS    | Custom    |
+| **Playable Ad Fit**    | Poor (too large)         | Good (tree-shake) | Good (3D)       | Poor (too large) | Possible       | Poor (too large) | Excellent |
+| **License**            | MIT                      | MIT               | MIT (engine)    | MIT (engine)     | MIT            | Apache 2.0       | N/A       |
 
 ---
 
@@ -1457,18 +1512,18 @@ Is it 3D?
 // 4. Audio: Use tiny MP3 snippets or synthesize sounds
 // Web Audio API oscillators for simple effects:
 function playBeep(frequency: number, duration: number): void {
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+  const ctx = new AudioContext();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
 
-    osc.frequency.value = frequency;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    gain.gain.value = 0.3;
+  osc.frequency.value = frequency;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  gain.gain.value = 0.3;
 
-    osc.start();
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    osc.stop(ctx.currentTime + duration);
+  osc.start();
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+  osc.stop(ctx.currentTime + duration);
 }
 
 // 5. Texture atlas — one texture, many sprites
@@ -1492,6 +1547,7 @@ function playBeep(frequency: number, duration: number): void {
 **Why not Three.js/Babylon.js?** These are 3D engines. For a 2D playable ad, they bring unnecessary complexity and size.
 
 The key optimizations:
+
 1. Inline everything into one HTML file (JS, CSS, base64-encoded images)
 2. Use a single texture atlas for all sprites
 3. Synthesize sound effects with Web Audio API oscillators instead of MP3 files
@@ -1505,6 +1561,7 @@ The key optimizations:
 **A:**
 
 **Arcade Physics:**
+
 - AABB-only collision (axis-aligned rectangles and circles)
 - No rotation, no polygon colliders
 - Very fast: handles hundreds of bodies at 60fps
@@ -1515,6 +1572,7 @@ The key optimizations:
 **Use for:** Platformers, top-down shooters, casual games, match-3, puzzle games — any game where precise polygon collision isn't needed.
 
 **Matter.js Physics:**
+
 - Full rigid body simulation: polygon colliders, rotation, friction, restitution
 - Joints and constraints (springs, hinges, distance joints)
 - Compound bodies (multiple shapes attached to one body)
@@ -1532,6 +1590,7 @@ The key optimizations:
 **A:**
 
 **Traditional OOP (inheritance):**
+
 ```
 GameObject
 ├── Character (has health, inventory)
@@ -1542,11 +1601,13 @@ GameObject
 ```
 
 Problems:
+
 - **Diamond inheritance**: What if a "PossessedEnemy" needs both Player input and NPC AI?
 - **Rigid hierarchy**: Adding a new combination of behaviors requires new classes
 - **Bloated base class**: Common functionality gets pushed up into `GameObject`, making it huge
 
 **ECS (composition):**
+
 ```
 Entity: just an ID (e.g., number)
 
@@ -1567,6 +1628,7 @@ Systems: pure behavior (no state)
 ```
 
 **Key advantages of ECS:**
+
 1. **Composition over inheritance**: Any combination of components creates a new entity type without new classes
 2. **Data-oriented design**: Components are stored in contiguous arrays — cache-friendly, fast iteration
 3. **Decoupled systems**: Systems don't depend on each other, can be added/removed independently
@@ -1581,6 +1643,7 @@ Systems: pure behavior (no state)
 **A:**
 
 **PixiJS is a rendering engine.** It draws things on screen — sprites, graphics, text, filters — and does it extremely well. It provides a display tree (scene graph), event system, and asset loader. It does NOT provide:
+
 - Physics
 - Audio management
 - Scene/state management
@@ -1592,6 +1655,7 @@ Systems: pure behavior (no state)
 **Phaser is a game framework.** It includes PixiJS-level rendering (Phaser has its own renderer now, historically used PixiJS) PLUS all the game systems listed above.
 
 **Choose PixiJS when:**
+
 - Building a custom game engine (you want rendering + your own architecture)
 - Size matters (playable ads, lightweight games)
 - You only need rendering and will add other systems yourself
@@ -1599,6 +1663,7 @@ Systems: pure behavior (no state)
 - You're building an interactive visualization, not a traditional game
 
 **Choose Phaser when:**
+
 - You want to build a complete game quickly
 - You need built-in physics, audio, tweens, and scene management
 - Bundle size isn't critical (> 5MB budget)
@@ -1632,6 +1697,7 @@ The Player's world position is `(100+200, 50+300) = (300, 350)`. The Weapon's wo
 The scene graph is traversed depth-first. Children render on top of parents. Siblings render in order (first added = drawn first = behind later siblings).
 
 **Game-specific usage:**
+
 - **Camera**: Instead of moving every object, move the GameWorld container in the opposite direction. `gameWorld.x = -cameraX`.
 - **Layers**: Create Container nodes for background, game objects, particles, UI. Each layer can be independently sorted, filtered, or transformed.
 - **Parenting**: Attach a weapon to a character — when the character moves/rotates, the weapon follows automatically.
@@ -1647,66 +1713,81 @@ PixiJS, Three.js, Phaser, Cocos, and Babylon all use scene graphs. PlayCanvas al
 
 ```typescript
 class Camera2D {
-    private readonly world: PIXI.Container;
-    private readonly screenWidth: number;
-    private readonly screenHeight: number;
+  private readonly world: PIXI.Container;
+  private readonly screenWidth: number;
+  private readonly screenHeight: number;
 
-    // Camera state
-    private x: number = 0;
-    private y: number = 0;
-    private zoom: number = 1;
-    private rotation: number = 0;
+  // Camera state
+  private x: number = 0;
+  private y: number = 0;
+  private zoom: number = 1;
+  private rotation: number = 0;
 
-    // Bounds (optional — restrict camera to level area)
-    private bounds: { minX: number; minY: number; maxX: number; maxY: number } | null = null;
+  // Bounds (optional — restrict camera to level area)
+  private bounds: {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  } | null = null;
 
-    constructor(world: PIXI.Container, screenWidth: number, screenHeight: number) {
-        this.world = world;
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeight;
+  constructor(
+    world: PIXI.Container,
+    screenWidth: number,
+    screenHeight: number
+  ) {
+    this.world = world;
+    this.screenWidth = screenWidth;
+    this.screenHeight = screenHeight;
+  }
+
+  setBounds(minX: number, minY: number, maxX: number, maxY: number): void {
+    this.bounds = { minX, minY, maxX, maxY };
+  }
+
+  follow(targetX: number, targetY: number, dt: number): void {
+    // Smooth follow using frame-rate independent lerp
+    const halfLife = 0.15; // seconds
+    const factor = 1 - Math.pow(0.5, dt / halfLife);
+
+    this.x += (targetX - this.x) * factor;
+    this.y += (targetY - this.y) * factor;
+
+    // Clamp to bounds
+    if (this.bounds) {
+      const halfW = this.screenWidth / 2 / this.zoom;
+      const halfH = this.screenHeight / 2 / this.zoom;
+
+      this.x = Math.max(
+        this.bounds.minX + halfW,
+        Math.min(this.bounds.maxX - halfW, this.x)
+      );
+      this.y = Math.max(
+        this.bounds.minY + halfH,
+        Math.min(this.bounds.maxY - halfH, this.y)
+      );
     }
+  }
 
-    setBounds(minX: number, minY: number, maxX: number, maxY: number): void {
-        this.bounds = { minX, minY, maxX, maxY };
-    }
+  setZoom(zoom: number): void {
+    this.zoom = Math.max(0.1, Math.min(5, zoom));
+  }
 
-    follow(targetX: number, targetY: number, dt: number): void {
-        // Smooth follow using frame-rate independent lerp
-        const halfLife = 0.15; // seconds
-        const factor = 1 - Math.pow(0.5, dt / halfLife);
+  apply(): void {
+    // Transform the world container to simulate camera
+    this.world.x = this.screenWidth / 2 - this.x * this.zoom;
+    this.world.y = this.screenHeight / 2 - this.y * this.zoom;
+    this.world.scale.set(this.zoom);
+    this.world.rotation = -this.rotation;
+  }
 
-        this.x += (targetX - this.x) * factor;
-        this.y += (targetY - this.y) * factor;
-
-        // Clamp to bounds
-        if (this.bounds) {
-            const halfW = (this.screenWidth / 2) / this.zoom;
-            const halfH = (this.screenHeight / 2) / this.zoom;
-
-            this.x = Math.max(this.bounds.minX + halfW, Math.min(this.bounds.maxX - halfW, this.x));
-            this.y = Math.max(this.bounds.minY + halfH, Math.min(this.bounds.maxY - halfH, this.y));
-        }
-    }
-
-    setZoom(zoom: number): void {
-        this.zoom = Math.max(0.1, Math.min(5, zoom));
-    }
-
-    apply(): void {
-        // Transform the world container to simulate camera
-        this.world.x = this.screenWidth / 2 - this.x * this.zoom;
-        this.world.y = this.screenHeight / 2 - this.y * this.zoom;
-        this.world.scale.set(this.zoom);
-        this.world.rotation = -this.rotation;
-    }
-
-    // Convert screen coordinates to world coordinates (for click handling)
-    screenToWorld(screenX: number, screenY: number): { x: number; y: number } {
-        return {
-            x: (screenX - this.world.x) / this.zoom,
-            y: (screenY - this.world.y) / this.zoom,
-        };
-    }
+  // Convert screen coordinates to world coordinates (for click handling)
+  screenToWorld(screenX: number, screenY: number): { x: number; y: number } {
+    return {
+      x: (screenX - this.world.x) / this.zoom,
+      y: (screenY - this.world.y) / this.zoom,
+    };
+  }
 }
 
 // Usage
@@ -1714,9 +1795,9 @@ const camera = new Camera2D(gameWorld, 800, 600);
 camera.setBounds(0, 0, levelWidth, levelHeight);
 
 app.ticker.add((ticker) => {
-    const dt = ticker.deltaMS / 1000;
-    camera.follow(player.x, player.y, dt);
-    camera.apply();
+  const dt = ticker.deltaMS / 1000;
+  camera.follow(player.x, player.y, dt);
+  camera.apply();
 });
 ```
 
@@ -1728,22 +1809,23 @@ The key insight is that moving the camera left is the same as moving the entire 
 
 **A:**
 
-| Aspect | Three.js | Babylon.js |
-|--------|----------|------------|
-| **Philosophy** | Library — minimal, flexible | Engine — batteries-included |
-| **Bundle size** | ~150KB gzip | ~500KB+ gzip |
-| **Physics** | External (cannon-es, rapier) | Built-in (Havok, Cannon, Ammo) |
-| **Audio** | External (howler.js, Web Audio) | Built-in |
-| **GUI/UI** | External or HTML overlay | Built-in (BABYLON.GUI) |
-| **Debugging** | Chrome DevTools, Spector.js | Built-in Inspector (excellent) |
-| **Shader authoring** | `ShaderMaterial` (GLSL) | Node Material Editor (visual) |
-| **Animation** | AnimationMixer (basic state) | Animation Groups + state machine |
-| **Community size** | Larger (more GitHub stars, examples) | Smaller but very active |
-| **Documentation** | Good but scattered | Excellent (Playground, docs site) |
-| **Corporate backing** | Community-driven (Ricardo Cabello + contributors) | Microsoft |
-| **XR/VR support** | WebXR API integration | First-class XR support |
+| Aspect                | Three.js                                          | Babylon.js                        |
+| --------------------- | ------------------------------------------------- | --------------------------------- |
+| **Philosophy**        | Library — minimal, flexible                       | Engine — batteries-included       |
+| **Bundle size**       | ~150KB gzip                                       | ~500KB+ gzip                      |
+| **Physics**           | External (cannon-es, rapier)                      | Built-in (Havok, Cannon, Ammo)    |
+| **Audio**             | External (howler.js, Web Audio)                   | Built-in                          |
+| **GUI/UI**            | External or HTML overlay                          | Built-in (BABYLON.GUI)            |
+| **Debugging**         | Chrome DevTools, Spector.js                       | Built-in Inspector (excellent)    |
+| **Shader authoring**  | `ShaderMaterial` (GLSL)                           | Node Material Editor (visual)     |
+| **Animation**         | AnimationMixer (basic state)                      | Animation Groups + state machine  |
+| **Community size**    | Larger (more GitHub stars, examples)              | Smaller but very active           |
+| **Documentation**     | Good but scattered                                | Excellent (Playground, docs site) |
+| **Corporate backing** | Community-driven (Ricardo Cabello + contributors) | Microsoft                         |
+| **XR/VR support**     | WebXR API integration                             | First-class XR support            |
 
 **Choose Three.js when:**
+
 - You want a lightweight foundation and will build/integrate your own systems
 - You need maximum control over the rendering pipeline
 - Bundle size matters
@@ -1751,6 +1833,7 @@ The key insight is that moving the camera left is the same as moving the entire 
 - Your project is more visualization than game
 
 **Choose Babylon.js when:**
+
 - You want everything in one package (physics, audio, GUI, particles)
 - You need a debugging Inspector (Babylon's is unmatched)
 - You're building a complete 3D game, not just a 3D scene
@@ -1767,6 +1850,7 @@ The key insight is that moving the camera left is the same as moving the entire 
 **A:** They share the same high-level concept (entities with attached components processed by systems) but differ in implementation:
 
 **PlayCanvas:**
+
 - Components are engine-provided types (`model`, `rigidbody`, `collision`, `camera`, `light`, `script`, `animation`)
 - Custom behavior is added via "Script" components — JavaScript/TypeScript classes with `initialize()`, `update()`, `postUpdate()`
 - Entity hierarchy doubles as the scene graph
@@ -1774,6 +1858,7 @@ The key insight is that moving the camera left is the same as moving the entire 
 - Data is stored on components directly (not in separate data stores)
 
 **Unity:**
+
 - Components can be any C# class extending `MonoBehaviour`
 - Each component has its own `Start()`, `Update()`, `FixedUpdate()`
 - Transforms are implicit (every GameObject has a Transform)
@@ -1783,6 +1868,7 @@ The key insight is that moving the camera left is the same as moving the entire 
 **Key difference:** PlayCanvas is closer to "Entity-Component" than full "Entity-Component-System." Behavior lives on script components rather than in separate systems. Unity's traditional `MonoBehaviour` pattern is similar — behavior is on the component, not in a system.
 
 True ECS (as in Unity DOTS or libraries like bitecs for JavaScript) separates:
+
 - **Entities**: just IDs
 - **Components**: pure data, no behavior, stored in contiguous arrays
 - **Systems**: functions that operate on sets of entities matching component queries
@@ -1807,19 +1893,19 @@ PlayCanvas and Unity-classic both blur the line between components and systems b
 
 ```typescript
 // Data-oriented storage for 1000 units
-const positions = new Float32Array(1000 * 2);     // x, y
-const velocities = new Float32Array(1000 * 2);    // vx, vy
-const healths = new Float32Array(1000);            // current health
-const unitTypes = new Uint8Array(1000);            // type enum
-const aiStates = new Uint8Array(1000);             // state enum
+const positions = new Float32Array(1000 * 2); // x, y
+const velocities = new Float32Array(1000 * 2); // vx, vy
+const healths = new Float32Array(1000); // current health
+const unitTypes = new Uint8Array(1000); // type enum
+const aiStates = new Uint8Array(1000); // state enum
 
 // Movement system — processes all units in a tight loop
 function movementSystem(count: number, dt: number): void {
-    for (let i = 0; i < count; i++) {
-        const idx = i * 2;
-        positions[idx]     += velocities[idx]     * dt;
-        positions[idx + 1] += velocities[idx + 1] * dt;
-    }
+  for (let i = 0; i < count; i++) {
+    const idx = i * 2;
+    positions[idx] += velocities[idx] * dt;
+    positions[idx + 1] += velocities[idx + 1] * dt;
+  }
 }
 ```
 
@@ -1838,23 +1924,25 @@ I would NOT use Phaser (too heavy, Arcade physics isn't designed for this), Baby
 ```typescript
 // PixiJS Ticker usage
 app.ticker.add((ticker) => {
-    const deltaTime = ticker.deltaTime;  // Normalized: 1.0 at target FPS (default 60)
-    const deltaMS = ticker.deltaMS;      // Actual milliseconds since last frame
-    const elapsedMS = ticker.elapsedMS;  // Total elapsed time
-    const FPS = ticker.FPS;              // Current frames per second
+  const deltaTime = ticker.deltaTime; // Normalized: 1.0 at target FPS (default 60)
+  const deltaMS = ticker.deltaMS; // Actual milliseconds since last frame
+  const elapsedMS = ticker.elapsedMS; // Total elapsed time
+  const FPS = ticker.FPS; // Current frames per second
 
-    // Game logic here
-    sprite.x += speed * (deltaMS / 1000);
+  // Game logic here
+  sprite.x += speed * (deltaMS / 1000);
 });
 ```
 
 **How it works internally:**
+
 1. `Ticker` calls `requestAnimationFrame` in a loop
 2. On each frame, it calculates delta time from the previous frame
 3. It iterates through all registered callbacks (listeners) in priority order
 4. Each callback receives the `Ticker` instance with timing data
 
 **Key properties:**
+
 - `ticker.speed`: Time scale multiplier (default 1.0). Set to 0 for pause, 0.5 for slow motion.
 - `ticker.maxFPS`: Cap the frame rate (e.g., 30 for mobile).
 - `ticker.minFPS`: Set minimum FPS for delta time capping (prevents huge dt values).
@@ -1867,10 +1955,10 @@ The Ticker IS the game loop in a PixiJS-only project. If you have your own game 
 app.ticker.stop();
 
 function myGameLoop(timestamp: number): void {
-    // Your custom timing, physics, etc.
-    myUpdate(dt);
-    app.renderer.render(app.stage); // Tell PixiJS to render
-    requestAnimationFrame(myGameLoop);
+  // Your custom timing, physics, etc.
+  myUpdate(dt);
+  app.renderer.render(app.stage); // Tell PixiJS to render
+  requestAnimationFrame(myGameLoop);
 }
 ```
 
@@ -1886,29 +1974,29 @@ This gives you full control over timing while still using PixiJS for rendering.
 
 ```typescript
 class MyScene extends Phaser.Scene {
-    // 1. init() — Runs first. Receives data passed from previous scene.
-    init(data: { level: number }): void {
-        this.level = data.level;
-    }
+  // 1. init() — Runs first. Receives data passed from previous scene.
+  init(data: { level: number }): void {
+    this.level = data.level;
+  }
 
-    // 2. preload() — Load assets. Runs before create.
-    preload(): void {
-        this.load.image('player', 'assets/player.png');
-        this.load.audio('bgm', 'assets/music.mp3');
-    }
+  // 2. preload() — Load assets. Runs before create.
+  preload(): void {
+    this.load.image('player', 'assets/player.png');
+    this.load.audio('bgm', 'assets/music.mp3');
+  }
 
-    // 3. create() — Set up game objects. Runs once after preload.
-    create(): void {
-        this.player = this.add.sprite(100, 100, 'player');
-        this.physics.add.existing(this.player);
-    }
+  // 3. create() — Set up game objects. Runs once after preload.
+  create(): void {
+    this.player = this.add.sprite(100, 100, 'player');
+    this.physics.add.existing(this.player);
+  }
 
-    // 4. update(time, delta) — Runs every frame during gameplay.
-    update(time: number, delta: number): void {
-        // time: total elapsed ms since game start
-        // delta: ms since last frame
-        this.player.x += this.speed * (delta / 1000);
-    }
+  // 4. update(time, delta) — Runs every frame during gameplay.
+  update(time: number, delta: number): void {
+    // time: total elapsed ms since game start
+    // delta: ms since last frame
+    this.player.x += this.speed * (delta / 1000);
+  }
 }
 ```
 
@@ -1941,33 +2029,39 @@ Scenes running in parallel share the same game canvas. The rendering order follo
 **A:**
 
 1. **Performance on low-end mobile devices:**
+
    - Test on real devices, not just Chrome DevTools mobile emulation
    - Mobile GPUs are 5-10x weaker than desktop — reduce draw calls, texture sizes, particle counts
    - Consider targeting 30fps on mobile, 60fps on desktop
    - Avoid heavy shaders (blur, glow) on mobile or provide fallbacks
 
 2. **Input abstraction:**
+
    - Desktop: keyboard + mouse (hover, right-click, scroll wheel)
    - Mobile: touch (multi-touch, gestures, no hover)
    - The engine must support both or have good input abstraction
    - Phaser, PlayCanvas, Cocos all handle this well. PixiJS/Three.js require more manual work.
 
 3. **Screen resolution and aspect ratio:**
+
    - Mobile screens vary wildly (4:3 iPads, 19.5:9 phones, landscape/portrait)
    - The engine needs responsive layout support or you must implement it
    - Common approach: design for a reference resolution, scale to fit with letterboxing
 
 4. **Memory constraints:**
+
    - Mobile Safari limits web content to ~1.5GB memory
    - Texture memory is especially limited — use smaller atlases, compressed textures
    - Monitor `performance.memory` (Chrome only) or watch for context loss
 
 5. **Audio differences:**
+
    - Mobile browsers require user gesture to start audio (autoplay policy)
    - iOS Safari has specific WebAudio quirks (must resume AudioContext on touch)
    - The engine should handle these platform differences
 
 6. **Bundle size:**
+
    - Mobile users may be on slow networks
    - Smaller engine + assets = faster load time = lower bounce rate
    - Consider lazy loading non-essential assets

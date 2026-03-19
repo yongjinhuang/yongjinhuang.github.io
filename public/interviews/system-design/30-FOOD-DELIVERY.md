@@ -6,30 +6,30 @@
 
 ### Functional Requirements
 
-| Category | Requirements |
-|----------|-------------|
-| **Customer** | Browse restaurants by location/cuisine, view menus, place orders, real-time order tracking, payment, order history, rate restaurant and driver |
-| **Restaurant** | Receive and manage incoming orders, update menu items and availability, set operating hours, manage prep time, mark orders ready for pickup |
-| **Driver** | Go online/offline, receive delivery requests, accept/reject, navigation to restaurant and customer, mark order picked up and delivered, view earnings |
-| **Order Management** | Full order lifecycle: Placed → Accepted → Preparing → Ready → Picked Up → En Route → Delivered, support cancellations and refunds |
-| **Dispatch** | Match available driver to order, consider proximity, load balancing, order batching for efficiency |
-| **ETA** | Real-time ETA for food prep + driver travel, updates on every state transition |
-| **Payments** | Customer payment capture, platform hold, restaurant payout, driver payout with commission deduction |
-| **Promotions** | Promo codes, free delivery thresholds, BOGO, first-order discounts |
-| **Surge Pricing** | Dynamic delivery fee based on demand/supply imbalance per geographic zone |
+| Category             | Requirements                                                                                                                                          |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Customer**         | Browse restaurants by location/cuisine, view menus, place orders, real-time order tracking, payment, order history, rate restaurant and driver        |
+| **Restaurant**       | Receive and manage incoming orders, update menu items and availability, set operating hours, manage prep time, mark orders ready for pickup           |
+| **Driver**           | Go online/offline, receive delivery requests, accept/reject, navigation to restaurant and customer, mark order picked up and delivered, view earnings |
+| **Order Management** | Full order lifecycle: Placed → Accepted → Preparing → Ready → Picked Up → En Route → Delivered, support cancellations and refunds                     |
+| **Dispatch**         | Match available driver to order, consider proximity, load balancing, order batching for efficiency                                                    |
+| **ETA**              | Real-time ETA for food prep + driver travel, updates on every state transition                                                                        |
+| **Payments**         | Customer payment capture, platform hold, restaurant payout, driver payout with commission deduction                                                   |
+| **Promotions**       | Promo codes, free delivery thresholds, BOGO, first-order discounts                                                                                    |
+| **Surge Pricing**    | Dynamic delivery fee based on demand/supply imbalance per geographic zone                                                                             |
 
 ### Non-Functional Requirements
 
-| Requirement | Target |
-|-------------|--------|
-| Order placement latency | < 500ms (p99) |
-| ETA accuracy | Within 5 minutes of actual delivery time, 90% of the time |
-| Driver location freshness | < 3 seconds stale |
-| Availability | 99.99% (< 53 minutes downtime/year) |
-| Order durability | Zero lost orders (at-least-once, idempotent processing) |
-| Order tracking update latency | < 2 seconds end-to-end to customer |
-| Driver dispatch latency | < 30 seconds to assign a driver |
-| Consistency | Strong consistency for order state transitions; eventual for analytics |
+| Requirement                   | Target                                                                 |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| Order placement latency       | < 500ms (p99)                                                          |
+| ETA accuracy                  | Within 5 minutes of actual delivery time, 90% of the time              |
+| Driver location freshness     | < 3 seconds stale                                                      |
+| Availability                  | 99.99% (< 53 minutes downtime/year)                                    |
+| Order durability              | Zero lost orders (at-least-once, idempotent processing)                |
+| Order tracking update latency | < 2 seconds end-to-end to customer                                     |
+| Driver dispatch latency       | < 30 seconds to assign a driver                                        |
+| Consistency                   | Strong consistency for order state transitions; eventual for analytics |
 
 ### Scale Estimates
 
@@ -46,6 +46,7 @@ Driver location updates:   500,000 drivers * 1 update/4 sec = 125,000 updates/se
 ### Back-of-Envelope Calculations
 
 **Order Write Throughput:**
+
 ```
 10M orders/day / 86,400 sec = ~116 orders/sec baseline
 Peak factor: 4x = ~464 orders/sec
@@ -53,6 +54,7 @@ Each order: ~5 state transitions = ~2,320 writes/sec at peak
 ```
 
 **Driver Location Updates:**
+
 ```
 500K active drivers * 1 update every 3-4 seconds = ~140K writes/sec
 Each location record: lat(8) + lng(8) + timestamp(8) + driverId(16) = ~40 bytes
@@ -61,6 +63,7 @@ Storage rate: 140K * 40 bytes = ~5.6 MB/sec
 ```
 
 **Storage Estimates:**
+
 ```
 Order record:         ~2 KB (with items)
 10M orders/day:       10M * 2KB = 20 GB/day
@@ -70,6 +73,7 @@ Driver location:      Only last-known stored: 500K * 100 bytes = 50 MB
 ```
 
 **Bandwidth:**
+
 ```
 Order tracking WebSocket:  1M connections * 200 bytes/update * 0.3 update/sec = ~60 MB/sec
 Map tile requests:         1M users * 10 KB/min = ~167 MB/sec (via CDN)
@@ -514,13 +518,13 @@ The food delivery platform must balance three distinct parties with conflicting 
 
 **Key Tension Points and Resolutions:**
 
-| Tension | Resolution |
-|---------|------------|
-| Customer wants fast ETA; restaurant is slow | Show realistic ETA with prep time factored in; surface restaurants with fast prep |
-| Driver waits at restaurant too long | Dispatch driver to arrive near restaurant-ready time, not immediately after order placed |
-| Restaurant overwhelmed at peak | Order throttling: gate orders via `max_concurrent_orders`, queue overflow orders |
-| Customer expects low fee; driver needs high pay | Surge pricing in high-demand zones, driver incentives funded by platform |
-| Driver rejects too many orders | Track acceptance rate; reduce dispatches or penalize low-acceptance drivers |
+| Tension                                         | Resolution                                                                               |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Customer wants fast ETA; restaurant is slow     | Show realistic ETA with prep time factored in; surface restaurants with fast prep        |
+| Driver waits at restaurant too long             | Dispatch driver to arrive near restaurant-ready time, not immediately after order placed |
+| Restaurant overwhelmed at peak                  | Order throttling: gate orders via `max_concurrent_orders`, queue overflow orders         |
+| Customer expects low fee; driver needs high pay | Surge pricing in high-demand zones, driver incentives funded by platform                 |
+| Driver rejects too many orders                  | Track acceptance rate; reduce dispatches or penalize low-acceptance drivers              |
 
 ---
 
@@ -614,6 +618,7 @@ Restaurant POS / Admin Portal
 ```
 
 **Item Availability Toggle (High Frequency):**
+
 - Stored in Redis with TTL: `menu:avail:{restaurantId}:{itemId}` = 0/1
 - Override checked at order creation; async synced to PostgreSQL every 60 seconds
 
@@ -637,6 +642,7 @@ def can_accept_order(restaurant_id):
 ```
 
 **Prep Time Estimation:**
+
 - Base prep time set by restaurant (configurable per item category)
 - ML model adjusts based on:
   - Time of day (lunch/dinner rush)
@@ -693,6 +699,7 @@ Weights (tunable):
 ```
 
 **Acceptance Rate Management:**
+
 - Drivers with acceptance rate < 70% receive fewer dispatch requests
 - Rate tracked as exponential moving average over last 100 dispatches
 - Very low acceptance rate → temporary suspension
@@ -749,6 +756,7 @@ Route: Driver -> Restaurant X (pick up A+B) -> 123 Main St -> 125 Oak Ave
 ```
 
 **ETA Update Triggers:**
+
 1. Order accepted by restaurant (revise based on actual prep start)
 2. Order marked ready (driver en route ETA becomes primary)
 3. Every 60 seconds while driver en route (real-time traffic rerouting)
@@ -756,6 +764,7 @@ Route: Driver -> Restaurant X (pick up A+B) -> 123 Main St -> 125 Oak Ave
 5. Traffic event detected on expected route
 
 **ETA Accuracy Target: p90 within 5 minutes**
+
 - Monitored per restaurant and per zone
 - Restaurants with consistently inaccurate prep time self-reporting flagged for review
 
@@ -855,6 +864,7 @@ Stored in Redis: surge:zone:{h3CellId} -> multiplier (TTL 90s)
 ```
 
 **Driver Incentives During Surge:**
+
 - Boost pay: platform adds $1-3 per delivery in high-surge zones
 - Shown to drivers on earnings map heat overlay
 - Incentive zones recalculated every 5 minutes
@@ -890,6 +900,7 @@ Driver App                   Order Tracking Service         Customer App
 ```
 
 **WebSocket Connection Management:**
+
 - Customer connects on order detail page
 - Each WebSocket server handles ~50K concurrent connections
 - Sticky sessions: orderId hashed to specific server via consistent hashing
@@ -898,6 +909,7 @@ Driver App                   Order Tracking Service         Customer App
 - Mobile: long-polling fallback for restrictive networks
 
 **Map Rendering:**
+
 - Driver location smoothed with linear interpolation between updates (no jerky movement)
 - Restaurant and customer pins pre-loaded; only driver position streams
 - Map tiles served from CDN (not real-time streamed)
@@ -939,6 +951,7 @@ Driver App                   Order Tracking Service         Customer App
 ```
 
 **KDS Features:**
+
 - Orders sorted by estimated pickup time (earliest first)
 - Color coding: green = ample time, yellow = pickup soon, red = driver waiting
 - Prep timer shown in real-time per order
@@ -992,6 +1005,7 @@ Driver App                   Order Tracking Service         Customer App
 ```
 
 **Idempotency:**
+
 - All payment operations use idempotency keys: `payment:{orderId}:{action}`
 - Prevents duplicate charges on retries
 
@@ -1034,12 +1048,14 @@ After delivery:
 ```
 
 **Rating Impact Rules:**
+
 - Restaurant rating < 3.5 for 30 days: review team notified, potential delisting
 - Driver rating < 4.0 for 50 deliveries: additional training required
 - Driver rating < 3.5: account deactivation review
 - Customer rating < 3.0: low-priority in driver dispatch queue
 
 **Review Moderation:**
+
 - Text reviews pass through content moderation (profanity filter, hate speech detector)
 - Photo reviews (food photos) stored in S3, served via CDN
 - Restaurants can respond to reviews (public response, moderated)
@@ -1075,6 +1091,7 @@ After delivery:
 ```
 
 **GPS Spoofing Detection:**
+
 ```python
 def detect_gps_spoofing(driver_id, new_location, new_timestamp):
     last = get_last_location(driver_id)
@@ -1093,6 +1110,7 @@ def detect_gps_spoofing(driver_id, new_location, new_timestamp):
 ```
 
 **Promo Abuse Detection:**
+
 - Redis HyperLogLog tracks distinct phone numbers per device ID
 - Rule: same device → same phone → max 1 "first order" promo
 - ML model scores promo redemption for anomaly (trained on labeled abuse cases)
@@ -1153,6 +1171,7 @@ Queue key: restaurant:order_queue:{restaurantId}
 ```
 
 **Driver Incentives During Peak:**
+
 - Surge zone shown on driver map as heat overlay
 - Zone-specific bonuses: "$2 extra per delivery in Downtown 5-8pm"
 - Guaranteed minimum earnings: "Earn at least $25/hr in this zone"
@@ -1186,15 +1205,16 @@ Queue key: restaurant:order_queue:{restaurantId}
 
 **Promo Types:**
 
-| Type | Example | Logic |
-|------|---------|-------|
-| `percent_off` | 20% off | `discount = cart_subtotal * 0.20` |
-| `flat_off` | $5 off $20+ | `if subtotal >= min: discount = flat_value` |
-| `free_delivery` | Free delivery | `discount = delivery_fee` |
-| `bogo` | Buy 1 get 1 free | `discount = cheapest_item_price` |
-| `first_order` | 50% off first order | `check user.total_orders == 0` |
+| Type            | Example             | Logic                                       |
+| --------------- | ------------------- | ------------------------------------------- |
+| `percent_off`   | 20% off             | `discount = cart_subtotal * 0.20`           |
+| `flat_off`      | $5 off $20+         | `if subtotal >= min: discount = flat_value` |
+| `free_delivery` | Free delivery       | `discount = delivery_fee`                   |
+| `bogo`          | Buy 1 get 1 free    | `discount = cheapest_item_price`            |
+| `first_order`   | 50% off first order | `check user.total_orders == 0`              |
 
 **Atomic Usage Increment:**
+
 ```lua
 -- Redis Lua script for atomic promo use
 local current = redis.call('HINCRBY', KEYS[1], 'used_count', 1)
@@ -1273,32 +1293,32 @@ WebSocket (Tracking) Service:
 
 ### Caching Strategy
 
-| Data | Cache | TTL | Invalidation |
-|------|-------|-----|-------------|
-| Restaurant list by area | Redis | 60 sec | On restaurant status change |
-| Menu for restaurant | Redis | 5 min | On menu item update |
-| Driver locations | Redis GEO | 10 sec | Continuous GEOADD |
-| Surge multiplier per zone | Redis | 90 sec | Recalculated every 60s |
-| Promo code details | Redis | 5 min | On promo update |
-| User session | Redis | 24 hrs | On logout |
-| ETA prediction | Redis | 30 sec | On state change |
+| Data                      | Cache     | TTL    | Invalidation                |
+| ------------------------- | --------- | ------ | --------------------------- |
+| Restaurant list by area   | Redis     | 60 sec | On restaurant status change |
+| Menu for restaurant       | Redis     | 5 min  | On menu item update         |
+| Driver locations          | Redis GEO | 10 sec | Continuous GEOADD           |
+| Surge multiplier per zone | Redis     | 90 sec | Recalculated every 60s      |
+| Promo code details        | Redis     | 5 min  | On promo update             |
+| User session              | Redis     | 24 hrs | On logout                   |
+| ETA prediction            | Redis     | 30 sec | On state change             |
 
 ---
 
 ## 20. Trade-offs
 
-| Decision | Choice | Trade-off |
-|----------|--------|-----------|
-| **Consistency vs. Availability** for order state | Strong consistency (PostgreSQL + optimistic locking) | Slightly higher latency; zero lost state transitions |
-| **Driver location storage** | Redis GEO (not PostgreSQL) | Lose ACID guarantees; gain 10x throughput |
-| **ETA calculation** | Hybrid (rules + ML) vs. pure ML | Rules are explainable and fast; ML more accurate but opaque |
-| **Dispatch: sequential vs. parallel** | Parallel offer to top 3 drivers | More reliable acceptance; first-mover advantage avoids wait |
-| **Order queue at peak** | Async queue vs. direct write | Slightly delayed confirmation; prevents database overload |
-| **Payment capture timing** | On delivery (not on placement) | Protects customer; increases chargeback risk window |
-| **Batching deliveries** | Opt-in batching based on route efficiency | Improves driver economics; increases customer delivery time |
-| **Geospatial system** | H3 (Uber) vs. Geohash | H3 equal-area better for surge zones; geohash simpler to implement |
-| **WebSocket vs. polling** | WebSocket for tracking | Lower latency, higher infra cost; polling simpler for low-scale |
-| **Restaurant payout timing** | T+1 or weekly batch | Weekly reduces transaction costs; daily improves restaurant cash flow |
+| Decision                                         | Choice                                               | Trade-off                                                             |
+| ------------------------------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------- |
+| **Consistency vs. Availability** for order state | Strong consistency (PostgreSQL + optimistic locking) | Slightly higher latency; zero lost state transitions                  |
+| **Driver location storage**                      | Redis GEO (not PostgreSQL)                           | Lose ACID guarantees; gain 10x throughput                             |
+| **ETA calculation**                              | Hybrid (rules + ML) vs. pure ML                      | Rules are explainable and fast; ML more accurate but opaque           |
+| **Dispatch: sequential vs. parallel**            | Parallel offer to top 3 drivers                      | More reliable acceptance; first-mover advantage avoids wait           |
+| **Order queue at peak**                          | Async queue vs. direct write                         | Slightly delayed confirmation; prevents database overload             |
+| **Payment capture timing**                       | On delivery (not on placement)                       | Protects customer; increases chargeback risk window                   |
+| **Batching deliveries**                          | Opt-in batching based on route efficiency            | Improves driver economics; increases customer delivery time           |
+| **Geospatial system**                            | H3 (Uber) vs. Geohash                                | H3 equal-area better for surge zones; geohash simpler to implement    |
+| **WebSocket vs. polling**                        | WebSocket for tracking                               | Lower latency, higher infra cost; polling simpler for low-scale       |
+| **Restaurant payout timing**                     | T+1 or weekly batch                                  | Weekly reduces transaction costs; daily improves restaurant cash flow |
 
 ---
 
@@ -1335,6 +1355,7 @@ A: Horizontally scale Order Service and Dispatch Service pods. Shard Redis clust
 **Q: How do you compute restaurant ETAs for the browse page (before an order is placed)?**
 
 A: For the browse/discovery phase, ETAs are approximated using:
+
 1. Restaurant's `avg_prep_minutes`
 2. Crow-flies distance from customer to restaurant (adjusted by road_factor = 1.3)
 3. Estimated driver pickup delay based on zone driver supply
@@ -1417,6 +1438,7 @@ A: Order state machine uses strong consistency (PostgreSQL with optimistic locki
 ### Key Metrics
 
 **Business Metrics (real-time dashboards):**
+
 - Orders per minute, region breakdown
 - Order fulfillment rate (% successfully delivered)
 - Average delivery time vs. ETA
@@ -1425,6 +1447,7 @@ A: Order state machine uses strong consistency (PostgreSQL with optimistic locki
 - Customer satisfaction score (CSAT from ratings)
 
 **Infrastructure Metrics:**
+
 - Order placement p50/p95/p99 latency
 - Driver location update lag (freshness)
 - Dispatch latency (time from order placed to driver assigned)

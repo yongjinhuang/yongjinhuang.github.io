@@ -43,6 +43,7 @@ Rating:       [4+ stars (120)]
 Each facet shows available values AND the count of matching items. Selecting a facet narrows results and updates other facet counts in real-time.
 
 **How it works:**
+
 1. User applies a filter (e.g., Brand = Nike)
 2. Query re-executes with the filter applied
 3. Results narrow to Nike products only
@@ -69,20 +70,20 @@ Results can be sorted by different criteria. The default is usually "relevance" 
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Full-Text Search** | Searching content by words/phrases with language awareness (stemming, synonyms) |
-| **Inverted Index** | A data structure that maps words to documents. The secret sauce behind fast search |
-| **Relevance** | How well a result matches the user's intent. The hardest part of search |
-| **Facet** | A filterable dimension of the data (category, price range, brand) with counts |
-| **Tokenization** | Breaking text into individual words or terms for indexing |
-| **Stemming** | Reducing words to their root form (running, runs, ran → run) |
-| **Synonyms** | Treating different words as equivalent (couch = sofa, laptop = notebook) |
-| **Fuzzy Matching** | Finding results even when the query has typos (iphne → iPhone) |
-| **Boosting** | Giving extra weight to certain fields or documents in ranking (title matches count more than body matches) |
-| **Zero Results** | When a search returns nothing. A major UX failure — always offer alternatives |
-| **Search Analytics** | Tracking what people search for, what they click, and where they give up |
-| **Elasticsearch** | The most popular open-source search engine. Built on Apache Lucene |
+| Term                 | What It Means                                                                                              |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Full-Text Search** | Searching content by words/phrases with language awareness (stemming, synonyms)                            |
+| **Inverted Index**   | A data structure that maps words to documents. The secret sauce behind fast search                         |
+| **Relevance**        | How well a result matches the user's intent. The hardest part of search                                    |
+| **Facet**            | A filterable dimension of the data (category, price range, brand) with counts                              |
+| **Tokenization**     | Breaking text into individual words or terms for indexing                                                  |
+| **Stemming**         | Reducing words to their root form (running, runs, ran → run)                                               |
+| **Synonyms**         | Treating different words as equivalent (couch = sofa, laptop = notebook)                                   |
+| **Fuzzy Matching**   | Finding results even when the query has typos (iphne → iPhone)                                             |
+| **Boosting**         | Giving extra weight to certain fields or documents in ranking (title matches count more than body matches) |
+| **Zero Results**     | When a search returns nothing. A major UX failure — always offer alternatives                              |
+| **Search Analytics** | Tracking what people search for, what they click, and where they give up                                   |
+| **Elasticsearch**    | The most popular open-source search engine. Built on Apache Lucene                                         |
 
 ## Common Patterns
 
@@ -131,11 +132,11 @@ Semantic search using embeddings. Instead of matching keywords, it understands m
 
 ## Quick Reference
 
-| Dataset Size | Recommended Approach |
-|-------------|---------------------|
-| <10K records | Database LIKE/full-text search |
-| 10K-1M records | PostgreSQL full-text search or Meilisearch |
-| 1M+ records | Elasticsearch / OpenSearch |
-| Need managed service | Algolia or Typesense |
-| Semantic / AI search | Vector search (pgvector, Pinecone) |
-| Autocomplete only | Prefix-based index or trie structure |
+| Dataset Size         | Recommended Approach                       |
+| -------------------- | ------------------------------------------ |
+| <10K records         | Database LIKE/full-text search             |
+| 10K-1M records       | PostgreSQL full-text search or Meilisearch |
+| 1M+ records          | Elasticsearch / OpenSearch                 |
+| Need managed service | Algolia or Typesense                       |
+| Semantic / AI search | Vector search (pgvector, Pinecone)         |
+| Autocomplete only    | Prefix-based index or trie structure       |

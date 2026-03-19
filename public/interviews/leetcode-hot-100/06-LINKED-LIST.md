@@ -170,6 +170,7 @@ class Solution:
 ### Approach
 
 Three-step process:
+
 1. **Find the middle** using slow/fast pointers.
 2. **Reverse** the second half of the list.
 3. **Merge** the two halves by alternating nodes.
@@ -482,11 +483,11 @@ class LRUCache:
 
 ## Pattern Summary
 
-| Pattern | Problems | Key Idea |
-|---------|----------|----------|
-| Fast/Slow Pointers | #141, #143 | Detect cycles, find midpoints |
-| Dummy Node | #21, #19, #2, #23 | Simplify head-insertion edge cases |
-| In-Place Reversal | #206, #143 | Reverse by flipping `next` pointers |
-| Hash Map + Linked List | #138, #146 | O(1) lookup with ordered structure |
-| Divide and Conquer | #23 | Merge pairs to reduce k lists |
-| Carry Simulation | #2 | Digit-by-digit arithmetic |
+| Pattern                | Problems          | Key Idea                            |
+| ---------------------- | ----------------- | ----------------------------------- |
+| Fast/Slow Pointers     | #141, #143        | Detect cycles, find midpoints       |
+| Dummy Node             | #21, #19, #2, #23 | Simplify head-insertion edge cases  |
+| In-Place Reversal      | #206, #143        | Reverse by flipping `next` pointers |
+| Hash Map + Linked List | #138, #146        | O(1) lookup with ordered structure  |
+| Divide and Conquer     | #23               | Merge pairs to reduce k lists       |
+| Carry Simulation       | #2                | Digit-by-digit arithmetic           |

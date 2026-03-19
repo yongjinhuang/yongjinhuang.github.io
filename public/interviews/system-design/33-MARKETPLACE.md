@@ -6,35 +6,35 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Listing Management | Sellers create, update, and deactivate listings with photos, descriptions, pricing, and inventory |
-| 2 | Search and Discovery | Buyers search and browse listings by keyword, category, location, price range, and filters |
-| 3 | Buyer-Seller Messaging | Direct communication between buyer and seller before/after purchase |
-| 4 | Transaction Flow | Buyer pays → funds held in escrow → seller ships → buyer confirms → funds released |
-| 5 | Reviews and Ratings | Bilateral post-transaction reviews; buyer rates seller and seller rates buyer |
-| 6 | Trust and Safety | Identity verification, fraud detection, and content moderation |
-| 7 | Dispute Resolution | Buyer/seller protection policies, mediation workflow, chargebacks |
-| 8 | Commission and Fees | Platform take rate deducted at transaction settlement |
-| 9 | Seller Analytics | Dashboard with views, clicks, conversion rate, and revenue metrics |
-| 10 | Notifications | Order updates, messages, review requests, payout confirmations |
-| 11 | Multi-Currency | Support cross-border transactions with currency conversion |
-| 12 | Cold Start | Bootstrap supply and demand in new categories or geographies |
+| #   | Requirement            | Description                                                                                       |
+| --- | ---------------------- | ------------------------------------------------------------------------------------------------- |
+| 1   | Listing Management     | Sellers create, update, and deactivate listings with photos, descriptions, pricing, and inventory |
+| 2   | Search and Discovery   | Buyers search and browse listings by keyword, category, location, price range, and filters        |
+| 3   | Buyer-Seller Messaging | Direct communication between buyer and seller before/after purchase                               |
+| 4   | Transaction Flow       | Buyer pays → funds held in escrow → seller ships → buyer confirms → funds released                |
+| 5   | Reviews and Ratings    | Bilateral post-transaction reviews; buyer rates seller and seller rates buyer                     |
+| 6   | Trust and Safety       | Identity verification, fraud detection, and content moderation                                    |
+| 7   | Dispute Resolution     | Buyer/seller protection policies, mediation workflow, chargebacks                                 |
+| 8   | Commission and Fees    | Platform take rate deducted at transaction settlement                                             |
+| 9   | Seller Analytics       | Dashboard with views, clicks, conversion rate, and revenue metrics                                |
+| 10  | Notifications          | Order updates, messages, review requests, payout confirmations                                    |
+| 11  | Multi-Currency         | Support cross-border transactions with currency conversion                                        |
+| 12  | Cold Start             | Bootstrap supply and demand in new categories or geographies                                      |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Search latency | < 200ms (p95) |
-| 2 | Transaction processing | < 1 second end-to-end |
-| 3 | Availability | 99.99% (< 53 minutes downtime/year) |
-| 4 | Double-charge rate | Zero (idempotent payments) |
-| 5 | Listing write latency | < 500ms for create/update |
-| 6 | Message delivery latency | < 2 seconds |
-| 7 | Fraud detection latency | < 500ms (inline, pre-auth) |
-| 8 | Consistency | Strong for transactions; eventual for analytics and search index |
-| 9 | Durability | Zero lost orders (at-least-once processing with idempotency) |
-| 10 | Data retention | 7 years for financial records; 90 days for message logs |
+| #   | Requirement              | Target                                                           |
+| --- | ------------------------ | ---------------------------------------------------------------- |
+| 1   | Search latency           | < 200ms (p95)                                                    |
+| 2   | Transaction processing   | < 1 second end-to-end                                            |
+| 3   | Availability             | 99.99% (< 53 minutes downtime/year)                              |
+| 4   | Double-charge rate       | Zero (idempotent payments)                                       |
+| 5   | Listing write latency    | < 500ms for create/update                                        |
+| 6   | Message delivery latency | < 2 seconds                                                      |
+| 7   | Fraud detection latency  | < 500ms (inline, pre-auth)                                       |
+| 8   | Consistency              | Strong for transactions; eventual for analytics and search index |
+| 9   | Durability               | Zero lost orders (at-least-once processing with idempotency)     |
+| 10  | Data retention           | 7 years for financial records; 90 days for message logs          |
 
 ### Scale Estimates
 
@@ -52,6 +52,7 @@ Reviews:                   500,000 new reviews/day
 ### Back-of-Envelope Calculations
 
 **Transaction Write Throughput:**
+
 ```
 1M transactions/day / 86,400 sec = ~12 transactions/sec baseline
 Peak factor: 5x = ~60 transactions/sec
@@ -60,6 +61,7 @@ Total writes: ~480 state writes/sec at peak
 ```
 
 **Storage Estimates:**
+
 ```
 Listing record:            ~5 KB (text fields, metadata)
 Listing photos:            ~10 photos * 500 KB (compressed) = 5 MB per listing
@@ -74,6 +76,7 @@ Review record:             ~1 KB
 ```
 
 **Search Index:**
+
 ```
 50M listings * 5 KB text = 250 GB raw
 Inverted index (3x amplification) = ~750 GB in Elasticsearch
@@ -81,6 +84,7 @@ Index updates: 200K listing changes/day = ~2 writes/sec
 ```
 
 **Bandwidth:**
+
 ```
 Search response (50 results * 500 bytes): 25 KB/response
 580 QPS * 25 KB = ~14.5 MB/sec outbound from search service
@@ -586,12 +590,12 @@ Target metrics:
 
 ### Network Effect Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| Same-side | More buyers attract more buyers (social proof) | Trending listings |
-| Cross-side | More sellers attract more buyers and vice versa | Core marketplace effect |
-| Data network | More transactions improve recommendations | Personalized search |
-| Geographic | Density in a region improves liquidity locally | Hyperlocal search radius |
+| Type         | Description                                     | Example                  |
+| ------------ | ----------------------------------------------- | ------------------------ |
+| Same-side    | More buyers attract more buyers (social proof)  | Trending listings        |
+| Cross-side   | More sellers attract more buyers and vice versa | Core marketplace effect  |
+| Data network | More transactions improve recommendations       | Personalized search      |
+| Geographic   | Density in a region improves liquidity locally  | Hyperlocal search radius |
 
 ---
 
@@ -885,13 +889,13 @@ score<0.1  0.1-  0.8+
 
 **Seller fraud patterns:**
 
-| Pattern | Detection Signal | Action |
-|---------|-----------------|--------|
-| Shill bidding | Buyer-seller network graph cycles | Suspend accounts |
-| Counterfeit goods | Image similarity to known brands | Remove listing + notify brand |
-| Fee avoidance | Off-platform payment requests in messages | Message filter + warning |
-| Account takeover | Login from new geo + new device | Force 2FA reauthentication |
-| Review manipulation | Review cluster analysis (same device, IP, timing) | Remove reviews + penalize |
+| Pattern             | Detection Signal                                  | Action                        |
+| ------------------- | ------------------------------------------------- | ----------------------------- |
+| Shill bidding       | Buyer-seller network graph cycles                 | Suspend accounts              |
+| Counterfeit goods   | Image similarity to known brands                  | Remove listing + notify brand |
+| Fee avoidance       | Off-platform payment requests in messages         | Message filter + warning      |
+| Account takeover    | Login from new geo + new device                   | Force 2FA reauthentication    |
+| Review manipulation | Review cluster analysis (same device, IP, timing) | Remove reviews + penalize     |
 
 ---
 
@@ -1435,16 +1439,16 @@ Phase 3 (500M+ listings):
 
 ## 18. Trade-offs
 
-| Decision | Option A | Option B | Choice | Reason |
-|----------|----------|----------|--------|--------|
-| Search consistency | Strong (DB read) | Eventual (Elasticsearch) | Eventual | 500ms lag acceptable; ES provides better full-text and ranking |
-| Escrow model | Bank escrow account per order | Virtual ledger (pooled account) | Virtual ledger | Cheaper, faster; real bank escrow is slow and costly |
-| Review reveal | Immediate publish | Simultaneous bilateral reveal | Bilateral reveal | Prevents retaliation; Airbnb research shows higher quality reviews |
-| Payment gateway | Build in-house | Third-party (Stripe) | Third-party | PCI DSS compliance burden; time-to-market; Stripe handles 3DS, fraud |
-| Messaging storage | Kafka (event log) | PostgreSQL (relational) | PostgreSQL | Low message volume; conversation threading easier with relational model |
-| Fraud detection | Rules-only | ML model + rules | ML + rules | Rules handle known patterns fast; ML catches novel fraud patterns |
-| Search ranking | Pure relevance | Relevance + business metrics | Hybrid | Pure relevance ignores listing quality; pure business metrics kills UX |
-| Multi-currency FX rate lock | At payment time | At order creation | At payment time | Rate locked when money moves; avoids rate staleness window |
+| Decision                    | Option A                      | Option B                        | Choice           | Reason                                                                  |
+| --------------------------- | ----------------------------- | ------------------------------- | ---------------- | ----------------------------------------------------------------------- |
+| Search consistency          | Strong (DB read)              | Eventual (Elasticsearch)        | Eventual         | 500ms lag acceptable; ES provides better full-text and ranking          |
+| Escrow model                | Bank escrow account per order | Virtual ledger (pooled account) | Virtual ledger   | Cheaper, faster; real bank escrow is slow and costly                    |
+| Review reveal               | Immediate publish             | Simultaneous bilateral reveal   | Bilateral reveal | Prevents retaliation; Airbnb research shows higher quality reviews      |
+| Payment gateway             | Build in-house                | Third-party (Stripe)            | Third-party      | PCI DSS compliance burden; time-to-market; Stripe handles 3DS, fraud    |
+| Messaging storage           | Kafka (event log)             | PostgreSQL (relational)         | PostgreSQL       | Low message volume; conversation threading easier with relational model |
+| Fraud detection             | Rules-only                    | ML model + rules                | ML + rules       | Rules handle known patterns fast; ML catches novel fraud patterns       |
+| Search ranking              | Pure relevance                | Relevance + business metrics    | Hybrid           | Pure relevance ignores listing quality; pure business metrics kills UX  |
+| Multi-currency FX rate lock | At payment time               | At order creation               | At payment time  | Rate locked when money moves; avoids rate staleness window              |
 
 ---
 

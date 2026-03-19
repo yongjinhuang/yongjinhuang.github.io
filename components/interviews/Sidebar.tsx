@@ -11,6 +11,8 @@ import {
   HiMagnifyingGlass,
   HiXMark,
   HiMapPin,
+  HiMinus,
+  HiBars3BottomLeft,
 } from 'react-icons/hi2';
 
 interface SidebarProps {
@@ -26,6 +28,22 @@ export function Sidebar({ categories, selectedSlug, onSelect }: SidebarProps) {
 
   const toggleCategory = (name: string) => {
     setCollapsed((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
+
+  const expandAll = () => {
+    const next: Record<string, boolean> = {};
+    categories.forEach((c) => {
+      next[c.name] = false;
+    });
+    setCollapsed(next);
+  };
+
+  const collapseAll = () => {
+    const next: Record<string, boolean> = {};
+    categories.forEach((c) => {
+      next[c.name] = true;
+    });
+    setCollapsed(next);
   };
 
   // Auto-expand the category containing the selected file
@@ -67,26 +85,40 @@ export function Sidebar({ categories, selectedSlug, onSelect }: SidebarProps) {
         <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
           Files
         </h3>
-        <button
-          onClick={() => {
-            // Expand the category of the selected file and trigger scroll
-            const selectedCategory = categories.find((c) =>
-              c.files.some((f) => f.slug === selectedSlug)
-            );
-            if (selectedCategory) {
-              setCollapsed((prev) => ({
-                ...prev,
-                [selectedCategory.name]: false,
-              }));
-            }
-            setLocateTrigger((prev) => prev + 1);
-          }}
-          className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-accent transition-colors"
-          title="Locate current file"
-        >
-          <HiMapPin className="w-3.5 h-3.5" />
-          <span>Locate</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={expandAll}
+            className="text-gray-400 dark:text-gray-500 hover:text-accent transition-colors"
+            title="Expand all"
+          >
+            <HiBars3BottomLeft className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={collapseAll}
+            className="text-gray-400 dark:text-gray-500 hover:text-accent transition-colors"
+            title="Collapse all"
+          >
+            <HiMinus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => {
+              const selectedCategory = categories.find((c) =>
+                c.files.some((f) => f.slug === selectedSlug)
+              );
+              if (selectedCategory) {
+                setCollapsed((prev) => ({
+                  ...prev,
+                  [selectedCategory.name]: false,
+                }));
+              }
+              setLocateTrigger((prev) => prev + 1);
+            }}
+            className="text-gray-400 dark:text-gray-500 hover:text-accent transition-colors"
+            title="Locate current file"
+          >
+            <HiMapPin className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Search input */}

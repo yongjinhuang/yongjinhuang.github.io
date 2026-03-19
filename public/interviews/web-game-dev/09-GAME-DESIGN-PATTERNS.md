@@ -286,9 +286,7 @@ class HierarchicalStateMachine {
     let current = this.states.get(stateId);
     while (current) {
       ancestors.unshift(current.id);
-      current = current.parent
-        ? this.states.get(current.parent)
-        : undefined;
+      current = current.parent ? this.states.get(current.parent) : undefined;
     }
     return ancestors;
   }
@@ -351,9 +349,9 @@ hfsm.transition('jumping');
 // Enters: airborne, jumping
 // Active: [alive, airborne, jumping]
 
-hfsm.isInState('alive');    // true
+hfsm.isInState('alive'); // true
 hfsm.isInState('airborne'); // true
-hfsm.isInState('jumping');  // true
+hfsm.isInState('jumping'); // true
 hfsm.isInState('grounded'); // false
 ```
 
@@ -367,13 +365,13 @@ ECS separates data from behavior and composes entities from reusable components.
 
 ### Why ECS?
 
-| Traditional OOP | ECS |
-|----------------|-----|
-| Deep inheritance hierarchies | Flat composition |
-| "Diamond problem" with multiple inheritance | Mix any components freely |
-| Methods scattered across class tree | Logic centralized in systems |
-| Hard to add new behaviors | Add a component, done |
-| Poor cache performance | Data-oriented, cache-friendly |
+| Traditional OOP                             | ECS                           |
+| ------------------------------------------- | ----------------------------- |
+| Deep inheritance hierarchies                | Flat composition              |
+| "Diamond problem" with multiple inheritance | Mix any components freely     |
+| Methods scattered across class tree         | Logic centralized in systems  |
+| Hard to add new behaviors                   | Add a component, done         |
+| Poor cache performance                      | Data-oriented, cache-friendly |
 
 ### Basic ECS Implementation
 
@@ -539,8 +537,10 @@ class RenderSystem implements System {
       this.ctx.rotate(spr.rotation);
       this.ctx.drawImage(
         texture,
-        -spr.width / 2, -spr.height / 2,
-        spr.width, spr.height
+        -spr.width / 2,
+        -spr.height / 2,
+        spr.width,
+        spr.height
       );
       this.ctx.restore();
     }
@@ -558,7 +558,7 @@ class HealthSystem implements System {
       }
     }
 
-    toDestroy.forEach(entity => world.destroyEntity(entity));
+    toDestroy.forEach((entity) => world.destroyEntity(entity));
   }
 }
 
@@ -718,7 +718,7 @@ class Game {
   }
 
   update(dt: number): void {
-    this.systems.forEach(system => system.update(this.world, dt));
+    this.systems.forEach((system) => system.update(this.world, dt));
   }
 }
 ```
@@ -844,7 +844,7 @@ class BulletSystem {
   }
 
   update(dt: number): void {
-    this.pool.forEach(bullet => {
+    this.pool.forEach((bullet) => {
       bullet.x += bullet.vx * dt;
       bullet.y += bullet.vy * dt;
       bullet.lifetime += dt;
@@ -852,8 +852,10 @@ class BulletSystem {
       // Release if expired or out of bounds
       if (
         bullet.lifetime >= bullet.maxLifetime ||
-        bullet.x < -50 || bullet.x > 850 ||
-        bullet.y < -50 || bullet.y > 650
+        bullet.x < -50 ||
+        bullet.x > 850 ||
+        bullet.y < -50 ||
+        bullet.y > 650
       ) {
         this.pool.release(bullet);
       }
@@ -862,7 +864,7 @@ class BulletSystem {
 
   render(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = '#ff0';
-    this.pool.forEach(bullet => {
+    this.pool.forEach((bullet) => {
       ctx.beginPath();
       ctx.arc(bullet.x, bullet.y, 3, 0, Math.PI * 2);
       ctx.fill();
@@ -957,12 +959,12 @@ class ParticleEmitter {
   }
 
   update(dt: number): void {
-    this.pool.forEach(p => {
+    this.pool.forEach((p) => {
       p.vy += p.gravity * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.life += dt;
-      p.alpha = 1 - (p.life / p.maxLife);
+      p.alpha = 1 - p.life / p.maxLife;
 
       if (p.life >= p.maxLife) {
         this.pool.release(p);
@@ -971,15 +973,10 @@ class ParticleEmitter {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    this.pool.forEach(p => {
+    this.pool.forEach((p) => {
       ctx.globalAlpha = p.alpha;
       ctx.fillStyle = p.color;
-      ctx.fillRect(
-        p.x - p.size / 2,
-        p.y - p.size / 2,
-        p.size,
-        p.size
-      );
+      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
     });
     ctx.globalAlpha = 1;
   }
@@ -1039,14 +1036,11 @@ class EventBus {
     return unsubscribe;
   }
 
-  emit<K extends keyof GameEvents>(
-    event: K,
-    data: GameEvents[K]
-  ): void {
+  emit<K extends keyof GameEvents>(event: K, data: GameEvents[K]): void {
     const callbacks = this.listeners.get(event);
     if (!callbacks) return;
 
-    callbacks.forEach(callback => {
+    callbacks.forEach((callback) => {
       try {
         callback(data);
       } catch (error) {
@@ -1270,7 +1264,7 @@ class CompositeCommand implements Command {
   constructor(private commands: Command[]) {}
 
   execute(): void {
-    this.commands.forEach(cmd => cmd.execute());
+    this.commands.forEach((cmd) => cmd.execute());
   }
 
   undo(): void {
@@ -1281,7 +1275,7 @@ class CompositeCommand implements Command {
   }
 
   describe(): string {
-    return this.commands.map(cmd => cmd.describe()).join('; ');
+    return this.commands.map((cmd) => cmd.describe()).join('; ');
   }
 }
 ```
@@ -1356,7 +1350,7 @@ interface TutorialStep {
   message: string;
   commands: Command[];
   waitForInput?: string; // Input event to wait for
-  delay?: number;        // Auto-advance delay in ms
+  delay?: number; // Auto-advance delay in ms
 }
 
 class TutorialRunner {
@@ -1378,7 +1372,7 @@ class TutorialRunner {
     const step = this.steps[this.currentStep];
     if (!step) return;
 
-    step.commands.forEach(cmd => {
+    step.commands.forEach((cmd) => {
       this.commandHistory.execute(cmd);
     });
   }
@@ -1421,29 +1415,59 @@ interface TileType {
 // Registry of all tile types (shared, read-only)
 const TILE_TYPES: Record<number, TileType> = {
   0: {
-    id: 0, name: 'air',
-    textureX: 0, textureY: 0, textureWidth: 0, textureHeight: 0,
-    solid: false, friction: 0, damage: 0,
+    id: 0,
+    name: 'air',
+    textureX: 0,
+    textureY: 0,
+    textureWidth: 0,
+    textureHeight: 0,
+    solid: false,
+    friction: 0,
+    damage: 0,
   },
   1: {
-    id: 1, name: 'grass',
-    textureX: 0, textureY: 0, textureWidth: 32, textureHeight: 32,
-    solid: true, friction: 0.8, damage: 0,
+    id: 1,
+    name: 'grass',
+    textureX: 0,
+    textureY: 0,
+    textureWidth: 32,
+    textureHeight: 32,
+    solid: true,
+    friction: 0.8,
+    damage: 0,
   },
   2: {
-    id: 2, name: 'stone',
-    textureX: 32, textureY: 0, textureWidth: 32, textureHeight: 32,
-    solid: true, friction: 0.6, damage: 0,
+    id: 2,
+    name: 'stone',
+    textureX: 32,
+    textureY: 0,
+    textureWidth: 32,
+    textureHeight: 32,
+    solid: true,
+    friction: 0.6,
+    damage: 0,
   },
   3: {
-    id: 3, name: 'lava',
-    textureX: 64, textureY: 0, textureWidth: 32, textureHeight: 32,
-    solid: false, friction: 0.3, damage: 10,
+    id: 3,
+    name: 'lava',
+    textureX: 64,
+    textureY: 0,
+    textureWidth: 32,
+    textureHeight: 32,
+    solid: false,
+    friction: 0.3,
+    damage: 10,
   },
   4: {
-    id: 4, name: 'ice',
-    textureX: 96, textureY: 0, textureWidth: 32, textureHeight: 32,
-    solid: true, friction: 0.1, damage: 0,
+    id: 4,
+    name: 'ice',
+    textureX: 96,
+    textureY: 0,
+    textureWidth: 32,
+    textureHeight: 32,
+    solid: true,
+    friction: 0.1,
+    damage: 0,
   },
 };
 
@@ -1515,9 +1539,9 @@ class SpriteRegistry {
 
 // Each game entity only stores a reference to the definition + its own state
 interface AnimatedEntity {
-  spriteName: string;      // Reference to shared SpriteDefinition
-  currentFrame: number;    // Instance-specific state
-  frameTimer: number;      // Instance-specific state
+  spriteName: string; // Reference to shared SpriteDefinition
+  currentFrame: number; // Instance-specific state
+  frameTimer: number; // Instance-specific state
   x: number;
   y: number;
   flipX: boolean;
@@ -1591,7 +1615,7 @@ class SceneNode {
   markDirty(): void {
     if (this.dirty) return; // Already dirty, children must be too
     this.dirty = true;
-    this.children.forEach(child => child.markDirty());
+    this.children.forEach((child) => child.markDirty());
   }
 
   updateWorldTransform(): void {
@@ -1614,7 +1638,7 @@ class SceneNode {
     }
 
     this.dirty = false;
-    this.children.forEach(child => child.updateWorldTransform());
+    this.children.forEach((child) => child.updateWorldTransform());
   }
 
   render(ctx: CanvasRenderingContext2D): void {
@@ -1631,7 +1655,7 @@ class SceneNode {
 
     ctx.restore();
 
-    this.children.forEach(child => child.render(ctx));
+    this.children.forEach((child) => child.render(ctx));
   }
 
   // Override in subclasses
@@ -1721,7 +1745,10 @@ interface IPhysicsService {
   addBody(body: unknown): void;
   removeBody(body: unknown): void;
   step(dt: number): void;
-  raycast(from: { x: number; y: number }, to: { x: number; y: number }): unknown[];
+  raycast(
+    from: { x: number; y: number },
+    to: { x: number; y: number }
+  ): unknown[];
 }
 
 interface IRenderService {
@@ -1791,13 +1818,13 @@ const mousePos = Services.getInput().getMousePosition();
 
 ### Service Locator vs Dependency Injection
 
-| Aspect | Service Locator | Dependency Injection |
-|--------|----------------|---------------------|
-| Discovery | Runtime lookup | Compile-time wiring |
-| Dependencies | Hidden | Explicit |
-| Testing | Swap implementations | Inject mocks |
-| Coupling | To the locator | To interfaces |
-| Best for | Game subsystems | Business logic |
+| Aspect       | Service Locator      | Dependency Injection |
+| ------------ | -------------------- | -------------------- |
+| Discovery    | Runtime lookup       | Compile-time wiring  |
+| Dependencies | Hidden               | Explicit             |
+| Testing      | Swap implementations | Inject mocks         |
+| Coupling     | To the locator       | To interfaces        |
+| Best for     | Game subsystems      | Business logic       |
 
 ---
 
@@ -1867,7 +1894,7 @@ const gameLoop = new GameLoop(
   (alpha) => {
     // Render with interpolation for smooth visuals
     renderer.clear();
-    entities.forEach(e => {
+    entities.forEach((e) => {
       const x = e.prevX + (e.x - e.prevX) * alpha;
       const y = e.prevY + (e.y - e.prevY) * alpha;
       renderer.drawSprite(e.sprite, x, y);
@@ -1937,7 +1964,7 @@ class SpatialHash<T extends { x: number; y: number }> {
         const cell = this.cells.get(`${cx},${cy}`);
         if (!cell) continue;
 
-        cell.forEach(item => {
+        cell.forEach((item) => {
           const dx = item.x - x;
           const dy = item.y - y;
           if (dx * dx + dy * dy <= radiusSq) {
@@ -1958,18 +1985,15 @@ class SpatialHash<T extends { x: number; y: number }> {
 // Usage: collision detection with spatial hash
 const spatialHash = new SpatialHash<Bullet>(64);
 
-function checkBulletEnemyCollisions(
-  bullets: Bullet[],
-  enemies: Enemy[]
-): void {
+function checkBulletEnemyCollisions(bullets: Bullet[], enemies: Enemy[]): void {
   // Insert all enemies
   spatialHash.clear();
-  enemies.forEach(e => spatialHash.insert(e));
+  enemies.forEach((e) => spatialHash.insert(e));
 
   // For each bullet, only check nearby enemies
-  bullets.forEach(bullet => {
+  bullets.forEach((bullet) => {
     const nearby = spatialHash.queryNearby(bullet.x, bullet.y, 32);
-    nearby.forEach(enemy => {
+    nearby.forEach((enemy) => {
       if (checkCollision(bullet, enemy)) {
         handleHit(bullet, enemy);
       }
@@ -2009,17 +2033,20 @@ A bullet hell game involves thousands of bullets on screen simultaneously, makin
 In traditional OOP, game entities inherit from a base class, creating deep hierarchies: `GameObject -> Character -> Enemy -> FlyingEnemy`. This leads to the "diamond problem" and rigid hierarchies that are hard to refactor.
 
 ECS separates concerns into three parts:
+
 - **Entities**: Just unique IDs (numbers). No data, no behavior.
 - **Components**: Pure data structs. `Position { x, y }`, `Velocity { vx, vy }`, `Health { current, max }`. No methods.
 - **Systems**: Contain all logic. Each system queries entities with specific component combinations and processes them.
 
 Advantages:
+
 - **Composition over inheritance**: An entity is defined by which components it has. Want a flying enemy? Add `Position + Velocity + Sprite + Health + AIFlying`. Want a static turret? `Position + Sprite + Health + AITurret`.
 - **Cache-friendly**: Components of the same type are stored contiguously. When the MovementSystem iterates all Velocity components, it reads sequential memory.
 - **Easy to add behaviors**: Adding a "poisoned" status effect? Create a `Poison { damagePerSecond, duration }` component and a `PoisonSystem`. No existing code changes.
 - **Testable**: Systems are pure functions of components. Easy to test in isolation.
 
 Trade-offs:
+
 - **More boilerplate**: Requires component stores, system registration, entity management.
 - **Indirection**: Following logic requires looking at systems rather than a single class.
 - **Overkill for small games**: A simple 2D platformer with 20 entities does not need ECS.
@@ -2086,6 +2113,7 @@ The same principle applies to: sprite definitions (share frame data, each instan
 A scene graph organizes game objects in a tree where each node has a local transform (position, rotation, scale) relative to its parent. The world transform is computed by concatenating transforms up the tree.
 
 **When useful:**
+
 - **Articulated characters**: A character has a body, arms, legs, and a weapon. Rotating the arm also rotates the hand and weapon attached to it.
 - **Vehicles**: A car has wheels that rotate independently while the car moves. A tank has a body and a turret that rotates relative to the body.
 - **UI hierarchies**: A dialog box contains buttons and text. Moving the dialog moves all its children.
@@ -2094,6 +2122,7 @@ A scene graph organizes game objects in a tree where each node has a local trans
 **Optimization with dirty flags**: When a node's local transform changes, mark it and all descendants as "dirty." Only recompute world transforms for dirty nodes. If 1000 objects exist and only 5 move, only ~5-20 transforms are recomputed (the movers plus their children).
 
 **When a flat list is better:**
+
 - Simple particle systems (no parent-child relationships)
 - Bullet hell games (thousands of independent projectiles)
 - When cache-friendly iteration is more important than hierarchical transforms
@@ -2110,11 +2139,13 @@ A scene graph organizes game objects in a tree where each node has a local trans
 **Observer/Event system**: The collision system emits `events.emit('enemy:killed', { score: 100 })`. The score manager subscribes: `events.on('enemy:killed', ({ score }) => addScore(score))`. The collision system does not know or care about scoring.
 
 **Observer advantages:**
+
 - Decoupled: Adding screen shake on enemy death requires zero changes to the collision system. Just subscribe.
 - Multiple listeners: Audio, particles, score, achievements can all react to the same event independently.
 - Easy to add/remove features without cascading changes.
 
 **Observer disadvantages:**
+
 - Harder to trace execution flow (event handlers are not in the call stack).
 - String-based events can have typos (mitigated with TypeScript typed events).
 - Performance overhead from event dispatching (negligible in practice).
@@ -2141,6 +2172,7 @@ When the player redoes: pop from the redo stack, call `execute()`, push onto the
 For composite actions (e.g., a match-3 swap that triggers cascading matches), use a CompositeCommand that groups multiple atomic commands. Undoing the composite undoes all sub-commands in reverse order.
 
 Important considerations:
+
 - Cap the history size to prevent unbounded memory growth.
 - Some actions may be non-undoable (e.g., using a consumable power-up). Mark these and clear the undo stack when they occur.
 - For a level editor, save the full state periodically as a snapshot. Undo walks backward through commands until a snapshot, then restores the snapshot and replays commands forward.
@@ -2162,6 +2194,7 @@ Key differences from singletons:
 3. **No global state in the class itself**: The service implementations are stateless from the locator's perspective. They can be created, configured, and registered normally.
 
 **Trade-offs:**
+
 - Dependencies are still hidden (not in constructor signatures). This makes it harder to know what a class depends on.
 - Runtime errors if a service is accessed before registration (mitigated with null implementations).
 - A step between raw singletons and full dependency injection.
@@ -2175,6 +2208,7 @@ For games, the Service Locator is a pragmatic choice. Full DI frameworks add com
 **Answer:**
 
 States:
+
 - **Idle**: Standing still on ground. Transitions to: Running (move input), Jumping (jump input), Falling (walk off edge), Attacking (attack input), Hurt (hit by enemy), Dead (health <= 0).
 - **Running**: Moving on ground. Transitions to: Idle (no input), Jumping (jump input), Falling (walk off edge), Attacking (attack input), Sliding (slide input), Hurt, Dead.
 - **Jumping**: Rising upward. Transitions to: Falling (velocity.y becomes positive), DoubleJumping (jump input if double jump available), WallSliding (touching wall), Hurt, Dead.

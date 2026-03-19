@@ -10,7 +10,7 @@ effortlessly scan your interface or leaves confused after three seconds.
 This topic matters because every pixel on screen competes for attention. Without a
 clear hierarchy, users experience cognitive overload. With a strong hierarchy and
 thoughtful layout, interfaces feel intuitive -- users find what they need without
-thinking about *how* they found it.
+thinking about _how_ they found it.
 
 **What this file covers:**
 
@@ -247,7 +247,7 @@ Tailwind CSS uses a 4px base (`p-1` = 4px, `p-2` = 8px, `p-4` = 16px, etc.).
 
 #### Spacing Relationships
 
-The space *between* groups should be larger than the space *within* groups.
+The space _between_ groups should be larger than the space _within_ groups.
 This directly applies the proximity principle.
 
 ```
@@ -406,13 +406,15 @@ module.exports = {
       24: '96px',
     },
   },
-}
+};
 ```
 
 ### Implementing a 12-Column Grid in Tailwind
 
 ```jsx
-{/* 12-column grid */}
+{
+  /* 12-column grid */
+}
 <div className="grid grid-cols-12 gap-6">
   {/* Sidebar: 3 columns */}
   <aside className="col-span-3">
@@ -423,13 +425,15 @@ module.exports = {
   <main className="col-span-9">
     <article>...</article>
   </main>
-</div>
+</div>;
 
-{/* Responsive: stack on mobile, side-by-side on desktop */}
+{
+  /* Responsive: stack on mobile, side-by-side on desktop */
+}
 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
   <aside className="md:col-span-4">...</aside>
   <main className="md:col-span-8">...</main>
-</div>
+</div>;
 ```
 
 ### Visual Hierarchy with Tailwind Typography
@@ -445,8 +449,8 @@ function HeroSection() {
 
       {/* Level 2: Smaller, lighter -- seen second */}
       <p className="text-xl text-gray-600 max-w-2xl">
-        A practical guide to visual hierarchy, layout systems,
-        and spacing that makes your UI feel effortless.
+        A practical guide to visual hierarchy, layout systems, and spacing that
+        makes your UI feel effortless.
       </p>
 
       {/* Level 3: CTA with high contrast -- draws action */}
@@ -599,7 +603,9 @@ Strengthen the hierarchy:
 ### Grid Recommendations
 
 ```jsx
-{/* Portfolio two-column layout */}
+{
+  /* Portfolio two-column layout */
+}
 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-6xl mx-auto">
   {/* Left column: sticky sidebar */}
   <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start">
@@ -613,12 +619,13 @@ Strengthen the hierarchy:
     <EducationSection />
     <SkillsSection />
   </div>
-</div>
+</div>;
 ```
 
 ### Whitespace Audit
 
 Review each section component and ensure:
+
 - Section gaps use `py-16` or larger (64px+)
 - Card internal padding uses `p-6` (24px)
 - Element groups within cards use `space-y-2` (8px) for tight grouping

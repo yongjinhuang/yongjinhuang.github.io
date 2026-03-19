@@ -19,14 +19,14 @@ Technical decision questions test whether you can think beyond code. Interviewer
 
 ### Common Technical Decision Areas
 
-| Area | Example Decisions |
-|------|------------------|
-| **Architecture** | Monolith vs. microservices, sync vs. async, event-driven vs. request-response |
-| **Technology Selection** | Language choice, database selection, framework adoption, cloud provider |
-| **Build vs. Buy** | Custom solution vs. third-party service, OSS adoption vs. internal tooling |
-| **Scale and Performance** | Caching strategies, denormalization, eventual consistency trade-offs |
-| **Migration** | When to rewrite vs. refactor, incremental vs. big-bang migration |
-| **Technical Debt** | When to pay it down, how to prioritize, how to communicate the cost |
+| Area                      | Example Decisions                                                             |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| **Architecture**          | Monolith vs. microservices, sync vs. async, event-driven vs. request-response |
+| **Technology Selection**  | Language choice, database selection, framework adoption, cloud provider       |
+| **Build vs. Buy**         | Custom solution vs. third-party service, OSS adoption vs. internal tooling    |
+| **Scale and Performance** | Caching strategies, denormalization, eventual consistency trade-offs          |
+| **Migration**             | When to rewrite vs. refactor, incremental vs. big-bang migration              |
+| **Technical Debt**        | When to pay it down, how to prioritize, how to communicate the cost           |
 
 ---
 
@@ -63,6 +63,7 @@ Clarify your role in the decision and what success looked like.
 
 **Action:**
 Walk through your decision-making process:
+
 - What options did you evaluate?
 - What criteria did you use?
 - What trade-offs did you weigh?
@@ -111,6 +112,7 @@ The VP of Engineering pushed back, preferring the database-per-tenant approach f
 "We migrated the top 10 clients to dedicated databases over five weeks. Query performance for those clients improved by 8x on average. Performance for the remaining clients improved by 3x because the largest datasets were no longer competing for resources. We stopped losing enterprise prospects immediately. Six months later, when the SRE team was in place, we revisited the decision and migrated all clients to dedicated databases using the runbooks and tooling we had built during the tiered phase. The phased approach meant that the full migration was significantly easier because we had already solved the hard operational problems. The VP of Engineering later told me that the tiered approach was the right call given our constraints at the time."
 
 **Why this is strong:**
+
 - Evaluated multiple options systematically, not just the one chosen
 - Used a scoring matrix to make the comparison transparent
 - Considered team size and operational reality, not just architecture purity
@@ -143,6 +145,7 @@ I presented this to the PM and my manager together. I framed it as: 'We can eith
 "We adopted Service B and had the notification system integrated within one sprint. The 13 engineer-weeks we saved were redirected to building the analytics features that became our primary selling point in the next two quarters. The notification service cost us $1,200 per month compared to my estimate of roughly $8,000 per month in ongoing engineering maintenance if we had built it ourselves. After 18 months, we are still on Service B with zero significant issues. The PM adopted a 'build-vs-buy analysis required' step for all feature requests estimated at more than four weeks, which has saved the team from several other build-it-ourselves traps."
 
 **Why this is strong:**
+
 - Proactively questioned the assumption rather than just building
 - Thorough analysis with concrete numbers
 - Compared total cost of ownership, not just initial build time
@@ -176,6 +179,7 @@ I also proposed a trigger for revisiting the decision: when our event volume exc
 "The CTO and CPO approved the simpler approach. We shipped the analytics dashboard in five weeks instead of the estimated fourteen. User adoption was strong, with 78% of enterprise clients using the dashboard within the first month. Query performance was within the targets we had set. Eighteen months later, we hit 50 million events per day and had not yet needed to migrate. The materialized view approach scaled better than I had initially estimated because PostgreSQL's parallel query capabilities continued to improve. We documented a migration plan for the future but avoided spending months on a complex infrastructure project that was not yet necessary."
 
 **Why this is strong:**
+
 - Respects the original proposal and the people behind it
 - Uses a structured risk analysis, not just opinions
 - Builds a working proof of concept as evidence
@@ -194,6 +198,7 @@ I also proposed a trigger for revisiting the decision: when our event volume exc
 > "We needed a database, and I chose PostgreSQL because it's the best database. It's reliable, it's open source, it has great community support, and it handles everything we need. We set it up and it worked great."
 
 **Why this is weak:**
+
 - No alternatives considered or discussed.
 - "It's the best database" is not a trade-off analysis.
 - No mention of what requirements drove the decision.
@@ -207,6 +212,7 @@ I also proposed a trigger for revisiting the decision: when our event volume exc
 > "We went with microservices and Kubernetes because that's what all the top companies are using. Netflix uses it, Uber uses it, and we wanted to be on the cutting edge. It was a lot of work to set up, but now we have a modern architecture."
 
 **Why this is weak:**
+
 - Decision driven by trends, not requirements.
 - "Netflix uses it" is not relevant to your context.
 - "A lot of work" suggests the cost was not properly evaluated.
@@ -220,6 +226,7 @@ I also proposed a trigger for revisiting the decision: when our event volume exc
 > "We used a CQRS pattern with event sourcing. Events are serialized with Protocol Buffers and stored in Kafka topics with a retention period of 7 days. Read models are projected into Elasticsearch with a custom projection engine I built using the actor model. We use snapshotting every 1000 events to keep replay times under 2 seconds."
 
 **Why this is weak:**
+
 - All technical implementation, no context or reasoning.
 - Does not explain WHY these choices were made.
 - No discussion of alternatives or trade-offs.
@@ -240,6 +247,7 @@ I also proposed a trigger for revisiting the decision: when our event volume exc
 
 **Action:**
 "I evaluated [number] approaches:
+
 1. [Option A]: [pros]. Trade-offs: [cons]. Estimated effort: [time].
 2. [Option B]: [pros]. Trade-offs: [cons]. Estimated effort: [time].
 3. [Option C]: [pros]. Trade-offs: [cons]. Estimated effort: [time].
@@ -259,6 +267,7 @@ I recommended [chosen option] because [key deciding factors]. I validated the ap
 
 **Action:**
 "I analyzed the full scope of [the capability], including [features typically underestimated: maintenance, compliance, edge cases]. I evaluated [number] options:
+
 - Build: [effort estimate, ongoing cost, advantages]
 - [Service A]: [cost, capabilities, limitations]
 - [Service B]: [cost, capabilities, limitations]
@@ -315,30 +324,30 @@ When telling technical decision stories, demonstrate this process:
 
 ### Do's and Don'ts
 
-| Do | Don't |
-|----|-------|
-| Evaluate multiple options explicitly | Present only the option you chose |
-| Explain your criteria and why they mattered | Let the interviewer guess why you chose something |
-| Discuss what you traded away, not just what you gained | Present your choice as having no downsides |
-| Tailor technical depth to your audience | Use the same explanation for a PM and a staff engineer |
-| Connect technical decisions to business outcomes | Stop at "it was technically better" |
-| Show willingness to revisit decisions with new data | Treat decisions as permanent and final |
-| Acknowledge uncertainty and risk | Present yourself as always certain |
-| Credit others who contributed to the decision | Present complex decisions as solo efforts |
+| Do                                                     | Don't                                                  |
+| ------------------------------------------------------ | ------------------------------------------------------ |
+| Evaluate multiple options explicitly                   | Present only the option you chose                      |
+| Explain your criteria and why they mattered            | Let the interviewer guess why you chose something      |
+| Discuss what you traded away, not just what you gained | Present your choice as having no downsides             |
+| Tailor technical depth to your audience                | Use the same explanation for a PM and a staff engineer |
+| Connect technical decisions to business outcomes       | Stop at "it was technically better"                    |
+| Show willingness to revisit decisions with new data    | Treat decisions as permanent and final                 |
+| Acknowledge uncertainty and risk                       | Present yourself as always certain                     |
+| Credit others who contributed to the decision          | Present complex decisions as solo efforts              |
 
 ### Key Phrases for Technical Decision Stories
 
-| Use These | Avoid These |
-|-----------|-------------|
-| "I evaluated three options..." | "I just knew this was the right choice" |
-| "The key trade-off was..." | "There was no downside" |
-| "I validated the approach by..." | "I was confident it would work" |
-| "Given our constraints of..." | "In an ideal world..." |
-| "The deciding factor was..." | "It was obvious" |
-| "I proposed a phased approach to reduce risk..." | "We just went for it" |
-| "When [stakeholder] raised [concern], I..." | "Nobody questioned my decision" |
-| "Looking back, I would have..." | "I wouldn't change anything" |
+| Use These                                        | Avoid These                             |
+| ------------------------------------------------ | --------------------------------------- |
+| "I evaluated three options..."                   | "I just knew this was the right choice" |
+| "The key trade-off was..."                       | "There was no downside"                 |
+| "I validated the approach by..."                 | "I was confident it would work"         |
+| "Given our constraints of..."                    | "In an ideal world..."                  |
+| "The deciding factor was..."                     | "It was obvious"                        |
+| "I proposed a phased approach to reduce risk..." | "We just went for it"                   |
+| "When [stakeholder] raised [concern], I..."      | "Nobody questioned my decision"         |
+| "Looking back, I would have..."                  | "I wouldn't change anything"            |
 
 ---
 
-*Next: [04 - Failure & Learning](./04-FAILURE-LEARNING.md)*
+_Next: [04 - Failure & Learning](./04-FAILURE-LEARNING.md)_

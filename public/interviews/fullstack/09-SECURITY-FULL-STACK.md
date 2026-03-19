@@ -14,18 +14,18 @@ This guide covers the OWASP Top 10, injection attacks, authentication and author
 
 The Open Web Application Security Project (OWASP) maintains a list of the most critical web application security risks, updated every few years. Here are the categories most relevant to full-stack developers:
 
-| # | Category | Description |
-|---|----------|-------------|
-| A01 | Broken Access Control | Users can act outside their intended permissions |
-| A02 | Cryptographic Failures | Sensitive data exposed due to weak or missing encryption |
-| A03 | Injection | Untrusted data sent to an interpreter as part of a command or query |
-| A04 | Insecure Design | Flaws in architecture that no amount of implementation fixes can address |
-| A05 | Security Misconfiguration | Default configs, open cloud storage, verbose error messages |
-| A06 | Vulnerable Components | Using libraries with known vulnerabilities |
-| A07 | Identification & Auth Failures | Weak passwords, missing MFA, session fixation |
-| A08 | Software & Data Integrity Failures | CI/CD pipeline tampering, unsigned updates |
-| A09 | Security Logging & Monitoring Failures | Breaches go undetected due to inadequate logging |
-| A10 | Server-Side Request Forgery (SSRF) | Server is tricked into making requests to unintended destinations |
+| #   | Category                               | Description                                                              |
+| --- | -------------------------------------- | ------------------------------------------------------------------------ |
+| A01 | Broken Access Control                  | Users can act outside their intended permissions                         |
+| A02 | Cryptographic Failures                 | Sensitive data exposed due to weak or missing encryption                 |
+| A03 | Injection                              | Untrusted data sent to an interpreter as part of a command or query      |
+| A04 | Insecure Design                        | Flaws in architecture that no amount of implementation fixes can address |
+| A05 | Security Misconfiguration              | Default configs, open cloud storage, verbose error messages              |
+| A06 | Vulnerable Components                  | Using libraries with known vulnerabilities                               |
+| A07 | Identification & Auth Failures         | Weak passwords, missing MFA, session fixation                            |
+| A08 | Software & Data Integrity Failures     | CI/CD pipeline tampering, unsigned updates                               |
+| A09 | Security Logging & Monitoring Failures | Breaches go undetected due to inadequate logging                         |
+| A10 | Server-Side Request Forgery (SSRF)     | Server is tricked into making requests to unintended destinations        |
 
 ### 2. Injection Attacks
 
@@ -74,11 +74,11 @@ XSS occurs when an attacker injects malicious scripts into content that other us
 
 **Three types:**
 
-| Type | How It Works | Example |
-|------|-------------|---------|
-| **Stored XSS** | Malicious script saved to database, served to all users | Comment containing `<script>` tag |
+| Type              | How It Works                                            | Example                            |
+| ----------------- | ------------------------------------------------------- | ---------------------------------- |
+| **Stored XSS**    | Malicious script saved to database, served to all users | Comment containing `<script>` tag  |
 | **Reflected XSS** | Script in URL parameters reflected back in the response | Search query shown on results page |
-| **DOM-based XSS** | Client-side JavaScript writes untrusted data to the DOM | `innerHTML = location.hash` |
+| **DOM-based XSS** | Client-side JavaScript writes untrusted data to the DOM | `innerHTML = location.hash`        |
 
 **Prevention:**
 
@@ -213,7 +213,7 @@ app.post('/api/users', async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({
       error: 'Validation failed',
-      details: parsed.error.issues.map(i => ({
+      details: parsed.error.issues.map((i) => ({
         field: i.path.join('.'),
         message: i.message,
       })),
@@ -231,13 +231,13 @@ Never hardcode secrets. Never commit them to version control.
 
 **Hierarchy of approaches:**
 
-| Approach | When to Use | Example |
-|----------|-------------|---------|
-| Environment variables | Simple apps, local dev | `process.env.DATABASE_URL` |
-| `.env` files (not committed) | Local development | `.env` in `.gitignore` |
-| CI/CD secrets | Build-time secrets | GitHub Actions secrets, GitLab CI variables |
-| Secret managers | Production | AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager |
-| Sealed secrets | Kubernetes | Bitnami Sealed Secrets |
+| Approach                     | When to Use            | Example                                                  |
+| ---------------------------- | ---------------------- | -------------------------------------------------------- |
+| Environment variables        | Simple apps, local dev | `process.env.DATABASE_URL`                               |
+| `.env` files (not committed) | Local development      | `.env` in `.gitignore`                                   |
+| CI/CD secrets                | Build-time secrets     | GitHub Actions secrets, GitLab CI variables              |
+| Secret managers              | Production             | AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager |
+| Sealed secrets               | Kubernetes             | Bitnami Sealed Secrets                                   |
 
 ```typescript
 // config.ts -- Validate all required secrets at startup
@@ -254,7 +254,7 @@ const envSchema = z.object({
 function loadConfig() {
   const parsed = envSchema.safeParse(process.env);
   if (!parsed.success) {
-    const missing = parsed.error.issues.map(i => i.path.join('.')).join(', ');
+    const missing = parsed.error.issues.map((i) => i.path.join('.')).join(', ');
     throw new Error(`Missing or invalid environment variables: ${missing}`);
   }
   return parsed.data;
@@ -285,13 +285,15 @@ import cors from 'cors';
 app.use(cors());
 
 // CORRECT: Explicit allowlist
-app.use(cors({
-  origin: ['https://myapp.com', 'https://staging.myapp.com'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  maxAge: 86400, // Cache preflight for 24 hours
-}));
+app.use(
+  cors({
+    origin: ['https://myapp.com', 'https://staging.myapp.com'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    maxAge: 86400, // Cache preflight for 24 hours
+  })
+);
 ```
 
 ### 10. Content Security Policy (CSP)
@@ -300,17 +302,20 @@ CSP tells the browser which resources are allowed to load, providing a strong de
 
 ```typescript
 app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', [
-    "default-src 'self'",
-    "script-src 'self' 'nonce-{NONCE}'",
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https://cdn.myapp.com",
-    "font-src 'self' https://fonts.gstatic.com",
-    "connect-src 'self' https://api.myapp.com",
-    "frame-ancestors 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-  ].join('; '));
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'nonce-{NONCE}'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https://cdn.myapp.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "connect-src 'self' https://api.myapp.com",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ')
+  );
   next();
 });
 ```
@@ -352,31 +357,33 @@ A set of HTTP response headers that instruct the browser to enable security feat
 import helmet from 'helmet';
 
 // helmet sets multiple security headers at once
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+      },
     },
-  },
-  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-  frameguard: { action: 'deny' },
-  noSniff: true,
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-}));
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+    frameguard: { action: 'deny' },
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  })
+);
 ```
 
 **Key headers explained:**
 
-| Header | Purpose |
-|--------|---------|
-| `Strict-Transport-Security` | Force HTTPS for all future requests |
-| `X-Content-Type-Options: nosniff` | Prevent MIME type sniffing |
-| `X-Frame-Options: DENY` | Prevent clickjacking via iframes |
-| `Referrer-Policy` | Control how much referrer info is sent |
-| `Content-Security-Policy` | Restrict resource loading |
-| `Permissions-Policy` | Control browser feature access (camera, mic, geolocation) |
+| Header                            | Purpose                                                   |
+| --------------------------------- | --------------------------------------------------------- |
+| `Strict-Transport-Security`       | Force HTTPS for all future requests                       |
+| `X-Content-Type-Options: nosniff` | Prevent MIME type sniffing                                |
+| `X-Frame-Options: DENY`           | Prevent clickjacking via iframes                          |
+| `Referrer-Policy`                 | Control how much referrer info is sent                    |
+| `Content-Security-Policy`         | Restrict resource loading                                 |
+| `Permissions-Policy`              | Control browser feature access (camera, mic, geolocation) |
 
 ### 13. Dependency Vulnerabilities
 
@@ -484,7 +491,19 @@ function renderComment(markdownInput: string): string {
 
   // Sanitize the HTML
   const cleanHtml = DOMPurify.sanitize(rawHtml, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote'],
+    ALLOWED_TAGS: [
+      'p',
+      'br',
+      'strong',
+      'em',
+      'a',
+      'ul',
+      'ol',
+      'li',
+      'code',
+      'pre',
+      'blockquote',
+    ],
     ALLOWED_ATTR: ['href', 'target', 'rel'],
     ALLOW_DATA_ATTR: false,
   });
@@ -539,7 +558,8 @@ function requireRole(...roles: string[]) {
 }
 
 // Usage
-app.delete('/api/admin/users/:id',
+app.delete(
+  '/api/admin/users/:id',
   requireAuth,
   requireRole('admin', 'super_admin'),
   auditLog('user.delete'),
@@ -594,7 +614,7 @@ async function validateApiKey(key: string): Promise<ApiKeyRecord | null> {
 
 **Answer:**
 
-**Authentication** verifies *who you are* (identity). **Authorization** verifies *what you can do* (permissions).
+**Authentication** verifies _who you are_ (identity). **Authorization** verifies _what you can do_ (permissions).
 
 Authentication answers: "Is this user who they claim to be?"
 Authorization answers: "Is this user allowed to perform this action?"
@@ -625,6 +645,7 @@ React's protection breaks down in two cases:
 2. **`href` attributes with `javascript:` URLs:** React does not block `<a href="javascript:alert('xss')">`. You must validate URLs yourself.
 
 Additional layers of defense:
+
 - Content Security Policy to prevent inline script execution
 - HttpOnly cookies to prevent session theft even if XSS occurs
 - Input validation on the server to reject obvious attack payloads
@@ -644,6 +665,7 @@ Every major database driver and ORM supports parameterized queries:
 - **Query builders (Knex):** Parameterize by default when using the fluent API
 
 Additional defenses:
+
 - Use the principle of least privilege for database users (read-only connections where possible)
 - Validate input types and lengths before they reach the query
 - Use stored procedures for complex operations
@@ -683,6 +705,7 @@ Secrets (API keys, database passwords, encryption keys) should never be in sourc
 5. **Principle of least privilege.** Each service should only have access to the secrets it needs.
 
 **What to do if a secret is leaked:**
+
 1. Rotate the secret immediately
 2. Audit access logs for the compromised credential
 3. If it was committed to Git, the secret is in the history even if you delete it from the latest commit. Rotate and use `git filter-branch` or BFG Repo-Cleaner to remove it from history.
@@ -793,39 +816,46 @@ import { Express } from 'express';
 
 export function applySecurityMiddleware(app: Express) {
   // Security headers
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:', 'https://cdn.example.com'],
-        connectSrc: ["'self'", 'https://api.example.com'],
-        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        frameAncestors: ["'none'"],
-        baseUri: ["'self'"],
-        formAction: ["'self'"],
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https://cdn.example.com'],
+          connectSrc: ["'self'", 'https://api.example.com'],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+          frameAncestors: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+        },
       },
-    },
-    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-  }));
+      hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+    })
+  );
 
   // CORS
-  app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || [],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    maxAge: 86400,
-  }));
+  app.use(
+    cors({
+      origin: process.env.ALLOWED_ORIGINS?.split(',') || [],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+      maxAge: 86400,
+    })
+  );
 
   // Rate limiting
-  app.use('/api/', rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-  }));
+  app.use(
+    '/api/',
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 100,
+      standardHeaders: true,
+      legacyHeaders: false,
+    })
+  );
 
   // Body size limits
   app.use(express.json({ limit: '1mb' }));
@@ -868,11 +898,15 @@ async function createTokenPair(user: User) {
   const refreshToken = generateRefreshToken();
 
   // Store refresh token hash in database
-  const refreshTokenHash = createHash('sha256').update(refreshToken).digest('hex');
+  const refreshTokenHash = createHash('sha256')
+    .update(refreshToken)
+    .digest('hex');
   await db.refreshTokens.create({
     userId: user.id,
     tokenHash: refreshTokenHash,
-    expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
+    expiresAt: new Date(
+      Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+    ),
   });
 
   return { accessToken, refreshToken };
@@ -912,27 +946,31 @@ import { z } from 'zod';
 import DOMPurify from 'isomorphic-dompurify';
 
 // Custom Zod transformers for security
-const sanitizedString = z.string().transform(val => val.trim());
+const sanitizedString = z.string().transform((val) => val.trim());
 
-const sanitizedHtml = z.string().transform(val =>
+const sanitizedHtml = z.string().transform((val) =>
   DOMPurify.sanitize(val, {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li'],
     ALLOWED_ATTR: ['href'],
   })
 );
 
-const safeUrl = z.string().url().refine(
-  url => {
-    const parsed = new URL(url);
-    return ['http:', 'https:'].includes(parsed.protocol);
-  },
-  { message: 'Only HTTP and HTTPS URLs are allowed' }
-);
+const safeUrl = z
+  .string()
+  .url()
+  .refine(
+    (url) => {
+      const parsed = new URL(url);
+      return ['http:', 'https:'].includes(parsed.protocol);
+    },
+    { message: 'Only HTTP and HTTPS URLs are allowed' }
+  );
 
-const safeEmail = z.string()
+const safeEmail = z
+  .string()
   .email()
   .max(255)
-  .transform(val => val.toLowerCase().trim());
+  .transform((val) => val.toLowerCase().trim());
 
 // Usage in schemas
 export const createPostSchema = z.object({
@@ -974,7 +1012,10 @@ async function validateUpload(
 ): Promise<FileValidationResult> {
   // Check file size
   if (buffer.length > MAX_FILE_SIZE) {
-    return { valid: false, error: `File exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB` };
+    return {
+      valid: false,
+      error: `File exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+    };
   }
 
   // Detect actual file type from magic bytes (not from extension or claimed type)
@@ -999,7 +1040,10 @@ async function validateUpload(
   const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
 
   // Generate content-based filename to prevent conflicts and enumerate attacks
-  const hash = createHash('sha256').update(buffer).digest('hex').substring(0, 16);
+  const hash = createHash('sha256')
+    .update(buffer)
+    .digest('hex')
+    .substring(0, 16);
   const finalFilename = `${hash}_${safeFilename}`;
 
   return { valid: true, detectedType: detected.mime };
@@ -1013,32 +1057,38 @@ async function validateUpload(
 import { z } from 'zod';
 
 const commonPasswords = new Set([
-  'password123', '123456789', 'qwerty123', 'admin123',
-  'letmein', 'welcome1', 'monkey123', 'dragon123',
+  'password123',
+  '123456789',
+  'qwerty123',
+  'admin123',
+  'letmein',
+  'welcome1',
+  'monkey123',
+  'dragon123',
   // In production, load from a file with 10,000+ common passwords
 ]);
 
-export const passwordSchema = z.string()
+export const passwordSchema = z
+  .string()
   .min(12, 'Password must be at least 12 characters')
   .max(128, 'Password must be at most 128 characters')
   .refine(
-    pw => /[a-z]/.test(pw),
+    (pw) => /[a-z]/.test(pw),
     'Password must contain at least one lowercase letter'
   )
   .refine(
-    pw => /[A-Z]/.test(pw),
+    (pw) => /[A-Z]/.test(pw),
     'Password must contain at least one uppercase letter'
   )
+  .refine((pw) => /[0-9]/.test(pw), 'Password must contain at least one number')
   .refine(
-    pw => /[0-9]/.test(pw),
-    'Password must contain at least one number'
-  )
-  .refine(
-    pw => !commonPasswords.has(pw.toLowerCase()),
+    (pw) => !commonPasswords.has(pw.toLowerCase()),
     'This password is too common'
   );
 
-export function estimatePasswordStrength(password: string): 'weak' | 'fair' | 'strong' {
+export function estimatePasswordStrength(
+  password: string
+): 'weak' | 'fair' | 'strong' {
   let score = 0;
 
   if (password.length >= 12) score += 1;
@@ -1074,18 +1124,18 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 
 ### OWASP Top 10 -- Quick Defenses
 
-| Vulnerability | Defense |
-|---------------|---------|
-| Injection | Parameterized queries, ORMs |
-| Broken Auth | bcrypt/Argon2, MFA, session management |
-| XSS | Output encoding (React auto-escapes), CSP, DOMPurify |
-| CSRF | SameSite cookies, CSRF tokens |
-| SSRF | URL allowlisting, block private IPs |
-| Broken Access Control | Server-side authorization checks on every endpoint |
-| Security Misconfiguration | Helmet, disable debug mode, remove defaults |
-| Vulnerable Components | npm audit, Dependabot, Snyk |
-| Logging Failures | Structured logging, audit trails |
-| Insecure Design | Threat modeling during design phase |
+| Vulnerability             | Defense                                              |
+| ------------------------- | ---------------------------------------------------- |
+| Injection                 | Parameterized queries, ORMs                          |
+| Broken Auth               | bcrypt/Argon2, MFA, session management               |
+| XSS                       | Output encoding (React auto-escapes), CSP, DOMPurify |
+| CSRF                      | SameSite cookies, CSRF tokens                        |
+| SSRF                      | URL allowlisting, block private IPs                  |
+| Broken Access Control     | Server-side authorization checks on every endpoint   |
+| Security Misconfiguration | Helmet, disable debug mode, remove defaults          |
+| Vulnerable Components     | npm audit, Dependabot, Snyk                          |
+| Logging Failures          | Structured logging, audit trails                     |
+| Insecure Design           | Threat modeling during design phase                  |
 
 ### Cookie Security Settings
 

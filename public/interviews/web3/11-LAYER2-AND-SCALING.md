@@ -127,12 +127,12 @@ How fast bridges work:
 
 ### 3.3 Key Optimistic Rollups
 
-| Rollup | Stack | TVL | Notable |
-|--------|-------|-----|---------|
-| Arbitrum One | Nitro | ~$15B | Largest L2 by TVL, Stylus (Rust/C++) |
-| Optimism | OP Stack | ~$7B | Superchain vision, many forks |
-| Base | OP Stack | ~$5B | Built by Coinbase |
-| Mantle | OP Stack fork | ~$1B | EigenDA for data availability |
+| Rollup       | Stack         | TVL   | Notable                              |
+| ------------ | ------------- | ----- | ------------------------------------ |
+| Arbitrum One | Nitro         | ~$15B | Largest L2 by TVL, Stylus (Rust/C++) |
+| Optimism     | OP Stack      | ~$7B  | Superchain vision, many forks        |
+| Base         | OP Stack      | ~$5B  | Built by Coinbase                    |
+| Mantle       | OP Stack fork | ~$1B  | EigenDA for data availability        |
 
 ---
 
@@ -165,13 +165,13 @@ Disadvantage:
 
 ### 4.2 Key ZK Rollups
 
-| Rollup | Proof System | EVM Compat. | Notable |
-|--------|-------------|-------------|---------|
-| zkSync Era | PLONK + custom | zkEVM (bytecode level) | Account abstraction native |
-| StarkNet | STARKs | Cairo language (not EVM) | Quantum-resistant |
-| Polygon zkEVM | PLONK + recursion | EVM equivalent (Type 2) | Close to mainnet EVM |
-| Scroll | KZG + halo2 | EVM equivalent (Type 2) | Community-driven |
-| Linea | lattice-based | EVM equivalent | Built by ConsenSys |
+| Rollup        | Proof System      | EVM Compat.              | Notable                    |
+| ------------- | ----------------- | ------------------------ | -------------------------- |
+| zkSync Era    | PLONK + custom    | zkEVM (bytecode level)   | Account abstraction native |
+| StarkNet      | STARKs            | Cairo language (not EVM) | Quantum-resistant          |
+| Polygon zkEVM | PLONK + recursion | EVM equivalent (Type 2)  | Close to mainnet EVM       |
+| Scroll        | KZG + halo2       | EVM equivalent (Type 2)  | Community-driven           |
+| Linea         | lattice-based     | EVM equivalent           | Built by ConsenSys         |
 
 ### 4.3 EVM Equivalence Types
 
@@ -287,12 +287,12 @@ Third-party bridge: Hop, Across, Stargate, Wormhole
 
 Bridges are the most attacked infrastructure in Web3 (>$2.5B stolen):
 
-| Attack | Year | Lost | Cause |
-|--------|------|------|-------|
-| Ronin Bridge | 2022 | $624M | Compromised 5/9 validator keys |
-| Wormhole | 2022 | $326M | Signature verification bypass |
-| Nomad | 2022 | $190M | Initialization bug (anyone could drain) |
-| Harmony Horizon | 2022 | $100M | Compromised 2/5 multisig keys |
+| Attack          | Year | Lost  | Cause                                   |
+| --------------- | ---- | ----- | --------------------------------------- |
+| Ronin Bridge    | 2022 | $624M | Compromised 5/9 validator keys          |
+| Wormhole        | 2022 | $326M | Signature verification bypass           |
+| Nomad           | 2022 | $190M | Initialization bug (anyone could drain) |
+| Harmony Horizon | 2022 | $100M | Compromised 2/5 multisig keys           |
 
 **Key lesson**: Bridges are high-value targets because they hold locked funds. Minimize bridge usage; prefer native L2 assets when possible.
 
@@ -309,19 +309,19 @@ Deploying to an L2 is nearly identical to deploying to Ethereum mainnet — just
 const config: HardhatUserConfig = {
   networks: {
     arbitrum: {
-      url: "https://arb1.arbitrum.io/rpc",
+      url: 'https://arb1.arbitrum.io/rpc',
       accounts: [process.env.PRIVATE_KEY!],
     },
     optimism: {
-      url: "https://mainnet.optimism.io",
+      url: 'https://mainnet.optimism.io',
       accounts: [process.env.PRIVATE_KEY!],
     },
     base: {
-      url: "https://mainnet.base.org",
+      url: 'https://mainnet.base.org',
       accounts: [process.env.PRIVATE_KEY!],
     },
     zksync: {
-      url: "https://mainnet.era.zksync.io",
+      url: 'https://mainnet.era.zksync.io',
       accounts: [process.env.PRIVATE_KEY!],
       // zkSync requires a special compiler plugin
     },

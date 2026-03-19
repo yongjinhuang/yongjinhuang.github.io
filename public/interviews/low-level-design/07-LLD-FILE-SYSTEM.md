@@ -26,16 +26,16 @@ section covers a text editor with undo/redo using the Command pattern.
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Create files and directories | Nested directory structure |
-| F2 | Read/write file content | String content for simplicity |
-| F3 | Delete files and directories | Recursive delete for directories |
-| F4 | List directory contents | Like `ls` command |
-| F5 | Navigate paths | Absolute paths: `/home/user/docs/file.txt` |
-| F6 | Search | Find by name, extension, or size |
-| F7 | Move/rename | Move file or directory to a new location |
-| F8 | Permissions | Read, write, execute for owner (simplified) |
+| #   | Requirement                  | Details                                     |
+| --- | ---------------------------- | ------------------------------------------- |
+| F1  | Create files and directories | Nested directory structure                  |
+| F2  | Read/write file content      | String content for simplicity               |
+| F3  | Delete files and directories | Recursive delete for directories            |
+| F4  | List directory contents      | Like `ls` command                           |
+| F5  | Navigate paths               | Absolute paths: `/home/user/docs/file.txt`  |
+| F6  | Search                       | Find by name, extension, or size            |
+| F7  | Move/rename                  | Move file or directory to a new location    |
+| F8  | Permissions                  | Read, write, execute for owner (simplified) |
 
 ### Clarifying Questions
 

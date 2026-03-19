@@ -6,13 +6,13 @@ Most real-world Terraform adoption does not start with a blank slate. You inheri
 
 ## Why You Need Import
 
-| Scenario | What Happens |
-|----------|-------------|
+| Scenario                                | What Happens                                                                  |
+| --------------------------------------- | ----------------------------------------------------------------------------- |
 | Existing infra not managed by Terraform | Resources exist in AWS but not in state; Terraform wants to create duplicates |
-| Brownfield project adoption | Team decides to adopt IaC for infrastructure that has been running for years |
-| Migrating from CloudFormation/Pulumi | Need to bring resources into Terraform state without downtime |
-| Resources created by another team | Shared resources (VPC, DNS zones) need to be managed or referenced |
-| Disaster recovery | Rebuild state after accidental state file deletion |
+| Brownfield project adoption             | Team decides to adopt IaC for infrastructure that has been running for years  |
+| Migrating from CloudFormation/Pulumi    | Need to bring resources into Terraform state without downtime                 |
+| Resources created by another team       | Shared resources (VPC, DNS zones) need to be managed or referenced            |
+| Disaster recovery                       | Rebuild state after accidental state file deletion                            |
 
 ---
 
@@ -108,13 +108,13 @@ terraform apply
 
 ### Advantages Over CLI Import
 
-| Feature | CLI `terraform import` | Import Blocks |
-|---------|----------------------|---------------|
-| Declarative | No (imperative command) | Yes (in config) |
-| Reviewable in PRs | No | Yes (code review) |
-| Plannable | No (modifies state directly) | Yes (shows in plan output) |
-| Bulk import | Requires scripting | Just add more blocks |
-| Rollback | Manual state manipulation | Remove block, re-plan |
+| Feature           | CLI `terraform import`       | Import Blocks              |
+| ----------------- | ---------------------------- | -------------------------- |
+| Declarative       | No (imperative command)      | Yes (in config)            |
+| Reviewable in PRs | No                           | Yes (code review)          |
+| Plannable         | No (modifies state directly) | Yes (shows in plan output) |
+| Bulk import       | Requires scripting           | Just add more blocks       |
+| Rollback          | Manual state manipulation    | Remove block, re-plan      |
 
 After the import is applied and the plan is clean, remove the `import` blocks from your config. They are one-time declarations.
 
@@ -260,12 +260,12 @@ terraform apply
 
 ### Advantages of Moved Blocks Over state mv
 
-| Feature | `terraform state mv` | `moved` blocks |
-|---------|---------------------|----------------|
-| Declarative | No | Yes |
-| Reviewable in PRs | No (state-level operation) | Yes |
+| Feature                   | `terraform state mv`          | `moved` blocks               |
+| ------------------------- | ----------------------------- | ---------------------------- |
+| Declarative               | No                            | Yes                          |
+| Reviewable in PRs         | No (state-level operation)    | Yes                          |
 | Works across team members | Everyone must run the command | Automatic on next plan/apply |
-| Rollback | Manual state manipulation | Remove the block |
+| Rollback                  | Manual state manipulation     | Remove the block             |
 
 Keep `moved` blocks for a few apply cycles so all team members and CI pipelines pick up the change. Then remove them.
 
@@ -307,6 +307,7 @@ terraform init -migrate-state
 ```
 
 Terraform will:
+
 1. Read state from the old backend
 2. Write state to the new backend
 3. Confirm the migration
@@ -385,14 +386,14 @@ terraform init -upgrade
 
 ### Key Version Milestones
 
-| Version | Notable Changes |
-|---------|----------------|
-| 1.0 | Stability promise, no more breaking changes in 1.x |
-| 1.1 | `moved` blocks for declarative refactoring |
-| 1.3 | `optional()` for variable object attributes |
-| 1.5 | `import` blocks, `-generate-config-out`, `check` blocks |
-| 1.6 | `terraform test` framework (built-in testing) |
-| 1.7 | `removed` blocks, provider-defined functions |
+| Version | Notable Changes                                         |
+| ------- | ------------------------------------------------------- |
+| 1.0     | Stability promise, no more breaking changes in 1.x      |
+| 1.1     | `moved` blocks for declarative refactoring              |
+| 1.3     | `optional()` for variable object attributes             |
+| 1.5     | `import` blocks, `-generate-config-out`, `check` blocks |
+| 1.6     | `terraform test` framework (built-in testing)           |
+| 1.7     | `removed` blocks, provider-defined functions            |
 
 ---
 
@@ -428,28 +429,28 @@ AWS-specific tool that reads CloudFormation, CDK, or Terraform config from your 
 
 ### Import Comparison
 
-| Tool | Scope | Config Generation | State Import | Maintained |
-|------|-------|------------------|--------------|------------|
-| `terraform import` | Single resource | No (before 1.5) | Yes | Official |
-| Import blocks (1.5+) | Single resource | Yes (`-generate-config-out`) | Yes | Official |
-| Terraformer | Bulk, multi-provider | Yes | Yes | Community |
-| Former2 | AWS bulk | Yes | No (config only) | Community |
+| Tool                 | Scope                | Config Generation            | State Import     | Maintained |
+| -------------------- | -------------------- | ---------------------------- | ---------------- | ---------- |
+| `terraform import`   | Single resource      | No (before 1.5)              | Yes              | Official   |
+| Import blocks (1.5+) | Single resource      | Yes (`-generate-config-out`) | Yes              | Official   |
+| Terraformer          | Bulk, multi-provider | Yes                          | Yes              | Community  |
+| Former2              | AWS bulk             | Yes                          | No (config only) | Community  |
 
 ---
 
 ## Common Gotchas
 
-| Gotcha | Why It Happens | How to Avoid |
-|--------|----------------|--------------|
-| Import does not generate config (pre-1.5) | Legacy `terraform import` only modifies state, not config | Use Terraform 1.5+ import blocks with `-generate-config-out` |
-| Some resources cannot be imported | Provider does not implement import for that resource type | Check provider docs; may need to recreate or manage outside Terraform |
-| State manipulation is risky | `state mv`, `state rm` directly modify state; mistakes can orphan or duplicate resources | Always back up state first: `terraform state pull > backup.json` |
-| Generated config is too verbose | Auto-generation includes every API-returned attribute | Clean up generated code to only include attributes you want to manage |
-| Import drift after apply | Imported resource config does not exactly match reality; apply modifies it | Always run `terraform plan` after import and resolve all diffs before moving on |
-| Cross-state move creates a gap | Between `state rm` and `import`, the resource is unmanaged | Do both operations in quick succession; never leave resources in limbo |
-| Backend migration loses state | Using `-reconfigure` instead of `-migrate-state` | Always use `-migrate-state`; `-reconfigure` starts fresh |
-| Version upgrade breaks providers | Provider version constraints may conflict with new Terraform version | Pin provider versions; upgrade Terraform and providers separately |
-| Moved blocks not picked up | Team members do not run `terraform init` or `apply` after refactoring | Keep `moved` blocks for several cycles; communicate refactoring in PRs |
+| Gotcha                                    | Why It Happens                                                                           | How to Avoid                                                                    |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Import does not generate config (pre-1.5) | Legacy `terraform import` only modifies state, not config                                | Use Terraform 1.5+ import blocks with `-generate-config-out`                    |
+| Some resources cannot be imported         | Provider does not implement import for that resource type                                | Check provider docs; may need to recreate or manage outside Terraform           |
+| State manipulation is risky               | `state mv`, `state rm` directly modify state; mistakes can orphan or duplicate resources | Always back up state first: `terraform state pull > backup.json`                |
+| Generated config is too verbose           | Auto-generation includes every API-returned attribute                                    | Clean up generated code to only include attributes you want to manage           |
+| Import drift after apply                  | Imported resource config does not exactly match reality; apply modifies it               | Always run `terraform plan` after import and resolve all diffs before moving on |
+| Cross-state move creates a gap            | Between `state rm` and `import`, the resource is unmanaged                               | Do both operations in quick succession; never leave resources in limbo          |
+| Backend migration loses state             | Using `-reconfigure` instead of `-migrate-state`                                         | Always use `-migrate-state`; `-reconfigure` starts fresh                        |
+| Version upgrade breaks providers          | Provider version constraints may conflict with new Terraform version                     | Pin provider versions; upgrade Terraform and providers separately               |
+| Moved blocks not picked up                | Team members do not run `terraform init` or `apply` after refactoring                    | Keep `moved` blocks for several cycles; communicate refactoring in PRs          |
 
 ---
 

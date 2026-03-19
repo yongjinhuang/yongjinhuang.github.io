@@ -6,15 +6,15 @@ An API gateway sits at the edge of a microservices architecture, handling cross-
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **routes** | Maps incoming requests to backend services | Decouples external API paths from internal service topology; enables versioning and migration |
-| **api_keys** | Authentication credentials for API clients | Enables per-client identification, scoping, and rate limiting without coupling to user accounts |
-| **rate_limit_rules** | Configures rate limiting policies | Separates rate limit configuration from enforcement; supports per-client, per-endpoint, and global limits |
-| **rate_limit_counters** | Real-time request counts (Redis) | In-memory counters for sub-millisecond rate limit checks; ephemeral by design with TTL |
-| **circuit_breaker_state** | Tracks upstream service health (in-memory) | Prevents cascading failures by stopping requests to unhealthy services; must be fast so kept in memory |
-| **certificates** | TLS certificates for HTTPS termination | Centralizes certificate management with auto-renewal support |
-| **service_registry** | Live service instance directory (etcd/Consul) | Enables dynamic service discovery and load balancing without hardcoded addresses |
+| Table                     | Purpose                                       | Why It Exists                                                                                             |
+| ------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **routes**                | Maps incoming requests to backend services    | Decouples external API paths from internal service topology; enables versioning and migration             |
+| **api_keys**              | Authentication credentials for API clients    | Enables per-client identification, scoping, and rate limiting without coupling to user accounts           |
+| **rate_limit_rules**      | Configures rate limiting policies             | Separates rate limit configuration from enforcement; supports per-client, per-endpoint, and global limits |
+| **rate_limit_counters**   | Real-time request counts (Redis)              | In-memory counters for sub-millisecond rate limit checks; ephemeral by design with TTL                    |
+| **circuit_breaker_state** | Tracks upstream service health (in-memory)    | Prevents cascading failures by stopping requests to unhealthy services; must be fast so kept in memory    |
+| **certificates**          | TLS certificates for HTTPS termination        | Centralizes certificate management with auto-renewal support                                              |
+| **service_registry**      | Live service instance directory (etcd/Consul) | Enables dynamic service discovery and load balancing without hardcoded addresses                          |
 
 ---
 
@@ -22,82 +22,82 @@ An API gateway sits at the edge of a microservices architecture, handling cross-
 
 ### routes
 
-| Field | Type | Description |
-|-------|------|-------------|
-| route_id | PK, UUID | Unique route identifier |
-| match_host | VARCHAR | Hostname to match (e.g., api.example.com); enables multi-tenant routing on a single gateway |
-| match_path_pattern | VARCHAR | URL path pattern with parameter support (e.g., /v1/users/{id}); matched in priority order |
-| match_methods | ARRAY | HTTP methods this route handles (GET, POST, etc.); enables method-level routing to different services |
-| target_service | VARCHAR | Backend service name (resolved via service_registry) |
-| target_port | INT | Port on the target service |
-| strip_prefix | BOOLEAN | Whether to strip the matched prefix before forwarding (e.g., /api/v1/users becomes /users) |
-| timeout_ms | INT | Request timeout; set per-route because some endpoints (file uploads) need longer timeouts |
-| retry_count | INT | Number of retries on failure; set per-route because idempotent GETs can retry safely but POSTs often cannot |
-| priority | INT | Route evaluation order; higher priority routes are checked first to handle overlapping patterns |
+| Field              | Type     | Description                                                                                                 |
+| ------------------ | -------- | ----------------------------------------------------------------------------------------------------------- |
+| route_id           | PK, UUID | Unique route identifier                                                                                     |
+| match_host         | VARCHAR  | Hostname to match (e.g., api.example.com); enables multi-tenant routing on a single gateway                 |
+| match_path_pattern | VARCHAR  | URL path pattern with parameter support (e.g., /v1/users/{id}); matched in priority order                   |
+| match_methods      | ARRAY    | HTTP methods this route handles (GET, POST, etc.); enables method-level routing to different services       |
+| target_service     | VARCHAR  | Backend service name (resolved via service_registry)                                                        |
+| target_port        | INT      | Port on the target service                                                                                  |
+| strip_prefix       | BOOLEAN  | Whether to strip the matched prefix before forwarding (e.g., /api/v1/users becomes /users)                  |
+| timeout_ms         | INT      | Request timeout; set per-route because some endpoints (file uploads) need longer timeouts                   |
+| retry_count        | INT      | Number of retries on failure; set per-route because idempotent GETs can retry safely but POSTs often cannot |
+| priority           | INT      | Route evaluation order; higher priority routes are checked first to handle overlapping patterns             |
 
 ### api_keys
 
-| Field | Type | Description |
-|-------|------|-------------|
-| key_id | PK, UUID | Unique key identifier (not the key itself) |
-| key_hash | VARCHAR | SHA-256 hash of the API key; raw keys are never stored for security |
-| client_name | VARCHAR | Human-readable name for the client using this key |
-| scopes | ARRAY | Permissions granted (e.g., read:users, write:orders); enables least-privilege access |
-| rate_limit_tier | VARCHAR | Which rate limit tier this client falls under (free, pro, enterprise) |
-| is_active | BOOLEAN | Kill switch to immediately revoke access without deleting the key record |
-| created_at | TIMESTAMP | When the key was issued |
-| expires_at | TIMESTAMP | Key expiration; forces regular rotation for security hygiene |
+| Field           | Type      | Description                                                                          |
+| --------------- | --------- | ------------------------------------------------------------------------------------ |
+| key_id          | PK, UUID  | Unique key identifier (not the key itself)                                           |
+| key_hash        | VARCHAR   | SHA-256 hash of the API key; raw keys are never stored for security                  |
+| client_name     | VARCHAR   | Human-readable name for the client using this key                                    |
+| scopes          | ARRAY     | Permissions granted (e.g., read:users, write:orders); enables least-privilege access |
+| rate_limit_tier | VARCHAR   | Which rate limit tier this client falls under (free, pro, enterprise)                |
+| is_active       | BOOLEAN   | Kill switch to immediately revoke access without deleting the key record             |
+| created_at      | TIMESTAMP | When the key was issued                                                              |
+| expires_at      | TIMESTAMP | Key expiration; forces regular rotation for security hygiene                         |
 
 ### rate_limit_rules
 
-| Field | Type | Description |
-|-------|------|-------------|
-| rule_id | PK, UUID | Unique rule identifier |
-| scope | ENUM | global, per_client, per_endpoint; determines the granularity of the limit |
-| key_pattern | VARCHAR | Pattern for constructing the Redis key (e.g., {client_id}:{endpoint}); templated to support flexible scoping |
-| max_requests | INT | Maximum number of requests allowed in the window |
-| window_seconds | INT | Duration of the rate limit window; common values are 1 (burst), 60 (per-minute), 3600 (per-hour) |
+| Field          | Type     | Description                                                                                                  |
+| -------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
+| rule_id        | PK, UUID | Unique rule identifier                                                                                       |
+| scope          | ENUM     | global, per_client, per_endpoint; determines the granularity of the limit                                    |
+| key_pattern    | VARCHAR  | Pattern for constructing the Redis key (e.g., {client_id}:{endpoint}); templated to support flexible scoping |
+| max_requests   | INT      | Maximum number of requests allowed in the window                                                             |
+| window_seconds | INT      | Duration of the rate limit window; common values are 1 (burst), 60 (per-minute), 3600 (per-hour)             |
 
 ### rate_limit_counters (Redis)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| key | STRING | Constructed key: rl:{client_id}:{endpoint}:{window}; encodes all dimensions of the rate limit |
-| counter | INT | Current request count in this window; incremented atomically with INCR |
-| TTL | INT | Set to window_seconds on first request; counter auto-expires when window closes |
+| Field   | Type   | Description                                                                                   |
+| ------- | ------ | --------------------------------------------------------------------------------------------- |
+| key     | STRING | Constructed key: rl:{client_id}:{endpoint}:{window}; encodes all dimensions of the rate limit |
+| counter | INT    | Current request count in this window; incremented atomically with INCR                        |
+| TTL     | INT    | Set to window_seconds on first request; counter auto-expires when window closes               |
 
 ### circuit_breaker_state (in-memory)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| service_name | KEY | The upstream service this breaker protects |
-| state | ENUM | closed (normal), open (blocking requests), half_open (testing recovery) |
-| failure_count | INT | Consecutive failures; when threshold is exceeded, state transitions to open |
-| last_failure_at | TIMESTAMP | Used to calculate whether the recovery_timeout has elapsed |
-| recovery_timeout | DURATION | How long to wait in open state before transitioning to half_open and allowing a test request |
+| Field            | Type      | Description                                                                                  |
+| ---------------- | --------- | -------------------------------------------------------------------------------------------- |
+| service_name     | KEY       | The upstream service this breaker protects                                                   |
+| state            | ENUM      | closed (normal), open (blocking requests), half_open (testing recovery)                      |
+| failure_count    | INT       | Consecutive failures; when threshold is exceeded, state transitions to open                  |
+| last_failure_at  | TIMESTAMP | Used to calculate whether the recovery_timeout has elapsed                                   |
+| recovery_timeout | DURATION  | How long to wait in open state before transitioning to half_open and allowing a test request |
 
 ### certificates
 
-| Field | Type | Description |
-|-------|------|-------------|
-| cert_id | PK, UUID | Unique certificate identifier |
-| domain | VARCHAR | Domain name this certificate covers (may include wildcards) |
-| cert_pem | TEXT | PEM-encoded certificate chain |
-| key_pem_encrypted | TEXT | PEM-encoded private key, encrypted at rest; decrypted only in memory during TLS handshake |
-| expires_at | TIMESTAMP | Certificate expiration; monitored for renewal alerts |
-| auto_renew | BOOLEAN | Whether to automatically renew via ACME/Let's Encrypt before expiration |
+| Field             | Type      | Description                                                                               |
+| ----------------- | --------- | ----------------------------------------------------------------------------------------- |
+| cert_id           | PK, UUID  | Unique certificate identifier                                                             |
+| domain            | VARCHAR   | Domain name this certificate covers (may include wildcards)                               |
+| cert_pem          | TEXT      | PEM-encoded certificate chain                                                             |
+| key_pem_encrypted | TEXT      | PEM-encoded private key, encrypted at rest; decrypted only in memory during TLS handshake |
+| expires_at        | TIMESTAMP | Certificate expiration; monitored for renewal alerts                                      |
+| auto_renew        | BOOLEAN   | Whether to automatically renew via ACME/Let's Encrypt before expiration                   |
 
 ### service_registry (etcd/Consul)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| service_name | KEY | Logical service name (e.g., user-service) |
-| instances | ARRAY | List of available instances, each containing host, port, health status, weight, and zone |
-| host | VARCHAR | IP or hostname of the instance |
-| port | INT | Port the instance is listening on |
-| health | ENUM | healthy, unhealthy, draining; unhealthy instances are removed from load balancing |
-| weight | INT | Relative weight for weighted load balancing; higher weight = more traffic |
-| zone | VARCHAR | Availability zone; enables zone-aware routing to minimize latency |
+| Field        | Type    | Description                                                                              |
+| ------------ | ------- | ---------------------------------------------------------------------------------------- |
+| service_name | KEY     | Logical service name (e.g., user-service)                                                |
+| instances    | ARRAY   | List of available instances, each containing host, port, health status, weight, and zone |
+| host         | VARCHAR | IP or hostname of the instance                                                           |
+| port         | INT     | Port the instance is listening on                                                        |
+| health       | ENUM    | healthy, unhealthy, draining; unhealthy instances are removed from load balancing        |
+| weight       | INT     | Relative weight for weighted load balancing; higher weight = more traffic                |
+| zone         | VARCHAR | Availability zone; enables zone-aware routing to minimize latency                        |
 
 ---
 

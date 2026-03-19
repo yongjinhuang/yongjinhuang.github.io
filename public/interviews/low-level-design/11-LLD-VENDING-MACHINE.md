@@ -26,24 +26,24 @@ design patterns.
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Product slots | Multiple products stored in slots with quantity tracking |
-| F2 | Insert money | Accept coins and bills, track running balance |
-| F3 | Select product | User selects by slot code (e.g., A1, B2) |
-| F4 | Dispense product | Deliver product if balance is sufficient and item in stock |
-| F5 | Return change | Calculate and return change using greedy coin algorithm |
-| F6 | Refund | User can cancel and get full refund at any point |
-| F7 | Admin restock | Admin can restock products and collect money |
-| F8 | Display | Show available products, prices, and current balance |
+| #   | Requirement      | Details                                                    |
+| --- | ---------------- | ---------------------------------------------------------- |
+| F1  | Product slots    | Multiple products stored in slots with quantity tracking   |
+| F2  | Insert money     | Accept coins and bills, track running balance              |
+| F3  | Select product   | User selects by slot code (e.g., A1, B2)                   |
+| F4  | Dispense product | Deliver product if balance is sufficient and item in stock |
+| F5  | Return change    | Calculate and return change using greedy coin algorithm    |
+| F6  | Refund           | User can cancel and get full refund at any point           |
+| F7  | Admin restock    | Admin can restock products and collect money               |
+| F8  | Display          | Show available products, prices, and current balance       |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
+| #   | Requirement                                              |
+| --- | -------------------------------------------------------- |
 | NF1 | Thread-safe (concurrent users at multi-unit deployments) |
-| NF2 | Extensible for new payment types (card, mobile) |
-| NF3 | Clear state transitions with no invalid states |
+| NF2 | Extensible for new payment types (card, mobile)          |
+| NF3 | Clear state transitions with no invalid states           |
 
 ### Clarifying Questions to Ask
 
@@ -137,16 +137,16 @@ design patterns.
 
 **Transitions:**
 
-| From | Event | To | Action |
-|------|-------|----|--------|
-| IDLE | Insert money | HAS_MONEY | Add to balance |
-| HAS_MONEY | Insert money | HAS_MONEY | Add to balance |
-| HAS_MONEY | Select (valid) | DISPENSING | Begin dispensing |
-| HAS_MONEY | Select (invalid) | HAS_MONEY | Show error, keep balance |
-| HAS_MONEY | Refund | IDLE | Return all money |
-| DISPENSING | Dispense complete | IDLE | Give product + change |
-| Any | Admin maintenance | OUT_OF_SERVICE | Lock machine |
-| OUT_OF_SERVICE | Admin unlock | IDLE | Resume operation |
+| From           | Event             | To             | Action                   |
+| -------------- | ----------------- | -------------- | ------------------------ |
+| IDLE           | Insert money      | HAS_MONEY      | Add to balance           |
+| HAS_MONEY      | Insert money      | HAS_MONEY      | Add to balance           |
+| HAS_MONEY      | Select (valid)    | DISPENSING     | Begin dispensing         |
+| HAS_MONEY      | Select (invalid)  | HAS_MONEY      | Show error, keep balance |
+| HAS_MONEY      | Refund            | IDLE           | Return all money         |
+| DISPENSING     | Dispense complete | IDLE           | Give product + change    |
+| Any            | Admin maintenance | OUT_OF_SERVICE | Lock machine             |
+| OUT_OF_SERVICE | Admin unlock      | IDLE           | Resume operation         |
 
 ---
 
@@ -653,7 +653,7 @@ refund the balance.
 
 ## 9. Gotchas
 
-- **Change before dispense.** Always verify that change can be made *before* dispensing the
+- **Change before dispense.** Always verify that change can be made _before_ dispensing the
   product. Once the product is out, you cannot put it back. The implementation checks
   `make_change` first, then dispenses.
 

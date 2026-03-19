@@ -5,6 +5,7 @@
 If CPUs are Swiss Army knives -- versatile tools that handle any task competently -- then GPUs are industrial stamping presses: specialized machines that perform one narrow class of operation at staggering speed. This chapter explains why GPUs were built, how they work at the hardware level, and how to reason about when they are the right tool for a problem.
 
 By the end of this chapter you will understand:
+
 - Why the graphics pipeline demanded a fundamentally different processor design
 - The internal structure of a modern GPU down to the warp scheduler level
 - How the SIMT execution model works and where it breaks down
@@ -159,7 +160,7 @@ The key innovation was **unified shaders**: instead of having separate hardware 
 
 ### 3.1.4 Why CPUs Alone Are Not Enough
 
-Consider multiplying two 4096x4096 matrices. This requires approximately 2 * 4096^3 = 137 billion floating-point operations (FLOPs).
+Consider multiplying two 4096x4096 matrices. This requires approximately 2 \* 4096^3 = 137 billion floating-point operations (FLOPs).
 
 ```
 MATRIX MULTIPLY: CPU vs GPU
@@ -245,12 +246,12 @@ Legend:
 
 Key organizational levels from top to bottom:
 
-| Level | Description | Count (H100) |
-|-------|-------------|--------------|
-| **GPU** | The entire chip | 1 |
-| **GPC** | Graphics Processing Cluster, groups SMs with a rasterizer | 8 |
-| **TPC** | Texture Processing Cluster, groups 2 SMs | 66 |
-| **SM** | Streaming Multiprocessor, the fundamental compute unit | 132 |
+| Level   | Description                                               | Count (H100) |
+| ------- | --------------------------------------------------------- | ------------ |
+| **GPU** | The entire chip                                           | 1            |
+| **GPC** | Graphics Processing Cluster, groups SMs with a rasterizer | 8            |
+| **TPC** | Texture Processing Cluster, groups 2 SMs                  | 66           |
+| **SM**  | Streaming Multiprocessor, the fundamental compute unit    | 132          |
 
 ### 3.2.2 The Streaming Multiprocessor (SM)
 
@@ -308,7 +309,7 @@ Let us examine each component:
 Each SM has 4 warp schedulers, each capable of issuing one or more instructions per clock cycle to a group of 32 threads (a "warp"). The schedulers operate independently, meaning up to 4 different warps can be executing instructions simultaneously within a single SM.
 
 **Register File (256 KB per SM)**
-This is enormous compared to a CPU register file (which is typically ~1 KB per core). GPU threads are lightweight precisely because their state is held entirely in registers. With 65,536 32-bit registers per SM, a warp of 32 threads using 64 registers each consumes 32 * 64 = 2,048 registers, allowing 32 concurrent warps per SM.
+This is enormous compared to a CPU register file (which is typically ~1 KB per core). GPU threads are lightweight precisely because their state is held entirely in registers. With 65,536 32-bit registers per SM, a warp of 32 threads using 64 registers each consumes 32 \* 64 = 2,048 registers, allowing 32 concurrent warps per SM.
 
 **CUDA Cores (FP32 units)**
 Each processing block contains 16 dedicated FP32 units and 16 units that can handle either FP32 or INT32 operations. An SM with 4 processing blocks therefore has 128 CUDA cores. These execute basic arithmetic: add, multiply, fused multiply-add (FMA).
@@ -413,14 +414,14 @@ Instruction: FADD R1, R2, R3
 
 The key differences:
 
-| Feature | SIMD (CPU) | SIMT (GPU) |
-|---------|-----------|-----------|
-| Programming model | Explicit vector operations | Scalar code per thread |
-| Divergence handling | Programmer manages masks | Hardware handles it (with cost) |
-| Register model | Wide shared registers | Per-thread private registers |
-| Width | 4-16 elements (ISA-defined) | 32 threads (warp, hardware-defined) |
-| Flexibility | Fixed-width, compile-time | Dynamic warp formation |
-| Branching | Requires manual masking | Hardware predication |
+| Feature             | SIMD (CPU)                  | SIMT (GPU)                          |
+| ------------------- | --------------------------- | ----------------------------------- |
+| Programming model   | Explicit vector operations  | Scalar code per thread              |
+| Divergence handling | Programmer manages masks    | Hardware handles it (with cost)     |
+| Register model      | Wide shared registers       | Per-thread private registers        |
+| Width               | 4-16 elements (ISA-defined) | 32 threads (warp, hardware-defined) |
+| Flexibility         | Fixed-width, compile-time   | Dynamic warp formation              |
+| Branching           | Requires manual masking     | Hardware predication                |
 
 ### 3.3.2 Warp Execution
 
@@ -633,12 +634,12 @@ GPU THREAD HIERARCHY
 +================================================================+
 ```
 
-| Level | Size | Scope | Communication |
-|-------|------|-------|---------------|
-| **Thread** | 1 thread | Has its own registers and local memory | Via registers only |
-| **Warp** | 32 threads | Executes in lockstep on one SM | Warp shuffle instructions |
-| **Block** | Up to 1024 threads (32 warps) | Runs on a single SM | Shared memory, `__syncthreads()` |
-| **Grid** | Up to 2^31 blocks | Spans the entire GPU | Global memory, atomics |
+| Level      | Size                          | Scope                                  | Communication                    |
+| ---------- | ----------------------------- | -------------------------------------- | -------------------------------- |
+| **Thread** | 1 thread                      | Has its own registers and local memory | Via registers only               |
+| **Warp**   | 32 threads                    | Executes in lockstep on one SM         | Warp shuffle instructions        |
+| **Block**  | Up to 1024 threads (32 warps) | Runs on a single SM                    | Shared memory, `__syncthreads()` |
+| **Grid**   | Up to 2^31 blocks             | Spans the entire GPU                   | Global memory, atomics           |
 
 ### 3.4.2 How Blocks Map to SMs
 
@@ -1035,14 +1036,14 @@ HBM3 / HBM3e (Data Center: A100, H100, H200)
 
 Comparison:
 
-| Feature | GDDR6X | HBM3 | HBM3e |
-|---------|--------|------|-------|
-| Bandwidth | ~1 TB/s | ~3.35 TB/s | ~4.8 TB/s |
-| Capacity | 12-24 GB | 80 GB | 141 GB |
-| Bus width | 256-384 bit | 6144+ bit | 8192+ bit |
-| Power per GB/s | ~0.05 W | ~0.02 W | ~0.015 W |
-| Cost per GB | ~$2-4 | ~$10-20 | ~$15-30 |
-| Use case | Gaming, workstation | Data center, AI | AI, large models |
+| Feature        | GDDR6X              | HBM3            | HBM3e            |
+| -------------- | ------------------- | --------------- | ---------------- |
+| Bandwidth      | ~1 TB/s             | ~3.35 TB/s      | ~4.8 TB/s        |
+| Capacity       | 12-24 GB            | 80 GB           | 141 GB           |
+| Bus width      | 256-384 bit         | 6144+ bit       | 8192+ bit        |
+| Power per GB/s | ~0.05 W             | ~0.02 W         | ~0.015 W         |
+| Cost per GB    | ~$2-4               | ~$10-20         | ~$15-30          |
+| Use case       | Gaming, workstation | Data center, AI | AI, large models |
 
 ### 3.6.2 Effective Bandwidth Calculation
 
@@ -1542,18 +1543,18 @@ MI300X uses 8 compute chiplets + 4 I/O dies on one package
 
 AMD terminology vs NVIDIA terminology:
 
-| AMD Term | NVIDIA Equivalent | Description |
-|----------|-------------------|-------------|
-| Compute Unit (CU) | Streaming Multiprocessor (SM) | Basic compute building block |
-| Work Group Processor (WGP) | ~2 SMs | Groups 2 CUs with shared resources |
-| Stream Processor | CUDA Core | Single ALU execution unit |
-| Wavefront (wave32/wave64) | Warp (32 threads) | Group of threads in lockstep |
-| Local Data Share (LDS) | Shared Memory | Per-block fast scratchpad |
-| Matrix Core | Tensor Core | Matrix multiply-accumulate unit |
-| Infinity Cache | L2 Cache (conceptually) | Large on-die cache (RDNA) |
-| Infinity Fabric | NVLink (loosely) | Die-to-die interconnect |
-| ROCm | CUDA | GPU programming platform |
-| HIP | CUDA (API-compatible) | ROCm's CUDA-like programming API |
+| AMD Term                   | NVIDIA Equivalent             | Description                        |
+| -------------------------- | ----------------------------- | ---------------------------------- |
+| Compute Unit (CU)          | Streaming Multiprocessor (SM) | Basic compute building block       |
+| Work Group Processor (WGP) | ~2 SMs                        | Groups 2 CUs with shared resources |
+| Stream Processor           | CUDA Core                     | Single ALU execution unit          |
+| Wavefront (wave32/wave64)  | Warp (32 threads)             | Group of threads in lockstep       |
+| Local Data Share (LDS)     | Shared Memory                 | Per-block fast scratchpad          |
+| Matrix Core                | Tensor Core                   | Matrix multiply-accumulate unit    |
+| Infinity Cache             | L2 Cache (conceptually)       | Large on-die cache (RDNA)          |
+| Infinity Fabric            | NVLink (loosely)              | Die-to-die interconnect            |
+| ROCm                       | CUDA                          | GPU programming platform           |
+| HIP                        | CUDA (API-compatible)         | ROCm's CUDA-like programming API   |
 
 ### 3.8.2 Intel Xe / Arc
 
@@ -1668,18 +1669,18 @@ GPU SUITABILITY ANALYSIS
 
 ### 3.9.2 Decision Matrix
 
-| Factor | Favors GPU | Favors CPU |
-|--------|-----------|-----------|
-| **Data parallelism** | Millions of independent elements | Few elements or dependencies |
-| **Arithmetic intensity** | High FLOP/byte ratio (>5-10) | Low FLOP/byte ratio (<1) |
-| **Control flow** | Uniform (all threads same path) | Highly divergent, complex branching |
-| **Data size** | Large (fills GPU parallelism) | Small (overhead > compute) |
-| **Memory access** | Regular, coalesced patterns | Random, pointer-chasing |
-| **Precision** | FP16/FP32 sufficient | FP64 required (scientific) |
-| **Latency** | Throughput matters more | Single-operation latency critical |
-| **Data transfer** | Data stays on GPU across kernels | Frequent CPU-GPU transfers |
-| **Algorithm** | Well-known parallel algorithms exist | Inherently sequential |
-| **Development time** | Performance justifies effort | Rapid iteration needed |
+| Factor                   | Favors GPU                           | Favors CPU                          |
+| ------------------------ | ------------------------------------ | ----------------------------------- |
+| **Data parallelism**     | Millions of independent elements     | Few elements or dependencies        |
+| **Arithmetic intensity** | High FLOP/byte ratio (>5-10)         | Low FLOP/byte ratio (<1)            |
+| **Control flow**         | Uniform (all threads same path)      | Highly divergent, complex branching |
+| **Data size**            | Large (fills GPU parallelism)        | Small (overhead > compute)          |
+| **Memory access**        | Regular, coalesced patterns          | Random, pointer-chasing             |
+| **Precision**            | FP16/FP32 sufficient                 | FP64 required (scientific)          |
+| **Latency**              | Throughput matters more              | Single-operation latency critical   |
+| **Data transfer**        | Data stays on GPU across kernels     | Frequent CPU-GPU transfers          |
+| **Algorithm**            | Well-known parallel algorithms exist | Inherently sequential               |
+| **Development time**     | Performance justifies effort         | Rapid iteration needed              |
 
 ### 3.9.3 Cost-Benefit Analysis
 
@@ -2171,11 +2172,12 @@ From fastest to slowest: (1) Registers -- zero-cycle latency, per-thread, up to 
 **Q6: A kernel uses 96 registers per thread and 48 KB of shared memory per block, with block size 256. On an SM with 65,536 registers, 256 KB shared memory (configurable), and max 32 blocks / 64 warps, how many blocks can run concurrently on one SM?**
 
 Step by step:
-- Register limit: 256 threads/block * 96 registers/thread = 24,576 registers per block. 65,536 / 24,576 = 2.67, so 2 blocks.
+
+- Register limit: 256 threads/block \* 96 registers/thread = 24,576 registers per block. 65,536 / 24,576 = 2.67, so 2 blocks.
 - Shared memory limit: 48 KB per block. If we configure 192 KB for shared memory: 192 / 48 = 4 blocks.
 - Warp limit: 256 threads/block = 8 warps/block. 64 max warps / 8 = 8 blocks.
 - Block limit: 32 blocks max.
-- Answer: min(2, 4, 8, 32) = **2 blocks** per SM. The limiter is register usage. This gives 2 * 8 = 16 active warps out of 64 max = 25% occupancy. Consider reducing register usage (e.g., compiler flag `--maxrregcount=64`) to improve occupancy if the kernel is memory-bound.
+- Answer: min(2, 4, 8, 32) = **2 blocks** per SM. The limiter is register usage. This gives 2 \* 8 = 16 active warps out of 64 max = 25% occupancy. Consider reducing register usage (e.g., compiler flag `--maxrregcount=64`) to improve occupancy if the kernel is memory-bound.
 
 **Q7: You have a kernel that processes a 4096x4096 FP32 matrix. Each thread reads one element, performs 100 FLOPs, and writes one element. Is this kernel compute-bound or memory-bound on an H100?**
 

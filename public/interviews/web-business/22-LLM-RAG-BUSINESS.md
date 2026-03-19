@@ -74,33 +74,33 @@ Track these metrics from day one: response accuracy (% of correct answers), retr
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Hallucination** | When an LLM generates information that sounds correct but is fabricated. The core problem RAG addresses |
-| **Grounding** | Anchoring LLM responses to real, verifiable data sources. RAG is a grounding technique |
-| **Embedding** | A numerical vector representation of text that captures its meaning. Similar text produces similar vectors |
-| **Vector Database** | A database optimized for storing and searching embeddings (Pinecone, Weaviate, Qdrant, Chroma, pgvector) |
-| **Token** | The unit LLMs use to process text. Roughly 0.75 words per token. You pay per token |
-| **Context Window** | The maximum amount of text an LLM can process in a single request. Ranges from 4K to 200K+ tokens depending on the model |
-| **Prompt Engineering** | Crafting the instructions and context you send to an LLM to get the best output |
-| **Fine-Tuning** | Retraining a model on your specific data to change its behavior or knowledge. Expensive and slow compared to RAG |
+| Term                   | What It Means                                                                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Hallucination**      | When an LLM generates information that sounds correct but is fabricated. The core problem RAG addresses                            |
+| **Grounding**          | Anchoring LLM responses to real, verifiable data sources. RAG is a grounding technique                                             |
+| **Embedding**          | A numerical vector representation of text that captures its meaning. Similar text produces similar vectors                         |
+| **Vector Database**    | A database optimized for storing and searching embeddings (Pinecone, Weaviate, Qdrant, Chroma, pgvector)                           |
+| **Token**              | The unit LLMs use to process text. Roughly 0.75 words per token. You pay per token                                                 |
+| **Context Window**     | The maximum amount of text an LLM can process in a single request. Ranges from 4K to 200K+ tokens depending on the model           |
+| **Prompt Engineering** | Crafting the instructions and context you send to an LLM to get the best output                                                    |
+| **Fine-Tuning**        | Retraining a model on your specific data to change its behavior or knowledge. Expensive and slow compared to RAG                   |
 | **RAG vs Fine-Tuning** | RAG adds knowledge at query time (flexible, cheap). Fine-tuning bakes knowledge into the model (expensive, static). Start with RAG |
-| **Chunking** | Splitting documents into smaller pieces for embedding and retrieval. Chunk size significantly affects quality |
-| **Hybrid Search** | Combining vector similarity search with keyword search (BM25) for better retrieval accuracy |
-| **Guardrails** | Rules and filters that prevent an LLM from generating harmful, off-topic, or policy-violating content |
-| **Inference** | The process of running a query through an LLM to get a response. This is what you pay for with API pricing |
-| **Temperature** | A parameter controlling how creative vs deterministic the LLM's output is. Lower = more predictable |
+| **Chunking**           | Splitting documents into smaller pieces for embedding and retrieval. Chunk size significantly affects quality                      |
+| **Hybrid Search**      | Combining vector similarity search with keyword search (BM25) for better retrieval accuracy                                        |
+| **Guardrails**         | Rules and filters that prevent an LLM from generating harmful, off-topic, or policy-violating content                              |
+| **Inference**          | The process of running a query through an LLM to get a response. This is what you pay for with API pricing                         |
+| **Temperature**        | A parameter controlling how creative vs deterministic the LLM's output is. Lower = more predictable                                |
 
 ## The Vendor Landscape
 
-| Provider | Key Models | Strengths | Pricing Model |
-|----------|-----------|-----------|---------------|
-| **OpenAI** | GPT-4o, GPT-4o-mini, o1 | Largest ecosystem, widest adoption, strong reasoning | Per-token API pricing |
-| **Anthropic** | Claude Opus, Sonnet, Haiku | Long context windows (200K), strong safety, excellent at following instructions | Per-token API pricing |
-| **Google** | Gemini Pro, Gemini Flash | Multimodal (text + image + video), deep Google integration | Per-token API pricing |
-| **Cohere** | Command R+, Embed | Built specifically for enterprise RAG, strong retrieval models | Per-token API pricing |
-| **Meta (open-source)** | Llama 3, Llama 3.1 | Free to use, self-hostable, active community, no vendor lock-in | Free (you pay for compute) |
-| **Mistral (open-source)** | Mistral Large, Mixtral | Strong performance for size, good for self-hosting | Free or API pricing |
+| Provider                  | Key Models                 | Strengths                                                                       | Pricing Model              |
+| ------------------------- | -------------------------- | ------------------------------------------------------------------------------- | -------------------------- |
+| **OpenAI**                | GPT-4o, GPT-4o-mini, o1    | Largest ecosystem, widest adoption, strong reasoning                            | Per-token API pricing      |
+| **Anthropic**             | Claude Opus, Sonnet, Haiku | Long context windows (200K), strong safety, excellent at following instructions | Per-token API pricing      |
+| **Google**                | Gemini Pro, Gemini Flash   | Multimodal (text + image + video), deep Google integration                      | Per-token API pricing      |
+| **Cohere**                | Command R+, Embed          | Built specifically for enterprise RAG, strong retrieval models                  | Per-token API pricing      |
+| **Meta (open-source)**    | Llama 3, Llama 3.1         | Free to use, self-hostable, active community, no vendor lock-in                 | Free (you pay for compute) |
+| **Mistral (open-source)** | Mistral Large, Mixtral     | Strong performance for size, good for self-hosting                              | Free or API pricing        |
 
 **Key insight:** The gap between open-source and proprietary models is shrinking fast. Llama 3 and Mistral compete with GPT-3.5 for many tasks. For cost-sensitive or privacy-sensitive applications, open-source is increasingly viable.
 
@@ -134,15 +134,15 @@ Wrap your LLM with input and output filters. Input guardrails detect prompt inje
 
 ### Pattern 5: Build vs Buy Decision
 
-| Factor | Use an API (OpenAI, Anthropic) | Self-Host (Llama, Mistral) |
-|--------|-------------------------------|---------------------------|
-| **Time to market** | Days to weeks | Weeks to months |
-| **Cost at low volume** | Low (pay per token) | High (GPU infrastructure) |
-| **Cost at high volume** | High (tokens add up fast) | Lower (fixed infrastructure) |
-| **Data privacy** | Data sent to third party | Data stays on your servers |
-| **Customization** | Limited to API parameters | Full control over the model |
-| **Maintenance** | Vendor handles updates | You handle everything |
-| **Compliance** | Check vendor's certifications | Full control over compliance |
+| Factor                  | Use an API (OpenAI, Anthropic) | Self-Host (Llama, Mistral)   |
+| ----------------------- | ------------------------------ | ---------------------------- |
+| **Time to market**      | Days to weeks                  | Weeks to months              |
+| **Cost at low volume**  | Low (pay per token)            | High (GPU infrastructure)    |
+| **Cost at high volume** | High (tokens add up fast)      | Lower (fixed infrastructure) |
+| **Data privacy**        | Data sent to third party       | Data stays on your servers   |
+| **Customization**       | Limited to API parameters      | Full control over the model  |
+| **Maintenance**         | Vendor handles updates         | You handle everything        |
+| **Compliance**          | Check vendor's certifications  | Full control over compliance |
 
 **General rule:** Start with APIs to validate the use case. Move to self-hosted only when you have a proven need (cost savings at scale, strict data residency requirements, or deep customization needs).
 
@@ -170,21 +170,21 @@ Wrap your LLM with input and output filters. Input guardrails detect prompt inje
 
 ## Quick Reference
 
-| Decision | Recommendation |
-|----------|---------------|
-| First AI feature | Start with RAG + API (OpenAI/Anthropic), not fine-tuning |
-| Model choice for prototyping | GPT-4o or Claude Sonnet -- good balance of quality and cost |
-| Model choice for production | Route by complexity: cheap model for simple, powerful model for complex |
-| Vector database for starting out | pgvector (if you already use PostgreSQL) or Chroma (lightweight) |
-| Vector database at scale | Pinecone, Weaviate, or Qdrant (managed, production-ready) |
-| Data privacy concern | Self-host open-source models (Llama 3, Mistral) on your infrastructure |
-| Customer-facing bot | Always add guardrails + human-in-the-loop |
-| Measuring quality | Build eval set of 50-100 Q&A pairs, measure retrieval + generation accuracy |
+| Decision                         | Recommendation                                                              |
+| -------------------------------- | --------------------------------------------------------------------------- |
+| First AI feature                 | Start with RAG + API (OpenAI/Anthropic), not fine-tuning                    |
+| Model choice for prototyping     | GPT-4o or Claude Sonnet -- good balance of quality and cost                 |
+| Model choice for production      | Route by complexity: cheap model for simple, powerful model for complex     |
+| Vector database for starting out | pgvector (if you already use PostgreSQL) or Chroma (lightweight)            |
+| Vector database at scale         | Pinecone, Weaviate, or Qdrant (managed, production-ready)                   |
+| Data privacy concern             | Self-host open-source models (Llama 3, Mistral) on your infrastructure      |
+| Customer-facing bot              | Always add guardrails + human-in-the-loop                                   |
+| Measuring quality                | Build eval set of 50-100 Q&A pairs, measure retrieval + generation accuracy |
 
-| Cost Component | Typical Range |
-|---------------|---------------|
-| Embedding (per 1M tokens) | $0.02 - $0.13 |
-| LLM input tokens (per 1M) | $0.15 (Haiku) - $15.00 (Opus/GPT-4) |
-| LLM output tokens (per 1M) | $0.60 (Haiku) - $75.00 (Opus/GPT-4) |
-| Vector database (managed) | $70 - $500/month for starter tiers |
-| Self-hosted GPU (cloud) | $1,000 - $10,000+/month depending on model size |
+| Cost Component             | Typical Range                                   |
+| -------------------------- | ----------------------------------------------- |
+| Embedding (per 1M tokens)  | $0.02 - $0.13                                   |
+| LLM input tokens (per 1M)  | $0.15 (Haiku) - $15.00 (Opus/GPT-4)             |
+| LLM output tokens (per 1M) | $0.60 (Haiku) - $75.00 (Opus/GPT-4)             |
+| Vector database (managed)  | $70 - $500/month for starter tiers              |
+| Self-hosted GPU (cloud)    | $1,000 - $10,000+/month depending on model size |

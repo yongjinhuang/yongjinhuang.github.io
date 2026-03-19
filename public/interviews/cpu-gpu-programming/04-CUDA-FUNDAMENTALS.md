@@ -3,6 +3,7 @@
 You understand how GPUs are built -- thousands of simple cores, a deep memory hierarchy, and the SIMT execution model. Now it is time to write code that runs on them. CUDA (Compute Unified Device Architecture) is NVIDIA's programming model for general-purpose GPU computing. This chapter takes you from zero to writing, compiling, and optimizing real CUDA programs.
 
 By the end of this chapter you will be able to:
+
 - Write, compile, and run CUDA kernels
 - Manage GPU memory with cudaMalloc, cudaMemcpy, and cudaFree
 - Map problem dimensions to thread grids using 1D, 2D, and 3D indexing
@@ -57,11 +58,11 @@ The CPU (host) orchestrates: it allocates GPU memory, copies data to the GPU, la
 
 CUDA extends C/C++ with three function qualifiers that control where a function runs and where it can be called from:
 
-| Qualifier | Executes on | Callable from | Notes |
-|-----------|------------|---------------|-------|
-| `__global__` | Device (GPU) | Host (CPU) | Kernel entry point. Must return void. |
-| `__device__` | Device (GPU) | Device (GPU) | Helper function called from kernels. |
-| `__host__` | Host (CPU) | Host (CPU) | Normal CPU function (default if omitted). |
+| Qualifier    | Executes on  | Callable from | Notes                                     |
+| ------------ | ------------ | ------------- | ----------------------------------------- |
+| `__global__` | Device (GPU) | Host (CPU)    | Kernel entry point. Must return void.     |
+| `__device__` | Device (GPU) | Device (GPU)  | Helper function called from kernels.      |
+| `__host__`   | Host (CPU)   | Host (CPU)    | Normal CPU function (default if omitted). |
 
 You can combine `__host__` and `__device__` to compile a function for both:
 
@@ -98,6 +99,7 @@ Total threads = 4 * 8 = 32
 ```
 
 Every thread knows its position through built-in variables:
+
 - `threadIdx.x` -- thread index within the block (0 to 7 above)
 - `blockIdx.x` -- block index within the grid (0 to 3 above)
 - `blockDim.x` -- number of threads per block (8 above)
@@ -117,12 +119,12 @@ The triple-chevron actually accepts four parameters:
 kernel<<<gridDim, blockDim, sharedMemBytes, stream>>>(args...);
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `gridDim` | `dim3` or `int` | Number of blocks in the grid |
-| `blockDim` | `dim3` or `int` | Number of threads per block |
-| `sharedMemBytes` | `size_t` | Dynamic shared memory per block (default 0) |
-| `stream` | `cudaStream_t` | CUDA stream for async execution (default 0) |
+| Parameter        | Type            | Description                                 |
+| ---------------- | --------------- | ------------------------------------------- |
+| `gridDim`        | `dim3` or `int` | Number of blocks in the grid                |
+| `blockDim`       | `dim3` or `int` | Number of threads per block                 |
+| `sharedMemBytes` | `size_t`        | Dynamic shared memory per block (default 0) |
+| `stream`         | `cudaStream_t`  | CUDA stream for async execution (default 0) |
 
 ### 1.5 Execution Flow
 
@@ -193,6 +195,7 @@ Hello from CPU!
 ```
 
 Key observations:
+
 - `printf` works inside GPU kernels (since compute capability 2.0)
 - `cudaDeviceSynchronize()` is essential -- without it, the program may exit before the GPU finishes
 - Kernel launches are **asynchronous**: the CPU continues immediately after launching
@@ -298,13 +301,13 @@ Total threads = 3 * 2 * 2 * 2 = 24
 
 ### 3.2 Built-in Variables
 
-| Variable | Type | Description |
-|----------|------|-------------|
-| `threadIdx` | `dim3` | Thread index within its block (0-based) |
-| `blockIdx` | `dim3` | Block index within the grid (0-based) |
-| `blockDim` | `dim3` | Dimensions of each block (threads per block) |
-| `gridDim` | `dim3` | Dimensions of the grid (blocks per grid) |
-| `warpSize` | `int` | Warp size (always 32 on current hardware) |
+| Variable    | Type   | Description                                  |
+| ----------- | ------ | -------------------------------------------- |
+| `threadIdx` | `dim3` | Thread index within its block (0-based)      |
+| `blockIdx`  | `dim3` | Block index within the grid (0-based)        |
+| `blockDim`  | `dim3` | Dimensions of each block (threads per block) |
+| `gridDim`   | `dim3` | Dimensions of the grid (blocks per grid)     |
+| `warpSize`  | `int`  | Warp size (always 32 on current hardware)    |
 
 Each of these `dim3` variables has `.x`, `.y`, and `.z` components.
 
@@ -885,6 +888,7 @@ Results:
 ```
 
 Key observations:
+
 - The kernel itself is extremely fast because vector addition is **memory-bound** -- limited by how fast data can be read/written, not by compute
 - The total GPU time includes PCIe transfers, which dominate for this simple operation
 - **Effective bandwidth** of ~480 GB/s is close to the theoretical max (~760 GB/s for RTX 3080), meaning the kernel is well-optimized
@@ -922,7 +926,7 @@ Matrix multiplication is the most important operation in GPU computing. It is th
 
 ### 7.1 The Problem
 
-Compute C = A * B where A is MxK, B is KxN, and C is MxN:
+Compute C = A \* B where A is MxK, B is KxN, and C is MxN:
 
 ```
          K                    N                    N
@@ -1426,17 +1430,17 @@ nvcc -std=c++17 -o program program.cu
 
 ### 8.3 Compute Capability Reference
 
-| Compute Capability | Architecture | Example GPUs |
-|-------------------|-------------|-------------|
-| 5.0 / 5.2 | Maxwell | GTX 900 series |
-| 6.0 / 6.1 | Pascal | GTX 1000 series, P100 |
-| 7.0 | Volta | V100 |
-| 7.5 | Turing | RTX 2000 series, T4 |
-| 8.0 | Ampere | A100 |
-| 8.6 | Ampere | RTX 3000 series |
-| 8.9 | Ada Lovelace | RTX 4000 series, L4, L40 |
-| 9.0 | Hopper | H100, H200 |
-| 10.0 | Blackwell | B100, B200, GB200 |
+| Compute Capability | Architecture | Example GPUs             |
+| ------------------ | ------------ | ------------------------ |
+| 5.0 / 5.2          | Maxwell      | GTX 900 series           |
+| 6.0 / 6.1          | Pascal       | GTX 1000 series, P100    |
+| 7.0                | Volta        | V100                     |
+| 7.5                | Turing       | RTX 2000 series, T4      |
+| 8.0                | Ampere       | A100                     |
+| 8.6                | Ampere       | RTX 3000 series          |
+| 8.9                | Ada Lovelace | RTX 4000 series, L4, L40 |
+| 9.0                | Hopper       | H100, H200               |
+| 10.0               | Blackwell    | B100, B200, GB200        |
 
 Use `nvcc --list-gpu-arch` to see supported architectures in your CUDA toolkit version.
 
@@ -1685,6 +1689,7 @@ BLOCK SIZE DECISION TREE:
 ```
 
 Rules of thumb:
+
 - **Always a multiple of 32** (warp size). Using 100 threads wastes 28 out of every 128 SIMD lanes (4 warps allocated, 3.125 warps of useful work)
 - **128 or 256** is almost always a good choice for 1D kernels
 - **512 or 1024** can reduce occupancy due to register pressure
@@ -1762,6 +1767,7 @@ WARP DIVERGENCE:
 ```
 
 Strategies to minimize divergence:
+
 - Align branches on warp boundaries (multiples of 32)
 - Use predication instead of branching for short conditional code
 - Restructure data so adjacent threads follow the same path
@@ -2445,7 +2451,7 @@ Sort                 Radix sort, bitonic sort       Multiple passes of scan+scat
 
 2. **Array Scaling**: Write a complete CUDA program that multiplies every element of an array by a scalar. Include error checking on all CUDA calls and verification against a CPU reference. Use N = 10,000,000.
 
-3. **Device Report**: Write a program that queries and prints all device properties in a formatted report. Include computed metrics like theoretical bandwidth and peak GFLOPS (SM count * clock rate * FMA ops per clock per SM).
+3. **Device Report**: Write a program that queries and prints all device properties in a formatted report. Include computed metrics like theoretical bandwidth and peak GFLOPS (SM count _ clock rate _ FMA ops per clock per SM).
 
 ### Intermediate
 
@@ -2647,17 +2653,17 @@ __global__ void bad(int* flag, float* data) {
 
 This chapter covered the essential building blocks of CUDA programming:
 
-| Topic | Key Takeaway |
-|-------|-------------|
-| Programming model | Host orchestrates, device executes in massive parallelism |
-| Function qualifiers | `__global__` for kernels, `__device__` for GPU helpers, combine `__host__ __device__` for portable code |
-| Thread indexing | `blockIdx * blockDim + threadIdx` for global thread ID; use grid-stride loops for large problems |
-| Memory management | cudaMalloc/cudaMemcpy/cudaFree with CHECK_CUDA on every call; pinned memory for faster transfers |
-| Error handling | CHECK_CUDA macro on all API calls; cudaGetLastError + cudaDeviceSynchronize after kernels |
-| Timing | CUDA events record on the GPU timeline; CPU timers measure the wrong thing for async kernels |
-| Tiling | Shared memory tiles reduce global memory traffic by TILE_SIZE factor |
-| Compilation | nvcc with `-arch=sm_XX` matching your GPU; use `--ptxas-options=-v` to check resource usage |
-| Optimization | Block size must be a multiple of 32; coalesced memory access; minimize divergence |
-| Common patterns | Element-wise (trivial), reduction (tree in shared mem), scatter/gather (prefer gather), scan (double-buffer) |
+| Topic               | Key Takeaway                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Programming model   | Host orchestrates, device executes in massive parallelism                                                    |
+| Function qualifiers | `__global__` for kernels, `__device__` for GPU helpers, combine `__host__ __device__` for portable code      |
+| Thread indexing     | `blockIdx * blockDim + threadIdx` for global thread ID; use grid-stride loops for large problems             |
+| Memory management   | cudaMalloc/cudaMemcpy/cudaFree with CHECK_CUDA on every call; pinned memory for faster transfers             |
+| Error handling      | CHECK_CUDA macro on all API calls; cudaGetLastError + cudaDeviceSynchronize after kernels                    |
+| Timing              | CUDA events record on the GPU timeline; CPU timers measure the wrong thing for async kernels                 |
+| Tiling              | Shared memory tiles reduce global memory traffic by TILE_SIZE factor                                         |
+| Compilation         | nvcc with `-arch=sm_XX` matching your GPU; use `--ptxas-options=-v` to check resource usage                  |
+| Optimization        | Block size must be a multiple of 32; coalesced memory access; minimize divergence                            |
+| Common patterns     | Element-wise (trivial), reduction (tree in shared mem), scatter/gather (prefer gather), scan (double-buffer) |
 
 With these fundamentals, you are ready for Chapter 5: Advanced CUDA Programming, where we cover streams for concurrent execution, unified memory for simplified programming, cooperative groups for flexible synchronization, warp-level primitives for maximum performance, and the Thrust library for productive GPU programming.

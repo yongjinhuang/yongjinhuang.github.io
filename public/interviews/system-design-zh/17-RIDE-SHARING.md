@@ -4,25 +4,25 @@
 
 ### 功能需求
 
-| 类别 | 需求 |
-|----------|-------------|
+| 类别     | 需求                                                                                  |
+| -------- | ------------------------------------------------------------------------------------- |
 | **乘客** | 发起叫车请求（上车点/下车点）、查看附近司机、实时追踪、行程历史、为司机评分、分摊车费 |
-| **司机** | 上线/下线、接受/拒绝叫车请求、导航至上车点和下车点、收入仪表盘、为乘客评分 |
-| **匹配** | 为乘客匹配最优附近司机、拒绝/超时后重新匹配、支持拼车 |
-| **定价** | 预估车费、surge/动态定价、费用明细、优惠码 |
-| **支付** | 预授权支付、完成后扣费、小费、司机提现、退款 |
-| **安全** | SOS 按钮、与联系人分享行程、司机/乘客验证、行程录音 |
+| **司机** | 上线/下线、接受/拒绝叫车请求、导航至上车点和下车点、收入仪表盘、为乘客评分            |
+| **匹配** | 为乘客匹配最优附近司机、拒绝/超时后重新匹配、支持拼车                                 |
+| **定价** | 预估车费、surge/动态定价、费用明细、优惠码                                            |
+| **支付** | 预授权支付、完成后扣费、小费、司机提现、退款                                          |
+| **安全** | SOS 按钮、与联系人分享行程、司机/乘客验证、行程录音                                   |
 
 ### 非功能需求
 
-| 需求 | 目标 |
-|-------------|--------|
-| 匹配延迟 | < 1 分钟找到司机 (p99) |
-| 位置更新频率 | 活跃司机每 3-5 秒一次 |
-| 可用性 | 99.99% 正常运行时间 (< 52 分钟停机/年) |
-| 位置精度 | < 10 米精度 |
-| 实时追踪延迟 | < 2 秒端到端 |
-| 峰值需求处理 | 活动/恶劣天气时 3-5 倍正常流量 |
+| 需求         | 目标                                   |
+| ------------ | -------------------------------------- |
+| 匹配延迟     | < 1 分钟找到司机 (p99)                 |
+| 位置更新频率 | 活跃司机每 3-5 秒一次                  |
+| 可用性       | 99.99% 正常运行时间 (< 52 分钟停机/年) |
+| 位置精度     | < 10 米精度                            |
+| 实时追踪延迟 | < 2 秒端到端                           |
+| 峰值需求处理 | 活动/恶劣天气时 3-5 倍正常流量         |
 
 ### 规模估算
 
@@ -37,6 +37,7 @@ Peak rides/sec:      ~500 ride requests/sec (20M / 86400 * 2x peak)
 ### 粗略计算
 
 **位置更新：**
+
 ```
 Active drivers at peak:    2M
 Update frequency:          1 update / 4 seconds
@@ -46,6 +47,7 @@ Bandwidth (ingest):        500,000 * 100 = 50 MB/sec = 400 Mbps
 ```
 
 **位置存储（热数据，最近 24 小时）：**
+
 ```
 Updates per driver per day: 86,400 / 4 = 21,600 (if online 24h, ~8h avg = 7,200)
 Total updates/day:          2M * 7,200 = 14.4B updates/day
@@ -54,6 +56,7 @@ Daily storage:              14.4B * 100 = 1.44 TB/day
 ```
 
 **匹配 QPS：**
+
 ```
 Ride requests/sec:          500 (peak)
 Matching operations/sec:    500 (each triggers geospatial query)
@@ -62,6 +65,7 @@ Average candidates/query:   10-50 drivers evaluated
 ```
 
 **行程数据存储：**
+
 ```
 Trips per day:              20M
 Average trip record:        2 KB (metadata + route summary)
@@ -138,16 +142,16 @@ Supporting Services:
 
 ### 服务职责
 
-| 服务 | 职责 | 协议 |
-|---------|---------------|----------|
-| **API Gateway** | 认证、限流、请求路由 | HTTPS, WebSocket |
-| **Ride Service** | 行程生命周期管理、状态机 | gRPC |
-| **Location Service** | 接收司机位置、geospatial 查询 | WebSocket（接收）, gRPC（查询） |
-| **Matching Service** | 为叫车请求寻找最优司机 | gRPC |
-| **Pricing Service** | 车费计算、surge pricing | gRPC |
-| **Payment Service** | 预授权、扣费、提现 | gRPC |
-| **ETA Service** | 路线计算、时间预估 | gRPC |
-| **Notification Service** | 推送通知、短信 | Kafka consumer |
+| 服务                     | 职责                          | 协议                            |
+| ------------------------ | ----------------------------- | ------------------------------- |
+| **API Gateway**          | 认证、限流、请求路由          | HTTPS, WebSocket                |
+| **Ride Service**         | 行程生命周期管理、状态机      | gRPC                            |
+| **Location Service**     | 接收司机位置、geospatial 查询 | WebSocket（接收）, gRPC（查询） |
+| **Matching Service**     | 为叫车请求寻找最优司机        | gRPC                            |
+| **Pricing Service**      | 车费计算、surge pricing       | gRPC                            |
+| **Payment Service**      | 预授权、扣费、提现            | gRPC                            |
+| **ETA Service**          | 路线计算、时间预估            | gRPC                            |
+| **Notification Service** | 推送通知、短信                | Kafka consumer                  |
 
 ---
 
@@ -210,20 +214,20 @@ Supporting Services:
 
 ### 状态转换
 
-| 从 | 到 | 触发条件 | 副作用 |
-|------|----|---------|-------------|
-| REQUESTED | MATCHING | 系统 | 启动匹配计时器，计算预估价格 |
-| MATCHING | DRIVER_ASSIGNED | 匹配成功 | 通知司机，启动接受计时器（15秒） |
-| MATCHING | CANCELLED_NO_MATCH | 超时（2 分钟） | 通知乘客，不收费 |
-| DRIVER_ASSIGNED | DRIVER_EN_ROUTE | 司机接受 | 通知乘客，开始 ETA 追踪 |
-| DRIVER_ASSIGNED | MATCHING | 司机拒绝/超时 | 重新进入匹配池，排除该司机 |
-| DRIVER_EN_ROUTE | ARRIVED | 司机到达上车点 | 通知乘客，启动等待计时器（5 分钟） |
-| ARRIVED | IN_PROGRESS | 乘客上车 | 开始计价，开始路线追踪 |
-| ARRIVED | NO_SHOW | 等待计时器到期 | 收取取消费，释放司机 |
-| IN_PROGRESS | COMPLETED | 到达目的地 | 计算最终车费，向乘客扣费 |
-| COMPLETED | RATED | 提交评分 | 更新司机/乘客评分 |
-| 任何行程前状态 | CANCELLED_BY_RIDER | 乘客取消 | 可能收取取消费 |
-| DRIVER_ASSIGNED | CANCELLED_BY_DRIVER | 司机取消 | 对司机处罚，重新匹配 |
+| 从              | 到                  | 触发条件       | 副作用                             |
+| --------------- | ------------------- | -------------- | ---------------------------------- |
+| REQUESTED       | MATCHING            | 系统           | 启动匹配计时器，计算预估价格       |
+| MATCHING        | DRIVER_ASSIGNED     | 匹配成功       | 通知司机，启动接受计时器（15秒）   |
+| MATCHING        | CANCELLED_NO_MATCH  | 超时（2 分钟） | 通知乘客，不收费                   |
+| DRIVER_ASSIGNED | DRIVER_EN_ROUTE     | 司机接受       | 通知乘客，开始 ETA 追踪            |
+| DRIVER_ASSIGNED | MATCHING            | 司机拒绝/超时  | 重新进入匹配池，排除该司机         |
+| DRIVER_EN_ROUTE | ARRIVED             | 司机到达上车点 | 通知乘客，启动等待计时器（5 分钟） |
+| ARRIVED         | IN_PROGRESS         | 乘客上车       | 开始计价，开始路线追踪             |
+| ARRIVED         | NO_SHOW             | 等待计时器到期 | 收取取消费，释放司机               |
+| IN_PROGRESS     | COMPLETED           | 到达目的地     | 计算最终车费，向乘客扣费           |
+| COMPLETED       | RATED               | 提交评分       | 更新司机/乘客评分                  |
+| 任何行程前状态  | CANCELLED_BY_RIDER  | 乘客取消       | 可能收取取消费                     |
+| DRIVER_ASSIGNED | CANCELLED_BY_DRIVER | 司机取消       | 对司机处罚，重新匹配               |
 
 ### 超时处理
 
@@ -300,16 +304,17 @@ Driver arrived + waiting    Yes ($5-10 fee)    Yes (wait time)
 
 ### 协议选择：WebSocket vs UDP
 
-| 因素 | WebSocket | UDP |
-|--------|-----------|-----|
-| 可靠性 | 保证送达 | 可能丢包 |
-| 开销 | TCP + WS 帧开销 | 极小 |
+| 因素     | WebSocket          | UDP          |
+| -------- | ------------------ | ------------ |
+| 可靠性   | 保证送达           | 可能丢包     |
+| 开销     | TCP + WS 帧开销    | 极小         |
 | 双向通信 | 是（服务端可推送） | 需要单独通道 |
-| 防火墙 | 可穿透 NAT | 可能被阻止 |
-| 电池消耗 | 需要心跳保活 | 无持久连接 |
-| **结论** | **移动端首选** | 适合内部服务 |
+| 防火墙   | 可穿透 NAT         | 可能被阻止   |
+| 电池消耗 | 需要心跳保活       | 无持久连接   |
+| **结论** | **移动端首选**     | 适合内部服务 |
 
 WebSocket 是首选，因为：
+
 - 移动网络对 TCP 支持良好，UDP 可能被封锁
 - 双向通信：服务端可将行程分配推送给司机
 - 连接状态有助于检测司机离线
@@ -380,11 +385,11 @@ Dense areas get finer granularity automatically
 
 #### 对比
 
-| 方案 | 优点 | 缺点 | 最适用于 |
-|----------|------|------|----------|
-| **Geohash** | 简单、Redis 内置支持、前缀搜索 | 边界效应、不均匀 | MVP、基于 Redis 的方案 |
-| **S2 Cells** | 无���界效应、均匀、层级化 | 需要复杂的库 | 大规模生产环境 |
-| **Quadtree** | 自适应密度、内存高效 | 重平衡复杂、仅内存 | 自定义内存索引 |
+| 方案         | 优点                           | 缺点               | 最适用于               |
+| ------------ | ------------------------------ | ------------------ | ---------------------- |
+| **Geohash**  | 简单、Redis 内置支持、前缀搜索 | 边界效应、不均匀   | MVP、基于 Redis 的方案 |
+| **S2 Cells** | 无���界效应、均匀、层级化      | 需要复杂的库       | 大规模生产环境         |
+| **Quadtree** | 自适应密度、内存高效           | 重平衡复杂、仅内存 | 自定义内存索引         |
 
 ### Redis Geospatial 实现
 
@@ -1876,15 +1881,15 @@ Driver penalty system:
 
 ## 总结：关键设计决策
 
-| 决策 | 选择 | 理由 |
-|----------|--------|-----------|
-| 位置协议 | WebSocket | 双向通信、移动端友好、连接状态感知 |
-| Geospatial 索引 | Redis GEOSEARCH + S2 Cells | 内置支持、速度快、水平可扩展 |
-| 匹配方案 | 批量二部图匹配 | 全局最优、亚秒级延迟 |
-| 事件流 | Apache Kafka | 持久化、高吞吐、可回放 |
-| 行程状态数据库 | PostgreSQL | 金融数据需要 ACID、强一致性 |
-| 位置历史 | TimescaleDB | 时序优化、自动分区 |
-| 定价缓存 | Redis | 亚毫秒读取 surge 倍率 |
-| 服务间通信 | gRPC + Kafka | 低延迟同步 + 异步事件驱动 |
-| 部署 | K8s 按城市 namespace | 故障隔离、独立扩展 |
-| 分片键 | 基于城市（大部分服务） | 天然分区、数据本地性 |
+| 决策            | 选择                       | 理由                               |
+| --------------- | -------------------------- | ---------------------------------- |
+| 位置协议        | WebSocket                  | 双向通信、移动端友好、连接状态感知 |
+| Geospatial 索引 | Redis GEOSEARCH + S2 Cells | 内置支持、速度快、水平可扩展       |
+| 匹配方案        | 批量二部图匹配             | 全局最优、亚秒级延迟               |
+| 事件流          | Apache Kafka               | 持久化、高吞吐、可回放             |
+| 行程状态数据库  | PostgreSQL                 | 金融数据需要 ACID、强一致性        |
+| 位置历史        | TimescaleDB                | 时序优化、自动分区                 |
+| 定价缓存        | Redis                      | 亚毫秒读取 surge 倍率              |
+| 服务间通信      | gRPC + Kafka               | 低延迟同步 + 异步事件驱动          |
+| 部署            | K8s 按城市 namespace       | 故障隔离、独立扩展                 |
+| 分片键          | 基于城市（大部分服务）     | 天然分区、数据本地性               |

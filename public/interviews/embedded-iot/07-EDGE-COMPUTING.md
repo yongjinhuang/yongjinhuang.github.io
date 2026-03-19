@@ -10,13 +10,13 @@ Modern IoT devices are no longer dumb sensors that ship raw data to the cloud. E
 
 Sending every sensor reading to the cloud works for prototypes, but production IoT systems hit several walls:
 
-| Concern | Cloud-Only | Edge |
-|---------|-----------|------|
-| Latency | 50-500 ms round-trip | < 1 ms local inference |
-| Bandwidth | Continuous upload cost | Only anomalies sent |
-| Privacy | Raw data leaves device | Data stays on-device |
-| Availability | Fails without connectivity | Works offline |
-| Cost | Per-message cloud bills | One-time silicon cost |
+| Concern      | Cloud-Only                 | Edge                   |
+| ------------ | -------------------------- | ---------------------- |
+| Latency      | 50-500 ms round-trip       | < 1 ms local inference |
+| Bandwidth    | Continuous upload cost     | Only anomalies sent    |
+| Privacy      | Raw data leaves device     | Data stays on-device   |
+| Availability | Fails without connectivity | Works offline          |
+| Cost         | Per-message cloud bills    | One-time silicon cost  |
 
 ### 1.2 Edge vs. Fog vs. Cloud
 
@@ -65,13 +65,13 @@ TinyML refers to running machine learning inference on microcontrollers operatin
 
 Key constraints:
 
-| Resource | Typical Budget |
-|----------|---------------|
-| Flash (model + code) | 256 KB - 2 MB |
+| Resource                    | Typical Budget |
+| --------------------------- | -------------- |
+| Flash (model + code)        | 256 KB - 2 MB  |
 | RAM (activations + buffers) | 64 KB - 512 KB |
-| Clock speed | 64 - 240 MHz |
-| Power | 1 - 50 mW |
-| Floating-point unit | Often absent |
+| Clock speed                 | 64 - 240 MHz   |
+| Power                       | 1 - 50 mW      |
+| Floating-point unit         | Often absent   |
 
 ### 2.2 The TinyML Workflow
 
@@ -292,12 +292,14 @@ Edge Impulse generates optimized code for:
 Detect a small vocabulary of spoken commands ("yes", "no", "stop", "go") using a ~20 KB model processing MFCC features from a PDM microphone.
 
 **Pipeline:**
+
 ```
 Microphone -> PDM->PCM -> Windowing -> MFCC (40 coefficients)
            -> Neural Network (Conv1D or DS-CNN) -> Keyword ID
 ```
 
 **Typical specs:**
+
 - Accuracy: ~93% on Speech Commands dataset
 - Latency: 20-50 ms per inference
 - Model size: 18-50 KB (INT8)
@@ -368,11 +370,11 @@ Classify hand gestures using a 6-axis IMU (accelerometer + gyroscope). Common in
 Convert floating-point weights (32-bit) to lower precision:
 
 | Precision | Weight Size | Relative Accuracy | Speedup (Cortex-M) |
-|-----------|------------|-------------------|---------------------|
-| FP32 | 4 bytes | Baseline | 1x |
-| FP16 | 2 bytes | ~0.1% loss | 1.5-2x |
-| INT8 | 1 byte | ~1% loss | 2-4x |
-| INT4 | 0.5 bytes | ~3-5% loss | 3-6x |
+| --------- | ----------- | ----------------- | ------------------ |
+| FP32      | 4 bytes     | Baseline          | 1x                 |
+| FP16      | 2 bytes     | ~0.1% loss        | 1.5-2x             |
+| INT8      | 1 byte      | ~1% loss          | 2-4x               |
+| INT4      | 0.5 bytes   | ~3-5% loss        | 3-6x               |
 
 ```
 +----------------------------------------------------------+
@@ -464,14 +466,14 @@ Use neural architecture search (NAS) constrained by target hardware:
 
 Dedicated silicon for matrix multiply-accumulate (MAC) operations:
 
-| Accelerator | TOPS | Power | Target |
-|-------------|------|-------|--------|
-| Arm Ethos-U55 | 0.5 | 5 mW | Cortex-M55 MCUs |
-| Arm Ethos-U85 | 4.0 | 50 mW | Cortex-M85 MCUs |
-| Coral Edge TPU | 4.0 | 2 W | Linux SBCs |
-| Intel Movidius | 1.0 | 1 W | USB stick / M.2 |
-| Kendryte K210 | 0.8 | 300 mW | RISC-V + KPU |
-| ESP32-S3 | -- | 50 mW | Xtensa + vector ext. |
+| Accelerator    | TOPS | Power  | Target               |
+| -------------- | ---- | ------ | -------------------- |
+| Arm Ethos-U55  | 0.5  | 5 mW   | Cortex-M55 MCUs      |
+| Arm Ethos-U85  | 4.0  | 50 mW  | Cortex-M85 MCUs      |
+| Coral Edge TPU | 4.0  | 2 W    | Linux SBCs           |
+| Intel Movidius | 1.0  | 1 W    | USB stick / M.2      |
+| Kendryte K210  | 0.8  | 300 mW | RISC-V + KPU         |
+| ESP32-S3       | --   | 50 mW  | Xtensa + vector ext. |
 
 ### 7.2 Google Coral Edge TPU
 
@@ -507,21 +509,21 @@ The Movidius Myriad X VPU offers a USB-stick form factor for adding neural infer
 
 ### 8.1 Keyword Spotting (DS-CNN, Speech Commands)
 
-| Platform | Model Size | Inference Time | Accuracy | Power |
-|----------|-----------|---------------|----------|-------|
-| STM32L4 (Cortex-M4 @ 80 MHz) | 26 KB | 40 ms | 92.3% | 8 mW |
-| nRF5340 (Cortex-M33 @ 128 MHz) | 26 KB | 22 ms | 92.3% | 5 mW |
-| ESP32-S3 (Xtensa @ 240 MHz) | 26 KB | 12 ms | 92.3% | 45 mW |
-| RPi Pico (Cortex-M0+ @ 133 MHz) | 26 KB | 90 ms | 92.3% | 15 mW |
+| Platform                        | Model Size | Inference Time | Accuracy | Power |
+| ------------------------------- | ---------- | -------------- | -------- | ----- |
+| STM32L4 (Cortex-M4 @ 80 MHz)    | 26 KB      | 40 ms          | 92.3%    | 8 mW  |
+| nRF5340 (Cortex-M33 @ 128 MHz)  | 26 KB      | 22 ms          | 92.3%    | 5 mW  |
+| ESP32-S3 (Xtensa @ 240 MHz)     | 26 KB      | 12 ms          | 92.3%    | 45 mW |
+| RPi Pico (Cortex-M0+ @ 133 MHz) | 26 KB      | 90 ms          | 92.3%    | 15 mW |
 
 ### 8.2 Person Detection (MobileNet v1 0.25, 96x96)
 
-| Platform | Model Size | Inference Time | Accuracy | Power |
-|----------|-----------|---------------|----------|-------|
-| STM32H7 (Cortex-M7 @ 480 MHz) | 300 KB | 180 ms | 84.5% | 120 mW |
-| ESP32-S3 + PSRAM | 300 KB | 250 ms | 84.5% | 150 mW |
-| Coral USB Accelerator | 300 KB | 3 ms | 84.5% | 2 W |
-| Jetson Nano (GPU) | 300 KB | 5 ms | 84.5% | 5 W |
+| Platform                      | Model Size | Inference Time | Accuracy | Power  |
+| ----------------------------- | ---------- | -------------- | -------- | ------ |
+| STM32H7 (Cortex-M7 @ 480 MHz) | 300 KB     | 180 ms         | 84.5%    | 120 mW |
+| ESP32-S3 + PSRAM              | 300 KB     | 250 ms         | 84.5%    | 150 mW |
+| Coral USB Accelerator         | 300 KB     | 3 ms           | 84.5%    | 2 W    |
+| Jetson Nano (GPU)             | 300 KB     | 5 ms           | 84.5%    | 5 W    |
 
 ---
 
@@ -859,16 +861,16 @@ motor_state_t check_motor_health(void) {
 
 ## 14. Tools and Frameworks Summary
 
-| Tool | Purpose | Output |
-|------|---------|--------|
-| TensorFlow Lite Micro | On-MCU inference runtime | C++ library |
-| Edge Impulse | End-to-end TinyML platform | C++ library / binary |
-| TF Model Optimization Toolkit | Pruning, quantization | Optimized model |
-| CMSIS-NN | ARM Cortex-M optimized kernels | Accelerated ops |
-| OpenMV | MicroPython vision platform | Python scripts |
-| Edge TPU Compiler | Compile for Coral | .tflite (Edge TPU) |
-| Apache TVM | Compiler for diverse targets | Optimized runtime |
-| MCUNet | NAS for microcontrollers | Architecture + engine |
+| Tool                          | Purpose                        | Output                |
+| ----------------------------- | ------------------------------ | --------------------- |
+| TensorFlow Lite Micro         | On-MCU inference runtime       | C++ library           |
+| Edge Impulse                  | End-to-end TinyML platform     | C++ library / binary  |
+| TF Model Optimization Toolkit | Pruning, quantization          | Optimized model       |
+| CMSIS-NN                      | ARM Cortex-M optimized kernels | Accelerated ops       |
+| OpenMV                        | MicroPython vision platform    | Python scripts        |
+| Edge TPU Compiler             | Compile for Coral              | .tflite (Edge TPU)    |
+| Apache TVM                    | Compiler for diverse targets   | Optimized runtime     |
+| MCUNet                        | NAS for microcontrollers       | Architecture + engine |
 
 ---
 
@@ -887,7 +889,7 @@ Post-training quantization applies quantization after training and may lose 1-3%
 The tensor arena is a statically allocated memory region used for input/output tensors, intermediate activation buffers, and scratch memory. Size it by calling `interpreter.arena_used_bytes()` after `AllocateTensors()` on the target, then add 10-20% margin. Undersizing causes allocation failure; oversizing wastes RAM.
 
 **Q5: How does a depthwise separable convolution save memory compared to a standard convolution?**
-A standard convolution applies a K x K x C_in filter for each of C_out output channels (K^2 * C_in * C_out params). Depthwise separable splits this into a depthwise step (K^2 * C_in params, one filter per input channel) and a pointwise step (C_in * C_out params). Total params: K^2 * C_in + C_in * C_out, which is ~8-9x fewer for typical values.
+A standard convolution applies a K x K x C*in filter for each of C_out output channels (K^2 * C*in * C*out params). Depthwise separable splits this into a depthwise step (K^2 * C*in params, one filter per input channel) and a pointwise step (C_in * C*out params). Total params: K^2 * C*in + C_in * C_out, which is ~8-9x fewer for typical values.
 
 **Q6: Describe the MFCC feature extraction pipeline for keyword spotting.**
 Audio is sampled at 16 kHz, divided into overlapping 30 ms frames, windowed (Hann), transformed via FFT, passed through a Mel-scale filter bank (typically 40 filters), log-compressed, and then a DCT is applied. The result is a 49x40 spectrogram for a 1-second audio clip, which serves as input to the neural network.

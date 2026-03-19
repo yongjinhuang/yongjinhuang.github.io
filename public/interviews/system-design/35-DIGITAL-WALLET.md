@@ -6,35 +6,35 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Wallet Creation | Every user gets a wallet on registration; supports personal and business accounts |
-| 2 | Top-up / Deposit | Fund wallet from linked bank (ACH), debit card push, or wire transfer |
-| 3 | P2P Transfer | Send money instantly to another wallet user by email/phone/username |
-| 4 | Withdraw | Pull funds from wallet to linked bank account (ACH or wire) |
-| 5 | Payment | Pay merchants; wallet is debited, merchant wallet or bank is credited |
-| 6 | Transaction History | Paginated, filterable ledger of all wallet events |
-| 7 | Balance Inquiry | Real-time available balance and pending/reserved amounts |
-| 8 | Refunds & Reversals | Reverse or partially refund completed transactions |
-| 9 | Multi-currency | Hold and convert between currencies; display in user's preferred currency |
-| 10 | Recurring Payments | Schedule recurring transfers and standing orders |
-| 11 | Escrow | Hold funds in escrow for marketplace transactions, release on condition |
-| 12 | Notifications | Push/email/SMS alerts for every wallet event |
+| #   | Requirement         | Description                                                                       |
+| --- | ------------------- | --------------------------------------------------------------------------------- |
+| 1   | Wallet Creation     | Every user gets a wallet on registration; supports personal and business accounts |
+| 2   | Top-up / Deposit    | Fund wallet from linked bank (ACH), debit card push, or wire transfer             |
+| 3   | P2P Transfer        | Send money instantly to another wallet user by email/phone/username               |
+| 4   | Withdraw            | Pull funds from wallet to linked bank account (ACH or wire)                       |
+| 5   | Payment             | Pay merchants; wallet is debited, merchant wallet or bank is credited             |
+| 6   | Transaction History | Paginated, filterable ledger of all wallet events                                 |
+| 7   | Balance Inquiry     | Real-time available balance and pending/reserved amounts                          |
+| 8   | Refunds & Reversals | Reverse or partially refund completed transactions                                |
+| 9   | Multi-currency      | Hold and convert between currencies; display in user's preferred currency         |
+| 10  | Recurring Payments  | Schedule recurring transfers and standing orders                                  |
+| 11  | Escrow              | Hold funds in escrow for marketplace transactions, release on condition           |
+| 12  | Notifications       | Push/email/SMS alerts for every wallet event                                      |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Transfer latency | < 500ms end-to-end for P2P (p99) |
-| 2 | Balance accuracy | 100% — zero tolerance for errors |
-| 3 | Availability | 99.999% (< 5.26 minutes downtime/year) |
-| 4 | Throughput | 5,000 TPS sustained; 20,000 TPS peak |
-| 5 | Durability | Zero transaction loss — write-ahead log + synchronous replication |
-| 6 | Audit | Complete, immutable history for every state change |
-| 7 | Consistency | Strong consistency for all balance mutations |
-| 8 | Idempotency | Exactly-once semantics for every operation |
-| 9 | Compliance | KYC/AML, PCI-DSS, SOX audit trail, GDPR |
-| 10 | Encryption | All PII and financial data encrypted at rest and in transit |
+| #   | Requirement      | Target                                                            |
+| --- | ---------------- | ----------------------------------------------------------------- |
+| 1   | Transfer latency | < 500ms end-to-end for P2P (p99)                                  |
+| 2   | Balance accuracy | 100% — zero tolerance for errors                                  |
+| 3   | Availability     | 99.999% (< 5.26 minutes downtime/year)                            |
+| 4   | Throughput       | 5,000 TPS sustained; 20,000 TPS peak                              |
+| 5   | Durability       | Zero transaction loss — write-ahead log + synchronous replication |
+| 6   | Audit            | Complete, immutable history for every state change                |
+| 7   | Consistency      | Strong consistency for all balance mutations                      |
+| 8   | Idempotency      | Exactly-once semantics for every operation                        |
+| 9   | Compliance       | KYC/AML, PCI-DSS, SOX audit trail, GDPR                           |
+| 10  | Encryption       | All PII and financial data encrypted at rest and in transit       |
 
 ### Scale Estimation
 
@@ -81,6 +81,7 @@ PATCH  /v1/wallets/{walletId}/status            Freeze / unfreeze wallet (compli
 ```
 
 **GET /v1/wallets/me Response:**
+
 ```json
 {
   "walletId": "wlt_a1b2c3d4",
@@ -114,6 +115,7 @@ POST   /v1/transfers/{transferId}/reverse       Reverse completed transfer
 ```
 
 **POST /v1/transfers Request:**
+
 ```json
 {
   "idempotencyKey": "idem_550e8400-e29b-41d4-a716-446655440000",
@@ -130,6 +132,7 @@ POST   /v1/transfers/{transferId}/reverse       Reverse completed transfer
 ```
 
 **POST /v1/transfers Response (201 Created):**
+
 ```json
 {
   "transferId": "txn_7a8b9c0d",
@@ -139,8 +142,18 @@ POST   /v1/transfers/{transferId}/reverse       Reverse completed transfer
   "amount": "50.00",
   "currency": "USD",
   "ledgerEntries": [
-    { "entryId": "led_001", "accountId": "wlt_a1b2c3d4", "type": "debit", "amount": "50.00" },
-    { "entryId": "led_002", "accountId": "wlt_e5f6g7h8", "type": "credit", "amount": "50.00" }
+    {
+      "entryId": "led_001",
+      "accountId": "wlt_a1b2c3d4",
+      "type": "debit",
+      "amount": "50.00"
+    },
+    {
+      "entryId": "led_002",
+      "accountId": "wlt_e5f6g7h8",
+      "type": "credit",
+      "amount": "50.00"
+    }
   ],
   "completedAt": "2024-03-01T14:23:01.234Z",
   "idempotencyKey": "idem_550e8400-e29b-41d4-a716-446655440000"
@@ -157,6 +170,7 @@ GET    /v1/withdrawals/{withdrawalId}           Get withdrawal status
 ```
 
 **POST /v1/topups Request:**
+
 ```json
 {
   "idempotencyKey": "idem_abc123",
@@ -178,6 +192,7 @@ GET    /v1/ledger/{entryId}
 ```
 
 **GET /v1/ledger Response:**
+
 ```json
 {
   "entries": [
@@ -1321,18 +1336,18 @@ CQRS Pattern:
 
 ## 20. Trade-offs
 
-| Decision | Chosen Approach | Alternative | Reason |
-|----------|-----------------|-------------|--------|
-| Balance model | Stored + nightly verification | Computed from ledger | O(1) reads at 5K TPS; drift caught by reconciliation |
-| Cross-shard transfers | Saga pattern | 2PC | Saga: higher availability, tolerate coordinator failure; 2PC blocks on failure |
-| Concurrency control | Optimistic locking (OCC) + SELECT FOR UPDATE for P2P | Pure OCC | P2P must be atomic across two rows; OCC for single-row updates (top-up) |
-| Idempotency store | Postgres table + Redis in-flight | Redis only | Postgres survives Redis restart; Redis prevents in-flight duplicates |
-| Ledger storage | Relational (PostgreSQL) | Event store (EventStoreDB) | SQL native for double-entry constraint checking; event sourcing adds complexity |
-| Fraud scoring | Synchronous ML (< 50ms) | Async post-transaction | Reject fraud before funds move; async scoring misses real-time window |
-| Exchange rates | Cached in Redis (60s TTL) | Real-time per-call | 60s stale acceptable; per-call adds latency and cost at 5K TPS |
-| Bank linking | Plaid OAuth + micro-deposits fallback | Direct routing number entry | Plaid instant and secure; micro-deposits = fallback for Plaid unsupported banks |
-| Audit storage | Postgres table + S3 WORM | Immutable ledger DB (Immudb) | Postgres familiar, triggers enforce immutability; S3 WORM satisfies regulatory retention |
-| Shard key | wallet_id | user_id | Same thing in this model; wallet_id groups all a user's currency balances together |
+| Decision              | Chosen Approach                                      | Alternative                  | Reason                                                                                   |
+| --------------------- | ---------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------- |
+| Balance model         | Stored + nightly verification                        | Computed from ledger         | O(1) reads at 5K TPS; drift caught by reconciliation                                     |
+| Cross-shard transfers | Saga pattern                                         | 2PC                          | Saga: higher availability, tolerate coordinator failure; 2PC blocks on failure           |
+| Concurrency control   | Optimistic locking (OCC) + SELECT FOR UPDATE for P2P | Pure OCC                     | P2P must be atomic across two rows; OCC for single-row updates (top-up)                  |
+| Idempotency store     | Postgres table + Redis in-flight                     | Redis only                   | Postgres survives Redis restart; Redis prevents in-flight duplicates                     |
+| Ledger storage        | Relational (PostgreSQL)                              | Event store (EventStoreDB)   | SQL native for double-entry constraint checking; event sourcing adds complexity          |
+| Fraud scoring         | Synchronous ML (< 50ms)                              | Async post-transaction       | Reject fraud before funds move; async scoring misses real-time window                    |
+| Exchange rates        | Cached in Redis (60s TTL)                            | Real-time per-call           | 60s stale acceptable; per-call adds latency and cost at 5K TPS                           |
+| Bank linking          | Plaid OAuth + micro-deposits fallback                | Direct routing number entry  | Plaid instant and secure; micro-deposits = fallback for Plaid unsupported banks          |
+| Audit storage         | Postgres table + S3 WORM                             | Immutable ledger DB (Immudb) | Postgres familiar, triggers enforce immutability; S3 WORM satisfies regulatory retention |
+| Shard key             | wallet_id                                            | user_id                      | Same thing in this model; wallet_id groups all a user's currency balances together       |
 
 ---
 
@@ -1376,4 +1391,4 @@ A: RTO < 5 minutes, RPO = 0 seconds (zero data loss). Architecture: synchronous 
 
 ---
 
-*Covers: double-entry bookkeeping, saga pattern, idempotency, optimistic locking, AML/KYC, fraud detection, multi-currency, reconciliation, HSM encryption, audit trail, horizontal sharding.*
+_Covers: double-entry bookkeeping, saga pattern, idempotency, optimistic locking, AML/KYC, fraud detection, multi-currency, reconciliation, HSM encryption, audit trail, horizontal sharding._

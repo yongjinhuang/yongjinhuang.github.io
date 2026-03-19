@@ -2525,6 +2525,7 @@ Here is the complete flow from signal to post-trade analysis:
 **Problem 2**: Design a TWAP algorithm that handles the following edge cases: (a) the market closes before the schedule ends, (b) a child order is rejected by the exchange, (c) the price moves more than 2% against you during execution.
 
 **Problem 3**: You have the following venue quotes for a BUY order of 10,000 shares:
+
 - NYSE: Ask $100.05, Size 3,000, Fee $0.003/share
 - NASDAQ: Ask $100.04, Size 5,000, Fee $0.003/share
 - BATS: Ask $100.05, Size 4,000, Rebate -$0.002/share
@@ -2535,6 +2536,7 @@ Design the optimal routing strategy considering Reg NMS requirements, fees, and 
 **Problem 4**: Implement the Almgren-Chriss model for selling 500,000 shares over 4 hours with the following parameters: daily volume = 10M shares, daily volatility = 2.5%, temporary impact = 0.0005, permanent impact = 0.00005. Compare trajectories for risk aversion lambda = {0, 1e-7, 1e-6, 1e-5}.
 
 **Problem 5**: Decode the following FIX message and describe the order it represents:
+
 ```
 8=FIX.4.4|9=148|35=D|49=ALGO_ENGINE|56=NYSE|34=1042|
 52=20250115-15:45:00.123|11=VWAP-0042-17|55=MSFT|54=2|
@@ -2554,4 +2556,4 @@ Design the optimal routing strategy considering Reg NMS requirements, fees, and 
 
 ---
 
-*Next Chapter: [11-RISK-MANAGEMENT](11-RISK-MANAGEMENT.md) -- Portfolio risk measurement, VaR, stress testing, and risk budgeting.*
+_Next Chapter: [11-RISK-MANAGEMENT](11-RISK-MANAGEMENT.md) -- Portfolio risk measurement, VaR, stress testing, and risk budgeting._

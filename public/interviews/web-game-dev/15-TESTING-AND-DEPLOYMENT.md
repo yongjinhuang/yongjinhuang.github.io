@@ -383,7 +383,8 @@ class AdBridge {
   }
 
   openStore(): void {
-    const storeUrl = 'https://play.google.com/store/apps/details?id=com.example.game';
+    const storeUrl =
+      'https://play.google.com/store/apps/details?id=com.example.game';
 
     if (this.isDapi && this.dapi) {
       this.dapi.openStoreUrl(storeUrl);
@@ -563,7 +564,8 @@ class MraidPolyfill {
     placementType: 'interstitial',
   };
 
-  private readonly listeners: Map<string, Array<(...args: unknown[]) => void>> = new Map();
+  private readonly listeners: Map<string, Array<(...args: unknown[]) => void>> =
+    new Map();
   private readonly logDiv: HTMLDivElement;
 
   constructor() {
@@ -621,7 +623,10 @@ class MraidPolyfill {
     return this.mraidState.viewable;
   }
 
-  addEventListener(event: string, callback: (...args: unknown[]) => void): void {
+  addEventListener(
+    event: string,
+    callback: (...args: unknown[]) => void
+  ): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
@@ -629,7 +634,10 @@ class MraidPolyfill {
     this.log(`Listener added: ${event}`);
   }
 
-  removeEventListener(event: string, callback: (...args: unknown[]) => void): void {
+  removeEventListener(
+    event: string,
+    callback: (...args: unknown[]) => void
+  ): void {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
       const idx = eventListeners.indexOf(callback);
@@ -843,7 +851,9 @@ function createGrid(cols: number, rows: number, typeCount: number): Grid {
   );
 }
 
-function findHorizontalMatches(grid: Grid): Array<{ row: number; col: number; length: number }> {
+function findHorizontalMatches(
+  grid: Grid
+): Array<{ row: number; col: number; length: number }> {
   const matches: Array<{ row: number; col: number; length: number }> = [];
 
   for (let row = 0; row < grid.length; row++) {
@@ -851,7 +861,10 @@ function findHorizontalMatches(grid: Grid): Array<{ row: number; col: number; le
     let matchLength = 1;
 
     for (let col = 1; col <= grid[row].length; col++) {
-      if (col < grid[row].length && grid[row][col].type === grid[row][matchStart].type) {
+      if (
+        col < grid[row].length &&
+        grid[row][col].type === grid[row][matchStart].type
+      ) {
         matchLength++;
       } else {
         if (matchLength >= 3) {
@@ -866,7 +879,13 @@ function findHorizontalMatches(grid: Grid): Array<{ row: number; col: number; le
   return matches;
 }
 
-function swapCells(grid: Grid, r1: number, c1: number, r2: number, c2: number): Grid {
+function swapCells(
+  grid: Grid,
+  r1: number,
+  c1: number,
+  r2: number,
+  c2: number
+): Grid {
   return grid.map((row, r) =>
     row.map((cell, c) => {
       if (r === r1 && c === c1) return grid[r2][c2];
@@ -987,10 +1006,7 @@ class VisualRegressionTester {
   private readonly referenceSnapshots: Map<string, string> = new Map();
 
   // Capture a snapshot of the current canvas state
-  captureSnapshot(
-    canvas: HTMLCanvasElement,
-    name: string
-  ): VisualSnapshot {
+  captureSnapshot(canvas: HTMLCanvasElement, name: string): VisualSnapshot {
     return {
       name,
       dataUrl: canvas.toDataURL('image/png'),
@@ -1051,7 +1067,8 @@ class VisualRegressionTester {
         diffData.data[i + 3] = 255;
       } else {
         // Show original in grayscale
-        const gray = (dataA.data[i] + dataA.data[i + 1] + dataA.data[i + 2]) / 3;
+        const gray =
+          (dataA.data[i] + dataA.data[i + 1] + dataA.data[i + 2]) / 3;
         diffData.data[i] = gray;
         diffData.data[i + 1] = gray;
         diffData.data[i + 2] = gray;
@@ -1136,16 +1153,20 @@ class InputRecorder {
     this.startTime = performance.now();
     this.isRecording = true;
 
-    const recordEvent = (type: InputEvent['type'], e: MouseEvent | TouchEvent): void => {
+    const recordEvent = (
+      type: InputEvent['type'],
+      e: MouseEvent | TouchEvent
+    ): void => {
       if (!this.isRecording) return;
 
       let x: number;
       let y: number;
 
       if ('touches' in e) {
-        const touch = e.type === 'touchend'
-          ? (e as TouchEvent).changedTouches[0]
-          : (e as TouchEvent).touches[0];
+        const touch =
+          e.type === 'touchend'
+            ? (e as TouchEvent).changedTouches[0]
+            : (e as TouchEvent).touches[0];
         const rect = canvas.getBoundingClientRect();
         x = touch.clientX - rect.left;
         y = touch.clientY - rect.top;
@@ -1252,7 +1273,8 @@ class FrameTimingProfiler {
   private readonly maxFrames: number;
   private lastTimestamp: number = 0;
 
-  constructor(maxFrames: number = 600) { // 10 seconds at 60fps
+  constructor(maxFrames: number = 600) {
+    // 10 seconds at 60fps
     this.maxFrames = maxFrames;
     this.frameTimes = new Float64Array(maxFrames);
   }
@@ -1276,8 +1298,9 @@ class FrameTimingProfiler {
     let jankyFrames = 0;
 
     for (let i = 0; i < frames.length; i++) {
-      if (frames[i] > 33.33) droppedFrames++;   // Below 30fps
-      else if (frames[i] > 18) jankyFrames++;    // Below 55fps
+      if (frames[i] > 33.33)
+        droppedFrames++; // Below 30fps
+      else if (frames[i] > 18) jankyFrames++; // Below 55fps
     }
 
     return {
@@ -1293,7 +1316,8 @@ class FrameTimingProfiler {
       droppedFrames,
       jankyFrames,
       droppedFramePercent: (droppedFrames / frames.length) * 100,
-      smoothnessScore: ((frames.length - jankyFrames - droppedFrames) / frames.length) * 100,
+      smoothnessScore:
+        ((frames.length - jankyFrames - droppedFrames) / frames.length) * 100,
     };
   }
 }
@@ -1449,6 +1473,7 @@ custom frame timing and memory profiling for game-specific metrics.
 ## Pre-Release QA Checklist for Playable Ads
 
 ### Layout & Orientation
+
 - [ ] Portrait mode displays correctly on phone
 - [ ] Landscape mode displays correctly on phone
 - [ ] Portrait mode displays correctly on tablet
@@ -1459,6 +1484,7 @@ custom frame timing and memory profiling for game-specific metrics.
 - [ ] Safe area insets respected on all devices
 
 ### Touch Input
+
 - [ ] Tap targets are minimum 44x44px
 - [ ] Touch input is responsive (<100ms perceived delay)
 - [ ] Multi-touch doesn't cause issues
@@ -1468,6 +1494,7 @@ custom frame timing and memory profiling for game-specific metrics.
 - [ ] Touch works correctly after orientation change
 
 ### CTA (Call to Action)
+
 - [ ] CTA button is clearly visible
 - [ ] CTA is tappable (not obscured by other elements)
 - [ ] CTA redirects to correct app store URL
@@ -1477,6 +1504,7 @@ custom frame timing and memory profiling for game-specific metrics.
 - [ ] CTA text is appropriate and not misleading
 
 ### Audio
+
 - [ ] Audio respects device volume setting
 - [ ] Audio respects mute/silent switch on iOS
 - [ ] No audio plays before user interaction (browser policy)
@@ -1486,6 +1514,7 @@ custom frame timing and memory profiling for game-specific metrics.
 - [ ] Sound effects don't overlap awkwardly
 
 ### Error Handling
+
 - [ ] No JavaScript errors in console
 - [ ] No unhandled promise rejections
 - [ ] Graceful fallback if WebGL unavailable
@@ -1494,6 +1523,7 @@ custom frame timing and memory profiling for game-specific metrics.
 - [ ] No errors when ad is quickly closed and reopened
 
 ### Size & Loading
+
 - [ ] Total file size under network limit (2-5MB depending on network)
 - [ ] First frame renders in <1 second
 - [ ] Game is playable within 2 seconds
@@ -1501,6 +1531,7 @@ custom frame timing and memory profiling for game-specific metrics.
 - [ ] No loading spinner visible for more than 1 second
 
 ### Gameplay
+
 - [ ] Game is completable in 15-30 seconds
 - [ ] Tutorial is clear without text (icon/animation based)
 - [ ] Difficulty is appropriate (user should succeed)
@@ -1510,6 +1541,7 @@ custom frame timing and memory profiling for game-specific metrics.
 - [ ] End card appears at appropriate time
 
 ### Performance
+
 - [ ] Maintains 60fps on target low-end device
 - [ ] No visible frame drops during gameplay
 - [ ] No GC pauses causing stutters
@@ -1518,6 +1550,7 @@ custom frame timing and memory profiling for game-specific metrics.
 - [ ] Battery usage is reasonable
 
 ### MRAID Compliance
+
 - [ ] mraid.js script tag present in HTML
 - [ ] Game waits for mraid ready event
 - [ ] Game respects viewableChange events
@@ -1526,6 +1559,7 @@ custom frame timing and memory profiling for game-specific metrics.
 - [ ] close() / stateChange handled correctly
 
 ### Cross-Platform
+
 - [ ] Chrome on Android
 - [ ] Samsung Browser on Android
 - [ ] Safari on iOS
@@ -1545,7 +1579,9 @@ interface QAResult {
   readonly details: string;
 }
 
-async function runAutomatedQA(htmlFilePath: string): Promise<readonly QAResult[]> {
+async function runAutomatedQA(
+  htmlFilePath: string
+): Promise<readonly QAResult[]> {
   const results: QAResult[] = [];
 
   // Size check
@@ -1573,7 +1609,9 @@ async function runAutomatedQA(htmlFilePath: string): Promise<readonly QAResult[]
     category: 'MRAID',
     check: 'mraid.js reference',
     status: text.includes('mraid.js') ? 'pass' : 'fail',
-    details: text.includes('mraid.js') ? 'Found' : 'Missing mraid.js script tag',
+    details: text.includes('mraid.js')
+      ? 'Found'
+      : 'Missing mraid.js script tag',
   });
 
   // External request check
@@ -1602,7 +1640,8 @@ async function runAutomatedQA(htmlFilePath: string): Promise<readonly QAResult[]
   });
 
   // Console.log check
-  const consoleLogCount = (text.match(/console\.(log|warn|error)/g) || []).length;
+  const consoleLogCount = (text.match(/console\.(log|warn|error)/g) || [])
+    .length;
   results.push({
     category: 'Code Quality',
     check: 'No console.log statements',
@@ -1621,8 +1660,8 @@ async function runAutomatedQA(htmlFilePath: string): Promise<readonly QAResult[]
     details: hasStylesheetLinks
       ? 'Has external stylesheets'
       : hasScriptSrcs
-      ? 'Has external scripts (other than mraid)'
-      : 'All assets inline',
+        ? 'Has external scripts (other than mraid)'
+        : 'All assets inline',
   });
 
   return results;
@@ -1992,9 +2031,13 @@ function generateSizeBadge(sizeBytes: number, limitBytes: number): string {
   const percentage = (sizeBytes / limitBytes) * 100;
   const sizeKB = Math.round(sizeBytes / 1024);
   const color =
-    percentage < 50 ? 'green' :
-    percentage < 75 ? 'yellow' :
-    percentage < 100 ? 'orange' : 'red';
+    percentage < 50
+      ? 'green'
+      : percentage < 75
+        ? 'yellow'
+        : percentage < 100
+          ? 'orange'
+          : 'red';
 
   return `https://img.shields.io/badge/bundle_size-${sizeKB}KB-${color}`;
 }
@@ -2012,6 +2055,7 @@ function generateSizeBadge(sizeBytes: number, limitBytes: number): string {
 
 **Tier 1 - Real device testing (5-8 devices):**
 These are the devices I keep on my desk or in the office. I test every build on these:
+
 - Galaxy A10/A12 (low-end Android, the true stress test)
 - Galaxy S21 (mid-range Android)
 - Pixel 6 (stock Android, reference WebView)
@@ -2023,6 +2067,7 @@ On these I check: performance (frame timing), touch feel, orientation, audio, CT
 
 **Tier 2 - Cloud device testing (20-30 devices via BrowserStack):**
 I run automated scripts that:
+
 1. Load the playable ad
 2. Take screenshots at key moments (loading, gameplay, end card)
 3. Verify canvas renders (non-blank screenshot)
@@ -2032,6 +2077,7 @@ I run automated scripts that:
 This covers Samsung Internet, MIUI browser, various Android versions, different iOS versions.
 
 **Tier 3 - Network preview tools (per network):**
+
 - Facebook Ad Preview (tests in actual FB WebView)
 - Unity Creative Tester app
 - ironSource testing dashboard
@@ -2050,18 +2096,21 @@ After launch, monitor crash reports and error logs for the first 48 hours. If a 
 "My pipeline has four stages, triggered on every push:
 
 **Stage 1: Lint + Type Check (30 seconds)**
+
 - ESLint for code quality
 - TypeScript compiler for type safety
 - Prettier for formatting consistency
 - Runs on every commit
 
 **Stage 2: Test (1 minute)**
+
 - Unit tests for game logic (match detection, scoring, grid operations)
 - 80%+ code coverage requirement
 - Deterministic tests (fixed random seeds)
 - No canvas rendering in tests (pure logic only)
 
 **Stage 3: Build + Validate (1 minute)**
+
 - esbuild bundles TypeScript to single JS file
 - Asset inliner converts images to base64
 - HTML template generates self-contained file
@@ -2073,6 +2122,7 @@ After launch, monitor crash reports and error logs for the first 48 hours. If a 
   - Valid HTML structure
 
 **Stage 4: Size Report (PR only)**
+
 - Comments on the PR with bundle size
 - Shows delta from main branch
 - Warns if approaching size limit
@@ -2092,12 +2142,14 @@ I don't automate network uploads because each network has its own dashboard and 
 **Immediate debugging steps:**
 
 1. **Remote debugging:**
+
    - Android: Enable USB debugging, connect device, `chrome://inspect` to see the WebView
    - iOS: Safari → Develop → Device → the WebView page
 
 2. **Common WebView issues:**
 
    - **Missing APIs:** WebView might not support `OffscreenCanvas`, `ResizeObserver`, or newer JS APIs. Check with feature detection:
+
    ```typescript
    if (typeof ResizeObserver === 'undefined') {
      // Fallback to window resize event
@@ -2109,6 +2161,7 @@ I don't automate network uploads because each network has its own dashboard and 
    - **Touch events:** The Facebook app may intercept certain touch gestures (swipe to go back). Use `{ passive: false }` and `preventDefault()` on your game canvas.
 
    - **Canvas context:** Some WebViews have WebGL issues. Always have a Canvas2D fallback:
+
    ```typescript
    const gl = canvas.getContext('webgl');
    if (!gl) {
@@ -2120,6 +2173,7 @@ I don't automate network uploads because each network has its own dashboard and 
    - **Performance:** WebViews run in the host app's process, competing for resources. The game that runs at 60fps in Chrome might only get 30fps in a WebView.
 
 3. **Systematic fix process:**
+
    - Reproduce the exact issue in the WebView
    - Check console for errors via remote debugging
    - Identify which API or behavior differs
@@ -2151,6 +2205,7 @@ I don't automate network uploads because each network has its own dashboard and 
    - Falls back to desktop behavior for development
 
 2. **MRAID compliance essentials:**
+
    - Always include `<script src="mraid.js"></script>` (even though the file doesn't exist - the SDK injects it)
    - Never start the game until `ready` event fires
    - Never play audio until `viewableChange` says `true`
@@ -2159,6 +2214,7 @@ I don't automate network uploads because each network has its own dashboard and 
 
 3. **Testing matrix:**
    For each network, I test:
+
    - Does the game load and become interactive?
    - Does the CTA redirect to the correct store?
    - Does audio respect the system volume?
@@ -2183,11 +2239,13 @@ Most rejection issues come from forgetting to use `mraid.open()` or having exter
 "My QA process takes about 4-6 hours for a thorough pass, plus ongoing monitoring after launch.
 
 **Phase 1: Automated checks (15 minutes)**
+
 - CI pipeline runs: lint, tests, build, size check
 - Automated QA script validates MRAID, no external requests, size limits
 - Fix any failures before manual testing
 
 **Phase 2: Developer self-test (1 hour)**
+
 - Play through entire flow 5+ times on my development device
 - Test both orientations
 - Test with volume on and off
@@ -2196,6 +2254,7 @@ Most rejection issues come from forgetting to use `mraid.open()` or having exter
 - Check performance with Chrome DevTools
 
 **Phase 3: Device lab testing (2-3 hours)**
+
 - Test on 5-8 real devices (see my device matrix)
 - Focus on low-end Android (Galaxy A10) for performance
 - Focus on iOS for layout/safe areas
@@ -2203,6 +2262,7 @@ Most rejection issues come from forgetting to use `mraid.open()` or having exter
 - Record any issues with screenshots/screen recordings
 
 **Phase 4: Network-specific testing (1-2 hours)**
+
 - Upload to each target network's preview/testing tool
 - Facebook Ad Preview
 - Unity Creative Tester
@@ -2211,16 +2271,19 @@ Most rejection issues come from forgetting to use `mraid.open()` or having exter
 - Check that viewability events are handled
 
 **Phase 5: Stakeholder review (30 minutes)**
+
 - Send preview links to the UA manager and game team
 - Collect feedback on gameplay feel and end card messaging
 - Make final adjustments
 
 **Phase 6: Post-launch monitoring (ongoing)**
+
 - First 24 hours: monitor crash reports, error rates
 - First 48 hours: check initial CTR and engagement metrics
 - First week: compare performance against previous creatives
 
 The most common issues found during QA are:
+
 1. Layout problems on specific screen sizes (30% of issues)
 2. Audio not pausing/resuming correctly (20%)
 3. Performance issues on low-end devices (20%)
@@ -2236,6 +2299,7 @@ The most common issues found during QA are:
 "Rejections happen. The key is to have a fast turnaround process.
 
 **Prevention (reduce rejections):**
+
 1. Maintain a checklist per network with their specific requirements
 2. Run automated checks before submission
 3. Review the network's policy documentation quarterly for changes
@@ -2244,36 +2308,42 @@ The most common issues found during QA are:
 **When rejected:**
 
 1. **Read the rejection reason carefully.** Networks usually provide a specific category:
+
    - Technical issue (size, loading, crash)
    - Policy violation (misleading, inappropriate content)
    - Quality issue (low quality, poor UX)
 
 2. **Common fixes by rejection type:**
 
-   *Size exceeds limit:*
+   _Size exceeds limit:_
+
    - Compress images further (TinyPNG)
    - Remove unused sprites
    - Switch audio to Web Audio synthesis
    - Split atlas into smaller textures
 
-   *External requests:*
+   _External requests:_
+
    - Check for analytics scripts accidentally left in
    - Verify no CDN font loading
    - Check for tracking pixels
    - Ensure all images are base64 inline
 
-   *Misleading content:*
+   _Misleading content:_
+
    - Ensure gameplay in ad matches actual app
    - Remove exaggerated effects not in the real game
    - Update end card to accurately represent the app
 
-   *Performance issues:*
+   _Performance issues:_
+
    - Test on the specific device the reviewer used (if reported)
    - Reduce canvas resolution for mobile
    - Simplify animations
    - Add loading screen if first frame is slow
 
 3. **Fix → Re-test → Re-submit:**
+
    - Usually a same-day fix
    - Run through the full QA checklist again (don't just fix the one thing)
    - Re-submit with a note explaining the fix
@@ -2295,12 +2365,14 @@ The most common issues found during QA are:
 **Core method:** Use `canvas.toDataURL()` to capture screenshots and compare them pixel-by-pixel.
 
 **Making it deterministic:**
+
 1. **Fixed random seed:** All game randomness must use a seeded PRNG, not `Math.random()`
 2. **Fixed timestamp:** Pass explicit timestamps to the game loop, not `Date.now()`
 3. **Fixed viewport:** Always render to the same canvas dimensions in tests
 4. **No async rendering:** Tests wait for all animations to complete before capturing
 
 **Implementation:**
+
 - Capture reference screenshots for key game states (loading, gameplay, end card)
 - On each build, render the same states with the same seed
 - Compare pixel-by-pixel with a threshold (1-2% difference allowed for anti-aliasing)
@@ -2308,12 +2380,14 @@ The most common issues found during QA are:
 - Fail the test if diff exceeds threshold
 
 **Practical limitations:**
+
 - Different GPUs render text slightly differently, so I avoid testing text-heavy screens
 - Anti-aliasing produces different results across platforms, so I use a tolerance
 - I run visual tests only on the CI server (consistent GPU) and not on developer machines
 - I test game LOGIC with unit tests (no rendering) and only use visual regression for critical visual states
 
 **When it's worth it:**
+
 - Catching unintended visual changes during refactoring
 - Verifying sprite atlas changes don't break layouts
 - Ensuring animation keyframes produce expected results

@@ -163,23 +163,23 @@ Promotions drive order volume but are expensive:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
+| Term                             | What It Means                                                                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Dark kitchen / Ghost kitchen** | A restaurant that operates exclusively for delivery — no dine-in, no storefront. Lower overhead, optimized for delivery speed |
-| **Dispatch** | The algorithm that assigns drivers to orders. The most critical system in the platform |
-| **Batching** | Combining multiple orders into a single driver trip to improve efficiency |
-| **Surge pricing** | Increasing fees during high-demand periods to balance supply and demand |
-| **EDT / ETA** | Estimated Delivery Time / Estimated Time of Arrival. The promise shown to the customer |
-| **Prep time** | How long the restaurant takes to prepare the order after accepting it |
-| **Geofence** | A virtual boundary on a map that triggers actions when a driver enters or exits |
-| **Take rate** | The percentage of order value the platform keeps as commission (typically 15-30%) |
-| **AOV** | Average Order Value. Key metric that drives unit economics |
-| **Dayparting** | Showing different menus or pricing based on time of day |
-| **Last mile** | The final leg of delivery — from a local hub or restaurant to the customer's door |
-| **Driver utilization** | Percentage of a driver's online time spent actively delivering. Higher is better for driver earnings |
-| **Basket incentive** | Minimum order amount required for free delivery, encouraging customers to add more items |
-| **KDS** | Kitchen Display System. The screen in the restaurant that shows incoming orders |
-| **Map matching** | Snapping raw GPS coordinates to known road segments for accurate tracking |
+| **Dispatch**                     | The algorithm that assigns drivers to orders. The most critical system in the platform                                        |
+| **Batching**                     | Combining multiple orders into a single driver trip to improve efficiency                                                     |
+| **Surge pricing**                | Increasing fees during high-demand periods to balance supply and demand                                                       |
+| **EDT / ETA**                    | Estimated Delivery Time / Estimated Time of Arrival. The promise shown to the customer                                        |
+| **Prep time**                    | How long the restaurant takes to prepare the order after accepting it                                                         |
+| **Geofence**                     | A virtual boundary on a map that triggers actions when a driver enters or exits                                               |
+| **Take rate**                    | The percentage of order value the platform keeps as commission (typically 15-30%)                                             |
+| **AOV**                          | Average Order Value. Key metric that drives unit economics                                                                    |
+| **Dayparting**                   | Showing different menus or pricing based on time of day                                                                       |
+| **Last mile**                    | The final leg of delivery — from a local hub or restaurant to the customer's door                                             |
+| **Driver utilization**           | Percentage of a driver's online time spent actively delivering. Higher is better for driver earnings                          |
+| **Basket incentive**             | Minimum order amount required for free delivery, encouraging customers to add more items                                      |
+| **KDS**                          | Kitchen Display System. The screen in the restaurant that shows incoming orders                                               |
+| **Map matching**                 | Snapping raw GPS coordinates to known road segments for accurate tracking                                                     |
 
 ## Common Patterns
 

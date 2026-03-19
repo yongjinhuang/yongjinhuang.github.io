@@ -88,10 +88,12 @@ output "connection_string" {
 ```
 
 What `sensitive = true` does:
+
 - Redacts the value from `terraform plan` and `terraform apply` console output
 - Prevents the value from appearing in `terraform output` without `-json` flag
 
 What `sensitive = true` does NOT do:
+
 - Does not encrypt the value in state (it is still plain text in `.tfstate`)
 - Does not prevent the value from appearing in provider error messages
 - Does not prevent the value from being logged by the provider itself
@@ -104,13 +106,13 @@ What `sensitive = true` does NOT do:
 
 Terraform state contains every attribute of every resource -- in plain text. This includes:
 
-| Resource | What State Contains |
-|----------|-------------------|
-| `aws_db_instance` | Master password, endpoint, port |
-| `aws_iam_access_key` | Access key ID, secret access key |
-| `tls_private_key` | Full private key PEM |
-| `aws_secretsmanager_secret_version` | The actual secret value |
-| `aws_instance` | User data (may contain bootstrap secrets) |
+| Resource                            | What State Contains                       |
+| ----------------------------------- | ----------------------------------------- |
+| `aws_db_instance`                   | Master password, endpoint, port           |
+| `aws_iam_access_key`                | Access key ID, secret access key          |
+| `tls_private_key`                   | Full private key PEM                      |
+| `aws_secretsmanager_secret_version` | The actual secret value                   |
+| `aws_instance`                      | User data (may contain bootstrap secrets) |
 
 **The state file is the single biggest security risk in any Terraform setup.**
 
@@ -308,13 +310,13 @@ Key separation: the plan role is read-only and scoped to pull requests. The appl
 
 OIDC eliminates long-lived credentials entirely. GitHub Actions receives a short-lived token from AWS STS for each workflow run.
 
-| Aspect | Access Keys | OIDC Federation |
-|--------|-------------|-----------------|
-| Credential lifetime | Permanent until rotated | Minutes (per-run) |
-| Storage | GitHub Secrets | None (dynamic) |
-| Rotation required | Yes (manually) | No (automatic) |
-| Blast radius if leaked | Full access until revoked | Already expired |
-| Branch scoping | Not possible | Built-in via sub claim |
+| Aspect                 | Access Keys               | OIDC Federation        |
+| ---------------------- | ------------------------- | ---------------------- |
+| Credential lifetime    | Permanent until rotated   | Minutes (per-run)      |
+| Storage                | GitHub Secrets            | None (dynamic)         |
+| Rotation required      | Yes (manually)            | No (automatic)         |
+| Blast radius if leaked | Full access until revoked | Already expired        |
+| Branch scoping         | Not possible              | Built-in via sub claim |
 
 ---
 
@@ -349,10 +351,7 @@ Service Control Policies in AWS Organizations act as a hard ceiling. Even if Ter
     {
       "Sid": "DenyPublicS3",
       "Effect": "Deny",
-      "Action": [
-        "s3:PutBucketPolicy",
-        "s3:PutBucketAcl"
-      ],
+      "Action": ["s3:PutBucketPolicy", "s3:PutBucketAcl"],
       "Resource": "*",
       "Condition": {
         "StringEquals": {
@@ -407,13 +406,13 @@ provider "aws" {
 
 ### Short-Lived Tokens
 
-| Method | Lifetime | Use Case |
-|--------|----------|----------|
-| OIDC (GitHub Actions) | ~1 hour | CI/CD pipelines |
-| Instance profile (EC2) | ~6 hours, auto-rotated | Self-hosted runners |
-| SSO session | 1-12 hours (configurable) | Developer workstations |
-| STS AssumeRole | 1-12 hours | Cross-account access |
-| Access keys | Permanent | Avoid whenever possible |
+| Method                 | Lifetime                  | Use Case                |
+| ---------------------- | ------------------------- | ----------------------- |
+| OIDC (GitHub Actions)  | ~1 hour                   | CI/CD pipelines         |
+| Instance profile (EC2) | ~6 hours, auto-rotated    | Self-hosted runners     |
+| SSO session            | 1-12 hours (configurable) | Developer workstations  |
+| STS AssumeRole         | 1-12 hours                | Cross-account access    |
+| Access keys            | Permanent                 | Avoid whenever possible |
 
 ---
 

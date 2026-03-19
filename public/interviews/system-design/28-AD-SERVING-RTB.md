@@ -6,37 +6,37 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Ad Request Serving | Publishers send ad requests; system returns the winning ad creative within latency budget |
-| 2 | Real-Time Bidding (RTB) | Run OpenRTB auction among DSPs in < 80ms, select winning bid, serve creative |
-| 3 | Ad Targeting | Match ads to users via contextual, behavioral, demographic, retargeting, and lookalike signals |
-| 4 | CTR Prediction | Predict click-through rate for each candidate ad using ML models |
-| 5 | Auction Engine | Support first-price and second-price auctions; enforce floors and reserve prices |
-| 6 | Frequency Capping | Limit impressions per user per ad/campaign within rolling time windows |
-| 7 | Budget Pacing | Distribute advertiser spend evenly over campaign flight dates; prevent over-spend |
-| 8 | Click & Impression Tracking | Record impressions and clicks with zero loss; support viewability measurement |
-| 9 | Attribution | Attribute conversions to ad touchpoints (last-click, first-click, multi-touch, view-through) |
-| 10 | Fraud Detection | Detect and filter click fraud, bot traffic, and invalid traffic (IVT) in real time |
-| 11 | Privacy Compliance | Enforce GDPR consent signals, CCPA opt-out, and Apple ATT opt-in before targeting |
-| 12 | Reporting & Analytics | Near-real-time spend, impression, click, and conversion dashboards for advertisers |
-| 13 | Ad Creative Management | Upload, review, and serve display, video, and native creatives via CDN |
-| 14 | Campaign Management | CRUD for campaigns, ad groups, ads, budgets, targeting rules, and bid strategies |
+| #   | Requirement                 | Description                                                                                    |
+| --- | --------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1   | Ad Request Serving          | Publishers send ad requests; system returns the winning ad creative within latency budget      |
+| 2   | Real-Time Bidding (RTB)     | Run OpenRTB auction among DSPs in < 80ms, select winning bid, serve creative                   |
+| 3   | Ad Targeting                | Match ads to users via contextual, behavioral, demographic, retargeting, and lookalike signals |
+| 4   | CTR Prediction              | Predict click-through rate for each candidate ad using ML models                               |
+| 5   | Auction Engine              | Support first-price and second-price auctions; enforce floors and reserve prices               |
+| 6   | Frequency Capping           | Limit impressions per user per ad/campaign within rolling time windows                         |
+| 7   | Budget Pacing               | Distribute advertiser spend evenly over campaign flight dates; prevent over-spend              |
+| 8   | Click & Impression Tracking | Record impressions and clicks with zero loss; support viewability measurement                  |
+| 9   | Attribution                 | Attribute conversions to ad touchpoints (last-click, first-click, multi-touch, view-through)   |
+| 10  | Fraud Detection             | Detect and filter click fraud, bot traffic, and invalid traffic (IVT) in real time             |
+| 11  | Privacy Compliance          | Enforce GDPR consent signals, CCPA opt-out, and Apple ATT opt-in before targeting              |
+| 12  | Reporting & Analytics       | Near-real-time spend, impression, click, and conversion dashboards for advertisers             |
+| 13  | Ad Creative Management      | Upload, review, and serve display, video, and native creatives via CDN                         |
+| 14  | Campaign Management         | CRUD for campaigns, ad groups, ads, budgets, targeting rules, and bid strategies               |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Ad serving latency | < 100ms end-to-end (p99) |
-| 2 | RTB auction latency | < 80ms (leaving headroom for creative serving) |
-| 3 | Availability | 99.99% (< 52 minutes downtime/year) |
-| 4 | Throughput | 1M+ ad requests/sec at peak |
-| 5 | Click tracking durability | Zero loss — at-least-once delivery with dedup |
-| 6 | Consistency for budget | Eventual consistency acceptable (< 1% over-spend tolerated) |
-| 7 | Fraud filtering latency | < 10ms inline in the serving path |
-| 8 | Attribution pipeline lag | < 15 minutes for near-real-time, < 24h for finalized |
-| 9 | Data retention | Raw events 90 days hot, 7 years cold archive |
-| 10 | Privacy | No PII stored without valid consent; data anonymized post-30 days |
+| #   | Requirement               | Target                                                            |
+| --- | ------------------------- | ----------------------------------------------------------------- |
+| 1   | Ad serving latency        | < 100ms end-to-end (p99)                                          |
+| 2   | RTB auction latency       | < 80ms (leaving headroom for creative serving)                    |
+| 3   | Availability              | 99.99% (< 52 minutes downtime/year)                               |
+| 4   | Throughput                | 1M+ ad requests/sec at peak                                       |
+| 5   | Click tracking durability | Zero loss — at-least-once delivery with dedup                     |
+| 6   | Consistency for budget    | Eventual consistency acceptable (< 1% over-spend tolerated)       |
+| 7   | Fraud filtering latency   | < 10ms inline in the serving path                                 |
+| 8   | Attribution pipeline lag  | < 15 minutes for near-real-time, < 24h for finalized              |
+| 9   | Data retention            | Raw events 90 days hot, 7 years cold archive                      |
+| 10  | Privacy                   | No PII stored without valid consent; data anonymized post-30 days |
 
 ### Scale Estimation
 
@@ -661,6 +661,7 @@ DSPs that do not respond within `tmax` (80ms) are treated as no-bid. The exchang
 ### Auction Types
 
 **Second-Price Auction (Vickrey):**
+
 ```
 Bids: [DSP-A: $3.00, DSP-B: $2.50, DSP-C: $1.80]
 Winner: DSP-A
@@ -673,6 +674,7 @@ Properties:
 ```
 
 **First-Price Auction:**
+
 ```
 Bids: [DSP-A: $3.00, DSP-B: $2.50, DSP-C: $1.80]
 Winner: DSP-A
@@ -897,6 +899,7 @@ Model Serving (TorchServe / ONNX Runtime)
 ### Problem Statement
 
 Without frequency caps, a user might see the same ad hundreds of times per day, causing:
+
 - Ad fatigue and negative brand association
 - Wasted advertiser budget on incremental exposures
 - Poor user experience
@@ -955,7 +958,7 @@ Cleanup: Key expires 2 * window duration
 
 ### Approximate Counting at Scale
 
-For 1B users with 100K campaigns: exact Redis per-user counters are too expensive (1B * 100K = 100T keys). Use tiered approach:
+For 1B users with 100K campaigns: exact Redis per-user counters are too expensive (1B \* 100K = 100T keys). Use tiered approach:
 
 ```
 Tier 1 (exact, hot users):
@@ -1603,10 +1606,11 @@ We lose the ability to identify the user (by design, for privacy). The user effe
 **Q: How do you detect and handle click fraud at scale?**
 
 Three layers:
+
 1. Real-time (inline, < 5ms): IP blacklist bloom filter, UA bot detection, click interval check (same impression clicked twice).
 2. Near-real-time (Flink, < 5min): Click rate anomalies per IP, per publisher. Geographic IP inconsistency.
 3. Batch (daily): Publisher-level CTR anomaly detection vs baseline. Hold suspicious publishers' payments pending investigation.
-Credits issued to advertisers automatically for confirmed IVT.
+   Credits issued to advertisers automatically for confirmed IVT.
 
 **Q: How does the system handle sudden traffic spikes (e.g., Super Bowl ads)?**
 
@@ -1619,6 +1623,7 @@ The click tracker immediately writes to Kafka (durable, replicated log) before r
 **Q: How would you implement server-side ad insertion (SSAI) for streaming video?**
 
 SSAI stitches ad creatives into the video stream server-side, making them indistinguishable from content at the network level (defeating ad blockers). The ad decision and transcoding happen before delivery:
+
 1. Video player requests stream from CDN origin.
 2. Origin calls ad decision service with content context + user signals.
 3. Ad decision returns creative URL.
@@ -1638,4 +1643,4 @@ Clickstream (impressions, clicks, conversions): Clickhouse (columnar OLAP). Desi
 
 ---
 
-*End of Design: Ad Serving & Real-Time Bidding System*
+_End of Design: Ad Serving & Real-Time Bidding System_

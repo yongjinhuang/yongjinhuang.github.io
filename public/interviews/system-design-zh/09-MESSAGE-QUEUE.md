@@ -21,29 +21,29 @@
 
 ### 功能性需求
 
-| 需求                    | 描述                                                            |
-|-------------------------|-----------------------------------------------------------------|
-| 发布消息                | Producer 将消息发送到指定的 topic                                |
-| 订阅 topic              | Consumer 从一个或多个 topic 读取消息                             |
-| 基于 topic 的路由       | 消息按逻辑 topic 进行组织                                       |
-| 消息保留                | 消息持久化保存可配置的时长（如 7 天）                            |
-| 消息重放                | Consumer 可通过重置 offset 重新读取历史消息                      |
-| Consumer group          | 多个 consumer 共同分担工作；每条消息在每个 group 内只投递一次    |
-| 顺序保证                | 同一 partition 内的消息严格有序                                  |
-| At-least-once 投递      | 默认的投递保证，配合 consumer 确认机制                           |
-| Exactly-once（可选）    | 针对关键工作负载的事务支持                                      |
+| 需求                 | 描述                                                          |
+| -------------------- | ------------------------------------------------------------- |
+| 发布消息             | Producer 将消息发送到指定的 topic                             |
+| 订阅 topic           | Consumer 从一个或多个 topic 读取消息                          |
+| 基于 topic 的路由    | 消息按逻辑 topic 进行组织                                     |
+| 消息保留             | 消息持久化保存可配置的时长（如 7 天）                         |
+| 消息重放             | Consumer 可通过重置 offset 重新读取历史消息                   |
+| Consumer group       | 多个 consumer 共同分担工作；每条消息在每个 group 内只投递一次 |
+| 顺序保证             | 同一 partition 内的消息严格有序                               |
+| At-least-once 投递   | 默认的投递保证，配合 consumer 确认机制                        |
+| Exactly-once（可选） | 针对关键工作负载的事务支持                                    |
 
 ### 非功能性需求
 
-| 需求         | 目标                                                              |
-|--------------|-------------------------------------------------------------------|
-| 吞吐量       | 每秒数百万条消息（集群聚合）                                      |
-| 延迟         | 端到端 99 分位延迟 < 10ms（从 producer 到 consumer）              |
-| 持久性       | 确认后不丢失消息（replication factor >= 3）                       |
-| 可用性       | 99.99% 正常运行时间；单个 broker 故障时零停机                     |
-| 可扩展性     | 通过增加 broker 和 partition 实现水平扩展                         |
-| 顺序性       | 单个 partition 内严格有序                                         |
-| 保留策略     | 可配置；默认 7 天；支持无限保留                                   |
+| 需求     | 目标                                                 |
+| -------- | ---------------------------------------------------- |
+| 吞吐量   | 每秒数百万条消息（集群聚合）                         |
+| 延迟     | 端到端 99 分位延迟 < 10ms（从 producer 到 consumer） |
+| 持久性   | 确认后不丢失消息（replication factor >= 3）          |
+| 可用性   | 99.99% 正常运行时间；单个 broker 故障时零停机        |
+| 可扩展性 | 通过增加 broker 和 partition 实现水平扩展            |
+| 顺序性   | 单个 partition 内严格有序                            |
+| 保留策略 | 可配置；默认 7 天；支持无限保留                      |
 
 ### 规模估算
 
@@ -122,22 +122,22 @@ Producer --> [ Append-Only Log ] --> Consumer A (offset 5)
 
 ### 对比表
 
-| 特性                   | 传统消息队列 (RabbitMQ)         | 事件流 (Kafka)                    |
-|------------------------|-------------------------------|---------------------------------|
-| 消息生命周期           | 消费后删除                     | 按配置时长保留                    |
-| 投递模型               | 推送给 consumer                | 由 consumer 拉取                  |
-| 重放能力               | 否（消息已删除）               | 是（重置 offset）                 |
-| 路由复杂度             | 丰富（exchange、binding）      | 简单（topic + partition key）     |
-| Consumer group         | 竞争消费者                     | 带 offset 的 consumer group       |
-| 顺序性                 | 每个队列（不保证）             | 每个 partition（保证）            |
-| 吞吐量                 | 每节点 ~50K msgs/sec           | 每节点 ~1M+ msgs/sec             |
-| 延迟                   | 亚毫秒级                       | 个位数毫秒                        |
-| 协议                   | AMQP、STOMP、MQTT              | 自定义二进制协议                  |
-| 背压                   | 队列深度 / consumer prefetch   | consumer 控制的拉取速率            |
-| 消息优先级             | 是（内置）                     | 否（需设计变通方案）              |
-| 死信队列               | 内置                           | 需手动实现                        |
-| Exactly-once           | 通过事务                       | Idempotent producer + EOS         |
-| 存储                   | 内存 + 可选磁盘                | 始终使用磁盘（append-only log）   |
+| 特性           | 传统消息队列 (RabbitMQ)      | 事件流 (Kafka)                  |
+| -------------- | ---------------------------- | ------------------------------- |
+| 消息生命周期   | 消费后删除                   | 按配置时长保留                  |
+| 投递模型       | 推送给 consumer              | 由 consumer 拉取                |
+| 重放能力       | 否（消息已删除）             | 是（重置 offset）               |
+| 路由复杂度     | 丰富（exchange、binding）    | 简单（topic + partition key）   |
+| Consumer group | 竞争消费者                   | 带 offset 的 consumer group     |
+| 顺序性         | 每个队列（不保证）           | 每个 partition（保证）          |
+| 吞吐量         | 每节点 ~50K msgs/sec         | 每节点 ~1M+ msgs/sec            |
+| 延迟           | 亚毫秒级                     | 个位数毫秒                      |
+| 协议           | AMQP、STOMP、MQTT            | 自定义二进制协议                |
+| 背压           | 队列深度 / consumer prefetch | consumer 控制的拉取速率         |
+| 消息优先级     | 是（内置）                   | 否（需设计变通方案）            |
+| 死信队列       | 内置                         | 需手动实现                      |
+| Exactly-once   | 通过事务                     | Idempotent producer + EOS       |
+| 存储           | 内存 + 可选磁盘              | 始终使用磁盘（append-only log） |
 
 ### 何时使用哪种
 
@@ -316,12 +316,12 @@ Topic: "user-events" (3 个 partition，replication factor = 3)
 
 **Partition 分配策略：**
 
-| 策略         | 描述                                             | 使用场景                     |
-|-------------|--------------------------------------------------|------------------------------|
-| Round-robin  | 均匀分配到各 partition                            | 无顺序要求                   |
-| 基于 Key     | hash(key) % partitions；相同 key 到相同 partition  | 按实体排序                   |
-| 自定义       | 应用程序定义的 partitioner                        | 地理位置、优先级等           |
-| Sticky       | 批次填满前一直发到同一个 partition                 | 提高批处理效率               |
+| 策略        | 描述                                              | 使用场景           |
+| ----------- | ------------------------------------------------- | ------------------ |
+| Round-robin | 均匀分配到各 partition                            | 无顺序要求         |
+| 基于 Key    | hash(key) % partitions；相同 key 到相同 partition | 按实体排序         |
+| 自定义      | 应用程序定义的 partitioner                        | 地理位置、优先级等 |
+| Sticky      | 批次填满前一直发到同一个 partition                | 提高批处理效率     |
 
 ### 4.2 Producer
 
@@ -1017,11 +1017,11 @@ ISR 缩减场景：
 
 ### 对比表
 
-| 语义           | Producer 配置                    | Consumer 配置                 | 数据丢失 | 重复       | 吞吐量     | 使用场景                    |
-|----------------|----------------------------------|-------------------------------|----------|------------|------------|-----------------------------|
-| At-most-once   | acks=0，不重试                   | 处理前提���                    | 是       | 否         | 最高       | 监控指标、日志              |
-| At-least-once  | acks=all，retries=MAX            | 处理后提交                    | 否       | 是         | 高         | 大多数应用                  |
-| Exactly-once   | Idempotent + transactional       | Transactional consumer        | 否       | 否         | 中等       | 金融、计费                  |
+| 语义          | Producer 配置              | Consumer 配置          | 数据丢失 | 重复 | 吞吐量 | 使用场景       |
+| ------------- | -------------------------- | ---------------------- | -------- | ---- | ------ | -------------- |
+| At-most-once  | acks=0，不重试             | 处理前提���            | 是       | 否   | 最高   | 监控指标、日志 |
+| At-least-once | acks=all，retries=MAX      | 处理后提交             | 否       | 是   | 高     | 大多数应用     |
+| Exactly-once  | Idempotent + transactional | Transactional consumer | 否       | 否   | 中等   | 金融、计费     |
 
 ### Idempotent Producer 深入解析
 

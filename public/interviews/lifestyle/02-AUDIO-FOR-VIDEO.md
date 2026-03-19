@@ -45,14 +45,14 @@ mediocre footage, but you cannot fix terrible audio in post.
 
 ### 2.1 Key Audio Properties
 
-| Property | What It Means for You |
-|----------|----------------------|
-| Volume (Amplitude) | How loud the recording is — aim for -12 to -6 dB peaks |
-| Frequency | Pitch of the sound — human voice is 85-255 Hz fundamental |
-| Dynamic range | Difference between quietest and loudest parts |
-| Signal-to-noise ratio (SNR) | Your voice vs background noise — higher is better |
-| Sample rate | How often audio is captured per second — use 48 kHz for video |
-| Bit depth | Precision of each sample — use 24-bit for recording |
+| Property                    | What It Means for You                                         |
+| --------------------------- | ------------------------------------------------------------- |
+| Volume (Amplitude)          | How loud the recording is — aim for -12 to -6 dB peaks        |
+| Frequency                   | Pitch of the sound — human voice is 85-255 Hz fundamental     |
+| Dynamic range               | Difference between quietest and loudest parts                 |
+| Signal-to-noise ratio (SNR) | Your voice vs background noise — higher is better             |
+| Sample rate                 | How often audio is captured per second — use 48 kHz for video |
+| Bit depth                   | Precision of each sample — use 24-bit for recording           |
 
 ### 2.2 Decibels (dB) — The Volume Scale
 
@@ -74,10 +74,10 @@ absolute maximum — anything above clips and distorts.
 
 ### 2.3 Sample Rate and Bit Depth
 
-| Setting | Standard | Why |
-|---------|----------|-----|
-| Sample rate | **48 kHz** | Industry standard for video (not 44.1 kHz, that is for music CDs) |
-| Bit depth | **24-bit** | More headroom for quiet recordings; 16-bit is fine for final export |
+| Setting     | Standard   | Why                                                                 |
+| ----------- | ---------- | ------------------------------------------------------------------- |
+| Sample rate | **48 kHz** | Industry standard for video (not 44.1 kHz, that is for music CDs)   |
+| Bit depth   | **24-bit** | More headroom for quiet recordings; 16-bit is fine for final export |
 
 > **Important**: Always record at **48 kHz / 24-bit**. This matches video industry
 > standards and gives you maximum flexibility in post-production.
@@ -113,26 +113,26 @@ absolute maximum — anything above clips and distorts.
 
 ### 3.2 Detailed Comparison
 
-| Type | Proximity | Background Rejection | Visibility | Price Range |
-|------|-----------|---------------------|------------|-------------|
-| Lavalier (wired) | Excellent (on body) | Moderate | Hidden on clothing | $20-300 |
-| Lavalier (wireless) | Excellent | Moderate | Small transmitter | $50-600 |
-| Shotgun (on-camera) | Good (2-4 feet) | Good | On camera top | $50-500 |
-| Shotgun (boom) | Excellent (overhead) | Excellent | Off-camera | $200-1,000 |
-| USB condenser | Excellent (6-12 inches) | Poor-moderate | Visible on desk | $50-300 |
-| Dynamic (XLR/USB) | Excellent (2-6 inches) | Excellent | Visible | $50-400 |
+| Type                | Proximity               | Background Rejection | Visibility         | Price Range |
+| ------------------- | ----------------------- | -------------------- | ------------------ | ----------- |
+| Lavalier (wired)    | Excellent (on body)     | Moderate             | Hidden on clothing | $20-300     |
+| Lavalier (wireless) | Excellent               | Moderate             | Small transmitter  | $50-600     |
+| Shotgun (on-camera) | Good (2-4 feet)         | Good                 | On camera top      | $50-500     |
+| Shotgun (boom)      | Excellent (overhead)    | Excellent            | Off-camera         | $200-1,000  |
+| USB condenser       | Excellent (6-12 inches) | Poor-moderate        | Visible on desk    | $50-300     |
+| Dynamic (XLR/USB)   | Excellent (2-6 inches)  | Excellent            | Visible            | $50-400     |
 
 ### 3.3 Condenser vs Dynamic
 
-| Property | Condenser | Dynamic |
-|----------|-----------|---------|
-| Sensitivity | High (picks up everything) | Low (rejects background) |
-| Detail | Very detailed, crisp | Warm, smooth |
-| Background noise | Picks up room noise, keyboard, AC | Rejects most background noise |
-| Proximity needed | 6-12 inches | 2-6 inches (close) |
-| Power needed | Phantom power (48V) or USB | None (or USB) |
-| Room treatment needed | Yes, critical | Less critical |
-| Best for | Treated rooms, voiceover | Untreated rooms, noisy environments |
+| Property              | Condenser                         | Dynamic                             |
+| --------------------- | --------------------------------- | ----------------------------------- |
+| Sensitivity           | High (picks up everything)        | Low (rejects background)            |
+| Detail                | Very detailed, crisp              | Warm, smooth                        |
+| Background noise      | Picks up room noise, keyboard, AC | Rejects most background noise       |
+| Proximity needed      | 6-12 inches                       | 2-6 inches (close)                  |
+| Power needed          | Phantom power (48V) or USB        | None (or USB)                       |
+| Room treatment needed | Yes, critical                     | Less critical                       |
+| Best for              | Treated rooms, voiceover          | Untreated rooms, noisy environments |
 
 > **For home offices without acoustic treatment**: Use a **dynamic microphone** (like
 > Shure SM7B, Rode PodMic, or Samson Q2U). It will reject keyboard noise, AC hum,
@@ -163,12 +163,12 @@ Cardioid (most common):          Omnidirectional:            Figure-8:
    - Voiceover                 - Group round-table         interview
 ```
 
-| Pattern | Picks Up | Rejects | Best Use |
-|---------|----------|---------|----------|
-| Cardioid | Front | Back and sides | Solo recording, vlogs |
-| Supercardioid | Narrow front | Sides (some back) | Noisy environments |
-| Omnidirectional | All directions | Nothing | Ambient, lavalier |
-| Figure-8 (Bidirectional) | Front and back | Sides | Two-person interview |
+| Pattern                  | Picks Up       | Rejects           | Best Use              |
+| ------------------------ | -------------- | ----------------- | --------------------- |
+| Cardioid                 | Front          | Back and sides    | Solo recording, vlogs |
+| Supercardioid            | Narrow front   | Sides (some back) | Noisy environments    |
+| Omnidirectional          | All directions | Nothing           | Ambient, lavalier     |
+| Figure-8 (Bidirectional) | Front and back | Sides             | Two-person interview  |
 
 ## 5. Recording Setup Scenarios
 
@@ -287,14 +287,14 @@ on a separate track.
 
 **Always monitor your audio with headphones while recording.**
 
-| What to Listen For | What It Means |
-|-------------------|---------------|
-| Hiss / white noise | Gain too high, or noisy preamp |
-| Rumble / low hum | AC interference, handling noise |
-| Plosives (P/B pops) | Too close, need pop filter |
-| Sibilance (harsh S) | Mic too bright, angle mic off-axis |
-| Room echo | Need acoustic treatment or closer mic |
-| Clipping / distortion | Level too high, reduce gain |
+| What to Listen For    | What It Means                         |
+| --------------------- | ------------------------------------- |
+| Hiss / white noise    | Gain too high, or noisy preamp        |
+| Rumble / low hum      | AC interference, handling noise       |
+| Plosives (P/B pops)   | Too close, need pop filter            |
+| Sibilance (harsh S)   | Mic too bright, angle mic off-axis    |
+| Room echo             | Need acoustic treatment or closer mic |
+| Clipping / distortion | Level too high, reduce gain           |
 
 ### 6.3 The Clap Sync
 
@@ -334,14 +334,14 @@ Direct sound:                    With reflections:
 
 ### 7.2 Budget Room Treatment
 
-| Treatment | Cost | Effectiveness | How |
-|-----------|------|---------------|-----|
-| Closet recording | Free | Excellent | Record in a closet full of clothes |
-| Blanket fort | Free | Good | Hang blankets around your recording area |
-| Bookshelf diffusion | Free | Moderate | Place bookshelves on walls behind you |
-| Moving blankets | $20-40 | Very good | Hang thick blankets on stands or walls |
-| Acoustic foam panels | $30-80 | Good | Place at reflection points on walls |
-| Professional panels | $100-400 | Excellent | Rockwool/fiberglass panels in frames |
+| Treatment            | Cost     | Effectiveness | How                                      |
+| -------------------- | -------- | ------------- | ---------------------------------------- |
+| Closet recording     | Free     | Excellent     | Record in a closet full of clothes       |
+| Blanket fort         | Free     | Good          | Hang blankets around your recording area |
+| Bookshelf diffusion  | Free     | Moderate      | Place bookshelves on walls behind you    |
+| Moving blankets      | $20-40   | Very good     | Hang thick blankets on stands or walls   |
+| Acoustic foam panels | $30-80   | Good          | Place at reflection points on walls      |
+| Professional panels  | $100-400 | Excellent     | Rockwool/fiberglass panels in frames     |
 
 ### 7.3 Quick Fixes
 
@@ -418,33 +418,33 @@ Frequency Guide for Human Voice:
   ╱      ╲           ╱     ╲         ╱         ╲
 ```
 
-| Frequency | Action | Why |
-|-----------|--------|-----|
-| Below 80 Hz | High-pass filter (cut) | Remove rumble, handling noise, room boom |
-| 200-400 Hz | Slight cut if needed | Reduce "muddiness" or "boxiness" |
-| 1-2 kHz | Leave flat or slight boost | Natural body of the voice |
-| 2-5 kHz | Gentle boost (+2-3 dB) | Adds clarity and presence |
-| 8-12 kHz | Subtle boost (+1-2 dB) | Adds "air" and openness |
+| Frequency   | Action                     | Why                                      |
+| ----------- | -------------------------- | ---------------------------------------- |
+| Below 80 Hz | High-pass filter (cut)     | Remove rumble, handling noise, room boom |
+| 200-400 Hz  | Slight cut if needed       | Reduce "muddiness" or "boxiness"         |
+| 1-2 kHz     | Leave flat or slight boost | Natural body of the voice                |
+| 2-5 kHz     | Gentle boost (+2-3 dB)     | Adds clarity and presence                |
+| 8-12 kHz    | Subtle boost (+1-2 dB)     | Adds "air" and openness                  |
 
 ### 8.3 Compression Settings for Voice
 
-| Parameter | Setting | What It Does |
-|-----------|---------|--------------|
-| Threshold | -18 to -12 dB | Level where compression starts |
-| Ratio | 3:1 to 4:1 | How much to reduce signal above threshold |
-| Attack | 5-10 ms | How fast compression kicks in |
-| Release | 50-100 ms | How fast compression stops |
-| Makeup gain | +3-6 dB (adjust to taste) | Boost overall level after compression |
+| Parameter   | Setting                   | What It Does                              |
+| ----------- | ------------------------- | ----------------------------------------- |
+| Threshold   | -18 to -12 dB             | Level where compression starts            |
+| Ratio       | 3:1 to 4:1                | How much to reduce signal above threshold |
+| Attack      | 5-10 ms                   | How fast compression kicks in             |
+| Release     | 50-100 ms                 | How fast compression stops                |
+| Makeup gain | +3-6 dB (adjust to taste) | Boost overall level after compression     |
 
 ### 8.4 Loudness Standards
 
-| Platform | Target Loudness | Peak Level |
-|----------|----------------|------------|
-| YouTube | -14 to -16 LUFS | -1 dBTP |
-| Podcasts (Apple) | -16 LUFS | -1 dBTP |
-| Podcasts (Spotify) | -14 LUFS | -1 dBTP |
-| Broadcast TV | -24 LUFS | -2 dBTP |
-| Streaming (music) | -14 LUFS | -1 dBTP |
+| Platform           | Target Loudness | Peak Level |
+| ------------------ | --------------- | ---------- |
+| YouTube            | -14 to -16 LUFS | -1 dBTP    |
+| Podcasts (Apple)   | -16 LUFS        | -1 dBTP    |
+| Podcasts (Spotify) | -14 LUFS        | -1 dBTP    |
+| Broadcast TV       | -24 LUFS        | -2 dBTP    |
+| Streaming (music)  | -14 LUFS        | -1 dBTP    |
 
 > **LUFS** (Loudness Units Full Scale) measures perceived loudness over time, unlike
 > dB which measures instantaneous level. YouTube will turn down loud audio and boost
@@ -452,13 +452,13 @@ Frequency Guide for Human Voice:
 
 ### 8.5 AI-Powered Audio Tools
 
-| Tool | What It Does | Price |
-|------|-------------|-------|
-| Adobe Podcast (Enhance Speech) | AI noise removal, room echo removal | Free (web) |
-| Descript | AI transcription, filler word removal | $24/mo |
-| Krisp | Real-time AI noise cancellation | Free tier / $8/mo |
-| LALAL.AI | Separate voice from music/noise | Free tier / $15 |
-| Audacity + noise reduction | Manual noise profile removal | Free |
+| Tool                           | What It Does                          | Price             |
+| ------------------------------ | ------------------------------------- | ----------------- |
+| Adobe Podcast (Enhance Speech) | AI noise removal, room echo removal   | Free (web)        |
+| Descript                       | AI transcription, filler word removal | $24/mo            |
+| Krisp                          | Real-time AI noise cancellation       | Free tier / $8/mo |
+| LALAL.AI                       | Separate voice from music/noise       | Free tier / $15   |
+| Audacity + noise reduction     | Manual noise profile removal          | Free              |
 
 > **Quick win**: Upload your audio to Adobe Podcast's "Enhance Speech" feature. It will
 > remove background noise, reduce echo, and improve clarity in seconds — for free.
@@ -468,6 +468,7 @@ Frequency Guide for Human Voice:
 ### 9.1 Why Background Music Matters
 
 Background music:
+
 - Sets the **emotional tone** of your video
 - Smooths over **awkward silences** and transitions
 - Makes your content feel **more professional**
@@ -486,15 +487,15 @@ Music should be felt, not consciously heard.
 
 ### 9.3 Royalty-Free Music Sources
 
-| Source | Quality | Price | License |
-|--------|---------|-------|---------|
-| YouTube Audio Library | Good | Free | Free for YouTube |
-| Epidemic Sound | Excellent | $13/mo (personal) | Full clearance |
-| Artlist | Excellent | $10/mo | Universal license |
-| Musicbed | Premium | $10/mo+ | Cinematic quality |
-| Free Music Archive | Variable | Free | Various CC licenses |
-| Uppbeat | Good | Free tier / $7/mo | Cleared for YouTube |
-| Pixabay Music | Good | Free | CC0 (no attribution) |
+| Source                | Quality   | Price             | License              |
+| --------------------- | --------- | ----------------- | -------------------- |
+| YouTube Audio Library | Good      | Free              | Free for YouTube     |
+| Epidemic Sound        | Excellent | $13/mo (personal) | Full clearance       |
+| Artlist               | Excellent | $10/mo            | Universal license    |
+| Musicbed              | Premium   | $10/mo+           | Cinematic quality    |
+| Free Music Archive    | Variable  | Free              | Various CC licenses  |
+| Uppbeat               | Good      | Free tier / $7/mo | Cleared for YouTube  |
+| Pixabay Music         | Good      | Free              | CC0 (no attribution) |
 
 > **Warning**: Never use copyrighted music without a license. YouTube's Content ID system
 > will detect it and either mute your video, demonetize it, or give the revenue to the
@@ -504,13 +505,13 @@ Music should be felt, not consciously heard.
 
 Sound effects add polish and emphasis:
 
-| Effect Type | When to Use | Example |
-|-------------|-------------|---------|
-| Whoosh | Transitions, text appearing | Swipe between scenes |
-| Pop/Click | Highlighting points, subscribe button | Click sound on text popup |
-| Ambient | Establishing atmosphere | Coffee shop, city, nature |
-| Impact | Emphasizing key moments | Bass drop on reveal |
-| Typing/UI | Tech tutorials, overlays | Keyboard clicks |
+| Effect Type | When to Use                           | Example                   |
+| ----------- | ------------------------------------- | ------------------------- |
+| Whoosh      | Transitions, text appearing           | Swipe between scenes      |
+| Pop/Click   | Highlighting points, subscribe button | Click sound on text popup |
+| Ambient     | Establishing atmosphere               | Coffee shop, city, nature |
+| Impact      | Emphasizing key moments               | Bass drop on reveal       |
+| Typing/UI   | Tech tutorials, overlays              | Keyboard clicks           |
 
 **Free SFX sources**: Freesound.org, Pixabay Sound Effects, YouTube Audio Library
 
@@ -518,40 +519,40 @@ Sound effects add polish and emphasis:
 
 ### Budget: Free (What You Already Have)
 
-| Item | Solution |
-|------|----------|
-| Microphone | Wired earbuds (surprisingly decent proximity mic) |
-| Monitoring | Same earbuds |
-| Recording software | GarageBand (Mac), Audacity (all platforms) |
-| Noise removal | Adobe Podcast Enhance (free web tool) |
+| Item               | Solution                                          |
+| ------------------ | ------------------------------------------------- |
+| Microphone         | Wired earbuds (surprisingly decent proximity mic) |
+| Monitoring         | Same earbuds                                      |
+| Recording software | GarageBand (Mac), Audacity (all platforms)        |
+| Noise removal      | Adobe Podcast Enhance (free web tool)             |
 
 ### Budget: $50-100
 
-| Item | Product | Price |
-|------|---------|-------|
-| Lavalier mic | Boya BY-M1 (wired, 3.5mm) | $20 |
-| USB mic | Fifine K669 or Maono AU-PM421 | $30-50 |
-| Boom arm | Generic desk arm | $15-25 |
-| Pop filter | Generic foam/mesh | $5-10 |
+| Item         | Product                       | Price  |
+| ------------ | ----------------------------- | ------ |
+| Lavalier mic | Boya BY-M1 (wired, 3.5mm)     | $20    |
+| USB mic      | Fifine K669 or Maono AU-PM421 | $30-50 |
+| Boom arm     | Generic desk arm              | $15-25 |
+| Pop filter   | Generic foam/mesh             | $5-10  |
 
 ### Budget: $200-400
 
-| Item | Product | Price |
-|------|---------|-------|
-| Wireless lav | Rode Wireless GO II | $200-250 |
+| Item               | Product                       | Price    |
+| ------------------ | ----------------------------- | -------- |
+| Wireless lav       | Rode Wireless GO II           | $200-250 |
 | OR USB dynamic mic | Rode PodMic USB or Samson Q2U | $100-130 |
-| Boom arm | Rode PSA1+ | $100 |
-| Headphones | Audio-Technica ATH-M50x | $130 |
+| Boom arm           | Rode PSA1+                    | $100     |
+| Headphones         | Audio-Technica ATH-M50x       | $130     |
 
 ### Budget: $500-1,000
 
-| Item | Product | Price |
-|------|---------|-------|
-| Wireless lav | Rode Wireless PRO or DJI Mic 2 | $250-380 |
-| Desktop dynamic | Shure SM7dB (built-in preamp) | $400 |
-| Audio interface | Focusrite Scarlett Solo (4th gen) | $110 |
-| Boom arm | Rode PSA1+ | $100 |
-| Headphones | Beyerdynamic DT 700 Pro X | $180 |
+| Item            | Product                           | Price    |
+| --------------- | --------------------------------- | -------- |
+| Wireless lav    | Rode Wireless PRO or DJI Mic 2    | $250-380 |
+| Desktop dynamic | Shure SM7dB (built-in preamp)     | $400     |
+| Audio interface | Focusrite Scarlett Solo (4th gen) | $110     |
+| Boom arm        | Rode PSA1+                        | $100     |
+| Headphones      | Beyerdynamic DT 700 Pro X         | $180     |
 
 ### Recommended Progression
 

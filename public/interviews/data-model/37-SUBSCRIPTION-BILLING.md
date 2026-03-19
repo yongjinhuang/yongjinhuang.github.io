@@ -6,16 +6,16 @@ A subscription billing system must handle recurring charges, usage-based meterin
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **plans** | Product catalog entries | Represents what the customer is buying; separated from pricing to support multiple price points per plan |
-| **plan_prices** | Pricing configurations per plan | Decouples price from plan so one plan can have monthly/annual pricing, different currencies, and different pricing models |
-| **price_tiers** | Graduated/volume pricing tiers | Enables per-unit pricing that changes at volume breakpoints (e.g., first 100 API calls at $0.01, next 1000 at $0.005) |
-| **subscriptions** | Active customer subscriptions | Tracks the lifecycle of a customer's relationship with a plan, including trials, pausing, and cancellation |
-| **invoices** | Billing documents for each period | The financial record of what is owed; supports partial payments, credits, and tax calculations |
-| **invoice_line_items** | Individual charges on an invoice | Breaks down the invoice into components (base subscription, metered usage, prorations, discounts, tax) for transparency |
-| **payments** | Payment attempts against invoices | Tracks each attempt to collect payment, enabling retry logic with exponential backoff |
-| **usage_events** | Raw metered usage data points | Captures granular usage events that are aggregated at billing time into invoice line items |
+| Table                  | Purpose                           | Why It Exists                                                                                                             |
+| ---------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **plans**              | Product catalog entries           | Represents what the customer is buying; separated from pricing to support multiple price points per plan                  |
+| **plan_prices**        | Pricing configurations per plan   | Decouples price from plan so one plan can have monthly/annual pricing, different currencies, and different pricing models |
+| **price_tiers**        | Graduated/volume pricing tiers    | Enables per-unit pricing that changes at volume breakpoints (e.g., first 100 API calls at $0.01, next 1000 at $0.005)     |
+| **subscriptions**      | Active customer subscriptions     | Tracks the lifecycle of a customer's relationship with a plan, including trials, pausing, and cancellation                |
+| **invoices**           | Billing documents for each period | The financial record of what is owed; supports partial payments, credits, and tax calculations                            |
+| **invoice_line_items** | Individual charges on an invoice  | Breaks down the invoice into components (base subscription, metered usage, prorations, discounts, tax) for transparency   |
+| **payments**           | Payment attempts against invoices | Tracks each attempt to collect payment, enabling retry logic with exponential backoff                                     |
+| **usage_events**       | Raw metered usage data points     | Captures granular usage events that are aggregated at billing time into invoice line items                                |
 
 ---
 
@@ -23,104 +23,104 @@ A subscription billing system must handle recurring charges, usage-based meterin
 
 ### plans
 
-| Field | Type | Description |
-|-------|------|-------------|
-| plan_id | PK, UUID | Unique plan identifier |
-| name | VARCHAR | Display name (e.g., "Starter", "Professional", "Enterprise") |
-| description | TEXT | Plan description shown to customers |
-| is_active | BOOLEAN | Whether new subscriptions can select this plan; inactive plans still serve existing subscribers |
+| Field       | Type     | Description                                                                                     |
+| ----------- | -------- | ----------------------------------------------------------------------------------------------- |
+| plan_id     | PK, UUID | Unique plan identifier                                                                          |
+| name        | VARCHAR  | Display name (e.g., "Starter", "Professional", "Enterprise")                                    |
+| description | TEXT     | Plan description shown to customers                                                             |
+| is_active   | BOOLEAN  | Whether new subscriptions can select this plan; inactive plans still serve existing subscribers |
 
 ### plan_prices
 
-| Field | Type | Description |
-|-------|------|-------------|
-| price_id | PK, UUID | Unique price identifier; this is what the subscription actually references |
-| plan_id | FK → plans | Which plan this price belongs to |
-| billing_interval | ENUM | month or year; determines the billing cycle length |
-| pricing_model | ENUM | flat (fixed price), per_seat (quantity-based), metered (usage-based), tiered (graduated pricing) |
-| unit_amount_cents | INT | Price per unit in the smallest currency unit (cents); for flat pricing, this is the total |
-| currency | VARCHAR(3) | ISO 4217 currency code |
-| meter_name | VARCHAR | For metered pricing, identifies which usage_events meter to aggregate; null for non-metered |
+| Field             | Type       | Description                                                                                      |
+| ----------------- | ---------- | ------------------------------------------------------------------------------------------------ |
+| price_id          | PK, UUID   | Unique price identifier; this is what the subscription actually references                       |
+| plan_id           | FK → plans | Which plan this price belongs to                                                                 |
+| billing_interval  | ENUM       | month or year; determines the billing cycle length                                               |
+| pricing_model     | ENUM       | flat (fixed price), per_seat (quantity-based), metered (usage-based), tiered (graduated pricing) |
+| unit_amount_cents | INT        | Price per unit in the smallest currency unit (cents); for flat pricing, this is the total        |
+| currency          | VARCHAR(3) | ISO 4217 currency code                                                                           |
+| meter_name        | VARCHAR    | For metered pricing, identifies which usage_events meter to aggregate; null for non-metered      |
 
 ### price_tiers
 
-| Field | Type | Description |
-|-------|------|-------------|
-| price_id | FK, composite PK | Which price these tiers belong to |
-| tier_start | INT, composite PK | Start of this tier's range (inclusive) |
-| tier_end | INT | End of this tier's range (inclusive); null for the final "unlimited" tier |
-| unit_amount | INT | Per-unit price in this tier (cents) |
-| flat_amount | INT | Fixed fee added when this tier is reached; enables "platform fee + per-unit" pricing |
+| Field       | Type              | Description                                                                          |
+| ----------- | ----------------- | ------------------------------------------------------------------------------------ |
+| price_id    | FK, composite PK  | Which price these tiers belong to                                                    |
+| tier_start  | INT, composite PK | Start of this tier's range (inclusive)                                               |
+| tier_end    | INT               | End of this tier's range (inclusive); null for the final "unlimited" tier            |
+| unit_amount | INT               | Per-unit price in this tier (cents)                                                  |
+| flat_amount | INT               | Fixed fee added when this tier is reached; enables "platform fee + per-unit" pricing |
 
 ### subscriptions
 
-| Field | Type | Description |
-|-------|------|-------------|
-| subscription_id | PK, UUID | Unique subscription identifier |
-| customer_id | FK → customers | Who is subscribed |
-| plan_id | FK → plans | Which plan they chose |
-| price_id | FK → plan_prices | Which specific price configuration applies |
-| status | ENUM | trialing, active, past_due, paused, canceled; drives billing behavior |
-| quantity | INT | Number of seats/units for per_seat pricing; defaults to 1 for flat pricing |
-| trial_end | TIMESTAMP | When the trial period ends; null if no trial |
-| current_period_start | TIMESTAMP | Start of the current billing period |
-| current_period_end | TIMESTAMP | End of the current billing period; this is when the next invoice is generated |
-| billing_anchor_day | INT | Day of month for billing (1-28); ensures consistent billing dates across months |
-| coupon_id | FK → coupons | Applied discount; null if none |
-| cancel_at_period_end | BOOLEAN | If true, subscription will cancel when current_period_end is reached rather than renewing |
+| Field                | Type             | Description                                                                               |
+| -------------------- | ---------------- | ----------------------------------------------------------------------------------------- |
+| subscription_id      | PK, UUID         | Unique subscription identifier                                                            |
+| customer_id          | FK → customers   | Who is subscribed                                                                         |
+| plan_id              | FK → plans       | Which plan they chose                                                                     |
+| price_id             | FK → plan_prices | Which specific price configuration applies                                                |
+| status               | ENUM             | trialing, active, past_due, paused, canceled; drives billing behavior                     |
+| quantity             | INT              | Number of seats/units for per_seat pricing; defaults to 1 for flat pricing                |
+| trial_end            | TIMESTAMP        | When the trial period ends; null if no trial                                              |
+| current_period_start | TIMESTAMP        | Start of the current billing period                                                       |
+| current_period_end   | TIMESTAMP        | End of the current billing period; this is when the next invoice is generated             |
+| billing_anchor_day   | INT              | Day of month for billing (1-28); ensures consistent billing dates across months           |
+| coupon_id            | FK → coupons     | Applied discount; null if none                                                            |
+| cancel_at_period_end | BOOLEAN          | If true, subscription will cancel when current_period_end is reached rather than renewing |
 
 ### invoices
 
-| Field | Type | Description |
-|-------|------|-------------|
-| invoice_id | PK, UUID | Unique invoice identifier |
-| subscription_id | FK → subscriptions | Which subscription this invoice is for |
-| customer_id | FK → customers | Bill-to customer (denormalized for query convenience) |
-| status | ENUM | draft (being built), open (finalized, awaiting payment), paid, void (canceled), uncollectible (gave up) |
-| subtotal | INT | Sum of line items before discount and tax (cents) |
-| discount | INT | Discount amount from coupon (cents) |
-| tax | INT | Calculated tax amount (cents) |
-| total | INT | subtotal - discount + tax (cents) |
-| amount_due | INT | total minus any credits applied (cents); this is what the payment must cover |
-| amount_paid | INT | Amount actually collected (cents); may differ from amount_due for partial payments |
-| due_date | TIMESTAMP | Payment deadline; overdue invoices trigger dunning |
-| paid_at | TIMESTAMP | When payment succeeded; null until paid |
+| Field           | Type               | Description                                                                                             |
+| --------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
+| invoice_id      | PK, UUID           | Unique invoice identifier                                                                               |
+| subscription_id | FK → subscriptions | Which subscription this invoice is for                                                                  |
+| customer_id     | FK → customers     | Bill-to customer (denormalized for query convenience)                                                   |
+| status          | ENUM               | draft (being built), open (finalized, awaiting payment), paid, void (canceled), uncollectible (gave up) |
+| subtotal        | INT                | Sum of line items before discount and tax (cents)                                                       |
+| discount        | INT                | Discount amount from coupon (cents)                                                                     |
+| tax             | INT                | Calculated tax amount (cents)                                                                           |
+| total           | INT                | subtotal - discount + tax (cents)                                                                       |
+| amount_due      | INT                | total minus any credits applied (cents); this is what the payment must cover                            |
+| amount_paid     | INT                | Amount actually collected (cents); may differ from amount_due for partial payments                      |
+| due_date        | TIMESTAMP          | Payment deadline; overdue invoices trigger dunning                                                      |
+| paid_at         | TIMESTAMP          | When payment succeeded; null until paid                                                                 |
 
 ### invoice_line_items
 
-| Field | Type | Description |
-|-------|------|-------------|
-| line_id | PK, UUID | Unique line item identifier |
-| invoice_id | FK → invoices | Which invoice this line belongs to |
-| type | ENUM | subscription (base charge), metered (usage charge), proration (mid-cycle change adjustment), discount, tax |
-| description | TEXT | Human-readable description (e.g., "Professional plan - March 2026") |
-| quantity | INT | Number of units (seats, API calls, etc.) |
-| unit_amount | INT | Price per unit (cents) |
-| amount | INT | Total for this line item: quantity * unit_amount (cents) |
+| Field       | Type          | Description                                                                                                |
+| ----------- | ------------- | ---------------------------------------------------------------------------------------------------------- |
+| line_id     | PK, UUID      | Unique line item identifier                                                                                |
+| invoice_id  | FK → invoices | Which invoice this line belongs to                                                                         |
+| type        | ENUM          | subscription (base charge), metered (usage charge), proration (mid-cycle change adjustment), discount, tax |
+| description | TEXT          | Human-readable description (e.g., "Professional plan - March 2026")                                        |
+| quantity    | INT           | Number of units (seats, API calls, etc.)                                                                   |
+| unit_amount | INT           | Price per unit (cents)                                                                                     |
+| amount      | INT           | Total for this line item: quantity \* unit_amount (cents)                                                  |
 
 ### payments
 
-| Field | Type | Description |
-|-------|------|-------------|
-| payment_id | PK, UUID | Unique payment identifier |
-| invoice_id | FK → invoices | Which invoice this payment is for |
-| amount | INT | Amount charged (cents) |
-| status | ENUM | pending, succeeded, failed; drives retry logic |
-| payment_method_id | FK → payment_methods | Which card/bank account was charged |
-| idempotency_key | VARCHAR, UNIQUE | Prevents double-charging on retries |
-| attempt_number | INT | Which attempt this is (1, 2, 3...); used for exponential backoff calculation |
-| next_retry_at | TIMESTAMP | When to retry if this attempt failed; null on success |
+| Field             | Type                 | Description                                                                  |
+| ----------------- | -------------------- | ---------------------------------------------------------------------------- |
+| payment_id        | PK, UUID             | Unique payment identifier                                                    |
+| invoice_id        | FK → invoices        | Which invoice this payment is for                                            |
+| amount            | INT                  | Amount charged (cents)                                                       |
+| status            | ENUM                 | pending, succeeded, failed; drives retry logic                               |
+| payment_method_id | FK → payment_methods | Which card/bank account was charged                                          |
+| idempotency_key   | VARCHAR, UNIQUE      | Prevents double-charging on retries                                          |
+| attempt_number    | INT                  | Which attempt this is (1, 2, 3...); used for exponential backoff calculation |
+| next_retry_at     | TIMESTAMP            | When to retry if this attempt failed; null on success                        |
 
 ### usage_events
 
-| Field | Type | Description |
-|-------|------|-------------|
-| event_id | PK, UUID | Unique event identifier |
-| subscription_id | FK → subscriptions | Which subscription generated this usage |
-| meter_name | VARCHAR | What was metered (e.g., api_calls, storage_gb, emails_sent); matches plan_prices.meter_name |
-| quantity | INT | How many units were consumed in this event |
-| timestamp | TIMESTAMP | When the usage occurred; used for period-based aggregation |
-| idempotency_key | VARCHAR, UNIQUE | Prevents double-counting usage from retried API calls |
+| Field           | Type               | Description                                                                                 |
+| --------------- | ------------------ | ------------------------------------------------------------------------------------------- |
+| event_id        | PK, UUID           | Unique event identifier                                                                     |
+| subscription_id | FK → subscriptions | Which subscription generated this usage                                                     |
+| meter_name      | VARCHAR            | What was metered (e.g., api_calls, storage_gb, emails_sent); matches plan_prices.meter_name |
+| quantity        | INT                | How many units were consumed in this event                                                  |
+| timestamp       | TIMESTAMP          | When the usage occurred; used for period-based aggregation                                  |
+| idempotency_key | VARCHAR, UNIQUE    | Prevents double-counting usage from retried API calls                                       |
 
 ---
 

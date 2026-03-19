@@ -22,10 +22,10 @@ Interviewers assess whether you can:
 
 ### Level Expectations
 
-| Level | People Development Signal |
-|-------|--------------------------|
-| L5 (Senior) | Actively mentors 1-2 junior/mid engineers. Gives constructive code review feedback. Onboards new team members effectively. |
-| L6 (Staff) | Designs growth frameworks for the team. Mentors senior engineers. Creates processes that scale learning (tech talks, design reviews, pairing). |
+| Level          | People Development Signal                                                                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L5 (Senior)    | Actively mentors 1-2 junior/mid engineers. Gives constructive code review feedback. Onboards new team members effectively.                                  |
+| L6 (Staff)     | Designs growth frameworks for the team. Mentors senior engineers. Creates processes that scale learning (tech talks, design reviews, pairing).              |
 | L7 (Principal) | Shapes engineering culture across the organization. Sponsors high-potential engineers for promotion. Defines what "senior" and "staff" mean at the company. |
 
 ---
@@ -73,11 +73,11 @@ SBI (Situation-Behavior-Impact) is the most effective model for giving feedback 
 
 ### Structure
 
-| Component | What It Does | Example |
-|-----------|-------------|---------|
-| **Situation** | Grounds the feedback in a specific event | "In yesterday's design review..." |
-| **Behavior** | Describes the observable action (not intent) | "...you interrupted Sarah three times while she was presenting her approach..." |
-| **Impact** | Explains the effect of the behavior | "...which made it harder for the team to understand her proposal, and she seemed to disengage for the rest of the meeting." |
+| Component     | What It Does                                 | Example                                                                                                                     |
+| ------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Situation** | Grounds the feedback in a specific event     | "In yesterday's design review..."                                                                                           |
+| **Behavior**  | Describes the observable action (not intent) | "...you interrupted Sarah three times while she was presenting her approach..."                                             |
+| **Impact**    | Explains the effect of the behavior          | "...which made it harder for the team to understand her proposal, and she seemed to disengage for the rest of the meeting." |
 
 ### SBI in Practice
 
@@ -91,14 +91,14 @@ SBI (Situation-Behavior-Impact) is the most effective model for giving feedback 
 
 ### SBI Anti-patterns
 
-| Anti-pattern | Example | Why It Fails |
-|-------------|---------|-------------|
-| **Vague praise** | "Great job this week!" | Not actionable. The person does not know what to repeat. |
-| **Character labels** | "You are being defensive" | Attacks identity, not behavior. Triggers defensiveness. |
-| **Delayed feedback** | Giving feedback 3 months later | Person cannot recall the situation. Loses impact. |
-| **Feedback sandwich** | Positive-negative-positive | People learn to distrust positive feedback. |
-| **Public criticism** | Calling out mistakes in team meetings | Damages psychological safety for everyone present. |
-| **"You always/never"** | "You always miss deadlines" | Absolute statements feel unfair and shut down dialogue. |
+| Anti-pattern           | Example                               | Why It Fails                                             |
+| ---------------------- | ------------------------------------- | -------------------------------------------------------- |
+| **Vague praise**       | "Great job this week!"                | Not actionable. The person does not know what to repeat. |
+| **Character labels**   | "You are being defensive"             | Attacks identity, not behavior. Triggers defensiveness.  |
+| **Delayed feedback**   | Giving feedback 3 months later        | Person cannot recall the situation. Loses impact.        |
+| **Feedback sandwich**  | Positive-negative-positive            | People learn to distrust positive feedback.              |
+| **Public criticism**   | Calling out mistakes in team meetings | Damages psychological safety for everyone present.       |
+| **"You always/never"** | "You always miss deadlines"           | Absolute statements feel unfair and shut down dialogue.  |
 
 ---
 
@@ -128,21 +128,21 @@ Code review is the highest-frequency mentoring opportunity most engineers have. 
 
 ### Effective Code Review Comments
 
-| Instead Of | Write |
-|-----------|-------|
-| "This is wrong" | "This will fail when X is null. Consider adding a guard clause -- here is an example from our codebase: [link]" |
-| "Why did you do it this way?" | "I see you chose approach A. I have seen approach B work well for similar problems because [reason]. What do you think?" |
-| "LGTM" (on a junior's first complex PR) | "This is solid work. Two things stood out: [positive]. One thing to consider for next time: [learning opportunity]." |
-| "Nit: rename this variable" | "nit: Consider renaming `d` to `daysUntilExpiry` -- when I first read the function, I was not sure what `d` referred to." |
-| "This needs to be refactored" | "This function is doing three things: parsing, validating, and transforming. Extracting these into separate functions would make each one easier to test. Want to pair on this?" |
+| Instead Of                              | Write                                                                                                                                                                            |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "This is wrong"                         | "This will fail when X is null. Consider adding a guard clause -- here is an example from our codebase: [link]"                                                                  |
+| "Why did you do it this way?"           | "I see you chose approach A. I have seen approach B work well for similar problems because [reason]. What do you think?"                                                         |
+| "LGTM" (on a junior's first complex PR) | "This is solid work. Two things stood out: [positive]. One thing to consider for next time: [learning opportunity]."                                                             |
+| "Nit: rename this variable"             | "nit: Consider renaming `d` to `daysUntilExpiry` -- when I first read the function, I was not sure what `d` referred to."                                                        |
+| "This needs to be refactored"           | "This function is doing three things: parsing, validating, and transforming. Extracting these into separate functions would make each one easier to test. Want to pair on this?" |
 
 ### Code Review as Growth Accelerator
 
-| Junior Engineer | Mid-Level Engineer | Senior Engineer |
-|----------------|-------------------|-----------------|
-| Explain the "why" behind standards | Ask questions that prompt deeper thinking | Challenge architectural assumptions |
-| Point to documentation and examples | Suggest they review how similar problems were solved elsewhere | Share trade-offs they may not have considered |
-| Pair on complex changes | Ask them to present their approach to the team | Invite them to review your code |
+| Junior Engineer                                                    | Mid-Level Engineer                                                                      | Senior Engineer                                                              |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Explain the "why" behind standards                                 | Ask questions that prompt deeper thinking                                               | Challenge architectural assumptions                                          |
+| Point to documentation and examples                                | Suggest they review how similar problems were solved elsewhere                          | Share trade-offs they may not have considered                                |
+| Pair on complex changes                                            | Ask them to present their approach to the team                                          | Invite them to review your code                                              |
 | Celebrate growth: "Your error handling has improved significantly" | Give them ownership: "You clearly understand this domain -- what do you think about X?" | Treat as peers: "I had not considered that approach. Interesting trade-off." |
 
 ---
@@ -191,12 +191,12 @@ Staff+ engineers do not just mentor individuals -- they create systems that deve
 
 ### Growth Plan Template
 
-| Dimension | Current State | 6-Month Goal | Actions | Support Needed |
-|-----------|-------------|-------------|---------|---------------|
+| Dimension           | Current State                                           | 6-Month Goal                                | Actions                                                                      | Support Needed                                    |
+| ------------------- | ------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------- |
 | **Technical depth** | Strong in backend, limited distributed systems exposure | Lead design of a distributed caching system | Assign as tech lead for caching project. Pair with Staff engineer on design. | Time for design exploration. Budget for training. |
-| **Communication** | Good in 1:1, hesitant in large groups | Present at least 2 tech talks to the org | Start with team-level presentations. Review and coach on delivery. | Feedback after each presentation. |
-| **Influence** | Influences within team | Influence one cross-team decision | Assign to cross-team working group. Debrief on stakeholder dynamics. | Introduction to key stakeholders. |
-| **Mentoring** | Has not mentored before | Mentor one junior engineer for 6 months | Set up mentoring relationship. Check in monthly. | Mentoring guidelines and support. |
+| **Communication**   | Good in 1:1, hesitant in large groups                   | Present at least 2 tech talks to the org    | Start with team-level presentations. Review and coach on delivery.           | Feedback after each presentation.                 |
+| **Influence**       | Influences within team                                  | Influence one cross-team decision           | Assign to cross-team working group. Debrief on stakeholder dynamics.         | Introduction to key stakeholders.                 |
+| **Mentoring**       | Has not mentored before                                 | Mentor one junior engineer for 6 months     | Set up mentoring relationship. Check in monthly.                             | Mentoring guidelines and support.                 |
 
 ---
 
@@ -206,39 +206,42 @@ Staff+ engineers do not just mentor individuals -- they create systems that deve
 
 ### 1:1 Structure
 
-| Time | Activity | Purpose |
-|------|----------|---------|
-| 0-5 min | **Check-in** | How are they doing? Energy level? Anything on their mind? |
-| 5-15 min | **Their agenda** | Always let them go first. This is their meeting. |
-| 15-25 min | **Your agenda** | Feedback, growth conversations, context sharing |
-| 25-30 min | **Action items and commitments** | What are we each doing before next time? |
+| Time      | Activity                         | Purpose                                                   |
+| --------- | -------------------------------- | --------------------------------------------------------- |
+| 0-5 min   | **Check-in**                     | How are they doing? Energy level? Anything on their mind? |
+| 5-15 min  | **Their agenda**                 | Always let them go first. This is their meeting.          |
+| 15-25 min | **Your agenda**                  | Feedback, growth conversations, context sharing           |
+| 25-30 min | **Action items and commitments** | What are we each doing before next time?                  |
 
 ### 1:1 Question Bank
 
 **For understanding their experience:**
+
 - "What is the most frustrating thing about your day-to-day right now?"
 - "What would you do differently if you were in my role?"
 - "On a scale of 1-10, how energized are you by your current work? What would make it a 10?"
 
 **For growth:**
+
 - "What skill do you most want to develop in the next 6 months?"
 - "What is the most challenging thing you worked on this week? What did you learn?"
 - "Where do you want to be in your career in 2 years? What is one thing we can do this quarter to move toward that?"
 
 **For surfacing problems early:**
+
 - "Is there anything that almost went wrong this week?"
 - "If you could change one thing about how our team works, what would it be?"
 - "Is there anything you are hesitant to bring up?"
 
 ### 1:1 Anti-patterns
 
-| Anti-pattern | Why It Fails | Better Approach |
-|-------------|-------------|-----------------|
-| **Status updates only** | Wastes a high-value touchpoint on information that could be async | Use async standup for status. Use 1:1s for things that need trust and conversation. |
-| **Canceling frequently** | Signals that their growth is not a priority | Reschedule, never cancel. If you must cancel, explain why and reschedule immediately. |
-| **Doing all the talking** | The 1:1 is for them, not for you | Aim for 70% them, 30% you. |
-| **Only talking about work** | Misses the human dimension | Ask about their life, energy, and motivation. People are not just workers. |
-| **No follow-through** | Promising to help and not delivering | Track action items. Follow up at the next 1:1. |
+| Anti-pattern                | Why It Fails                                                      | Better Approach                                                                       |
+| --------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **Status updates only**     | Wastes a high-value touchpoint on information that could be async | Use async standup for status. Use 1:1s for things that need trust and conversation.   |
+| **Canceling frequently**    | Signals that their growth is not a priority                       | Reschedule, never cancel. If you must cancel, explain why and reschedule immediately. |
+| **Doing all the talking**   | The 1:1 is for them, not for you                                  | Aim for 70% them, 30% you.                                                            |
+| **Only talking about work** | Misses the human dimension                                        | Ask about their life, energy, and motivation. People are not just workers.            |
+| **No follow-through**       | Promising to help and not delivering                              | Track action items. Follow up at the next 1:1.                                        |
 
 ---
 
@@ -287,6 +290,7 @@ These are different activities with different impacts. Staff+ engineers need to 
 ### Who to Sponsor
 
 Sponsor people who:
+
 - Demonstrate high potential but lack visibility
 - Are doing Staff-level work but are not yet recognized for it
 - Come from backgrounds that are underrepresented in your org's leadership
@@ -300,23 +304,23 @@ Psychological safety is the belief that you will not be punished for making mist
 
 ### The Four Stages of Psychological Safety
 
-| Stage | Definition | What It Enables | How You Build It |
-|-------|-----------|----------------|-----------------|
-| **Inclusion Safety** | "I belong here" | People feel welcome and accepted | Welcome new members actively. Use inclusive language. Value diverse perspectives. |
-| **Learner Safety** | "I can ask questions" | People are not afraid to say "I do not know" | Publicly say "I do not know" yourself. Celebrate learning, not just knowing. |
-| **Contributor Safety** | "I can share ideas" | People propose solutions without fear of ridicule | Respond to every idea with engagement. "That is interesting, tell me more." |
-| **Challenger Safety** | "I can disagree" | People challenge the status quo and push back on senior engineers | Thank people who disagree with you publicly. "I had not considered that." |
+| Stage                  | Definition            | What It Enables                                                   | How You Build It                                                                  |
+| ---------------------- | --------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Inclusion Safety**   | "I belong here"       | People feel welcome and accepted                                  | Welcome new members actively. Use inclusive language. Value diverse perspectives. |
+| **Learner Safety**     | "I can ask questions" | People are not afraid to say "I do not know"                      | Publicly say "I do not know" yourself. Celebrate learning, not just knowing.      |
+| **Contributor Safety** | "I can share ideas"   | People propose solutions without fear of ridicule                 | Respond to every idea with engagement. "That is interesting, tell me more."       |
+| **Challenger Safety**  | "I can disagree"      | People challenge the status quo and push back on senior engineers | Thank people who disagree with you publicly. "I had not considered that."         |
 
 ### Practical Actions
 
-| Action | Frequency | Impact |
-|--------|-----------|--------|
-| When you make a mistake, share it with the team and what you learned | As it happens | Normalizes fallibility |
-| Ask genuine questions in meetings, not just rhetorical ones | Every meeting | Shows that not knowing is acceptable |
-| Respond to ideas with curiosity, even ones you disagree with | Every interaction | Makes people feel heard |
-| Call out good questions: "That is a great question, I had not thought about that" | Weekly | Rewards intellectual bravery |
-| In postmortems, redirect blame to systems: "What process allowed this?" | Every postmortem | Builds trust that mistakes are learning opportunities |
-| Share your own growth areas: "I am working on improving my X" | Monthly | Models vulnerability |
+| Action                                                                            | Frequency         | Impact                                                |
+| --------------------------------------------------------------------------------- | ----------------- | ----------------------------------------------------- |
+| When you make a mistake, share it with the team and what you learned              | As it happens     | Normalizes fallibility                                |
+| Ask genuine questions in meetings, not just rhetorical ones                       | Every meeting     | Shows that not knowing is acceptable                  |
+| Respond to ideas with curiosity, even ones you disagree with                      | Every interaction | Makes people feel heard                               |
+| Call out good questions: "That is a great question, I had not thought about that" | Weekly            | Rewards intellectual bravery                          |
+| In postmortems, redirect blame to systems: "What process allowed this?"           | Every postmortem  | Builds trust that mistakes are learning opportunities |
+| Share your own growth areas: "I am working on improving my X"                     | Monthly           | Models vulnerability                                  |
 
 ---
 
@@ -360,11 +364,11 @@ This is the hardest part of people development. Avoiding the conversation does n
 
 ### Skill vs Will vs Environment
 
-| Root Cause | Signs | Response |
-|-----------|-------|----------|
-| **Skill gap** | Tries hard but produces low-quality work. Asks for help frequently. | Training, pairing, structured learning plan. |
-| **Will/motivation** | Has the skills but does not apply them consistently. Disengaged. | Understand the root cause. Is it burnout? Misalignment? Boredom? Address the cause, not the symptom. |
-| **Environmental** | Was high-performing, recently declined. External stressors. | Be compassionate. Adjust expectations temporarily. Remove blockers. Check if workload is unreasonable. |
+| Root Cause          | Signs                                                               | Response                                                                                               |
+| ------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Skill gap**       | Tries hard but produces low-quality work. Asks for help frequently. | Training, pairing, structured learning plan.                                                           |
+| **Will/motivation** | Has the skills but does not apply them consistently. Disengaged.    | Understand the root cause. Is it burnout? Misalignment? Boredom? Address the cause, not the symptom.   |
+| **Environmental**   | Was high-performing, recently declined. External stressors.         | Be compassionate. Adjust expectations temporarily. Remove blockers. Check if workload is unreasonable. |
 
 ---
 
@@ -434,16 +438,16 @@ The measure of success is not whether people say they feel safe -- it is whether
 
 ## Anti-patterns to Avoid
 
-| Anti-pattern | Why It Fails | What to Do Instead |
-|-------------|-------------|-------------------|
-| **The Hero** | Doing everything yourself instead of delegating to grow others | Give away work that will stretch someone, even if you could do it faster. |
-| **The Absent Mentor** | Agreeing to mentor but never following through | Schedule mentoring time. Treat it with the same priority as meetings. |
-| **Generic Advice** | "Just keep doing great work and you will get promoted" | Be specific: "Here are three concrete skills to develop, with a plan for each." |
-| **Mentoring Clones** | Pushing people to follow your exact career path | Understand their goals and strengths. Guide toward their path, not yours. |
-| **Feedback Avoidance** | Not giving constructive feedback to avoid discomfort | Avoiding feedback is not kind -- it is cowardly. People deserve to know how to improve. |
-| **Public Criticism** | Calling out mistakes in team meetings or Slack channels | Praise in public, develop in private. Always. |
-| **All Mentoring, No Sponsoring** | Giving advice but never putting your reputation on the line | Sponsor people for opportunities, not just advise them on how to find opportunities. |
-| **Ignoring Team Dynamics** | Focusing only on individuals, missing team-level patterns | Pay attention to team health: meeting dynamics, collaboration patterns, morale signals. |
+| Anti-pattern                     | Why It Fails                                                   | What to Do Instead                                                                      |
+| -------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| **The Hero**                     | Doing everything yourself instead of delegating to grow others | Give away work that will stretch someone, even if you could do it faster.               |
+| **The Absent Mentor**            | Agreeing to mentor but never following through                 | Schedule mentoring time. Treat it with the same priority as meetings.                   |
+| **Generic Advice**               | "Just keep doing great work and you will get promoted"         | Be specific: "Here are three concrete skills to develop, with a plan for each."         |
+| **Mentoring Clones**             | Pushing people to follow your exact career path                | Understand their goals and strengths. Guide toward their path, not yours.               |
+| **Feedback Avoidance**           | Not giving constructive feedback to avoid discomfort           | Avoiding feedback is not kind -- it is cowardly. People deserve to know how to improve. |
+| **Public Criticism**             | Calling out mistakes in team meetings or Slack channels        | Praise in public, develop in private. Always.                                           |
+| **All Mentoring, No Sponsoring** | Giving advice but never putting your reputation on the line    | Sponsor people for opportunities, not just advise them on how to find opportunities.    |
+| **Ignoring Team Dynamics**       | Focusing only on individuals, missing team-level patterns      | Pay attention to team health: meeting dynamics, collaboration patterns, morale signals. |
 
 ---
 

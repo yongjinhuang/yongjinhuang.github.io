@@ -109,6 +109,7 @@ Studies consistently show that developer intuition about bottlenecks is wrong 70
 **Misconception 3: "Micro-benchmarks tell the truth."**
 
 Isolated benchmarks often measure the wrong thing:
+
 - The CPU cache is warm (unrealistic for real workloads)
 - Branch predictors have learned the pattern (unrealistic)
 - Memory allocator is in a favorable state (unrealistic)
@@ -170,6 +171,7 @@ Nsight Systems is the **system-level** profiler for GPU applications. It shows y
 ### When to Use Nsight Systems
 
 Use Nsight Systems **first**, before any other GPU profiling tool. It answers:
+
 - What percentage of time is spent in GPU kernels vs. CPU code vs. data transfers?
 - Are GPU kernels overlapping with data transfers (using streams correctly)?
 - What is the kernel launch overhead?
@@ -292,6 +294,7 @@ The timeline view (opened in the Nsight Systems GUI) shows multiple rows:
 3. **Tiny kernels with long gaps**: If kernel bars are thin with large spaces between them, kernel launch overhead dominates. Consider kernel fusion or persistent kernels.
 
 4. **cudaMemcpy dominance**: If the majority of time is in cudaMemcpy calls, consider:
+
    - Unified Memory to eliminate explicit transfers
    - Pinned memory for faster transfers
    - Overlapping transfers with computation
@@ -349,6 +352,7 @@ Nsight Compute is the **kernel-level** profiler. After Nsight Systems tells you 
 ### When to Use Nsight Compute
 
 Use Nsight Compute **after** Nsight Systems has identified a specific kernel as the bottleneck. It answers:
+
 - Is the kernel compute-bound or memory-bound?
 - What is the occupancy and what limits it?
 - Are memory accesses coalesced?
@@ -473,16 +477,16 @@ This is one of the most valuable pieces of information in Nsight Compute:
 
 **Common stall reasons and what they mean:**
 
-| Stall Reason | Cause | Fix |
-|---|---|---|
-| `long_scoreboard` | Waiting for global memory | Better coalescing, shared memory cache, prefetching |
-| `short_scoreboard` | Waiting for math pipeline | Reduce instruction-level dependencies, ILP |
-| `mio_throttle` | Memory instruction queue full | Fewer memory instructions per thread |
-| `wait` | `__syncthreads()` barrier | Reduce synchronization, algorithmic change |
-| `not_selected` | Low priority among eligible warps | More warps (higher occupancy) |
-| `math_pipe_throttle` | Compute pipeline saturated | Already compute-bound, good sign |
-| `tex_throttle` | Texture unit saturated | Reduce texture fetches |
-| `lg_throttle` | Local/global memory throttle | Reduce memory traffic |
+| Stall Reason         | Cause                             | Fix                                                 |
+| -------------------- | --------------------------------- | --------------------------------------------------- |
+| `long_scoreboard`    | Waiting for global memory         | Better coalescing, shared memory cache, prefetching |
+| `short_scoreboard`   | Waiting for math pipeline         | Reduce instruction-level dependencies, ILP          |
+| `mio_throttle`       | Memory instruction queue full     | Fewer memory instructions per thread                |
+| `wait`               | `__syncthreads()` barrier         | Reduce synchronization, algorithmic change          |
+| `not_selected`       | Low priority among eligible warps | More warps (higher occupancy)                       |
+| `math_pipe_throttle` | Compute pipeline saturated        | Already compute-bound, good sign                    |
+| `tex_throttle`       | Texture unit saturated            | Reduce texture fetches                              |
+| `lg_throttle`        | Local/global memory throttle      | Reduce memory traffic                               |
 
 #### Memory Workload Analysis
 
@@ -680,15 +684,15 @@ ncu --page raw --set full ./my_cuda_app
 
 ### nvprof vs ncu Comparison
 
-| Feature | nvprof | ncu |
-|---|---|---|
-| GPU Support | Pre-Volta (Kepler, Maxwell, Pascal) | Volta and newer |
-| Kernel profiling | Basic metrics | Full sections with analysis |
-| Roofline | Not built-in | Built-in roofline chart |
-| Source correlation | Limited | Full SASS/PTX source mapping |
-| Comparison mode | Not built-in | Built-in diff mode |
-| Speed | Faster (fewer metrics) | Slower (replays kernel per metric) |
-| Status | Deprecated | Actively maintained |
+| Feature            | nvprof                              | ncu                                |
+| ------------------ | ----------------------------------- | ---------------------------------- |
+| GPU Support        | Pre-Volta (Kepler, Maxwell, Pascal) | Volta and newer                    |
+| Kernel profiling   | Basic metrics                       | Full sections with analysis        |
+| Roofline           | Not built-in                        | Built-in roofline chart            |
+| Source correlation | Limited                             | Full SASS/PTX source mapping       |
+| Comparison mode    | Not built-in                        | Built-in diff mode                 |
+| Speed              | Faster (fewer metrics)              | Slower (replays kernel per metric) |
+| Status             | Deprecated                          | Actively maintained                |
 
 ---
 
@@ -1069,16 +1073,19 @@ Imbalance or Serial Spinning: 18.7% of wall time
 1. **Compile with debug info** (`-g`) but keep optimizations on (`-O2`). VTune needs symbols for source correlation but you want real-world performance behavior.
 
 2. **Disable turbo boost** for reproducible results:
+
    ```bash
    echo 1 | sudo tee /sys/devices/system/cpu/intel_pstate/no_turbo
    ```
 
 3. **Pin threads to cores** to avoid migration noise:
+
    ```bash
    taskset -c 0-3 ./my_app
    ```
 
 4. **Use ITT API** for custom annotations (like NVTX for GPU):
+
    ```cpp
    #include <ittnotify.h>
    __itt_domain* domain = __itt_domain_create("MyDomain");
@@ -1233,11 +1240,13 @@ ms_print massif.out.12345
 1. **Compile with `-g -O1`**: Debug symbols for line numbers, light optimization to stay realistic. `-O0` changes behavior too much; `-O2` can confuse source mapping.
 
 2. **Use suppression files** to filter known false positives:
+
    ```bash
    valgrind --suppressions=my_suppressions.supp ./my_app
    ```
 
 3. **Cachegrind cache parameters** can be set to match your actual hardware:
+
    ```bash
    valgrind --tool=cachegrind \
             --D1=32768,8,64 \
@@ -1378,6 +1387,7 @@ __global__ void debug_kernel(float* data, int n) {
 ```
 
 **Important printf limitations:**
+
 - Output buffer is limited (default 1 MB). Set it larger if needed:
   ```cpp
   cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10 * 1024 * 1024); // 10 MB

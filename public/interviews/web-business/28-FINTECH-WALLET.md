@@ -62,26 +62,26 @@ For P2P transfers specifically, many wallets allow sending to phone numbers or e
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **KYC (Know Your Customer)** | Identity verification process required by law before users can transact. Involves ID checks, address verification, and sometimes biometrics |
-| **AML (Anti-Money Laundering)** | Rules and systems that detect and prevent money laundering. Includes transaction monitoring, suspicious activity reports, and sanctions screening |
-| **Ledger** | The authoritative record of all financial transactions. Wallet systems use double-entry bookkeeping — every debit has a matching credit |
-| **Double-Entry Bookkeeping** | Every transaction creates two entries: a debit from one account and a credit to another. Ensures the books always balance to zero |
-| **Velocity Check** | Rules that limit how fast or how often a user can transact. Example: max 5 transfers per hour, max $5,000 per day |
-| **Settlement** | The actual movement of real money between banks, which happens after the wallet transaction is recorded. Often batched daily |
-| **Reconciliation** | The process of matching your internal ledger records against external bank statements to make sure nothing is missing or duplicated |
-| **Float** | Money sitting in your system between when a user tops up and when a merchant withdraws. Regulated heavily — you often must hold it in trust accounts |
-| **Virtual Card** | A programmatically generated card number linked to the wallet balance. Users can shop online as if they had a physical card |
-| **Chargeback** | When a user disputes a card-funded transaction through their bank. The bank pulls the money back, and you eat the loss unless you can prove the transaction was legitimate |
-| **E-Money License** | A regulatory license required in many countries to operate a digital wallet. Without it, you're operating illegally |
-| **Cashback** | A percentage of the transaction returned to the user as a reward. Funded by the wallet operator or merchant as a growth incentive |
-| **P2P Transfer** | Person-to-person money transfer within the wallet ecosystem. User A sends $20 to User B |
-| **Sanctions Screening** | Checking users and transactions against government watchlists (OFAC, EU sanctions) to ensure you're not facilitating terrorism financing |
-| **STR / SAR** | Suspicious Transaction Report / Suspicious Activity Report — a mandatory filing to regulators when you detect potentially illegal activity |
-| **PEP** | Politically Exposed Person — individuals in prominent public positions who require enhanced due diligence due to higher corruption risk |
-| **T+1 / T+2** | Settlement timing notation. T+1 means settlement happens one business day after the transaction date |
-| **Trust Account / Escrow** | A segregated bank account where user funds are held separately from the company's operating funds, often legally required |
+| Term                            | What It Means                                                                                                                                                              |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **KYC (Know Your Customer)**    | Identity verification process required by law before users can transact. Involves ID checks, address verification, and sometimes biometrics                                |
+| **AML (Anti-Money Laundering)** | Rules and systems that detect and prevent money laundering. Includes transaction monitoring, suspicious activity reports, and sanctions screening                          |
+| **Ledger**                      | The authoritative record of all financial transactions. Wallet systems use double-entry bookkeeping — every debit has a matching credit                                    |
+| **Double-Entry Bookkeeping**    | Every transaction creates two entries: a debit from one account and a credit to another. Ensures the books always balance to zero                                          |
+| **Velocity Check**              | Rules that limit how fast or how often a user can transact. Example: max 5 transfers per hour, max $5,000 per day                                                          |
+| **Settlement**                  | The actual movement of real money between banks, which happens after the wallet transaction is recorded. Often batched daily                                               |
+| **Reconciliation**              | The process of matching your internal ledger records against external bank statements to make sure nothing is missing or duplicated                                        |
+| **Float**                       | Money sitting in your system between when a user tops up and when a merchant withdraws. Regulated heavily — you often must hold it in trust accounts                       |
+| **Virtual Card**                | A programmatically generated card number linked to the wallet balance. Users can shop online as if they had a physical card                                                |
+| **Chargeback**                  | When a user disputes a card-funded transaction through their bank. The bank pulls the money back, and you eat the loss unless you can prove the transaction was legitimate |
+| **E-Money License**             | A regulatory license required in many countries to operate a digital wallet. Without it, you're operating illegally                                                        |
+| **Cashback**                    | A percentage of the transaction returned to the user as a reward. Funded by the wallet operator or merchant as a growth incentive                                          |
+| **P2P Transfer**                | Person-to-person money transfer within the wallet ecosystem. User A sends $20 to User B                                                                                    |
+| **Sanctions Screening**         | Checking users and transactions against government watchlists (OFAC, EU sanctions) to ensure you're not facilitating terrorism financing                                   |
+| **STR / SAR**                   | Suspicious Transaction Report / Suspicious Activity Report — a mandatory filing to regulators when you detect potentially illegal activity                                 |
+| **PEP**                         | Politically Exposed Person — individuals in prominent public positions who require enhanced due diligence due to higher corruption risk                                    |
+| **T+1 / T+2**                   | Settlement timing notation. T+1 means settlement happens one business day after the transaction date                                                                       |
+| **Trust Account / Escrow**      | A segregated bank account where user funds are held separately from the company's operating funds, often legally required                                                  |
 
 ## Common Patterns
 
@@ -90,6 +90,7 @@ For P2P transfers specifically, many wallets allow sending to phone numbers or e
 Start users with minimal verification and low limits. As they provide more identity documents, unlock higher transaction limits and features like withdrawals or virtual cards.
 
 **Typical tiers:**
+
 - **Tier 0**: Email/phone only. Can receive money but not send or withdraw. Balance cap of $100.
 - **Tier 1**: ID verified. Can send/receive up to $1,000/month. No withdrawals yet.
 - **Tier 2**: Full KYC (ID + address + selfie). Full access to all features with limits up to $10,000+/month.
@@ -173,22 +174,22 @@ Instead of storing just the current state (balance = $150), store every event th
 
 ## Quick Reference
 
-| Scenario | Recommended Approach |
-|----------|---------------------|
-| User onboarding | Tiered KYC — start light, progressively verify |
-| Storing balances | Double-entry ledger with immutable entries, never mutable balance fields |
-| P2P transfers | Atomic debit + credit in a single database transaction |
-| Top-up via card | Use a payment gateway (Stripe, Adyen), add holding period before funds are transferable |
-| Withdrawals | AML screening, then queue for batch bank transfer |
-| Fraud detection | Velocity checks + device fingerprinting + behavioral analysis |
-| Multi-currency | Separate sub-ledgers per currency, real-time FX rates with markup |
-| Cashback/rewards | Rules engine with caps, expiration, and abuse detection |
-| Virtual cards | Partner with a card issuer (Marqeta, Stripe Issuing) to generate card numbers on demand |
-| Reconciliation | Daily automated matching of internal ledger vs. bank statements |
-| Regulatory compliance | Obtain e-money license per country, implement KYC/AML per local requirements |
-| Chargebacks | Holding periods on card-funded top-ups, evidence collection for disputes |
-| Settlement | Batch processing on a schedule (T+1), with real-time internal ledger updates |
-| Licensing | Research requirements early — EMI in EU, MPI in Singapore, MTL per state in US |
-| Audit readiness | Immutable ledger, event sourcing, and comprehensive logging from day one |
-| Dispute resolution | Built-in investigation workflow with temporary credits and resolution timelines |
-| Cross-border payments | Multi-currency sub-ledgers + transparent FX rates + local payment rail integration |
+| Scenario              | Recommended Approach                                                                    |
+| --------------------- | --------------------------------------------------------------------------------------- |
+| User onboarding       | Tiered KYC — start light, progressively verify                                          |
+| Storing balances      | Double-entry ledger with immutable entries, never mutable balance fields                |
+| P2P transfers         | Atomic debit + credit in a single database transaction                                  |
+| Top-up via card       | Use a payment gateway (Stripe, Adyen), add holding period before funds are transferable |
+| Withdrawals           | AML screening, then queue for batch bank transfer                                       |
+| Fraud detection       | Velocity checks + device fingerprinting + behavioral analysis                           |
+| Multi-currency        | Separate sub-ledgers per currency, real-time FX rates with markup                       |
+| Cashback/rewards      | Rules engine with caps, expiration, and abuse detection                                 |
+| Virtual cards         | Partner with a card issuer (Marqeta, Stripe Issuing) to generate card numbers on demand |
+| Reconciliation        | Daily automated matching of internal ledger vs. bank statements                         |
+| Regulatory compliance | Obtain e-money license per country, implement KYC/AML per local requirements            |
+| Chargebacks           | Holding periods on card-funded top-ups, evidence collection for disputes                |
+| Settlement            | Batch processing on a schedule (T+1), with real-time internal ledger updates            |
+| Licensing             | Research requirements early — EMI in EU, MPI in Singapore, MTL per state in US          |
+| Audit readiness       | Immutable ledger, event sourcing, and comprehensive logging from day one                |
+| Dispute resolution    | Built-in investigation workflow with temporary credits and resolution timelines         |
+| Cross-border payments | Multi-currency sub-ledgers + transparent FX rates + local payment rail integration      |

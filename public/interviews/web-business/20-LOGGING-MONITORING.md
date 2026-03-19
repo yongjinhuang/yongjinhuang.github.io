@@ -22,12 +22,12 @@ Your application writes log entries for important events:
 
 ### Log Levels
 
-| Level | When to Use | Example |
-|-------|-------------|---------|
-| **ERROR** | Something failed that shouldn't have | Payment processing failed, database connection lost |
-| **WARN** | Something unusual that might become a problem | Rate limit approaching, disk space running low |
-| **INFO** | Normal operations worth recording | User signed up, order placed, deployment completed |
-| **DEBUG** | Detailed info for troubleshooting | SQL query executed, cache hit/miss, request/response payloads |
+| Level     | When to Use                                   | Example                                                       |
+| --------- | --------------------------------------------- | ------------------------------------------------------------- |
+| **ERROR** | Something failed that shouldn't have          | Payment processing failed, database connection lost           |
+| **WARN**  | Something unusual that might become a problem | Rate limit approaching, disk space running low                |
+| **INFO**  | Normal operations worth recording             | User signed up, order placed, deployment completed            |
+| **DEBUG** | Detailed info for troubleshooting             | SQL query executed, cache hit/miss, request/response payloads |
 
 In production, you typically log INFO and above. DEBUG is too verbose for production but invaluable during troubleshooting.
 
@@ -88,25 +88,25 @@ Each service adds its span to the trace. You can see the complete request journe
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Log Aggregation** | Collecting logs from all servers into one searchable system (ELK, Datadog, Splunk) |
-| **ELK Stack** | Elasticsearch + Logstash + Kibana — a popular open-source logging stack |
-| **APM** | Application Performance Monitoring — tracks request latency, errors, dependencies (Datadog, New Relic) |
-| **Trace** | A record of a request's journey through multiple services |
-| **Span** | A single operation within a trace (e.g., "database query took 50ms") |
-| **P50 / P95 / P99** | Percentile latencies. P99 = 99% of requests are faster than this value |
-| **SLA** | Service Level Agreement — contractual guarantee (99.9% uptime) |
-| **SLO** | Service Level Objective — internal target (99.95% uptime, P99 latency < 500ms) |
-| **SLI** | Service Level Indicator — the actual measured metric |
-| **Error Budget** | How much downtime is "allowed" before violating the SLO. Spent error budget = freeze new features, fix reliability |
-| **On-Call** | Engineer designated to respond to production alerts during a rotation period |
-| **Incident** | A production issue that affects users. Tracked and reviewed formally |
-| **Postmortem / Retrospective** | After-incident review: what happened, timeline, root cause, action items. Blameless |
-| **MTTD** | Mean Time To Detect — how quickly you notice a problem |
-| **MTTR** | Mean Time To Recover — how quickly you fix a problem |
-| **Dashboard** | A visual display of key metrics (Grafana, Datadog dashboards) |
-| **Runbook** | Step-by-step instructions for responding to a specific alert |
+| Term                           | What It Means                                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| **Log Aggregation**            | Collecting logs from all servers into one searchable system (ELK, Datadog, Splunk)                                 |
+| **ELK Stack**                  | Elasticsearch + Logstash + Kibana — a popular open-source logging stack                                            |
+| **APM**                        | Application Performance Monitoring — tracks request latency, errors, dependencies (Datadog, New Relic)             |
+| **Trace**                      | A record of a request's journey through multiple services                                                          |
+| **Span**                       | A single operation within a trace (e.g., "database query took 50ms")                                               |
+| **P50 / P95 / P99**            | Percentile latencies. P99 = 99% of requests are faster than this value                                             |
+| **SLA**                        | Service Level Agreement — contractual guarantee (99.9% uptime)                                                     |
+| **SLO**                        | Service Level Objective — internal target (99.95% uptime, P99 latency < 500ms)                                     |
+| **SLI**                        | Service Level Indicator — the actual measured metric                                                               |
+| **Error Budget**               | How much downtime is "allowed" before violating the SLO. Spent error budget = freeze new features, fix reliability |
+| **On-Call**                    | Engineer designated to respond to production alerts during a rotation period                                       |
+| **Incident**                   | A production issue that affects users. Tracked and reviewed formally                                               |
+| **Postmortem / Retrospective** | After-incident review: what happened, timeline, root cause, action items. Blameless                                |
+| **MTTD**                       | Mean Time To Detect — how quickly you notice a problem                                                             |
+| **MTTR**                       | Mean Time To Recover — how quickly you fix a problem                                                               |
+| **Dashboard**                  | A visual display of key metrics (Grafana, Datadog dashboards)                                                      |
+| **Runbook**                    | Step-by-step instructions for responding to a specific alert                                                       |
 
 ## Common Patterns
 
@@ -168,21 +168,21 @@ Dedicated service that captures application errors with full context (stack trac
 
 ## Quick Reference
 
-| What to Monitor | Alert Threshold | Why |
-|----------------|-----------------|-----|
-| Error rate | > 1% for 5 min | Something is broken |
-| P99 latency | > 2s for 5 min | Users are experiencing slowness |
-| CPU usage | > 80% for 10 min | Server is overloaded |
-| Disk usage | > 85% | Disk full = crash |
-| Queue depth | Growing for 15 min | Workers can't keep up |
-| Failed logins per IP | > 20 in 5 min | Possible brute force attack |
-| Deployment health | Error spike after deploy | New code introduced a bug |
+| What to Monitor      | Alert Threshold          | Why                             |
+| -------------------- | ------------------------ | ------------------------------- |
+| Error rate           | > 1% for 5 min           | Something is broken             |
+| P99 latency          | > 2s for 5 min           | Users are experiencing slowness |
+| CPU usage            | > 80% for 10 min         | Server is overloaded            |
+| Disk usage           | > 85%                    | Disk full = crash               |
+| Queue depth          | Growing for 15 min       | Workers can't keep up           |
+| Failed logins per IP | > 20 in 5 min            | Possible brute force attack     |
+| Deployment health    | Error spike after deploy | New code introduced a bug       |
 
-| Tool | Category | Use Case |
-|------|----------|----------|
-| Datadog | All-in-one | Logs + metrics + traces + APM |
-| Grafana + Prometheus | Open source | Metrics + dashboards + alerting |
-| ELK Stack | Open source | Log aggregation + search |
-| Sentry | Error tracking | Capture + triage application errors |
-| PagerDuty | Incident management | Alert routing + on-call scheduling |
-| Jaeger / Zipkin | Open source | Distributed tracing |
+| Tool                 | Category            | Use Case                            |
+| -------------------- | ------------------- | ----------------------------------- |
+| Datadog              | All-in-one          | Logs + metrics + traces + APM       |
+| Grafana + Prometheus | Open source         | Metrics + dashboards + alerting     |
+| ELK Stack            | Open source         | Log aggregation + search            |
+| Sentry               | Error tracking      | Capture + triage application errors |
+| PagerDuty            | Incident management | Alert routing + on-call scheduling  |
+| Jaeger / Zipkin      | Open source         | Distributed tracing                 |

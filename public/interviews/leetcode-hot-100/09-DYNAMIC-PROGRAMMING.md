@@ -6,10 +6,10 @@ Dynamic Programming (DP) solves problems by breaking them into overlapping subpr
 
 ### Top-Down vs Bottom-Up
 
-| Approach | Description | Pros | Cons |
-|----------|-------------|------|------|
-| **Top-Down (Memoization)** | Recursive with cache; start from the original problem and break down | Intuitive; only computes needed states | Recursion overhead; stack depth limits |
-| **Bottom-Up (Tabulation)** | Iterative; build solutions from smallest subproblems up | No recursion overhead; often space-optimizable | Must determine computation order; may compute unneeded states |
+| Approach                   | Description                                                          | Pros                                           | Cons                                                          |
+| -------------------------- | -------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------- |
+| **Top-Down (Memoization)** | Recursive with cache; start from the original problem and break down | Intuitive; only computes needed states         | Recursion overhead; stack depth limits                        |
+| **Bottom-Up (Tabulation)** | Iterative; build solutions from smallest subproblems up              | No recursion overhead; often space-optimizable | Must determine computation order; may compute unneeded states |
 
 ### State Definition Checklist
 
@@ -60,6 +60,7 @@ def climbStairs(n: int) -> int:
 **Time**: O(n)
 **Space**: O(1)
 **Edge Cases**:
+
 - `n = 1` -> 1
 - `n = 2` -> 2
 
@@ -96,6 +97,7 @@ def rob(nums: list[int]) -> int:
 **Time**: O(n)
 **Space**: O(1)
 **Edge Cases**:
+
 - Single house -> return its value
 - Two houses -> return max of the two
 - All zeros -> 0
@@ -136,6 +138,7 @@ def rob(nums: list[int]) -> int:
 **Time**: O(n)
 **Space**: O(1) (excluding the slices; use index bounds to avoid slicing if needed)
 **Edge Cases**:
+
 - Single house -> return its value
 - Two houses -> return max of the two
 - Three houses -> can only rob one, return max
@@ -151,11 +154,13 @@ def rob(nums: list[int]) -> int:
 ### Approach
 
 **Expand Around Center** (preferred for O(1) space):
+
 - A palindrome mirrors around its center. There are `2n - 1` possible centers (each character, and each gap between characters).
 - For each center, expand outward while characters match.
 - Track the longest palindrome found.
 
 **DP alternative**:
+
 - `dp[i][j] = True` if `s[i..j]` is a palindrome.
 - `dp[i][j] = (s[i] == s[j]) and dp[i+1][j-1]` for `j - i >= 2`.
 - O(n^2) time and space.
@@ -185,6 +190,7 @@ def longestPalindrome(s: str) -> str:
 **Time**: O(n^2) -- each expansion is O(n), done for O(n) centers
 **Space**: O(1)
 **Edge Cases**:
+
 - Single character -> itself
 - All identical characters -> entire string
 - No palindrome longer than 1 -> return first character
@@ -220,9 +226,10 @@ def coinChange(coins: list[int], amount: int) -> int:
     return dp[amount] if dp[amount] <= amount else -1
 ```
 
-**Time**: O(amount * len(coins))
+**Time**: O(amount \* len(coins))
 **Space**: O(amount)
 **Edge Cases**:
+
 - `amount = 0` -> 0
 - No valid combination -> -1
 - Single coin that divides amount evenly
@@ -261,9 +268,10 @@ def wordBreak(s: str, wordDict: list[str]) -> bool:
     return dp[len(s)]
 ```
 
-**Time**: O(n * m) where `n = len(s)` and `m = max_word_len`
+**Time**: O(n \* m) where `n = len(s)` and `m = max_word_len`
 **Space**: O(n)
 **Edge Cases**:
+
 - `s` is exactly one word in dict -> True
 - Single character string
 - Dictionary words overlap (e.g., "sand" and "and" for "sanand")
@@ -280,11 +288,13 @@ def wordBreak(s: str, wordDict: list[str]) -> bool:
 ### Approach
 
 **O(n^2) DP**:
+
 - `dp[i]` = length of LIS ending at index `i`.
 - `dp[i] = max(dp[j] + 1)` for all `j < i` where `nums[j] < nums[i]`.
 - Answer: `max(dp)`.
 
 **O(n log n) with Binary Search** (preferred):
+
 - Maintain a list `tails` where `tails[k]` is the smallest tail element of all increasing subsequences of length `k + 1`.
 - For each number, binary search for its position in `tails`:
   - If larger than all tails, append (extends longest subsequence).
@@ -313,6 +323,7 @@ def lengthOfLIS(nums: list[int]) -> int:
 **Time**: O(n log n)
 **Space**: O(n)
 **Edge Cases**:
+
 - Already sorted ascending -> length of array
 - Already sorted descending -> 1
 - All elements equal -> 1
@@ -346,9 +357,10 @@ def uniquePaths(m: int, n: int) -> int:
     return dp[n - 1]
 ```
 
-**Time**: O(m * n)
+**Time**: O(m \* n)
 **Space**: O(n)
 **Edge Cases**:
+
 - `m = 1` or `n = 1` -> 1 (only one straight path)
 - `m = n = 1` -> 1
 
@@ -387,6 +399,7 @@ def maxSubArray(nums: list[int]) -> int:
 **Time**: O(n)
 **Space**: O(1)
 **Edge Cases**:
+
 - All negative numbers -> returns the least negative (max single element)
 - Single element -> return it
 - All positive -> sum of entire array
@@ -427,6 +440,7 @@ def canJump(nums: list[int]) -> bool:
 **Time**: O(n)
 **Space**: O(1)
 **Edge Cases**:
+
 - Single element -> always True (already at last index)
 - `nums[0] = 0` with `n > 1` -> False (stuck at start)
 - All ones -> always reachable
@@ -473,6 +487,7 @@ def numDecodings(s: str) -> int:
 **Time**: O(n)
 **Space**: O(1)
 **Edge Cases**:
+
 - Leading zero `"0..."` -> 0
 - Contains `"00"` -> 0 (no valid decoding for consecutive zeros)
 - `"10"` -> 1 (only "J")
@@ -518,9 +533,10 @@ def canPartition(nums: list[int]) -> bool:
     return dp[target]
 ```
 
-**Time**: O(n * target) where `target = sum(nums) / 2`
+**Time**: O(n \* target) where `target = sum(nums) / 2`
 **Space**: O(target)
 **Edge Cases**:
+
 - Odd total sum -> False
 - Single element -> False
 - Two equal elements -> True
@@ -569,9 +585,10 @@ def minDistance(word1: str, word2: str) -> int:
     return prev[n]
 ```
 
-**Time**: O(m * n)
+**Time**: O(m \* n)
 **Space**: O(min(m, n))
 **Edge Cases**:
+
 - One or both strings empty -> length of the other string
 - Identical strings -> 0
 - Completely different strings of same length -> length (all replacements)
@@ -581,21 +598,21 @@ def minDistance(word1: str, word2: str) -> int:
 
 ## Summary Table
 
-| # | Problem | Difficulty | Pattern | Time | Space |
-|---|---------|-----------|---------|------|-------|
-| 70 | Climbing Stairs | Easy | Linear DP (Fibonacci) | O(n) | O(1) |
-| 198 | House Robber | Medium | Linear DP (include/exclude) | O(n) | O(1) |
-| 213 | House Robber II | Medium | Circular -> two linear | O(n) | O(1) |
-| 5 | Longest Palindromic Substring | Medium | Expand Around Center | O(n^2) | O(1) |
-| 322 | Coin Change | Medium | Unbounded Knapsack | O(amount * coins) | O(amount) |
-| 139 | Word Break | Medium | String DP | O(n * m) | O(n) |
-| 300 | Longest Increasing Subsequence | Medium | Patience Sort + Binary Search | O(n log n) | O(n) |
-| 62 | Unique Paths | Medium | Grid DP | O(m * n) | O(n) |
-| 53 | Maximum Subarray | Medium | Kadane's Algorithm | O(n) | O(1) |
-| 55 | Jump Game | Medium | Greedy | O(n) | O(1) |
-| 91 | Decode Ways | Medium | Linear DP | O(n) | O(1) |
-| 416 | Partition Equal Subset Sum | Medium | 0/1 Knapsack | O(n * target) | O(target) |
-| 72 | Edit Distance | Medium | 2D String DP | O(m * n) | O(min(m,n)) |
+| #   | Problem                        | Difficulty | Pattern                       | Time               | Space       |
+| --- | ------------------------------ | ---------- | ----------------------------- | ------------------ | ----------- |
+| 70  | Climbing Stairs                | Easy       | Linear DP (Fibonacci)         | O(n)               | O(1)        |
+| 198 | House Robber                   | Medium     | Linear DP (include/exclude)   | O(n)               | O(1)        |
+| 213 | House Robber II                | Medium     | Circular -> two linear        | O(n)               | O(1)        |
+| 5   | Longest Palindromic Substring  | Medium     | Expand Around Center          | O(n^2)             | O(1)        |
+| 322 | Coin Change                    | Medium     | Unbounded Knapsack            | O(amount \* coins) | O(amount)   |
+| 139 | Word Break                     | Medium     | String DP                     | O(n \* m)          | O(n)        |
+| 300 | Longest Increasing Subsequence | Medium     | Patience Sort + Binary Search | O(n log n)         | O(n)        |
+| 62  | Unique Paths                   | Medium     | Grid DP                       | O(m \* n)          | O(n)        |
+| 53  | Maximum Subarray               | Medium     | Kadane's Algorithm            | O(n)               | O(1)        |
+| 55  | Jump Game                      | Medium     | Greedy                        | O(n)               | O(1)        |
+| 91  | Decode Ways                    | Medium     | Linear DP                     | O(n)               | O(1)        |
+| 416 | Partition Equal Subset Sum     | Medium     | 0/1 Knapsack                  | O(n \* target)     | O(target)   |
+| 72  | Edit Distance                  | Medium     | 2D String DP                  | O(m \* n)          | O(min(m,n)) |
 
 ## Key Takeaways
 

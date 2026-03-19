@@ -199,18 +199,18 @@ The programmable routing network consumes roughly 50-60% of the FPGA die area. I
 
 ### 12.1.6 FPGA vs CPU vs GPU vs ASIC
 
-| Feature         | CPU             | GPU              | FPGA              | ASIC              |
-|-----------------|-----------------|------------------|--------------------|-------------------|
-| Architecture    | Sequential +    | SIMT, thousands  | Reconfigurable     | Fixed-function    |
-|                 | superscalar     | of cores         | logic fabric       | custom circuit    |
-| Programming     | C/C++, Rust     | CUDA, OpenCL     | Verilog/VHDL, HLS  | Verilog/VHDL      |
-| Clock Speed     | 3-6 GHz         | 1-2.5 GHz        | 200-900 MHz        | Up to 5+ GHz     |
-| Parallelism     | 8-128 cores     | 1000s SMs        | Fully custom        | Fully custom      |
-| Reconfigurable  | Yes (software)  | Yes (software)   | Yes (bitstream)     | No (fixed)        |
-| Time to Market  | Days            | Days-Weeks       | Weeks-Months        | 1-3 years         |
-| Power Eff.      | Low-Medium      | Medium            | High                | Highest           |
-| Unit Cost       | $50-$10K        | $200-$40K        | $20-$50K            | $1-$100 (volume)  |
-| NRE Cost        | ~$0             | ~$0              | ~$0                 | $5M-$500M         |
+| Feature        | CPU            | GPU             | FPGA              | ASIC             |
+| -------------- | -------------- | --------------- | ----------------- | ---------------- |
+| Architecture   | Sequential +   | SIMT, thousands | Reconfigurable    | Fixed-function   |
+|                | superscalar    | of cores        | logic fabric      | custom circuit   |
+| Programming    | C/C++, Rust    | CUDA, OpenCL    | Verilog/VHDL, HLS | Verilog/VHDL     |
+| Clock Speed    | 3-6 GHz        | 1-2.5 GHz       | 200-900 MHz       | Up to 5+ GHz     |
+| Parallelism    | 8-128 cores    | 1000s SMs       | Fully custom      | Fully custom     |
+| Reconfigurable | Yes (software) | Yes (software)  | Yes (bitstream)   | No (fixed)       |
+| Time to Market | Days           | Days-Weeks      | Weeks-Months      | 1-3 years        |
+| Power Eff.     | Low-Medium     | Medium          | High              | Highest          |
+| Unit Cost      | $50-$10K       | $200-$40K       | $20-$50K          | $1-$100 (volume) |
+| NRE Cost       | ~$0            | ~$0             | ~$0               | $5M-$500M        |
 
 ---
 
@@ -288,14 +288,14 @@ Example: Video Transcoding (H.265 4K)
 
 ### 12.2.4 Key Use Cases
 
-| Domain | Applications |
-|--------|-------------|
-| **Networking & Telecom** | SmartNICs, 5G baseband, packet processing, protocol offload, firewall/DPI |
-| **Finance** | Ultra-low latency trading, risk computation, market data parsing, tick-to-trade < 1us |
-| **Signal Processing** | Radar/sonar, SDR, image processing, audio/video codec, medical imaging |
-| **AI/ML Inference** | INT8/INT4 inference, custom neural networks, transformer acceleration, edge AI |
-| **Data Center** | Database acceleration, compression/crypto, search, Microsoft Catapult |
-| **Embedded/Automotive** | ADAS sensor fusion, motor control, industrial automation, robotics, aerospace |
+| Domain                   | Applications                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| **Networking & Telecom** | SmartNICs, 5G baseband, packet processing, protocol offload, firewall/DPI             |
+| **Finance**              | Ultra-low latency trading, risk computation, market data parsing, tick-to-trade < 1us |
+| **Signal Processing**    | Radar/sonar, SDR, image processing, audio/video codec, medical imaging                |
+| **AI/ML Inference**      | INT8/INT4 inference, custom neural networks, transformer acceleration, edge AI        |
+| **Data Center**          | Database acceleration, compression/crypto, search, Microsoft Catapult                 |
+| **Embedded/Automotive**  | ADAS sensor fusion, motor control, industrial automation, robotics, aerospace         |
 
 ---
 
@@ -334,6 +334,7 @@ endmodule
 ```
 
 Key distinctions:
+
 - **wire**: Represents physical connections. Cannot store state. Driven by `assign` statements or module outputs.
 - **reg**: Represents storage elements. Updated inside `always` blocks. Does NOT necessarily synthesize to a register -- the synthesis tool decides.
 - **assign**: Continuous assignment for combinational logic.
@@ -596,14 +597,14 @@ end architecture rtl;
 
 ### 12.4.2 VHDL vs Verilog Comparison
 
-| Feature | Verilog | VHDL |
-|---------|---------|------|
-| Origin | Gateway Design, 1984 | US DoD, 1983 |
-| Typing | Weakly typed | Strongly typed |
-| Verbosity | Concise (C-like) | Verbose (Ada/Pascal-like) |
-| Case Sensitive | Yes | No |
-| Industry | ASIC, consumer | Aerospace, defense |
-| Modern Version | SystemVerilog | VHDL-2019 |
+| Feature        | Verilog              | VHDL                      |
+| -------------- | -------------------- | ------------------------- |
+| Origin         | Gateway Design, 1984 | US DoD, 1983              |
+| Typing         | Weakly typed         | Strongly typed            |
+| Verbosity      | Concise (C-like)     | Verbose (Ada/Pascal-like) |
+| Case Sensitive | Yes                  | No                        |
+| Industry       | ASIC, consumer       | Aerospace, defense        |
+| Modern Version | SystemVerilog        | VHDL-2019                 |
 
 **SystemVerilog** is the modern evolution of Verilog, adding classes, interfaces, assertions, constrained random verification, and coverage -- it is now the industry standard for ASIC verification.
 
@@ -827,6 +828,7 @@ Your Verilog:                    Synthesized Result:
 ### 12.6.3 Place and Route
 
 After synthesis, the tool must:
+
 1. **Place**: Assign each logic element to a physical CLB location on the chip
 2. **Route**: Connect the placed elements using the programmable routing network
 3. **Optimize**: Iterate to meet timing, area, and power constraints
@@ -867,17 +869,17 @@ Fix: add pipeline stages, reduce logic levels, constrain placement,
 
 ### 12.6.5 Simulation Tools
 
-| Tool        | Type        | Speed     | Accuracy   | Free?  |
-|-------------|-------------|-----------|------------|--------|
-| Verilator   | Open source | Very fast | Cycle-acc. | Yes    |
-| Icarus      | Open source | Moderate  | Event-sim  | Yes    |
-| ModelSim    | Commercial  | Moderate  | Full HDL   | Free*  |
-| Vivado Sim  | Bundled     | Moderate  | Full HDL   | Free** |
-| VCS         | Commercial  | Fast      | Full HDL   | No     |
-| Xcelium     | Commercial  | Fast      | Full HDL   | No     |
+| Tool       | Type        | Speed     | Accuracy   | Free?    |
+| ---------- | ----------- | --------- | ---------- | -------- |
+| Verilator  | Open source | Very fast | Cycle-acc. | Yes      |
+| Icarus     | Open source | Moderate  | Event-sim  | Yes      |
+| ModelSim   | Commercial  | Moderate  | Full HDL   | Free\*   |
+| Vivado Sim | Bundled     | Moderate  | Full HDL   | Free\*\* |
+| VCS        | Commercial  | Fast      | Full HDL   | No       |
+| Xcelium    | Commercial  | Fast      | Full HDL   | No       |
 
-(*) Intel/Altera Starter Edition
-(**) With Vivado WebPACK
+(\*) Intel/Altera Starter Edition
+(\*\*) With Vivado WebPACK
 
 ---
 
@@ -885,19 +887,19 @@ Fix: add pipeline stages, reduce logic levels, constrain placement,
 
 ### 12.7.1 The Full Comparison Matrix
 
-| Metric | GPU | FPGA | ASIC |
-|--------|-----|------|------|
-| Peak TOPS (INT8) | 1000+ | 100-400 | 500-2000+ |
-| Power (typical) | 200-700W | 25-225W | 5-200W |
-| TOPS/Watt (INT8) | 2-5 | 5-20 | 20-100 |
-| Latency | us-ms | ns-us | ns |
-| Deterministic | No | Yes | Yes |
-| Reconfigurable | Software only | Full hardware | No |
-| Dev Time | Days-Weeks | Months | 1-3 years |
-| NRE Cost | ~$0 | ~$0 | $5M-$500M |
-| Unit Cost (1K) | $200-$40K | $50-$50K | $1-$100 |
-| Memory Bandwidth | 1-3 TB/s | 10-100 GB/s | Custom |
-| Ecosystem | Excellent | Moderate | Limited |
+| Metric           | GPU           | FPGA          | ASIC      |
+| ---------------- | ------------- | ------------- | --------- |
+| Peak TOPS (INT8) | 1000+         | 100-400       | 500-2000+ |
+| Power (typical)  | 200-700W      | 25-225W       | 5-200W    |
+| TOPS/Watt (INT8) | 2-5           | 5-20          | 20-100    |
+| Latency          | us-ms         | ns-us         | ns        |
+| Deterministic    | No            | Yes           | Yes       |
+| Reconfigurable   | Software only | Full hardware | No        |
+| Dev Time         | Days-Weeks    | Months        | 1-3 years |
+| NRE Cost         | ~$0           | ~$0           | $5M-$500M |
+| Unit Cost (1K)   | $200-$40K     | $50-$50K      | $1-$100   |
+| Memory Bandwidth | 1-3 TB/s      | 10-100 GB/s   | Custom    |
+| Ecosystem        | Excellent     | Moderate      | Limited   |
 
 ### 12.7.2 When to Use Each
 
@@ -925,16 +927,16 @@ Decision Tree:
 
 ### 12.7.3 Concrete Examples
 
-| Workload | Best Choice | Reasoning |
-|----------|-------------|-----------|
-| Training GPT-4 scale model | GPU | Massive parallelism + ecosystem |
-| HFT order execution | FPGA | Sub-us latency |
-| Bitcoin mining | ASIC | Single hash function, massive volume |
-| 5G baseband processing | ASIC/FPGA | Real-time + volume |
-| Edge camera AI inference | FPGA | Power + latency |
-| Datacenter AI inference | GPU/ASIC | Throughput |
-| Network packet inspection | FPGA | Line-rate + flexibility |
-| Prototyping new chip design | FPGA | Reconfigurability |
+| Workload                    | Best Choice | Reasoning                            |
+| --------------------------- | ----------- | ------------------------------------ |
+| Training GPT-4 scale model  | GPU         | Massive parallelism + ecosystem      |
+| HFT order execution         | FPGA        | Sub-us latency                       |
+| Bitcoin mining              | ASIC        | Single hash function, massive volume |
+| 5G baseband processing      | ASIC/FPGA   | Real-time + volume                   |
+| Edge camera AI inference    | FPGA        | Power + latency                      |
+| Datacenter AI inference     | GPU/ASIC    | Throughput                           |
+| Network packet inspection   | FPGA        | Line-rate + flexibility              |
+| Prototyping new chip design | FPGA        | Reconfigurability                    |
 
 ---
 
@@ -1130,11 +1132,11 @@ Precision vs Resources on FPGA:
 
 Amazon's EC2 F1 instances provide Xilinx VU9P FPGAs on demand:
 
-| Instance | FPGAs | vCPUs | RAM |
-|----------|-------|-------|-----|
-| f1.2xlarge | 1x VU9P | 8 | 122 GB |
-| f1.4xlarge | 2x VU9P | 16 | 244 GB |
-| f1.16xlarge | 8x VU9P | 64 | 976 GB |
+| Instance    | FPGAs   | vCPUs | RAM    |
+| ----------- | ------- | ----- | ------ |
+| f1.2xlarge  | 1x VU9P | 8     | 122 GB |
+| f1.4xlarge  | 2x VU9P | 16    | 244 GB |
+| f1.16xlarge | 8x VU9P | 64    | 976 GB |
 
 Each VU9P: 2.6M LUTs, 5.2M FFs, 6,840 DSPs, 75.9 Mb BRAM, 270 Mb UltraRAM, 4x DDR4 (64 GB), PCIe Gen3 x16.
 
@@ -1216,12 +1218,12 @@ int main() {
 
 ### 12.9.4 Azure and Other Cloud FPGAs
 
-| Provider | Service | FPGA | Notes |
-|----------|---------|------|-------|
-| AWS | EC2 F1 | Xilinx VU9P | Most mature offering |
-| Azure | Project Catapult | Intel Stratix 10 | Internal use (Bing, networking, AI) |
-| Alibaba | F3 instances | Xilinx VU9P | Available in China regions |
-| Nimbix | FPGA Cloud | Various | HPC-focused |
+| Provider | Service          | FPGA             | Notes                               |
+| -------- | ---------------- | ---------------- | ----------------------------------- |
+| AWS      | EC2 F1           | Xilinx VU9P      | Most mature offering                |
+| Azure    | Project Catapult | Intel Stratix 10 | Internal use (Bing, networking, AI) |
+| Alibaba  | F3 instances     | Xilinx VU9P      | Available in China regions          |
+| Nimbix   | FPGA Cloud       | Various          | HPC-focused                         |
 
 Microsoft uses FPGAs internally (Catapult/Brainwave) for Bing search ranking, Azure networking (SmartNIC), and AI inference, but public Azure FPGA instances have been limited.
 
@@ -1563,14 +1565,14 @@ Apple M4 SoC:
 
 ### 12.11.5 Other Notable Custom Accelerators
 
-| Company | Chip | Focus | Notable Feature |
-|---------|------|-------|-----------------|
-| NVIDIA | H100/B200 | AI Training | Transformer Engine |
-| Google | TPU v5p | AI Training | 3D Torus ICI |
-| Tesla | Dojo D1 | Video training | Custom mesh network |
-| Cerebras | WSE-3 | AI Training | Wafer-scale chip |
-| Groq | LPU | AI Inference | Deterministic execution |
-| AWS | Trainium2/Inferentia2 | AI Training/Inference | Cloud-native |
+| Company  | Chip                  | Focus                 | Notable Feature         |
+| -------- | --------------------- | --------------------- | ----------------------- |
+| NVIDIA   | H100/B200             | AI Training           | Transformer Engine      |
+| Google   | TPU v5p               | AI Training           | 3D Torus ICI            |
+| Tesla    | Dojo D1               | Video training        | Custom mesh network     |
+| Cerebras | WSE-3                 | AI Training           | Wafer-scale chip        |
+| Groq     | LPU                   | AI Inference          | Deterministic execution |
+| AWS      | Trainium2/Inferentia2 | AI Training/Inference | Cloud-native            |
 
 ---
 
@@ -1639,12 +1641,12 @@ HBM is a 3D-stacked DRAM technology that provides massive bandwidth in a compact
 
 ### 12.12.3 Advanced Packaging Technologies
 
-| Technology | Bandwidth | Latency | Example Users |
-|-----------|-----------|---------|---------------|
-| **2D Side-by-Side** | 10-100 GB/s | ~10-20 ns | Traditional multi-chip |
-| **2.5D Interposer** | 100+ GB/s | ~2-5 ns | AMD MI300, NVIDIA H100 |
-| **3D Stacking (TSV)** | 1+ TB/s | ~1 ns | AMD 3D V-Cache, HBM |
-| **EMIB (Intel)** | ~100 GB/s | ~5 ns | Intel Ponte Vecchio |
+| Technology            | Bandwidth   | Latency   | Example Users          |
+| --------------------- | ----------- | --------- | ---------------------- |
+| **2D Side-by-Side**   | 10-100 GB/s | ~10-20 ns | Traditional multi-chip |
+| **2.5D Interposer**   | 100+ GB/s   | ~2-5 ns   | AMD MI300, NVIDIA H100 |
+| **3D Stacking (TSV)** | 1+ TB/s     | ~1 ns     | AMD 3D V-Cache, HBM    |
+| **EMIB (Intel)**      | ~100 GB/s   | ~5 ns     | Intel Ponte Vecchio    |
 
 2.5D uses a silicon interposer to connect dies at high bandwidth. 3D stacking places dies directly on top of each other using through-silicon vias (TSVs) but has thermal challenges. Intel's EMIB embeds small silicon bridges in the substrate, avoiding a full interposer.
 

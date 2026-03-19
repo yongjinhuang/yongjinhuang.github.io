@@ -12,6 +12,7 @@ state, write the recurrence, and choose between top-down (memoization) and botto
 ### 1.1 How to Identify a DP Problem
 
 A problem is likely DP if:
+
 1. It asks for the **optimum** (min, max, longest, shortest) or **count** of ways
 2. You can break it into **overlapping subproblems**
 3. A greedy approach does not work (local optimum != global optimum)
@@ -19,13 +20,13 @@ A problem is likely DP if:
 
 ### 1.2 Top-Down (Memoization) vs Bottom-Up (Tabulation)
 
-| Aspect | Top-Down | Bottom-Up |
-|--------|----------|-----------|
-| Approach | Recursion + cache | Iterative, fill table |
-| Ease of writing | More intuitive | Requires careful ordering |
-| Space optimization | Harder | Easier to reduce |
-| Stack overflow risk | Yes (deep recursion) | No |
-| Subproblems computed | Only what's needed | All subproblems |
+| Aspect               | Top-Down             | Bottom-Up                 |
+| -------------------- | -------------------- | ------------------------- |
+| Approach             | Recursion + cache    | Iterative, fill table     |
+| Ease of writing      | More intuitive       | Requires careful ordering |
+| Space optimization   | Harder               | Easier to reduce          |
+| Stack overflow risk  | Yes (deep recursion) | No                        |
+| Subproblems computed | Only what's needed   | All subproblems           |
 
 **Top-down template:**
 
@@ -320,6 +321,7 @@ def unique_paths(m: int, n: int) -> int:
 
 **State:** `dp[i][j]` = LCS length of `text1[0..i-1]` and `text2[0..j-1]`.
 **Recurrence:**
+
 - If `text1[i-1] == text2[j-1]`: `dp[i][j] = dp[i-1][j-1] + 1`
 - Else: `dp[i][j] = max(dp[i-1][j], dp[i][j-1])`
 
@@ -491,47 +493,52 @@ def matrix_chain_order(dimensions: list[int]) -> int:
 
 ## 5. Common Interview Questions
 
-| # | Problem | Difficulty | Category | State Definition |
-|---|---------|-----------|----------|------------------|
-| 1 | Climbing Stairs | Easy | 1D | `dp[i]` = ways to reach step i |
-| 2 | House Robber | Medium | 1D | `dp[i]` = max rob from 0..i |
-| 3 | Coin Change | Medium | 1D | `dp[a]` = min coins for amount a |
-| 4 | Longest Increasing Subsequence | Medium | 1D | `dp[i]` = LIS ending at i |
-| 5 | Word Break | Medium | 1D | `dp[i]` = can segment s[0..i-1] |
-| 6 | Unique Paths | Medium | 2D | `dp[r][c]` = paths to (r,c) |
-| 7 | Longest Common Subsequence | Medium | 2D | `dp[i][j]` = LCS of prefixes |
-| 8 | Edit Distance | Medium | 2D | `dp[i][j]` = min ops for prefixes |
-| 9 | 0/1 Knapsack | Medium | 2D | `dp[i][w]` = max value with capacity w |
-| 10 | House Robber II | Medium | 1D | Circular: run twice excluding endpoints |
-| 11 | Decode Ways | Medium | 1D | `dp[i]` = decodings of s[0..i-1] |
-| 12 | Burst Balloons | Hard | Interval | `dp[l][r]` = max coins in (l,r) |
+| #   | Problem                        | Difficulty | Category | State Definition                        |
+| --- | ------------------------------ | ---------- | -------- | --------------------------------------- |
+| 1   | Climbing Stairs                | Easy       | 1D       | `dp[i]` = ways to reach step i          |
+| 2   | House Robber                   | Medium     | 1D       | `dp[i]` = max rob from 0..i             |
+| 3   | Coin Change                    | Medium     | 1D       | `dp[a]` = min coins for amount a        |
+| 4   | Longest Increasing Subsequence | Medium     | 1D       | `dp[i]` = LIS ending at i               |
+| 5   | Word Break                     | Medium     | 1D       | `dp[i]` = can segment s[0..i-1]         |
+| 6   | Unique Paths                   | Medium     | 2D       | `dp[r][c]` = paths to (r,c)             |
+| 7   | Longest Common Subsequence     | Medium     | 2D       | `dp[i][j]` = LCS of prefixes            |
+| 8   | Edit Distance                  | Medium     | 2D       | `dp[i][j]` = min ops for prefixes       |
+| 9   | 0/1 Knapsack                   | Medium     | 2D       | `dp[i][w]` = max value with capacity w  |
+| 10  | House Robber II                | Medium     | 1D       | Circular: run twice excluding endpoints |
+| 11  | Decode Ways                    | Medium     | 1D       | `dp[i]` = decodings of s[0..i-1]        |
+| 12  | Burst Balloons                 | Hard       | Interval | `dp[l][r]` = max coins in (l,r)         |
 
 ---
 
 ## 6. Gotchas
 
 ### 6.1 Identifying DP vs Greedy
+
 - DP: "minimum number of coins to make amount" (coin change) -- greedy fails for [1,3,4] target=6
 - Greedy: "minimum number of intervals to remove for no overlap" -- greedy works
 - **Test:** If the locally optimal choice doesn't guarantee globally optimal, use DP.
 
 ### 6.2 State Definition Mistakes
+
 - Missing a dimension: if the answer depends on index AND remaining capacity, you need 2D.
 - Overcounting: ensure states are unique and non-overlapping.
 - Wrong base case: double-check what `dp[0]` represents.
 
 ### 6.3 Iteration Order
+
 - Bottom-up: ensure all dependencies are computed before the current cell.
 - 0/1 knapsack: iterate **backward** over capacity to prevent using an item twice.
 - Unbounded knapsack: iterate **forward** over capacity.
 - 2D: typically left-to-right, top-to-bottom.
 
 ### 6.4 Space Optimization
+
 - Most 2D DP only depends on the previous row: reduce to O(n) with two rows.
 - Some 1D DP only depends on the last 2 values: reduce to O(1).
 - Beware: space optimization makes backtracking (recovering the actual solution) harder.
 
 ### 6.5 Python-Specific
+
 - `@lru_cache(maxsize=None)` for memoization. Remember to call `.cache_clear()` if needed.
 - `float('inf')` for initialization (not `sys.maxsize` -- avoids overflow in comparisons).
 - For large DP tables, consider using `array` module or numpy for memory efficiency.
@@ -541,14 +548,14 @@ def matrix_chain_order(dimensions: list[int]) -> int:
 
 ## 7. Quick Reference
 
-| Pattern | When to Use | State | Recurrence Shape | Space |
-|---------|-------------|-------|-----------------|-------|
-| Fibonacci-style | Sequential decisions | `dp[i]` | `dp[i] = f(dp[i-1], dp[i-2])` | O(1) |
-| Coin change | Unbounded choices | `dp[amount]` | `dp[a] = min(dp[a-coin]+1)` | O(amount) |
-| 0/1 Knapsack | Take/skip with constraint | `dp[i][w]` | `max(skip, take)` | O(n*W) or O(W) |
-| LCS | Two sequences | `dp[i][j]` | Match or skip | O(m*n) or O(n) |
-| Edit distance | String transformation | `dp[i][j]` | `min(ins, del, rep)` | O(m*n) or O(n) |
-| LIS | Longest subsequence | `dp[i]` or tails array | `max(dp[j]+1)` or bisect | O(n^2) or O(nlogn) |
-| Grid paths | 2D grid traversal | `dp[r][c]` | `dp[r-1][c] + dp[r][c-1]` | O(m*n) or O(n) |
-| Interval DP | Ranges, merge cost | `dp[l][r]` | `dp[l][k] + dp[k][r] + cost` | O(n^2) |
-| Bitmask DP | Subsets, permutations | `dp[mask]` | `dp[mask \| (1<<i)]` | O(2^n) |
+| Pattern         | When to Use               | State                  | Recurrence Shape              | Space              |
+| --------------- | ------------------------- | ---------------------- | ----------------------------- | ------------------ |
+| Fibonacci-style | Sequential decisions      | `dp[i]`                | `dp[i] = f(dp[i-1], dp[i-2])` | O(1)               |
+| Coin change     | Unbounded choices         | `dp[amount]`           | `dp[a] = min(dp[a-coin]+1)`   | O(amount)          |
+| 0/1 Knapsack    | Take/skip with constraint | `dp[i][w]`             | `max(skip, take)`             | O(n\*W) or O(W)    |
+| LCS             | Two sequences             | `dp[i][j]`             | Match or skip                 | O(m\*n) or O(n)    |
+| Edit distance   | String transformation     | `dp[i][j]`             | `min(ins, del, rep)`          | O(m\*n) or O(n)    |
+| LIS             | Longest subsequence       | `dp[i]` or tails array | `max(dp[j]+1)` or bisect      | O(n^2) or O(nlogn) |
+| Grid paths      | 2D grid traversal         | `dp[r][c]`             | `dp[r-1][c] + dp[r][c-1]`     | O(m\*n) or O(n)    |
+| Interval DP     | Ranges, merge cost        | `dp[l][r]`             | `dp[l][k] + dp[k][r] + cost`  | O(n^2)             |
+| Bitmask DP      | Subsets, permutations     | `dp[mask]`             | `dp[mask \| (1<<i)]`          | O(2^n)             |

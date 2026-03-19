@@ -57,12 +57,14 @@ All checks must pass before the PR can be merged. This is enforced by branch pro
 ### 5. Deployment
 
 **Staging (Pre-Production):**
+
 1. Artifacts are deployed to a staging environment that mirrors production
 2. QA team (or automated E2E tests) verifies everything works
 3. Performance testing may happen here
 4. If issues are found, the pipeline stops — fix and retry
 
 **Production:**
+
 1. After staging approval, artifacts are deployed to production
 2. Deployment strategy is executed (see Common Patterns below)
 3. Health checks verify the new version is serving traffic correctly
@@ -77,26 +79,26 @@ All checks must pass before the PR can be merged. This is enforced by branch pro
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **CI** | Continuous Integration — automatically testing code on every push |
-| **CD** | Continuous Deployment/Delivery — automatically deploying code after CI passes |
-| **Pipeline** | The sequence of automated steps from code to production |
-| **Artifact** | The built output (Docker image, compiled binary, bundled JS) |
-| **Branch Protection** | Rules that prevent merging unless checks pass and reviews are approved |
-| **Feature Branch** | A branch created for a specific feature or fix, merged back when done |
-| **Trunk-Based Development** | Everyone commits to main/trunk with short-lived branches. Favors small, frequent merges |
-| **GitFlow** | A branching strategy with develop, feature, release, and hotfix branches. More complex |
-| **Blue-Green Deployment** | Two identical environments. Deploy to the idle one, then switch traffic |
-| **Canary Deployment** | Deploy to a small percentage of users first. If metrics are good, roll out to everyone |
-| **Rolling Deployment** | Gradually replace old instances with new ones, one at a time |
-| **Rollback** | Reverting to a previous version when something goes wrong |
-| **Environment** | A separate instance of your app (development, staging, production) |
-| **Infrastructure as Code (IaC)** | Defining infrastructure (servers, databases, networks) in code (Terraform, CloudFormation) |
-| **SLA** | Service Level Agreement — the promised uptime (e.g., 99.9% = max 8.7 hours downtime/year) |
-| **MTTR** | Mean Time To Recovery — how quickly you recover from incidents |
-| **Hotfix** | An urgent fix deployed outside the normal release cycle |
-| **Feature Flag** | A toggle that enables/disables features without deploying. See [Feature Flags](19-FEATURE-FLAGS.md) |
+| Term                             | What It Means                                                                                       |
+| -------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **CI**                           | Continuous Integration — automatically testing code on every push                                   |
+| **CD**                           | Continuous Deployment/Delivery — automatically deploying code after CI passes                       |
+| **Pipeline**                     | The sequence of automated steps from code to production                                             |
+| **Artifact**                     | The built output (Docker image, compiled binary, bundled JS)                                        |
+| **Branch Protection**            | Rules that prevent merging unless checks pass and reviews are approved                              |
+| **Feature Branch**               | A branch created for a specific feature or fix, merged back when done                               |
+| **Trunk-Based Development**      | Everyone commits to main/trunk with short-lived branches. Favors small, frequent merges             |
+| **GitFlow**                      | A branching strategy with develop, feature, release, and hotfix branches. More complex              |
+| **Blue-Green Deployment**        | Two identical environments. Deploy to the idle one, then switch traffic                             |
+| **Canary Deployment**            | Deploy to a small percentage of users first. If metrics are good, roll out to everyone              |
+| **Rolling Deployment**           | Gradually replace old instances with new ones, one at a time                                        |
+| **Rollback**                     | Reverting to a previous version when something goes wrong                                           |
+| **Environment**                  | A separate instance of your app (development, staging, production)                                  |
+| **Infrastructure as Code (IaC)** | Defining infrastructure (servers, databases, networks) in code (Terraform, CloudFormation)          |
+| **SLA**                          | Service Level Agreement — the promised uptime (e.g., 99.9% = max 8.7 hours downtime/year)           |
+| **MTTR**                         | Mean Time To Recovery — how quickly you recover from incidents                                      |
+| **Hotfix**                       | An urgent fix deployed outside the normal release cycle                                             |
+| **Feature Flag**                 | A toggle that enables/disables features without deploying. See [Feature Flags](19-FEATURE-FLAGS.md) |
 
 ## Common Patterns
 
@@ -158,12 +160,12 @@ No servers to manage. Build static assets, deploy to a CDN.
 
 ## Quick Reference
 
-| Scenario | Recommended Strategy |
-|----------|---------------------|
-| Small team, simple app | Push to main → auto-deploy to production |
-| Growing team | Feature branches + PR reviews + staging environment |
-| Large team, critical app | Canary deployment + feature flags + automated rollback |
-| Static site / JAMstack | Push to main → build → deploy to CDN |
-| Mobile app | CI/CD + TestFlight/Play Console + phased rollout |
-| Breaking change | Feature flag to decouple deploy from release |
-| Database change | Run migration separately, ensure backward compatibility |
+| Scenario                 | Recommended Strategy                                    |
+| ------------------------ | ------------------------------------------------------- |
+| Small team, simple app   | Push to main → auto-deploy to production                |
+| Growing team             | Feature branches + PR reviews + staging environment     |
+| Large team, critical app | Canary deployment + feature flags + automated rollback  |
+| Static site / JAMstack   | Push to main → build → deploy to CDN                    |
+| Mobile app               | CI/CD + TestFlight/Play Console + phased rollout        |
+| Breaking change          | Feature flag to decouple deploy from release            |
+| Database change          | Run migration separately, ensure backward compatibility |

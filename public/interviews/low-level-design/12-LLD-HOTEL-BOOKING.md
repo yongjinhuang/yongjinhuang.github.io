@@ -27,24 +27,24 @@ cancellation policies, and dynamic pricing.
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Room types | Single, Double, Suite, Deluxe with different capacities |
-| F2 | Search availability | Find available rooms for a date range and room type |
-| F3 | Make reservation | Book a room with guest details and dates |
-| F4 | Reservation lifecycle | Pending -> Confirmed -> CheckedIn -> CheckedOut / Cancelled |
-| F5 | Pricing | Base rate, seasonal pricing, weekend surcharge, dynamic pricing |
-| F6 | Cancellation | Free cancellation window, penalties after cutoff |
-| F7 | Guest management | Store guest info, track booking history |
-| F8 | Payment | Deposit on booking, full payment at checkout, refund on cancel |
+| #   | Requirement           | Details                                                         |
+| --- | --------------------- | --------------------------------------------------------------- |
+| F1  | Room types            | Single, Double, Suite, Deluxe with different capacities         |
+| F2  | Search availability   | Find available rooms for a date range and room type             |
+| F3  | Make reservation      | Book a room with guest details and dates                        |
+| F4  | Reservation lifecycle | Pending -> Confirmed -> CheckedIn -> CheckedOut / Cancelled     |
+| F5  | Pricing               | Base rate, seasonal pricing, weekend surcharge, dynamic pricing |
+| F6  | Cancellation          | Free cancellation window, penalties after cutoff                |
+| F7  | Guest management      | Store guest info, track booking history                         |
+| F8  | Payment               | Deposit on booking, full payment at checkout, refund on cancel  |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
-| NF1 | Thread-safe room allocation (no double-booking) |
+| #   | Requirement                                              |
+| --- | -------------------------------------------------------- |
+| NF1 | Thread-safe room allocation (no double-booking)          |
 | NF2 | Extensible pricing without modifying existing strategies |
-| NF3 | Efficient availability queries across date ranges |
+| NF3 | Efficient availability queries across date ranges        |
 
 ### Clarifying Questions to Ask
 
@@ -140,14 +140,14 @@ cancellation policies, and dynamic pricing.
 
 **Transitions:**
 
-| From | Event | To | Action |
-|------|-------|----|--------|
-| PENDING | Deposit paid | CONFIRMED | Record payment |
-| PENDING | Cancel | CANCELLED | Full refund |
-| CONFIRMED | Guest arrives | CHECKED_IN | Verify identity |
-| CONFIRMED | Cancel | CANCELLED | Refund per cancellation policy |
-| CHECKED_IN | Guest departs | CHECKED_OUT | Charge remaining balance |
-| CHECKED_IN | Cancel | Not allowed | Must check out instead |
+| From       | Event         | To          | Action                         |
+| ---------- | ------------- | ----------- | ------------------------------ |
+| PENDING    | Deposit paid  | CONFIRMED   | Record payment                 |
+| PENDING    | Cancel        | CANCELLED   | Full refund                    |
+| CONFIRMED  | Guest arrives | CHECKED_IN  | Verify identity                |
+| CONFIRMED  | Cancel        | CANCELLED   | Refund per cancellation policy |
+| CHECKED_IN | Guest departs | CHECKED_OUT | Charge remaining balance       |
+| CHECKED_IN | Cancel        | Not allowed | Must check out instead         |
 
 ---
 

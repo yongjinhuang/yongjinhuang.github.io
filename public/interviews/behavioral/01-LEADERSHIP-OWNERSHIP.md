@@ -18,12 +18,12 @@ Leadership in engineering is not about having a manager title. Interviewers are 
 
 ### Level Expectations
 
-| Level | Leadership Signal |
-|-------|------------------|
-| Junior (L3/E3) | Takes ownership of assigned tasks, asks for help appropriately, follows through |
-| Mid (L4/E4) | Identifies problems and proposes solutions, drives small projects independently |
-| Senior (L5/E5) | Drives cross-team initiatives, influences technical direction, mentors others |
-| Staff (L6/E6) | Sets org-wide technical strategy, builds consensus across teams, anticipates future needs |
+| Level          | Leadership Signal                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| Junior (L3/E3) | Takes ownership of assigned tasks, asks for help appropriately, follows through           |
+| Mid (L4/E4)    | Identifies problems and proposes solutions, drives small projects independently           |
+| Senior (L5/E5) | Drives cross-team initiatives, influences technical direction, mentors others             |
+| Staff (L6/E6)  | Sets org-wide technical strategy, builds consensus across teams, anticipates future needs |
 
 ---
 
@@ -60,6 +60,7 @@ Make your decision to step up explicit. Show that you chose to act, not that som
 
 **Action:**
 This is where you demonstrate leadership behaviors:
+
 - How you assessed the situation
 - How you rallied others
 - How you made decisions
@@ -94,6 +95,7 @@ Quantify the impact and acknowledge others' contributions while being clear abou
 "Deployment time dropped from two hours to eight minutes. We went from one deployment-related incident per month to zero over the next four months. The team's deployment frequency increased from twice a week to daily. Our CTO mentioned the CI/CD pipeline as a key factor when we pitched to Series B investors about our engineering maturity. I was promoted to senior engineer at the next review cycle, and the deployment pipeline was cited as a primary reason."
 
 **Why this is strong:**
+
 - Clear gap identification (no one owned it)
 - Voluntary action (not assigned)
 - Incremental approach showing judgment
@@ -120,6 +122,7 @@ Quantify the impact and acknowledge others' contributions while being clear abou
 "The team unanimously chose the open-source library approach. We shipped the dashboard six weeks ahead of the original schedule. The time we saved allowed us to add two features that customers had been requesting: export-to-PDF and real-time data refresh. Our PM later told me that this was a turning point in how she thought about build-vs-buy decisions. She started requiring prototype comparisons for any project estimated at over two weeks."
 
 **Why this is strong:**
+
 - Did not just complain; built evidence
 - Respected others' perspectives
 - Used data and prototypes, not just opinions
@@ -145,6 +148,7 @@ Quantify the impact and acknowledge others' contributions while being clear abou
 "We completed the migration in six weeks, well within the 90-day deadline. The new API version actually improved our search latency by 20%. The structured decision document became a template that our team used for future vendor decisions. When I look back, the key learning was that 80% of the information gathered in the first two days was sufficient to make a good decision. Waiting for the remaining 20% would have cost us three weeks and added unnecessary pressure to the timeline."
 
 **Why this is strong:**
+
 - Shows comfort with ambiguity
 - Structured approach to reducing uncertainty
 - Parallel information gathering (efficient)
@@ -163,6 +167,7 @@ Quantify the impact and acknowledge others' contributions while being clear abou
 > "We had a big project to redesign the homepage. We all worked really hard on it. We had meetings every day and we divided up the work. It turned out great and the stakeholders were happy."
 
 **Why this is weak:**
+
 - No "I" statements at all. Every sentence uses "we."
 - No specific actions described.
 - No measurable results ("turned out great" is not quantifiable).
@@ -176,6 +181,7 @@ Quantify the impact and acknowledge others' contributions while being clear abou
 > "Our codebase was really messy. There was no documentation, the tests were flaky, and the build took 45 minutes. It had been like that for over a year. Everyone on the team complained about it. The previous tech lead had tried to fix it but left the company. It was really frustrating because it slowed down every feature we tried to build."
 
 **Why this is weak:**
+
 - Three-quarters of the answer is describing the problem.
 - No actions taken, no decisions made.
 - Ends with the frustration, not a resolution.
@@ -188,6 +194,7 @@ Quantify the impact and acknowledge others' contributions while being clear abou
 > "I single-handedly redesigned our entire microservices architecture. I made all the technical decisions. I wrote all the code. I deployed it myself. I even wrote the documentation. Nobody else was involved. It was a complete success because of my effort."
 
 **Why this is weak:**
+
 - Not believable. No significant project is a one-person show.
 - Shows zero collaboration or leadership skills.
 - No mention of challenges or trade-offs.
@@ -247,33 +254,34 @@ Use these templates to draft your own leadership stories. Fill in the brackets w
 
 ### Key Phrases for Leadership Stories
 
-| Use These | Avoid These |
-|-----------|-------------|
-| "I identified..." | "We kind of noticed..." |
-| "I decided to..." | "Someone suggested..." |
-| "I proposed..." | "It was decided..." |
-| "I took responsibility for..." | "I was told to..." |
-| "I drove the team toward..." | "The team worked on..." |
-| "I escalated because..." | "I complained about..." |
-| "I measured the impact by..." | "It went well..." |
+| Use These                                | Avoid These             |
+| ---------------------------------------- | ----------------------- |
+| "I identified..."                        | "We kind of noticed..." |
+| "I decided to..."                        | "Someone suggested..."  |
+| "I proposed..."                          | "It was decided..."     |
+| "I took responsibility for..."           | "I was told to..."      |
+| "I drove the team toward..."             | "The team worked on..." |
+| "I escalated because..."                 | "I complained about..." |
+| "I measured the impact by..."            | "It went well..."       |
 | "The result was a 30% improvement in..." | "Everyone was happy..." |
 
 ### Do's and Don'ts
 
-| Do | Don't |
-|----|-------|
-| Show you chose to act, not that you were assigned | Start with "my manager asked me to..." |
-| Describe your specific reasoning and decisions | List tasks you completed without explaining why |
-| Quantify results with numbers | Use vague qualifiers like "a lot" or "significantly" |
-| Acknowledge contributions from others | Claim you did everything alone |
-| Show the before/after clearly | Leave the interviewer guessing about the impact |
-| Demonstrate that leadership is repeatable | Tell a one-off hero story with no lasting change |
-| Connect to business outcomes | Stop at the technical outcome |
-| Show what you learned and how you grew | Present yourself as already perfect |
+| Do                                                | Don't                                                |
+| ------------------------------------------------- | ---------------------------------------------------- |
+| Show you chose to act, not that you were assigned | Start with "my manager asked me to..."               |
+| Describe your specific reasoning and decisions    | List tasks you completed without explaining why      |
+| Quantify results with numbers                     | Use vague qualifiers like "a lot" or "significantly" |
+| Acknowledge contributions from others             | Claim you did everything alone                       |
+| Show the before/after clearly                     | Leave the interviewer guessing about the impact      |
+| Demonstrate that leadership is repeatable         | Tell a one-off hero story with no lasting change     |
+| Connect to business outcomes                      | Stop at the technical outcome                        |
+| Show what you learned and how you grew            | Present yourself as already perfect                  |
 
 ### Amazon Leadership Principles Mapping
 
 If interviewing at Amazon, these questions map to:
+
 - **Ownership**: "Leaders never say 'that's not my job.'"
 - **Bias for Action**: Speed matters. Many decisions are reversible.
 - **Deliver Results**: Leaders focus on key inputs and deliver with quality.
@@ -282,4 +290,4 @@ If interviewing at Amazon, these questions map to:
 
 ---
 
-*Next: [02 - Conflict Resolution](./02-CONFLICT-RESOLUTION.md)*
+_Next: [02 - Conflict Resolution](./02-CONFLICT-RESOLUTION.md)_

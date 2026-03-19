@@ -27,6 +27,7 @@ Each layer is faster and closer to the user. Data flows backward (from database 
 5. If expired → request from server again
 
 Controlled by HTTP headers:
+
 - `Cache-Control: max-age=3600` — Cache for 1 hour
 - `Cache-Control: no-cache` — Always check with server before using cache
 - `Cache-Control: no-store` — Never cache (for sensitive data)
@@ -54,23 +55,23 @@ Some databases cache query results internally. PostgreSQL caches recent query pl
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Cache Hit** | Requested data is found in cache. Fast |
-| **Cache Miss** | Data not in cache. Must fetch from the source. Slow |
-| **Hit Rate** | Percentage of requests served from cache. Higher = better (aim for 90%+) |
-| **TTL (Time To Live)** | How long cached data is valid before it expires |
-| **Cache Invalidation** | Removing or updating cached data when the source changes. "The hardest problem in CS" |
-| **Stale Data** | Cached data that's no longer current. The source has changed but the cache hasn't been updated |
-| **Cache-Through** | Application reads from cache; on miss, cache fetches from source and stores it |
-| **Write-Through** | Every write goes to both cache and source simultaneously |
-| **Write-Behind** | Write to cache immediately, sync to source asynchronously (risky — data can be lost) |
-| **Cache Stampede** | When a popular cache entry expires and hundreds of requests hit the database simultaneously |
-| **Cache Warming** | Pre-loading cache with data you expect to be needed (before a traffic spike, during deployment) |
-| **Eviction Policy** | How the cache decides what to remove when it's full (LRU, LFU, FIFO) |
-| **LRU** | Least Recently Used — evicts data that hasn't been accessed in the longest time. Most common policy |
-| **Redis** | An in-memory data store commonly used for application caching |
-| **CDN** | Content Delivery Network — caches static and sometimes dynamic content at edge locations globally |
+| Term                   | What It Means                                                                                       |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
+| **Cache Hit**          | Requested data is found in cache. Fast                                                              |
+| **Cache Miss**         | Data not in cache. Must fetch from the source. Slow                                                 |
+| **Hit Rate**           | Percentage of requests served from cache. Higher = better (aim for 90%+)                            |
+| **TTL (Time To Live)** | How long cached data is valid before it expires                                                     |
+| **Cache Invalidation** | Removing or updating cached data when the source changes. "The hardest problem in CS"               |
+| **Stale Data**         | Cached data that's no longer current. The source has changed but the cache hasn't been updated      |
+| **Cache-Through**      | Application reads from cache; on miss, cache fetches from source and stores it                      |
+| **Write-Through**      | Every write goes to both cache and source simultaneously                                            |
+| **Write-Behind**       | Write to cache immediately, sync to source asynchronously (risky — data can be lost)                |
+| **Cache Stampede**     | When a popular cache entry expires and hundreds of requests hit the database simultaneously         |
+| **Cache Warming**      | Pre-loading cache with data you expect to be needed (before a traffic spike, during deployment)     |
+| **Eviction Policy**    | How the cache decides what to remove when it's full (LRU, LFU, FIFO)                                |
+| **LRU**                | Least Recently Used — evicts data that hasn't been accessed in the longest time. Most common policy |
+| **Redis**              | An in-memory data store commonly used for application caching                                       |
+| **CDN**                | Content Delivery Network — caches static and sometimes dynamic content at edge locations globally   |
 
 ## Common Patterns
 
@@ -134,19 +135,19 @@ This means: "Cache for 60 seconds. After 60 seconds, serve stale while fetching 
 
 ## Quick Reference
 
-| What to Cache | Where | TTL | Invalidation |
-|--------------|-------|-----|-------------|
-| Static assets (CSS, JS, images) | CDN + Browser | Long (1 year) | Filename hashing (new deploy = new filename) |
-| API responses (read-heavy) | Redis/Memcached | 5 min - 1 hour | Invalidate on write |
-| User sessions | Redis | Session duration | Delete on logout |
-| Database query results | Redis | 1 min - 15 min | Invalidate when underlying data changes |
-| HTML pages | CDN | 1 min - 1 hour | Purge on content update |
-| Configuration | Application memory | Until restart | Restart or hot reload |
+| What to Cache                   | Where              | TTL              | Invalidation                                 |
+| ------------------------------- | ------------------ | ---------------- | -------------------------------------------- |
+| Static assets (CSS, JS, images) | CDN + Browser      | Long (1 year)    | Filename hashing (new deploy = new filename) |
+| API responses (read-heavy)      | Redis/Memcached    | 5 min - 1 hour   | Invalidate on write                          |
+| User sessions                   | Redis              | Session duration | Delete on logout                             |
+| Database query results          | Redis              | 1 min - 15 min   | Invalidate when underlying data changes      |
+| HTML pages                      | CDN                | 1 min - 1 hour   | Purge on content update                      |
+| Configuration                   | Application memory | Until restart    | Restart or hot reload                        |
 
-| Problem | Solution |
-|---------|----------|
-| Stale data | Shorter TTL or event-driven invalidation |
-| Cache stampede | Locking or stale-while-revalidate |
-| Cache miss overhead | Cache warming before traffic spikes |
-| Memory pressure | LRU eviction, selective caching |
+| Problem                      | Solution                                   |
+| ---------------------------- | ------------------------------------------ |
+| Stale data                   | Shorter TTL or event-driven invalidation   |
+| Cache stampede               | Locking or stale-while-revalidate          |
+| Cache miss overhead          | Cache warming before traffic spikes        |
+| Memory pressure              | LRU eviction, selective caching            |
 | Inconsistency across regions | Event-based invalidation via message queue |

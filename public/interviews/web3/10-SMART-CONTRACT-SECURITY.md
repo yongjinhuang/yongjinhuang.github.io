@@ -425,14 +425,14 @@ echidna . --contract EchidnaTest --config echidna.yaml
 
 ### 6.5 Tool Comparison
 
-| Tool | Type | Language | Best For |
-|------|------|----------|----------|
-| Slither | Static analysis | Python | Quick vulnerability scan |
-| Mythril | Symbolic execution | Python | Deep bug finding |
-| Echidna | Property fuzzing | Haskell | Invariant testing |
-| Foundry fuzz | Fuzz testing | Rust | Fast fuzzing, integrated |
-| Certora | Formal verification | Certora Prover | Mathematical correctness proofs |
-| Tenderly | Simulation | Cloud | Transaction debugging |
+| Tool         | Type                | Language       | Best For                        |
+| ------------ | ------------------- | -------------- | ------------------------------- |
+| Slither      | Static analysis     | Python         | Quick vulnerability scan        |
+| Mythril      | Symbolic execution  | Python         | Deep bug finding                |
+| Echidna      | Property fuzzing    | Haskell        | Invariant testing               |
+| Foundry fuzz | Fuzz testing        | Rust           | Fast fuzzing, integrated        |
+| Certora      | Formal verification | Certora Prover | Mathematical correctness proofs |
+| Tenderly     | Simulation          | Cloud          | Transaction debugging           |
 
 ---
 

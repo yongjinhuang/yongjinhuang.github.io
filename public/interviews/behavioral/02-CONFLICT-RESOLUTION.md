@@ -59,6 +59,7 @@ Clarify what needed to happen and why the conflict mattered. This is not about w
 
 **Action:**
 This is where you show emotional intelligence and conflict resolution skills:
+
 - How you listened and sought to understand
 - How you de-escalated tension
 - How you moved toward a resolution
@@ -99,6 +100,7 @@ I presented the benchmark data to my colleague and said, 'Your concern about sto
 "We implemented the CRDT approach and launched the collaboration feature on schedule. Offline editing became our most-praised feature in user feedback, with 34% of users reporting they used it regularly. The compaction strategy my colleague improved worked even better than expected, keeping storage overhead under 3%. What I valued most from this experience was that the final solution was better than what either of us had proposed independently. My colleague and I continued to pair on architecture decisions after that, and our 'prototype and benchmark' approach became the team norm for resolving technical disagreements."
 
 **Why this is strong:**
+
 - Acknowledges the other person's expertise and valid concerns
 - Moves the discussion from meetings to a structured 1:1
 - Prepares by understanding the other perspective first
@@ -131,6 +133,7 @@ I also proposed that we add the full real-time search to the next quarter's road
 "We shipped the debounced search in three days, well ahead of the demo. The enterprise demo went well and resulted in a signed contract. The PM thanked me for not just pushing back but offering a solution that met the actual need. She started including me in early requirement discussions for future features, which improved our planning process significantly. We did eventually build the full real-time search the following quarter when we had the time to do it properly."
 
 **Why this is strong:**
+
 - Does not just say "no" but offers an alternative
 - Understands the actual need behind the requirement
 - Brings a working prototype, not just objections
@@ -163,6 +166,7 @@ I set up a joint demo with both teams where the mobile lead tested the optimized
 "The mobile team's load times improved by 85%. Three other consumer teams adopted field selection within the next month, reducing their bandwidth costs. The Slack tension between the teams disappeared. Our engineering director mentioned this in a company all-hands as an example of cross-team collaboration. The experience taught me that many cross-team conflicts come from not fully understanding each other's constraints, and that a small investment in empathy and investigation can prevent weeks of political maneuvering."
 
 **Why this is strong:**
+
 - Takes initiative without being asked
 - Starts by understanding the other team's perspective (literally watching the problem)
 - Finds a root cause that reframes the problem
@@ -181,6 +185,7 @@ I set up a joint demo with both teams where the mobile lead tested the optimized
 > "I tend to get along with everyone. I can't really think of a time I had a serious disagreement. If someone suggests something different from what I think, I usually just go with it to keep the peace. I think teamwork means being flexible."
 
 **Why this is weak:**
+
 - Unbelievable. Everyone has disagreements.
 - Shows conflict avoidance, not resolution.
 - "Keeping the peace" by never voicing opinions is not a strength.
@@ -193,6 +198,7 @@ I set up a joint demo with both teams where the mobile lead tested the optimized
 > "My coworker wanted to use MongoDB for our project, but I knew PostgreSQL was the right choice. I explained to him multiple times why he was wrong. I showed him benchmark after benchmark. Eventually, he came around and we used PostgreSQL. I was right, and the project went fine."
 
 **Why this is weak:**
+
 - Framed as winning vs. losing, not problem-solving.
 - "Showed him why he was wrong" shows poor emotional intelligence.
 - No effort to understand the other person's reasoning.
@@ -206,6 +212,7 @@ I set up a joint demo with both teams where the mobile lead tested the optimized
 > "I had this coworker who was really hard to work with. He was always late to meetings, his code was terrible, and he never listened to feedback. I tried to talk to him, but he was so stubborn. Eventually, I just went to our manager and told her about all the problems. She talked to him, and things got a little better, but honestly, he was just a difficult person."
 
 **Why this is weak:**
+
 - Characterizes the person rather than describing specific behaviors.
 - Shows no self-reflection about your own role.
 - Going straight to the manager without attempting direct resolution is poor form.
@@ -264,27 +271,27 @@ I set up a joint demo with both teams where the mobile lead tested the optimized
 
 ### Key Principles for Conflict Stories
 
-| Principle | What It Looks Like |
-|-----------|-------------------|
-| **Seek to understand first** | "I asked her to walk me through her reasoning" |
-| **Separate person from problem** | "The disagreement was about the approach, not about us" |
-| **Use data over opinions** | "I built a prototype to test both approaches" |
-| **Find the underlying need** | "The real concern was reliability, not the specific technology" |
-| **Preserve the relationship** | "We continued working well together afterward" |
-| **Know when to commit** | "I disagreed, but once the decision was made, I fully supported it" |
-| **Escalate as a last resort** | "I tried to resolve it directly first before involving our manager" |
+| Principle                        | What It Looks Like                                                  |
+| -------------------------------- | ------------------------------------------------------------------- |
+| **Seek to understand first**     | "I asked her to walk me through her reasoning"                      |
+| **Separate person from problem** | "The disagreement was about the approach, not about us"             |
+| **Use data over opinions**       | "I built a prototype to test both approaches"                       |
+| **Find the underlying need**     | "The real concern was reliability, not the specific technology"     |
+| **Preserve the relationship**    | "We continued working well together afterward"                      |
+| **Know when to commit**          | "I disagreed, but once the decision was made, I fully supported it" |
+| **Escalate as a last resort**    | "I tried to resolve it directly first before involving our manager" |
 
 ### Do's and Don'ts
 
-| Do | Don't |
-|----|-------|
-| Acknowledge the other person's valid points | Describe the other person as unreasonable |
-| Show empathy for their position and constraints | Focus only on being right |
-| Describe specific behaviors, not character traits | Say things like "they were difficult" or "stubborn" |
-| Demonstrate active listening | Skip straight to your counterargument |
-| Show how you de-escalated tension | Describe how you "won" the argument |
-| Include the relationship outcome | End the story at the technical resolution |
-| Take responsibility for your part | Blame the conflict entirely on the other person |
+| Do                                                | Don't                                                  |
+| ------------------------------------------------- | ------------------------------------------------------ |
+| Acknowledge the other person's valid points       | Describe the other person as unreasonable              |
+| Show empathy for their position and constraints   | Focus only on being right                              |
+| Describe specific behaviors, not character traits | Say things like "they were difficult" or "stubborn"    |
+| Demonstrate active listening                      | Skip straight to your counterargument                  |
+| Show how you de-escalated tension                 | Describe how you "won" the argument                    |
+| Include the relationship outcome                  | End the story at the technical resolution              |
+| Take responsibility for your part                 | Blame the conflict entirely on the other person        |
 | Show what you learned about handling disagreement | Present yourself as always handling conflict perfectly |
 
 ### Conflict Resolution Escalation Ladder
@@ -309,4 +316,4 @@ Level 5: Disagree and commit (support the decision fully)
 
 ---
 
-*Next: [03 - Technical Decisions](./03-TECHNICAL-DECISIONS.md)*
+_Next: [03 - Technical Decisions](./03-TECHNICAL-DECISIONS.md)_

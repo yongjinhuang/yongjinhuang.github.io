@@ -37,17 +37,17 @@ Concurrency shows up in EVERY interview stage:
 
 ## Table of Contents
 
-| # | File | Topics | Difficulty |
-|---|------|--------|------------|
-| 01 | [Fundamentals](./01-FUNDAMENTALS.md) | Process vs thread vs coroutine, concurrency vs parallelism, Amdahl's law, memory models, OS scheduling | Beginner |
-| 02 | [Synchronization Primitives](./02-SYNCHRONIZATION-PRIMITIVES.md) | Mutex, RLock, Semaphore, Condition, Barrier, Event, ReadWriteLock, spinlock vs mutex, optimistic vs pessimistic | Intermediate |
-| 03 | [Classic Problems](./03-CLASSIC-PROBLEMS.md) | Dining Philosophers, Sleeping Barber, Cigarette Smokers, H2O, LeetCode concurrency problems | Intermediate |
-| 04 | [Deadlock, Livelock & Starvation](./04-DEADLOCK-LIVELOCK-STARVATION.md) | Coffman conditions, detection algorithms, prevention strategies, Banker's algorithm, priority inversion | Intermediate |
-| 05 | [Thread-Safe Data Structures](./05-THREAD-SAFE-DATA-STRUCTURES.md) | Blocking queue, concurrent hashmap, atomic counter, thread-safe singleton, CAS, lock-free stack, concurrent LRU cache | Advanced |
-| 06 | [Async Programming Deep Dive](./06-ASYNC-PROGRAMMING.md) | Event loop internals, structured concurrency, TaskGroup, error handling, backpressure, async pipelines | Advanced |
-| 07 | [Go Concurrency Model](./07-GO-CONCURRENCY.md) | Goroutines, channels, select, sync package, fan-in/fan-out, context, race detector | Advanced |
-| 08 | [Distributed Concurrency](./08-DISTRIBUTED-CONCURRENCY.md) | Distributed locks, optimistic/pessimistic concurrency, 2PC, sagas, CRDTs, leader election | Advanced |
-| 09 | [Interview Questions](./09-INTERVIEW-QUESTIONS.md) | 30 curated questions (Easy/Medium/Hard) with key points, follow-ups, code skeletons | All Levels |
+| #   | File                                                                    | Topics                                                                                                                | Difficulty   |
+| --- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 01  | [Fundamentals](./01-FUNDAMENTALS.md)                                    | Process vs thread vs coroutine, concurrency vs parallelism, Amdahl's law, memory models, OS scheduling                | Beginner     |
+| 02  | [Synchronization Primitives](./02-SYNCHRONIZATION-PRIMITIVES.md)        | Mutex, RLock, Semaphore, Condition, Barrier, Event, ReadWriteLock, spinlock vs mutex, optimistic vs pessimistic       | Intermediate |
+| 03  | [Classic Problems](./03-CLASSIC-PROBLEMS.md)                            | Dining Philosophers, Sleeping Barber, Cigarette Smokers, H2O, LeetCode concurrency problems                           | Intermediate |
+| 04  | [Deadlock, Livelock & Starvation](./04-DEADLOCK-LIVELOCK-STARVATION.md) | Coffman conditions, detection algorithms, prevention strategies, Banker's algorithm, priority inversion               | Intermediate |
+| 05  | [Thread-Safe Data Structures](./05-THREAD-SAFE-DATA-STRUCTURES.md)      | Blocking queue, concurrent hashmap, atomic counter, thread-safe singleton, CAS, lock-free stack, concurrent LRU cache | Advanced     |
+| 06  | [Async Programming Deep Dive](./06-ASYNC-PROGRAMMING.md)                | Event loop internals, structured concurrency, TaskGroup, error handling, backpressure, async pipelines                | Advanced     |
+| 07  | [Go Concurrency Model](./07-GO-CONCURRENCY.md)                          | Goroutines, channels, select, sync package, fan-in/fan-out, context, race detector                                    | Advanced     |
+| 08  | [Distributed Concurrency](./08-DISTRIBUTED-CONCURRENCY.md)              | Distributed locks, optimistic/pessimistic concurrency, 2PC, sagas, CRDTs, leader election                             | Advanced     |
+| 09  | [Interview Questions](./09-INTERVIEW-QUESTIONS.md)                      | 30 curated questions (Easy/Medium/Hard) with key points, follow-ups, code skeletons                                   | All Levels   |
 
 ---
 
@@ -95,7 +95,7 @@ Afternoon: 04-DEADLOCK (Coffman conditions + prevention strategies)
 
 ## How to Use These Files
 
-1. **Read the conceptual explanation first.** Understand *why* before memorizing *how*.
+1. **Read the conceptual explanation first.** Understand _why_ before memorizing _how_.
 2. **Type out the code examples.** Do not copy-paste. Typing builds muscle memory.
 3. **Draw the ASCII diagrams yourself.** Redraw the thread interaction diagrams on paper.
 4. **Solve each problem before reading the solution.** Cover the solution with your hand.

@@ -27,13 +27,13 @@ INCIDENT LIFECYCLE
 
 ### Phase Breakdown
 
-| Phase | Goal | Key Actions | Owner |
-|-------|------|-------------|-------|
-| Detection | Know something is wrong | Alert fires, anomaly detected, user report | Monitoring system / On-call |
-| Triage | Understand blast radius | Confirm real vs. false alarm, assign SEV, open war room | Incident Commander (IC) |
-| Mitigation | Stop the bleeding | Rollback, scale, disable feature flag, reroute traffic | IC + SMEs |
-| Resolution | Restore full service | Verify metrics normal, close incident, draft timeline | IC |
-| Postmortem | Learn and prevent | Timeline reconstruction, 5-whys, action items | Postmortem owner |
+| Phase      | Goal                    | Key Actions                                             | Owner                       |
+| ---------- | ----------------------- | ------------------------------------------------------- | --------------------------- |
+| Detection  | Know something is wrong | Alert fires, anomaly detected, user report              | Monitoring system / On-call |
+| Triage     | Understand blast radius | Confirm real vs. false alarm, assign SEV, open war room | Incident Commander (IC)     |
+| Mitigation | Stop the bleeding       | Rollback, scale, disable feature flag, reroute traffic  | IC + SMEs                   |
+| Resolution | Restore full service    | Verify metrics normal, close incident, draft timeline   | IC                          |
+| Postmortem | Learn and prevent       | Timeline reconstruction, 5-whys, action items           | Postmortem owner            |
 
 ### Time Pressure by Phase
 
@@ -157,15 +157,15 @@ ESCALATION CONTACTS:
 
 ### Burnout Prevention
 
-| Practice | Implementation |
-|----------|----------------|
-| Maximum pages per night | Alert when on-call receives >3 pages/night; review alert quality |
-| Minimum rotation size | Never fewer than 3 engineers; 4-5 is healthy |
-| Compensation | Explicit on-call stipend or comp time policy; document it |
-| Alert hygiene sprints | Quarterly rotation to reduce false alarms; track "actionable page %" |
-| Business-hours escalation | SEV3/SEV4 alerts queue to next business day unless escalated |
-| Guaranteed sleep window | No pages without override between 23:00–07:00 local time |
-| Post-incident recovery | After SEV1: 24h before next on-call shift |
+| Practice                  | Implementation                                                       |
+| ------------------------- | -------------------------------------------------------------------- |
+| Maximum pages per night   | Alert when on-call receives >3 pages/night; review alert quality     |
+| Minimum rotation size     | Never fewer than 3 engineers; 4-5 is healthy                         |
+| Compensation              | Explicit on-call stipend or comp time policy; document it            |
+| Alert hygiene sprints     | Quarterly rotation to reduce false alarms; track "actionable page %" |
+| Business-hours escalation | SEV3/SEV4 alerts queue to next business day unless escalated         |
+| Guaranteed sleep window   | No pages without override between 23:00–07:00 local time             |
+| Post-incident recovery    | After SEV1: 24h before next on-call shift                            |
 
 ---
 
@@ -173,12 +173,12 @@ ESCALATION CONTACTS:
 
 ### SEV Definitions
 
-| Level | Name | Definition | Response SLA | Who Gets Paged |
-|-------|------|------------|--------------|----------------|
-| SEV1 | Critical | Complete service outage or data loss; >25% users affected | Acknowledge: 5 min; Mitigate: 60 min | Primary + Secondary + Engineering Lead + VP Eng |
-| SEV2 | Major | Significant degradation; core feature broken; <25% users affected | Acknowledge: 15 min; Mitigate: 2h | Primary + Secondary + Team Lead |
-| SEV3 | Minor | Non-critical feature broken; workaround exists; <5% users affected | Acknowledge: 30 min; Next business day OK | Primary only |
-| SEV4 | Low | Cosmetic issue, performance slightly degraded, no user impact | Business hours | Primary (queued) |
+| Level | Name     | Definition                                                         | Response SLA                              | Who Gets Paged                                  |
+| ----- | -------- | ------------------------------------------------------------------ | ----------------------------------------- | ----------------------------------------------- |
+| SEV1  | Critical | Complete service outage or data loss; >25% users affected          | Acknowledge: 5 min; Mitigate: 60 min      | Primary + Secondary + Engineering Lead + VP Eng |
+| SEV2  | Major    | Significant degradation; core feature broken; <25% users affected  | Acknowledge: 15 min; Mitigate: 2h         | Primary + Secondary + Team Lead                 |
+| SEV3  | Minor    | Non-critical feature broken; workaround exists; <5% users affected | Acknowledge: 30 min; Next business day OK | Primary only                                    |
+| SEV4  | Low      | Cosmetic issue, performance slightly degraded, no user impact      | Business hours                            | Primary (queued)                                |
 
 ### Escalation Matrix
 
@@ -274,13 +274,13 @@ Next update in 15 minutes.
 
 The IC is the single decision-maker. They do not debug — they direct.
 
-| IC Responsibility | What It Means |
-|-------------------|---------------|
+| IC Responsibility            | What It Means                                               |
+| ---------------------------- | ----------------------------------------------------------- |
 | Declare and own the incident | One person calls the SEV, opens the channel, is accountable |
-| Assign roles | Designate comms lead, scribe, SMEs |
-| Drive mitigation | Ask "what's our next action and ETA?" every 10-15 min |
-| Make go/no-go calls | Authorize rollbacks, traffic shifts, emergency changes |
-| Close the incident | Declare resolution, assign postmortem owner |
+| Assign roles                 | Designate comms lead, scribe, SMEs                          |
+| Drive mitigation             | Ask "what's our next action and ETA?" every 10-15 min       |
+| Make go/no-go calls          | Authorize rollbacks, traffic shifts, emergency changes      |
+| Close the incident           | Declare resolution, assign postmortem owner                 |
 
 ---
 
@@ -320,13 +320,13 @@ WAR ROOM PARTICIPANTS
 
 ### Communication Channels
 
-| Channel | Purpose | Audience |
-|---------|---------|----------|
-| `#inc-YYYYMMDD-description` | Working channel: all technical discussion | Responders only |
-| `#incidents` | Broadcast channel: high-level updates | All engineers |
-| `#customer-success` | Customer impact updates | CS team, support |
-| Status page | Public-facing updates | Customers |
-| Email | Executive and customer comms for SEV1 | Leadership, enterprise customers |
+| Channel                     | Purpose                                   | Audience                         |
+| --------------------------- | ----------------------------------------- | -------------------------------- |
+| `#inc-YYYYMMDD-description` | Working channel: all technical discussion | Responders only                  |
+| `#incidents`                | Broadcast channel: high-level updates     | All engineers                    |
+| `#customer-success`         | Customer impact updates                   | CS team, support                 |
+| Status page                 | Public-facing updates                     | Customers                        |
+| Email                       | Executive and customer comms for SEV1     | Leadership, enterprise customers |
 
 ### War Room Cadence
 
@@ -420,58 +420,70 @@ Links to related runbooks.
 # Application Server — High CPU (>85% for 10 min)
 
 ## Symptoms
+
 - Alert: app_cpu_utilization > 85% for 10 min
 - Degraded response times, potential 503s
 
 ## Diagnosis
 
 # 1. Which instances are affected?
+
 aws cloudwatch get-metric-statistics \
-  --namespace AWS/EC2 \
-  --metric-name CPUUtilization \
-  --dimensions Name=AutoScalingGroupName,Value=app-prod-asg \
-  --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%S) \
-  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
-  --period 60 --statistics Average
+ --namespace AWS/EC2 \
+ --metric-name CPUUtilization \
+ --dimensions Name=AutoScalingGroupName,Value=app-prod-asg \
+ --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%S) \
+ --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+ --period 60 --statistics Average
 
 # 2. What process is consuming CPU?
+
 ssh app-prod-01
 top -bn1 | head -20
 
 # 3. Is there a traffic spike?
+
 # Check: Grafana → Application → RPS dashboard
 
 # 4. Recent deploys?
+
 kubectl rollout history deployment/app-prod
 
 ## Mitigation (in order of preference)
 
 ### Option A — Scale out (preferred, least risk)
+
 aws autoscaling set-desired-capacity \
-  --auto-scaling-group-name app-prod-asg \
-  --desired-capacity 12   # was 8; add 4 instances
+ --auto-scaling-group-name app-prod-asg \
+ --desired-capacity 12 # was 8; add 4 instances
 
 # Verify: wait 3 min, check CPU per instance
+
 # Rollback: set desired-capacity back to 8
 
 ### Option B — Rollback recent deploy
+
 kubectl rollout undo deployment/app-prod
 kubectl rollout status deployment/app-prod
 
 # Verify: check CPU drops within 5 min after rollout
 
 ### Option C — Kill runaway process (last resort)
+
 ssh app-prod-01
 ps aux | sort -k3 -r | head -5
-kill -15 <PID>   # SIGTERM first
+kill -15 <PID> # SIGTERM first
+
 # If no response after 30s: kill -9 <PID>
 
 ## Resolution Criteria
+
 - CPU < 60% across all instances for 10 continuous minutes
 - Error rate < 0.1%
 - p99 latency < 200ms
 
 ## Escalation
+
 App team lead: @dave-k (Slack), +1-555-0102 (PD)
 ```
 
@@ -483,43 +495,55 @@ App team lead: @dave-k (Slack), +1-555-0102 (PD)
 ## Diagnosis
 
 # Which partition?
+
 df -h
 
 # What's consuming space?
-du -sh /var/log/* | sort -rh | head -20
-du -sh /tmp/* | sort -rh | head -10
+
+du -sh /var/log/_ | sort -rh | head -20
+du -sh /tmp/_ | sort -rh | head -10
 
 # Application logs specifically:
-du -sh /var/log/app/* | sort -rh | head -10
+
+du -sh /var/log/app/\* | sort -rh | head -10
 
 # Docker if applicable:
+
 docker system df
 docker system prune --dry-run
 
 ## Mitigation
 
 ### Step 1 — Rotate/compress logs (safe)
+
 logrotate -f /etc/logrotate.conf
-find /var/log -name "*.log" -mtime +7 -exec gzip {} \;
+find /var/log -name "\*.log" -mtime +7 -exec gzip {} \;
 
 ### Step 2 — Clear temp files (safe)
+
 find /tmp -mtime +1 -delete
 find /var/tmp -mtime +7 -delete
 
 ### Step 3 — Docker cleanup (verify no active containers first)
+
 docker images -f "dangling=true" -q | xargs docker rmi
 docker volume prune -f
 
 ### Step 4 — Expand volume (if AWS EBS)
+
 # Increase EBS volume size (no downtime on modern kernels)
-aws ec2 modify-volume --volume-id vol-XXXXXXXX --size 100  # was 50GB
+
+aws ec2 modify-volume --volume-id vol-XXXXXXXX --size 100 # was 50GB
 
 # After resize, grow filesystem:
+
 sudo growpart /dev/xvda 1
-sudo resize2fs /dev/xvda1   # ext4
-# OR: sudo xfs_growfs /     # xfs
+sudo resize2fs /dev/xvda1 # ext4
+
+# OR: sudo xfs_growfs / # xfs
 
 ## Resolution Criteria
+
 - Disk utilization < 70%
 - Application writing logs without errors
 ```
@@ -530,6 +554,7 @@ sudo resize2fs /dev/xvda1   # ext4
 # Application — OOM Kills / Memory Exhaustion
 
 ## Symptoms
+
 - Alert: container_memory_usage_bytes > 90% of limit
 - Kubernetes: OOMKilled in pod status
 - Application: 502/503 errors during restart
@@ -537,29 +562,37 @@ sudo resize2fs /dev/xvda1   # ext4
 ## Diagnosis
 
 # Kubernetes OOM check:
+
 kubectl get pods -n production | grep -v Running
 kubectl describe pod <pod-name> -n production | grep -A5 "Last State"
+
 # Look for: Reason: OOMKilled
 
 # Memory usage per pod:
+
 kubectl top pods -n production --sort-by=memory | head -20
 
 # Memory leak indicators (steady growth over time):
+
 # Check: Grafana → Memory usage per pod → last 24h trend
 
 ## Mitigation
 
 ### Immediate: Restart affected pods
+
 kubectl rollout restart deployment/app-prod -n production
 
 ### Short-term: Increase memory limit
+
 kubectl patch deployment app-prod -n production \
-  --patch '{"spec":{"template":{"spec":{"containers":[{"name":"app","resources":{"limits":{"memory":"2Gi"},"requests":{"memory":"1Gi"}}}]}}}}'
+ --patch '{"spec":{"template":{"spec":{"containers":[{"name":"app","resources":{"limits":{"memory":"2Gi"},"requests":{"memory":"1Gi"}}}]}}}}'
 
 ### If memory leak suspected: rollback
+
 kubectl rollout undo deployment/app-prod -n production
 
 ## Escalation
+
 - If steady growth pattern: file bug, assign to service owner
 - If all pods affected simultaneously: likely traffic-related, scale out first
 ```
@@ -570,6 +603,7 @@ kubectl rollout undo deployment/app-prod -n production
 # Database — Connection Pool Exhaustion
 
 ## Symptoms
+
 - Alert: db_connections_used / db_connections_max > 90%
 - Application errors: "too many connections", "connection timeout"
 - Logs: FATAL: remaining connection slots are reserved for non-replication superuser connections
@@ -577,21 +611,24 @@ kubectl rollout undo deployment/app-prod -n production
 ## Diagnosis
 
 # PostgreSQL: check current connections
+
 psql -h db-prod.internal -U admin -c "
-SELECT count(*), state, wait_event_type, wait_event
+SELECT count(\*), state, wait_event_type, wait_event
 FROM pg_stat_activity
 GROUP BY state, wait_event_type, wait_event
 ORDER BY count DESC;"
 
 # Which application is holding connections?
+
 psql -h db-prod.internal -U admin -c "
-SELECT application_name, count(*), state
+SELECT application_name, count(\*), state
 FROM pg_stat_activity
 WHERE state != 'idle'
 GROUP BY application_name, state
 ORDER BY count DESC;"
 
 # Long-running queries (potential locks):
+
 psql -h db-prod.internal -U admin -c "
 SELECT pid, now() - pg_stat_activity.query_start AS duration, query, state
 FROM pg_stat_activity
@@ -601,25 +638,32 @@ ORDER BY duration DESC;"
 ## Mitigation
 
 ### Step 1 — Kill idle connections (safe)
+
 psql -h db-prod.internal -U admin -c "
 SELECT pg_terminate_backend(pid)
 FROM pg_stat_activity
 WHERE state = 'idle'
-  AND query_start < now() - interval '10 minutes'
-  AND pid != pg_backend_pid();"
+AND query_start < now() - interval '10 minutes'
+AND pid != pg_backend_pid();"
 
 ### Step 2 — Kill long-running blocking queries
+
 # Identify blocking query PID from above, then:
+
 psql -h db-prod.internal -U admin -c "SELECT pg_terminate_backend(<PID>);"
 
 ### Step 3 — Reduce pool size at application level
+
 # If using PgBouncer, reduce pool_size temporarily
+
 # If direct connections, reduce app replicas
 
 ### Step 4 — Increase max_connections (requires DB restart — last resort)
+
 # Document in change ticket, get IC approval
 
 ## Resolution Criteria
+
 - Connection count < 80% of max_connections
 - Application error rate < 0.1%
 - No connection timeout errors in logs
@@ -631,36 +675,49 @@ psql -h db-prod.internal -U admin -c "SELECT pg_terminate_backend(<PID>);"
 # TLS Certificate Expiring / Expired
 
 ## Detection (proactive — before expiry)
+
 # Check cert expiry:
+
 echo | openssl s_client -servername api.example.com \
-  -connect api.example.com:443 2>/dev/null | \
-  openssl x509 -noout -dates
+ -connect api.example.com:443 2>/dev/null | \
+ openssl x509 -noout -dates
 
 # Or via AWS ACM:
+
 aws acm list-certificates --query 'CertificateSummaryList[*].[DomainName,Status]'
 aws acm describe-certificate --certificate-arn arn:aws:acm:... | jq '.Certificate.NotAfter'
 
 ## Mitigation
 
 ### AWS ACM (auto-renew managed certs — usually automatic)
+
 # Verify auto-renewal is on:
+
 aws acm describe-certificate --certificate-arn arn:aws:acm:... | \
-  jq '.Certificate.RenewalEligibility'
+ jq '.Certificate.RenewalEligibility'
 
 # Trigger manual renewal if needed:
+
 aws acm renew-certificate --certificate-arn arn:aws:acm:...
 
 ### Let's Encrypt (certbot)
+
 certbot renew --cert-name api.example.com --dry-run
 certbot renew --cert-name api.example.com
 systemctl reload nginx
 
 ### Manual cert replacement
+
 # 1. Obtain new cert from CA
+
 # 2. Validate: openssl x509 -in new.crt -noout -text
+
 # 3. Check key matches: openssl x509 -noout -modulus -in new.crt | md5sum
-#                       openssl rsa -noout -modulus -in new.key | md5sum
+
+# openssl rsa -noout -modulus -in new.key | md5sum
+
 # 4. Deploy to load balancer / web server
+
 # 5. Verify: echo | openssl s_client -connect api.example.com:443
 ```
 
@@ -1006,13 +1063,13 @@ Do not stop at a person's name.
 
 ### Postmortem Sharing Culture
 
-| Practice | How |
-|----------|-----|
-| Regular postmortem reviews | Monthly "incident review" meeting open to all engineers |
-| Postmortem archive | All postmortems in searchable wiki (not private docs) |
-| Action item tracking | All action items in Jira with DRI (Directly Responsible Individual) |
-| 30-day check-in | Review action item completion 30 days post-incident |
-| Cross-team sharing | High-value postmortems shared in eng-all Slack channel |
+| Practice                   | How                                                                 |
+| -------------------------- | ------------------------------------------------------------------- |
+| Regular postmortem reviews | Monthly "incident review" meeting open to all engineers             |
+| Postmortem archive         | All postmortems in searchable wiki (not private docs)               |
+| Action item tracking       | All action items in Jira with DRI (Directly Responsible Individual) |
+| 30-day check-in            | Review action item completion 30 days post-incident                 |
+| Cross-team sharing         | High-value postmortems shared in eng-all Slack channel              |
 
 ---
 
@@ -1020,13 +1077,13 @@ Do not stop at a person's name.
 
 ### Core Metrics Definitions
 
-| Metric | Formula | Target | Notes |
-|--------|---------|--------|-------|
-| MTTD (Mean Time to Detect) | Avg time from incident start to alert fire | < 5 min | Measures monitoring quality |
-| MTTA (Mean Time to Acknowledge) | Avg time from alert to first human response | < 5 min (SEV1) | Measures on-call responsiveness |
-| MTTR (Mean Time to Resolve) | Avg time from detection to resolution | < 60 min (SEV1) | Primary SRE KPI |
-| MTBF (Mean Time Between Failures) | Total uptime / number of incidents | Maximize | Service reliability |
-| MTTM (Mean Time to Mitigate) | Avg time from detection to blast radius reduced | < 30 min (SEV1) | Mitigation vs. root cause fix |
+| Metric                            | Formula                                         | Target          | Notes                           |
+| --------------------------------- | ----------------------------------------------- | --------------- | ------------------------------- |
+| MTTD (Mean Time to Detect)        | Avg time from incident start to alert fire      | < 5 min         | Measures monitoring quality     |
+| MTTA (Mean Time to Acknowledge)   | Avg time from alert to first human response     | < 5 min (SEV1)  | Measures on-call responsiveness |
+| MTTR (Mean Time to Resolve)       | Avg time from detection to resolution           | < 60 min (SEV1) | Primary SRE KPI                 |
+| MTBF (Mean Time Between Failures) | Total uptime / number of incidents              | Maximize        | Service reliability             |
+| MTTM (Mean Time to Mitigate)      | Avg time from detection to blast radius reduced | < 30 min (SEV1) | Mitigation vs. root cause fix   |
 
 ### Operational Health Dashboard
 
@@ -1095,22 +1152,22 @@ Action: SEV1 response: all feature deploys require SRE approval
 
 ### Alert and On-Call Management
 
-| Tool | Strengths | Best For |
-|------|-----------|---------|
-| PagerDuty | Mature routing, escalation policies, rich integrations, analytics | Most production environments |
-| OpsGenie | Strong Jira integration, lower cost, good mobile app | Teams on Atlassian stack |
-| VictorOps (Splunk On-Call) | Good for Splunk users, timeline view | Splunk-heavy environments |
-| Rootly | Modern UX, Slack-native incident management | Teams wanting Slack-first workflow |
-| FireHydrant | Full incident lifecycle, retrospective tooling | Teams wanting postmortem tooling bundled |
+| Tool                       | Strengths                                                         | Best For                                 |
+| -------------------------- | ----------------------------------------------------------------- | ---------------------------------------- |
+| PagerDuty                  | Mature routing, escalation policies, rich integrations, analytics | Most production environments             |
+| OpsGenie                   | Strong Jira integration, lower cost, good mobile app              | Teams on Atlassian stack                 |
+| VictorOps (Splunk On-Call) | Good for Splunk users, timeline view                              | Splunk-heavy environments                |
+| Rootly                     | Modern UX, Slack-native incident management                       | Teams wanting Slack-first workflow       |
+| FireHydrant                | Full incident lifecycle, retrospective tooling                    | Teams wanting postmortem tooling bundled |
 
 ### Status Pages
 
-| Tool | Strengths |
-|------|-----------|
+| Tool                 | Strengths                                                     |
+| -------------------- | ------------------------------------------------------------- |
 | Atlassian Statuspage | Industry standard, Jira/PD integration, subscriber management |
-| Instatus | Modern, affordable, good API |
-| Cachet | Open-source, self-hosted |
-| Betteruptime | Combined monitoring + status page |
+| Instatus             | Modern, affordable, good API                                  |
+| Cachet               | Open-source, self-hosted                                      |
+| Betteruptime         | Combined monitoring + status page                             |
 
 ### Incident Response in Slack
 
@@ -1132,32 +1189,32 @@ Action: SEV1 response: all feature deploys require SRE approval
 ```yaml
 # Escalation policy (Terraform)
 resource "pagerduty_escalation_policy" "platform_sev1" {
-  name      = "Platform SEV1"
-  num_loops = 2
+name      = "Platform SEV1"
+num_loops = 2
 
-  rule {
-    escalation_delay_in_minutes = 5
-    target {
-      type = "schedule_reference"
-      id   = pagerduty_schedule.primary.id
-    }
-  }
+rule {
+escalation_delay_in_minutes = 5
+target {
+type = "schedule_reference"
+id   = pagerduty_schedule.primary.id
+}
+}
 
-  rule {
-    escalation_delay_in_minutes = 5
-    target {
-      type = "schedule_reference"
-      id   = pagerduty_schedule.secondary.id
-    }
-  }
+rule {
+escalation_delay_in_minutes = 5
+target {
+type = "schedule_reference"
+id   = pagerduty_schedule.secondary.id
+}
+}
 
-  rule {
-    escalation_delay_in_minutes = 10
-    target {
-      type = "user_reference"
-      id   = pagerduty_user.engineering_lead.id
-    }
-  }
+rule {
+escalation_delay_in_minutes = 10
+target {
+type = "user_reference"
+id   = pagerduty_user.engineering_lead.id
+}
+}
 }
 ```
 
@@ -1314,15 +1371,15 @@ When asked about a cascading failure, demonstrate:
 
 ### Common Interview Questions and Key Points
 
-| Question | Key Points to Hit |
-|----------|------------------|
-| "Walk me through an incident you handled" | Use: detection→triage→mitigation→resolution→postmortem structure |
-| "How do you design an on-call rotation?" | Cover: rotation size, primary/secondary, handoff ritual, burnout prevention, alert quality |
-| "What makes a good runbook?" | Diagnosis steps with commands, ordered mitigation (least→most disruptive), resolution criteria, escalation |
-| "How do you run a postmortem?" | Blameless, timeline reconstruction, 5-whys to systemic causes, action items with owners/dates |
-| "What's your MTTR and how do you improve it?" | MTTD + MTTA + mitigation speed; improve each independently |
-| "How do you prevent alert fatigue?" | Alert quality sprints, track actionable%, escalate false positive alerts as bugs |
-| "What do you do in the first 5 minutes?" | Acknowledge→confirm→scope→declare→stabilize (don't make changes immediately) |
+| Question                                      | Key Points to Hit                                                                                          |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| "Walk me through an incident you handled"     | Use: detection→triage→mitigation→resolution→postmortem structure                                           |
+| "How do you design an on-call rotation?"      | Cover: rotation size, primary/secondary, handoff ritual, burnout prevention, alert quality                 |
+| "What makes a good runbook?"                  | Diagnosis steps with commands, ordered mitigation (least→most disruptive), resolution criteria, escalation |
+| "How do you run a postmortem?"                | Blameless, timeline reconstruction, 5-whys to systemic causes, action items with owners/dates              |
+| "What's your MTTR and how do you improve it?" | MTTD + MTTA + mitigation speed; improve each independently                                                 |
+| "How do you prevent alert fatigue?"           | Alert quality sprints, track actionable%, escalate false positive alerts as bugs                           |
+| "What do you do in the first 5 minutes?"      | Acknowledge→confirm→scope→declare→stabilize (don't make changes immediately)                               |
 
 ### On-Call Health Check
 

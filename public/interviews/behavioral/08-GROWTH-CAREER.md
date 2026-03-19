@@ -11,7 +11,7 @@ Growth and career questions help interviewers assess your self-awareness, motiva
 - **Alignment** -- Do your goals match what this role and company can provide? Will you be engaged and motivated, or will you be looking for something else in six months?
 - **Curiosity** -- Are you genuinely interested in learning new things, or do you only learn what is immediately required?
 
-The core question is: *Is this person on an upward trajectory, and will they continue to grow here?*
+The core question is: _Is this person on an upward trajectory, and will they continue to grow here?_
 
 ---
 
@@ -35,13 +35,17 @@ The core question is: *Is this person on an upward trajectory, and will they con
 For growth questions, the STAR method shifts slightly. The "Situation" often describes a personal realization or career moment rather than a project. The "Action" focuses on your deliberate steps to grow. The "Result" should show tangible evidence of improvement.
 
 ### Situation
+
 Describe the context that triggered growth. Was it feedback from a manager? A project that exposed a gap in your skills? A career event like a layoff or a promotion you did not get?
 
 ### Task
+
 What did you need to learn, change, or improve? Be specific. "Become a better engineer" is too vague. "Improve my system design skills to operate at the senior level" is concrete.
 
 ### Action
+
 Describe the deliberate steps you took. Interviewers want to see agency:
+
 - Sought feedback from specific people
 - Took a course, read books, built side projects
 - Found a mentor or joined a study group
@@ -49,6 +53,7 @@ Describe the deliberate steps you took. Interviewers want to see agency:
 - Changed habits or routines
 
 ### Result
+
 Show measurable or observable improvement. Did you get promoted? Did you take on new responsibilities? Did a manager comment on the change? Did you pass a certification or deliver a project in the new domain?
 
 **Tip**: Authenticity matters more than perfection. Interviewers can tell when you are performing humility versus genuinely reflecting.
@@ -153,34 +158,34 @@ Show measurable or observable improvement. Did you get promoted? Did you take on
 
 ### Story 1: Receiving Critical Feedback
 
-- **Situation**: During _______ (review, 1:1, project retrospective), I received feedback that _______.
-- **Task**: I needed to improve _______.
-- **Action**: My initial reaction was _______. After reflecting, I _______ (specific steps). I also sought additional input from _______. Over the next _______ (timeframe), I _______.
-- **Result**: _______ (specific improvement). My manager/peers noticed _______. This led to _______ (promotion, new responsibility, better outcomes).
+- **Situation**: During **\_\_\_** (review, 1:1, project retrospective), I received feedback that **\_\_\_**.
+- **Task**: I needed to improve **\_\_\_**.
+- **Action**: My initial reaction was **\_\_\_**. After reflecting, I **\_\_\_** (specific steps). I also sought additional input from **\_\_\_**. Over the next **\_\_\_** (timeframe), I **\_\_\_**.
+- **Result**: **\_\_\_** (specific improvement). My manager/peers noticed **\_\_\_**. This led to **\_\_\_** (promotion, new responsibility, better outcomes).
 - **Best used for**: Feedback, self-improvement, self-awareness
 
 ### Story 2: Learning a New Skill
 
-- **Situation**: I realized I needed to learn _______ because _______.
-- **Task**: I needed to go from _______ (current level) to _______ (target level) in _______ (timeframe).
-- **Action**: I structured my learning by _______. I found a mentor/resource by _______. I practiced by _______. When I struggled with _______, I _______.
-- **Result**: I was able to _______ (apply the skill in production). Over time, I became the _______ on my team. I shared what I learned by _______.
+- **Situation**: I realized I needed to learn **\_\_\_** because **\_\_\_**.
+- **Task**: I needed to go from **\_\_\_** (current level) to **\_\_\_** (target level) in **\_\_\_** (timeframe).
+- **Action**: I structured my learning by **\_\_\_**. I found a mentor/resource by **\_\_\_**. I practiced by **\_\_\_**. When I struggled with **\_\_\_**, I **\_\_\_**.
+- **Result**: I was able to **\_\_\_** (apply the skill in production). Over time, I became the **\_\_\_** on my team. I shared what I learned by **\_\_\_**.
 - **Best used for**: Continuous learning, stepping outside comfort zone, growth mindset
 
 ### Story 3: Career Setback or Failure
 
-- **Situation**: _______ (what happened: missed promotion, project failure, layoff, bad role fit).
+- **Situation**: **\_\_\_** (what happened: missed promotion, project failure, layoff, bad role fit).
 - **Task**: I needed to recover and learn from the experience.
-- **Action**: I took time to reflect on _______. I sought feedback from _______. I changed my approach by _______. I specifically worked on _______.
-- **Result**: _______ (how I bounced back). The experience taught me _______. It ultimately led to _______ (a better outcome).
+- **Action**: I took time to reflect on **\_\_\_**. I sought feedback from **\_\_\_**. I changed my approach by **\_\_\_**. I specifically worked on **\_\_\_**.
+- **Result**: **\_\_\_** (how I bounced back). The experience taught me **\_\_\_**. It ultimately led to **\_\_\_** (a better outcome).
 - **Best used for**: Resilience, self-awareness, learning from failure
 
 ### Story 4: Career Transition
 
-- **Situation**: I transitioned from _______ to _______ because _______.
-- **Task**: I needed to build skills in _______ while maintaining credibility in _______.
-- **Action**: I prepared by _______. I found opportunities to _______ (bridge the gap). The hardest part was _______, and I handled it by _______.
-- **Result**: Within _______ (timeframe), I was _______ (productive/leading/contributing) in the new role. I brought unique value by combining _______ from my previous experience with _______ from the new domain.
+- **Situation**: I transitioned from **\_\_\_** to **\_\_\_** because **\_\_\_**.
+- **Task**: I needed to build skills in **\_\_\_** while maintaining credibility in **\_\_\_**.
+- **Action**: I prepared by **\_\_\_**. I found opportunities to **\_\_\_** (bridge the gap). The hardest part was **\_\_\_**, and I handled it by **\_\_\_**.
+- **Result**: Within **\_\_\_** (timeframe), I was **\_\_\_** (productive/leading/contributing) in the new role. I brought unique value by combining **\_\_\_** from my previous experience with **\_\_\_** from the new domain.
 - **Best used for**: Career transitions, adaptability, bringing diverse perspectives
 
 ---
@@ -201,27 +206,27 @@ Interviewers look for these signals. Make sure your stories include them:
 
 ### Key Phrases to Use
 
-| Do Say | Do Not Say |
-|--------|------------|
-| "I realized I needed to improve..." | "I am already pretty good at everything..." |
-| "I sought feedback from..." | "Nobody ever told me..." |
-| "I deliberately chose a project that stretched..." | "I just did what was assigned to me..." |
-| "My initial reaction was defensive, but then..." | "The feedback was wrong..." |
-| "I am specifically working on..." | "I want to keep growing..." (too vague) |
-| "The setback taught me..." | "It was unfair..." |
-| "In five years, I want to be able to..." | "I do not really plan that far ahead..." |
+| Do Say                                             | Do Not Say                                  |
+| -------------------------------------------------- | ------------------------------------------- |
+| "I realized I needed to improve..."                | "I am already pretty good at everything..." |
+| "I sought feedback from..."                        | "Nobody ever told me..."                    |
+| "I deliberately chose a project that stretched..." | "I just did what was assigned to me..."     |
+| "My initial reaction was defensive, but then..."   | "The feedback was wrong..."                 |
+| "I am specifically working on..."                  | "I want to keep growing..." (too vague)     |
+| "The setback taught me..."                         | "It was unfair..."                          |
+| "In five years, I want to be able to..."           | "I do not really plan that far ahead..."    |
 
 ### Do's and Don'ts
 
-| Do | Don't |
-|----|-------|
-| Show genuine self-reflection | Give "weakness as strength" answers |
-| Name specific skills you are developing | Be vague about growth areas |
+| Do                                                      | Don't                                               |
+| ------------------------------------------------------- | --------------------------------------------------- |
+| Show genuine self-reflection                            | Give "weakness as strength" answers                 |
+| Name specific skills you are developing                 | Be vague about growth areas                         |
 | Connect your goals to the role you are interviewing for | Describe goals that have nothing to do with the job |
-| Be honest about setbacks and what you learned | Blame others for career challenges |
-| Show a pattern of deliberate growth over time | Describe growth as accidental or passive |
-| Demonstrate how you share your learning with others | Focus only on personal advancement |
-| Acknowledge what you do not know yet | Pretend to have no weaknesses |
+| Be honest about setbacks and what you learned           | Blame others for career challenges                  |
+| Show a pattern of deliberate growth over time           | Describe growth as accidental or passive            |
+| Demonstrate how you share your learning with others     | Focus only on personal advancement                  |
+| Acknowledge what you do not know yet                    | Pretend to have no weaknesses                       |
 
 ### Answering "Where Do You See Yourself in 5 Years?"
 
@@ -232,6 +237,7 @@ A strong answer has three components:
 3. **Connection to the role**: "This role is a great fit because it would allow me to..."
 
 Avoid:
+
 - "I want your job" (comes across as threatening, not ambitious)
 - "I want to start my own company" (signals you will leave)
 - "I have not really thought about it" (signals lack of ambition)

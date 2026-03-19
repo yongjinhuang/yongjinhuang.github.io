@@ -185,16 +185,16 @@ canvas.addEventListener('pointercancel', (e: PointerEvent) => {
 
 ```typescript
 interface PointerEventInfo {
-  pointerId: number;        // Unique identifier (like touch.identifier)
-  pointerType: string;      // "mouse", "touch", "pen"
+  pointerId: number; // Unique identifier (like touch.identifier)
+  pointerType: string; // "mouse", "touch", "pen"
   clientX: number;
   clientY: number;
-  pressure: number;         // 0-1 (0.5 for mouse buttons, variable for touch/pen)
-  tiltX: number;            // Pen tilt (-90 to 90)
+  pressure: number; // 0-1 (0.5 for mouse buttons, variable for touch/pen)
+  tiltX: number; // Pen tilt (-90 to 90)
   tiltY: number;
-  width: number;            // Contact area width
-  height: number;           // Contact area height
-  isPrimary: boolean;       // Is this the primary pointer?
+  width: number; // Contact area width
+  height: number; // Contact area height
+  isPrimary: boolean; // Is this the primary pointer?
 }
 ```
 
@@ -226,7 +226,10 @@ class InputManager {
     this.setupListeners();
   }
 
-  on(event: 'start' | 'move' | 'end', callback: (state: InputState) => void): void {
+  on(
+    event: 'start' | 'move' | 'end',
+    callback: (state: InputState) => void
+  ): void {
     if (event === 'start') this.callbacks.onStart = callback;
     if (event === 'move') this.callbacks.onMove = callback;
     if (event === 'end') this.callbacks.onEnd = callback;
@@ -342,12 +345,16 @@ canvas.addEventListener('mouseup', (e: MouseEvent) => {
 });
 
 // Mouse wheel for zoom
-canvas.addEventListener('wheel', (e: WheelEvent) => {
-  e.preventDefault();
-  // e.deltaY: positive = scroll down, negative = scroll up
-  // e.deltaMode: 0=pixels, 1=lines, 2=pages
-  handleZoom(e.deltaY, e.clientX, e.clientY);
-}, { passive: false });
+canvas.addEventListener(
+  'wheel',
+  (e: WheelEvent) => {
+    e.preventDefault();
+    // e.deltaY: positive = scroll down, negative = scroll up
+    // e.deltaMode: 0=pixels, 1=lines, 2=pages
+    handleZoom(e.deltaY, e.clientX, e.clientY);
+  },
+  { passive: false }
+);
 ```
 
 ---
@@ -438,7 +445,13 @@ function screenToWorld(
   camera: Camera
 ): { x: number; y: number } {
   const canvasPos = screenToCanvas(screenX, screenY, canvas);
-  return canvasToWorld(canvasPos.x, canvasPos.y, camera, canvas.width, canvas.height);
+  return canvasToWorld(
+    canvasPos.x,
+    canvasPos.y,
+    camera,
+    canvas.width,
+    canvas.height
+  );
 }
 ```
 
@@ -447,7 +460,11 @@ function screenToWorld(
 High-DPI screens require special handling:
 
 ```typescript
-function setupHiDPICanvas(canvas: HTMLCanvasElement, width: number, height: number): void {
+function setupHiDPICanvas(
+  canvas: HTMLCanvasElement,
+  width: number,
+  height: number
+): void {
   const dpr = window.devicePixelRatio || 1;
 
   // Set display size (CSS pixels)
@@ -491,7 +508,15 @@ function screenToCanvasHiDPI(
 ### Gesture State Machine
 
 ```typescript
-type GestureType = 'none' | 'tap' | 'doubletap' | 'longpress' | 'swipe' | 'drag' | 'pinch' | 'rotate';
+type GestureType =
+  | 'none'
+  | 'tap'
+  | 'doubletap'
+  | 'longpress'
+  | 'swipe'
+  | 'drag'
+  | 'pinch'
+  | 'rotate';
 
 interface GestureState {
   type: GestureType;
@@ -500,17 +525,20 @@ interface GestureState {
   startY: number;
   currentX: number;
   currentY: number;
-  pointers: Map<number, { x: number; y: number; startX: number; startY: number }>;
+  pointers: Map<
+    number,
+    { x: number; y: number; startX: number; startY: number }
+  >;
 }
 
 const GESTURE_CONFIG = {
-  TAP_MAX_DURATION: 300,       // ms
-  TAP_MAX_DISTANCE: 10,        // pixels
-  DOUBLE_TAP_GAP: 300,         // ms between taps
-  LONG_PRESS_DURATION: 500,    // ms
-  SWIPE_MIN_DISTANCE: 50,      // pixels
-  SWIPE_MIN_VELOCITY: 0.3,     // pixels/ms
-  DRAG_MIN_DISTANCE: 10,       // pixels before drag starts
+  TAP_MAX_DURATION: 300, // ms
+  TAP_MAX_DISTANCE: 10, // pixels
+  DOUBLE_TAP_GAP: 300, // ms between taps
+  LONG_PRESS_DURATION: 500, // ms
+  SWIPE_MIN_DISTANCE: 50, // pixels
+  SWIPE_MIN_VELOCITY: 0.3, // pixels/ms
+  DRAG_MIN_DISTANCE: 10, // pixels before drag starts
 } as const;
 ```
 
@@ -535,7 +563,10 @@ function detectTap(
   const duration = endTime - startTime;
   const distance = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
 
-  if (duration > GESTURE_CONFIG.TAP_MAX_DURATION || distance > GESTURE_CONFIG.TAP_MAX_DISTANCE) {
+  if (
+    duration > GESTURE_CONFIG.TAP_MAX_DURATION ||
+    distance > GESTURE_CONFIG.TAP_MAX_DISTANCE
+  ) {
     return { type: 'none', detector };
   }
 
@@ -545,7 +576,10 @@ function detectTap(
     (startX - detector.lastTapX) ** 2 + (startY - detector.lastTapY) ** 2
   );
 
-  if (timeSinceLastTap < GESTURE_CONFIG.DOUBLE_TAP_GAP && distFromLastTap < 30) {
+  if (
+    timeSinceLastTap < GESTURE_CONFIG.DOUBLE_TAP_GAP &&
+    distFromLastTap < 30
+  ) {
     return {
       type: 'doubletap',
       detector: { ...detector, lastTapTime: 0, lastTapX: 0, lastTapY: 0 },
@@ -554,7 +588,12 @@ function detectTap(
 
   return {
     type: 'tap',
-    detector: { ...detector, lastTapTime: endTime, lastTapX: endX, lastTapY: endY },
+    detector: {
+      ...detector,
+      lastTapTime: endTime,
+      lastTapX: endX,
+      lastTapY: endY,
+    },
   };
 }
 ```
@@ -585,7 +624,10 @@ function detectSwipe(
   const duration = endTime - startTime;
   const velocity = distance / duration;
 
-  if (distance < GESTURE_CONFIG.SWIPE_MIN_DISTANCE || velocity < GESTURE_CONFIG.SWIPE_MIN_VELOCITY) {
+  if (
+    distance < GESTURE_CONFIG.SWIPE_MIN_DISTANCE ||
+    velocity < GESTURE_CONFIG.SWIPE_MIN_VELOCITY
+  ) {
     return { detected: false, direction: null, velocity: 0, distance: 0 };
   }
 
@@ -608,7 +650,11 @@ class LongPressDetector {
   private timer: number | null = null;
   private callback: ((x: number, y: number) => void) | null = null;
 
-  start(x: number, y: number, onLongPress: (x: number, y: number) => void): void {
+  start(
+    x: number,
+    y: number,
+    onLongPress: (x: number, y: number) => void
+  ): void {
     this.cancel();
     this.callback = onLongPress;
     this.timer = window.setTimeout(() => {
@@ -722,9 +768,17 @@ class DragHandler {
     currentY: 0,
   };
 
-  private hitTest: (x: number, y: number) => { id: string; x: number; y: number } | null;
+  private hitTest: (
+    x: number,
+    y: number
+  ) => { id: string; x: number; y: number } | null;
 
-  constructor(hitTest: (x: number, y: number) => { id: string; x: number; y: number } | null) {
+  constructor(
+    hitTest: (
+      x: number,
+      y: number
+    ) => { id: string; x: number; y: number } | null
+  ) {
     this.hitTest = hitTest;
   }
 
@@ -803,7 +857,10 @@ type GestureCallback = {
 class GestureRecognizer {
   private canvas: HTMLCanvasElement;
   private callbacks: GestureCallback;
-  private pointers: Map<number, { x: number; y: number; startX: number; startY: number; startTime: number }> = new Map();
+  private pointers: Map<
+    number,
+    { x: number; y: number; startX: number; startY: number; startTime: number }
+  > = new Map();
   private longPressTimer: number | null = null;
   private lastTapTime = 0;
   private isDragging = false;
@@ -876,7 +933,8 @@ class GestureRecognizer {
         }
 
         this.callbacks.onDragMove?.(
-          e.clientX, e.clientY,
+          e.clientX,
+          e.clientY,
           e.clientX - pointer.startX,
           e.clientY - pointer.startY
         );
@@ -888,15 +946,20 @@ class GestureRecognizer {
       const currentDist = Math.sqrt(
         (pts[1].x - pts[0].x) ** 2 + (pts[1].y - pts[0].y) ** 2
       );
-      const currentAngle = Math.atan2(
-        pts[1].y - pts[0].y,
-        pts[1].x - pts[0].x
-      );
+      const currentAngle = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x);
       const centerX = (pts[0].x + pts[1].x) / 2;
       const centerY = (pts[0].y + pts[1].y) / 2;
 
-      this.callbacks.onPinch?.(currentDist / this.initialPinchDistance, centerX, centerY);
-      this.callbacks.onRotate?.(currentAngle - this.initialRotationAngle, centerX, centerY);
+      this.callbacks.onPinch?.(
+        currentDist / this.initialPinchDistance,
+        centerX,
+        centerY
+      );
+      this.callbacks.onRotate?.(
+        currentAngle - this.initialRotationAngle,
+        centerX,
+        centerY
+      );
     }
   }
 
@@ -920,7 +983,10 @@ class GestureRecognizer {
       (e.clientX - pointer.startX) ** 2 + (e.clientY - pointer.startY) ** 2
     );
 
-    if (duration < GESTURE_CONFIG.TAP_MAX_DURATION && distance < GESTURE_CONFIG.TAP_MAX_DISTANCE) {
+    if (
+      duration < GESTURE_CONFIG.TAP_MAX_DURATION &&
+      distance < GESTURE_CONFIG.TAP_MAX_DISTANCE
+    ) {
       const timeSinceLastTap = performance.now() - this.lastTapTime;
       if (timeSinceLastTap < GESTURE_CONFIG.DOUBLE_TAP_GAP) {
         this.callbacks.onDoubleTap?.(e.clientX, e.clientY);
@@ -939,9 +1005,12 @@ class GestureRecognizer {
 
     // Check for swipe
     const swipe = detectSwipe(
-      pointer.startX, pointer.startY,
-      e.clientX, e.clientY,
-      pointer.startTime, performance.now()
+      pointer.startX,
+      pointer.startY,
+      e.clientX,
+      e.clientY,
+      pointer.startTime,
+      performance.now()
     );
 
     if (swipe.detected && swipe.direction) {
@@ -978,7 +1047,11 @@ class KeyboardManager {
       this.keysDown.add(e.code);
 
       // Prevent default for game keys
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+      if (
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(
+          e.code
+        )
+      ) {
         e.preventDefault();
       }
     });
@@ -1085,7 +1158,12 @@ class GamepadManager {
   }
 
   // Vibration (if supported)
-  vibrate(padIndex: number, duration: number, weakMag: number, strongMag: number): void {
+  vibrate(
+    padIndex: number,
+    duration: number,
+    weakMag: number,
+    strongMag: number
+  ): void {
     const pad = this.gamepads.get(padIndex);
     if (pad?.vibrationActuator) {
       pad.vibrationActuator.playEffect('dual-rumble', {
@@ -1137,10 +1215,10 @@ interface JoystickState {
   baseY: number;
   knobX: number;
   knobY: number;
-  dirX: number;        // Normalized -1 to 1
-  dirY: number;        // Normalized -1 to 1
-  magnitude: number;   // 0 to 1
-  angle: number;       // Radians
+  dirX: number; // Normalized -1 to 1
+  dirY: number; // Normalized -1 to 1
+  magnitude: number; // 0 to 1
+  angle: number; // Radians
 }
 
 class VirtualJoystick {
@@ -1249,8 +1327,16 @@ class VirtualJoystick {
 
     // Knob
     ctx.beginPath();
-    ctx.arc(this.state.knobX, this.state.knobY, this.maxRadius * 0.4, 0, Math.PI * 2);
-    ctx.fillStyle = this.state.active ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.3)';
+    ctx.arc(
+      this.state.knobX,
+      this.state.knobY,
+      this.maxRadius * 0.4,
+      0,
+      Math.PI * 2
+    );
+    ctx.fillStyle = this.state.active
+      ? 'rgba(255, 255, 255, 0.6)'
+      : 'rgba(255, 255, 255, 0.3)';
     ctx.fill();
   }
 }
@@ -1264,7 +1350,10 @@ A common pattern where the joystick base moves to wherever the user first touche
 class DynamicJoystick extends VirtualJoystick {
   private zone: { x: number; y: number; width: number; height: number };
 
-  constructor(zone: { x: number; y: number; width: number; height: number }, maxRadius = 50) {
+  constructor(
+    zone: { x: number; y: number; width: number; height: number },
+    maxRadius = 50
+  ) {
     super(0, 0, maxRadius);
     this.zone = zone;
   }
@@ -1329,16 +1418,20 @@ class VirtualDPad {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
 
     // Horizontal bar
-    ctx.fillRect(cx - s, cy - s / 3, s * 2, s * 2 / 3);
+    ctx.fillRect(cx - s, cy - s / 3, s * 2, (s * 2) / 3);
     // Vertical bar
-    ctx.fillRect(cx - s / 3, cy - s, s * 2 / 3, s * 2);
+    ctx.fillRect(cx - s / 3, cy - s, (s * 2) / 3, s * 2);
 
     // Highlight pressed directions
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    if (this.pressed.has('up')) ctx.fillRect(cx - s / 3, cy - s, s * 2 / 3, s * 2 / 3);
-    if (this.pressed.has('down')) ctx.fillRect(cx - s / 3, cy + s / 3, s * 2 / 3, s * 2 / 3);
-    if (this.pressed.has('left')) ctx.fillRect(cx - s, cy - s / 3, s * 2 / 3, s * 2 / 3);
-    if (this.pressed.has('right')) ctx.fillRect(cx + s / 3, cy - s / 3, s * 2 / 3, s * 2 / 3);
+    if (this.pressed.has('up'))
+      ctx.fillRect(cx - s / 3, cy - s, (s * 2) / 3, (s * 2) / 3);
+    if (this.pressed.has('down'))
+      ctx.fillRect(cx - s / 3, cy + s / 3, (s * 2) / 3, (s * 2) / 3);
+    if (this.pressed.has('left'))
+      ctx.fillRect(cx - s, cy - s / 3, (s * 2) / 3, (s * 2) / 3);
+    if (this.pressed.has('right'))
+      ctx.fillRect(cx + s / 3, cy - s / 3, (s * 2) / 3, (s * 2) / 3);
   }
 }
 ```
@@ -1372,7 +1465,8 @@ class InputBuffer {
   // Check if a specific command was buffered within the window
   consume(type: string, currentTime: number): InputCommand | null {
     const index = this.buffer.findIndex(
-      cmd => cmd.type === type && (currentTime - cmd.timestamp) < this.bufferWindow
+      (cmd) =>
+        cmd.type === type && currentTime - cmd.timestamp < this.bufferWindow
     );
 
     if (index === -1) return null;
@@ -1388,7 +1482,7 @@ class InputBuffer {
   // Remove expired commands
   cleanup(currentTime: number): void {
     this.buffer = this.buffer.filter(
-      cmd => (currentTime - cmd.timestamp) < this.bufferWindow
+      (cmd) => currentTime - cmd.timestamp < this.bufferWindow
     );
   }
 }
@@ -1416,7 +1510,9 @@ class PlayerController {
   }
 
   private justLanded = false;
-  private jump(): void { /* jump logic */ }
+  private jump(): void {
+    /* jump logic */
+  }
 }
 ```
 
@@ -1494,10 +1590,26 @@ class AccessibleInput {
     // Try keyboard
     let kx = 0;
     let ky = 0;
-    if (this.keyboardManager.isDown('ArrowLeft') || this.keyboardManager.isDown('KeyA')) kx -= 1;
-    if (this.keyboardManager.isDown('ArrowRight') || this.keyboardManager.isDown('KeyD')) kx += 1;
-    if (this.keyboardManager.isDown('ArrowUp') || this.keyboardManager.isDown('KeyW')) ky -= 1;
-    if (this.keyboardManager.isDown('ArrowDown') || this.keyboardManager.isDown('KeyS')) ky += 1;
+    if (
+      this.keyboardManager.isDown('ArrowLeft') ||
+      this.keyboardManager.isDown('KeyA')
+    )
+      kx -= 1;
+    if (
+      this.keyboardManager.isDown('ArrowRight') ||
+      this.keyboardManager.isDown('KeyD')
+    )
+      kx += 1;
+    if (
+      this.keyboardManager.isDown('ArrowUp') ||
+      this.keyboardManager.isDown('KeyW')
+    )
+      ky -= 1;
+    if (
+      this.keyboardManager.isDown('ArrowDown') ||
+      this.keyboardManager.isDown('KeyS')
+    )
+      ky += 1;
 
     if (kx !== 0 || ky !== 0) {
       // Normalize diagonal movement
@@ -1578,31 +1690,38 @@ class TiltController {
 
   async enable(): Promise<boolean> {
     // iOS 13+ requires permission
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        'requestPermission' in DeviceOrientationEvent) {
+    if (
+      typeof DeviceOrientationEvent !== 'undefined' &&
+      'requestPermission' in DeviceOrientationEvent
+    ) {
       try {
-        const permission = await (DeviceOrientationEvent as any).requestPermission();
+        const permission = await (
+          DeviceOrientationEvent as any
+        ).requestPermission();
         if (permission !== 'granted') return false;
       } catch {
         return false;
       }
     }
 
-    window.addEventListener('deviceorientation', (e: DeviceOrientationEvent) => {
-      if (e.beta === null || e.gamma === null) return;
+    window.addEventListener(
+      'deviceorientation',
+      (e: DeviceOrientationEvent) => {
+        if (e.beta === null || e.gamma === null) return;
 
-      if (!this.enabled) {
-        // Calibrate on first reading
-        this.calibration = { beta: e.beta, gamma: e.gamma };
-        this.enabled = true;
+        if (!this.enabled) {
+          // Calibrate on first reading
+          this.calibration = { beta: e.beta, gamma: e.gamma };
+          this.enabled = true;
+        }
+
+        // Normalize to -1 to 1 (assuming ~30 degree max tilt)
+        this.tilt = {
+          x: Math.max(-1, Math.min(1, (e.gamma - this.calibration.gamma) / 30)),
+          y: Math.max(-1, Math.min(1, (e.beta - this.calibration.beta) / 30)),
+        };
       }
-
-      // Normalize to -1 to 1 (assuming ~30 degree max tilt)
-      this.tilt = {
-        x: Math.max(-1, Math.min(1, (e.gamma - this.calibration.gamma) / 30)),
-        y: Math.max(-1, Math.min(1, (e.beta - this.calibration.beta) / 30)),
-      };
-    });
+    );
 
     return true;
   }
@@ -1656,11 +1775,15 @@ function preventDefaultBehaviors(element: HTMLElement): void {
   document.addEventListener('gestureend', (e) => e.preventDefault());
 
   // Prevent scroll on touch move
-  document.addEventListener('touchmove', (e) => {
-    if (e.target === element || element.contains(e.target as Node)) {
-      e.preventDefault();
-    }
-  }, { passive: false });
+  document.addEventListener(
+    'touchmove',
+    (e) => {
+      if (e.target === element || element.contains(e.target as Node)) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
 }
 ```
 
@@ -1668,14 +1791,20 @@ function preventDefaultBehaviors(element: HTMLElement): void {
 
 ```html
 <!-- Prevent zoom and scaling -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+/>
 
 <!-- iOS specific -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta
+  name="apple-mobile-web-app-status-bar-style"
+  content="black-translucent"
+/>
 
 <!-- Android specific -->
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes" />
 ```
 
 ---
@@ -1859,6 +1988,7 @@ behavior that differs from `pointercancel`, or if targeting very old browsers.
 
 2. **Canvas to World**: Apply the inverse of the camera transform. If the camera
    has position (cx, cy), zoom z, and rotation r, then:
+
    - Subtract canvas center to get offset from center
    - Divide by zoom
    - Rotate by -r
@@ -1885,6 +2015,7 @@ is resized, scaled with CSS, or when a camera/viewport system is involved.
    Use `Math.atan2` for more nuanced angle-based detection.
 
 Edge cases to handle:
+
 - Very fast flicks (short distance but high velocity)
 - Diagonal swipes (do you want 4-directional or 8-directional?)
 - Swipes that change direction mid-gesture
@@ -1961,6 +2092,7 @@ if those presses are ignored, the game feels like it's dropping inputs.
 being fixed), which is more intuitive for most players.
 
 **Key considerations**:
+
 - Use `setPointerCapture` to keep receiving events if finger slides off the joystick
 - Show clear visual feedback (base opacity, knob position)
 - Return smooth normalized values (not pixel distances)

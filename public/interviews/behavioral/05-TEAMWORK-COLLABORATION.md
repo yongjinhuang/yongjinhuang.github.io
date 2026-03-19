@@ -11,7 +11,7 @@ Teamwork questions are among the most common in behavioral interviews because al
 - **Conflict navigation** -- When disagreements arise in code reviews or design discussions, do you handle them constructively?
 - **Adaptability** -- Can you work effectively with people across time zones, experience levels, and cultural backgrounds?
 
-The overarching question behind every teamwork prompt is: *Would I want this person on my team?*
+The overarching question behind every teamwork prompt is: _Would I want this person on my team?_
 
 ---
 
@@ -32,23 +32,28 @@ The overarching question behind every teamwork prompt is: *Would I want this per
 
 ## How to Structure Your Answer
 
-Use the STAR method, but tailor it for teamwork questions by making the *other people* visible in your story. A common mistake is turning a teamwork answer into a solo hero narrative.
+Use the STAR method, but tailor it for teamwork questions by making the _other people_ visible in your story. A common mistake is turning a teamwork answer into a solo hero narrative.
 
 ### Situation
+
 Set the scene by describing the team composition, the project, and any relevant dynamics (remote vs. co-located, cross-functional vs. single-team, experience levels).
 
 ### Task
+
 Clarify your specific role and responsibility within the team. Were you leading? Contributing as a peer? Mentoring someone?
 
 ### Action
+
 This is where interviewers listen most carefully. Focus on:
+
 - How you communicated (meetings, async messages, documentation)
 - How you handled disagreements or differing opinions
 - How you adapted your approach for different team members
 - Specific collaborative behaviors (pair programming, whiteboarding, knowledge sharing)
 
 ### Result
-Quantify the outcome where possible, but also describe the *team* outcome, not just your personal achievement. Did the team ship faster? Did code quality improve? Did a junior developer grow?
+
+Quantify the outcome where possible, but also describe the _team_ outcome, not just your personal achievement. Did the team ship faster? Did code quality improve? Did a junior developer grow?
 
 **Tip**: End with what you learned about collaboration from the experience.
 
@@ -122,7 +127,7 @@ Quantify the outcome where possible, but also describe the *team* outcome, not j
 
 > "I believe code reviews are really important. I always try to be thorough but also respectful. I think it is important to balance quality with speed. Communication is key."
 
-**Why this fails**: There is no specific example, no STAR structure, and no evidence that the candidate actually does what they claim. Anyone can say they value communication. Interviewers want to hear what you *did*.
+**Why this fails**: There is no specific example, no STAR structure, and no evidence that the candidate actually does what they claim. Anyone can say they value communication. Interviewers want to hear what you _did_.
 
 ---
 
@@ -142,34 +147,34 @@ Use these templates to prepare your own stories. Fill in the blanks with real ex
 
 ### Story 1: Cross-Team Collaboration
 
-- **Situation**: I was working on _______ which required coordination between _______ and _______ teams. The challenge was _______.
-- **Task**: My role was to _______.
-- **Action**: I facilitated collaboration by _______. When we hit a disagreement about _______, I resolved it by _______. I also _______ to keep everyone aligned.
-- **Result**: We delivered _______ (on time / early / with X% improvement). The process improvement I introduced was _______, which is still used today.
+- **Situation**: I was working on **\_\_\_** which required coordination between **\_\_\_** and **\_\_\_** teams. The challenge was **\_\_\_**.
+- **Task**: My role was to **\_\_\_**.
+- **Action**: I facilitated collaboration by **\_\_\_**. When we hit a disagreement about **\_\_\_**, I resolved it by **\_\_\_**. I also **\_\_\_** to keep everyone aligned.
+- **Result**: We delivered **\_\_\_** (on time / early / with X% improvement). The process improvement I introduced was **\_\_\_**, which is still used today.
 - **Best used for**: Cross-team work, conflict resolution, influence without authority
 
 ### Story 2: Mentoring / Knowledge Sharing
 
-- **Situation**: A _______ (junior engineer / new team member) needed help with _______.
-- **Task**: I took on the responsibility of _______.
-- **Action**: Instead of _______ (common but ineffective approach), I _______ (better approach). Specifically, I _______. I also _______.
-- **Result**: The person was able to _______ independently within _______ (timeframe). They went on to _______.
+- **Situation**: A **\_\_\_** (junior engineer / new team member) needed help with **\_\_\_**.
+- **Task**: I took on the responsibility of **\_\_\_**.
+- **Action**: Instead of **\_\_\_** (common but ineffective approach), I **\_\_\_** (better approach). Specifically, I **\_\_\_**. I also **\_\_\_**.
+- **Result**: The person was able to **\_\_\_** independently within **\_\_\_** (timeframe). They went on to **\_\_\_**.
 - **Best used for**: Mentoring, leadership, growing others
 
 ### Story 3: Code Review Impact
 
-- **Situation**: Our team's code review process had a problem: _______.
-- **Task**: I wanted to improve _______ without _______.
-- **Action**: I introduced _______ (specific practice or tool). I got buy-in by _______. I reinforced the change by _______.
-- **Result**: _______ (metric) improved by _______%. Team feedback was _______.
+- **Situation**: Our team's code review process had a problem: **\_\_\_**.
+- **Task**: I wanted to improve **\_\_\_** without **\_\_\_**.
+- **Action**: I introduced **\_\_\_** (specific practice or tool). I got buy-in by **\_\_\_**. I reinforced the change by **\_\_\_**.
+- **Result**: **\_\_\_** (metric) improved by **\_\_\_**%. Team feedback was **\_\_\_**.
 - **Best used for**: Code quality, process improvement, influence
 
 ### Story 4: Remote / Distributed Team Collaboration
 
-- **Situation**: I was working with a team distributed across _______ (locations/time zones).
-- **Task**: We needed to deliver _______ despite the communication challenges.
-- **Action**: I adapted by _______ (async communication, documentation, meeting schedule). When _______ happened, I _______.
-- **Result**: We shipped _______ and the team reported _______ improvement in collaboration. I learned _______.
+- **Situation**: I was working with a team distributed across **\_\_\_** (locations/time zones).
+- **Task**: We needed to deliver **\_\_\_** despite the communication challenges.
+- **Action**: I adapted by **\_\_\_** (async communication, documentation, meeting schedule). When **\_\_\_** happened, I **\_\_\_**.
+- **Result**: We shipped **\_\_\_** and the team reported **\_\_\_** improvement in collaboration. I learned **\_\_\_**.
 - **Best used for**: Remote work, adaptability, communication skills
 
 ---
@@ -178,25 +183,25 @@ Use these templates to prepare your own stories. Fill in the blanks with real ex
 
 ### Key Phrases to Use
 
-| Do Say | Do Not Say |
-|--------|------------|
-| "We decided together..." | "I told them to..." |
-| "I facilitated a discussion..." | "I took over because they were slow..." |
-| "I asked questions to understand their perspective..." | "They were wrong, so I..." |
-| "The team shipped..." | "I shipped..." |
-| "I helped them grow by..." | "I fixed their code..." |
-| "We disagreed, so I proposed..." | "We disagreed, so I escalated..." |
+| Do Say                                                 | Do Not Say                              |
+| ------------------------------------------------------ | --------------------------------------- |
+| "We decided together..."                               | "I told them to..."                     |
+| "I facilitated a discussion..."                        | "I took over because they were slow..." |
+| "I asked questions to understand their perspective..." | "They were wrong, so I..."              |
+| "The team shipped..."                                  | "I shipped..."                          |
+| "I helped them grow by..."                             | "I fixed their code..."                 |
+| "We disagreed, so I proposed..."                       | "We disagreed, so I escalated..."       |
 
 ### Do's and Don'ts
 
-| Do | Don't |
-|----|-------|
-| Name specific people and their contributions | Make it a solo narrative |
-| Show how you adapted your communication style | Assume one communication style fits all |
-| Describe how you handled disagreements constructively | Avoid mentioning disagreements entirely |
-| Quantify team outcomes (ship date, quality metrics) | Only mention vague "team bonding" |
-| Explain what you learned from teammates | Position yourself as the only expert |
-| Show empathy for different working styles | Criticize teammates or other teams |
+| Do                                                     | Don't                                     |
+| ------------------------------------------------------ | ----------------------------------------- |
+| Name specific people and their contributions           | Make it a solo narrative                  |
+| Show how you adapted your communication style          | Assume one communication style fits all   |
+| Describe how you handled disagreements constructively  | Avoid mentioning disagreements entirely   |
+| Quantify team outcomes (ship date, quality metrics)    | Only mention vague "team bonding"         |
+| Explain what you learned from teammates                | Position yourself as the only expert      |
+| Show empathy for different working styles              | Criticize teammates or other teams        |
 | Mention async communication strategies for remote work | Ignore the realities of distributed teams |
 
 ### The Collaboration Spectrum

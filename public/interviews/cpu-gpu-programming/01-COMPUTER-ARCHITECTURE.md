@@ -93,8 +93,8 @@ memory speed is called the "memory wall" and is the #1 performance bottleneck in
 computing.
 
 **Buses:**
-The "highways" connecting components. The address bus specifies *where* to read/write, the
-data bus carries *what* to read/write, and the control bus carries signals like "read" or
+The "highways" connecting components. The address bus specifies _where_ to read/write, the
+data bus carries _what_ to read/write, and the control bus carries signals like "read" or
 "write." Bus width determines how much data can move per cycle.
 
 ### 1.3 The Fetch-Decode-Execute Cycle
@@ -132,6 +132,7 @@ Every CPU runs an infinite loop:
 **A concrete example -- adding two numbers in memory:**
 
 Suppose memory looks like this:
+
 ```
 Address  |  Contents
 ---------|--------------------
@@ -142,6 +143,7 @@ Address  |  Contents
 ```
 
 Step by step:
+
 1. **FETCH**: PC = 0x1000. CPU reads the ADD instruction from memory.
 2. **DECODE**: CPU recognizes ADD opcode. It needs values from addresses 0x2000 and 0x2004.
 3. **EXECUTE**: CPU reads 42 and 58 from memory, sends to ALU. ALU computes 42 + 58 = 100.
@@ -228,13 +230,13 @@ only ~1004 cycles (5 to fill + 999 more completions).
 
 **Stage Details:**
 
-| Stage | Abbreviation | What Happens |
-|-------|-------------|--------------|
-| Instruction Fetch | IF | Read instruction from I-cache at address in PC. Increment PC. |
-| Instruction Decode | ID | Decode opcode. Read source registers from register file. |
-| Execute | EX | ALU performs the operation (add, subtract, compare, address calc). |
-| Memory Access | MEM | Load: read data from D-cache. Store: write data to D-cache. |
-| Write Back | WB | Write result back to destination register. |
+| Stage              | Abbreviation | What Happens                                                       |
+| ------------------ | ------------ | ------------------------------------------------------------------ |
+| Instruction Fetch  | IF           | Read instruction from I-cache at address in PC. Increment PC.      |
+| Instruction Decode | ID           | Decode opcode. Read source registers from register file.           |
+| Execute            | EX           | ALU performs the operation (add, subtract, compare, address calc). |
+| Memory Access      | MEM          | Load: read data from D-cache. Store: write data to D-cache.        |
+| Write Back         | WB           | Write result back to destination register.                         |
 
 ### 2.3 Pipeline Hazards
 
@@ -326,6 +328,7 @@ instruction address until the branch condition is evaluated:
 ```
 
 Solutions:
+
 - **Branch prediction**: Guess which way the branch goes (see Section 5)
 - **Delayed branching**: Fill the delay slot with a useful instruction (MIPS approach)
 - **Predicated execution**: Execute both paths, discard wrong one (ARM conditional execution)
@@ -394,7 +397,7 @@ faster) but increase the penalty for mispredictions and stalls. Modern designs s
 ### 3.1 Superscalar: Multiple Instructions Per Cycle
 
 A pipelined CPU still processes at most one instruction per clock cycle per pipeline. A
-**superscalar** CPU has multiple execution units and can issue *several* instructions per
+**superscalar** CPU has multiple execution units and can issue _several_ instructions per
 cycle, achieving an Instructions Per Cycle (IPC) greater than 1.
 
 ```
@@ -422,13 +425,13 @@ cycle, achieving an Instructions Per Cycle (IPC) greater than 1.
 
 **Modern CPU execution width:**
 
-| CPU | Issue Width | Peak IPC |
-|-----|-------------|----------|
-| Intel Skylake | 4 micro-ops/cycle | ~4 |
-| Intel Golden Cove (12th gen) | 6 micro-ops/cycle | ~6 |
-| AMD Zen 4 | 6 micro-ops/cycle | ~6 |
-| Apple M1 (Firestorm) | 8 micro-ops/cycle | ~8 |
-| Apple M3 (Performance) | 9 micro-ops/cycle | ~9 |
+| CPU                          | Issue Width       | Peak IPC |
+| ---------------------------- | ----------------- | -------- |
+| Intel Skylake                | 4 micro-ops/cycle | ~4       |
+| Intel Golden Cove (12th gen) | 6 micro-ops/cycle | ~6       |
+| AMD Zen 4                    | 6 micro-ops/cycle | ~6       |
+| Apple M1 (Firestorm)         | 8 micro-ops/cycle | ~8       |
+| Apple M3 (Performance)       | 9 micro-ops/cycle | ~9       |
 
 ### 3.2 In-Order vs. Out-of-Order Execution
 
@@ -536,7 +539,7 @@ Consider this code:
 ```
 
 Without renaming, I3 cannot execute until I2 reads R1 (otherwise I3 would overwrite I1's
-result before I2 uses it). This is a **Write-After-Read (WAR)** hazard -- a *false*
+result before I2 uses it). This is a **Write-After-Read (WAR)** hazard -- a _false_
 dependency because I3 is using R1 for a completely unrelated purpose.
 
 ```
@@ -574,7 +577,7 @@ execution unit. This is called **Tomasulo's algorithm** (first implemented in IB
 Model 91, 1967).
 
 **Reorder Buffer (ROB):**
-Even though instructions execute out of order, they must *retire* (commit their results) in
+Even though instructions execute out of order, they must _retire_ (commit their results) in
 program order. Why? Because of exceptions and interrupts. If instruction 50 causes a page
 fault, the CPU must be able to say "everything before 50 completed, nothing after 50 has
 taken effect." The ROB is a circular buffer that tracks every in-flight instruction and
@@ -615,6 +618,7 @@ limited by:
 4. **Resource limitations**: Finite execution units, ROB entries, RS entries
 
 Compilers and CPUs work together to maximize ILP:
+
 - **Compiler**: Instruction scheduling, loop unrolling, software pipelining
 - **CPU hardware**: Register renaming, OoO execution, speculative execution
 
@@ -793,12 +797,12 @@ When a cache line is loaded, where does it go in the cache? There are three stra
 
 **Modern CPU cache associativity:**
 
-| Cache Level | Typical Size | Associativity | Line Size |
-|-------------|-------------|---------------|-----------|
-| L1-I (instructions) | 32-64 KB | 8-way | 64 B |
-| L1-D (data) | 32-64 KB | 8-12 way | 64 B |
-| L2 | 256 KB - 2 MB | 4-16 way | 64 B |
-| L3 | 8-64 MB | 12-16 way | 64 B |
+| Cache Level         | Typical Size  | Associativity | Line Size |
+| ------------------- | ------------- | ------------- | --------- |
+| L1-I (instructions) | 32-64 KB      | 8-way         | 64 B      |
+| L1-D (data)         | 32-64 KB      | 8-12 way      | 64 B      |
+| L2                  | 256 KB - 2 MB | 4-16 way      | 64 B      |
+| L3                  | 8-64 MB       | 12-16 way     | 64 B      |
 
 ### 4.5 Cache Replacement Policies
 
@@ -958,11 +962,11 @@ consistent view of memory.
 
 Three types of cache misses (the "Three Cs"):
 
-| Miss Type | Cause | Mitigation |
-|-----------|-------|------------|
-| **Compulsory** (cold) | First access to a block | Prefetching |
-| **Capacity** | Cache too small for working set | Larger cache, better algorithms |
-| **Conflict** | Multiple addresses map to same set | Higher associativity |
+| Miss Type             | Cause                              | Mitigation                      |
+| --------------------- | ---------------------------------- | ------------------------------- |
+| **Compulsory** (cold) | First access to a block            | Prefetching                     |
+| **Capacity**          | Cache too small for working set    | Larger cache, better algorithms |
+| **Conflict**          | Multiple addresses map to same set | Higher associativity            |
 
 A fourth "C" for multicore:
 | **Coherence** | Another core invalidated the line | Reduce sharing, padding |
@@ -1132,7 +1136,7 @@ Modern CPUs use hardware tables that learn from past behavior:
 
 ### 5.4 Branch Target Buffer (BTB)
 
-Prediction accuracy is not enough -- the CPU also needs to know *where* a taken branch goes.
+Prediction accuracy is not enough -- the CPU also needs to know _where_ a taken branch goes.
 The Branch Target Buffer stores the target address of recently taken branches.
 
 ```
@@ -1160,7 +1164,7 @@ The Branch Target Buffer stores the target address of recently taken branches.
 ### 5.5 Speculative Execution
 
 When the branch predictor says "this branch is taken, jump to address X," the CPU does not
-just start fetching -- it actually *executes* the predicted instructions, modifying registers
+just start fetching -- it actually _executes_ the predicted instructions, modifying registers
 (via the rename table) and issuing memory operations. This is **speculative execution**.
 
 If the prediction was correct, the speculative results are committed (retired from the ROB)
@@ -1557,7 +1561,7 @@ threads on one core, sharing execution units.
 
 ### 7.2 SIMD: Single Instruction, Multiple Data
 
-Instead of operating on one number at a time, SIMD instructions operate on a *vector* of
+Instead of operating on one number at a time, SIMD instructions operate on a _vector_ of
 numbers simultaneously.
 
 ```
@@ -2125,8 +2129,8 @@ The two fundamental approaches to instruction set design:
 
 Every optimization technique we will study in the rest of this guide -- SIMD vectorization,
 cache-friendly data layouts, lock-free programming, GPU offloading -- exploits one or more
-of these architectural features. The hardware *wants* to run your code fast; you just need
-to write code that works *with* the architecture instead of against it.
+of these architectural features. The hardware _wants_ to run your code fast; you just need
+to write code that works _with_ the architecture instead of against it.
 
 ---
 
@@ -2236,6 +2240,7 @@ efficiency comparable to RISC designs.
 
 In **Chapter 02: CPU Optimization**, we will apply everything from this chapter to write
 code that exploits the hardware. You will learn to:
+
 - Use SIMD intrinsics for 4-16x throughput on data-parallel operations
 - Structure data for cache-friendly access patterns
 - Write branchless code that avoids misprediction penalties

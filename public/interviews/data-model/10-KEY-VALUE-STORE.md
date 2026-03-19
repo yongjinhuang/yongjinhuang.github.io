@@ -4,25 +4,25 @@ A distributed key-value store provides high availability and horizontal scalabil
 
 ## Table Responsibilities
 
-| Structure | Purpose | Storage | Key Characteristic |
-|-----------|---------|---------|-------------------|
-| **kv_pairs** | Application data (key-value pairs) | Distributed across nodes | Replicated to N nodes, versioned |
-| **ring_topology** | Consistent hash ring mapping | Each node's metadata | Determines data placement |
-| **cluster_nodes** | Node health and datacenter info | Gossip protocol state | Decentralized, no single coordinator |
-| **hint_store** | Temporary storage for failed writes | Local to each node | Enables hinted handoff for availability |
+| Structure         | Purpose                             | Storage                  | Key Characteristic                      |
+| ----------------- | ----------------------------------- | ------------------------ | --------------------------------------- |
+| **kv_pairs**      | Application data (key-value pairs)  | Distributed across nodes | Replicated to N nodes, versioned        |
+| **ring_topology** | Consistent hash ring mapping        | Each node's metadata     | Determines data placement               |
+| **cluster_nodes** | Node health and datacenter info     | Gossip protocol state    | Decentralized, no single coordinator    |
+| **hint_store**    | Temporary storage for failed writes | Local to each node       | Enables hinted handoff for availability |
 
 ## Detailed Field Descriptions
 
 ### kv_pairs
 
-| Field | Type | Description |
-|-------|------|-------------|
-| key | BYTES, PK | The lookup key. Hashed (e.g., MD5, Murmur3) to determine position on the consistent hash ring. The raw key bytes are stored alongside the hash for exact matching. |
-| value | BYTES | The stored data. Opaque to the storage engine. Can be JSON, Protobuf, or any serialized format. Size limits vary (DynamoDB: 400KB, Cassandra: 2GB theoretical but <1MB recommended). |
+| Field          | Type              | Description                                                                                                                                                                                                      |
+| -------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| key            | BYTES, PK         | The lookup key. Hashed (e.g., MD5, Murmur3) to determine position on the consistent hash ring. The raw key bytes are stored alongside the hash for exact matching.                                               |
+| value          | BYTES             | The stored data. Opaque to the storage engine. Can be JSON, Protobuf, or any serialized format. Size limits vary (DynamoDB: 400KB, Cassandra: 2GB theoretical but <1MB recommended).                             |
 | version_vector | MAP<node_id, INT> | Vector clock for conflict detection. Each node increments its own counter on write. Two versions are concurrent if neither dominates the other. Example: `{A:2, B:1}` vs `{A:1, B:2}` are concurrent (conflict). |
-| ttl | INT, NULLABLE | Time-to-live in seconds. After expiry, the key is tombstoned (marked for deletion) and eventually garbage collected via compaction. Null means no expiration. |
-| created_at | TIMESTAMP | When the key was first written. Used for debugging and auditing. |
-| updated_at | TIMESTAMP | When the value was last modified. Used alongside version_vector for last-write-wins conflict resolution (when vector clocks are not used). |
+| ttl            | INT, NULLABLE     | Time-to-live in seconds. After expiry, the key is tombstoned (marked for deletion) and eventually garbage collected via compaction. Null means no expiration.                                                    |
+| created_at     | TIMESTAMP         | When the key was first written. Used for debugging and auditing.                                                                                                                                                 |
+| updated_at     | TIMESTAMP         | When the value was last modified. Used alongside version_vector for last-write-wins conflict resolution (when vector clocks are not used).                                                                       |
 
 **Why vector clocks instead of timestamps?** Timestamps require synchronized clocks across nodes, which is impractical in distributed systems (clock skew). Vector clocks capture causal ordering without clock synchronization. If `{A:3, B:2}` vs `{A:3, B:1}`, the first clearly happened after the second. If `{A:3, B:1}` vs `{A:1, B:3}`, they are concurrent and the application must resolve the conflict.
 
@@ -30,38 +30,38 @@ A distributed key-value store provides high availability and horizontal scalabil
 
 ### ring_topology
 
-| Field | Type | Description |
-|-------|------|-------------|
-| virtual_node_id | INT, PK | Identifier for a virtual node (vnode) on the hash ring. Each physical node owns multiple vnodes (typically 128-256) for even distribution. |
-| physical_node_id | STRING, FK → cluster_nodes | Which physical node owns this vnode. When a node joins, its vnodes are spread evenly around the ring. |
-| hash_range_start | BIGINT | Start of the hash range this vnode is responsible for (inclusive). |
-| hash_range_end | BIGINT | End of the hash range (exclusive). A key with hash H belongs to this vnode if `hash_range_start <= H < hash_range_end`. |
+| Field            | Type                       | Description                                                                                                                                |
+| ---------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| virtual_node_id  | INT, PK                    | Identifier for a virtual node (vnode) on the hash ring. Each physical node owns multiple vnodes (typically 128-256) for even distribution. |
+| physical_node_id | STRING, FK → cluster_nodes | Which physical node owns this vnode. When a node joins, its vnodes are spread evenly around the ring.                                      |
+| hash_range_start | BIGINT                     | Start of the hash range this vnode is responsible for (inclusive).                                                                         |
+| hash_range_end   | BIGINT                     | End of the hash range (exclusive). A key with hash H belongs to this vnode if `hash_range_start <= H < hash_range_end`.                    |
 
 **Why virtual nodes?** Without vnodes, adding a new physical node only takes over one range from one neighbor, causing uneven distribution. With vnodes (e.g., 256 per physical node), the new node takes small ranges from many neighbors, maintaining balance. It also helps when nodes have different hardware capacities — assign more vnodes to larger machines.
 
 ### cluster_nodes
 
-| Field | Type | Description |
-|-------|------|-------------|
-| node_id | STRING, PK | Unique node identifier (typically UUID). Persists across restarts. |
-| host | VARCHAR | IP address or hostname. |
-| port | INT | Service port for client and inter-node communication. |
-| status | ENUM('active','leaving','joining') | Current lifecycle state. `joining`: receiving data from existing nodes. `leaving`: transferring data to remaining nodes. Only `active` nodes serve reads and writes. |
-| datacenter | VARCHAR | Datacenter identifier (e.g., `us-east-1`, `eu-west-1`). Used for rack-aware replication: replicas are placed in different datacenters for disaster recovery. |
-| rack | VARCHAR | Rack within the datacenter. Rack-aware placement ensures replicas survive rack-level failures (power, switch). |
+| Field      | Type                               | Description                                                                                                                                                          |
+| ---------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| node_id    | STRING, PK                         | Unique node identifier (typically UUID). Persists across restarts.                                                                                                   |
+| host       | VARCHAR                            | IP address or hostname.                                                                                                                                              |
+| port       | INT                                | Service port for client and inter-node communication.                                                                                                                |
+| status     | ENUM('active','leaving','joining') | Current lifecycle state. `joining`: receiving data from existing nodes. `leaving`: transferring data to remaining nodes. Only `active` nodes serve reads and writes. |
+| datacenter | VARCHAR                            | Datacenter identifier (e.g., `us-east-1`, `eu-west-1`). Used for rack-aware replication: replicas are placed in different datacenters for disaster recovery.         |
+| rack       | VARCHAR                            | Rack within the datacenter. Rack-aware placement ensures replicas survive rack-level failures (power, switch).                                                       |
 
 **Why datacenter and rack awareness?** Placing all 3 replicas on the same rack means a single top-of-rack switch failure loses all copies. Rack-aware placement guarantees replicas span racks. Datacenter-aware placement provides cross-region durability.
 
 ### hint_store
 
-| Field | Type | Description |
-|-------|------|-------------|
-| target_node_id | STRING | The node that should have received this write but was unavailable. When the target comes back online, hints are replayed to it. |
-| key | BYTES | The key that was written. |
-| value | BYTES | The value that was written. |
-| version | MAP<node_id, INT> | Version vector at the time of the write. Ensures the replayed hint does not overwrite a newer version. |
-| timestamp | TIMESTAMP | When the hint was created. Hints older than a threshold (e.g., 3 hours) are discarded — the node is assumed permanently failed and full repair (anti-entropy) is needed instead. |
-| hint_created_at | TIMESTAMP | Same as timestamp. Used for hint expiration and garbage collection. |
+| Field           | Type              | Description                                                                                                                                                                      |
+| --------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| target_node_id  | STRING            | The node that should have received this write but was unavailable. When the target comes back online, hints are replayed to it.                                                  |
+| key             | BYTES             | The key that was written.                                                                                                                                                        |
+| value           | BYTES             | The value that was written.                                                                                                                                                      |
+| version         | MAP<node_id, INT> | Version vector at the time of the write. Ensures the replayed hint does not overwrite a newer version.                                                                           |
+| timestamp       | TIMESTAMP         | When the hint was created. Hints older than a threshold (e.g., 3 hours) are discarded — the node is assumed permanently failed and full repair (anti-entropy) is needed instead. |
+| hint_created_at | TIMESTAMP         | Same as timestamp. Used for hint expiration and garbage collection.                                                                                                              |
 
 **Why hinted handoff?** When a replica node is temporarily down, the write could fail (reducing availability) or be lost (reducing durability). Hinted handoff lets another node temporarily store the write and replay it when the target recovers. This maintains availability without sacrificing durability for short outages.
 

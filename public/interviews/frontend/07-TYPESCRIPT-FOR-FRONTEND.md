@@ -14,9 +14,9 @@ TypeScript infers types from values wherever possible. You should let inference 
 
 ```typescript
 // Inference works -- no annotation needed
-const name = 'Alice';              // type: "Alice" (string literal)
-const count = 42;                   // type: 42 (number literal)
-const items = [1, 2, 3];           // type: number[]
+const name = 'Alice'; // type: "Alice" (string literal)
+const count = 42; // type: 42 (number literal)
+const items = [1, 2, 3]; // type: number[]
 const user = { name: 'Bob', age: 30 }; // type: { name: string; age: number }
 
 // Let annotation needed when inference is too broad
@@ -48,8 +48,8 @@ function first<T>(arr: T[]): T | undefined {
   return arr[0];
 }
 
-const num = first([1, 2, 3]);       // type: number | undefined
-const str = first(['a', 'b']);       // type: string | undefined
+const num = first([1, 2, 3]); // type: number | undefined
+const str = first(['a', 'b']); // type: string | undefined
 
 // Generic with constraint
 function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
@@ -57,8 +57,8 @@ function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
 }
 
 const user = { name: 'Alice', age: 30 };
-const name = getProperty(user, 'name');  // type: string
-const age = getProperty(user, 'age');    // type: number
+const name = getProperty(user, 'name'); // type: string
+const age = getProperty(user, 'age'); // type: number
 // getProperty(user, 'email');           // Error: 'email' not in keyof user
 
 // Generic interface
@@ -113,13 +113,15 @@ type RolePermissions = Record<User['role'], string[]>;
 type FrozenUser = Readonly<User>;
 
 // Extract<T, U> -- extract members from union
-type AdminRole = Extract<User['role'], 'admin'>;  // 'admin'
+type AdminRole = Extract<User['role'], 'admin'>; // 'admin'
 
 // Exclude<T, U> -- remove members from union
 type NonAdminRole = Exclude<User['role'], 'admin'>; // 'user'
 
 // ReturnType<T> -- get return type of function
-function fetchUser() { return { id: '1', name: 'Alice' }; }
+function fetchUser() {
+  return { id: '1', name: 'Alice' };
+}
 type FetchResult = ReturnType<typeof fetchUser>;
 // { id: string; name: string }
 
@@ -209,14 +211,18 @@ function getLength(value: string | string[]) {
 }
 
 // in operator
-interface Fish { swim: () => void }
-interface Bird { fly: () => void }
+interface Fish {
+  swim: () => void;
+}
+interface Bird {
+  fly: () => void;
+}
 
 function move(animal: Fish | Bird) {
   if ('swim' in animal) {
     animal.swim(); // Fish
   } else {
-    animal.fly();  // Bird
+    animal.fly(); // Bird
   }
 }
 
@@ -272,7 +278,7 @@ type CSSUnit = 'px' | 'rem' | 'em' | '%' | 'vh' | 'vw';
 type CSSValue = `${number}${CSSUnit}`;
 // "10px", "2rem", "100%", etc.
 
-const width: CSSValue = '100px';  // OK
+const width: CSSValue = '100px'; // OK
 // const bad: CSSValue = 'abc';   // Error
 
 // Route parameters
@@ -293,7 +299,7 @@ type CommentRouteParams = ExtractParams<'/posts/:postId/comments/:commentId'>;
 
 // Object key patterns
 type Getters<T> = {
-  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K]
+  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];
 };
 
 type UserGetters = Getters<{ name: string; age: number }>;
@@ -335,7 +341,7 @@ type PrefixedUser = Prefixed<{ name: string; age: number }>;
 
 // Filter properties by type
 type StringKeys<T> = {
-  [K in keyof T as T[K] extends string ? K : never]: T[K]
+  [K in keyof T as T[K] extends string ? K : never]: T[K];
 };
 
 type UserStrings = StringKeys<User>;
@@ -350,14 +356,14 @@ Types that depend on a condition:
 // Basic conditional
 type IsString<T> = T extends string ? true : false;
 
-type A = IsString<string>;  // true
-type B = IsString<number>;  // false
+type A = IsString<string>; // true
+type B = IsString<number>; // false
 
 // Inferring within conditionals
 type Flatten<T> = T extends Array<infer Item> ? Item : T;
 
-type Num = Flatten<number[]>;  // number
-type Str = Flatten<string>;    // string
+type Num = Flatten<number[]>; // number
+type Str = Flatten<string>; // string
 
 // Unwrap promise
 type UnwrapPromise<T> = T extends Promise<infer U> ? UnwrapPromise<U> : T;
@@ -377,8 +383,7 @@ type Arr2 = ToArrayNonDist<string | number>;
 // (string | number)[]
 
 // Practical: Extract function overload return types
-type ExtractReturn<T> =
-  T extends (...args: infer _A) => infer R ? R : never;
+type ExtractReturn<T> = T extends (...args: infer _A) => infer R ? R : never;
 ```
 
 ### Declaration Files
@@ -599,12 +604,14 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((pre
 **Answer:** Both define object shapes, but they have key differences:
 
 **`interface`:**
+
 - Supports declaration merging (multiple declarations with the same name merge)
 - Supports `extends` for inheritance
 - Can only describe object shapes (not primitives, unions, tuples)
 - Better error messages in some cases
 
 **`type`:**
+
 - Cannot be merged (redeclaring is an error)
 - Uses `&` for intersection (similar to extends)
 - Can represent any type: primitives, unions, tuples, mapped types, conditional types
@@ -624,7 +631,9 @@ type Status = 'active' | 'inactive';
 type Admin = User & { permissions: string[] };
 
 // Computed properties (type only)
-type Getters<T> = { [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K] };
+type Getters<T> = {
+  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];
+};
 ```
 
 **Recommendation:** Use `interface` for public API contracts and object shapes that may be extended. Use `type` for unions, computed types, and complex type expressions.
@@ -635,15 +644,20 @@ type Getters<T> = { [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K]
 
 ```typescript
 // Without generics -- loses type info
-function firstAny(arr: any[]): any { return arr[0]; }
+function firstAny(arr: any[]): any {
+  return arr[0];
+}
 
 // With generics -- preserves type info
-function first<T>(arr: T[]): T | undefined { return arr[0]; }
+function first<T>(arr: T[]): T | undefined {
+  return arr[0];
+}
 
 const num = first([1, 2, 3]); // number | undefined (not any)
 ```
 
 Generics are crucial for:
+
 - Collection types (`Array<T>`, `Map<K, V>`, `Set<T>`)
 - API response wrappers (`ApiResponse<T>`)
 - Utility types (`Partial<T>`, `Pick<T, K>`)
@@ -654,6 +668,7 @@ Generics are crucial for:
 **Answer:** Discriminated unions are union types where each member has a common literal property (the discriminant) that TypeScript uses for narrowing. They model states that have different shapes depending on a variant.
 
 Use them for:
+
 - **API response states** (`loading | success | error`)
 - **Event systems** (different event types with different payloads)
 - **State machines** (each state has different available data)
@@ -669,8 +684,8 @@ The exhaustive `switch` pattern with a `never` default case ensures you handle e
 // Extract the element type from an array, or keep the type as-is
 type Unwrap<T> = T extends Array<infer E> ? E : T;
 
-type A = Unwrap<string[]>;  // string
-type B = Unwrap<number>;    // number
+type A = Unwrap<string[]>; // string
+type B = Unwrap<number>; // number
 
 // Extract the resolved type from a Promise
 type Resolved<T> = T extends Promise<infer R> ? Resolved<R> : T;
@@ -794,18 +809,23 @@ class TypedEmitter<Events extends Record<string, unknown>> {
     [K in keyof Events]?: Array<(data: Events[K]) => void>;
   } = {};
 
-  on<K extends keyof Events>(event: K, listener: (data: Events[K]) => void): () => void {
+  on<K extends keyof Events>(
+    event: K,
+    listener: (data: Events[K]) => void
+  ): () => void {
     const eventListeners = this.listeners[event] ?? [];
     this.listeners[event] = [...eventListeners, listener];
 
     return () => {
-      this.listeners[event] = (this.listeners[event] ?? []).filter(l => l !== listener);
+      this.listeners[event] = (this.listeners[event] ?? []).filter(
+        (l) => l !== listener
+      );
     };
   }
 
   emit<K extends keyof Events>(event: K, data: Events[K]): void {
     const eventListeners = this.listeners[event] ?? [];
-    eventListeners.forEach(listener => listener(data));
+    eventListeners.forEach((listener) => listener(data));
   }
 }
 
@@ -914,7 +934,10 @@ class QueryBuilder<T extends Record<string, unknown>> {
 
   where(conditions: Partial<T>): QueryBuilder<T> {
     return Object.assign(Object.create(Object.getPrototypeOf(this)), {
-      config: { ...this.config, where: { ...this.config.where, ...conditions } },
+      config: {
+        ...this.config,
+        where: { ...this.config.where, ...conditions },
+      },
     });
   }
 
@@ -979,57 +1002,57 @@ const query = new QueryBuilder<Product>('products')
 
 ## Quick Reference
 
-| Utility Type | Transformation |
-|-------------|---------------|
-| `Partial<T>` | All properties optional |
-| `Required<T>` | All properties required |
-| `Readonly<T>` | All properties readonly |
-| `Pick<T, K>` | Select properties K from T |
-| `Omit<T, K>` | Remove properties K from T |
-| `Record<K, V>` | Object with keys K and values V |
-| `Extract<T, U>` | Members of T assignable to U |
-| `Exclude<T, U>` | Members of T not assignable to U |
-| `NonNullable<T>` | Remove null and undefined |
-| `ReturnType<F>` | Return type of function F |
-| `Parameters<F>` | Parameter types of function F as tuple |
-| `Awaited<T>` | Unwrap nested Promise types |
-| `InstanceType<C>` | Instance type of a constructor |
+| Utility Type      | Transformation                         |
+| ----------------- | -------------------------------------- |
+| `Partial<T>`      | All properties optional                |
+| `Required<T>`     | All properties required                |
+| `Readonly<T>`     | All properties readonly                |
+| `Pick<T, K>`      | Select properties K from T             |
+| `Omit<T, K>`      | Remove properties K from T             |
+| `Record<K, V>`    | Object with keys K and values V        |
+| `Extract<T, U>`   | Members of T assignable to U           |
+| `Exclude<T, U>`   | Members of T not assignable to U       |
+| `NonNullable<T>`  | Remove null and undefined              |
+| `ReturnType<F>`   | Return type of function F              |
+| `Parameters<F>`   | Parameter types of function F as tuple |
+| `Awaited<T>`      | Unwrap nested Promise types            |
+| `InstanceType<C>` | Instance type of a constructor         |
 
-| React Type | Usage |
-|-----------|-------|
-| `React.ReactNode` | Anything renderable (string, number, JSX, null) |
-| `React.ReactElement` | JSX element specifically |
-| `React.FC<Props>` | Function component type (avoid in modern code) |
-| `React.ComponentType<Props>` | Class or function component |
-| `React.ElementType` | Component or HTML tag string |
-| `React.ComponentPropsWithoutRef<C>` | Props of component C without ref |
-| `React.ComponentPropsWithRef<C>` | Props of component C with ref |
-| `React.FormEvent<HTMLFormElement>` | Form submit event |
-| `React.ChangeEvent<HTMLInputElement>` | Input change event |
-| `React.MouseEvent<HTMLButtonElement>` | Button click event |
-| `React.KeyboardEvent<HTMLElement>` | Keyboard event |
-| `React.Ref<HTMLElement>` | Ref type for elements |
-| `React.MutableRefObject<T>` | useRef return type |
+| React Type                            | Usage                                           |
+| ------------------------------------- | ----------------------------------------------- |
+| `React.ReactNode`                     | Anything renderable (string, number, JSX, null) |
+| `React.ReactElement`                  | JSX element specifically                        |
+| `React.FC<Props>`                     | Function component type (avoid in modern code)  |
+| `React.ComponentType<Props>`          | Class or function component                     |
+| `React.ElementType`                   | Component or HTML tag string                    |
+| `React.ComponentPropsWithoutRef<C>`   | Props of component C without ref                |
+| `React.ComponentPropsWithRef<C>`      | Props of component C with ref                   |
+| `React.FormEvent<HTMLFormElement>`    | Form submit event                               |
+| `React.ChangeEvent<HTMLInputElement>` | Input change event                              |
+| `React.MouseEvent<HTMLButtonElement>` | Button click event                              |
+| `React.KeyboardEvent<HTMLElement>`    | Keyboard event                                  |
+| `React.Ref<HTMLElement>`              | Ref type for elements                           |
+| `React.MutableRefObject<T>`           | useRef return type                              |
 
-| Type Guard | Narrows To |
-|-----------|-----------|
-| `typeof x === 'string'` | `string` |
-| `typeof x === 'number'` | `number` |
-| `typeof x === 'boolean'` | `boolean` |
-| `typeof x === 'function'` | Function |
-| `x instanceof Date` | `Date` |
-| `'key' in x` | Object with `key` property |
-| `Array.isArray(x)` | `Array` |
-| Custom: `(x): x is T` | `T` |
+| Type Guard                | Narrows To                 |
+| ------------------------- | -------------------------- |
+| `typeof x === 'string'`   | `string`                   |
+| `typeof x === 'number'`   | `number`                   |
+| `typeof x === 'boolean'`  | `boolean`                  |
+| `typeof x === 'function'` | Function                   |
+| `x instanceof Date`       | `Date`                     |
+| `'key' in x`              | Object with `key` property |
+| `Array.isArray(x)`        | `Array`                    |
+| Custom: `(x): x is T`     | `T`                        |
 
-| Keyword | Purpose |
-|---------|---------|
-| `as const` | Infer narrowest literal type |
-| `satisfies` | Check type without widening |
-| `is` | Custom type guard return |
-| `infer` | Extract type within conditional |
-| `keyof` | Union of object keys |
-| `typeof` | Get type from value |
-| `extends` | Generic constraint or conditional check |
-| `never` | Impossible type / exhaustive check |
-| `unknown` | Type-safe any |
+| Keyword     | Purpose                                 |
+| ----------- | --------------------------------------- |
+| `as const`  | Infer narrowest literal type            |
+| `satisfies` | Check type without widening             |
+| `is`        | Custom type guard return                |
+| `infer`     | Extract type within conditional         |
+| `keyof`     | Union of object keys                    |
+| `typeof`    | Get type from value                     |
+| `extends`   | Generic constraint or conditional check |
+| `never`     | Impossible type / exhaustive check      |
+| `unknown`   | Type-safe any                           |

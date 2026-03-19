@@ -64,6 +64,7 @@ Robotics sits at the intersection of mechanical engineering, electrical engineer
 ```
 
 You cannot build a robot without understanding:
+
 - **How** to represent position and orientation in 3D space
 - **What** kinematics means and why inverse kinematics is hard
 - **Why** singularities cause robots to lose control
@@ -86,6 +87,7 @@ You cannot build a robot without understanding:
 ```
 
 Control theory is the beating heart of robotics:
+
 - **PID** is the most widely used controller in industry (90%+ of all control loops)
 - **MPC** is behind every modern self-driving car
 - **LQR** balances performance vs. control effort optimally

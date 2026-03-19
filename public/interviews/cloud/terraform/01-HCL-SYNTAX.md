@@ -10,13 +10,13 @@ Terraform reads **every** `.tf` file in the current directory (non-recursively) 
 
 ### File Types
 
-| Extension | Purpose |
-|-----------|---------|
-| `.tf` | Terraform configuration (HCL syntax) |
-| `.tf.json` | Terraform configuration (JSON syntax, rarely used) |
-| `.tfvars` | Variable value definitions |
-| `.auto.tfvars` | Auto-loaded variable values (no `-var-file` flag needed) |
-| `.terraform.lock.hcl` | Dependency lock file (always commit this) |
+| Extension             | Purpose                                                  |
+| --------------------- | -------------------------------------------------------- |
+| `.tf`                 | Terraform configuration (HCL syntax)                     |
+| `.tf.json`            | Terraform configuration (JSON syntax, rarely used)       |
+| `.tfvars`             | Variable value definitions                               |
+| `.auto.tfvars`        | Auto-loaded variable values (no `-var-file` flag needed) |
+| `.terraform.lock.hcl` | Dependency lock file (always commit this)                |
 
 ### Naming Conventions
 
@@ -47,16 +47,16 @@ block_type "label_1" "label_2" {
 
 ### Block Types
 
-| Block | Labels | Purpose |
-|-------|--------|---------|
-| `resource` | type, name | Creates infrastructure |
-| `data` | type, name | Reads existing infrastructure |
-| `variable` | name | Declares an input variable |
-| `output` | name | Declares an output value |
-| `locals` | (none) | Defines local named values |
-| `module` | name | Calls a child module |
-| `provider` | name | Configures a provider plugin |
-| `terraform` | (none) | Terraform settings (version, backend, required_providers) |
+| Block       | Labels     | Purpose                                                   |
+| ----------- | ---------- | --------------------------------------------------------- |
+| `resource`  | type, name | Creates infrastructure                                    |
+| `data`      | type, name | Reads existing infrastructure                             |
+| `variable`  | name       | Declares an input variable                                |
+| `output`    | name       | Declares an output value                                  |
+| `locals`    | (none)     | Defines local named values                                |
+| `module`    | name       | Calls a child module                                      |
+| `provider`  | name       | Configures a provider plugin                              |
+| `terraform` | (none)     | Terraform settings (version, backend, required_providers) |
 
 ### Examples
 
@@ -110,26 +110,26 @@ HCL has a strict type system. Every value has a type, and Terraform will error i
 
 ### Primitive Types
 
-| Type | Example | Notes |
-|------|---------|-------|
-| `string` | `"hello"` | Always quoted |
-| `number` | `42`, `3.14` | Integer or float |
-| `bool` | `true`, `false` | Lowercase only |
+| Type     | Example         | Notes            |
+| -------- | --------------- | ---------------- |
+| `string` | `"hello"`       | Always quoted    |
+| `number` | `42`, `3.14`    | Integer or float |
+| `bool`   | `true`, `false` | Lowercase only   |
 
 ### Collection Types
 
-| Type | Example | Constraint |
-|------|---------|------------|
-| `list(type)` | `["a", "b", "c"]` | Ordered, same type elements |
-| `set(type)` | `toset(["a", "b"])` | Unordered, unique, same type |
-| `map(type)` | `{ key = "value" }` | String keys, same type values |
+| Type         | Example             | Constraint                    |
+| ------------ | ------------------- | ----------------------------- |
+| `list(type)` | `["a", "b", "c"]`   | Ordered, same type elements   |
+| `set(type)`  | `toset(["a", "b"])` | Unordered, unique, same type  |
+| `map(type)`  | `{ key = "value" }` | String keys, same type values |
 
 ### Structural Types
 
-| Type | Example | Constraint |
-|------|---------|------------|
+| Type            | Example                           | Constraint                            |
+| --------------- | --------------------------------- | ------------------------------------- |
 | `object({...})` | `{ name = string, age = number }` | Fixed attributes with specified types |
-| `tuple([...])` | `[string, number, bool]` | Fixed length, each element typed |
+| `tuple([...])`  | `[string, number, bool]`          | Fixed length, each element typed      |
 
 ### Type Constraints in Variables
 
@@ -246,13 +246,13 @@ terraform {
 
 ### Version Constraint Syntax
 
-| Syntax | Meaning |
-|--------|---------|
-| `= 5.1.0` | Exactly 5.1.0 |
-| `>= 5.0` | 5.0 or newer |
-| `~> 5.0` | >= 5.0.0, < 6.0.0 (pessimistic, major pinned) |
-| `~> 5.1` | >= 5.1.0, < 5.2.0 (pessimistic, minor pinned) |
-| `>= 5.0, < 6.0` | Compound constraint |
+| Syntax          | Meaning                                       |
+| --------------- | --------------------------------------------- |
+| `= 5.1.0`       | Exactly 5.1.0                                 |
+| `>= 5.0`        | 5.0 or newer                                  |
+| `~> 5.0`        | >= 5.0.0, < 6.0.0 (pessimistic, major pinned) |
+| `~> 5.1`        | >= 5.1.0, < 5.2.0 (pessimistic, minor pinned) |
+| `>= 5.0, < 6.0` | Compound constraint                           |
 
 `~>` is the most common. It allows patch/minor upgrades but prevents breaking major version bumps.
 

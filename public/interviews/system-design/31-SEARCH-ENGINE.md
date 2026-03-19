@@ -30,33 +30,33 @@
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Full-Text Search | Accept user queries and return ranked documents based on text relevance |
-| 2 | Document Indexing | Ingest, parse, analyze, and index documents from multiple sources |
-| 3 | Query Language | Support term, phrase, bool, fuzzy, wildcard, and range queries |
-| 4 | Faceted Search | Return aggregated facet counts for drill-down navigation |
-| 5 | Autocomplete | Prefix-based and edge n-gram suggestions with sub-50ms latency |
-| 6 | Relevance Tuning | Field boosting, custom scoring functions, business rules injection |
-| 7 | Near-Real-Time (NRT) | Indexed documents become searchable within ~1 second |
-| 8 | Multi-Tenancy | Isolated indexes per tenant with per-tenant quotas |
-| 9 | Highlight & Snippet | Return matching term highlights and context snippets |
-| 10 | Synonym Support | Expand queries using synonym dictionaries at index or query time |
-| 11 | Analytics | Track query counts, zero-result rates, click-through rates |
-| 12 | Hybrid Search | Combine keyword (BM25) and vector (kNN) search with result fusion |
+| #   | Requirement          | Description                                                             |
+| --- | -------------------- | ----------------------------------------------------------------------- |
+| 1   | Full-Text Search     | Accept user queries and return ranked documents based on text relevance |
+| 2   | Document Indexing    | Ingest, parse, analyze, and index documents from multiple sources       |
+| 3   | Query Language       | Support term, phrase, bool, fuzzy, wildcard, and range queries          |
+| 4   | Faceted Search       | Return aggregated facet counts for drill-down navigation                |
+| 5   | Autocomplete         | Prefix-based and edge n-gram suggestions with sub-50ms latency          |
+| 6   | Relevance Tuning     | Field boosting, custom scoring functions, business rules injection      |
+| 7   | Near-Real-Time (NRT) | Indexed documents become searchable within ~1 second                    |
+| 8   | Multi-Tenancy        | Isolated indexes per tenant with per-tenant quotas                      |
+| 9   | Highlight & Snippet  | Return matching term highlights and context snippets                    |
+| 10  | Synonym Support      | Expand queries using synonym dictionaries at index or query time        |
+| 11  | Analytics            | Track query counts, zero-result rates, click-through rates              |
+| 12  | Hybrid Search        | Combine keyword (BM25) and vector (kNN) search with result fusion       |
 
 ### Non-Functional Requirements
 
-| Requirement | Target |
-|-------------|--------|
-| Search latency | < 100ms p99 for keyword search |
+| Requirement      | Target                                             |
+| ---------------- | -------------------------------------------------- |
+| Search latency   | < 100ms p99 for keyword search                     |
 | Indexing latency | < 1 second (NRT) from document write to searchable |
-| Availability | 99.99% (< 52 minutes downtime/year) |
-| Query throughput | 10,000+ queries/sec sustained |
-| Index throughput | 1,000,000 document updates/hour |
-| Durability | Zero data loss; replicated across 3 nodes minimum |
-| Scalability | Linear horizontal scaling via sharding |
-| Consistency | Eventual consistency acceptable for search results |
+| Availability     | 99.99% (< 52 minutes downtime/year)                |
+| Query throughput | 10,000+ queries/sec sustained                      |
+| Index throughput | 1,000,000 document updates/hour                    |
+| Durability       | Zero data loss; replicated across 3 nodes minimum  |
+| Scalability      | Linear horizontal scaling via sharding             |
+| Consistency      | Eventual consistency acceptable for search results |
 
 ### Scale Estimates
 
@@ -98,15 +98,15 @@ Nodes (rough sizing at 64 GB RAM each):
 
 ### Back-of-Envelope Summary
 
-| Resource | Estimate |
-|----------|----------|
-| Total documents | 1 billion |
-| Index storage | 50 TB |
-| Query throughput | 10K QPS (20K peak) |
-| Indexing rate | 278/sec avg, 2,780/sec burst |
-| Data nodes | ~100 nodes @ 64 GB RAM |
-| p99 search latency | < 100ms |
-| NRT indexing delay | < 1 second |
+| Resource           | Estimate                     |
+| ------------------ | ---------------------------- |
+| Total documents    | 1 billion                    |
+| Index storage      | 50 TB                        |
+| Query throughput   | 10K QPS (20K peak)           |
+| Indexing rate      | 278/sec avg, 2,780/sec burst |
+| Data nodes         | ~100 nodes @ 64 GB RAM       |
+| p99 search latency | < 100ms                      |
+| NRT indexing delay | < 1 second                   |
 
 ---
 
@@ -306,14 +306,14 @@ Response 200 OK:
 {
   "mappings": {
     "properties": {
-      "id":           { "type": "keyword" },
+      "id": { "type": "keyword" },
       "title": {
         "type": "text",
         "analyzer": "english",
         "fields": {
-          "keyword":  { "type": "keyword", "ignore_above": 256 },
-          "suggest":  { "type": "completion" },
-          "ngram":    { "type": "text", "analyzer": "edge_ngram_analyzer" }
+          "keyword": { "type": "keyword", "ignore_above": 256 },
+          "suggest": { "type": "completion" },
+          "ngram": { "type": "text", "analyzer": "edge_ngram_analyzer" }
         }
       },
       "body": {
@@ -328,10 +328,10 @@ Response 200 OK:
           "keyword": { "type": "keyword" }
         }
       },
-      "tags":         { "type": "keyword" },
-      "category":     { "type": "keyword" },
+      "tags": { "type": "keyword" },
+      "category": { "type": "keyword" },
       "published_at": { "type": "date", "format": "strict_date_time" },
-      "view_count":   { "type": "long" },
+      "view_count": { "type": "long" },
       "embedding": {
         "type": "dense_vector",
         "dims": 768,
@@ -945,6 +945,7 @@ Parameter Tuning Guide:
 ```json
 { "term": { "category": "technology" } }
 // No analysis applied -- match exact keyword value
+
 // Use for: enums, IDs, status fields (mapped as keyword)
 ```
 
@@ -955,7 +956,7 @@ Parameter Tuning Guide:
   "match": {
     "body": {
       "query": "distributed systems",
-      "operator": "OR",          // OR (default) or AND
+      "operator": "OR", // OR (default) or AND
       "minimum_should_match": "75%",
       "fuzziness": "AUTO"
     }
@@ -964,6 +965,7 @@ Parameter Tuning Guide:
 // Analysis applied to query text
 // "distributed systems" -> analyzed -> ["distribut", "system"]
 // OR: doc matches if any token present
+
 // AND: doc must contain all tokens
 ```
 
@@ -981,6 +983,7 @@ Parameter Tuning Guide:
 // Requires tokens to appear in ORDER and ADJACENT
 // slop=1 allows 1 intervening token
 // "distributed computing systems" matches with slop=1
+
 // Uses position data from posting list
 ```
 
@@ -989,19 +992,15 @@ Parameter Tuning Guide:
 ```json
 {
   "bool": {
-    "must": [
-      { "match": { "body": "search engine" } }
-    ],
+    "must": [{ "match": { "body": "search engine" } }],
     "should": [
       { "match": { "title": { "query": "search engine", "boost": 3.0 } } },
-      { "term":  { "tags": "featured" } }
+      { "term": { "tags": "featured" } }
     ],
-    "must_not": [
-      { "term": { "status": "deleted" } }
-    ],
+    "must_not": [{ "term": { "status": "deleted" } }],
     "filter": [
       { "range": { "published_at": { "gte": "now-30d" } } },
-      { "term":  { "category": "technology" } }
+      { "term": { "category": "technology" } }
     ],
     "minimum_should_match": 1
   }
@@ -1009,6 +1008,7 @@ Parameter Tuning Guide:
 // must:     contributes to score, document MUST match
 // should:   contributes to score, optional (boosts relevance)
 // must_not: document MUST NOT match (no scoring, cached as bitset)
+
 // filter:   document MUST match (NO scoring, cached as bitset)
 ```
 
@@ -1019,14 +1019,15 @@ Parameter Tuning Guide:
   "fuzzy": {
     "title": {
       "value": "serch",
-      "fuzziness": "AUTO",   // AUTO: 0 for len<3, 1 for 3-5, 2 for >5
-      "prefix_length": 2,    // first N chars must match exactly
-      "max_expansions": 50   // max candidate terms to consider
+      "fuzziness": "AUTO", // AUTO: 0 for len<3, 1 for 3-5, 2 for >5
+      "prefix_length": 2, // first N chars must match exactly
+      "max_expansions": 50 // max candidate terms to consider
     }
   }
 }
 // Uses Levenshtein distance (edit distance)
 // "serch" matches "search" (1 insertion)
+
 // Implemented via Levenshtein automaton on term dictionary
 ```
 
@@ -1044,6 +1045,7 @@ Parameter Tuning Guide:
   }
 }
 // Numeric and date fields use BKD tree (Block K-D Tree)
+
 // O(log N) range lookups, efficient for multi-dimensional ranges
 ```
 
@@ -1054,12 +1056,13 @@ Parameter Tuning Guide:
   "multi_match": {
     "query": "search engine technology",
     "fields": ["title^3", "body^1", "tags^2"],
-    "type": "best_fields",    // or cross_fields, most_fields, phrase
+    "type": "best_fields", // or cross_fields, most_fields, phrase
     "tie_breaker": 0.3
   }
 }
 // best_fields: score = max(field_score) + tie_breaker * other_scores
 // cross_fields: treats all fields as one big field (good for names)
+
 // most_fields:  sum of all field scores (good for multi-analyzer)
 ```
 
@@ -1990,19 +1993,19 @@ Target: 1M documents/hour = 278 docs/sec
 
 ## 19. Trade-offs
 
-| Decision | Option A | Option B | Recommendation |
-|----------|----------|----------|----------------|
-| Refresh interval | 1s (NRT) | 30s (high throughput) | 1s for search apps, 30s for log ingestion |
-| Shard size | Small (5GB) | Large (50GB) | 25-50 GB; avoid too-small (overhead) or too-large (slow recovery) |
-| Replica count | 0 (no HA) | 2 (extra read) | 1 replica for HA; 2 for read-heavy workloads |
-| Index-time vs query-time analysis | Index-time synonyms | Query-time synonyms | Query-time: no reindex needed when vocab changes |
-| Keyword vs text mapping | text only | text + keyword sub-field | Multi-field: text for search, keyword for aggs/sort |
-| BM25 vs TF-IDF | TF-IDF (simpler) | BM25 (default since ES5) | Always BM25; TF-IDF only for legacy compat |
-| Mapping strict vs dynamic | dynamic=true | dynamic=false | Strict in production; prevent mapping explosion |
-| Deep pagination | from/size | search_after (cursor) | Always search_after for >1000 results |
-| Aggregation precision | shard_size=10 | shard_size=1000 | Increase shard_size for accurate counts (vs latency) |
-| Vector search ANN | HNSW (fast, less accurate) | Exact kNN (slow, perfect) | HNSW with num_candidates tuning |
-| Cross-cluster search | Single cluster | CCS (federated) | CCS for geo-distributed or isolation requirements |
+| Decision                          | Option A                   | Option B                  | Recommendation                                                    |
+| --------------------------------- | -------------------------- | ------------------------- | ----------------------------------------------------------------- |
+| Refresh interval                  | 1s (NRT)                   | 30s (high throughput)     | 1s for search apps, 30s for log ingestion                         |
+| Shard size                        | Small (5GB)                | Large (50GB)              | 25-50 GB; avoid too-small (overhead) or too-large (slow recovery) |
+| Replica count                     | 0 (no HA)                  | 2 (extra read)            | 1 replica for HA; 2 for read-heavy workloads                      |
+| Index-time vs query-time analysis | Index-time synonyms        | Query-time synonyms       | Query-time: no reindex needed when vocab changes                  |
+| Keyword vs text mapping           | text only                  | text + keyword sub-field  | Multi-field: text for search, keyword for aggs/sort               |
+| BM25 vs TF-IDF                    | TF-IDF (simpler)           | BM25 (default since ES5)  | Always BM25; TF-IDF only for legacy compat                        |
+| Mapping strict vs dynamic         | dynamic=true               | dynamic=false             | Strict in production; prevent mapping explosion                   |
+| Deep pagination                   | from/size                  | search_after (cursor)     | Always search_after for >1000 results                             |
+| Aggregation precision             | shard_size=10              | shard_size=1000           | Increase shard_size for accurate counts (vs latency)              |
+| Vector search ANN                 | HNSW (fast, less accurate) | Exact kNN (slow, perfect) | HNSW with num_candidates tuning                                   |
+| Cross-cluster search              | Single cluster             | CCS (federated)           | CCS for geo-distributed or isolation requirements                 |
 
 ### Deep Pagination Problem
 
@@ -2032,24 +2035,24 @@ For jump-to-page: Pre-compute page boundaries with scroll
 
 ## 20. Comparison: Search Engines
 
-| Feature | Elasticsearch | Apache Solr | Algolia | Typesense | Meilisearch |
-|---------|--------------|-------------|---------|-----------|-------------|
-| **License** | Elastic License 2.0 (SSPL for old) | Apache 2.0 | Proprietary SaaS | GPL-3.0 / Cloud | MIT (self-host) |
-| **Primary Use** | General purpose, logs, APM | Enterprise search, faceted | Developer-friendly SaaS search | Open-source Algolia alt | Open-source, ease of use |
-| **Query Language** | Query DSL (JSON) | Solr Query Syntax, JSON | Custom JSON API | Custom JSON | Simple JSON |
-| **Scalability** | Excellent (PB-scale) | Good (TB-scale) | Managed / auto | Good (10s TB) | Moderate (single TB) |
-| **Distributed** | Native (shards+replicas) | SolrCloud | Managed | Native | Limited |
-| **Relevance Default** | BM25 (tunable) | BM25 (tunable) | Proprietary (typo, geo, business rules) | BM25 + typo-tolerance | BM25 + typo-tolerance |
-| **Faceted Search** | Excellent (aggregations) | Excellent | Good | Good | Good |
-| **Geo Search** | Excellent | Good | Excellent | Good | Basic |
-| **Analytics** | Kibana, X-Pack | Native + Solr Admin | Built-in (click analytics) | Basic | Basic |
-| **Vector/Hybrid** | Yes (kNN + RRF) | Yes (KNN) | No (only keyword) | Yes (hybrid) | No |
-| **Schema** | Semi-schemaless (dynamic mapping) | Schema-required | Schemaless | Schema optional | Schemaless |
-| **Hosting** | Self-host or Elastic Cloud | Self-host or Managed | SaaS only | Self-host or Cloud | Self-host or Cloud |
-| **Setup Complexity** | High | High | Low (API key + JSON) | Medium | Very low |
-| **Search Latency** | 10-100ms | 20-200ms | < 50ms (SLA) | < 50ms | < 50ms |
-| **Indexing Speed** | Very fast (bulk API) | Fast | Fast | Fast | Fast |
-| **Best For** | Enterprise full-text, observability | Enterprise Java apps | Startup/SaaS instant search | Self-hosted Algolia | Simple self-hosted search |
+| Feature               | Elasticsearch                       | Apache Solr                | Algolia                                 | Typesense               | Meilisearch               |
+| --------------------- | ----------------------------------- | -------------------------- | --------------------------------------- | ----------------------- | ------------------------- |
+| **License**           | Elastic License 2.0 (SSPL for old)  | Apache 2.0                 | Proprietary SaaS                        | GPL-3.0 / Cloud         | MIT (self-host)           |
+| **Primary Use**       | General purpose, logs, APM          | Enterprise search, faceted | Developer-friendly SaaS search          | Open-source Algolia alt | Open-source, ease of use  |
+| **Query Language**    | Query DSL (JSON)                    | Solr Query Syntax, JSON    | Custom JSON API                         | Custom JSON             | Simple JSON               |
+| **Scalability**       | Excellent (PB-scale)                | Good (TB-scale)            | Managed / auto                          | Good (10s TB)           | Moderate (single TB)      |
+| **Distributed**       | Native (shards+replicas)            | SolrCloud                  | Managed                                 | Native                  | Limited                   |
+| **Relevance Default** | BM25 (tunable)                      | BM25 (tunable)             | Proprietary (typo, geo, business rules) | BM25 + typo-tolerance   | BM25 + typo-tolerance     |
+| **Faceted Search**    | Excellent (aggregations)            | Excellent                  | Good                                    | Good                    | Good                      |
+| **Geo Search**        | Excellent                           | Good                       | Excellent                               | Good                    | Basic                     |
+| **Analytics**         | Kibana, X-Pack                      | Native + Solr Admin        | Built-in (click analytics)              | Basic                   | Basic                     |
+| **Vector/Hybrid**     | Yes (kNN + RRF)                     | Yes (KNN)                  | No (only keyword)                       | Yes (hybrid)            | No                        |
+| **Schema**            | Semi-schemaless (dynamic mapping)   | Schema-required            | Schemaless                              | Schema optional         | Schemaless                |
+| **Hosting**           | Self-host or Elastic Cloud          | Self-host or Managed       | SaaS only                               | Self-host or Cloud      | Self-host or Cloud        |
+| **Setup Complexity**  | High                                | High                       | Low (API key + JSON)                    | Medium                  | Very low                  |
+| **Search Latency**    | 10-100ms                            | 20-200ms                   | < 50ms (SLA)                            | < 50ms                  | < 50ms                    |
+| **Indexing Speed**    | Very fast (bulk API)                | Fast                       | Fast                                    | Fast                    | Fast                      |
+| **Best For**          | Enterprise full-text, observability | Enterprise Java apps       | Startup/SaaS instant search             | Self-hosted Algolia     | Simple self-hosted search |
 
 ### When to Choose What
 

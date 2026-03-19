@@ -39,28 +39,28 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss)$': 'identity-obj-proxy',
-    '\\.(jpg|jpeg|png|svg)$': '<rootDir>/__mocks__/fileMock.js'
+    '\\.(jpg|jpeg|png|svg)$': '<rootDir>/__mocks__/fileMock.js',
   },
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
-    '!src/**/index.ts'
+    '!src/**/index.ts',
   ],
   coverageThreshold: {
     global: {
       branches: 80,
       functions: 80,
       lines: 80,
-      statements: 80
-    }
-  }
-}
+      statements: 80,
+    },
+  },
+};
 
 // jest.setup.js
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';
 ```
 
 ### React Testing Library
@@ -68,54 +68,58 @@ import '@testing-library/jest-dom'
 RTL encourages testing components the way users interact with them -- by finding elements through accessible roles, labels, and text rather than implementation details like class names or component internals.
 
 ```jsx
-import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { TodoApp } from './TodoApp'
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { TodoApp } from './TodoApp';
 
 describe('TodoApp', () => {
   it('adds a new todo when the form is submitted', async () => {
-    const user = userEvent.setup()
-    render(<TodoApp />)
+    const user = userEvent.setup();
+    render(<TodoApp />);
 
-    const input = screen.getByPlaceholderText('Add a todo...')
-    const submitButton = screen.getByRole('button', { name: /add/i })
+    const input = screen.getByPlaceholderText('Add a todo...');
+    const submitButton = screen.getByRole('button', { name: /add/i });
 
-    await user.type(input, 'Buy groceries')
-    await user.click(submitButton)
+    await user.type(input, 'Buy groceries');
+    await user.click(submitButton);
 
-    expect(screen.getByText('Buy groceries')).toBeInTheDocument()
-    expect(input).toHaveValue('')
-  })
+    expect(screen.getByText('Buy groceries')).toBeInTheDocument();
+    expect(input).toHaveValue('');
+  });
 
   it('marks a todo as completed when clicked', async () => {
-    const user = userEvent.setup()
-    render(<TodoApp initialTodos={[{ id: '1', text: 'Test todo', completed: false }]} />)
+    const user = userEvent.setup();
+    render(
+      <TodoApp
+        initialTodos={[{ id: '1', text: 'Test todo', completed: false }]}
+      />
+    );
 
-    const checkbox = screen.getByRole('checkbox', { name: /test todo/i })
-    expect(checkbox).not.toBeChecked()
+    const checkbox = screen.getByRole('checkbox', { name: /test todo/i });
+    expect(checkbox).not.toBeChecked();
 
-    await user.click(checkbox)
+    await user.click(checkbox);
 
-    expect(checkbox).toBeChecked()
-  })
+    expect(checkbox).toBeChecked();
+  });
 
   it('filters todos by completion status', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup();
     render(
       <TodoApp
         initialTodos={[
           { id: '1', text: 'Done task', completed: true },
-          { id: '2', text: 'Pending task', completed: false }
+          { id: '2', text: 'Pending task', completed: false },
         ]}
       />
-    )
+    );
 
-    await user.click(screen.getByRole('button', { name: /active/i }))
+    await user.click(screen.getByRole('button', { name: /active/i }));
 
-    expect(screen.queryByText('Done task')).not.toBeInTheDocument()
-    expect(screen.getByText('Pending task')).toBeInTheDocument()
-  })
-})
+    expect(screen.queryByText('Done task')).not.toBeInTheDocument();
+    expect(screen.getByText('Pending task')).toBeInTheDocument();
+  });
+});
 ```
 
 ### Query Priority
@@ -136,21 +140,21 @@ RTL queries should follow this priority (most to least preferred):
 `fireEvent` dispatches DOM events directly. `userEvent` simulates full user interactions, including focus, keyboard events, and browser-level behavior.
 
 ```jsx
-import userEvent from '@testing-library/user-event'
+import userEvent from '@testing-library/user-event';
 
 // PREFER: userEvent (simulates real user behavior)
-const user = userEvent.setup()
-await user.type(input, 'hello')   // Types character by character
-await user.click(button)          // Focuses, then clicks
-await user.keyboard('{Enter}')    // Presses Enter key
-await user.selectOptions(select, ['option1'])
-await user.tab()                  // Moves focus to next element
-await user.hover(element)         // Triggers hover events
-await user.clear(input)           // Clears input field
+const user = userEvent.setup();
+await user.type(input, 'hello'); // Types character by character
+await user.click(button); // Focuses, then clicks
+await user.keyboard('{Enter}'); // Presses Enter key
+await user.selectOptions(select, ['option1']);
+await user.tab(); // Moves focus to next element
+await user.hover(element); // Triggers hover events
+await user.clear(input); // Clears input field
 
 // AVOID: fireEvent (skips intermediate events)
-fireEvent.change(input, { target: { value: 'hello' } })  // Jumps to final value
-fireEvent.click(button)  // No focus events
+fireEvent.change(input, { target: { value: 'hello' } }); // Jumps to final value
+fireEvent.click(button); // No focus events
 ```
 
 ### Mocking
@@ -160,107 +164,107 @@ fireEvent.click(button)  // No focus events
 ```js
 // Mock an entire module
 jest.mock('./api', () => ({
-  fetchUser: jest.fn()
-}))
+  fetchUser: jest.fn(),
+}));
 
-import { fetchUser } from './api'
+import { fetchUser } from './api';
 
 beforeEach(() => {
-  jest.clearAllMocks()
-})
+  jest.clearAllMocks();
+});
 
 it('displays user data after loading', async () => {
-  fetchUser.mockResolvedValue({ name: 'Alice', email: 'alice@test.com' })
+  fetchUser.mockResolvedValue({ name: 'Alice', email: 'alice@test.com' });
 
-  render(<UserProfile userId="1" />)
+  render(<UserProfile userId="1" />);
 
-  expect(screen.getByText('Loading...')).toBeInTheDocument()
+  expect(screen.getByText('Loading...')).toBeInTheDocument();
 
   await waitFor(() => {
-    expect(screen.getByText('Alice')).toBeInTheDocument()
-  })
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+  });
 
-  expect(fetchUser).toHaveBeenCalledWith('1')
-  expect(fetchUser).toHaveBeenCalledTimes(1)
-})
+  expect(fetchUser).toHaveBeenCalledWith('1');
+  expect(fetchUser).toHaveBeenCalledTimes(1);
+});
 ```
 
 **Timer Mocking**:
 
 ```js
 beforeEach(() => {
-  jest.useFakeTimers()
-})
+  jest.useFakeTimers();
+});
 
 afterEach(() => {
-  jest.useRealTimers()
-})
+  jest.useRealTimers();
+});
 
 it('debounces search input', async () => {
-  const onSearch = jest.fn()
-  const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
-  render(<SearchBar onSearch={onSearch} debounceMs={300} />)
+  const onSearch = jest.fn();
+  const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+  render(<SearchBar onSearch={onSearch} debounceMs={300} />);
 
-  const input = screen.getByRole('textbox')
-  await user.type(input, 'react')
+  const input = screen.getByRole('textbox');
+  await user.type(input, 'react');
 
   // Search should not have fired yet (within debounce window)
-  expect(onSearch).not.toHaveBeenCalled()
+  expect(onSearch).not.toHaveBeenCalled();
 
   // Advance past debounce delay
-  jest.advanceTimersByTime(300)
+  jest.advanceTimersByTime(300);
 
-  expect(onSearch).toHaveBeenCalledWith('react')
-  expect(onSearch).toHaveBeenCalledTimes(1)
-})
+  expect(onSearch).toHaveBeenCalledWith('react');
+  expect(onSearch).toHaveBeenCalledTimes(1);
+});
 ```
 
 **API Mocking with MSW (Mock Service Worker)**:
 
 ```js
-import { setupServer } from 'msw/node'
-import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
 
 const server = setupServer(
   http.get('/api/users/:id', ({ params }) => {
     return HttpResponse.json({
       id: params.id,
       name: 'Alice',
-      email: 'alice@test.com'
-    })
+      email: 'alice@test.com',
+    });
   }),
 
   http.post('/api/users', async ({ request }) => {
-    const body = await request.json()
-    return HttpResponse.json({ id: '123', ...body }, { status: 201 })
+    const body = await request.json();
+    return HttpResponse.json({ id: '123', ...body }, { status: 201 });
   }),
 
   http.get('/api/users', () => {
     return HttpResponse.json([
       { id: '1', name: 'Alice' },
-      { id: '2', name: 'Bob' }
-    ])
+      { id: '2', name: 'Bob' },
+    ]);
   })
-)
+);
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 it('handles server error gracefully', async () => {
   // Override handler for this specific test
   server.use(
     http.get('/api/users/:id', () => {
-      return new HttpResponse(null, { status: 500 })
+      return new HttpResponse(null, { status: 500 });
     })
-  )
+  );
 
-  render(<UserProfile userId="1" />)
+  render(<UserProfile userId="1" />);
 
   await waitFor(() => {
-    expect(screen.getByText(/something went wrong/i)).toBeInTheDocument()
-  })
-})
+    expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
+  });
+});
 ```
 
 ### Testing Custom Hooks
@@ -268,136 +272,146 @@ it('handles server error gracefully', async () => {
 Use `renderHook` from React Testing Library:
 
 ```jsx
-import { renderHook, act, waitFor } from '@testing-library/react'
-import { useCounter } from './useCounter'
+import { renderHook, act, waitFor } from '@testing-library/react';
+import { useCounter } from './useCounter';
 
 describe('useCounter', () => {
   it('initializes with the given value', () => {
-    const { result } = renderHook(() => useCounter(10))
-    expect(result.current.count).toBe(10)
-  })
+    const { result } = renderHook(() => useCounter(10));
+    expect(result.current.count).toBe(10);
+  });
 
   it('increments the count', () => {
-    const { result } = renderHook(() => useCounter(0))
+    const { result } = renderHook(() => useCounter(0));
 
     act(() => {
-      result.current.increment()
-    })
+      result.current.increment();
+    });
 
-    expect(result.current.count).toBe(1)
-  })
+    expect(result.current.count).toBe(1);
+  });
 
   it('resets to initial value', () => {
-    const { result } = renderHook(() => useCounter(5))
+    const { result } = renderHook(() => useCounter(5));
 
     act(() => {
-      result.current.increment()
-      result.current.increment()
-    })
+      result.current.increment();
+      result.current.increment();
+    });
 
-    expect(result.current.count).toBe(7)
+    expect(result.current.count).toBe(7);
 
     act(() => {
-      result.current.reset()
-    })
+      result.current.reset();
+    });
 
-    expect(result.current.count).toBe(5)
-  })
-})
+    expect(result.current.count).toBe(5);
+  });
+});
 ```
 
 ### Testing Async Code
 
 ```jsx
-import { render, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react'
+import {
+  render,
+  screen,
+  waitFor,
+  waitForElementToBeRemoved,
+} from '@testing-library/react';
 
 it('loads and displays data', async () => {
-  render(<DataTable endpoint="/api/data" />)
+  render(<DataTable endpoint="/api/data" />);
 
   // Wait for loading state to disappear
-  await waitForElementToBeRemoved(() => screen.queryByText('Loading...'))
+  await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
 
   // Verify data is displayed
-  expect(screen.getByText('Row 1')).toBeInTheDocument()
-  expect(screen.getAllByRole('row')).toHaveLength(11) // header + 10 data rows
-})
+  expect(screen.getByText('Row 1')).toBeInTheDocument();
+  expect(screen.getAllByRole('row')).toHaveLength(11); // header + 10 data rows
+});
 
 it('retries on failure then succeeds', async () => {
-  let callCount = 0
+  let callCount = 0;
 
   server.use(
     http.get('/api/data', () => {
-      callCount++
+      callCount++;
       if (callCount < 3) {
-        return new HttpResponse(null, { status: 503 })
+        return new HttpResponse(null, { status: 503 });
       }
-      return HttpResponse.json({ items: [{ id: '1', name: 'Item 1' }] })
+      return HttpResponse.json({ items: [{ id: '1', name: 'Item 1' }] });
     })
-  )
+  );
 
-  render(<DataTable endpoint="/api/data" retries={3} />)
+  render(<DataTable endpoint="/api/data" retries={3} />);
 
-  await waitFor(() => {
-    expect(screen.getByText('Item 1')).toBeInTheDocument()
-  }, { timeout: 5000 })
-})
+  await waitFor(
+    () => {
+      expect(screen.getByText('Item 1')).toBeInTheDocument();
+    },
+    { timeout: 5000 }
+  );
+});
 ```
 
 ### E2E Testing with Playwright
 
 ```js
-import { test, expect } from '@playwright/test'
+import { test, expect } from '@playwright/test';
 
 test.describe('Authentication Flow', () => {
   test('user can sign up, log in, and access dashboard', async ({ page }) => {
     // Sign up
-    await page.goto('/signup')
-    await page.getByLabel('Email').fill('newuser@test.com')
-    await page.getByLabel('Password').fill('SecureP@ss123')
-    await page.getByLabel('Confirm Password').fill('SecureP@ss123')
-    await page.getByRole('button', { name: 'Sign Up' }).click()
+    await page.goto('/signup');
+    await page.getByLabel('Email').fill('newuser@test.com');
+    await page.getByLabel('Password').fill('SecureP@ss123');
+    await page.getByLabel('Confirm Password').fill('SecureP@ss123');
+    await page.getByRole('button', { name: 'Sign Up' }).click();
 
-    await expect(page.getByText('Account created')).toBeVisible()
+    await expect(page.getByText('Account created')).toBeVisible();
 
     // Log in
-    await page.goto('/login')
-    await page.getByLabel('Email').fill('newuser@test.com')
-    await page.getByLabel('Password').fill('SecureP@ss123')
-    await page.getByRole('button', { name: 'Log In' }).click()
+    await page.goto('/login');
+    await page.getByLabel('Email').fill('newuser@test.com');
+    await page.getByLabel('Password').fill('SecureP@ss123');
+    await page.getByRole('button', { name: 'Log In' }).click();
 
     // Verify redirect to dashboard
-    await expect(page).toHaveURL('/dashboard')
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
-  })
+    await expect(page).toHaveURL('/dashboard');
+    await expect(
+      page.getByRole('heading', { name: 'Dashboard' })
+    ).toBeVisible();
+  });
 
   test('shows validation errors for invalid input', async ({ page }) => {
-    await page.goto('/login')
-    await page.getByRole('button', { name: 'Log In' }).click()
+    await page.goto('/login');
+    await page.getByRole('button', { name: 'Log In' }).click();
 
-    await expect(page.getByText('Email is required')).toBeVisible()
-    await expect(page.getByText('Password is required')).toBeVisible()
-  })
+    await expect(page.getByText('Email is required')).toBeVisible();
+    await expect(page.getByText('Password is required')).toBeVisible();
+  });
 
   test('handles network errors gracefully', async ({ page }) => {
     await page.route('**/api/auth/login', (route) => {
-      route.abort('connectionrefused')
-    })
+      route.abort('connectionrefused');
+    });
 
-    await page.goto('/login')
-    await page.getByLabel('Email').fill('user@test.com')
-    await page.getByLabel('Password').fill('password')
-    await page.getByRole('button', { name: 'Log In' }).click()
+    await page.goto('/login');
+    await page.getByLabel('Email').fill('user@test.com');
+    await page.getByLabel('Password').fill('password');
+    await page.getByRole('button', { name: 'Log In' }).click();
 
-    await expect(page.getByText(/network error/i)).toBeVisible()
-  })
-})
+    await expect(page.getByText(/network error/i)).toBeVisible();
+  });
+});
 ```
 
 Playwright configuration:
 
 ```js
 // playwright.config.ts
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
@@ -409,20 +423,20 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure'
+    screenshot: 'only-on-failure',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } }
+    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
   ],
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI
-  }
-})
+    reuseExistingServer: !process.env.CI,
+  },
+});
 ```
 
 ### Snapshot Testing
@@ -433,23 +447,25 @@ Snapshot tests capture the rendered output and compare it against a saved refere
 it('renders the card component correctly', () => {
   const { container } = render(
     <Card title="Test Card" description="A test description" />
-  )
-  expect(container.firstChild).toMatchSnapshot()
-})
+  );
+  expect(container.firstChild).toMatchSnapshot();
+});
 
 // Inline snapshots (stored in the test file)
 it('formats currency correctly', () => {
-  expect(formatCurrency(1234.56)).toMatchInlineSnapshot(`"$1,234.56"`)
-  expect(formatCurrency(0)).toMatchInlineSnapshot(`"$0.00"`)
-  expect(formatCurrency(-99.9)).toMatchInlineSnapshot(`"-$99.90"`)
-})
+  expect(formatCurrency(1234.56)).toMatchInlineSnapshot(`"$1,234.56"`);
+  expect(formatCurrency(0)).toMatchInlineSnapshot(`"$0.00"`);
+  expect(formatCurrency(-99.9)).toMatchInlineSnapshot(`"-$99.90"`);
+});
 ```
 
 **Pros of snapshot testing:**
+
 - Quick to write, catches unexpected UI changes
 - Good for utility function output verification
 
 **Cons of snapshot testing:**
+
 - Large snapshots are unreadable and get rubber-stamped in reviews
 - Brittle -- any change triggers a failure, even intentional ones
 - Tests pass trivially with `--updateSnapshot`
@@ -468,12 +484,14 @@ vitest --coverage
 ```
 
 Coverage metrics:
+
 - **Statements** - Percentage of code statements executed
 - **Branches** - Percentage of conditional branches taken (if/else, ternary, switch)
 - **Functions** - Percentage of functions called
 - **Lines** - Percentage of lines executed
 
 High coverage does not mean good tests. You can hit 100% coverage with tests that assert nothing. Focus on:
+
 - Testing critical paths and edge cases
 - Testing behavior, not implementation
 - Meaningful assertions (not just "it renders")
@@ -500,20 +518,18 @@ Wrap the component in the context provider during rendering:
 function renderWithProviders(ui, { theme = 'light', user = null } = {}) {
   return render(
     <ThemeContext.Provider value={{ theme }}>
-      <AuthContext.Provider value={{ user }}>
-        {ui}
-      </AuthContext.Provider>
+      <AuthContext.Provider value={{ user }}>{ui}</AuthContext.Provider>
     </ThemeContext.Provider>
-  )
+  );
 }
 
 it('shows admin controls for admin users', () => {
   renderWithProviders(<Dashboard />, {
-    user: { id: '1', role: 'admin' }
-  })
+    user: { id: '1', role: 'admin' },
+  });
 
-  expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument()
-})
+  expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
+});
 ```
 
 ### 5. What is the purpose of `act` in React testing?
@@ -538,85 +554,83 @@ Focus testing effort on: business-critical logic (checkout, authentication, data
 
 ```jsx
 // test-utils.jsx
-import { render } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter } from 'react-router-dom'
-import { ThemeProvider } from './contexts/ThemeProvider'
+import { render } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeProvider';
 
 function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
-        gcTime: 0
-      }
-    }
-  })
+        gcTime: 0,
+      },
+    },
+  });
 }
 
 export function renderWithProviders(ui, options = {}) {
-  const queryClient = createTestQueryClient()
+  const queryClient = createTestQueryClient();
 
   function Wrapper({ children }) {
     return (
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <ThemeProvider>
-            {children}
-          </ThemeProvider>
+          <ThemeProvider>{children}</ThemeProvider>
         </BrowserRouter>
       </QueryClientProvider>
-    )
+    );
   }
 
   return {
     ...render(ui, { wrapper: Wrapper, ...options }),
-    queryClient
-  }
+    queryClient,
+  };
 }
 
 // Re-export everything from RTL
-export * from '@testing-library/react'
-export { default as userEvent } from '@testing-library/user-event'
+export * from '@testing-library/react';
+export { default as userEvent } from '@testing-library/user-event';
 ```
 
 ### Testing Error Boundaries
 
 ```jsx
-import { render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react';
 
 function ProblemChild() {
-  throw new Error('Test error')
+  throw new Error('Test error');
 }
 
 it('renders fallback UI when a child throws', () => {
   // Suppress console.error for this test
-  const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
   render(
     <ErrorBoundary fallback={<p>Something went wrong</p>}>
       <ProblemChild />
     </ErrorBoundary>
-  )
+  );
 
-  expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+  expect(screen.getByText('Something went wrong')).toBeInTheDocument();
 
-  consoleSpy.mockRestore()
-})
+  consoleSpy.mockRestore();
+});
 ```
 
 ### Testing Accessibility
 
 ```jsx
-import { axe, toHaveNoViolations } from 'jest-axe'
+import { axe, toHaveNoViolations } from 'jest-axe';
 
-expect.extend(toHaveNoViolations)
+expect.extend(toHaveNoViolations);
 
 it('has no accessibility violations', async () => {
-  const { container } = render(<LoginForm />)
-  const results = await axe(container)
-  expect(results).toHaveNoViolations()
-})
+  const { container } = render(<LoginForm />);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
 ```
 
 ## Gotchas & Edge Cases
@@ -639,31 +653,31 @@ it('has no accessibility violations', async () => {
 
 ## Quick Reference
 
-| Tool | Purpose | Speed | Confidence |
-|---|---|---|---|
-| Jest / Vitest | Test runner, assertions, mocking | Fast | Foundation |
-| React Testing Library | Component testing via user behavior | Fast | High |
-| userEvent | Realistic user interaction simulation | Fast | Higher than fireEvent |
-| MSW | Network-level API mocking | Fast | High |
-| Playwright | Cross-browser E2E testing | Slow | Highest |
-| jest-axe | Automated accessibility testing | Fast | Medium |
-| Storybook | Visual component testing | Medium | Medium |
+| Tool                  | Purpose                               | Speed  | Confidence            |
+| --------------------- | ------------------------------------- | ------ | --------------------- |
+| Jest / Vitest         | Test runner, assertions, mocking      | Fast   | Foundation            |
+| React Testing Library | Component testing via user behavior   | Fast   | High                  |
+| userEvent             | Realistic user interaction simulation | Fast   | Higher than fireEvent |
+| MSW                   | Network-level API mocking             | Fast   | High                  |
+| Playwright            | Cross-browser E2E testing             | Slow   | Highest               |
+| jest-axe              | Automated accessibility testing       | Fast   | Medium                |
+| Storybook             | Visual component testing              | Medium | Medium                |
 
-| Query | Use When |
-|---|---|
-| `getByRole` | Element has an ARIA role (button, textbox, heading) |
-| `getByLabelText` | Form element with a label |
-| `getByPlaceholderText` | Input has placeholder text |
-| `getByText` | Non-interactive element with visible text |
-| `getByTestId` | No better query available (last resort) |
-| `queryBy*` | Asserting element does NOT exist |
-| `findBy*` | Element appears asynchronously |
-| `getAllBy*` | Multiple matching elements expected |
+| Query                  | Use When                                            |
+| ---------------------- | --------------------------------------------------- |
+| `getByRole`            | Element has an ARIA role (button, textbox, heading) |
+| `getByLabelText`       | Form element with a label                           |
+| `getByPlaceholderText` | Input has placeholder text                          |
+| `getByText`            | Non-interactive element with visible text           |
+| `getByTestId`          | No better query available (last resort)             |
+| `queryBy*`             | Asserting element does NOT exist                    |
+| `findBy*`              | Element appears asynchronously                      |
+| `getAllBy*`            | Multiple matching elements expected                 |
 
-| Pattern | Description |
-|---|---|
-| AAA | Arrange (setup) -> Act (interact) -> Assert (verify) |
-| Custom render | Wrap with providers for consistent test setup |
-| MSW handlers | Define default handlers, override per test |
-| Screen debug | `screen.debug()` to print current DOM state |
-| Cleanup | Automatic in RTL; manual for global mocks |
+| Pattern       | Description                                          |
+| ------------- | ---------------------------------------------------- |
+| AAA           | Arrange (setup) -> Act (interact) -> Assert (verify) |
+| Custom render | Wrap with providers for consistent test setup        |
+| MSW handlers  | Define default handlers, override per test           |
+| Screen debug  | `screen.debug()` to print current DOM state          |
+| Cleanup       | Automatic in RTL; manual for global mocks            |

@@ -40,17 +40,17 @@ Suppr is an **AI-powered academic research platform** built on Spring Boot 3.5.3
 
 ### 1.2 External Service Dependencies
 
-| Service | Purpose | Protocol | Timeout |
-|---------|---------|----------|---------|
-| **LLM Service** | Doc search, summarization, query rewriting | HTTP/REST | 30 min |
-| **Translation Service** | File translation (Word/Excel/PDF/PPT) | HTTP/SSE | 24 hours |
-| **Deep Research Service** | Research report generation | HTTP/SSE | 30 min |
-| **Gotenberg** | PDF conversion via LibreOffice/Chromium | HTTP/Multipart | 30 min |
-| **PubMed/NCBI** | Academic article metadata & citations | HTTP/REST | 30 min |
-| **WeChat MP + Mini-app** | OAuth login, notifications | HTTPS | Default |
-| **Wilddata Pay** | Payment gateway (WeChat Pay, Alipay) | HTTP/REST | 30 min |
-| **Strapi CMS** | Content management for sharing | HTTP/REST | 5 min |
-| **File Download Proxy** | External file retrieval with fallback chain | HTTP | 30s |
+| Service                   | Purpose                                     | Protocol       | Timeout  |
+| ------------------------- | ------------------------------------------- | -------------- | -------- |
+| **LLM Service**           | Doc search, summarization, query rewriting  | HTTP/REST      | 30 min   |
+| **Translation Service**   | File translation (Word/Excel/PDF/PPT)       | HTTP/SSE       | 24 hours |
+| **Deep Research Service** | Research report generation                  | HTTP/SSE       | 30 min   |
+| **Gotenberg**             | PDF conversion via LibreOffice/Chromium     | HTTP/Multipart | 30 min   |
+| **PubMed/NCBI**           | Academic article metadata & citations       | HTTP/REST      | 30 min   |
+| **WeChat MP + Mini-app**  | OAuth login, notifications                  | HTTPS          | Default  |
+| **Wilddata Pay**          | Payment gateway (WeChat Pay, Alipay)        | HTTP/REST      | 30 min   |
+| **Strapi CMS**            | Content management for sharing              | HTTP/REST      | 5 min    |
+| **File Download Proxy**   | External file retrieval with fallback chain | HTTP           | 30s      |
 
 ### 1.3 Key Design Decisions
 

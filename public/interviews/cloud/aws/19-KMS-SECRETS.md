@@ -4,23 +4,23 @@ AWS Key Management Service (KMS) is a managed service for creating, controlling,
 
 ## KMS Key Types
 
-| Key Type | Managed By | Rotation | Use Case |
-|----------|-----------|----------|----------|
-| AWS owned keys | AWS | Automatic, varies | Default encryption for services (S3-SSE, SQS) |
-| AWS managed keys | AWS (in your account) | Automatic (yearly) | Service-specific encryption (alias `aws/s3`, `aws/ebs`) |
-| Customer managed keys (CMKs) | You | Optional (configurable) | Full control: key policies, grants, aliases, rotation schedule |
-| Custom key stores | You (CloudHSM cluster) | Manual | Regulatory requirements, HSM-backed keys |
+| Key Type                     | Managed By             | Rotation                | Use Case                                                       |
+| ---------------------------- | ---------------------- | ----------------------- | -------------------------------------------------------------- |
+| AWS owned keys               | AWS                    | Automatic, varies       | Default encryption for services (S3-SSE, SQS)                  |
+| AWS managed keys             | AWS (in your account)  | Automatic (yearly)      | Service-specific encryption (alias `aws/s3`, `aws/ebs`)        |
+| Customer managed keys (CMKs) | You                    | Optional (configurable) | Full control: key policies, grants, aliases, rotation schedule |
+| Custom key stores            | You (CloudHSM cluster) | Manual                  | Regulatory requirements, HSM-backed keys                       |
 
 ## Symmetric vs Asymmetric Keys
 
-| Property | Symmetric | Asymmetric |
-|----------|-----------|------------|
-| Algorithm | AES-256-GCM | RSA, ECC, SM2 |
-| Key material | Single shared key (never leaves KMS) | Public + private key pair |
-| Use cases | Encrypt/decrypt data, envelope encryption | Sign/verify, encrypt outside AWS |
-| Public key export | Not applicable | Yes, public key downloadable |
-| AWS service integration | All services | Limited |
-| Default | Yes | No |
+| Property                | Symmetric                                 | Asymmetric                       |
+| ----------------------- | ----------------------------------------- | -------------------------------- |
+| Algorithm               | AES-256-GCM                               | RSA, ECC, SM2                    |
+| Key material            | Single shared key (never leaves KMS)      | Public + private key pair        |
+| Use cases               | Encrypt/decrypt data, envelope encryption | Sign/verify, encrypt outside AWS |
+| Public key export       | Not applicable                            | Yes, public key downloadable     |
+| AWS service integration | All services                              | Limited                          |
+| Default                 | Yes                                       | No                               |
 
 Use symmetric keys unless you specifically need to encrypt data outside AWS or perform digital signatures.
 
@@ -37,19 +37,15 @@ Every KMS key has exactly one key policy. This is the primary authorization mech
     {
       "Sid": "Enable root account full access",
       "Effect": "Allow",
-      "Principal": {"AWS": "arn:aws:iam::123456789012:root"},
+      "Principal": { "AWS": "arn:aws:iam::123456789012:root" },
       "Action": "kms:*",
       "Resource": "*"
     },
     {
       "Sid": "Allow use of the key",
       "Effect": "Allow",
-      "Principal": {"AWS": "arn:aws:iam::123456789012:role/AppRole"},
-      "Action": [
-        "kms:Encrypt",
-        "kms:Decrypt",
-        "kms:GenerateDataKey"
-      ],
+      "Principal": { "AWS": "arn:aws:iam::123456789012:role/AppRole" },
+      "Action": ["kms:Encrypt", "kms:Decrypt", "kms:GenerateDataKey"],
       "Resource": "*"
     }
   ]
@@ -101,11 +97,11 @@ This pattern is used by S3, EBS, and virtually every AWS service that encrypts d
 
 ## Key Rotation
 
-| Rotation Type | How It Works | When to Use |
-|--------------|-------------|-------------|
-| Automatic | AWS generates new key material yearly; old material kept for decryption | Default for customer managed symmetric keys |
-| On-demand | Trigger rotation manually via API | When you need rotation on your schedule |
-| Manual | Create new key, re-encrypt data, update aliases | Asymmetric keys, imported key material |
+| Rotation Type | How It Works                                                            | When to Use                                 |
+| ------------- | ----------------------------------------------------------------------- | ------------------------------------------- |
+| Automatic     | AWS generates new key material yearly; old material kept for decryption | Default for customer managed symmetric keys |
+| On-demand     | Trigger rotation manually via API                                       | When you need rotation on your schedule     |
+| Manual        | Create new key, re-encrypt data, update aliases                         | Asymmetric keys, imported key material      |
 
 ```bash
 # Enable automatic rotation
@@ -141,6 +137,7 @@ Multi-region keys share the same key ID and key material. Data encrypted in one 
 ### Core Concepts
 
 Secrets Manager stores secrets as key-value pairs encrypted with KMS. Each secret has:
+
 - A name (path-like, e.g., `prod/myapp/database`)
 - A secret value (string or binary, up to 65 KB)
 - Versioning (AWSCURRENT, AWSPREVIOUS, AWSPENDING)
@@ -184,6 +181,7 @@ aws secretsmanager rotate-secret \
 ```
 
 Rotation follows a four-step process:
+
 1. **createSecret** -- generate new credentials, store as `AWSPENDING`
 2. **setSecret** -- update the resource (e.g., change DB password)
 3. **testSecret** -- verify new credentials work
@@ -193,25 +191,25 @@ Rotation follows a four-step process:
 
 Secrets Manager has built-in rotation support for:
 
-| Service | How |
-|---------|-----|
-| Amazon RDS | AWS-provided rotation Lambda templates |
-| Amazon Aurora | Same as RDS, supports multi-user rotation |
-| Amazon Redshift | AWS-provided rotation Lambda |
-| Amazon DocumentDB | AWS-provided rotation Lambda |
+| Service           | How                                       |
+| ----------------- | ----------------------------------------- |
+| Amazon RDS        | AWS-provided rotation Lambda templates    |
+| Amazon Aurora     | Same as RDS, supports multi-user rotation |
+| Amazon Redshift   | AWS-provided rotation Lambda              |
+| Amazon DocumentDB | AWS-provided rotation Lambda              |
 
 ## Secrets Manager vs Parameter Store
 
-| Feature | Secrets Manager | Parameter Store |
-|---------|----------------|-----------------|
-| Cost | $0.40/secret/month + $0.05/10K API calls | Free tier (standard), $0.05/10K for advanced |
-| Max size | 65 KB | 4 KB (standard), 8 KB (advanced) |
-| Automatic rotation | Built-in with Lambda | Manual (no native rotation) |
-| Cross-account access | Resource-based policies | Shared via RAM or cross-account IAM |
-| Versioning | AWSCURRENT, AWSPREVIOUS, AWSPENDING | Version numbers + labels |
-| Encryption | Always encrypted (KMS) | Optional encryption (KMS) |
-| Native DB integration | Yes (RDS, Aurora, Redshift, DocumentDB) | No |
-| Hierarchy | Flat names | Path-based hierarchy (`/app/prod/db/host`) |
+| Feature               | Secrets Manager                          | Parameter Store                              |
+| --------------------- | ---------------------------------------- | -------------------------------------------- |
+| Cost                  | $0.40/secret/month + $0.05/10K API calls | Free tier (standard), $0.05/10K for advanced |
+| Max size              | 65 KB                                    | 4 KB (standard), 8 KB (advanced)             |
+| Automatic rotation    | Built-in with Lambda                     | Manual (no native rotation)                  |
+| Cross-account access  | Resource-based policies                  | Shared via RAM or cross-account IAM          |
+| Versioning            | AWSCURRENT, AWSPREVIOUS, AWSPENDING      | Version numbers + labels                     |
+| Encryption            | Always encrypted (KMS)                   | Optional encryption (KMS)                    |
+| Native DB integration | Yes (RDS, Aurora, Redshift, DocumentDB)  | No                                           |
+| Hierarchy             | Flat names                               | Path-based hierarchy (`/app/prod/db/host`)   |
 
 **Decision guide**: Use Secrets Manager when you need automatic rotation or store database credentials. Use Parameter Store for application configuration, feature flags, and non-sensitive values where cost matters.
 
@@ -235,15 +233,17 @@ def handler(event, context):
 
 ```json
 {
-  "containerDefinitions": [{
-    "name": "app",
-    "secrets": [
-      {
-        "name": "DB_PASSWORD",
-        "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:prod/myapp/db-credentials:password::"
-      }
-    ]
-  }],
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "secrets": [
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:prod/myapp/db-credentials:password::"
+        }
+      ]
+    }
+  ],
   "executionRoleArn": "arn:aws:iam::123456789012:role/ecsTaskExecutionRole"
 }
 ```
@@ -311,14 +311,14 @@ aws secretsmanager restore-secret --secret-id my-secret
 
 ## Common Gotchas
 
-| Issue | Details |
-|-------|---------|
-| KMS request quotas | Shared quota per account per region (5,500-30,000 req/sec depending on operation). High-throughput encryption may need quota increase or data key caching. |
-| Cross-account key sharing | Requires key policy update AND IAM policy in consuming account. Both sides must be configured. |
-| Key deletion is destructive | Minimum 7-day waiting period. Once deleted, all data encrypted with that key is unrecoverable. |
-| Secrets Manager cost | $0.40/secret/month adds up. 1,000 secrets = $400/month. Use Parameter Store for non-rotating, non-sensitive config. |
-| Rotation downtime window | Brief window during rotation where old credentials are invalidated. Use multi-user rotation strategy to avoid downtime. |
-| 4 KB direct encryption limit | KMS Encrypt API only handles up to 4 KB. Use envelope encryption (GenerateDataKey) for larger payloads. |
-| Imported key material | Cannot be automatically rotated. Must manually create new key and re-encrypt data. |
-| Secret version staging | During rotation, `AWSPENDING` label exists temporarily. Applications should always request `AWSCURRENT`. |
-| Parameter Store free tier limits | Standard parameters: 10,000 max, 4 KB max size, no throughput limit. Advanced: $0.05/parameter/month. |
+| Issue                            | Details                                                                                                                                                    |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| KMS request quotas               | Shared quota per account per region (5,500-30,000 req/sec depending on operation). High-throughput encryption may need quota increase or data key caching. |
+| Cross-account key sharing        | Requires key policy update AND IAM policy in consuming account. Both sides must be configured.                                                             |
+| Key deletion is destructive      | Minimum 7-day waiting period. Once deleted, all data encrypted with that key is unrecoverable.                                                             |
+| Secrets Manager cost             | $0.40/secret/month adds up. 1,000 secrets = $400/month. Use Parameter Store for non-rotating, non-sensitive config.                                        |
+| Rotation downtime window         | Brief window during rotation where old credentials are invalidated. Use multi-user rotation strategy to avoid downtime.                                    |
+| 4 KB direct encryption limit     | KMS Encrypt API only handles up to 4 KB. Use envelope encryption (GenerateDataKey) for larger payloads.                                                    |
+| Imported key material            | Cannot be automatically rotated. Must manually create new key and re-encrypt data.                                                                         |
+| Secret version staging           | During rotation, `AWSPENDING` label exists temporarily. Applications should always request `AWSCURRENT`.                                                   |
+| Parameter Store free tier limits | Standard parameters: 10,000 max, 4 KB max size, no throughput limit. Advanced: $0.05/parameter/month.                                                      |

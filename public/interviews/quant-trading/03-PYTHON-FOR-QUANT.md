@@ -765,6 +765,7 @@ print(ticker.quarterly_financials)
 ```
 
 **Caveats with yfinance:**
+
 - Rate-limited, not suitable for production
 - Data quality is "good enough" for research, not trading
 - Adjusted prices handle splits and dividends retroactively

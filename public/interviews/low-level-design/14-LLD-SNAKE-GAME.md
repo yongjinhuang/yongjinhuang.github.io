@@ -27,25 +27,25 @@ are many edge cases around direction handling, food placement, and game state tr
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Game board | Grid of configurable width and height |
-| F2 | Snake movement | Moves one cell per tick in the current direction |
-| F3 | Direction control | Up, down, left, right; prevent 180-degree turns |
-| F4 | Food spawning | Random placement on empty cells (not on snake body) |
-| F5 | Growth | Snake grows by one segment when eating food |
-| F6 | Collision detection | Game over on wall hit or self-intersection |
-| F7 | Score tracking | Points per food eaten, speed increases with score |
-| F8 | Game states | Playing, Paused, GameOver |
-| F9 | Move history | Record all moves for replay |
+| #   | Requirement         | Details                                             |
+| --- | ------------------- | --------------------------------------------------- |
+| F1  | Game board          | Grid of configurable width and height               |
+| F2  | Snake movement      | Moves one cell per tick in the current direction    |
+| F3  | Direction control   | Up, down, left, right; prevent 180-degree turns     |
+| F4  | Food spawning       | Random placement on empty cells (not on snake body) |
+| F5  | Growth              | Snake grows by one segment when eating food         |
+| F6  | Collision detection | Game over on wall hit or self-intersection          |
+| F7  | Score tracking      | Points per food eaten, speed increases with score   |
+| F8  | Game states         | Playing, Paused, GameOver                           |
+| F9  | Move history        | Record all moves for replay                         |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
+| #   | Requirement                                        |
+| --- | -------------------------------------------------- |
 | NF1 | O(1) snake movement (deque: add head, remove tail) |
-| NF2 | O(1) self-collision check (set of body positions) |
-| NF3 | Extensible for new food types and power-ups |
+| NF2 | O(1) self-collision check (set of body positions)  |
+| NF3 | Extensible for new food types and power-ups        |
 
 ### Clarifying Questions to Ask
 
@@ -129,13 +129,13 @@ are many edge cases around direction handling, food placement, and game state tr
 
 **Transitions:**
 
-| From | Event | To | Action |
-|------|-------|----|--------|
-| PLAYING | Tick (no collision) | PLAYING | Move snake, check food |
-| PLAYING | Tick (collision) | GAME_OVER | Record final score |
-| PLAYING | Pause | PAUSED | Freeze game loop |
-| PAUSED | Resume | PLAYING | Continue game loop |
-| GAME_OVER | Restart | PLAYING | Reset board and snake |
+| From      | Event               | To        | Action                 |
+| --------- | ------------------- | --------- | ---------------------- |
+| PLAYING   | Tick (no collision) | PLAYING   | Move snake, check food |
+| PLAYING   | Tick (collision)    | GAME_OVER | Record final score     |
+| PLAYING   | Pause               | PAUSED    | Freeze game loop       |
+| PAUSED    | Resume              | PLAYING   | Continue game loop     |
+| GAME_OVER | Restart             | PLAYING   | Reset board and snake  |
 
 ---
 
@@ -500,7 +500,7 @@ Score    Tick Speed (seconds)
 Formula: speed = max(0.05, 0.30 - (score // 10) * 0.02)
 ```
 
-**Food placement efficiency:** Building the empty cell list is O(W * H) per spawn. For a
+**Food placement efficiency:** Building the empty cell list is O(W \* H) per spawn. For a
 typical 20x15 board (300 cells), this is negligible. For very large boards, you could
 maintain a running set of occupied cells and sample randomly until hitting an empty cell.
 
@@ -703,7 +703,7 @@ Instead of returning GAME_OVER on wall collision, wrap the position: `new_row % 
 
 ### "How would you implement an AI snake?"
 
-Use BFS/A* to find the shortest path from the snake head to the food, avoiding the body
+Use BFS/A\* to find the shortest path from the snake head to the food, avoiding the body
 and walls. For a smarter AI, also consider trapping (ensure a path to the tail exists after
 eating the food).
 
@@ -715,7 +715,7 @@ eating the food).
   LEFT, the head reverses into the body. The `change_direction` method blocks opposite
   directions. This is the most common bug in naive implementations.
 
-- **Self-collision detection timing.** Check self-collision *after* moving the snake, not
+- **Self-collision detection timing.** Check self-collision _after_ moving the snake, not
   before. The body set may temporarily have duplicate entries during `move()`. The
   `collides_with_self` method checks `len(set) < len(deque)`.
 

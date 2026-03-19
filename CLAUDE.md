@@ -75,6 +75,7 @@ Two-level layout system:
 The codebase uses a clean component architecture with separation of concerns:
 
 - **UI Components** (`components/ui/`) - Reusable primitives:
+
   - `Card.tsx` - Glass card with hover effects
   - `Button.tsx` - Brutal-style buttons with variants
   - `IconButton.tsx` - Circular icon buttons for social links
@@ -84,6 +85,7 @@ The codebase uses a clean component architecture with separation of concerns:
   - `SkillTag.tsx` - Animated skill tags
 
 - **Section Components** (`components/sections/`) - Page sections:
+
   - `Intro.tsx` - Hero/introduction section
   - `Details.tsx` - Personal contact details
   - `Experience.tsx` - Work experience timeline
@@ -91,6 +93,7 @@ The codebase uses a clean component architecture with separation of concerns:
   - `Skills.tsx` - Technical skills grid
 
 - **Layout Components** (`components/layout/`) - Layout primitives:
+
   - `Navbar.tsx` - Navigation bar with theme toggle and language selector
 
 - **Utility Components** (`components/`) - Standalone utilities:

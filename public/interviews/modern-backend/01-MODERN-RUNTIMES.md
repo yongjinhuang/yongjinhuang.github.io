@@ -119,7 +119,7 @@ describe('User fetching', () => {
   it('returns user data', async () => {
     // Built-in mocking
     const mockFetch = mock.fn(async () => ({
-      json: async () => ({ id: 1, name: 'Alice' })
+      json: async () => ({ id: 1, name: 'Alice' }),
     }));
 
     mock.method(globalThis, 'fetch', mockFetch);
@@ -219,6 +219,7 @@ Bun's key architectural decision was choosing JavaScriptCore (JSC) over V8. This
 ```
 
 **Why JavaScriptCore?**
+
 - JSC has a 4-tier JIT compilation pipeline (LLInt -> Baseline -> DFG -> FTL)
 - The FTL tier uses LLVM backend for maximum optimization
 - JSC has faster startup than V8 because the interpreter tier (LLInt) is lighter
@@ -263,7 +264,7 @@ const server = Bun.serve({
     if (url.pathname === '/api/users') {
       return Response.json([
         { id: 1, name: 'Alice' },
-        { id: 2, name: 'Bob' }
+        { id: 2, name: 'Bob' },
       ]);
     }
 
@@ -274,7 +275,7 @@ const server = Bun.serve({
           controller.enqueue('Hello ');
           controller.enqueue('World');
           controller.close();
-        }
+        },
       });
       return new Response(stream);
     }
@@ -292,14 +293,14 @@ const server = Bun.serve({
     },
     close(ws) {
       ws.unsubscribe('chat');
-    }
+    },
   },
 
   // TLS configuration
   tls: {
     cert: Bun.file('./cert.pem'),
     key: Bun.file('./key.pem'),
-  }
+  },
 });
 
 console.log(`Server running on ${server.url}`);
@@ -334,16 +335,18 @@ const insertUser = db.prepare(
 const getUser = db.prepare('SELECT * FROM users WHERE id = ?');
 
 // Transaction support
-const createUsers = db.transaction((users: Array<{email: string, name: string}>) => {
-  const results = users.map(user =>
-    insertUser.get({ $email: user.email, $name: user.name })
-  );
-  return results;
-});
+const createUsers = db.transaction(
+  (users: Array<{ email: string; name: string }>) => {
+    const results = users.map((user) =>
+      insertUser.get({ $email: user.email, $name: user.name })
+    );
+    return results;
+  }
+);
 
 const newUsers = createUsers([
   { email: 'alice@example.com', name: 'Alice' },
-  { email: 'bob@example.com', name: 'Bob' }
+  { email: 'bob@example.com', name: 'Bob' },
 ]);
 ```
 
@@ -536,7 +539,8 @@ console.log(entry.versionstamp); // Optimistic concurrency control
 
 // Atomic operations (compare-and-swap)
 const current = await kv.get(['counter']);
-await kv.atomic()
+await kv
+  .atomic()
   .check(current) // Fails if versionstamp changed
   .set(['counter'], (current.value ?? 0) + 1)
   .commit();
@@ -549,7 +553,8 @@ for await (const entry of users) {
 
 // Secondary indexes
 async function createUser(user: { id: string; email: string; name: string }) {
-  await kv.atomic()
+  await kv
+    .atomic()
     .set(['users', user.id], user)
     .set(['users_by_email', user.email], user.id)
     .commit();
@@ -595,6 +600,7 @@ kv.listenQueue(async (msg) => {
 ## When to Use Which Runtime
 
 ### Choose Node.js When:
+
 - **Enterprise environments** with strict compatibility requirements
 - **Existing large codebases** that rely on Node-specific APIs
 - **Maximum npm compatibility** is non-negotiable
@@ -603,6 +609,7 @@ kv.listenQueue(async (msg) => {
 - **Native addons** -- N-API ecosystem is most mature in Node
 
 ### Choose Bun When:
+
 - **Startup time matters** -- CLI tools, serverless functions, development scripts
 - **All-in-one toolkit desired** -- bundler, test runner, package manager in one
 - **SQLite workloads** -- built-in SQLite is faster than any npm SQLite binding
@@ -611,6 +618,7 @@ kv.listenQueue(async (msg) => {
 - **Monorepo tooling** -- Bun workspaces are fast and simple
 
 ### Choose Deno When:
+
 - **Security is paramount** -- fintech, healthcare, multi-tenant platforms
 - **TypeScript-first teams** -- zero config TS support, no tsconfig.json needed
 - **Edge deployment** -- Deno Deploy provides global edge runtime
@@ -686,16 +694,20 @@ import { createServer } from 'node:http';
 const server = createServer((req, res) => {
   if (req.url === '/api/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', runtime: 'node', pid: process.pid }));
+    res.end(
+      JSON.stringify({ status: 'ok', runtime: 'node', pid: process.pid })
+    );
     return;
   }
 
   if (req.url === '/api/users' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify([
-      { id: 1, name: 'Alice' },
-      { id: 2, name: 'Bob' }
-    ]));
+    res.end(
+      JSON.stringify([
+        { id: 1, name: 'Alice' },
+        { id: 2, name: 'Bob' },
+      ])
+    );
     return;
   }
 
@@ -720,19 +732,19 @@ Bun.serve({
       return Response.json({
         status: 'ok',
         runtime: 'bun',
-        pid: process.pid
+        pid: process.pid,
       });
     }
 
     if (url.pathname === '/api/users' && req.method === 'GET') {
       return Response.json([
         { id: 1, name: 'Alice' },
-        { id: 2, name: 'Bob' }
+        { id: 2, name: 'Bob' },
       ]);
     }
 
     return new Response('Not Found', { status: 404 });
-  }
+  },
 });
 
 console.log('Bun server listening on port 3000');
@@ -748,14 +760,14 @@ Deno.serve({ port: 3000 }, (req) => {
     return Response.json({
       status: 'ok',
       runtime: 'deno',
-      pid: Deno.pid
+      pid: Deno.pid,
     });
   }
 
   if (url.pathname === '/api/users' && req.method === 'GET') {
     return Response.json([
       { id: 1, name: 'Alice' },
-      { id: 2, name: 'Bob' }
+      { id: 2, name: 'Bob' },
     ]);
   }
 
@@ -780,7 +792,7 @@ import assert from 'node:assert/strict';
 describe('UserService', () => {
   it('creates a user with valid input', async () => {
     const mockDb = {
-      insert: mock.fn(() => ({ id: 1, name: 'Alice' }))
+      insert: mock.fn(() => ({ id: 1, name: 'Alice' })),
     };
 
     const service = new UserService(mockDb);
@@ -800,7 +812,7 @@ import { describe, it, expect, mock } from 'bun:test';
 describe('UserService', () => {
   it('creates a user with valid input', async () => {
     const mockDb = {
-      insert: mock(() => ({ id: 1, name: 'Alice' }))
+      insert: mock(() => ({ id: 1, name: 'Alice' })),
     };
 
     const service = new UserService(mockDb);
@@ -819,7 +831,7 @@ import { assertEquals } from 'jsr:@std/assert';
 
 Deno.test('UserService creates a user with valid input', async () => {
   const mockDb = {
-    insert: () => ({ id: 1, name: 'Alice' })
+    insert: () => ({ id: 1, name: 'Alice' }),
   };
 
   const service = new UserService(mockDb);
@@ -836,7 +848,7 @@ Deno.test({
     const config = await Deno.readTextFile('./config/app.json');
     const parsed = JSON.parse(config);
     assertEquals(parsed.port, 3000);
-  }
+  },
 });
 ```
 

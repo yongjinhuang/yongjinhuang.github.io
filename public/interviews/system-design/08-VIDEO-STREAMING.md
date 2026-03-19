@@ -10,42 +10,42 @@ across the globe. This guide walks through the end-to-end system design.
 
 ### Functional Requirements
 
-| Category        | Requirement                                                  |
-| --------------- | ------------------------------------------------------------ |
-| Upload          | Users can upload videos of any length (up to 12 hours)       |
-| Streaming       | Users can stream videos with adaptive quality                |
-| Search          | Full-text search over titles, descriptions, tags             |
-| Recommendations | Personalized feed based on watch history and preferences     |
-| Comments        | Threaded comments on videos                                  |
-| Likes/Dislikes  | Users can like or dislike videos                             |
-| Subscriptions   | Users subscribe to channels and receive updates              |
-| Watch History   | Track and resume partially-watched videos                    |
-| Playlists       | Users can create and share playlists                         |
-| Notifications   | New video alerts for subscribed channels                     |
+| Category        | Requirement                                              |
+| --------------- | -------------------------------------------------------- |
+| Upload          | Users can upload videos of any length (up to 12 hours)   |
+| Streaming       | Users can stream videos with adaptive quality            |
+| Search          | Full-text search over titles, descriptions, tags         |
+| Recommendations | Personalized feed based on watch history and preferences |
+| Comments        | Threaded comments on videos                              |
+| Likes/Dislikes  | Users can like or dislike videos                         |
+| Subscriptions   | Users subscribe to channels and receive updates          |
+| Watch History   | Track and resume partially-watched videos                |
+| Playlists       | Users can create and share playlists                     |
+| Notifications   | New video alerts for subscribed channels                 |
 
 ### Non-Functional Requirements
 
-| Requirement       | Target                                                      |
-| ----------------- | ----------------------------------------------------------- |
-| Streaming quality | Adaptive bitrate, no buffering on stable connections        |
-| Startup latency   | < 2 seconds to first frame                                  |
+| Requirement       | Target                                                     |
+| ----------------- | ---------------------------------------------------------- |
+| Streaming quality | Adaptive bitrate, no buffering on stable connections       |
+| Startup latency   | < 2 seconds to first frame                                 |
 | Availability      | 99.99% uptime (< 53 min downtime/year)                     |
-| Global reach      | Low-latency streaming from any continent                    |
-| Durability        | Zero data loss for uploaded content (11 nines durability)   |
-| Consistency       | Eventual consistency acceptable for view counts, likes      |
-| Upload processing | Videos available for streaming within 10 minutes of upload  |
+| Global reach      | Low-latency streaming from any continent                   |
+| Durability        | Zero data loss for uploaded content (11 nines durability)  |
+| Consistency       | Eventual consistency acceptable for view counts, likes     |
+| Upload processing | Videos available for streaming within 10 minutes of upload |
 
 ### Scale Estimates
 
-| Metric                    | Value                          |
-| ------------------------- | ------------------------------ |
-| Total users               | 2 billion                      |
-| Daily active users (DAU)  | 800 million                    |
-| Video uploads per minute  | 500 hours                      |
-| Video views per day       | 1 billion                      |
-| Average video length      | 7 minutes                      |
-| Average watch time/day    | 40 minutes per user            |
-| Total videos stored       | 800 million+                   |
+| Metric                   | Value               |
+| ------------------------ | ------------------- |
+| Total users              | 2 billion           |
+| Daily active users (DAU) | 800 million         |
+| Video uploads per minute | 500 hours           |
+| Video views per day      | 1 billion           |
+| Average video length     | 7 minutes           |
+| Average watch time/day   | 40 minutes per user |
+| Total videos stored      | 800 million+        |
 
 ### Back-of-Envelope Calculations
 
@@ -250,12 +250,12 @@ Response 200:
 
 ### Upload Strategy Comparison
 
-| Strategy            | Pros                                       | Cons                                  | Best For           |
-| ------------------- | ------------------------------------------ | ------------------------------------- | ------------------ |
-| Direct upload       | Simple implementation                      | Server bandwidth bottleneck           | Small files < 100MB|
-| Pre-signed URL      | Offloads to object storage                 | No resume on failure                  | Medium files       |
-| Resumable (tus)     | Fault-tolerant, resume after disconnection | More complex client & server logic    | Large video files  |
-| Chunked multipart   | Parallel upload of chunks                  | Chunk assembly complexity             | Very large files   |
+| Strategy          | Pros                                       | Cons                               | Best For            |
+| ----------------- | ------------------------------------------ | ---------------------------------- | ------------------- |
+| Direct upload     | Simple implementation                      | Server bandwidth bottleneck        | Small files < 100MB |
+| Pre-signed URL    | Offloads to object storage                 | No resume on failure               | Medium files        |
+| Resumable (tus)   | Fault-tolerant, resume after disconnection | More complex client & server logic | Large video files   |
+| Chunked multipart | Parallel upload of chunks                  | Chunk assembly complexity          | Very large files    |
 
 **Decision**: Use resumable upload (tus protocol) as the primary strategy. Videos are
 large files uploaded over potentially unreliable connections (mobile). The ability to
@@ -738,13 +738,13 @@ CREATE INDEX idx_jobs_video ON video_processing_jobs(video_id);
 ### Transcoding Configuration Matrix
 
 | Resolution | Bitrate (H.264) | Bitrate (H.265) | Bitrate (VP9) | Bitrate (AV1) |
-| ---------- | ---------------- | ---------------- | ------------- | ------------- |
-| 240p       | 400 kbps         | 250 kbps         | 200 kbps      | 150 kbps      |
-| 360p       | 700 kbps         | 450 kbps         | 400 kbps      | 300 kbps      |
-| 480p       | 1,200 kbps       | 750 kbps         | 700 kbps      | 500 kbps      |
-| 720p       | 2,500 kbps       | 1,500 kbps       | 1,400 kbps    | 1,000 kbps    |
-| 1080p      | 5,000 kbps       | 3,000 kbps       | 2,800 kbps    | 2,000 kbps    |
-| 4K         | 16,000 kbps      | 10,000 kbps      | 9,000 kbps    | 6,000 kbps    |
+| ---------- | --------------- | --------------- | ------------- | ------------- |
+| 240p       | 400 kbps        | 250 kbps        | 200 kbps      | 150 kbps      |
+| 360p       | 700 kbps        | 450 kbps        | 400 kbps      | 300 kbps      |
+| 480p       | 1,200 kbps      | 750 kbps        | 700 kbps      | 500 kbps      |
+| 720p       | 2,500 kbps      | 1,500 kbps      | 1,400 kbps    | 1,000 kbps    |
+| 1080p      | 5,000 kbps      | 3,000 kbps      | 2,800 kbps    | 2,000 kbps    |
+| 4K         | 16,000 kbps     | 10,000 kbps     | 9,000 kbps    | 6,000 kbps    |
 
 ### Codec Selection Strategy
 
@@ -766,21 +766,21 @@ Decision tree for codec selection:
 
 ### Streaming Protocol Comparison
 
-| Feature              | HLS                  | DASH                 | RTMP              |
-| -------------------- | -------------------- | -------------------- | ----------------- |
-| Full Name            | HTTP Live Streaming  | Dynamic Adaptive     | Real-Time         |
-|                      |                      | Streaming over HTTP  | Messaging Protocol|
-| Developer            | Apple                | MPEG                 | Adobe             |
-| Transport            | HTTP                 | HTTP                 | TCP               |
-| Manifest Format      | .m3u8                | .mpd (XML)           | N/A               |
-| Segment Format       | .ts or .fmp4         | .m4s or .mp4         | FLV               |
-| Adaptive Bitrate     | Yes                  | Yes                  | Limited           |
-| DRM Support          | FairPlay, Widevine   | Widevine, PlayReady  | Limited           |
-| Latency              | 6-30s (LL-HLS: 2-5s)| 3-10s (LL-DASH: 2-3s)| 1-3s              |
-| Browser Support      | Safari native, JS    | JS players           | Flash (deprecated)|
-|                      | players everywhere   | everywhere           |                   |
-| CDN Friendly         | Very (HTTP-based)    | Very (HTTP-based)    | Poor              |
-| Industry Adoption    | Very high            | High                 | Legacy only       |
+| Feature           | HLS                  | DASH                  | RTMP               |
+| ----------------- | -------------------- | --------------------- | ------------------ |
+| Full Name         | HTTP Live Streaming  | Dynamic Adaptive      | Real-Time          |
+|                   |                      | Streaming over HTTP   | Messaging Protocol |
+| Developer         | Apple                | MPEG                  | Adobe              |
+| Transport         | HTTP                 | HTTP                  | TCP                |
+| Manifest Format   | .m3u8                | .mpd (XML)            | N/A                |
+| Segment Format    | .ts or .fmp4         | .m4s or .mp4          | FLV                |
+| Adaptive Bitrate  | Yes                  | Yes                   | Limited            |
+| DRM Support       | FairPlay, Widevine   | Widevine, PlayReady   | Limited            |
+| Latency           | 6-30s (LL-HLS: 2-5s) | 3-10s (LL-DASH: 2-3s) | 1-3s               |
+| Browser Support   | Safari native, JS    | JS players            | Flash (deprecated) |
+|                   | players everywhere   | everywhere            |                    |
+| CDN Friendly      | Very (HTTP-based)    | Very (HTTP-based)     | Poor               |
+| Industry Adoption | Very high            | High                  | Legacy only        |
 
 **Decision**: Use HLS as primary protocol with DASH as fallback. HLS has the widest
 device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CDNs.
@@ -1036,13 +1036,13 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### Cache Strategy
 
-| Content Type         | Cache Duration | Strategy  | Notes                          |
-| -------------------- | -------------- | --------- | ------------------------------ |
-| Video segments (.ts) | 1 year         | Pull      | Immutable, content-addressed   |
-| HLS manifests        | 10 seconds     | Pull      | Needs freshness for live       |
-| Thumbnails           | 30 days        | Pull      | Regenerated on update          |
-| Popular videos       | Proactive push | Push      | Pre-warm edge caches           |
-| Long-tail content    | On-demand      | Pull      | Evicted by LRU                 |
+| Content Type         | Cache Duration | Strategy | Notes                        |
+| -------------------- | -------------- | -------- | ---------------------------- |
+| Video segments (.ts) | 1 year         | Pull     | Immutable, content-addressed |
+| HLS manifests        | 10 seconds     | Pull     | Needs freshness for live     |
+| Thumbnails           | 30 days        | Pull     | Regenerated on update        |
+| Popular videos       | Proactive push | Push     | Pre-warm edge caches         |
+| Long-tail content    | On-demand      | Pull     | Evicted by LRU               |
 
 ### Push vs Pull CDN Strategy
 
@@ -1201,16 +1201,16 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### Feature Engineering Summary
 
-| Feature Category | Features                                           | Source           |
-| ---------------- | -------------------------------------------------- | ---------------- |
-| User profile     | Age, country, language, device type                | Registration     |
-| Watch history    | Last 100 videos watched, watch completion rate     | Event logs       |
-| Engagement       | Like ratio, comment frequency, share frequency     | Event logs       |
-| Context          | Time of day, day of week, session length           | Real-time        |
-| Video metadata   | Title, description, tags, category, duration       | Upload metadata  |
-| Video quality    | Resolution, production quality score               | ML model         |
-| Social signals   | Subscriber count, video age, trending score        | Aggregated stats |
-| Freshness        | Hours since upload, velocity of views              | Computed         |
+| Feature Category | Features                                       | Source           |
+| ---------------- | ---------------------------------------------- | ---------------- |
+| User profile     | Age, country, language, device type            | Registration     |
+| Watch history    | Last 100 videos watched, watch completion rate | Event logs       |
+| Engagement       | Like ratio, comment frequency, share frequency | Event logs       |
+| Context          | Time of day, day of week, session length       | Real-time        |
+| Video metadata   | Title, description, tags, category, duration   | Upload metadata  |
+| Video quality    | Resolution, production quality score           | ML model         |
+| Social signals   | Subscriber count, video age, trending score    | Aggregated stats |
+| Freshness        | Hours since upload, velocity of views          | Computed         |
 
 ---
 
@@ -1245,21 +1245,26 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 {
   "mappings": {
     "properties": {
-      "video_id":     { "type": "keyword" },
-      "title":        { "type": "text", "analyzer": "custom_analyzer",
-                        "fields": { "exact": { "type": "keyword" } } },
-      "description":  { "type": "text", "analyzer": "custom_analyzer" },
-      "tags":         { "type": "keyword" },
-      "category":     { "type": "keyword" },
-      "channel_name": { "type": "text",
-                        "fields": { "exact": { "type": "keyword" } } },
-      "language":     { "type": "keyword" },
+      "video_id": { "type": "keyword" },
+      "title": {
+        "type": "text",
+        "analyzer": "custom_analyzer",
+        "fields": { "exact": { "type": "keyword" } }
+      },
+      "description": { "type": "text", "analyzer": "custom_analyzer" },
+      "tags": { "type": "keyword" },
+      "category": { "type": "keyword" },
+      "channel_name": {
+        "type": "text",
+        "fields": { "exact": { "type": "keyword" } }
+      },
+      "language": { "type": "keyword" },
       "duration_sec": { "type": "integer" },
-      "view_count":   { "type": "long" },
-      "like_count":   { "type": "long" },
+      "view_count": { "type": "long" },
+      "like_count": { "type": "long" },
       "published_at": { "type": "date" },
-      "captions":     { "type": "text", "analyzer": "standard" },
-      "embedding":    { "type": "dense_vector", "dims": 768 }
+      "captions": { "type": "text", "analyzer": "standard" },
+      "embedding": { "type": "dense_vector", "dims": 768 }
     }
   }
 }
@@ -1297,18 +1302,18 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### Search Ranking Factors
 
-| Factor                  | Weight | Description                                 |
-| ----------------------- | ------ | ------------------------------------------- |
-| Title match             | High   | Exact and partial matches in title           |
-| Tag match               | High   | Query terms matching video tags              |
-| Description match       | Medium | Query terms in description                   |
-| Caption match           | Low    | Query terms in auto-generated captions       |
-| View count              | Medium | Logarithmic scale of total views             |
-| Like/dislike ratio      | Medium | Higher ratio = better content signal         |
-| Watch completion rate   | Medium | Videos people finish rank higher             |
-| Freshness               | Low    | Newer videos get a small boost               |
-| Channel authority       | Low    | Established channels with consistent quality |
-| User personalization    | Medium | Based on user's watch history and prefs      |
+| Factor                | Weight | Description                                  |
+| --------------------- | ------ | -------------------------------------------- |
+| Title match           | High   | Exact and partial matches in title           |
+| Tag match             | High   | Query terms matching video tags              |
+| Description match     | Medium | Query terms in description                   |
+| Caption match         | Low    | Query terms in auto-generated captions       |
+| View count            | Medium | Logarithmic scale of total views             |
+| Like/dislike ratio    | Medium | Higher ratio = better content signal         |
+| Watch completion rate | Medium | Videos people finish rank higher             |
+| Freshness             | Low    | Newer videos get a small boost               |
+| Channel authority     | Low    | Established channels with consistent quality |
+| User personalization  | Medium | Based on user's watch history and prefs      |
 
 ---
 
@@ -1630,14 +1635,14 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### Deployment Strategy
 
-| Component         | Strategy                         | Rollout            |
-| ----------------- | -------------------------------- | ------------------ |
-| API Services      | Blue-green deployment            | Canary 1% -> 10% -> 100% |
-| Transcoding       | Rolling update                   | Replace 10% at a time     |
-| CDN Config        | Gradual propagation              | Region by region          |
-| Database Schema   | Online migration (gh-ost)        | Zero-downtime             |
-| ML Models         | Shadow mode -> A/B test -> full  | Measure engagement first  |
-| Client Apps       | Feature flags                    | Gradual rollout           |
+| Component       | Strategy                        | Rollout                  |
+| --------------- | ------------------------------- | ------------------------ |
+| API Services    | Blue-green deployment           | Canary 1% -> 10% -> 100% |
+| Transcoding     | Rolling update                  | Replace 10% at a time    |
+| CDN Config      | Gradual propagation             | Region by region         |
+| Database Schema | Online migration (gh-ost)       | Zero-downtime            |
+| ML Models       | Shadow mode -> A/B test -> full | Measure engagement first |
+| Client Apps     | Feature flags                   | Gradual rollout          |
 
 ---
 
@@ -1840,20 +1845,20 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### Key Design Decisions
 
-| Decision                       | Choice                    | Rationale                            |
-| ------------------------------ | ------------------------- | ------------------------------------ |
-| Upload protocol                | Resumable (tus)           | Large files, unreliable networks     |
-| Streaming protocol             | HLS (primary)             | Widest device support, CDN-friendly  |
-| Video storage                  | Object storage (S3)       | Infinite scale, durability           |
-| Metadata database              | PostgreSQL (sharded)      | ACID for critical metadata           |
-| Counters/analytics             | Cassandra                 | High write throughput, time-series   |
-| Search                         | Elasticsearch             | Full-text search, relevance scoring  |
-| Cache                          | Redis                     | Session, metadata, count caching     |
-| Message queue                  | Kafka                     | High throughput, event replay        |
-| CDN strategy                   | Multi-CDN, 3-tier         | Cost optimization, global reach      |
-| Transcoding                    | Auto-scaling worker fleet | Handle variable upload volume        |
-| Recommendations                | Two-tower deep learning   | Scale and personalization            |
-| View counting                  | Multi-layer aggregation   | Handle 1B views/day without DB load  |
+| Decision           | Choice                    | Rationale                           |
+| ------------------ | ------------------------- | ----------------------------------- |
+| Upload protocol    | Resumable (tus)           | Large files, unreliable networks    |
+| Streaming protocol | HLS (primary)             | Widest device support, CDN-friendly |
+| Video storage      | Object storage (S3)       | Infinite scale, durability          |
+| Metadata database  | PostgreSQL (sharded)      | ACID for critical metadata          |
+| Counters/analytics | Cassandra                 | High write throughput, time-series  |
+| Search             | Elasticsearch             | Full-text search, relevance scoring |
+| Cache              | Redis                     | Session, metadata, count caching    |
+| Message queue      | Kafka                     | High throughput, event replay       |
+| CDN strategy       | Multi-CDN, 3-tier         | Cost optimization, global reach     |
+| Transcoding        | Auto-scaling worker fleet | Handle variable upload volume       |
+| Recommendations    | Two-tower deep learning   | Scale and personalization           |
+| View counting      | Multi-layer aggregation   | Handle 1B views/day without DB load |
 
 ### Critical Path for Interview
 
@@ -1873,11 +1878,11 @@ Focus the discussion on these areas in a 45-minute interview:
 
 ### Trade-offs to Discuss
 
-| Trade-off                           | Option A                    | Option B                      |
-| ----------------------------------- | --------------------------- | ----------------------------- |
-| Consistency vs availability         | Strong (view counts)        | Eventual (chosen for scale)   |
-| Eager vs lazy transcoding           | All formats upfront         | On-demand (chosen for cost)   |
-| Own CDN vs third-party              | Full control, high capex    | Managed, opex (chosen)        |
-| Monolith vs microservices           | Simpler operations          | Independent scaling (chosen)  |
-| SQL vs NoSQL for metadata           | ACID guarantees (chosen)    | Easier horizontal scaling     |
-| Real-time vs batch recommendations  | Fresher results (chosen)    | Cheaper compute               |
+| Trade-off                          | Option A                 | Option B                     |
+| ---------------------------------- | ------------------------ | ---------------------------- |
+| Consistency vs availability        | Strong (view counts)     | Eventual (chosen for scale)  |
+| Eager vs lazy transcoding          | All formats upfront      | On-demand (chosen for cost)  |
+| Own CDN vs third-party             | Full control, high capex | Managed, opex (chosen)       |
+| Monolith vs microservices          | Simpler operations       | Independent scaling (chosen) |
+| SQL vs NoSQL for metadata          | ACID guarantees (chosen) | Easier horizontal scaling    |
+| Real-time vs batch recommendations | Fresher results (chosen) | Cheaper compute              |

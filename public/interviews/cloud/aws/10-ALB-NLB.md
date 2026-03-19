@@ -10,14 +10,14 @@ ALB operates at the application layer and understands HTTP/HTTPS. It inspects re
 
 ### Core Features
 
-| Feature | Details |
-|---------|---------|
-| Protocol | HTTP, HTTPS, gRPC |
-| Routing | Path-based, host-based, header-based, query-string-based |
-| Targets | EC2 instances, IPs, Lambda functions, containers |
-| WebSockets | Native support |
-| HTTP/2 | Native support |
-| Idle timeout | Default 60s, configurable |
+| Feature      | Details                                                  |
+| ------------ | -------------------------------------------------------- |
+| Protocol     | HTTP, HTTPS, gRPC                                        |
+| Routing      | Path-based, host-based, header-based, query-string-based |
+| Targets      | EC2 instances, IPs, Lambda functions, containers         |
+| WebSockets   | Native support                                           |
+| HTTP/2       | Native support                                           |
+| Idle timeout | Default 60s, configurable                                |
 
 ### Path-Based Routing
 
@@ -77,14 +77,14 @@ NLB operates at the transport layer. It handles millions of requests per second 
 
 ### Core Features
 
-| Feature | Details |
-|---------|---------|
-| Protocol | TCP, UDP, TLS |
-| Latency | Ultra-low (~100us) |
-| Static IPs | One static IP per AZ (or Elastic IP) |
-| Source IP | Preserved by default |
-| Targets | EC2 instances, IPs, ALB (chaining) |
-| Connection | Long-lived connections supported |
+| Feature    | Details                                     |
+| ---------- | ------------------------------------------- |
+| Protocol   | TCP, UDP, TLS                               |
+| Latency    | Ultra-low (~100us)                          |
+| Static IPs | One static IP per AZ (or Elastic IP)        |
+| Source IP  | Preserved by default                        |
+| Targets    | EC2 instances, IPs, ALB (chaining)          |
+| Connection | Long-lived connections supported            |
 | Throughput | Millions of requests/second without warm-up |
 
 ### When NLB Shines
@@ -103,11 +103,11 @@ Register an ALB as a target of an NLB. This gives you both static IPs (NLB) and 
 
 ## Target Types
 
-| Target Type | ALB | NLB | Notes |
-|------------|-----|-----|-------|
-| Instance | Yes | Yes | Routes by instance ID |
-| IP | Yes | Yes | Supports IPs in peered VPCs |
-| Lambda | Yes | No | ALB invokes Lambda synchronously |
+| Target Type | ALB | NLB | Notes                            |
+| ----------- | --- | --- | -------------------------------- |
+| Instance    | Yes | Yes | Routes by instance ID            |
+| IP          | Yes | Yes | Supports IPs in peered VPCs      |
+| Lambda      | Yes | No  | ALB invokes Lambda synchronously |
 
 Lambda targets on ALB: the ALB converts HTTP to JSON, invokes the function, and converts the response back. No target group health checks for Lambda targets.
 
@@ -119,14 +119,14 @@ Both ALB and NLB perform health checks against registered targets. Unhealthy tar
 
 ### Configuration Parameters
 
-| Parameter | ALB Default | NLB Default |
-|-----------|-------------|-------------|
-| Protocol | HTTP | TCP |
-| Path | `/` | N/A (TCP) |
-| Interval | 30s | 30s |
-| Timeout | 5s | 10s |
-| Healthy threshold | 5 | 3 |
-| Unhealthy threshold | 2 | 3 |
+| Parameter           | ALB Default | NLB Default |
+| ------------------- | ----------- | ----------- |
+| Protocol            | HTTP        | TCP         |
+| Path                | `/`         | N/A (TCP)   |
+| Interval            | 30s         | 30s         |
+| Timeout             | 5s          | 10s         |
+| Healthy threshold   | 5           | 3           |
+| Unhealthy threshold | 2           | 3           |
 
 ### ALB Health Check Example
 
@@ -169,10 +169,10 @@ aws elbv2 create-listener \
 
 Distributes traffic evenly across all registered targets in all enabled AZs, regardless of which AZ received the request.
 
-| Load Balancer | Default | Cost |
-|--------------|---------|------|
-| ALB | Always on (cannot disable) | No extra charge |
-| NLB | Off by default | Inter-AZ data charges apply when enabled |
+| Load Balancer | Default                    | Cost                                     |
+| ------------- | -------------------------- | ---------------------------------------- |
+| ALB           | Always on (cannot disable) | No extra charge                          |
+| NLB           | Off by default             | Inter-AZ data charges apply when enabled |
 
 Without cross-zone: traffic is split evenly across AZs first, then among targets within that AZ. If AZ-A has 2 targets and AZ-B has 8, each AZ gets 50% -- meaning AZ-A targets get 25% each while AZ-B targets get 6.25% each.
 
@@ -226,17 +226,17 @@ WAF rules can block by IP, rate-limit, match SQL injection patterns, and apply m
 
 ## ALB vs NLB Decision Matrix
 
-| Criteria | Choose ALB | Choose NLB |
-|----------|-----------|-----------|
-| Protocol | HTTP/HTTPS/gRPC | TCP/UDP/TLS |
-| Routing needs | Path, host, header-based | None (port-based only) |
-| Latency requirement | Acceptable (~ms) | Ultra-low (~us) |
-| Static IP needed | No (use Global Accelerator if needed) | Yes (built-in) |
-| WAF needed | Yes | No |
-| Lambda targets | Yes | No |
-| PrivateLink | No | Yes (required) |
-| Source IP preservation | Via X-Forwarded-For header | Natively preserved |
-| Sticky sessions | Yes | No |
+| Criteria               | Choose ALB                            | Choose NLB             |
+| ---------------------- | ------------------------------------- | ---------------------- |
+| Protocol               | HTTP/HTTPS/gRPC                       | TCP/UDP/TLS            |
+| Routing needs          | Path, host, header-based              | None (port-based only) |
+| Latency requirement    | Acceptable (~ms)                      | Ultra-low (~us)        |
+| Static IP needed       | No (use Global Accelerator if needed) | Yes (built-in)         |
+| WAF needed             | Yes                                   | No                     |
+| Lambda targets         | Yes                                   | No                     |
+| PrivateLink            | No                                    | Yes (required)         |
+| Source IP preservation | Via X-Forwarded-For header            | Natively preserved     |
+| Sticky sessions        | Yes                                   | No                     |
 
 ---
 

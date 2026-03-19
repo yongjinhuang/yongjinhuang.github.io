@@ -122,26 +122,26 @@ Key metrics for evaluating loyalty program effectiveness:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Earn Rate** | How many points a user receives per unit of spend. Example: 2 points per dollar |
-| **Burn Rate** | The rate at which points are consumed during redemption. Example: 100 points = $1 discount |
-| **Breakage** | The percentage of points that are earned but never redeemed. This is revenue for the program operator |
-| **Tier Qualification** | The criteria (spend, visits, points) a user must meet to achieve or maintain a loyalty tier |
-| **Qualifying Spend** | Only certain transactions count toward tier advancement. Bonus points and promotional credits often don't qualify |
-| **Redemption Rate** | The percentage of total earned points that users actually redeem over a given period |
-| **Points Liability** | The financial obligation on your balance sheet representing unredeemed points that could be claimed in the future |
-| **Coalition Program** | A loyalty program spanning multiple brands where points are interchangeable across partners |
-| **Earn Rules Engine** | The configurable system that evaluates transactions against business rules to determine points awards |
-| **FIFO Redemption** | First In, First Out — oldest points are redeemed first, ensuring points closest to expiration are used |
-| **Soft Landing** | Dropping a user down by one tier instead of all the way to the base tier when they fail to requalify |
-| **Status Run** | When a user accelerates spending near the end of a qualification period to reach the next tier |
-| **Breakage Model** | The statistical model (per IFRS 15 / ASC 606) used to estimate how many points will go unredeemed for revenue recognition |
-| **Card-Linked Offer** | A promotion automatically activated when a user pays with a linked payment card at a participating merchant |
-| **Gamification** | Game-like mechanics (challenges, streaks, badges, progress bars) used to drive engagement within the loyalty program |
-| **Referral Bonus** | Points or credits awarded to both the referring user and the new user when a referral results in a qualifying action |
-| **Points Currency** | The unit of value in a loyalty program (Stars, Miles, Points). Different programs have different valuations per unit |
-| **Escheatment** | Legal requirement in some jurisdictions to turn over unclaimed property (including unredeemed points) to the state after a dormancy period |
+| Term                   | What It Means                                                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Earn Rate**          | How many points a user receives per unit of spend. Example: 2 points per dollar                                                            |
+| **Burn Rate**          | The rate at which points are consumed during redemption. Example: 100 points = $1 discount                                                 |
+| **Breakage**           | The percentage of points that are earned but never redeemed. This is revenue for the program operator                                      |
+| **Tier Qualification** | The criteria (spend, visits, points) a user must meet to achieve or maintain a loyalty tier                                                |
+| **Qualifying Spend**   | Only certain transactions count toward tier advancement. Bonus points and promotional credits often don't qualify                          |
+| **Redemption Rate**    | The percentage of total earned points that users actually redeem over a given period                                                       |
+| **Points Liability**   | The financial obligation on your balance sheet representing unredeemed points that could be claimed in the future                          |
+| **Coalition Program**  | A loyalty program spanning multiple brands where points are interchangeable across partners                                                |
+| **Earn Rules Engine**  | The configurable system that evaluates transactions against business rules to determine points awards                                      |
+| **FIFO Redemption**    | First In, First Out — oldest points are redeemed first, ensuring points closest to expiration are used                                     |
+| **Soft Landing**       | Dropping a user down by one tier instead of all the way to the base tier when they fail to requalify                                       |
+| **Status Run**         | When a user accelerates spending near the end of a qualification period to reach the next tier                                             |
+| **Breakage Model**     | The statistical model (per IFRS 15 / ASC 606) used to estimate how many points will go unredeemed for revenue recognition                  |
+| **Card-Linked Offer**  | A promotion automatically activated when a user pays with a linked payment card at a participating merchant                                |
+| **Gamification**       | Game-like mechanics (challenges, streaks, badges, progress bars) used to drive engagement within the loyalty program                       |
+| **Referral Bonus**     | Points or credits awarded to both the referring user and the new user when a referral results in a qualifying action                       |
+| **Points Currency**    | The unit of value in a loyalty program (Stars, Miles, Points). Different programs have different valuations per unit                       |
+| **Escheatment**        | Legal requirement in some jurisdictions to turn over unclaimed property (including unredeemed points) to the state after a dormancy period |
 
 ## Common Patterns
 
@@ -200,20 +200,20 @@ Points have a fixed, transparent monetary value (100 points = $1, always) and ca
 
 ## Quick Reference
 
-| Scenario | Recommended Approach |
-|----------|---------------------|
-| Setting earn rates | Start conservative (1 point per $1). Increase after measuring impact on retention and margin |
-| Tier structure | 3-4 tiers max. Clear thresholds, meaningful differentiation between levels |
-| Points expiration | 12-24 months of account inactivity. Send warnings at 30/14/7 days. Use FIFO consumption |
-| Redemption design | Make it frictionless. Points-at-checkout is the highest-engagement redemption model |
-| Preventing earn abuse | Hard caps per transaction and per period. Delayed confirmation until return window closes |
-| Referral programs | Two-sided rewards with qualifying action requirement. Device fingerprinting for fraud detection |
-| Cashback programs | 30-60 day pending period. Clear display of pending vs. available balance |
-| Partner integration | API-based earn/redeem with contractual earn rates and automated settlement |
-| Rules engine | Configuration-driven with priority ordering, mutual exclusion, and hard caps |
-| Points accounting | Track liability per IFRS 15 / ASC 606. Estimate breakage with historical data |
-| Tier downgrades | Soft landings (one tier drop max). Grace periods. Communicate well in advance |
-| Fraud prevention | Velocity limits on earn/redeem. Device fingerprinting. Pattern analysis on referrals |
-| Gamification | Challenges, streaks, and progress bars. Rotate frequently to maintain engagement |
-| Program ROI | Track incremental revenue, CLV lift, redemption rate, and cost as % of revenue |
-| Coalition programs | Clearinghouse settlement between partners. Standardized points currency with conversion rates |
+| Scenario              | Recommended Approach                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------- |
+| Setting earn rates    | Start conservative (1 point per $1). Increase after measuring impact on retention and margin    |
+| Tier structure        | 3-4 tiers max. Clear thresholds, meaningful differentiation between levels                      |
+| Points expiration     | 12-24 months of account inactivity. Send warnings at 30/14/7 days. Use FIFO consumption         |
+| Redemption design     | Make it frictionless. Points-at-checkout is the highest-engagement redemption model             |
+| Preventing earn abuse | Hard caps per transaction and per period. Delayed confirmation until return window closes       |
+| Referral programs     | Two-sided rewards with qualifying action requirement. Device fingerprinting for fraud detection |
+| Cashback programs     | 30-60 day pending period. Clear display of pending vs. available balance                        |
+| Partner integration   | API-based earn/redeem with contractual earn rates and automated settlement                      |
+| Rules engine          | Configuration-driven with priority ordering, mutual exclusion, and hard caps                    |
+| Points accounting     | Track liability per IFRS 15 / ASC 606. Estimate breakage with historical data                   |
+| Tier downgrades       | Soft landings (one tier drop max). Grace periods. Communicate well in advance                   |
+| Fraud prevention      | Velocity limits on earn/redeem. Device fingerprinting. Pattern analysis on referrals            |
+| Gamification          | Challenges, streaks, and progress bars. Rotate frequently to maintain engagement                |
+| Program ROI           | Track incremental revenue, CLV lift, redemption rate, and cost as % of revenue                  |
+| Coalition programs    | Clearinghouse settlement between partners. Standardized points currency with conversion rates   |

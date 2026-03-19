@@ -26,27 +26,27 @@ The core challenge is preventing double booking when multiple users try to selec
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Movie catalog | Movies with title, description, duration, genre |
-| F2 | Theater/Screen management | Theaters have multiple screens with seat layouts |
-| F3 | Show scheduling | Assign movies to screens at specific times |
-| F4 | Seat selection | View available seats, select specific seats |
-| F5 | Seat types | Regular, Premium, VIP with different pricing |
-| F6 | Booking workflow | Select -> Lock -> Pay -> Confirm (with timeout) |
-| F7 | Concurrency | Two users cannot book the same seat |
-| F8 | Cancellation | Cancel booking with refund rules |
-| F9 | Search | By movie, theater, city, time |
-| F10 | Discounts | Coupon and promotional pricing |
+| #   | Requirement               | Details                                          |
+| --- | ------------------------- | ------------------------------------------------ |
+| F1  | Movie catalog             | Movies with title, description, duration, genre  |
+| F2  | Theater/Screen management | Theaters have multiple screens with seat layouts |
+| F3  | Show scheduling           | Assign movies to screens at specific times       |
+| F4  | Seat selection            | View available seats, select specific seats      |
+| F5  | Seat types                | Regular, Premium, VIP with different pricing     |
+| F6  | Booking workflow          | Select -> Lock -> Pay -> Confirm (with timeout)  |
+| F7  | Concurrency               | Two users cannot book the same seat              |
+| F8  | Cancellation              | Cancel booking with refund rules                 |
+| F9  | Search                    | By movie, theater, city, time                    |
+| F10 | Discounts                 | Coupon and promotional pricing                   |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
-| NF1 | Thread-safe seat booking (no double booking) |
+| #   | Requirement                                           |
+| --- | ----------------------------------------------------- |
+| NF1 | Thread-safe seat booking (no double booking)          |
 | NF2 | Seat locks expire after timeout (prevent ghost holds) |
-| NF3 | Extensible pricing without modifying booking logic |
-| NF4 | Support for multiple cities and theaters |
+| NF3 | Extensible pricing without modifying booking logic    |
+| NF4 | Support for multiple cities and theaters              |
 
 ### Clarifying Questions to Ask
 

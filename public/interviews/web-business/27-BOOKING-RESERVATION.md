@@ -90,47 +90,55 @@ No-shows are costly. Common strategies:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Availability** | The remaining bookable inventory for a given time/date. Must be checked in real-time to prevent overselling |
-| **Hold / Soft Lock** | A temporary reservation that expires if not confirmed within a time window (usually 5-15 minutes) |
-| **Confirmed Booking** | A reservation that's been finalized — payment taken, inventory decremented, confirmation sent |
-| **Overbooking** | Intentionally accepting more bookings than capacity, betting on cancellations and no-shows |
-| **No-Show** | A confirmed booking where the customer doesn't appear. Costly for the business |
-| **Waitlist** | A queue of people waiting for a slot to open up. Triggered by cancellations or additional inventory |
-| **Buffer Time** | Padding between bookings for cleanup, prep, or transition (e.g., 15 min between salon appointments) |
-| **Cancellation Window** | The deadline before which a user can cancel without penalty |
-| **Dynamic Pricing** | Adjusting prices based on demand, time until the event, remaining inventory, or seasonality |
-| **Recurring Booking** | A reservation that repeats on a schedule — weekly therapy sessions, monthly team meetings |
-| **Walk-in** | A customer who shows up without a reservation. Must be balanced with reserved capacity |
-| **Block / Blackout** | Marking certain dates or times as unavailable (holidays, maintenance, private events) |
-| **Multi-Resource** | A booking that requires coordinating multiple resources simultaneously — a room, a therapist, and equipment |
-| **Group Booking** | A single reservation for multiple people or units, often with special pricing or coordination needs |
+| Term                    | What It Means                                                                                               |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Availability**        | The remaining bookable inventory for a given time/date. Must be checked in real-time to prevent overselling |
+| **Hold / Soft Lock**    | A temporary reservation that expires if not confirmed within a time window (usually 5-15 minutes)           |
+| **Confirmed Booking**   | A reservation that's been finalized — payment taken, inventory decremented, confirmation sent               |
+| **Overbooking**         | Intentionally accepting more bookings than capacity, betting on cancellations and no-shows                  |
+| **No-Show**             | A confirmed booking where the customer doesn't appear. Costly for the business                              |
+| **Waitlist**            | A queue of people waiting for a slot to open up. Triggered by cancellations or additional inventory         |
+| **Buffer Time**         | Padding between bookings for cleanup, prep, or transition (e.g., 15 min between salon appointments)         |
+| **Cancellation Window** | The deadline before which a user can cancel without penalty                                                 |
+| **Dynamic Pricing**     | Adjusting prices based on demand, time until the event, remaining inventory, or seasonality                 |
+| **Recurring Booking**   | A reservation that repeats on a schedule — weekly therapy sessions, monthly team meetings                   |
+| **Walk-in**             | A customer who shows up without a reservation. Must be balanced with reserved capacity                      |
+| **Block / Blackout**    | Marking certain dates or times as unavailable (holidays, maintenance, private events)                       |
+| **Multi-Resource**      | A booking that requires coordinating multiple resources simultaneously — a room, a therapist, and equipment |
+| **Group Booking**       | A single reservation for multiple people or units, often with special pricing or coordination needs         |
 
 ## Common Patterns
 
 ### Time Zone Handling
+
 Store all times in UTC internally. Convert to the user's local time zone for display and to the venue's time zone for operations. A user in New York booking a restaurant in Los Angeles needs to see Pacific Time. Edge cases: bookings that cross DST transitions (a 2 AM appointment during "spring forward" doesn't exist). Always store the venue's IANA time zone identifier (e.g., `America/Los_Angeles`, not "PST") since offset-based representations don't account for DST changes.
 
 ### Buffer Time Between Bookings
+
 A dentist appointment doesn't end at 10:30 and the next start at 10:30. You need cleanup, setup, and transition time. Model buffer as a property of the resource or booking type. A 30-minute appointment with a 10-minute buffer means the next available slot is 40 minutes later, not 30.
 
 ### Dynamic Pricing
+
 Prices change based on demand signals: remaining inventory, days until the booking, day of week, season, and competitor pricing. Airlines and hotels are masters of this. Implementation typically involves a pricing rules engine that evaluates conditions at search time and returns the current price. Early-bird discounts, last-minute deals, and surge pricing are all variants. Important: always show the user the final price before they confirm. Bait-and-switch pricing (showing a low price in search, then charging more at checkout) destroys trust and may violate regulations.
 
 ### Recurring Bookings
+
 User books "every Tuesday at 2 PM for 8 weeks." Generate individual booking instances from the recurrence rule. Handle conflicts per-instance (week 4 might overlap with a holiday block). Allow cancellation of single instances without breaking the series. Store the recurrence pattern (cron-like or RFC 5545 RRULE) separately from the generated instances. Common decision: do you generate all instances upfront (simpler queries, but updating the pattern means regenerating) or generate them on-the-fly (flexible, but complex availability checks)?
 
 ### Multi-Resource Scheduling
+
 A medical procedure might need a specific doctor, an operating room, and an anesthesiologist — all available at the same time. Query availability as the intersection of all required resources. If any one is unavailable, the slot doesn't show. This is computationally expensive and benefits from pre-calculated availability windows.
 
 ### Group Bookings
+
 A party of 12 at a restaurant or a corporate block of 20 hotel rooms. Often requires manual approval, custom pricing, and coordination. The system needs to handle partial confirmations (8 of 20 rooms confirmed so far) and group-level cancellation policies that differ from individual ones.
 
 ### Booking Modifications
+
 Users want to change dates, times, or party size after booking. This is essentially a cancel-and-rebook operation, but the UX should feel like an edit. Check availability for the new slot, apply any price differences, preserve the original booking ID for tracking, and handle cancellation policy implications (does modifying reset the cancellation window?). Track a modification history so support agents can see what changed and when. Some businesses limit the number of modifications allowed to prevent abuse.
 
 ### Booking Statuses
+
 A well-designed booking system tracks clear status transitions:
 
 ```

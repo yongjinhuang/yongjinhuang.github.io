@@ -106,13 +106,13 @@ This separates block building from block proposing (PBS).
 
 ### 1.4 Protecting Against MEV
 
-| Protection | How It Works | Example |
-|-----------|-------------|---------|
+| Protection      | How It Works                                       | Example           |
+| --------------- | -------------------------------------------------- | ----------------- |
 | Private mempool | Submit tx directly to builder, skip public mempool | Flashbots Protect |
-| MEV-aware DEX | DEX routes orders to avoid sandwiching | CoW Swap |
-| Intent-based | Express intent, solver finds best execution | UniswapX |
-| Lower slippage | Reduce slippage tolerance (may cause tx failure) | Manual |
-| Batch auctions | All orders in a batch get same price | CoW Protocol |
+| MEV-aware DEX   | DEX routes orders to avoid sandwiching             | CoW Swap          |
+| Intent-based    | Express intent, solver finds best execution        | UniswapX          |
+| Lower slippage  | Reduce slippage tolerance (may cause tx failure)   | Manual            |
+| Batch auctions  | All orders in a batch get same price               | CoW Protocol      |
 
 ---
 
@@ -341,13 +341,13 @@ Solution:
 
 ### 4.2 Actively Validated Services (AVS)
 
-| AVS Category | Examples | What They Validate |
-|-------------|----------|-------------------|
-| Oracle networks | Custom Chainlink alternative | Price data correctness |
-| Data availability | EigenDA | Rollup data is available |
-| Bridges | Cross-chain messaging | Message correctness |
-| Sequencers | Shared sequencing | L2 transaction ordering |
-| Coprocessors | ZK proof verification | Computation correctness |
+| AVS Category      | Examples                     | What They Validate       |
+| ----------------- | ---------------------------- | ------------------------ |
+| Oracle networks   | Custom Chainlink alternative | Price data correctness   |
+| Data availability | EigenDA                      | Rollup data is available |
+| Bridges           | Cross-chain messaging        | Message correctness      |
+| Sequencers        | Shared sequencing            | L2 transaction ordering  |
+| Coprocessors      | ZK proof verification        | Computation correctness  |
 
 ---
 
@@ -381,14 +381,14 @@ Benefits:
 
 ### 5.2 Key Modular Projects
 
-| Project | Role | Description |
-|---------|------|-------------|
-| Celestia | Data Availability | Specialized DA layer, modular-first |
-| EigenDA | Data Availability | DA secured by restaked ETH |
-| Avail | Data Availability | Polygon's DA layer |
-| Espresso | Shared Sequencing | Multiple rollups share one sequencer |
-| Astria | Shared Sequencing | Decentralized shared sequencer |
-| Dymension | Settlement | Settlement layer for RollApps |
+| Project   | Role              | Description                          |
+| --------- | ----------------- | ------------------------------------ |
+| Celestia  | Data Availability | Specialized DA layer, modular-first  |
+| EigenDA   | Data Availability | DA secured by restaked ETH           |
+| Avail     | Data Availability | Polygon's DA layer                   |
+| Espresso  | Shared Sequencing | Multiple rollups share one sequencer |
+| Astria    | Shared Sequencing | Decentralized shared sequencer       |
+| Dymension | Settlement        | Settlement layer for RollApps        |
 
 ---
 

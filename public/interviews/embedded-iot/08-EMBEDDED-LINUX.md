@@ -8,21 +8,21 @@ When a project outgrows the constraints of a bare-metal RTOS -- when it needs a 
 
 ### 1.1 Decision Matrix
 
-| Criterion | RTOS / Bare-Metal | Embedded Linux |
-|-----------|-------------------|----------------|
-| Boot time | < 100 ms | 2-30 seconds |
-| RAM required | 4 KB - 512 KB | 16 MB - 1 GB |
-| Storage required | 64 KB - 2 MB | 8 MB - 2 GB |
-| Real-time guarantees | Deterministic (< 10 us) | Soft RT with PREEMPT_RT |
-| Filesystem | None / littlefs / FAT | ext4, SquashFS, UBIFS |
-| Networking | lwIP (limited) | Full TCP/IP + WiFi/BT |
-| USB host support | Limited | Comprehensive |
-| Display / GUI | LVGL, basic | Qt, GTK, Wayland |
-| Development ecosystem | Vendor SDKs | apt, pip, cargo, etc. |
-| Security updates | Manual firmware OTA | Package manager updates |
-| Power consumption | Micro-amps sleep | Milliamps minimum |
-| Certification (safety) | Easier to certify | Harder (large codebase) |
-| Typical processors | Cortex-M, RISC-V MCUs | Cortex-A, MIPS, RISC-V MPUs |
+| Criterion              | RTOS / Bare-Metal       | Embedded Linux              |
+| ---------------------- | ----------------------- | --------------------------- |
+| Boot time              | < 100 ms                | 2-30 seconds                |
+| RAM required           | 4 KB - 512 KB           | 16 MB - 1 GB                |
+| Storage required       | 64 KB - 2 MB            | 8 MB - 2 GB                 |
+| Real-time guarantees   | Deterministic (< 10 us) | Soft RT with PREEMPT_RT     |
+| Filesystem             | None / littlefs / FAT   | ext4, SquashFS, UBIFS       |
+| Networking             | lwIP (limited)          | Full TCP/IP + WiFi/BT       |
+| USB host support       | Limited                 | Comprehensive               |
+| Display / GUI          | LVGL, basic             | Qt, GTK, Wayland            |
+| Development ecosystem  | Vendor SDKs             | apt, pip, cargo, etc.       |
+| Security updates       | Manual firmware OTA     | Package manager updates     |
+| Power consumption      | Micro-amps sleep        | Milliamps minimum           |
+| Certification (safety) | Easier to certify       | Harder (large codebase)     |
+| Typical processors     | Cortex-M, RISC-V MCUs   | Cortex-A, MIPS, RISC-V MPUs |
 
 ### 1.2 The Middle Ground
 
@@ -631,16 +631,16 @@ The Yocto Project is an open-source collaboration that produces tools and metada
 
 ### 8.2 Key Concepts
 
-| Term | Description |
-|------|-------------|
-| **Recipe** (.bb) | Instructions to build a single package |
-| **Layer** | Collection of recipes organized by purpose |
-| **BitBake** | The build engine (like make on steroids) |
-| **BSP Layer** | Board Support Package -- machine-specific recipes |
+| Term             | Description                                       |
+| ---------------- | ------------------------------------------------- |
+| **Recipe** (.bb) | Instructions to build a single package            |
+| **Layer**        | Collection of recipes organized by purpose        |
+| **BitBake**      | The build engine (like make on steroids)          |
+| **BSP Layer**    | Board Support Package -- machine-specific recipes |
 | **Distro Layer** | Distribution policy (init system, libc, features) |
-| **Image Recipe** | Defines what packages go into the final rootfs |
-| **MACHINE** | Target hardware (e.g., raspberrypi4, beaglebone) |
-| **DISTRO** | Distribution configuration (e.g., poky) |
+| **Image Recipe** | Defines what packages go into the final rootfs    |
+| **MACHINE**      | Target hardware (e.g., raspberrypi4, beaglebone)  |
+| **DISTRO**       | Distribution configuration (e.g., poky)           |
 
 ### 8.3 Layer Architecture
 
@@ -775,14 +775,14 @@ IMAGE_ROOTFS_EXTRA_SPACE = "524288"
 
 ### 9.1 Buildroot vs. Yocto
 
-| Aspect | Buildroot | Yocto |
-|--------|-----------|-------|
-| Learning curve | Gentle | Steep |
-| Build time | 15-60 min | 1-4 hours |
-| Package count | ~2,500 | ~10,000+ |
-| Customization | menuconfig | Recipes + layers |
-| Incremental builds | Full rebuild | Smart caching (sstate) |
-| Best for | Simple products | Complex, long-lived products |
+| Aspect             | Buildroot       | Yocto                        |
+| ------------------ | --------------- | ---------------------------- |
+| Learning curve     | Gentle          | Steep                        |
+| Build time         | 15-60 min       | 1-4 hours                    |
+| Package count      | ~2,500          | ~10,000+                     |
+| Customization      | menuconfig      | Recipes + layers             |
+| Incremental builds | Full rebuild    | Smart caching (sstate)       |
+| Best for           | Simple products | Complex, long-lived products |
 
 ### 9.2 Buildroot Workflow
 
@@ -1119,12 +1119,12 @@ Standard Linux is not deterministic: a high-priority task can be delayed by kern
 
 ### 13.2 Latency Comparison
 
-| Configuration | Worst-Case Latency | Use Case |
-|---------------|-------------------|----------|
-| Standard Linux | 1-10 ms | General embedded |
-| PREEMPT_RT Linux | 20-100 us | Soft real-time |
-| Dedicated RTOS (FreeRTOS) | 1-10 us | Hard real-time |
-| Bare metal | < 1 us | Ultra-low latency |
+| Configuration             | Worst-Case Latency | Use Case          |
+| ------------------------- | ------------------ | ----------------- |
+| Standard Linux            | 1-10 ms            | General embedded  |
+| PREEMPT_RT Linux          | 20-100 us          | Soft real-time    |
+| Dedicated RTOS (FreeRTOS) | 1-10 us            | Hard real-time    |
+| Bare metal                | < 1 us             | Ultra-low latency |
 
 ### 13.3 Building with PREEMPT_RT
 

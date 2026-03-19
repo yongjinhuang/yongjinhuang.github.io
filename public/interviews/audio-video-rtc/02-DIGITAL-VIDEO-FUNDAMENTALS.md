@@ -52,12 +52,12 @@ Frame 1       Frame 2       Frame 3       Frame 4
 A **frame rate** is the number of individual still images (frames) displayed per
 second, measured in **fps** (frames per second) or **Hz**.
 
-| Standard      | Frame Rate | Origin / Use Case                              |
-|---------------|------------|-------------------------------------------------|
-| Silent Film   | 16-18 fps  | Early cinema; looks "jerky" to modern eyes      |
-| Cinema (Film) | 24 fps     | Theatrical standard since the late 1920s        |
-| PAL           | 25 fps     | European broadcast (50 Hz mains frequency)      |
-| NTSC          | 29.97 fps  | North American broadcast (60 Hz / 1.001)        |
+| Standard      | Frame Rate | Origin / Use Case                                |
+| ------------- | ---------- | ------------------------------------------------ |
+| Silent Film   | 16-18 fps  | Early cinema; looks "jerky" to modern eyes       |
+| Cinema (Film) | 24 fps     | Theatrical standard since the late 1920s         |
+| PAL           | 25 fps     | European broadcast (50 Hz mains frequency)       |
+| NTSC          | 29.97 fps  | North American broadcast (60 Hz / 1.001)         |
 | Web Video     | 30 fps     | Common for streaming and online content          |
 | Smooth Video  | 60 fps     | Gaming, sports, modern streaming (Netflix, etc.) |
 | High FR       | 120 fps    | Competitive gaming, VR, high-end displays        |
@@ -110,13 +110,13 @@ Each field = 540 lines, displayed 1/60th second apart
 Two fields combine to form one frame at 1/30th second
 ```
 
-| Property          | Interlaced (e.g., 1080i) | Progressive (e.g., 1080p)  |
-|-------------------|--------------------------|----------------------------|
-| Lines per pass    | Half (one field)         | All (one frame)            |
-| Temporal cadence  | 60 fields/sec            | 30 or 60 frames/sec        |
-| Motion artifacts  | Combing / feathering     | None                       |
-| Bandwidth         | Lower for same "fps feel"| Higher                     |
-| Modern usage      | Legacy broadcast, some sports | Everything new          |
+| Property         | Interlaced (e.g., 1080i)      | Progressive (e.g., 1080p) |
+| ---------------- | ----------------------------- | ------------------------- |
+| Lines per pass   | Half (one field)              | All (one frame)           |
+| Temporal cadence | 60 fields/sec                 | 30 or 60 frames/sec       |
+| Motion artifacts | Combing / feathering          | None                      |
+| Bandwidth        | Lower for same "fps feel"     | Higher                    |
+| Modern usage     | Legacy broadcast, some sports | Everything new            |
 
 **Combing artifacts** appear in interlaced video when an object moves between the
 two fields. The odd and even lines show the object in slightly different positions,
@@ -149,11 +149,11 @@ individual wavelengths. Instead, it has three types of cone cells.
 
 The retina contains three types of cone photoreceptors:
 
-| Cone Type | Peak Sensitivity | Commonly Called |
-|-----------|-----------------|-----------------|
-| S (Short) | ~420 nm         | Blue cones      |
-| M (Medium)| ~530 nm         | Green cones     |
-| L (Long)  | ~560 nm         | Red cones       |
+| Cone Type  | Peak Sensitivity | Commonly Called |
+| ---------- | ---------------- | --------------- |
+| S (Short)  | ~420 nm          | Blue cones      |
+| M (Medium) | ~530 nm          | Green cones     |
+| L (Long)   | ~560 nm          | Red cones       |
 
 ```
 Sensitivity
@@ -210,12 +210,12 @@ light at varying intensities:
 
 Color depth defines how many distinct values each channel can take:
 
-| Bit Depth | Values per Channel | Total Colors        | Use Case                      |
-|-----------|--------------------|---------------------|-------------------------------|
-| 8-bit     | 256 (0-255)        | 16.7 million        | SDR content, web, most video  |
-| 10-bit    | 1,024 (0-1023)     | 1.07 billion        | Professional video, HDR       |
-| 12-bit    | 4,096 (0-4095)     | 68.7 billion        | Cinema mastering, raw camera  |
-| 16-bit    | 65,536             | 281 trillion        | Scientific imaging, VFX       |
+| Bit Depth | Values per Channel | Total Colors | Use Case                     |
+| --------- | ------------------ | ------------ | ---------------------------- |
+| 8-bit     | 256 (0-255)        | 16.7 million | SDR content, web, most video |
+| 10-bit    | 1,024 (0-1023)     | 1.07 billion | Professional video, HDR      |
+| 12-bit    | 4,096 (0-4095)     | 68.7 billion | Cinema mastering, raw camera |
+| 16-bit    | 65,536             | 281 trillion | Scientific imaging, VFX      |
 
 **Why does bit depth matter?**
 
@@ -254,15 +254,15 @@ Brightness      Signal                Signal
 The gamma curve "stretches" the dark values, giving them more code values.
 ```
 
-| Term                | Meaning                                                |
-|---------------------|--------------------------------------------------------|
-| Gamma (gamma)       | The exponent in the power function: V_out = V_in^gamma |
-| OETF                | Opto-Electronic Transfer Function (camera -> signal)   |
-| EOTF                | Electro-Optical Transfer Function (signal -> display)  |
-| sRGB gamma          | Approx 2.2 (with linear segment near black)            |
-| BT.1886             | Reference EOTF for BT.709 HD content                  |
-| PQ (SMPTE ST 2084)  | Perceptual Quantizer for HDR (up to 10,000 nits)      |
-| HLG                 | Hybrid Log-Gamma for broadcast HDR                     |
+| Term               | Meaning                                                |
+| ------------------ | ------------------------------------------------------ |
+| Gamma (gamma)      | The exponent in the power function: V_out = V_in^gamma |
+| OETF               | Opto-Electronic Transfer Function (camera -> signal)   |
+| EOTF               | Electro-Optical Transfer Function (signal -> display)  |
+| sRGB gamma         | Approx 2.2 (with linear segment near black)            |
+| BT.1886            | Reference EOTF for BT.709 HD content                   |
+| PQ (SMPTE ST 2084) | Perceptual Quantizer for HDR (up to 10,000 nits)       |
+| HLG                | Hybrid Log-Gamma for broadcast HDR                     |
 
 **PQ (Perceptual Quantizer)** is the HDR transfer function used by Dolby Vision
 and HDR10. Unlike gamma, which is relative (0-100% of display max), PQ maps code
@@ -290,11 +290,11 @@ values: Red, Green, Blue. Simple, intuitive, but not efficient for video.
 
 **YCbCr** (often loosely called YUV) separates brightness from color:
 
-| Component | Name           | Contains                           |
-|-----------|----------------|------------------------------------|
-| Y         | Luma           | Brightness (weighted sum of R,G,B) |
-| Cb        | Blue-difference| Blue chrominance                   |
-| Cr        | Red-difference | Red chrominance                    |
+| Component | Name            | Contains                           |
+| --------- | --------------- | ---------------------------------- |
+| Y         | Luma            | Brightness (weighted sum of R,G,B) |
+| Cb        | Blue-difference | Blue chrominance                   |
+| Cr        | Red-difference  | Red chrominance                    |
 
 ```
 RGB Image          Y (Luma)            Cb (Blue diff)      Cr (Red diff)
@@ -328,11 +328,11 @@ we are most sensitive to green light.
 
 These are ITU-R Recommendations that define color spaces for different video standards:
 
-| Standard   | Resolution    | Color Primaries | Luma Coefficients (R, G, B)    | Era        |
-|------------|---------------|-----------------|--------------------------------|------------|
-| BT.601     | SD (480i/576i)| Narrower gamut  | 0.299, 0.587, 0.114           | 1982       |
-| BT.709     | HD (720p+)    | sRGB primaries  | 0.2126, 0.7152, 0.0722        | 1990       |
-| BT.2020    | UHD (4K/8K)   | Wide gamut      | 0.2627, 0.6780, 0.0593        | 2012       |
+| Standard | Resolution     | Color Primaries | Luma Coefficients (R, G, B) | Era  |
+| -------- | -------------- | --------------- | --------------------------- | ---- |
+| BT.601   | SD (480i/576i) | Narrower gamut  | 0.299, 0.587, 0.114         | 1982 |
+| BT.709   | HD (720p+)     | sRGB primaries  | 0.2126, 0.7152, 0.0722      | 1990 |
+| BT.2020  | UHD (4K/8K)    | Wide gamut      | 0.2627, 0.6780, 0.0593      | 2012 |
 
 ```
 CIE 1931 Chromaticity Diagram (simplified):
@@ -420,12 +420,12 @@ Ratio to 4:4:4 = 50% (saves 50%)
 
 **Summary Table:**
 
-| Format  | Chroma H:V Ratio | Bits/Pixel (8-bit) | Savings | Use Case                    |
-|---------|------------------|--------------------|---------|-----------------------------|
-| 4:4:4   | 1:1              | 24 bpp             | 0%      | Studio, graphics, VFX       |
-| 4:2:2   | 1/2 : 1          | 16 bpp             | 33%     | Professional video, editing |
-| 4:2:0   | 1/2 : 1/2        | 12 bpp             | 50%     | Consumer video, streaming   |
-| 4:1:1   | 1/4 : 1          | 12 bpp             | 50%     | DV (legacy)                 |
+| Format | Chroma H:V Ratio | Bits/Pixel (8-bit) | Savings | Use Case                    |
+| ------ | ---------------- | ------------------ | ------- | --------------------------- |
+| 4:4:4  | 1:1              | 24 bpp             | 0%      | Studio, graphics, VFX       |
+| 4:2:2  | 1/2 : 1          | 16 bpp             | 33%     | Professional video, editing |
+| 4:2:0  | 1/2 : 1/2        | 12 bpp             | 50%     | Consumer video, streaming   |
+| 4:1:1  | 1/4 : 1          | 12 bpp             | 50%     | DV (legacy)                 |
 
 **Why 4:2:0 dominates consumer video**: The human eye's chroma resolution is
 roughly half its luma resolution. At normal viewing distances, 4:2:0 is
@@ -438,18 +438,18 @@ in chroma data is essentially free quality.
 
 ### 4.1 Standard Resolutions
 
-| Name          | Resolution    | Pixels     | Megapixels | Aspect Ratio |
-|---------------|---------------|------------|------------|--------------|
-| SD (NTSC)     | 720 x 480     | 345,600    | 0.35 MP    | 3:2*         |
-| SD (PAL)      | 720 x 576     | 414,720    | 0.41 MP    | 5:4*         |
-| HD (720p)     | 1280 x 720    | 921,600    | 0.92 MP    | 16:9         |
-| FHD (1080p)   | 1920 x 1080   | 2,073,600  | 2.07 MP    | 16:9         |
-| QHD (1440p)   | 2560 x 1440   | 3,686,400  | 3.69 MP    | 16:9         |
-| 4K UHD        | 3840 x 2160   | 8,294,400  | 8.29 MP    | 16:9         |
-| 4K DCI        | 4096 x 2160   | 8,847,360  | 8.85 MP    | ~17:9        |
-| 8K UHD        | 7680 x 4320   | 33,177,600 | 33.18 MP   | 16:9         |
+| Name        | Resolution  | Pixels     | Megapixels | Aspect Ratio |
+| ----------- | ----------- | ---------- | ---------- | ------------ |
+| SD (NTSC)   | 720 x 480   | 345,600    | 0.35 MP    | 3:2\*        |
+| SD (PAL)    | 720 x 576   | 414,720    | 0.41 MP    | 5:4\*        |
+| HD (720p)   | 1280 x 720  | 921,600    | 0.92 MP    | 16:9         |
+| FHD (1080p) | 1920 x 1080 | 2,073,600  | 2.07 MP    | 16:9         |
+| QHD (1440p) | 2560 x 1440 | 3,686,400  | 3.69 MP    | 16:9         |
+| 4K UHD      | 3840 x 2160 | 8,294,400  | 8.29 MP    | 16:9         |
+| 4K DCI      | 4096 x 2160 | 8,847,360  | 8.85 MP    | ~17:9        |
+| 8K UHD      | 7680 x 4320 | 33,177,600 | 33.18 MP   | 16:9         |
 
-*SD uses non-square pixels; see Pixel Aspect Ratio below.
+\*SD uses non-square pixels; see Pixel Aspect Ratio below.
 
 ### 4.2 Aspect Ratios
 
@@ -463,15 +463,15 @@ in chroma data is essentially free quality.
 Classic TV                Modern standard          Ultrawide / Cinema
 ```
 
-| Ratio     | Decimal | Use Case                                   |
-|-----------|---------|--------------------------------------------|
-| 4:3       | 1.33    | Classic TV, old monitors                   |
-| 16:9      | 1.78    | Modern TV, streaming, YouTube              |
-| 1.85:1    | 1.85    | US theatrical widescreen                   |
-| 2.39:1    | 2.39    | Anamorphic cinema (CinemaScope)            |
-| 21:9      | 2.33    | Ultrawide monitors                         |
-| 9:16      | 0.56    | Vertical video (TikTok, Instagram Reels)   |
-| 1:1       | 1.00    | Instagram square posts                     |
+| Ratio  | Decimal | Use Case                                 |
+| ------ | ------- | ---------------------------------------- |
+| 4:3    | 1.33    | Classic TV, old monitors                 |
+| 16:9   | 1.78    | Modern TV, streaming, YouTube            |
+| 1.85:1 | 1.85    | US theatrical widescreen                 |
+| 2.39:1 | 2.39    | Anamorphic cinema (CinemaScope)          |
+| 21:9   | 2.33    | Ultrawide monitors                       |
+| 9:16   | 0.56    | Vertical video (TikTok, Instagram Reels) |
+| 1:1    | 1.00    | Instagram square posts                   |
 
 ### 4.3 Pixel Aspect Ratio (PAR) vs Display Aspect Ratio (DAR)
 
@@ -541,20 +541,20 @@ Total: 8 pixels x 3 bytes = 24 bytes = 3 bytes/pixel
 
 ### 5.2 Common Raw Formats
 
-| Format   | Type    | Subsampling | Bytes/Pixel | Description                       |
-|----------|---------|-------------|-------------|-----------------------------------|
-| YUV420P  | Planar  | 4:2:0       | 1.5         | Three separate Y, U, V planes     |
-| I420     | Planar  | 4:2:0       | 1.5         | Same as YUV420P (Y, Cb, Cr order) |
-| YV12     | Planar  | 4:2:0       | 1.5         | Same but Y, Cr, Cb order          |
-| NV12     | Semi-pl | 4:2:0       | 1.5         | Y plane + interleaved UV plane    |
-| NV21     | Semi-pl | 4:2:0       | 1.5         | Y plane + interleaved VU plane    |
-| YUV422P  | Planar  | 4:2:2       | 2.0         | Three planes, half-width chroma   |
-| YUYV     | Packed  | 4:2:2       | 2.0         | Y0 U Y1 V (also called YUY2)     |
-| UYVY     | Packed  | 4:2:2       | 2.0         | U Y0 V Y1                         |
-| RGB24    | Packed  | N/A (4:4:4) | 3.0         | R G B R G B ...                   |
-| BGR24    | Packed  | N/A (4:4:4) | 3.0         | B G R B G R ... (OpenCV default)  |
-| RGBA     | Packed  | N/A (4:4:4) | 4.0         | R G B A (with alpha channel)      |
-| RGB48    | Packed  | N/A (4:4:4) | 6.0         | 16-bit per channel RGB            |
+| Format  | Type    | Subsampling | Bytes/Pixel | Description                       |
+| ------- | ------- | ----------- | ----------- | --------------------------------- |
+| YUV420P | Planar  | 4:2:0       | 1.5         | Three separate Y, U, V planes     |
+| I420    | Planar  | 4:2:0       | 1.5         | Same as YUV420P (Y, Cb, Cr order) |
+| YV12    | Planar  | 4:2:0       | 1.5         | Same but Y, Cr, Cb order          |
+| NV12    | Semi-pl | 4:2:0       | 1.5         | Y plane + interleaved UV plane    |
+| NV21    | Semi-pl | 4:2:0       | 1.5         | Y plane + interleaved VU plane    |
+| YUV422P | Planar  | 4:2:2       | 2.0         | Three planes, half-width chroma   |
+| YUYV    | Packed  | 4:2:2       | 2.0         | Y0 U Y1 V (also called YUY2)      |
+| UYVY    | Packed  | 4:2:2       | 2.0         | U Y0 V Y1                         |
+| RGB24   | Packed  | N/A (4:4:4) | 3.0         | R G B R G B ...                   |
+| BGR24   | Packed  | N/A (4:4:4) | 3.0         | B G R B G R ... (OpenCV default)  |
+| RGBA    | Packed  | N/A (4:4:4) | 4.0         | R G B A (with alpha channel)      |
+| RGB48   | Packed  | N/A (4:4:4) | 6.0         | 16-bit per channel RGB            |
 
 ### 5.3 NV12 and NV21 Detail
 
@@ -613,15 +613,15 @@ Per hour   = 5.3 * 60 = ~318 GB/hr
 
 **Bandwidth table for common formats (uncompressed):**
 
-| Resolution | Format   | FPS | Frame Size | Bitrate       | Per Hour   |
-|------------|----------|-----|------------|---------------|------------|
-| 720p       | YUV420   | 30  | 1.38 MB    | 331 Mbps      | 149 GB     |
-| 1080p      | YUV420   | 30  | 2.97 MB    | 712 Mbps      | 320 GB     |
-| 1080p      | YUV420   | 60  | 2.97 MB    | 1.42 Gbps     | 640 GB     |
-| 1080p      | RGB24    | 30  | 5.93 MB    | 1.42 Gbps     | 640 GB     |
-| 4K UHD     | YUV420   | 30  | 11.94 MB   | 2.86 Gbps     | 1.29 TB    |
-| 4K UHD     | YUV420   | 60  | 11.94 MB   | 5.73 Gbps     | 2.58 TB    |
-| 8K UHD     | YUV420   | 60  | 47.78 MB   | 22.9 Gbps     | 10.3 TB    |
+| Resolution | Format | FPS | Frame Size | Bitrate   | Per Hour |
+| ---------- | ------ | --- | ---------- | --------- | -------- |
+| 720p       | YUV420 | 30  | 1.38 MB    | 331 Mbps  | 149 GB   |
+| 1080p      | YUV420 | 30  | 2.97 MB    | 712 Mbps  | 320 GB   |
+| 1080p      | YUV420 | 60  | 2.97 MB    | 1.42 Gbps | 640 GB   |
+| 1080p      | RGB24  | 30  | 5.93 MB    | 1.42 Gbps | 640 GB   |
+| 4K UHD     | YUV420 | 30  | 11.94 MB   | 2.86 Gbps | 1.29 TB  |
+| 4K UHD     | YUV420 | 60  | 11.94 MB   | 5.73 Gbps | 2.58 TB  |
+| 8K UHD     | YUV420 | 60  | 47.78 MB   | 22.9 Gbps | 10.3 TB  |
 
 This makes it obvious why video compression is essential. Even a single hour
 of uncompressed 4K 60fps would consume over 2.5 terabytes.
@@ -635,13 +635,13 @@ of uncompressed 4K 60fps would consume over 2.5 terabytes.
 Scaling changes the resolution of a video frame. The quality depends heavily on
 the interpolation algorithm:
 
-| Algorithm          | Speed    | Quality    | Use Case                      |
-|--------------------|----------|------------|-------------------------------|
-| Nearest Neighbor   | Fastest  | Worst      | Pixel art, integer scaling    |
-| Bilinear           | Fast     | OK         | Preview, real-time            |
-| Bicubic            | Medium   | Good       | General-purpose scaling       |
-| Lanczos            | Slow     | Excellent  | High-quality downscaling      |
-| Spline             | Slow     | Excellent  | Professional post-production  |
+| Algorithm        | Speed   | Quality   | Use Case                     |
+| ---------------- | ------- | --------- | ---------------------------- |
+| Nearest Neighbor | Fastest | Worst     | Pixel art, integer scaling   |
+| Bilinear         | Fast    | OK        | Preview, real-time           |
+| Bicubic          | Medium  | Good      | General-purpose scaling      |
+| Lanczos          | Slow    | Excellent | High-quality downscaling     |
+| Spline           | Slow    | Excellent | Professional post-production |
 
 **Downscaling** (reducing resolution) requires a low-pass filter to prevent
 aliasing. Lanczos is the gold standard for downscaling.
@@ -698,24 +698,26 @@ Hardware encoders/decoders often include dedicated color space conversion units.
 
 Converts interlaced content to progressive. Common algorithms:
 
-| Method         | Quality | Speed  | Description                                   |
-|----------------|---------|--------|-----------------------------------------------|
-| Bob            | Low     | Fast   | Each field becomes a frame; double frame rate  |
-| Weave          | Low     | Fast   | Interleave two fields; causes combing          |
-| Blend          | Medium  | Fast   | Average adjacent fields                        |
-| Yadif          | Good    | Medium | Spatial + temporal check per pixel             |
-| QTGMC          | Best    | Slow   | Motion-compensated temporal Gaussian           |
-| BWDIF          | Good    | Medium | Bob-Weave deinterlacer; used in FFmpeg         |
+| Method | Quality | Speed  | Description                                   |
+| ------ | ------- | ------ | --------------------------------------------- |
+| Bob    | Low     | Fast   | Each field becomes a frame; double frame rate |
+| Weave  | Low     | Fast   | Interleave two fields; causes combing         |
+| Blend  | Medium  | Fast   | Average adjacent fields                       |
+| Yadif  | Good    | Medium | Spatial + temporal check per pixel            |
+| QTGMC  | Best    | Slow   | Motion-compensated temporal Gaussian          |
+| BWDIF  | Good    | Medium | Bob-Weave deinterlacer; used in FFmpeg        |
 
 ### 6.6 Frame Rate Conversion
 
 Changing the frame rate of a video:
 
 **Simple methods:**
+
 - **Drop frames**: Remove frames to reduce rate (30fps -> 24fps: drop every 5th)
 - **Duplicate frames**: Repeat frames to increase rate (causes judder)
 
 **Advanced methods:**
+
 - **Motion-compensated interpolation (MCI)**: Generate new intermediate frames
   by estimating motion between existing frames. Used in TV "motion smoothing"
   (the "soap opera effect").
@@ -891,11 +893,11 @@ Instead of encoding the entire frame again, encode only the difference.
 
 Video codecs use three types of frames:
 
-| Frame Type | Full Name              | Description                                    |
-|------------|------------------------|------------------------------------------------|
-| I-frame    | Intra-coded frame      | Complete frame, compressed like a JPEG          |
-| P-frame    | Predictive frame       | References one previous frame; stores only diff |
-| B-frame    | Bi-predictive frame    | References both previous AND future frames      |
+| Frame Type | Full Name           | Description                                     |
+| ---------- | ------------------- | ----------------------------------------------- |
+| I-frame    | Intra-coded frame   | Complete frame, compressed like a JPEG          |
+| P-frame    | Predictive frame    | References one previous frame; stores only diff |
+| B-frame    | Bi-predictive frame | References both previous AND future frames      |
 
 ```
 Compression efficiency:     I-frame > P-frame > B-frame (most compressed)
@@ -936,14 +938,15 @@ At 30fps: one I-frame every 0.4 seconds
 At 60fps: one I-frame every 0.2 seconds
 ```
 
-| GOP Parameter    | Typical Value | Effect                                    |
-|------------------|---------------|-------------------------------------------|
-| GOP size         | 30-250        | Larger = better compression, worse seek   |
-| Number of B's    | 0-5           | More B's = better compression              |
-| Closed GOP       | Yes/No        | Closed: no cross-GOP references            |
-| Keyframe interval| 1-10 seconds  | For streaming: 1-4 seconds typical         |
+| GOP Parameter     | Typical Value | Effect                                  |
+| ----------------- | ------------- | --------------------------------------- |
+| GOP size          | 30-250        | Larger = better compression, worse seek |
+| Number of B's     | 0-5           | More B's = better compression           |
+| Closed GOP        | Yes/No        | Closed: no cross-GOP references         |
+| Keyframe interval | 1-10 seconds  | For streaming: 1-4 seconds typical      |
 
 **Trade-offs:**
+
 - **Longer GOPs** = better compression (fewer expensive I-frames), but slower
   random access / seeking
 - **Shorter GOPs** = worse compression, but faster seeking, better error recovery
@@ -974,15 +977,16 @@ Residual = Block_A' - Block_A_predicted
 
 **Block matching algorithms:**
 
-| Algorithm           | Description                          | Complexity    |
-|---------------------|--------------------------------------|---------------|
-| Full Search         | Check every possible position        | Very high     |
-| Three Step Search   | Logarithmic step reduction           | Medium        |
-| Diamond Search      | Diamond-shaped search pattern        | Medium-Low    |
-| Hexagonal Search    | Hexagonal pattern, used in x264      | Low           |
-| UMH (Uneven MH)    | Multi-hex with early termination     | Medium        |
+| Algorithm         | Description                      | Complexity |
+| ----------------- | -------------------------------- | ---------- |
+| Full Search       | Check every possible position    | Very high  |
+| Three Step Search | Logarithmic step reduction       | Medium     |
+| Diamond Search    | Diamond-shaped search pattern    | Medium-Low |
+| Hexagonal Search  | Hexagonal pattern, used in x264  | Low        |
+| UMH (Uneven MH)   | Multi-hex with early termination | Medium     |
 
 Modern codecs (H.264+) use:
+
 - Variable block sizes (from 64x64 down to 4x4)
 - Sub-pixel motion estimation (quarter-pixel precision)
 - Multiple reference frames
@@ -1041,13 +1045,13 @@ Bitstream Output
 Rate control determines how many bits to allocate to each frame, macroblock,
 or coding unit. It adjusts the QP (Quantization Parameter) dynamically.
 
-| Mode  | Full Name                    | Description                                        |
-|-------|------------------------------|----------------------------------------------------|
-| CBR   | Constant Bit Rate            | Fixed bitrate; QP varies. Required for live         |
-| VBR   | Variable Bit Rate            | Target avg bitrate; allows peaks. Good for VOD      |
-| CRF   | Constant Rate Factor         | Constant perceptual quality; file size varies        |
-| CQP   | Constant Quantization Param  | Fixed QP; quality/size unpredictable. Testing only   |
-| ABR   | Average Bit Rate             | Similar to VBR, targets average. Common in FFmpeg    |
+| Mode | Full Name                   | Description                                        |
+| ---- | --------------------------- | -------------------------------------------------- |
+| CBR  | Constant Bit Rate           | Fixed bitrate; QP varies. Required for live        |
+| VBR  | Variable Bit Rate           | Target avg bitrate; allows peaks. Good for VOD     |
+| CRF  | Constant Rate Factor        | Constant perceptual quality; file size varies      |
+| CQP  | Constant Quantization Param | Fixed QP; quality/size unpredictable. Testing only |
+| ABR  | Average Bit Rate            | Similar to VBR, targets average. Common in FFmpeg  |
 
 **CRF scale** (used by x264, x265, libsvtav1):
 
@@ -1071,13 +1075,13 @@ quality per byte.
 
 ### 8.7 Major Video Codecs Comparison
 
-| Codec     | Standard     | Year | Compression vs H.264 | License       |
-|-----------|-------------|------|----------------------|---------------|
-| H.264/AVC | ITU/ISO     | 2003 | Baseline             | Patented      |
-| H.265/HEVC| ITU/ISO     | 2013 | ~40-50% better       | Patented      |
-| VP9       | Google       | 2013 | ~30-40% better       | Royalty-free  |
-| AV1       | AOMedia      | 2018 | ~50-60% better       | Royalty-free  |
-| VVC/H.266 | ITU/ISO     | 2020 | ~60-70% better       | Patented      |
+| Codec      | Standard | Year | Compression vs H.264 | License      |
+| ---------- | -------- | ---- | -------------------- | ------------ |
+| H.264/AVC  | ITU/ISO  | 2003 | Baseline             | Patented     |
+| H.265/HEVC | ITU/ISO  | 2013 | ~40-50% better       | Patented     |
+| VP9        | Google   | 2013 | ~30-40% better       | Royalty-free |
+| AV1        | AOMedia  | 2018 | ~50-60% better       | Royalty-free |
+| VVC/H.266  | ITU/ISO  | 2020 | ~60-70% better       | Patented     |
 
 ---
 
@@ -1611,6 +1615,7 @@ conversion matrices and color primaries. BT.601 is for SD video; BT.709 is for
 HD and above.
 
 The luma coefficients differ:
+
 - BT.601: Y = 0.299R + 0.587G + 0.114B
 - BT.709: Y = 0.2126R + 0.7152G + 0.0722B
 
@@ -1695,6 +1700,7 @@ Raw 1080p 30fps YUV420 requires ~712 Mbps. We need approximately 142:1
 compression to fit in 5 Mbps.
 
 Recommended:
+
 - **Codec**: H.264 (broadest compatibility) or H.265 (better compression)
 - **H.264 at 5 Mbps**: Achievable with CRF ~23 or CBR 5M. Quality will be
   good for most content.
@@ -1731,18 +1737,18 @@ Detailed pipeline:
 
 ### Quick-Fire Technical Questions
 
-| Question | Answer |
-|----------|--------|
-| How many bytes is a 1080p YUV420 frame? | 1920 x 1080 x 1.5 = 3,110,400 bytes (~2.97 MB) |
-| What is the pixel format of most hardware decoders? | NV12 |
-| Why is OpenCV BGR instead of RGB? | Historical: early camera hardware used BGR byte order |
-| What does CRF 0 mean in x264? | Mathematically lossless encoding |
-| What is a keyframe interval of 2 seconds at 30fps? | GOP size = 60 frames |
-| What is the most common chroma subsampling? | 4:2:0 |
-| H.264 vs H.265 compression improvement? | H.265 is ~40-50% better at the same quality |
-| What is CABAC? | Context-Adaptive Binary Arithmetic Coding (entropy coder in H.264/H.265) |
-| What causes banding in video gradients? | Insufficient bit depth (8-bit) + aggressive quantization |
-| What is a deblocking filter? | In-loop filter that smooths block boundaries in coded video |
+| Question                                            | Answer                                                                   |
+| --------------------------------------------------- | ------------------------------------------------------------------------ |
+| How many bytes is a 1080p YUV420 frame?             | 1920 x 1080 x 1.5 = 3,110,400 bytes (~2.97 MB)                           |
+| What is the pixel format of most hardware decoders? | NV12                                                                     |
+| Why is OpenCV BGR instead of RGB?                   | Historical: early camera hardware used BGR byte order                    |
+| What does CRF 0 mean in x264?                       | Mathematically lossless encoding                                         |
+| What is a keyframe interval of 2 seconds at 30fps?  | GOP size = 60 frames                                                     |
+| What is the most common chroma subsampling?         | 4:2:0                                                                    |
+| H.264 vs H.265 compression improvement?             | H.265 is ~40-50% better at the same quality                              |
+| What is CABAC?                                      | Context-Adaptive Binary Arithmetic Coding (entropy coder in H.264/H.265) |
+| What causes banding in video gradients?             | Insufficient bit depth (8-bit) + aggressive quantization                 |
+| What is a deblocking filter?                        | In-loop filter that smooths block boundaries in coded video              |
 
 ---
 

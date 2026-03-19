@@ -6,18 +6,18 @@ An ad serving platform matches advertisers' ads with publisher inventory in real
 
 ## Table Responsibilities
 
-| Table | Purpose | Storage | Why It Exists |
-|-------|---------|---------|---------------|
-| **advertisers** | Advertiser accounts | Postgres | Top-level entity for billing and access control |
-| **campaigns** | Budget and schedule management | Postgres | Controls spend pacing and bidding strategy |
-| **ad_groups** | Targeting and frequency caps | Postgres | Groups ads by audience; enables granular targeting without duplicating targeting rules per ad |
-| **ads** | Individual ad units with scoring | Postgres | Links creative to targeting; carries quality/CTR predictions for auction ranking |
-| **creatives** | Ad creative assets | Postgres | Separates creative from targeting; one creative can be reused across multiple ads |
-| **impression_events** | Impression logging | ClickHouse | High-volume event stream; write-optimized columnar storage |
-| **click_events** | Click tracking | ClickHouse | Separate from impressions for different retention and query patterns |
-| **conversion_events** | Conversion attribution | ClickHouse | Tracks post-click/post-view conversions for ROI measurement |
-| **user_profiles** | Real-time user data | Redis | Sub-millisecond reads during auction; stores segments and freq caps |
-| **budget_counters** | Real-time spend tracking | Redis | Atomic increments prevent budget overspend during concurrent auctions |
+| Table                 | Purpose                          | Storage    | Why It Exists                                                                                 |
+| --------------------- | -------------------------------- | ---------- | --------------------------------------------------------------------------------------------- |
+| **advertisers**       | Advertiser accounts              | Postgres   | Top-level entity for billing and access control                                               |
+| **campaigns**         | Budget and schedule management   | Postgres   | Controls spend pacing and bidding strategy                                                    |
+| **ad_groups**         | Targeting and frequency caps     | Postgres   | Groups ads by audience; enables granular targeting without duplicating targeting rules per ad |
+| **ads**               | Individual ad units with scoring | Postgres   | Links creative to targeting; carries quality/CTR predictions for auction ranking              |
+| **creatives**         | Ad creative assets               | Postgres   | Separates creative from targeting; one creative can be reused across multiple ads             |
+| **impression_events** | Impression logging               | ClickHouse | High-volume event stream; write-optimized columnar storage                                    |
+| **click_events**      | Click tracking                   | ClickHouse | Separate from impressions for different retention and query patterns                          |
+| **conversion_events** | Conversion attribution           | ClickHouse | Tracks post-click/post-view conversions for ROI measurement                                   |
+| **user_profiles**     | Real-time user data              | Redis      | Sub-millisecond reads during auction; stores segments and freq caps                           |
+| **budget_counters**   | Real-time spend tracking         | Redis      | Atomic increments prevent budget overspend during concurrent auctions                         |
 
 ---
 
@@ -25,29 +25,29 @@ An ad serving platform matches advertisers' ads with publisher inventory in real
 
 ### advertisers
 
-| Field | Type | Description |
-|-------|------|-------------|
-| advertiser_id | UUID (PK) | Unique advertiser identifier |
-| name | VARCHAR | Company or brand name |
-| status | ENUM | active, paused, suspended |
-| billing_type | ENUM | prepaid, postpaid, credit_line |
+| Field         | Type      | Description                    |
+| ------------- | --------- | ------------------------------ |
+| advertiser_id | UUID (PK) | Unique advertiser identifier   |
+| name          | VARCHAR   | Company or brand name          |
+| status        | ENUM      | active, paused, suspended      |
+| billing_type  | ENUM      | prepaid, postpaid, credit_line |
 
 ### campaigns
 
-| Field | Type | Description |
-|-------|------|-------------|
-| campaign_id | UUID (PK) | Unique campaign identifier |
-| advertiser_id | UUID (FK) | Parent advertiser |
-| name | VARCHAR | Campaign name |
-| status | ENUM | draft, active, paused, completed, exhausted |
-| budget_daily | DECIMAL | Maximum daily spend in dollars |
-| budget_total | DECIMAL | Lifetime budget cap |
-| spend_today | DECIMAL | Running daily spend (synced from Redis periodically) |
-| spend_total | DECIMAL | Running lifetime spend |
-| start_date | DATE | Campaign start date |
-| end_date | DATE | Campaign end date |
-| bidding_strategy | ENUM | cpm (cost per mille), cpc (cost per click), cpa (cost per action) |
-| target_bid | DECIMAL | Target bid amount in the chosen strategy's unit |
+| Field            | Type      | Description                                                       |
+| ---------------- | --------- | ----------------------------------------------------------------- |
+| campaign_id      | UUID (PK) | Unique campaign identifier                                        |
+| advertiser_id    | UUID (FK) | Parent advertiser                                                 |
+| name             | VARCHAR   | Campaign name                                                     |
+| status           | ENUM      | draft, active, paused, completed, exhausted                       |
+| budget_daily     | DECIMAL   | Maximum daily spend in dollars                                    |
+| budget_total     | DECIMAL   | Lifetime budget cap                                               |
+| spend_today      | DECIMAL   | Running daily spend (synced from Redis periodically)              |
+| spend_total      | DECIMAL   | Running lifetime spend                                            |
+| start_date       | DATE      | Campaign start date                                               |
+| end_date         | DATE      | Campaign end date                                                 |
+| bidding_strategy | ENUM      | cpm (cost per mille), cpc (cost per click), cpa (cost per action) |
+| target_bid       | DECIMAL   | Target bid amount in the chosen strategy's unit                   |
 
 **Why both budget_daily and budget_total?** Daily budgets prevent a campaign from burning its entire budget in one hour during a traffic spike. Total budget caps lifetime spend. Both are needed for proper pacing.
 
@@ -55,104 +55,104 @@ An ad serving platform matches advertisers' ads with publisher inventory in real
 
 ### ad_groups
 
-| Field | Type | Description |
-|-------|------|-------------|
-| ad_group_id | UUID (PK) | Unique ad group identifier |
-| campaign_id | UUID (FK) | Parent campaign |
-| geo_targets | VARCHAR[] | Targeted countries/regions/cities |
-| device_targets | VARCHAR[] | desktop, mobile, tablet |
-| age_targets | INT4RANGE | Age range targeting (e.g., [18, 35)) |
-| interest_segments | VARCHAR[] | Targeted interest segments (e.g., "sports", "technology") |
-| freq_cap_impressions | INT | Max impressions per user within the frequency window |
-| freq_cap_window | INTERVAL | Time window for frequency capping (e.g., 24 hours) |
+| Field                | Type      | Description                                               |
+| -------------------- | --------- | --------------------------------------------------------- |
+| ad_group_id          | UUID (PK) | Unique ad group identifier                                |
+| campaign_id          | UUID (FK) | Parent campaign                                           |
+| geo_targets          | VARCHAR[] | Targeted countries/regions/cities                         |
+| device_targets       | VARCHAR[] | desktop, mobile, tablet                                   |
+| age_targets          | INT4RANGE | Age range targeting (e.g., [18, 35))                      |
+| interest_segments    | VARCHAR[] | Targeted interest segments (e.g., "sports", "technology") |
+| freq_cap_impressions | INT       | Max impressions per user within the frequency window      |
+| freq_cap_window      | INTERVAL  | Time window for frequency capping (e.g., 24 hours)        |
 
 **Why ad_groups between campaigns and ads?** Without ad groups, targeting rules would be duplicated on every ad. Ad groups let you define "show to 25-34 year old mobile users in the US" once, then attach multiple ad creatives to test which performs best.
 
 ### ads
 
-| Field | Type | Description |
-|-------|------|-------------|
-| ad_id | UUID (PK) | Unique ad identifier |
-| ad_group_id | UUID (FK) | Parent ad group (inherits targeting) |
-| creative_id | UUID (FK) | The creative asset to display |
-| status | ENUM | active, paused, rejected |
-| bid_override | DECIMAL | Optional per-ad bid override (overrides campaign target_bid) |
-| quality_score | FLOAT | Platform-assigned quality score (0-10) based on historical performance |
-| predicted_ctr | FLOAT | ML-predicted click-through rate; updated periodically |
+| Field         | Type      | Description                                                            |
+| ------------- | --------- | ---------------------------------------------------------------------- |
+| ad_id         | UUID (PK) | Unique ad identifier                                                   |
+| ad_group_id   | UUID (FK) | Parent ad group (inherits targeting)                                   |
+| creative_id   | UUID (FK) | The creative asset to display                                          |
+| status        | ENUM      | active, paused, rejected                                               |
+| bid_override  | DECIMAL   | Optional per-ad bid override (overrides campaign target_bid)           |
+| quality_score | FLOAT     | Platform-assigned quality score (0-10) based on historical performance |
+| predicted_ctr | FLOAT     | ML-predicted click-through rate; updated periodically                  |
 
 **Why predicted_ctr on the ad?** The auction ranking formula is typically `predicted_ctr x bid`. This ensures that a high-quality ad with a low bid can beat a low-quality ad with a high bid, improving user experience while maximizing platform revenue (eCPM).
 
 ### creatives
 
-| Field | Type | Description |
-|-------|------|-------------|
-| creative_id | UUID (PK) | Unique creative identifier |
-| advertiser_id | UUID (FK) | Owner advertiser |
-| creative_type | ENUM | display, video, native |
-| width | INT | Creative width in pixels |
-| height | INT | Creative height in pixels |
-| asset_url | VARCHAR | URL to the creative asset (image, video, or native payload) |
-| click_through_url | VARCHAR | Landing page URL when the ad is clicked |
+| Field             | Type      | Description                                                 |
+| ----------------- | --------- | ----------------------------------------------------------- |
+| creative_id       | UUID (PK) | Unique creative identifier                                  |
+| advertiser_id     | UUID (FK) | Owner advertiser                                            |
+| creative_type     | ENUM      | display, video, native                                      |
+| width             | INT       | Creative width in pixels                                    |
+| height            | INT       | Creative height in pixels                                   |
+| asset_url         | VARCHAR   | URL to the creative asset (image, video, or native payload) |
+| click_through_url | VARCHAR   | Landing page URL when the ad is clicked                     |
 
 ### impression_events (ClickHouse)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| impression_id | UUID | Unique impression identifier |
-| ad_id | UUID | Which ad was shown |
-| campaign_id | UUID | Denormalized for fast aggregation without joins |
-| user_id_hash | VARCHAR | Hashed user identifier (privacy-safe) |
-| auction_price | DECIMAL | The price actually paid (second-price auction result) |
-| bid_price | DECIMAL | The winning bid amount |
-| geo | VARCHAR | User's geographic location |
-| device | VARCHAR | Device type |
-| timestamp | DATETIME | When the impression occurred |
+| Field         | Type     | Description                                           |
+| ------------- | -------- | ----------------------------------------------------- |
+| impression_id | UUID     | Unique impression identifier                          |
+| ad_id         | UUID     | Which ad was shown                                    |
+| campaign_id   | UUID     | Denormalized for fast aggregation without joins       |
+| user_id_hash  | VARCHAR  | Hashed user identifier (privacy-safe)                 |
+| auction_price | DECIMAL  | The price actually paid (second-price auction result) |
+| bid_price     | DECIMAL  | The winning bid amount                                |
+| geo           | VARCHAR  | User's geographic location                            |
+| device        | VARCHAR  | Device type                                           |
+| timestamp     | DATETIME | When the impression occurred                          |
 
 **Why denormalize campaign_id?** ClickHouse queries aggregate billions of rows. Joins are expensive. Denormalizing campaign_id into every impression avoids joining with the campaigns table for the most common query ("show me impressions by campaign").
 
 ### click_events (ClickHouse)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| click_id | UUID | Unique click identifier |
-| impression_id | UUID | Which impression was clicked |
-| ad_id | UUID | Denormalized for aggregation |
-| campaign_id | UUID | Denormalized for aggregation |
-| user_id_hash | VARCHAR | Hashed user identifier |
-| timestamp | DATETIME | When the click occurred |
+| Field         | Type     | Description                  |
+| ------------- | -------- | ---------------------------- |
+| click_id      | UUID     | Unique click identifier      |
+| impression_id | UUID     | Which impression was clicked |
+| ad_id         | UUID     | Denormalized for aggregation |
+| campaign_id   | UUID     | Denormalized for aggregation |
+| user_id_hash  | VARCHAR  | Hashed user identifier       |
+| timestamp     | DATETIME | When the click occurred      |
 
 ### conversion_events (ClickHouse)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| conversion_id | UUID | Unique conversion identifier |
-| click_id | UUID | Which click led to this conversion (nullable for view-through) |
-| impression_id | UUID | Which impression led to this conversion |
-| campaign_id | UUID | Denormalized for aggregation |
-| conversion_type | VARCHAR | purchase, signup, app_install, etc. |
-| revenue | DECIMAL | Revenue attributed to this conversion |
-| timestamp | DATETIME | When the conversion occurred |
+| Field           | Type     | Description                                                    |
+| --------------- | -------- | -------------------------------------------------------------- |
+| conversion_id   | UUID     | Unique conversion identifier                                   |
+| click_id        | UUID     | Which click led to this conversion (nullable for view-through) |
+| impression_id   | UUID     | Which impression led to this conversion                        |
+| campaign_id     | UUID     | Denormalized for aggregation                                   |
+| conversion_type | VARCHAR  | purchase, signup, app_install, etc.                            |
+| revenue         | DECIMAL  | Revenue attributed to this conversion                          |
+| timestamp       | DATETIME | When the conversion occurred                                   |
 
 ### user_profiles (Redis)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| user_id | KEY | Redis key |
-| segments | SET | User's interest segments for targeting |
-| interests | SET | Inferred interests from browsing behavior |
-| freq_caps | HASH | campaign_id → impression count within current window |
-| consent_flags | HASH | GDPR/CCPA consent state per purpose |
+| Field         | Type | Description                                          |
+| ------------- | ---- | ---------------------------------------------------- |
+| user_id       | KEY  | Redis key                                            |
+| segments      | SET  | User's interest segments for targeting               |
+| interests     | SET  | Inferred interests from browsing behavior            |
+| freq_caps     | HASH | campaign_id → impression count within current window |
+| consent_flags | HASH | GDPR/CCPA consent state per purpose                  |
 
 **Why Redis for user profiles?** The auction happens in under 100ms. Loading user segments and frequency caps from a relational database would add 5-20ms of latency. Redis provides sub-millisecond reads with hash and set operations.
 
 ### budget_counters (Redis)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| key | STRING | campaign_id + date (e.g., "budget:camp123:2024-01-15") |
-| spend | DECIMAL | Atomic counter incremented on each auction win |
-| impressions | INT | Atomic counter of impressions served |
-| TTL | 48h | Auto-expires after 48 hours |
+| Field       | Type    | Description                                            |
+| ----------- | ------- | ------------------------------------------------------ |
+| key         | STRING  | campaign_id + date (e.g., "budget:camp123:2024-01-15") |
+| spend       | DECIMAL | Atomic counter incremented on each auction win         |
+| impressions | INT     | Atomic counter of impressions served                   |
+| TTL         | 48h     | Auto-expires after 48 hours                            |
 
 **Why Redis atomic counters?** In a system serving 100K+ auctions per second, checking and updating budget in Postgres would create massive contention. Redis INCRBYFLOAT is atomic, lock-free, and sub-millisecond. The 48h TTL auto-cleans old counters.
 

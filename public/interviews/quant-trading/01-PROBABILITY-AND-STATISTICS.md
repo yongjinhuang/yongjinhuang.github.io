@@ -10,7 +10,7 @@ Probability and statistics form the backbone of every quant interview. Whether y
 
 ### Fundamental Counting Principle
 
-If task A can be done in m ways and task B in n ways, then A followed by B can be done in m * n ways.
+If task A can be done in m ways and task B in n ways, then A followed by B can be done in m \* n ways.
 
 ### Permutations
 
@@ -32,9 +32,10 @@ C(n, k) = n! / (k! * (n - k)!)
 ```
 
 **Key identities**:
-- C(n, k) = C(n, n-k)                    (symmetry)
-- C(n, k) = C(n-1, k-1) + C(n-1, k)     (Pascal's identity)
-- Sum of C(n, k) for k=0..n = 2^n        (binomial theorem at x=1)
+
+- C(n, k) = C(n, n-k) (symmetry)
+- C(n, k) = C(n-1, k-1) + C(n-1, k) (Pascal's identity)
+- Sum of C(n, k) for k=0..n = 2^n (binomial theorem at x=1)
 
 ### Stars and Bars
 
@@ -71,7 +72,7 @@ If n items are placed into m containers with n > m, at least one container has m
 **Generalized**: If n items in m containers, some container has at least ceil(n/m) items.
 
 **Example**: Prove that among any 5 integers, at least two have the same remainder mod 4.
-*Proof*: There are only 4 possible remainders (0, 1, 2, 3). By pigeonhole, 5 integers in 4 "bins" means at least two share a remainder.
+_Proof_: There are only 4 possible remainders (0, 1, 2, 3). By pigeonhole, 5 integers in 4 "bins" means at least two share a remainder.
 
 ---
 
@@ -80,11 +81,13 @@ If n items are placed into m containers with n > m, at least one container has m
 ### Sample Space and Events
 
 A **probability space** is a triple (Omega, F, P) where:
+
 - Omega is the sample space (set of all outcomes)
 - F is a sigma-algebra of events (subsets of Omega)
 - P is a probability measure with P(Omega) = 1
 
 ### Axioms of Probability (Kolmogorov)
+
 1. P(A) >= 0 for all events A
 2. P(Omega) = 1
 3. For mutually exclusive events A1, A2, ...: P(union) = sum of P(Ai)
@@ -95,7 +98,7 @@ A **probability space** is a triple (Omega, F, P) where:
 P(A | B) = P(A ∩ B) / P(B),    provided P(B) > 0
 ```
 
-**Multiplication rule**: P(A ∩ B) = P(A | B) * P(B) = P(B | A) * P(A)
+**Multiplication rule**: P(A ∩ B) = P(A | B) _ P(B) = P(B | A) _ P(A)
 
 ### Bayes' Theorem
 
@@ -131,7 +134,7 @@ P(A) = Σ_i P(A | Bi) * P(Bi)
 
 ### Independence
 
-Events A and B are independent iff P(A ∩ B) = P(A) * P(B).
+Events A and B are independent iff P(A ∩ B) = P(A) \* P(B).
 
 Equivalently: P(A | B) = P(A).
 
@@ -144,11 +147,13 @@ Equivalently: P(A | B) = P(A).
 ### Definition
 
 For discrete random variable X:
+
 ```
 E[X] = Σ_x x * P(X = x)
 ```
 
 For continuous random variable X with density f:
+
 ```
 E[X] = ∫ x * f(x) dx
 ```
@@ -183,7 +188,7 @@ Beautifully, this is 1 regardless of n.
 E[X] = E[E[X | Y]]
 ```
 
-This means: E[X] = Σ_y E[X | Y = y] * P(Y = y)
+This means: E[X] = Σ_y E[X | Y = y] \* P(Y = y)
 
 **Example**: You roll a fair die. If you get k, you then flip k coins. What is the expected number of heads?
 
@@ -211,7 +216,8 @@ Var(X) = E[(X - E[X])^2] = E[X^2] - (E[X])^2
 ```
 
 Properties:
-- Var(aX + b) = a^2 * Var(X)
+
+- Var(aX + b) = a^2 \* Var(X)
 - Var(X) >= 0, with equality iff X is constant a.s.
 
 ### Covariance and Correlation
@@ -242,8 +248,9 @@ Var(X) = E[Var(X | Y)] + Var(E[X | Y])
 "The total variance = mean of conditional variances + variance of conditional means"
 
 **Example**: Using the die-then-coins example above.
+
 - E[X | Y] = Y/2, so Var(E[X | Y]) = Var(Y/2) = Var(Y)/4 = (35/12)/4 = 35/48
-- Var(X | Y) = Y * (1/4) (variance of Y Bernoulli trials), so E[Var(X | Y)] = E[Y]/4 = 3.5/4 = 7/8
+- Var(X | Y) = Y \* (1/4) (variance of Y Bernoulli trials), so E[Var(X | Y)] = E[Y]/4 = 3.5/4 = 7/8
 - Var(X) = 7/8 + 35/48 = 42/48 + 35/48 = 77/48 ≈ 1.604
 
 ---
@@ -252,15 +259,16 @@ Var(X) = E[Var(X | Y)] + Var(E[X | Y])
 
 ### Discrete Distributions
 
-| Distribution | PMF / Parameters | E[X] | Var(X) | MGF M(t) |
-|-------------|-----------------|------|--------|-----------|
-| Bernoulli(p) | P(X=1) = p | p | p(1-p) | (1-p) + pe^t |
-| Binomial(n,p) | C(n,k)p^k(1-p)^(n-k) | np | np(1-p) | ((1-p) + pe^t)^n |
-| Geometric(p) | p(1-p)^(k-1), k=1,2,... | 1/p | (1-p)/p^2 | pe^t / (1-(1-p)e^t) |
-| Poisson(lambda) | e^(-λ)λ^k / k! | λ | λ | e^(λ(e^t - 1)) |
-| Negative Binomial(r,p) | C(k-1,r-1)p^r(1-p)^(k-r) | r/p | r(1-p)/p^2 | (pe^t / (1-(1-p)e^t))^r |
+| Distribution           | PMF / Parameters         | E[X] | Var(X)     | MGF M(t)                |
+| ---------------------- | ------------------------ | ---- | ---------- | ----------------------- |
+| Bernoulli(p)           | P(X=1) = p               | p    | p(1-p)     | (1-p) + pe^t            |
+| Binomial(n,p)          | C(n,k)p^k(1-p)^(n-k)     | np   | np(1-p)    | ((1-p) + pe^t)^n        |
+| Geometric(p)           | p(1-p)^(k-1), k=1,2,...  | 1/p  | (1-p)/p^2  | pe^t / (1-(1-p)e^t)     |
+| Poisson(lambda)        | e^(-λ)λ^k / k!           | λ    | λ          | e^(λ(e^t - 1))          |
+| Negative Binomial(r,p) | C(k-1,r-1)p^r(1-p)^(k-r) | r/p  | r(1-p)/p^2 | (pe^t / (1-(1-p)e^t))^r |
 
 **When each arises in trading**:
+
 - **Bernoulli**: A single trade is profitable (1) or not (0)
 - **Binomial**: Number of profitable trades out of n
 - **Geometric**: Number of trades until first profit
@@ -268,14 +276,15 @@ Var(X) = E[Var(X | Y)] + Var(E[X | Y])
 
 ### Continuous Distributions
 
-| Distribution | PDF | E[X] | Var(X) |
-|-------------|-----|------|--------|
-| Uniform(a,b) | 1/(b-a) | (a+b)/2 | (b-a)^2/12 |
-| Exponential(λ) | λe^(-λx), x >= 0 | 1/λ | 1/λ^2 |
-| Normal(μ,σ^2) | (1/√(2πσ^2)) exp(-(x-μ)^2/(2σ^2)) | μ | σ^2 |
+| Distribution      | PDF                                       | E[X]        | Var(X)                |
+| ----------------- | ----------------------------------------- | ----------- | --------------------- |
+| Uniform(a,b)      | 1/(b-a)                                   | (a+b)/2     | (b-a)^2/12            |
+| Exponential(λ)    | λe^(-λx), x >= 0                          | 1/λ         | 1/λ^2                 |
+| Normal(μ,σ^2)     | (1/√(2πσ^2)) exp(-(x-μ)^2/(2σ^2))         | μ           | σ^2                   |
 | Log-Normal(μ,σ^2) | (1/(x√(2πσ^2))) exp(-(ln x - μ)^2/(2σ^2)) | e^(μ+σ^2/2) | (e^(σ^2)-1)e^(2μ+σ^2) |
 
 **When each arises in trading**:
+
 - **Uniform**: Prior on an unknown parameter, random starting times
 - **Exponential**: Time between order arrivals (memoryless property), time to next market event
 - **Normal**: Daily returns (approximately), sum of many small independent shocks (CLT)
@@ -284,6 +293,7 @@ Var(X) = E[Var(X | Y)] + Var(E[X | Y])
 ### The Exponential-Poisson Connection
 
 If events arrive according to a Poisson process with rate λ:
+
 - Number of events in time t is Poisson(λt)
 - Time between consecutive events is Exponential(λ)
 - Time until the r-th event is Gamma(r, λ)
@@ -334,7 +344,8 @@ where C ≈ 0.4748 and Phi is the standard normal CDF.
 ### Application in Trading: Sharpe Ratio Estimation
 
 If daily returns have mean μ and standard deviation σ:
-- Annualized Sharpe Ratio = (μ / σ) * √252
+
+- Annualized Sharpe Ratio = (μ / σ) \* √252
 - Standard error of estimated Sharpe = approximately 1/√n for n days of data
 - You need about 4 years of daily data to distinguish a Sharpe of 1.0 from 0 at 95% confidence
 
@@ -367,7 +378,7 @@ def sharpe_confidence_interval(returns, confidence=0.95):
 
 ### Setup
 
-Given n i.i.d. random variables X1, ..., Xn, the order statistics are X_(1) <= X_(2) <= ... <= X_(n).
+Given n i.i.d. random variables X1, ..., Xn, the order statistics are X*(1) <= X*(2) <= ... <= X\_(n).
 
 ### Uniform Order Statistics
 
@@ -379,7 +390,7 @@ Var(X_(k)) = k(n - k + 1) / ((n + 1)^2 (n + 2))
 ```
 
 **Spacing**: The gaps between consecutive order statistics:
-D_k = X_(k) - X_(k-1) are exchangeable with E[D_k] = 1/(n+1).
+D*k = X*(k) - X\_(k-1) are exchangeable with E[D_k] = 1/(n+1).
 
 ### Min and Max
 
@@ -436,9 +447,9 @@ E[total] = Σ_{i=0}^{n-1} n/(n - i) = n * Σ_{j=1}^{n} 1/j = n * H_n
 
 where H_n = 1 + 1/2 + 1/3 + ... + 1/n is the n-th harmonic number.
 
-For n = 6 (die faces): E = 6 * (1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6) = 6 * 2.45 = 14.7
+For n = 6 (die faces): E = 6 _ (1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6) = 6 _ 2.45 = 14.7
 
-For n = 52 (deck of cards): E = 52 * H_52 ≈ 52 * 4.559 ≈ 236
+For n = 52 (deck of cards): E = 52 _ H_52 ≈ 52 _ 4.559 ≈ 236
 
 ### Puzzle 2: Gambler's Ruin
 
@@ -446,11 +457,12 @@ For n = 52 (deck of cards): E = 52 * H_52 ≈ 52 * 4.559 ≈ 236
 
 **Solution**: Let P_i = probability of ruin starting with $i.
 
-Boundary conditions: P_0 = 1 (already ruined), P_{a+b} = 0 (B is ruined).
+Boundary conditions: P*0 = 1 (already ruined), P*{a+b} = 0 (B is ruined).
 
-Recurrence: P_i = p * P_{i+1} + q * P_{i-1}
+Recurrence: P*i = p \* P*{i+1} + q \* P\_{i-1}
 
 If p != q (biased coin):
+
 ```
 P_i = ((q/p)^i - (q/p)^(a+b)) / (1 - (q/p)^(a+b))
 
@@ -458,6 +470,7 @@ For A's ruin probability: P_a = ((q/p)^a - (q/p)^(a+b)) / (1 - (q/p)^(a+b))
 ```
 
 If p = q = 1/2 (fair coin):
+
 ```
 P_i = 1 - i/(a+b)
 
@@ -479,6 +492,7 @@ P(at least one match) = 1 - P(all different)
 **Key values**: P > 0.5 when k >= 23, P > 0.99 when k >= 57.
 
 **Approximation**: For small k relative to n:
+
 ```
 P ≈ 1 - e^(-k(k-1)/(2n))
 ```
@@ -494,7 +508,7 @@ P(derangement) = Σ_{k=0}^{n} (-1)^k / k! → 1/e ≈ 0.3679 as n → ∞
 This converges extremely fast. For n >= 5, the probability is already within 0.003 of 1/e.
 
 **Follow-up**: What is the expected number of people who get their own hat back?
-By linearity of expectation: E[fixed points] = n * (1/n) = 1, regardless of n.
+By linearity of expectation: E[fixed points] = n \* (1/n) = 1, regardless of n.
 
 ### Puzzle 5: Broken Stick Problem
 
@@ -517,6 +531,7 @@ P(triangle) = 1/4
 ### Puzzle 6: Expected Number of Dice Rolls to See All Six Faces
 
 This is the coupon collector problem with n = 6:
+
 ```
 E = 6(1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6) = 6 + 3 + 2 + 1.5 + 1.2 + 1 = 14.7
 ```
@@ -553,15 +568,17 @@ Each row sums to 1. The n-step transition probability is given by P^n.
 
 ### Stationary Distribution
 
-A distribution pi is stationary if pi * P = pi, i.e., it is a left eigenvector of P with eigenvalue 1.
+A distribution pi is stationary if pi \* P = pi, i.e., it is a left eigenvector of P with eigenvalue 1.
 
 For an irreducible, aperiodic chain on a finite state space:
+
 - A unique stationary distribution exists
 - The chain converges to it from any starting state
 
 ### Absorption Probabilities
 
 For chains with absorbing states, key questions are:
+
 - Probability of being absorbed in each absorbing state
 - Expected time to absorption
 
@@ -572,13 +589,14 @@ For chains with absorbing states, key questions are:
 A particle starts at position 0 on {0, 1, 2, ..., N}. At each step it moves right with probability p and left with probability q = 1 - p. States 0 and N are absorbing. What is E[T], the expected number of steps to absorption?
 
 Using first-step analysis, let t_i = E[T | start at i]:
+
 ```
 t_i = 1 + p * t_{i+1} + q * t_{i-1},    1 <= i <= N-1
 t_0 = t_N = 0
 ```
 
-For p = q = 1/2: t_i = i * (N - i)
-For p != q: t_i = (i/(q-p)) - (N/(q-p)) * ((q/p)^i - 1) / ((q/p)^N - 1)
+For p = q = 1/2: t*i = i * (N - i)
+For p != q: t*i = (i/(q-p)) - (N/(q-p)) * ((q/p)^i - 1) / ((q/p)^N - 1)
 
 ```python
 import numpy as np
@@ -608,6 +626,7 @@ print(random_walk_absorption_time(10, 0.5, 3))  # 21.0 = 3*7
 ### Application: Gambler's Ruin as Markov Chain
 
 The gambler's ruin problem is exactly a random walk on {0, 1, ..., N} with absorbing barriers. The transition matrix has:
+
 - P(i, i+1) = p for 1 <= i <= N-1
 - P(i, i-1) = q for 1 <= i <= N-1
 - P(0, 0) = P(N, N) = 1 (absorbing)
@@ -626,13 +645,14 @@ The expected number of cards before the first Ace is 48/5 = 9.6, so the expected
 
 **Alternative (using indicator variables)**: For each non-Ace card i (i = 1..48), let Xi = 1 if card i appears before all 4 Aces. Among the 5 items {card i, Ace1, Ace2, Ace3, Ace4}, card i is first with probability 1/5. So E[Xi] = 1/5.
 
-E[cards before first Ace] = Σ E[Xi] = 48 * (1/5) = 48/5.
+E[cards before first Ace] = Σ E[Xi] = 48 \* (1/5) = 48/5.
 
 ### Problem 2: Dice Game
 
 **Question**: You roll two fair dice repeatedly. What is the probability you roll a sum of 7 before you roll a sum of 8?
 
 **Solution**:
+
 - P(sum = 7) = 6/36 = 1/6
 - P(sum = 8) = 5/36
 - P(neither) = 25/36
@@ -667,6 +687,7 @@ print(f"P(win) = {prob_win:.4f}, E[profit] = {ev:.4f}")
 **Question**: A bag has 3 red balls and 2 blue balls. You draw two balls without replacement. Given that the second ball is red, what is the probability the first was also red?
 
 **Solution**:
+
 ```
 P(1st red | 2nd red) = P(2nd red | 1st red) * P(1st red) / P(2nd red)
                      = (2/4) * (3/5) / (3/5)
@@ -675,7 +696,7 @@ P(1st red | 2nd red) = P(2nd red | 1st red) * P(1st red) / P(2nd red)
 
 Wait -- let's compute P(2nd red) more carefully:
 P(2nd red) = P(2nd red | 1st red)*P(1st red) + P(2nd red | 1st blue)*P(1st blue)
-           = (2/4)(3/5) + (3/4)(2/5) = 6/20 + 6/20 = 12/20 = 3/5
+= (2/4)(3/5) + (3/4)(2/5) = 6/20 + 6/20 = 12/20 = 3/5
 
 So P(1st red | 2nd red) = (2/4)(3/5) / (3/5) = 2/4 = **1/2**
 
@@ -684,7 +705,7 @@ So P(1st red | 2nd red) = (2/4)(3/5) / (3/5) = 2/4 = **1/2**
 **Question**: A trader places orders that get filled with probability 0.1 independently. What is the probability the first fill comes on exactly the 5th order? What is the expected number of orders until the first fill?
 
 **Solution**: X ~ Geometric(0.1).
-P(X = 5) = (0.9)^4 * (0.1) = 0.6561 * 0.1 = **0.0656**
+P(X = 5) = (0.9)^4 _ (0.1) = 0.6561 _ 0.1 = **0.0656**
 E[X] = 1/0.1 = **10 orders**
 
 ### Problem 6: Random Walk with Drift
@@ -709,7 +730,7 @@ P(reach 110) = (1 - 0.1486) / (1 - 0.0221) = 0.8514 / 0.9779 ≈ 0.8707
 
 **Solution**:
 In 2 hours, arrivals ~ Poisson(6).
-P(X = 5) = e^(-6) * 6^5 / 5! = e^(-6) * 7776 / 120 = e^(-6) * 64.8 ≈ 0.00248 * 64.8 ≈ **0.1606**
+P(X = 5) = e^(-6) _ 6^5 / 5! = e^(-6) _ 7776 / 120 = e^(-6) _ 64.8 ≈ 0.00248 _ 64.8 ≈ **0.1606**
 
 Time between any two consecutive arrivals is Exponential(3) (rate 3/hour), so:
 E[time between 3rd and 4th] = 1/3 hour = **20 minutes**
@@ -721,6 +742,7 @@ E[time between 3rd and 4th] = 1/3 hour = **20 minutes**
 **Question**: What is the probability that a random permutation of {1, 2, ..., 8} has no element in its natural position (derangement)?
 
 **Solution**:
+
 ```
 D(8) / 8! = Σ_{k=0}^{8} (-1)^k / k!
            = 1 - 1 + 1/2 - 1/6 + 1/24 - 1/120 + 1/720 - 1/5040 + 1/40320
@@ -734,6 +756,7 @@ So P(derangement) ≈ 1/e ≈ 0.3679
 **Question**: If X ~ Poisson(λ) and Y ~ Poisson(μ) are independent, what is the distribution of X + Y?
 
 **Solution using MGFs**:
+
 ```
 M_X(t) = e^(λ(e^t - 1))
 M_Y(t) = e^(μ(e^t - 1))
@@ -748,9 +771,9 @@ This is the MGF of Poisson(λ + μ). Since the MGF uniquely determines the distr
 **Question**: A stock's daily return R has a 60% probability of being +1% and a 40% probability of being -1.5%. You can choose to invest each day or not. If you must invest for exactly k out of n = 100 days (chosen randomly in advance), what is the expected total return as a function of k?
 
 **Solution**:
-E[return per invested day] = 0.6 * (0.01) + 0.4 * (-0.015) = 0.006 - 0.006 = 0.
+E[return per invested day] = 0.6 _ (0.01) + 0.4 _ (-0.015) = 0.006 - 0.006 = 0.
 
-The expected return for each invested day is exactly 0, so E[total return] = k * 0 = **0 for any k**.
+The expected return for each invested day is exactly 0, so E[total return] = k \* 0 = **0 for any k**.
 
 This illustrates that a zero-expected-return game remains zero-expected regardless of how many days you participate -- you cannot create edge from a fair game by varying position size (a consequence of the optional stopping theorem for martingales).
 
@@ -761,11 +784,11 @@ This illustrates that a zero-expected-return game remains zero-expected regardle
 **Solution**: Let Xi = 1 if flip i matches. P(match) = P(HH) + P(TT) = 1/4 + 1/4 = 1/2.
 
 By linearity of expectation:
-E[matches] = n * (1/2) = **n/2**
+E[matches] = n \* (1/2) = **n/2**
 
 **Follow-up**: What is the variance?
-Var(Xi) = 1/2 * 1/2 = 1/4. The Xi are independent, so:
-Var(total) = n * (1/4) = n/4.
+Var(Xi) = 1/2 _ 1/2 = 1/4. The Xi are independent, so:
+Var(total) = n _ (1/4) = n/4.
 
 ---
 

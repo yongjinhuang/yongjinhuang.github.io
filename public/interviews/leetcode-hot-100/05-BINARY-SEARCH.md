@@ -113,6 +113,7 @@ class Solution:
 **Time**: O(log n)
 **Space**: O(1)
 **Edge Cases**:
+
 - Single element array -- the loop executes once, handles correctly.
 - Target smaller than all elements -- `lo` moves past `hi` immediately at the left end.
 - Target larger than all elements -- `hi` moves past `lo` at the right end.
@@ -150,9 +151,10 @@ class Solution:
         return False
 ```
 
-**Time**: O(log(m * n))
+**Time**: O(log(m \* n))
 **Space**: O(1)
 **Edge Cases**:
+
 - Single row or single column matrix -- the index math still works correctly.
 - Target smaller than `matrix[0][0]` or larger than `matrix[m-1][n-1]` -- exits immediately.
 - 1x1 matrix -- single comparison.
@@ -189,9 +191,10 @@ class Solution:
         return lo
 ```
 
-**Time**: O(n * log(max(piles))), where `n` is the number of piles.
+**Time**: O(n \* log(max(piles))), where `n` is the number of piles.
 **Space**: O(1)
 **Edge Cases**:
+
 - `h == len(piles)` -- she must eat each pile in one hour, so answer is `max(piles)`.
 - All piles have size 1 -- answer is 1.
 - Single pile -- answer is `ceil(piles[0] / h)`.
@@ -233,6 +236,7 @@ class Solution:
 **Time**: O(log n)
 **Space**: O(1)
 **Edge Cases**:
+
 - Array is not rotated (already sorted) -- `nums[mid] <= nums[hi]` always, `hi` converges to 0.
 - Array has only one element -- loop does not execute, returns `nums[0]`.
 - Array rotated by 1 -- minimum is the last element; binary search converges to it.
@@ -287,6 +291,7 @@ class Solution:
 **Time**: O(log n)
 **Space**: O(1)
 **Edge Cases**:
+
 - Target is at the rotation point -- handled by the `nums[mid] == target` check.
 - No rotation -- degenerates to standard binary search since the left half is always sorted.
 - Two-element array -- one iteration determines the answer.
@@ -347,6 +352,7 @@ class Solution:
 **Time**: O(log n)
 **Space**: O(1)
 **Edge Cases**:
+
 - Empty array -- return `[-1, -1]` immediately.
 - Target appears once -- `left == right`.
 - All elements are the target -- returns `[0, n-1]`.
@@ -367,10 +373,12 @@ The median splits the merged array into two equal halves. Instead of actually me
 Let `A` be the smaller array (length `m`) and `B` be the larger (length `n`). We need to place `i` elements from `A` and `j = (m + n + 1) // 2 - i` elements from `B` into the left half.
 
 A valid partition satisfies:
+
 - `A[i-1] <= B[j]` (everything in left-A is <= everything in right-B)
 - `B[j-1] <= A[i]` (everything in left-B is <= everything in right-A)
 
 We binary search `i` in `[0, m]`:
+
 - If `A[i-1] > B[j]`: `i` is too large, move left.
 - If `B[j-1] > A[i]`: `i` is too small, move right.
 - Otherwise: valid partition found.
@@ -421,6 +429,7 @@ class Solution:
 **Time**: O(log(min(m, n)))
 **Space**: O(1)
 **Edge Cases**:
+
 - One array is empty -- all elements come from the other array. The boundary sentinels (`-inf` / `inf`) handle this.
 - Arrays of length 1 each -- single iteration determines the partition.
 - All elements of one array are smaller than all elements of the other -- `i` goes to 0 or `m`.
@@ -431,17 +440,18 @@ class Solution:
 
 ## Summary
 
-| # | Problem | Difficulty | Pattern | Time |
-|---|---------|-----------|---------|------|
-| 704 | Binary Search | Easy | Standard | O(log n) |
-| 74 | Search a 2D Matrix | Medium | Standard (virtual 1D) | O(log(mn)) |
-| 875 | Koko Eating Bananas | Medium | Search on answer | O(n log max) |
-| 153 | Find Min in Rotated Array | Medium | Modified (compare with hi) | O(log n) |
-| 33 | Search in Rotated Array | Medium | Modified (identify sorted half) | O(log n) |
-| 34 | First and Last Position | Medium | Left-bound + Right-bound | O(log n) |
-| 4 | Median of Two Sorted Arrays | Hard | Partition binary search | O(log min(m,n)) |
+| #   | Problem                     | Difficulty | Pattern                         | Time            |
+| --- | --------------------------- | ---------- | ------------------------------- | --------------- |
+| 704 | Binary Search               | Easy       | Standard                        | O(log n)        |
+| 74  | Search a 2D Matrix          | Medium     | Standard (virtual 1D)           | O(log(mn))      |
+| 875 | Koko Eating Bananas         | Medium     | Search on answer                | O(n log max)    |
+| 153 | Find Min in Rotated Array   | Medium     | Modified (compare with hi)      | O(log n)        |
+| 33  | Search in Rotated Array     | Medium     | Modified (identify sorted half) | O(log n)        |
+| 34  | First and Last Position     | Medium     | Left-bound + Right-bound        | O(log n)        |
+| 4   | Median of Two Sorted Arrays | Hard       | Partition binary search         | O(log min(m,n)) |
 
 **Key takeaways**:
+
 - Problems 704, 74, 34 use the array directly as the search space.
 - Problem 875 uses the answer value as the search space (search on answer).
 - Problems 153 and 33 adapt binary search for rotated arrays by identifying the sorted half.

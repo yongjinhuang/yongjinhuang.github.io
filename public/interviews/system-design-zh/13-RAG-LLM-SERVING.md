@@ -4,28 +4,28 @@
 
 ### 功能需求
 
-| 需求 | 描述 |
-|---|---|
-| 文档摄入 | 上传并处理文档（PDF、HTML、Markdown、DOCX） |
-| Chunking 与 Embedding | 将文档拆分为 chunk，生成向量 embedding |
-| 向量存储 | 将 embedding 存储在 Vector DB 中以实现快速检索 |
-| 语义检索 | 根据用户查询检索相关上下文 |
-| 答案生成 | 使用 LLM 结合检索到的上下文生成有依据的答案 |
-| 多轮对话 | 跨轮次维护对话上下文 |
-| 引用追踪 | 将生成的答案归因到源文档和段落 |
-| 反馈收集 | 收集用户评分（点赞/点踩）用于持续改进 |
+| 需求                  | 描述                                           |
+| --------------------- | ---------------------------------------------- |
+| 文档摄入              | 上传并处理文档（PDF、HTML、Markdown、DOCX）    |
+| Chunking 与 Embedding | 将文档拆分为 chunk，生成向量 embedding         |
+| 向量存储              | 将 embedding 存储在 Vector DB 中以实现快速检索 |
+| 语义检索              | 根据用户查询检索相关上下文                     |
+| 答案生成              | 使用 LLM 结合检索到的上下文生成有依据的答案    |
+| 多轮对话              | 跨轮次维护对话上下文                           |
+| 引用追踪              | 将生成的答案归因到源文档和段落                 |
+| 反馈收集              | 收集用户评分（点赞/点踩）用于持续改进          |
 
 ### 非功能需求
 
-| 需求 | 目标 |
-|---|---|
-| 端到端延迟 | < 2 秒（首 token 时间 < 500ms） |
-| 文档规模 | 1000 万文档已索引 |
+| 需求       | 目标                                            |
+| ---------- | ----------------------------------------------- |
+| 端到端延迟 | < 2 秒（首 token 时间 < 500ms）                 |
+| 文档规模   | 1000 万文档已索引                               |
 | 查询吞吐量 | 每天 10 万次查询（平均约 1.2 QPS，峰值 10 QPS） |
-| 可用性 | 99.9% 正常运行时间 |
-| 新鲜度 | 新文档在 15 分钟内可搜索 |
-| 成本效率 | 每次查询平均成本 < $0.02 |
-| 准确性 | 事实性查询的幻觉率 < 5% |
+| 可用性     | 99.9% 正常运行时间                              |
+| 新鲜度     | 新文档在 15 分钟内可搜索                        |
+| 成本效率   | 每次查询平均成本 < $0.02                        |
+| 准确性     | 事实性查询的幻觉率 < 5%                         |
 
 ### 规模估算
 
@@ -68,6 +68,7 @@ GPU inference（自托管）:
 检索增强生成（RAG）是一种在生成答案之前，先从外部知识库中检索相关信息来增强大语言模型（LLM）响应的技术。RAG 不仅依赖模型的参数化知识（训练数据），还将回复建立在具体的、最新的文档之上。
 
 **为什么 RAG 很重要：**
+
 - 通过提供事实依据来减少幻觉
 - 无需微调即可实现领域特定的回答
 - 知识可以在不重新训练模型的情况下更新
@@ -93,6 +94,7 @@ GPU inference（自托管）:
 ```
 
 **何时使用各方案：**
+
 - **Prompt Engineering**：简单任务、格式化、角色控制
 - **RAG**：企业知识库、文档问答、客户支持
 - **Fine-Tuning**：自定义语调/风格、专业推理、任务特定行为
@@ -513,6 +515,7 @@ def enrich_chunk(chunk: str, document_metadata: dict, chunk_idx: int) -> dict:
 ```
 
 **选型指南：**
+
 - **初创/原型**：pgvector（如 < 1000 万向量）或 ChromaDB（本地开发）
 - **生产环境（托管）**：Pinecone 或 Qdrant Cloud
 - **生产环境（自托管，最大控制权）**：Qdrant 或 Milvus
@@ -691,6 +694,7 @@ Pipeline:
 ```
 
 **流行的 reranker 模型：**
+
 - Cohere Rerank v3（API，最佳质量）
 - BGE-Reranker-v2-m3（开源，多语言）
 - cross-encoder/ms-marco-MiniLM-L-12-v2（轻量级，快速）
@@ -1140,10 +1144,12 @@ async def chat(query: str):
 
 ```javascript
 // 客户端 (JavaScript)
-const eventSource = new EventSource(`/api/chat?query=${encodeURIComponent(query)}`);
+const eventSource = new EventSource(
+  `/api/chat?query=${encodeURIComponent(query)}`
+);
 
 eventSource.onmessage = (event) => {
-  if (event.data === "[DONE]") {
+  if (event.data === '[DONE]') {
     eventSource.close();
     return;
   }
@@ -2082,25 +2088,25 @@ spec:
         app: vllm
     spec:
       nodeSelector:
-        nvidia.com/gpu.product: "A100"
+        nvidia.com/gpu.product: 'A100'
       containers:
         - name: vllm
           image: vllm/vllm-openai:latest
           args:
-            - "--model=meta-llama/Llama-3.1-70B-Instruct"
-            - "--quantization=awq"
-            - "--tensor-parallel-size=1"
-            - "--max-model-len=8192"
-            - "--gpu-memory-utilization=0.9"
+            - '--model=meta-llama/Llama-3.1-70B-Instruct'
+            - '--quantization=awq'
+            - '--tensor-parallel-size=1'
+            - '--max-model-len=8192'
+            - '--gpu-memory-utilization=0.9'
           resources:
             limits:
               nvidia.com/gpu: 1
-              memory: "96Gi"
-              cpu: "16"
+              memory: '96Gi'
+              cpu: '16'
             requests:
               nvidia.com/gpu: 1
-              memory: "80Gi"
-              cpu: "8"
+              memory: '80Gi'
+              cpu: '8'
           ports:
             - containerPort: 8000
           readinessProbe:
@@ -2128,7 +2134,7 @@ spec:
           name: gpu_utilization
         target:
           type: AverageValue
-          averageValue: "70"
+          averageValue: '70'
 ```
 
 ### 多区域注意事项
@@ -2403,6 +2409,7 @@ class ConversationMemory:
 ```
 
 **面试中的关键差异化点：**
+
 - 提到父子 chunking（展示超越朴素 RAG 的深度）
 - 讨论混合搜索（dense + sparse）而非纯向量搜索
 - 提出语义缓存作为成本/延迟优化方案

@@ -91,25 +91,25 @@ Money flows in supply chain are often more complex than the product flows:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **AWB** | Air Waybill — the unique tracking number assigned to a shipment by the carrier |
-| **SKU** | Stock Keeping Unit — unique identifier for each distinct product or variant |
-| **3PL** | Third-Party Logistics — an external company that handles warehousing, fulfillment, and/or shipping on your behalf |
-| **WMS** | Warehouse Management System — software that manages warehouse operations (receiving, storage, picking, packing, shipping) |
-| **TMS** | Transport Management System — software that manages shipment planning, carrier selection, route optimization, and tracking |
-| **OMS** | Order Management System — software that manages the order lifecycle from placement to delivery |
-| **SLA** | Service Level Agreement — contractual delivery promises (e.g., deliver within 3 business days) |
-| **OTD** | On-Time Delivery — percentage of orders delivered within the promised timeframe |
-| **COD** | Cash on Delivery — customer pays in cash when the parcel arrives. Common in Southeast Asia and the Middle East |
-| **POD** | Proof of Delivery — evidence that the parcel was delivered (photo, signature, OTP) |
-| **Fulfillment Rate** | Percentage of orders successfully fulfilled and shipped out of total orders received |
-| **Cross-Docking** | Items arrive at a hub and are immediately sorted and loaded onto outbound trucks without being stored in the warehouse |
-| **Reverse Logistics** | The process of moving goods from the customer back to the seller or warehouse (returns, exchanges, recalls) |
-| **Hub-and-Spoke** | A network model where parcels flow from local spokes to a central hub for sorting, then out to destination spokes |
-| **Dead Stock** | Inventory that hasn't sold and is unlikely to sell. Costs money to store |
-| **Lead Time** | The time between placing an order with a supplier and receiving the goods |
-| **Manifest** | The official list of parcels handed to a carrier in a single batch. Used for handoff reconciliation |
+| Term                  | What It Means                                                                                                              |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **AWB**               | Air Waybill — the unique tracking number assigned to a shipment by the carrier                                             |
+| **SKU**               | Stock Keeping Unit — unique identifier for each distinct product or variant                                                |
+| **3PL**               | Third-Party Logistics — an external company that handles warehousing, fulfillment, and/or shipping on your behalf          |
+| **WMS**               | Warehouse Management System — software that manages warehouse operations (receiving, storage, picking, packing, shipping)  |
+| **TMS**               | Transport Management System — software that manages shipment planning, carrier selection, route optimization, and tracking |
+| **OMS**               | Order Management System — software that manages the order lifecycle from placement to delivery                             |
+| **SLA**               | Service Level Agreement — contractual delivery promises (e.g., deliver within 3 business days)                             |
+| **OTD**               | On-Time Delivery — percentage of orders delivered within the promised timeframe                                            |
+| **COD**               | Cash on Delivery — customer pays in cash when the parcel arrives. Common in Southeast Asia and the Middle East             |
+| **POD**               | Proof of Delivery — evidence that the parcel was delivered (photo, signature, OTP)                                         |
+| **Fulfillment Rate**  | Percentage of orders successfully fulfilled and shipped out of total orders received                                       |
+| **Cross-Docking**     | Items arrive at a hub and are immediately sorted and loaded onto outbound trucks without being stored in the warehouse     |
+| **Reverse Logistics** | The process of moving goods from the customer back to the seller or warehouse (returns, exchanges, recalls)                |
+| **Hub-and-Spoke**     | A network model where parcels flow from local spokes to a central hub for sorting, then out to destination spokes          |
+| **Dead Stock**        | Inventory that hasn't sold and is unlikely to sell. Costs money to store                                                   |
+| **Lead Time**         | The time between placing an order with a supplier and receiving the goods                                                  |
+| **Manifest**          | The official list of parcels handed to a carrier in a single batch. Used for handoff reconciliation                        |
 
 ## Common Patterns
 
@@ -173,21 +173,21 @@ In COD markets, the carrier collects payment from the customer and remits it to 
 
 ## Quick Reference
 
-| Stage | System | Key Data |
-|-------|--------|----------|
-| Order placed | OMS | Order ID, items, shipping address, payment status |
-| Warehouse ops | WMS | SKU, bin location, pick list, pack verification |
-| Carrier handoff | TMS | AWB, manifest, carrier code, service type |
-| In transit | TMS + Carrier API | Tracking events, hub scans, ETA |
-| Last mile | Driver app | Route, delivery slot, POD capture |
-| Delivered | OMS + TMS | POD, delivery timestamp, COD amount collected |
-| Returns | Reverse logistics | Return reason, pickup, inspection result, refund |
+| Stage           | System            | Key Data                                          |
+| --------------- | ----------------- | ------------------------------------------------- |
+| Order placed    | OMS               | Order ID, items, shipping address, payment status |
+| Warehouse ops   | WMS               | SKU, bin location, pick list, pack verification   |
+| Carrier handoff | TMS               | AWB, manifest, carrier code, service type         |
+| In transit      | TMS + Carrier API | Tracking events, hub scans, ETA                   |
+| Last mile       | Driver app        | Route, delivery slot, POD capture                 |
+| Delivered       | OMS + TMS         | POD, delivery timestamp, COD amount collected     |
+| Returns         | Reverse logistics | Return reason, pickup, inspection result, refund  |
 
-| Metric | Target | Why It Matters |
-|--------|--------|----------------|
-| On-Time Delivery (OTD) | > 95% | Customer satisfaction and SLA compliance |
-| Fulfillment Rate | > 98% | Measures warehouse efficiency |
-| First-Attempt Delivery Rate | > 85% | Failed attempts are expensive (re-delivery costs) |
-| Return Rate | < 5-10% | High returns indicate product or listing issues |
-| COD Reconciliation Accuracy | > 99.5% | Cash leakage erodes margins |
-| Shipping Cost per Order | Varies | Track trend over time — should decrease with scale |
+| Metric                      | Target  | Why It Matters                                     |
+| --------------------------- | ------- | -------------------------------------------------- |
+| On-Time Delivery (OTD)      | > 95%   | Customer satisfaction and SLA compliance           |
+| Fulfillment Rate            | > 98%   | Measures warehouse efficiency                      |
+| First-Attempt Delivery Rate | > 85%   | Failed attempts are expensive (re-delivery costs)  |
+| Return Rate                 | < 5-10% | High returns indicate product or listing issues    |
+| COD Reconciliation Accuracy | > 99.5% | Cash leakage erodes margins                        |
+| Shipping Cost per Order     | Varies  | Track trend over time — should decrease with scale |

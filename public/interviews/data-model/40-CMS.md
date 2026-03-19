@@ -6,17 +6,17 @@ A headless CMS provides content infrastructure that decouples content creation f
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **spaces** | Top-level content container (like a project) | Isolates content for different sites/apps; each space has its own content types, entries, and settings |
-| **content_types** | User-defined content schemas | Enables non-developers to define structured content (e.g., "Blog Post", "Product") without code changes |
-| **content_type_fields** | Field definitions within a content type | Describes each field's type, validation, and localization settings; separated from content_types for normalization |
-| **entries** | Individual content records | The actual content (a specific blog post, product, etc.); stores field values as locale-aware JSON |
-| **entry_versions** | Version history for every entry | Enables rollback, audit trail, and diff comparison; every save creates a new version |
-| **entry_references** | Tracks relationships between entries | Enables linked content (e.g., a blog post referencing an author entry); supports referential integrity checks |
-| **assets** | Media files (images, documents, videos) | Manages binary content separately from structured content; includes CDN integration |
-| **workflows** | Editorial approval pipelines | Enforces review processes before publishing; configurable per space |
-| **webhooks** | Event-driven integrations | Enables downstream systems (CDN, search index, static site builders) to react to content changes |
+| Table                   | Purpose                                      | Why It Exists                                                                                                      |
+| ----------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **spaces**              | Top-level content container (like a project) | Isolates content for different sites/apps; each space has its own content types, entries, and settings             |
+| **content_types**       | User-defined content schemas                 | Enables non-developers to define structured content (e.g., "Blog Post", "Product") without code changes            |
+| **content_type_fields** | Field definitions within a content type      | Describes each field's type, validation, and localization settings; separated from content_types for normalization |
+| **entries**             | Individual content records                   | The actual content (a specific blog post, product, etc.); stores field values as locale-aware JSON                 |
+| **entry_versions**      | Version history for every entry              | Enables rollback, audit trail, and diff comparison; every save creates a new version                               |
+| **entry_references**    | Tracks relationships between entries         | Enables linked content (e.g., a blog post referencing an author entry); supports referential integrity checks      |
+| **assets**              | Media files (images, documents, videos)      | Manages binary content separately from structured content; includes CDN integration                                |
+| **workflows**           | Editorial approval pipelines                 | Enforces review processes before publishing; configurable per space                                                |
+| **webhooks**            | Event-driven integrations                    | Enables downstream systems (CDN, search index, static site builders) to react to content changes                   |
 
 ---
 
@@ -24,107 +24,107 @@ A headless CMS provides content infrastructure that decouples content creation f
 
 ### spaces
 
-| Field | Type | Description |
-|-------|------|-------------|
-| space_id | PK, UUID | Unique space identifier |
-| name | VARCHAR | Space display name |
-| plan_tier | ENUM | free, pro, enterprise; determines storage limits, API rate limits, and feature access |
-| default_locale | VARCHAR | Default language for content (e.g., "en-US"); used as fallback when a locale is missing |
-| settings_json | JSONB | Space-level settings (enabled locales, default workflow, preview URLs) |
+| Field          | Type     | Description                                                                             |
+| -------------- | -------- | --------------------------------------------------------------------------------------- |
+| space_id       | PK, UUID | Unique space identifier                                                                 |
+| name           | VARCHAR  | Space display name                                                                      |
+| plan_tier      | ENUM     | free, pro, enterprise; determines storage limits, API rate limits, and feature access   |
+| default_locale | VARCHAR  | Default language for content (e.g., "en-US"); used as fallback when a locale is missing |
+| settings_json  | JSONB    | Space-level settings (enabled locales, default workflow, preview URLs)                  |
 
 ### content_types
 
-| Field | Type | Description |
-|-------|------|-------------|
-| content_type_id | PK, UUID | Unique content type identifier |
-| space_id | FK → spaces | Which space this content type belongs to |
-| name | VARCHAR | Display name (e.g., "Blog Post", "Product", "Author") |
-| description | TEXT | What this content type represents |
-| api_identifier | VARCHAR | Machine-readable name used in API queries (e.g., "blogPost"); immutable after creation to avoid breaking consumers |
-| version | INT | Schema version; incremented on field changes to track content type evolution |
+| Field           | Type        | Description                                                                                                        |
+| --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| content_type_id | PK, UUID    | Unique content type identifier                                                                                     |
+| space_id        | FK → spaces | Which space this content type belongs to                                                                           |
+| name            | VARCHAR     | Display name (e.g., "Blog Post", "Product", "Author")                                                              |
+| description     | TEXT        | What this content type represents                                                                                  |
+| api_identifier  | VARCHAR     | Machine-readable name used in API queries (e.g., "blogPost"); immutable after creation to avoid breaking consumers |
+| version         | INT         | Schema version; incremented on field changes to track content type evolution                                       |
 
 ### content_type_fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| content_type_id | FK, composite PK | Which content type this field belongs to |
-| field_id | VARCHAR, composite PK | Machine-readable field identifier (e.g., "title", "body", "price") |
-| name | VARCHAR | Human-readable field name shown in the editor UI |
-| field_type | ENUM | text, rich_text, number, date, boolean, media, reference, json, location; determines editor widget and validation |
-| required | BOOLEAN | Whether this field must have a value before publishing |
-| localized | BOOLEAN | Whether this field has per-locale values; title is typically localized, price typically is not |
-| validations_json | JSONB | Field-specific validation rules (min/max length, regex pattern, allowed content types for references) |
-| default_value | JSONB | Default value for new entries; locale-aware if the field is localized |
+| Field            | Type                  | Description                                                                                                       |
+| ---------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| content_type_id  | FK, composite PK      | Which content type this field belongs to                                                                          |
+| field_id         | VARCHAR, composite PK | Machine-readable field identifier (e.g., "title", "body", "price")                                                |
+| name             | VARCHAR               | Human-readable field name shown in the editor UI                                                                  |
+| field_type       | ENUM                  | text, rich_text, number, date, boolean, media, reference, json, location; determines editor widget and validation |
+| required         | BOOLEAN               | Whether this field must have a value before publishing                                                            |
+| localized        | BOOLEAN               | Whether this field has per-locale values; title is typically localized, price typically is not                    |
+| validations_json | JSONB                 | Field-specific validation rules (min/max length, regex pattern, allowed content types for references)             |
+| default_value    | JSONB                 | Default value for new entries; locale-aware if the field is localized                                             |
 
 ### entries
 
-| Field | Type | Description |
-|-------|------|-------------|
-| entry_id | PK, UUID | Unique entry identifier |
-| space_id | FK → spaces | Which space this entry belongs to |
-| content_type_id | FK → content_types | Which content type this entry conforms to |
-| fields_json | JSONB | All field values, stored locale-aware: `{"title": {"en": "Hello", "zh": "..."}, "price": {"en": 29.99}}` |
-| status | ENUM | draft, in_review, published, archived; drives visibility in the delivery API |
-| published_version | INT | Which version number is currently live; null if never published |
-| created_by | FK → users | Who created this entry |
-| published_at | TIMESTAMP | When the current published version went live; null if unpublished |
+| Field             | Type               | Description                                                                                              |
+| ----------------- | ------------------ | -------------------------------------------------------------------------------------------------------- |
+| entry_id          | PK, UUID           | Unique entry identifier                                                                                  |
+| space_id          | FK → spaces        | Which space this entry belongs to                                                                        |
+| content_type_id   | FK → content_types | Which content type this entry conforms to                                                                |
+| fields_json       | JSONB              | All field values, stored locale-aware: `{"title": {"en": "Hello", "zh": "..."}, "price": {"en": 29.99}}` |
+| status            | ENUM               | draft, in_review, published, archived; drives visibility in the delivery API                             |
+| published_version | INT                | Which version number is currently live; null if never published                                          |
+| created_by        | FK → users         | Who created this entry                                                                                   |
+| published_at      | TIMESTAMP          | When the current published version went live; null if unpublished                                        |
 
 ### entry_versions
 
-| Field | Type | Description |
-|-------|------|-------------|
-| version_id | PK, UUID | Unique version identifier |
-| entry_id | FK → entries | Which entry this version belongs to |
-| version_number | INT | Monotonically increasing version number within this entry |
-| fields_json | JSONB | Complete snapshot of all field values at this version; enables point-in-time restoration |
-| changed_by | FK → users | Who made this change |
-| created_at | TIMESTAMP | When this version was created |
+| Field          | Type         | Description                                                                              |
+| -------------- | ------------ | ---------------------------------------------------------------------------------------- |
+| version_id     | PK, UUID     | Unique version identifier                                                                |
+| entry_id       | FK → entries | Which entry this version belongs to                                                      |
+| version_number | INT          | Monotonically increasing version number within this entry                                |
+| fields_json    | JSONB        | Complete snapshot of all field values at this version; enables point-in-time restoration |
+| changed_by     | FK → users   | Who made this change                                                                     |
+| created_at     | TIMESTAMP    | When this version was created                                                            |
 
 ### entry_references
 
-| Field | Type | Description |
-|-------|------|-------------|
-| source_entry_id | FK, composite PK | The entry containing the reference (e.g., a blog post) |
-| target_entry_id | FK, composite PK | The entry being referenced (e.g., an author) |
-| field_id | VARCHAR, composite PK | Which field in the source entry holds the reference |
-| reference_type | VARCHAR | Type of reference (link, embed); determines how the target is rendered |
+| Field           | Type                  | Description                                                            |
+| --------------- | --------------------- | ---------------------------------------------------------------------- |
+| source_entry_id | FK, composite PK      | The entry containing the reference (e.g., a blog post)                 |
+| target_entry_id | FK, composite PK      | The entry being referenced (e.g., an author)                           |
+| field_id        | VARCHAR, composite PK | Which field in the source entry holds the reference                    |
+| reference_type  | VARCHAR               | Type of reference (link, embed); determines how the target is rendered |
 
 ### assets
 
-| Field | Type | Description |
-|-------|------|-------------|
-| asset_id | PK, UUID | Unique asset identifier |
-| space_id | FK → spaces | Which space this asset belongs to |
-| title_json | JSONB | Locale-aware title: `{"en": "Hero Image", "zh": "..."}` |
-| file_name | VARCHAR | Original uploaded file name |
-| content_type | VARCHAR | MIME type (image/png, application/pdf, video/mp4) |
-| file_size | BIGINT | File size in bytes; used for storage quota enforcement |
-| storage_key | VARCHAR | S3 object key; the actual file lives in object storage, not the database |
-| cdn_url | VARCHAR | Public CDN URL for serving the asset; includes image transformation parameters |
-| width | INT | Image/video width in pixels; null for non-visual assets |
-| height | INT | Image/video height in pixels; null for non-visual assets |
+| Field        | Type        | Description                                                                    |
+| ------------ | ----------- | ------------------------------------------------------------------------------ |
+| asset_id     | PK, UUID    | Unique asset identifier                                                        |
+| space_id     | FK → spaces | Which space this asset belongs to                                              |
+| title_json   | JSONB       | Locale-aware title: `{"en": "Hero Image", "zh": "..."}`                        |
+| file_name    | VARCHAR     | Original uploaded file name                                                    |
+| content_type | VARCHAR     | MIME type (image/png, application/pdf, video/mp4)                              |
+| file_size    | BIGINT      | File size in bytes; used for storage quota enforcement                         |
+| storage_key  | VARCHAR     | S3 object key; the actual file lives in object storage, not the database       |
+| cdn_url      | VARCHAR     | Public CDN URL for serving the asset; includes image transformation parameters |
+| width        | INT         | Image/video width in pixels; null for non-visual assets                        |
+| height       | INT         | Image/video height in pixels; null for non-visual assets                       |
 
 ### workflows
 
-| Field | Type | Description |
-|-------|------|-------------|
-| workflow_id | PK, UUID | Unique workflow identifier |
-| space_id | FK → spaces | Which space this workflow applies to |
-| name | VARCHAR | Workflow name (e.g., "Standard Review", "Legal Approval") |
-| stages_json | JSONB | Ordered list of stages with required approvers (e.g., draft → editor_review → legal_review → published) |
-| current_stage | VARCHAR | The active stage for entries in this workflow |
+| Field         | Type        | Description                                                                                             |
+| ------------- | ----------- | ------------------------------------------------------------------------------------------------------- |
+| workflow_id   | PK, UUID    | Unique workflow identifier                                                                              |
+| space_id      | FK → spaces | Which space this workflow applies to                                                                    |
+| name          | VARCHAR     | Workflow name (e.g., "Standard Review", "Legal Approval")                                               |
+| stages_json   | JSONB       | Ordered list of stages with required approvers (e.g., draft → editor_review → legal_review → published) |
+| current_stage | VARCHAR     | The active stage for entries in this workflow                                                           |
 
 ### webhooks
 
-| Field | Type | Description |
-|-------|------|-------------|
-| webhook_id | PK, UUID | Unique webhook identifier |
-| space_id | FK → spaces | Which space this webhook monitors |
-| name | VARCHAR | Human-readable webhook name |
-| url | VARCHAR | HTTPS endpoint to receive webhook payloads |
-| events | ARRAY | Which events trigger this webhook (entry.publish, entry.update, entry.delete, asset.upload) |
-| headers_json | JSONB | Custom HTTP headers sent with webhook requests (e.g., authentication tokens) |
-| is_active | BOOLEAN | Kill switch to disable without deleting configuration |
+| Field        | Type        | Description                                                                                 |
+| ------------ | ----------- | ------------------------------------------------------------------------------------------- |
+| webhook_id   | PK, UUID    | Unique webhook identifier                                                                   |
+| space_id     | FK → spaces | Which space this webhook monitors                                                           |
+| name         | VARCHAR     | Human-readable webhook name                                                                 |
+| url          | VARCHAR     | HTTPS endpoint to receive webhook payloads                                                  |
+| events       | ARRAY       | Which events trigger this webhook (entry.publish, entry.update, entry.delete, asset.upload) |
+| headers_json | JSONB       | Custom HTTP headers sent with webhook requests (e.g., authentication tokens)                |
+| is_active    | BOOLEAN     | Kill switch to disable without deleting configuration                                       |
 
 ---
 

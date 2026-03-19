@@ -49,6 +49,7 @@ FIDELITY SPECTRUM
 Lo-fi wireframes are rough sketches that communicate layout and content priority without any visual design detail. They use boxes, lines, and labels.
 
 **Characteristics:**
+
 - Black and white (or pencil on paper)
 - No real content -- placeholder text and boxes
 - No typography, colors, or imagery decisions
@@ -56,6 +57,7 @@ Lo-fi wireframes are rough sketches that communicate layout and content priority
 - Fast to create, easy to discard
 
 **When to use lo-fi:**
+
 - You are exploring multiple layout approaches
 - You need to align with a team or stakeholder quickly
 - You are working through a complex interaction before committing
@@ -94,6 +96,7 @@ PAPER PROTOTYPE EXAMPLE: Portfolio Homepage
 Mid-fi wireframes add structure and specificity to lo-fi sketches. They are typically created digitally and include real (or realistic) labels, defined spacing, and clearer component boundaries.
 
 **Characteristics:**
+
 - Grayscale or minimal color (sometimes a single accent color)
 - Real navigation labels and section headings
 - Defined grid and spacing
@@ -102,6 +105,7 @@ Mid-fi wireframes add structure and specificity to lo-fi sketches. They are typi
 - No final typography or colors
 
 **When to use mid-fi:**
+
 - Layout decisions are settling and you need to formalize them
 - You are creating developer handoff documentation
 - You are testing with users to validate layout and content priority
@@ -156,6 +160,7 @@ MID-FI WIREFRAME: Portfolio Homepage
 Hi-fi wireframes (often called mockups at this stage) include final visual design: real colors, typography, imagery, and pixel-accurate spacing.
 
 **Characteristics:**
+
 - Full color palette applied
 - Final typography (font families, sizes, weights)
 - Real or representative imagery
@@ -164,6 +169,7 @@ Hi-fi wireframes (often called mockups at this stage) include final visual desig
 - Closely resembles the final product
 
 **When to use hi-fi:**
+
 - Visual design decisions need stakeholder approval
 - You are conducting usability tests where aesthetics might influence behavior
 - You are creating detailed developer handoff specifications
@@ -192,18 +198,19 @@ MOCKUP            PROTOTYPE          PROTOTYPE
 
 ### Digital Wireframing Tools
 
-| Tool        | Fidelity | Collaboration | Learning Curve | Best For                     |
-|-------------|----------|---------------|----------------|------------------------------|
-| Paper       | Lo-fi    | In-person     | None           | Initial brainstorming        |
-| Balsamiq    | Lo-fi    | Moderate      | Low            | Quick wireframes             |
-| Whimsical   | Lo-fi    | High          | Low            | Flowcharts + wireframes      |
-| Figma       | All      | Excellent     | Medium         | Full design workflow         |
-| Sketch      | Mid-Hi   | Moderate      | Medium         | Mac-only design              |
-| Adobe XD    | Mid-Hi   | Moderate      | Medium         | Adobe ecosystem              |
-| Framer      | Hi-fi    | High          | High           | Interactive prototypes       |
-| Code (HTML) | All      | Git-based     | High (varies)  | Developer prototyping        |
+| Tool        | Fidelity | Collaboration | Learning Curve | Best For                |
+| ----------- | -------- | ------------- | -------------- | ----------------------- |
+| Paper       | Lo-fi    | In-person     | None           | Initial brainstorming   |
+| Balsamiq    | Lo-fi    | Moderate      | Low            | Quick wireframes        |
+| Whimsical   | Lo-fi    | High          | Low            | Flowcharts + wireframes |
+| Figma       | All      | Excellent     | Medium         | Full design workflow    |
+| Sketch      | Mid-Hi   | Moderate      | Medium         | Mac-only design         |
+| Adobe XD    | Mid-Hi   | Moderate      | Medium         | Adobe ecosystem         |
+| Framer      | Hi-fi    | High          | High           | Interactive prototypes  |
+| Code (HTML) | All      | Git-based     | High (varies)  | Developer prototyping   |
 
 **Figma** has become the industry standard for several reasons:
+
 - Browser-based, works on any OS
 - Real-time multiplayer collaboration
 - Free tier sufficient for most individual work
@@ -245,6 +252,7 @@ Question                                    Lo  Mid  Hi
 **Process:**
 
 1. **Draw screens on paper** (one per sheet):
+
    - Homepage
    - Projects page
    - Individual project page
@@ -252,11 +260,13 @@ Question                                    Lo  Mid  Hi
    - Contact page
 
 2. **Create a task script:**
+
    - "You received a link to this developer's portfolio. Find their most impressive project."
    - "You want to hire this person. Find a way to contact them."
    - "You want to know what technologies they work with."
 
 3. **Simulate the interface:**
+
    - Lay the homepage in front of the participant
    - When they "tap" a navigation item, swap the paper to that screen
    - Observe where they hesitate, what they tap first, what confuses them
@@ -282,10 +292,12 @@ export default function PrototypeHome() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* NAV: Fixed, minimal */}
-      <nav className="fixed top-0 z-50 flex w-full items-center
+      <nav
+        className="fixed top-0 z-50 flex w-full items-center
                       justify-between border-b bg-white/80 px-8 py-4
                       backdrop-blur dark:border-gray-800
-                      dark:bg-gray-950/80">
+                      dark:bg-gray-950/80"
+      >
         <span className="text-lg font-bold">YJ</span>
         <div className="flex gap-6 text-sm">
           <a href="#projects">Projects</a>
@@ -295,27 +307,29 @@ export default function PrototypeHome() {
       </nav>
 
       {/* HERO: Name, title, one-liner, CTA */}
-      <section className="flex min-h-screen flex-col items-center
-                          justify-center px-8 text-center">
-        <h1 className="text-6xl font-bold tracking-tight">
-          Yongjin Huang
-        </h1>
-        <p className="mt-4 text-xl text-gray-500">
-          Full-Stack Developer
-        </p>
+      <section
+        className="flex min-h-screen flex-col items-center
+                          justify-center px-8 text-center"
+      >
+        <h1 className="text-6xl font-bold tracking-tight">Yongjin Huang</h1>
+        <p className="mt-4 text-xl text-gray-500">Full-Stack Developer</p>
         <p className="mt-2 max-w-md text-gray-400">
-          Building performant web applications with modern
-          JavaScript and a focus on user experience.
+          Building performant web applications with modern JavaScript and a
+          focus on user experience.
         </p>
         <div className="mt-8 flex gap-4">
-          <a href="#projects"
-             className="rounded-full bg-blue-600 px-6 py-3
-                        text-white">
+          <a
+            href="#projects"
+            className="rounded-full bg-blue-600 px-6 py-3
+                        text-white"
+          >
             View Projects
           </a>
-          <a href="#contact"
-             className="rounded-full border border-gray-300 px-6
-                        py-3">
+          <a
+            href="#contact"
+            className="rounded-full border border-gray-300 px-6
+                        py-3"
+          >
             Contact Me
           </a>
         </div>
@@ -323,26 +337,24 @@ export default function PrototypeHome() {
 
       {/* PROJECTS: Grid of cards */}
       <section id="projects" className="px-8 py-20">
-        <h2 className="mb-12 text-3xl font-bold">
-          Featured Projects
-        </h2>
+        <h2 className="mb-12 text-3xl font-bold">Featured Projects</h2>
         <div className="grid gap-8 md:grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i}
-                 className="overflow-hidden rounded-xl border
-                            dark:border-gray-800">
+            <div
+              key={i}
+              className="overflow-hidden rounded-xl border
+                            dark:border-gray-800"
+            >
               {/* Placeholder image */}
               <div className="h-48 bg-gray-200 dark:bg-gray-800" />
               <div className="p-6">
-                <h3 className="text-lg font-semibold">
-                  Project {i}
-                </h3>
+                <h3 className="text-lg font-semibold">Project {i}</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   React, TypeScript, Node.js
                 </p>
                 <p className="mt-3 text-sm text-gray-400">
-                  Brief description of what this project does and
-                  what problem it solves.
+                  Brief description of what this project does and what problem
+                  it solves.
                 </p>
               </div>
             </div>
@@ -351,19 +363,30 @@ export default function PrototypeHome() {
       </section>
 
       {/* ABOUT: Brief bio + skills */}
-      <section id="about" className="bg-gray-50 px-8 py-20
-                                     dark:bg-gray-900">
+      <section
+        id="about"
+        className="bg-gray-50 px-8 py-20
+                                     dark:bg-gray-900"
+      >
         <h2 className="mb-8 text-3xl font-bold">About</h2>
         <p className="max-w-2xl text-gray-600 dark:text-gray-400">
-          Two to three sentences about yourself, your background,
-          and what drives your work.
+          Two to three sentences about yourself, your background, and what
+          drives your work.
         </p>
         <div className="mt-8 flex flex-wrap gap-2">
-          {['React', 'TypeScript', 'Node.js', 'Next.js',
-            'Tailwind', 'PostgreSQL'].map((skill) => (
-            <span key={skill}
-                  className="rounded-full bg-gray-200 px-3 py-1
-                             text-sm dark:bg-gray-800">
+          {[
+            'React',
+            'TypeScript',
+            'Node.js',
+            'Next.js',
+            'Tailwind',
+            'PostgreSQL',
+          ].map((skill) => (
+            <span
+              key={skill}
+              className="rounded-full bg-gray-200 px-3 py-1
+                             text-sm dark:bg-gray-800"
+            >
               {skill}
             </span>
           ))}
@@ -375,18 +398,18 @@ export default function PrototypeHome() {
         <h2 className="mb-8 text-3xl font-bold">Get in Touch</h2>
         <p className="text-gray-500">
           Email me at{' '}
-          <a href="mailto:you@example.com"
-             className="text-blue-600 underline">
+          <a href="mailto:you@example.com" className="text-blue-600 underline">
             you@example.com
           </a>
         </p>
       </section>
     </div>
-  )
+  );
 }
 ```
 
 **Why this works for developers:**
+
 - You already know Tailwind and JSX -- zero tool-learning overhead
 - The prototype runs in a browser -- stakeholders can interact with it
 - Hot module reload gives you instant feedback
@@ -396,8 +419,8 @@ export default function PrototypeHome() {
 ### Example 3: Framer Motion for Prototype Interactions
 
 ```tsx
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 
 // Prototype a project card with hover interaction
 function ProjectCard({
@@ -405,11 +428,11 @@ function ProjectCard({
   description,
   tags,
 }: {
-  title: string
-  description: string
-  tags: readonly string[]
+  title: string;
+  description: string;
+  tags: readonly string[];
 }) {
-  const [isHovered, setIsHovered] = useState(false)
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <motion.div
@@ -431,8 +454,10 @@ function ProjectCard({
               className="absolute inset-0 flex items-center
                          justify-center bg-black/50"
             >
-              <span className="rounded-full bg-white px-4 py-2
-                               text-sm font-medium">
+              <span
+                className="rounded-full bg-white px-4 py-2
+                               text-sm font-medium"
+              >
                 View Project
               </span>
             </motion.div>
@@ -458,7 +483,7 @@ function ProjectCard({
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
 ```
 
@@ -517,8 +542,8 @@ function WireBox({
   label,
   className = '',
 }: {
-  label: string
-  className?: string
+  label: string;
+  className?: string;
 }) {
   return (
     <div
@@ -529,7 +554,7 @@ function WireBox({
     >
       {label}
     </div>
-  )
+  );
 }
 
 function WirePlaceholder({
@@ -537,9 +562,9 @@ function WirePlaceholder({
   height,
   label,
 }: {
-  width: string
-  height: string
-  label?: string
+  width: string;
+  height: string;
+  label?: string;
 }) {
   return (
     <div
@@ -549,7 +574,7 @@ function WirePlaceholder({
     >
       {label ?? `${width} x ${height}`}
     </div>
-  )
+  );
 }
 
 function WireText({ lines = 3 }: { lines?: number }) {
@@ -565,16 +590,18 @@ function WireText({ lines = 3 }: { lines?: number }) {
         />
       ))}
     </div>
-  )
+  );
 }
 
 function WireButton({ label }: { label: string }) {
   return (
-    <div className="inline-block rounded border-2 border-gray-400
-                    px-4 py-2 text-sm text-gray-500">
+    <div
+      className="inline-block rounded border-2 border-gray-400
+                    px-4 py-2 text-sm text-gray-500"
+    >
       {label}
     </div>
-  )
+  );
 }
 
 // Usage: quickly sketch a page layout
@@ -595,7 +622,11 @@ function WireframeHomepage() {
       <div className="grid grid-cols-3 gap-6">
         {[1, 2, 3].map((i) => (
           <div key={i} className="space-y-3">
-            <WirePlaceholder width="100%" height="160px" label={`Project ${i}`} />
+            <WirePlaceholder
+              width="100%"
+              height="160px"
+              label={`Project ${i}`}
+            />
             <WireText lines={2} />
           </div>
         ))}
@@ -603,7 +634,7 @@ function WireframeHomepage() {
 
       <WireBox label="Footer" className="h-24" />
     </div>
-  )
+  );
 }
 ```
 
@@ -613,7 +644,7 @@ function WireframeHomepage() {
 
 ### Q1: What is the difference between a wireframe and a prototype?
 
-**Answer:** A wireframe is a static visual representation of a page's layout, content hierarchy, and structure. It shows *what* will be on the screen and *where*. A prototype adds interactivity -- it simulates *how* the interface behaves when users interact with it. Think of wireframes as blueprints and prototypes as scale models. Wireframes can exist at any fidelity (lo-fi sketches to hi-fi mockups), and prototypes can range from simple click-through sequences to fully functional coded experiences. In practice, the terms often blur: a Figma file with linked screens is both a hi-fi wireframe and a clickable prototype.
+**Answer:** A wireframe is a static visual representation of a page's layout, content hierarchy, and structure. It shows _what_ will be on the screen and _where_. A prototype adds interactivity -- it simulates _how_ the interface behaves when users interact with it. Think of wireframes as blueprints and prototypes as scale models. Wireframes can exist at any fidelity (lo-fi sketches to hi-fi mockups), and prototypes can range from simple click-through sequences to fully functional coded experiences. In practice, the terms often blur: a Figma file with linked screens is both a hi-fi wireframe and a clickable prototype.
 
 ### Q2: When would you skip wireframing and go straight to code?
 
@@ -747,13 +778,13 @@ Best for: Developers who want maximum clarity and minimalism.
 // Create a rapid prototype page at app/prototype/page.tsx
 // Use this to test layouts before integrating into your real site
 
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.5 },
-}
+};
 
 export default function Prototype() {
   return (
@@ -764,8 +795,10 @@ export default function Prototype() {
                    justify-center px-8 text-center"
         {...fadeUp}
       >
-        <h1 className="text-5xl font-bold tracking-tight
-                       sm:text-7xl">
+        <h1
+          className="text-5xl font-bold tracking-tight
+                       sm:text-7xl"
+        >
           Your Name
         </h1>
         <p className="mt-4 text-lg text-gray-500 sm:text-xl">
@@ -777,9 +810,11 @@ export default function Prototype() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <button className="rounded-full bg-gray-900 px-6 py-3
+          <button
+            className="rounded-full bg-gray-900 px-6 py-3
                              text-sm text-white dark:bg-white
-                             dark:text-gray-900">
+                             dark:text-gray-900"
+          >
             View Work
           </button>
           <button className="rounded-full border px-6 py-3 text-sm">
@@ -802,22 +837,28 @@ export default function Prototype() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
             >
-              <div className="h-48 bg-gradient-to-br from-gray-100
+              <div
+                className="h-48 bg-gradient-to-br from-gray-100
                               to-gray-200 transition-transform
                               group-hover:scale-105
-                              dark:from-gray-800 dark:to-gray-900" />
+                              dark:from-gray-800 dark:to-gray-900"
+              />
               <div className="p-5">
                 <h3 className="font-semibold">Project {i + 1}</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   Brief description goes here
                 </p>
                 <div className="mt-3 flex gap-2">
-                  <span className="rounded bg-gray-100 px-2 py-0.5
-                                   text-xs dark:bg-gray-800">
+                  <span
+                    className="rounded bg-gray-100 px-2 py-0.5
+                                   text-xs dark:bg-gray-800"
+                  >
                     React
                   </span>
-                  <span className="rounded bg-gray-100 px-2 py-0.5
-                                   text-xs dark:bg-gray-800">
+                  <span
+                    className="rounded bg-gray-100 px-2 py-0.5
+                                   text-xs dark:bg-gray-800"
+                  >
                     TypeScript
                   </span>
                 </div>
@@ -827,7 +868,7 @@ export default function Prototype() {
         </div>
       </section>
     </main>
-  )
+  );
 }
 ```
 

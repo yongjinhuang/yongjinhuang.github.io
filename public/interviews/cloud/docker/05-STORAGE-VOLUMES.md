@@ -221,16 +221,16 @@ $ docker run --mount type=bind,source=$(pwd)/config,target=/app/config,readonly 
 
 ### 4.2 Volumes vs Bind Mounts
 
-| Aspect | Volume | Bind Mount |
-|--------|--------|-----------|
-| Managed by | Docker | You |
-| Location | `/var/lib/docker/volumes/` | Anywhere on host |
-| Pre-populated | Yes (copies image data into empty volume) | No (host data shadows image data) |
-| Backup | Via volume commands or direct access | Standard filesystem tools |
-| Cross-platform | Works consistently | Path differences (Windows vs Linux) |
-| Docker CLI manage | Yes (volume create/inspect/rm) | No |
-| Use case | Persistent data (databases, uploads) | Development (source code, config) |
-| Performance (macOS) | Better (in Docker VM) | Slow (filesystem sharing overhead) |
+| Aspect              | Volume                                    | Bind Mount                          |
+| ------------------- | ----------------------------------------- | ----------------------------------- |
+| Managed by          | Docker                                    | You                                 |
+| Location            | `/var/lib/docker/volumes/`                | Anywhere on host                    |
+| Pre-populated       | Yes (copies image data into empty volume) | No (host data shadows image data)   |
+| Backup              | Via volume commands or direct access      | Standard filesystem tools           |
+| Cross-platform      | Works consistently                        | Path differences (Windows vs Linux) |
+| Docker CLI manage   | Yes (volume create/inspect/rm)            | No                                  |
+| Use case            | Persistent data (databases, uploads)      | Development (source code, config)   |
+| Performance (macOS) | Better (in Docker VM)                     | Slow (filesystem sharing overhead)  |
 
 ### 4.3 When to Use Each
 
@@ -271,12 +271,12 @@ $ docker run --mount type=tmpfs,target=/tmp,tmpfs-size=100m nginx
 
 ### 5.2 Use Cases
 
-| Use Case | Why tmpfs |
-|----------|-----------|
-| Secrets at runtime | Never written to disk, gone when container stops |
-| Session data | Fast access, ephemeral by nature |
-| Scratch space for processing | Fast I/O, no disk wear |
-| /tmp in read-only containers | Container has read-only rootfs but needs /tmp |
+| Use Case                     | Why tmpfs                                        |
+| ---------------------------- | ------------------------------------------------ |
+| Secrets at runtime           | Never written to disk, gone when container stops |
+| Session data                 | Fast access, ephemeral by nature                 |
+| Scratch space for processing | Fast I/O, no disk wear                           |
+| /tmp in read-only containers | Container has read-only rootfs but needs /tmp    |
 
 ```bash
 # Read-only container with tmpfs for writable directories
@@ -318,14 +318,14 @@ $ docker volume create \
 
 ### 6.2 Cloud Volume Drivers
 
-| Driver | Backend | Use Case |
-|--------|---------|----------|
-| `rexray/ebs` | AWS EBS | Persistent block storage on AWS |
-| `rexray/efs` | AWS EFS | Shared NFS on AWS |
-| `azure/azure-file` | Azure Files | Shared file storage on Azure |
-| `flocker` | Various | Multi-host volume management (deprecated) |
-| `portworx` | Portworx | Enterprise storage for containers |
-| `netapp` | NetApp | Enterprise NAS/SAN |
+| Driver             | Backend     | Use Case                                  |
+| ------------------ | ----------- | ----------------------------------------- |
+| `rexray/ebs`       | AWS EBS     | Persistent block storage on AWS           |
+| `rexray/efs`       | AWS EFS     | Shared NFS on AWS                         |
+| `azure/azure-file` | Azure Files | Shared file storage on Azure              |
+| `flocker`          | Various     | Multi-host volume management (deprecated) |
+| `portworx`         | Portworx    | Enterprise storage for containers         |
+| `netapp`           | NetApp      | Enterprise NAS/SAN                        |
 
 ```bash
 # Example: AWS EBS volume
@@ -380,12 +380,12 @@ $ docker run -v /host/path:/app:Z nginx
 
 Docker Desktop on macOS runs containers in a Linux VM. Bind mounts require filesystem synchronization between macOS and the VM:
 
-| Sync Mechanism | Speed | Consistency |
-|----------------|-------|-------------|
-| osxfs (legacy) | Very slow | Full |
-| gRPC FUSE | Slow | Full |
-| VirtioFS | Fast | Full |
-| Mutagen (sync) | Fast | Eventually consistent |
+| Sync Mechanism | Speed     | Consistency           |
+| -------------- | --------- | --------------------- |
+| osxfs (legacy) | Very slow | Full                  |
+| gRPC FUSE      | Slow      | Full                  |
+| VirtioFS       | Fast      | Full                  |
+| Mutagen (sync) | Fast      | Eventually consistent |
 
 ```bash
 # Use VirtioFS (Docker Desktop settings > General > VirtioFS)
@@ -400,8 +400,8 @@ $ docker run -v myapp-sync:/app node:20 npm start
 services:
   app:
     volumes:
-      - .:/app               # source code (bind mount)
-      - node_modules:/app/node_modules  # deps (named volume, fast)
+      - .:/app # source code (bind mount)
+      - node_modules:/app/node_modules # deps (named volume, fast)
 volumes:
   node_modules:
 ```
@@ -432,15 +432,15 @@ ftype=1    # must be 1
 
 ### 8.3 Storage Driver Comparison
 
-| Driver | Status | Backing FS | Performance | Notes |
-|--------|--------|-----------|-------------|-------|
-| **overlay2** | Recommended | ext4, xfs | Excellent | Default on all modern systems |
-| **fuse-overlayfs** | Supported | Any | Good | For rootless Docker |
-| **btrfs** | Supported | btrfs | Good | Native CoW, snapshots |
-| **zfs** | Supported | zfs | Good | Native CoW, compression |
-| **vfs** | Fallback | Any | Poor | No CoW, full copy each layer |
-| **aufs** | Deprecated | ext4 | Good | Removed in Docker 24+ |
-| **devicemapper** | Deprecated | Direct LVM | Poor | Complex setup, removed |
+| Driver             | Status      | Backing FS | Performance | Notes                         |
+| ------------------ | ----------- | ---------- | ----------- | ----------------------------- |
+| **overlay2**       | Recommended | ext4, xfs  | Excellent   | Default on all modern systems |
+| **fuse-overlayfs** | Supported   | Any        | Good        | For rootless Docker           |
+| **btrfs**          | Supported   | btrfs      | Good        | Native CoW, snapshots         |
+| **zfs**            | Supported   | zfs        | Good        | Native CoW, compression       |
+| **vfs**            | Fallback    | Any        | Poor        | No CoW, full copy each layer  |
+| **aufs**           | Deprecated  | ext4       | Good        | Removed in Docker 24+         |
+| **devicemapper**   | Deprecated  | Direct LVM | Poor        | Complex setup, removed        |
 
 ### 8.4 Copy-on-Write Performance
 
@@ -732,12 +732,14 @@ For read-heavy workloads, the overlay performs well because reads just traverse 
 Docker has no built-in volume backup command, so you need to use workarounds:
 
 **Generic approach (works for any volume):** Run a temporary container that mounts both the volume and a host directory, then tar the volume contents:
+
 ```bash
 docker run --rm -v myvolume:/source:ro -v $(pwd):/backup alpine \
   tar czf /backup/myvolume.tar.gz -C /source .
 ```
 
 **Database-specific approach (preferred for databases):** Use the database's native dump tools because they produce consistent, application-aware backups:
+
 ```bash
 docker exec db pg_dumpall -U postgres > backup.sql
 ```
@@ -759,10 +761,11 @@ Solutions, from easiest to most involved:
 1. **Switch to VirtioFS** in Docker Desktop settings. It is significantly faster than the older gRPC-FUSE or osxfs backends.
 
 2. **Use named volumes for dependency directories.** Mount source code via bind mount but put node_modules in a named volume:
+
    ```yaml
    volumes:
-     - .:/app          # bind mount: source code
-     - deps:/app/node_modules  # volume: dependencies (fast!)
+     - .:/app # bind mount: source code
+     - deps:/app/node_modules # volume: dependencies (fast!)
    ```
 
 3. **Use Docker Compose `watch` mode** which selectively syncs only changed files instead of mounting the entire directory.
@@ -775,19 +778,19 @@ Solutions, from easiest to most involved:
 
 ## 13. Quick Reference
 
-| Command | Purpose |
-|---------|---------|
-| `docker volume create <name>` | Create named volume |
-| `docker volume ls` | List all volumes |
-| `docker volume inspect <name>` | Volume details and mount point |
-| `docker volume rm <name>` | Remove a volume |
-| `docker volume prune` | Remove all unused volumes |
-| `docker run -v name:/path` | Mount named volume |
-| `docker run -v /host:/ctr` | Bind mount |
-| `docker run --tmpfs /tmp` | tmpfs mount |
-| `docker run --mount type=volume,...` | Explicit mount syntax |
-| `docker run --mount type=bind,...` | Explicit bind mount syntax |
-| `docker run --read-only` | Read-only container filesystem |
-| `docker diff <container>` | Show filesystem changes |
-| `docker system df -v` | Disk usage with volume details |
-| `docker cp <ctr>:/path ./local` | Copy files from container |
+| Command                              | Purpose                        |
+| ------------------------------------ | ------------------------------ |
+| `docker volume create <name>`        | Create named volume            |
+| `docker volume ls`                   | List all volumes               |
+| `docker volume inspect <name>`       | Volume details and mount point |
+| `docker volume rm <name>`            | Remove a volume                |
+| `docker volume prune`                | Remove all unused volumes      |
+| `docker run -v name:/path`           | Mount named volume             |
+| `docker run -v /host:/ctr`           | Bind mount                     |
+| `docker run --tmpfs /tmp`            | tmpfs mount                    |
+| `docker run --mount type=volume,...` | Explicit mount syntax          |
+| `docker run --mount type=bind,...`   | Explicit bind mount syntax     |
+| `docker run --read-only`             | Read-only container filesystem |
+| `docker diff <container>`            | Show filesystem changes        |
+| `docker system df -v`                | Disk usage with volume details |
+| `docker cp <ctr>:/path ./local`      | Copy files from container      |

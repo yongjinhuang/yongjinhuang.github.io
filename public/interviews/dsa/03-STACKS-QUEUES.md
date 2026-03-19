@@ -22,6 +22,7 @@ val = stack.pop() # pop: 2
 ```
 
 **When to use a stack:**
+
 - Matching parentheses/brackets
 - Nearest smaller/larger element (monotonic stack)
 - Expression evaluation (postfix, infix)
@@ -44,6 +45,7 @@ val = queue.popleft()  # dequeue (left): 1
 **Never use `list` as a queue.** `list.pop(0)` is O(n) because it shifts all elements.
 
 **When to use a queue:**
+
 - BFS (level-order traversal)
 - Sliding window maximum (deque)
 - Task scheduling (round-robin)
@@ -441,24 +443,25 @@ def car_fleet(target: int, position: list[int], speed: list[int]) -> int:
 
 ## 4. Common Interview Questions
 
-| # | Problem | Difficulty | Pattern | Key Insight |
-|---|---------|-----------|---------|-------------|
-| 1 | Valid Parentheses | Easy | Stack matching | Push open, match close |
-| 2 | Min Stack | Medium | Auxiliary stack | Track min at each level |
-| 3 | Evaluate Reverse Polish | Medium | Operand stack | Pop two, compute, push result |
-| 4 | Daily Temperatures | Medium | Monotonic decreasing stack | Pop when warmer day found |
-| 5 | Next Greater Element | Medium | Monotonic stack + hash map | Build next-greater map |
-| 6 | Car Fleet | Medium | Stack of arrival times | Sort by position descending |
-| 7 | Generate Parentheses | Medium | Backtracking with stack concept | Track open/close counts |
-| 8 | Sliding Window Maximum | Hard | Monotonic decreasing deque | Front = current max |
-| 9 | Largest Rectangle in Histogram | Hard | Monotonic increasing stack | Width = right - left boundary |
-| 10 | Trapping Rain Water | Hard | Stack or two pointers | See Arrays chapter |
+| #   | Problem                        | Difficulty | Pattern                         | Key Insight                   |
+| --- | ------------------------------ | ---------- | ------------------------------- | ----------------------------- |
+| 1   | Valid Parentheses              | Easy       | Stack matching                  | Push open, match close        |
+| 2   | Min Stack                      | Medium     | Auxiliary stack                 | Track min at each level       |
+| 3   | Evaluate Reverse Polish        | Medium     | Operand stack                   | Pop two, compute, push result |
+| 4   | Daily Temperatures             | Medium     | Monotonic decreasing stack      | Pop when warmer day found     |
+| 5   | Next Greater Element           | Medium     | Monotonic stack + hash map      | Build next-greater map        |
+| 6   | Car Fleet                      | Medium     | Stack of arrival times          | Sort by position descending   |
+| 7   | Generate Parentheses           | Medium     | Backtracking with stack concept | Track open/close counts       |
+| 8   | Sliding Window Maximum         | Hard       | Monotonic decreasing deque      | Front = current max           |
+| 9   | Largest Rectangle in Histogram | Hard       | Monotonic increasing stack      | Width = right - left boundary |
+| 10  | Trapping Rain Water            | Hard       | Stack or two pointers           | See Arrays chapter            |
 
 ---
 
 ## 5. Gotchas
 
 ### 5.1 Stack Gotchas
+
 - **Empty stack check**: Always check `if stack` before `stack[-1]` or `stack.pop()`.
 - **Monotonic stack direction**: For "next greater," use decreasing stack. For "next smaller,"
   use increasing stack. Getting this backward is the most common mistake.
@@ -466,12 +469,14 @@ def car_fleet(target: int, position: list[int], speed: list[int]) -> int:
   compute distances (like in daily temperatures).
 
 ### 5.2 Queue Gotchas
+
 - **Never use `list.pop(0)`**: It is O(n). Always use `collections.deque.popleft()`.
 - **Deque is not a queue-only structure**: `deque` supports O(1) operations on both ends.
   Don't confuse it with a strict queue.
 - **BFS level tracking**: Use `for _ in range(len(queue))` to process one level at a time.
 
 ### 5.3 Monotonic Stack Gotchas
+
 - **When to use decreasing vs increasing:**
   - Next **greater** element: decreasing stack (pop smaller elements)
   - Next **smaller** element: increasing stack (pop larger elements)
@@ -481,6 +486,7 @@ def car_fleet(target: int, position: list[int], speed: list[int]) -> int:
   They have no next greater/smaller element (result stays at default, usually -1).
 
 ### 5.4 Sliding Window Deque Gotchas
+
 - **Window boundary**: Remove from front when `dq[0] < i - k + 1`, not `i - k`.
 - **Window fully formed**: Results start at index `k - 1`, not `k`.
 - **Don't confuse with sliding window sum**: The deque pattern is specifically for
@@ -490,15 +496,15 @@ def car_fleet(target: int, position: list[int], speed: list[int]) -> int:
 
 ## 6. Quick Reference
 
-| Pattern | When to Use | Time | Space | Key Steps |
-|---------|-------------|------|-------|-----------|
-| Stack matching | Parentheses, brackets, tags | O(n) | O(n) | Push open, check close against top |
-| Monotonic decreasing stack | Next greater element | O(n) | O(n) | Pop smaller, record answer for popped |
-| Monotonic increasing stack | Next smaller element | O(n) | O(n) | Pop larger, record answer for popped |
-| Min stack | O(1) min retrieval | O(1)/op | O(n) | Parallel min stack tracking current min |
-| Deque sliding window | Max/min in fixed window | O(n) | O(k) | Remove out-of-window, remove dominated |
-| Two stacks as queue | Queue with stack operations | O(1)* | O(n) | In-stack for push, out-stack for pop |
-| Stack for expression eval | Postfix/infix evaluation | O(n) | O(n) | Numbers on stack, operators trigger compute |
-| Histogram stack | Largest rectangle | O(n) | O(n) | Increasing stack, width = right - left |
+| Pattern                    | When to Use                 | Time    | Space | Key Steps                                   |
+| -------------------------- | --------------------------- | ------- | ----- | ------------------------------------------- |
+| Stack matching             | Parentheses, brackets, tags | O(n)    | O(n)  | Push open, check close against top          |
+| Monotonic decreasing stack | Next greater element        | O(n)    | O(n)  | Pop smaller, record answer for popped       |
+| Monotonic increasing stack | Next smaller element        | O(n)    | O(n)  | Pop larger, record answer for popped        |
+| Min stack                  | O(1) min retrieval          | O(1)/op | O(n)  | Parallel min stack tracking current min     |
+| Deque sliding window       | Max/min in fixed window     | O(n)    | O(k)  | Remove out-of-window, remove dominated      |
+| Two stacks as queue        | Queue with stack operations | O(1)\*  | O(n)  | In-stack for push, out-stack for pop        |
+| Stack for expression eval  | Postfix/infix evaluation    | O(n)    | O(n)  | Numbers on stack, operators trigger compute |
+| Histogram stack            | Largest rectangle           | O(n)    | O(n)  | Increasing stack, width = right - left      |
 
-*Amortized O(1)
+\*Amortized O(1)

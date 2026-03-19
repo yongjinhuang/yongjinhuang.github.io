@@ -39,13 +39,13 @@
 
 ### Organizational Models
 
-| Model | Embedded SRE | Centralized SRE | Consulting SRE |
-|---|---|---|---|
-| Structure | SREs in product teams | Separate SRE org | SREs as advisors |
-| Pros | Deep domain knowledge | Consistent standards | Scales broadly |
-| Cons | Inconsistent practices | Org silos | Shallow impact |
-| Best for | Large product orgs | Early SRE practice | Platform teams |
-| On-call | Product team rotation | SRE-only rotation | Hybrid |
+| Model     | Embedded SRE           | Centralized SRE      | Consulting SRE   |
+| --------- | ---------------------- | -------------------- | ---------------- |
+| Structure | SREs in product teams  | Separate SRE org     | SREs as advisors |
+| Pros      | Deep domain knowledge  | Consistent standards | Scales broadly   |
+| Cons      | Inconsistent practices | Org silos            | Shallow impact   |
+| Best for  | Large product orgs     | Early SRE practice   | Platform teams   |
+| On-call   | Product team rotation  | SRE-only rotation    | Hybrid           |
 
 ### SRE vs DevOps: The Key Distinction
 
@@ -90,12 +90,12 @@ SRE is a **role and methodology**. DevOps is a **philosophy**. Platform Engineer
 
 ### Ownership Matrix
 
-| Layer | Owner | Audience | Cadence |
-|---|---|---|---|
-| SLI | SRE / Observability team | Engineering | Real-time |
-| SLO | Product + SRE jointly | Engineering + leadership | Weekly |
-| SLA | Legal + Product | Customers | Contract term |
-| Error Budget | SRE | Dev + SRE | Daily |
+| Layer        | Owner                    | Audience                 | Cadence       |
+| ------------ | ------------------------ | ------------------------ | ------------- |
+| SLI          | SRE / Observability team | Engineering              | Real-time     |
+| SLO          | Product + SRE jointly    | Engineering + leadership | Weekly        |
+| SLA          | Legal + Product          | Customers                | Contract term |
+| Error Budget | SRE                      | Dev + SRE                | Daily         |
 
 ### The Key Rule
 
@@ -133,17 +133,18 @@ Example:
 
 ### Good vs Bad SLI Design
 
-| Property | Good SLI | Bad SLI |
-|---|---|---|
-| User-centric | "Requests served < 200ms" | "CPU < 70%" |
-| Measurable | Prometheus/metric | Human judgment |
-| Ratio-based | 0.0 to 1.0 | Absolute counts |
-| Aggregatable | Sums across instances | Per-instance only |
-| Leading indicator | Latency p99 | Error count |
+| Property          | Good SLI                  | Bad SLI           |
+| ----------------- | ------------------------- | ----------------- |
+| User-centric      | "Requests served < 200ms" | "CPU < 70%"       |
+| Measurable        | Prometheus/metric         | Human judgment    |
+| Ratio-based       | 0.0 to 1.0                | Absolute counts   |
+| Aggregatable      | Sums across instances     | Per-instance only |
+| Leading indicator | Latency p99               | Error count       |
 
 ### SLI Measurement Methods
 
 **Availability SLI:**
+
 ```promql
 # Good: ratio of successful requests
 sum(rate(http_requests_total{status!~"5.."}[5m]))
@@ -152,6 +153,7 @@ sum(rate(http_requests_total[5m]))
 ```
 
 **Latency SLI:**
+
 ```promql
 # Good: proportion of requests under threshold
 sum(rate(http_request_duration_seconds_bucket{le="0.2"}[5m]))
@@ -160,6 +162,7 @@ sum(rate(http_request_duration_seconds_count[5m]))
 ```
 
 **Throughput SLI:**
+
 ```promql
 # Good: successful writes per second (as ratio of target)
 sum(rate(writes_total{result="success"}[5m]))
@@ -168,6 +171,7 @@ scalar(target_write_rate)
 ```
 
 **Correctness SLI (hardest to measure):**
+
 ```
 Options:
   1. Canary validation — run shadow requests against known-good oracle
@@ -225,24 +229,29 @@ Step 6: Document and commit
 **Review Date:** Quarterly
 
 ### SLI Definition
+
 Ratio of payment transactions completing without server-side
 error, measured over rolling 28-day window.
 
-Numerator:   payment_transactions_total{result="success"}
+Numerator: payment_transactions_total{result="success"}
 Denominator: payment_transactions_total
 
 Exclusions:
+
 - Client-side validation errors (4xx)
 - Planned maintenance windows (declared >24h in advance)
 
 ### SLO Target
+
 99.95% over 28-day rolling window
 
 ### Error Budget
+
 - Monthly budget: 0.05% × 28 days × 24h × 60m = 20.16 minutes
 - Budget burn alert thresholds: 2%, 5%, 10%, 50%
 
 ### Reporting
+
 - Dashboard: [link]
 - Weekly report: SRE Monday standup
 - Owner escalation: At 50% budget consumed
@@ -274,6 +283,7 @@ Two windows prevent alert flapping on short spikes.
 ```
 
 **Prometheus alert example:**
+
 ```yaml
 groups:
   - name: slo_payment_availability
@@ -293,8 +303,8 @@ groups:
         labels:
           severity: page
         annotations:
-          summary: "Payment SLO burning at >14.4x rate"
-          description: "Error budget will be exhausted in ~2h"
+          summary: 'Payment SLO burning at >14.4x rate'
+          description: 'Error budget will be exhausted in ~2h'
 ```
 
 ### Stakeholder Negotiation Framework
@@ -379,14 +389,15 @@ Action required: Incident declared, fixes prioritized
 ### Policy Triggers
 
 | Budget Remaining | State    | Required Actions                              |
-|-----------------|----------|-----------------------------------------------|
-| 100% - 50%      | Healthy  | Normal operations, features ship freely        |
-| 50% - 25%       | Warning  | SRE review of all high-risk deployments        |
-| 25% - 10%       | Danger   | Freeze non-critical feature deployments        |
-| 10% - 0%        | Critical | Full deployment freeze; reliability work only  |
-| 0% (exhausted)  | Breached | Exec review; SLO renegotiation consideration   |
+| ---------------- | -------- | --------------------------------------------- |
+| 100% - 50%       | Healthy  | Normal operations, features ship freely       |
+| 50% - 25%        | Warning  | SRE review of all high-risk deployments       |
+| 25% - 10%        | Danger   | Freeze non-critical feature deployments       |
+| 10% - 0%         | Critical | Full deployment freeze; reliability work only |
+| 0% (exhausted)   | Breached | Exec review; SLO renegotiation consideration  |
 
 ### Development Freeze Mechanics
+
 1. SRE sends freeze notification to #engineering channel
 2. All deploy pipelines require SRE approval (Slack workflow)
 3. Exception process: VP-level approval for critical fixes
@@ -394,6 +405,7 @@ Action required: Incident declared, fixes prioritized
 5. Post-freeze: retrospective on what consumed budget
 
 ### Budget Restoration (when exhausted)
+
 - Option A: Wait for monthly reset
 - Option B: Negotiate SLO reduction with stakeholders
 - Option C: Demonstrate sustained reliability improvement
@@ -425,15 +437,15 @@ Toil has six characteristics (Google SRE definition):
 
 ### Toil Examples vs Non-Toil
 
-| Task | Toil? | Why |
-|---|---|---|
-| Restart stuck cron job | Yes | Manual, repetitive, automatable |
-| Respond to capacity alert, scale up | Yes | Reactive, automatable |
-| Write runbook for issue | No | Enduring value |
-| Design auto-scaling policy | No | Engineering work |
-| Run weekly cert rotation script | Yes | Repetitive, no enduring value |
-| Automate cert rotation | No | Eliminates toil |
-| Handle oncall escalation | Partial | If escalation → systemic fix = not toil |
+| Task                                | Toil?   | Why                                     |
+| ----------------------------------- | ------- | --------------------------------------- |
+| Restart stuck cron job              | Yes     | Manual, repetitive, automatable         |
+| Respond to capacity alert, scale up | Yes     | Reactive, automatable                   |
+| Write runbook for issue             | No      | Enduring value                          |
+| Design auto-scaling policy          | No      | Engineering work                        |
+| Run weekly cert rotation script     | Yes     | Repetitive, no enduring value           |
+| Automate cert rotation              | No      | Eliminates toil                         |
+| Handle oncall escalation            | Partial | If escalation → systemic fix = not toil |
 
 ### Measuring Toil
 
@@ -766,13 +778,13 @@ Headroom policy (example):
 
 ### Organic vs Inorganic Growth
 
-| Growth Type | Planning Horizon | Data Source | Who Provides |
-|---|---|---|---|
-| Organic | 12-18 months | Historical trend + MoM | Analytics |
-| Product launch | Event-specific | PM roadmap | Product |
-| Marketing campaign | Event-specific | Campaign calendar | Marketing |
-| External event | Reactive | News monitoring | Sales |
-| Viral/unexpected | N/A — must have burst | Circuit breakers | SRE |
+| Growth Type        | Planning Horizon      | Data Source            | Who Provides |
+| ------------------ | --------------------- | ---------------------- | ------------ |
+| Organic            | 12-18 months          | Historical trend + MoM | Analytics    |
+| Product launch     | Event-specific        | PM roadmap             | Product      |
+| Marketing campaign | Event-specific        | Campaign calendar      | Marketing    |
+| External event     | Reactive              | News monitoring        | Sales        |
+| Viral/unexpected   | N/A — must have burst | Circuit breakers       | SRE          |
 
 ---
 
@@ -800,12 +812,12 @@ CHANGE RISK MODEL:
 
 ### Change Advisory Board (CAB) Tiering
 
-| Change Tier | Description | Approval Required | Timing |
-|---|---|---|---|
-| Standard | Pre-approved, documented | None | Anytime |
-| Normal | Reviewed, tested | Team lead | Change window |
-| Major | High blast radius | CAB + SRE | Scheduled window |
-| Emergency | Break-fix under incident | On-call lead + manager | Immediately |
+| Change Tier | Description              | Approval Required      | Timing           |
+| ----------- | ------------------------ | ---------------------- | ---------------- |
+| Standard    | Pre-approved, documented | None                   | Anytime          |
+| Normal      | Reviewed, tested         | Team lead              | Change window    |
+| Major       | High blast radius        | CAB + SRE              | Scheduled window |
+| Emergency   | Break-fix under incident | On-call lead + manager | Immediately      |
 
 ### Progressive Rollout with Automated Rollback
 
@@ -818,18 +830,18 @@ spec:
     canary:
       steps:
         - setWeight: 5
-        - pause: {duration: 10m}
+        - pause: { duration: 10m }
         - setWeight: 25
-        - pause: {duration: 10m}
+        - pause: { duration: 10m }
         - setWeight: 50
-        - pause: {duration: 10m}
+        - pause: { duration: 10m }
         - setWeight: 100
       analysis:
         templates:
           - templateName: error-rate
         args:
           - name: slo-threshold
-            value: "0.001"
+            value: '0.001'
       # If analysis fails at any step → auto-rollback
 ```
 
@@ -966,8 +978,9 @@ BLAMELESS FRAME:
 **SLO Impact:** Consumed X minutes of error budget (Y% of monthly)
 
 ### Timeline (UTC)
+
 | Time  | Event                                          |
-|-------|------------------------------------------------|
+| ----- | ---------------------------------------------- |
 | 14:02 | Alert fires: Payment error rate >2%            |
 | 14:07 | On-call acknowledges, begins investigation     |
 | 14:23 | Root cause identified: DB connection pool leak |
@@ -976,6 +989,7 @@ BLAMELESS FRAME:
 | 14:50 | Incident closed, monitoring for recurrence     |
 
 ### Root Cause Analysis (5 Whys)
+
 1. Why? Payment errors spiked
 2. Why? DB connections exhausted
 3. Why? Connection pool not released on exception path
@@ -983,17 +997,19 @@ BLAMELESS FRAME:
 5. Why? Code review didn't catch this pattern
 
 ### Contributing Factors
+
 - No automated test for connection exhaustion scenario
 - Alert threshold too conservative (2% not 0.5%)
 - Runbook didn't include connection pool diagnostics
 
 ### Action Items
-| Item                               | Owner   | Due    | Priority |
-|------------------------------------|---------|--------|----------|
-| Fix exception handler with finally | Dev team| +3 days| P0       |
-| Add connection pool exhaustion test| Dev team| +1 week| P1       |
-| Lower alert threshold to 0.5%      | SRE     | +2 days| P1       |
-| Update DB runbook                  | SRE     | +1 week| P2       |
+
+| Item                                | Owner    | Due     | Priority |
+| ----------------------------------- | -------- | ------- | -------- |
+| Fix exception handler with finally  | Dev team | +3 days | P0       |
+| Add connection pool exhaustion test | Dev team | +1 week | P1       |
+| Lower alert threshold to 0.5%       | SRE      | +2 days | P1       |
+| Update DB runbook                   | SRE      | +1 week | P2       |
 ```
 
 ### Documentation Culture
@@ -1051,14 +1067,14 @@ QUALITY SIGNAL: Is your new hire on-call alone in week 3?
 
 ```yaml
 # sloth.yaml — SLO definition as code
-version: "prometheus/v1"
-service: "payment-service"
+version: 'prometheus/v1'
+service: 'payment-service'
 labels:
-  team: "payments-sre"
+  team: 'payments-sre'
 slos:
-  - name: "requests-availability"
+  - name: 'requests-availability'
     objective: 99.9
-    description: "99.9% of payment requests succeed"
+    description: '99.9% of payment requests succeed'
     sli:
       events:
         error_query: sum(rate(http_requests_total{job="payment",code=~"5.."}[{{.window}}]))
@@ -1066,9 +1082,9 @@ slos:
     alerting:
       name: PaymentAvailability
       page_alert:
-        labels: {severity: "page"}
+        labels: { severity: 'page' }
       ticket_alert:
-        labels: {severity: "ticket"}
+        labels: { severity: 'ticket' }
 ```
 
 ### Monitoring Stack Integration
@@ -1186,15 +1202,15 @@ SRE TEAM STRUCTURE (200-engineer org):
 
 ### SRE Implementation Anti-Patterns
 
-| Anti-Pattern | Problem | Correct Approach |
-|---|---|---|
-| SLOs set to current baseline | No improvement pressure | Set SLO 0.1-0.5% above baseline |
-| 100% availability SLO | Impossible; no error budget | Find user happiness threshold |
-| SRE owns all oncall | Dev teams ignore reliability | Dev teams share oncall burden |
-| No PRR gate | Unreliable services deployed | PRR required for GA launch |
-| Toil accepted as normal | Engineers burn out; attrition | Treat 50% toil as P1 issue |
-| Blameful postmortems | Engineers hide incidents | Blameless; learning focus |
-| Alert on every metric | Alert fatigue | Alert only on SLI/SLO burns |
+| Anti-Pattern                 | Problem                       | Correct Approach                |
+| ---------------------------- | ----------------------------- | ------------------------------- |
+| SLOs set to current baseline | No improvement pressure       | Set SLO 0.1-0.5% above baseline |
+| 100% availability SLO        | Impossible; no error budget   | Find user happiness threshold   |
+| SRE owns all oncall          | Dev teams ignore reliability  | Dev teams share oncall burden   |
+| No PRR gate                  | Unreliable services deployed  | PRR required for GA launch      |
+| Toil accepted as normal      | Engineers burn out; attrition | Treat 50% toil as P1 issue      |
+| Blameful postmortems         | Engineers hide incidents      | Blameless; learning focus       |
+| Alert on every metric        | Alert fatigue                 | Alert only on SLI/SLO burns     |
 
 ---
 
@@ -1228,4 +1244,4 @@ SLO TIGHTENING RULE:
 
 ---
 
-*Next: [12-INCIDENT-MANAGEMENT.md](./12-INCIDENT-MANAGEMENT.md) — Incident command structure, war rooms, blameless postmortems in depth*
+_Next: [12-INCIDENT-MANAGEMENT.md](./12-INCIDENT-MANAGEMENT.md) — Incident command structure, war rooms, blameless postmortems in depth_

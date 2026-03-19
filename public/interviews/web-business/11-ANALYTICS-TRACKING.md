@@ -29,12 +29,12 @@ Events are sent from the client (browser/mobile) or server to an analytics platf
 
 Before writing any tracking code, define a tracking plan — a spreadsheet or document listing:
 
-| Event Name | When It Fires | Properties | Tracked By |
-|-----------|---------------|------------|------------|
-| Page Viewed | Every page load | page_url, referrer | Client |
-| Sign Up Started | User opens signup form | source (organic, ad, referral) | Client |
-| Sign Up Completed | User finishes registration | method (email, google, github) | Server |
-| Purchase Completed | Payment succeeds | amount, currency, plan_name | Server |
+| Event Name         | When It Fires              | Properties                     | Tracked By |
+| ------------------ | -------------------------- | ------------------------------ | ---------- |
+| Page Viewed        | Every page load            | page_url, referrer             | Client     |
+| Sign Up Started    | User opens signup form     | source (organic, ad, referral) | Client     |
+| Sign Up Completed  | User finishes registration | method (email, google, github) | Server     |
+| Purchase Completed | Payment succeeds           | amount, currency, plan_name    | Server     |
 
 A tracking plan prevents chaos. Without it, you'll end up with duplicate events, inconsistent naming, and missing data.
 
@@ -67,22 +67,22 @@ Group users by when they signed up (or any shared characteristic) and compare th
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Event** | A tracked user action (page view, click, purchase) |
-| **Property** | Metadata attached to an event (page URL, button name, amount) |
-| **Funnel** | A sequence of steps users go through, with drop-off rates at each step |
-| **Conversion Rate** | Percentage of users who complete a desired action |
-| **Cohort** | A group of users who share a characteristic (signup date, source) |
-| **Retention** | What percentage of users come back after a given time period |
-| **DAU/MAU** | Daily/Monthly Active Users — the most basic engagement metrics |
-| **Session** | A period of user activity. Typically ends after 30 minutes of inactivity |
-| **Attribution** | Determining which marketing channel (ad, email, organic) led to a conversion |
-| **UTM Parameters** | URL parameters (`utm_source`, `utm_medium`, `utm_campaign`) that track where traffic comes from |
-| **CTR** | Click-Through Rate — clicks divided by impressions |
-| **LTV / CLV** | Lifetime Value / Customer Lifetime Value — total revenue a customer generates over their relationship with you |
-| **CAC** | Customer Acquisition Cost — how much you spend to acquire one customer |
-| **Statistical Significance** | Confidence that A/B test results are real, not random chance. Usually p < 0.05 |
+| Term                         | What It Means                                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Event**                    | A tracked user action (page view, click, purchase)                                                             |
+| **Property**                 | Metadata attached to an event (page URL, button name, amount)                                                  |
+| **Funnel**                   | A sequence of steps users go through, with drop-off rates at each step                                         |
+| **Conversion Rate**          | Percentage of users who complete a desired action                                                              |
+| **Cohort**                   | A group of users who share a characteristic (signup date, source)                                              |
+| **Retention**                | What percentage of users come back after a given time period                                                   |
+| **DAU/MAU**                  | Daily/Monthly Active Users — the most basic engagement metrics                                                 |
+| **Session**                  | A period of user activity. Typically ends after 30 minutes of inactivity                                       |
+| **Attribution**              | Determining which marketing channel (ad, email, organic) led to a conversion                                   |
+| **UTM Parameters**           | URL parameters (`utm_source`, `utm_medium`, `utm_campaign`) that track where traffic comes from                |
+| **CTR**                      | Click-Through Rate — clicks divided by impressions                                                             |
+| **LTV / CLV**                | Lifetime Value / Customer Lifetime Value — total revenue a customer generates over their relationship with you |
+| **CAC**                      | Customer Acquisition Cost — how much you spend to acquire one customer                                         |
+| **Statistical Significance** | Confidence that A/B test results are real, not random chance. Usually p < 0.05                                 |
 
 ## Common Patterns
 
@@ -130,10 +130,10 @@ App → Segment → Mixpanel (product analytics)
 
 ## Quick Reference
 
-| What to Track | Where to Track | Why |
-|--------------|----------------|-----|
-| Page views, clicks, scrolls | Client-side | UI engagement |
-| Sign-ups, purchases, subscriptions | Server-side | Accurate business metrics |
-| Feature usage | Both | Product decisions |
-| Errors and exceptions | Both | Reliability monitoring |
-| Marketing attribution | Client-side (UTM params) | ROI on marketing spend |
+| What to Track                      | Where to Track           | Why                       |
+| ---------------------------------- | ------------------------ | ------------------------- |
+| Page views, clicks, scrolls        | Client-side              | UI engagement             |
+| Sign-ups, purchases, subscriptions | Server-side              | Accurate business metrics |
+| Feature usage                      | Both                     | Product decisions         |
+| Errors and exceptions              | Both                     | Reliability monitoring    |
+| Marketing attribution              | Client-side (UTM params) | ROI on marketing spend    |

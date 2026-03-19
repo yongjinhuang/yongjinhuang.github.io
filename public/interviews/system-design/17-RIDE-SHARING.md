@@ -4,25 +4,25 @@
 
 ### Functional Requirements
 
-| Category | Requirements |
-|----------|-------------|
-| **Rider** | Request a ride (pickup/dropoff), view nearby drivers, real-time tracking, ride history, rate driver, split fare |
-| **Driver** | Go online/offline, accept/reject ride requests, navigation to pickup & dropoff, earnings dashboard, rate rider |
-| **Matching** | Match rider with optimal nearby driver, re-match on rejection/timeout, support ride pooling |
-| **Pricing** | Upfront fare estimate, surge/dynamic pricing, fare breakdown, promo codes |
-| **Payments** | Pre-authorize payment, charge on completion, tips, driver payouts, refunds |
-| **Safety** | SOS button, share trip with contacts, driver/rider verification, ride recording |
+| Category     | Requirements                                                                                                    |
+| ------------ | --------------------------------------------------------------------------------------------------------------- |
+| **Rider**    | Request a ride (pickup/dropoff), view nearby drivers, real-time tracking, ride history, rate driver, split fare |
+| **Driver**   | Go online/offline, accept/reject ride requests, navigation to pickup & dropoff, earnings dashboard, rate rider  |
+| **Matching** | Match rider with optimal nearby driver, re-match on rejection/timeout, support ride pooling                     |
+| **Pricing**  | Upfront fare estimate, surge/dynamic pricing, fare breakdown, promo codes                                       |
+| **Payments** | Pre-authorize payment, charge on completion, tips, driver payouts, refunds                                      |
+| **Safety**   | SOS button, share trip with contacts, driver/rider verification, ride recording                                 |
 
 ### Non-Functional Requirements
 
-| Requirement | Target |
-|-------------|--------|
-| Matching latency | < 1 minute to find a driver (p99) |
-| Location update frequency | Every 3-5 seconds from active drivers |
-| Availability | 99.99% uptime (< 52 min downtime/year) |
-| Location accuracy | < 10 meter precision |
-| Real-time tracking delay | < 2 seconds end-to-end |
-| Peak demand handling | 3-5x normal traffic during events/weather |
+| Requirement               | Target                                    |
+| ------------------------- | ----------------------------------------- |
+| Matching latency          | < 1 minute to find a driver (p99)         |
+| Location update frequency | Every 3-5 seconds from active drivers     |
+| Availability              | 99.99% uptime (< 52 min downtime/year)    |
+| Location accuracy         | < 10 meter precision                      |
+| Real-time tracking delay  | < 2 seconds end-to-end                    |
+| Peak demand handling      | 3-5x normal traffic during events/weather |
 
 ### Scale Estimates
 
@@ -37,6 +37,7 @@ Peak rides/sec:      ~500 ride requests/sec (20M / 86400 * 2x peak)
 ### Back-of-Envelope Calculations
 
 **Location Updates:**
+
 ```
 Active drivers at peak:    2M
 Update frequency:          1 update / 4 seconds
@@ -46,6 +47,7 @@ Bandwidth (ingest):        500,000 * 100 = 50 MB/sec = 400 Mbps
 ```
 
 **Location Storage (hot data, last 24h):**
+
 ```
 Updates per driver per day: 86,400 / 4 = 21,600 (if online 24h, ~8h avg = 7,200)
 Total updates/day:          2M * 7,200 = 14.4B updates/day
@@ -54,6 +56,7 @@ Daily storage:              14.4B * 100 = 1.44 TB/day
 ```
 
 **Matching QPS:**
+
 ```
 Ride requests/sec:          500 (peak)
 Matching operations/sec:    500 (each triggers geospatial query)
@@ -62,6 +65,7 @@ Average candidates/query:   10-50 drivers evaluated
 ```
 
 **Trip Data Storage:**
+
 ```
 Trips per day:              20M
 Average trip record:        2 KB (metadata + route summary)
@@ -138,16 +142,16 @@ Supporting Services:
 
 ### Service Responsibilities
 
-| Service | Responsibility | Protocol |
-|---------|---------------|----------|
-| **API Gateway** | Authentication, rate limiting, request routing | HTTPS, WebSocket |
-| **Ride Service** | Trip lifecycle management, state machine | gRPC |
-| **Location Service** | Ingest driver locations, geospatial queries | WebSocket (ingest), gRPC (query) |
-| **Matching Service** | Find optimal driver for ride request | gRPC |
-| **Pricing Service** | Fare calculation, surge pricing | gRPC |
-| **Payment Service** | Pre-auth, charge, payouts | gRPC |
-| **ETA Service** | Route calculation, time estimates | gRPC |
-| **Notification Service** | Push notifications, SMS | Kafka consumer |
+| Service                  | Responsibility                                 | Protocol                         |
+| ------------------------ | ---------------------------------------------- | -------------------------------- |
+| **API Gateway**          | Authentication, rate limiting, request routing | HTTPS, WebSocket                 |
+| **Ride Service**         | Trip lifecycle management, state machine       | gRPC                             |
+| **Location Service**     | Ingest driver locations, geospatial queries    | WebSocket (ingest), gRPC (query) |
+| **Matching Service**     | Find optimal driver for ride request           | gRPC                             |
+| **Pricing Service**      | Fare calculation, surge pricing                | gRPC                             |
+| **Payment Service**      | Pre-auth, charge, payouts                      | gRPC                             |
+| **ETA Service**          | Route calculation, time estimates              | gRPC                             |
+| **Notification Service** | Push notifications, SMS                        | Kafka consumer                   |
 
 ---
 
@@ -210,20 +214,20 @@ Supporting Services:
 
 ### State Transitions
 
-| From | To | Trigger | Side Effects |
-|------|----|---------|-------------|
-| REQUESTED | MATCHING | System | Start matching timer, calculate upfront price |
-| MATCHING | DRIVER_ASSIGNED | Match found | Notify driver, start accept timer (15s) |
-| MATCHING | CANCELLED_NO_MATCH | Timeout (2 min) | Notify rider, no charge |
-| DRIVER_ASSIGNED | DRIVER_EN_ROUTE | Driver accepts | Notify rider, start ETA tracking |
-| DRIVER_ASSIGNED | MATCHING | Driver rejects/timeout | Re-enter matching pool, exclude driver |
-| DRIVER_EN_ROUTE | ARRIVED | Driver at pickup | Notify rider, start wait timer (5 min) |
-| ARRIVED | IN_PROGRESS | Rider picked up | Start metering, begin route tracking |
-| ARRIVED | NO_SHOW | Wait timer expires | Charge cancellation fee, free driver |
-| IN_PROGRESS | COMPLETED | Arrive at destination | Calculate final fare, charge rider |
-| COMPLETED | RATED | Rating submitted | Update driver/rider rating |
-| Any pre-trip | CANCELLED_BY_RIDER | Rider cancels | Possible cancellation fee |
-| DRIVER_ASSIGNED | CANCELLED_BY_DRIVER | Driver cancels | Penalty to driver, re-match |
+| From            | To                  | Trigger                | Side Effects                                  |
+| --------------- | ------------------- | ---------------------- | --------------------------------------------- |
+| REQUESTED       | MATCHING            | System                 | Start matching timer, calculate upfront price |
+| MATCHING        | DRIVER_ASSIGNED     | Match found            | Notify driver, start accept timer (15s)       |
+| MATCHING        | CANCELLED_NO_MATCH  | Timeout (2 min)        | Notify rider, no charge                       |
+| DRIVER_ASSIGNED | DRIVER_EN_ROUTE     | Driver accepts         | Notify rider, start ETA tracking              |
+| DRIVER_ASSIGNED | MATCHING            | Driver rejects/timeout | Re-enter matching pool, exclude driver        |
+| DRIVER_EN_ROUTE | ARRIVED             | Driver at pickup       | Notify rider, start wait timer (5 min)        |
+| ARRIVED         | IN_PROGRESS         | Rider picked up        | Start metering, begin route tracking          |
+| ARRIVED         | NO_SHOW             | Wait timer expires     | Charge cancellation fee, free driver          |
+| IN_PROGRESS     | COMPLETED           | Arrive at destination  | Calculate final fare, charge rider            |
+| COMPLETED       | RATED               | Rating submitted       | Update driver/rider rating                    |
+| Any pre-trip    | CANCELLED_BY_RIDER  | Rider cancels          | Possible cancellation fee                     |
+| DRIVER_ASSIGNED | CANCELLED_BY_DRIVER | Driver cancels         | Penalty to driver, re-match                   |
 
 ### Timeout Handling
 
@@ -300,16 +304,17 @@ Driver arrived + waiting    Yes ($5-10 fee)    Yes (wait time)
 
 ### Protocol Choice: WebSocket vs UDP
 
-| Factor | WebSocket | UDP |
-|--------|-----------|-----|
-| Reliability | Guaranteed delivery | May lose packets |
-| Overhead | TCP + WS framing | Minimal |
-| Bidirectional | Yes (server can push) | Requires separate channel |
-| Firewall | Works through NAT | May be blocked |
-| Battery | Keep-alive needed | No persistent connection |
-| **Verdict** | **Preferred for mobile** | Good for internal services |
+| Factor        | WebSocket                | UDP                        |
+| ------------- | ------------------------ | -------------------------- |
+| Reliability   | Guaranteed delivery      | May lose packets           |
+| Overhead      | TCP + WS framing         | Minimal                    |
+| Bidirectional | Yes (server can push)    | Requires separate channel  |
+| Firewall      | Works through NAT        | May be blocked             |
+| Battery       | Keep-alive needed        | No persistent connection   |
+| **Verdict**   | **Preferred for mobile** | Good for internal services |
 
 WebSocket is preferred because:
+
 - Mobile networks handle TCP well, UDP can be blocked
 - Bidirectional: server pushes trip assignments back to driver
 - Connection state useful for detecting driver going offline
@@ -380,11 +385,11 @@ Dense areas get finer granularity automatically
 
 #### Comparison
 
-| Approach | Pros | Cons | Best For |
-|----------|------|------|----------|
-| **Geohash** | Simple, Redis built-in, prefix search | Edge effects, non-uniform | MVP, Redis-based |
-| **S2 Cells** | No edge effects, uniform, hierarchical | Complex library needed | Production at scale |
-| **Quadtree** | Adaptive density, efficient memory | Complex rebalancing, in-memory only | Custom in-memory index |
+| Approach     | Pros                                   | Cons                                | Best For               |
+| ------------ | -------------------------------------- | ----------------------------------- | ---------------------- |
+| **Geohash**  | Simple, Redis built-in, prefix search  | Edge effects, non-uniform           | MVP, Redis-based       |
+| **S2 Cells** | No edge effects, uniform, hierarchical | Complex library needed              | Production at scale    |
+| **Quadtree** | Adaptive density, efficient memory     | Complex rebalancing, in-memory only | Custom in-memory index |
 
 ### Redis Geospatial Implementation
 
@@ -1876,15 +1881,15 @@ Driver penalty system:
 
 ## Summary: Key Design Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Location protocol | WebSocket | Bidirectional, mobile-friendly, connection state |
-| Geospatial index | Redis GEOSEARCH + S2 Cells | Built-in, fast, horizontally scalable |
-| Matching approach | Batched bipartite matching | Globally optimal, sub-second latency |
-| Event streaming | Apache Kafka | Durable, high throughput, replay capability |
-| Trip state DB | PostgreSQL | ACID for financial data, strong consistency |
-| Location history | TimescaleDB | Time-series optimized, auto-partitioning |
-| Pricing cache | Redis | Sub-ms reads for surge multipliers |
-| Inter-service comm | gRPC + Kafka | Low-latency sync + async event-driven |
-| Deployment | K8s per city namespace | Fault isolation, independent scaling |
-| Sharding key | City-based (most services) | Natural partition, data locality |
+| Decision           | Choice                     | Rationale                                        |
+| ------------------ | -------------------------- | ------------------------------------------------ |
+| Location protocol  | WebSocket                  | Bidirectional, mobile-friendly, connection state |
+| Geospatial index   | Redis GEOSEARCH + S2 Cells | Built-in, fast, horizontally scalable            |
+| Matching approach  | Batched bipartite matching | Globally optimal, sub-second latency             |
+| Event streaming    | Apache Kafka               | Durable, high throughput, replay capability      |
+| Trip state DB      | PostgreSQL                 | ACID for financial data, strong consistency      |
+| Location history   | TimescaleDB                | Time-series optimized, auto-partitioning         |
+| Pricing cache      | Redis                      | Sub-ms reads for surge multipliers               |
+| Inter-service comm | gRPC + Kafka               | Low-latency sync + async event-driven            |
+| Deployment         | K8s per city namespace     | Fault isolation, independent scaling             |
+| Sharding key       | City-based (most services) | Natural partition, data locality                 |

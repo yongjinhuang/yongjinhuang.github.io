@@ -49,7 +49,7 @@ CPU and GPU programming is the foundation of high-performance computing. From vi
 
 ### Phase 1: Hardware Foundations (Chapters 01-02)
 
-**Goal**: Understand how CPUs actually work at the hardware level, and learn to write code that works *with* the hardware instead of against it.
+**Goal**: Understand how CPUs actually work at the hardware level, and learn to write code that works _with_ the hardware instead of against it.
 
 ```
 01-COMPUTER-ARCHITECTURE          02-CPU-OPTIMIZATION
@@ -64,6 +64,7 @@ CPU and GPU programming is the foundation of high-performance computing. From vi
 ```
 
 You cannot write fast code without understanding:
+
 - **How** the CPU executes instructions (pipelining, superscalar, out-of-order)
 - **Where** data lives (registers, L1/L2/L3 cache, RAM, disk)
 - **Why** certain access patterns are 100x faster than others (cache lines, prefetching)
@@ -214,16 +215,16 @@ GPU: Thousands of simple cores, optimized for THROUGHPUT
 
 **When to use which:**
 
-| Workload | Best On | Why |
-|----------|---------|-----|
-| Sequential logic, branching | CPU | Branch prediction, low latency |
-| Matrix multiplication | GPU | Embarrassingly parallel |
-| OS kernel, file I/O | CPU | Complex control flow |
-| Image/video processing | GPU | Same operation on millions of pixels |
-| Database queries (OLTP) | CPU | Random access, complex logic |
-| Machine learning training | GPU | Massive parallel linear algebra |
-| Web server request handling | CPU | I/O-bound, complex routing |
-| Scientific simulation | GPU | Regular grid computations |
+| Workload                    | Best On | Why                                  |
+| --------------------------- | ------- | ------------------------------------ |
+| Sequential logic, branching | CPU     | Branch prediction, low latency       |
+| Matrix multiplication       | GPU     | Embarrassingly parallel              |
+| OS kernel, file I/O         | CPU     | Complex control flow                 |
+| Image/video processing      | GPU     | Same operation on millions of pixels |
+| Database queries (OLTP)     | CPU     | Random access, complex logic         |
+| Machine learning training   | GPU     | Massive parallel linear algebra      |
+| Web server request handling | CPU     | I/O-bound, complex routing           |
+| Scientific simulation       | GPU     | Regular grid computations            |
 
 ---
 
@@ -262,27 +263,27 @@ GPU: Thousands of simple cores, optimized for THROUGHPUT
 
 ### Books
 
-| Book | Author | Focus |
-|------|--------|-------|
-| *Computer Organization & Design* | Patterson & Hennessy | CPU architecture fundamentals |
-| *Computer Architecture: A Quantitative Approach* | Hennessy & Patterson | Advanced CPU architecture |
-| *Programming Massively Parallel Processors* | Kirk & Hwu | CUDA and GPU programming |
-| *CUDA by Example* | Sanders & Kandrot | Hands-on CUDA introduction |
-| *The Art of Multiprocessor Programming* | Herlihy & Shavit | Concurrent algorithms |
-| *Is Parallel Programming Hard?* | Paul McKenney | Linux kernel parallelism |
-| *What Every Programmer Should Know About Memory* | Ulrich Drepper | Memory systems deep dive |
+| Book                                             | Author               | Focus                         |
+| ------------------------------------------------ | -------------------- | ----------------------------- |
+| _Computer Organization & Design_                 | Patterson & Hennessy | CPU architecture fundamentals |
+| _Computer Architecture: A Quantitative Approach_ | Hennessy & Patterson | Advanced CPU architecture     |
+| _Programming Massively Parallel Processors_      | Kirk & Hwu           | CUDA and GPU programming      |
+| _CUDA by Example_                                | Sanders & Kandrot    | Hands-on CUDA introduction    |
+| _The Art of Multiprocessor Programming_          | Herlihy & Shavit     | Concurrent algorithms         |
+| _Is Parallel Programming Hard?_                  | Paul McKenney        | Linux kernel parallelism      |
+| _What Every Programmer Should Know About Memory_ | Ulrich Drepper       | Memory systems deep dive      |
 
 ### Online Resources
 
-| Resource | Type | Level |
-|----------|------|-------|
-| NVIDIA CUDA Documentation | Official docs | All |
-| GTC (GPU Technology Conference) talks | Video lectures | Intermediate+ |
-| Godbolt Compiler Explorer | Tool | All |
-| NVIDIA Nsight tutorials | Performance tools | Intermediate |
-| MIT 6.172 (Performance Engineering) | Course | Intermediate |
-| CMU 15-418 (Parallel Computer Architecture) | Course | Advanced |
-| Stanford CS149 (Parallel Computing) | Course | Intermediate |
+| Resource                                    | Type              | Level         |
+| ------------------------------------------- | ----------------- | ------------- |
+| NVIDIA CUDA Documentation                   | Official docs     | All           |
+| GTC (GPU Technology Conference) talks       | Video lectures    | Intermediate+ |
+| Godbolt Compiler Explorer                   | Tool              | All           |
+| NVIDIA Nsight tutorials                     | Performance tools | Intermediate  |
+| MIT 6.172 (Performance Engineering)         | Course            | Intermediate  |
+| CMU 15-418 (Parallel Computer Architecture) | Course            | Advanced      |
+| Stanford CS149 (Parallel Computing)         | Course            | Intermediate  |
 
 ---
 

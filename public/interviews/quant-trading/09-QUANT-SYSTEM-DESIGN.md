@@ -1237,6 +1237,7 @@ Total latency budget: < 2 microseconds (kernel bypass)
 **Q: Design a backtesting system that can simulate strategies across thousands of instruments over 10 years of tick data.**
 
 **A:**
+
 ```
 Key requirements:
 - 10 years x 1000 instruments x ~50,000 ticks/day = 180 billion events
@@ -1287,6 +1288,7 @@ Architecture:
 **Q: Design a risk system for an options market making desk that manages positions in 5,000 listed options.**
 
 **A:**
+
 ```
 Requirements:
 - Compute Greeks for 5,000 positions in real-time
@@ -1354,6 +1356,7 @@ Architecture:
 **Q: Design a market data feed handler that processes NASDAQ ITCH 5.0 messages at peak rates of 10 million messages per second.**
 
 **A:**
+
 ```
 10M messages/sec = 100 nanoseconds per message budget.
 
@@ -1405,6 +1408,7 @@ FPGA APPROACH (for ultra-low-latency firms):
 **Q: You need to store and query 5 years of tick data for 10,000 US equities. Design the storage system.**
 
 **A:**
+
 ```
 Data volume estimate:
   10,000 symbols x 50,000 ticks/day x 252 days/year x 5 years
@@ -1495,4 +1499,4 @@ Storage design:
 
 ---
 
-*Previous Chapter: [Chapter 8 - Game Theory, Auctions & Strategic Thinking](08-GAME-THEORY-AND-AUCTIONS.md)*
+_Previous Chapter: [Chapter 8 - Game Theory, Auctions & Strategic Thinking](08-GAME-THEORY-AND-AUCTIONS.md)_

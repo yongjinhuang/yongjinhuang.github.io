@@ -27,27 +27,27 @@ this problem a favorite for testing pattern knowledge in practice.
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Card validation | Read card, verify with bank |
-| F2 | PIN authentication | 3 attempts, then lock card |
-| F3 | Withdrawal | Select amount, dispense cash |
-| F4 | Deposit | Accept cash/check |
-| F5 | Balance inquiry | Display current balance |
-| F6 | Transfer | Between accounts |
-| F7 | Cash denomination | Dispense optimal mix of bills |
-| F8 | Daily limit | Track and enforce withdrawal limits |
-| F9 | Receipt | Generate transaction receipt |
-| F10 | Audit logging | Log every action for compliance |
+| #   | Requirement        | Details                             |
+| --- | ------------------ | ----------------------------------- |
+| F1  | Card validation    | Read card, verify with bank         |
+| F2  | PIN authentication | 3 attempts, then lock card          |
+| F3  | Withdrawal         | Select amount, dispense cash        |
+| F4  | Deposit            | Accept cash/check                   |
+| F5  | Balance inquiry    | Display current balance             |
+| F6  | Transfer           | Between accounts                    |
+| F7  | Cash denomination  | Dispense optimal mix of bills       |
+| F8  | Daily limit        | Track and enforce withdrawal limits |
+| F9  | Receipt            | Generate transaction receipt        |
+| F10 | Audit logging      | Log every action for compliance     |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
+| #   | Requirement                                         |
+| --- | --------------------------------------------------- |
 | NF1 | State machine for ATM flow (no invalid transitions) |
-| NF2 | Thread-safe cash inventory |
-| NF3 | Extensible for new transaction types |
-| NF4 | Comprehensive error handling and recovery |
+| NF2 | Thread-safe cash inventory                          |
+| NF3 | Extensible for new transaction types                |
+| NF4 | Comprehensive error handling and recovery           |
 
 ### Clarifying Questions to Ask
 
@@ -152,14 +152,14 @@ Valid Auth Exec Log         | cash_dispenser      |
 
 **Transitions:**
 
-| From | Event | To | Action |
-|------|-------|----|--------|
-| IDLE | insert_card() | CARD_INSERTED | Validate card with bank |
-| CARD_INSERTED | enter_pin() OK | PIN_VALIDATED | Reset PIN counter |
-| CARD_INSERTED | enter_pin() FAIL x3 | IDLE | Lock card, eject |
-| PIN_VALIDATED | select_transaction() | TXN_SELECTED | Store transaction type |
-| TXN_SELECTED | execute() | IDLE | Process, dispense, eject card |
-| Any (non-IDLE) | cancel() | IDLE | Eject card, abort |
+| From           | Event                | To            | Action                        |
+| -------------- | -------------------- | ------------- | ----------------------------- |
+| IDLE           | insert_card()        | CARD_INSERTED | Validate card with bank       |
+| CARD_INSERTED  | enter_pin() OK       | PIN_VALIDATED | Reset PIN counter             |
+| CARD_INSERTED  | enter_pin() FAIL x3  | IDLE          | Lock card, eject              |
+| PIN_VALIDATED  | select_transaction() | TXN_SELECTED  | Store transaction type        |
+| TXN_SELECTED   | execute()            | IDLE          | Process, dispense, eject card |
+| Any (non-IDLE) | cancel()             | IDLE          | Eject card, abort             |
 
 ---
 

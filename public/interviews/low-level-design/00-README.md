@@ -28,8 +28,8 @@ working code -- as opposed to the distributed infrastructure focus of system des
 +-------------------------------------------+-----------------------+
 ```
 
-**Key distinction:** System design interviews ask you to decide *which* services and databases to use.
-LLD interviews ask you to write the *classes and methods* inside one of those services.
+**Key distinction:** System design interviews ask you to decide _which_ services and databases to use.
+LLD interviews ask you to write the _classes and methods_ inside one of those services.
 
 ---
 
@@ -92,42 +92,42 @@ Every LLD interview can be approached with this 4-step method:
 
 ### Foundations
 
-| # | File | Topic | Key Concepts |
-|---|------|-------|--------------|
-| 0 | [00-README.md](00-README.md) | This guide | LLD vs HLD, interview framework |
-| 1 | [01-OOP-PRINCIPLES.md](01-OOP-PRINCIPLES.md) | OOP Principles | SOLID, DRY, KISS, YAGNI, composition vs inheritance, DI |
-| 2 | [02-DESIGN-PATTERNS.md](02-DESIGN-PATTERNS.md) | Design Patterns | Creational, Structural, Behavioral patterns with code |
+| #   | File                                           | Topic           | Key Concepts                                            |
+| --- | ---------------------------------------------- | --------------- | ------------------------------------------------------- |
+| 0   | [00-README.md](00-README.md)                   | This guide      | LLD vs HLD, interview framework                         |
+| 1   | [01-OOP-PRINCIPLES.md](01-OOP-PRINCIPLES.md)   | OOP Principles  | SOLID, DRY, KISS, YAGNI, composition vs inheritance, DI |
+| 2   | [02-DESIGN-PATTERNS.md](02-DESIGN-PATTERNS.md) | Design Patterns | Creational, Structural, Behavioral patterns with code   |
 
 ### Classic LLD Problems (Most Frequently Asked)
 
-| # | File | Topic | Key Concepts |
-|---|------|-------|--------------|
-| 3 | [03-LLD-PARKING-LOT.md](03-LLD-PARKING-LOT.md) | Parking Lot System | Inheritance, strategy, capacity tracking |
-| 4 | [04-LLD-LRU-CACHE.md](04-LLD-LRU-CACHE.md) | LRU Cache | Hash map + linked list, O(1) operations, TTL |
-| 5 | [05-LLD-ELEVATOR-SYSTEM.md](05-LLD-ELEVATOR-SYSTEM.md) | Elevator System | State machine, scheduling algorithms, observer |
-| 6 | [06-LLD-TASK-SCHEDULER.md](06-LLD-TASK-SCHEDULER.md) | Task Scheduler | Priority queue, DAG dependencies, retry logic |
-| 7 | [07-LLD-FILE-SYSTEM.md](07-LLD-FILE-SYSTEM.md) | In-Memory File System | Composite pattern, command pattern, permissions |
-| 8 | [08-LLD-CHESS-GAME.md](08-LLD-CHESS-GAME.md) | Chess Game | Piece hierarchy, move validation, game state |
+| #   | File                                                   | Topic                 | Key Concepts                                    |
+| --- | ------------------------------------------------------ | --------------------- | ----------------------------------------------- |
+| 3   | [03-LLD-PARKING-LOT.md](03-LLD-PARKING-LOT.md)         | Parking Lot System    | Inheritance, strategy, capacity tracking        |
+| 4   | [04-LLD-LRU-CACHE.md](04-LLD-LRU-CACHE.md)             | LRU Cache             | Hash map + linked list, O(1) operations, TTL    |
+| 5   | [05-LLD-ELEVATOR-SYSTEM.md](05-LLD-ELEVATOR-SYSTEM.md) | Elevator System       | State machine, scheduling algorithms, observer  |
+| 6   | [06-LLD-TASK-SCHEDULER.md](06-LLD-TASK-SCHEDULER.md)   | Task Scheduler        | Priority queue, DAG dependencies, retry logic   |
+| 7   | [07-LLD-FILE-SYSTEM.md](07-LLD-FILE-SYSTEM.md)         | In-Memory File System | Composite pattern, command pattern, permissions |
+| 8   | [08-LLD-CHESS-GAME.md](08-LLD-CHESS-GAME.md)           | Chess Game            | Piece hierarchy, move validation, game state    |
 
 ### More LLD Problems (Commonly Asked)
 
-| # | File | Topic | Key Concepts |
-|---|------|-------|--------------|
-| 11 | [11-LLD-VENDING-MACHINE.md](11-LLD-VENDING-MACHINE.md) | Vending Machine | State pattern, change calculation, inventory |
-| 12 | [12-LLD-HOTEL-BOOKING.md](12-LLD-HOTEL-BOOKING.md) | Hotel Reservation System | Reservation lifecycle, pricing strategy, availability |
-| 13 | [13-LLD-LIBRARY-SYSTEM.md](13-LLD-LIBRARY-SYSTEM.md) | Library Management | Catalog, borrow/return, fines, reservations, observer |
-| 14 | [14-LLD-SNAKE-GAME.md](14-LLD-SNAKE-GAME.md) | Snake Game | Deque body, collision detection, game loop, command |
-| 15 | [15-LLD-SPLITWISE.md](15-LLD-SPLITWISE.md) | Expense Sharing (Splitwise) | Debt simplification, split strategies, graph-based settlement |
-| 16 | [16-LLD-MOVIE-TICKET.md](16-LLD-MOVIE-TICKET.md) | Movie Ticket Booking | Seat locking, concurrency, booking workflow, discounts |
-| 17 | [17-LLD-ATM.md](17-LLD-ATM.md) | ATM Machine | State pattern, denomination algorithm, chain of responsibility |
-| 18 | [18-LLD-LOGGER.md](18-LLD-LOGGER.md) | Logging Framework | Logger hierarchy, handlers, formatters, async logging |
+| #   | File                                                   | Topic                       | Key Concepts                                                   |
+| --- | ------------------------------------------------------ | --------------------------- | -------------------------------------------------------------- |
+| 11  | [11-LLD-VENDING-MACHINE.md](11-LLD-VENDING-MACHINE.md) | Vending Machine             | State pattern, change calculation, inventory                   |
+| 12  | [12-LLD-HOTEL-BOOKING.md](12-LLD-HOTEL-BOOKING.md)     | Hotel Reservation System    | Reservation lifecycle, pricing strategy, availability          |
+| 13  | [13-LLD-LIBRARY-SYSTEM.md](13-LLD-LIBRARY-SYSTEM.md)   | Library Management          | Catalog, borrow/return, fines, reservations, observer          |
+| 14  | [14-LLD-SNAKE-GAME.md](14-LLD-SNAKE-GAME.md)           | Snake Game                  | Deque body, collision detection, game loop, command            |
+| 15  | [15-LLD-SPLITWISE.md](15-LLD-SPLITWISE.md)             | Expense Sharing (Splitwise) | Debt simplification, split strategies, graph-based settlement  |
+| 16  | [16-LLD-MOVIE-TICKET.md](16-LLD-MOVIE-TICKET.md)       | Movie Ticket Booking        | Seat locking, concurrency, booking workflow, discounts         |
+| 17  | [17-LLD-ATM.md](17-LLD-ATM.md)                         | ATM Machine                 | State pattern, denomination algorithm, chain of responsibility |
+| 18  | [18-LLD-LOGGER.md](18-LLD-LOGGER.md)                   | Logging Framework           | Logger hierarchy, handlers, formatters, async logging          |
 
 ### Advanced Topics
 
-| # | File | Topic | Key Concepts |
-|---|------|-------|--------------|
-| 9 | [09-CLEAN-ARCHITECTURE.md](09-CLEAN-ARCHITECTURE.md) | Clean Architecture | Layered, hexagonal, DDD, repository pattern |
-| 10 | [10-CONCURRENCY-PATTERNS.md](10-CONCURRENCY-PATTERNS.md) | Concurrency Patterns | Locks, producer-consumer, async/await, GIL |
+| #   | File                                                     | Topic                | Key Concepts                                |
+| --- | -------------------------------------------------------- | -------------------- | ------------------------------------------- |
+| 9   | [09-CLEAN-ARCHITECTURE.md](09-CLEAN-ARCHITECTURE.md)     | Clean Architecture   | Layered, hexagonal, DDD, repository pattern |
+| 10  | [10-CONCURRENCY-PATTERNS.md](10-CONCURRENCY-PATTERNS.md) | Concurrency Patterns | Locks, producer-consumer, async/await, GIL  |
 
 ---
 
@@ -171,19 +171,19 @@ LLD interviews are evaluated on these dimensions:
 
 ## Quick Reference: Top LLD Interview Questions
 
-| # | Problem | Patterns Used | Difficulty | File |
-|---|---------|---------------|------------|------|
-| 1 | Parking Lot | Strategy, Factory | Medium | [03](03-LLD-PARKING-LOT.md) |
-| 2 | LRU Cache | Hash Map + Linked List | Medium | [04](04-LLD-LRU-CACHE.md) |
-| 3 | Elevator System | State, Observer, Strategy | Hard | [05](05-LLD-ELEVATOR-SYSTEM.md) |
-| 4 | Task/Job Scheduler | Priority Queue, DAG | Hard | [06](06-LLD-TASK-SCHEDULER.md) |
-| 5 | In-Memory File System | Composite, Command | Medium | [07](07-LLD-FILE-SYSTEM.md) |
-| 6 | Chess / Tic-Tac-Toe | Inheritance, Strategy | Medium | [08](08-LLD-CHESS-GAME.md) |
-| 7 | Vending Machine | State, Strategy | Medium | [11](11-LLD-VENDING-MACHINE.md) |
-| 8 | Hotel Booking System | Strategy, State, Observer | Medium | [12](12-LLD-HOTEL-BOOKING.md) |
-| 9 | Library Management | Repository, Observer, Strategy | Medium | [13](13-LLD-LIBRARY-SYSTEM.md) |
-| 10 | Snake Game | State, Command, Deque | Medium | [14](14-LLD-SNAKE-GAME.md) |
-| 11 | Splitwise / Expense Sharing | Strategy, Graph, Observer | Hard | [15](15-LLD-SPLITWISE.md) |
-| 12 | Movie Ticket Booking | State, Strategy, Locking | Hard | [16](16-LLD-MOVIE-TICKET.md) |
-| 13 | ATM Machine | State, Command, Chain of Resp. | Hard | [17](17-LLD-ATM.md) |
-| 14 | Logging Framework | Singleton, Chain of Resp., Strategy | Hard | [18](18-LLD-LOGGER.md) |
+| #   | Problem                     | Patterns Used                       | Difficulty | File                            |
+| --- | --------------------------- | ----------------------------------- | ---------- | ------------------------------- |
+| 1   | Parking Lot                 | Strategy, Factory                   | Medium     | [03](03-LLD-PARKING-LOT.md)     |
+| 2   | LRU Cache                   | Hash Map + Linked List              | Medium     | [04](04-LLD-LRU-CACHE.md)       |
+| 3   | Elevator System             | State, Observer, Strategy           | Hard       | [05](05-LLD-ELEVATOR-SYSTEM.md) |
+| 4   | Task/Job Scheduler          | Priority Queue, DAG                 | Hard       | [06](06-LLD-TASK-SCHEDULER.md)  |
+| 5   | In-Memory File System       | Composite, Command                  | Medium     | [07](07-LLD-FILE-SYSTEM.md)     |
+| 6   | Chess / Tic-Tac-Toe         | Inheritance, Strategy               | Medium     | [08](08-LLD-CHESS-GAME.md)      |
+| 7   | Vending Machine             | State, Strategy                     | Medium     | [11](11-LLD-VENDING-MACHINE.md) |
+| 8   | Hotel Booking System        | Strategy, State, Observer           | Medium     | [12](12-LLD-HOTEL-BOOKING.md)   |
+| 9   | Library Management          | Repository, Observer, Strategy      | Medium     | [13](13-LLD-LIBRARY-SYSTEM.md)  |
+| 10  | Snake Game                  | State, Command, Deque               | Medium     | [14](14-LLD-SNAKE-GAME.md)      |
+| 11  | Splitwise / Expense Sharing | Strategy, Graph, Observer           | Hard       | [15](15-LLD-SPLITWISE.md)       |
+| 12  | Movie Ticket Booking        | State, Strategy, Locking            | Hard       | [16](16-LLD-MOVIE-TICKET.md)    |
+| 13  | ATM Machine                 | State, Command, Chain of Resp.      | Hard       | [17](17-LLD-ATM.md)             |
+| 14  | Logging Framework           | Singleton, Chain of Resp., Strategy | Hard       | [18](18-LLD-LOGGER.md)          |

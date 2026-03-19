@@ -10,18 +10,18 @@ Building a working prototype is half the battle. Shipping a reliable, safe, cert
 
 The firmware engineer should be involved in MCU selection from day one. Key decision factors:
 
-| Factor | Questions to Ask |
-|--------|-----------------|
-| **Core** | Cortex-M0+ (low power) vs. M4 (DSP) vs. M7 (performance)? |
-| **Flash / RAM** | Does the firmware + TinyML model + OTA staging fit? |
-| **Peripherals** | How many UARTs, SPI, I2C, ADC channels needed? |
-| **Connectivity** | Built-in WiFi/BLE (ESP32, nRF) or external module? |
-| **Power modes** | Stop/standby current? Wake-up sources? |
-| **Security** | TrustZone, secure boot ROM, crypto accelerator? |
-| **Ecosystem** | SDK maturity, community support, RTOS ports? |
-| **Supply chain** | Second-source available? Lead time? NRND risk? |
-| **Cost** | BOM target at volume (1K, 100K, 1M units)? |
-| **Package** | QFN, BGA, LQFP? PCB assembly capability? |
+| Factor           | Questions to Ask                                          |
+| ---------------- | --------------------------------------------------------- |
+| **Core**         | Cortex-M0+ (low power) vs. M4 (DSP) vs. M7 (performance)? |
+| **Flash / RAM**  | Does the firmware + TinyML model + OTA staging fit?       |
+| **Peripherals**  | How many UARTs, SPI, I2C, ADC channels needed?            |
+| **Connectivity** | Built-in WiFi/BLE (ESP32, nRF) or external module?        |
+| **Power modes**  | Stop/standby current? Wake-up sources?                    |
+| **Security**     | TrustZone, secure boot ROM, crypto accelerator?           |
+| **Ecosystem**    | SDK maturity, community support, RTOS ports?              |
+| **Supply chain** | Second-source available? Lead time? NRND risk?            |
+| **Cost**         | BOM target at volume (1K, 100K, 1M units)?                |
+| **Package**      | QFN, BGA, LQFP? PCB assembly capability?                  |
 
 ### 1.2 BOM Cost Optimization
 
@@ -108,26 +108,27 @@ Every IC power pin needs a 100 nF ceramic capacitor placed as close as possible 
 ### 3.1 What Is EMC?
 
 Electromagnetic Compatibility (EMC) requires that a device:
+
 - **Does not emit** excessive electromagnetic interference (EMI) -- emission limits.
 - **Is immune to** external electromagnetic interference -- susceptibility/immunity.
 
 ### 3.2 Regulatory Standards
 
-| Region | Standard | Authority | Test Types |
-|--------|----------|-----------|------------|
-| Europe | EN 55032 (emissions), EN 55035 (immunity) | CE marking | Radiated, conducted |
-| USA | FCC Part 15 (Class A/B) | FCC | Radiated, conducted |
-| International | CISPR 32/35 | IEC | Harmonized standards |
+| Region        | Standard                                  | Authority  | Test Types           |
+| ------------- | ----------------------------------------- | ---------- | -------------------- |
+| Europe        | EN 55032 (emissions), EN 55035 (immunity) | CE marking | Radiated, conducted  |
+| USA           | FCC Part 15 (Class A/B)                   | FCC        | Radiated, conducted  |
+| International | CISPR 32/35                               | IEC        | Harmonized standards |
 
 ### 3.3 Common EMI Problems and Fixes
 
-| Problem | Root Cause | Fix |
-|---------|-----------|-----|
-| Radiated emissions at clock frequency | Unshielded clock traces | Add series ferrite bead, shorten trace |
-| Conducted emissions on power cable | Switching regulator noise | Add input filter (LC), use spread-spectrum clocking |
-| Susceptibility to ESD | Exposed connectors | Add TVS diodes to all external interfaces |
-| Harmonics from digital I/O | Fast edge rates | Slow down drive strength, add RC snubber |
-| Antenna port spurious emissions | Harmonics of MCU clock | Add band-pass filter on antenna path |
+| Problem                               | Root Cause                | Fix                                                 |
+| ------------------------------------- | ------------------------- | --------------------------------------------------- |
+| Radiated emissions at clock frequency | Unshielded clock traces   | Add series ferrite bead, shorten trace              |
+| Conducted emissions on power cable    | Switching regulator noise | Add input filter (LC), use spread-spectrum clocking |
+| Susceptibility to ESD                 | Exposed connectors        | Add TVS diodes to all external interfaces           |
+| Harmonics from digital I/O            | Fast edge rates           | Slow down drive strength, add RC snubber            |
+| Antenna port spurious emissions       | Harmonics of MCU clock    | Add band-pass filter on antenna path                |
 
 ### 3.4 Pre-Compliance Testing
 
@@ -226,13 +227,13 @@ void enter_stop2_mode(void)
 
 For perpetual operation without batteries:
 
-| Source | Power Density | Typical Output | Best For |
-|--------|--------------|---------------|----------|
-| Indoor solar | 10-100 uW/cm^2 | 50-500 uW | Sensors with display |
-| Outdoor solar | 10-100 mW/cm^2 | 10-500 mW | Outdoor IoT |
-| Thermoelectric | 20-60 uW/cm^2 | 1-10 mW | Industrial monitoring |
-| Vibration (piezo) | 10-800 uW/cm^3 | 10-200 uW | Motor monitoring |
-| RF harvesting | 0.1-1 uW/cm^2 | 1-100 uW | NFC/RFID tags |
+| Source            | Power Density  | Typical Output | Best For              |
+| ----------------- | -------------- | -------------- | --------------------- |
+| Indoor solar      | 10-100 uW/cm^2 | 50-500 uW      | Sensors with display  |
+| Outdoor solar     | 10-100 mW/cm^2 | 10-500 mW      | Outdoor IoT           |
+| Thermoelectric    | 20-60 uW/cm^2  | 1-10 mW        | Industrial monitoring |
+| Vibration (piezo) | 10-800 uW/cm^3 | 10-200 uW      | Motor monitoring      |
+| RF harvesting     | 0.1-1 uW/cm^2  | 1-100 uW       | NFC/RFID tags         |
 
 ---
 
@@ -387,15 +388,15 @@ typedef struct {
 
 ### 5.5 Common Embedded Vulnerabilities
 
-| Vulnerability | Description | Mitigation |
-|--------------|-------------|------------|
-| Unprotected debug port | JTAG/SWD left enabled | Disable in production fuses |
-| Plaintext firmware | OTA updates not encrypted | AES-GCM encryption |
-| No secure boot | Arbitrary code execution | Signature verification chain |
-| Buffer overflow | Stack/heap corruption | MPU, stack canaries, bounds checking |
-| Hardcoded keys | Keys in source code | Secure element, key provisioning |
-| Unencrypted communication | Sniffable data | TLS/DTLS for all network traffic |
-| Rollback attack | Downgrade to vulnerable FW | Anti-rollback counter in OTP |
+| Vulnerability             | Description                | Mitigation                           |
+| ------------------------- | -------------------------- | ------------------------------------ |
+| Unprotected debug port    | JTAG/SWD left enabled      | Disable in production fuses          |
+| Plaintext firmware        | OTA updates not encrypted  | AES-GCM encryption                   |
+| No secure boot            | Arbitrary code execution   | Signature verification chain         |
+| Buffer overflow           | Stack/heap corruption      | MPU, stack canaries, bounds checking |
+| Hardcoded keys            | Keys in source code        | Secure element, key provisioning     |
+| Unencrypted communication | Sniffable data             | TLS/DTLS for all network traffic     |
+| Rollback attack           | Downgrade to vulnerable FW | Anti-rollback counter in OTP         |
 
 ---
 
@@ -482,23 +483,23 @@ Safety Integrity Level (SIL) defines the target probability of dangerous failure
 
 Software safety classification:
 
-| Class | Hazard | Requirements |
-|-------|--------|-------------|
-| A | No injury possible | Basic development process |
-| B | Non-serious injury possible | Requirements traceability, architecture, testing |
-| C | Death or serious injury possible | Detailed design, unit testing, full traceability |
+| Class | Hazard                           | Requirements                                     |
+| ----- | -------------------------------- | ------------------------------------------------ |
+| A     | No injury possible               | Basic development process                        |
+| B     | Non-serious injury possible      | Requirements traceability, architecture, testing |
+| C     | Death or serious injury possible | Detailed design, unit testing, full traceability |
 
 ### 6.5 DO-178C: Avionics Software
 
 Design Assurance Levels (DAL):
 
-| Level | Failure Condition | Example |
-|-------|-------------------|---------|
-| A | Catastrophic | Flight control computer |
-| B | Hazardous | Engine control |
-| C | Major | Autopilot disconnect |
-| D | Minor | Cabin lighting |
-| E | No effect | Entertainment system |
+| Level | Failure Condition | Example                 |
+| ----- | ----------------- | ----------------------- |
+| A     | Catastrophic      | Flight control computer |
+| B     | Hazardous         | Engine control          |
+| C     | Major             | Autopilot disconnect    |
+| D     | Minor             | Cabin lighting          |
+| E     | No effect         | Entertainment system    |
 
 ### 6.6 What Safety Certification Means for Firmware
 
@@ -842,15 +843,15 @@ bool is_provisioned(void)
 
 ### 9.1 Key Metrics to Monitor
 
-| Metric | Purpose | Alert Threshold |
-|--------|---------|----------------|
-| Battery voltage | Predict replacements | < 3.3V |
-| RSSI / SNR | Connectivity health | RSSI < -120 dBm |
-| Uptime / reboot count | Stability indicator | > 3 reboots/day |
-| Firmware version | Track rollout progress | != target version |
-| Free Flash / RAM | Detect memory leaks | < 10% free |
-| Error counters | Detect systematic issues | > 10 errors/hour |
-| Temperature | Operating range compliance | > 85 C |
+| Metric                | Purpose                    | Alert Threshold   |
+| --------------------- | -------------------------- | ----------------- |
+| Battery voltage       | Predict replacements       | < 3.3V            |
+| RSSI / SNR            | Connectivity health        | RSSI < -120 dBm   |
+| Uptime / reboot count | Stability indicator        | > 3 reboots/day   |
+| Firmware version      | Track rollout progress     | != target version |
+| Free Flash / RAM      | Detect memory leaks        | < 10% free        |
+| Error counters        | Detect systematic issues   | > 10 errors/hour  |
+| Temperature           | Operating range compliance | > 85 C            |
 
 ### 9.2 OTA Update Strategy
 
@@ -865,18 +866,18 @@ bool is_provisioned(void)
 
 ### 10.1 Common Certifications
 
-| Certification | Region | Scope |
-|---------------|--------|-------|
-| CE | Europe (EU/EEA) | EMC, safety, radio (RED directive) |
-| FCC | United States | Radio emissions, intentional radiators |
-| IC | Canada | Radio equipment |
-| MIC/TELEC | Japan | Radio equipment |
-| UL/IEC 62368 | Global | Product safety (electrical/fire) |
-| RoHS | EU | Restriction of hazardous substances |
-| REACH | EU | Chemical substance registration |
-| WEEE | EU | Waste electronics recycling |
-| IP rating | Global | Ingress protection (dust/water) |
-| UN 38.3 | Global | Lithium battery transport safety |
+| Certification | Region          | Scope                                  |
+| ------------- | --------------- | -------------------------------------- |
+| CE            | Europe (EU/EEA) | EMC, safety, radio (RED directive)     |
+| FCC           | United States   | Radio emissions, intentional radiators |
+| IC            | Canada          | Radio equipment                        |
+| MIC/TELEC     | Japan           | Radio equipment                        |
+| UL/IEC 62368  | Global          | Product safety (electrical/fire)       |
+| RoHS          | EU              | Restriction of hazardous substances    |
+| REACH         | EU              | Chemical substance registration        |
+| WEEE          | EU              | Waste electronics recycling            |
+| IP rating     | Global          | Ingress protection (dust/water)        |
+| UN 38.3       | Global          | Lithium battery transport safety       |
 
 ### 10.2 CE Marking Process
 
@@ -1075,7 +1076,7 @@ Post-Launch:
 Core architecture and performance, Flash/RAM for firmware and OTA, required peripherals (UART, SPI, I2C, ADC), built-in connectivity (WiFi, BLE), low-power modes and sleep current, security features (TrustZone, crypto), ecosystem maturity (SDK, RTOS ports, community), supply chain (availability, second sources, lead time), unit cost at volume, and package options for PCB assembly.
 
 **Q2: How do you estimate battery life for an IoT device?**
-Create a power profile by measuring current draw in each operating mode (sleep, active, transmit). Calculate average current using the duty cycle: sum of (current * time) for each mode divided by total cycle time. Divide battery capacity (mAh) by average current (mA) to get hours. Derate by 15-20% for battery aging and self-discharge.
+Create a power profile by measuring current draw in each operating mode (sleep, active, transmit). Calculate average current using the duty cycle: sum of (current \* time) for each mode divided by total cycle time. Divide battery capacity (mAh) by average current (mA) to get hours. Derate by 15-20% for battery aging and self-discharge.
 
 **Q3: What is secure boot and why is it important for embedded devices?**
 Secure boot is a chain of trust where each boot stage cryptographically verifies the signature of the next stage before executing it. The root of trust is anchored in immutable ROM or OTP fuses. It prevents execution of tampered or unauthorized firmware, protecting against malware injection, IP theft, and counterfeit devices.

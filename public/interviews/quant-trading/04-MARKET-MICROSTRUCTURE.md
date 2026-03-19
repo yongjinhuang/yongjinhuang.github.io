@@ -43,18 +43,18 @@ Most modern electronic markets use a central limit order book as the matching me
 
 ### Order Types
 
-| Order Type | Description | Risk | Use Case |
-|-----------|-------------|------|----------|
-| **Market Order** | Execute immediately at best available price | Slippage | Need immediate execution |
-| **Limit Order** | Execute at specified price or better | May not fill | Want price certainty |
-| **IOC** (Immediate or Cancel) | Fill what you can immediately, cancel rest | Partial fill | Sweep liquidity |
-| **FOK** (Fill or Kill) | Fill entire order or nothing | Total miss | All-or-nothing |
-| **GTC** (Good Till Cancel) | Stays on book until filled or canceled | Adverse selection | Patient execution |
-| **Stop Order** | Becomes market order when price hits trigger | Gap risk | Stop-loss protection |
-| **Stop-Limit** | Becomes limit order when price hits trigger | May not fill after trigger | Controlled stop-loss |
-| **Pegged Order** | Price tracks a reference (e.g., midpoint) | Complexity | Passive midpoint execution |
-| **Iceberg/Reserve** | Shows only a portion of total quantity | Detection risk | Hide large orders |
-| **Midpoint Peg** | Pegged to midpoint of NBBO | Wider spread execution | Dark pool strategies |
+| Order Type                    | Description                                  | Risk                       | Use Case                   |
+| ----------------------------- | -------------------------------------------- | -------------------------- | -------------------------- |
+| **Market Order**              | Execute immediately at best available price  | Slippage                   | Need immediate execution   |
+| **Limit Order**               | Execute at specified price or better         | May not fill               | Want price certainty       |
+| **IOC** (Immediate or Cancel) | Fill what you can immediately, cancel rest   | Partial fill               | Sweep liquidity            |
+| **FOK** (Fill or Kill)        | Fill entire order or nothing                 | Total miss                 | All-or-nothing             |
+| **GTC** (Good Till Cancel)    | Stays on book until filled or canceled       | Adverse selection          | Patient execution          |
+| **Stop Order**                | Becomes market order when price hits trigger | Gap risk                   | Stop-loss protection       |
+| **Stop-Limit**                | Becomes limit order when price hits trigger  | May not fill after trigger | Controlled stop-loss       |
+| **Pegged Order**              | Price tracks a reference (e.g., midpoint)    | Complexity                 | Passive midpoint execution |
+| **Iceberg/Reserve**           | Shows only a portion of total quantity       | Detection risk             | Hide large orders          |
+| **Midpoint Peg**              | Pegged to midpoint of NBBO                   | Wider spread execution     | Dark pool strategies       |
 
 ### Matching Algorithms
 
@@ -123,6 +123,7 @@ The bid-ask spread is the market maker's compensation for providing liquidity. I
 A sequential trade model where a market maker faces informed and uninformed traders.
 
 **Setup**:
+
 - True value V is either V_H (high) or V_L (low), each with probability 1/2
 - Fraction μ of traders are informed (know V), fraction (1-μ) are uninformed
 - Uninformed traders buy/sell with equal probability
@@ -147,6 +148,7 @@ Spread = Ask - Bid = μ * (V_H - V_L)
 ```
 
 **Key insight**: The spread is proportional to:
+
 1. μ: fraction of informed traders (more informed traders = wider spread)
 2. V_H - V_L: size of information asymmetry (bigger news = wider spread)
 
@@ -168,6 +170,7 @@ where λ = σ_V / (2 * σ_U)
 Lambda measures the "permanent price impact per unit traded" -- a fundamental quantity in market microstructure.
 
 **Implications**:
+
 - Higher information asymmetry (σ_V) → higher λ → more price impact
 - More noise trading (σ_U) → lower λ → less price impact (noise provides cover)
 - The informed trader trades optimally: not too aggressively (to hide), not too slowly (to exploit information before it becomes stale)
@@ -234,6 +237,7 @@ Where:
 ```
 
 **Intuitions**:
+
 1. **Inventory skew**: When q > 0 (long), the reservation price is below mid → bid and ask shift down → more likely to sell, reducing inventory
 2. **Wider spread when**:
    - Higher volatility σ (more risky to provide liquidity)
@@ -330,11 +334,13 @@ Price
 ```
 
 **Temporary impact**: The immediate price displacement caused by trading, which decays over time as the order book refills. Models include:
-- Linear: ΔP_temp = η * (dQ/dt)
-- Square-root: ΔP_temp = η * sign(Q) * √|dQ/dt|
+
+- Linear: ΔP_temp = η \* (dQ/dt)
+- Square-root: ΔP*temp = η * sign(Q) \_ √|dQ/dt|
 
 **Permanent impact**: The lasting shift in price due to the information content of the trade:
-- Linear: ΔP_perm = γ * Q (total quantity traded)
+
+- Linear: ΔP_perm = γ \* Q (total quantity traded)
 - This is Kyle's lambda from the microstructure literature
 
 ### The Square-Root Law of Price Impact
@@ -353,6 +359,7 @@ Where:
 This has been observed across thousands of stocks, different time periods, and different markets. It is one of the most robust empirical facts in finance.
 
 **Example**: A stock with σ = 2% and V = 1M shares/day. You want to trade 100,000 shares (10% of daily volume).
+
 ```
 Impact ≈ 2% * √(0.1) ≈ 2% * 0.316 ≈ 0.63%
 ```
@@ -362,8 +369,9 @@ Impact ≈ 2% * √(0.1) ≈ 2% * 0.316 ≈ 0.63%
 **Problem**: You must liquidate Q shares over time horizon T. How do you trade optimally to minimize the combination of market impact cost and timing risk?
 
 **Model**:
-- Permanent impact: linear in trade rate (g(v) = γ*v)
-- Temporary impact: linear in trade rate (h(v) = η*v)
+
+- Permanent impact: linear in trade rate (g(v) = γ\*v)
+- Temporary impact: linear in trade rate (h(v) = η\*v)
 - Risk aversion: λ
 
 **Optimal trading trajectory**:
@@ -622,6 +630,7 @@ for i, qty in enumerate(schedule):
 ```
 
 **Benchmark**: Performance is measured against the actual VWAP:
+
 ```
 VWAP_actual = Σ(P_i * V_i) / Σ(V_i)
 
@@ -771,6 +780,7 @@ Window of opportunity: ~5 microseconds
 ### Reg NMS (Regulation National Market System) - US
 
 Key provisions:
+
 - **Order Protection Rule (Rule 611)**: Trades must be executed at the NBBO. You cannot "trade through" a better price displayed on another exchange.
 - **Access Rule (Rule 610)**: Limits access fees to $0.003/share. This creates the "rebate" system.
 - **Sub-Penny Rule (Rule 612)**: Quotes cannot be in increments less than $0.01 for stocks priced above $1.00.
@@ -813,6 +823,7 @@ Why this works:
 ### MiFID II (EU - Markets in Financial Instruments Directive)
 
 Key provisions relevant to quant trading:
+
 - **Best execution** requirements (more stringent than US)
 - **Market making obligations** (systematic internalizers must quote)
 - **Dark pool caps** (limits on dark trading volumes)
@@ -942,6 +953,7 @@ For HFT, binary protocols (e.g., OUCH, ITCH, PILLAR) replace FIX for lower laten
 **Solution**:
 
 If you offer P, the seller accepts when V <= P. Given acceptance:
+
 ```
 E[profit | accept] = E[V - P | V <= P]
                    = E[V | V <= P] - P
@@ -950,6 +962,7 @@ E[profit | accept] = E[V - P | V <= P]
 ```
 
 Your expected profit is:
+
 ```
 E[profit] = P(accept) * E[profit | accept] + P(reject) * 0
           = (P/100) * (-P/2)
@@ -969,6 +982,7 @@ This is ALWAYS negative (or zero at P = 0). The optimal strategy is to offer P =
 Let the bid = 50 - s/2 and ask = 50 + s/2 where s is the spread.
 
 When a buy order arrives:
+
 ```
 P(informed | buy) = 0.3 * P(buy | informed) / P(buy)
 ```

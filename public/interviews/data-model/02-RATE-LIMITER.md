@@ -4,38 +4,39 @@ A rate limiter controls how many requests a user can make within a time window. 
 
 ## Table Responsibilities
 
-| Table/Structure | Purpose | Storage | Key Characteristic |
-|----------------|---------|---------|-------------------|
-| **rate_limit_rules** | Define limits per endpoint and tier | PostgreSQL | Read on startup, cached in memory |
-| **rate_limit_counters** | Track request counts per window | Redis | High-frequency reads/writes, auto-expiring |
-| **token_bucket_state** | Track token bucket algorithm state | Redis | Atomic operations for token math |
+| Table/Structure         | Purpose                             | Storage    | Key Characteristic                         |
+| ----------------------- | ----------------------------------- | ---------- | ------------------------------------------ |
+| **rate_limit_rules**    | Define limits per endpoint and tier | PostgreSQL | Read on startup, cached in memory          |
+| **rate_limit_counters** | Track request counts per window     | Redis      | High-frequency reads/writes, auto-expiring |
+| **token_bucket_state**  | Track token bucket algorithm state  | Redis      | Atomic operations for token math           |
 
 ## Detailed Field Descriptions
 
 ### rate_limit_rules (PostgreSQL)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| rule_id | BIGINT, PK | Unique rule identifier. |
-| endpoint | VARCHAR(255) | API path pattern (e.g., `/api/v1/shorten`). Supports wildcards like `/api/*` for broad rules. |
-| tier | ENUM('free','pro','enterprise') | User tier this rule applies to. Combined with endpoint to form the lookup key. |
-| max_requests | INT | Maximum allowed requests within the window. E.g., 100 requests. |
-| window_seconds | INT | Length of the time window. E.g., 60 for "100 requests per minute." |
-| algorithm | ENUM('fixed_window','sliding_window','token_bucket') | Which algorithm to apply. Different endpoints may need different algorithms based on traffic patterns. |
+| Field          | Type                                                 | Description                                                                                            |
+| -------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| rule_id        | BIGINT, PK                                           | Unique rule identifier.                                                                                |
+| endpoint       | VARCHAR(255)                                         | API path pattern (e.g., `/api/v1/shorten`). Supports wildcards like `/api/*` for broad rules.          |
+| tier           | ENUM('free','pro','enterprise')                      | User tier this rule applies to. Combined with endpoint to form the lookup key.                         |
+| max_requests   | INT                                                  | Maximum allowed requests within the window. E.g., 100 requests.                                        |
+| window_seconds | INT                                                  | Length of the time window. E.g., 60 for "100 requests per minute."                                     |
+| algorithm      | ENUM('fixed_window','sliding_window','token_bucket') | Which algorithm to apply. Different endpoints may need different algorithms based on traffic patterns. |
 
 **Why store algorithm per rule?** Login endpoints may use fixed windows (simple, strict), while API endpoints use token buckets (smoother, allows bursts). One size does not fit all.
 
 ### rate_limit_counters (Redis)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| key | STRING | Pattern: `rate:{user_id}:{endpoint}:{window_start}`. The window_start timestamp ensures each time window gets its own counter. |
-| value | INT | Number of requests made in this window. Incremented atomically via INCR. |
-| TTL | INT (seconds) | Set to `window_seconds` on first INCR. Auto-deletes when the window expires, preventing unbounded memory growth. |
+| Field | Type          | Description                                                                                                                    |
+| ----- | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| key   | STRING        | Pattern: `rate:{user_id}:{endpoint}:{window_start}`. The window_start timestamp ensures each time window gets its own counter. |
+| value | INT           | Number of requests made in this window. Incremented atomically via INCR.                                                       |
+| TTL   | INT (seconds) | Set to `window_seconds` on first INCR. Auto-deletes when the window expires, preventing unbounded memory growth.               |
 
 **Why include `window_start` in the key?** For fixed-window limiting, each window needs a separate counter. The window_start (e.g., timestamp floored to the minute) naturally partitions counters by time.
 
 **Sliding Window Variant:** For sliding window, use a Redis Sorted Set instead:
+
 - Key: `rate:{user_id}:{endpoint}`
 - Members: request timestamps (or UUIDs)
 - Score: timestamp
@@ -44,11 +45,11 @@ A rate limiter controls how many requests a user can make within a time window. 
 
 ### token_bucket_state (Redis)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| key | STRING | Pattern: `bucket:{user_id}:{endpoint}`. One bucket per user-endpoint combination. |
-| tokens | FLOAT (stored as string) | Current number of available tokens. Decremented on each request. Can be fractional due to refill math. |
-| last_refill_time | FLOAT (epoch seconds) | Timestamp of last token refill. Used to calculate how many tokens to add: `elapsed * (max_requests / window_seconds)`. |
+| Field            | Type                     | Description                                                                                                            |
+| ---------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| key              | STRING                   | Pattern: `bucket:{user_id}:{endpoint}`. One bucket per user-endpoint combination.                                      |
+| tokens           | FLOAT (stored as string) | Current number of available tokens. Decremented on each request. Can be fractional due to refill math.                 |
+| last_refill_time | FLOAT (epoch seconds)    | Timestamp of last token refill. Used to calculate how many tokens to add: `elapsed * (max_requests / window_seconds)`. |
 
 **Why FLOAT for tokens?** The refill rate is often fractional (e.g., 1.67 tokens/sec for 100/min). Storing as float avoids rounding errors that would accumulate over time.
 

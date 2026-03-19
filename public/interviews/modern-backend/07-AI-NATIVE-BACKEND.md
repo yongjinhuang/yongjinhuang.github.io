@@ -46,22 +46,22 @@ LLM responses take 2-30 seconds to generate completely. Users expect to see toke
 ```
 
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import { Request, Response } from "express";
+import Anthropic from '@anthropic-ai/sdk';
+import { Request, Response } from 'express';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 async function handleChatStream(req: Request, res: Response): Promise<void> {
-  const { messages, model = "claude-sonnet-4-20250514" } = req.body;
+  const { messages, model = 'claude-sonnet-4-20250514' } = req.body;
 
   // Set SSE headers
   res.writeHead(200, {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-    "X-Accel-Buffering": "no", // Disable nginx buffering
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no', // Disable nginx buffering
   });
 
   try {
@@ -69,48 +69,50 @@ async function handleChatStream(req: Request, res: Response): Promise<void> {
       model,
       max_tokens: 4096,
       messages,
-      system: "You are a helpful assistant.",
+      system: 'You are a helpful assistant.',
     });
 
-    stream.on("text", (text) => {
-      res.write(`data: ${JSON.stringify({ type: "token", content: text })}\n\n`);
+    stream.on('text', (text) => {
+      res.write(
+        `data: ${JSON.stringify({ type: 'token', content: text })}\n\n`
+      );
     });
 
-    stream.on("message", (message) => {
+    stream.on('message', (message) => {
       res.write(
         `data: ${JSON.stringify({
-          type: "usage",
+          type: 'usage',
           inputTokens: message.usage.input_tokens,
           outputTokens: message.usage.output_tokens,
         })}\n\n`
       );
     });
 
-    stream.on("error", (error) => {
+    stream.on('error', (error) => {
       res.write(
-        `data: ${JSON.stringify({ type: "error", message: error.message })}\n\n`
+        `data: ${JSON.stringify({ type: 'error', message: error.message })}\n\n`
       );
-      res.write("data: [DONE]\n\n");
+      res.write('data: [DONE]\n\n');
       res.end();
     });
 
-    stream.on("end", () => {
-      res.write("data: [DONE]\n\n");
+    stream.on('end', () => {
+      res.write('data: [DONE]\n\n');
       res.end();
     });
 
     // Handle client disconnect
-    req.on("close", () => {
+    req.on('close', () => {
       stream.abort();
     });
   } catch (error) {
     res.write(
       `data: ${JSON.stringify({
-        type: "error",
+        type: 'error',
         message: (error as Error).message,
       })}\n\n`
     );
-    res.write("data: [DONE]\n\n");
+    res.write('data: [DONE]\n\n');
     res.end();
   }
 }
@@ -147,39 +149,39 @@ Function calling allows the LLM to invoke structured functions in your backend. 
 ```
 
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic from '@anthropic-ai/sdk';
 
 const tools: Anthropic.Tool[] = [
   {
-    name: "get_weather",
+    name: 'get_weather',
     description:
-      "Get the current weather for a location. Use this when the user asks about weather conditions.",
+      'Get the current weather for a location. Use this when the user asks about weather conditions.',
     input_schema: {
-      type: "object" as const,
+      type: 'object' as const,
       properties: {
         location: {
-          type: "string",
+          type: 'string',
           description: "City name, e.g., 'Tokyo' or 'San Francisco, CA'",
         },
         unit: {
-          type: "string",
-          enum: ["celsius", "fahrenheit"],
-          description: "Temperature unit. Default: celsius",
+          type: 'string',
+          enum: ['celsius', 'fahrenheit'],
+          description: 'Temperature unit. Default: celsius',
         },
       },
-      required: ["location"],
+      required: ['location'],
     },
   },
   {
-    name: "search_database",
-    description: "Search the product database by query string.",
+    name: 'search_database',
+    description: 'Search the product database by query string.',
     input_schema: {
-      type: "object" as const,
+      type: 'object' as const,
       properties: {
-        query: { type: "string", description: "Search query" },
-        limit: { type: "number", description: "Max results. Default: 5" },
+        query: { type: 'string', description: 'Search query' },
+        limit: { type: 'number', description: 'Max results. Default: 5' },
       },
-      required: ["query"],
+      required: ['query'],
     },
   },
 ];
@@ -191,7 +193,7 @@ const toolExecutors: Record<
 > = {
   get_weather: async (input) => {
     const response = await fetch(
-      `https://weather.api/v1/current?q=${input.location}&units=${input.unit ?? "celsius"}`
+      `https://weather.api/v1/current?q=${input.location}&units=${input.unit ?? 'celsius'}`
     );
     return response.json();
   },
@@ -214,16 +216,16 @@ async function agenticChat(
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       tools,
       messages,
     });
 
     // Check if the LLM wants to use tools
-    if (response.stop_reason === "tool_use") {
+    if (response.stop_reason === 'tool_use') {
       const toolUseBlocks = response.content.filter(
-        (block): block is Anthropic.ToolUseBlock => block.type === "tool_use"
+        (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
       );
 
       // Execute all tool calls
@@ -232,7 +234,7 @@ async function agenticChat(
           const executor = toolExecutors[toolUse.name];
           if (!executor) {
             return {
-              type: "tool_result" as const,
+              type: 'tool_result' as const,
               tool_use_id: toolUse.id,
               content: `Unknown tool: ${toolUse.name}`,
               is_error: true,
@@ -244,13 +246,13 @@ async function agenticChat(
               toolUse.input as Record<string, unknown>
             );
             return {
-              type: "tool_result" as const,
+              type: 'tool_result' as const,
               tool_use_id: toolUse.id,
               content: JSON.stringify(result),
             };
           } catch (error) {
             return {
-              type: "tool_result" as const,
+              type: 'tool_result' as const,
               tool_use_id: toolUse.id,
               content: `Tool error: ${(error as Error).message}`,
               is_error: true,
@@ -262,19 +264,19 @@ async function agenticChat(
       // Add assistant response and tool results to conversation
       messages = [
         ...messages,
-        { role: "assistant", content: response.content },
-        { role: "user", content: toolResults },
+        { role: 'assistant', content: response.content },
+        { role: 'user', content: toolResults },
       ];
     } else {
       // LLM returned final text response
       const textBlock = response.content.find(
-        (block): block is Anthropic.TextBlock => block.type === "text"
+        (block): block is Anthropic.TextBlock => block.type === 'text'
       );
-      return textBlock?.text ?? "";
+      return textBlock?.text ?? '';
     }
   }
 
-  throw new Error("Exceeded maximum tool-use iterations");
+  throw new Error('Exceeded maximum tool-use iterations');
 }
 ```
 
@@ -282,17 +284,17 @@ async function agenticChat(
 
 Getting reliable structured data from LLMs is critical for backend integration.
 
-```typescript
-import { z } from "zod";
+````typescript
+import { z } from 'zod';
 
 // Define the expected output schema
 const ProductReviewAnalysis = z.object({
-  sentiment: z.enum(["positive", "negative", "neutral", "mixed"]),
+  sentiment: z.enum(['positive', 'negative', 'neutral', 'mixed']),
   confidence: z.number().min(0).max(1),
   topics: z.array(
     z.object({
       topic: z.string(),
-      sentiment: z.enum(["positive", "negative", "neutral"]),
+      sentiment: z.enum(['positive', 'negative', 'neutral']),
       keywords: z.array(z.string()),
     })
   ),
@@ -307,11 +309,11 @@ async function analyzeReview(
   reviewText: string
 ): Promise<ProductReviewAnalysis> {
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: 'claude-sonnet-4-20250514',
     max_tokens: 1024,
     messages: [
       {
-        role: "user",
+        role: 'user',
         content: `Analyze this product review and respond with ONLY a JSON object matching this schema:
 {
   "sentiment": "positive" | "negative" | "neutral" | "mixed",
@@ -328,7 +330,7 @@ Review: "${reviewText}"`,
   });
 
   const text =
-    response.content[0].type === "text" ? response.content[0].text : "";
+    response.content[0].type === 'text' ? response.content[0].text : '';
 
   // Extract JSON from response (handle markdown code blocks)
   const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) ?? [null, text];
@@ -337,7 +339,7 @@ Review: "${reviewText}"`,
   // Validate with Zod
   return ProductReviewAnalysis.parse(parsed);
 }
-```
+````
 
 ---
 
@@ -433,8 +435,8 @@ Retrieval-Augmented Generation (RAG) grounds LLM responses in your own data. A p
 ### RAG Pipeline with pgvector
 
 ```typescript
-import { Pool } from "pg";
-import OpenAI from "openai";
+import { Pool } from 'pg';
+import OpenAI from 'openai';
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -451,10 +453,12 @@ interface DocumentChunk {
   };
 }
 
-async function ingestDocument(chunks: ReadonlyArray<DocumentChunk>): Promise<void> {
+async function ingestDocument(
+  chunks: ReadonlyArray<DocumentChunk>
+): Promise<void> {
   // Batch embed all chunks
   const embeddings = await openai.embeddings.create({
-    model: "text-embedding-3-large",
+    model: 'text-embedding-3-large',
     input: chunks.map((c) => c.content),
     dimensions: 1536, // Reduce from 3072 for cost/performance
   });
@@ -462,7 +466,7 @@ async function ingestDocument(chunks: ReadonlyArray<DocumentChunk>): Promise<voi
   // Batch insert with embeddings
   const client = await db.connect();
   try {
-    await client.query("BEGIN");
+    await client.query('BEGIN');
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
@@ -478,14 +482,14 @@ async function ingestDocument(chunks: ReadonlyArray<DocumentChunk>): Promise<voi
           chunk.documentId,
           chunk.content,
           JSON.stringify(chunk.metadata),
-          `[${embedding.join(",")}]`,
+          `[${embedding.join(',')}]`,
         ]
       );
     }
 
-    await client.query("COMMIT");
+    await client.query('COMMIT');
   } catch (error) {
-    await client.query("ROLLBACK");
+    await client.query('ROLLBACK');
     throw error;
   } finally {
     client.release();
@@ -505,12 +509,12 @@ async function hybridSearch(
 ): Promise<ReadonlyArray<RetrievalResult>> {
   // 1. Embed the query
   const queryEmbedding = await openai.embeddings.create({
-    model: "text-embedding-3-large",
+    model: 'text-embedding-3-large',
     input: query,
     dimensions: 1536,
   });
 
-  const vector = `[${queryEmbedding.data[0].embedding.join(",")}]`;
+  const vector = `[${queryEmbedding.data[0].embedding.join(',')}]`;
 
   // 2. Hybrid search: combine vector similarity with BM25 keyword search
   const results = await db.query(
@@ -563,23 +567,23 @@ async function ragQuery(userQuery: string): Promise<string> {
       (chunk, i) =>
         `[Source ${i + 1}: ${(chunk.metadata as { source: string }).source}]\n${chunk.content}`
     )
-    .join("\n\n---\n\n");
+    .join('\n\n---\n\n');
 
   // 3. Generate answer with context
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: 'claude-sonnet-4-20250514',
     max_tokens: 2048,
     system: `You are a helpful assistant. Answer questions based ONLY on the provided context.
 If the context does not contain enough information, say so. Always cite your sources using [Source N] notation.`,
     messages: [
       {
-        role: "user",
+        role: 'user',
         content: `Context:\n${context}\n\n---\n\nQuestion: ${userQuery}`,
       },
     ],
   });
 
-  return response.content[0].type === "text" ? response.content[0].text : "";
+  return response.content[0].type === 'text' ? response.content[0].text : '';
 }
 ```
 
@@ -638,11 +642,11 @@ const MODEL_PRICING: Record<
   string,
   { readonly input: number; readonly output: number }
 > = {
-  "claude-sonnet-4-20250514": { input: 3.0, output: 15.0 },
-  "claude-haiku-35-20241022": { input: 0.8, output: 4.0 },
-  "claude-opus-4-20250514": { input: 15.0, output: 75.0 },
-  "gpt-4o": { input: 2.5, output: 10.0 },
-  "gpt-4o-mini": { input: 0.15, output: 0.6 },
+  'claude-sonnet-4-20250514': { input: 3.0, output: 15.0 },
+  'claude-haiku-35-20241022': { input: 0.8, output: 4.0 },
+  'claude-opus-4-20250514': { input: 15.0, output: 75.0 },
+  'gpt-4o': { input: 2.5, output: 10.0 },
+  'gpt-4o-mini': { input: 0.15, output: 0.6 },
 };
 
 interface UsageRecord {
@@ -719,21 +723,21 @@ interface ModelRoute {
 const routes: ReadonlyArray<ModelRoute> = [
   {
     // Complex reasoning tasks -> Opus
-    primary: "claude-opus-4-20250514",
-    fallbacks: ["claude-sonnet-4-20250514"],
-    condition: (req) => req.taskType === "complex_reasoning",
+    primary: 'claude-opus-4-20250514',
+    fallbacks: ['claude-sonnet-4-20250514'],
+    condition: (req) => req.taskType === 'complex_reasoning',
   },
   {
     // Standard chat -> Sonnet
-    primary: "claude-sonnet-4-20250514",
-    fallbacks: ["gpt-4o", "claude-haiku-35-20241022"],
-    condition: (req) => req.taskType === "chat",
+    primary: 'claude-sonnet-4-20250514',
+    fallbacks: ['gpt-4o', 'claude-haiku-35-20241022'],
+    condition: (req) => req.taskType === 'chat',
   },
   {
     // Simple classification -> Haiku (cheapest)
-    primary: "claude-haiku-35-20241022",
-    fallbacks: ["gpt-4o-mini"],
-    condition: (req) => req.taskType === "classification",
+    primary: 'claude-haiku-35-20241022',
+    fallbacks: ['gpt-4o-mini'],
+    condition: (req) => req.taskType === 'classification',
   },
 ];
 
@@ -746,14 +750,17 @@ async function routeRequest(request: AiRequest): Promise<AiResponse> {
       return await callModel(model, request);
     } catch (error) {
       const errorMessage = (error as Error).message;
-      if (errorMessage.includes("rate_limit") || errorMessage.includes("overloaded")) {
+      if (
+        errorMessage.includes('rate_limit') ||
+        errorMessage.includes('overloaded')
+      ) {
         continue; // Try next model
       }
       throw error; // Non-retryable error
     }
   }
 
-  throw new Error("All models exhausted");
+  throw new Error('All models exhausted');
 }
 ```
 

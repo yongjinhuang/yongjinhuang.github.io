@@ -59,13 +59,13 @@ The `source` follows the format `<namespace>/<type>`. Official HashiCorp provide
 
 ## 3. Version Constraints
 
-| Syntax | Meaning | Use When |
-|--------|---------|----------|
-| `= 5.1.0` | Exactly this version | Pinning after a known-good deploy |
-| `~> 5.0` | >= 5.0.0, < 6.0.0 | Allow minor and patch updates |
-| `~> 5.1` | >= 5.1.0, < 5.2.0 | Allow only patch updates |
-| `>= 5.0` | 5.0 or newer | Rarely useful alone (too permissive) |
-| `>= 5.0, < 6.0` | Range constraint | Explicit range |
+| Syntax          | Meaning              | Use When                             |
+| --------------- | -------------------- | ------------------------------------ |
+| `= 5.1.0`       | Exactly this version | Pinning after a known-good deploy    |
+| `~> 5.0`        | >= 5.0.0, < 6.0.0    | Allow minor and patch updates        |
+| `~> 5.1`        | >= 5.1.0, < 5.2.0    | Allow only patch updates             |
+| `>= 5.0`        | 5.0 or newer         | Rarely useful alone (too permissive) |
+| `>= 5.0, < 6.0` | Range constraint     | Explicit range                       |
 
 **Recommendation:** Use `~> MAJOR.MINOR` for most cases. This allows patch updates while preventing minor version bumps that might introduce new behaviors.
 
@@ -79,13 +79,13 @@ Providers need credentials. **Never put credentials in `.tf` files.**
 
 The AWS provider checks credentials in this order (first match wins):
 
-| Priority | Method | Best For |
-|----------|--------|----------|
-| 1 | Environment variables | CI/CD pipelines, containers |
-| 2 | Shared credentials file (`~/.aws/credentials`) | Local development |
-| 3 | Shared config file (`~/.aws/config`) | SSO profiles |
-| 4 | EC2 instance profile / ECS task role | Workloads running in AWS |
-| 5 | Web identity token (OIDC) | GitHub Actions, Kubernetes |
+| Priority | Method                                         | Best For                    |
+| -------- | ---------------------------------------------- | --------------------------- |
+| 1        | Environment variables                          | CI/CD pipelines, containers |
+| 2        | Shared credentials file (`~/.aws/credentials`) | Local development           |
+| 3        | Shared config file (`~/.aws/config`)           | SSO profiles                |
+| 4        | EC2 instance profile / ECS task role           | Workloads running in AWS    |
+| 5        | Web identity token (OIDC)                      | GitHub Actions, Kubernetes  |
 
 ```bash
 # Environment variables (CI/CD)
@@ -230,12 +230,12 @@ terraform init -migrate-state  # Migrate state to new backend
 
 `.terraform.lock.hcl` records the exact provider versions and their checksums -- the Terraform equivalent of `package-lock.json`.
 
-| Rule | Why |
-|------|-----|
-| Always commit `.terraform.lock.hcl` | Ensures all team members and CI use the same versions |
-| Never edit it manually | Let Terraform manage it |
-| Run `terraform init -upgrade` to update | Respects constraints while upgrading |
-| Run `terraform providers lock` to add platform hashes | Required when team uses different OS/arch |
+| Rule                                                  | Why                                                   |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| Always commit `.terraform.lock.hcl`                   | Ensures all team members and CI use the same versions |
+| Never edit it manually                                | Let Terraform manage it                               |
+| Run `terraform init -upgrade` to update               | Respects constraints while upgrading                  |
+| Run `terraform providers lock` to add platform hashes | Required when team uses different OS/arch             |
 
 ```bash
 # Generate hashes for multiple platforms
@@ -249,11 +249,11 @@ terraform providers
 
 ## 8. Official vs Community Providers
 
-| Category | Source Namespace | Maintained By | Examples |
-|----------|----------------|---------------|----------|
-| Official | `hashicorp/` | HashiCorp | aws, google, azurerm, kubernetes |
-| Partner | Varies | Technology partner | DataDog/datadog, cloudflare/cloudflare |
-| Community | Varies | Individual maintainers | Varies widely in quality |
+| Category  | Source Namespace | Maintained By          | Examples                               |
+| --------- | ---------------- | ---------------------- | -------------------------------------- |
+| Official  | `hashicorp/`     | HashiCorp              | aws, google, azurerm, kubernetes       |
+| Partner   | Varies           | Technology partner     | DataDog/datadog, cloudflare/cloudflare |
+| Community | Varies           | Individual maintainers | Varies widely in quality               |
 
 Prefer official and partner providers. Vet community providers carefully -- check commit history, issue tracker, and activity.
 

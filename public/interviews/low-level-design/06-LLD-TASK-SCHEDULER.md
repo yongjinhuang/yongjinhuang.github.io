@@ -27,22 +27,22 @@ infrastructure roles.
 
 ### Functional Requirements
 
-| # | Requirement | Details |
-|---|-------------|---------|
-| F1 | Submit tasks | Submit a callable with priority and schedule |
-| F2 | Priority execution | Higher priority tasks execute first |
-| F3 | Scheduled execution | Run tasks at specific times or intervals |
-| F4 | Task dependencies | Task B runs only after Task A completes |
-| F5 | Retry on failure | Configurable retry count with backoff |
-| F6 | Dead letter queue | Failed tasks (after retries) go to DLQ for inspection |
-| F7 | Cancel tasks | Cancel pending or scheduled tasks |
+| #   | Requirement         | Details                                               |
+| --- | ------------------- | ----------------------------------------------------- |
+| F1  | Submit tasks        | Submit a callable with priority and schedule          |
+| F2  | Priority execution  | Higher priority tasks execute first                   |
+| F3  | Scheduled execution | Run tasks at specific times or intervals              |
+| F4  | Task dependencies   | Task B runs only after Task A completes               |
+| F5  | Retry on failure    | Configurable retry count with backoff                 |
+| F6  | Dead letter queue   | Failed tasks (after retries) go to DLQ for inspection |
+| F7  | Cancel tasks        | Cancel pending or scheduled tasks                     |
 
 ### Non-Functional Requirements
 
-| # | Requirement |
-|---|-------------|
-| NF1 | Thread-safe execution |
-| NF2 | Concurrent task execution (thread pool) |
+| #   | Requirement                                |
+| --- | ------------------------------------------ |
+| NF1 | Thread-safe execution                      |
+| NF2 | Concurrent task execution (thread pool)    |
 | NF3 | No task executed before its scheduled time |
 | NF4 | Dependencies respected (topological order) |
 
@@ -554,6 +554,7 @@ for dead_task in scheduler.get_dlq():
 ### Step 2: Core Design (5 min)
 
 Identify three key components:
+
 1. **Task** -- the unit of work with metadata
 2. **TaskScheduler** -- priority queue + thread pool
 3. **DAGExecutor** -- dependency resolution
@@ -608,7 +609,7 @@ Tasks should be designed to be safely re-executed. Use unique execution IDs and 
   aging mechanism: increase priority over time for tasks waiting too long.
 
 - **Cron drift:** If a task takes longer than its interval, the next run should be scheduled
-  from the *intended* time, not from completion time. Otherwise, intervals slowly drift.
+  from the _intended_ time, not from completion time. Otherwise, intervals slowly drift.
 
 ---
 

@@ -37,16 +37,16 @@ ROS provides four fundamental capabilities:
 
 ### 1.3 ROS 1 vs. ROS 2
 
-| Feature | ROS 1 | ROS 2 |
-|---------|-------|-------|
-| Middleware | Custom (TCPROS/UDPROS) | DDS (industry standard) |
-| Discovery | Centralized (rosmaster) | Decentralized (DDS) |
-| Real-time | Not supported | Supported (with care) |
-| Security | None built-in | DDS Security (SROS2) |
-| Multi-robot | Hacky (namespaces) | First-class (DDS domains) |
-| Lifecycle | None | Managed lifecycle nodes |
-| OS support | Linux only (official) | Linux, macOS, Windows |
-| Python | Python 2 (rospy) | Python 3 (rclpy) |
+| Feature     | ROS 1                   | ROS 2                     |
+| ----------- | ----------------------- | ------------------------- |
+| Middleware  | Custom (TCPROS/UDPROS)  | DDS (industry standard)   |
+| Discovery   | Centralized (rosmaster) | Decentralized (DDS)       |
+| Real-time   | Not supported           | Supported (with care)     |
+| Security    | None built-in           | DDS Security (SROS2)      |
+| Multi-robot | Hacky (namespaces)      | First-class (DDS domains) |
+| Lifecycle   | None                    | Managed lifecycle nodes   |
+| OS support  | Linux only (official)   | Linux, macOS, Windows     |
+| Python      | Python 2 (rospy)        | Python 3 (rclpy)          |
 
 ROS 2 is the current standard. ROS 1 reached end-of-life in May 2025.
 
@@ -104,13 +104,13 @@ publish/subscribe communication. Key concepts:
 
 QoS is one of the most important (and most misunderstood) features of ROS 2:
 
-| Policy | Options | Use Case |
-|--------|---------|----------|
-| Reliability | RELIABLE / BEST_EFFORT | Sensor data vs. commands |
-| Durability | TRANSIENT_LOCAL / VOLATILE | Late-joining subscribers |
-| History | KEEP_LAST(N) / KEEP_ALL | Buffer depth |
-| Deadline | Duration | Detect stale data |
-| Liveliness | AUTOMATIC / MANUAL | Detect dead nodes |
+| Policy      | Options                    | Use Case                 |
+| ----------- | -------------------------- | ------------------------ |
+| Reliability | RELIABLE / BEST_EFFORT     | Sensor data vs. commands |
+| Durability  | TRANSIENT_LOCAL / VOLATILE | Late-joining subscribers |
+| History     | KEEP_LAST(N) / KEEP_ALL    | Buffer depth             |
+| Deadline    | Duration                   | Detect stale data        |
+| Liveliness  | AUTOMATIC / MANUAL         | Detect dead nodes        |
 
 Common pitfall: a RELIABLE publisher and a BEST_EFFORT subscriber will NOT
 connect. QoS must be compatible.
@@ -889,6 +889,7 @@ The costmap is a 2D grid where each cell has a cost:
 ```
 
 Layers are stacked:
+
 1. **Static layer**: From the map (walls, furniture)
 2. **Obstacle layer**: From live sensors (people, new objects)
 3. **Inflation layer**: Grows obstacles by robot radius
@@ -1103,14 +1104,14 @@ my_robot/
 
 ### 14.3 Common Pitfalls
 
-| Pitfall | Solution |
-|---------|----------|
-| QoS mismatch (no data flowing) | Match reliability/durability policies |
-| Transform timeout | Ensure tf publishers are running, check rates |
-| Callback not called | Check executor type, spin correctly |
-| Simulation clock drift | Use `use_sim_time` parameter consistently |
-| Large messages slow | Use composable nodes (intra-process) |
-| Parameter not updating | Use `add_on_set_parameters_callback` |
+| Pitfall                        | Solution                                      |
+| ------------------------------ | --------------------------------------------- |
+| QoS mismatch (no data flowing) | Match reliability/durability policies         |
+| Transform timeout              | Ensure tf publishers are running, check rates |
+| Callback not called            | Check executor type, spin correctly           |
+| Simulation clock drift         | Use `use_sim_time` parameter consistently     |
+| Large messages slow            | Use composable nodes (intra-process)          |
+| Parameter not updating         | Use `add_on_set_parameters_callback`          |
 
 ---
 

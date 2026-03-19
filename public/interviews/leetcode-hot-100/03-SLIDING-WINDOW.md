@@ -46,12 +46,14 @@ def sliding_window(s: str) -> int:
 ```
 
 **When to use Sliding Window:**
+
 - Find min/max subarray or substring satisfying a condition
 - Contiguous sequence problems
 - String permutation or anagram matching
 - Problems mentioning "consecutive" or "contiguous"
 
 **Key decisions:**
+
 - What data structure tracks the window state? (hashmap, counter, variable)
 - When is the window invalid? (determines the shrink condition)
 - When do you update the answer? (after shrink, or inside the loop)
@@ -85,6 +87,7 @@ def max_profit(prices: list[int]) -> int:
 **Time**: O(n) -- single pass through the array.
 **Space**: O(1) -- only two variables.
 **Edge Cases**:
+
 - Prices in strictly decreasing order -- profit is 0 (never sell).
 - Array of length 1 -- profit is 0.
 - All prices equal -- profit is 0.
@@ -122,6 +125,7 @@ def length_of_longest_substring(s: str) -> int:
 **Time**: O(n) -- each character is visited at most twice.
 **Space**: O(min(n, m)) -- where m is the size of the character set.
 **Edge Cases**:
+
 - Empty string -- return 0.
 - All identical characters (e.g., "aaaa") -- return 1.
 - All unique characters -- return len(s).
@@ -165,6 +169,7 @@ def character_replacement(s: str, k: int) -> int:
 **Time**: O(n) -- single pass; left pointer moves at most n times.
 **Space**: O(1) -- frequency map has at most 26 entries.
 **Edge Cases**:
+
 - k >= len(s) -- entire string is the answer.
 - k == 0 -- find longest run of a single character.
 - String of length 1 -- return 1.
@@ -264,6 +269,7 @@ def check_inclusion(s1: str, s2: str) -> bool:
 **Time**: O(n) -- where n = len(s2). Counter comparison is O(26) = O(1) for lowercase letters.
 **Space**: O(1) -- counters hold at most 26 keys.
 **Edge Cases**:
+
 - s1 longer than s2 -- return False.
 - s1 and s2 are identical -- return True.
 - s1 is a single character -- check if it exists in s2.
@@ -324,6 +330,7 @@ def min_window(s: str, t: str) -> str:
 **Time**: O(n + m) -- where n = len(s), m = len(t). Each character in s is visited at most twice (once by right, once by left).
 **Space**: O(n + m) -- window_count can have up to n keys, t_count has up to m keys. In practice O(1) if charset is fixed (e.g., 128 ASCII).
 **Edge Cases**:
+
 - t is longer than s -- return "".
 - s equals t -- return s.
 - t has duplicate characters (e.g., t = "AA") -- window must contain at least 2 A's.
@@ -341,6 +348,7 @@ def min_window(s: str, t: str) -> str:
 ### Approach
 
 Use a deque that stores indices. For each new element:
+
 1. Remove indices from the back while the deque's back value is less than or equal to the current value (they can never be the max).
 2. Add the current index to the back.
 3. Remove the front if it falls outside the current window.
@@ -377,6 +385,7 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
 **Time**: O(n) -- each element is pushed and popped from the deque at most once.
 **Space**: O(k) -- the deque holds at most k indices.
 **Edge Cases**:
+
 - k == 1 -- return the original array.
 - k == len(nums) -- return a single-element list with the global max.
 - All elements equal -- every window max is that value.
@@ -387,11 +396,11 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
 
 ## Summary Table
 
-| # | Problem | Difficulty | Window Type | Key Data Structure | Time | Space |
-|---|---------|-----------|-------------|-------------------|------|-------|
-| 121 | Best Time to Buy and Sell Stock | Easy | Variable (implicit) | Min tracker | O(n) | O(1) |
-| 3 | Longest Substring Without Repeating | Medium | Variable | HashMap (char -> index) | O(n) | O(min(n,m)) |
-| 424 | Longest Repeating Character Replacement | Medium | Variable | Frequency map | O(n) | O(1) |
-| 567 | Permutation in String | Medium | Fixed | Counter / frequency map | O(n) | O(1) |
-| 76 | Minimum Window Substring | Hard | Variable (contract) | Counter + formed count | O(n+m) | O(n+m) |
-| 239 | Sliding Window Maximum | Hard | Fixed | Monotonic deque | O(n) | O(k) |
+| #   | Problem                                 | Difficulty | Window Type         | Key Data Structure      | Time   | Space       |
+| --- | --------------------------------------- | ---------- | ------------------- | ----------------------- | ------ | ----------- |
+| 121 | Best Time to Buy and Sell Stock         | Easy       | Variable (implicit) | Min tracker             | O(n)   | O(1)        |
+| 3   | Longest Substring Without Repeating     | Medium     | Variable            | HashMap (char -> index) | O(n)   | O(min(n,m)) |
+| 424 | Longest Repeating Character Replacement | Medium     | Variable            | Frequency map           | O(n)   | O(1)        |
+| 567 | Permutation in String                   | Medium     | Fixed               | Counter / frequency map | O(n)   | O(1)        |
+| 76  | Minimum Window Substring                | Hard       | Variable (contract) | Counter + formed count  | O(n+m) | O(n+m)      |
+| 239 | Sliding Window Maximum                  | Hard       | Fixed               | Monotonic deque         | O(n)   | O(k)        |

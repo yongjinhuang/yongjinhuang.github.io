@@ -23,6 +23,7 @@ The core of i18n — all user-facing text comes from translation files, not hard
 ```
 
 Translation files:
+
 ```json
 // en.json
 { "welcome_back": "Welcome back!" }
@@ -50,12 +51,12 @@ Priority usually goes: User setting > URL > Cookie > Browser > Default.
 
 These vary wildly by locale:
 
-| Format | US (en-US) | Germany (de-DE) | China (zh-CN) | Japan (ja-JP) |
-|--------|-----------|-----------------|---------------|---------------|
-| Date | 03/01/2026 | 01.03.2026 | 2026/03/01 | 2026年3月1日 |
-| Number | 1,234.56 | 1.234,56 | 1,234.56 | 1,234.56 |
-| Currency | $1,234.56 | 1.234,56 € | ¥1,234.56 | ¥1,234 |
-| Time | 3:30 PM | 15:30 | 15:30 | 15:30 |
+| Format   | US (en-US) | Germany (de-DE) | China (zh-CN) | Japan (ja-JP) |
+| -------- | ---------- | --------------- | ------------- | ------------- |
+| Date     | 03/01/2026 | 01.03.2026      | 2026/03/01    | 2026年3月1日  |
+| Number   | 1,234.56   | 1.234,56        | 1,234.56      | 1,234.56      |
+| Currency | $1,234.56  | 1.234,56 €      | ¥1,234.56     | ¥1,234        |
+| Time     | 3:30 PM    | 15:30           | 15:30         | 15:30         |
 
 Use the `Intl` API (built into JavaScript) to format these correctly.
 
@@ -94,19 +95,19 @@ Arabic, Hebrew, Farsi, and Urdu are written right-to-left. This affects:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **i18n** | Internationalization — building the system to support multiple locales |
-| **l10n** | Localization — adapting the product for a specific locale |
-| **Locale** | A combination of language + region (en-US, zh-CN, pt-BR). Determines formatting rules |
-| **Translation Key** | An identifier that maps to translated text (e.g., `welcome_back`) |
-| **Translation File** | A file (JSON, YAML, PO) containing all translations for a locale |
-| **ICU MessageFormat** | A standard for handling complex translation patterns (plurals, gender, select) |
-| **RTL** | Right-to-Left — languages like Arabic and Hebrew that read right to left |
-| **Locale Fallback** | If `zh-TW` translation is missing, fall back to `zh`, then to `en` |
-| **String Extraction** | Automatically finding translatable strings in code and generating translation files |
-| **TMS** | Translation Management System — a platform where translators work (Crowdin, Phrase, Lokalise) |
-| **Machine Translation** | Using AI to generate initial translations (Google Translate, DeepL). Usually needs human review |
+| Term                    | What It Means                                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- |
+| **i18n**                | Internationalization — building the system to support multiple locales                                    |
+| **l10n**                | Localization — adapting the product for a specific locale                                                 |
+| **Locale**              | A combination of language + region (en-US, zh-CN, pt-BR). Determines formatting rules                     |
+| **Translation Key**     | An identifier that maps to translated text (e.g., `welcome_back`)                                         |
+| **Translation File**    | A file (JSON, YAML, PO) containing all translations for a locale                                          |
+| **ICU MessageFormat**   | A standard for handling complex translation patterns (plurals, gender, select)                            |
+| **RTL**                 | Right-to-Left — languages like Arabic and Hebrew that read right to left                                  |
+| **Locale Fallback**     | If `zh-TW` translation is missing, fall back to `zh`, then to `en`                                        |
+| **String Extraction**   | Automatically finding translatable strings in code and generating translation files                       |
+| **TMS**                 | Translation Management System — a platform where translators work (Crowdin, Phrase, Lokalise)             |
+| **Machine Translation** | Using AI to generate initial translations (Google Translate, DeepL). Usually needs human review           |
 | **Pseudo-Localization** | Replacing English text with accented characters (Ŵéĺçöḿé) to visually test i18n without real translations |
 
 ## Common Patterns
@@ -162,13 +163,13 @@ Each locale gets its own build (or bundle). Only the relevant translations are i
 
 ## Quick Reference
 
-| Aspect | Implementation |
-|--------|---------------|
-| Text | Translation keys + JSON files per locale |
-| Dates | `Intl.DateTimeFormat` with locale parameter |
-| Numbers | `Intl.NumberFormat` with locale parameter |
-| Currency | Store in cents + currency code, format with `Intl.NumberFormat` |
-| Plurals | ICU MessageFormat or library support (i18next, FormatJS) |
-| RTL | CSS `direction: rtl`, logical properties, mirrored layouts |
-| URL routing | `/[locale]/path` pattern |
-| Fallback | Specific locale → language → default locale |
+| Aspect      | Implementation                                                  |
+| ----------- | --------------------------------------------------------------- |
+| Text        | Translation keys + JSON files per locale                        |
+| Dates       | `Intl.DateTimeFormat` with locale parameter                     |
+| Numbers     | `Intl.NumberFormat` with locale parameter                       |
+| Currency    | Store in cents + currency code, format with `Intl.NumberFormat` |
+| Plurals     | ICU MessageFormat or library support (i18next, FormatJS)        |
+| RTL         | CSS `direction: rtl`, logical properties, mirrored layouts      |
+| URL routing | `/[locale]/path` pattern                                        |
+| Fallback    | Specific locale → language → default locale                     |

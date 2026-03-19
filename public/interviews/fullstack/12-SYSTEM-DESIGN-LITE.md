@@ -61,18 +61,18 @@ Discuss what happens as the system grows.
 
 These are the building blocks of most web architectures. Know when and why to use each.
 
-| Component | Purpose | When to Use |
-|-----------|---------|-------------|
-| **CDN** | Cache static assets close to users | Images, JS/CSS bundles, static pages |
-| **Load Balancer** | Distribute traffic across servers | Multiple application instances |
-| **Application Cache (Redis)** | Cache frequently-read data | Session storage, hot data, rate limiting |
-| **Message Queue (RabbitMQ/SQS)** | Decouple producers from consumers | Email sending, background jobs, event processing |
-| **Search Index (Elasticsearch)** | Full-text search, faceted search | Product search, log search, content search |
-| **Object Storage (S3)** | Store files and media | User uploads, backups, static assets |
-| **Database Read Replicas** | Scale read queries | Read-heavy workloads |
-| **Database Sharding** | Scale write queries and data volume | Data too large for one database |
-| **WebSocket Server** | Real-time bidirectional communication | Chat, live updates, notifications |
-| **Task Queue (Celery/Bull)** | Background job processing | Report generation, data processing |
+| Component                        | Purpose                               | When to Use                                      |
+| -------------------------------- | ------------------------------------- | ------------------------------------------------ |
+| **CDN**                          | Cache static assets close to users    | Images, JS/CSS bundles, static pages             |
+| **Load Balancer**                | Distribute traffic across servers     | Multiple application instances                   |
+| **Application Cache (Redis)**    | Cache frequently-read data            | Session storage, hot data, rate limiting         |
+| **Message Queue (RabbitMQ/SQS)** | Decouple producers from consumers     | Email sending, background jobs, event processing |
+| **Search Index (Elasticsearch)** | Full-text search, faceted search      | Product search, log search, content search       |
+| **Object Storage (S3)**          | Store files and media                 | User uploads, backups, static assets             |
+| **Database Read Replicas**       | Scale read queries                    | Read-heavy workloads                             |
+| **Database Sharding**            | Scale write queries and data volume   | Data too large for one database                  |
+| **WebSocket Server**             | Real-time bidirectional communication | Chat, live updates, notifications                |
+| **Task Queue (Celery/Bull)**     | Background job processing             | Report generation, data processing               |
 
 ### 3. Trade-off Discussions
 
@@ -80,15 +80,15 @@ Interviewers want to see that you can reason about trade-offs, not just pick the
 
 **Common trade-offs in system design:**
 
-| Decision | Option A | Option B |
-|----------|----------|----------|
-| SQL vs NoSQL | Strong consistency, rich queries, ACID | Flexible schema, horizontal scaling, eventual consistency |
-| Cache | Fast reads, less DB load | Stale data, cache invalidation complexity |
-| Sync vs Async | Simple, immediate feedback | Decoupled, resilient, handles spikes |
-| Monolith vs Services | Simple, fast to build | Independent scaling, team autonomy |
-| Polling vs WebSocket | Simple, stateless | Real-time, lower latency, stateful connections |
-| Normalize vs Denormalize | Less storage, single source of truth | Faster reads, more complex writes |
-| Consistency vs Availability | All users see the same data | System remains available during partitions |
+| Decision                    | Option A                               | Option B                                                  |
+| --------------------------- | -------------------------------------- | --------------------------------------------------------- |
+| SQL vs NoSQL                | Strong consistency, rich queries, ACID | Flexible schema, horizontal scaling, eventual consistency |
+| Cache                       | Fast reads, less DB load               | Stale data, cache invalidation complexity                 |
+| Sync vs Async               | Simple, immediate feedback             | Decoupled, resilient, handles spikes                      |
+| Monolith vs Services        | Simple, fast to build                  | Independent scaling, team autonomy                        |
+| Polling vs WebSocket        | Simple, stateless                      | Real-time, lower latency, stateful connections            |
+| Normalize vs Denormalize    | Less storage, single source of truth   | Faster reads, more complex writes                         |
+| Consistency vs Availability | All users see the same data            | System remains available during partitions                |
 
 ---
 
@@ -365,12 +365,16 @@ async function moveTask(taskId: string, body: MoveTaskInput) {
     newPosition = afterTask.position + 1000;
   } else if (!afterTaskId) {
     // Moving to the top
-    const beforeTask = await db.tasks.findUnique({ where: { id: beforeTaskId } });
+    const beforeTask = await db.tasks.findUnique({
+      where: { id: beforeTaskId },
+    });
     newPosition = beforeTask.position / 2;
   } else {
     // Moving between two tasks
     const afterTask = await db.tasks.findUnique({ where: { id: afterTaskId } });
-    const beforeTask = await db.tasks.findUnique({ where: { id: beforeTaskId } });
+    const beforeTask = await db.tasks.findUnique({
+      where: { id: beforeTaskId },
+    });
     newPosition = (afterTask.position + beforeTask.position) / 2;
   }
 
@@ -615,7 +619,11 @@ function handleHeartbeat(ws: WebSocket, userId: string) {
 
 ```typescript
 // Message history with cursor pagination
-async function getMessages(conversationId: string, before?: string, limit = 50) {
+async function getMessages(
+  conversationId: string,
+  before?: string,
+  limit = 50
+) {
   const whereClause = before
     ? 'AND m.created_at < (SELECT created_at FROM messages WHERE id = $3)'
     : '';
@@ -624,7 +632,8 @@ async function getMessages(conversationId: string, before?: string, limit = 50) 
     ? [conversationId, limit, before]
     : [conversationId, limit];
 
-  const messages = await db.query(`
+  const messages = await db.query(
+    `
     SELECT m.id, m.content, m.message_type, m.attachment_url,
            m.created_at, m.sender_id, u.username, u.avatar_url
     FROM messages m
@@ -632,7 +641,9 @@ async function getMessages(conversationId: string, before?: string, limit = 50) 
     WHERE m.conversation_id = $1 ${whereClause}
     ORDER BY m.created_at DESC
     LIMIT $2
-  `, params);
+  `,
+    params
+  );
 
   const hasMore = messages.length === limit;
   const nextCursor = hasMore ? messages[messages.length - 1].id : null;
@@ -711,23 +722,30 @@ Add a cache when you observe repeated reads of the same data that is expensive t
 **Common strategies:**
 
 **Cache-aside (lazy loading):**
+
 1. Check cache. If hit, return cached value.
 2. If miss, read from database, write to cache with a TTL, return value.
+
 - Pros: Simple, only caches what is actually requested
 - Cons: First request is always slow (cache miss), data can become stale until TTL expires
 
 **Write-through:**
+
 1. Write to cache and database simultaneously on every write.
+
 - Pros: Cache is always up to date
 - Cons: Every write is slower (two writes), cache may store data that is never read
 
 **Write-behind (write-back):**
+
 1. Write to cache immediately, asynchronously write to database.
+
 - Pros: Fastest writes
 - Cons: Risk of data loss if cache crashes before database write
 
 **Cache invalidation:**
 The hardest problem. Options:
+
 - TTL-based: Set a time-to-live. Accept staleness within the TTL window.
 - Event-based: Invalidate or update cache when the underlying data changes (via application logic or database triggers).
 - Versioned keys: Include a version number in the cache key. Bump the version to invalidate.
@@ -881,18 +899,22 @@ router.get('/api/posts', async (req, res) => {
   }
 
   if (query.tag) {
-    whereConditions = [...whereConditions, `EXISTS (
+    whereConditions = [
+      ...whereConditions,
+      `EXISTS (
       SELECT 1 FROM post_tags pt
       JOIN tags t ON pt.tag_id = t.id
       WHERE pt.post_id = p.id AND t.slug = $${paramIndex}
-    )`];
+    )`,
+    ];
     params.push(query.tag);
     paramIndex++;
   }
 
   if (query.search) {
-    whereConditions = [...whereConditions,
-      `(p.title ILIKE $${paramIndex} OR p.excerpt ILIKE $${paramIndex})`
+    whereConditions = [
+      ...whereConditions,
+      `(p.title ILIKE $${paramIndex} OR p.excerpt ILIKE $${paramIndex})`,
     ];
     params.push(`%${query.search}%`);
     paramIndex++;
@@ -902,7 +924,7 @@ router.get('/api/posts', async (req, res) => {
 
   const countResult = await db.query(
     `SELECT COUNT(*) FROM posts p WHERE ${whereClause}`,
-    params,
+    params
   );
   const total = parseInt(countResult.rows[0].count);
 
@@ -915,7 +937,7 @@ router.get('/api/posts', async (req, res) => {
      WHERE ${whereClause}
      ORDER BY p.${query.sort} ${query.order}
      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-    [...params, query.limit, offset],
+    [...params, query.limit, offset]
   );
 
   res.json({
@@ -970,12 +992,15 @@ export function useUpdateTask(projectId: string) {
       await queryClient.cancelQueries({ queryKey: ['tasks', projectId] });
 
       // Snapshot the previous value
-      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', projectId]);
+      const previousTasks = queryClient.getQueryData<Task[]>([
+        'tasks',
+        projectId,
+      ]);
 
       // Optimistically update to the new value
       queryClient.setQueryData<Task[]>(['tasks', projectId], (old) => {
         if (!old) return old;
-        return old.map(task =>
+        return old.map((task) =>
           task.id === taskId ? { ...task, ...updates } : task
         );
       });
@@ -1017,7 +1042,7 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
 async function fetchWithRetry(
   url: string,
   options: RequestInit = {},
-  retryConfig: RetryConfig = DEFAULT_RETRY_CONFIG,
+  retryConfig: RetryConfig = DEFAULT_RETRY_CONFIG
 ): Promise<Response> {
   let lastError: Error | null = null;
 
@@ -1031,12 +1056,13 @@ async function fetchWithRetry(
       // Retry on rate limit (429) and server errors (5xx)
       if (response.status === 429) {
         const retryAfter = parseInt(response.headers.get('Retry-After') || '0');
-        const delay = retryAfter > 0
-          ? retryAfter * 1000
-          : Math.min(
-              retryConfig.baseDelayMs * Math.pow(2, attempt),
-              retryConfig.maxDelayMs,
-            );
+        const delay =
+          retryAfter > 0
+            ? retryAfter * 1000
+            : Math.min(
+                retryConfig.baseDelayMs * Math.pow(2, attempt),
+                retryConfig.maxDelayMs
+              );
         await sleep(delay);
         continue;
       }
@@ -1044,7 +1070,7 @@ async function fetchWithRetry(
       if (response.status >= 500 && attempt < retryConfig.maxRetries) {
         const delay = Math.min(
           retryConfig.baseDelayMs * Math.pow(2, attempt),
-          retryConfig.maxDelayMs,
+          retryConfig.maxDelayMs
         );
         await sleep(delay);
         continue;
@@ -1056,7 +1082,7 @@ async function fetchWithRetry(
       if (attempt < retryConfig.maxRetries) {
         const delay = Math.min(
           retryConfig.baseDelayMs * Math.pow(2, attempt),
-          retryConfig.maxDelayMs,
+          retryConfig.maxDelayMs
         );
         await sleep(delay);
       }
@@ -1067,7 +1093,7 @@ async function fetchWithRetry(
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 ```
 
@@ -1107,49 +1133,49 @@ function sleep(ms: number): Promise<void> {
 
 ### When to Use What
 
-| Need | Solution |
-|------|----------|
-| Fast reads of hot data | Redis cache |
-| Full-text search | Elasticsearch |
-| Background jobs | Message queue + workers |
-| File storage | Object storage (S3) + CDN |
-| Real-time one-way | Server-Sent Events |
-| Real-time bidirectional | WebSocket + Redis Pub/Sub |
-| Scale reads | Database read replicas + cache |
-| Scale writes | Sharding or write-optimized store |
+| Need                    | Solution                          |
+| ----------------------- | --------------------------------- |
+| Fast reads of hot data  | Redis cache                       |
+| Full-text search        | Elasticsearch                     |
+| Background jobs         | Message queue + workers           |
+| File storage            | Object storage (S3) + CDN         |
+| Real-time one-way       | Server-Sent Events                |
+| Real-time bidirectional | WebSocket + Redis Pub/Sub         |
+| Scale reads             | Database read replicas + cache    |
+| Scale writes            | Sharding or write-optimized store |
 
 ### Database Decision Quick Guide
 
-| Requirement | Choose |
-|-------------|--------|
-| Transactions, JOINs, complex queries | PostgreSQL |
-| Document-shaped data, flexible schema | MongoDB |
-| Key-value lookups, caching | Redis |
-| Time-series, high write throughput | Cassandra, TimescaleDB |
-| Graph traversal | Neo4j |
-| Full-text search | Elasticsearch |
+| Requirement                           | Choose                 |
+| ------------------------------------- | ---------------------- |
+| Transactions, JOINs, complex queries  | PostgreSQL             |
+| Document-shaped data, flexible schema | MongoDB                |
+| Key-value lookups, caching            | Redis                  |
+| Time-series, high write throughput    | Cassandra, TimescaleDB |
+| Graph traversal                       | Neo4j                  |
+| Full-text search                      | Elasticsearch          |
 
 ### Pagination Quick Reference
 
-| Type | URL | Best For |
-|------|-----|----------|
-| Offset | `?page=3&limit=20` | Admin tables, small datasets |
+| Type   | URL                       | Best For                               |
+| ------ | ------------------------- | -------------------------------------- |
+| Offset | `?page=3&limit=20`        | Admin tables, small datasets           |
 | Cursor | `?cursor=abc123&limit=20` | Feeds, infinite scroll, large datasets |
-| Keyset | `?after_id=100&limit=20` | Simple cursor based on primary key |
+| Keyset | `?after_id=100&limit=20`  | Simple cursor based on primary key     |
 
 ### Estimation Cheat Sheet
 
-| Metric | Approximate Value |
-|--------|-------------------|
-| 1 day | ~100K seconds |
-| 1 million requests/day | ~12 requests/second |
-| 1 GB stored | ~1 billion characters of text |
-| Average web page | ~2-3 MB |
-| Average API response | ~1-10 KB |
-| Redis read latency | < 1ms |
-| Database read latency | 1-10ms |
-| Cross-region network latency | 50-150ms |
-| CDN cache hit latency | 10-50ms |
+| Metric                       | Approximate Value             |
+| ---------------------------- | ----------------------------- |
+| 1 day                        | ~100K seconds                 |
+| 1 million requests/day       | ~12 requests/second           |
+| 1 GB stored                  | ~1 billion characters of text |
+| Average web page             | ~2-3 MB                       |
+| Average API response         | ~1-10 KB                      |
+| Redis read latency           | < 1ms                         |
+| Database read latency        | 1-10ms                        |
+| Cross-region network latency | 50-150ms                      |
+| CDN cache hit latency        | 10-50ms                       |
 
 ### Key Takeaways
 

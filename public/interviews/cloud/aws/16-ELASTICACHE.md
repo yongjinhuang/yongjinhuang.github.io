@@ -6,16 +6,16 @@ Amazon ElastiCache is a fully managed in-memory data store and cache service. It
 
 ## Redis vs Memcached
 
-| Feature | Redis | Memcached |
-|---------|-------|-----------|
-| **Data structures** | Strings, hashes, lists, sets, sorted sets, streams, bitmaps | Strings only |
-| **Persistence** | RDB snapshots + AOF | None |
-| **Replication** | Primary-replica with auto failover | None |
-| **Cluster mode** | Hash-slot sharding (16,384 slots) | Client-side consistent hashing |
-| **Threading** | Single-threaded event loop (I/O threads since Redis 6) | Multi-threaded |
-| **Pub/Sub** | Yes | No |
-| **Lua scripting** | Yes | No |
-| **Transactions** | MULTI/EXEC | No |
+| Feature             | Redis                                                       | Memcached                      |
+| ------------------- | ----------------------------------------------------------- | ------------------------------ |
+| **Data structures** | Strings, hashes, lists, sets, sorted sets, streams, bitmaps | Strings only                   |
+| **Persistence**     | RDB snapshots + AOF                                         | None                           |
+| **Replication**     | Primary-replica with auto failover                          | None                           |
+| **Cluster mode**    | Hash-slot sharding (16,384 slots)                           | Client-side consistent hashing |
+| **Threading**       | Single-threaded event loop (I/O threads since Redis 6)      | Multi-threaded                 |
+| **Pub/Sub**         | Yes                                                         | No                             |
+| **Lua scripting**   | Yes                                                         | No                             |
+| **Transactions**    | MULTI/EXEC                                                  | No                             |
 
 **Rule of thumb:** Use Redis unless you need multi-threaded performance for simple key-value blobs and do not care about persistence or data structures.
 
@@ -35,11 +35,11 @@ Data partitioned across multiple shards using hash slots (0-16383). Up to 500 no
 
 ### Node Types
 
-| Family | Examples | Optimized For |
-|--------|----------|---------------|
-| **R (memory)** | cache.r7g.large, cache.r7g.4xlarge | Large datasets, sorted sets, streams |
-| **M (general)** | cache.m7g.large | Balanced compute/memory |
-| **T (burstable)** | cache.t4g.micro, cache.t4g.medium | Dev/test, low-traffic |
+| Family            | Examples                           | Optimized For                        |
+| ----------------- | ---------------------------------- | ------------------------------------ |
+| **R (memory)**    | cache.r7g.large, cache.r7g.4xlarge | Large datasets, sorted sets, streams |
+| **M (general)**   | cache.m7g.large                    | Balanced compute/memory              |
+| **T (burstable)** | cache.t4g.micro, cache.t4g.medium  | Dev/test, low-traffic                |
 
 Provision 25-30% more memory than your dataset for Redis overhead (fragmentation, replication buffers). ElastiCache reserves ~25% of node memory internally.
 
@@ -55,12 +55,12 @@ Provision 25-30% more memory than your dataset for Redis overhead (fragmentation
 
 ## Backup and Restore (Redis Only)
 
-| Feature | Details |
-|---------|---------|
-| **Automatic backups** | Daily snapshots, 1-35 day retention |
-| **Manual snapshots** | On-demand, retained until deleted |
-| **Restore** | Creates a new cluster from the snapshot |
-| **Export** | Copy snapshots to S3 for cross-region or archival |
+| Feature               | Details                                           |
+| --------------------- | ------------------------------------------------- |
+| **Automatic backups** | Daily snapshots, 1-35 day retention               |
+| **Manual snapshots**  | On-demand, retained until deleted                 |
+| **Restore**           | Creates a new cluster from the snapshot           |
+| **Export**            | Copy snapshots to S3 for cross-region or archival |
 
 Snapshots cause brief latency spikes. Schedule during off-peak hours.
 
@@ -106,11 +106,11 @@ aws elasticache create-serverless-cache \
 
 ## TTL Strategies
 
-| Strategy | TTL | Use Case |
-|----------|-----|----------|
-| **Short** | 30s - 5min | Frequently changing data (sessions, prices) |
-| **Medium** | 5min - 1hr | User profiles, product details |
-| **Long** | 1hr - 24hr | Config, translations |
+| Strategy   | TTL        | Use Case                                    |
+| ---------- | ---------- | ------------------------------------------- |
+| **Short**  | 30s - 5min | Frequently changing data (sessions, prices) |
+| **Medium** | 5min - 1hr | User profiles, product details              |
+| **Long**   | 1hr - 24hr | Config, translations                        |
 
 Always set a TTL. Add jitter to prevent thundering herd: `TTL = base_ttl + random(0, jitter_seconds)`.
 
@@ -126,12 +126,12 @@ Redis is single-threaded. Every connection consumes ~10 KB. Use connection pooli
 
 ElastiCache clusters are **VPC-only** with no public endpoints.
 
-| Layer | Redis | Memcached |
-|-------|-------|-----------|
-| **In-transit encryption** | TLS | TLS |
-| **At-rest encryption** | AES-256 (KMS) | AES-256 (KMS) |
-| **Authentication** | Redis AUTH or IAM auth (Redis 7+) | SASL |
-| **Access control** | Redis ACLs (user-level command restrictions) | None |
+| Layer                     | Redis                                        | Memcached     |
+| ------------------------- | -------------------------------------------- | ------------- |
+| **In-transit encryption** | TLS                                          | TLS           |
+| **At-rest encryption**    | AES-256 (KMS)                                | AES-256 (KMS) |
+| **Authentication**        | Redis AUTH or IAM auth (Redis 7+)            | SASL          |
+| **Access control**        | Redis ACLs (user-level command restrictions) | None          |
 
 ---
 

@@ -35,14 +35,15 @@ refactoring example from messy code to clean code.
 
 Good architecture enables:
 
-| Benefit | What It Means |
-|---------|---------------|
-| **Testability** | Business logic tested without database or HTTP |
-| **Flexibility** | Swap Postgres for MongoDB without changing business code |
-| **Readability** | New developers understand the system quickly |
-| **Maintainability** | Changes in one layer do not cascade to others |
+| Benefit             | What It Means                                            |
+| ------------------- | -------------------------------------------------------- |
+| **Testability**     | Business logic tested without database or HTTP           |
+| **Flexibility**     | Swap Postgres for MongoDB without changing business code |
+| **Readability**     | New developers understand the system quickly             |
+| **Maintainability** | Changes in one layer do not cascade to others            |
 
 Bad architecture leads to:
+
 - "I changed the database schema and 47 files broke"
 - "I can't test this function without spinning up the entire server"
 - "Nobody wants to touch this code because everything is connected to everything"
@@ -79,6 +80,7 @@ layer only talks to the layer directly below it.
 ```
 
 **Rules:**
+
 1. Each layer only depends on the layer below it.
 2. Never skip layers (presentation should not call the database directly).
 3. Data flows down as requests, up as responses.
@@ -90,8 +92,8 @@ the business layer might need changes too. Hexagonal architecture fixes this.
 
 ## 3. Hexagonal / Ports-and-Adapters
 
-The key insight: business logic defines *interfaces* (ports) and the outside world provides
-*implementations* (adapters). Dependencies point inward.
+The key insight: business logic defines _interfaces_ (ports) and the outside world provides
+_implementations_ (adapters). Dependencies point inward.
 
 ```
           +------------------+
@@ -240,12 +242,12 @@ rule is absolute: **source code dependencies must point inward**.
 
 **The Four Layers:**
 
-| Layer | Contains | Depends On |
-|-------|----------|------------|
-| **Entities** | Domain objects, business rules | Nothing |
-| **Use Cases** | Application logic, orchestration | Entities |
-| **Interface Adapters** | Controllers, repos, presenters | Use Cases, Entities |
-| **Frameworks** | Flask/Django, PostgreSQL, React | Interface Adapters |
+| Layer                  | Contains                         | Depends On          |
+| ---------------------- | -------------------------------- | ------------------- |
+| **Entities**           | Domain objects, business rules   | Nothing             |
+| **Use Cases**          | Application logic, orchestration | Entities            |
+| **Interface Adapters** | Controllers, repos, presenters   | Use Cases, Entities |
+| **Frameworks**         | Flask/Django, PostgreSQL, React  | Interface Adapters  |
 
 **The Dependency Rule:** Code in an inner circle must not know anything about code in an outer
 circle. A use case can reference an entity, but an entity must never reference a use case.
@@ -760,13 +762,13 @@ def create_test_use_case(products: list[Product]) -> tuple:
 
 ### What Changed?
 
-| Before | After |
-|--------|-------|
-| SQL, SMTP, business logic in one function | 4 clean layers |
-| Cannot test without database and email server | Test with in-memory adapters |
-| Adding a new notification channel means modifying the function | Add a new adapter class |
-| Discount logic buried in SQL query logic | Extracted to `DiscountPolicy` domain service |
-| No error handling, raw dicts | Typed dataclasses, explicit exceptions |
+| Before                                                         | After                                        |
+| -------------------------------------------------------------- | -------------------------------------------- |
+| SQL, SMTP, business logic in one function                      | 4 clean layers                               |
+| Cannot test without database and email server                  | Test with in-memory adapters                 |
+| Adding a new notification channel means modifying the function | Add a new adapter class                      |
+| Discount logic buried in SQL query logic                       | Extracted to `DiscountPolicy` domain service |
+| No error handling, raw dicts                                   | Typed dataclasses, explicit exceptions       |
 
 ---
 
@@ -776,7 +778,7 @@ def create_test_use_case(products: list[Product]) -> tuple:
    core entities and business rules first. Only then think about databases and APIs.
 
 2. **Draw dependency arrows.** Show that dependencies point inward. "The service depends on
-   the repository *interface*, not on PostgreSQL directly."
+   the repository _interface_, not on PostgreSQL directly."
 
 3. **Mention testability.** "By depending on interfaces, I can test the business logic with
    in-memory fakes in milliseconds, without a database."

@@ -17,12 +17,12 @@ connections = N * (N - 1) / 2
 ```
 
 | Participants | Connections | Upload Streams per Peer |
-|-------------|-------------|------------------------|
-| 2           | 1           | 1                      |
-| 4           | 6           | 3                      |
-| 8           | 28          | 7                      |
-| 16          | 120         | 15                     |
-| 50          | 1225        | 49                     |
+| ------------ | ----------- | ----------------------- |
+| 2            | 1           | 1                       |
+| 4            | 6           | 3                       |
+| 8            | 28          | 7                       |
+| 16           | 120         | 15                      |
+| 50           | 1225        | 49                      |
 
 Each peer must encode and upload its media stream once per remote peer. A participant on a 5 Mbps upload link sending 1.5 Mbps video can handle roughly 3 outbound streams before quality collapses.
 
@@ -150,14 +150,14 @@ The SFU participates in bandwidth estimation:
 
 ### Popular SFU Implementations
 
-| SFU | Language | License | Notes |
-|-----|----------|---------|-------|
-| mediasoup | C++/Node.js | ISC | Highly performant, popular for custom applications |
-| Janus | C | GPL-3.0 | Plugin-based, versatile gateway |
-| Pion | Go | MIT | Pure Go, great for custom SFUs |
-| LiveKit | Go (Pion-based) | Apache-2.0 | Full-featured platform with SDKs |
-| ion-sfu | Go | MIT | Lightweight, Pion-based |
-| Jitsi Videobridge | Java/Kotlin | Apache-2.0 | Powers Jitsi Meet |
+| SFU               | Language        | License    | Notes                                              |
+| ----------------- | --------------- | ---------- | -------------------------------------------------- |
+| mediasoup         | C++/Node.js     | ISC        | Highly performant, popular for custom applications |
+| Janus             | C               | GPL-3.0    | Plugin-based, versatile gateway                    |
+| Pion              | Go              | MIT        | Pure Go, great for custom SFUs                     |
+| LiveKit           | Go (Pion-based) | Apache-2.0 | Full-featured platform with SDKs                   |
+| ion-sfu           | Go              | MIT        | Lightweight, Pion-based                            |
+| Jitsi Videobridge | Java/Kotlin     | Apache-2.0 | Powers Jitsi Meet                                  |
 
 ---
 
@@ -212,12 +212,14 @@ An MCU receives media from all participants, decodes every stream, composites th
 ### When to Use MCU vs SFU
 
 **Choose MCU when:**
+
 - Participants have extremely limited download bandwidth (receive only 1 stream).
 - You need server-side recording with a composited layout.
 - Interoperating with legacy SIP/H.323 telephony systems that expect a single composite.
 - You need guaranteed layout consistency across all participants.
 
 **Choose SFU when:**
+
 - You need low latency (no encode/decode round trip on server).
 - You want to minimize server cost (forwarding is 10-100x cheaper than transcoding).
 - Clients can handle multiple streams (modern browsers, mobile apps).
@@ -263,7 +265,7 @@ RID (Restriction Identifier) is an RTP header extension that labels each simulca
 const pc = new RTCPeerConnection(config);
 
 const stream = await navigator.mediaDevices.getUserMedia({
-  video: { width: 1280, height: 720 }
+  video: { width: 1280, height: 720 },
 });
 
 const videoTrack = stream.getVideoTracks()[0];
@@ -275,21 +277,21 @@ const transceiver = pc.addTransceiver(videoTrack, {
       rid: 'low',
       maxBitrate: 150_000,
       scaleResolutionDownBy: 4,
-      maxFramerate: 15
+      maxFramerate: 15,
     },
     {
       rid: 'medium',
       maxBitrate: 500_000,
       scaleResolutionDownBy: 2,
-      maxFramerate: 30
+      maxFramerate: 30,
     },
     {
       rid: 'high',
       maxBitrate: 2_500_000,
       scaleResolutionDownBy: 1,
-      maxFramerate: 30
-    }
-  ]
+      maxFramerate: 30,
+    },
+  ],
 });
 ```
 
@@ -456,7 +458,7 @@ const pc = new RTCPeerConnection(config);
 
 // Offerer creates the channel
 const channel = pc.createDataChannel('chat', {
-  ordered: true,           // SCTP ordered delivery
+  ordered: true, // SCTP ordered delivery
   maxRetransmits: undefined, // reliable (default)
 });
 
@@ -484,12 +486,12 @@ pc.ondatachannel = (event) => {
 
 ### Ordered vs Unordered, Reliable vs Unreliable
 
-| Mode | Config | Behavior | Use Case |
-|------|--------|----------|----------|
-| Ordered + Reliable | `{ ordered: true }` (default) | TCP-like: in-order, no loss | Chat messages, file transfer |
-| Unordered + Reliable | `{ ordered: false }` | All messages arrive, order not guaranteed | Asset loading |
-| Ordered + Unreliable | `{ ordered: true, maxRetransmits: 3 }` | Limited retries, in-order | Game commands |
-| Unordered + Unreliable | `{ ordered: false, maxRetransmits: 0 }` | Fire-and-forget, lowest latency | Game position updates, cursor sync |
+| Mode                   | Config                                  | Behavior                                  | Use Case                           |
+| ---------------------- | --------------------------------------- | ----------------------------------------- | ---------------------------------- |
+| Ordered + Reliable     | `{ ordered: true }` (default)           | TCP-like: in-order, no loss               | Chat messages, file transfer       |
+| Unordered + Reliable   | `{ ordered: false }`                    | All messages arrive, order not guaranteed | Asset loading                      |
+| Ordered + Unreliable   | `{ ordered: true, maxRetransmits: 3 }`  | Limited retries, in-order                 | Game commands                      |
+| Unordered + Unreliable | `{ ordered: false, maxRetransmits: 0 }` | Fire-and-forget, lowest latency           | Game position updates, cursor sync |
 
 You can also use `maxPacketLifeTime` (in milliseconds) instead of `maxRetransmits` to limit how long SCTP retries.
 
@@ -539,11 +541,11 @@ async function startScreenShare() {
   try {
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
       video: {
-        cursor: 'always',         // Show cursor in capture
+        cursor: 'always', // Show cursor in capture
         displaySurface: 'monitor', // Prefer full screen
         frameRate: { ideal: 30, max: 60 },
         width: { ideal: 1920 },
-        height: { ideal: 1080 }
+        height: { ideal: 1080 },
       },
       audio: {
         echoCancellation: false,
@@ -556,7 +558,7 @@ async function startScreenShare() {
       selfBrowserSurface: 'exclude',
       systemAudio: 'include',
       surfaceSwitching: 'include',
-      monitorTypeSurfaces: 'include'
+      monitorTypeSurfaces: 'include',
     });
 
     return screenStream;
@@ -574,11 +576,11 @@ async function startScreenShare() {
 
 The browser presents a picker where the user selects what to share:
 
-| Surface | Description | Audio Support |
-|---------|-------------|---------------|
+| Surface        | Description                          | Audio Support      |
+| -------------- | ------------------------------------ | ------------------ |
 | Screen/Monitor | Entire display including all windows | OS-level (limited) |
-| Window | Single application window | No |
-| Browser Tab | A specific browser tab | Yes (Chrome) |
+| Window         | Single application window            | No                 |
+| Browser Tab    | A specific browser tab               | Yes (Chrome)       |
 
 ### Combining Screen Share with Camera (PiP)
 
@@ -589,13 +591,13 @@ async function startScreenShareWithCamera(pc) {
   // Get screen share stream
   const screenStream = await navigator.mediaDevices.getDisplayMedia({
     video: { frameRate: 30 },
-    audio: true
+    audio: true,
   });
 
   // Get camera stream (small resolution for PiP)
   const cameraStream = await navigator.mediaDevices.getUserMedia({
     video: { width: 320, height: 240, frameRate: 15 },
-    audio: false // Audio already captured from mic
+    audio: false, // Audio already captured from mic
   });
 
   // Add screen share track to peer connection
@@ -623,7 +625,7 @@ System audio capture is available when sharing a Chrome tab. The audio track app
 ```javascript
 const stream = await navigator.mediaDevices.getDisplayMedia({
   video: true,
-  audio: true // Request system audio
+  audio: true, // Request system audio
 });
 
 const audioTracks = stream.getAudioTracks();
@@ -668,7 +670,7 @@ function recordStream(stream) {
   const recorder = new MediaRecorder(stream, {
     mimeType,
     videoBitsPerSecond: 2_500_000,
-    audioBitsPerSecond: 128_000
+    audioBitsPerSecond: 128_000,
   });
 
   const chunks = [];
@@ -701,7 +703,7 @@ function getSupportedMimeType() {
     'video/webm;codecs=vp8,opus',
     'video/webm;codecs=h264,opus',
     'video/webm',
-    'video/mp4'
+    'video/mp4',
   ];
 
   for (const type of types) {
@@ -724,7 +726,7 @@ pc.ontrack = (event) => {
 
   // Record the remote stream
   const recorder = new MediaRecorder(remoteStream, {
-    mimeType: 'video/webm;codecs=vp9,opus'
+    mimeType: 'video/webm;codecs=vp9,opus',
   });
 
   // Or combine local + remote into a single canvas for composite recording
@@ -760,7 +762,7 @@ async function uploadRecording(blob) {
 
   const response = await fetch('/api/recordings', {
     method: 'POST',
-    body: formData
+    body: formData,
   });
 
   return response.json();
@@ -809,11 +811,11 @@ const senderTransform = new TransformStream({
     const newFrame = new EncodedVideoChunk({
       type: encodedFrame.type,
       timestamp: encodedFrame.timestamp,
-      data: encryptedData
+      data: encryptedData,
     });
 
     controller.enqueue(newFrame);
-  }
+  },
 });
 
 // Apply transform to the sender
@@ -825,7 +827,7 @@ senderStreams.readable
 // Using the newer RTCRtpScriptTransform API (preferred):
 sender.transform = new RTCRtpScriptTransform(worker, {
   operation: 'encrypt',
-  keyId: currentKeyId
+  keyId: currentKeyId,
 });
 ```
 
@@ -839,18 +841,18 @@ const worker = new Worker('transform-worker.js');
 
 const sender = pc.addTrack(videoTrack);
 sender.transform = new RTCRtpScriptTransform(worker, {
-  operation: 'encrypt'
+  operation: 'encrypt',
 });
 
-const receiver = pc.getReceivers().find(r => r.track.kind === 'video');
+const receiver = pc.getReceivers().find((r) => r.track.kind === 'video');
 receiver.transform = new RTCRtpScriptTransform(worker, {
-  operation: 'decrypt'
+  operation: 'decrypt',
 });
 
 // Provide encryption key to worker
 worker.postMessage({
   type: 'setKey',
-  key: await exportKey(encryptionKey)
+  key: await exportKey(encryptionKey),
 });
 ```
 
@@ -902,12 +904,10 @@ onrtctransform = (event) => {
         frame.data = decrypted;
         controller.enqueue(frame);
       }
-    }
+    },
   });
 
-  transformer.readable
-    .pipeThrough(transform)
-    .pipeTo(transformer.writable);
+  transformer.readable.pipeThrough(transform).pipeTo(transformer.writable);
 };
 ```
 
@@ -954,11 +954,13 @@ GCC is the default congestion control algorithm in WebRTC. It combines two estim
 ```
 
 **Loss-based estimator**:
+
 - If packet loss > 10%: reduce bitrate by (1 - loss/2).
 - If packet loss < 2%: increase bitrate by ~8% per second.
 - Between 2-10%: hold steady.
 
 **Delay-based estimator**:
+
 - Measures one-way delay variation (OWD) of packets.
 - Uses a Kalman filter to estimate the queuing delay trend.
 - Three states: Overuse (decrease), Underuse (increase), Normal (hold).
@@ -1048,7 +1050,7 @@ async function collectStats(pc) {
           totalDecodeTime: stat.totalDecodeTime,
           nackCount: stat.nackCount,
           pliCount: stat.pliCount,
-          firCount: stat.firCount
+          firCount: stat.firCount,
         };
         break;
 
@@ -1064,7 +1066,7 @@ async function collectStats(pc) {
           totalEncodeTime: stat.totalEncodeTime,
           qualityLimitationReason: stat.qualityLimitationReason,
           qualityLimitationDurations: stat.qualityLimitationDurations,
-          retransmittedPacketsSent: stat.retransmittedPacketsSent
+          retransmittedPacketsSent: stat.retransmittedPacketsSent,
         };
         break;
 
@@ -1076,7 +1078,7 @@ async function collectStats(pc) {
             bytesReceived: stat.bytesReceived,
             bytesSent: stat.bytesSent,
             localCandidateType: stat.localCandidateId,
-            remoteCandidateType: stat.remoteCandidateId
+            remoteCandidateType: stat.remoteCandidateId,
           };
         }
         break;
@@ -1086,7 +1088,7 @@ async function collectStats(pc) {
           roundTripTime: stat.roundTripTime,
           jitter: stat.jitter,
           fractionLost: stat.fractionLost,
-          packetsLost: stat.packetsLost
+          packetsLost: stat.packetsLost,
         };
         break;
     }
@@ -1147,14 +1149,14 @@ class StatsMonitor {
       if (delta.packetLossRate > 0.05) {
         this.emit('quality-warning', {
           type: 'high-packet-loss',
-          value: delta.packetLossRate
+          value: delta.packetLossRate,
         });
       }
 
       if (delta.roundTripTime > 0.3) {
         this.emit('quality-warning', {
           type: 'high-latency',
-          value: delta.roundTripTime
+          value: delta.roundTripTime,
         });
       }
 
@@ -1182,7 +1184,7 @@ class StatsMonitor {
           jitter: stat.jitter,
           framesDecoded: stat.framesDecoded,
           framesDropped: stat.framesDropped,
-          framesPerSecond: stat.framesPerSecond
+          framesPerSecond: stat.framesPerSecond,
         };
       }
     });
@@ -1202,9 +1204,8 @@ class StatsMonitor {
       curr.videoInbound.packetsReceived - prev.videoInbound.packetsReceived;
 
     const totalPackets = packetsLostDelta + packetsRecvDelta;
-    const packetLossRate = totalPackets > 0
-      ? packetsLostDelta / totalPackets
-      : 0;
+    const packetLossRate =
+      totalPackets > 0 ? packetsLostDelta / totalPackets : 0;
 
     const bytesDelta =
       curr.videoInbound.bytesReceived - prev.videoInbound.bytesReceived;
@@ -1214,7 +1215,7 @@ class StatsMonitor {
       packetLossRate,
       roundTripTime: curr.videoInbound.jitter,
       bitrate,
-      framesPerSecond: curr.videoInbound.framesPerSecond
+      framesPerSecond: curr.videoInbound.framesPerSecond,
     };
   }
 
@@ -1234,6 +1235,7 @@ Production WebRTC applications send stats to observability platforms:
 - **Custom** -- Send stats via the data channel or a side HTTP/WebSocket connection to your own Grafana/Datadog/New Relic backend.
 
 Key dashboard panels:
+
 1. **Call quality distribution** -- Histogram of MOS scores across all calls.
 2. **Packet loss heatmap** -- Per-region, per-time breakdown.
 3. **Bitrate over time** -- Per participant, with simulcast layer annotations.
@@ -1276,7 +1278,7 @@ async function restartIce(pc) {
   // Send offer to remote peer via signaling
   signalingChannel.send({
     type: 'offer',
-    sdp: pc.localDescription.sdp
+    sdp: pc.localDescription.sdp,
   });
 }
 
@@ -1340,7 +1342,7 @@ function setupPerfectNegotiation(pc, signaling, isPolite) {
       await pc.setLocalDescription();
       signaling.send({
         type: pc.localDescription.type,
-        sdp: pc.localDescription.sdp
+        sdp: pc.localDescription.sdp,
       });
     } catch (err) {
       // handle error
@@ -1355,8 +1357,7 @@ function setupPerfectNegotiation(pc, signaling, isPolite) {
         const description = { type, sdp };
 
         const offerCollision =
-          type === 'offer' &&
-          (makingOffer || pc.signalingState !== 'stable');
+          type === 'offer' && (makingOffer || pc.signalingState !== 'stable');
 
         ignoreOffer = !isPolite && offerCollision;
 
@@ -1370,7 +1371,7 @@ function setupPerfectNegotiation(pc, signaling, isPolite) {
           await pc.setLocalDescription();
           signaling.send({
             type: pc.localDescription.type,
-            sdp: pc.localDescription.sdp
+            sdp: pc.localDescription.sdp,
           });
         }
       } else if (candidate) {
@@ -1399,8 +1400,8 @@ const transceiver = pc.addTransceiver('video', {
   direction: 'sendrecv',
   sendEncodings: [
     { rid: 'low', maxBitrate: 100_000, scaleResolutionDownBy: 4 },
-    { rid: 'high', maxBitrate: 1_000_000, scaleResolutionDownBy: 1 }
-  ]
+    { rid: 'high', maxBitrate: 1_000_000, scaleResolutionDownBy: 1 },
+  ],
 });
 
 // Change direction mid-call (e.g., mute sending)
@@ -1412,8 +1413,8 @@ transceiver.stop();
 // Get codec preferences
 const codecs = RTCRtpReceiver.getCapabilities('video').codecs;
 // Prefer VP9 over H.264
-const vp9Codecs = codecs.filter(c => c.mimeType === 'video/VP9');
-const otherCodecs = codecs.filter(c => c.mimeType !== 'video/VP9');
+const vp9Codecs = codecs.filter((c) => c.mimeType === 'video/VP9');
+const otherCodecs = codecs.filter((c) => c.mimeType !== 'video/VP9');
 transceiver.setCodecPreferences([...vp9Codecs, ...otherCodecs]);
 ```
 
@@ -1425,13 +1426,13 @@ transceiver.setCodecPreferences([...vp9Codecs, ...otherCodecs]);
 // Switch from camera to screen share without renegotiation
 async function switchToScreenShare(pc) {
   const screenStream = await navigator.mediaDevices.getDisplayMedia({
-    video: true
+    video: true,
   });
   const screenTrack = screenStream.getVideoTracks()[0];
 
-  const videoSender = pc.getSenders().find(s =>
-    s.track && s.track.kind === 'video'
-  );
+  const videoSender = pc
+    .getSenders()
+    .find((s) => s.track && s.track.kind === 'video');
 
   // No renegotiation needed
   await videoSender.replaceTrack(screenTrack);
@@ -1439,7 +1440,7 @@ async function switchToScreenShare(pc) {
   // Switch back when screen share ends
   screenTrack.onended = async () => {
     const cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: true
+      video: true,
     });
     await videoSender.replaceTrack(cameraStream.getVideoTracks()[0]);
   };
@@ -1459,7 +1460,7 @@ async function adaptVideoQuality(videoTrack, networkQuality) {
       await videoTrack.applyConstraints({
         width: { ideal: 1280 },
         height: { ideal: 720 },
-        frameRate: { ideal: 30 }
+        frameRate: { ideal: 30 },
       });
       break;
 
@@ -1467,7 +1468,7 @@ async function adaptVideoQuality(videoTrack, networkQuality) {
       await videoTrack.applyConstraints({
         width: { ideal: 640 },
         height: { ideal: 360 },
-        frameRate: { ideal: 24 }
+        frameRate: { ideal: 24 },
       });
       break;
 
@@ -1475,7 +1476,7 @@ async function adaptVideoQuality(videoTrack, networkQuality) {
       await videoTrack.applyConstraints({
         width: { ideal: 320 },
         height: { ideal: 180 },
-        frameRate: { ideal: 15 }
+        frameRate: { ideal: 15 },
       });
       break;
 
@@ -1609,6 +1610,7 @@ func main() {
 ```
 
 **Why Pion is popular for SFUs:**
+
 - Pure Go: easy cross-compilation, no CGo dependencies.
 - Modular: use only the components you need (ICE, DTLS, SRTP, SCTP separately).
 - Well-documented with many examples.
@@ -1713,7 +1715,7 @@ asyncio.run(main())
 
 **Q: Why can't WebRTC P2P scale to 50 participants?**
 
-A: In a full mesh, each peer must send N-1 separate encoded streams. With 50 participants that means 49 simultaneous uploads per peer. A typical residential connection can handle 3-5 Mbps upload, supporting only 2-3 high-quality video streams. Additionally, each connection requires independent ICE negotiation and STUN/TURN traversal, exponentially increasing setup complexity. The total connections grow as N*(N-1)/2 = 1225, making mesh infeasible. SFUs solve this by reducing upload to 1 stream (or 2-3 simulcast layers) per peer.
+A: In a full mesh, each peer must send N-1 separate encoded streams. With 50 participants that means 49 simultaneous uploads per peer. A typical residential connection can handle 3-5 Mbps upload, supporting only 2-3 high-quality video streams. Additionally, each connection requires independent ICE negotiation and STUN/TURN traversal, exponentially increasing setup complexity. The total connections grow as N\*(N-1)/2 = 1225, making mesh infeasible. SFUs solve this by reducing upload to 1 stream (or 2-3 simulcast layers) per peer.
 
 **Q: Compare SFU and MCU. When would you choose each?**
 

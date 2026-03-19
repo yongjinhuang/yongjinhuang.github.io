@@ -6,13 +6,13 @@ RDS (Relational Database Service) is a managed service that handles the undiffer
 
 ## Supported Engines
 
-| Engine | RDS | Aurora |
-|--------|-----|--------|
+| Engine         | RDS | Aurora                  |
+| -------------- | --- | ----------------------- |
 | **PostgreSQL** | Yes | Yes (Aurora PostgreSQL) |
-| **MySQL** | Yes | Yes (Aurora MySQL) |
-| **MariaDB** | Yes | No |
-| **Oracle** | Yes | No |
-| **SQL Server** | Yes | No |
+| **MySQL**      | Yes | Yes (Aurora MySQL)      |
+| **MariaDB**    | Yes | No                      |
+| **Oracle**     | Yes | No                      |
+| **SQL Server** | Yes | No                      |
 
 Choose Aurora when you want PostgreSQL or MySQL compatibility with higher performance and availability. Choose standard RDS when you need Oracle, SQL Server, MariaDB, or want to avoid Aurora's pricing model.
 
@@ -51,12 +51,12 @@ Writes succeed as long as 4 of 6 copies acknowledge. Reads succeed with 3 of 6. 
 
 ## Instance Classes
 
-| Class Family | Use Case | Example |
-|-------------|----------|---------|
-| **db.r6g / db.r7g** | Memory-optimized (production workloads) | db.r7g.2xlarge |
-| **db.m6g / db.m7g** | General purpose (balanced workloads) | db.m7g.xlarge |
-| **db.t4g / db.t3** | Burstable (dev/test, low-traffic) | db.t4g.medium |
-| **db.x2g** | Memory-intensive (large in-memory datasets) | db.x2g.xlarge |
+| Class Family        | Use Case                                    | Example        |
+| ------------------- | ------------------------------------------- | -------------- |
+| **db.r6g / db.r7g** | Memory-optimized (production workloads)     | db.r7g.2xlarge |
+| **db.m6g / db.m7g** | General purpose (balanced workloads)        | db.m7g.xlarge  |
+| **db.t4g / db.t3**  | Burstable (dev/test, low-traffic)           | db.t4g.medium  |
+| **db.x2g**          | Memory-intensive (large in-memory datasets) | db.x2g.xlarge  |
 
 **Graviton instances (g suffix)** offer ~20% better price-performance than Intel equivalents. Use them unless your engine or extension has an ARM compatibility issue.
 
@@ -80,13 +80,13 @@ Writes succeed as long as 4 of 6 copies acknowledge. Reads succeed with 3 of 6. 
 
 ### Read Replicas
 
-| Feature | RDS Read Replicas | Aurora Replicas |
-|---------|-------------------|-----------------|
-| Max count | 5 | 15 |
-| Replication | Asynchronous (binlog/WAL) | Shared storage layer (~10ms lag) |
-| Failover target | Manual promotion | Automatic failover |
-| Cross-region | Yes | Yes (Aurora Global Database) |
-| Independent scaling | Yes (different instance class) | Yes |
+| Feature             | RDS Read Replicas              | Aurora Replicas                  |
+| ------------------- | ------------------------------ | -------------------------------- |
+| Max count           | 5                              | 15                               |
+| Replication         | Asynchronous (binlog/WAL)      | Shared storage layer (~10ms lag) |
+| Failover target     | Manual promotion               | Automatic failover               |
+| Cross-region        | Yes                            | Yes (Aurora Global Database)     |
+| Independent scaling | Yes (different instance class) | Yes                              |
 
 ```bash
 # Create an Aurora read replica
@@ -103,11 +103,11 @@ aws rds create-db-instance \
 
 ### Standard RDS Storage
 
-| Type | Use Case | IOPS |
-|------|----------|------|
-| **gp3** | General purpose, most workloads | Baseline 3,000 IOPS, scalable to 16,000 |
-| **io1 / io2** | I/O-intensive (OLTP, large databases) | Up to 256,000 IOPS |
-| **magnetic** | Legacy, do not use | Low |
+| Type          | Use Case                              | IOPS                                    |
+| ------------- | ------------------------------------- | --------------------------------------- |
+| **gp3**       | General purpose, most workloads       | Baseline 3,000 IOPS, scalable to 16,000 |
+| **io1 / io2** | I/O-intensive (OLTP, large databases) | Up to 256,000 IOPS                      |
+| **magnetic**  | Legacy, do not use                    | Low                                     |
 
 **Storage auto-scaling**: RDS can automatically increase storage when usage exceeds a threshold. Set a max limit to control costs.
 
@@ -185,6 +185,7 @@ Engine-specific features (Oracle TDE, SQL Server native backup, etc.). Less comm
 A fully managed database proxy that sits between your application and RDS/Aurora.
 
 **Why use it:**
+
 - **Connection pooling**: Reuses database connections. Critical for Lambda (each invocation opens a new connection)
 - **IAM authentication**: Authenticate to the database using IAM roles instead of passwords
 - **Faster failover**: Reduces failover time by maintaining connections to the standby and transparently routing traffic
@@ -210,13 +211,13 @@ aws rds create-db-proxy \
 
 Scales compute capacity up and down automatically based on workload. You set a minimum and maximum ACU (Aurora Capacity Unit) range.
 
-| Feature | Detail |
-|---------|--------|
-| Scaling granularity | 0.5 ACU increments |
-| Min ACU | 0.5 (effectively scales near zero) |
-| Max ACU | 256 |
-| Scale-up time | Seconds |
-| Mixing with provisioned | Yes, same cluster can have both |
+| Feature                 | Detail                             |
+| ----------------------- | ---------------------------------- |
+| Scaling granularity     | 0.5 ACU increments                 |
+| Min ACU                 | 0.5 (effectively scales near zero) |
+| Max ACU                 | 256                                |
+| Scale-up time           | Seconds                            |
+| Mixing with provisioned | Yes, same cluster can have both    |
 
 **Good for:** Dev/test environments, unpredictable workloads, off-hours scaling. **Not ideal for:** Consistently high, latency-sensitive production loads where provisioned instances give more predictable performance.
 
@@ -330,15 +331,15 @@ aws rds reboot-db-instance --db-instance-identifier my-postgres
 
 ## Common Gotchas
 
-| Gotcha | Detail |
-|--------|--------|
-| **Storage auto-scaling cannot shrink** | Once storage grows, it never decreases. Over-provisioning is permanent. |
-| **Multi-AZ failover takes ~60s** | DNS TTL propagation. Your app must handle transient connection errors and retry. |
-| **Maintenance windows** | AWS applies patches during your maintenance window. Set it to low-traffic hours. Defer if needed, but do not skip indefinitely. |
-| **Major version upgrades need planning** | Test on a snapshot clone first. Some upgrades require downtime. Aurora blue/green deployments help. |
-| **Cannot encrypt an existing instance** | Must snapshot -> copy with encryption -> restore. Plan encryption from day one. |
-| **Read replica lag** | Standard RDS replicas use async replication. Under write-heavy loads, lag can be minutes. Aurora replicas share storage, so lag is typically <10ms. |
-| **max_connections scales with instance size** | Tiny instances (db.t4g.micro) may have max_connections as low as 40. Know your limits before deploying. |
-| **Aurora I/O costs** | Aurora charges per million I/O requests. For very I/O-intensive workloads, this can exceed the cost savings from not provisioning storage. Aurora I/O-Optimized pricing eliminates per-I/O charges for a higher instance price. |
-| **Blue/Green deployments** | Use RDS Blue/Green Deployments for major upgrades. It creates a staging environment that mirrors production, lets you test, then switches over with minimal downtime. |
-| **Snapshot restore creates a new instance** | PITR and snapshot restores always create a new endpoint. Your app config must be updated (or use RDS Proxy / Route 53 CNAME). |
+| Gotcha                                        | Detail                                                                                                                                                                                                                          |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Storage auto-scaling cannot shrink**        | Once storage grows, it never decreases. Over-provisioning is permanent.                                                                                                                                                         |
+| **Multi-AZ failover takes ~60s**              | DNS TTL propagation. Your app must handle transient connection errors and retry.                                                                                                                                                |
+| **Maintenance windows**                       | AWS applies patches during your maintenance window. Set it to low-traffic hours. Defer if needed, but do not skip indefinitely.                                                                                                 |
+| **Major version upgrades need planning**      | Test on a snapshot clone first. Some upgrades require downtime. Aurora blue/green deployments help.                                                                                                                             |
+| **Cannot encrypt an existing instance**       | Must snapshot -> copy with encryption -> restore. Plan encryption from day one.                                                                                                                                                 |
+| **Read replica lag**                          | Standard RDS replicas use async replication. Under write-heavy loads, lag can be minutes. Aurora replicas share storage, so lag is typically <10ms.                                                                             |
+| **max_connections scales with instance size** | Tiny instances (db.t4g.micro) may have max_connections as low as 40. Know your limits before deploying.                                                                                                                         |
+| **Aurora I/O costs**                          | Aurora charges per million I/O requests. For very I/O-intensive workloads, this can exceed the cost savings from not provisioning storage. Aurora I/O-Optimized pricing eliminates per-I/O charges for a higher instance price. |
+| **Blue/Green deployments**                    | Use RDS Blue/Green Deployments for major upgrades. It creates a staging environment that mirrors production, lets you test, then switches over with minimal downtime.                                                           |
+| **Snapshot restore creates a new instance**   | PITR and snapshot restores always create a new endpoint. Your app config must be updated (or use RDS Proxy / Route 53 CNAME).                                                                                                   |

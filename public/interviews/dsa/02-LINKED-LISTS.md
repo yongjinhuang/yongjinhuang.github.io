@@ -20,6 +20,7 @@ class ListNode:
 ```
 
 **Properties:**
+
 - Access by index: O(n)
 - Insert/delete at head: O(1)
 - Insert/delete at arbitrary position: O(n) to find, O(1) to splice
@@ -62,6 +63,7 @@ Two pointers move at different speeds. The fast pointer moves 2 steps per iterat
 slow pointer moves 1 step.
 
 **Applications:**
+
 - Find the middle of a list
 - Detect cycles
 - Find the start of a cycle
@@ -153,7 +155,7 @@ speed 1. They meet at the cycle start.
 
 **Why it works:** Let `a` = distance from head to cycle start, `b` = distance from cycle start
 to meeting point, `c` = cycle length. At meeting: slow traveled `a + b`, fast traveled
-`a + b + nc` for some integer n. Since fast = 2 * slow: `a + b + nc = 2(a + b)`, so
+`a + b + nc` for some integer n. Since fast = 2 \* slow: `a + b + nc = 2(a + b)`, so
 `a = nc - b`. Moving `a` steps from meeting point lands at cycle start.
 
 ```python
@@ -261,6 +263,7 @@ def remove_nth_from_end(head: ListNode | None, n: int) -> ListNode | None:
 **Problem:** Given `L0 -> L1 -> ... -> Ln`, reorder to `L0 -> Ln -> L1 -> Ln-1 -> ...`.
 
 **Approach:** Three steps:
+
 1. Find the middle using fast-slow pointers
 2. Reverse the second half
 3. Merge the two halves alternately
@@ -463,48 +466,53 @@ def add_two_numbers(
 
 ## 4. Common Interview Questions
 
-| # | Problem | Difficulty | Pattern | Key Insight |
-|---|---------|-----------|---------|-------------|
-| 1 | Reverse Linked List | Easy | In-place reversal | Three pointers: prev, curr, next |
-| 2 | Merge Two Sorted Lists | Easy | Dummy node | Compare heads, append smaller |
-| 3 | Linked List Cycle | Easy | Fast-slow pointers | Fast moves 2x, slow moves 1x |
-| 4 | Middle of Linked List | Easy | Fast-slow pointers | When fast hits end, slow is middle |
-| 5 | Palindrome Linked List | Easy | Fast-slow + reverse | Reverse second half, compare |
-| 6 | Remove Nth from End | Medium | Two pointers with gap | Gap of n between pointers |
-| 7 | Add Two Numbers | Medium | Dummy node | Carry propagation |
-| 8 | Reorder List | Medium | Find mid + reverse + merge | Three-step decomposition |
-| 9 | Linked List Cycle II | Medium | Floyd's algorithm | Math proof for cycle start |
-| 10 | LRU Cache | Medium | Hash map + doubly linked list | O(1) get and put |
-| 11 | Merge K Sorted Lists | Hard | Heap or divide-and-conquer | See Heaps chapter |
-| 12 | Reverse Nodes in K-Group | Hard | Iterative reversal in chunks | Count k, reverse, reconnect |
+| #   | Problem                  | Difficulty | Pattern                       | Key Insight                        |
+| --- | ------------------------ | ---------- | ----------------------------- | ---------------------------------- |
+| 1   | Reverse Linked List      | Easy       | In-place reversal             | Three pointers: prev, curr, next   |
+| 2   | Merge Two Sorted Lists   | Easy       | Dummy node                    | Compare heads, append smaller      |
+| 3   | Linked List Cycle        | Easy       | Fast-slow pointers            | Fast moves 2x, slow moves 1x       |
+| 4   | Middle of Linked List    | Easy       | Fast-slow pointers            | When fast hits end, slow is middle |
+| 5   | Palindrome Linked List   | Easy       | Fast-slow + reverse           | Reverse second half, compare       |
+| 6   | Remove Nth from End      | Medium     | Two pointers with gap         | Gap of n between pointers          |
+| 7   | Add Two Numbers          | Medium     | Dummy node                    | Carry propagation                  |
+| 8   | Reorder List             | Medium     | Find mid + reverse + merge    | Three-step decomposition           |
+| 9   | Linked List Cycle II     | Medium     | Floyd's algorithm             | Math proof for cycle start         |
+| 10  | LRU Cache                | Medium     | Hash map + doubly linked list | O(1) get and put                   |
+| 11  | Merge K Sorted Lists     | Hard       | Heap or divide-and-conquer    | See Heaps chapter                  |
+| 12  | Reverse Nodes in K-Group | Hard       | Iterative reversal in chunks  | Count k, reverse, reconnect        |
 
 ---
 
 ## 5. Gotchas
 
 ### 5.1 Pointer Management
+
 - **Always save the next pointer** before modifying `curr.next`. Forgetting this is the most
   common bug in reversal problems.
 - When splitting a list, **set the tail of the first part to None** to avoid cycles.
 - After merging or reordering, verify the list terminates (`last_node.next = None`).
 
 ### 5.2 Edge Cases
+
 - **Empty list** (`head is None`): Always check this first.
 - **Single node**: Most operations are no-ops.
 - **Two nodes**: Test your merge/reverse logic with exactly 2 nodes.
 - **Even vs odd length**: Fast-slow pointer middle can differ. Know which middle you get.
 
 ### 5.3 Dummy Node Usage
+
 - Use a dummy node whenever the **head might be removed or changed**.
 - Always return `dummy.next`, not `head` (head may have been removed).
 - Don't forget to create the dummy: `dummy = ListNode(0, head)`.
 
 ### 5.4 In-Place vs New List
+
 - Many problems require in-place modification (no extra list nodes).
 - "In-place" still allows O(1) extra pointers.
 - If the problem returns a new list, you can allocate new nodes.
 
 ### 5.5 Python-Specific
+
 - Python doesn't have null; use `None`.
 - `is` checks identity (same object), `==` checks value. For nodes, use `is` to compare references.
 - No need for manual memory management; Python's GC handles orphaned nodes.
@@ -513,13 +521,13 @@ def add_two_numbers(
 
 ## 6. Quick Reference
 
-| Pattern | When to Use | Time | Space | Key Steps |
-|---------|-------------|------|-------|-----------|
-| Dummy node | Head might change | - | O(1) | `dummy = ListNode(0, head); return dummy.next` |
-| Fast-slow (find middle) | Need midpoint | O(n) | O(1) | Fast moves 2x; when fast ends, slow = mid |
-| Fast-slow (cycle detect) | Detect cycle | O(n) | O(1) | If fast == slow, cycle exists |
-| Floyd's (cycle start) | Find cycle entry | O(n) | O(1) | After meet, reset one to head, move both 1x |
-| In-place reversal | Reverse list/sublist | O(n) | O(1) | Save next, reverse pointer, advance all |
-| Two-pointer gap | Nth from end | O(n) | O(1) | Advance fast by n, then move both |
-| Hash map + DLL | LRU Cache | O(1)/op | O(n) | Map for lookup, DLL for order |
-| Merge technique | Merge sorted lists | O(n+m) | O(1) | Compare heads, append smaller |
+| Pattern                  | When to Use          | Time    | Space | Key Steps                                      |
+| ------------------------ | -------------------- | ------- | ----- | ---------------------------------------------- |
+| Dummy node               | Head might change    | -       | O(1)  | `dummy = ListNode(0, head); return dummy.next` |
+| Fast-slow (find middle)  | Need midpoint        | O(n)    | O(1)  | Fast moves 2x; when fast ends, slow = mid      |
+| Fast-slow (cycle detect) | Detect cycle         | O(n)    | O(1)  | If fast == slow, cycle exists                  |
+| Floyd's (cycle start)    | Find cycle entry     | O(n)    | O(1)  | After meet, reset one to head, move both 1x    |
+| In-place reversal        | Reverse list/sublist | O(n)    | O(1)  | Save next, reverse pointer, advance all        |
+| Two-pointer gap          | Nth from end         | O(n)    | O(1)  | Advance fast by n, then move both              |
+| Hash map + DLL           | LRU Cache            | O(1)/op | O(n)  | Map for lookup, DLL for order                  |
+| Merge technique          | Merge sorted lists   | O(n+m)  | O(1)  | Compare heads, append smaller                  |

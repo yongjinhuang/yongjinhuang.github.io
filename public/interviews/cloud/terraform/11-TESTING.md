@@ -99,13 +99,13 @@ rule "aws_resource_missing_tags" {
 
 tflint catches things like:
 
-| Error Type | Example | Caught By |
-|-----------|---------|-----------|
-| Invalid instance type | `m5.nonexistent` | tflint (AWS plugin) |
-| Missing required tags | No `Environment` tag | tflint (custom rule) |
-| Deprecated resource | `aws_opsworks_stack` | tflint |
-| Bad naming convention | `myBucket` (not snake_case) | tflint |
-| Invalid AMI format | `ami-wrongformat` | tflint (AWS plugin) |
+| Error Type            | Example                     | Caught By            |
+| --------------------- | --------------------------- | -------------------- |
+| Invalid instance type | `m5.nonexistent`            | tflint (AWS plugin)  |
+| Missing required tags | No `Environment` tag        | tflint (custom rule) |
+| Deprecated resource   | `aws_opsworks_stack`        | tflint               |
+| Bad naming convention | `myBucket` (not snake_case) | tflint               |
+| Invalid AMI format    | `ami-wrongformat`           | tflint (AWS plugin)  |
 
 ---
 
@@ -453,16 +453,16 @@ pre-commit run --all-files   # Run manually
 
 ## Summary: What to Run Where
 
-| Tool | When | Cost | What It Catches |
-|------|------|------|-----------------|
-| `terraform fmt` | Pre-commit, CI | Free | Formatting |
-| `terraform validate` | Pre-commit, CI | Free | Syntax errors, bad references |
-| tflint | Pre-commit, CI | Free | Provider-specific errors, naming |
-| Checkov / trivy | CI | Free | Security misconfigs, compliance |
-| OPA / Conftest | CI | Free | Custom policy violations |
-| `terraform test` (plan) | CI | Free | Logic errors, variable handling |
-| `terraform test` (apply) | Nightly/scheduled | Real cost | Deployment validation |
-| Terratest | Nightly/scheduled | Real cost | Full integration validation |
+| Tool                     | When              | Cost      | What It Catches                  |
+| ------------------------ | ----------------- | --------- | -------------------------------- |
+| `terraform fmt`          | Pre-commit, CI    | Free      | Formatting                       |
+| `terraform validate`     | Pre-commit, CI    | Free      | Syntax errors, bad references    |
+| tflint                   | Pre-commit, CI    | Free      | Provider-specific errors, naming |
+| Checkov / trivy          | CI                | Free      | Security misconfigs, compliance  |
+| OPA / Conftest           | CI                | Free      | Custom policy violations         |
+| `terraform test` (plan)  | CI                | Free      | Logic errors, variable handling  |
+| `terraform test` (apply) | Nightly/scheduled | Real cost | Deployment validation            |
+| Terratest                | Nightly/scheduled | Real cost | Full integration validation      |
 
 ---
 

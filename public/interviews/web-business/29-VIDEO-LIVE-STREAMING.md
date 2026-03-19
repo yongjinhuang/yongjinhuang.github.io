@@ -72,14 +72,14 @@ Live chat is integral to the live streaming experience — Twitch, YouTube Live,
 
 ### Monetization Models
 
-| Model | How It Works | Examples |
-|-------|-------------|----------|
-| **Subscriptions** | Viewers pay a monthly fee for access to content or a specific creator | Netflix, Twitch subscriptions, Patreon |
-| **Ads (Pre-roll, Mid-roll, Post-roll)** | Video ads played before, during, or after content. Sold via CPM or programmatic | YouTube, Twitch ads |
-| **Donations / Tips** | Viewers send money directly to creators during live streams | Twitch Bits, YouTube Super Chat, TikTok Gifts |
-| **Pay-Per-View** | One-time payment to access a specific event or piece of content | Boxing matches, concerts, conferences |
-| **Virtual Goods** | Viewers purchase digital items (badges, emotes, virtual gifts) | TikTok coins, Twitch emotes |
-| **Freemium / Tiered** | Basic content free, premium content behind paywall | YouTube Premium, Crunchyroll |
+| Model                                   | How It Works                                                                    | Examples                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------- |
+| **Subscriptions**                       | Viewers pay a monthly fee for access to content or a specific creator           | Netflix, Twitch subscriptions, Patreon        |
+| **Ads (Pre-roll, Mid-roll, Post-roll)** | Video ads played before, during, or after content. Sold via CPM or programmatic | YouTube, Twitch ads                           |
+| **Donations / Tips**                    | Viewers send money directly to creators during live streams                     | Twitch Bits, YouTube Super Chat, TikTok Gifts |
+| **Pay-Per-View**                        | One-time payment to access a specific event or piece of content                 | Boxing matches, concerts, conferences         |
+| **Virtual Goods**                       | Viewers purchase digital items (badges, emotes, virtual gifts)                  | TikTok coins, Twitch emotes                   |
+| **Freemium / Tiered**                   | Basic content free, premium content behind paywall                              | YouTube Premium, Crunchyroll                  |
 
 Most platforms combine multiple models. YouTube uses ads plus subscriptions plus Super Chat. Twitch uses ads plus subscriptions plus Bits plus gifted subs.
 
@@ -111,28 +111,28 @@ DRM (Digital Rights Management) prevents unauthorized copying and redistribution
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Transcoding** | Converting video from one format/codec/resolution to another. The most compute-intensive step in the pipeline |
-| **Rendition** | One version of a video at a specific resolution and bitrate. A single upload might produce 5-6 renditions |
-| **ABR (Adaptive Bitrate)** | Technology that switches video quality dynamically based on the viewer's network conditions |
-| **HLS** | HTTP Live Streaming — Apple's protocol using .m3u8 manifests and segmented video. The dominant streaming format |
-| **DASH** | Dynamic Adaptive Streaming over HTTP — open standard alternative to HLS using .mpd manifests |
-| **RTMP** | Real-Time Messaging Protocol — the standard for ingesting live streams from broadcasters to servers |
-| **Codec** | The algorithm used to compress/decompress video. H.264 is universal, H.265 is more efficient, AV1 is the future |
-| **Manifest** | A text file (.m3u8 or .mpd) that lists all available quality levels and segment URLs for the player |
-| **Segment** | A small chunk (2-10 seconds) of video. Players download segments one at a time for streaming |
-| **Latency** | The delay between a live event happening and the viewer seeing it. Ranges from sub-second (WebRTC) to 30+ seconds (standard HLS) |
-| **DRM** | Digital Rights Management — encryption and licensing system that prevents unauthorized copying |
-| **CDN** | Content Delivery Network — global network of edge servers that cache and serve video close to viewers |
-| **VOD** | Video on Demand — pre-recorded content available for playback at any time |
-| **Bitrate** | The amount of data per second in a video stream, measured in Mbps. Higher bitrate means better quality but more bandwidth |
-| **LL-HLS** | Low-Latency HLS — Apple's extension to HLS that reduces live latency to 2-5 seconds |
-| **WebRTC** | Web Real-Time Communication — browser-native protocol for sub-second latency, used for video calls and ultra-low-latency streaming |
-| **CMAF** | Common Media Application Format — a standard that unifies HLS and DASH segment formats to reduce storage and CDN costs |
-| **Ingest** | The process of receiving a live video feed from a broadcaster into the streaming infrastructure |
-| **Origin** | The source server where video segments are stored before being distributed by the CDN |
-| **Egress** | Outbound data transfer from your infrastructure to viewers. The largest cost component of video delivery |
+| Term                       | What It Means                                                                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Transcoding**            | Converting video from one format/codec/resolution to another. The most compute-intensive step in the pipeline                      |
+| **Rendition**              | One version of a video at a specific resolution and bitrate. A single upload might produce 5-6 renditions                          |
+| **ABR (Adaptive Bitrate)** | Technology that switches video quality dynamically based on the viewer's network conditions                                        |
+| **HLS**                    | HTTP Live Streaming — Apple's protocol using .m3u8 manifests and segmented video. The dominant streaming format                    |
+| **DASH**                   | Dynamic Adaptive Streaming over HTTP — open standard alternative to HLS using .mpd manifests                                       |
+| **RTMP**                   | Real-Time Messaging Protocol — the standard for ingesting live streams from broadcasters to servers                                |
+| **Codec**                  | The algorithm used to compress/decompress video. H.264 is universal, H.265 is more efficient, AV1 is the future                    |
+| **Manifest**               | A text file (.m3u8 or .mpd) that lists all available quality levels and segment URLs for the player                                |
+| **Segment**                | A small chunk (2-10 seconds) of video. Players download segments one at a time for streaming                                       |
+| **Latency**                | The delay between a live event happening and the viewer seeing it. Ranges from sub-second (WebRTC) to 30+ seconds (standard HLS)   |
+| **DRM**                    | Digital Rights Management — encryption and licensing system that prevents unauthorized copying                                     |
+| **CDN**                    | Content Delivery Network — global network of edge servers that cache and serve video close to viewers                              |
+| **VOD**                    | Video on Demand — pre-recorded content available for playback at any time                                                          |
+| **Bitrate**                | The amount of data per second in a video stream, measured in Mbps. Higher bitrate means better quality but more bandwidth          |
+| **LL-HLS**                 | Low-Latency HLS — Apple's extension to HLS that reduces live latency to 2-5 seconds                                                |
+| **WebRTC**                 | Web Real-Time Communication — browser-native protocol for sub-second latency, used for video calls and ultra-low-latency streaming |
+| **CMAF**                   | Common Media Application Format — a standard that unifies HLS and DASH segment formats to reduce storage and CDN costs             |
+| **Ingest**                 | The process of receiving a live video feed from a broadcaster into the streaming infrastructure                                    |
+| **Origin**                 | The source server where video segments are stored before being distributed by the CDN                                              |
+| **Egress**                 | Outbound data transfer from your infrastructure to viewers. The largest cost component of video delivery                           |
 
 ## Common Patterns
 
@@ -191,20 +191,20 @@ Instead of relying solely on DRM, use signed URLs or short-lived tokens for vide
 
 ## Quick Reference
 
-| Scenario | Recommended Approach |
-|----------|---------------------|
-| Upload large video files | Resumable upload (tus protocol) directly to object storage via pre-signed URLs |
-| Transcode for multi-device playback | Generate HLS with H.264 renditions at 360p/480p/720p/1080p; add AV1 for cost savings at scale |
-| Deliver video globally | CDN with origin-pull caching; multi-CDN for high-availability requirements |
-| Start a live stream | RTMP ingest to a media server, real-time transcode to HLS/DASH, distribute via CDN |
-| Reduce live latency | LL-HLS or CMAF for 2-5s; WebRTC for sub-second (smaller audiences) |
-| Add real-time chat to live streams | WebSocket connections with Redis Pub/Sub fan-out; add moderation filters |
-| Monetize with ads | SSAI for ad-blocker resistance; VAST/VPAID for client-side ad insertion |
-| Protect premium content | Multi-DRM (Widevine + FairPlay + PlayReady) with a license server |
-| Generate thumbnails | Extract frames during transcode; use ML for best-frame selection; generate sprite sheets for scrubbing |
-| Manage a VOD library | Metadata catalog in a database, Elasticsearch for search, S3 lifecycle policies for archival |
-| Monetize creators | Combine subscriptions + donations + ad revenue share; track per-creator analytics |
-| Control access without full DRM | Signed URLs or short-lived tokens validated at the CDN edge |
-| Optimize encoding costs | Per-title encoding to match bitrate to content complexity |
-| Handle live-to-VOD | Auto-stitch live segments into a VOD asset; regenerate manifest; extract metadata |
-| Monitor viewer experience | Track buffering ratio, startup time, bitrate switches, and playback errors in real time |
+| Scenario                            | Recommended Approach                                                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Upload large video files            | Resumable upload (tus protocol) directly to object storage via pre-signed URLs                         |
+| Transcode for multi-device playback | Generate HLS with H.264 renditions at 360p/480p/720p/1080p; add AV1 for cost savings at scale          |
+| Deliver video globally              | CDN with origin-pull caching; multi-CDN for high-availability requirements                             |
+| Start a live stream                 | RTMP ingest to a media server, real-time transcode to HLS/DASH, distribute via CDN                     |
+| Reduce live latency                 | LL-HLS or CMAF for 2-5s; WebRTC for sub-second (smaller audiences)                                     |
+| Add real-time chat to live streams  | WebSocket connections with Redis Pub/Sub fan-out; add moderation filters                               |
+| Monetize with ads                   | SSAI for ad-blocker resistance; VAST/VPAID for client-side ad insertion                                |
+| Protect premium content             | Multi-DRM (Widevine + FairPlay + PlayReady) with a license server                                      |
+| Generate thumbnails                 | Extract frames during transcode; use ML for best-frame selection; generate sprite sheets for scrubbing |
+| Manage a VOD library                | Metadata catalog in a database, Elasticsearch for search, S3 lifecycle policies for archival           |
+| Monetize creators                   | Combine subscriptions + donations + ad revenue share; track per-creator analytics                      |
+| Control access without full DRM     | Signed URLs or short-lived tokens validated at the CDN edge                                            |
+| Optimize encoding costs             | Per-title encoding to match bitrate to content complexity                                              |
+| Handle live-to-VOD                  | Auto-stitch live segments into a VOD asset; regenerate manifest; extract metadata                      |
+| Monitor viewer experience           | Track buffering ratio, startup time, bitrate switches, and playback errors in real time                |

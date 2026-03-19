@@ -34,6 +34,7 @@ class Solution:
 **Time**: O(n) - single pass through the array
 **Space**: O(n) - hash map stores up to n elements
 **Edge Cases**:
+
 - Negative numbers (complement logic still works)
 - Duplicate values (e.g., `[3, 3]` with target 6 - works because we check before inserting)
 - Array of length 2 (minimum valid input)
@@ -68,6 +69,7 @@ class Solution:
 **Time**: O(n) - single pass, O(1) average set lookup
 **Space**: O(n) - set stores up to n elements
 **Edge Cases**:
+
 - Empty array or single element (no duplicates possible)
 - All elements identical (return `True` immediately on second element)
 - Very large values (hash set handles arbitrary integers)
@@ -101,6 +103,7 @@ class Solution:
 **Time**: O(n) - where n is the length of the strings
 **Space**: O(1) - at most 26 lowercase English letters in the counter
 **Edge Cases**:
+
 - Different lengths (immediately `False`)
 - Empty strings (both empty is `True`)
 - Single character strings
@@ -154,9 +157,10 @@ class Solution:
         return list(groups.values())
 ```
 
-**Time**: O(n * k log k) for sorted-key approach, O(n * k) for count-tuple approach - where n is the number of strings and k is the max string length
-**Space**: O(n * k) - storing all strings in the hash map
+**Time**: O(n _ k log k) for sorted-key approach, O(n _ k) for count-tuple approach - where n is the number of strings and k is the max string length
+**Space**: O(n \* k) - storing all strings in the hash map
 **Edge Cases**:
+
 - Empty string `""` (valid anagram group by itself)
 - Single-character strings
 - All strings are the same
@@ -203,6 +207,7 @@ class Solution:
 **Time**: O(n) - counting is O(n), bucket sort is O(n)
 **Space**: O(n) - counter and buckets
 **Edge Cases**:
+
 - k equals the number of distinct elements (return all)
 - k = 1 (return the single most frequent)
 - All elements have the same frequency
@@ -246,6 +251,7 @@ class Solution:
 **Time**: O(n) - two linear passes
 **Space**: O(1) - output array does not count as extra space per problem statement
 **Edge Cases**:
+
 - Array contains zero (products involving zero are handled naturally)
 - Array contains multiple zeros (all products become 0 except none)
 - Negative numbers (signs cancel correctly via multiplication)
@@ -289,6 +295,7 @@ class Solution:
 **Time**: O(n) - each number is visited at most twice (once in the outer loop, once in a while-loop extension)
 **Space**: O(n) - hash set
 **Edge Cases**:
+
 - Empty array (return 0)
 - Duplicates (set deduplicates them; `[1, 1, 2]` has longest = 2)
 - Single element (longest = 1)
@@ -334,6 +341,7 @@ class Codec:
 **Time**: O(n) - where n is the total number of characters across all strings
 **Space**: O(1) - extra space beyond the output (the encoded/decoded result itself is required output)
 **Edge Cases**:
+
 - Empty list `[]` (encode returns `""`, decode returns `[]`)
 - List containing empty strings `["", ""]` (encoded as `"0#0#"`)
 - Strings containing `#` characters (length prefix prevents ambiguity)
@@ -344,13 +352,13 @@ class Codec:
 
 ## Summary Table
 
-| # | Problem | Difficulty | Key Technique | Time | Space |
-|---|---------|-----------|---------------|------|-------|
-| 1 | Two Sum | Easy | Hash map complement | O(n) | O(n) |
-| 217 | Contains Duplicate | Easy | Hash set | O(n) | O(n) |
-| 242 | Valid Anagram | Easy | Frequency count | O(n) | O(1) |
-| 49 | Group Anagrams | Medium | Sorted key / count tuple | O(nk log k) | O(nk) |
-| 347 | Top K Frequent | Medium | Bucket sort | O(n) | O(n) |
-| 238 | Product Except Self | Medium | Prefix + suffix product | O(n) | O(1) |
-| 128 | Longest Consecutive | Medium | Set + sequence start | O(n) | O(n) |
-| 271 | Encode/Decode Strings | Medium | Length-prefix encoding | O(n) | O(1) |
+| #   | Problem               | Difficulty | Key Technique            | Time        | Space |
+| --- | --------------------- | ---------- | ------------------------ | ----------- | ----- |
+| 1   | Two Sum               | Easy       | Hash map complement      | O(n)        | O(n)  |
+| 217 | Contains Duplicate    | Easy       | Hash set                 | O(n)        | O(n)  |
+| 242 | Valid Anagram         | Easy       | Frequency count          | O(n)        | O(1)  |
+| 49  | Group Anagrams        | Medium     | Sorted key / count tuple | O(nk log k) | O(nk) |
+| 347 | Top K Frequent        | Medium     | Bucket sort              | O(n)        | O(n)  |
+| 238 | Product Except Self   | Medium     | Prefix + suffix product  | O(n)        | O(1)  |
+| 128 | Longest Consecutive   | Medium     | Set + sequence start     | O(n)        | O(n)  |
+| 271 | Encode/Decode Strings | Medium     | Length-prefix encoding   | O(n)        | O(1)  |

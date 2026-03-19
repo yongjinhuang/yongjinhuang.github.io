@@ -204,9 +204,10 @@ class Solution:
         return islands
 ```
 
-**Time**: O(m * n) — every cell visited at most once.
-**Space**: O(m * n) — visited set in the worst case.
+**Time**: O(m _ n) — every cell visited at most once.
+**Space**: O(m _ n) — visited set in the worst case.
 **Edge Cases**:
+
 - Empty grid → 0
 - Grid of all water → 0
 - Grid of all land → 1
@@ -258,6 +259,7 @@ class Solution:
 **Time**: O(V + E) — visit every node and edge once.
 **Space**: O(V) — hash map storing all cloned nodes.
 **Edge Cases**:
+
 - `None` input → return `None`
 - Single node with no neighbors
 - Node with self-loop
@@ -319,9 +321,10 @@ class Solution:
         return [[r, c] for r, c in pacific & atlantic]
 ```
 
-**Time**: O(m * n) — each cell visited at most twice (once per ocean).
-**Space**: O(m * n) — two reachable sets.
+**Time**: O(m _ n) — each cell visited at most twice (once per ocean).
+**Space**: O(m _ n) — two reachable sets.
 **Edge Cases**:
+
 - 1x1 grid → that single cell
 - Flat grid (all same height) → every cell
 - Strictly decreasing from top-left → only border cells
@@ -374,6 +377,7 @@ class Solution:
 **Time**: O(V + E) — process every node and edge.
 **Space**: O(V + E) — adjacency list and in-degree array.
 **Edge Cases**:
+
 - No prerequisites → always possible
 - Self-loop `[0, 0]` → cycle, return `False`
 - Disconnected graph → still valid if no cycles
@@ -426,6 +430,7 @@ class Solution:
 **Time**: O(V + E)
 **Space**: O(V + E)
 **Edge Cases**:
+
 - No prerequisites → return `[0, 1, ..., n-1]` (any order)
 - Single course → `[0]`
 - Cycle → empty list
@@ -476,9 +481,10 @@ class Solution:
         return components
 ```
 
-**Time**: O(E * α(n)) ≈ O(E) — α is the inverse Ackermann function, effectively constant.
+**Time**: O(E \* α(n)) ≈ O(E) — α is the inverse Ackermann function, effectively constant.
 **Space**: O(n) — parent and rank arrays.
 **Edge Cases**:
+
 - No edges → `n` components
 - Fully connected → 1 component
 - `n = 0` → 0 components
@@ -521,9 +527,10 @@ class Solution:
         return all(union(u, v) for u, v in edges)
 ```
 
-**Time**: O(E * α(n)) ≈ O(n) since E = n - 1.
+**Time**: O(E \* α(n)) ≈ O(n) since E = n - 1.
 **Space**: O(n) — parent array.
 **Edge Cases**:
+
 - `n = 1`, no edges → valid tree
 - `n = 0` → edge case; typically valid (empty tree)
 - Duplicate edges → would cause cycle detection to fail → `False`
@@ -583,9 +590,10 @@ class Solution:
         return minutes if fresh == 0 else -1
 ```
 
-**Time**: O(m * n) — every cell processed at most once.
-**Space**: O(m * n) — queue can hold all cells.
+**Time**: O(m _ n) — every cell processed at most once.
+**Space**: O(m _ n) — queue can hold all cells.
 **Edge Cases**:
+
 - No fresh oranges → 0 (already done)
 - No rotten oranges but fresh exist → -1
 - Fresh orange isolated by empty cells → -1
@@ -644,9 +652,10 @@ class Solution:
         return 0
 ```
 
-**Time**: O(n * k^2) — `n` words of length `k`; generating each pattern is O(k), and we do this for every word.
-**Space**: O(n * k) — pattern map and visited set.
+**Time**: O(n _ k^2) — `n` words of length `k`; generating each pattern is O(k), and we do this for every word.
+**Space**: O(n _ k) — pattern map and visited set.
 **Edge Cases**:
+
 - `endWord` not in word list → 0
 - `beginWord == endWord` → debatable; per LeetCode constraints they differ
 - No possible transformations → 0
@@ -656,14 +665,14 @@ class Solution:
 
 ## Summary Table
 
-| # | Problem | Pattern | Key Insight |
-|---|---------|---------|-------------|
-| 200 | Number of Islands | Grid BFS/DFS | Count connected components on a grid |
-| 133 | Clone Graph | BFS + Hash Map | Map old nodes to new nodes to avoid duplicates |
-| 417 | Pacific Atlantic Water Flow | Reverse Multi-source BFS | Flow backward from ocean borders |
-| 207 | Course Schedule | Topological Sort (Kahn's) | Cycle detection via in-degree processing |
-| 210 | Course Schedule II | Topological Sort (Kahn's) | Same as 207 but collect the order |
-| 323 | Connected Components | Union-Find | Merge components, count remaining |
-| 261 | Graph Valid Tree | Union-Find | Tree = connected + n-1 edges + no cycle |
-| 994 | Rotting Oranges | Multi-source BFS | Level-order BFS = simultaneous spread |
-| 127 | Word Ladder | BFS Shortest Path | Wildcard pattern map for neighbor lookup |
+| #   | Problem                     | Pattern                   | Key Insight                                    |
+| --- | --------------------------- | ------------------------- | ---------------------------------------------- |
+| 200 | Number of Islands           | Grid BFS/DFS              | Count connected components on a grid           |
+| 133 | Clone Graph                 | BFS + Hash Map            | Map old nodes to new nodes to avoid duplicates |
+| 417 | Pacific Atlantic Water Flow | Reverse Multi-source BFS  | Flow backward from ocean borders               |
+| 207 | Course Schedule             | Topological Sort (Kahn's) | Cycle detection via in-degree processing       |
+| 210 | Course Schedule II          | Topological Sort (Kahn's) | Same as 207 but collect the order              |
+| 323 | Connected Components        | Union-Find                | Merge components, count remaining              |
+| 261 | Graph Valid Tree            | Union-Find                | Tree = connected + n-1 edges + no cycle        |
+| 994 | Rotting Oranges             | Multi-source BFS          | Level-order BFS = simultaneous spread          |
+| 127 | Word Ladder                 | BFS Shortest Path         | Wildcard pattern map for neighbor lookup       |

@@ -64,16 +64,16 @@ Investing           (Medium Freq)       (High Freq)
 
 HFT firms account for a substantial fraction of total equity market volume:
 
-| Metric                     | Approximate Value |
-|----------------------------|-------------------|
-| US equity volume share     | 40-55%            |
-| European equity volume     | 30-40%            |
-| US futures volume          | 50-60%            |
-| FX spot volume             | 25-35%            |
-| Average holding period     | Seconds to minutes|
-| Daily trades (large firm)  | 1M - 10M+        |
-| Typical Sharpe ratio       | 5 - 30+           |
-| Annual revenue (top firm)  | $1B - $5B+        |
+| Metric                    | Approximate Value  |
+| ------------------------- | ------------------ |
+| US equity volume share    | 40-55%             |
+| European equity volume    | 30-40%             |
+| US futures volume         | 50-60%             |
+| FX spot volume            | 25-35%             |
+| Average holding period    | Seconds to minutes |
+| Daily trades (large firm) | 1M - 10M+          |
+| Typical Sharpe ratio      | 5 - 30+            |
+| Annual revenue (top firm) | $1B - $5B+         |
 
 ### Major HFT Firms
 
@@ -110,7 +110,7 @@ TIER 2: Specialized / Multi-Strategy
 
 **Misconception 1: "HFT is front-running"**
 
-Front-running is illegal and involves trading ahead of a known customer order. HFT firms do not have access to customer orders before they hit the exchange. What they do is *react faster* to public information, which is legal.
+Front-running is illegal and involves trading ahead of a known customer order. HFT firms do not have access to customer orders before they hit the exchange. What they do is _react faster_ to public information, which is legal.
 
 **Misconception 2: "HFT causes crashes"**
 
@@ -129,12 +129,14 @@ Speed alone does not make a system HFT. A long-term fund using fast execution is
 Academic research provides a nuanced picture:
 
 **Evidence FOR HFT (net positive):**
+
 - Hendershott, Jones & Menkveld (2011): Algorithmic trading narrows spreads, improves price discovery
 - Brogaard, Hendershott & Riordan (2014): HFT improves price efficiency, reduces volatility
 - Malinova & Park (2015): Restricting HFT (via fees) widened spreads and harmed retail investors
 - Menkveld (2013): Entry of a new HFT market maker reduced spreads by 15%
 
 **Evidence AGAINST HFT (potential harm):**
+
 - Budish, Cramton & Shim (2015): Arms race is socially wasteful, proposed frequent batch auctions
 - Aquilina, Budish & O'Neill (2022): Latency arbitrage accounts for ~33% of market-making profits in FTSE 100
 - Biais, Foucault & Moinas (2015): HFT can harm slow traders and create adverse selection
@@ -313,6 +315,7 @@ EVENT-DRIVEN HFT TIMELINE
 ```
 
 Key structured events:
+
 - Non-Farm Payrolls (NFP) -- first Friday of each month
 - FOMC decisions -- 8 times per year
 - CPI/PPI releases
@@ -612,14 +615,14 @@ TRADITIONAL PATH:                    KERNEL BYPASS PATH:
 
 **Major Kernel Bypass Technologies:**
 
-| Technology       | Vendor      | Approach                      |
-|------------------|-------------|-------------------------------|
-| Solarflare       | Xilinx/AMD  | OpenOnload (socket intercept) |
-| OpenOnload       |             |                               |
-| DPDK             | Linux/Intel | Full userspace NIC driver     |
-| Mellanox VMA     | NVIDIA      | Verbs-based acceleration      |
-| ef_vi            | Xilinx/AMD  | Direct NIC access API         |
-| Exablaze         | Cisco       | ExaNIC + ExaSock              |
+| Technology   | Vendor      | Approach                      |
+| ------------ | ----------- | ----------------------------- |
+| Solarflare   | Xilinx/AMD  | OpenOnload (socket intercept) |
+| OpenOnload   |             |                               |
+| DPDK         | Linux/Intel | Full userspace NIC driver     |
+| Mellanox VMA | NVIDIA      | Verbs-based acceleration      |
+| ef_vi        | Xilinx/AMD  | Direct NIC access API         |
+| Exablaze     | Cisco       | ExaNIC + ExaSock              |
 
 ### TCP Tuning for Low Latency
 
@@ -2699,4 +2702,4 @@ COMPETITIVE LANDSCAPE:
 
 ---
 
-*Next chapter: [Chapter 13 - Alternative Data and Machine Learning in Trading](13-ALTERNATIVE-DATA-ML.md)*
+_Next chapter: [Chapter 13 - Alternative Data and Machine Learning in Trading](13-ALTERNATIVE-DATA-ML.md)_

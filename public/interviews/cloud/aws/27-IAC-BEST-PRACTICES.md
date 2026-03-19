@@ -11,7 +11,8 @@ Infrastructure as Code (IaC) is the practice of defining, provisioning, and mana
 Manual console changes (ClickOps) create undocumented, unreproducible infrastructure. Someone adds a security group rule at 2 AM during an incident. Another engineer tweaks a Lambda timeout through the console. Within weeks, your "documented" architecture diverges from reality.
 
 Problems with ClickOps:
-- No audit trail beyond CloudTrail (which tells you *what* changed, not *why*)
+
+- No audit trail beyond CloudTrail (which tells you _what_ changed, not _why_)
 - Impossible to reproduce environments reliably
 - Knowledge lives in people's heads, not in version control
 - No peer review for infrastructure changes
@@ -19,14 +20,14 @@ Problems with ClickOps:
 
 ### What IaC Gives You
 
-| Benefit | Description |
-|---------|-------------|
-| **Reproducibility** | Spin up identical environments in minutes |
-| **Version control** | Git history shows who changed what and why |
-| **Peer review** | PRs for infrastructure, just like application code |
-| **Auditability** | Compliance teams can read the repo, not dig through CloudTrail |
-| **Drift detection** | Compare desired state against actual state automatically |
-| **Disaster recovery** | Rebuild entire environments from code |
+| Benefit               | Description                                                    |
+| --------------------- | -------------------------------------------------------------- |
+| **Reproducibility**   | Spin up identical environments in minutes                      |
+| **Version control**   | Git history shows who changed what and why                     |
+| **Peer review**       | PRs for infrastructure, just like application code             |
+| **Auditability**      | Compliance teams can read the repo, not dig through CloudTrail |
+| **Drift detection**   | Compare desired state against actual state automatically       |
+| **Disaster recovery** | Rebuild entire environments from code                          |
 
 ### Infrastructure Drift
 
@@ -38,15 +39,15 @@ Drift occurs when actual infrastructure state diverges from what your IaC define
 
 ### Comparison
 
-| Feature | CloudFormation | CDK | Terraform | Pulumi |
-|---------|---------------|-----|-----------|--------|
-| Language | YAML/JSON | TypeScript, Python, Java, Go, C# | HCL | TypeScript, Python, Go, C#, Java |
-| State management | AWS-managed (no state file) | AWS-managed (compiles to CFN) | Self-managed (S3 + DynamoDB) | Self-managed or Pulumi Cloud |
-| Multi-cloud | No | No | Yes | Yes |
-| Drift detection | Built-in | Via CloudFormation | `terraform plan` | `pulumi preview` |
-| Learning curve | Moderate | Low (if you know the language) | Moderate | Low (if you know the language) |
-| Ecosystem | AWS-only | AWS-only (with escape hatches) | Massive provider ecosystem | Growing |
-| Rollback | Automatic on failure | Automatic on failure | Manual | Manual |
+| Feature          | CloudFormation              | CDK                              | Terraform                    | Pulumi                           |
+| ---------------- | --------------------------- | -------------------------------- | ---------------------------- | -------------------------------- |
+| Language         | YAML/JSON                   | TypeScript, Python, Java, Go, C# | HCL                          | TypeScript, Python, Go, C#, Java |
+| State management | AWS-managed (no state file) | AWS-managed (compiles to CFN)    | Self-managed (S3 + DynamoDB) | Self-managed or Pulumi Cloud     |
+| Multi-cloud      | No                          | No                               | Yes                          | Yes                              |
+| Drift detection  | Built-in                    | Via CloudFormation               | `terraform plan`             | `pulumi preview`                 |
+| Learning curve   | Moderate                    | Low (if you know the language)   | Moderate                     | Low (if you know the language)   |
+| Ecosystem        | AWS-only                    | AWS-only (with escape hatches)   | Massive provider ecosystem   | Growing                          |
+| Rollback         | Automatic on failure        | Automatic on failure             | Manual                       | Manual                           |
 
 ### Decision Matrix
 
@@ -274,7 +275,8 @@ export class DatabaseConstruct extends Construct {
   constructor(scope: Construct, id: string, props: DatabaseConstructProps) {
     super(scope, id);
 
-    const instanceType = props.instanceType ??
+    const instanceType =
+      props.instanceType ??
       ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM);
 
     const instance = new rds.DatabaseInstance(this, 'Database', {
@@ -286,9 +288,10 @@ export class DatabaseConstruct extends Construct {
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       storageEncrypted: true,
       deletionProtection: props.environment === 'prod',
-      removalPolicy: props.environment === 'prod'
-        ? cdk.RemovalPolicy.RETAIN
-        : cdk.RemovalPolicy.DESTROY,
+      removalPolicy:
+        props.environment === 'prod'
+          ? cdk.RemovalPolicy.RETAIN
+          : cdk.RemovalPolicy.DESTROY,
     });
 
     this.endpoint = instance.dbInstanceEndpointAddress;
@@ -336,7 +339,10 @@ instance_count   = 3
 // config/prod.ts
 export const prodConfig = {
   environment: 'prod',
-  instanceType: ec2.InstanceType.of(ec2.InstanceClass.R6G, ec2.InstanceSize.XLARGE),
+  instanceType: ec2.InstanceType.of(
+    ec2.InstanceClass.R6G,
+    ec2.InstanceSize.XLARGE
+  ),
   instanceCount: 3,
 };
 ```
@@ -392,7 +398,7 @@ resource "aws_wafv2_web_acl" "this" {
 
 ### GitHub Actions Example (Terraform)
 
-```yaml
+````yaml
 name: Terraform
 
 on:
@@ -467,7 +473,7 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
         working-directory: infrastructure/environments/prod
-```
+````
 
 ### Drift Detection
 
@@ -507,12 +513,12 @@ State files also contain sensitive values. Encrypt the state bucket and restrict
 
 Run static analysis in CI before any apply:
 
-| Tool | Target | What It Checks |
-|------|--------|----------------|
-| **tfsec** | Terraform | Security misconfigurations |
-| **Checkov** | Terraform, CFN, CDK | Security, compliance, best practices |
-| **cfn-nag** | CloudFormation | Security warnings and failures |
-| **OPA/Conftest** | Any (JSON/YAML/HCL) | Custom policy rules |
+| Tool             | Target              | What It Checks                       |
+| ---------------- | ------------------- | ------------------------------------ |
+| **tfsec**        | Terraform           | Security misconfigurations           |
+| **Checkov**      | Terraform, CFN, CDK | Security, compliance, best practices |
+| **cfn-nag**      | CloudFormation      | Security warnings and failures       |
+| **OPA/Conftest** | Any (JSON/YAML/HCL) | Custom policy rules                  |
 
 Example Checkov in CI:
 
@@ -536,13 +542,13 @@ Example Checkov in CI:
 
 Every resource should have at minimum:
 
-| Tag | Purpose | Example |
-|-----|---------|---------|
-| `Environment` | Identifies env | `prod`, `staging`, `dev` |
-| `Service` | Logical service name | `payment-api`, `user-auth` |
-| `Team` | Owning team | `platform`, `payments` |
-| `CostCenter` | Billing attribution | `CC-1234` |
-| `ManagedBy` | How it was created | `terraform`, `cdk`, `manual` |
+| Tag           | Purpose              | Example                      |
+| ------------- | -------------------- | ---------------------------- |
+| `Environment` | Identifies env       | `prod`, `staging`, `dev`     |
+| `Service`     | Logical service name | `payment-api`, `user-auth`   |
+| `Team`        | Owning team          | `platform`, `payments`       |
+| `CostCenter`  | Billing attribution  | `CC-1234`                    |
+| `ManagedBy`   | How it was created   | `terraform`, `cdk`, `manual` |
 
 ### Enforcing Tags
 
@@ -741,6 +747,7 @@ docs/
 ### Runbooks for Day-2 Operations
 
 Every stack should have runbooks covering:
+
 - How to scale up/down
 - Failover procedures
 - Disaster recovery steps
@@ -806,18 +813,18 @@ Manage commitments through IaC for auditability. Track expiration dates and rene
 
 ## Golden Rules Summary
 
-| Rule | Why |
-|------|-----|
-| Everything in version control | No undocumented changes |
-| One tool, standardized | Avoid operational fragmentation |
-| Same code, different parameters | Environments must be structurally identical |
-| Remote state, always encrypted | Local state is a ticking time bomb |
-| Small, focused stacks | Limit blast radius of any single change |
-| Separate stateful from stateless | Databases and compute have different lifecycles |
-| PR-based workflow with plan output | Every change is reviewed before apply |
-| No secrets in code or state | Use Secrets Manager / SSM Parameter Store |
-| Policy-as-code in CI | Catch misconfigurations before they reach AWS |
-| Tag everything | Cost attribution, access control, and operations depend on it |
-| Test infrastructure like application code | Unit tests, integration tests, drift detection |
-| Protect critical resources | `prevent_destroy`, `DeletionPolicy: Retain` |
-| Document and maintain runbooks | Code without context is a liability |
+| Rule                                      | Why                                                           |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| Everything in version control             | No undocumented changes                                       |
+| One tool, standardized                    | Avoid operational fragmentation                               |
+| Same code, different parameters           | Environments must be structurally identical                   |
+| Remote state, always encrypted            | Local state is a ticking time bomb                            |
+| Small, focused stacks                     | Limit blast radius of any single change                       |
+| Separate stateful from stateless          | Databases and compute have different lifecycles               |
+| PR-based workflow with plan output        | Every change is reviewed before apply                         |
+| No secrets in code or state               | Use Secrets Manager / SSM Parameter Store                     |
+| Policy-as-code in CI                      | Catch misconfigurations before they reach AWS                 |
+| Tag everything                            | Cost attribution, access control, and operations depend on it |
+| Test infrastructure like application code | Unit tests, integration tests, drift detection                |
+| Protect critical resources                | `prevent_destroy`, `DeletionPolicy: Retain`                   |
+| Document and maintain runbooks            | Code without context is a liability                           |

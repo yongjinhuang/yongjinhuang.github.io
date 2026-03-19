@@ -1,6 +1,7 @@
 # Round 2: Technical Assessment - Live Coding
 
 ## Format
+
 - **Duration**: 1 hour on HackerRank (live, with interviewer)
 - **Difficulty**: LeetCode Medium to Medium-Hard (rated 3.2/5.0)
 - **Language**: Your choice (Python recommended given Whatnot's main backend)
@@ -10,6 +11,7 @@
 ## Strategy for the Interview
 
 ### Time Management (60 minutes)
+
 ```
 0-5 min   → Read problem, ask clarifying questions
 5-10 min  → Discuss approach with interviewer
@@ -19,6 +21,7 @@
 ```
 
 ### Communication Tips
+
 - **Think aloud**: Explain your reasoning as you code
 - **Ask clarifications**: Input size? Edge cases? Can I use built-in methods?
 - **Start simple**: Brute force first, then optimize
@@ -56,7 +59,7 @@ def group_anagrams_optimal(strs: list[str]) -> list[list[str]]:
     return list(groups.values())
 ```
 
-**Key Insight**: Sort each string as key, or use character frequency tuple for O(n*k).
+**Key Insight**: Sort each string as key, or use character frequency tuple for O(n\*k).
 
 **LeetCode**: [49. Group Anagrams](https://leetcode.com/problems/group-anagrams/)
 
@@ -500,6 +503,7 @@ class TokenBucket:
 ## LeetCode Practice List (Priority Order)
 
 ### Must Do (Top 15) - Trie & Graph Heavy
+
 1. Implement Trie (#208) **[CRITICAL]**
 2. Design Add and Search Words (#211) **[CRITICAL]**
 3. Word Search II (#212) **[CRITICAL]**
@@ -517,6 +521,7 @@ class TokenBucket:
 15. Maximum Subarray (#53)
 
 ### Should Do (Next 10)
+
 16. Word Break (#139)
 17. Rotting Oranges (#994)
 18. Network Delay Time (#743)

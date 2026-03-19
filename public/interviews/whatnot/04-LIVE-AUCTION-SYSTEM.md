@@ -11,6 +11,7 @@ Design a real-time auction system where sellers broadcast live video and buyers 
 ## Step 1: Requirements
 
 ### Functional Requirements
+
 - Seller starts a livestream and creates auction items
 - Buyers place bids in real-time during the auction window
 - Support "Secret Max Bid" (proxy bidding) — system auto-bids up to user's maximum
@@ -20,6 +21,7 @@ Design a real-time auction system where sellers broadcast live video and buyers 
 - "Buy It Now" fixed-price listings alongside auctions
 
 ### Non-Functional Requirements
+
 - **Latency**: Bid processing < 100ms
 - **Consistency**: No double-winning, no lost bids, correct winner
 - **Availability**: 99.9% — auction downtime = lost revenue
@@ -27,6 +29,7 @@ Design a real-time auction system where sellers broadcast live video and buyers 
 - **Ordering**: Bids must be processed in order (first valid bid wins ties)
 
 ### Out of Scope
+
 - Video streaming infrastructure (see [05-LIVESTREAM-PLATFORM.md](05-LIVESTREAM-PLATFORM.md))
 - Payment processing details
 - Fraud detection
@@ -131,6 +134,7 @@ Each auction item runs as an isolated Elixir GenServer process:
 ```
 
 **Why GenServer?**
+
 - Single-process = serialized bid processing = no race conditions
 - Each auction is isolated — one crash doesn't affect others
 - Erlang/OTP supervision tree auto-restarts crashed processes
@@ -180,6 +184,7 @@ Example:
 ```
 
 **Implementation rules:**
+
 1. Max bids are stored privately in GenServer state (not broadcast)
 2. When a new bid arrives, check all max bids for auto-response
 3. New price = min(highest_max_bid, second_highest_max_bid + increment)
@@ -232,33 +237,33 @@ CREATE TABLE max_bids (
 ```graphql
 # Mutations
 mutation PlaceBid($itemId: ID!, $amount: Int!) {
-    placeBid(itemId: $itemId, amount: $amount) {
-        success
-        currentPrice
-        isWinning
-        error
-    }
+  placeBid(itemId: $itemId, amount: $amount) {
+    success
+    currentPrice
+    isWinning
+    error
+  }
 }
 
 mutation PlaceMaxBid($itemId: ID!, $maxAmount: Int!) {
-    placeMaxBid(itemId: $itemId, maxAmount: $maxAmount) {
-        success
-        currentPrice
-        isWinning
-        error
-    }
+  placeMaxBid(itemId: $itemId, maxAmount: $maxAmount) {
+    success
+    currentPrice
+    isWinning
+    error
+  }
 }
 
 # Subscriptions (via Phoenix Channels / WebSocket)
 subscription AuctionUpdates($streamId: ID!) {
-    auctionUpdate(streamId: $streamId) {
-        itemId
-        currentPrice
-        currentWinner  # display name only
-        timeRemaining
-        status
-        bidCount
-    }
+  auctionUpdate(streamId: $streamId) {
+    itemId
+    currentPrice
+    currentWinner # display name only
+    timeRemaining
+    status
+    bidCount
+  }
 }
 ```
 
@@ -269,11 +274,13 @@ subscription AuctionUpdates($streamId: ID!) {
 ### Scaling Strategies
 
 **Horizontal scaling of GenServers:**
+
 - Horde distributes auction processes across Elixir cluster nodes
 - Each node handles subset of active auctions
 - Process migration on node failure via Horde handoff
 
 **Read scaling (viewer fan-out):**
+
 - 583K viewers don't all connect to the auction GenServer
 - Phoenix PubSub broadcasts state changes to all subscribers
 - PubSub shards across nodes to distribute fan-out load
@@ -296,23 +303,23 @@ subscription AuctionUpdates($streamId: ID!) {
 
 ### Failure Handling
 
-| Failure | Solution |
-|---------|----------|
-| GenServer crash | OTP supervisor restarts, recovers state from Redis snapshot |
-| Node failure | Horde migrates processes to healthy nodes |
+| Failure           | Solution                                                            |
+| ----------------- | ------------------------------------------------------------------- |
+| GenServer crash   | OTP supervisor restarts, recovers state from Redis snapshot         |
+| Node failure      | Horde migrates processes to healthy nodes                           |
 | Network partition | Auction pauses, resumes when healed (consistency over availability) |
-| Redis failure | Fall back to GenServer in-memory state + PostgreSQL event log |
-| Duplicate bids | Idempotency key per bid (user_id + item_id + amount + timestamp) |
+| Redis failure     | Fall back to GenServer in-memory state + PostgreSQL event log       |
+| Duplicate bids    | Idempotency key per bid (user_id + item_id + amount + timestamp)    |
 
 ### Trade-offs Discussed
 
-| Decision | Choice | Why |
-|----------|--------|-----|
-| Consistency vs Availability | **Consistency** | Wrong winner is worse than brief downtime |
-| Single process vs distributed | **Single GenServer** per auction | Serialized bids eliminate race conditions |
-| In-memory vs persistent | **Both** | In-memory for speed, persist to Kafka/DB for durability |
-| WebSocket vs polling | **WebSocket** | Real-time requirements demand push, not pull |
-| SQL vs NoSQL for bids | **SQL (append-only)** | Audit trail, ACID guarantees for financial data |
+| Decision                      | Choice                           | Why                                                     |
+| ----------------------------- | -------------------------------- | ------------------------------------------------------- |
+| Consistency vs Availability   | **Consistency**                  | Wrong winner is worse than brief downtime               |
+| Single process vs distributed | **Single GenServer** per auction | Serialized bids eliminate race conditions               |
+| In-memory vs persistent       | **Both**                         | In-memory for speed, persist to Kafka/DB for durability |
+| WebSocket vs polling          | **WebSocket**                    | Real-time requirements demand push, not pull            |
+| SQL vs NoSQL for bids         | **SQL (append-only)**            | Audit trail, ACID guarantees for financial data         |
 
 ### Monitoring & Observability
 

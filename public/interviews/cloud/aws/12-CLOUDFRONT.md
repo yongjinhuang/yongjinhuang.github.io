@@ -10,26 +10,26 @@ A CloudFront distribution defines the configuration for content delivery: where 
 
 ### Key Components
 
-| Component | Purpose |
-|-----------|---------|
-| Origin | Where CloudFront fetches content from |
-| Behavior | Rules for how requests are handled and cached |
-| Cache Policy | Controls what is included in the cache key and TTL |
-| Domain Names (CNAMEs) | Custom domains for the distribution |
-| SSL Certificate | TLS certificate for HTTPS |
-| Price Class | Which edge locations to use |
+| Component             | Purpose                                            |
+| --------------------- | -------------------------------------------------- |
+| Origin                | Where CloudFront fetches content from              |
+| Behavior              | Rules for how requests are handled and cached      |
+| Cache Policy          | Controls what is included in the cache key and TTL |
+| Domain Names (CNAMEs) | Custom domains for the distribution                |
+| SSL Certificate       | TLS certificate for HTTPS                          |
+| Price Class           | Which edge locations to use                        |
 
 ---
 
 ## Origin Types
 
-| Origin Type | Use Case | Notes |
-|------------|----------|-------|
-| S3 bucket | Static assets, websites | Use OAC for private buckets |
-| ALB / ELB | Dynamic web applications | Must be publicly accessible |
-| Custom HTTP | Any HTTP server | EC2, on-premises, third-party |
-| MediaStore | Video streaming | Optimized for media delivery |
-| API Gateway | REST/HTTP APIs | Regional or edge-optimized |
+| Origin Type | Use Case                 | Notes                         |
+| ----------- | ------------------------ | ----------------------------- |
+| S3 bucket   | Static assets, websites  | Use OAC for private buckets   |
+| ALB / ELB   | Dynamic web applications | Must be publicly accessible   |
+| Custom HTTP | Any HTTP server          | EC2, on-premises, third-party |
+| MediaStore  | Video streaming          | Optimized for media delivery  |
+| API Gateway | REST/HTTP APIs           | Regional or edge-optimized    |
 
 ### Origin Failover (Origin Groups)
 
@@ -43,10 +43,7 @@ Origin groups provide automatic failover. Define a primary and secondary origin.
       "StatusCodes": { "Items": [500, 502, 503, 504], "Quantity": 4 }
     },
     "Members": {
-      "Items": [
-        { "OriginId": "primary-s3" },
-        { "OriginId": "backup-s3" }
-      ],
+      "Items": [{ "OriginId": "primary-s3" }, { "OriginId": "backup-s3" }],
       "Quantity": 2
     }
   }
@@ -80,19 +77,19 @@ The cache key determines what makes a cached object unique. By default, it is th
 
 ### TTL Configuration
 
-| Setting | Default | Range |
-|---------|---------|-------|
-| Default TTL | 86400s (24h) | 0 - 31536000s |
-| Minimum TTL | 0s | 0 - 31536000s |
+| Setting     | Default            | Range         |
+| ----------- | ------------------ | ------------- |
+| Default TTL | 86400s (24h)       | 0 - 31536000s |
+| Minimum TTL | 0s                 | 0 - 31536000s |
 | Maximum TTL | 31536000s (1 year) | 0 - 31536000s |
 
 CloudFront respects `Cache-Control` and `Expires` headers from the origin, bounded by min/max TTL. If the origin sends no cache headers, the default TTL is used.
 
 ### Cache Policies vs Origin Request Policies
 
-| Policy Type | Controls |
-|------------|----------|
-| Cache Policy | What is in the cache key, TTL settings |
+| Policy Type           | Controls                                                                                 |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| Cache Policy          | What is in the cache key, TTL settings                                                   |
 | Origin Request Policy | What headers/cookies/query strings are forwarded to origin (without affecting cache key) |
 
 This separation is critical: you often need to forward authentication headers to the origin without including them in the cache key (which would destroy cache hit rates).
@@ -143,28 +140,28 @@ aws acm request-certificate \
 
 ### SNI vs Dedicated IP
 
-| Method | Cost | Notes |
-|--------|------|-------|
-| SNI (Server Name Indication) | Free | Works with modern clients (99.9%+) |
-| Dedicated IP | $600/month per distribution | Required only for ancient clients without SNI |
+| Method                       | Cost                        | Notes                                         |
+| ---------------------------- | --------------------------- | --------------------------------------------- |
+| SNI (Server Name Indication) | Free                        | Works with modern clients (99.9%+)            |
+| Dedicated IP                 | $600/month per distribution | Required only for ancient clients without SNI |
 
 Always use SNI unless you have a specific requirement for legacy client support.
 
 ### Viewer Protocol Policy
 
-| Policy | Behavior |
-|--------|----------|
-| HTTP and HTTPS | Serve both (not recommended) |
-| Redirect HTTP to HTTPS | 301 redirect (recommended) |
-| HTTPS Only | Reject HTTP requests |
+| Policy                 | Behavior                     |
+| ---------------------- | ---------------------------- |
+| HTTP and HTTPS         | Serve both (not recommended) |
+| Redirect HTTP to HTTPS | 301 redirect (recommended)   |
+| HTTPS Only             | Reject HTTP requests         |
 
 ### Origin Protocol Policy
 
-| Policy | When to Use |
-|--------|------------|
-| HTTPS Only | Origin supports HTTPS (recommended) |
-| Match Viewer | Origin handles both protocols |
-| HTTP Only | Origin is HTTP only (e.g., S3 website endpoint) |
+| Policy       | When to Use                                     |
+| ------------ | ----------------------------------------------- |
+| HTTPS Only   | Origin supports HTTPS (recommended)             |
+| Match Viewer | Origin handles both protocols                   |
+| HTTP Only    | Origin is HTTP only (e.g., S3 website endpoint) |
 
 ---
 
@@ -172,22 +169,23 @@ Always use SNI unless you have a specific requirement for legacy client support.
 
 ### Lambda@Edge vs CloudFront Functions
 
-| Feature | Lambda@Edge | CloudFront Functions |
-|---------|------------|---------------------|
-| Runtime | Node.js, Python | JavaScript only |
-| Execution time | Up to 30s (origin) / 5s (viewer) | Up to 1ms |
-| Memory | 128-10240 MB | 2 MB |
-| Network access | Yes | No |
-| File system access | Yes (512 MB /tmp) | No |
-| Request body access | Yes | No |
-| Deploy region | us-east-1 (replicated globally) | Edge locations |
-| Triggers | Viewer request/response, Origin request/response | Viewer request/response only |
-| Price | $0.60 per 1M requests + duration | $0.10 per 1M requests |
-| Scale | Thousands per second | Millions per second |
+| Feature             | Lambda@Edge                                      | CloudFront Functions         |
+| ------------------- | ------------------------------------------------ | ---------------------------- |
+| Runtime             | Node.js, Python                                  | JavaScript only              |
+| Execution time      | Up to 30s (origin) / 5s (viewer)                 | Up to 1ms                    |
+| Memory              | 128-10240 MB                                     | 2 MB                         |
+| Network access      | Yes                                              | No                           |
+| File system access  | Yes (512 MB /tmp)                                | No                           |
+| Request body access | Yes                                              | No                           |
+| Deploy region       | us-east-1 (replicated globally)                  | Edge locations               |
+| Triggers            | Viewer request/response, Origin request/response | Viewer request/response only |
+| Price               | $0.60 per 1M requests + duration                 | $0.10 per 1M requests        |
+| Scale               | Thousands per second                             | Millions per second          |
 
 ### When to Use What
 
 **CloudFront Functions** -- lightweight, high-volume transformations:
+
 - URL rewrites and redirects
 - Header manipulation
 - Cache key normalization
@@ -195,6 +193,7 @@ Always use SNI unless you have a specific requirement for legacy client support.
 - A/B testing (cookie-based routing)
 
 **Lambda@Edge** -- heavier processing:
+
 - Dynamic origin selection
 - Authentication and authorization with external calls
 - Image transformation
@@ -205,17 +204,17 @@ Always use SNI unless you have a specific requirement for legacy client support.
 
 ```javascript
 function handler(event) {
-    var request = event.request;
-    var uri = request.uri;
+  var request = event.request;
+  var uri = request.uri;
 
-    // Append index.html for directory requests
-    if (uri.endsWith('/')) {
-        request.uri += 'index.html';
-    } else if (!uri.includes('.')) {
-        request.uri += '/index.html';
-    }
+  // Append index.html for directory requests
+  if (uri.endsWith('/')) {
+    request.uri += 'index.html';
+  } else if (!uri.includes('.')) {
+    request.uri += '/index.html';
+  }
 
-    return request;
+  return request;
 }
 ```
 
@@ -226,6 +225,7 @@ function handler(event) {
 OAC restricts S3 bucket access so content is only served through CloudFront, not directly from S3.
 
 OAC replaces the older Origin Access Identity (OAI). OAC supports:
+
 - All S3 bucket types (including SSE-KMS encrypted)
 - All S3 features (S3 Object Lambda, etc.)
 - Better security with short-lived credentials
@@ -239,20 +239,22 @@ OAC replaces the older Origin Access Identity (OAI). OAC supports:
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "AllowCloudFrontServicePrincipal",
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "cloudfront.amazonaws.com"
-    },
-    "Action": "s3:GetObject",
-    "Resource": "arn:aws:s3:::my-bucket/*",
-    "Condition": {
-      "StringEquals": {
-        "AWS:SourceArn": "arn:aws:cloudfront::123456789:distribution/E1A2B3C4D5E6F7"
+  "Statement": [
+    {
+      "Sid": "AllowCloudFrontServicePrincipal",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudfront.amazonaws.com"
+      },
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::my-bucket/*",
+      "Condition": {
+        "StringEquals": {
+          "AWS:SourceArn": "arn:aws:cloudfront::123456789:distribution/E1A2B3C4D5E6F7"
+        }
       }
     }
-  }]
+  ]
 }
 ```
 
@@ -262,9 +264,9 @@ OAC replaces the older Origin Access Identity (OAI). OAC supports:
 
 Control access to private content by requiring authentication via signed URLs or cookies.
 
-| Method | Use Case |
-|--------|----------|
-| Signed URL | Individual file access, RTMP streams |
+| Method        | Use Case                                         |
+| ------------- | ------------------------------------------------ |
+| Signed URL    | Individual file access, RTMP streams             |
 | Signed Cookie | Access to multiple restricted files, entire site |
 
 Signed URLs include an expiration time, optional IP restriction, and a signature generated with a CloudFront key pair.
@@ -302,10 +304,10 @@ Stream logs to Kinesis Data Streams in real time. Configurable sampling rate (1-
 
 Restrict which edge locations CloudFront uses to reduce cost. Content is served from fewer locations, potentially increasing latency for distant users.
 
-| Price Class | Regions Included |
-|-------------|-----------------|
-| PriceClass_All | All edge locations (best performance) |
-| PriceClass_200 | Excludes South America and Australia |
+| Price Class    | Regions Included                         |
+| -------------- | ---------------------------------------- |
+| PriceClass_All | All edge locations (best performance)    |
+| PriceClass_200 | Excludes South America and Australia     |
 | PriceClass_100 | North America and Europe only (cheapest) |
 
 ---

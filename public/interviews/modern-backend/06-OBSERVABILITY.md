@@ -46,11 +46,11 @@ This guide covers the three pillars of observability, the OpenTelemetry standard
 Unstructured logs (`console.log("user logged in")`) are almost useless at scale. Structured logging outputs machine-parseable key-value pairs that can be searched, filtered, and correlated.
 
 ```typescript
-import pino from "pino";
+import pino from 'pino';
 
 // ── Logger Configuration ────────────────────────────────────
 const logger = pino({
-  level: process.env.LOG_LEVEL ?? "info",
+  level: process.env.LOG_LEVEL ?? 'info',
   formatters: {
     level(label: string) {
       return { level: label };
@@ -64,16 +64,16 @@ const logger = pino({
   // Redact sensitive fields
   redact: {
     paths: [
-      "req.headers.authorization",
-      "req.headers.cookie",
-      "body.password",
-      "body.creditCard",
+      'req.headers.authorization',
+      'req.headers.cookie',
+      'body.password',
+      'body.creditCard',
     ],
-    censor: "[REDACTED]",
+    censor: '[REDACTED]',
   },
   // Add base fields to every log
   base: {
-    service: "order-service",
+    service: 'order-service',
     version: process.env.APP_VERSION,
     environment: process.env.NODE_ENV,
   },
@@ -94,7 +94,7 @@ function createRequestLogger(
 
 // ── Usage ───────────────────────────────────────────────────
 function handleOrder(req: Request, log: pino.Logger): void {
-  log.info({ orderId: "abc-123", amount: 49.99 }, "Order received");
+  log.info({ orderId: 'abc-123', amount: 49.99 }, 'Order received');
   // Output:
   // {
   //   "level": "info",
@@ -113,6 +113,7 @@ function handleOrder(req: Request, log: pino.Logger): void {
 ```
 
 **Log levels and their semantics:**
+
 - `fatal`: System is unusable, immediate action required
 - `error`: Operation failed, but system continues. Requires investigation
 - `warn`: Something unexpected, but handled. May indicate future problems
@@ -243,27 +244,27 @@ OpenTelemetry is the CNCF standard for instrumentation. It provides a vendor-neu
 ### OpenTelemetry Setup in Node.js
 
 ```typescript
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
-import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
-import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
-import { ExpressInstrumentation } from "@opentelemetry/instrumentation-express";
-import { PgInstrumentation } from "@opentelemetry/instrumentation-pg";
-import { RedisInstrumentation } from "@opentelemetry/instrumentation-redis-4";
-import { PinoInstrumentation } from "@opentelemetry/instrumentation-pino";
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
+import { PgInstrumentation } from '@opentelemetry/instrumentation-pg';
+import { RedisInstrumentation } from '@opentelemetry/instrumentation-redis-4';
+import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino';
 import {
   Resource,
   detectResourcesSync,
   envDetectorSync,
   hostDetectorSync,
   processDetectorSync,
-} from "@opentelemetry/resources";
+} from '@opentelemetry/resources';
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
-} from "@opentelemetry/semantic-conventions";
+} from '@opentelemetry/semantic-conventions';
 
 // ── SDK Initialization (must run before any imports) ────────
 const sdk = new NodeSDK({
@@ -271,26 +272,26 @@ const sdk = new NodeSDK({
     detectors: [envDetectorSync, hostDetectorSync, processDetectorSync],
   }).merge(
     new Resource({
-      [ATTR_SERVICE_NAME]: "order-service",
-      [ATTR_SERVICE_VERSION]: process.env.APP_VERSION ?? "unknown",
-      [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: process.env.NODE_ENV ?? "development",
+      [ATTR_SERVICE_NAME]: 'order-service',
+      [ATTR_SERVICE_VERSION]: process.env.APP_VERSION ?? 'unknown',
+      [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: process.env.NODE_ENV ?? 'development',
     })
   ),
 
   traceExporter: new OTLPTraceExporter({
-    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT + "/v1/traces",
+    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT + '/v1/traces',
   }),
 
   metricReader: new PeriodicExportingMetricReader({
     exporter: new OTLPMetricExporter({
-      url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT + "/v1/metrics",
+      url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT + '/v1/metrics',
     }),
     exportIntervalMillis: 15000,
   }),
 
   instrumentations: [
     new HttpInstrumentation({
-      ignoreIncomingPaths: ["/health", "/ready", "/metrics"],
+      ignoreIncomingPaths: ['/health', '/ready', '/metrics'],
     }),
     new ExpressInstrumentation(),
     new PgInstrumentation({
@@ -303,7 +304,7 @@ const sdk = new NodeSDK({
 
 sdk.start();
 
-process.on("SIGTERM", async () => {
+process.on('SIGTERM', async () => {
   await sdk.shutdown();
   process.exit(0);
 });
@@ -312,48 +313,48 @@ process.on("SIGTERM", async () => {
 ### Custom Spans and Business Metrics
 
 ```typescript
-import { trace, metrics, SpanStatusCode } from "@opentelemetry/api";
+import { trace, metrics, SpanStatusCode } from '@opentelemetry/api';
 
-const tracer = trace.getTracer("order-service");
-const meter = metrics.getMeter("order-service");
+const tracer = trace.getTracer('order-service');
+const meter = metrics.getMeter('order-service');
 
 // ── Custom Metrics ──────────────────────────────────────────
-const orderCounter = meter.createCounter("orders.created", {
-  description: "Total orders created",
-  unit: "orders",
+const orderCounter = meter.createCounter('orders.created', {
+  description: 'Total orders created',
+  unit: 'orders',
 });
 
-const orderValueHistogram = meter.createHistogram("orders.value", {
-  description: "Distribution of order values",
-  unit: "USD",
+const orderValueHistogram = meter.createHistogram('orders.value', {
+  description: 'Distribution of order values',
+  unit: 'USD',
   advice: {
     explicitBucketBoundaries: [10, 25, 50, 100, 250, 500, 1000, 5000],
   },
 });
 
-const activeOrders = meter.createUpDownCounter("orders.active", {
-  description: "Currently active orders",
+const activeOrders = meter.createUpDownCounter('orders.active', {
+  description: 'Currently active orders',
 });
 
 // ── Custom Span Example ─────────────────────────────────────
 async function processOrder(order: Order): Promise<OrderResult> {
   return tracer.startActiveSpan(
-    "processOrder",
+    'processOrder',
     {
       attributes: {
-        "order.id": order.id,
-        "order.customer_id": order.customerId,
-        "order.item_count": order.items.length,
+        'order.id': order.id,
+        'order.customer_id': order.customerId,
+        'order.item_count': order.items.length,
       },
     },
     async (span) => {
       try {
         // Child span for validation
         const validated = await tracer.startActiveSpan(
-          "validateOrder",
+          'validateOrder',
           async (validationSpan) => {
             const result = await validateOrder(order);
-            validationSpan.setAttribute("order.valid", result.isValid);
+            validationSpan.setAttribute('order.valid', result.isValid);
             validationSpan.end();
             return result;
           }
@@ -362,15 +363,15 @@ async function processOrder(order: Order): Promise<OrderResult> {
         if (!validated.isValid) {
           span.setStatus({
             code: SpanStatusCode.ERROR,
-            message: "Order validation failed",
+            message: 'Order validation failed',
           });
           span.end();
-          return { success: false, error: "Validation failed" };
+          return { success: false, error: 'Validation failed' };
         }
 
         // Child span for payment
-        await tracer.startActiveSpan("chargePayment", async (paymentSpan) => {
-          paymentSpan.setAttribute("payment.method", order.paymentMethod);
+        await tracer.startActiveSpan('chargePayment', async (paymentSpan) => {
+          paymentSpan.setAttribute('payment.method', order.paymentMethod);
           await chargePayment(order);
           paymentSpan.end();
         });
@@ -491,12 +492,12 @@ async function processOrder(order: Order): Promise<OrderResult> {
 
 **Common SLIs by service type:**
 
-| Service Type | Availability SLI | Latency SLI | Quality SLI |
-|---|---|---|---|
-| HTTP API | % of non-5xx responses | p50, p95, p99 response time | % of valid responses |
-| Data pipeline | % of records processed | End-to-end latency | % of accurate results |
-| Storage | % of reads/writes succeeding | Read/write latency | Durability (data loss) |
-| Streaming | % of messages delivered | Consumer lag | % of ordered delivery |
+| Service Type  | Availability SLI             | Latency SLI                 | Quality SLI            |
+| ------------- | ---------------------------- | --------------------------- | ---------------------- |
+| HTTP API      | % of non-5xx responses       | p50, p95, p99 response time | % of valid responses   |
+| Data pipeline | % of records processed       | End-to-end latency          | % of accurate results  |
+| Storage       | % of reads/writes succeeding | Read/write latency          | Durability (data loss) |
+| Streaming     | % of messages delivered      | Consumer lag                | % of ordered delivery  |
 
 ---
 
@@ -535,13 +536,13 @@ async function processOrder(order: Order): Promise<OrderResult> {
 
 ```typescript
 interface CircuitBreakerConfig {
-  readonly failureThreshold: number;   // Failures before opening
-  readonly successThreshold: number;   // Successes to close from half-open
-  readonly timeoutMs: number;          // Time in open state before half-open
-  readonly monitorWindowMs: number;    // Window for counting failures
+  readonly failureThreshold: number; // Failures before opening
+  readonly successThreshold: number; // Successes to close from half-open
+  readonly timeoutMs: number; // Time in open state before half-open
+  readonly monitorWindowMs: number; // Window for counting failures
 }
 
-type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
+type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
 interface CircuitBreakerState {
   readonly state: CircuitState;
@@ -553,7 +554,7 @@ interface CircuitBreakerState {
 
 function createCircuitBreaker(config: CircuitBreakerConfig) {
   let current: CircuitBreakerState = {
-    state: "CLOSED",
+    state: 'CLOSED',
     failureCount: 0,
     successCount: 0,
     lastFailureTime: 0,
@@ -564,32 +565,32 @@ function createCircuitBreaker(config: CircuitBreakerConfig) {
     current = {
       ...current,
       state: newState,
-      failureCount: newState === "CLOSED" ? 0 : current.failureCount,
-      successCount: newState === "HALF_OPEN" ? 0 : current.successCount,
+      failureCount: newState === 'CLOSED' ? 0 : current.failureCount,
+      successCount: newState === 'HALF_OPEN' ? 0 : current.successCount,
       nextRetryTime:
-        newState === "OPEN"
+        newState === 'OPEN'
           ? Date.now() + config.timeoutMs
           : current.nextRetryTime,
     };
   }
 
   async function execute<T>(fn: () => Promise<T>): Promise<T> {
-    if (current.state === "OPEN") {
+    if (current.state === 'OPEN') {
       if (Date.now() >= current.nextRetryTime) {
-        transitionTo("HALF_OPEN");
+        transitionTo('HALF_OPEN');
       } else {
-        throw new Error("Circuit breaker is OPEN");
+        throw new Error('Circuit breaker is OPEN');
       }
     }
 
     try {
       const result = await fn();
 
-      if (current.state === "HALF_OPEN") {
+      if (current.state === 'HALF_OPEN') {
         const newSuccessCount = current.successCount + 1;
         current = { ...current, successCount: newSuccessCount };
         if (newSuccessCount >= config.successThreshold) {
-          transitionTo("CLOSED");
+          transitionTo('CLOSED');
         }
       } else {
         current = { ...current, failureCount: 0 };
@@ -604,10 +605,10 @@ function createCircuitBreaker(config: CircuitBreakerConfig) {
         lastFailureTime: Date.now(),
       };
 
-      if (current.state === "HALF_OPEN") {
-        transitionTo("OPEN");
+      if (current.state === 'HALF_OPEN') {
+        transitionTo('OPEN');
       } else if (newFailureCount >= config.failureThreshold) {
-        transitionTo("OPEN");
+        transitionTo('OPEN');
       }
 
       throw error;
@@ -630,8 +631,8 @@ const paymentCircuit = createCircuitBreaker({
 
 async function chargePayment(amount: number): Promise<PaymentResult> {
   return paymentCircuit.execute(async () => {
-    const response = await fetch("https://payments.api/charge", {
-      method: "POST",
+    const response = await fetch('https://payments.api/charge', {
+      method: 'POST',
       body: JSON.stringify({ amount }),
       signal: AbortSignal.timeout(5000),
     });
@@ -676,14 +677,14 @@ async function chargePayment(amount: number): Promise<PaymentResult> {
 ```
 
 ```typescript
-import { Router, Request, Response } from "express";
+import { Router, Request, Response } from 'express';
 
 interface HealthStatus {
-  readonly status: "healthy" | "degraded" | "unhealthy";
+  readonly status: 'healthy' | 'degraded' | 'unhealthy';
   readonly checks: Record<
     string,
     {
-      readonly status: "pass" | "fail";
+      readonly status: 'pass' | 'fail';
       readonly latencyMs?: number;
       readonly message?: string;
     }
@@ -702,46 +703,46 @@ function healthRouter(dependencies: {
 
   // Startup probe -- returns 200 once app is ready
   let isStarted = false;
-  router.get("/startup", (_req: Request, res: Response) => {
+  router.get('/startup', (_req: Request, res: Response) => {
     if (isStarted) {
-      res.status(200).json({ status: "started" });
+      res.status(200).json({ status: 'started' });
     } else {
-      res.status(503).json({ status: "starting" });
+      res.status(503).json({ status: 'starting' });
     }
   });
 
   // Liveness probe -- just check process health, NO external deps
-  router.get("/health/live", (_req: Request, res: Response) => {
+  router.get('/health/live', (_req: Request, res: Response) => {
     const memUsage = process.memoryUsage();
     const heapUsedPct = memUsage.heapUsed / memUsage.heapTotal;
 
     if (heapUsedPct > 0.95) {
       res.status(503).json({
-        status: "unhealthy",
-        reason: "Memory pressure",
+        status: 'unhealthy',
+        reason: 'Memory pressure',
         heapUsedPct,
       });
       return;
     }
 
-    res.status(200).json({ status: "alive" });
+    res.status(200).json({ status: 'alive' });
   });
 
   // Readiness probe -- check all external dependencies
-  router.get("/health/ready", async (_req: Request, res: Response) => {
-    const checks: HealthStatus["checks"] = {};
+  router.get('/health/ready', async (_req: Request, res: Response) => {
+    const checks: HealthStatus['checks'] = {};
 
     // Database check
     const dbStart = Date.now();
     try {
-      await dependencies.db.query("SELECT 1");
+      await dependencies.db.query('SELECT 1');
       checks.database = {
-        status: "pass",
+        status: 'pass',
         latencyMs: Date.now() - dbStart,
       };
     } catch (error) {
       checks.database = {
-        status: "fail",
+        status: 'fail',
         message: (error as Error).message,
       };
     }
@@ -751,25 +752,23 @@ function healthRouter(dependencies: {
     try {
       await dependencies.redis.ping();
       checks.redis = {
-        status: "pass",
+        status: 'pass',
         latencyMs: Date.now() - redisStart,
       };
     } catch (error) {
       checks.redis = {
-        status: "fail",
+        status: 'fail',
         message: (error as Error).message,
       };
     }
 
-    const allPassing = Object.values(checks).every(
-      (c) => c.status === "pass"
-    );
+    const allPassing = Object.values(checks).every((c) => c.status === 'pass');
 
     const health: HealthStatus = {
-      status: allPassing ? "healthy" : "unhealthy",
+      status: allPassing ? 'healthy' : 'unhealthy',
       checks,
       uptime: Date.now() - startTime,
-      version: process.env.APP_VERSION ?? "unknown",
+      version: process.env.APP_VERSION ?? 'unknown',
     };
 
     res.status(allPassing ? 200 : 503).json(health);
@@ -931,6 +930,7 @@ traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
 Service B's OTel SDK extracts this header, creates a new span with the received trace ID and the received span ID as its parent, and continues the trace.
 
 **Propagation works across different protocols:**
+
 - **HTTP**: `traceparent` and `tracestate` headers
 - **gRPC**: Metadata (same headers as HTTP/2)
 - **Kafka**: Message headers

@@ -4,7 +4,7 @@
 
 The most important architectural shift in backend engineering since containerization is the move toward **edge computing** -- running application logic not in a centralized data center, but at the network edge, geographically close to users. Combined with serverless execution models that eliminate server management entirely, this creates a new paradigm where a user in Tokyo gets the same sub-50ms response time as a user in Virginia.
 
-Understanding the internals of V8 isolates, the trade-offs between edge platforms, and when serverless is the *wrong* choice separates senior engineers from those who only follow tutorials.
+Understanding the internals of V8 isolates, the trade-offs between edge platforms, and when serverless is the _wrong_ choice separates senior engineers from those who only follow tutorials.
 
 ---
 
@@ -188,7 +188,11 @@ export interface Env {
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext
+  ): Promise<Response> {
     const url = new URL(request.url);
 
     // Route handling
@@ -275,8 +279,9 @@ async function handleUpload(request: Request, env: Env): Promise<Response> {
 
 // D1: SQLite at the edge
 async function handleQuery(request: Request, env: Env): Promise<Response> {
-  const { results } = await env.MY_DB
-    .prepare('SELECT * FROM users WHERE active = ? ORDER BY created_at DESC LIMIT ?')
+  const { results } = await env.MY_DB.prepare(
+    'SELECT * FROM users WHERE active = ? ORDER BY created_at DESC LIMIT ?'
+  )
     .bind(true, 20)
     .all();
 
@@ -284,7 +289,10 @@ async function handleQuery(request: Request, env: Env): Promise<Response> {
 }
 
 // AI Workers: ML inference at the edge
-async function handleAISummarize(request: Request, env: Env): Promise<Response> {
+async function handleAISummarize(
+  request: Request,
+  env: Env
+): Promise<Response> {
   const { text } = await request.json<{ text: string }>();
 
   const result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
@@ -356,13 +364,15 @@ export class RateLimiter implements DurableObject {
     this.requests = (await this.state.storage.get<number[]>('requests')) ?? [];
 
     // Remove expired entries
-    this.requests = this.requests.filter(ts => now - ts < windowMs);
+    this.requests = this.requests.filter((ts) => now - ts < windowMs);
 
     if (this.requests.length >= maxRequests) {
       return new Response('Rate limit exceeded', {
         status: 429,
         headers: {
-          'Retry-After': String(Math.ceil((this.requests[0] + windowMs - now) / 1000)),
+          'Retry-After': String(
+            Math.ceil((this.requests[0] + windowMs - now) / 1000)
+          ),
         },
       });
     }
@@ -472,13 +482,10 @@ import { streamifyResponse } from 'aws-lambda';
 export const handler = streamifyResponse(
   async (event, responseStream, context) => {
     // Set content type
-    responseStream = awslambda.HttpResponseStream.from(
-      responseStream,
-      {
-        statusCode: 200,
-        headers: { 'Content-Type': 'text/event-stream' },
-      }
-    );
+    responseStream = awslambda.HttpResponseStream.from(responseStream, {
+      statusCode: 200,
+      headers: { 'Content-Type': 'text/event-stream' },
+    });
 
     // Stream data as it becomes available
     for (let i = 0; i < 10; i++) {
@@ -608,19 +615,23 @@ const orderSaga = {
     ReserveInventory: {
       Type: 'Task',
       Resource: 'arn:aws:lambda:...:reserveInventory',
-      Catch: [{
-        ErrorEquals: ['States.ALL'],
-        Next: 'OrderFailed',
-      }],
+      Catch: [
+        {
+          ErrorEquals: ['States.ALL'],
+          Next: 'OrderFailed',
+        },
+      ],
       Next: 'ChargePayment',
     },
     ChargePayment: {
       Type: 'Task',
       Resource: 'arn:aws:lambda:...:chargePayment',
-      Catch: [{
-        ErrorEquals: ['States.ALL'],
-        Next: 'ReleaseInventory',
-      }],
+      Catch: [
+        {
+          ErrorEquals: ['States.ALL'],
+          Next: 'ReleaseInventory',
+        },
+      ],
       Next: 'CreateShipment',
     },
     ReleaseInventory: {
@@ -853,8 +864,9 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl;
 
   // A/B testing at the edge
-  const bucket = request.cookies.get('ab-bucket')?.value
-    ?? (Math.random() > 0.5 ? 'control' : 'experiment');
+  const bucket =
+    request.cookies.get('ab-bucket')?.value ??
+    (Math.random() > 0.5 ? 'control' : 'experiment');
 
   if (!request.cookies.get('ab-bucket')) {
     const response = NextResponse.next();

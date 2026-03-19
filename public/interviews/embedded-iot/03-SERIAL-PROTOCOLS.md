@@ -36,12 +36,12 @@ before communication begins.
 
 ### 1.2 Baud Rate and Timing
 
-| Baud Rate | Bit Time   | Byte Rate   | Common Use                    |
-|-----------|------------|-------------|-------------------------------|
-| 9600      | 104.2 us   | 960 B/s     | GPS, legacy sensors           |
-| 115200    | 8.68 us    | 11.52 KB/s  | Debug console, general use    |
-| 921600    | 1.09 us    | 92.16 KB/s  | High-speed logging            |
-| 1000000   | 1.00 us    | 100 KB/s    | ESP32 default monitor         |
+| Baud Rate | Bit Time | Byte Rate  | Common Use                 |
+| --------- | -------- | ---------- | -------------------------- |
+| 9600      | 104.2 us | 960 B/s    | GPS, legacy sensors        |
+| 115200    | 8.68 us  | 11.52 KB/s | Debug console, general use |
+| 921600    | 1.09 us  | 92.16 KB/s | High-speed logging         |
+| 1000000   | 1.00 us  | 100 KB/s   | ESP32 default monitor      |
 
 **Clock accuracy matters**: UART has no clock wire. Both sides sample the data line
 based on their own clocks. If the clocks differ by more than about 3-5%, bits will be
@@ -213,7 +213,7 @@ Both master and slave must use the same mode.
 ```
 
 | Mode | CPOL | CPHA | Clock Idle | Sample Edge | Shift Edge |
-|------|------|------|------------|-------------|------------|
+| ---- | ---- | ---- | ---------- | ----------- | ---------- |
 | 0    | 0    | 0    | LOW        | Rising      | Falling    |
 | 1    | 0    | 1    | LOW        | Falling     | Rising     |
 | 2    | 1    | 0    | HIGH       | Falling     | Rising     |
@@ -367,12 +367,12 @@ arbitration and backs off.
 **ACK/NACK**: After every byte, the receiver pulls SDA LOW (ACK) or leaves it HIGH
 (NACK). NACK signals an error or the end of a read transaction.
 
-| Speed Mode   | Clock Rate  | Use Case                     |
-|-------------|-------------|-------------------------------|
-| Standard     | 100 kHz     | Most sensors, EEPROMs         |
-| Fast         | 400 kHz     | Accelerometers, displays      |
-| Fast+        | 1 MHz       | Touch controllers             |
-| High-Speed   | 3.4 MHz     | Specialized devices           |
+| Speed Mode | Clock Rate | Use Case                 |
+| ---------- | ---------- | ------------------------ |
+| Standard   | 100 kHz    | Most sensors, EEPROMs    |
+| Fast       | 400 kHz    | Accelerometers, displays |
+| Fast+      | 1 MHz      | Touch controllers        |
+| High-Speed | 3.4 MHz    | Specialized devices      |
 
 ### 3.4 Pull-Up Resistor Selection
 
@@ -381,6 +381,7 @@ low resistance (e.g., 100 ohm) draws excessive current and the open-drain driver
 pull the line LOW.
 
 Rule of thumb:
+
 - **Standard mode (100 kHz)**: 4.7k - 10k ohm
 - **Fast mode (400 kHz)**: 2.2k - 4.7k ohm
 - **Bus capacitance**: Must be below 400 pF (limits cable length and device count)
@@ -734,12 +735,12 @@ the highest frequency component in the signal.
 
 ### 6.3 ADC Architectures
 
-| Type           | Speed          | Resolution | Use Case                    |
-|----------------|----------------|------------|------------------------------|
-| SAR            | 1-10 MSPS      | 8-16 bit   | General MCU ADC, fast scans  |
-| Sigma-Delta    | 10-1000 SPS    | 16-24 bit  | Precision measurement, audio |
-| Flash (Parallel)| 100+ MSPS    | 6-10 bit   | RF, oscilloscopes            |
-| Pipelined      | 10-100 MSPS   | 10-14 bit  | Video, communications        |
+| Type             | Speed       | Resolution | Use Case                     |
+| ---------------- | ----------- | ---------- | ---------------------------- |
+| SAR              | 1-10 MSPS   | 8-16 bit   | General MCU ADC, fast scans  |
+| Sigma-Delta      | 10-1000 SPS | 16-24 bit  | Precision measurement, audio |
+| Flash (Parallel) | 100+ MSPS   | 6-10 bit   | RF, oscilloscopes            |
+| Pipelined        | 10-100 MSPS | 10-14 bit  | Video, communications        |
 
 **SAR (Successive Approximation Register)**: Most common in MCUs. Uses a binary search
 algorithm: compare input to Vref/2, then Vref/4, and so on. Completes in N clock cycles
@@ -997,19 +998,20 @@ protocol activity looks like.
 
 ## 10. Protocol Selection Guide
 
-| Criterion          | UART    | SPI     | I2C     | CAN      |
-|--------------------|---------|---------|---------|----------|
-| Wires              | 2 (TX/RX)| 4+CS  | 2 (SDA/SCL)| 2 (diff) |
-| Speed              | 115k-1M | 1-80 MHz| 100k-3.4M| 1M-5M   |
-| Duplex             | Full    | Full    | Half    | Half     |
-| Multi-device       | No (P2P)| Yes (CS)| Yes (addr)| Yes (bus)|
-| Error detection    | Parity  | None*   | ACK/NACK| CRC+more |
-| Distance           | Short   | Short   | Short   | Long     |
-| Typical use        | Debug   | Display | Sensors | Automotive|
+| Criterion       | UART      | SPI      | I2C         | CAN        |
+| --------------- | --------- | -------- | ----------- | ---------- |
+| Wires           | 2 (TX/RX) | 4+CS     | 2 (SDA/SCL) | 2 (diff)   |
+| Speed           | 115k-1M   | 1-80 MHz | 100k-3.4M   | 1M-5M      |
+| Duplex          | Full      | Full     | Half        | Half       |
+| Multi-device    | No (P2P)  | Yes (CS) | Yes (addr)  | Yes (bus)  |
+| Error detection | Parity    | None\*   | ACK/NACK    | CRC+more   |
+| Distance        | Short     | Short    | Short       | Long       |
+| Typical use     | Debug     | Display  | Sensors     | Automotive |
 
-*SPI relies on higher-level protocol for error detection.
+\*SPI relies on higher-level protocol for error detection.
 
 **When to use which**:
+
 - **UART**: Debug console, GPS, BLE modules, simple point-to-point.
 - **SPI**: High-speed peripherals (display, Flash, SD card, high-rate sensors).
 - **I2C**: Low-speed sensors, EEPROMs, RTCs -- when you need many devices on few pins.
@@ -1092,7 +1094,7 @@ resynchronize on edges). The receiver automatically removes stuff bits. A violat
 (6 consecutive same bits) is detected as a stuff error.
 
 **Q13: You read 2048 from a 12-bit ADC with 3.3V reference. What is the input voltage?**
-A: Voltage = (ADC_value / 2^N) * Vref = (2048 / 4096) * 3.3V = 1.65V (exactly half
+A: Voltage = (ADC*value / 2^N) * Vref = (2048 / 4096) \_ 3.3V = 1.65V (exactly half
 of the reference voltage, which makes sense since 2048 is exactly half of 4096).
 
 **Q14: How would you implement a UART-based command parser for an embedded system?**

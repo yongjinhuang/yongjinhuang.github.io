@@ -65,28 +65,28 @@ my-chart/
 ### 1.2 Chart.yaml
 
 ```yaml
-apiVersion: v2                    # v2 for Helm 3
+apiVersion: v2 # v2 for Helm 3
 name: my-app
 description: A Helm chart for my application
-type: application                 # application (default) or library
-version: 1.0.0                    # Chart version (SemVer)
-appVersion: "2.5.0"              # Application version (informational)
-kubeVersion: ">=1.25.0-0"        # Supported K8s versions
+type: application # application (default) or library
+version: 1.0.0 # Chart version (SemVer)
+appVersion: '2.5.0' # Application version (informational)
+kubeVersion: '>=1.25.0-0' # Supported K8s versions
 home: https://github.com/org/my-app
 sources:
-- https://github.com/org/my-app
+  - https://github.com/org/my-app
 maintainers:
-- name: John Doe
-  email: john@example.com
+  - name: John Doe
+    email: john@example.com
 dependencies:
-- name: postgresql
-  version: "12.x.x"
-  repository: "https://charts.bitnami.com/bitnami"
-  condition: postgresql.enabled    # Only include if postgresql.enabled=true
-- name: redis
-  version: "17.x.x"
-  repository: "oci://registry-1.docker.io/bitnamicharts"
-  alias: cache                     # Reference as .Values.cache instead of .Values.redis
+  - name: postgresql
+    version: '12.x.x'
+    repository: 'https://charts.bitnami.com/bitnami'
+    condition: postgresql.enabled # Only include if postgresql.enabled=true
+  - name: redis
+    version: '17.x.x'
+    repository: 'oci://registry-1.docker.io/bitnamicharts'
+    alias: cache # Reference as .Values.cache instead of .Values.redis
 ```
 
 ### 1.3 Template Functions and Syntax
@@ -153,7 +153,7 @@ annotations:
 {{- end }}
 ```
 
-### 1.4 _helpers.tpl Common Patterns
+### 1.4 \_helpers.tpl Common Patterns
 
 ```yaml
 # templates/_helpers.tpl
@@ -251,24 +251,24 @@ spec:
 
 **Hook execution order:**
 
-| Hook | When | Common Use |
-|------|------|-----------|
-| `pre-install` | Before any chart resources are created | DB setup, secret creation |
-| `post-install` | After all resources are created | Smoke tests, notifications |
-| `pre-upgrade` | Before upgrade, after templates rendered | DB migration, backup |
-| `post-upgrade` | After all resources are upgraded | Smoke tests, cache warmup |
-| `pre-delete` | Before resources are deleted | Data export, cleanup |
-| `post-delete` | After all resources are deleted | External resource cleanup |
-| `pre-rollback` | Before rollback | DB backup before reverting |
-| `post-rollback` | After rollback | Verify rolled-back state |
+| Hook            | When                                     | Common Use                 |
+| --------------- | ---------------------------------------- | -------------------------- |
+| `pre-install`   | Before any chart resources are created   | DB setup, secret creation  |
+| `post-install`  | After all resources are created          | Smoke tests, notifications |
+| `pre-upgrade`   | Before upgrade, after templates rendered | DB migration, backup       |
+| `post-upgrade`  | After all resources are upgraded         | Smoke tests, cache warmup  |
+| `pre-delete`    | Before resources are deleted             | Data export, cleanup       |
+| `post-delete`   | After all resources are deleted          | External resource cleanup  |
+| `pre-rollback`  | Before rollback                          | DB backup before reverting |
+| `post-rollback` | After rollback                           | Verify rolled-back state   |
 
 **Delete policies:**
 
-| Policy | Behavior |
-|--------|----------|
+| Policy                 | Behavior                                              |
+| ---------------------- | ----------------------------------------------------- |
 | `before-hook-creation` | Delete previous hook resource before creating new one |
-| `hook-succeeded` | Delete after hook succeeds |
-| `hook-failed` | Delete after hook fails |
+| `hook-succeeded`       | Delete after hook succeeds                            |
+| `hook-failed`          | Delete after hook fails                               |
 
 ### 1.6 Helm Testing
 
@@ -315,14 +315,14 @@ Library charts contain only named templates (no rendered manifests). They are de
 # Chart.yaml of library chart
 apiVersion: v2
 name: common-templates
-type: library                     # Not application
+type: library # Not application
 version: 1.0.0
 
 # Chart.yaml of consuming chart
 dependencies:
-- name: common-templates
-  version: "1.x.x"
-  repository: "https://charts.myorg.com"
+  - name: common-templates
+    version: '1.x.x'
+    repository: 'https://charts.myorg.com'
 ```
 
 **Use case:** Standardize labels, service accounts, resource definitions across all charts in an organization.
@@ -403,76 +403,76 @@ spec:
     plural: databases
     singular: database
     shortNames:
-    - db
+      - db
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
-    schema:
-      openAPIV3Schema:
-        type: object
-        properties:
-          spec:
-            type: object
-            required: ["engine", "version", "storage"]
-            properties:
-              engine:
-                type: string
-                enum: ["postgres", "mysql"]
-              version:
-                type: string
-              replicas:
-                type: integer
-                minimum: 1
-                maximum: 7
-                default: 1
-              storage:
-                type: object
-                properties:
-                  size:
-                    type: string
-                    pattern: "^[0-9]+(Gi|Ti)$"
-                  storageClass:
-                    type: string
-              backup:
-                type: object
-                properties:
-                  schedule:
-                    type: string
-                  retention:
-                    type: string
-          status:
-            type: object
-            properties:
-              phase:
-                type: string
-                enum: ["Creating", "Running", "Failed", "Upgrading"]
-              readyReplicas:
-                type: integer
-              endpoint:
-                type: string
-    subresources:
-      status: {}                       # Enable /status subresource
-      scale:                           # Enable /scale subresource (for HPA)
-        specReplicasPath: .spec.replicas
-        statusReplicasPath: .status.readyReplicas
-    additionalPrinterColumns:          # Custom columns for kubectl get
-    - name: Engine
-      type: string
-      jsonPath: .spec.engine
-    - name: Version
-      type: string
-      jsonPath: .spec.version
-    - name: Replicas
-      type: integer
-      jsonPath: .spec.replicas
-    - name: Status
-      type: string
-      jsonPath: .status.phase
-    - name: Age
-      type: date
-      jsonPath: .metadata.creationTimestamp
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: ['engine', 'version', 'storage']
+              properties:
+                engine:
+                  type: string
+                  enum: ['postgres', 'mysql']
+                version:
+                  type: string
+                replicas:
+                  type: integer
+                  minimum: 1
+                  maximum: 7
+                  default: 1
+                storage:
+                  type: object
+                  properties:
+                    size:
+                      type: string
+                      pattern: '^[0-9]+(Gi|Ti)$'
+                    storageClass:
+                      type: string
+                backup:
+                  type: object
+                  properties:
+                    schedule:
+                      type: string
+                    retention:
+                      type: string
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: ['Creating', 'Running', 'Failed', 'Upgrading']
+                readyReplicas:
+                  type: integer
+                endpoint:
+                  type: string
+      subresources:
+        status: {} # Enable /status subresource
+        scale: # Enable /scale subresource (for HPA)
+          specReplicasPath: .spec.replicas
+          statusReplicasPath: .status.readyReplicas
+      additionalPrinterColumns: # Custom columns for kubectl get
+        - name: Engine
+          type: string
+          jsonPath: .spec.engine
+        - name: Version
+          type: string
+          jsonPath: .spec.version
+        - name: Replicas
+          type: integer
+          jsonPath: .spec.replicas
+        - name: Status
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
 ```
 
 **Using the CRD:**
@@ -485,14 +485,14 @@ metadata:
   namespace: production
 spec:
   engine: postgres
-  version: "16"
+  version: '16'
   replicas: 3
   storage:
     size: 100Gi
     storageClass: fast-ssd
   backup:
-    schedule: "0 2 * * *"
-    retention: "30d"
+    schedule: '0 2 * * *'
+    retention: '30d'
 ```
 
 ```bash
@@ -518,17 +518,17 @@ conversion:
         name: database-operator-webhook
         namespace: operators
         path: /convert
-    conversionReviewVersions: ["v1"]
+    conversionReviewVersions: ['v1']
 ```
 
 **Validation with CEL (1.25+):**
 
 ```yaml
 x-kubernetes-validations:
-- rule: "self.replicas % 2 == 1"
-  message: "Replicas must be odd for quorum"
-- rule: "self.replicas >= oldSelf.replicas || self.replicas >= 1"
-  message: "Cannot scale below 1"
+  - rule: 'self.replicas % 2 == 1'
+    message: 'Replicas must be odd for quorum'
+  - rule: 'self.replicas >= oldSelf.replicas || self.replicas >= 1'
+    message: 'Cannot scale below 1'
 ```
 
 ### 2.4 The Control Loop in Detail
@@ -578,22 +578,22 @@ func (r *DatabaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 **Level-triggered vs Edge-triggered:**
 
-| Approach | Description | Kubernetes Model |
-|----------|-------------|-----------------|
-| Edge-triggered | React to events (change happened) | Dangerous: miss events = drift |
+| Approach        | Description                             | Kubernetes Model                                      |
+| --------------- | --------------------------------------- | ----------------------------------------------------- |
+| Edge-triggered  | React to events (change happened)       | Dangerous: miss events = drift                        |
 | Level-triggered | React to state (current state is wrong) | Kubernetes standard: always compare desired vs actual |
 
 Kubernetes operators should be **level-triggered** — they should be correct even if they miss events. The reconciliation loop always reads current state and compares to desired state.
 
 ### 2.5 Operator Frameworks
 
-| Framework | Language | Complexity | Best For |
-|-----------|----------|-----------|----------|
-| **kubebuilder** | Go | Medium | Go developers, production operators |
-| **Operator SDK** | Go, Ansible, Helm | Low-Medium | Quick start, multiple languages |
-| **Metacontroller** | Any (webhook) | Low | Operators in any language (Python, Node.js) |
-| **KUDO** | Declarative | Low | Plan-based operators, no code |
-| **kopf** | Python | Low | Python-based operators, prototyping |
+| Framework          | Language          | Complexity | Best For                                    |
+| ------------------ | ----------------- | ---------- | ------------------------------------------- |
+| **kubebuilder**    | Go                | Medium     | Go developers, production operators         |
+| **Operator SDK**   | Go, Ansible, Helm | Low-Medium | Quick start, multiple languages             |
+| **Metacontroller** | Any (webhook)     | Low        | Operators in any language (Python, Node.js) |
+| **KUDO**           | Declarative       | Low        | Plan-based operators, no code               |
+| **kopf**           | Python            | Low        | Python-based operators, prototyping         |
 
 ```bash
 # Scaffold a new operator with kubebuilder
@@ -609,16 +609,16 @@ kubebuilder create api --group myorg --version v1alpha1 --kind Database
 
 ### 2.6 Common Operators in Production
 
-| Operator | What It Manages | Why Not Just Helm? |
-|---------|----------------|-------------------|
-| **cert-manager** | TLS certificates (Let's Encrypt, internal CA) | Auto-renewal, automatic issuance on Ingress annotation |
-| **external-dns** | DNS records (Route53, CloudFlare) | Automatically creates DNS records for Services/Ingresses |
-| **prometheus-operator** | Prometheus, Grafana, AlertManager | ServiceMonitor/PrometheusRule CRDs for declarative monitoring |
-| **ArgoCD** | Git-synchronized applications | Continuous reconciliation, drift detection, multi-cluster |
-| **CloudNativePG** | PostgreSQL clusters | Automated failover, backup, recovery, minor version upgrades |
-| **Strimzi** | Apache Kafka clusters | Automated rolling upgrades, topic/user management |
-| **Rook** | Ceph storage clusters | Automated cluster expansion, self-healing, rebalancing |
-| **Crossplane** | Cloud infrastructure (AWS, GCP, Azure) | Provisions cloud resources via K8s CRDs |
+| Operator                | What It Manages                               | Why Not Just Helm?                                            |
+| ----------------------- | --------------------------------------------- | ------------------------------------------------------------- |
+| **cert-manager**        | TLS certificates (Let's Encrypt, internal CA) | Auto-renewal, automatic issuance on Ingress annotation        |
+| **external-dns**        | DNS records (Route53, CloudFlare)             | Automatically creates DNS records for Services/Ingresses      |
+| **prometheus-operator** | Prometheus, Grafana, AlertManager             | ServiceMonitor/PrometheusRule CRDs for declarative monitoring |
+| **ArgoCD**              | Git-synchronized applications                 | Continuous reconciliation, drift detection, multi-cluster     |
+| **CloudNativePG**       | PostgreSQL clusters                           | Automated failover, backup, recovery, minor version upgrades  |
+| **Strimzi**             | Apache Kafka clusters                         | Automated rolling upgrades, topic/user management             |
+| **Rook**                | Ceph storage clusters                         | Automated cluster expansion, self-healing, rebalancing        |
+| **Crossplane**          | Cloud infrastructure (AWS, GCP, Azure)        | Provisions cloud resources via K8s CRDs                       |
 
 ### 2.7 When to Use What
 
@@ -641,12 +641,14 @@ Q: Are you installing third-party software?
 ```
 
 **Build an Operator when:**
+
 - The application has complex operational procedures (failover, backup, upgrade)
 - Manual intervention is frequently needed and error-prone
 - Multiple instances of the application must be managed with consistent behavior
 - The application lifecycle goes beyond install/upgrade/delete
 
 **Do NOT build an Operator when:**
+
 - Helm chart + CronJob for maintenance tasks is sufficient
 - The application is stateless and simple to manage
 - You do not have the team capacity to maintain custom Go code
@@ -716,33 +718,33 @@ When using `--reuse-values`, Helm merges existing values with new ones. But arra
 
 ## 5. Quick Reference
 
-| Helm Command | Description |
-|-------------|-------------|
-| `helm install <release> <chart>` | Install a chart |
-| `helm upgrade <release> <chart>` | Upgrade a release |
-| `helm rollback <release> <revision>` | Rollback to a revision |
-| `helm uninstall <release>` | Delete a release |
-| `helm list` | List releases |
-| `helm history <release>` | Show release history |
-| `helm template <release> <chart>` | Render templates locally |
-| `helm lint <chart>` | Check chart for issues |
-| `helm test <release>` | Run chart tests |
-| `helm get values <release>` | Show release values |
+| Helm Command                          | Description                |
+| ------------------------------------- | -------------------------- |
+| `helm install <release> <chart>`      | Install a chart            |
+| `helm upgrade <release> <chart>`      | Upgrade a release          |
+| `helm rollback <release> <revision>`  | Rollback to a revision     |
+| `helm uninstall <release>`            | Delete a release           |
+| `helm list`                           | List releases              |
+| `helm history <release>`              | Show release history       |
+| `helm template <release> <chart>`     | Render templates locally   |
+| `helm lint <chart>`                   | Check chart for issues     |
+| `helm test <release>`                 | Run chart tests            |
+| `helm get values <release>`           | Show release values        |
 | `helm diff upgrade <release> <chart>` | Show upgrade diff (plugin) |
-| `helm search repo <keyword>` | Search chart repos |
-| `helm repo add <name> <url>` | Add chart repository |
+| `helm search repo <keyword>`          | Search chart repos         |
+| `helm repo add <name> <url>`          | Add chart repository       |
 
-| Operator Framework | Language | Learning Curve | Maturity |
-|-------------------|----------|---------------|----------|
-| **kubebuilder** | Go | Medium | High (CNCF) |
-| **Operator SDK** | Go/Ansible/Helm | Low-Medium | High (Red Hat) |
-| **Metacontroller** | Any (webhooks) | Low | Medium |
-| **kopf** | Python | Low | Medium |
-| **KUDO** | Declarative YAML | Low | Low (archived) |
+| Operator Framework | Language         | Learning Curve | Maturity       |
+| ------------------ | ---------------- | -------------- | -------------- |
+| **kubebuilder**    | Go               | Medium         | High (CNCF)    |
+| **Operator SDK**   | Go/Ansible/Helm  | Low-Medium     | High (Red Hat) |
+| **Metacontroller** | Any (webhooks)   | Low            | Medium         |
+| **kopf**           | Python           | Low            | Medium         |
+| **KUDO**           | Declarative YAML | Low            | Low (archived) |
 
-| Extension Method | Complexity | Continuous Management | Best For |
-|-----------------|-----------|----------------------|----------|
-| Raw YAML | None | No | Simple, learning |
-| Kustomize | Low | No | Environment overlays |
-| Helm | Medium | No (hook-only lifecycle) | Packaging, third-party |
-| Operator | High | Yes (control loop) | Complex stateful apps |
+| Extension Method | Complexity | Continuous Management    | Best For               |
+| ---------------- | ---------- | ------------------------ | ---------------------- |
+| Raw YAML         | None       | No                       | Simple, learning       |
+| Kustomize        | Low        | No                       | Environment overlays   |
+| Helm             | Medium     | No (hook-only lifecycle) | Packaging, third-party |
+| Operator         | High       | Yes (control loop)       | Complex stateful apps  |

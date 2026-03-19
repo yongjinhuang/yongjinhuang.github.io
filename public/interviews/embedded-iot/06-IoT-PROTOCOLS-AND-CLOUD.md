@@ -289,15 +289,15 @@ void mqtt_app_start(void) {
 
 CoAP is a lightweight RESTful protocol designed for constrained devices. Unlike MQTT (which uses TCP), CoAP runs over UDP, reducing overhead and memory requirements.
 
-| Feature          | MQTT                    | CoAP                    |
-|------------------|-------------------------|-------------------------|
-| Transport        | TCP                     | UDP                     |
-| Pattern          | Pub/Sub                 | Request/Response (REST) |
-| Header size      | 2 bytes min             | 4 bytes fixed           |
-| Reliability      | TCP + QoS               | Confirmable messages    |
-| Encryption       | TLS                     | DTLS                    |
-| Discovery        | No                      | Yes (/.well-known/core) |
-| Observe          | Subscribe               | Observe option          |
+| Feature     | MQTT        | CoAP                    |
+| ----------- | ----------- | ----------------------- |
+| Transport   | TCP         | UDP                     |
+| Pattern     | Pub/Sub     | Request/Response (REST) |
+| Header size | 2 bytes min | 4 bytes fixed           |
+| Reliability | TCP + QoS   | Confirmable messages    |
+| Encryption  | TLS         | DTLS                    |
+| Discovery   | No          | Yes (/.well-known/core) |
+| Observe     | Subscribe   | Observe option          |
 
 ### 3.2 CoAP Message Types
 
@@ -337,14 +337,14 @@ HTTP is universally understood and requires no broker infrastructure. For device
 
 ### 4.2 Trade-offs vs MQTT
 
-| Factor                | HTTP                      | MQTT                        |
-|-----------------------|---------------------------|-----------------------------|
-| Connection overhead   | New TCP connection per request (unless keep-alive) | Persistent connection |
-| Server push           | Polling or SSE/WebSocket  | Native (subscribe)          |
-| Bandwidth             | Large headers (~700 bytes) | Tiny headers (2-5 bytes)   |
-| Infrastructure        | Any web server             | Requires MQTT broker        |
-| Bidirectional         | Client-initiated only     | Both directions             |
-| Ideal for             | Cloud APIs, infrequent reporting | Real-time, frequent data, commands |
+| Factor              | HTTP                                               | MQTT                               |
+| ------------------- | -------------------------------------------------- | ---------------------------------- |
+| Connection overhead | New TCP connection per request (unless keep-alive) | Persistent connection              |
+| Server push         | Polling or SSE/WebSocket                           | Native (subscribe)                 |
+| Bandwidth           | Large headers (~700 bytes)                         | Tiny headers (2-5 bytes)           |
+| Infrastructure      | Any web server                                     | Requires MQTT broker               |
+| Bidirectional       | Client-initiated only                              | Both directions                    |
+| Ideal for           | Cloud APIs, infrequent reporting                   | Real-time, frequent data, commands |
 
 For most IoT applications with bidirectional communication, MQTT is preferred. HTTP is acceptable for simple, infrequent uploads.
 
@@ -376,6 +376,7 @@ On constrained devices, every byte matters. The serialization format affects ban
 The default choice for interoperability. Every language and cloud platform supports JSON. Use it unless bandwidth or parsing overhead is a genuine constraint.
 
 MicroPython:
+
 ```python
 import json
 
@@ -384,6 +385,7 @@ payload = json.dumps({"temp": 23.5, "humid": 61})
 ```
 
 C (using cJSON on ESP32):
+
 ```c
 cJSON *root = cJSON_CreateObject();
 cJSON_AddNumberToObject(root, "temp", 23.5);
@@ -521,12 +523,12 @@ Each device needs unique credentials (certificates, keys, tokens) and configurat
 
 ### 8.2 Approaches
 
-| Method              | Description                                          | Scale    |
-|---------------------|------------------------------------------------------|----------|
-| Manual              | Flash credentials per device in factory              | Small    |
-| Just-in-Time (JITR) | Device presents a CA-signed cert, cloud auto-registers | Medium  |
-| Fleet provisioning  | Claim certificate + template creates unique identity | Large    |
-| Token-based         | Short-lived tokens from a provisioning service       | Large    |
+| Method              | Description                                            | Scale  |
+| ------------------- | ------------------------------------------------------ | ------ |
+| Manual              | Flash credentials per device in factory                | Small  |
+| Just-in-Time (JITR) | Device presents a CA-signed cert, cloud auto-registers | Medium |
+| Fleet provisioning  | Claim certificate + template creates unique identity   | Large  |
+| Token-based         | Short-lived tokens from a provisioning service         | Large  |
 
 ### 8.3 Secure Element Integration
 

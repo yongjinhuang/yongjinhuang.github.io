@@ -39,6 +39,7 @@ simple APIs. Its history is rooted in strategic acquisitions by Google:
 - **2010**: Google acquires **Global IP Solutions (GIPS)** for $68.2 million.
   GIPS was a Swedish company that developed real-time voice and video processing
   engines used by companies including Yahoo, AOL, and Oovoo. GIPS provided:
+
   - Audio codecs (iSAC, iLBC)
   - Acoustic Echo Cancellation (AEC)
   - Automatic Gain Control (AGC)
@@ -62,12 +63,13 @@ simple APIs. Its history is rooted in strategic acquisitions by Google:
 
 WebRTC is jointly standardized by two organizations:
 
-| Organization | Scope | Key Specifications |
-|---|---|---|
-| **W3C** (World Wide Web Consortium) | JavaScript APIs | `RTCPeerConnection`, `MediaStream`, `RTCDataChannel` |
-| **IETF** (Internet Engineering Task Force) | Wire protocols | ICE, DTLS-SRTP, SCTP, SDP extensions, codec requirements |
+| Organization                               | Scope           | Key Specifications                                       |
+| ------------------------------------------ | --------------- | -------------------------------------------------------- |
+| **W3C** (World Wide Web Consortium)        | JavaScript APIs | `RTCPeerConnection`, `MediaStream`, `RTCDataChannel`     |
+| **IETF** (Internet Engineering Task Force) | Wire protocols  | ICE, DTLS-SRTP, SCTP, SDP extensions, codec requirements |
 
 Key RFCs include:
+
 - **RFC 8825** - Overview: Real-Time Communication in Web Browsers
 - **RFC 8826** - Security Architecture
 - **RFC 8827** - Security Considerations for WebRTC
@@ -81,16 +83,16 @@ Key RFCs include:
 
 As of 2025, WebRTC is supported in all major browsers:
 
-| Browser | Support Since | Notes |
-|---|---|---|
-| Chrome | 2012 (v23) | Full support, reference implementation |
-| Firefox | 2013 (v22) | Full support |
-| Safari | 2017 (v11) | Initially limited, now full support |
-| Edge | 2018 (Chromium-based) | Full support via Chromium |
-| Opera | 2013 | Full support via Chromium |
-| Samsung Internet | 2016 | Full support |
-| iOS Safari | iOS 11+ | Full support |
-| Android WebView | Chrome 28+ | Supported |
+| Browser          | Support Since         | Notes                                  |
+| ---------------- | --------------------- | -------------------------------------- |
+| Chrome           | 2012 (v23)            | Full support, reference implementation |
+| Firefox          | 2013 (v22)            | Full support                           |
+| Safari           | 2017 (v11)            | Initially limited, now full support    |
+| Edge             | 2018 (Chromium-based) | Full support via Chromium              |
+| Opera            | 2013                  | Full support via Chromium              |
+| Samsung Internet | 2016                  | Full support                           |
+| iOS Safari       | iOS 11+               | Full support                           |
+| Android WebView  | Chrome 28+            | Supported                              |
 
 ### The Peer-to-Peer Promise
 
@@ -104,6 +106,7 @@ requiring media to pass through a server. This provides:
 - **Rich media**: Audio, video, and arbitrary data channels
 
 However, the "peer-to-peer" nature has important caveats:
+
 - **Signaling still requires a server** to exchange session metadata
 - **NAT traversal** may require STUN/TURN servers
 - **Roughly 15-20% of connections** require a TURN relay, making them
@@ -406,37 +409,37 @@ a=ssrc:9876543210 cname:localCname
 
 **Session-level fields:**
 
-| Line | Meaning |
-|---|---|
-| `v=0` | Protocol version. Always 0. |
-| `o=- 462... 2 IN IP4 127.0.0.1` | Origin: username (-), session ID, version, network type, address type, address |
-| `s=-` | Session name. Typically unused in WebRTC (set to `-`). |
-| `t=0 0` | Timing: start time and stop time. 0 0 means the session is permanent. |
-| `a=group:BUNDLE 0 1` | BUNDLE groups media sections (audio `0` and video `1`) onto a single transport. |
-| `a=extmap-allow-mixed` | Allows mixing one-byte and two-byte RTP header extensions. |
-| `a=msid-semantic: WMS stream0` | MediaStream identification semantic. `WMS` = WebRTC Media Streams. |
+| Line                            | Meaning                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------- |
+| `v=0`                           | Protocol version. Always 0.                                                     |
+| `o=- 462... 2 IN IP4 127.0.0.1` | Origin: username (-), session ID, version, network type, address type, address  |
+| `s=-`                           | Session name. Typically unused in WebRTC (set to `-`).                          |
+| `t=0 0`                         | Timing: start time and stop time. 0 0 means the session is permanent.           |
+| `a=group:BUNDLE 0 1`            | BUNDLE groups media sections (audio `0` and video `1`) onto a single transport. |
+| `a=extmap-allow-mixed`          | Allows mixing one-byte and two-byte RTP header extensions.                      |
+| `a=msid-semantic: WMS stream0`  | MediaStream identification semantic. `WMS` = WebRTC Media Streams.              |
 
 **Media-level fields (per m= section):**
 
-| Line | Meaning |
-|---|---|
-| `m=audio 9 UDP/TLS/RTP/SAVPF 111 103 ...` | Media type, port (9 = placeholder with ICE), profile, payload type numbers |
-| `c=IN IP4 0.0.0.0` | Connection address. 0.0.0.0 is a placeholder; actual address determined by ICE. |
-| `a=rtcp:9 IN IP4 0.0.0.0` | RTCP connection info. Also a placeholder. |
-| `a=ice-ufrag:abcd` | ICE username fragment for authentication. |
-| `a=ice-pwd:efgh...` | ICE password for authentication. |
-| `a=ice-options:trickle` | Supports trickle ICE (incremental candidate delivery). |
-| `a=fingerprint:sha-256 AA:BB:...` | DTLS certificate fingerprint for identity verification. |
-| `a=setup:actpass` | DTLS role: offerer proposes `actpass` (willing to be active or passive). |
-| `a=mid:0` | Media identification tag. Referenced by BUNDLE grouping. |
-| `a=sendrecv` | Direction: send and receive media. Others: `sendonly`, `recvonly`, `inactive`. |
-| `a=msid:stream0 audioTrack0` | Associates this media with a MediaStream and track ID. |
-| `a=rtcp-mux` | Multiplex RTP and RTCP on the same port. Mandatory in WebRTC. |
-| `a=rtpmap:111 opus/48000/2` | Payload type 111 maps to Opus codec, 48kHz, 2 channels. |
-| `a=fmtp:111 minptime=10;useinbandfec=1` | Format parameters: minimum packet time 10ms, in-band FEC enabled. |
-| `a=rtcp-fb:111 transport-cc` | RTCP feedback: transport-wide congestion control for payload 111. |
-| `a=ssrc:1234567890 cname:localCname` | Synchronization source identifier and canonical name. |
-| `a=candidate:...` | ICE candidate (see ICE section for full breakdown). |
+| Line                                      | Meaning                                                                         |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| `m=audio 9 UDP/TLS/RTP/SAVPF 111 103 ...` | Media type, port (9 = placeholder with ICE), profile, payload type numbers      |
+| `c=IN IP4 0.0.0.0`                        | Connection address. 0.0.0.0 is a placeholder; actual address determined by ICE. |
+| `a=rtcp:9 IN IP4 0.0.0.0`                 | RTCP connection info. Also a placeholder.                                       |
+| `a=ice-ufrag:abcd`                        | ICE username fragment for authentication.                                       |
+| `a=ice-pwd:efgh...`                       | ICE password for authentication.                                                |
+| `a=ice-options:trickle`                   | Supports trickle ICE (incremental candidate delivery).                          |
+| `a=fingerprint:sha-256 AA:BB:...`         | DTLS certificate fingerprint for identity verification.                         |
+| `a=setup:actpass`                         | DTLS role: offerer proposes `actpass` (willing to be active or passive).        |
+| `a=mid:0`                                 | Media identification tag. Referenced by BUNDLE grouping.                        |
+| `a=sendrecv`                              | Direction: send and receive media. Others: `sendonly`, `recvonly`, `inactive`.  |
+| `a=msid:stream0 audioTrack0`              | Associates this media with a MediaStream and track ID.                          |
+| `a=rtcp-mux`                              | Multiplex RTP and RTCP on the same port. Mandatory in WebRTC.                   |
+| `a=rtpmap:111 opus/48000/2`               | Payload type 111 maps to Opus codec, 48kHz, 2 channels.                         |
+| `a=fmtp:111 minptime=10;useinbandfec=1`   | Format parameters: minimum packet time 10ms, in-band FEC enabled.               |
+| `a=rtcp-fb:111 transport-cc`              | RTCP feedback: transport-wide congestion control for payload 111.               |
+| `a=ssrc:1234567890 cname:localCname`      | Synchronization source identifier and canonical name.                           |
+| `a=candidate:...`                         | ICE candidate (see ICE section for full breakdown).                             |
 
 ### ICE Candidates in SDP
 
@@ -447,6 +450,7 @@ a=candidate:foundation component-id transport priority address port typ type [ra
 ```
 
 Example breakdown:
+
 ```
 a=candidate:2 1 udp 1845501695 203.0.113.50 12345 typ srflx raddr 192.168.1.100 rport 54321
             ^  ^  ^   ^          ^             ^         ^          ^                ^
@@ -460,11 +464,13 @@ Historically there were two competing approaches to representing multiple
 media tracks in SDP:
 
 **Plan B** (Google's approach, now deprecated):
+
 - Multiple tracks of the same media type share a single `m=` line
 - Tracks distinguished by SSRC
 - Used in older Chrome versions
 
 **Unified Plan** (RFC 8829, current standard):
+
 - Each track gets its own `m=` line
 - Tracks identified by `a=mid` attribute
 - Uses `a=msid` to associate tracks with MediaStreams
@@ -557,12 +563,12 @@ Symmetric            STUN       STUN       TURN*      TURN
 
 ICE gathers multiple candidates and tests them to find the best path:
 
-| Type | Name | Description | Priority |
-|---|---|---|---|
-| `host` | Host candidate | Local interface address (e.g., 192.168.1.100:5000) | Highest |
-| `srflx` | Server Reflexive | Public address discovered via STUN (e.g., 203.0.113.50:12345) | Medium |
-| `prflx` | Peer Reflexive | Discovered during connectivity checks (surprise address) | Medium |
-| `relay` | Relay candidate | Address allocated on a TURN server | Lowest |
+| Type    | Name             | Description                                                   | Priority |
+| ------- | ---------------- | ------------------------------------------------------------- | -------- |
+| `host`  | Host candidate   | Local interface address (e.g., 192.168.1.100:5000)            | Highest  |
+| `srflx` | Server Reflexive | Public address discovered via STUN (e.g., 203.0.113.50:12345) | Medium   |
+| `prflx` | Peer Reflexive   | Discovered during connectivity checks (surprise address)      | Medium   |
+| `relay` | Relay candidate  | Address allocated on a TURN server                            | Lowest   |
 
 ### Candidate Gathering Process
 
@@ -748,6 +754,7 @@ Client (192.168.1.100:5000)       NAT (203.0.113.50)       STUN Server (stun.exa
 ```
 
 Key attributes:
+
 - **MAPPED-ADDRESS**: The public IP:port as seen by the server
 - **XOR-MAPPED-ADDRESS**: Same but XOR'd with magic cookie (prevents ALG
   tampering)
@@ -767,7 +774,7 @@ const config = {
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
-  ]
+  ],
 };
 ```
 
@@ -825,14 +832,14 @@ Peer A                    TURN Server                    Peer B
 
 ### TURN Messages
 
-| Message | Purpose |
-|---|---|
-| **Allocate** | Request a relay address on the TURN server |
-| **Refresh** | Keep the allocation alive (must be refreshed periodically) |
-| **CreatePermission** | Authorize a peer IP to send through the relay |
-| **ChannelBind** | Create an efficient channel for a specific peer (reduces overhead) |
-| **Send** | Send data via the relay (uses Send Indication) |
-| **Data** | Receive data via the relay (uses Data Indication) |
+| Message              | Purpose                                                            |
+| -------------------- | ------------------------------------------------------------------ |
+| **Allocate**         | Request a relay address on the TURN server                         |
+| **Refresh**          | Keep the allocation alive (must be refreshed periodically)         |
+| **CreatePermission** | Authorize a peer IP to send through the relay                      |
+| **ChannelBind**      | Create an efficient channel for a specific peer (reduces overhead) |
+| **Send**             | Send data via the relay (uses Send Indication)                     |
+| **Data**             | Receive data via the relay (uses Data Indication)                  |
 
 ### TURN over TCP and TLS
 
@@ -852,12 +859,12 @@ const config = {
       urls: [
         'turn:turn.example.com:3478?transport=udp',
         'turn:turn.example.com:3478?transport=tcp',
-        'turns:turn.example.com:443?transport=tcp'
+        'turns:turn.example.com:443?transport=tcp',
       ],
       username: 'user',
-      credential: 'password'
-    }
-  ]
+      credential: 'password',
+    },
+  ],
 };
 ```
 
@@ -865,13 +872,13 @@ const config = {
 
 TURN servers are expensive because they relay all media traffic:
 
-| Factor | STUN | TURN |
-|---|---|---|
-| **Bandwidth** | Negligible (only binding requests) | Full media bandwidth per session |
-| **CPU** | Minimal | Moderate (relaying, auth) |
-| **Scalability** | Thousands of concurrent users per server | Hundreds, depends on bandwidth |
-| **Cost** | Essentially free to run | $0.05-0.40 per GB depending on provider |
-| **Typical usage** | 80-85% of connections | 15-20% of connections |
+| Factor            | STUN                                     | TURN                                    |
+| ----------------- | ---------------------------------------- | --------------------------------------- |
+| **Bandwidth**     | Negligible (only binding requests)       | Full media bandwidth per session        |
+| **CPU**           | Minimal                                  | Moderate (relaying, auth)               |
+| **Scalability**   | Thousands of concurrent users per server | Hundreds, depends on bandwidth          |
+| **Cost**          | Essentially free to run                  | $0.05-0.40 per GB depending on provider |
+| **Typical usage** | 80-85% of connections                    | 15-20% of connections                   |
 
 Managed TURN services include Twilio, Xirsys, and Cloudflare. Self-hosted
 options include coturn (the most popular open-source TURN server).
@@ -999,12 +1006,12 @@ attacker can modify the SDP, they can perform a man-in-the-middle attack.
 Since DTLS, SRTP, SRTCP, and STUN all share the same port (via ICE and
 BUNDLE), the first byte of each packet is used to demultiplex:
 
-| First Byte Range | Protocol |
-|---|---|
-| 0-3 | STUN |
-| 20-63 | DTLS |
-| 128-191 | RTP/SRTP |
-| 192-223 | RTCP/SRTCP (when not muxed, rare) |
+| First Byte Range | Protocol                          |
+| ---------------- | --------------------------------- |
+| 0-3              | STUN                              |
+| 20-63            | DTLS                              |
+| 128-191          | RTP/SRTP                          |
+| 192-223          | RTCP/SRTCP (when not muxed, rare) |
 
 ---
 
@@ -1061,6 +1068,7 @@ SENDER PIPELINE                              RECEIVER PIPELINE
 **Capture**: Raw PCM audio from the microphone, typically at 48 kHz, 16-bit.
 
 **Pre-processing** (all done in the browser engine, not JavaScript):
+
 - **AEC (Acoustic Echo Cancellation)**: Removes echo from speaker playback
   that the microphone picks up
 - **AGC (Automatic Gain Control)**: Normalizes audio volume levels
@@ -1077,6 +1085,7 @@ adjust their size based on network conditions.
 ### Video Pipeline Details
 
 **Encoding**: WebRTC requires VP8 and H.264 support. Common codecs:
+
 - **VP8**: Older, widely supported, royalty-free
 - **VP9**: Better compression than VP8, royalty-free
 - **H.264**: Hardware acceleration on most devices, patent-encumbered
@@ -1119,12 +1128,12 @@ const configuration = {
     {
       urls: 'turn:turn.example.com:3478',
       username: 'user',
-      credential: 'pass'
-    }
+      credential: 'pass',
+    },
   ],
-  iceTransportPolicy: 'all',     // 'all' or 'relay' (force TURN)
-  bundlePolicy: 'max-bundle',    // Bundle all media on one transport
-  rtcpMuxPolicy: 'require',      // Require RTCP multiplexing
+  iceTransportPolicy: 'all', // 'all' or 'relay' (force TURN)
+  bundlePolicy: 'max-bundle', // Bundle all media on one transport
+  rtcpMuxPolicy: 'require', // Require RTCP multiplexing
 };
 
 // 2. Create peer connection
@@ -1133,10 +1142,10 @@ const pc = new RTCPeerConnection(configuration);
 // 3. Add local media tracks
 const stream = await navigator.mediaDevices.getUserMedia({
   video: true,
-  audio: true
+  audio: true,
 });
 
-stream.getTracks().forEach(track => {
+stream.getTracks().forEach((track) => {
   pc.addTrack(track, stream);
 });
 
@@ -1150,10 +1159,12 @@ pc.ontrack = (event) => {
 pc.onicecandidate = (event) => {
   if (event.candidate) {
     // Send candidate to remote peer via signaling
-    signalingChannel.send(JSON.stringify({
-      type: 'candidate',
-      candidate: event.candidate
-    }));
+    signalingChannel.send(
+      JSON.stringify({
+        type: 'candidate',
+        candidate: event.candidate,
+      })
+    );
   }
 };
 
@@ -1178,10 +1189,12 @@ pc.onconnectionstatechange = () => {
 pc.onnegotiationneeded = async () => {
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
-  signalingChannel.send(JSON.stringify({
-    type: 'offer',
-    sdp: pc.localDescription
-  }));
+  signalingChannel.send(
+    JSON.stringify({
+      type: 'offer',
+      sdp: pc.localDescription,
+    })
+  );
 };
 ```
 
@@ -1198,17 +1211,19 @@ async function createAndSendOffer() {
   const offer = await pc.createOffer({
     offerToReceiveAudio: true,
     offerToReceiveVideo: true,
-    iceRestart: false            // Set true to restart ICE
+    iceRestart: false, // Set true to restart ICE
   });
 
   // setLocalDescription triggers ICE candidate gathering
   await pc.setLocalDescription(offer);
 
   // Send offer via signaling
-  signalingChannel.send(JSON.stringify({
-    type: 'offer',
-    sdp: offer
-  }));
+  signalingChannel.send(
+    JSON.stringify({
+      type: 'offer',
+      sdp: offer,
+    })
+  );
 }
 ```
 
@@ -1224,9 +1239,9 @@ async function handleOffer(offerSdp) {
   // Add local tracks before creating answer
   const stream = await navigator.mediaDevices.getUserMedia({
     video: true,
-    audio: true
+    audio: true,
   });
-  stream.getTracks().forEach(track => pc.addTrack(track, stream));
+  stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
   // createAnswer() generates a compatible SDP answer
   const answer = await pc.createAnswer();
@@ -1235,10 +1250,12 @@ async function handleOffer(offerSdp) {
   await pc.setLocalDescription(answer);
 
   // Send answer via signaling
-  signalingChannel.send(JSON.stringify({
-    type: 'answer',
-    sdp: answer
-  }));
+  signalingChannel.send(
+    JSON.stringify({
+      type: 'answer',
+      sdp: answer,
+    })
+  );
 }
 ```
 
@@ -1279,11 +1296,11 @@ signalingState transitions:
 ```javascript
 // Create a data channel (offerer side)
 const dataChannel = pc.createDataChannel('chat', {
-  ordered: true,           // Guarantee order (default: true)
-  maxRetransmits: 3,       // Max retransmission attempts
+  ordered: true, // Guarantee order (default: true)
+  maxRetransmits: 3, // Max retransmission attempts
   // maxPacketLifeTime: 3000, // Alternative: max time in ms (mutually exclusive with maxRetransmits)
-  protocol: '',            // Sub-protocol name
-  negotiated: false,       // If true, both sides must create with same ID
+  protocol: '', // Sub-protocol name
+  negotiated: false, // If true, both sides must create with same ID
 });
 
 dataChannel.onopen = () => {
@@ -1316,7 +1333,7 @@ providing reliable/unreliable and ordered/unordered delivery modes.
 // Request audio and video
 const stream = await navigator.mediaDevices.getUserMedia({
   audio: true,
-  video: true
+  video: true,
 });
 
 // Display in a video element
@@ -1340,15 +1357,15 @@ const constraints = {
     aspectRatio: { ideal: 16 / 9 },
 
     // Camera selection
-    facingMode: 'user',          // 'user' = front camera, 'environment' = rear
+    facingMode: 'user', // 'user' = front camera, 'environment' = rear
     // facingMode: { exact: 'environment' },  // Must be rear camera or fail
 
     // Specific device
     // deviceId: { exact: 'abc123' },
 
     // Resize mode
-    resizeMode: 'crop-and-scale',  // or 'none'
-  }
+    resizeMode: 'crop-and-scale', // or 'none'
+  },
 };
 
 const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -1372,14 +1389,14 @@ const constraints = {
     sampleRate: 48000,
 
     // Channel count
-    channelCount: { ideal: 1 },  // Mono for voice
+    channelCount: { ideal: 1 }, // Mono for voice
 
     // Latency
-    latency: { ideal: 0.01 },  // 10ms
+    latency: { ideal: 0.01 }, // 10ms
 
     // Specific device
     // deviceId: { exact: 'xyz789' },
-  }
+  },
 };
 ```
 
@@ -1392,9 +1409,9 @@ async function listDevices() {
 
   const devices = await navigator.mediaDevices.enumerateDevices();
 
-  const audioInputs = devices.filter(d => d.kind === 'audioinput');
-  const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
-  const videoInputs = devices.filter(d => d.kind === 'videoinput');
+  const audioInputs = devices.filter((d) => d.kind === 'audioinput');
+  const audioOutputs = devices.filter((d) => d.kind === 'audiooutput');
+  const videoInputs = devices.filter((d) => d.kind === 'videoinput');
 
   // Each device has:
   // - deviceId: unique identifier
@@ -1411,15 +1428,15 @@ async function listDevices() {
 ```javascript
 async function switchCamera(deviceId) {
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { deviceId: { exact: deviceId } }
+    video: { deviceId: { exact: deviceId } },
   });
 
   const [newTrack] = stream.getVideoTracks();
 
   // Replace track on existing peer connection
-  const sender = pc.getSenders().find(s =>
-    s.track && s.track.kind === 'video'
-  );
+  const sender = pc
+    .getSenders()
+    .find((s) => s.track && s.track.kind === 'video');
 
   if (sender) {
     await sender.replaceTrack(newTrack);
@@ -1450,20 +1467,18 @@ cameraPermission.onchange = () => {
 // getDisplayMedia for screen/window/tab capture
 const screenStream = await navigator.mediaDevices.getDisplayMedia({
   video: {
-    cursor: 'always',           // Show cursor
-    displaySurface: 'monitor',  // 'monitor', 'window', 'browser'
+    cursor: 'always', // Show cursor
+    displaySurface: 'monitor', // 'monitor', 'window', 'browser'
     width: { ideal: 1920 },
     height: { ideal: 1080 },
     frameRate: { max: 30 },
   },
-  audio: true  // System audio (limited browser support)
+  audio: true, // System audio (limited browser support)
 });
 
 // Replace camera track with screen share
 const [screenTrack] = screenStream.getVideoTracks();
-const sender = pc.getSenders().find(s =>
-  s.track && s.track.kind === 'video'
-);
+const sender = pc.getSenders().find((s) => s.track && s.track.kind === 'video');
 
 if (sender) {
   await sender.replaceTrack(screenTrack);
@@ -1527,21 +1542,25 @@ wss.on('connection', (ws) => {
         // Notify existing peers about the new participant
         room.forEach((peerWs, peerId) => {
           if (peerId !== clientId) {
-            peerWs.send(JSON.stringify({
-              type: 'peer-joined',
-              peerId: clientId
-            }));
+            peerWs.send(
+              JSON.stringify({
+                type: 'peer-joined',
+                peerId: clientId,
+              })
+            );
           }
         });
 
         // Notify the joiner about existing peers
         const existingPeers = Array.from(room.keys()).filter(
-          id => id !== clientId
+          (id) => id !== clientId
         );
-        ws.send(JSON.stringify({
-          type: 'existing-peers',
-          peers: existingPeers
-        }));
+        ws.send(
+          JSON.stringify({
+            type: 'existing-peers',
+            peers: existingPeers,
+          })
+        );
         break;
       }
 
@@ -1552,10 +1571,12 @@ wss.on('connection', (ws) => {
         if (room) {
           const targetWs = room.get(message.target);
           if (targetWs && targetWs.readyState === 1) {
-            targetWs.send(JSON.stringify({
-              ...message,
-              sender: clientId
-            }));
+            targetWs.send(
+              JSON.stringify({
+                ...message,
+                sender: clientId,
+              })
+            );
           }
         }
         break;
@@ -1569,10 +1590,12 @@ wss.on('connection', (ws) => {
       if (room) {
         room.delete(clientId);
         room.forEach((peerWs) => {
-          peerWs.send(JSON.stringify({
-            type: 'peer-left',
-            peerId: clientId
-          }));
+          peerWs.send(
+            JSON.stringify({
+              type: 'peer-left',
+              peerId: clientId,
+            })
+          );
         });
         if (room.size === 0) {
           rooms.delete(currentRoom);
@@ -1594,307 +1617,333 @@ server.listen(PORT, () => {
 <!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebRTC Video Call</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #1a1a2e;
-      color: #eee;
-    }
-    .video-container {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    video {
-      width: 420px;
-      height: 315px;
-      background: #000;
-      border-radius: 8px;
-    }
-    #localVideo { transform: scaleX(-1); }
-    button {
-      padding: 10px 20px;
-      margin: 5px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .join-btn { background: #4ecca3; color: #1a1a2e; }
-    .hang-up-btn { background: #e74c3c; color: #fff; }
-    .controls { margin: 15px 0; }
-    input {
-      padding: 10px;
-      border: 1px solid #333;
-      border-radius: 4px;
-      background: #16213e;
-      color: #eee;
-      font-size: 14px;
-    }
-    #status { margin: 10px 0; font-style: italic; color: #4ecca3; }
-  </style>
-</head>
-<body>
-  <h1>WebRTC Video Call</h1>
-  <div class="controls">
-    <input id="roomInput" placeholder="Enter room name" value="test-room" />
-    <button class="join-btn" id="joinBtn" onclick="joinRoom()">Join Room</button>
-    <button class="hang-up-btn" id="hangUpBtn" onclick="hangUp()" disabled>Hang Up</button>
-  </div>
-  <div id="status">Not connected</div>
-  <div class="video-container">
-    <div>
-      <h3>Local</h3>
-      <video id="localVideo" autoplay muted playsinline></video>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebRTC Video Call</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #1a1a2e;
+        color: #eee;
+      }
+      .video-container {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      video {
+        width: 420px;
+        height: 315px;
+        background: #000;
+        border-radius: 8px;
+      }
+      #localVideo {
+        transform: scaleX(-1);
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .join-btn {
+        background: #4ecca3;
+        color: #1a1a2e;
+      }
+      .hang-up-btn {
+        background: #e74c3c;
+        color: #fff;
+      }
+      .controls {
+        margin: 15px 0;
+      }
+      input {
+        padding: 10px;
+        border: 1px solid #333;
+        border-radius: 4px;
+        background: #16213e;
+        color: #eee;
+        font-size: 14px;
+      }
+      #status {
+        margin: 10px 0;
+        font-style: italic;
+        color: #4ecca3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WebRTC Video Call</h1>
+    <div class="controls">
+      <input id="roomInput" placeholder="Enter room name" value="test-room" />
+      <button class="join-btn" id="joinBtn" onclick="joinRoom()">
+        Join Room
+      </button>
+      <button class="hang-up-btn" id="hangUpBtn" onclick="hangUp()" disabled>
+        Hang Up
+      </button>
     </div>
-    <div>
-      <h3>Remote</h3>
-      <video id="remoteVideo" autoplay playsinline></video>
+    <div id="status">Not connected</div>
+    <div class="video-container">
+      <div>
+        <h3>Local</h3>
+        <video id="localVideo" autoplay muted playsinline></video>
+      </div>
+      <div>
+        <h3>Remote</h3>
+        <video id="remoteVideo" autoplay playsinline></video>
+      </div>
     </div>
-  </div>
 
-  <script>
-    // -------------------------------------------------------
-    // State
-    // -------------------------------------------------------
-    let ws = null;
-    let localStream = null;
-    let peerConnection = null;
-    const clientId = crypto.randomUUID();
+    <script>
+      // -------------------------------------------------------
+      // State
+      // -------------------------------------------------------
+      let ws = null;
+      let localStream = null;
+      let peerConnection = null;
+      const clientId = crypto.randomUUID();
 
-    // -------------------------------------------------------
-    // ICE server configuration
-    // -------------------------------------------------------
-    const rtcConfig = {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        // Add TURN servers here for production:
-        // {
-        //   urls: 'turn:turn.example.com:3478',
-        //   username: 'user',
-        //   credential: 'pass'
-        // }
-      ]
-    };
-
-    // -------------------------------------------------------
-    // UI helpers
-    // -------------------------------------------------------
-    function setStatus(text) {
-      document.getElementById('status').textContent = text;
-    }
-
-    // -------------------------------------------------------
-    // Join a room
-    // -------------------------------------------------------
-    async function joinRoom() {
-      const room = document.getElementById('roomInput').value.trim();
-      if (!room) return;
-
-      setStatus('Requesting camera and microphone...');
-
-      // Capture local media
-      localStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: { echoCancellation: true, noiseSuppression: true }
-      });
-      document.getElementById('localVideo').srcObject = localStream;
-
-      // Connect to signaling server
-      const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-      ws = new WebSocket(`${protocol}://${location.host}`);
-
-      ws.onopen = () => {
-        setStatus('Connected to signaling server. Waiting for peer...');
-        ws.send(JSON.stringify({ type: 'join', room, clientId }));
-        document.getElementById('joinBtn').disabled = true;
-        document.getElementById('hangUpBtn').disabled = false;
+      // -------------------------------------------------------
+      // ICE server configuration
+      // -------------------------------------------------------
+      const rtcConfig = {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          // Add TURN servers here for production:
+          // {
+          //   urls: 'turn:turn.example.com:3478',
+          //   username: 'user',
+          //   credential: 'pass'
+          // }
+        ],
       };
 
-      ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        handleSignalingMessage(message);
-      };
+      // -------------------------------------------------------
+      // UI helpers
+      // -------------------------------------------------------
+      function setStatus(text) {
+        document.getElementById('status').textContent = text;
+      }
 
-      ws.onclose = () => {
-        setStatus('Disconnected from signaling server');
-      };
-    }
+      // -------------------------------------------------------
+      // Join a room
+      // -------------------------------------------------------
+      async function joinRoom() {
+        const room = document.getElementById('roomInput').value.trim();
+        if (!room) return;
 
-    // -------------------------------------------------------
-    // Handle signaling messages
-    // -------------------------------------------------------
-    async function handleSignalingMessage(message) {
-      switch (message.type) {
-        case 'existing-peers': {
-          // We are the newer peer; create offers to existing peers
-          if (message.peers.length > 0) {
-            const peerId = message.peers[0]; // 1:1 call
-            await createPeerConnection(peerId);
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-            ws.send(JSON.stringify({
-              type: 'offer',
-              target: peerId,
-              sdp: peerConnection.localDescription
-            }));
-            setStatus('Sending offer to peer...');
+        setStatus('Requesting camera and microphone...');
+
+        // Capture local media
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: { echoCancellation: true, noiseSuppression: true },
+        });
+        document.getElementById('localVideo').srcObject = localStream;
+
+        // Connect to signaling server
+        const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+        ws = new WebSocket(`${protocol}://${location.host}`);
+
+        ws.onopen = () => {
+          setStatus('Connected to signaling server. Waiting for peer...');
+          ws.send(JSON.stringify({ type: 'join', room, clientId }));
+          document.getElementById('joinBtn').disabled = true;
+          document.getElementById('hangUpBtn').disabled = false;
+        };
+
+        ws.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          handleSignalingMessage(message);
+        };
+
+        ws.onclose = () => {
+          setStatus('Disconnected from signaling server');
+        };
+      }
+
+      // -------------------------------------------------------
+      // Handle signaling messages
+      // -------------------------------------------------------
+      async function handleSignalingMessage(message) {
+        switch (message.type) {
+          case 'existing-peers': {
+            // We are the newer peer; create offers to existing peers
+            if (message.peers.length > 0) {
+              const peerId = message.peers[0]; // 1:1 call
+              await createPeerConnection(peerId);
+              const offer = await peerConnection.createOffer();
+              await peerConnection.setLocalDescription(offer);
+              ws.send(
+                JSON.stringify({
+                  type: 'offer',
+                  target: peerId,
+                  sdp: peerConnection.localDescription,
+                })
+              );
+              setStatus('Sending offer to peer...');
+            }
+            break;
           }
-          break;
-        }
 
-        case 'peer-joined': {
-          // A new peer joined; wait for their offer
-          setStatus('Peer joined. Waiting for offer...');
-          break;
-        }
+          case 'peer-joined': {
+            // A new peer joined; wait for their offer
+            setStatus('Peer joined. Waiting for offer...');
+            break;
+          }
 
-        case 'offer': {
-          await createPeerConnection(message.sender);
-          await peerConnection.setRemoteDescription(
-            new RTCSessionDescription(message.sdp)
-          );
-          const answer = await peerConnection.createAnswer();
-          await peerConnection.setLocalDescription(answer);
-          ws.send(JSON.stringify({
-            type: 'answer',
-            target: message.sender,
-            sdp: peerConnection.localDescription
-          }));
-          setStatus('Received offer. Sending answer...');
-          break;
-        }
+          case 'offer': {
+            await createPeerConnection(message.sender);
+            await peerConnection.setRemoteDescription(
+              new RTCSessionDescription(message.sdp)
+            );
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            ws.send(
+              JSON.stringify({
+                type: 'answer',
+                target: message.sender,
+                sdp: peerConnection.localDescription,
+              })
+            );
+            setStatus('Received offer. Sending answer...');
+            break;
+          }
 
-        case 'answer': {
-          await peerConnection.setRemoteDescription(
-            new RTCSessionDescription(message.sdp)
-          );
-          setStatus('Answer received. Establishing connection...');
-          break;
-        }
+          case 'answer': {
+            await peerConnection.setRemoteDescription(
+              new RTCSessionDescription(message.sdp)
+            );
+            setStatus('Answer received. Establishing connection...');
+            break;
+          }
 
-        case 'candidate': {
-          if (peerConnection) {
-            await peerConnection.addIceCandidate(
-              new RTCIceCandidate(message.candidate)
+          case 'candidate': {
+            if (peerConnection) {
+              await peerConnection.addIceCandidate(
+                new RTCIceCandidate(message.candidate)
+              );
+            }
+            break;
+          }
+
+          case 'peer-left': {
+            setStatus('Peer disconnected');
+            closePeerConnection();
+            break;
+          }
+        }
+      }
+
+      // -------------------------------------------------------
+      // Create RTCPeerConnection
+      // -------------------------------------------------------
+      async function createPeerConnection(peerId) {
+        peerConnection = new RTCPeerConnection(rtcConfig);
+
+        // Add local tracks
+        localStream.getTracks().forEach((track) => {
+          peerConnection.addTrack(track, localStream);
+        });
+
+        // Handle remote tracks
+        peerConnection.ontrack = (event) => {
+          document.getElementById('remoteVideo').srcObject = event.streams[0];
+          setStatus('Connected! Video call in progress.');
+        };
+
+        // Handle ICE candidates
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            ws.send(
+              JSON.stringify({
+                type: 'candidate',
+                target: peerId,
+                candidate: event.candidate,
+              })
             );
           }
-          break;
-        }
+        };
 
-        case 'peer-left': {
-          setStatus('Peer disconnected');
-          closePeerConnection();
-          break;
-        }
+        // Monitor connection state
+        peerConnection.oniceconnectionstatechange = () => {
+          const state = peerConnection.iceConnectionState;
+          switch (state) {
+            case 'checking':
+              setStatus('Checking connectivity...');
+              break;
+            case 'connected':
+              setStatus('Connected! Video call in progress.');
+              break;
+            case 'completed':
+              setStatus('Connection established (optimal path found).');
+              break;
+            case 'disconnected':
+              setStatus('Peer disconnected. Attempting to reconnect...');
+              break;
+            case 'failed':
+              setStatus('Connection failed. Try refreshing.');
+              break;
+            case 'closed':
+              setStatus('Connection closed.');
+              break;
+          }
+        };
+
+        // Handle negotiation needed (for renegotiation scenarios)
+        peerConnection.onnegotiationneeded = async () => {
+          // Only the offerer initiates renegotiation
+          if (peerConnection.signalingState === 'stable') {
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            ws.send(
+              JSON.stringify({
+                type: 'offer',
+                target: peerId,
+                sdp: peerConnection.localDescription,
+              })
+            );
+          }
+        };
       }
-    }
 
-    // -------------------------------------------------------
-    // Create RTCPeerConnection
-    // -------------------------------------------------------
-    async function createPeerConnection(peerId) {
-      peerConnection = new RTCPeerConnection(rtcConfig);
-
-      // Add local tracks
-      localStream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, localStream);
-      });
-
-      // Handle remote tracks
-      peerConnection.ontrack = (event) => {
-        document.getElementById('remoteVideo').srcObject = event.streams[0];
-        setStatus('Connected! Video call in progress.');
-      };
-
-      // Handle ICE candidates
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          ws.send(JSON.stringify({
-            type: 'candidate',
-            target: peerId,
-            candidate: event.candidate
-          }));
+      // -------------------------------------------------------
+      // Hang up
+      // -------------------------------------------------------
+      function hangUp() {
+        closePeerConnection();
+        if (localStream) {
+          localStream.getTracks().forEach((track) => track.stop());
+          localStream = null;
         }
-      };
-
-      // Monitor connection state
-      peerConnection.oniceconnectionstatechange = () => {
-        const state = peerConnection.iceConnectionState;
-        switch (state) {
-          case 'checking':
-            setStatus('Checking connectivity...');
-            break;
-          case 'connected':
-            setStatus('Connected! Video call in progress.');
-            break;
-          case 'completed':
-            setStatus('Connection established (optimal path found).');
-            break;
-          case 'disconnected':
-            setStatus('Peer disconnected. Attempting to reconnect...');
-            break;
-          case 'failed':
-            setStatus('Connection failed. Try refreshing.');
-            break;
-          case 'closed':
-            setStatus('Connection closed.');
-            break;
+        document.getElementById('localVideo').srcObject = null;
+        document.getElementById('remoteVideo').srcObject = null;
+        if (ws) {
+          ws.close();
+          ws = null;
         }
-      };
+        document.getElementById('joinBtn').disabled = false;
+        document.getElementById('hangUpBtn').disabled = true;
+        setStatus('Call ended');
+      }
 
-      // Handle negotiation needed (for renegotiation scenarios)
-      peerConnection.onnegotiationneeded = async () => {
-        // Only the offerer initiates renegotiation
-        if (peerConnection.signalingState === 'stable') {
-          const offer = await peerConnection.createOffer();
-          await peerConnection.setLocalDescription(offer);
-          ws.send(JSON.stringify({
-            type: 'offer',
-            target: peerId,
-            sdp: peerConnection.localDescription
-          }));
+      function closePeerConnection() {
+        if (peerConnection) {
+          peerConnection.close();
+          peerConnection = null;
         }
-      };
-    }
-
-    // -------------------------------------------------------
-    // Hang up
-    // -------------------------------------------------------
-    function hangUp() {
-      closePeerConnection();
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        localStream = null;
+        document.getElementById('remoteVideo').srcObject = null;
       }
-      document.getElementById('localVideo').srcObject = null;
-      document.getElementById('remoteVideo').srcObject = null;
-      if (ws) {
-        ws.close();
-        ws = null;
-      }
-      document.getElementById('joinBtn').disabled = false;
-      document.getElementById('hangUpBtn').disabled = true;
-      setStatus('Call ended');
-    }
-
-    function closePeerConnection() {
-      if (peerConnection) {
-        peerConnection.close();
-        peerConnection = null;
-      }
-      document.getElementById('remoteVideo').srcObject = null;
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
 ```
 
@@ -2026,6 +2075,7 @@ firewalls), media is routed through the TURN server. TURN is bandwidth-
 intensive and more expensive to operate.
 
 Key differences:
+
 - STUN only discovers addresses; TURN relays traffic
 - STUN is nearly free; TURN has significant bandwidth costs
 - STUN fails with symmetric NAT; TURN always works
@@ -2036,6 +2086,7 @@ Key differences:
 ### Q2: Why does WebRTC not define a signaling protocol?
 
 WebRTC intentionally leaves signaling unspecified to enable:
+
 - **Interoperability**: Integration with existing systems (SIP, XMPP, custom)
 - **Flexibility**: Different use cases need different signaling (1:1, group, broadcast)
 - **Separation of concerns**: Signaling is an application-level concern; WebRTC focuses on real-time media transport
@@ -2074,12 +2125,14 @@ finding the best network path between two peers, especially when one or both
 are behind NATs or firewalls.
 
 ICE is necessary because:
+
 - Most devices are behind NAT (no directly reachable public IP)
 - Different NAT types have different traversal requirements
 - Firewalls may block incoming connections
 - Multiple network interfaces may be available (WiFi, cellular, VPN)
 
 ICE works by:
+
 1. Gathering multiple candidates (host, server reflexive, relay)
 2. Exchanging candidates via signaling
 3. Performing connectivity checks on all candidate pairs
@@ -2126,12 +2179,14 @@ WebRTC mandates encryption --- there is no way to send unencrypted media:
 ### Q7: What is the difference between Plan B and Unified Plan?
 
 **Plan B** (deprecated):
+
 - Google's original approach
 - Multiple tracks of the same media type share one `m=` section in SDP
 - Distinguished by SSRC identifiers
 - Not standardized, removed from modern browsers
 
 **Unified Plan** (current standard, RFC 8829):
+
 - Each track gets its own `m=` section
 - Uses `a=mid` for identification and `a=msid` for stream association
 - Supports mid-session track addition and removal
@@ -2144,6 +2199,7 @@ All new WebRTC code should use Unified Plan.
 ### Q8: What happens when a peer changes networks (e.g., WiFi to cellular)?
 
 When a network change occurs:
+
 1. The existing ICE candidate pair becomes unreachable
 2. `iceConnectionState` transitions to `disconnected`
 3. ICE may attempt to find an alternative pair from existing candidates
@@ -2160,6 +2216,7 @@ When a network change occurs:
 ### Q9: Explain the difference between SFU and MCU for multi-party calls.
 
 **SFU (Selective Forwarding Unit)**:
+
 - Receives media streams from each participant
 - Forwards selected streams to other participants without transcoding
 - Each receiver decides quality via simulcast/SVC layer selection
@@ -2167,12 +2224,14 @@ When a network change occurs:
 - Most popular architecture (used by Zoom, Google Meet, Discord)
 
 **MCU (Multipoint Control Unit)**:
+
 - Receives all streams, decodes them, composites into a single layout
 - Each participant receives one combined stream
 - Higher server CPU (decoding + encoding), lower client bandwidth
 - Used when clients have limited bandwidth or processing power
 
 **Mesh (pure P2P)**:
+
 - Each participant connects directly to every other participant
 - N-1 upload streams and N-1 download streams per participant
 - No server cost but scales very poorly (practical limit: 3-4 peers)
@@ -2188,9 +2247,10 @@ Key debugging tools and approaches:
    codec info, packet loss, jitter, and bandwidth graphs.
 
 2. **RTCPeerConnection.getStats()**: Programmatic access to stats:
+
    ```javascript
    const stats = await pc.getStats();
-   stats.forEach(report => {
+   stats.forEach((report) => {
      if (report.type === 'candidate-pair' && report.nominated) {
        console.log('Selected pair:', report);
        console.log('RTT:', report.currentRoundTripTime);
@@ -2221,12 +2281,14 @@ incrementally as they are discovered, rather than waiting for all candidates
 to be gathered before sending the SDP.
 
 Without Trickle ICE (Vanilla ICE):
+
 - Wait for all candidates (host, srflx, relay)
 - Include all candidates in the SDP
 - Send SDP with all candidates at once
 - Connection establishment is slow (TURN allocation can take seconds)
 
 With Trickle ICE:
+
 - Send SDP immediately (may have zero candidates)
 - Send each candidate separately as it is discovered via `onicecandidate`
 - Remote peer adds candidates incrementally via `addIceCandidate()`
@@ -2241,6 +2303,7 @@ RTCDataChannels provide peer-to-peer data transfer using SCTP over DTLS.
 They support both reliable/ordered and unreliable/unordered modes.
 
 Use cases:
+
 - **Chat messages**: Reliable, ordered delivery
 - **Game state**: Unreliable, unordered for low-latency updates
 - **File transfer**: Reliable delivery with progress tracking
@@ -2248,6 +2311,7 @@ Use cases:
 - **Collaborative editing**: Real-time document sync
 
 Key features:
+
 - Binary and text data support
 - Configurable reliability (maxRetransmits, maxPacketLifeTime)
 - Multiple concurrent channels on one connection
@@ -2273,6 +2337,7 @@ WebRTC adapts to network conditions through several mechanisms:
    based on the bandwidth estimate.
 
 5. **RTCP feedback**:
+
    - **REMB**: Receiver reports estimated maximum bitrate
    - **Transport-CC**: Per-packet arrival times for sender-side estimation
    - **NACK**: Request retransmission of lost packets

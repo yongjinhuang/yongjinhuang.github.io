@@ -25,18 +25,18 @@ export default async function LangLayout({ children, params }: Props) {
       disableTransitionOnChange
     >
       <ColorSchemeProvider>
-      <div className="min-h-screen relative">
-        <AnimatedBackground />
-        <CustomCursor />
-        <Navbar nav={t.nav} />
+        <div className="min-h-screen relative">
+          <AnimatedBackground />
+          <CustomCursor />
+          <Navbar nav={t.nav} />
 
-        <main className="container mx-auto px-4 pt-28 md:pt-32 pb-16">
-          {children}
-        </main>
+          <main className="container mx-auto px-4 pt-28 md:pt-32 pb-16">
+            {children}
+          </main>
 
-        <Footer params={params} />
-        <ScrollToTop />
-      </div>
+          <Footer params={params} />
+          <ScrollToTop />
+        </div>
       </ColorSchemeProvider>
     </ThemeProvider>
   );

@@ -38,35 +38,35 @@ An e-learning platform enables instructors to create and publish courses with vi
 
 ### Functional Requirements
 
-| # | Requirement | Description |
-|---|-------------|-------------|
-| 1 | Course Creation | Instructors create courses with sections, lessons (video/text/code), pricing, and metadata |
-| 2 | Video Delivery | Upload, transcode, and stream video lectures with adaptive bitrate and subtitle support |
-| 3 | Progress Tracking | Track video watch position, lesson completion, section completion, and overall course progress |
-| 4 | Quizzes & Assignments | Support MCQ, coding exercises, essay submissions with auto and manual grading |
-| 5 | Certificates | Generate verifiable completion certificates with unique codes |
-| 6 | Enrollment | Browse, purchase/enroll, and manage course enrollments with payment processing |
-| 7 | Reviews & Ratings | Learners rate and review courses; aggregate ratings displayed on course pages |
-| 8 | Instructor Dashboard | Revenue analytics, engagement metrics, student progress overview, Q&A management |
-| 9 | Search & Discovery | Full-text search, category browsing, personalized recommendations |
-| 10 | Discussion Forums | Per-course Q&A threads, upvoting, instructor responses |
-| 11 | Live Classes | Scheduled live video sessions with chat, screen sharing, and recording |
-| 12 | Notifications | Enrollment confirmation, new content alerts, deadline reminders, certificate issued |
+| #   | Requirement           | Description                                                                                    |
+| --- | --------------------- | ---------------------------------------------------------------------------------------------- |
+| 1   | Course Creation       | Instructors create courses with sections, lessons (video/text/code), pricing, and metadata     |
+| 2   | Video Delivery        | Upload, transcode, and stream video lectures with adaptive bitrate and subtitle support        |
+| 3   | Progress Tracking     | Track video watch position, lesson completion, section completion, and overall course progress |
+| 4   | Quizzes & Assignments | Support MCQ, coding exercises, essay submissions with auto and manual grading                  |
+| 5   | Certificates          | Generate verifiable completion certificates with unique codes                                  |
+| 6   | Enrollment            | Browse, purchase/enroll, and manage course enrollments with payment processing                 |
+| 7   | Reviews & Ratings     | Learners rate and review courses; aggregate ratings displayed on course pages                  |
+| 8   | Instructor Dashboard  | Revenue analytics, engagement metrics, student progress overview, Q&A management               |
+| 9   | Search & Discovery    | Full-text search, category browsing, personalized recommendations                              |
+| 10  | Discussion Forums     | Per-course Q&A threads, upvoting, instructor responses                                         |
+| 11  | Live Classes          | Scheduled live video sessions with chat, screen sharing, and recording                         |
+| 12  | Notifications         | Enrollment confirmation, new content alerts, deadline reminders, certificate issued            |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| 1 | Video start latency | < 2 seconds globally (p95) |
-| 2 | Video rebuffer ratio | < 0.5% of playback time |
-| 3 | API response latency | < 200ms (p95) for reads, < 500ms for writes |
-| 4 | Availability | 99.95% (< 4.4 hours downtime/year) |
-| 5 | Progress sync latency | < 5 seconds (eventual consistency acceptable) |
-| 6 | Search latency | < 150ms (p95) |
-| 7 | Concurrent video streams | 2M simultaneous viewers at peak |
-| 8 | Offline content | Download and view without network; sync on reconnect |
-| 9 | Accessibility | WCAG 2.1 AA compliance (captions, screen reader, keyboard nav) |
-| 10 | Data durability | Zero loss of enrollment, progress, or payment data |
+| #   | Requirement              | Target                                                         |
+| --- | ------------------------ | -------------------------------------------------------------- |
+| 1   | Video start latency      | < 2 seconds globally (p95)                                     |
+| 2   | Video rebuffer ratio     | < 0.5% of playback time                                        |
+| 3   | API response latency     | < 200ms (p95) for reads, < 500ms for writes                    |
+| 4   | Availability             | 99.95% (< 4.4 hours downtime/year)                             |
+| 5   | Progress sync latency    | < 5 seconds (eventual consistency acceptable)                  |
+| 6   | Search latency           | < 150ms (p95)                                                  |
+| 7   | Concurrent video streams | 2M simultaneous viewers at peak                                |
+| 8   | Offline content          | Download and view without network; sync on reconnect           |
+| 9   | Accessibility            | WCAG 2.1 AA compliance (captions, screen reader, keyboard nav) |
+| 10  | Data durability          | Zero loss of enrollment, progress, or payment data             |
 
 ### Scale Estimation
 
@@ -100,6 +100,7 @@ Payments:
 ### Back-of-Envelope Calculations
 
 **Video Storage:**
+
 ```
 Existing library:      5M hours × 3 resolutions × avg 1.5 GB/hr = 22.5 PB
 New uploads/month:     50,000 hrs × 3 resolutions × 1.5 GB/hr = 225 TB/month
@@ -108,6 +109,7 @@ Subtitle storage:      5M hours × 2 languages avg × 50 KB = 500 GB (negligible
 ```
 
 **Video Bandwidth:**
+
 ```
 Concurrent streams:    2M peak
 Average bitrate:       3 Mbps (720p adaptive)
@@ -117,6 +119,7 @@ CDN cost estimate:     ~$0.02/GB = ~$6.7M/month at scale
 ```
 
 **API Throughput:**
+
 ```
 Read QPS (catalog/progress):    50M views/day / 86400 = ~580 QPS avg, 3K peak
 Write QPS (progress updates):   50M views × 5 progress pings/view = 250M/day
@@ -126,6 +129,7 @@ Quiz submissions:               10M/day = ~116/sec avg, ~600/sec peak
 ```
 
 **Database Storage:**
+
 ```
 Enrollment records:    100M users × 5 courses avg × 500 bytes = 250 GB
 Progress records:      100M users × 5 courses × 20 lessons × 200 bytes = 2 TB
@@ -2524,30 +2528,30 @@ Platform health: (1) Video start time P50/P95/P99 per CDN region (target: P95 < 
 
 ### Key Architecture Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Video storage | S3 + CDN (CloudFront) | Cost-effective at petabyte scale, global delivery |
-| Video streaming | HLS + DASH adaptive bitrate | Universal device support, bandwidth adaptation |
-| DRM | Widevine + FairPlay | Covers Android/Chrome + iOS/Safari |
-| Primary database | PostgreSQL (sharded) | ACID for enrollments/payments, JSON support |
-| Progress writes | Redis write-behind → PostgreSQL | Handle 15K writes/sec with eventual consistency |
-| Search | Elasticsearch | Full-text + faceted filtering + autocomplete |
-| Event bus | Kafka | Decouple services, event sourcing for analytics |
-| Code execution | gVisor sandboxed containers | Secure isolation, multi-language support |
-| Recommendations | Hybrid CF + CBF | Combines social signals with content similarity |
-| Certificates | PDF + PNG + blockchain anchor | Shareable, verifiable, tamper-evident |
-| Live classes | WebRTC (SFU) + LL-HLS fallback | Low latency for small groups, CDN scale for large |
-| Offline | Encrypted download + DRM license | Secure offline viewing with time-limited license |
+| Decision         | Choice                           | Rationale                                         |
+| ---------------- | -------------------------------- | ------------------------------------------------- |
+| Video storage    | S3 + CDN (CloudFront)            | Cost-effective at petabyte scale, global delivery |
+| Video streaming  | HLS + DASH adaptive bitrate      | Universal device support, bandwidth adaptation    |
+| DRM              | Widevine + FairPlay              | Covers Android/Chrome + iOS/Safari                |
+| Primary database | PostgreSQL (sharded)             | ACID for enrollments/payments, JSON support       |
+| Progress writes  | Redis write-behind → PostgreSQL  | Handle 15K writes/sec with eventual consistency   |
+| Search           | Elasticsearch                    | Full-text + faceted filtering + autocomplete      |
+| Event bus        | Kafka                            | Decouple services, event sourcing for analytics   |
+| Code execution   | gVisor sandboxed containers      | Secure isolation, multi-language support          |
+| Recommendations  | Hybrid CF + CBF                  | Combines social signals with content similarity   |
+| Certificates     | PDF + PNG + blockchain anchor    | Shareable, verifiable, tamper-evident             |
+| Live classes     | WebRTC (SFU) + LL-HLS fallback   | Low latency for small groups, CDN scale for large |
+| Offline          | Encrypted download + DRM license | Secure offline viewing with time-limited license  |
 
 ### Key Trade-offs
 
-| Trade-off | Option A | Option B | Decision |
-|-----------|----------|----------|----------|
-| Video latency vs. cost | Dedicated streaming servers (low latency) | CDN with HLS (higher latency, lower cost) | CDN + HLS. 2-3s start time is acceptable for education. CDN cost savings at scale are significant. |
-| Progress consistency | Synchronous DB write (strong consistency) | Redis write-behind (eventual consistency) | Write-behind. Losing 30s of progress data is acceptable. Handling 15K writes/sec synchronously is expensive. |
-| Code execution security | Full VM per execution (maximum isolation) | gVisor containers (good isolation, lower overhead) | gVisor. 10x faster startup than full VMs. Security is sufficient for educational code execution. |
-| Grading approach | All auto-graded (scalable, instant) | Human grading available (accurate, slow) | Hybrid. Auto-grade MCQ/code, human-grade essays. AI-assisted grading for short answers reduces manual load. |
-| Recommendation freshness | Real-time updates (expensive compute) | Batch-computed daily (stale but cheap) | Batch daily + event-triggered refresh on enrollment. Recommendations do not need second-level freshness. |
-| Offline DRM strictness | Strict DRM, no downloads | Encrypted offline with 30-day license | Encrypted offline. Mobile learners in emerging markets need offline access. 30-day license balances security and usability. |
-| Live class architecture | Pure WebRTC (low latency, limited scale) | RTMP + CDN (high latency, unlimited scale) | Tiered. WebRTC for < 500 participants, RTMP + LL-HLS for larger audiences. Most live classes are small. |
-| Subtitle generation | Human-only (high accuracy, slow, expensive) | ASR auto-generated (fast, cheaper, less accurate) | Auto-generated + human review for popular courses. ASR accuracy (Whisper) is sufficient for most content. Human review for top 100 courses. |
+| Trade-off                | Option A                                    | Option B                                           | Decision                                                                                                                                    |
+| ------------------------ | ------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Video latency vs. cost   | Dedicated streaming servers (low latency)   | CDN with HLS (higher latency, lower cost)          | CDN + HLS. 2-3s start time is acceptable for education. CDN cost savings at scale are significant.                                          |
+| Progress consistency     | Synchronous DB write (strong consistency)   | Redis write-behind (eventual consistency)          | Write-behind. Losing 30s of progress data is acceptable. Handling 15K writes/sec synchronously is expensive.                                |
+| Code execution security  | Full VM per execution (maximum isolation)   | gVisor containers (good isolation, lower overhead) | gVisor. 10x faster startup than full VMs. Security is sufficient for educational code execution.                                            |
+| Grading approach         | All auto-graded (scalable, instant)         | Human grading available (accurate, slow)           | Hybrid. Auto-grade MCQ/code, human-grade essays. AI-assisted grading for short answers reduces manual load.                                 |
+| Recommendation freshness | Real-time updates (expensive compute)       | Batch-computed daily (stale but cheap)             | Batch daily + event-triggered refresh on enrollment. Recommendations do not need second-level freshness.                                    |
+| Offline DRM strictness   | Strict DRM, no downloads                    | Encrypted offline with 30-day license              | Encrypted offline. Mobile learners in emerging markets need offline access. 30-day license balances security and usability.                 |
+| Live class architecture  | Pure WebRTC (low latency, limited scale)    | RTMP + CDN (high latency, unlimited scale)         | Tiered. WebRTC for < 500 participants, RTMP + LL-HLS for larger audiences. Most live classes are small.                                     |
+| Subtitle generation      | Human-only (high accuracy, slow, expensive) | ASR auto-generated (fast, cheaper, less accurate)  | Auto-generated + human review for popular courses. ASR accuracy (Whisper) is sufficient for most content. Human review for top 100 courses. |

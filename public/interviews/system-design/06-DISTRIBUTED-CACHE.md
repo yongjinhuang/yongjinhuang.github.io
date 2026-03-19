@@ -21,28 +21,28 @@
 
 ### Functional Requirements
 
-| Requirement          | Description                                                      |
-|----------------------|------------------------------------------------------------------|
-| **Get / Set / Delete** | Basic key-value operations with O(1) average time complexity   |
-| **TTL (Time-To-Live)** | Per-key expiration; keys are automatically removed after TTL   |
-| **Eviction Policies**  | LRU, LFU, FIFO, Random, TTL-based eviction when memory is full |
-| **Rich Data Structures** | String, Hash, List, Set, Sorted Set, Bitmap, HyperLogLog     |
-| **Atomic Operations**   | INCR/DECR, CAS (Compare-And-Swap), MULTI/EXEC transactions   |
-| **Pub/Sub**             | Publish and subscribe to channels for real-time messaging      |
-| **Distributed Locking** | Support distributed mutual exclusion across clients            |
-| **Scan / Iteration**    | Non-blocking iteration over keyspace                           |
+| Requirement              | Description                                                    |
+| ------------------------ | -------------------------------------------------------------- |
+| **Get / Set / Delete**   | Basic key-value operations with O(1) average time complexity   |
+| **TTL (Time-To-Live)**   | Per-key expiration; keys are automatically removed after TTL   |
+| **Eviction Policies**    | LRU, LFU, FIFO, Random, TTL-based eviction when memory is full |
+| **Rich Data Structures** | String, Hash, List, Set, Sorted Set, Bitmap, HyperLogLog       |
+| **Atomic Operations**    | INCR/DECR, CAS (Compare-And-Swap), MULTI/EXEC transactions     |
+| **Pub/Sub**              | Publish and subscribe to channels for real-time messaging      |
+| **Distributed Locking**  | Support distributed mutual exclusion across clients            |
+| **Scan / Iteration**     | Non-blocking iteration over keyspace                           |
 
 ### Non-Functional Requirements
 
-| Requirement            | Target                                                        |
-|------------------------|---------------------------------------------------------------|
-| **Latency**            | Sub-millisecond for single-key operations (p99 < 1 ms)       |
-| **Throughput**         | 100K+ operations/second per node                              |
-| **Availability**       | 99.99% uptime; automatic failover within seconds              |
-| **Durability**         | Configurable — from pure in-memory to fully persistent        |
-| **Consistency**        | Eventual consistency across replicas; strong within a shard   |
-| **Scalability**        | Linear horizontal scaling; support 100+ nodes                 |
-| **Fault Tolerance**    | Survive node failures, network partitions, datacenter outages |
+| Requirement         | Target                                                        |
+| ------------------- | ------------------------------------------------------------- |
+| **Latency**         | Sub-millisecond for single-key operations (p99 < 1 ms)        |
+| **Throughput**      | 100K+ operations/second per node                              |
+| **Availability**    | 99.99% uptime; automatic failover within seconds              |
+| **Durability**      | Configurable — from pure in-memory to fully persistent        |
+| **Consistency**     | Eventual consistency across replicas; strong within a shard   |
+| **Scalability**     | Linear horizontal scaling; support 100+ nodes                 |
+| **Fault Tolerance** | Survive node failures, network partitions, datacenter outages |
 
 ### Scale Estimation
 
@@ -108,21 +108,25 @@ The application is responsible for reading from and writing to the cache.
 ```
 
 **When to Use:**
+
 - General-purpose caching where reads dominate writes.
 - Applications that can tolerate stale data for short periods.
 - Situations where not all data needs to be cached.
 
 **Pros:**
+
 - Only requested data is cached (no wasted memory).
 - Cache failure does not break the system (graceful degradation).
 - Simple to implement.
 
 **Cons:**
+
 - Cache miss penalty — three round trips on a miss.
 - Stale data possible if the DB is updated without cache invalidation.
 - "Cache stampede" risk on cold start or after eviction.
 
 **Redis Example:**
+
 ```python
 def get_user(user_id):
     # 1. Check cache
@@ -162,14 +166,17 @@ The cache sits between the application and the database. The cache itself handle
 ```
 
 **When to Use:**
+
 - When you want the cache to own the data-loading logic.
 - Libraries like Guava Cache, Caffeine, or frameworks that support loaders.
 
 **Pros:**
+
 - Application code is simpler (no cache miss handling).
 - Data loading is centralized in the cache layer.
 
 **Cons:**
+
 - First request for each key is always slow (cold miss).
 - Tight coupling between cache and data source.
 - More complex cache implementation.
@@ -197,14 +204,17 @@ Every write goes to the cache first, and the cache synchronously writes to the d
 ```
 
 **When to Use:**
+
 - When data consistency between cache and DB is critical.
 - Often paired with Read-Through for a complete solution.
 
 **Pros:**
+
 - Cache and DB are always in sync.
 - No data loss on cache eviction (data is in DB).
 
 **Cons:**
+
 - Higher write latency (two writes on every operation).
 - Every write goes through the cache, even for rarely-read data.
 
@@ -231,16 +241,19 @@ The application writes to the cache, and the cache asynchronously flushes to the
 ```
 
 **When to Use:**
+
 - High write throughput requirements.
 - Applications that can tolerate some data loss risk.
 - Write-heavy workloads (e.g., analytics counters, session stores).
 
 **Pros:**
+
 - Very low write latency.
 - Batching reduces DB load significantly.
 - Absorbs write spikes.
 
 **Cons:**
+
 - Risk of data loss if the cache node crashes before flushing.
 - Complex failure recovery.
 - Eventual consistency between cache and DB.
@@ -272,15 +285,18 @@ The cache proactively refreshes entries before they expire, based on predicted a
 ```
 
 **When to Use:**
+
 - Predictable access patterns.
 - When cache miss latency is unacceptable.
 - High-traffic keys where staleness must be minimized.
 
 **Pros:**
+
 - Near-zero cache miss rate for hot keys.
 - Reduced latency for frequently accessed data.
 
 **Cons:**
+
 - Wastes resources refreshing data that may not be requested again.
 - Complex to implement; requires prediction of access patterns.
 
@@ -288,13 +304,13 @@ The cache proactively refreshes entries before they expire, based on predicted a
 
 ### 2.6 Strategy Comparison Table
 
-| Strategy        | Read Latency | Write Latency | Consistency  | Data Loss Risk | Complexity | Best For                     |
-|-----------------|-------------|---------------|-------------|----------------|------------|------------------------------|
-| Cache-Aside     | Miss: High  | Low (DB only) | Eventual    | None           | Low        | General purpose              |
-| Read-Through    | Miss: High  | N/A           | Eventual    | None           | Medium     | Simplified read path         |
-| Write-Through   | Hit: Low    | High          | Strong      | None           | Medium     | Consistency-critical writes  |
-| Write-Behind    | Hit: Low    | Very Low      | Eventual    | **High**       | High       | Write-heavy workloads        |
-| Refresh-Ahead   | Very Low    | N/A           | Near-real   | None           | High       | Hot keys, predictable access |
+| Strategy      | Read Latency | Write Latency | Consistency | Data Loss Risk | Complexity | Best For                     |
+| ------------- | ------------ | ------------- | ----------- | -------------- | ---------- | ---------------------------- |
+| Cache-Aside   | Miss: High   | Low (DB only) | Eventual    | None           | Low        | General purpose              |
+| Read-Through  | Miss: High   | N/A           | Eventual    | None           | Medium     | Simplified read path         |
+| Write-Through | Hit: Low     | High          | Strong      | None           | Medium     | Consistency-critical writes  |
+| Write-Behind  | Hit: Low     | Very Low      | Eventual    | **High**       | High       | Write-heavy workloads        |
+| Refresh-Ahead | Very Low     | N/A           | Near-real   | None           | High       | Hot keys, predictable access |
 
 ---
 
@@ -349,13 +365,13 @@ The cache proactively refreshes entries before they expire, based on predicted a
 
 ### Key Architectural Components
 
-| Component              | Responsibility                                              |
-|------------------------|-------------------------------------------------------------|
-| **Client Library**     | Connection pooling, routing, serialization, retry logic     |
-| **Cache Node (Master)**| Serves reads/writes for its shard; replicates to replicas   |
-| **Replica Node**       | Serves reads (optionally); takes over on master failure     |
-| **Coordination Svc**   | Cluster membership, leader election, topology changes       |
-| **Hash Slot Map**      | Maps 16,384 hash slots to shards for deterministic routing  |
+| Component               | Responsibility                                             |
+| ----------------------- | ---------------------------------------------------------- |
+| **Client Library**      | Connection pooling, routing, serialization, retry logic    |
+| **Cache Node (Master)** | Serves reads/writes for its shard; replicates to replicas  |
+| **Replica Node**        | Serves reads (optionally); takes over on master failure    |
+| **Coordination Svc**    | Cluster membership, leader election, topology changes      |
+| **Hash Slot Map**       | Maps 16,384 hash slots to shards for deterministic routing |
 
 ---
 
@@ -450,6 +466,7 @@ With few physical nodes, the key distribution is uneven. Virtual nodes solve thi
 ```
 
 **Benefits:**
+
 - Even data distribution across heterogeneous hardware.
 - Assign more virtual nodes to more powerful machines.
 - Smoother redistribution when nodes join or leave.
@@ -467,6 +484,7 @@ Redis Cluster uses a fixed 16,384 hash slots (not a traditional consistent hash 
 ```
 
 **Advantages over pure consistent hashing:**
+
 - Deterministic slot assignment; no ring ambiguity.
 - Resharding moves specific slot ranges, not random keys.
 - Clients cache the slot-to-node mapping for direct routing.
@@ -475,13 +493,13 @@ Redis Cluster uses a fixed 16,384 hash slots (not a traditional consistent hash 
 
 A "hot key" is a single key receiving disproportionate traffic (e.g., a viral post, a celebrity's profile).
 
-| Solution                  | Description                                                    |
-|---------------------------|----------------------------------------------------------------|
-| **Key splitting**         | Split `hot_key` into `hot_key:0`, `hot_key:1`, ..., `hot_key:N`. Client reads from random shard. |
-| **Local caching**         | Cache hot keys in application memory (L1 cache) with short TTL. |
-| **Read replicas**         | Route reads for hot keys to replicas to distribute load.        |
-| **Proxy-layer caching**   | Let the proxy detect and locally cache hot keys.                |
-| **Key tracking**          | Redis `CLIENT TRACKING` + `REDIRECT` for server-assisted invalidation. |
+| Solution                | Description                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| **Key splitting**       | Split `hot_key` into `hot_key:0`, `hot_key:1`, ..., `hot_key:N`. Client reads from random shard. |
+| **Local caching**       | Cache hot keys in application memory (L1 cache) with short TTL.                                  |
+| **Read replicas**       | Route reads for hot keys to replicas to distribute load.                                         |
+| **Proxy-layer caching** | Let the proxy detect and locally cache hot keys.                                                 |
+| **Key tracking**        | Redis `CLIENT TRACKING` + `REDIRECT` for server-assisted invalidation.                           |
 
 ```
   Hot Key Splitting Example:
@@ -504,16 +522,16 @@ A "hot key" is a single key receiving disproportionate traffic (e.g., a viral po
 
 ### 5.1 In-Memory Data Structures (Redis)
 
-| Data Type      | Underlying Structure                      | Example Commands                    |
-|----------------|-------------------------------------------|-------------------------------------|
-| **String**     | Simple Dynamic String (SDS)               | `SET`, `GET`, `INCR`, `APPEND`      |
-| **Hash**       | Ziplist (small) / Hash Table (large)      | `HSET`, `HGET`, `HGETALL`           |
-| **List**       | Quicklist (linked list of ziplists)       | `LPUSH`, `RPOP`, `LRANGE`           |
-| **Set**        | Intset (small ints) / Hash Table          | `SADD`, `SMEMBERS`, `SINTER`        |
-| **Sorted Set** | Ziplist (small) / Skip List + Hash Table  | `ZADD`, `ZRANGE`, `ZRANGEBYSCORE`   |
-| **Bitmap**     | String (bit operations)                   | `SETBIT`, `GETBIT`, `BITCOUNT`      |
-| **HyperLogLog**| Sparse/Dense HLL representation           | `PFADD`, `PFCOUNT`, `PFMERGE`       |
-| **Stream**     | Radix tree of listpack entries            | `XADD`, `XREAD`, `XRANGE`          |
+| Data Type       | Underlying Structure                     | Example Commands                  |
+| --------------- | ---------------------------------------- | --------------------------------- |
+| **String**      | Simple Dynamic String (SDS)              | `SET`, `GET`, `INCR`, `APPEND`    |
+| **Hash**        | Ziplist (small) / Hash Table (large)     | `HSET`, `HGET`, `HGETALL`         |
+| **List**        | Quicklist (linked list of ziplists)      | `LPUSH`, `RPOP`, `LRANGE`         |
+| **Set**         | Intset (small ints) / Hash Table         | `SADD`, `SMEMBERS`, `SINTER`      |
+| **Sorted Set**  | Ziplist (small) / Skip List + Hash Table | `ZADD`, `ZRANGE`, `ZRANGEBYSCORE` |
+| **Bitmap**      | String (bit operations)                  | `SETBIT`, `GETBIT`, `BITCOUNT`    |
+| **HyperLogLog** | Sparse/Dense HLL representation          | `PFADD`, `PFCOUNT`, `PFMERGE`     |
+| **Stream**      | Radix tree of listpack entries           | `XADD`, `XREAD`, `XRANGE`         |
 
 ### 5.2 Hash Table Implementation
 
@@ -565,18 +583,19 @@ Memory Optimization Techniques:
 
 When `maxmemory` is reached, Redis must evict keys to make room.
 
-| Policy              | Description                                                   |
-|---------------------|---------------------------------------------------------------|
-| `noeviction`        | Return error on writes; reads still work                      |
-| `allkeys-lru`       | Evict least recently used key from all keys                   |
-| `volatile-lru`      | Evict LRU key from keys with TTL set                          |
-| `allkeys-lfu`       | Evict least frequently used key from all keys                 |
-| `volatile-lfu`      | Evict LFU key from keys with TTL set                          |
-| `allkeys-random`    | Evict a random key                                            |
-| `volatile-random`   | Evict a random key with TTL set                               |
-| `volatile-ttl`      | Evict key with nearest expiration time                        |
+| Policy            | Description                                   |
+| ----------------- | --------------------------------------------- |
+| `noeviction`      | Return error on writes; reads still work      |
+| `allkeys-lru`     | Evict least recently used key from all keys   |
+| `volatile-lru`    | Evict LRU key from keys with TTL set          |
+| `allkeys-lfu`     | Evict least frequently used key from all keys |
+| `volatile-lfu`    | Evict LFU key from keys with TTL set          |
+| `allkeys-random`  | Evict a random key                            |
+| `volatile-random` | Evict a random key with TTL set               |
+| `volatile-ttl`    | Evict key with nearest expiration time        |
 
 **Redis configuration:**
+
 ```
 CONFIG SET maxmemory 4gb
 CONFIG SET maxmemory-policy allkeys-lru
@@ -720,15 +739,16 @@ Redis LFU uses a logarithmic frequency counter stored in 8 bits of the LRU field
 
 ### 6.2 Async vs Sync Replication Trade-offs
 
-| Aspect             | Asynchronous                          | Synchronous                          |
-|--------------------|---------------------------------------|--------------------------------------|
-| **Write Latency**  | Low (master returns immediately)      | High (waits for replica ACK)         |
-| **Data Safety**    | Risk of data loss on master failure   | No data loss                         |
-| **Throughput**     | Higher                                | Lower                                |
-| **Availability**   | Higher (replica lag is OK)            | Lower (replica must be reachable)    |
-| **Redis Default**  | Yes (async)                           | No (`WAIT` command for semi-sync)    |
+| Aspect            | Asynchronous                        | Synchronous                       |
+| ----------------- | ----------------------------------- | --------------------------------- |
+| **Write Latency** | Low (master returns immediately)    | High (waits for replica ACK)      |
+| **Data Safety**   | Risk of data loss on master failure | No data loss                      |
+| **Throughput**    | Higher                              | Lower                             |
+| **Availability**  | Higher (replica lag is OK)          | Lower (replica must be reachable) |
+| **Redis Default** | Yes (async)                         | No (`WAIT` command for semi-sync) |
 
 **Semi-synchronous with WAIT:**
+
 ```
 # Write data
 SET user:1 "Alice"
@@ -829,15 +849,16 @@ Split-brain occurs when network partitions cause multiple nodes to believe they 
 
 **Solutions:**
 
-| Solution                             | How It Works                                                    |
-|--------------------------------------|-----------------------------------------------------------------|
-| `min-replicas-to-write`             | Master rejects writes if fewer than N replicas are connected.    |
-| `min-replicas-max-lag`              | Master rejects writes if replica lag exceeds N seconds.          |
-| **Quorum-based writes**             | Require majority acknowledgment before confirming writes.        |
+| Solution                            | How It Works                                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `min-replicas-to-write`             | Master rejects writes if fewer than N replicas are connected.                                  |
+| `min-replicas-max-lag`              | Master rejects writes if replica lag exceeds N seconds.                                        |
+| **Quorum-based writes**             | Require majority acknowledgment before confirming writes.                                      |
 | **Fencing tokens**                  | New master gets a monotonically increasing token; old master's writes are rejected by storage. |
-| **NODE_TIMEOUT + cluster settings** | Tune cluster-node-timeout to balance between false positives and detection speed. |
+| **NODE_TIMEOUT + cluster settings** | Tune cluster-node-timeout to balance between false positives and detection speed.              |
 
 **Configuration:**
+
 ```
 # Require at least 1 replica with lag < 10 seconds
 CONFIG SET min-replicas-to-write 1
@@ -877,6 +898,7 @@ RDB creates point-in-time snapshots of the dataset.
 ```
 
 **Configuration:**
+
 ```
 save 900 1       # Snapshot if 1+ key changed in 900 seconds
 save 300 10      # Snapshot if 10+ keys changed in 300 seconds
@@ -889,11 +911,13 @@ dir /var/lib/redis
 ```
 
 **Pros:**
+
 - Compact single-file backup, easy to transfer.
 - Fast restart (load binary file).
 - Minimal performance impact (child process does the work).
 
 **Cons:**
+
 - Data loss between snapshots (could be minutes).
 - fork() can be slow with large datasets (memory page table copy).
 - Memory spike: COW can double memory usage under heavy writes during BGSAVE.
@@ -933,6 +957,7 @@ AOF logs every write operation.
 ```
 
 **AOF Rewrite (Compaction):**
+
 ```
   Original AOF:          Rewritten AOF:
   SET x 1                SET x 3
@@ -948,6 +973,7 @@ AOF logs every write operation.
 ```
 
 **Configuration:**
+
 ```
 appendonly yes
 appendfsync everysec
@@ -982,20 +1008,21 @@ Redis 4.0+ supports a hybrid persistence mode:
 ```
 
 **Configuration:**
+
 ```
 aof-use-rdb-preamble yes
 ```
 
 ### 7.4 Persistence Trade-offs
 
-| Aspect             | RDB                  | AOF (everysec)       | Hybrid (RDB + AOF)   |
-|--------------------|----------------------|----------------------|-----------------------|
-| **Data Loss**      | Minutes of data      | ~1 second of data    | ~1 second of data     |
-| **Restart Speed**  | Fast (binary load)   | Slow (replay log)    | Fast                  |
-| **Disk Usage**     | Compact              | Larger (grows fast)  | Medium                |
-| **Write Perf**     | Minimal impact       | Slight impact        | Slight impact         |
-| **Backup**         | Easy (single file)   | Harder (growing log) | Medium                |
-| **Recommended**    | Caching only         | Data store           | Production default    |
+| Aspect            | RDB                | AOF (everysec)       | Hybrid (RDB + AOF) |
+| ----------------- | ------------------ | -------------------- | ------------------ |
+| **Data Loss**     | Minutes of data    | ~1 second of data    | ~1 second of data  |
+| **Restart Speed** | Fast (binary load) | Slow (replay log)    | Fast               |
+| **Disk Usage**    | Compact            | Larger (grows fast)  | Medium             |
+| **Write Perf**    | Minimal impact     | Slight impact        | Slight impact      |
+| **Backup**        | Easy (single file) | Harder (growing log) | Medium             |
+| **Recommended**   | Caching only       | Data store           | Production default |
 
 ---
 
@@ -1194,6 +1221,7 @@ Ensures a client always sees its own writes.
 The fundamental challenge: keeping cache and DB in sync during concurrent operations.
 
 **Problem Scenario (Cache-Aside):**
+
 ```
   Thread A (read):              Thread B (write):
   1. Cache MISS for key X
@@ -1282,6 +1310,7 @@ The fundamental challenge: keeping cache and DB in sync during concurrent operat
 ```
 
 **Redis Cluster commands:**
+
 ```
 # Add a new node to the cluster
 redis-cli --cluster add-node new_host:6379 existing_host:6379
@@ -1325,13 +1354,13 @@ redis-cli --cluster check host:6379
 
 **Comparison:**
 
-| Aspect              | Client-Side          | Proxy-Based          | Cluster Mode         |
-|---------------------|----------------------|----------------------|----------------------|
-| Latency             | Lowest               | +1 hop               | +redirect (rare)     |
-| Client Complexity   | High                 | Low                  | Medium               |
-| Topology Changes    | Client update needed | Proxy update only    | Automatic            |
-| Multi-key ops       | Limited              | Limited              | Same-slot only       |
-| Scalability         | Good                 | Proxy bottleneck     | Excellent            |
+| Aspect            | Client-Side          | Proxy-Based       | Cluster Mode     |
+| ----------------- | -------------------- | ----------------- | ---------------- |
+| Latency           | Lowest               | +1 hop            | +redirect (rare) |
+| Client Complexity | High                 | Low               | Medium           |
+| Topology Changes  | Client update needed | Proxy update only | Automatic        |
+| Multi-key ops     | Limited              | Limited           | Same-slot only   |
+| Scalability       | Good                 | Proxy bottleneck  | Excellent        |
 
 ### 10.3 Connection Pooling
 
@@ -1353,6 +1382,7 @@ redis-cli --cluster check host:6379
 ```
 
 **Configuration (Jedis example):**
+
 ```java
 JedisPoolConfig config = new JedisPoolConfig();
 config.setMaxTotal(50);           // max connections in pool
@@ -1383,6 +1413,7 @@ JedisPool pool = new JedisPool(config, "redis-host", 6379);
 ```
 
 **Redis Pipeline Example:**
+
 ```python
 pipe = redis.pipeline(transaction=False)
 pipe.set("key1", "value1")
@@ -1394,6 +1425,7 @@ results = pipe.execute()
 ```
 
 **MGET/MSET (native batch):**
+
 ```
 MSET user:1:name "Alice" user:1:age "30" user:1:city "NYC"
 MGET user:1:name user:1:age user:1:city
@@ -1554,14 +1586,14 @@ MGET user:1:name user:1:age user:1:city
 
 **Solutions:**
 
-| Solution                      | Implementation                                              |
-|-------------------------------|-------------------------------------------------------------|
-| **Random TTL jitter**         | `TTL = base_ttl + random(0, jitter_range)`                  |
-| **Staggered warm-up**         | Pre-load cache in batches during cold start                 |
-| **Circuit breaker**           | Stop DB queries when error rate exceeds threshold           |
-| **Rate limiting on DB**       | Cap the number of concurrent DB queries                     |
-| **Fallback / degraded mode**  | Return stale data or default values during avalanche        |
-| **Multi-tier cache**          | L1 (local) absorbs some load even if L2 (Redis) is cold    |
+| Solution                     | Implementation                                          |
+| ---------------------------- | ------------------------------------------------------- |
+| **Random TTL jitter**        | `TTL = base_ttl + random(0, jitter_range)`              |
+| **Staggered warm-up**        | Pre-load cache in batches during cold start             |
+| **Circuit breaker**          | Stop DB queries when error rate exceeds threshold       |
+| **Rate limiting on DB**      | Cap the number of concurrent DB queries                 |
+| **Fallback / degraded mode** | Return stale data or default values during avalanche    |
+| **Multi-tier cache**         | L1 (local) absorbs some load even if L2 (Redis) is cold |
 
 ```python
 import random
@@ -1589,12 +1621,12 @@ def set_with_jitter(key, value, base_ttl=3600, jitter=300):
 
 **Solutions:**
 
-| Solution                | Description                                                        |
-|-------------------------|--------------------------------------------------------------------|
-| **Cache null results**  | Store `NULL` / empty marker with short TTL for known misses        |
-| **Bloom filter**        | Check membership before querying — if not in filter, skip DB       |
-| **Input validation**    | Reject obviously invalid keys (negative IDs, invalid formats)      |
-| **Rate limiting**       | Limit requests per client/IP to prevent abuse                      |
+| Solution               | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| **Cache null results** | Store `NULL` / empty marker with short TTL for known misses   |
+| **Bloom filter**       | Check membership before querying — if not in filter, skip DB  |
+| **Input validation**   | Reject obviously invalid keys (negative IDs, invalid formats) |
+| **Rate limiting**      | Limit requests per client/IP to prevent abuse                 |
 
 **Bloom Filter Approach:**
 
@@ -1787,6 +1819,7 @@ def release_lock(lock_name, token):
 ```
 
 **Commands:**
+
 ```
 # Publisher
 PUBLISH notifications "New order received"
@@ -1825,6 +1858,7 @@ PSUBSCRIBE user:*:events    # pattern-based subscription
 ```
 
 **Redis Streams Commands:**
+
 ```
 # Producer
 XADD mystream * event "order_created" order_id "42"

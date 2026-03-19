@@ -11,6 +11,7 @@ Networking and HTTP knowledge is foundational for frontend engineers. Every user
 ### HTTP Protocol Versions
 
 **HTTP/1.1** (1997)
+
 - Text-based protocol with one request per TCP connection (or pipelining, rarely used).
 - Head-of-line (HOL) blocking: the second request must wait for the first response.
 - Workarounds: domain sharding, sprite sheets, bundling files.
@@ -22,6 +23,7 @@ Connection: keep-alive
 ```
 
 **HTTP/2** (2015)
+
 - Binary framing layer over a single TCP connection.
 - Multiplexing: multiple streams in parallel without HOL blocking at the application layer.
 - Header compression (HPACK).
@@ -29,6 +31,7 @@ Connection: keep-alive
 - Still suffers from TCP-level HOL blocking when a packet is lost.
 
 **HTTP/3** (2022)
+
 - Built on QUIC (UDP-based transport).
 - Eliminates TCP HOL blocking entirely -- each stream is independent.
 - Faster connection setup (0-RTT resumption).
@@ -49,15 +52,16 @@ Connection: keep-alive
 
 **Caching Headers**
 
-| Header | Purpose | Example |
-|--------|---------|---------|
-| `Cache-Control` | Directives for caching | `max-age=3600, public` |
-| `ETag` | Content fingerprint for validation | `"abc123"` |
-| `Last-Modified` | Timestamp of last change | `Wed, 01 Mar 2026 00:00:00 GMT` |
-| `If-None-Match` | Client sends ETag back for validation | `"abc123"` |
+| Header              | Purpose                               | Example                         |
+| ------------------- | ------------------------------------- | ------------------------------- |
+| `Cache-Control`     | Directives for caching                | `max-age=3600, public`          |
+| `ETag`              | Content fingerprint for validation    | `"abc123"`                      |
+| `Last-Modified`     | Timestamp of last change              | `Wed, 01 Mar 2026 00:00:00 GMT` |
+| `If-None-Match`     | Client sends ETag back for validation | `"abc123"`                      |
 | `If-Modified-Since` | Client sends timestamp for validation | `Wed, 01 Mar 2026 00:00:00 GMT` |
 
 Cache-Control directives:
+
 - `no-store` -- never cache.
 - `no-cache` -- cache but always revalidate.
 - `max-age=N` -- fresh for N seconds.
@@ -66,39 +70,40 @@ Cache-Control directives:
 
 **CORS Headers**
 
-| Header | Direction | Purpose |
-|--------|-----------|---------|
-| `Origin` | Request | Identifies the requesting origin |
-| `Access-Control-Allow-Origin` | Response | Which origins are allowed |
-| `Access-Control-Allow-Methods` | Response | Allowed HTTP methods |
-| `Access-Control-Allow-Headers` | Response | Allowed request headers |
-| `Access-Control-Allow-Credentials` | Response | Whether cookies are sent |
-| `Access-Control-Max-Age` | Response | How long preflight is cached |
+| Header                             | Direction | Purpose                          |
+| ---------------------------------- | --------- | -------------------------------- |
+| `Origin`                           | Request   | Identifies the requesting origin |
+| `Access-Control-Allow-Origin`      | Response  | Which origins are allowed        |
+| `Access-Control-Allow-Methods`     | Response  | Allowed HTTP methods             |
+| `Access-Control-Allow-Headers`     | Response  | Allowed request headers          |
+| `Access-Control-Allow-Credentials` | Response  | Whether cookies are sent         |
+| `Access-Control-Max-Age`           | Response  | How long preflight is cached     |
 
 **Security Headers**
 
-| Header | Purpose |
-|--------|---------|
-| `Strict-Transport-Security` | Force HTTPS |
-| `Content-Security-Policy` | Restrict resource origins |
-| `X-Content-Type-Options` | Prevent MIME sniffing |
-| `X-Frame-Options` | Prevent clickjacking |
+| Header                      | Purpose                   |
+| --------------------------- | ------------------------- |
+| `Strict-Transport-Security` | Force HTTPS               |
+| `Content-Security-Policy`   | Restrict resource origins |
+| `X-Content-Type-Options`    | Prevent MIME sniffing     |
+| `X-Frame-Options`           | Prevent clickjacking      |
 
 ### HTTP Status Codes
 
-| Range | Category | Key Codes |
-|-------|----------|-----------|
-| 1xx | Informational | `101 Switching Protocols` (WebSocket upgrade) |
-| 2xx | Success | `200 OK`, `201 Created`, `204 No Content` |
-| 3xx | Redirection | `301 Moved Permanently`, `302 Found`, `304 Not Modified` |
-| 4xx | Client Error | `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `405 Method Not Allowed`, `409 Conflict`, `429 Too Many Requests` |
-| 5xx | Server Error | `500 Internal Server Error`, `502 Bad Gateway`, `503 Service Unavailable`, `504 Gateway Timeout` |
+| Range | Category      | Key Codes                                                                                                                                  |
+| ----- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1xx   | Informational | `101 Switching Protocols` (WebSocket upgrade)                                                                                              |
+| 2xx   | Success       | `200 OK`, `201 Created`, `204 No Content`                                                                                                  |
+| 3xx   | Redirection   | `301 Moved Permanently`, `302 Found`, `304 Not Modified`                                                                                   |
+| 4xx   | Client Error  | `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `405 Method Not Allowed`, `409 Conflict`, `429 Too Many Requests` |
+| 5xx   | Server Error  | `500 Internal Server Error`, `502 Bad Gateway`, `503 Service Unavailable`, `504 Gateway Timeout`                                           |
 
 Key distinction: `401` means "not authenticated" (who are you?), while `403` means "not authorized" (you lack permission).
 
 ### REST API Design
 
 REST (Representational State Transfer) principles:
+
 - **Resources** identified by URLs: `/users/123`.
 - **HTTP methods** as verbs: GET (read), POST (create), PUT (replace), PATCH (partial update), DELETE (remove).
 - **Stateless**: each request carries all needed context.
@@ -114,6 +119,7 @@ DELETE /api/users/123      -- delete user 123
 ```
 
 Good practices:
+
 - Use plural nouns (`/users`, not `/user`).
 - Nest for relationships: `/users/123/posts`.
 - Use query params for filtering: `/users?role=admin&page=2`.
@@ -137,18 +143,19 @@ query {
 }
 ```
 
-| Aspect | REST | GraphQL |
-|--------|------|---------|
-| Endpoints | Multiple (`/users`, `/posts`) | Single (`/graphql`) |
-| Over-fetching | Common | Avoided (client picks fields) |
-| Under-fetching | Common (multiple round trips) | Avoided (nested queries) |
-| Caching | HTTP caching works naturally | Requires client-side cache (Apollo, urql) |
-| File uploads | Native support | Requires multipart spec |
-| Learning curve | Lower | Higher |
+| Aspect         | REST                          | GraphQL                                   |
+| -------------- | ----------------------------- | ----------------------------------------- |
+| Endpoints      | Multiple (`/users`, `/posts`) | Single (`/graphql`)                       |
+| Over-fetching  | Common                        | Avoided (client picks fields)             |
+| Under-fetching | Common (multiple round trips) | Avoided (nested queries)                  |
+| Caching        | HTTP caching works naturally  | Requires client-side cache (Apollo, urql) |
+| File uploads   | Native support                | Requires multipart spec                   |
+| Learning curve | Lower                         | Higher                                    |
 
 ### Real-Time Communication
 
 **WebSocket**
+
 - Full-duplex, persistent connection.
 - Client and server can send messages at any time.
 - Starts as HTTP upgrade (`101 Switching Protocols`).
@@ -156,7 +163,8 @@ query {
 ```javascript
 const ws = new WebSocket('wss://example.com/socket');
 
-ws.onopen = () => ws.send(JSON.stringify({ type: 'subscribe', channel: 'chat' }));
+ws.onopen = () =>
+  ws.send(JSON.stringify({ type: 'subscribe', channel: 'chat' }));
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
   // handle incoming message
@@ -167,6 +175,7 @@ ws.onclose = (event) => {
 ```
 
 **Server-Sent Events (SSE)**
+
 - Unidirectional: server to client only.
 - Built on HTTP -- works with existing infrastructure (proxies, load balancers).
 - Automatic reconnection built in.
@@ -184,13 +193,13 @@ source.onerror = () => {
 };
 ```
 
-| Feature | WebSocket | SSE |
-|---------|-----------|-----|
-| Direction | Bidirectional | Server to client |
-| Protocol | Custom over TCP | HTTP |
-| Reconnection | Manual | Automatic |
-| Binary data | Yes | No (text only) |
-| Use cases | Chat, games, collaboration | Notifications, feeds, progress |
+| Feature      | WebSocket                  | SSE                            |
+| ------------ | -------------------------- | ------------------------------ |
+| Direction    | Bidirectional              | Server to client               |
+| Protocol     | Custom over TCP            | HTTP                           |
+| Reconnection | Manual                     | Automatic                      |
+| Binary data  | Yes                        | No (text only)                 |
+| Use cases    | Chat, games, collaboration | Notifications, feeds, progress |
 
 ### The Fetch API
 
@@ -252,6 +261,7 @@ async function streamResponse(url) {
 An origin is: `protocol + host + port`. So `https://app.example.com:443` differs from `http://app.example.com:80`.
 
 **Simple requests** (no preflight):
+
 - Methods: GET, HEAD, POST.
 - Headers: only safe-listed (Accept, Content-Type with form values, etc.).
 - Content-Type: `application/x-www-form-urlencoded`, `multipart/form-data`, `text/plain`.
@@ -272,20 +282,21 @@ Access-Control-Max-Age: 86400
 ```
 
 **Credentialed requests** (cookies, auth headers):
+
 - Client: `credentials: 'include'` in fetch.
 - Server: `Access-Control-Allow-Credentials: true`.
 - Server: `Access-Control-Allow-Origin` must be a specific origin, NOT `*`.
 
 ### Token Storage: Cookies vs localStorage vs sessionStorage
 
-| Aspect | httpOnly Cookie | localStorage | sessionStorage |
-|--------|-----------------|--------------|----------------|
-| Accessible via JS | No | Yes | Yes |
+| Aspect             | httpOnly Cookie                   | localStorage       | sessionStorage     |
+| ------------------ | --------------------------------- | ------------------ | ------------------ |
+| Accessible via JS  | No                                | Yes                | Yes                |
 | Sent automatically | Yes (with requests to the domain) | No (manual header) | No (manual header) |
-| Capacity | ~4KB | ~5-10MB | ~5-10MB |
-| Expiration | Configurable | Never | Tab close |
-| XSS vulnerable | No (httpOnly) | Yes | Yes |
-| CSRF vulnerable | Yes | No | No |
+| Capacity           | ~4KB                              | ~5-10MB            | ~5-10MB            |
+| Expiration         | Configurable                      | Never              | Tab close          |
+| XSS vulnerable     | No (httpOnly)                     | Yes                | Yes                |
+| CSRF vulnerable    | Yes                               | No                 | No                 |
 
 **Recommendation**: Store auth tokens in httpOnly, Secure, SameSite=Strict cookies when possible. This protects against XSS (JavaScript cannot read the token) while CSRF can be mitigated with SameSite and anti-CSRF tokens. If you must use localStorage (e.g., SPAs with third-party APIs), pair it with short-lived tokens and aggressive XSS prevention.
 
@@ -381,6 +392,7 @@ POST   /api/v1/auth/logout            -- invalidate token
 ```
 
 Response format for list endpoints includes pagination metadata:
+
 ```json
 {
   "data": [...],
@@ -473,7 +485,10 @@ function createSSEClient(url, handlers) {
 
     eventSource.onerror = () => {
       eventSource.close();
-      const delay = Math.min(1000 * Math.pow(2, reconnectAttempt), maxReconnectDelay);
+      const delay = Math.min(
+        1000 * Math.pow(2, reconnectAttempt),
+        maxReconnectDelay
+      );
       reconnectAttempt++;
       handlers.onReconnecting?.(delay);
       setTimeout(connect, delay);
@@ -555,7 +570,9 @@ async function graphqlRequest(endpoint, query, variables = {}) {
 }
 
 // Usage
-const data = await graphqlRequest('/graphql', `
+const data = await graphqlRequest(
+  '/graphql',
+  `
   query GetUser($id: ID!) {
     user(id: $id) {
       name
@@ -563,7 +580,9 @@ const data = await graphqlRequest('/graphql', `
       posts { title }
     }
   }
-`, { id: '123' });
+`,
+  { id: '123' }
+);
 ```
 
 ---
@@ -594,22 +613,22 @@ const data = await graphqlRequest('/graphql', `
 
 ## Quick Reference
 
-| Topic | Key Points |
-|-------|------------|
-| HTTP/1.1 | Text-based, one request per connection, HOL blocking |
-| HTTP/2 | Binary, multiplexed streams, HPACK compression, single TCP connection |
-| HTTP/3 | QUIC (UDP), no TCP HOL blocking, 0-RTT, connection migration |
-| Cache-Control | `no-store`, `no-cache`, `max-age`, `immutable`, `stale-while-revalidate` |
-| ETag flow | Server sends ETag -> Client sends If-None-Match -> 304 or 200 |
-| CORS preflight | OPTIONS request for non-simple methods/headers, cached via Max-Age |
-| Credentials | `credentials: 'include'` + specific Allow-Origin + Allow-Credentials: true |
-| Status 301 vs 302 | 301 = permanent (cached), 302 = temporary (not cached) |
-| Status 401 vs 403 | 401 = unauthenticated, 403 = unauthorized (has identity, lacks permission) |
-| REST verbs | GET (read), POST (create), PUT (replace), PATCH (update), DELETE (remove) |
-| GraphQL | Single endpoint, client specifies fields, avoids over/under-fetching |
-| WebSocket | Bidirectional, persistent, manual reconnection |
-| SSE | Server-to-client, HTTP-based, auto reconnection, 6-connection limit (HTTP/1.1) |
-| fetch gotcha | Does not throw on 4xx/5xx -- check `response.ok` |
-| Token storage | httpOnly cookie (best for XSS protection) > localStorage (XSS vulnerable) |
-| AbortController | Pass `signal` to fetch, call `controller.abort()` to cancel |
-| Streaming | `response.body.getReader()` for incremental chunk processing |
+| Topic             | Key Points                                                                     |
+| ----------------- | ------------------------------------------------------------------------------ |
+| HTTP/1.1          | Text-based, one request per connection, HOL blocking                           |
+| HTTP/2            | Binary, multiplexed streams, HPACK compression, single TCP connection          |
+| HTTP/3            | QUIC (UDP), no TCP HOL blocking, 0-RTT, connection migration                   |
+| Cache-Control     | `no-store`, `no-cache`, `max-age`, `immutable`, `stale-while-revalidate`       |
+| ETag flow         | Server sends ETag -> Client sends If-None-Match -> 304 or 200                  |
+| CORS preflight    | OPTIONS request for non-simple methods/headers, cached via Max-Age             |
+| Credentials       | `credentials: 'include'` + specific Allow-Origin + Allow-Credentials: true     |
+| Status 301 vs 302 | 301 = permanent (cached), 302 = temporary (not cached)                         |
+| Status 401 vs 403 | 401 = unauthenticated, 403 = unauthorized (has identity, lacks permission)     |
+| REST verbs        | GET (read), POST (create), PUT (replace), PATCH (update), DELETE (remove)      |
+| GraphQL           | Single endpoint, client specifies fields, avoids over/under-fetching           |
+| WebSocket         | Bidirectional, persistent, manual reconnection                                 |
+| SSE               | Server-to-client, HTTP-based, auto reconnection, 6-connection limit (HTTP/1.1) |
+| fetch gotcha      | Does not throw on 4xx/5xx -- check `response.ok`                               |
+| Token storage     | httpOnly cookie (best for XSS protection) > localStorage (XSS vulnerable)      |
+| AbortController   | Pass `signal` to fetch, call `controller.abort()` to cancel                    |
+| Streaming         | `response.body.getReader()` for incremental chunk processing                   |

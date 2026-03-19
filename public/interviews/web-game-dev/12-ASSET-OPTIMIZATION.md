@@ -19,16 +19,16 @@
 
 Playable ads operate under strict size constraints that vary by ad network:
 
-| Ad Network       | Max Size (Uncompressed) | Max Size (Compressed) | Notes                        |
-|------------------|------------------------|-----------------------|------------------------------|
-| TikTok           | 2 MB                   | 2 MB                  | Strictest limit              |
-| Facebook/Meta    | 5 MB                   | 2 MB (gzip)           | Measures both                |
-| Google Ads       | 5 MB                   | -                     | Single HTML file             |
-| Unity Ads        | 5 MB                   | -                     | Can use MRAID               |
-| IronSource       | 5 MB                   | -                     | DAPI integration             |
-| AppLovin         | 5 MB                   | 5 MB                  | Single HTML or zip           |
-| Mintegral        | 5 MB                   | -                     | Single HTML file             |
-| Vungle/Liftoff   | 5 MB                   | -                     | ZIP allowed                  |
+| Ad Network     | Max Size (Uncompressed) | Max Size (Compressed) | Notes              |
+| -------------- | ----------------------- | --------------------- | ------------------ |
+| TikTok         | 2 MB                    | 2 MB                  | Strictest limit    |
+| Facebook/Meta  | 5 MB                    | 2 MB (gzip)           | Measures both      |
+| Google Ads     | 5 MB                    | -                     | Single HTML file   |
+| Unity Ads      | 5 MB                    | -                     | Can use MRAID      |
+| IronSource     | 5 MB                    | -                     | DAPI integration   |
+| AppLovin       | 5 MB                    | 5 MB                  | Single HTML or zip |
+| Mintegral      | 5 MB                    | -                     | Single HTML file   |
+| Vungle/Liftoff | 5 MB                    | -                     | ZIP allowed        |
 
 ### Why These Limits Exist
 
@@ -52,6 +52,7 @@ CTA → App Store
 ```
 
 Key reasons for size limits:
+
 - **Load time**: Users abandon if ad takes >2 seconds to load
 - **Data costs**: Many users are on metered mobile data
 - **Memory**: WebViews have limited memory (especially on low-end Android)
@@ -95,13 +96,13 @@ GPU-compressed texture formats allow the GPU to decompress textures on the fly, 
 
 #### Format Comparison
 
-| Format    | Platforms           | Compression Ratio | Quality    | Alpha Support |
-|-----------|--------------------|--------------------|------------|---------------|
-| ASTC      | iOS, modern Android | 4:1 to 36:1        | Excellent  | Yes           |
-| ETC2      | OpenGL ES 3.0+     | 4:1 to 6:1        | Good       | Yes           |
-| PVRTC     | iOS (older)        | 8:1                | Fair       | Yes           |
-| S3TC/DXT  | Desktop            | 4:1 to 6:1        | Good       | Yes (DXT5)    |
-| Basis     | Universal          | Varies             | Good       | Yes           |
+| Format   | Platforms           | Compression Ratio | Quality   | Alpha Support |
+| -------- | ------------------- | ----------------- | --------- | ------------- |
+| ASTC     | iOS, modern Android | 4:1 to 36:1       | Excellent | Yes           |
+| ETC2     | OpenGL ES 3.0+      | 4:1 to 6:1        | Good      | Yes           |
+| PVRTC    | iOS (older)         | 8:1               | Fair      | Yes           |
+| S3TC/DXT | Desktop             | 4:1 to 6:1        | Good      | Yes (DXT5)    |
+| Basis    | Universal           | Varies            | Good      | Yes           |
 
 #### When to Use Each
 
@@ -154,14 +155,21 @@ async function loadBasisTexture(
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
   for (let level = 0; level < levels; level++) {
-    const transcoded = basisFile.getImageTranscodedSizeInBytes(0, level, format);
+    const transcoded = basisFile.getImageTranscodedSizeInBytes(
+      0,
+      level,
+      format
+    );
     const dst = new Uint8Array(transcoded);
     basisFile.transcodeImage(dst, 0, level, format, 0, 0);
     gl.compressedTexImage2D(
-      gl.TEXTURE_2D, level, format,
+      gl.TEXTURE_2D,
+      level,
+      format,
       basisFile.getImageWidth(0, level),
       basisFile.getImageHeight(0, level),
-      0, dst
+      0,
+      dst
     );
   }
 
@@ -206,6 +214,7 @@ done
 **Browser support**: 97%+ globally (all modern browsers). Safe for playable ads.
 
 **Size comparison example**:
+
 ```
 character_sprite.png  →  145 KB
 character_sprite.webp →   98 KB  (32% smaller, lossy q=80)
@@ -234,7 +243,8 @@ function supportsAvif(): Promise<boolean> {
     img.onload = () => resolve(img.width === 1);
     img.onerror = () => resolve(false);
     // Tiny 1x1 AVIF
-    img.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKBxgABnQEBQIGBwYHCAkICgoLCgsMDQwNDAsMDg==';
+    img.src =
+      'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKBxgABnQEBQIGBwYHCAkICgoLCgsMDQwNDAsMDg==';
   });
 }
 
@@ -285,6 +295,7 @@ pngquant --quality=45-65 --speed 1 --force --ext .png input.png
 ```
 
 **Typical results**:
+
 ```
 Before: game_sprites.png   → 850 KB (32-bit RGBA)
 After:  game_sprites.png   → 210 KB (8-bit, quality 65-80)
@@ -352,6 +363,7 @@ jpegtran -copy none -progressive -optimize input.jpg > output.jpg
 ```
 
 **Quality guidelines**:
+
 - 85-95: High quality, barely noticeable loss
 - 70-85: Good for backgrounds, game textures
 - 50-70: Acceptable for blurred backgrounds, thumbnails
@@ -394,16 +406,16 @@ module.exports = {
     'removeOffCanvasPaths',
     {
       name: 'removeAttrs',
-      params: { attrs: ['data-name'] }
+      params: { attrs: ['data-name'] },
     },
     {
       name: 'convertPathData',
       params: {
         floatPrecision: 2,
-        transformPrecision: 2
-      }
-    }
-  ]
+        transformPrecision: 2,
+      },
+    },
+  ],
 };
 ```
 
@@ -472,7 +484,7 @@ class MaxRectsPacker {
             x: free.x + this.padding,
             y: free.y + this.padding,
             width: rectWidth,
-            height: rectHeight
+            height: rectHeight,
           };
           bestIndex = i;
         }
@@ -486,7 +498,7 @@ class MaxRectsPacker {
       x: bestRect.x - this.padding,
       y: bestRect.y - this.padding,
       width: w,
-      height: h
+      height: h,
     });
 
     return bestRect;
@@ -502,7 +514,7 @@ class MaxRectsPacker {
         x: used.x + used.width,
         y: free.y,
         width: free.x + free.width - used.x - used.width,
-        height: free.height
+        height: free.height,
       });
     }
 
@@ -512,7 +524,7 @@ class MaxRectsPacker {
         x: free.x,
         y: used.y + used.height,
         width: free.width,
-        height: free.y + free.height - used.y - used.height
+        height: free.y + free.height - used.y - used.height,
       });
     }
 
@@ -520,7 +532,7 @@ class MaxRectsPacker {
     this.freeRects = [
       ...this.freeRects.slice(0, index),
       ...this.freeRects.slice(index + 1),
-      ...newFreeRects
+      ...newFreeRects,
     ];
   }
 }
@@ -528,12 +540,12 @@ class MaxRectsPacker {
 
 #### Sprite Sheet Tools
 
-| Tool             | Type       | Output Format      | Notes                       |
-|------------------|-----------|--------------------|-----------------------------|
-| TexturePacker    | Commercial | JSON + PNG          | Industry standard, many features |
-| free-tex-packer  | Free       | JSON + PNG          | Open source alternative     |
-| Shoebox          | Free       | JSON + PNG          | Adobe AIR based             |
-| spritesmith      | npm        | JSON + PNG          | Node.js, scriptable         |
+| Tool            | Type       | Output Format | Notes                            |
+| --------------- | ---------- | ------------- | -------------------------------- |
+| TexturePacker   | Commercial | JSON + PNG    | Industry standard, many features |
+| free-tex-packer | Free       | JSON + PNG    | Open source alternative          |
+| Shoebox         | Free       | JSON + PNG    | Adobe AIR based                  |
+| spritesmith     | npm        | JSON + PNG    | Node.js, scriptable              |
 
 #### Important Settings
 
@@ -622,13 +634,13 @@ function ensurePOT(image: HTMLImageElement): HTMLCanvasElement {
 
 ### Format Comparison
 
-| Format | Compression | Quality/Size  | Support           | Best For          |
-|--------|------------|---------------|-------------------|-------------------|
-| MP3    | Lossy      | Good          | Universal         | Music, general    |
-| OGG    | Lossy      | Better        | All except old iOS| SFX, music        |
-| AAC    | Lossy      | Best per byte | iOS native, most  | iOS-targeted      |
-| WAV    | None       | Perfect       | Universal         | Never in prod     |
-| OPUS   | Lossy      | Excellent     | Modern browsers   | Future-proof      |
+| Format | Compression | Quality/Size  | Support            | Best For       |
+| ------ | ----------- | ------------- | ------------------ | -------------- |
+| MP3    | Lossy       | Good          | Universal          | Music, general |
+| OGG    | Lossy       | Better        | All except old iOS | SFX, music     |
+| AAC    | Lossy       | Best per byte | iOS native, most   | iOS-targeted   |
+| WAV    | None        | Perfect       | Universal          | Never in prod  |
+| OPUS   | Lossy       | Excellent     | Modern browsers    | Future-proof   |
 
 ### Sample Rate Reduction
 
@@ -651,6 +663,7 @@ done
 ```
 
 **Size comparison for a 2-second explosion sound**:
+
 ```
 explosion.wav       →  352 KB (44100Hz, stereo, 16-bit)
 explosion_44k.mp3   →   32 KB (44100Hz, stereo, 128kbps)
@@ -668,6 +681,7 @@ ffmpeg -i stereo_sfx.mp3 -ac 1 mono_sfx.mp3
 ```
 
 Why mono for SFX:
+
 - 50% smaller file size
 - Most mobile devices have single or closely-spaced speakers
 - Game engine can apply stereo panning at runtime if needed
@@ -714,7 +728,10 @@ class ProceduralAudio {
     gain.connect(this.ctx.destination);
 
     osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.05);
+    osc.frequency.exponentialRampToValueAtTime(
+      400,
+      this.ctx.currentTime + 0.05
+    );
 
     gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
@@ -733,7 +750,10 @@ class ProceduralAudio {
 
     osc.type = 'sine';
     osc.frequency.setValueAtTime(600, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.03);
+    osc.frequency.exponentialRampToValueAtTime(
+      1200,
+      this.ctx.currentTime + 0.03
+    );
     osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.1);
 
     gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
@@ -764,7 +784,10 @@ class ProceduralAudio {
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(2000, this.ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + duration);
+    filter.frequency.exponentialRampToValueAtTime(
+      100,
+      this.ctx.currentTime + duration
+    );
 
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
@@ -787,7 +810,7 @@ class ProceduralAudio {
     gain.connect(this.ctx.destination);
 
     // Two tones in quick succession (classic coin sound)
-    osc1.frequency.setValueAtTime(987, this.ctx.currentTime);  // B5
+    osc1.frequency.setValueAtTime(987, this.ctx.currentTime); // B5
     osc2.frequency.setValueAtTime(1318, this.ctx.currentTime + 0.08); // E6
 
     gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
@@ -809,7 +832,7 @@ class ProceduralAudio {
 
     for (let i = 0; i < data.length; i++) {
       const t = i / sampleRate;
-      const envelope = Math.sin(Math.PI * t / duration); // Rise and fall
+      const envelope = Math.sin((Math.PI * t) / duration); // Rise and fall
       data[i] = (Math.random() * 2 - 1) * envelope * 0.3;
     }
 
@@ -819,7 +842,10 @@ class ProceduralAudio {
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
     filter.frequency.setValueAtTime(3000, this.ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(6000, this.ctx.currentTime + duration);
+    filter.frequency.exponentialRampToValueAtTime(
+      6000,
+      this.ctx.currentTime + duration
+    );
     filter.Q.value = 1;
 
     source.connect(filter);
@@ -857,10 +883,14 @@ class ProceduralAudio {
 const audio = new ProceduralAudio();
 
 // Must be called after user interaction (browser autoplay policy)
-document.addEventListener('touchstart', async () => {
-  await audio.resume();
-  audio.playClick();
-}, { once: true });
+document.addEventListener(
+  'touchstart',
+  async () => {
+    await audio.resume();
+    audio.playClick();
+  },
+  { once: true }
+);
 ```
 
 ---
@@ -873,11 +903,11 @@ Tree shaking eliminates unused code from your bundle. It relies on ES module sta
 
 ```typescript
 // BAD: Imports entire library
-import _ from 'lodash';  // ~70KB minified
+import _ from 'lodash'; // ~70KB minified
 const result = _.debounce(fn, 300);
 
 // GOOD: Cherry-picked import (tree-shakeable)
-import debounce from 'lodash/debounce';  // ~1KB
+import debounce from 'lodash/debounce'; // ~1KB
 const result = debounce(fn, 300);
 
 // BEST: Write your own for playable ads (zero dependency)
@@ -911,7 +941,7 @@ import { calculateScore } from './utils';
 const enum GameState {
   Loading = 0,
   Playing = 1,
-  GameOver = 2
+  GameOver = 2,
 }
 // Compiles to just numbers, no runtime object
 ```
@@ -952,6 +982,7 @@ Brotli:       70 KB (30% reduction)
 ```
 
 **Key insight**: Base64-encoded binary data compresses much worse than text. This means:
+
 - Optimize assets BEFORE base64 encoding (compress images first, then base64)
 - The 33% base64 overhead is partially recovered by gzip on text portions
 - Focus optimization effort on raw asset size, not gzipped size
@@ -1006,21 +1037,23 @@ const ease = {
   linear: (t: number) => t,
   inQuad: (t: number) => t * t,
   outQuad: (t: number) => t * (2 - t),
-  inOutQuad: (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+  inOutQuad: (t: number) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
   outBack: (t: number) => {
     const c = 1.70158;
     return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2);
   },
   outElastic: (t: number) => {
     if (t === 0 || t === 1) return t;
-    return Math.pow(2, -10 * t) * Math.sin((t - 0.075) * (2 * Math.PI) / 0.3) + 1;
+    return (
+      Math.pow(2, -10 * t) * Math.sin(((t - 0.075) * (2 * Math.PI)) / 0.3) + 1
+    );
   },
   outBounce: (t: number) => {
     if (t < 1 / 2.75) return 7.5625 * t * t;
     if (t < 2 / 2.75) return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
     if (t < 2.5 / 2.75) return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
     return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
-  }
+  },
 } as const;
 ```
 
@@ -1232,7 +1265,12 @@ const assetPlugin = {
       const data = readFileSync(args.path);
       const base64 = data.toString('base64');
       const ext = extname(args.path).slice(1);
-      const mimeTypes = { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' };
+      const mimeTypes = {
+        png: 'image/png',
+        jpg: 'image/jpeg',
+        webp: 'image/webp',
+        gif: 'image/gif',
+      };
       const dataUri = `data:${mimeTypes[ext]};base64,${base64}`;
       return { contents: `export default "${dataUri}"`, loader: 'js' };
     });
@@ -1242,11 +1280,15 @@ const assetPlugin = {
       const data = readFileSync(args.path);
       const base64 = data.toString('base64');
       const ext = extname(args.path).slice(1);
-      const mimeTypes = { mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav' };
+      const mimeTypes = {
+        mp3: 'audio/mpeg',
+        ogg: 'audio/ogg',
+        wav: 'audio/wav',
+      };
       const dataUri = `data:${mimeTypes[ext]};base64,${base64}`;
       return { contents: `export default "${dataUri}"`, loader: 'js' };
     });
-  }
+  },
 };
 
 await esbuild.build({
@@ -1258,8 +1300,8 @@ await esbuild.build({
   outfile: 'dist/game.js',
   plugins: [assetPlugin],
   define: {
-    'process.env.NODE_ENV': '"production"'
-  }
+    'process.env.NODE_ENV': '"production"',
+  },
 });
 ```
 
@@ -1310,12 +1352,12 @@ import { gzipSync } from 'zlib';
 import { readFileSync } from 'fs';
 
 const LIMITS = {
-  tiktok: 2 * 1024 * 1024,      // 2 MB
-  facebook: 5 * 1024 * 1024,     // 5 MB uncompressed
-  facebook_gz: 2 * 1024 * 1024,  // 2 MB gzipped
-  google: 5 * 1024 * 1024,       // 5 MB
-  unity: 5 * 1024 * 1024,        // 5 MB
-  ironsource: 5 * 1024 * 1024,   // 5 MB
+  tiktok: 2 * 1024 * 1024, // 2 MB
+  facebook: 5 * 1024 * 1024, // 5 MB uncompressed
+  facebook_gz: 2 * 1024 * 1024, // 2 MB gzipped
+  google: 5 * 1024 * 1024, // 5 MB
+  unity: 5 * 1024 * 1024, // 5 MB
+  ironsource: 5 * 1024 * 1024, // 5 MB
 };
 
 const file = './dist/playable.min.html';
@@ -1324,8 +1366,12 @@ const rawSize = content.length;
 const gzipSize = gzipSync(content).length;
 
 console.log('\n=== SIZE REPORT ===');
-console.log(`Raw:    ${(rawSize / 1024).toFixed(1)} KB (${(rawSize / 1024 / 1024).toFixed(2)} MB)`);
-console.log(`Gzip:   ${(gzipSize / 1024).toFixed(1)} KB (${(gzipSize / 1024 / 1024).toFixed(2)} MB)`);
+console.log(
+  `Raw:    ${(rawSize / 1024).toFixed(1)} KB (${(rawSize / 1024 / 1024).toFixed(2)} MB)`
+);
+console.log(
+  `Gzip:   ${(gzipSize / 1024).toFixed(1)} KB (${(gzipSize / 1024 / 1024).toFixed(2)} MB)`
+);
 console.log('');
 
 for (const [network, limit] of Object.entries(LIMITS)) {
@@ -1333,7 +1379,9 @@ for (const [network, limit] of Object.entries(LIMITS)) {
   const pass = size <= limit;
   const label = pass ? 'PASS' : 'FAIL';
   const limitMB = (limit / 1024 / 1024).toFixed(0);
-  console.log(`  ${label}  ${network.padEnd(15)} ${(size / 1024 / 1024).toFixed(2)}MB / ${limitMB}MB`);
+  console.log(
+    `  ${label}  ${network.padEnd(15)} ${(size / 1024 / 1024).toFixed(2)}MB / ${limitMB}MB`
+  );
 }
 ```
 
@@ -1358,48 +1406,49 @@ for (const [network, limit] of Object.entries(LIMITS)) {
 // webpack.config.js for playable ads
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HtmlInlineScriptPlugin = require('html-inline-script-webpack-plugin');
-const HTMLInlineCSSWebpackPlugin = require('html-inline-css-webpack-plugin').default;
+const HTMLInlineCSSWebpackPlugin =
+  require('html-inline-css-webpack-plugin').default;
 
 module.exports = {
   entry: './src/main.ts',
   output: {
     filename: 'game.js',
-    path: __dirname + '/dist'
+    path: __dirname + '/dist',
   },
   module: {
     rules: [
       {
         test: /\.ts$/,
         use: 'ts-loader',
-        exclude: /node_modules/
+        exclude: /node_modules/,
       },
       {
         test: /\.(png|jpg|gif|webp)$/i,
-        type: 'asset/inline'  // Converts to base64 data URI
+        type: 'asset/inline', // Converts to base64 data URI
       },
       {
         test: /\.(mp3|ogg)$/i,
-        type: 'asset/inline'
+        type: 'asset/inline',
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader']
-      }
-    ]
+        use: ['style-loader', 'css-loader'],
+      },
+    ],
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: './src/index.html',
       inject: 'body',
-      minify: { collapseWhitespace: true, removeComments: true }
+      minify: { collapseWhitespace: true, removeComments: true },
     }),
     new HtmlInlineScriptPlugin(),
-    new HTMLInlineCSSWebpackPlugin()
+    new HTMLInlineCSSWebpackPlugin(),
   ],
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
   },
-  mode: 'production'
+  mode: 'production',
 };
 ```
 
@@ -1482,7 +1531,7 @@ let match;
 
 while ((match = base64Pattern.exec(html)) !== null) {
   const [, mimeType, data] = match;
-  const bytes = Math.ceil(data.length * 3 / 4);
+  const bytes = Math.ceil((data.length * 3) / 4);
   totalBase64 += data.length;
   assets.push({ type: mimeType, size: bytes });
 }
@@ -1506,7 +1555,9 @@ console.log(`Total HTML size: ${(html.length / 1024).toFixed(1)} KB`);
 console.log(`JavaScript:      ${(totalScript / 1024).toFixed(1)} KB`);
 console.log(`CSS:             ${(totalStyle / 1024).toFixed(1)} KB`);
 console.log(`Base64 data:     ${(totalBase64 / 1024).toFixed(1)} KB`);
-console.log(`Other HTML:      ${((html.length - totalScript - totalStyle - totalBase64) / 1024).toFixed(1)} KB`);
+console.log(
+  `Other HTML:      ${((html.length - totalScript - totalStyle - totalBase64) / 1024).toFixed(1)} KB`
+);
 
 console.log('\n=== EMBEDDED ASSETS ===');
 const grouped: Record<string, { count: number; totalSize: number }> = {};
@@ -1517,12 +1568,14 @@ for (const asset of assets) {
   }
   grouped[key] = {
     count: grouped[key].count + 1,
-    totalSize: grouped[key].totalSize + asset.size
+    totalSize: grouped[key].totalSize + asset.size,
   };
 }
 
 for (const [type, info] of Object.entries(grouped)) {
-  console.log(`  ${type}: ${info.count} files, ${(info.totalSize / 1024).toFixed(1)} KB (decoded)`);
+  console.log(
+    `  ${type}: ${info.count} files, ${(info.totalSize / 1024).toFixed(1)} KB (decoded)`
+  );
 }
 ```
 
@@ -1537,10 +1590,12 @@ for (const [type, info] of Object.entries(grouped)) {
 I'd approach this systematically, targeting the largest savings first:
 
 **1. Identify the biggest offenders** (use the size analysis script):
+
 - Run the asset analysis to see breakdown by category
 - Usually sprites are the #1 culprit
 
 **2. Image optimization** (typically saves 40-60%):
+
 - Run pngquant on all PNGs (65-80 quality): often halves PNG size
 - Consider WebP if the ad network supports it
 - Reduce atlas size from 4096 to 2048 if possible
@@ -1548,16 +1603,19 @@ I'd approach this systematically, targeting the largest savings first:
 - Check for duplicate or unnecessary sprites
 
 **3. Audio optimization** (saves 50-70%):
+
 - Convert to mono, 22050Hz, 64kbps MP3
 - Consider procedural audio for SFX (zero file size)
 - Shorten loops, trim silence
 
 **4. Code optimization**:
+
 - Check for accidentally bundled libraries
 - Enable tree shaking, dead code elimination
 - Ensure minification is working properly
 
 **5. Nuclear options if still over budget**:
+
 - Reduce sprite color depth to 64 or 32 colors
 - Downscale all sprites by 50% and render at 2x
 - Remove non-essential visual effects
@@ -1572,16 +1630,19 @@ I'd measure after each step and stop once under budget. The goal is maximum qual
 **Answer:**
 
 **PNG advantages:**
+
 - Universal support in all WebViews, including older Android
 - Lossless compression preserves sharp pixel art
 - Well-understood optimization pipeline (pngquant + optipng)
 
 **WebP advantages:**
+
 - 25-35% smaller than equivalent quality PNG
 - Can be lossy or lossless (both smaller than PNG)
 - Supports animation (alternative to sprite sheets)
 
 **WebP risks:**
+
 - Older Android WebViews (pre-4.3) lack support (rare now)
 - Some ad network preview tools may not render WebP
 - lossy WebP can show artifacts on hard edges (pixel art)
@@ -1617,6 +1678,7 @@ Base64 converts every 3 bytes of binary data into 4 ASCII characters, a 33% incr
 With a 2MB total budget, audio gets very little room. My approach:
 
 **Primary strategy: Procedural audio** (0 bytes)
+
 - Use Web Audio API oscillators and noise generators
 - Click, pop, swoosh, coin collect sounds are all achievable
 - Match-3 pop: sine wave 600Hz → 1200Hz → 200Hz over 100ms
@@ -1624,10 +1686,12 @@ With a 2MB total budget, audio gets very little room. My approach:
 - Victory: sequence of sine tones (C-E-G-C arpeggio)
 
 **If music is required:**
+
 - Generate a simple loop with Web Audio API (arpeggiator pattern)
 - Or: very short MP3 loop, 3-5 seconds, 11025Hz mono, 32kbps (~10-20KB)
 
 **Fallback for complex sounds:**
+
 - 22050Hz mono MP3 at 48kbps
 - Maximum 2-3 second clips
 - Budget: 50-100KB total for all audio
@@ -1644,18 +1708,21 @@ With a 2MB total budget, audio gets very little room. My approach:
 They solve different problems:
 
 **Image formats (PNG, WebP, JPEG):**
+
 - Compressed for storage and transmission
 - Must be fully decoded to RGBA pixels before GPU can use them
-- A 512x512 PNG might be 100KB on disk but 1MB in GPU memory (512 * 512 * 4 bytes)
+- A 512x512 PNG might be 100KB on disk but 1MB in GPU memory (512 _ 512 _ 4 bytes)
 - Used for: web delivery, playable ads (single-file HTML)
 
 **GPU texture compression (ASTC, ETC2, S3TC):**
+
 - Compressed format that the GPU reads directly without full decompression
 - A 512x512 ASTC 4x4 texture is ~256KB both on disk AND in GPU memory
 - Dramatically reduces GPU memory usage (4:1 to 36:1 ratio)
 - Used for: native mobile games, WebGL games with separate asset loading
 
 **For playable ads:** You almost always use PNG/WebP/JPEG because:
+
 1. Assets must be base64-encoded into a single HTML file
 2. GPU compressed formats add complexity (need Basis Universal transcoder ~100KB)
 3. The size limits (2-5MB) constrain total file size, not GPU memory
@@ -1710,6 +1777,7 @@ Ad Network Upload (automated via API where available)
 ```
 
 Key features:
+
 - **Shared asset library**: Pre-optimized sprites and audio that multiple creatives reuse
 - **Template generator**: New creative in minutes, not hours
 - **Automated size checks**: CI fails if over budget, catches regressions
@@ -1725,16 +1793,19 @@ Key features:
 I'd recommend against it. Here's my reasoning:
 
 **The math doesn't work for playable ads:**
+
 - three.js minified: ~150KB
 - After base64 encoding of assets + three.js, you've used most of your 2MB TikTok budget before writing any game logic
 - three.js includes 3D rendering, materials, geometry, lights, loaders, math utils, and many other features we won't use
 
 **What I'd suggest instead:**
+
 - For 2D Canvas rendering: write a minimal custom renderer (~2-5KB)
 - For simple WebGL: write a custom sprite batcher (~5-10KB)
 - For PixiJS-level features: write a thin abstraction over WebGL (~10-20KB)
 
 **When three.js IS appropriate:**
+
 - Full 3D playable ads (car racing, FPS demos)
 - Larger HTML5 games (>5MB budget)
 - Prototyping/internal tools where size doesn't matter
@@ -1767,7 +1838,7 @@ function detectDeviceTier(gl: WebGLRenderingContext): DeviceTier {
       name: 'low',
       maxTextureSize: 1024,
       audioSampleRate: 11025,
-      particleCount: 20
+      particleCount: 20,
     };
   }
 
@@ -1776,7 +1847,7 @@ function detectDeviceTier(gl: WebGLRenderingContext): DeviceTier {
       name: 'medium',
       maxTextureSize: 2048,
       audioSampleRate: 22050,
-      particleCount: 50
+      particleCount: 50,
     };
   }
 
@@ -1784,7 +1855,7 @@ function detectDeviceTier(gl: WebGLRenderingContext): DeviceTier {
     name: 'high',
     maxTextureSize: 4096,
     audioSampleRate: 44100,
-    particleCount: 100
+    particleCount: 100,
   };
 }
 
@@ -1817,19 +1888,19 @@ function setupCanvas(tier: DeviceTier): HTMLCanvasElement {
 
 **Answer:**
 
-| Aspect                 | Playable Ad              | Full Web Game            |
-|------------------------|--------------------------|--------------------------|
-| Total size budget      | 2-5 MB                   | 10-100+ MB               |
-| Delivery               | Single HTML file          | Multiple files via CDN   |
-| Assets encoded as      | Base64 (inline)           | Separate files (fetch)   |
-| Texture compression    | PNG/WebP (decoded)        | ASTC/ETC2/Basis (GPU)   |
-| Audio format           | Procedural / tiny MP3     | Full OGG/AAC tracks     |
-| Progressive loading    | Not possible              | Essential (loading bar)  |
-| Asset LOD              | Single quality            | Multiple quality tiers   |
-| Streaming              | Not possible              | Audio/video streaming    |
-| External requests      | Forbidden                 | Normal                   |
-| Caching                | N/A (one-time use)        | Service Worker, HTTP cache |
-| Font loading           | Base64 inline or CSS      | @font-face with woff2   |
+| Aspect              | Playable Ad           | Full Web Game              |
+| ------------------- | --------------------- | -------------------------- |
+| Total size budget   | 2-5 MB                | 10-100+ MB                 |
+| Delivery            | Single HTML file      | Multiple files via CDN     |
+| Assets encoded as   | Base64 (inline)       | Separate files (fetch)     |
+| Texture compression | PNG/WebP (decoded)    | ASTC/ETC2/Basis (GPU)      |
+| Audio format        | Procedural / tiny MP3 | Full OGG/AAC tracks        |
+| Progressive loading | Not possible          | Essential (loading bar)    |
+| Asset LOD           | Single quality        | Multiple quality tiers     |
+| Streaming           | Not possible          | Audio/video streaming      |
+| External requests   | Forbidden             | Normal                     |
+| Caching             | N/A (one-time use)    | Service Worker, HTTP cache |
+| Font loading        | Base64 inline or CSS  | @font-face with woff2      |
 
 The fundamental difference is that playable ads are self-contained: everything must be in one file. This constraint drives every optimization decision toward absolute minimum size, even at the cost of quality. Full web games can leverage progressive loading, CDN caching, and streaming to deliver high-quality assets without strict size limits.
 
@@ -1842,24 +1913,32 @@ The fundamental difference is that playable ads are self-contained: everything m
 Procedural generation creates content through code rather than pre-made assets. Each category has different code-to-asset tradeoffs:
 
 **Audio** (highest savings, ~50-200KB → 0KB):
+
 - All SFX can be procedural (clicks, pops, explosions)
 - Simple music loops via oscillator patterns
 - Web Audio API is built into every browser
 
 **Backgrounds** (high savings, ~100-500KB → ~1-5KB of code):
+
 - Gradient backgrounds via Canvas or CSS
 - Starfield: random dots on black
 - Particle effects: snow, rain, confetti
 - Geometric patterns: grids, hexagons, waves
 
 **UI elements** (moderate savings, ~50-200KB → ~2-10KB):
+
 - Buttons: Canvas rounded rectangles with gradients
 - Progress bars, health bars: simple shapes
 - Score popups: text rendering with shadows
 
 **Example: Procedural background (saves an entire background image)**:
+
 ```typescript
-function drawStarfield(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+function drawStarfield(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number
+): void {
   ctx.fillStyle = '#0a0a2e';
   ctx.fillRect(0, 0, w, h);
 

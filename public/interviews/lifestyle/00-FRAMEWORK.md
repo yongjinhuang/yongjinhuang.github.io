@@ -73,9 +73,9 @@ This series covers:
 ## 3. Mindset Shift: Engineer to Creator
 
 | Engineering Mindset         | Creator Mindset                      |
-|-----------------------------|--------------------------------------|
+| --------------------------- | ------------------------------------ |
 | Perfect code before ship    | Ship imperfect, iterate fast         |
-| DRY — Don't Repeat Yourself| Repetition builds brand recognition  |
+| DRY — Don't Repeat Yourself | Repetition builds brand recognition  |
 | Optimize for performance    | Optimize for emotion and engagement  |
 | Debug with logic            | "Debug" with audience feedback       |
 | Specs define the product    | The audience defines the product     |
@@ -99,21 +99,21 @@ You already have superpowers most creators lack:
 
 ## 4. Document Map
 
-| # | Document | What You Will Learn |
-|---|----------|---------------------|
-| 00 | Framework (this file) | Overview, learning path, mindset |
-| 01 | Camera & Shooting Basics | How cameras work, exposure triangle, composition rules |
-| 02 | Audio for Video | Microphone types, recording techniques, audio cleanup |
-| 03 | Video Editing Fundamentals | Cut theory, pacing, timeline editing, transitions |
-| 04 | Video Editing Tools | DaVinci Resolve, Premiere Pro, Final Cut, CapCut |
-| 05 | Color Grading & Correction | Color theory, scopes, LUTs, grading workflows |
-| 06 | Motion Graphics & Effects | Titles, lower thirds, transitions, compositing |
-| 07 | Thumbnails & Branding | Graphic design, typography, channel identity |
-| 08 | Vlogging Techniques | Vlog styles, B-roll, talking head, travel vlogs |
-| 09 | YouTube Channel Strategy | Algorithm, SEO, analytics, growth tactics |
-| 10 | Live Streaming Setup | OBS, hardware, platforms, interactive streaming |
-| 11 | Content Strategy & Storytelling | Narrative arcs, hooks, audience psychology |
-| 12 | Monetization & Career | Revenue streams, brand deals, going full-time |
+| #   | Document                        | What You Will Learn                                    |
+| --- | ------------------------------- | ------------------------------------------------------ |
+| 00  | Framework (this file)           | Overview, learning path, mindset                       |
+| 01  | Camera & Shooting Basics        | How cameras work, exposure triangle, composition rules |
+| 02  | Audio for Video                 | Microphone types, recording techniques, audio cleanup  |
+| 03  | Video Editing Fundamentals      | Cut theory, pacing, timeline editing, transitions      |
+| 04  | Video Editing Tools             | DaVinci Resolve, Premiere Pro, Final Cut, CapCut       |
+| 05  | Color Grading & Correction      | Color theory, scopes, LUTs, grading workflows          |
+| 06  | Motion Graphics & Effects       | Titles, lower thirds, transitions, compositing         |
+| 07  | Thumbnails & Branding           | Graphic design, typography, channel identity           |
+| 08  | Vlogging Techniques             | Vlog styles, B-roll, talking head, travel vlogs        |
+| 09  | YouTube Channel Strategy        | Algorithm, SEO, analytics, growth tactics              |
+| 10  | Live Streaming Setup            | OBS, hardware, platforms, interactive streaming        |
+| 11  | Content Strategy & Storytelling | Narrative arcs, hooks, audience psychology             |
+| 12  | Monetization & Career           | Revenue streams, brand deals, going full-time          |
 
 ## 5. Recommended Learning Order
 
@@ -157,52 +157,52 @@ You already have superpowers most creators lack:
 
 ### Tier 0: Free (Use What You Have)
 
-| Item | Solution |
-|------|----------|
-| Camera | Your smartphone (iPhone or recent Android) |
-| Microphone | Wired earbuds (surprisingly decent) |
-| Lighting | Window light (sit facing a window) |
-| Editing software | DaVinci Resolve (free, professional-grade) |
-| Streaming software | OBS Studio (free, open-source) |
-| Thumbnail design | Canva (free tier) |
+| Item               | Solution                                   |
+| ------------------ | ------------------------------------------ |
+| Camera             | Your smartphone (iPhone or recent Android) |
+| Microphone         | Wired earbuds (surprisingly decent)        |
+| Lighting           | Window light (sit facing a window)         |
+| Editing software   | DaVinci Resolve (free, professional-grade) |
+| Streaming software | OBS Studio (free, open-source)             |
+| Thumbnail design   | Canva (free tier)                          |
 
 **Total: $0**
 
 ### Tier 1: Starter ($200-500)
 
-| Item | Recommendation | Price |
-|------|---------------|-------|
-| Microphone | Rode VideoMicro II or Boya BY-M1 | $50-80 |
-| Lighting | Neewer 660 LED panel or ring light | $30-60 |
-| Tripod | Ulanzi MT-11 or similar flexible tripod | $20-30 |
-| Phone gimbal | DJI Osmo Mobile SE | $100-150 |
-| SD card | SanDisk Extreme 128GB | $15-20 |
+| Item         | Recommendation                          | Price    |
+| ------------ | --------------------------------------- | -------- |
+| Microphone   | Rode VideoMicro II or Boya BY-M1        | $50-80   |
+| Lighting     | Neewer 660 LED panel or ring light      | $30-60   |
+| Tripod       | Ulanzi MT-11 or similar flexible tripod | $20-30   |
+| Phone gimbal | DJI Osmo Mobile SE                      | $100-150 |
+| SD card      | SanDisk Extreme 128GB                   | $15-20   |
 
 **Total: ~$250-350**
 
 ### Tier 2: Serious ($1,000-2,500)
 
-| Item | Recommendation | Price |
-|------|---------------|-------|
-| Camera | Sony ZV-E10 II or Fujifilm X-S20 | $700-1,300 |
-| Lens | Kit lens + 35mm f/1.8 prime | $200-400 |
-| Microphone | Rode Wireless GO II | $200-250 |
-| Lighting | 2x Aputure Amaran 60d | $200-300 |
-| Tripod | Manfrotto Befree Advanced | $150-200 |
-| Audio recorder | Zoom H1n (backup) | $80-100 |
+| Item           | Recommendation                   | Price      |
+| -------------- | -------------------------------- | ---------- |
+| Camera         | Sony ZV-E10 II or Fujifilm X-S20 | $700-1,300 |
+| Lens           | Kit lens + 35mm f/1.8 prime      | $200-400   |
+| Microphone     | Rode Wireless GO II              | $200-250   |
+| Lighting       | 2x Aputure Amaran 60d            | $200-300   |
+| Tripod         | Manfrotto Befree Advanced        | $150-200   |
+| Audio recorder | Zoom H1n (backup)                | $80-100    |
 
 **Total: ~$1,500-2,500**
 
 ### Tier 3: Professional ($5,000+)
 
-| Item | Recommendation | Price |
-|------|---------------|-------|
-| Camera | Sony A7IV or Canon R6 II | $2,000-2,500 |
-| Lenses | 24-70 f/2.8 + 50mm f/1.4 + 16-35mm | $2,000-4,000 |
-| Audio | Rode Wireless PRO + Rode NT1 5th Gen | $400-600 |
-| Lighting | Aputure 300d + light modifiers | $800-1,200 |
-| Gimbal | DJI RS 4 | $400-500 |
-| Monitor | External field monitor | $150-300 |
+| Item     | Recommendation                          | Price        |
+| -------- | --------------------------------------- | ------------ |
+| Camera   | Sony A7IV or Canon R6 II                | $2,000-2,500 |
+| Lenses   | 24-70 f/2.8 + 50mm f/1.4 + 16-35mm      | $2,000-4,000 |
+| Audio    | Rode Wireless PRO + Rode NT1 5th Gen    | $400-600     |
+| Lighting | Aputure 300d + light modifiers          | $800-1,200   |
+| Gimbal   | DJI RS 4                                | $400-500     |
+| Monitor  | External field monitor                  | $150-300     |
 | Computer | M-series Mac or high-end PC for editing | $2,000-4,000 |
 
 **Total: $8,000-13,000+**
@@ -212,17 +212,17 @@ You already have superpowers most creators lack:
 
 ## 7. Time Investment Expectations
 
-| Skill | Competent | Good | Expert |
-|-------|-----------|------|--------|
-| Camera operation | 2 weeks | 2 months | 1 year |
-| Audio recording | 1 week | 1 month | 6 months |
-| Video editing (cuts & pacing) | 2 weeks | 3 months | 1-2 years |
-| Color grading | 1 month | 6 months | 2+ years |
-| Motion graphics | 1 month | 6 months | 2+ years |
-| Thumbnail design | 1 week | 2 months | 1 year |
-| Storytelling | 1 month | 6 months | Lifelong |
-| YouTube strategy | 1 month | 6 months | 2+ years |
-| Live streaming | 1 week | 2 months | 1 year |
+| Skill                         | Competent | Good     | Expert    |
+| ----------------------------- | --------- | -------- | --------- |
+| Camera operation              | 2 weeks   | 2 months | 1 year    |
+| Audio recording               | 1 week    | 1 month  | 6 months  |
+| Video editing (cuts & pacing) | 2 weeks   | 3 months | 1-2 years |
+| Color grading                 | 1 month   | 6 months | 2+ years  |
+| Motion graphics               | 1 month   | 6 months | 2+ years  |
+| Thumbnail design              | 1 week    | 2 months | 1 year    |
+| Storytelling                  | 1 month   | 6 months | Lifelong  |
+| YouTube strategy              | 1 month   | 6 months | 2+ years  |
+| Live streaming                | 1 week    | 2 months | 1 year    |
 
 > **The single most important thing**: Publish consistently. One video per week for
 > 6 months will teach you more than reading every guide ever written.

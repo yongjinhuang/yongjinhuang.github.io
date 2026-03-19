@@ -62,7 +62,7 @@ The event contains all the data the consumer needs. No callback required.
 ```typescript
 // Event-carried state transfer: the event IS the data
 interface OrderCreatedEvent {
-  type: "order.created";
+  type: 'order.created';
   timestamp: string;
   data: {
     orderId: string;
@@ -153,11 +153,13 @@ Separate the write model (commands) from the read model (queries). Often combine
 ```
 
 **When to use CQRS:**
+
 - Read and write patterns differ dramatically (e.g., 1000:1 read-to-write ratio)
 - You need different data models for reading vs writing
 - You need to scale reads and writes independently
 
 **When NOT to use CQRS:**
+
 - Simple CRUD applications
 - Tight consistency requirements
 - Small team that cannot maintain two models
@@ -213,6 +215,7 @@ Kafka is the backbone of most production event-driven systems. Understanding its
 ```
 
 **Key concepts:**
+
 - **Topic**: A named stream of records, analogous to a table in a database
 - **Partition**: A topic is split into partitions for parallelism. Each partition is an ordered, immutable log
 - **Consumer Group**: A group of consumers that cooperatively consume from a topic. Each partition is assigned to exactly one consumer within the group
@@ -349,16 +352,16 @@ AFTER COMPACTION:
 ### Kafka Producer/Consumer in TypeScript
 
 ```typescript
-import { Kafka, Partitioners, logLevel } from "kafkajs";
+import { Kafka, Partitioners, logLevel } from 'kafkajs';
 
 // ── Kafka Client Setup ──────────────────────────────────────
 const kafka = new Kafka({
-  clientId: "order-service",
-  brokers: ["kafka-1:9092", "kafka-2:9092", "kafka-3:9092"],
+  clientId: 'order-service',
+  brokers: ['kafka-1:9092', 'kafka-2:9092', 'kafka-3:9092'],
   logLevel: logLevel.WARN,
   ssl: true,
   sasl: {
-    mechanism: "scram-sha-256",
+    mechanism: 'scram-sha-256',
     username: process.env.KAFKA_USERNAME!,
     password: process.env.KAFKA_PASSWORD!,
   },
@@ -373,7 +376,7 @@ const kafka = new Kafka({
 const producer = kafka.producer({
   createPartitioner: Partitioners.DefaultPartitioner,
   idempotent: true, // Enable idempotent producer
-  transactionalId: "order-service-tx", // Enable transactions
+  transactionalId: 'order-service-tx', // Enable transactions
   maxInFlightRequests: 5,
 });
 
@@ -383,18 +386,18 @@ async function publishOrderEvent(order: Order): Promise<void> {
   try {
     // Publish to orders topic
     await transaction.send({
-      topic: "orders",
+      topic: 'orders',
       messages: [
         {
           key: order.id,
           value: JSON.stringify({
-            type: "order.created",
+            type: 'order.created',
             timestamp: new Date().toISOString(),
             data: order,
           }),
           headers: {
-            "correlation-id": order.correlationId,
-            "content-type": "application/json",
+            'correlation-id': order.correlationId,
+            'content-type': 'application/json',
           },
         },
       ],
@@ -402,12 +405,12 @@ async function publishOrderEvent(order: Order): Promise<void> {
 
     // Publish to analytics topic in the same transaction
     await transaction.send({
-      topic: "order-analytics",
+      topic: 'order-analytics',
       messages: [
         {
           key: order.customerId,
           value: JSON.stringify({
-            type: "order.metric",
+            type: 'order.metric',
             amount: order.totalAmount,
             region: order.region,
           }),
@@ -424,7 +427,7 @@ async function publishOrderEvent(order: Order): Promise<void> {
 
 // ── Consumer with Consumer Group ────────────────────────────
 const consumer = kafka.consumer({
-  groupId: "shipping-service",
+  groupId: 'shipping-service',
   sessionTimeout: 30000,
   heartbeatInterval: 3000,
   maxBytesPerPartition: 1048576, // 1MB
@@ -434,7 +437,7 @@ const consumer = kafka.consumer({
 async function startConsumer(): Promise<void> {
   await consumer.connect();
   await consumer.subscribe({
-    topics: ["orders"],
+    topics: ['orders'],
     fromBeginning: false,
   });
 
@@ -446,13 +449,13 @@ async function startConsumer(): Promise<void> {
       try {
         // Process with idempotency check
         const processed = await isAlreadyProcessed(
-          message.headers?.["correlation-id"]?.toString()
+          message.headers?.['correlation-id']?.toString()
         );
 
         if (!processed) {
           await handleOrderCreated(event.data);
           await markAsProcessed(
-            message.headers?.["correlation-id"]?.toString()
+            message.headers?.['correlation-id']?.toString()
           );
         }
 
@@ -534,35 +537,37 @@ async function startConsumer(): Promise<void> {
 Redis Streams provide a lightweight message queue with consumer groups, built into Redis:
 
 ```typescript
-import { Redis } from "ioredis";
+import { Redis } from 'ioredis';
 
 const redis = new Redis(process.env.REDIS_URL);
 
 // Produce
 async function publishEvent(stream: string, event: Record<string, string>) {
-  const id = await redis.xadd(stream, "*", ...Object.entries(event).flat());
+  const id = await redis.xadd(stream, '*', ...Object.entries(event).flat());
   return id;
 }
 
 // Consume with consumer group
-async function consumeEvents(
-  stream: string,
-  group: string,
-  consumer: string
-) {
+async function consumeEvents(stream: string, group: string, consumer: string) {
   // Create consumer group (idempotent with MKSTREAM)
   try {
-    await redis.xgroup("CREATE", stream, group, "0", "MKSTREAM");
+    await redis.xgroup('CREATE', stream, group, '0', 'MKSTREAM');
   } catch {
     // Group already exists
   }
 
   while (true) {
     const results = await redis.xreadgroup(
-      "GROUP", group, consumer,
-      "COUNT", "10",
-      "BLOCK", "5000",
-      "STREAMS", stream, ">"
+      'GROUP',
+      group,
+      consumer,
+      'COUNT',
+      '10',
+      'BLOCK',
+      '5000',
+      'STREAMS',
+      stream,
+      '>'
     );
 
     if (results) {
@@ -663,15 +668,13 @@ async function processWithRetry<T>(
       return await handler();
     } catch (error) {
       if (attempt === config.maxRetries) {
-        throw new Error(
-          `Exhausted ${config.maxRetries} retries: ${error}`
-        );
+        throw new Error(`Exhausted ${config.maxRetries} retries: ${error}`);
       }
       const delay = calculateBackoff(attempt, config);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-  throw new Error("Unreachable");
+  throw new Error('Unreachable');
 }
 ```
 
@@ -747,9 +750,9 @@ async function createOrder(
     `INSERT INTO outbox (aggregate_type, aggregate_id, event_type, payload)
      VALUES ($1, $2, $3, $4)`,
     [
-      "Order",
+      'Order',
       order.rows[0].id,
-      "order.created",
+      'order.created',
       JSON.stringify({
         orderId: order.rows[0].id,
         customerId: orderData.customerId,
@@ -788,10 +791,9 @@ async function outboxRelay(producer: KafkaProducer): Promise<void> {
       ],
     });
 
-    await db.query(
-      `UPDATE outbox SET published_at = NOW() WHERE id = $1`,
-      [event.id]
-    );
+    await db.query(`UPDATE outbox SET published_at = NOW() WHERE id = $1`, [
+      event.id,
+    ]);
   }
 }
 ```
@@ -809,9 +811,10 @@ async function ensureIdempotent(
   // Try to acquire the idempotency lock
   const acquired = await redis.set(
     `idempotency:${idempotencyKey}`,
-    "processing",
-    "EX", 3600,  // 1-hour TTL
-    "NX"         // Only set if not exists
+    'processing',
+    'EX',
+    3600, // 1-hour TTL
+    'NX' // Only set if not exists
   );
 
   if (!acquired) {
@@ -823,8 +826,9 @@ async function ensureIdempotent(
     await handler();
     await redis.set(
       `idempotency:${idempotencyKey}`,
-      "completed",
-      "EX", 86400  // Keep for 24 hours
+      'completed',
+      'EX',
+      86400 // Keep for 24 hours
     );
   } catch (error) {
     // Remove key so message can be retried
@@ -887,17 +891,17 @@ interface DomainEvent {
 }
 
 interface AccountCreated extends DomainEvent {
-  eventType: "AccountCreated";
+  eventType: 'AccountCreated';
   data: { ownerId: string; currency: string };
 }
 
 interface MoneyDeposited extends DomainEvent {
-  eventType: "MoneyDeposited";
+  eventType: 'MoneyDeposited';
   data: { amount: number; reference: string };
 }
 
 interface MoneyWithdrawn extends DomainEvent {
-  eventType: "MoneyWithdrawn";
+  eventType: 'MoneyWithdrawn';
   data: { amount: number; reference: string };
 }
 
@@ -909,7 +913,7 @@ interface AccountState {
   readonly ownerId: string;
   readonly balance: number;
   readonly currency: string;
-  readonly status: "active" | "frozen" | "closed";
+  readonly status: 'active' | 'frozen' | 'closed';
   readonly version: number;
 }
 
@@ -918,28 +922,28 @@ function applyEvent(
   event: AccountEvent
 ): AccountState {
   switch (event.eventType) {
-    case "AccountCreated":
+    case 'AccountCreated':
       return {
         id: event.streamId,
         ownerId: event.data.ownerId,
         balance: 0,
         currency: event.data.currency,
-        status: "active",
+        status: 'active',
         version: 1,
       };
 
-    case "MoneyDeposited":
-      if (!state) throw new Error("Cannot deposit to non-existent account");
+    case 'MoneyDeposited':
+      if (!state) throw new Error('Cannot deposit to non-existent account');
       return {
         ...state,
         balance: state.balance + event.data.amount,
         version: state.version + 1,
       };
 
-    case "MoneyWithdrawn":
-      if (!state) throw new Error("Cannot withdraw from non-existent account");
+    case 'MoneyWithdrawn':
+      if (!state) throw new Error('Cannot withdraw from non-existent account');
       if (state.balance < event.data.amount) {
-        throw new Error("Insufficient funds");
+        throw new Error('Insufficient funds');
       }
       return {
         ...state,
@@ -963,7 +967,7 @@ class EventStore {
   ): Promise<void> {
     const client = await this.db.connect();
     try {
-      await client.query("BEGIN");
+      await client.query('BEGIN');
 
       // Optimistic concurrency check
       const current = await client.query(
@@ -975,7 +979,7 @@ class EventStore {
       if (current.rows[0].version !== expectedVersion) {
         throw new Error(
           `Concurrency conflict: expected version ${expectedVersion}, ` +
-          `got ${current.rows[0].version}`
+            `got ${current.rows[0].version}`
         );
       }
 
@@ -996,9 +1000,9 @@ class EventStore {
         );
       }
 
-      await client.query("COMMIT");
+      await client.query('COMMIT');
     } catch (error) {
-      await client.query("ROLLBACK");
+      await client.query('ROLLBACK');
       throw error;
     } finally {
       client.release();
@@ -1021,9 +1025,7 @@ class EventStore {
     }));
   }
 
-  async loadStreamWithSnapshot(
-    streamId: string
-  ): Promise<AccountState | null> {
+  async loadStreamWithSnapshot(streamId: string): Promise<AccountState | null> {
     // Try loading from snapshot first
     const snapshot = await this.db.query(
       `SELECT * FROM snapshots
@@ -1155,10 +1157,12 @@ class EventStore {
 **Answer**: This requires exactly-once processing semantics, which is achieved through a combination of at-least-once delivery with idempotent consumers.
 
 **No message loss (at-least-once delivery):**
+
 1. **Producer side**: Use Kafka's `acks=all` so messages are not acknowledged until written to all in-sync replicas. Enable retries with idempotent producer (`enable.idempotence=true`) to prevent duplicates from retries.
 2. **Consumer side**: Disable auto-commit (`enable.auto.commit=false`). Only commit offsets after successful processing. If the consumer crashes before committing, the message will be redelivered.
 
 **No duplicate processing (idempotency):**
+
 1. Include a unique idempotency key in each message (e.g., a UUID or a business key like `order-123-v1`).
 2. Before processing, check an idempotency store (Redis or a database table) to see if this key has been processed.
 3. Process the message and record the idempotency key atomically (same database transaction if possible).
@@ -1187,12 +1191,14 @@ class EventStore {
 **Answer**: Event sourcing is not a default choice -- it adds significant complexity. Choose it when the benefits justify the costs.
 
 **Choose event sourcing when:**
+
 - **Audit requirements are non-negotiable**: Financial systems, healthcare, compliance-heavy domains where you must know exactly what happened and when
 - **Temporal queries are needed**: "What was the account balance at 3pm last Tuesday?" is trivial with event sourcing (replay events up to that timestamp) but requires complex temporal tables in CRUD
 - **Business logic depends on history**: Insurance claims processing, where the sequence of events matters for adjudication, not just the final state
 - **You need to rebuild state differently**: Multiple read models (projections) derived from the same event stream -- e.g., one for real-time dashboards, one for regulatory reporting
 
 **Avoid event sourcing when:**
+
 - Simple CRUD is sufficient (most web applications)
 - Team is not experienced with eventual consistency
 - The domain does not have complex business rules that benefit from event replay

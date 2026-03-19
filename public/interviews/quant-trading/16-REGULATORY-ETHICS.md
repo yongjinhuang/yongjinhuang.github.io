@@ -67,17 +67,18 @@ This creates a unique challenge for quantitative traders. Your strategy may inte
 
 The scale of penalties in financial regulation is staggering:
 
-| Case | Entity | Penalty | Year |
-|------|--------|---------|------|
-| SAC Capital (insider trading) | Firm | $1.8 billion | 2013 |
-| JPMorgan (spoofing) | Firm | $920 million | 2020 |
-| Navinder Sarao (Flash Crash) | Individual | Criminal conviction | 2016 |
-| Citadel Securities (Reg NMS) | Firm | $22.6 million | 2017 |
-| Tower Research (spoofing) | Firm | $67.4 million | 2019 |
-| Deutsche Bank (spoofing) | Firm | $30 million | 2018 |
-| Merrill Lynch (spoofing) | Firm | $25 million | 2019 |
+| Case                          | Entity     | Penalty             | Year |
+| ----------------------------- | ---------- | ------------------- | ---- |
+| SAC Capital (insider trading) | Firm       | $1.8 billion        | 2013 |
+| JPMorgan (spoofing)           | Firm       | $920 million        | 2020 |
+| Navinder Sarao (Flash Crash)  | Individual | Criminal conviction | 2016 |
+| Citadel Securities (Reg NMS)  | Firm       | $22.6 million       | 2017 |
+| Tower Research (spoofing)     | Firm       | $67.4 million       | 2019 |
+| Deutsche Bank (spoofing)      | Firm       | $30 million         | 2018 |
+| Merrill Lynch (spoofing)      | Firm       | $25 million         | 2019 |
 
 Penalties can include:
+
 - **Monetary fines**: Often multiples of the illegal profit gained
 - **Disgorgement**: Forced return of all profits from illegal activity
 - **Industry bans**: Permanent prohibition from working in finance
@@ -240,6 +241,7 @@ The SEC is the primary regulator for securities markets (stocks, bonds, options 
 - **Enforcement**: Investigating and prosecuting securities law violations
 
 For quant traders, the SEC matters when you:
+
 - Trade equities, equity options, or ETFs
 - Manage money for outside investors (Investment Advisers Act)
 - Operate a broker-dealer
@@ -247,14 +249,14 @@ For quant traders, the SEC matters when you:
 
 **Key SEC Rules for Quants**:
 
-| Rule | What It Covers |
-|------|---------------|
-| Reg NMS | National Market System, order routing, trade-through |
-| Reg SHO | Short selling, locate requirements, threshold lists |
-| Rule 15c3-5 | Market access, pre-trade risk controls |
-| Rule 10b-5 | Anti-fraud (insider trading, manipulation) |
-| Rule 613 | Consolidated Audit Trail (CAT) |
-| Reg ATS | Alternative Trading Systems (dark pools) |
+| Rule        | What It Covers                                       |
+| ----------- | ---------------------------------------------------- |
+| Reg NMS     | National Market System, order routing, trade-through |
+| Reg SHO     | Short selling, locate requirements, threshold lists  |
+| Rule 15c3-5 | Market access, pre-trade risk controls               |
+| Rule 10b-5  | Anti-fraud (insider trading, manipulation)           |
+| Rule 613    | Consolidated Audit Trail (CAT)                       |
+| Reg ATS     | Alternative Trading Systems (dark pools)             |
 
 ### 16.2.3 CFTC (Commodity Futures Trading Commission)
 
@@ -332,15 +334,18 @@ The Dodd-Frank Wall Street Reform and Consumer Protection Act (2010) introduced 
 Regulation NMS (2005, fully implemented 2007) fundamentally shaped modern US equity market structure:
 
 **Rule 611 -- Order Protection Rule (Trade-Through Rule)**:
+
 - Requires trading centers to establish policies to prevent "trade-throughs"
 - A trade-through occurs when an order executes at a price inferior to a better quote displayed at another trading center
 - You cannot execute a buy at $10.05 if another exchange is showing an offer at $10.03
 
 **Rule 610 -- Access Rule**:
+
 - Limits access fees to $0.003 per share (the origin of the maker-taker model)
 - Requires fair and non-discriminatory access to quotations
 
 **Rule 612 -- Sub-Penny Rule**:
+
 - Prohibits displaying quotes in sub-penny increments for stocks priced above $1.00
 - Minimum tick size of $0.01 for most stocks
 - Affects the granularity of pricing strategies
@@ -381,10 +386,12 @@ Regulation SHO governs short selling in US equity markets:
 - Hard-to-borrow stocks require explicit locate confirmation (adds latency and cost)
 
 **Close-Out Requirement (Rule 204)**: Failures to deliver must be closed out by purchasing shares:
+
 - T+1 for short sales (by start of trading on T+1 after settlement date)
 - Penalties for persistent failures
 
 **Alternative Uptick Rule (Rule 201)**: When a stock drops 10% or more from the prior day's close:
+
 - A circuit breaker triggers
 - Short sales are only permitted at a price above the current national best bid
 - Remains in effect for the rest of the day and the following day
@@ -538,6 +545,7 @@ ESMA is the EU-wide supervisory authority that coordinates national regulators (
 - Publishes Q&As and guidelines on algorithmic trading
 
 Key NCAs by country:
+
 - **UK**: FCA (Financial Conduct Authority) -- post-Brexit, operates under its own regime
 - **Germany**: BaFin
 - **France**: AMF
@@ -607,13 +615,13 @@ MiFID II introduced a harmonized tick size regime across EU venues:
 
 Example tick size table (simplified):
 
-| Avg Daily Transactions | Price Range | Tick Size |
-|----------------------|-------------|-----------|
-| 0 - 10 | 0.50 - 1.00 EUR | 0.005 |
-| 10 - 80 | 0.50 - 1.00 EUR | 0.002 |
-| 80 - 600 | 0.50 - 1.00 EUR | 0.001 |
-| 600 - 2,000 | 0.50 - 1.00 EUR | 0.0005 |
-| > 2,000 | 0.50 - 1.00 EUR | 0.0002 |
+| Avg Daily Transactions | Price Range     | Tick Size |
+| ---------------------- | --------------- | --------- |
+| 0 - 10                 | 0.50 - 1.00 EUR | 0.005     |
+| 10 - 80                | 0.50 - 1.00 EUR | 0.002     |
+| 80 - 600               | 0.50 - 1.00 EUR | 0.001     |
+| 600 - 2,000            | 0.50 - 1.00 EUR | 0.0005    |
+| > 2,000                | 0.50 - 1.00 EUR | 0.0002    |
 
 ### 16.3.6 Dark Pool Regulations
 
@@ -792,11 +800,13 @@ Key distinction: Front-running is illegal when there is a fiduciary duty or agen
 Trading on material non-public information (MNPI) is one of the most prosecuted securities offenses:
 
 **Elements of insider trading**:
+
 1. **Material information**: Would a reasonable investor consider it important?
 2. **Non-public**: Not yet disseminated to the general public
 3. **Breach of duty**: The person who trades (or tips) breaches a duty of trust
 
 **For quants, insider trading risks arise from**:
+
 - Alternative data sources that may contain MNPI (satellite imagery of insider meetings, web scraping of pre-release data)
 - Expert network consultants who share confidential information
 - Employees at data vendors with access to pre-release economic data
@@ -893,17 +903,20 @@ This is one of the most important practical concerns for quantitative traders. A
 ### 16.5.8 Real Enforcement Cases with Details
 
 **United States v. Coscia (2015)**:
+
 - Michael Coscia, a high-frequency trader, was the first person convicted under Dodd-Frank's anti-spoofing provision
 - Placed large orders in commodity futures he intended to cancel (spoofing)
 - Sentenced to three years in prison
 - Conviction upheld on appeal (Seventh Circuit, 2017)
 
 **CFTC v. Oystacher / 3Red Trading (2015)**:
+
 - Igor Oystacher and his firm 3Red Trading accused of spoofing in multiple CME futures markets
 - Alleged to have placed and quickly cancelled large orders to move prices
 - Settled for $2.5 million in 2018
 
 **SEC v. Lek Securities (2019)**:
+
 - Lek Securities Corporation, a broker-dealer, facilitated a manipulation scheme
 - Allowed foreign traders to use its market access for spoofing
 - Failed to maintain adequate risk controls
@@ -955,6 +968,7 @@ Best execution is a legal obligation requiring brokers and investment managers t
 ### 16.6.3 Documentation Requirements
 
 Firms must maintain:
+
 - **Execution policy**: Documented methodology for achieving best execution
 - **Venue selection**: Justification for choice of execution venues
 - **Monitoring reports**: Regular analysis of execution quality
@@ -1115,6 +1129,7 @@ A properly designed algorithmic trading system implements multiple layers of ris
 Both US and EU regulations require the ability to immediately halt algorithmic trading:
 
 **Kill switch requirements**:
+
 - Must be able to cancel all outstanding orders immediately
 - Must be able to prevent new orders from being submitted
 - Must be operable by compliance and risk staff (not just developers)
@@ -1122,6 +1137,7 @@ Both US and EU regulations require the ability to immediately halt algorithmic t
 - Must work independently of the trading system (cannot rely on the same code path that may be malfunctioning)
 
 **Implementation considerations**:
+
 ```
 +-----------------------------------------------------------------------+
 |                    KILL SWITCH ARCHITECTURE                             |
@@ -1292,7 +1308,7 @@ The practical implication for quant traders: you must analyze each crypto asset 
 
 ### 16.8.3 Howey Test for Securities
 
-The Supreme Court's 1946 *SEC v. W.J. Howey Co.* decision established the test for whether an instrument is an "investment contract" (and thus a security):
+The Supreme Court's 1946 _SEC v. W.J. Howey Co._ decision established the test for whether an instrument is an "investment contract" (and thus a security):
 
 ```
 +-----------------------------------------------------------------------+
@@ -1464,15 +1480,15 @@ Trade surveillance systems detect potential manipulation by analyzing order and 
 
 **Common surveillance alerts**:
 
-| Alert Type | What It Detects | Key Metrics |
-|-----------|-----------------|-------------|
-| Spoofing | Orders placed to be cancelled | Cancel rate, time-to-cancel, side bias |
-| Layering | Multiple spoof orders at different prices | Order depth pattern, cancel timing |
-| Wash trading | Trades between related accounts | Counterparty analysis, beneficial ownership |
-| Marking the close | Trades near market close to influence closing price | Volume concentration, price impact at close |
-| Front-running | Trading ahead of client orders | Time sequence analysis, information access |
-| Insider trading | Trading before material announcements | Timing correlation with news, unusual profitability |
-| Pump and dump | Promotional activity followed by selling | Social media correlation, position changes |
+| Alert Type        | What It Detects                                     | Key Metrics                                         |
+| ----------------- | --------------------------------------------------- | --------------------------------------------------- |
+| Spoofing          | Orders placed to be cancelled                       | Cancel rate, time-to-cancel, side bias              |
+| Layering          | Multiple spoof orders at different prices           | Order depth pattern, cancel timing                  |
+| Wash trading      | Trades between related accounts                     | Counterparty analysis, beneficial ownership         |
+| Marking the close | Trades near market close to influence closing price | Volume concentration, price impact at close         |
+| Front-running     | Trading ahead of client orders                      | Time sequence analysis, information access          |
+| Insider trading   | Trading before material announcements               | Timing correlation with news, unusual profitability |
+| Pump and dump     | Promotional activity followed by selling            | Social media correlation, position changes          |
 
 ### 16.9.3 Restricted Lists and Insider Trading Prevention
 
@@ -1523,6 +1539,7 @@ Regulatory record-keeping requirements are extensive:
 - **Algorithm documentation**: Source code, parameters, change logs
 
 Storage requirements:
+
 - Write-Once-Read-Many (WORM) format for certain records
 - Readily accessible for first 2 years
 - Available (though potentially archived) for remaining retention period
@@ -1726,14 +1743,14 @@ Algorithmic trading introduces systemic risks that did not exist in human-driven
 
 Major flash crash events:
 
-| Event | Date | Description |
-|-------|------|-------------|
-| Flash Crash | May 6, 2010 | Dow dropped ~1000 points in minutes, recovered |
-| Knight Capital | Aug 1, 2012 | Software bug, $440M loss in 45 minutes |
-| Treasury Flash Crash | Oct 15, 2014 | 10Y yield swung 37bp intraday |
-| ETF Flash Crash | Aug 24, 2015 | Hundreds of ETFs halted at market open |
-| GBP Flash Crash | Oct 7, 2016 | GBP dropped 6% in 2 minutes in Asian trading |
-| Crypto Flash Crash | May 19, 2021 | Bitcoin dropped 30% in hours |
+| Event                | Date         | Description                                    |
+| -------------------- | ------------ | ---------------------------------------------- |
+| Flash Crash          | May 6, 2010  | Dow dropped ~1000 points in minutes, recovered |
+| Knight Capital       | Aug 1, 2012  | Software bug, $440M loss in 45 minutes         |
+| Treasury Flash Crash | Oct 15, 2014 | 10Y yield swung 37bp intraday                  |
+| ETF Flash Crash      | Aug 24, 2015 | Hundreds of ETFs halted at market open         |
+| GBP Flash Crash      | Oct 7, 2016  | GBP dropped 6% in 2 minutes in Asian trading   |
+| Crypto Flash Crash   | May 19, 2021 | Bitcoin dropped 30% in hours                   |
 
 These events demonstrate that algorithmic trading, while improving normal market conditions, can create extreme outcomes during periods of stress. The ethical question is whether the efficiency gains during normal times justify the tail risk during crises.
 
@@ -1921,6 +1938,7 @@ The wash sale rule (IRC Section 1091) prevents taxpayers from claiming a tax los
 Section 475(f) of the Internal Revenue Code allows qualifying traders to elect mark-to-market (MTM) accounting:
 
 **Benefits**:
+
 - All positions marked to market at year-end (treated as if sold on Dec 31)
 - All gains and losses are **ordinary income/loss** (not capital)
 - **Wash sale rule does not apply** (major advantage for active traders)
@@ -1928,17 +1946,20 @@ Section 475(f) of the Internal Revenue Code allows qualifying traders to elect m
 - Net operating loss (NOL) carryback/carryforward
 
 **Requirements**:
+
 - Must be a "trader in securities" (not just an investor)
 - Must file election by April 15 of the tax year (cannot be made retroactively)
 - Election cannot be revoked without IRS permission
 - All gains become ordinary income (lose long-term capital gains rates)
 
 **Who should elect MTM**:
+
 - Active intraday/short-term traders with many positions
 - Traders who frequently trigger wash sales
 - Traders with significant losses to deduct
 
 **Who should NOT elect MTM**:
+
 - Long-term investors (lose favorable long-term capital gains rates)
 - Traders with mostly long holding periods
 
@@ -2156,6 +2177,7 @@ Maintaining detailed records is essential:
 A hedge fund typically requires the following legal documents:
 
 **Limited Partnership Agreement (LPA) or Operating Agreement**:
+
 - Terms of the fund (fees, withdrawals, allocations)
 - Rights and obligations of GP and LPs
 - Investment authority and restrictions
@@ -2163,6 +2185,7 @@ A hedge fund typically requires the following legal documents:
 - Dissolution terms
 
 **Private Placement Memorandum (PPM)**:
+
 - Detailed disclosure document for investors
 - Investment strategy description
 - Risk factors (must be comprehensive)
@@ -2172,6 +2195,7 @@ A hedge fund typically requires the following legal documents:
 - Tax considerations
 
 **Subscription Agreement**:
+
 - Investor representations (accredited investor, qualified purchaser)
 - Investment amount
 - Wire instructions
@@ -2179,14 +2203,14 @@ A hedge fund typically requires the following legal documents:
 
 **Estimated legal costs for fund formation**:
 
-| Item | Cost Range |
-|------|-----------|
-| Fund formation (domestic LP) | $25,000 - $75,000 |
-| Fund formation (master-feeder) | $75,000 - $200,000 |
-| Regulatory registration (SEC RIA) | $10,000 - $30,000 |
-| CFTC/NFA registration | $5,000 - $15,000 |
-| Compliance manual | $10,000 - $25,000 |
-| Ongoing legal (annual) | $20,000 - $100,000 |
+| Item                              | Cost Range         |
+| --------------------------------- | ------------------ |
+| Fund formation (domestic LP)      | $25,000 - $75,000  |
+| Fund formation (master-feeder)    | $75,000 - $200,000 |
+| Regulatory registration (SEC RIA) | $10,000 - $30,000  |
+| CFTC/NFA registration             | $5,000 - $15,000   |
+| Compliance manual                 | $10,000 - $25,000  |
+| Ongoing legal (annual)            | $20,000 - $100,000 |
 
 ### 16.12.4 Compliance Manual
 
@@ -2249,6 +2273,7 @@ Every registered investment adviser must maintain a written compliance manual (S
 ### 16.12.5 Auditor and Administrator Selection
 
 **Fund Auditor**:
+
 - Required by most institutional investors (and some jurisdictions)
 - Must be independent
 - Audits annual financial statements
@@ -2257,6 +2282,7 @@ Every registered investment adviser must maintain a written compliance manual (S
 - Cost: $30,000 - $200,000+ per year depending on fund complexity
 
 **Fund Administrator**:
+
 - Calculates NAV (Net Asset Value) independently
 - Processes subscriptions and redemptions
 - Maintains investor records
@@ -2450,12 +2476,12 @@ SEC and CFTC exams are a reality for registered firms. Preparation:
 
 ### Books
 
-- *Flash Boys* by Michael Lewis -- narrative on HFT and market structure
-- *Dark Pools* by Scott Patterson -- history of electronic trading
-- *The Man Who Solved the Market* by Gregory Zuckerman -- Renaissance Technologies
-- *Broken Markets* by Sal Arnuk and Joseph Saluzzi -- market structure critique
-- *Hedge Fund Law and Finance* by Phoebus Athanassiou -- legal framework
-- *Trading and Exchanges* by Larry Harris -- microstructure and regulation
+- _Flash Boys_ by Michael Lewis -- narrative on HFT and market structure
+- _Dark Pools_ by Scott Patterson -- history of electronic trading
+- _The Man Who Solved the Market_ by Gregory Zuckerman -- Renaissance Technologies
+- _Broken Markets_ by Sal Arnuk and Joseph Saluzzi -- market structure critique
+- _Hedge Fund Law and Finance_ by Phoebus Athanassiou -- legal framework
+- _Trading and Exchanges_ by Larry Harris -- microstructure and regulation
 
 ### Professional Organizations
 
@@ -2486,6 +2512,6 @@ SEC and CFTC exams are a reality for registered firms. Preparation:
 
 ---
 
-*Next Chapter: [Chapter 17: Career Guide -- Breaking into Quantitative Trading](17-CAREER-GUIDE.md)*
+_Next Chapter: [Chapter 17: Career Guide -- Breaking into Quantitative Trading](17-CAREER-GUIDE.md)_
 
-*Previous Chapter: [Chapter 15: Portfolio Construction and Risk Management](15-PORTFOLIO-RISK.md)*
+_Previous Chapter: [Chapter 15: Portfolio Construction and Risk Management](15-PORTFOLIO-RISK.md)_

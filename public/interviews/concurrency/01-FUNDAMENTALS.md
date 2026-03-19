@@ -44,6 +44,7 @@ Process A                          Process B
 ```
 
 **Key properties:**
+
 - Own address space (memory isolation)
 - Own file descriptor table
 - Created via `fork()` (Unix) or `CreateProcess()` (Windows)
@@ -70,6 +71,7 @@ Process
 ```
 
 **Key properties:**
+
 - Share heap, code, data, and file descriptors with other threads
 - Own stack, program counter, and register set
 - Created via `pthread_create()` or `threading.Thread()` in Python
@@ -97,6 +99,7 @@ Single OS Thread
 ```
 
 **Key properties:**
+
 - Cooperative: must explicitly yield control (`await`, `yield`)
 - No OS involvement in switching (no syscall overhead)
 - Very lightweight: ~KB of memory per coroutine

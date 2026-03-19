@@ -74,15 +74,15 @@ HFT Target: < 1-10 us total tick-to-trade
 
 ### C++ vs Python vs Rust
 
-| Aspect | C++ | Python | Rust |
-|---|---|---|---|
-| Latency | ~100ns decisions | ~10-100us | ~100ns decisions |
-| Memory control | Full manual/RAII | GC-managed | Ownership model |
-| Ecosystem (trading) | Mature, dominant | Research/backtesting | Growing |
-| Development speed | Slower | Fast | Moderate |
-| Safety | Manual discipline | Safe by default | Compile-time safe |
-| Hiring pool (quant) | Very large | Very large | Small but growing |
-| Legacy integration | Seamless | Via bindings | Via FFI |
+| Aspect              | C++               | Python               | Rust              |
+| ------------------- | ----------------- | -------------------- | ----------------- |
+| Latency             | ~100ns decisions  | ~10-100us            | ~100ns decisions  |
+| Memory control      | Full manual/RAII  | GC-managed           | Ownership model   |
+| Ecosystem (trading) | Mature, dominant  | Research/backtesting | Growing           |
+| Development speed   | Slower            | Fast                 | Moderate          |
+| Safety              | Manual discipline | Safe by default      | Compile-time safe |
+| Hiring pool (quant) | Very large        | Very large           | Small but growing |
+| Legacy integration  | Seamless          | Via bindings         | Via FFI           |
 
 **Typical division**: C++ for the hot path (feed handlers, order management, matching engines), Python for research/backtesting/analytics, Rust increasingly for new infrastructure.
 

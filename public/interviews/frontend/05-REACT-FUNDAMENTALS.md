@@ -2,7 +2,7 @@
 
 ## Overview
 
-React is the most widely used frontend library, and virtually every frontend interview will test your understanding of its core mental model. Interviewers want to see that you understand *why* React works the way it does -- not just the API surface. This guide covers JSX compilation, the component model, hooks, rendering behavior, and patterns that separate junior developers from senior ones.
+React is the most widely used frontend library, and virtually every frontend interview will test your understanding of its core mental model. Interviewers want to see that you understand _why_ React works the way it does -- not just the API surface. This guide covers JSX compilation, the component model, hooks, rendering behavior, and patterns that separate junior developers from senior ones.
 
 This guide focuses on React 18+ fundamentals. For advanced patterns like Server Components, concurrent features, and React 19 specifics, see the React Advanced Patterns guide.
 
@@ -19,7 +19,12 @@ JSX is syntactic sugar for `React.createElement()` calls (or the new JSX transfo
 const element = <h1 className="title">Hello, {name}</h1>;
 
 // Compiles to (classic transform)
-const element = React.createElement('h1', { className: 'title' }, 'Hello, ', name);
+const element = React.createElement(
+  'h1',
+  { className: 'title' },
+  'Hello, ',
+  name
+);
 
 // Compiles to (new transform -- no React import needed)
 import { jsx as _jsx } from 'react/jsx-runtime';
@@ -27,6 +32,7 @@ const element = _jsx('h1', { className: 'title', children: ['Hello, ', name] });
 ```
 
 **Key rules:**
+
 - JSX expressions must have a single root element (use `<>...</>` fragments)
 - Use `className` instead of `class`, `htmlFor` instead of `for`
 - JavaScript expressions go inside `{}`
@@ -35,10 +41,14 @@ const element = _jsx('h1', { className: 'title', children: ['Hello, ', name] });
 
 ```jsx
 // Bug: renders "0" when items is empty
-{items.length && <ItemList items={items} />}
+{
+  items.length && <ItemList items={items} />;
+}
 
 // Fix: explicit boolean check
-{items.length > 0 && <ItemList items={items} />}
+{
+  items.length > 0 && <ItemList items={items} />;
+}
 ```
 
 ### Function Components vs Class Components
@@ -49,7 +59,11 @@ Modern React development uses function components almost exclusively. Class comp
 // Function component (modern)
 function Greeting({ name }) {
   const [count, setCount] = useState(0);
-  return <h1 onClick={() => setCount(c => c + 1)}>Hello, {name} ({count})</h1>;
+  return (
+    <h1 onClick={() => setCount((c) => c + 1)}>
+      Hello, {name} ({count})
+    </h1>
+  );
 }
 
 // Class component (legacy)
@@ -58,7 +72,7 @@ class Greeting extends React.Component {
 
   render() {
     return (
-      <h1 onClick={() => this.setState(s => ({ count: s.count + 1 }))}>
+      <h1 onClick={() => this.setState((s) => ({ count: s.count + 1 }))}>
         Hello, {this.props.name} ({this.state.count})
       </h1>
     );
@@ -67,6 +81,7 @@ class Greeting extends React.Component {
 ```
 
 **Why function components won:**
+
 - Hooks enable reusable stateful logic (no HOC/render prop wrappers)
 - No `this` binding issues
 - Easier to test, smaller bundle size
@@ -86,14 +101,17 @@ function Counter({ initialCount, label }) {
 
   return (
     <div>
-      <span>{label}: {count}</span>
-      <button onClick={() => setCount(c => c + 1)}>+</button>
+      <span>
+        {label}: {count}
+      </span>
+      <button onClick={() => setCount((c) => c + 1)}>+</button>
     </div>
   );
 }
 ```
 
 **State update rules:**
+
 1. State updates are asynchronous (batched in React 18+)
 2. Use the updater function form when new state depends on previous state
 3. State is immutable -- always create new objects/arrays
@@ -101,18 +119,18 @@ function Counter({ initialCount, label }) {
 ```jsx
 // WRONG: Mutating state
 const handleAdd = (item) => {
-  items.push(item);        // Mutation!
-  setItems(items);          // Same reference -- React won't re-render
+  items.push(item); // Mutation!
+  setItems(items); // Same reference -- React won't re-render
 };
 
 // CORRECT: Immutable update
 const handleAdd = (item) => {
-  setItems(prev => [...prev, item]);
+  setItems((prev) => [...prev, item]);
 };
 
 // CORRECT: Immutable object update
 const handleUpdate = (field, value) => {
-  setUser(prev => ({ ...prev, [field]: value }));
+  setUser((prev) => ({ ...prev, [field]: value }));
 };
 ```
 
@@ -128,7 +146,7 @@ const [data, setData] = useState(() => {
 });
 
 // Updater function (when new state depends on previous)
-setCount(prev => prev + 1);
+setCount((prev) => prev + 1);
 
 // Direct value (when new state is independent)
 setCount(42);
@@ -152,13 +170,14 @@ useEffect(() => {
 
 **Dependency array behavior:**
 
-| Pattern | Runs when |
-|---------|-----------|
-| `useEffect(fn)` | After every render |
-| `useEffect(fn, [])` | Only after first render (mount) |
+| Pattern                 | Runs when                          |
+| ----------------------- | ---------------------------------- |
+| `useEffect(fn)`         | After every render                 |
+| `useEffect(fn, [])`     | Only after first render (mount)    |
 | `useEffect(fn, [a, b])` | After render if `a` or `b` changed |
 
 **Common mistakes:**
+
 - Missing dependencies (stale closures)
 - Unnecessary dependencies that cause infinite loops
 - Using `useEffect` for derived state (use `useMemo` instead)
@@ -178,7 +197,9 @@ useEffect(() => {
   }
 
   fetchUser();
-  return () => { cancelled = true; };
+  return () => {
+    cancelled = true;
+  };
 }, [userId]);
 ```
 
@@ -239,15 +260,17 @@ const sortedItems = useMemo(() => {
 
 ```jsx
 const handleClick = useCallback((id) => {
-  setItems(prev => prev.filter(item => item.id !== id));
+  setItems((prev) => prev.filter((item) => item.id !== id));
 }, []);
 ```
 
 **When to use them:**
+
 - `useMemo`: Expensive computations, referential equality for objects/arrays passed as props
 - `useCallback`: Functions passed to memoized children (`React.memo`), functions in dependency arrays
 
 **When NOT to use them:**
+
 - Simple calculations (the overhead of memoization exceeds the savings)
 - Values/functions not passed to children or used in dependency arrays
 - Premature optimization without measured performance issues
@@ -268,17 +291,20 @@ function useLocalStorage(key, initialValue) {
     }
   });
 
-  const setValue = useCallback((value) => {
-    setStoredValue(prev => {
-      const valueToStore = typeof value === 'function' ? value(prev) : value;
-      try {
-        localStorage.setItem(key, JSON.stringify(valueToStore));
-      } catch (error) {
-        console.error(`Error setting localStorage key "${key}":`, error);
-      }
-      return valueToStore;
-    });
-  }, [key]);
+  const setValue = useCallback(
+    (value) => {
+      setStoredValue((prev) => {
+        const valueToStore = typeof value === 'function' ? value(prev) : value;
+        try {
+          localStorage.setItem(key, JSON.stringify(valueToStore));
+        } catch (error) {
+          console.error(`Error setting localStorage key "${key}":`, error);
+        }
+        return valueToStore;
+      });
+    },
+    [key]
+  );
 
   return [storedValue, setValue];
 }
@@ -286,11 +312,16 @@ function useLocalStorage(key, initialValue) {
 // Usage
 function Settings() {
   const [theme, setTheme] = useLocalStorage('theme', 'light');
-  return <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>{theme}</button>;
+  return (
+    <button onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}>
+      {theme}
+    </button>
+  );
 }
 ```
 
 **Rules of hooks:**
+
 1. Only call hooks at the top level (no conditionals, loops, nested functions)
 2. Only call hooks from React function components or custom hooks
 3. Custom hooks must start with `use`
@@ -303,12 +334,7 @@ function Settings() {
 function ControlledInput() {
   const [value, setValue] = useState('');
 
-  return (
-    <input
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-    />
-  );
+  return <input value={value} onChange={(e) => setValue(e.target.value)} />;
 }
 ```
 
@@ -326,14 +352,14 @@ function UncontrolledInput() {
 }
 ```
 
-| Aspect | Controlled | Uncontrolled |
-|--------|-----------|-------------|
-| State location | React state | DOM |
-| Value access | `value` state variable | `ref.current.value` |
-| Validation | On every change | On submit |
-| Dynamic inputs | Easy | Harder |
-| Performance | More re-renders | Fewer re-renders |
-| Use case | Most forms | File inputs, simple forms |
+| Aspect         | Controlled             | Uncontrolled              |
+| -------------- | ---------------------- | ------------------------- |
+| State location | React state            | DOM                       |
+| Value access   | `value` state variable | `ref.current.value`       |
+| Validation     | On every change        | On submit                 |
+| Dynamic inputs | Easy                   | Harder                    |
+| Performance    | More re-renders        | Fewer re-renders          |
+| Use case       | Most forms             | File inputs, simple forms |
 
 ### Keys and Reconciliation
 
@@ -341,17 +367,18 @@ React uses keys to match children across renders. Keys tell React which elements
 
 ```jsx
 // GOOD: Stable, unique key
-{items.map(item => (
-  <ListItem key={item.id} data={item} />
-))}
+{
+  items.map((item) => <ListItem key={item.id} data={item} />);
+}
 
 // BAD: Array index as key (breaks on reorder, insert, delete)
-{items.map((item, index) => (
-  <ListItem key={index} data={item} />
-))}
+{
+  items.map((item, index) => <ListItem key={index} data={item} />);
+}
 ```
 
 **When index keys cause bugs:**
+
 - User types into an input field in the second item
 - First item is deleted
 - React thinks the second item (now at index 0) is the first item
@@ -369,10 +396,13 @@ React uses keys to match children across renders. Keys tell React which elements
 Prevents re-rendering when props haven't changed (shallow comparison):
 
 ```jsx
-const ExpensiveList = React.memo(function ExpensiveList({ items, onItemClick }) {
+const ExpensiveList = React.memo(function ExpensiveList({
+  items,
+  onItemClick,
+}) {
   return (
     <ul>
-      {items.map(item => (
+      {items.map((item) => (
         <li key={item.id} onClick={() => onItemClick(item.id)}>
           {item.name}
         </li>
@@ -401,15 +431,16 @@ const ThemeContext = React.createContext('light');
 function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('light');
 
-  const value = useMemo(() => ({
-    theme,
-    toggleTheme: () => setTheme(t => t === 'light' ? 'dark' : 'light'),
-  }), [theme]);
+  const value = useMemo(
+    () => ({
+      theme,
+      toggleTheme: () => setTheme((t) => (t === 'light' ? 'dark' : 'light')),
+    }),
+    [theme]
+  );
 
   return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
 }
 
@@ -460,10 +491,11 @@ class ErrorBoundary extends React.Component {
 // Usage
 <ErrorBoundary fallback={<ErrorPage />}>
   <App />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 **Limitations:** Error boundaries do NOT catch errors in:
+
 - Event handlers (use try/catch)
 - Asynchronous code (promises, setTimeout)
 - Server-side rendering
@@ -515,9 +547,9 @@ A re-render is triggered by: `setState`, parent re-render, context value change,
 function Component({ showExtra }) {
   const [name, setName] = useState('');
   if (showExtra) {
-    const [extra, setExtra] = useState('');  // Sometimes 2nd, sometimes missing
+    const [extra, setExtra] = useState(''); // Sometimes 2nd, sometimes missing
   }
-  const [count, setCount] = useState(0);     // Sometimes 2nd, sometimes 3rd
+  const [count, setCount] = useState(0); // Sometimes 2nd, sometimes 3rd
 }
 ```
 
@@ -538,9 +570,9 @@ For primitive values (strings, numbers, booleans), this works intuitively. For o
 
 **Answer:** Both run after render, but at different times:
 
-- **`useEffect`** runs asynchronously *after* the browser has painted. The user sees the updated UI, then the effect runs. This is the correct choice for data fetching, subscriptions, and most side effects.
+- **`useEffect`** runs asynchronously _after_ the browser has painted. The user sees the updated UI, then the effect runs. This is the correct choice for data fetching, subscriptions, and most side effects.
 
-- **`useLayoutEffect`** runs synchronously *after* DOM mutations but *before* the browser paints. The user never sees the intermediate state. Use this for DOM measurements or when you need to adjust the DOM before the user sees it (e.g., tooltip positioning, scroll restoration).
+- **`useLayoutEffect`** runs synchronously _after_ DOM mutations but _before_ the browser paints. The user never sees the intermediate state. Use this for DOM measurements or when you need to adjust the DOM before the user sees it (e.g., tooltip positioning, scroll restoration).
 
 Using `useLayoutEffect` for non-DOM-measurement effects blocks the paint and can cause visible jank.
 
@@ -562,9 +594,11 @@ function App() {
   const [theme, setTheme] = useState('light');
   return (
     <div className={theme}>
-      <Header />        {/* Re-renders unnecessarily */}
-      <ExpensiveTree />  {/* Re-renders unnecessarily */}
-      <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
+      <Header /> {/* Re-renders unnecessarily */}
+      <ExpensiveTree /> {/* Re-renders unnecessarily */}
+      <button
+        onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+      >
         Toggle
       </button>
     </div>
@@ -576,8 +610,10 @@ function ThemeWrapper({ children }) {
   const [theme, setTheme] = useState('light');
   return (
     <div className={theme}>
-      {children}         {/* Same reference, no re-render */}
-      <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
+      {children} {/* Same reference, no re-render */}
+      <button
+        onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+      >
         Toggle
       </button>
     </div>
@@ -607,6 +643,7 @@ Use controlled components for most forms. Use uncontrolled components for file i
 **Answer:** Context solves prop drilling -- passing data through many intermediate components that don't use it. Common use cases: theme, locale, authentication state, and feature flags.
 
 Limitations:
+
 - **Every consumer re-renders** when the context value changes, regardless of which part of the value they use
 - **Not a state management solution** -- it provides dependency injection, not optimized state distribution
 - **Performance at scale** -- for frequently changing values (mouse position, scroll), context causes excessive re-renders. Use a state management library (Zustand, Jotai) or `useSyncExternalStore` instead
@@ -642,7 +679,7 @@ function SearchBar() {
     }
   }, [debouncedQuery]);
 
-  return <input value={query} onChange={e => setQuery(e.target.value)} />;
+  return <input value={query} onChange={(e) => setQuery(e.target.value)} />;
 }
 ```
 
@@ -658,21 +695,23 @@ function useFetch(url) {
 
   useEffect(() => {
     let cancelled = false;
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     fetch(url)
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then(data => {
+      .then((data) => {
         if (!cancelled) setState({ data, loading: false, error: null });
       })
-      .catch(error => {
+      .catch((error) => {
         if (!cancelled) setState({ data: null, loading: false, error });
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [url]);
 
   return state;
@@ -687,18 +726,21 @@ const AccordionContext = React.createContext(null);
 function Accordion({ children, allowMultiple = false }) {
   const [openItems, setOpenItems] = useState(new Set());
 
-  const toggle = useCallback((id) => {
-    setOpenItems(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        if (!allowMultiple) next.clear();
-        next.add(id);
-      }
-      return next;
-    });
-  }, [allowMultiple]);
+  const toggle = useCallback(
+    (id) => {
+      setOpenItems((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          if (!allowMultiple) next.clear();
+          next.add(id);
+        }
+        return next;
+      });
+    },
+    [allowMultiple]
+  );
 
   const value = useMemo(() => ({ openItems, toggle }), [openItems, toggle]);
 
@@ -754,36 +796,36 @@ Accordion.Item = AccordionItem;
 
 ## Quick Reference
 
-| Hook | Purpose | Triggers Re-render |
-|------|---------|-------------------|
-| `useState` | Local component state | Yes |
-| `useEffect` | Side effects after render | No (but may call setState) |
-| `useLayoutEffect` | Side effects before paint | No (but may call setState) |
-| `useRef` | Mutable value / DOM reference | No |
-| `useMemo` | Memoize computed value | No |
-| `useCallback` | Memoize function reference | No |
-| `useContext` | Read context value | Yes (when context changes) |
-| `useReducer` | Complex state logic | Yes |
-| `useId` | Generate unique IDs for SSR | No |
+| Hook              | Purpose                       | Triggers Re-render         |
+| ----------------- | ----------------------------- | -------------------------- |
+| `useState`        | Local component state         | Yes                        |
+| `useEffect`       | Side effects after render     | No (but may call setState) |
+| `useLayoutEffect` | Side effects before paint     | No (but may call setState) |
+| `useRef`          | Mutable value / DOM reference | No                         |
+| `useMemo`         | Memoize computed value        | No                         |
+| `useCallback`     | Memoize function reference    | No                         |
+| `useContext`      | Read context value            | Yes (when context changes) |
+| `useReducer`      | Complex state logic           | Yes                        |
+| `useId`           | Generate unique IDs for SSR   | No                         |
 
-| Pattern | When to Use |
-|---------|-------------|
-| Controlled component | Forms needing real-time validation or formatting |
-| Uncontrolled component | File inputs, simple forms, integrating non-React code |
-| Custom hook | Reusable stateful logic across components |
-| Context | Theme, auth, locale -- data many components need |
-| React.memo | Expensive children that receive stable props |
-| Key prop reset | Force component to remount and reset state |
-| Children prop | Avoid re-rendering static content when parent state changes |
-| Error boundary | Graceful error handling in component subtrees |
-| Portal | Modals, tooltips, toasts that need to escape parent overflow/z-index |
+| Pattern                | When to Use                                                          |
+| ---------------------- | -------------------------------------------------------------------- |
+| Controlled component   | Forms needing real-time validation or formatting                     |
+| Uncontrolled component | File inputs, simple forms, integrating non-React code                |
+| Custom hook            | Reusable stateful logic across components                            |
+| Context                | Theme, auth, locale -- data many components need                     |
+| React.memo             | Expensive children that receive stable props                         |
+| Key prop reset         | Force component to remount and reset state                           |
+| Children prop          | Avoid re-rendering static content when parent state changes          |
+| Error boundary         | Graceful error handling in component subtrees                        |
+| Portal                 | Modals, tooltips, toasts that need to escape parent overflow/z-index |
 
-| Optimization | Technique |
-|-------------|-----------|
-| Avoid unnecessary renders | `React.memo`, `useMemo`, `useCallback` |
-| Colocate state | Move state closer to where it's used |
-| Split context | Separate fast-changing and slow-changing data |
-| Virtualize lists | Use `react-window` or `@tanstack/virtual` |
-| Lazy load components | `React.lazy` + `Suspense` |
-| Debounce inputs | `useDebounce` custom hook |
-| Avoid inline objects | Define outside render or memoize |
+| Optimization              | Technique                                     |
+| ------------------------- | --------------------------------------------- |
+| Avoid unnecessary renders | `React.memo`, `useMemo`, `useCallback`        |
+| Colocate state            | Move state closer to where it's used          |
+| Split context             | Separate fast-changing and slow-changing data |
+| Virtualize lists          | Use `react-window` or `@tanstack/virtual`     |
+| Lazy load components      | `React.lazy` + `Suspense`                     |
+| Debounce inputs           | `useDebounce` custom hook                     |
+| Avoid inline objects      | Define outside render or memoize              |

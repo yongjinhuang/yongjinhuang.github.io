@@ -28,24 +28,24 @@ within a strict latency budget while ingesting billions of queries per day.
 
 ### Functional Requirements
 
-| # | Requirement | Detail |
-|---|-------------|--------|
-| F1 | Prefix matching | As the user types "din", return suggestions like "dinner recipes", "dinosaur games" |
-| F2 | Top-K suggestions | Return the top 5-10 most popular/relevant completions |
-| F3 | Ranked results | Suggestions ordered by popularity, recency, and relevance |
-| F4 | Fast response | Results should appear as the user types each character |
-| F5 | Multi-language | Support queries in English, Chinese, Spanish, etc. |
-| F6 | Filtering | Exclude offensive, illegal, or inappropriate suggestions |
+| #   | Requirement       | Detail                                                                              |
+| --- | ----------------- | ----------------------------------------------------------------------------------- |
+| F1  | Prefix matching   | As the user types "din", return suggestions like "dinner recipes", "dinosaur games" |
+| F2  | Top-K suggestions | Return the top 5-10 most popular/relevant completions                               |
+| F3  | Ranked results    | Suggestions ordered by popularity, recency, and relevance                           |
+| F4  | Fast response     | Results should appear as the user types each character                              |
+| F5  | Multi-language    | Support queries in English, Chinese, Spanish, etc.                                  |
+| F6  | Filtering         | Exclude offensive, illegal, or inappropriate suggestions                            |
 
 ### Non-Functional Requirements
 
-| # | Requirement | Target |
-|---|-------------|--------|
-| NF1 | Latency | < 100 ms end-to-end (p99) |
-| NF2 | Availability | 99.99% uptime |
-| NF3 | Scalability | Handle 10M+ DAU |
-| NF4 | Consistency | Eventual consistency is acceptable (suggestions can lag minutes) |
-| NF5 | Fault tolerance | No single point of failure |
+| #   | Requirement     | Target                                                           |
+| --- | --------------- | ---------------------------------------------------------------- |
+| NF1 | Latency         | < 100 ms end-to-end (p99)                                        |
+| NF2 | Availability    | 99.99% uptime                                                    |
+| NF3 | Scalability     | Handle 10M+ DAU                                                  |
+| NF4 | Consistency     | Eventual consistency is acceptable (suggestions can lag minutes) |
+| NF5 | Fault tolerance | No single point of failure                                       |
 
 ### Back-of-Envelope Calculations
 
@@ -96,12 +96,12 @@ Peak bandwidth: 14,000 QPS * 200B = 2.8 MB/s (trivial)
 GET /v1/suggestions?prefix={prefix}&limit={limit}&lang={lang}&user_id={user_id}
 ```
 
-| Parameter | Type   | Required | Default | Description |
-|-----------|--------|----------|---------|-------------|
-| prefix    | string | yes      | -       | The characters typed so far |
-| limit     | int    | no       | 10      | Max number of suggestions to return |
+| Parameter | Type   | Required | Default | Description                              |
+| --------- | ------ | -------- | ------- | ---------------------------------------- |
+| prefix    | string | yes      | -       | The characters typed so far              |
+| limit     | int    | no       | 10      | Max number of suggestions to return      |
 | lang      | string | no       | "en"    | Language code for multi-language support |
-| user_id   | string | no       | -       | For personalized suggestions (optional) |
+| user_id   | string | no       | -       | For personalized suggestions (optional)  |
 
 ### Response Format
 
@@ -171,13 +171,13 @@ With 150ms debounce (4 requests):
 
 **Additional client-side optimizations:**
 
-| Optimization | Description |
-|-------------|-------------|
+| Optimization       | Description                                      |
+| ------------------ | ------------------------------------------------ |
 | Debounce 100-200ms | Wait before sending request after last keystroke |
-| Cancel in-flight | Abort previous XHR/fetch when new prefix arrives |
-| Client cache | Cache prefix -> suggestions in sessionStorage |
-| Min prefix length | Only query after 2+ characters typed |
-| Adaptive debounce | Increase debounce interval on slow networks |
+| Cancel in-flight   | Abort previous XHR/fetch when new prefix arrives |
+| Client cache       | Cache prefix -> suggestions in sessionStorage    |
+| Min prefix length  | Only query after 2+ characters typed             |
+| Adaptive debounce  | Increase debounce interval on slow networks      |
 
 ---
 
@@ -368,15 +368,16 @@ Nodes: 11                                 Nodes: 6  (45% reduction)
 
 **Space savings:** For a corpus of N strings with average length L:
 
-| Metric | Standard Trie | Compressed Trie |
-|--------|--------------|-----------------|
-| Nodes | O(N * L) | O(N) |
-| Space | ~40 bytes/node * N*L | ~(40 + avg_label_len) bytes/node * N |
-| Lookup | O(L) | O(L) (same) |
+| Metric | Standard Trie        | Compressed Trie                       |
+| ------ | -------------------- | ------------------------------------- |
+| Nodes  | O(N \* L)            | O(N)                                  |
+| Space  | ~40 bytes/node * N*L | ~(40 + avg_label_len) bytes/node \* N |
+| Lookup | O(L)                 | O(L) (same)                           |
 
 For 5M queries with avg length 20:
-- Standard: 5M * 20 * 40B = 4 GB
-- Compressed: 5M * 60B = 300 MB (>10x reduction)
+
+- Standard: 5M _ 20 _ 40B = 4 GB
+- Compressed: 5M \* 60B = 300 MB (>10x reduction)
 
 ### Alternative: Redis Sorted Sets (ZRANGEBYLEX)
 
@@ -395,14 +396,14 @@ ZRANGEBYLEX autocomplete "[how to c" "[how to c\xff" LIMIT 0 10
 
 **Trade-offs: Trie vs Redis Sorted Set**
 
-| Aspect | Custom Trie | Redis ZRANGEBYLEX |
-|--------|------------|-------------------|
-| Latency | < 1ms (in-process memory) | 1-5ms (network hop) |
-| Top-K ranking | Precomputed at each node | Requires separate score structure |
-| Space efficiency | Compressed trie is very compact | Stores full strings, more memory |
-| Complexity | Custom code to build and maintain | Off-the-shelf, easy to operate |
-| Scaling | Custom sharding logic needed | Redis Cluster handles sharding |
-| Best for | High-scale, low-latency | Prototypes, moderate scale |
+| Aspect           | Custom Trie                       | Redis ZRANGEBYLEX                 |
+| ---------------- | --------------------------------- | --------------------------------- |
+| Latency          | < 1ms (in-process memory)         | 1-5ms (network hop)               |
+| Top-K ranking    | Precomputed at each node          | Requires separate score structure |
+| Space efficiency | Compressed trie is very compact   | Stores full strings, more memory  |
+| Complexity       | Custom code to build and maintain | Off-the-shelf, easy to operate    |
+| Scaling          | Custom sharding logic needed      | Redis Cluster handles sharding    |
+| Best for         | High-scale, low-latency           | Prototypes, moderate scale        |
 
 ---
 
@@ -457,18 +458,18 @@ The system has two major data flows:
 
 ### Component Responsibilities
 
-| Component | Role |
-|-----------|------|
-| Client (Browser) | Debounce keystrokes, cache recent results, display suggestions |
-| Load Balancer / CDN | Route requests, cache popular prefix responses at edge |
-| API Servers | Validate input, route to Trie service, apply personalization |
-| Trie Service | In-memory Trie lookup, return top-K for a prefix in < 1ms |
-| Redis Cache | L2 cache for prefixes not in the in-memory Trie or for overflow |
-| Kafka | Buffer search query logs for async processing |
-| Aggregator | Count query frequencies per time window (hourly, daily) |
-| Frequency Store | Persist aggregated (query, frequency, timestamp) data |
-| Trie Builder | Read frequency data, build optimized Trie, serialize to snapshot |
-| Snapshot Store | Durable storage (S3/HDFS) for Trie binary snapshots |
+| Component           | Role                                                             |
+| ------------------- | ---------------------------------------------------------------- |
+| Client (Browser)    | Debounce keystrokes, cache recent results, display suggestions   |
+| Load Balancer / CDN | Route requests, cache popular prefix responses at edge           |
+| API Servers         | Validate input, route to Trie service, apply personalization     |
+| Trie Service        | In-memory Trie lookup, return top-K for a prefix in < 1ms        |
+| Redis Cache         | L2 cache for prefixes not in the in-memory Trie or for overflow  |
+| Kafka               | Buffer search query logs for async processing                    |
+| Aggregator          | Count query frequencies per time window (hourly, daily)          |
+| Frequency Store     | Persist aggregated (query, frequency, timestamp) data            |
+| Trie Builder        | Read frequency data, build optimized Trie, serialize to snapshot |
+| Snapshot Store      | Durable storage (S3/HDFS) for Trie binary snapshots              |
 
 ---
 
@@ -632,7 +633,7 @@ Every completed search (user hits Enter or clicks a suggestion) is logged:
 }
 ```
 
-**Important:** We only log *completed* searches, not every prefix keystroke. This
+**Important:** We only log _completed_ searches, not every prefix keystroke. This
 avoids inflating counts for partial prefixes the user never intended.
 
 #### Step 2: Time-Window Aggregation
@@ -676,6 +677,7 @@ Example for "how to make pancakes":
 ```
 
 This ensures:
+
 - Trending queries rise quickly (recent high counts dominate)
 - Old queries naturally fade without explicit deletion
 - Evergreen queries maintain scores through consistent volume
@@ -773,6 +775,7 @@ Rollout strategy (blue-green):
 ```
 
 **Advantages:**
+
 - Atomic updates (whole Trie is replaced at once)
 - Easy rollback (just point to previous snapshot)
 - No corruption from partial updates
@@ -808,12 +811,12 @@ class TrieWithHotUpdates:
 
 ### Trade-off: Freshness vs Build Cost
 
-| Strategy | Freshness | Build Cost | Complexity | Use When |
-|----------|-----------|-----------|------------|----------|
-| Full rebuild every hour | ~30 min lag | High (rebuild entire Trie) | Low | Stable query patterns |
-| Full rebuild every 15 min | ~8 min lag | Medium-High | Low | General use case |
-| Snapshot + hot updates | ~seconds for trending | Low (hot Trie is tiny) | Medium | Breaking news needed |
-| Fully real-time updates | Real-time | Very High (lock contention) | Very High | Rarely justified |
+| Strategy                  | Freshness             | Build Cost                  | Complexity | Use When              |
+| ------------------------- | --------------------- | --------------------------- | ---------- | --------------------- |
+| Full rebuild every hour   | ~30 min lag           | High (rebuild entire Trie)  | Low        | Stable query patterns |
+| Full rebuild every 15 min | ~8 min lag            | Medium-High                 | Low        | General use case      |
+| Snapshot + hot updates    | ~seconds for trending | Low (hot Trie is tiny)      | Medium     | Breaking news needed  |
+| Fully real-time updates   | Real-time             | Very High (lock contention) | Very High  | Rarely justified      |
 
 **Recommendation:** Snapshot rebuild every 15 minutes + hot update layer for trending.
 
@@ -943,6 +946,7 @@ Recommendation: Strategy 3 for production (fast, predictable)
 ## 9. Caching Strategy
 
 Autocomplete is extremely cache-friendly because:
+
 - Popular prefixes are queried by many users ("how to", "what is", "best")
 - Suggestions change infrequently (every 15 min rebuild)
 - Responses are small (~200 bytes)
@@ -999,10 +1003,13 @@ function getCachedSuggestions(prefix) {
 
 function cacheSuggestions(prefix, suggestions) {
   const key = CACHE_KEY_PREFIX + prefix;
-  sessionStorage.setItem(key, JSON.stringify({
-    suggestions,
-    timestamp: Date.now()
-  }));
+  sessionStorage.setItem(
+    key,
+    JSON.stringify({
+      suggestions,
+      timestamp: Date.now(),
+    })
+  );
 }
 ```
 
@@ -1104,6 +1111,7 @@ by query volume to balance load across shards.
 ```
 
 **Dynamic re-sharding:** If shard 1 (e-j) becomes a hotspot:
+
 - Split into two: [e-g] and [h-j]
 - Update the router's prefix-to-shard mapping
 - Both new shards load their respective Trie partitions
@@ -1497,16 +1505,16 @@ Integration with autocomplete:
 
 ## Summary: Key Design Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Core data structure | Trie with precomputed top-K at each node | O(L) lookup, no DFS at query time |
-| Trie variant | Compressed (Patricia) Trie | 10x space reduction |
-| Update strategy | Periodic snapshot rebuild (15 min) + hot Trie for trending | Balance freshness vs cost |
-| Caching | 4-layer (browser, CDN, Redis, in-memory Trie) | Minimize latency at every hop |
-| Sharding | Prefix-range partitioning | Simple routing, balanced load |
-| Multi-language | Separate Trie per locale | Different charsets and patterns |
-| Content filtering | Blocklist + ML classifier (offline) | Safety without query-time latency |
-| Personalization | Blend global + personal scores at API layer | Non-invasive, optional layer |
+| Decision            | Choice                                                     | Rationale                         |
+| ------------------- | ---------------------------------------------------------- | --------------------------------- |
+| Core data structure | Trie with precomputed top-K at each node                   | O(L) lookup, no DFS at query time |
+| Trie variant        | Compressed (Patricia) Trie                                 | 10x space reduction               |
+| Update strategy     | Periodic snapshot rebuild (15 min) + hot Trie for trending | Balance freshness vs cost         |
+| Caching             | 4-layer (browser, CDN, Redis, in-memory Trie)              | Minimize latency at every hop     |
+| Sharding            | Prefix-range partitioning                                  | Simple routing, balanced load     |
+| Multi-language      | Separate Trie per locale                                   | Different charsets and patterns   |
+| Content filtering   | Blocklist + ML classifier (offline)                        | Safety without query-time latency |
+| Personalization     | Blend global + personal scores at API layer                | Non-invasive, optional layer      |
 
 ### Latency Breakdown (p50)
 

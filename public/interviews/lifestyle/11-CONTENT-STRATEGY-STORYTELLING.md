@@ -50,13 +50,13 @@ a poor storyteller with a $50,000 camera setup.
 
 Storytelling does not mean fiction. For YouTube, storytelling means:
 
-| What It IS | What It Is NOT |
-|-----------|----------------|
-| Organizing information in a compelling sequence | Making stuff up |
-| Creating tension and resolution | Being dramatic for no reason |
-| Making the viewer care about the outcome | Clickbait with no payoff |
-| Taking the viewer on a journey from A to B | Rambling without structure |
-| Making complex topics feel like a conversation | Lecturing or reading a script |
+| What It IS                                      | What It Is NOT                |
+| ----------------------------------------------- | ----------------------------- |
+| Organizing information in a compelling sequence | Making stuff up               |
+| Creating tension and resolution                 | Being dramatic for no reason  |
+| Making the viewer care about the outcome        | Clickbait with no payoff      |
+| Taking the viewer on a journey from A to B      | Rambling without structure    |
+| Making complex topics feel like a conversation  | Lecturing or reading a script |
 
 ## 2. Narrative Structure for Video
 
@@ -83,11 +83,11 @@ Engagement
      (25%)     (50%)       (25%)
 ```
 
-| Act | Purpose | YouTube Example |
-|-----|---------|-----------------|
-| **Act 1: Setup** | Introduce the topic, context, stakes | "I tried learning piano in 30 days" (show day 1) |
-| **Act 2: Conflict** | The journey, obstacles, challenges | Days 2-25: struggles, small wins, setbacks |
-| **Act 3: Resolution** | The outcome, lessons learned | Day 30: the performance, what was learned |
+| Act                   | Purpose                              | YouTube Example                                  |
+| --------------------- | ------------------------------------ | ------------------------------------------------ |
+| **Act 1: Setup**      | Introduce the topic, context, stakes | "I tried learning piano in 30 days" (show day 1) |
+| **Act 2: Conflict**   | The journey, obstacles, challenges   | Days 2-25: struggles, small wins, setbacks       |
+| **Act 3: Resolution** | The outcome, lessons learned         | Day 30: the performance, what was learned        |
 
 ### 2.2 The YouTube Video Structure
 
@@ -187,27 +187,27 @@ A strong hook minimizes this drop.
 
 ### 3.2 Hook Formulas
 
-| Formula | Example | Why It Works |
-|---------|---------|-------------|
-| **Bold claim** | "This one trick made my videos 10x better" | Curiosity: what is the trick? |
-| **Question** | "Have you ever wondered why some videos go viral?" | Viewer wants the answer |
-| **Conflict** | "I spent $5,000 on gear and my videos still looked bad" | Relatable problem |
-| **Preview result** | Show the end result first (before/after) | Viewer wants to know how |
-| **Counter-intuitive** | "The best camera for YouTube costs $0" | Challenges expectations |
-| **Story opening** | "Last Tuesday, something unexpected happened..." | Narrative curiosity |
-| **Direct address** | "If you have been struggling with X, this video is for you" | Viewer feels targeted |
-| **Rapid fire** | Jump straight into content, no introduction | Energy and pacing |
+| Formula               | Example                                                     | Why It Works                  |
+| --------------------- | ----------------------------------------------------------- | ----------------------------- |
+| **Bold claim**        | "This one trick made my videos 10x better"                  | Curiosity: what is the trick? |
+| **Question**          | "Have you ever wondered why some videos go viral?"          | Viewer wants the answer       |
+| **Conflict**          | "I spent $5,000 on gear and my videos still looked bad"     | Relatable problem             |
+| **Preview result**    | Show the end result first (before/after)                    | Viewer wants to know how      |
+| **Counter-intuitive** | "The best camera for YouTube costs $0"                      | Challenges expectations       |
+| **Story opening**     | "Last Tuesday, something unexpected happened..."            | Narrative curiosity           |
+| **Direct address**    | "If you have been struggling with X, this video is for you" | Viewer feels targeted         |
+| **Rapid fire**        | Jump straight into content, no introduction                 | Energy and pacing             |
 
 ### 3.3 What to Avoid in Hooks
 
-| Do Not | Why |
-|--------|-----|
-| "Hey guys, welcome back to my channel!" | Wastes 5-10 seconds, viewer already knows |
-| Long logo/intro animation | Nobody cares about your logo, they came for content |
-| "Before we start, make sure to subscribe" | Asking before delivering value = annoying |
-| Apologizing for something | "Sorry I haven't uploaded" = negative energy |
-| Explaining what you are going to say | Just say it. Stop pre-ambling |
-| Recap of previous video | New viewers have no context |
+| Do Not                                    | Why                                                 |
+| ----------------------------------------- | --------------------------------------------------- |
+| "Hey guys, welcome back to my channel!"   | Wastes 5-10 seconds, viewer already knows           |
+| Long logo/intro animation                 | Nobody cares about your logo, they came for content |
+| "Before we start, make sure to subscribe" | Asking before delivering value = annoying           |
+| Apologizing for something                 | "Sorry I haven't uploaded" = negative energy        |
+| Explaining what you are going to say      | Just say it. Stop pre-ambling                       |
+| Recap of previous video                   | New viewers have no context                         |
 
 ### 3.4 The "Re-Hook"
 
@@ -226,16 +226,16 @@ Mini-hook examples:
 
 ### 4.1 Why People Watch Videos
 
-| Motivation | Examples |
-|-----------|---------|
-| **Learn something** | Tutorials, how-to, educational |
-| **Be entertained** | Comedy, drama, challenges |
-| **Feel inspired** | Transformation stories, motivational |
-| **Stay informed** | News, reviews, analysis |
-| **Feel connected** | Vlogs, community, parasocial relationship |
-| **Escape** | Travel, luxury, fantasy, ASMR |
-| **Validate beliefs** | Opinion pieces, commentary |
-| **Solve a problem** | Fixes, debugging, troubleshooting |
+| Motivation           | Examples                                  |
+| -------------------- | ----------------------------------------- |
+| **Learn something**  | Tutorials, how-to, educational            |
+| **Be entertained**   | Comedy, drama, challenges                 |
+| **Feel inspired**    | Transformation stories, motivational      |
+| **Stay informed**    | News, reviews, analysis                   |
+| **Feel connected**   | Vlogs, community, parasocial relationship |
+| **Escape**           | Travel, luxury, fantasy, ASMR             |
+| **Validate beliefs** | Opinion pieces, commentary                |
+| **Solve a problem**  | Fixes, debugging, troubleshooting         |
 
 ### 4.2 The Curiosity Gap
 
@@ -260,16 +260,16 @@ What viewer knows:         What viewer wants to know:
 
 When viewers zone out, break the pattern:
 
-| Interrupt Type | Example |
-|---------------|---------|
-| Visual change | Switch from talking head to B-roll |
-| Audio change | Music starts/stops, sound effect |
-| Pace change | Speed up or slow down delivery |
-| Format change | Switch from explanation to demonstration |
-| Humor | Unexpected joke or visual gag |
-| Direct address | "Now pay attention to this part" |
-| Story detour | "That reminds me of a time when..." |
-| On-screen text | Key phrase pops up beside you |
+| Interrupt Type | Example                                  |
+| -------------- | ---------------------------------------- |
+| Visual change  | Switch from talking head to B-roll       |
+| Audio change   | Music starts/stops, sound effect         |
+| Pace change    | Speed up or slow down delivery           |
+| Format change  | Switch from explanation to demonstration |
+| Humor          | Unexpected joke or visual gag            |
+| Direct address | "Now pay attention to this part"         |
+| Story detour   | "That reminds me of a time when..."      |
+| On-screen text | Key phrase pops up beside you            |
 
 ## 5. Content Pillars and Themes
 
@@ -300,13 +300,13 @@ Example: Tech Content Creator
 
 ### 5.2 Defining Your Pillars
 
-| Step | Action |
-|------|--------|
-| 1 | List everything you could talk about (brainstorm 30+ ideas) |
-| 2 | Group related ideas into clusters |
-| 3 | Pick 3-5 clusters that: you are passionate about AND people search for |
-| 4 | Assign each cluster a name (your pillar) |
-| 5 | Plan at least 10 video ideas per pillar |
+| Step | Action                                                                 |
+| ---- | ---------------------------------------------------------------------- |
+| 1    | List everything you could talk about (brainstorm 30+ ideas)            |
+| 2    | Group related ideas into clusters                                      |
+| 3    | Pick 3-5 clusters that: you are passionate about AND people search for |
+| 4    | Assign each cluster a name (your pillar)                               |
+| 5    | Plan at least 10 video ideas per pillar                                |
 
 ### 5.3 Content Mix Strategy
 
@@ -375,29 +375,29 @@ CONCLUSION (30 sec):
 
 ### 6.3 When to Script vs Outline
 
-| Content Type | Best Approach |
-|-------------|---------------|
+| Content Type           | Best Approach                                         |
+| ---------------------- | ----------------------------------------------------- |
 | Tutorial / educational | Detailed outline (need accuracy but natural delivery) |
-| Vlog | Bullet points (spontaneous, authentic) |
-| Documentary / essay | Full or partial script (precise narration needed) |
-| Live stream | Bullet points (interactive, flexible) |
-| Product review | Outline with key specs written out |
-| Story-driven content | Full script for narration, outline for on-camera |
+| Vlog                   | Bullet points (spontaneous, authentic)                |
+| Documentary / essay    | Full or partial script (precise narration needed)     |
+| Live stream            | Bullet points (interactive, flexible)                 |
+| Product review         | Outline with key specs written out                    |
+| Story-driven content   | Full script for narration, outline for on-camera      |
 
 ## 7. Research and Ideation
 
 ### 7.1 Where to Find Video Ideas
 
-| Source | How | Best For |
-|--------|-----|----------|
-| YouTube search suggestions | Type a keyword, see autocomplete | What people search for |
-| YouTube comments | Read comments on similar videos | What viewers want more of |
-| Reddit / forums | Browse niche subreddits | Community pain points |
-| Quora | Search your topic | Common questions |
-| Google Trends | Compare topic popularity | Timing and trending topics |
-| Competitor channels | See what works for them | Proven topics in your niche |
-| Your own analytics | See which videos performed best | Double down on what works |
-| Personal experience | What problems have you solved? | Authentic, unique content |
+| Source                     | How                              | Best For                    |
+| -------------------------- | -------------------------------- | --------------------------- |
+| YouTube search suggestions | Type a keyword, see autocomplete | What people search for      |
+| YouTube comments           | Read comments on similar videos  | What viewers want more of   |
+| Reddit / forums            | Browse niche subreddits          | Community pain points       |
+| Quora                      | Search your topic                | Common questions            |
+| Google Trends              | Compare topic popularity         | Timing and trending topics  |
+| Competitor channels        | See what works for them          | Proven topics in your niche |
+| Your own analytics         | See which videos performed best  | Double down on what works   |
+| Personal experience        | What problems have you solved?   | Authentic, unique content   |
 
 ### 7.2 The Idea Bank
 
@@ -425,13 +425,13 @@ This way you never face "I don't know what to make next."
 
 ### 7.3 Validating Ideas Before Production
 
-| Validation Method | How | Signal |
-|------------------|-----|--------|
-| YouTube search volume | Search the topic, check view counts on existing videos | High views = demand exists |
-| Competitor gap analysis | Find topics competitors have NOT covered well | Opportunity to fill a gap |
-| Community polling | Ask your audience (community tab, social media) | Direct demand signal |
-| Google Trends | Check if interest is rising or falling | Timing insight |
-| Comment sentiment | Read comments on similar videos for unmet needs | Viewer pain points |
+| Validation Method       | How                                                    | Signal                     |
+| ----------------------- | ------------------------------------------------------ | -------------------------- |
+| YouTube search volume   | Search the topic, check view counts on existing videos | High views = demand exists |
+| Competitor gap analysis | Find topics competitors have NOT covered well          | Opportunity to fill a gap  |
+| Community polling       | Ask your audience (community tab, social media)        | Direct demand signal       |
+| Google Trends           | Check if interest is rising or falling                 | Timing insight             |
+| Comment sentiment       | Read comments on similar videos for unmet needs        | Viewer pain points         |
 
 ## 8. The Content Production Pipeline
 
@@ -533,11 +533,11 @@ Views ▲                               Views ▲
 
 ### 9.2 The Ideal Mix
 
-| Content Type | % of Uploads | Growth Role |
-|-------------|-------------|-------------|
-| Evergreen (search/tutorial) | 50-60% | Stable base, long-term views |
-| Tentpole (trending/timely) | 20-30% | Spikes of new viewers |
-| Community (vlogs/personal) | 10-20% | Loyalty and retention |
+| Content Type                | % of Uploads | Growth Role                  |
+| --------------------------- | ------------ | ---------------------------- |
+| Evergreen (search/tutorial) | 50-60%       | Stable base, long-term views |
+| Tentpole (trending/timely)  | 20-30%       | Spikes of new viewers        |
+| Community (vlogs/personal)  | 10-20%       | Loyalty and retention        |
 
 ### 9.3 Updating Evergreen Content
 
@@ -564,14 +564,14 @@ Or: Update the original video (re-upload with current info)
 
 Your voice is the unique combination of:
 
-| Element | What It Means |
-|---------|--------------|
-| **Perspective** | How you see the world (engineer, artist, skeptic, optimist) |
-| **Tone** | Casual, professional, humorous, serious, motivational |
-| **Pace** | Fast and energetic? Slow and thoughtful? |
-| **Vocabulary** | Technical jargon? Accessible language? Slang? |
-| **Values** | What do you care about? Quality? Accessibility? Honesty? |
-| **Visual style** | Clean and minimal? Colorful and chaotic? Dark and moody? |
+| Element          | What It Means                                               |
+| ---------------- | ----------------------------------------------------------- |
+| **Perspective**  | How you see the world (engineer, artist, skeptic, optimist) |
+| **Tone**         | Casual, professional, humorous, serious, motivational       |
+| **Pace**         | Fast and energetic? Slow and thoughtful?                    |
+| **Vocabulary**   | Technical jargon? Accessible language? Slang?               |
+| **Values**       | What do you care about? Quality? Accessibility? Honesty?    |
+| **Visual style** | Clean and minimal? Colorful and chaotic? Dark and moody?    |
 
 ### 10.2 Finding Your Voice (The Process)
 

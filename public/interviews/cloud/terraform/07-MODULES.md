@@ -39,13 +39,13 @@ modules/vpc/
   README.md         # Usage documentation
 ```
 
-| File | Purpose |
-|------|---------|
-| `main.tf` | Core resources; may be split into multiple files for large modules |
+| File           | Purpose                                                                |
+| -------------- | ---------------------------------------------------------------------- |
+| `main.tf`      | Core resources; may be split into multiple files for large modules     |
 | `variables.tf` | All input variables with descriptions, types, defaults, and validation |
-| `outputs.tf` | All outputs with descriptions |
-| `versions.tf` | `required_providers` and `required_version` constraints |
-| `README.md` | Usage examples, input/output tables, requirements |
+| `outputs.tf`   | All outputs with descriptions                                          |
+| `versions.tf`  | `required_providers` and `required_version` constraints                |
+| `README.md`    | Usage examples, input/output tables, requirements                      |
 
 For simple modules, all resources can live in `main.tf`. For larger modules, split by concern: `networking.tf`, `security.tf`, `iam.tf`.
 
@@ -67,14 +67,14 @@ After adding or changing a `source`, you must run `terraform init` to download t
 
 ### Source Types
 
-| Source | Syntax | Use Case |
-|--------|--------|----------|
-| **Local path** | `source = "./modules/vpc"` | Modules within the same repo |
-| **Terraform Registry** | `source = "terraform-aws-modules/vpc/aws"` | Public community modules |
-| **GitHub** | `source = "github.com/org/repo//modules/vpc"` | Private or public GitHub repos |
-| **Git (generic)** | `source = "git::https://example.com/repo.git//modules/vpc"` | Any Git repository |
-| **S3** | `source = "s3::https://s3-eu-west-1.amazonaws.com/bucket/vpc.zip"` | S3-hosted module archives |
-| **GCS** | `source = "gcs::https://www.googleapis.com/storage/v1/bucket/vpc.zip"` | GCS-hosted module archives |
+| Source                 | Syntax                                                                 | Use Case                       |
+| ---------------------- | ---------------------------------------------------------------------- | ------------------------------ |
+| **Local path**         | `source = "./modules/vpc"`                                             | Modules within the same repo   |
+| **Terraform Registry** | `source = "terraform-aws-modules/vpc/aws"`                             | Public community modules       |
+| **GitHub**             | `source = "github.com/org/repo//modules/vpc"`                          | Private or public GitHub repos |
+| **Git (generic)**      | `source = "git::https://example.com/repo.git//modules/vpc"`            | Any Git repository             |
+| **S3**                 | `source = "s3::https://s3-eu-west-1.amazonaws.com/bucket/vpc.zip"`     | S3-hosted module archives      |
+| **GCS**                | `source = "gcs::https://www.googleapis.com/storage/v1/bucket/vpc.zip"` | GCS-hosted module archives     |
 
 The `//` separator in GitHub/Git sources separates the repo path from the subdirectory within the repo.
 
@@ -102,11 +102,11 @@ module "vpc" {
 
 Version constraint syntax:
 
-| Constraint | Meaning |
-|-----------|---------|
-| `"5.5.1"` | Exact version |
-| `"~> 5.5"` | Any 5.x where x >= 5 (e.g., 5.5, 5.6, 5.99 but not 6.0) |
-| `">= 5.0, < 6.0"` | Explicit range |
+| Constraint        | Meaning                                                 |
+| ----------------- | ------------------------------------------------------- |
+| `"5.5.1"`         | Exact version                                           |
+| `"~> 5.5"`        | Any 5.x where x >= 5 (e.g., 5.5, 5.6, 5.99 but not 6.0) |
+| `">= 5.0, < 6.0"` | Explicit range                                          |
 
 **Always pin versions in production.** An unpinned module will pull the latest version on `terraform init`, which can break your infrastructure without any change to your code.
 
@@ -269,14 +269,14 @@ The `examples/` directory is critical. It serves as both documentation and integ
 
 The [Terraform Registry](https://registry.terraform.io/) hosts thousands of community modules. The most widely used are the `terraform-aws-modules` family:
 
-| Module | Description |
-|--------|-------------|
-| `terraform-aws-modules/vpc/aws` | VPC with subnets, NAT, route tables |
-| `terraform-aws-modules/eks/aws` | EKS cluster with node groups |
-| `terraform-aws-modules/rds/aws` | RDS instances and clusters |
-| `terraform-aws-modules/s3-bucket/aws` | S3 bucket with policies |
-| `terraform-aws-modules/lambda/aws` | Lambda functions with IAM |
-| `terraform-aws-modules/security-group/aws` | Security groups with common rules |
+| Module                                     | Description                         |
+| ------------------------------------------ | ----------------------------------- |
+| `terraform-aws-modules/vpc/aws`            | VPC with subnets, NAT, route tables |
+| `terraform-aws-modules/eks/aws`            | EKS cluster with node groups        |
+| `terraform-aws-modules/rds/aws`            | RDS instances and clusters          |
+| `terraform-aws-modules/s3-bucket/aws`      | S3 bucket with policies             |
+| `terraform-aws-modules/lambda/aws`         | Lambda functions with IAM           |
+| `terraform-aws-modules/security-group/aws` | Security groups with common rules   |
 
 Using a registry module:
 

@@ -49,23 +49,23 @@ while maintaining perceptually excellent quality.
 
 Every modern video codec uses some combination of these techniques:
 
-| Technique              | Description                                                        |
-| ---------------------- | ------------------------------------------------------------------ |
-| Intra prediction       | Predict pixels from neighboring pixels within the same frame       |
-| Inter prediction       | Predict pixels from previously decoded reference frames            |
-| Transform coding       | Convert spatial-domain residuals to frequency domain (DCT/DST)     |
-| Quantization           | Reduce precision of transform coefficients (lossy step)            |
-| Entropy coding         | Losslessly compress quantized data (Huffman, arithmetic, ANS)      |
-| In-loop filtering      | Reduce blocking artifacts before the frame is used as a reference  |
-| Motion compensation    | Encode motion vectors instead of raw pixel differences             |
+| Technique           | Description                                                       |
+| ------------------- | ----------------------------------------------------------------- |
+| Intra prediction    | Predict pixels from neighboring pixels within the same frame      |
+| Inter prediction    | Predict pixels from previously decoded reference frames           |
+| Transform coding    | Convert spatial-domain residuals to frequency domain (DCT/DST)    |
+| Quantization        | Reduce precision of transform coefficients (lossy step)           |
+| Entropy coding      | Losslessly compress quantized data (Huffman, arithmetic, ANS)     |
+| In-loop filtering   | Reduce blocking artifacts before the frame is used as a reference |
+| Motion compensation | Encode motion vectors instead of raw pixel differences            |
 
 ### Frame Types
 
-| Frame Type | Name         | Description                                                     |
-| ---------- | ------------ | --------------------------------------------------------------- |
-| I-frame    | Intra frame  | Self-contained; no dependencies on other frames                 |
-| P-frame    | Predicted    | References one or more past frames                              |
-| B-frame    | Bi-predicted | References both past and future frames for better compression   |
+| Frame Type | Name         | Description                                                   |
+| ---------- | ------------ | ------------------------------------------------------------- |
+| I-frame    | Intra frame  | Self-contained; no dependencies on other frames               |
+| P-frame    | Predicted    | References one or more past frames                            |
+| B-frame    | Bi-predicted | References both past and future frames for better compression |
 
 A typical Group of Pictures (GOP) structure might look like:
 
@@ -98,14 +98,14 @@ and Blu-ray.
 H.264 defines profiles that specify which coding tools are available. Higher profiles
 enable more advanced features at the cost of encoding/decoding complexity.
 
-| Profile    | Key Features                                      | Typical Use Case           |
-| ---------- | ------------------------------------------------- | -------------------------- |
-| Baseline   | I and P slices only, CAVLC only, no B-frames      | Video conferencing, mobile |
-| Main       | B-frames, weighted prediction, CABAC              | Standard streaming         |
-| High       | 8x8 transform, quantization matrices, monochrome  | Broadcast, Blu-ray, VOD    |
-| High 10    | 10-bit color depth                                 | HDR content, grading       |
-| High 4:2:2 | 4:2:2 chroma subsampling                          | Professional production    |
-| High 4:4:4 | 4:4:4 chroma, lossless coding                     | Studio mastering           |
+| Profile    | Key Features                                     | Typical Use Case           |
+| ---------- | ------------------------------------------------ | -------------------------- |
+| Baseline   | I and P slices only, CAVLC only, no B-frames     | Video conferencing, mobile |
+| Main       | B-frames, weighted prediction, CABAC             | Standard streaming         |
+| High       | 8x8 transform, quantization matrices, monochrome | Broadcast, Blu-ray, VOD    |
+| High 10    | 10-bit color depth                               | HDR content, grading       |
+| High 4:2:2 | 4:2:2 chroma subsampling                         | Professional production    |
+| High 4:4:4 | 4:4:4 chroma, lossless coding                    | Studio mastering           |
 
 In practice, the **High profile** is used for nearly all consumer streaming and the
 **Baseline profile** for real-time communication (WebRTC, video calling).
@@ -116,14 +116,14 @@ Levels constrain the maximum resolution, frame rate, and bitrate that a decoder 
 support. They are orthogonal to profiles.
 
 | Level | Max Resolution | Max Frame Rate | Max Bitrate (High) |
-| ----- | -------------- | -------------- | ------------------- |
-| 3.0   | 720x480        | 30 fps         | 10 Mbps             |
-| 3.1   | 1280x720       | 30 fps         | 14 Mbps             |
-| 4.0   | 2048x1024      | 30 fps         | 20 Mbps             |
-| 4.1   | 2048x1024      | 30 fps         | 50 Mbps             |
-| 5.0   | 3672x1536      | 30 fps         | 135 Mbps            |
-| 5.1   | 4096x2160      | 30 fps         | 240 Mbps            |
-| 5.2   | 4096x2160      | 60 fps         | 240 Mbps            |
+| ----- | -------------- | -------------- | ------------------ |
+| 3.0   | 720x480        | 30 fps         | 10 Mbps            |
+| 3.1   | 1280x720       | 30 fps         | 14 Mbps            |
+| 4.0   | 2048x1024      | 30 fps         | 20 Mbps            |
+| 4.1   | 2048x1024      | 30 fps         | 50 Mbps            |
+| 5.0   | 3672x1536      | 30 fps         | 135 Mbps           |
+| 5.1   | 4096x2160      | 30 fps         | 240 Mbps           |
+| 5.2   | 4096x2160      | 60 fps         | 240 Mbps           |
 
 A codec string like `avc1.640028` encodes: **avc1** (H.264), profile_idc **64** (High),
 constraint flags **00**, level_idc **28** (Level 4.0 = 0x28 = 40 decimal).
@@ -157,6 +157,7 @@ The **Sequence Parameter Set (SPS)** and **Picture Parameter Set (PPS)** are the
 critical metadata structures in an H.264 stream.
 
 **SPS** contains:
+
 - Profile and level
 - Resolution (pic_width_in_mbs, pic_height_in_map_units)
 - Maximum number of reference frames
@@ -164,6 +165,7 @@ critical metadata structures in an H.264 stream.
 - VUI (Video Usability Information): timing, color space, aspect ratio
 
 **PPS** contains:
+
 - Entropy coding mode (CABAC or CAVLC)
 - Number of slice groups
 - Weighted prediction flags
@@ -178,13 +180,13 @@ via SDP `sprop-parameter-sets`.
 
 A single frame can be split into multiple **slices**, each independently decodable:
 
-| Slice Type | Contains             | Use Case                              |
-| ---------- | -------------------- | ------------------------------------- |
-| I-slice    | Only intra MBs       | Random access, error recovery         |
-| P-slice    | Intra + inter (past) | Standard prediction                   |
-| B-slice    | Intra + bi-pred      | Maximum compression                   |
-| SI-slice   | Switching I           | Bitstream switching (rare)            |
-| SP-slice   | Switching P           | Bitstream switching (rare)            |
+| Slice Type | Contains             | Use Case                      |
+| ---------- | -------------------- | ----------------------------- |
+| I-slice    | Only intra MBs       | Random access, error recovery |
+| P-slice    | Intra + inter (past) | Standard prediction           |
+| B-slice    | Intra + bi-pred      | Maximum compression           |
+| SI-slice   | Switching I          | Bitstream switching (rare)    |
+| SP-slice   | Switching P          | Bitstream switching (rare)    |
 
 ### Macroblock Structure
 
@@ -203,12 +205,14 @@ motion vectors. The encoder decides the optimal partition size per macroblock.
 H.264 supports two entropy coding methods:
 
 **CAVLC (Context-Adaptive Variable-Length Coding)**:
+
 - Simpler, faster to encode/decode
 - Uses look-up tables (Exp-Golomb codes)
 - Required for Baseline profile
 - Roughly 10-15% less efficient than CABAC
 
 **CABAC (Context-Adaptive Binary Arithmetic Coding)**:
+
 - Models probability of each bit based on context
 - Achieves 10-15% better compression than CAVLC
 - Significantly more computationally expensive
@@ -223,6 +227,7 @@ a reference for future frames. This is crucial: without it, blocking artifacts w
 propagate and amplify across frames.
 
 The filter strength is adaptive, based on:
+
 - Quantization parameter (QP) of adjacent blocks
 - Boundary strength (BS) derived from coding mode differences
 - Pixel value differences across the boundary
@@ -322,12 +327,12 @@ multi-threaded decoding:
 
 HEVC's adoption has been severely hampered by its fragmented patent landscape:
 
-| Patent Pool    | Annual Fee (est.)         |
-| -------------- | ------------------------- |
-| MPEG-LA        | $0.20/unit (cap $25M)     |
-| HEVC Advance   | Variable, higher rates    |
-| Velos Media    | Additional fees            |
-| Individual     | Unknown, unlicensed       |
+| Patent Pool  | Annual Fee (est.)      |
+| ------------ | ---------------------- |
+| MPEG-LA      | $0.20/unit (cap $25M)  |
+| HEVC Advance | Variable, higher rates |
+| Velos Media  | Additional fees        |
+| Individual   | Unknown, unlicensed    |
 
 Three separate patent pools plus individual licensors created uncertainty and high
 costs. This directly motivated the creation of the Alliance for Open Media and AV1.
@@ -377,6 +382,7 @@ it as open source under a BSD license. VP8 is roughly comparable to H.264 Baseli
 profile in compression efficiency.
 
 Key characteristics:
+
 - Boolean (arithmetic) entropy coder
 - 4x4 and 16x16 block transforms
 - Three reference frames (last, golden, alt-ref)
@@ -406,17 +412,17 @@ VP9 uses a **superblock** structure similar to HEVC's CTU:
 
 #### Key Features
 
-| Feature                  | Description                                          |
-| ------------------------ | ---------------------------------------------------- |
-| Superblocks              | Up to 64x64 with recursive partitioning              |
-| Prediction modes         | 10 intra modes, multiple inter modes                 |
-| Reference frames         | Up to 3 active references from 8 stored              |
-| Transform sizes          | 4x4, 8x8, 16x16, 32x32 DCT/ADST                    |
-| Entropy coding           | Multi-symbol boolean arithmetic coder                |
-| Loop filter              | Adaptive with direction detection                    |
-| Segmentation             | Up to 8 segments with per-segment parameters         |
-| Tile-based parallelism   | Column-based tiles for parallel decode               |
-| 10/12-bit support        | Profile 2 (10-bit) and Profile 3 (12-bit)           |
+| Feature                | Description                                  |
+| ---------------------- | -------------------------------------------- |
+| Superblocks            | Up to 64x64 with recursive partitioning      |
+| Prediction modes       | 10 intra modes, multiple inter modes         |
+| Reference frames       | Up to 3 active references from 8 stored      |
+| Transform sizes        | 4x4, 8x8, 16x16, 32x32 DCT/ADST              |
+| Entropy coding         | Multi-symbol boolean arithmetic coder        |
+| Loop filter            | Adaptive with direction detection            |
+| Segmentation           | Up to 8 segments with per-segment parameters |
+| Tile-based parallelism | Column-based tiles for parallel decode       |
+| 10/12-bit support      | Profile 2 (10-bit) and Profile 3 (12-bit)    |
 
 #### YouTube and VP9
 
@@ -537,29 +543,29 @@ source depth.
 
 #### Additional Tools
 
-| Tool                    | Description                                                 |
-| ----------------------- | ----------------------------------------------------------- |
-| Intra edge filter       | Smooth or sharpen intra prediction edges                    |
-| Palette mode            | Efficient coding for screen content (few distinct colors)   |
-| Intra block copy        | Copy a block from elsewhere in the same frame               |
-| Compound inter modes    | Blend two predictions with distance-weighted masks          |
-| Warped motion           | Affine motion model (rotation, zoom, shear)                 |
-| Global motion           | Frame-level motion parameters for camera pan/zoom           |
-| Switchable restoration  | Choose Wiener filter, self-guided filter, or none per tile  |
-| Symbol-by-symbol ANS    | Asymmetric numeral systems for entropy coding               |
-| Reference frame scaling | Reference frames at different resolutions                   |
+| Tool                    | Description                                                |
+| ----------------------- | ---------------------------------------------------------- |
+| Intra edge filter       | Smooth or sharpen intra prediction edges                   |
+| Palette mode            | Efficient coding for screen content (few distinct colors)  |
+| Intra block copy        | Copy a block from elsewhere in the same frame              |
+| Compound inter modes    | Blend two predictions with distance-weighted masks         |
+| Warped motion           | Affine motion model (rotation, zoom, shear)                |
+| Global motion           | Frame-level motion parameters for camera pan/zoom          |
+| Switchable restoration  | Choose Wiener filter, self-guided filter, or none per tile |
+| Symbol-by-symbol ANS    | Asymmetric numeral systems for entropy coding              |
+| Reference frame scaling | Reference frames at different resolutions                  |
 
 ### Encoding Speed Tradeoffs
 
 AV1's primary drawback is encoding speed. The reference encoder (libaom) is
 notoriously slow:
 
-| Encoder        | Speed vs x264 | Quality     | Use Case                     |
-| -------------- | ------------- | ----------- | ---------------------------- |
-| libaom         | 50-200x slower| Best        | Offline VOD, archival        |
-| SVT-AV1        | 5-20x slower  | Very good   | Production VOD encoding      |
-| rav1e          | 10-30x slower | Good        | Rust ecosystem, research     |
-| Hardware (AV1) | 1-3x slower   | Good        | Real-time, high throughput   |
+| Encoder        | Speed vs x264  | Quality   | Use Case                   |
+| -------------- | -------------- | --------- | -------------------------- |
+| libaom         | 50-200x slower | Best      | Offline VOD, archival      |
+| SVT-AV1        | 5-20x slower   | Very good | Production VOD encoding    |
+| rav1e          | 10-30x slower  | Good      | Rust ecosystem, research   |
+| Hardware (AV1) | 1-3x slower    | Good      | Real-time, high throughput |
 
 **SVT-AV1** (Scalable Video Technology for AV1), developed by Intel and Netflix,
 has become the practical production encoder. It is dramatically faster than libaom
@@ -627,19 +633,19 @@ over HEVC** at equivalent quality.
 
 ### Key Improvements
 
-| Feature                         | Description                                       |
-| ------------------------------- | ------------------------------------------------- |
-| CTU size up to 128x128          | Matches AV1's maximum block size                  |
-| Multi-type tree partitioning    | Binary and ternary splits in addition to quadtree |
-| 67 intra prediction modes       | vs 35 in HEVC, vs 9 in H.264                     |
-| Affine motion compensation      | 4 and 6 parameter affine models                   |
-| Bi-directional optical flow     | Refine motion at decoder side                     |
-| Adaptive loop filter (ALF)      | Wiener-based filter with diamond shape             |
-| LMCS                            | Luma mapping with chroma scaling                  |
-| Joint Cb-Cr residual coding     | Code chroma residuals jointly                     |
-| Subblock-based temporal MVP      | Better motion prediction for complex motion       |
-| Decoder-side motion refinement  | DMVR and PROF                                     |
-| Transform skip residual coding  | Improved screen content coding                    |
+| Feature                        | Description                                       |
+| ------------------------------ | ------------------------------------------------- |
+| CTU size up to 128x128         | Matches AV1's maximum block size                  |
+| Multi-type tree partitioning   | Binary and ternary splits in addition to quadtree |
+| 67 intra prediction modes      | vs 35 in HEVC, vs 9 in H.264                      |
+| Affine motion compensation     | 4 and 6 parameter affine models                   |
+| Bi-directional optical flow    | Refine motion at decoder side                     |
+| Adaptive loop filter (ALF)     | Wiener-based filter with diamond shape            |
+| LMCS                           | Luma mapping with chroma scaling                  |
+| Joint Cb-Cr residual coding    | Code chroma residuals jointly                     |
+| Subblock-based temporal MVP    | Better motion prediction for complex motion       |
+| Decoder-side motion refinement | DMVR and PROF                                     |
+| Transform skip residual coding | Improved screen content coding                    |
 
 ### Current Status
 
@@ -663,37 +669,37 @@ vvencapp --input input.yuv \
 
 ## 7. Video Codec Comparison
 
-| Property                  | H.264/AVC     | H.265/HEVC   | VP9           | AV1           | H.266/VVC    |
-| ------------------------- | ------------- | ------------ | ------------- | ------------- | ------------ |
-| Year standardized         | 2003          | 2013         | 2013          | 2018          | 2020         |
-| Compression (vs H.264)    | Baseline      | ~50% better  | ~35% better   | ~55% better   | ~65% better  |
-| Max block size            | 16x16         | 64x64        | 64x64         | 128x128       | 128x128      |
-| Encoding speed (CPU)      | Fast          | Medium       | Medium        | Slow          | Very slow    |
-| Decoding complexity       | Low           | Medium       | Medium        | Medium-High   | High         |
-| Hardware decode support   | Universal     | Widespread   | Widespread    | Growing       | Emerging     |
-| Hardware encode support   | Universal     | Widespread   | Limited       | Growing       | Rare         |
-| Licensing                 | MPEG-LA       | 3 pools+     | Royalty-free  | Royalty-free  | Uncertain    |
-| Chrome                    | Yes           | Partial      | Yes           | Yes           | No           |
-| Firefox                   | Yes           | No           | Yes           | Yes           | No           |
-| Safari                    | Yes           | Yes          | Yes (14.1+)   | Yes (17+)     | No           |
-| Edge                      | Yes           | Yes          | Yes           | Yes           | No           |
-| 10-bit support            | High 10 prof  | Main 10      | Profile 2     | Native        | Native       |
-| HDR support               | Limited       | Full (HDR10) | VP9 Profile 2 | Full          | Full         |
-| WebRTC support            | Yes           | No           | Yes           | Partial       | No           |
-| Primary container         | MP4           | MP4          | WebM          | MP4/WebM      | MP4          |
-| Best open encoder         | x264          | x265         | libvpx-vp9    | SVT-AV1       | VVenC        |
+| Property                | H.264/AVC    | H.265/HEVC   | VP9           | AV1          | H.266/VVC   |
+| ----------------------- | ------------ | ------------ | ------------- | ------------ | ----------- |
+| Year standardized       | 2003         | 2013         | 2013          | 2018         | 2020        |
+| Compression (vs H.264)  | Baseline     | ~50% better  | ~35% better   | ~55% better  | ~65% better |
+| Max block size          | 16x16        | 64x64        | 64x64         | 128x128      | 128x128     |
+| Encoding speed (CPU)    | Fast         | Medium       | Medium        | Slow         | Very slow   |
+| Decoding complexity     | Low          | Medium       | Medium        | Medium-High  | High        |
+| Hardware decode support | Universal    | Widespread   | Widespread    | Growing      | Emerging    |
+| Hardware encode support | Universal    | Widespread   | Limited       | Growing      | Rare        |
+| Licensing               | MPEG-LA      | 3 pools+     | Royalty-free  | Royalty-free | Uncertain   |
+| Chrome                  | Yes          | Partial      | Yes           | Yes          | No          |
+| Firefox                 | Yes          | No           | Yes           | Yes          | No          |
+| Safari                  | Yes          | Yes          | Yes (14.1+)   | Yes (17+)    | No          |
+| Edge                    | Yes          | Yes          | Yes           | Yes          | No          |
+| 10-bit support          | High 10 prof | Main 10      | Profile 2     | Native       | Native      |
+| HDR support             | Limited      | Full (HDR10) | VP9 Profile 2 | Full         | Full        |
+| WebRTC support          | Yes          | No           | Yes           | Partial      | No          |
+| Primary container       | MP4          | MP4          | WebM          | MP4/WebM     | MP4         |
+| Best open encoder       | x264         | x265         | libvpx-vp9    | SVT-AV1      | VVenC       |
 
 ### When to Use Each Codec
 
-| Scenario                        | Recommended Codec | Why                                      |
-| ------------------------------- | ----------------- | ---------------------------------------- |
-| Maximum compatibility           | H.264             | Universal hardware and software support  |
-| 4K/HDR streaming                | HEVC or AV1       | Necessary bitrate savings at 4K          |
-| YouTube/Web publishing          | AV1 (or VP9)      | Royalty-free, YouTube-native             |
-| Real-time video conferencing    | H.264 or VP8/VP9  | Low-latency encode/decode, WebRTC        |
-| Bandwidth-constrained delivery  | AV1               | Best compression efficiency              |
-| Apple ecosystem                 | HEVC              | Native HW acceleration, ProRes workflow  |
-| Archival / future-proofing      | AV1               | Open standard, broad industry support    |
+| Scenario                       | Recommended Codec | Why                                     |
+| ------------------------------ | ----------------- | --------------------------------------- |
+| Maximum compatibility          | H.264             | Universal hardware and software support |
+| 4K/HDR streaming               | HEVC or AV1       | Necessary bitrate savings at 4K         |
+| YouTube/Web publishing         | AV1 (or VP9)      | Royalty-free, YouTube-native            |
+| Real-time video conferencing   | H.264 or VP8/VP9  | Low-latency encode/decode, WebRTC       |
+| Bandwidth-constrained delivery | AV1               | Best compression efficiency             |
+| Apple ecosystem                | HEVC              | Native HW acceleration, ProRes workflow |
+| Archival / future-proofing     | AV1               | Open standard, broad industry support   |
 
 ---
 
@@ -761,14 +767,14 @@ Input PCM
 
 ### Key Audio Parameters
 
-| Parameter       | Description                                    | Common Values        |
-| --------------- | ---------------------------------------------- | -------------------- |
-| Sample rate     | Samples per second                             | 44100, 48000 Hz      |
-| Bit depth       | Bits per sample (uncompressed)                 | 16, 24 bits          |
-| Channels        | Number of audio channels                       | 1 (mono), 2 (stereo) |
-| Bitrate         | Compressed bits per second                     | 64-320 kbps          |
-| Frame size      | Number of samples per codec frame              | 960-2048             |
-| Latency         | Encoding delay in milliseconds                 | 3-100+ ms            |
+| Parameter   | Description                       | Common Values        |
+| ----------- | --------------------------------- | -------------------- |
+| Sample rate | Samples per second                | 44100, 48000 Hz      |
+| Bit depth   | Bits per sample (uncompressed)    | 16, 24 bits          |
+| Channels    | Number of audio channels          | 1 (mono), 2 (stereo) |
+| Bitrate     | Compressed bits per second        | 64-320 kbps          |
+| Frame size  | Number of samples per codec frame | 960-2048             |
+| Latency     | Encoding delay in milliseconds    | 3-100+ ms            |
 
 ---
 
@@ -820,15 +826,15 @@ Huffman tables. The encoder selects the table that minimizes output size.
 
 ### MP3 Bitrates and Quality
 
-| Bitrate   | Quality Level        | Typical Use                    |
-| --------- | -------------------- | ------------------------------ |
-| 64 kbps   | Poor                 | Voice, low bandwidth           |
-| 128 kbps  | Acceptable           | Casual listening               |
-| 192 kbps  | Good                 | General music                  |
-| 256 kbps  | Very good            | Quality-conscious listening    |
-| 320 kbps  | Maximum (CBR)        | Near-transparent               |
-| VBR V0    | ~245 kbps avg        | Best quality-to-size ratio     |
-| VBR V2    | ~190 kbps avg        | Excellent quality, smaller     |
+| Bitrate  | Quality Level | Typical Use                 |
+| -------- | ------------- | --------------------------- |
+| 64 kbps  | Poor          | Voice, low bandwidth        |
+| 128 kbps | Acceptable    | Casual listening            |
+| 192 kbps | Good          | General music               |
+| 256 kbps | Very good     | Quality-conscious listening |
+| 320 kbps | Maximum (CBR) | Near-transparent            |
+| VBR V0   | ~245 kbps avg | Best quality-to-size ratio  |
+| VBR V2   | ~190 kbps avg | Excellent quality, smaller  |
 
 ### MP3 Encoding with LAME
 
@@ -874,18 +880,19 @@ At the same bitrate, AAC typically sounds better than MP3 because:
 
 ### AAC Profiles
 
-| Profile       | Full Name                    | Bitrate Range | Use Case                      |
-| ------------- | ---------------------------- | ------------- | ----------------------------- |
-| AAC-LC        | Low Complexity               | 96-256 kbps   | Music streaming, podcasts     |
-| HE-AAC (v1)  | High Efficiency AAC          | 48-96 kbps    | Radio, mobile streaming       |
-| HE-AAC v2    | High Efficiency AAC v2       | 24-48 kbps    | Very low bitrate, voice+music |
-| AAC-LD        | Low Delay                    | 64-128 kbps   | Video conferencing            |
-| AAC-ELD       | Enhanced Low Delay           | 32-64 kbps    | Real-time communication       |
-| xHE-AAC      | Extended HE-AAC (USAC)       | 12-256 kbps   | Adaptive streaming            |
+| Profile     | Full Name              | Bitrate Range | Use Case                      |
+| ----------- | ---------------------- | ------------- | ----------------------------- |
+| AAC-LC      | Low Complexity         | 96-256 kbps   | Music streaming, podcasts     |
+| HE-AAC (v1) | High Efficiency AAC    | 48-96 kbps    | Radio, mobile streaming       |
+| HE-AAC v2   | High Efficiency AAC v2 | 24-48 kbps    | Very low bitrate, voice+music |
+| AAC-LD      | Low Delay              | 64-128 kbps   | Video conferencing            |
+| AAC-ELD     | Enhanced Low Delay     | 32-64 kbps    | Real-time communication       |
+| xHE-AAC     | Extended HE-AAC (USAC) | 12-256 kbps   | Adaptive streaming            |
 
 ### AAC-LC (Low Complexity)
 
 AAC-LC is the most widely used profile. It uses:
+
 - MDCT with 1024-sample (long) or 128-sample (short) windows
 - Up to 48 scalefactor bands
 - Huffman entropy coding with 12 codebook pairs
@@ -979,28 +986,31 @@ Opus is unique in combining two codecs into one:
 ```
 
 **SILK** (originally from Skype):
+
 - Linear Predictive Coding (LPC) based, optimized for speech
 - Excellent at very low bitrates (6-12 kbps)
 - Handles narrowband (8 kHz), mediumband (12 kHz), wideband (16 kHz)
 
 **CELT** (Constrained Energy Lapped Transform):
+
 - MDCT-based, optimized for general audio and music
 - Low algorithmic delay
 - Handles fullband audio (48 kHz)
 - Excellent transient handling
 
 **Hybrid mode**:
+
 - SILK handles frequencies below ~8 kHz
 - CELT handles frequencies above ~8 kHz
 - Used for wideband/superwideband speech at medium bitrates
 
 ### Operating Modes
 
-| Mode     | Bandwidth       | Bitrate Range  | Best For             | Delay     |
-| -------- | --------------- | -------------- | -------------------- | --------- |
-| SILK     | 4-16 kHz        | 6-40 kbps      | Voice, low bitrate   | 25-65 ms  |
-| Hybrid   | up to 20 kHz    | 12-64 kbps     | Voice + some music   | 25-65 ms  |
-| CELT     | up to 24 kHz    | 12-510 kbps    | Music, general audio | 5-22.5 ms |
+| Mode   | Bandwidth    | Bitrate Range | Best For             | Delay     |
+| ------ | ------------ | ------------- | -------------------- | --------- |
+| SILK   | 4-16 kHz     | 6-40 kbps     | Voice, low bitrate   | 25-65 ms  |
+| Hybrid | up to 20 kHz | 12-64 kbps    | Voice + some music   | 25-65 ms  |
+| CELT   | up to 24 kHz | 12-510 kbps   | Music, general audio | 5-22.5 ms |
 
 ### Why WebRTC Chose Opus
 
@@ -1118,6 +1128,7 @@ TOC byte encodes:
 released in 2000. It was created as a patent-free alternative to MP3 and AAC.
 
 Key characteristics:
+
 - MDCT-based with floor/residue coding approach
 - Quality range: q-1 (~45 kbps) to q10 (~500 kbps)
 - Generally comparable to AAC-LC at similar bitrates
@@ -1143,6 +1154,7 @@ is equal to or better than Vorbis, with the added benefit of low-latency support
 codec. It compresses audio by approximately **40-60%** with zero quality loss.
 
 How FLAC works:
+
 1. **Blocking**: Audio is divided into blocks (1024-65535 samples)
 2. **Interchannel decorrelation**: Convert L/R to Mid/Side for better compression
 3. **Prediction**: LPC prediction (up to 32nd order) removes redundancy
@@ -1172,33 +1184,33 @@ audiophile distribution.
 
 ## 13. Audio Codec Comparison
 
-| Property           | MP3           | AAC-LC        | HE-AAC v2    | Opus          | Vorbis        | FLAC          |
-| ------------------ | ------------- | ------------- | ------------ | ------------- | ------------- | ------------- |
-| Year               | 1993          | 1997          | 2006         | 2012          | 2000          | 2001          |
-| Type               | Lossy         | Lossy         | Lossy        | Lossy         | Lossy         | Lossless      |
-| Bitrate range      | 32-320 kbps   | 16-256 kbps   | 16-64 kbps  | 6-510 kbps    | 45-500 kbps   | ~500-1100 kbps|
-| Sweet spot         | 192-256 kbps  | 128-192 kbps  | 32-48 kbps  | 64-128 kbps   | 160-192 kbps  | N/A (lossless)|
-| Min latency        | ~100 ms       | ~80 ms        | ~100+ ms    | ~5 ms         | ~50 ms        | N/A           |
-| Sample rates       | up to 48 kHz  | up to 96 kHz  | up to 48 kHz| up to 48 kHz  | up to 192 kHz | up to 655 kHz |
-| Channels           | 2 (stereo)    | 48 (7.1+)     | 2 (PS)      | 255           | 255           | 8             |
-| Container          | .mp3          | .m4a, .mp4    | .m4a, .mp4  | .opus, .ogg   | .ogg          | .flac         |
-| Licensing          | Free (2017)   | MPEG-LA       | MPEG-LA     | Royalty-free   | Royalty-free  | Royalty-free  |
-| Browser support    | All           | All           | All         | All modern     | Firefox, Chrome| Chrome, Edge  |
-| WebRTC support     | No            | No            | No          | Mandatory      | No            | No            |
-| Best for           | Legacy compat | Streaming     | Low bitrate | Real-time/VoIP | Games, web    | Archival      |
+| Property        | MP3           | AAC-LC       | HE-AAC v2    | Opus           | Vorbis          | FLAC           |
+| --------------- | ------------- | ------------ | ------------ | -------------- | --------------- | -------------- |
+| Year            | 1993          | 1997         | 2006         | 2012           | 2000            | 2001           |
+| Type            | Lossy         | Lossy        | Lossy        | Lossy          | Lossy           | Lossless       |
+| Bitrate range   | 32-320 kbps   | 16-256 kbps  | 16-64 kbps   | 6-510 kbps     | 45-500 kbps     | ~500-1100 kbps |
+| Sweet spot      | 192-256 kbps  | 128-192 kbps | 32-48 kbps   | 64-128 kbps    | 160-192 kbps    | N/A (lossless) |
+| Min latency     | ~100 ms       | ~80 ms       | ~100+ ms     | ~5 ms          | ~50 ms          | N/A            |
+| Sample rates    | up to 48 kHz  | up to 96 kHz | up to 48 kHz | up to 48 kHz   | up to 192 kHz   | up to 655 kHz  |
+| Channels        | 2 (stereo)    | 48 (7.1+)    | 2 (PS)       | 255            | 255             | 8              |
+| Container       | .mp3          | .m4a, .mp4   | .m4a, .mp4   | .opus, .ogg    | .ogg            | .flac          |
+| Licensing       | Free (2017)   | MPEG-LA      | MPEG-LA      | Royalty-free   | Royalty-free    | Royalty-free   |
+| Browser support | All           | All          | All          | All modern     | Firefox, Chrome | Chrome, Edge   |
+| WebRTC support  | No            | No           | No           | Mandatory      | No              | No             |
+| Best for        | Legacy compat | Streaming    | Low bitrate  | Real-time/VoIP | Games, web      | Archival       |
 
 ### Choosing the Right Audio Codec
 
-| Scenario                         | Recommended    | Why                                    |
-| -------------------------------- | -------------- | -------------------------------------- |
-| Real-time voice (WebRTC)         | Opus           | Lowest latency, adaptive, mandatory    |
-| Music streaming                  | AAC-LC or Opus | Wide support (AAC) or quality (Opus)   |
-| Podcast distribution             | AAC-LC or MP3  | Universal player compatibility         |
-| Low-bandwidth voice              | Opus or HE-AAC | Excellent quality at 24-48 kbps        |
-| Music archival                   | FLAC           | Lossless, open format                  |
-| Game audio                       | Vorbis or Opus | Royalty-free, low CPU decode           |
-| Maximum compatibility            | MP3            | Plays literally everywhere             |
-| Adaptive streaming (DASH/HLS)    | AAC-LC         | HLS requires AAC, DASH supports both   |
+| Scenario                      | Recommended    | Why                                  |
+| ----------------------------- | -------------- | ------------------------------------ |
+| Real-time voice (WebRTC)      | Opus           | Lowest latency, adaptive, mandatory  |
+| Music streaming               | AAC-LC or Opus | Wide support (AAC) or quality (Opus) |
+| Podcast distribution          | AAC-LC or MP3  | Universal player compatibility       |
+| Low-bandwidth voice           | Opus or HE-AAC | Excellent quality at 24-48 kbps      |
+| Music archival                | FLAC           | Lossless, open format                |
+| Game audio                    | Vorbis or Opus | Royalty-free, low CPU decode         |
+| Maximum compatibility         | MP3            | Plays literally everywhere           |
+| Adaptive streaming (DASH/HLS) | AAC-LC         | HLS requires AAC, DASH supports both |
 
 ---
 
@@ -1229,12 +1241,12 @@ ffmpeg -i input.mp4 -c:v libsvtav1 -crf 28 output.mp4  # High quality
 
 CRF values are not comparable across codecs. Approximate equivalences:
 
-| Visual Quality     | x264 CRF | x265 CRF | SVT-AV1 CRF | libvpx-vp9 CRF |
-| ------------------ | --------- | --------- | ------------ | --------------- |
-| Visually lossless  | 17-18     | 20-22     | 18-22        | 15-20           |
-| High quality       | 20-23     | 24-28     | 25-30        | 25-32           |
-| Medium quality     | 24-27     | 29-32     | 32-38        | 33-38           |
-| Low quality        | 28-32     | 33-38     | 40-48        | 40-45           |
+| Visual Quality    | x264 CRF | x265 CRF | SVT-AV1 CRF | libvpx-vp9 CRF |
+| ----------------- | -------- | -------- | ----------- | -------------- |
+| Visually lossless | 17-18    | 20-22    | 18-22       | 15-20          |
+| High quality      | 20-23    | 24-28    | 25-30       | 25-32          |
+| Medium quality    | 24-27    | 29-32    | 32-38       | 33-38          |
+| Low quality       | 28-32    | 33-38    | 40-48       | 40-45          |
 
 #### CBR (Constant Bitrate)
 
@@ -1288,18 +1300,18 @@ ffmpeg -i input.mp4 -c:v libx264 -preset medium -b:v 4M \
 
 x264 and x265 use named presets that trade encoding speed for compression:
 
-| Preset      | Encoding Speed | File Size (relative) | Use Case                |
-| ----------- | -------------- | -------------------- | ----------------------- |
-| ultrafast   | ~50x           | +80-100%             | Real-time, testing      |
-| superfast   | ~30x           | +50-70%              | Real-time streaming     |
-| veryfast    | ~15x           | +30-40%              | Fast encode needs       |
-| faster      | ~8x            | +15-25%              | Balanced speed          |
-| fast        | ~5x            | +10-15%              | Slightly faster encode  |
-| medium      | ~3x (baseline) | Baseline              | Default, recommended    |
-| slow        | ~1.5x          | -5-10%               | Quality-focused VOD     |
-| slower      | ~0.7x          | -8-15%               | Maximum offline quality |
-| veryslow    | ~0.3x          | -10-18%              | Archival, benchmarking  |
-| placebo     | ~0.1x          | -12-20%              | Diminishing returns     |
+| Preset    | Encoding Speed | File Size (relative) | Use Case                |
+| --------- | -------------- | -------------------- | ----------------------- |
+| ultrafast | ~50x           | +80-100%             | Real-time, testing      |
+| superfast | ~30x           | +50-70%              | Real-time streaming     |
+| veryfast  | ~15x           | +30-40%              | Fast encode needs       |
+| faster    | ~8x            | +15-25%              | Balanced speed          |
+| fast      | ~5x            | +10-15%              | Slightly faster encode  |
+| medium    | ~3x (baseline) | Baseline             | Default, recommended    |
+| slow      | ~1.5x          | -5-10%               | Quality-focused VOD     |
+| slower    | ~0.7x          | -8-15%               | Maximum offline quality |
+| veryslow  | ~0.3x          | -10-18%              | Archival, benchmarking  |
+| placebo   | ~0.1x          | -12-20%              | Diminishing returns     |
 
 **Important**: The difference between `medium` and `veryslow` at the same CRF is
 typically only 10-18% file size savings. Going from `medium` to `slow` is often the
@@ -1318,16 +1330,16 @@ ffmpeg -i input.mp4 -c:v libsvtav1 -crf 28 -preset 12 output.mp4 # Fast
 
 x264 provides `-tune` options that optimize for specific content types:
 
-| Tune          | Effect                                                      |
-| ------------- | ----------------------------------------------------------- |
-| film          | Optimized for high-detail film content, lower deblocking    |
-| animation     | More deblocking, better for flat areas and hard edges       |
-| grain         | Preserves film grain at cost of higher bitrate              |
-| stillimage    | Optimized for static or near-static content                 |
-| fastdecode    | Disables CABAC and loop filter for faster decoding          |
-| zerolatency   | Disables lookahead, B-frames; for real-time streaming       |
-| psnr          | Optimize for PSNR metric (not perceptual quality)           |
-| ssim          | Optimize for SSIM metric                                    |
+| Tune        | Effect                                                   |
+| ----------- | -------------------------------------------------------- |
+| film        | Optimized for high-detail film content, lower deblocking |
+| animation   | More deblocking, better for flat areas and hard edges    |
+| grain       | Preserves film grain at cost of higher bitrate           |
+| stillimage  | Optimized for static or near-static content              |
+| fastdecode  | Disables CABAC and loop filter for faster decoding       |
+| zerolatency | Disables lookahead, B-frames; for real-time streaming    |
+| psnr        | Optimize for PSNR metric (not perceptual quality)        |
+| ssim        | Optimize for SSIM metric                                 |
 
 ```bash
 # Animated content
@@ -1367,15 +1379,15 @@ video far faster and more power-efficiently than CPU-based software.
 
 ### Hardware Encoder Comparison
 
-| Platform        | API          | H.264 | HEVC | AV1  | Vendor               |
-| --------------- | ------------ | ----- | ---- | ---- | -------------------- |
-| NVIDIA GPU      | NVENC        | Yes   | Yes  | Yes  | NVIDIA               |
-| Intel iGPU/Arc  | QSV          | Yes   | Yes  | Yes  | Intel                |
-| AMD GPU         | AMF/VCE      | Yes   | Yes  | Yes  | AMD                  |
-| Apple Silicon   | VideoToolbox | Yes   | Yes  | No   | Apple                |
-| Qualcomm SoC    | OMX/C2       | Yes   | Yes  | Yes  | Qualcomm             |
-| MediaTek SoC    | OMX/C2       | Yes   | Yes  | Yes  | MediaTek             |
-| ASIC (custom)   | Varies       | Yes   | Yes  | Yes  | Various (data center)|
+| Platform       | API          | H.264 | HEVC | AV1 | Vendor                |
+| -------------- | ------------ | ----- | ---- | --- | --------------------- |
+| NVIDIA GPU     | NVENC        | Yes   | Yes  | Yes | NVIDIA                |
+| Intel iGPU/Arc | QSV          | Yes   | Yes  | Yes | Intel                 |
+| AMD GPU        | AMF/VCE      | Yes   | Yes  | Yes | AMD                   |
+| Apple Silicon  | VideoToolbox | Yes   | Yes  | No  | Apple                 |
+| Qualcomm SoC   | OMX/C2       | Yes   | Yes  | Yes | Qualcomm              |
+| MediaTek SoC   | OMX/C2       | Yes   | Yes  | Yes | MediaTek              |
+| ASIC (custom)  | Varies       | Yes   | Yes  | Yes | Various (data center) |
 
 ### NVENC (NVIDIA)
 
@@ -1423,6 +1435,7 @@ ffmpeg -i input.mp4 \
 ```
 
 NVENC presets (Ada Lovelace / Turing+):
+
 - `p1` (fastest) to `p7` (highest quality)
 - `ll` tune for low latency
 - `hq` tune for high quality
@@ -1499,24 +1512,26 @@ ffmpeg -vaapi_device /dev/dri/renderD128 \
 
 ### GPU vs CPU Encoding: When to Use Which
 
-| Factor              | CPU (Software)                | GPU (Hardware)                    |
-| ------------------- | ----------------------------- | --------------------------------- |
-| Quality per bit     | Higher (5-20% better)         | Lower (but gap is narrowing)      |
-| Encoding speed      | Slower                        | 5-50x faster                      |
-| Parallel sessions   | Limited by cores              | Dedicated ASIC, many sessions     |
-| Latency             | Higher (preset dependent)     | Lower (fixed pipeline)            |
-| Power efficiency    | Lower                         | Higher (dedicated silicon)        |
-| Cost per encode     | Higher (CPU time)             | Lower (amortized)                 |
-| Configuration       | Highly tunable                | Limited parameters                |
-| Quality consistency | Very consistent               | Can vary across GPU generations   |
+| Factor              | CPU (Software)            | GPU (Hardware)                  |
+| ------------------- | ------------------------- | ------------------------------- |
+| Quality per bit     | Higher (5-20% better)     | Lower (but gap is narrowing)    |
+| Encoding speed      | Slower                    | 5-50x faster                    |
+| Parallel sessions   | Limited by cores          | Dedicated ASIC, many sessions   |
+| Latency             | Higher (preset dependent) | Lower (fixed pipeline)          |
+| Power efficiency    | Lower                     | Higher (dedicated silicon)      |
+| Cost per encode     | Higher (CPU time)         | Lower (amortized)               |
+| Configuration       | Highly tunable            | Limited parameters              |
+| Quality consistency | Very consistent           | Can vary across GPU generations |
 
 **Use CPU encoding when**:
+
 - Maximum quality matters (VOD, archival)
 - You need fine-grained parameter control
 - Encoding is offline and not time-sensitive
 - Quality per bit is the primary optimization target
 
 **Use GPU encoding when**:
+
 - Real-time or near-real-time encoding required (live streaming, gaming)
 - High throughput needed (many simultaneous streams)
 - Power efficiency matters (mobile, data center density)
@@ -1568,6 +1583,7 @@ a=rtpmap:0 PCMU/8000
 ```
 
 Key SDP fields for codecs:
+
 - `a=rtpmap`: Maps payload type number to codec name, clock rate, and channels
 - `a=fmtp`: Format-specific parameters (profile, level, packetization mode)
 - Payload types in `m=` line indicate preference order (first = most preferred)
@@ -1589,13 +1605,13 @@ LL = level_idc (hex)
 
 Common H.264 codec strings:
 
-| String          | Meaning                                 |
-| --------------- | --------------------------------------- |
-| avc1.42E01E     | Baseline Profile, Level 3.0             |
-| avc1.4D401F     | Main Profile, Level 3.1                 |
-| avc1.640028     | High Profile, Level 4.0                 |
-| avc1.640032     | High Profile, Level 5.0                 |
-| avc1.640034     | High Profile, Level 5.2                 |
+| String      | Meaning                     |
+| ----------- | --------------------------- |
+| avc1.42E01E | Baseline Profile, Level 3.0 |
+| avc1.4D401F | Main Profile, Level 3.1     |
+| avc1.640028 | High Profile, Level 4.0     |
+| avc1.640032 | High Profile, Level 5.0     |
+| avc1.640034 | High Profile, Level 5.2     |
 
 #### HEVC Codec String Format
 
@@ -1609,11 +1625,11 @@ Lxxx = level (e.g., L120 = Level 4.0 = 120/30)
 
 Examples:
 
-| String              | Meaning                          |
-| ------------------- | -------------------------------- |
-| hvc1.1.6.L93.B0     | Main Profile, Level 3.1          |
-| hvc1.2.4.L120.B0    | Main 10, Level 4.0               |
-| hvc1.2.4.L150.B0    | Main 10, Level 5.0               |
+| String           | Meaning                 |
+| ---------------- | ----------------------- |
+| hvc1.1.6.L93.B0  | Main Profile, Level 3.1 |
+| hvc1.2.4.L120.B0 | Main 10, Level 4.0      |
+| hvc1.2.4.L150.B0 | Main 10, Level 5.0      |
 
 #### VP9 Codec String Format
 
@@ -1625,10 +1641,10 @@ LL = level (10-62)
 DD = bit depth (08, 10, 12)
 ```
 
-| String           | Meaning                            |
-| ---------------- | ---------------------------------- |
-| vp09.00.31.08    | Profile 0, Level 3.1, 8-bit       |
-| vp09.02.41.10    | Profile 2, Level 4.1, 10-bit      |
+| String        | Meaning                      |
+| ------------- | ---------------------------- |
+| vp09.00.31.08 | Profile 0, Level 3.1, 8-bit  |
+| vp09.02.41.10 | Profile 2, Level 4.1, 10-bit |
 
 #### AV1 Codec String Format
 
@@ -1640,11 +1656,11 @@ LLM = level + tier (e.g., 09M = Level 3.1, Main tier)
 DD  = bit depth (08, 10, 12)
 ```
 
-| String            | Meaning                            |
-| ----------------- | ---------------------------------- |
-| av01.0.04M.08     | Main Profile, Level 3.0, 8-bit    |
-| av01.0.09M.10     | Main Profile, Level 4.1, 10-bit   |
-| av01.0.12M.10     | Main Profile, Level 5.1, 10-bit   |
+| String        | Meaning                         |
+| ------------- | ------------------------------- |
+| av01.0.04M.08 | Main Profile, Level 3.0, 8-bit  |
+| av01.0.09M.10 | Main Profile, Level 4.1, 10-bit |
+| av01.0.12M.10 | Main Profile, Level 5.1, 10-bit |
 
 ### Browser Codec Support Detection
 
@@ -1652,44 +1668,44 @@ DD  = bit depth (08, 10, 12)
 // Check video codec support using MediaSource API
 function isCodecSupported(codecString) {
   if (typeof MediaSource !== 'undefined') {
-    return MediaSource.isTypeSupported(`video/mp4; codecs="${codecString}"`)
+    return MediaSource.isTypeSupported(`video/mp4; codecs="${codecString}"`);
   }
-  return false
+  return false;
 }
 
 // Check common video codecs
 const codecs = {
-  'H.264 Baseline':  'avc1.42E01E',
-  'H.264 High':      'avc1.640028',
-  'H.265 Main':      'hvc1.1.6.L93.B0',
-  'H.265 Main 10':   'hvc1.2.4.L120.B0',
-  'VP9 Profile 0':   'vp09.00.31.08',
-  'VP9 Profile 2':   'vp09.02.41.10',
-  'AV1 Main 8-bit':  'av01.0.04M.08',
+  'H.264 Baseline': 'avc1.42E01E',
+  'H.264 High': 'avc1.640028',
+  'H.265 Main': 'hvc1.1.6.L93.B0',
+  'H.265 Main 10': 'hvc1.2.4.L120.B0',
+  'VP9 Profile 0': 'vp09.00.31.08',
+  'VP9 Profile 2': 'vp09.02.41.10',
+  'AV1 Main 8-bit': 'av01.0.04M.08',
   'AV1 Main 10-bit': 'av01.0.09M.10',
-}
+};
 
 for (const [name, codec] of Object.entries(codecs)) {
-  console.log(`${name} (${codec}): ${isCodecSupported(codec)}`)
+  console.log(`${name} (${codec}): ${isCodecSupported(codec)}`);
 }
 
 // Check audio codec support
 function isAudioCodecSupported(mimeType) {
-  const audio = document.createElement('audio')
-  return audio.canPlayType(mimeType) !== ''
+  const audio = document.createElement('audio');
+  return audio.canPlayType(mimeType) !== '';
 }
 
 const audioCodecs = {
-  'AAC-LC':  'audio/mp4; codecs="mp4a.40.2"',
-  'HE-AAC':  'audio/mp4; codecs="mp4a.40.5"',
-  'Opus':    'audio/webm; codecs="opus"',
-  'Vorbis':  'audio/ogg; codecs="vorbis"',
-  'FLAC':    'audio/flac',
-  'MP3':     'audio/mpeg',
-}
+  'AAC-LC': 'audio/mp4; codecs="mp4a.40.2"',
+  'HE-AAC': 'audio/mp4; codecs="mp4a.40.5"',
+  Opus: 'audio/webm; codecs="opus"',
+  Vorbis: 'audio/ogg; codecs="vorbis"',
+  FLAC: 'audio/flac',
+  MP3: 'audio/mpeg',
+};
 
 for (const [name, mime] of Object.entries(audioCodecs)) {
-  console.log(`${name}: ${isAudioCodecSupported(mime)}`)
+  console.log(`${name}: ${isAudioCodecSupported(mime)}`);
 }
 ```
 
@@ -1779,17 +1795,17 @@ Opus SDP parameters:
 
 Key Opus SDP parameters:
 
-| Parameter               | Description                                    | Default   |
-| ----------------------- | ---------------------------------------------- | --------- |
-| maxaveragebitrate       | Maximum average receive bitrate (bps)          | No limit  |
-| maxplaybackrate         | Maximum output sampling rate the receiver wants| 48000     |
-| stereo                  | Receiver prefers stereo (1) or mono (0)        | 0         |
-| sprop-stereo            | Sender will send stereo                        | 0         |
-| cbr                     | Constant bitrate (1) or VBR (0)                | 0         |
-| useinbandfec            | Enable in-band FEC                             | 0         |
-| usedtx                  | Discontinuous transmission (silence suppression)| 0        |
-| minptime                | Minimum packet duration in ms                  | 3         |
-| ptime                   | Preferred packet duration in ms                | 20        |
+| Parameter         | Description                                      | Default  |
+| ----------------- | ------------------------------------------------ | -------- |
+| maxaveragebitrate | Maximum average receive bitrate (bps)            | No limit |
+| maxplaybackrate   | Maximum output sampling rate the receiver wants  | 48000    |
+| stereo            | Receiver prefers stereo (1) or mono (0)          | 0        |
+| sprop-stereo      | Sender will send stereo                          | 0        |
+| cbr               | Constant bitrate (1) or VBR (0)                  | 0        |
+| useinbandfec      | Enable in-band FEC                               | 0        |
+| usedtx            | Discontinuous transmission (silence suppression) | 0        |
+| minptime          | Minimum packet duration in ms                    | 3        |
+| ptime             | Preferred packet duration in ms                  | 20       |
 
 ---
 

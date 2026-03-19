@@ -39,12 +39,12 @@ Each stage must complete all actions before the next stage begins. Actions withi
 
 ### 2.2 Source Stage Providers
 
-| Provider | Trigger | Notes |
-|----------|---------|-------|
-| **GitHub (v2)** | Webhook via CodeStar Connections | Recommended. Uses app-based auth. |
-| **S3** | CloudTrail event on object change | Good for artifact-triggered pipelines |
-| **ECR** | Image push | Triggers when a new Docker image is pushed |
-| **CodeCommit** | CloudWatch Event | Deprecated -- migrate away |
+| Provider        | Trigger                           | Notes                                      |
+| --------------- | --------------------------------- | ------------------------------------------ |
+| **GitHub (v2)** | Webhook via CodeStar Connections  | Recommended. Uses app-based auth.          |
+| **S3**          | CloudTrail event on object change | Good for artifact-triggered pipelines      |
+| **ECR**         | Image push                        | Triggers when a new Docker image is pushed |
+| **CodeCommit**  | CloudWatch Event                  | Deprecated -- migrate away                 |
 
 ### 2.3 Artifacts
 
@@ -101,11 +101,11 @@ version: 0.2
 
 env:
   variables:
-    NODE_ENV: "production"
+    NODE_ENV: 'production'
   parameter-store:
-    DB_PASSWORD: "/myapp/db/password"
+    DB_PASSWORD: '/myapp/db/password'
   secrets-manager:
-    API_KEY: "myapp/api-key:API_KEY"
+    API_KEY: 'myapp/api-key:API_KEY'
 
 phases:
   install:
@@ -145,13 +145,13 @@ reports:
 
 ### 3.2 Compute Types
 
-| Compute Type | vCPU | Memory | Use Case |
-|-------------|------|--------|----------|
-| BUILD_GENERAL1_SMALL | 2 | 3 GB | Small projects, linting |
-| BUILD_GENERAL1_MEDIUM | 4 | 7 GB | Standard builds |
-| BUILD_GENERAL1_LARGE | 8 | 15 GB | Large compilations, Docker builds |
-| BUILD_GENERAL1_2XLARGE | 72 | 145 GB | Huge monorepos, ML model packaging |
-| BUILD_LAMBDA_1GB-10GB | 1-10 | 1-10 GB | Fast, lightweight builds |
+| Compute Type           | vCPU | Memory  | Use Case                           |
+| ---------------------- | ---- | ------- | ---------------------------------- |
+| BUILD_GENERAL1_SMALL   | 2    | 3 GB    | Small projects, linting            |
+| BUILD_GENERAL1_MEDIUM  | 4    | 7 GB    | Standard builds                    |
+| BUILD_GENERAL1_LARGE   | 8    | 15 GB   | Large compilations, Docker builds  |
+| BUILD_GENERAL1_2XLARGE | 72   | 145 GB  | Huge monorepos, ML model packaging |
+| BUILD_LAMBDA_1GB-10GB  | 1-10 | 1-10 GB | Fast, lightweight builds           |
 
 ### 3.3 Key Features
 
@@ -186,14 +186,14 @@ CodeDeploy automates deployments to EC2 instances, ECS services, Lambda function
 
 ### 4.1 Deployment Strategies
 
-| Strategy | Target | How It Works |
-|----------|--------|-------------|
-| **In-Place** | EC2, On-prem | Stop app, deploy new version, restart. One host at a time or batch. |
-| **Blue/Green** | EC2 | Provision new instances, shift traffic, terminate old ones. |
-| **Blue/Green** | ECS | Create new task set, shift traffic via ALB, drain old tasks. |
-| **Canary** | Lambda, ECS | Shift X% of traffic, wait, then shift 100%. (e.g., `Canary10Percent5Minutes`) |
-| **Linear** | Lambda, ECS | Shift X% every N minutes. (e.g., `Linear10PercentEvery1Minute`) |
-| **AllAtOnce** | Lambda, ECS | Shift 100% immediately. |
+| Strategy       | Target       | How It Works                                                                  |
+| -------------- | ------------ | ----------------------------------------------------------------------------- |
+| **In-Place**   | EC2, On-prem | Stop app, deploy new version, restart. One host at a time or batch.           |
+| **Blue/Green** | EC2          | Provision new instances, shift traffic, terminate old ones.                   |
+| **Blue/Green** | ECS          | Create new task set, shift traffic via ALB, drain old tasks.                  |
+| **Canary**     | Lambda, ECS  | Shift X% of traffic, wait, then shift 100%. (e.g., `Canary10Percent5Minutes`) |
+| **Linear**     | Lambda, ECS  | Shift X% every N minutes. (e.g., `Linear10PercentEvery1Minute`)               |
+| **AllAtOnce**  | Lambda, ECS  | Shift 100% immediately.                                                       |
 
 ### 4.2 AppSpec File
 
@@ -230,13 +230,13 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "arn:aws:ecs:us-east-1:123456789012:task-definition/my-app:2"
+        TaskDefinition: 'arn:aws:ecs:us-east-1:123456789012:task-definition/my-app:2'
         LoadBalancerInfo:
-          ContainerName: "my-container"
+          ContainerName: 'my-container'
           ContainerPort: 8080
 Hooks:
-  - BeforeAllowTraffic: "arn:aws:lambda:us-east-1:123456789012:function:pre-traffic-hook"
-  - AfterAllowTraffic: "arn:aws:lambda:us-east-1:123456789012:function:post-traffic-hook"
+  - BeforeAllowTraffic: 'arn:aws:lambda:us-east-1:123456789012:function:pre-traffic-hook'
+  - AfterAllowTraffic: 'arn:aws:lambda:us-east-1:123456789012:function:post-traffic-hook'
 ```
 
 **For Lambda (appspec.yaml):**
@@ -247,13 +247,13 @@ Resources:
   - MyFunction:
       Type: AWS::Lambda::Function
       Properties:
-        Name: "my-function"
-        Alias: "live"
-        CurrentVersion: "1"
-        TargetVersion: "2"
+        Name: 'my-function'
+        Alias: 'live'
+        CurrentVersion: '1'
+        TargetVersion: '2'
 Hooks:
-  - BeforeAllowTraffic: "arn:aws:lambda:us-east-1:123456789012:function:pre-hook"
-  - AfterAllowTraffic: "arn:aws:lambda:us-east-1:123456789012:function:post-hook"
+  - BeforeAllowTraffic: 'arn:aws:lambda:us-east-1:123456789012:function:pre-hook'
+  - AfterAllowTraffic: 'arn:aws:lambda:us-east-1:123456789012:function:post-hook'
 ```
 
 ### 4.3 CodeDeploy Agent
@@ -289,16 +289,16 @@ aws deploy stop-deployment --deployment-id d-ABC123
 
 ## 5. CodePipeline vs GitHub Actions vs Jenkins
 
-| Feature | CodePipeline | GitHub Actions | Jenkins |
-|---------|-------------|---------------|---------|
-| **Hosting** | Fully managed | Fully managed | Self-managed |
-| **Source integration** | GitHub, S3, ECR | GitHub native | Any SCM |
-| **Build service** | CodeBuild | GitHub-hosted runners | Agents/nodes |
-| **Deploy strategies** | CodeDeploy (blue/green, canary) | Manual or third-party | Plugins |
-| **AWS integration** | Native (IAM roles, VPC) | Via OIDC + IAM roles | Via plugins/credentials |
-| **Pricing** | $1/pipeline/month + CodeBuild minutes | Free tier + per-minute | Free (infrastructure cost) |
-| **Conditional logic** | No native branching in pipeline | Full expression support | Groovy scripting |
-| **Marketplace** | Limited | 20,000+ actions | 1,800+ plugins |
+| Feature                | CodePipeline                          | GitHub Actions          | Jenkins                    |
+| ---------------------- | ------------------------------------- | ----------------------- | -------------------------- |
+| **Hosting**            | Fully managed                         | Fully managed           | Self-managed               |
+| **Source integration** | GitHub, S3, ECR                       | GitHub native           | Any SCM                    |
+| **Build service**      | CodeBuild                             | GitHub-hosted runners   | Agents/nodes               |
+| **Deploy strategies**  | CodeDeploy (blue/green, canary)       | Manual or third-party   | Plugins                    |
+| **AWS integration**    | Native (IAM roles, VPC)               | Via OIDC + IAM roles    | Via plugins/credentials    |
+| **Pricing**            | $1/pipeline/month + CodeBuild minutes | Free tier + per-minute  | Free (infrastructure cost) |
+| **Conditional logic**  | No native branching in pipeline       | Full expression support | Groovy scripting           |
+| **Marketplace**        | Limited                               | 20,000+ actions         | 1,800+ plugins             |
 
 **When to choose CodePipeline:** Deep AWS integration needed, blue/green ECS deployments, compliance requirements for AWS-native tooling.
 
@@ -310,14 +310,14 @@ aws deploy stop-deployment --deployment-id d-ABC123
 
 ## 6. Common Gotchas
 
-| Gotcha | Details |
-|--------|---------|
-| **CodeBuild timeout** | Max 8 hours (480 minutes). Set `timeoutInMinutes` in project config. |
-| **No conditional branching in CodePipeline** | Cannot skip stages based on conditions. Use Lambda actions to control flow or separate pipelines. |
-| **Artifact size limits** | CodePipeline artifacts limited to 500 MB. Use S3 references for larger payloads. |
-| **CodeDeploy agent required** | For EC2/on-prem only. Must be running and have IAM permissions. Agent auto-update can break things. |
-| **CodeBuild Docker builds** | Must enable `privilegedMode: true` to run Docker commands inside CodeBuild. |
-| **Pipeline triggers** | GitHub v2 connections require CodeStar Connections setup. Old OAuth tokens are deprecated. |
-| **Build cache invalidation** | S3 cache is keyed by path. Changing `cache.paths` in buildspec invalidates everything. |
-| **CodeDeploy rollback** | Automatic rollback deploys the last successful revision as a *new* deployment, not a revert. |
-| **Cross-account complexity** | Requires KMS key sharing, S3 bucket policies, and cross-account IAM roles. Plan for this upfront. |
+| Gotcha                                       | Details                                                                                             |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **CodeBuild timeout**                        | Max 8 hours (480 minutes). Set `timeoutInMinutes` in project config.                                |
+| **No conditional branching in CodePipeline** | Cannot skip stages based on conditions. Use Lambda actions to control flow or separate pipelines.   |
+| **Artifact size limits**                     | CodePipeline artifacts limited to 500 MB. Use S3 references for larger payloads.                    |
+| **CodeDeploy agent required**                | For EC2/on-prem only. Must be running and have IAM permissions. Agent auto-update can break things. |
+| **CodeBuild Docker builds**                  | Must enable `privilegedMode: true` to run Docker commands inside CodeBuild.                         |
+| **Pipeline triggers**                        | GitHub v2 connections require CodeStar Connections setup. Old OAuth tokens are deprecated.          |
+| **Build cache invalidation**                 | S3 cache is keyed by path. Changing `cache.paths` in buildspec invalidates everything.              |
+| **CodeDeploy rollback**                      | Automatic rollback deploys the last successful revision as a _new_ deployment, not a revert.        |
+| **Cross-account complexity**                 | Requires KMS key sharing, S3 bucket policies, and cross-account IAM roles. Plan for this upfront.   |

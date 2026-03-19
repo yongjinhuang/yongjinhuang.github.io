@@ -126,15 +126,15 @@ FreeRTOS supports a configurable number of priority levels (typically 5-25). Pri
 
 Zephyr is an open-source RTOS backed by the Linux Foundation. It is gaining traction, especially in the Nordic nRF ecosystem. Key differences from FreeRTOS:
 
-| Feature           | FreeRTOS             | Zephyr                    |
-|-------------------|----------------------|---------------------------|
-| License           | MIT                  | Apache 2.0                |
-| Build system      | CMake / Makefile     | CMake + Kconfig + Devicetree |
-| Networking        | Add-on (lwIP, etc.)  | Native TCP/IP, BLE, Thread |
-| File system       | Add-on               | Native (LittleFS, FAT)   |
-| Shell             | No                   | Built-in CLI shell        |
-| Device driver model | None (bare register) | Unified device driver API |
-| Footprint         | ~5-10 KB             | ~8-20 KB                  |
+| Feature             | FreeRTOS             | Zephyr                       |
+| ------------------- | -------------------- | ---------------------------- |
+| License             | MIT                  | Apache 2.0                   |
+| Build system        | CMake / Makefile     | CMake + Kconfig + Devicetree |
+| Networking          | Add-on (lwIP, etc.)  | Native TCP/IP, BLE, Thread   |
+| File system         | Add-on               | Native (LittleFS, FAT)       |
+| Shell               | No                   | Built-in CLI shell           |
+| Device driver model | None (bare register) | Unified device driver API    |
+| Footprint           | ~5-10 KB             | ~8-20 KB                     |
 
 Zephyr provides a more "Linux-like" development experience with Kconfig, Devicetree, and a comprehensive driver model. FreeRTOS is simpler and more widely deployed.
 
@@ -476,13 +476,13 @@ TaskHandle_t xHandle = xTaskCreateStatic(
 
 FreeRTOS provides five heap implementations:
 
-| Heap  | Description                          | Fragmentation | Free support |
-|-------|--------------------------------------|---------------|--------------|
-| heap_1 | Allocate only, never free           | None          | No           |
-| heap_2 | Best-fit, free supported            | Yes           | Yes          |
-| heap_3 | Wraps standard malloc/free          | Yes           | Yes          |
-| heap_4 | First-fit with coalescing           | Reduced       | Yes          |
-| heap_5 | Like heap_4 but spans multiple regions | Reduced    | Yes          |
+| Heap   | Description                            | Fragmentation | Free support |
+| ------ | -------------------------------------- | ------------- | ------------ |
+| heap_1 | Allocate only, never free              | None          | No           |
+| heap_2 | Best-fit, free supported               | Yes           | Yes          |
+| heap_3 | Wraps standard malloc/free             | Yes           | Yes          |
+| heap_4 | First-fit with coalescing              | Reduced       | Yes          |
+| heap_5 | Like heap_4 but spans multiple regions | Reduced       | Yes          |
 
 For production systems, `heap_4` is the most common choice. For safety-critical systems, `heap_1` or static allocation eliminates fragmentation entirely.
 
@@ -523,6 +523,7 @@ Fragmentation occurs when free memory exists but not in contiguous blocks large 
 ```
 
 Mitigation strategies:
+
 - Use static allocation where possible
 - Use memory pools for frequently allocated/freed objects
 - Allocate all dynamic objects at startup, never free
@@ -786,7 +787,7 @@ A low-priority meteorological task held a shared bus mutex. The high-priority bu
 `vTaskDelay()` delays for a specified number of ticks from the current moment, leading to drift if the task takes variable time before calling it. `vTaskDelayUntil()` delays until an absolute tick count, providing consistent period regardless of task execution time. Use `vTaskDelayUntil()` for periodic tasks.
 
 **Q7: What is the Rate Monotonic Scheduling policy and when is it optimal?**
-RMS assigns priorities based on period: shorter period gets higher priority. It is optimal among fixed-priority scheduling algorithms -- if any fixed-priority assignment can schedule a task set without deadline misses, RMS can too. The schedulability bound is N * (2^(1/N) - 1), approaching ln(2) = 69.3% for many tasks.
+RMS assigns priorities based on period: shorter period gets higher priority. It is optimal among fixed-priority scheduling algorithms -- if any fixed-priority assignment can schedule a task set without deadline misses, RMS can too. The schedulability bound is N \* (2^(1/N) - 1), approaching ln(2) = 69.3% for many tasks.
 
 **Q8: A FreeRTOS system has three tasks. Task A (priority 5) runs every 10 ms for 1 ms. Task B (priority 3) runs every 50 ms for 10 ms. Task C (priority 1) runs every 100 ms for 20 ms. Is this schedulable under RMS?**
 U = 1/10 + 10/50 + 20/100 = 0.1 + 0.2 + 0.2 = 0.5. The RMS bound for N=3 is 0.780. Since 0.5 < 0.780, the task set is schedulable. The priority assignment (A > B > C) matches RMS since A has the shortest period.

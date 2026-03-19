@@ -38,12 +38,12 @@ def backtrack(state: list, start: int, ...) -> None:
 
 ### Key Variations
 
-| Pattern | Next start index | Skip duplicates? |
-|---|---|---|
-| Subsets / Combinations | `i + 1` | No |
-| Subsets with duplicates | `i + 1` | Yes (`nums[i] == nums[i-1]`) |
-| Combination with reuse | `i` (same element reusable) | No |
-| Permutations | `0` (use visited set) | No |
+| Pattern                 | Next start index            | Skip duplicates?             |
+| ----------------------- | --------------------------- | ---------------------------- |
+| Subsets / Combinations  | `i + 1`                     | No                           |
+| Subsets with duplicates | `i + 1`                     | Yes (`nums[i] == nums[i-1]`) |
+| Combination with reuse  | `i` (same element reusable) | No                           |
+| Permutations            | `0` (use visited set)       | No                           |
 
 ---
 
@@ -74,8 +74,8 @@ def subsets(nums: list[int]) -> list[list[int]]:
     return result
 ```
 
-**Time**: O(n * 2^n) -- 2^n subsets, each copied in O(n).
-**Space**: O(n) recursion depth, O(n * 2^n) for output.
+**Time**: O(n _ 2^n) -- 2^n subsets, each copied in O(n).
+**Space**: O(n) recursion depth, O(n _ 2^n) for output.
 **Edge Cases**: Empty input returns `[[]]`. Single element returns `[[], [x]]`.
 
 ---
@@ -110,8 +110,8 @@ def subsets_with_dup(nums: list[int]) -> list[list[int]]:
     return result
 ```
 
-**Time**: O(n * 2^n) worst case.
-**Space**: O(n) recursion depth, O(n * 2^n) for output.
+**Time**: O(n _ 2^n) worst case.
+**Space**: O(n) recursion depth, O(n _ 2^n) for output.
 **Edge Cases**: All elements identical (e.g., `[1,1,1]`) produces subsets of lengths 0 through n only.
 
 ---
@@ -228,7 +228,7 @@ def permute(nums: list[int]) -> list[list[int]]:
     return result
 ```
 
-**Time**: O(n * n!) -- n! permutations, each copied in O(n).
+**Time**: O(n \* n!) -- n! permutations, each copied in O(n).
 **Space**: O(n) for recursion depth and visited array.
 **Edge Cases**: Single element returns `[[x]]`. Two elements returns both orderings.
 
@@ -274,7 +274,7 @@ def exist(board: list[list[str]], word: str) -> bool:
     return False
 ```
 
-**Time**: O(m * n * 3^L) where L is the word length. Each cell branches to at most 3 neighbors (excluding where we came from).
+**Time**: O(m _ n _ 3^L) where L is the word length. Each cell branches to at most 3 neighbors (excluding where we came from).
 **Space**: O(L) recursion depth.
 **Edge Cases**: Single-character word. Word longer than total grid cells. Grid is 1x1.
 
@@ -314,7 +314,7 @@ def partition(s: str) -> list[list[str]]:
     return result
 ```
 
-**Time**: O(n * 2^n) -- up to 2^n partitions, palindrome check is O(n).
+**Time**: O(n \* 2^n) -- up to 2^n partitions, palindrome check is O(n).
 **Space**: O(n) recursion depth.
 **Edge Cases**: Single character (always a palindrome). All identical characters (e.g., `"aaa"` has many valid partitions). Empty string returns `[[]]`.
 
@@ -356,7 +356,7 @@ def letter_combinations(digits: str) -> list[str]:
     return result
 ```
 
-**Time**: O(4^n * n) where n is the number of digits. At most 4 letters per digit, and joining takes O(n).
+**Time**: O(4^n \* n) where n is the number of digits. At most 4 letters per digit, and joining takes O(n).
 **Space**: O(n) recursion depth.
 **Edge Cases**: Empty input returns `[]`. Single digit returns its mapped letters individually. Digits with 4 letters (7, 9) increase branching factor.
 
@@ -418,14 +418,14 @@ def solve_n_queens(n: int) -> list[list[str]]:
 
 ## Summary Table
 
-| # | Problem | Difficulty | Key Technique |
-|---|---------|-----------|---------------|
-| 78 | Subsets | Medium | Basic backtracking, collect at every node |
-| 90 | Subsets II | Medium | Sort + skip duplicates |
-| 39 | Combination Sum | Medium | Reuse elements (start at `i`) |
-| 40 | Combination Sum II | Medium | No reuse + skip duplicates |
-| 46 | Permutations | Medium | Visited array, iterate all indices |
-| 79 | Word Search | Medium | Grid DFS, in-place marking |
-| 131 | Palindrome Partitioning | Medium | Partition string, validate palindromes |
-| 17 | Letter Combinations | Medium | Fixed mapping, digit-by-digit |
-| 51 | N-Queens | Hard | Row-by-row, constraint sets |
+| #   | Problem                 | Difficulty | Key Technique                             |
+| --- | ----------------------- | ---------- | ----------------------------------------- |
+| 78  | Subsets                 | Medium     | Basic backtracking, collect at every node |
+| 90  | Subsets II              | Medium     | Sort + skip duplicates                    |
+| 39  | Combination Sum         | Medium     | Reuse elements (start at `i`)             |
+| 40  | Combination Sum II      | Medium     | No reuse + skip duplicates                |
+| 46  | Permutations            | Medium     | Visited array, iterate all indices        |
+| 79  | Word Search             | Medium     | Grid DFS, in-place marking                |
+| 131 | Palindrome Partitioning | Medium     | Partition string, validate palindromes    |
+| 17  | Letter Combinations     | Medium     | Fixed mapping, digit-by-digit             |
+| 51  | N-Queens                | Hard       | Row-by-row, constraint sets               |

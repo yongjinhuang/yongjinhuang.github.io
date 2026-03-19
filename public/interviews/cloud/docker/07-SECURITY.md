@@ -58,16 +58,16 @@ Container: attacker must escape namespaces/cgroups (same kernel)
 
 ### 2.2 Common Attack Vectors
 
-| Vector | Description | Mitigation |
-|--------|-------------|------------|
-| **Vulnerable base images** | Known CVEs in OS packages | Scan images, use minimal bases, update regularly |
-| **Secrets in images** | API keys, passwords in layers | BuildKit secrets, never ENV/COPY secrets |
-| **Privileged containers** | All security disabled | Never use --privileged |
-| **Docker socket exposure** | Mount /var/run/docker.sock = root | Never mount in production |
-| **Container escape** | Kernel exploit from inside container | Update kernel, use gVisor/Kata, user namespaces |
-| **Malicious images** | Supply chain attack via base image | Use official images, verify signatures |
-| **Resource exhaustion** | Fork bomb, memory exhaustion | Cgroup limits, pids-limit |
-| **Network attack** | Container-to-container lateral movement | Network policies, segmentation |
+| Vector                     | Description                             | Mitigation                                       |
+| -------------------------- | --------------------------------------- | ------------------------------------------------ |
+| **Vulnerable base images** | Known CVEs in OS packages               | Scan images, use minimal bases, update regularly |
+| **Secrets in images**      | API keys, passwords in layers           | BuildKit secrets, never ENV/COPY secrets         |
+| **Privileged containers**  | All security disabled                   | Never use --privileged                           |
+| **Docker socket exposure** | Mount /var/run/docker.sock = root       | Never mount in production                        |
+| **Container escape**       | Kernel exploit from inside container    | Update kernel, use gVisor/Kata, user namespaces  |
+| **Malicious images**       | Supply chain attack via base image      | Use official images, verify signatures           |
+| **Resource exhaustion**    | Fork bomb, memory exhaustion            | Cgroup limits, pids-limit                        |
+| **Network attack**         | Container-to-container lateral movement | Network policies, segmentation                   |
 
 ---
 
@@ -140,13 +140,13 @@ services:
 
 ### 3.5 Minimal Capabilities by Use Case
 
-| Use Case | Required Capabilities |
-|----------|----------------------|
-| Web server (port 80/443) | `NET_BIND_SERVICE` |
-| Web server (port > 1024) | None (drop ALL) |
-| App writing to volumes | `CHOWN`, `FOWNER` (or fix permissions) |
-| Network monitoring | `NET_RAW`, `NET_ADMIN` |
-| Container that pings | `NET_RAW` |
+| Use Case                 | Required Capabilities                  |
+| ------------------------ | -------------------------------------- |
+| Web server (port 80/443) | `NET_BIND_SERVICE`                     |
+| Web server (port > 1024) | None (drop ALL)                        |
+| App writing to volumes   | `CHOWN`, `FOWNER` (or fix permissions) |
+| Network monitoring       | `NET_RAW`, `NET_ADMIN`                 |
+| Container that pings     | `NET_RAW`                              |
 
 ---
 
@@ -160,16 +160,16 @@ Seccomp (Secure Computing Mode) filters which system calls a process can make. D
 
 The default profile blocks these categories:
 
-| Category | Blocked Syscalls | Why |
-|----------|-----------------|-----|
-| Kernel modules | `init_module`, `delete_module`, `finit_module` | Prevent kernel modification |
-| System boot | `reboot`, `kexec_load`, `kexec_file_load` | Prevent host reboot |
-| Mount operations | `mount`, `umount2` | Prevent filesystem manipulation |
-| Process trace | `ptrace` (partially) | Prevent debugging other processes |
-| Namespace creation | `unshare`, `setns` (partially) | Prevent creating new namespaces |
-| Keyring | `add_key`, `keyctl`, `request_key` | Prevent kernel keyring access |
-| Clock | `clock_settime`, `settimeofday` | Prevent time changes |
-| Swap | `swapon`, `swapoff` | Prevent swap manipulation |
+| Category           | Blocked Syscalls                               | Why                               |
+| ------------------ | ---------------------------------------------- | --------------------------------- |
+| Kernel modules     | `init_module`, `delete_module`, `finit_module` | Prevent kernel modification       |
+| System boot        | `reboot`, `kexec_load`, `kexec_file_load`      | Prevent host reboot               |
+| Mount operations   | `mount`, `umount2`                             | Prevent filesystem manipulation   |
+| Process trace      | `ptrace` (partially)                           | Prevent debugging other processes |
+| Namespace creation | `unshare`, `setns` (partially)                 | Prevent creating new namespaces   |
+| Keyring            | `add_key`, `keyctl`, `request_key`             | Prevent kernel keyring access     |
+| Clock              | `clock_settime`, `settimeofday`                | Prevent time changes              |
+| Swap               | `swapon`, `swapoff`                            | Prevent swap manipulation         |
 
 ### 4.3 Custom Seccomp Profiles
 
@@ -180,12 +180,39 @@ The default profile blocks these categories:
   "architectures": ["SCMP_ARCH_X86_64"],
   "syscalls": [
     {
-      "names": ["read", "write", "open", "close", "stat", "fstat",
-                "mmap", "mprotect", "munmap", "brk", "rt_sigaction",
-                "rt_sigprocmask", "ioctl", "access", "pipe", "select",
-                "sched_yield", "clone", "fork", "execve", "exit",
-                "wait4", "kill", "getpid", "socket", "connect",
-                "accept", "sendto", "recvfrom", "bind", "listen"],
+      "names": [
+        "read",
+        "write",
+        "open",
+        "close",
+        "stat",
+        "fstat",
+        "mmap",
+        "mprotect",
+        "munmap",
+        "brk",
+        "rt_sigaction",
+        "rt_sigprocmask",
+        "ioctl",
+        "access",
+        "pipe",
+        "select",
+        "sched_yield",
+        "clone",
+        "fork",
+        "execve",
+        "exit",
+        "wait4",
+        "kill",
+        "getpid",
+        "socket",
+        "connect",
+        "accept",
+        "sendto",
+        "recvfrom",
+        "bind",
+        "listen"
+      ],
       "action": "SCMP_ACT_ALLOW"
     }
   ]
@@ -225,6 +252,7 @@ $ docker run --security-opt apparmor=unconfined myapp
 ```
 
 The default `docker-default` profile:
+
 - Denies mount operations
 - Denies write to `/proc` and `/sys`
 - Denies access to sensitive files
@@ -291,13 +319,13 @@ $ docker run --rm alpine cat /proc/1/uid_map
 
 ### 6.3 Trade-offs
 
-| Benefit | Limitation |
-|---------|-----------|
-| Container root is unprivileged on host | Volume permission issues (files owned by mapped UID) |
-| Container escape gives unprivileged access | Some images assume real root |
-| Better multi-tenant isolation | Incompatible with `--privileged` |
-| | Incompatible with `--net=host` |
-| | Performance overhead on some operations |
+| Benefit                                    | Limitation                                           |
+| ------------------------------------------ | ---------------------------------------------------- |
+| Container root is unprivileged on host     | Volume permission issues (files owned by mapped UID) |
+| Container escape gives unprivileged access | Some images assume real root                         |
+| Better multi-tenant isolation              | Incompatible with `--privileged`                     |
+|                                            | Incompatible with `--net=host`                       |
+|                                            | Performance overhead on some operations              |
 
 ---
 
@@ -321,6 +349,7 @@ services:
 ```
 
 **Why read-only matters:** If an attacker gains code execution inside the container, they cannot:
+
 - Write malware to the filesystem
 - Modify application binaries
 - Create reverse shells
@@ -343,6 +372,7 @@ services:
 ```
 
 This prevents processes from gaining additional privileges via:
+
 - SUID/SGID binaries (e.g., `/usr/bin/passwd`, `/bin/su`)
 - Linux capabilities added at runtime
 - Exec'd processes inheriting elevated privileges
@@ -382,13 +412,13 @@ Traditional Docker:                    Rootless Docker:
 
 ### 9.3 Trade-offs
 
-| Benefit | Limitation |
-|---------|-----------|
+| Benefit                                 | Limitation                                       |
+| --------------------------------------- | ------------------------------------------------ |
 | No root daemon = smaller attack surface | Cannot bind to ports < 1024 without extra config |
-| User-level isolation | Some storage drivers not supported |
-| No Docker socket as root | Overlay network requires extra setup |
-| Better for multi-tenant hosts | Slightly more complex setup |
-| | Performance may be slightly lower |
+| User-level isolation                    | Some storage drivers not supported               |
+| No Docker socket as root                | Overlay network requires extra setup             |
+| Better for multi-tenant hosts           | Slightly more complex setup                      |
+|                                         | Performance may be slightly lower                |
 
 ---
 
@@ -424,15 +454,15 @@ No shell    No shell      ash shell bash shell   bash + tools
 No CVEs     ~0 CVEs       Few CVEs  Some CVEs   Many CVEs
 ```
 
-| Base Image | Packages | Shell | Size | CVE Surface |
-|-----------|----------|-------|------|-------------|
-| `scratch` | 0 | No | 0MB | None |
-| `gcr.io/distroless/static` | ~1 | No | ~2MB | Minimal |
-| `gcr.io/distroless/cc` | ~5 | No | ~10MB | Minimal |
-| `alpine:3.19` | ~40 | ash | ~7MB | Low |
-| `debian:bookworm-slim` | ~100 | bash | ~74MB | Medium |
-| `ubuntu:24.04` | ~200 | bash | ~77MB | Medium |
-| `node:20` | ~400 | bash | ~900MB | High |
+| Base Image                 | Packages | Shell | Size   | CVE Surface |
+| -------------------------- | -------- | ----- | ------ | ----------- |
+| `scratch`                  | 0        | No    | 0MB    | None        |
+| `gcr.io/distroless/static` | ~1       | No    | ~2MB   | Minimal     |
+| `gcr.io/distroless/cc`     | ~5       | No    | ~10MB  | Minimal     |
+| `alpine:3.19`              | ~40      | ash   | ~7MB   | Low         |
+| `debian:bookworm-slim`     | ~100     | bash  | ~74MB  | Medium      |
+| `ubuntu:24.04`             | ~200     | bash  | ~77MB  | Medium      |
+| `node:20`                  | ~400     | bash  | ~900MB | High        |
 
 ### 10.3 Image Scanning in CI
 
@@ -445,7 +475,7 @@ No CVEs     ~0 CVEs       Few CVEs  Some CVEs   Many CVEs
     format: 'sarif'
     output: 'trivy-results.sarif'
     severity: 'CRITICAL,HIGH'
-    exit-code: '1'             # Fail CI on critical/high CVEs
+    exit-code: '1' # Fail CI on critical/high CVEs
 ```
 
 ---
@@ -513,9 +543,9 @@ services:
 
 secrets:
   db_password:
-    file: ./secrets/db_password.txt    # from file
+    file: ./secrets/db_password.txt # from file
   api_key:
-    environment: "API_KEY"              # from host env var
+    environment: 'API_KEY' # from host env var
 ```
 
 ---
@@ -618,11 +648,13 @@ $ echo c > /proc/sysrq-trigger
 The CIS (Center for Internet Security) Docker Benchmark provides a comprehensive checklist. Key recommendations:
 
 ### 14.1 Host Configuration
+
 - Keep Docker updated to latest stable version
 - Audit Docker daemon activities
 - Configure appropriate ulimits
 
 ### 14.2 Docker Daemon Configuration
+
 - Restrict network traffic between containers (`--icc=false`)
 - Set `--log-level` to at least `info`
 - Allow Docker to make changes to iptables
@@ -631,6 +663,7 @@ The CIS (Center for Internet Security) Docker Benchmark provides a comprehensive
 - Set default ulimit as appropriate
 
 ### 14.3 Container Runtime
+
 - Do not use `--privileged`
 - Do not map privileged ports (< 1024) unnecessarily
 - Open only needed ports
@@ -641,6 +674,7 @@ The CIS (Center for Internet Security) Docker Benchmark provides a comprehensive
 - Use `--pids-limit` to prevent fork bombs
 
 ### 14.4 Images
+
 - Create a user and use non-root USER
 - Use COPY instead of ADD
 - Do not store secrets in Dockerfiles
@@ -666,33 +700,33 @@ $ docker run --net host --pid host \
 # Production-hardened Docker Compose service
 services:
   api:
-    image: myregistry/myapi:v1.2.3@sha256:abc...   # pinned by digest
-    read_only: true                                   # read-only rootfs
+    image: myregistry/myapi:v1.2.3@sha256:abc... # pinned by digest
+    read_only: true # read-only rootfs
     security_opt:
-      - no-new-privileges:true                        # no privilege escalation
+      - no-new-privileges:true # no privilege escalation
     cap_drop:
-      - ALL                                           # drop all capabilities
+      - ALL # drop all capabilities
     cap_add:
-      - NET_BIND_SERVICE                              # add only what is needed
+      - NET_BIND_SERVICE # add only what is needed
     tmpfs:
-      - /tmp:rw,noexec,nosuid,size=50M                # writable tmp
-    user: "1000:1000"                                  # non-root
+      - /tmp:rw,noexec,nosuid,size=50M # writable tmp
+    user: '1000:1000' # non-root
     deploy:
       resources:
         limits:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 512M
-          pids: 100                                    # fork bomb protection
+          pids: 100 # fork bomb protection
     healthcheck:
-      test: ["CMD", "/healthcheck"]
+      test: ['CMD', '/healthcheck']
       interval: 30s
       timeout: 5s
       retries: 3
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
     networks:
       - backend
     restart: unless-stopped
@@ -847,19 +881,19 @@ Supply chain security covers the entire lifecycle from base image selection to r
 
 ## 18. Quick Reference
 
-| Security Feature | Command / Config |
-|------------------|-----------------|
-| Drop all capabilities | `--cap-drop=ALL` |
-| Add specific capability | `--cap-add=NET_BIND_SERVICE` |
-| Read-only filesystem | `--read-only` |
-| No new privileges | `--security-opt=no-new-privileges:true` |
-| Custom seccomp | `--security-opt seccomp=profile.json` |
-| Disable AppArmor | `--security-opt apparmor=unconfined` |
-| User namespace remap | `/etc/docker/daemon.json: {"userns-remap": "default"}` |
-| Non-root user | `USER 1000:1000` in Dockerfile |
-| Memory limit | `--memory=512m` |
-| PID limit | `--pids-limit=100` |
-| Scan with Trivy | `trivy image myapp:latest` |
-| Sign with cosign | `cosign sign --key key myregistry/myapp:v1` |
-| CIS Benchmark audit | `docker run docker/docker-bench-security` |
-| Rootless Docker | `dockerd-rootless-setuptool.sh install` |
+| Security Feature        | Command / Config                                       |
+| ----------------------- | ------------------------------------------------------ |
+| Drop all capabilities   | `--cap-drop=ALL`                                       |
+| Add specific capability | `--cap-add=NET_BIND_SERVICE`                           |
+| Read-only filesystem    | `--read-only`                                          |
+| No new privileges       | `--security-opt=no-new-privileges:true`                |
+| Custom seccomp          | `--security-opt seccomp=profile.json`                  |
+| Disable AppArmor        | `--security-opt apparmor=unconfined`                   |
+| User namespace remap    | `/etc/docker/daemon.json: {"userns-remap": "default"}` |
+| Non-root user           | `USER 1000:1000` in Dockerfile                         |
+| Memory limit            | `--memory=512m`                                        |
+| PID limit               | `--pids-limit=100`                                     |
+| Scan with Trivy         | `trivy image myapp:latest`                             |
+| Sign with cosign        | `cosign sign --key key myregistry/myapp:v1`            |
+| CIS Benchmark audit     | `docker run docker/docker-bench-security`              |
+| Rootless Docker         | `dockerd-rootless-setuptool.sh install`                |

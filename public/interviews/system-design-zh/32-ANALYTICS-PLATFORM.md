@@ -32,31 +32,31 @@
 
 ### 功能性需求
 
-| 类别 | 需求 |
-|------|------|
-| **事件追踪** | 摄取带有自定义属性的任意用户事件；追踪页面浏览、点击、表单提交、购买等行为；支持服务端和客户端事件；跨设备识别用户 |
-| **用户分析** | 包含事件历史的用户画像；匿名用户到已识别用户的关联；跨设备身份识别；按属性和行为进行用户分群 |
-| **Funnel 分析** | 定义多步骤转化漏斗；计算逐步转化率；支持时间窗口漏斗（如 7 天内完成转化）；支持流失分析并提供用户列表 |
-| **Cohort 分析** | 按首次出现日期划分的留存 cohort；按任意事件划分的行为 cohort；跨时间段的 cohort 对比；可导出 cohort 用户列表 |
-| **留存分析** | Day-N 留存（第 1、7、14、30 天）；滚动留存；无界留存；带 cohort 分组的 N 天留存曲线 |
-| **仪表盘** | 实时和历史图表；事件计数、独立用户数、转化率；自定义日期范围；可分享和可嵌入的仪表盘 |
-| **分群** | 按任意用户/事件属性筛选报表；AND/OR 条件构建器；可保存的分群以便复用 |
-| **A/B 测试** | 实验分组追踪；按变体统计转化率；统计显著性计算；样本量计算器 |
-| **数据导出** | 通过 API 导出原始事件；数据仓库同步（BigQuery、Snowflake、Redshift）；CSV 下载 cohort 列表 |
+| 类别            | 需求                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **事件追踪**    | 摄取带有自定义属性的任意用户事件；追踪页面浏览、点击、表单提交、购买等行为；支持服务端和客户端事件；跨设备识别用户 |
+| **用户分析**    | 包含事件历史的用户画像；匿名用户到已识别用户的关联；跨设备身份识别；按属性和行为进行用户分群                       |
+| **Funnel 分析** | 定义多步骤转化漏斗；计算逐步转化率；支持时间窗口漏斗（如 7 天内完成转化）；支持流失分析并提供用户列表              |
+| **Cohort 分析** | 按首次出现日期划分的留存 cohort；按任意事件划分的行为 cohort；跨时间段的 cohort 对比；可导出 cohort 用户列表       |
+| **留存分析**    | Day-N 留存（第 1、7、14、30 天）；滚动留存；无界留存；带 cohort 分组的 N 天留存曲线                                |
+| **仪表盘**      | 实时和历史图表；事件计数、独立用户数、转化率；自定义日期范围；可分享和可嵌入的仪表盘                               |
+| **分群**        | 按任意用户/事件属性筛选报表；AND/OR 条件构建器；可保存的分群以便复用                                               |
+| **A/B 测试**    | 实验分组追踪；按变体统计转化率；统计显著性计算；样本量计算器                                                       |
+| **数据导出**    | 通过 API 导出原始事件；数据仓库同步（BigQuery、Snowflake、Redshift）；CSV 下载 cohort 列表                         |
 
 ### 非功能性需求
 
-| 需求 | 目标 |
-|------|------|
-| 事件摄取延迟 | < 5 秒端到端（从 SDK 发送到可查询） |
-| 仪表盘查询延迟 | 30 天日期范围内 < 3 秒 |
-| 可用性 | 摄取 99.9% 正常运行时间；查询 99.95% |
-| 摄取吞吐量 | 持续峰值 200 万+ 事件/秒 |
-| 数据持久性 | 零事件丢失（至少一次投递 + 去重） |
-| 热数据保留 | 快速查询层保留 30 天 |
-| 可扩展性 | 线性水平扩展；无单点故障 |
-| 多租户 | 按项目/组织严格数据隔离 |
-| 安全性 | 传输中 TLS；静态 AES-256 加密；RBAC；SOC 2 Type II |
+| 需求           | 目标                                               |
+| -------------- | -------------------------------------------------- |
+| 事件摄取延迟   | < 5 秒端到端（从 SDK 发送到可查询）                |
+| 仪表盘查询延迟 | 30 天日期范围内 < 3 秒                             |
+| 可用性         | 摄取 99.9% 正常运行时间；查询 99.95%               |
+| 摄取吞吐量     | 持续峰值 200 万+ 事件/秒                           |
+| 数据持久性     | 零事件丢失（至少一次投递 + 去重）                  |
+| 热数据保留     | 快速查询层保留 30 天                               |
+| 可扩展性       | 线性水平扩展；无单点故障                           |
+| 多租户         | 按项目/组织严格数据隔离                            |
+| 安全性         | 传输中 TLS；静态 AES-256 加密；RBAC；SOC 2 Type II |
 
 ### 规模估算
 
@@ -635,53 +635,53 @@ Kafka "enriched-events" Topic
 
 ```json
 {
-  "schema_version":  "1.0",
-  "project_id":      "proj_abc123",
+  "schema_version": "1.0",
+  "project_id": "proj_abc123",
 
   // 身份字段
-  "distinct_id":     "user_42",           // 已识别用户（登录后）
-  "anonymous_id":    "anon_device_xyz",   // 匿名标识符（登录前）
-  "device_id":       "dev_iphone_001",    // 稳定硬件 ID（iOS 上的 IDFV）
-  "session_id":      "sess_20260301_001", // 会话级分组
+  "distinct_id": "user_42", // 已识别用户（登录后）
+  "anonymous_id": "anon_device_xyz", // 匿名标识符（登录前）
+  "device_id": "dev_iphone_001", // 稳定硬件 ID（iOS 上的 IDFV）
+  "session_id": "sess_20260301_001", // 会话级分组
 
   // 事件核心
-  "event_name":      "Purchase Completed",
-  "insert_id":       "evt_unique_abc123", // 幂等键
-  "event_time":      "2026-03-01T12:00:00.123Z",  // 客户端时间戳
-  "received_time":   "2026-03-01T12:00:00.512Z",  // 服务器时间戳
+  "event_name": "Purchase Completed",
+  "insert_id": "evt_unique_abc123", // 幂等键
+  "event_time": "2026-03-01T12:00:00.123Z", // 客户端时间戳
+  "received_time": "2026-03-01T12:00:00.512Z", // 服务器时间戳
 
   // 自定义属性（自由格式）
   "properties": {
-    "product_id":    "prod_456",
-    "price":         49.99,
-    "currency":      "USD",
-    "category":      "Electronics",
-    "quantity":      2,
-    "coupon_code":   "SPRING10"
+    "product_id": "prod_456",
+    "price": 49.99,
+    "currency": "USD",
+    "category": "Electronics",
+    "quantity": 2,
+    "coupon_code": "SPRING10"
   },
 
   // 自动采集的上下文
   "context": {
-    "ip":            "203.0.113.45",
-    "country":       "US",           // 服务端 geo 富化
-    "region":        "NY",
-    "city":          "New York",
-    "device_type":   "mobile",
-    "os":            "iOS",
-    "os_version":    "17.2",
-    "browser":       null,
-    "app_version":   "3.4.1",
-    "screen_width":  390,
+    "ip": "203.0.113.45",
+    "country": "US", // 服务端 geo 富化
+    "region": "NY",
+    "city": "New York",
+    "device_type": "mobile",
+    "os": "iOS",
+    "os_version": "17.2",
+    "browser": null,
+    "app_version": "3.4.1",
+    "screen_width": 390,
     "screen_height": 844,
-    "locale":        "en-US",
-    "timezone":      "America/New_York"
+    "locale": "en-US",
+    "timezone": "America/New_York"
   },
 
   // 归因
-  "utm_source":      "google",
-  "utm_medium":      "cpc",
-  "utm_campaign":    "spring_sale_2026",
-  "referrer":        "https://google.com/search?q=..."
+  "utm_source": "google",
+  "utm_medium": "cpc",
+  "utm_campaign": "spring_sale_2026",
+  "referrer": "https://google.com/search?q=..."
 }
 ```
 
@@ -1925,16 +1925,16 @@ ClickHouse 扩展策略：
 
 ### 21.1 关键设计权衡
 
-| 决策 | 选项 A | 选项 B | 选择 | 原因 |
-|------|--------|--------|------|------|
-| 查询引擎 | ClickHouse | BigQuery | ClickHouse | 更低延迟（<3s vs 5-30s），自托管，成本可控 |
-| 流处理 | Kafka + Flink | Kinesis + Lambda | Kafka + Flink | 更高吞吐量，有状态处理，无按事件计费 |
-| 身份解析 | 同步（请求内） | 异步（摄取后） | 异步 | Collector 保持高速（<10ms）；身份关联离线处理 |
-| 独立用户计数 | 精确 COUNT DISTINCT | HyperLogLog | HLL | 1-2% 误差可接受；节省 100 倍内存 |
-| Funnel 计算 | 预计算 | 按需 | 混合 | 常用 funnel 预计算；即席查询按需计算 |
-| 会话边界 | 客户端 | 服务端 | 服务端 | 一致的会话化；客户端不可信 |
-| Schema | 固定 schema | 动态 JSON | 混合 | 核心字段固定；自定义属性用 JSON blob |
-| 采样 | 不采样 | 渐进式采样 | 渐进式 | 用户体验：200ms 内显示结果 vs 30s；按需提供精确值 |
+| 决策         | 选项 A              | 选项 B           | 选择          | 原因                                              |
+| ------------ | ------------------- | ---------------- | ------------- | ------------------------------------------------- |
+| 查询引擎     | ClickHouse          | BigQuery         | ClickHouse    | 更低延迟（<3s vs 5-30s），自托管，成本可控        |
+| 流处理       | Kafka + Flink       | Kinesis + Lambda | Kafka + Flink | 更高吞吐量，有状态处理，无按事件计费              |
+| 身份解析     | 同步（请求内）      | 异步（摄取后）   | 异步          | Collector 保持高速（<10ms）；身份关联离线处理     |
+| 独立用户计数 | 精确 COUNT DISTINCT | HyperLogLog      | HLL           | 1-2% 误差可接受；节省 100 倍内存                  |
+| Funnel 计算  | 预计算              | 按需             | 混合          | 常用 funnel 预计算；即席查询按需计算              |
+| 会话边界     | 客户端              | 服务端           | 服务端        | 一致的会话化；客户端不可信                        |
+| Schema       | 固定 schema         | 动态 JSON        | 混合          | 核心字段固定；自定义属性用 JSON blob              |
+| 采样         | 不采样              | 渐进式采样       | 渐进式        | 用户体验：200ms 内显示结果 vs 30s；按需提供精确值 |
 
 ### 21.2 一致性 vs 可用性
 
@@ -1962,24 +1962,24 @@ ClickHouse 扩展策略：
 
 ## 22. 分析平台对比
 
-| 特性 | Mixpanel | Amplitude | Google Analytics 4 | PostHog |
-|------|---------|-----------|-------------------|---------|
-| **核心定位** | 用户行为分析 | 产品分析 | 网页/应用流量分析 | 开源产品分析 |
-| **Funnel 分析** | 优秀（业界最佳） | 优秀 | 基础 | 良好 |
-| **Cohort 分析** | 良好 | 优秀 (Journeys) | 有限 | 良好 |
-| **会话分析** | 有限 | 有限 | 优秀 | 良好 |
-| **实时** | 是（< 1 分钟） | 是（< 1 分钟） | 是（流式） | 是（< 1 分钟） |
-| **A/B 测试** | 通过 Experiments | 是（内置） | Google Optimize（已弃用） | Feature Flags + Experiments |
-| **SQL 访问** | 否（专有查询） | 是 (Amplitude SQL) | BigQuery 导出 | 是 (PostHog SQL) |
-| **数据所有权** | 供应商持有数据 | 供应商持有数据 | Google 持有数据 | 可自托管 |
-| **隐私 / GDPR** | 欧盟数据驻留 | 欧盟数据驻留 | 数据保留限制 | 完全控制（自托管） |
-| **采样** | 不采样（<=10 亿事件/月） | 超出配额后采样 | 大量采样 (GA4) | 不采样 |
-| **仓库同步** | 是 (Mixpanel -> BQ) | 是 (Amplitude -> BQ/Snowflake) | 原生 BigQuery | 是 (PostHog -> BQ/Snowflake) |
-| **定价模式** | 基于 MTU | 月度追踪用户 | 免费 + 360（企业版） | 基于事件（慷慨的免费层） |
-| **SDK 支持** | JS, iOS, Android, 服务端 | JS, iOS, Android, 服务端 | gtag.js, Firebase | JS, iOS, Android, 15+ SDK |
-| **离线支持** | 客户端 SDK 队列 | 客户端 SDK 队列 | 基础缓冲 | 客户端 SDK 队列 |
-| **存储架构** | 专有列式存储 | 基于 Snowflake | BigQuery | ClickHouse |
-| **最适合** | 初创公司、B2C 应用 | 企业产品团队 | 营销/SEO 团队 | 注重隐私、开源 |
+| 特性            | Mixpanel                 | Amplitude                      | Google Analytics 4        | PostHog                      |
+| --------------- | ------------------------ | ------------------------------ | ------------------------- | ---------------------------- |
+| **核心定位**    | 用户行为分析             | 产品分析                       | 网页/应用流量分析         | 开源产品分析                 |
+| **Funnel 分析** | 优秀（业界最佳）         | 优秀                           | 基础                      | 良好                         |
+| **Cohort 分析** | 良好                     | 优秀 (Journeys)                | 有限                      | 良好                         |
+| **会话分析**    | 有限                     | 有限                           | 优秀                      | 良好                         |
+| **实时**        | 是（< 1 分钟）           | 是（< 1 分钟）                 | 是（流式）                | 是（< 1 分钟）               |
+| **A/B 测试**    | 通过 Experiments         | 是（内置）                     | Google Optimize（已弃用） | Feature Flags + Experiments  |
+| **SQL 访问**    | 否（专有查询）           | 是 (Amplitude SQL)             | BigQuery 导出             | 是 (PostHog SQL)             |
+| **数据所有权**  | 供应商持有数据           | 供应商持有数据                 | Google 持有数据           | 可自托管                     |
+| **隐私 / GDPR** | 欧盟数据驻留             | 欧盟数据驻留                   | 数据保留限制              | 完全控制（自托管）           |
+| **采样**        | 不采样（<=10 亿事件/月） | 超出配额后采样                 | 大量采样 (GA4)            | 不采样                       |
+| **仓库同步**    | 是 (Mixpanel -> BQ)      | 是 (Amplitude -> BQ/Snowflake) | 原生 BigQuery             | 是 (PostHog -> BQ/Snowflake) |
+| **定价模式**    | 基于 MTU                 | 月度追踪用户                   | 免费 + 360（企业版）      | 基于事件（慷慨的免费层）     |
+| **SDK 支持**    | JS, iOS, Android, 服务端 | JS, iOS, Android, 服务端       | gtag.js, Firebase         | JS, iOS, Android, 15+ SDK    |
+| **离线支持**    | 客户端 SDK 队列          | 客户端 SDK 队列                | 基础缓冲                  | 客户端 SDK 队列              |
+| **存储架构**    | 专有列式存储             | 基于 Snowflake                 | BigQuery                  | ClickHouse                   |
+| **最适合**      | 初创公司、B2C 应用       | 企业产品团队                   | 营销/SEO 团队             | 注重隐私、开源               |
 
 ### 22.1 查询语言对比
 
@@ -2029,7 +2029,7 @@ PostHog (HogQL - 兼容 ClickHouse 的 SQL)：
 
 **问：身份图谱如何扩展到 1 亿用户？**
 
-答：身份图谱是一个键值存储（Redis Cluster），有 3 种分片键：`anon:{project}:{anon_id}`、`device:{project}:{device_id}` 和 `user:{project}:{user_id}`。1 亿用户平均每人 2 台设备，共 3 亿个键。每个键约 100 字节 -> 总计 30 GB，轻松放入 Redis（3 节点 * 64 GB）。对于非常大的企业客户，我们使用持久化图存储（Apache TinkerPop / Amazon Neptune）处理复杂的多跳查询，Redis 作为快速查找缓存。
+答：身份图谱是一个键值存储（Redis Cluster），有 3 种分片键：`anon:{project}:{anon_id}`、`device:{project}:{device_id}` 和 `user:{project}:{user_id}`。1 亿用户平均每人 2 台设备，共 3 亿个键。每个键约 100 字节 -> 总计 30 GB，轻松放入 Redis（3 节点 \* 64 GB）。对于非常大的企业客户，我们使用持久化图存储（Apache TinkerPop / Amazon Neptune）处理复杂的多跳查询，Redis 作为快速查找缓存。
 
 ---
 

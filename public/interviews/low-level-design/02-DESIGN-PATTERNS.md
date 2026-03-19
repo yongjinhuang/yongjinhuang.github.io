@@ -1,7 +1,7 @@
 # Design Patterns for LLD Interviews
 
 Design patterns are reusable solutions to common software design problems. In LLD interviews,
-knowing when and *why* to apply a pattern matters more than memorizing the implementation.
+knowing when and _why_ to apply a pattern matters more than memorizing the implementation.
 This guide covers the 17 most interview-relevant patterns with Python code and real-world use cases.
 
 ---

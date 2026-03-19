@@ -102,12 +102,12 @@ Measures the local magnetic field vector. When combined with the accelerometer, 
   Noise:       n ~ N(0, sigma^2)
 ```
 
-| Error Source       | Accelerometer        | Gyroscope           |
-|--------------------|----------------------|---------------------|
-| Bias instability   | 0.01-1 mg           | 0.1-10 deg/hr      |
-| Random walk        | 0.01-0.1 m/s/sqrt(hr)| 0.01-1 deg/sqrt(hr)|
-| Scale factor error | 0.01-1%             | 0.01-1%             |
-| Cross-axis coupling| 0.01-1%             | 0.01-1%             |
+| Error Source        | Accelerometer         | Gyroscope           |
+| ------------------- | --------------------- | ------------------- |
+| Bias instability    | 0.01-1 mg             | 0.1-10 deg/hr       |
+| Random walk         | 0.01-0.1 m/s/sqrt(hr) | 0.01-1 deg/sqrt(hr) |
+| Scale factor error  | 0.01-1%               | 0.01-1%             |
+| Cross-axis coupling | 0.01-1%               | 0.01-1%             |
 
 ### 2.5 Attitude Estimation from IMU
 
@@ -161,6 +161,7 @@ A 3D LiDAR produces hundreds of thousands of points per frame. Common processing
 ### 3.4 ICP Algorithm (Sketch)
 
 ICP aligns two point clouds by iteratively:
+
 1. For each point in cloud A, find the nearest point in cloud B
 2. Compute the rigid transformation (R, t) that minimizes the sum of squared distances
 3. Apply the transformation to cloud A
@@ -231,6 +232,7 @@ Calibration determines the intrinsic parameters (f_x, f_y, c_x, c_y) and lens di
 OpenCV provides `calibrateCamera()` for this.
 
 **Distortion models:**
+
 - **Radial distortion:** Barrel or pincushion effect. Modeled as: `r_corrected = r (1 + k1*r^2 + k2*r^4 + k3*r^6)`
 - **Tangential distortion:** From imperfect lens-sensor alignment
 
@@ -293,6 +295,7 @@ Every sensor has key specifications that determine its suitability:
 - **Sample rate:** How often measurements are produced
 
 **Noise models:**
+
 - **White noise:** Constant power spectral density (Gaussian, independent samples)
 - **Random walk:** Integral of white noise (accumulates, IMU bias)
 - **Flicker noise (1/f):** Low-frequency noise, common in electronics
@@ -517,6 +520,7 @@ Raw sensor data is fused in a single estimator.
 ### 7.3 Multi-Rate Fusion
 
 Different sensors run at different rates. The Kalman filter handles this naturally:
+
 - Run the predict step at the fastest sensor rate (often IMU at 100-1000 Hz)
 - Run the update step whenever a measurement arrives (GPS at 1-10 Hz, LiDAR at 10-20 Hz)
 
@@ -601,6 +605,7 @@ Modern SLAM formulates the problem as a graph optimization:
 **Back-end:** Optimizes all poses jointly to minimize constraint errors. This is a nonlinear least-squares problem solved with Gauss-Newton or Levenberg-Marquardt. Libraries: g2o, GTSAM, Ceres Solver.
 
 **Advantages over EKF-SLAM:**
+
 - Handles thousands of poses and landmarks efficiently (sparse matrix structure)
 - Can re-linearize (EKF cannot revisit past linearization points)
 - Naturally handles loop closures
@@ -610,12 +615,14 @@ Modern SLAM formulates the problem as a graph optimization:
 Uses cameras as the primary sensor. Key variants:
 
 **Feature-based (e.g., ORB-SLAM3):**
+
 1. Extract visual features (ORB, SIFT, SURF) from images
 2. Match features between frames to estimate motion
 3. Triangulate 3D positions of features (landmarks)
 4. Optimize with bundle adjustment (joint optimization of camera poses and 3D points)
 
 **Direct methods (e.g., LSD-SLAM, DSO):**
+
 1. Use pixel intensities directly (no feature extraction)
 2. Minimize photometric error between frames
 3. Build semi-dense or dense maps
@@ -710,6 +717,7 @@ LiDAR SLAM is generally more robust than visual SLAM in textureless environments
 Different sensors produce data at different times. Even a few milliseconds of misalignment causes errors when fusing fast-moving data (e.g., IMU at 200 Hz with camera at 30 Hz).
 
 **Solutions:**
+
 - Hardware trigger (shared pulse triggers all sensors simultaneously)
 - Timestamp interpolation (interpolate slower sensor to faster sensor's timestamps)
 - PTP (Precision Time Protocol) for networked sensors
@@ -739,6 +747,7 @@ Use TF (Transform) libraries (e.g., ROS tf2) to manage these transformations. A 
 Sensors occasionally produce grossly wrong measurements (reflections, multipath, occlusions). The Kalman filter assumes Gaussian noise and is not robust to outliers.
 
 **Solutions:**
+
 - **Mahalanobis distance gating:** Reject measurements whose innovation exceeds a threshold: `d^2 = y^T S^(-1) y > chi2_threshold`
 - **RANSAC:** Fit models to random subsets, keep the best fit
 - **M-estimators:** Replace squared error with robust cost functions (Huber, Tukey)
@@ -765,11 +774,11 @@ The EKF linearizes the nonlinear model using Jacobians (first-order Taylor expan
 
 **Q5: Explain the pinhole camera model and what camera calibration determines.**
 
-The pinhole model projects 3D points to 2D pixels using perspective projection: u = fx * X/Z + cx, v = fy * Y/Z + cy. Calibration determines the intrinsic parameters (focal lengths fx, fy, principal point cx, cy, and distortion coefficients) and optionally extrinsic parameters (position and orientation relative to some reference frame). It is typically done using a checkerboard pattern with known geometry.
+The pinhole model projects 3D points to 2D pixels using perspective projection: u = fx _ X/Z + cx, v = fy _ Y/Z + cy. Calibration determines the intrinsic parameters (focal lengths fx, fy, principal point cx, cy, and distortion coefficients) and optionally extrinsic parameters (position and orientation relative to some reference frame). It is typically done using a checkerboard pattern with known geometry.
 
 **Q6: How does stereo vision compute depth? What limits its effective range?**
 
-Stereo vision uses two cameras with known baseline b. For a point visible in both cameras, the disparity d = u_left - u_right relates to depth Z by Z = f*b/d. The effective range is limited by disparity resolution: at large distances, disparity approaches zero and quantization noise dominates. A wider baseline increases range but narrows the overlap region.
+Stereo vision uses two cameras with known baseline b. For a point visible in both cameras, the disparity d = u_left - u_right relates to depth Z by Z = f\*b/d. The effective range is limited by disparity resolution: at large distances, disparity approaches zero and quantization noise dominates. A wider baseline increases range but narrows the overlap region.
 
 **Q7: Compare LiDAR and cameras for autonomous driving. Why use both?**
 

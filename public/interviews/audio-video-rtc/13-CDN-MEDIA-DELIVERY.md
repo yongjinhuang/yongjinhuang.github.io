@@ -78,12 +78,12 @@ Origin Server (authoritative source of truth)
 
 Each tier has different characteristics:
 
-| Tier | Latency | Storage | Hit Ratio Target |
-|------|---------|---------|------------------|
-| L1 Edge | < 10ms | 10-50 TB SSD | 85-95% |
-| L2 Mid-tier | 10-50ms | 100-500 TB | 95-99% |
-| L3 Shield | 50-150ms | 500 TB+ | 99%+ |
-| Origin | 100-500ms | Unlimited | N/A |
+| Tier        | Latency   | Storage      | Hit Ratio Target |
+| ----------- | --------- | ------------ | ---------------- |
+| L1 Edge     | < 10ms    | 10-50 TB SSD | 85-95%           |
+| L2 Mid-tier | 10-50ms   | 100-500 TB   | 95-99%           |
+| L3 Shield   | 50-150ms  | 500 TB+      | 99%+             |
+| Origin      | 100-500ms | Unlimited    | N/A              |
 
 ### Anycast Routing
 
@@ -154,14 +154,17 @@ cache_key = hash(URL_path + query_params_subset + variant_info)
 **URL path**: `/video/12345/segment_00042.m4s`
 
 **Query parameters to include**:
+
 - Bitrate/quality selector if encoded in the URL.
 - Token or signature parameters should be **excluded** from the cache key (they vary per user but the content is identical).
 
 **Variant information**:
+
 - Resolution (1080p, 720p, etc.) is typically embedded in the URL path.
 - Codec (H.264, H.265, AV1) may be a separate path or query parameter.
 
 **What to strip from cache keys**:
+
 - Session tokens, authentication signatures.
 - Analytics tracking parameters (utm_source, etc.).
 - Client-specific identifiers.
@@ -216,22 +219,22 @@ An ABR (Adaptive Bitrate) ladder defines the set of encoded variants available f
 
 A typical ABR ladder for H.264:
 
-| Rung | Resolution | Bitrate (kbps) | Codec | Profile |
-|------|-----------|----------------|-------|---------|
-| 1 | 426x240 | 400 | H.264 | Baseline |
-| 2 | 640x360 | 800 | H.264 | Main |
-| 3 | 854x480 | 1400 | H.264 | Main |
-| 4 | 1280x720 | 2800 | H.264 | High |
-| 5 | 1920x1080 | 5000 | H.264 | High |
-| 6 | 2560x1440 | 8000 | H.264 | High |
-| 7 | 3840x2160 | 16000 | H.264 | High |
+| Rung | Resolution | Bitrate (kbps) | Codec | Profile  |
+| ---- | ---------- | -------------- | ----- | -------- |
+| 1    | 426x240    | 400            | H.264 | Baseline |
+| 2    | 640x360    | 800            | H.264 | Main     |
+| 3    | 854x480    | 1400           | H.264 | Main     |
+| 4    | 1280x720   | 2800           | H.264 | High     |
+| 5    | 1920x1080  | 5000           | H.264 | High     |
+| 6    | 2560x1440  | 8000           | H.264 | High     |
+| 7    | 3840x2160  | 16000          | H.264 | High     |
 
 For newer codecs (H.265/HEVC, AV1), bitrates can be 30-50% lower for equivalent quality:
 
-| Rung | Resolution | H.264 (kbps) | H.265 (kbps) | AV1 (kbps) |
-|------|-----------|---------------|---------------|------------|
-| 1080p | 1920x1080 | 5000 | 3500 | 2500 |
-| 4K | 3840x2160 | 16000 | 10000 | 7000 |
+| Rung  | Resolution | H.264 (kbps) | H.265 (kbps) | AV1 (kbps) |
+| ----- | ---------- | ------------ | ------------ | ---------- |
+| 1080p | 1920x1080  | 5000         | 3500         | 2500       |
+| 4K    | 3840x2160  | 16000        | 10000        | 7000       |
 
 ### Per-Title Encoding
 
@@ -281,6 +284,7 @@ YouTube's challenges differ from Netflix (user-generated content at massive scal
 ### Just-in-Time vs Pre-Transcoding
 
 **Pre-transcoding (offline)**:
+
 - Content is transcoded ahead of time, typically at ingest or shortly after.
 - All renditions are ready before any viewer requests them.
 - Higher quality possible (slower encoding presets, multi-pass).
@@ -288,6 +292,7 @@ YouTube's challenges differ from Netflix (user-generated content at massive scal
 - Used by: Netflix, Disney+, most VOD platforms.
 
 **Just-in-time (JIT) transcoding**:
+
 - Content is transcoded on-demand when a viewer requests a format not yet available.
 - Lower storage cost (only popular variants are generated and cached).
 - Higher compute cost per request, but amortized over subsequent viewers.
@@ -295,6 +300,7 @@ YouTube's challenges differ from Netflix (user-generated content at massive scal
 - Used by: YouTube (for long-tail content), user-generated content platforms.
 
 **Hybrid approach**:
+
 - Pre-transcode the most common variants (e.g., 720p H.264).
 - JIT transcode less common variants (e.g., 4K AV1) and cache the result.
 
@@ -389,12 +395,14 @@ Cloud equivalents use event notifications (S3 Event Notifications, GCS Pub/Sub) 
 Just-in-time (JIT) packaging converts stored mezzanine or intermediate files into the streaming format (HLS, DASH, CMAF) at request time. The packager runs at the origin or as a serverless function.
 
 **Unified Streaming Platform (USP)**:
+
 - Industry-standard JIT packager.
 - Stores a single MP4 file per rendition.
 - Dynamically generates HLS, DASH, or Smooth Streaming manifests and segments on request.
 - Supports DRM encryption, time-shifting, trick play, subtitles.
 
 **AWS Elemental MediaPackage**:
+
 - Managed JIT packaging service.
 - Receives live or VOD input in a single format.
 - Outputs HLS, DASH, CMAF, and MSS.
@@ -427,19 +435,20 @@ Origin-side (or offline) packaging pre-generates all streaming formats and store
 
 Trade-offs vs JIT:
 
-| Factor | Origin-Side | JIT |
-|--------|------------|-----|
-| Storage cost | Higher (multiple formats) | Lower (one source) |
-| Origin CPU | None at request time | CPU per request |
-| Flexibility | Must re-package for changes | Change on the fly |
-| Cache efficiency | Higher (static files) | Lower (dynamic generation) |
-| Latency to first byte | Lower (static file serve) | Slightly higher |
+| Factor                | Origin-Side                 | JIT                        |
+| --------------------- | --------------------------- | -------------------------- |
+| Storage cost          | Higher (multiple formats)   | Lower (one source)         |
+| Origin CPU            | None at request time        | CPU per request            |
+| Flexibility           | Must re-package for changes | Change on the fly          |
+| Cache efficiency      | Higher (static files)       | Lower (dynamic generation) |
+| Latency to first byte | Lower (static file serve)   | Slightly higher            |
 
 ### CMAF (Common Media Application Format)
 
 CMAF unifies HLS and DASH by defining a single segment format (fragmented MP4 / fMP4) that both protocols can reference. Before CMAF, HLS used MPEG-TS segments and DASH used fragmented MP4, requiring separate packaging.
 
 With CMAF:
+
 - A single set of fMP4 segments serves both HLS and DASH.
 - Only the manifests differ (m3u8 for HLS, mpd for DASH).
 - Storage cost is roughly halved.
@@ -458,6 +467,7 @@ Manifest manipulation is the practice of dynamically modifying HLS playlists or 
 - **Start-over/DVR**: Adjusting the manifest window for time-shifted viewing.
 
 Manifest manipulation can happen at:
+
 - The origin server.
 - A dedicated manifest manipulation service.
 - Edge compute functions (Lambda@Edge, Cloudflare Workers).
@@ -483,6 +493,7 @@ Encoder B (backup)    --RTMP/SRT-->  Ingest Server B (backup)
 ```
 
 The ingest selector monitors both feeds for:
+
 - Signal presence (is the feed arriving?).
 - Quality metrics (frozen frames, black frames, audio silence).
 - Timing (which feed is ahead/behind?).
@@ -579,11 +590,11 @@ Key rotation limits the window of exposure if a key is compromised.
 
 No single DRM works on all platforms, so content providers must support multiple DRM systems:
 
-| DRM | Platforms |
-|-----|-----------|
-| Widevine | Chrome, Android, Chromecast, smart TVs |
-| FairPlay | Safari, iOS, tvOS, macOS |
-| PlayReady | Edge, Windows, Xbox, some smart TVs |
+| DRM       | Platforms                              |
+| --------- | -------------------------------------- |
+| Widevine  | Chrome, Android, Chromecast, smart TVs |
+| FairPlay  | Safari, iOS, tvOS, macOS               |
+| PlayReady | Edge, Windows, Xbox, some smart TVs    |
 
 Multi-DRM workflow:
 
@@ -635,51 +646,61 @@ The CDN edge validates the token before serving content. If validation fails, it
 QoE metrics measure the viewer's subjective experience:
 
 **Startup time (Time to First Frame)**:
+
 - Time from play button press to first video frame rendered.
 - Target: < 2 seconds. Netflix targets < 1 second.
 - Components: DNS resolution, TCP/TLS handshake, manifest fetch, first segment download, decode, render.
 
 **Rebuffer rate**:
+
 - Percentage of playback time spent buffering (stalling).
 - Target: < 0.5% of total viewing time.
 - Expressed as rebuffer ratio (rebuffer time / total time) or rebuffers per hour.
 
 **Average bitrate**:
+
 - Mean bitrate delivered during the session.
 - Higher is generally better but must be correlated with device/screen size.
 
 **Bitrate switches**:
+
 - Number of quality switches during playback.
 - Frequent switching (oscillation) degrades perceived quality even if average bitrate is acceptable.
 
 **Video start failures (VSF)**:
+
 - Percentage of play attempts that fail to start.
 - Target: < 1%.
 
 **Error rate**:
+
 - HTTP errors (4xx, 5xx) during segment fetches.
 - Manifest parsing errors.
 - DRM license failures.
 
 **Exits before video start (EBVS)**:
+
 - Users who abandon before playback begins.
 - Correlates strongly with startup time.
 
 ### Analytics Platforms
 
 **Conviva**:
+
 - Real-time video analytics platform.
 - Sensor-based (client-side SDK in the player).
 - Provides Experience Insights: viewer count, buffering, quality score.
 - AI-powered alerting for QoE degradation.
 
 **Mux Data**:
+
 - Developer-friendly video analytics.
 - Lightweight SDK, easy integration with major players.
 - Real-time dashboard, API access, alerting.
 - Focus on engineering metrics (p95 startup time, rebuffer frequency by CDN).
 
 **Video.js analytics plugins**:
+
 - Open-source player with plugin ecosystem.
 - Plugins emit events (play, pause, buffering, error) to analytics backends.
 - Custom integration with Google Analytics, Segment, or proprietary systems.
@@ -704,16 +725,19 @@ Correlating client-side QoE with server-side metrics is essential for root cause
 ### CDN Pricing Models
 
 **Per-GB egress**:
+
 - Pay for each GB delivered from edge to viewer.
 - Typical rates: $0.02-0.08/GB depending on region and volume.
 - Simple and predictable.
 
 **Committed use / reserved capacity**:
+
 - Commit to a minimum monthly bandwidth or egress volume.
 - Discounts of 20-50% compared to on-demand pricing.
 - Risk: underutilization if traffic is below commitment.
 
 **95th percentile (burstable)**:
+
 - Pay based on the 95th percentile of bandwidth usage over the billing period.
 - 5% of peak samples are discarded (accommodates occasional spikes).
 - Good for traffic with predictable patterns and occasional bursts.
@@ -737,6 +761,7 @@ Deciding which CDN to use for each request:
 4. **Hybrid**: Combine performance scores with cost targets. Maximize quality subject to budget constraints.
 
 Multi-CDN switching can happen at:
+
 - **DNS level**: Different DNS responses for different users.
 - **Client-side**: Player SDK chooses CDN per segment based on recent performance.
 - **Server-side**: Manifest manipulation rewrites segment URLs to point to different CDNs.
@@ -754,10 +779,12 @@ CDN Edge -> Viewer A
 ```
 
 Benefits:
+
 - Reduces CDN egress by 50-80% for popular live events.
 - Scales naturally with viewership (more viewers = more peers).
 
 Challenges:
+
 - Requires WebRTC support in the player.
 - Upload bandwidth of peers varies; not reliable for all segments.
 - Latency can increase if peer connections are slow.
@@ -769,14 +796,15 @@ Providers: Streamroot (now Lumen), Peer5 (now Akamai), CDNBye.
 
 Not all content needs hot storage:
 
-| Tier | Use Case | Access Latency | Cost |
-|------|----------|---------------|------|
-| Hot (SSD/NVMe) | Live segments, popular VOD | < 10ms | $$$ |
-| Warm (HDD) | Recent VOD, moderate popularity | 10-100ms | $$ |
-| Cold (Archive) | Old content, rarely accessed | Seconds to minutes | $ |
-| Glacier/Deep Archive | Mezzanine backups, legal retention | Hours | $0.001/GB/month |
+| Tier                 | Use Case                           | Access Latency     | Cost            |
+| -------------------- | ---------------------------------- | ------------------ | --------------- |
+| Hot (SSD/NVMe)       | Live segments, popular VOD         | < 10ms             | $$$             |
+| Warm (HDD)           | Recent VOD, moderate popularity    | 10-100ms           | $$              |
+| Cold (Archive)       | Old content, rarely accessed       | Seconds to minutes | $               |
+| Glacier/Deep Archive | Mezzanine backups, legal retention | Hours              | $0.001/GB/month |
 
 Implement lifecycle policies:
+
 - After 30 days of no views, move from hot to warm.
 - After 90 days, move to cold.
 - Keep mezzanine files in deep archive indefinitely.
@@ -807,8 +835,8 @@ async function handleRequest(request) {
     return new Response(manifest, {
       headers: {
         'Content-Type': 'application/vnd.apple.mpegurl',
-        'Cache-Control': 'no-cache'
-      }
+        'Cache-Control': 'no-cache',
+      },
     });
   }
 
@@ -951,14 +979,14 @@ Cue-out marks the beginning of an ad opportunity. Cue-in marks the end. The SSAI
 
 ### Comparison Table
 
-| Provider | Strengths | Media Features | Pricing Model | Best For |
-|----------|-----------|----------------|---------------|----------|
-| Cloudflare Stream | Simple API, global network | Encoding, storage, delivery, player | Per-minute stored + delivered | Small-to-mid platforms |
-| AWS CloudFront + MediaServices | Deep AWS integration | MediaLive, MediaPackage, MediaConvert, IVS | Per-GB + service-specific | AWS-native architectures |
-| Akamai | Largest network, enterprise-grade | Media Delivery, Download Delivery, Adaptive Media Delivery | Custom/enterprise contracts | Large media companies, broadcasters |
-| Fastly | Programmable edge (VCL/Wasm), real-time purge | Edge compute for manifest manipulation | Per-GB or committed | Developers needing edge compute |
-| Mux | Developer-first video API | Encoding, hosting, streaming, analytics (Mux Data) | Per-minute + per-viewer | Developer teams, SaaS products |
-| Cloudinary Video | Media management + transformation | On-the-fly transcoding, DAM, AI tagging | Credit-based (transformations + storage + bandwidth) | Content-heavy websites, e-commerce |
+| Provider                       | Strengths                                     | Media Features                                             | Pricing Model                                        | Best For                            |
+| ------------------------------ | --------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------- |
+| Cloudflare Stream              | Simple API, global network                    | Encoding, storage, delivery, player                        | Per-minute stored + delivered                        | Small-to-mid platforms              |
+| AWS CloudFront + MediaServices | Deep AWS integration                          | MediaLive, MediaPackage, MediaConvert, IVS                 | Per-GB + service-specific                            | AWS-native architectures            |
+| Akamai                         | Largest network, enterprise-grade             | Media Delivery, Download Delivery, Adaptive Media Delivery | Custom/enterprise contracts                          | Large media companies, broadcasters |
+| Fastly                         | Programmable edge (VCL/Wasm), real-time purge | Edge compute for manifest manipulation                     | Per-GB or committed                                  | Developers needing edge compute     |
+| Mux                            | Developer-first video API                     | Encoding, hosting, streaming, analytics (Mux Data)         | Per-minute + per-viewer                              | Developer teams, SaaS products      |
+| Cloudinary Video               | Media management + transformation             | On-the-fly transcoding, DAM, AI tagging                    | Credit-based (transformations + storage + bandwidth) | Content-heavy websites, e-commerce  |
 
 ### Cloudflare Stream
 

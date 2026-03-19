@@ -11,7 +11,7 @@ Prioritization questions reveal how you think under pressure and whether you can
 - **Execution under constraints** -- Can you deliver meaningful value even when time and resources are limited?
 - **Saying no constructively** -- Can you push back without being dismissive or creating conflict?
 
-The core question is: *When this person faces more work than time, do they make smart choices or just work longer hours?*
+The core question is: _When this person faces more work than time, do they make smart choices or just work longer hours?_
 
 ---
 
@@ -32,16 +32,20 @@ The core question is: *When this person faces more work than time, do they make 
 
 ## How to Structure Your Answer
 
-For prioritization questions, the STAR method needs an extra emphasis on the **reasoning behind your choices**. Interviewers do not just want to know what you prioritized; they want to know *why* and *how* you communicated that decision.
+For prioritization questions, the STAR method needs an extra emphasis on the **reasoning behind your choices**. Interviewers do not just want to know what you prioritized; they want to know _why_ and _how_ you communicated that decision.
 
 ### Situation
+
 Describe the competing demands clearly. How many things were on your plate? What were the stakes? Who was involved? Why was it difficult to prioritize?
 
 ### Task
+
 What was your specific responsibility? Were you the one making the prioritization decision, or were you advocating for a particular approach?
 
 ### Action
+
 This is the most important part. Walk through your decision-making process:
+
 - What framework or criteria did you use? (Impact vs. effort, urgency vs. importance, dependencies, risk)
 - How did you communicate your priorities to stakeholders?
 - What did you say no to, and how did you say it?
@@ -49,6 +53,7 @@ This is the most important part. Walk through your decision-making process:
 - How did you protect focus time and manage context switching?
 
 ### Result
+
 Describe both the outcome and the stakeholder response. Did you meet the deadline? Was the scope cut acceptable? Did the stakeholders feel heard even when you pushed back?
 
 **Tip**: The best answers show that you prevented a crisis through proactive communication, not that you heroically worked through one.
@@ -141,34 +146,34 @@ Describe both the outcome and the stakeholder response. Did you meet the deadlin
 
 ### Story 1: Competing Priorities
 
-- **Situation**: I was simultaneously responsible for _______, _______, and _______. The conflict was _______.
-- **Task**: I needed to decide how to allocate my time and communicate the plan to _______.
-- **Action**: I evaluated priorities using _______ (framework/criteria). I proposed _______ to my manager/stakeholders. I delegated _______ to _______. I said no to _______ by explaining _______.
-- **Result**: The highest priority was delivered _______ (on time/early). Stakeholders responded by _______. I learned _______.
+- **Situation**: I was simultaneously responsible for **\_\_\_**, **\_\_\_**, and **\_\_\_**. The conflict was **\_\_\_**.
+- **Task**: I needed to decide how to allocate my time and communicate the plan to **\_\_\_**.
+- **Action**: I evaluated priorities using **\_\_\_** (framework/criteria). I proposed **\_\_\_** to my manager/stakeholders. I delegated **\_\_\_** to **\_\_\_**. I said no to **\_\_\_** by explaining **\_\_\_**.
+- **Result**: The highest priority was delivered **\_\_\_** (on time/early). Stakeholders responded by **\_\_\_**. I learned **\_\_\_**.
 - **Best used for**: Competing priorities, stakeholder management, delegation
 
 ### Story 2: Scope Negotiation
 
-- **Situation**: A project with _______ features was scoped for _______ (timeline). My estimate indicated we could only deliver _______.
-- **Task**: I needed to negotiate a realistic scope with _______.
-- **Action**: I prepared by _______. I presented _______ options. When the stakeholder pushed back on _______, I _______.
-- **Result**: We agreed on _______ and shipped on time. _______ features were deferred and later _______. The relationship with the stakeholder _______.
+- **Situation**: A project with **\_\_\_** features was scoped for **\_\_\_** (timeline). My estimate indicated we could only deliver **\_\_\_**.
+- **Task**: I needed to negotiate a realistic scope with **\_\_\_**.
+- **Action**: I prepared by **\_\_\_**. I presented **\_\_\_** options. When the stakeholder pushed back on **\_\_\_**, I **\_\_\_**.
+- **Result**: We agreed on **\_\_\_** and shipped on time. **\_\_\_** features were deferred and later **\_\_\_**. The relationship with the stakeholder **\_\_\_**.
 - **Best used for**: Scope negotiation, saying no constructively, estimation
 
 ### Story 3: Missed or Tight Deadline
 
-- **Situation**: _______ weeks into a project, I realized _______ (what changed or was underestimated).
-- **Task**: I needed to reassess the timeline and communicate to _______.
-- **Action**: I quantified the impact by _______. I presented _______ options to stakeholders within _______ (timeframe). I recommended _______ because _______.
-- **Result**: The project was delivered with _______ (delay/scope change). Stakeholders appreciated _______. I improved my process by _______.
+- **Situation**: **\_\_\_** weeks into a project, I realized **\_\_\_** (what changed or was underestimated).
+- **Task**: I needed to reassess the timeline and communicate to **\_\_\_**.
+- **Action**: I quantified the impact by **\_\_\_**. I presented **\_\_\_** options to stakeholders within **\_\_\_** (timeframe). I recommended **\_\_\_** because **\_\_\_**.
+- **Result**: The project was delivered with **\_\_\_** (delay/scope change). Stakeholders appreciated **\_\_\_**. I improved my process by **\_\_\_**.
 - **Best used for**: Deadline management, honest communication, estimation improvement
 
 ### Story 4: Saying No Constructively
 
-- **Situation**: _______ (person/team) asked me to take on _______ while I was already committed to _______.
+- **Situation**: **\_\_\_** (person/team) asked me to take on **\_\_\_** while I was already committed to **\_\_\_**.
 - **Task**: I needed to decline without damaging the relationship or leaving them without a solution.
-- **Action**: I acknowledged the importance of their request by _______. I explained my current constraints by _______. I offered an alternative: _______.
-- **Result**: They understood and _______. The alternative solution worked because _______. Our working relationship _______.
+- **Action**: I acknowledged the importance of their request by **\_\_\_**. I explained my current constraints by **\_\_\_**. I offered an alternative: **\_\_\_**.
+- **Result**: They understood and **\_\_\_**. The alternative solution worked because **\_\_\_**. Our working relationship **\_\_\_**.
 - **Best used for**: Saying no, stakeholder management, professional communication
 
 ---
@@ -188,26 +193,26 @@ When you face competing priorities, walk through this framework and reference it
 
 ### Key Phrases to Use
 
-| Do Say | Do Not Say |
-|--------|------------|
-| "I evaluated the trade-offs and proposed..." | "I just worked harder..." |
+| Do Say                                          | Do Not Say                                      |
+| ----------------------------------------------- | ----------------------------------------------- |
+| "I evaluated the trade-offs and proposed..."    | "I just worked harder..."                       |
 | "I raised the concern early when I realized..." | "I stayed quiet and hoped it would work out..." |
-| "I recommended we defer X because..." | "I could not do it..." |
-| "I came with three options..." | "I told them it was impossible..." |
-| "We agreed on a phased approach..." | "They forced me to cut corners..." |
-| "I protected my focus time by..." | "I just context-switched all day..." |
+| "I recommended we defer X because..."           | "I could not do it..."                          |
+| "I came with three options..."                  | "I told them it was impossible..."              |
+| "We agreed on a phased approach..."             | "They forced me to cut corners..."              |
+| "I protected my focus time by..."               | "I just context-switched all day..."            |
 
 ### Do's and Don'ts
 
-| Do | Don't |
-|----|-------|
-| Show a systematic prioritization framework | Describe a reactive or ad-hoc approach |
-| Communicate proactively to stakeholders | Wait until the deadline passes to raise concerns |
-| Propose solutions when saying no | Just say no without alternatives |
-| Take ownership of estimation mistakes | Blame others for changing requirements |
-| Describe healthy trade-offs (scope, not sleep) | Brag about unsustainable crunch hours |
-| Show delegation as a prioritization strategy | Imply you must do everything yourself |
-| Quantify the impact of your prioritization decisions | Give vague answers about "working hard" |
+| Do                                                   | Don't                                            |
+| ---------------------------------------------------- | ------------------------------------------------ |
+| Show a systematic prioritization framework           | Describe a reactive or ad-hoc approach           |
+| Communicate proactively to stakeholders              | Wait until the deadline passes to raise concerns |
+| Propose solutions when saying no                     | Just say no without alternatives                 |
+| Take ownership of estimation mistakes                | Blame others for changing requirements           |
+| Describe healthy trade-offs (scope, not sleep)       | Brag about unsustainable crunch hours            |
+| Show delegation as a prioritization strategy         | Imply you must do everything yourself            |
+| Quantify the impact of your prioritization decisions | Give vague answers about "working hard"          |
 
 ### Estimation Checklist
 

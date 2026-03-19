@@ -11,6 +11,7 @@ Design a livestream platform that supports sellers broadcasting live video while
 ## Step 1: Requirements
 
 ### Functional Requirements
+
 - Sellers broadcast live video from mobile app
 - Viewers watch with minimal latency (sub-second for small streams)
 - Real-time chat alongside the video feed
@@ -19,6 +20,7 @@ Design a livestream platform that supports sellers broadcasting live video while
 - Multi-quality adaptive streaming based on viewer's connection
 
 ### Non-Functional Requirements
+
 - **Video Latency**: < 500ms for small streams (WebRTC), < 5s for large (HLS)
 - **Chat Latency**: < 200ms for message delivery
 - **Scale**: 583K concurrent on single stream, 1.35M platform-wide
@@ -26,6 +28,7 @@ Design a livestream platform that supports sellers broadcasting live video while
 - **Reliability**: Auto-failover between streaming providers
 
 ### Out of Scope
+
 - Video recording/VOD
 - Content moderation ML
 - Seller analytics dashboard
@@ -93,12 +96,12 @@ Whatnot's key insight: **no single streaming provider handles all scenarios well
 
 ### Streaming Protocol Comparison
 
-| Protocol | Latency | Scale | Use Case |
-|----------|---------|-------|----------|
-| **WebRTC** | < 500ms | ~1,000 viewers | Small intimate streams |
-| **Amazon IVS** (Low-latency) | 2-5s | ~100K viewers | Medium streams |
-| **Agora** | 1-3s | 500K+ viewers | Viral events (MrBeast) |
-| **HLS/DASH** | 10-30s | Unlimited (CDN) | Fallback / catch-up |
+| Protocol                     | Latency | Scale           | Use Case               |
+| ---------------------------- | ------- | --------------- | ---------------------- |
+| **WebRTC**                   | < 500ms | ~1,000 viewers  | Small intimate streams |
+| **Amazon IVS** (Low-latency) | 2-5s    | ~100K viewers   | Medium streams         |
+| **Agora**                    | 1-3s    | 500K+ viewers   | Viral events (MrBeast) |
+| **HLS/DASH**                 | 10-30s  | Unlimited (CDN) | Fallback / catch-up    |
 
 ### Dynamic Provider Switching
 
@@ -162,16 +165,19 @@ Stream Size    Messages/sec    Fan-out/sec       Strategy
 ### Chat Strategies by Scale
 
 **Small streams (< 1,000 viewers)**:
+
 - All messages delivered to all viewers
 - No sampling needed
 - Full interactivity
 
 **Medium streams (1,000 - 50,000)**:
+
 - Chat messages sampled (show 1 in N)
 - All auction events delivered (never dropped)
 - Viewer sees representative subset of chat
 
 **Large streams (50,000+)**:
+
 - Aggressive chat sampling (show 1 in 100)
 - Batch chat updates every 500ms instead of real-time
 - Auction events still delivered individually and instantly
@@ -228,12 +234,12 @@ For massive events, the Client Admission Service (Go) gates entry:
 
 ### Trade-offs
 
-| Decision | Choice | Alternative | Why |
-|----------|--------|-------------|-----|
-| WebRTC vs HLS | **Both** (dynamic) | Single provider | Different scale needs different protocols |
-| Chat fidelity vs scale | **Sampling at scale** | Full delivery | 500M msg/s fan-out is physically impossible |
-| Multi-vendor vs single | **Multi-vendor** | Single provider | No single provider handles 583K well |
-| Latency vs scale | **Latency for small, scale for large** | One-size-fits-all | Intimate streams need interactivity |
+| Decision               | Choice                                 | Alternative       | Why                                         |
+| ---------------------- | -------------------------------------- | ----------------- | ------------------------------------------- |
+| WebRTC vs HLS          | **Both** (dynamic)                     | Single provider   | Different scale needs different protocols   |
+| Chat fidelity vs scale | **Sampling at scale**                  | Full delivery     | 500M msg/s fan-out is physically impossible |
+| Multi-vendor vs single | **Multi-vendor**                       | Single provider   | No single provider handles 583K well        |
+| Latency vs scale       | **Latency for small, scale for large** | One-size-fits-all | Intimate streams need interactivity         |
 
 ### Architecture Principles (from Whatnot engineering)
 
@@ -244,15 +250,15 @@ For massive events, the Client Admission Service (Go) gates entry:
 
 ### Monitoring
 
-| Metric | Alert Threshold |
-|--------|----------------|
-| Video rebuffer rate | > 1% of viewers |
-| Stream start failure rate | > 0.5% |
-| Chat message delivery latency (p99) | > 500ms |
-| Auction event delivery latency (p99) | > 100ms |
-| Provider error rate | > 2% |
-| WebSocket connection drops | > 5% in 1 minute |
-| Admission queue depth | > 10,000 |
+| Metric                               | Alert Threshold  |
+| ------------------------------------ | ---------------- |
+| Video rebuffer rate                  | > 1% of viewers  |
+| Stream start failure rate            | > 0.5%           |
+| Chat message delivery latency (p99)  | > 500ms          |
+| Auction event delivery latency (p99) | > 100ms          |
+| Provider error rate                  | > 2%             |
+| WebSocket connection drops           | > 5% in 1 minute |
+| Admission queue depth                | > 10,000         |
 
 ### What Changes at 10x Scale?
 

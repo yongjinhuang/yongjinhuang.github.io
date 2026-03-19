@@ -32,31 +32,31 @@
 
 ### Functional Requirements
 
-| Category | Requirements |
-|----------|-------------|
-| **Event Tracking** | Ingest arbitrary user events with custom properties; track page views, clicks, form submissions, purchases; support server-side and client-side events; identify users across devices |
-| **User Analytics** | User profiles with event history; anonymous-to-identified user stitching; cross-device identity resolution; user segmentation by properties and behaviors |
-| **Funnel Analysis** | Define multi-step conversion funnels; calculate step-by-step conversion rates; time-windowed funnels (e.g., convert within 7 days); drop-off analysis with user lists |
-| **Cohort Analysis** | Retention cohorts by first-seen date; behavioral cohorts by any event; cohort comparison across time periods; exportable cohort user lists |
-| **Retention Analysis** | Day-N retention (Day 1, 7, 14, 30); rolling retention; unbounded retention; N-day retention curves with cohort breakdown |
-| **Dashboards** | Real-time and historical charts; event counts, unique users, conversion rates; custom date ranges; shareable and embeddable dashboards |
-| **Segmentation** | Filter any report by arbitrary user/event properties; AND/OR condition builder; saved segments for reuse |
-| **A/B Testing** | Experiment assignment tracking; conversion rate by variant; statistical significance calculation; sample size calculator |
-| **Data Export** | Raw event export via API; warehouse sync (BigQuery, Snowflake, Redshift); CSV download for cohort lists |
+| Category               | Requirements                                                                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Event Tracking**     | Ingest arbitrary user events with custom properties; track page views, clicks, form submissions, purchases; support server-side and client-side events; identify users across devices |
+| **User Analytics**     | User profiles with event history; anonymous-to-identified user stitching; cross-device identity resolution; user segmentation by properties and behaviors                             |
+| **Funnel Analysis**    | Define multi-step conversion funnels; calculate step-by-step conversion rates; time-windowed funnels (e.g., convert within 7 days); drop-off analysis with user lists                 |
+| **Cohort Analysis**    | Retention cohorts by first-seen date; behavioral cohorts by any event; cohort comparison across time periods; exportable cohort user lists                                            |
+| **Retention Analysis** | Day-N retention (Day 1, 7, 14, 30); rolling retention; unbounded retention; N-day retention curves with cohort breakdown                                                              |
+| **Dashboards**         | Real-time and historical charts; event counts, unique users, conversion rates; custom date ranges; shareable and embeddable dashboards                                                |
+| **Segmentation**       | Filter any report by arbitrary user/event properties; AND/OR condition builder; saved segments for reuse                                                                              |
+| **A/B Testing**        | Experiment assignment tracking; conversion rate by variant; statistical significance calculation; sample size calculator                                                              |
+| **Data Export**        | Raw event export via API; warehouse sync (BigQuery, Snowflake, Redshift); CSV download for cohort lists                                                                               |
 
 ### Non-Functional Requirements
 
-| Requirement | Target |
-|-------------|--------|
-| Event ingestion latency | < 5 seconds end-to-end (SDK send to queryable) |
-| Dashboard query latency | < 3 seconds for 30-day date ranges |
-| Availability | 99.9% uptime for ingestion; 99.95% for query |
-| Ingestion throughput | 2M+ events/second sustained peak |
-| Data durability | Zero event loss (at-least-once delivery with deduplication) |
-| Hot data retention | 30 days in fast query tier |
-| Scalability | Linear horizontal scaling; no single points of failure |
-| Multi-tenancy | Strict data isolation per project/organization |
-| Security | TLS in transit; AES-256 at rest; RBAC; SOC 2 Type II |
+| Requirement             | Target                                                      |
+| ----------------------- | ----------------------------------------------------------- |
+| Event ingestion latency | < 5 seconds end-to-end (SDK send to queryable)              |
+| Dashboard query latency | < 3 seconds for 30-day date ranges                          |
+| Availability            | 99.9% uptime for ingestion; 99.95% for query                |
+| Ingestion throughput    | 2M+ events/second sustained peak                            |
+| Data durability         | Zero event loss (at-least-once delivery with deduplication) |
+| Hot data retention      | 30 days in fast query tier                                  |
+| Scalability             | Linear horizontal scaling; no single points of failure      |
+| Multi-tenancy           | Strict data isolation per project/organization              |
+| Security                | TLS in transit; AES-256 at rest; RBAC; SOC 2 Type II        |
 
 ### Scale Estimates
 
@@ -635,53 +635,53 @@ Layer 3: ClickHouse ReplacingMergeTree
 
 ```json
 {
-  "schema_version":  "1.0",
-  "project_id":      "proj_abc123",
+  "schema_version": "1.0",
+  "project_id": "proj_abc123",
 
   // Identity fields
-  "distinct_id":     "user_42",           // identified user (post-login)
-  "anonymous_id":    "anon_device_xyz",   // anonymous identifier (pre-login)
-  "device_id":       "dev_iphone_001",    // stable hardware ID (IDFV on iOS)
-  "session_id":      "sess_20260301_001", // session-scoped grouping
+  "distinct_id": "user_42", // identified user (post-login)
+  "anonymous_id": "anon_device_xyz", // anonymous identifier (pre-login)
+  "device_id": "dev_iphone_001", // stable hardware ID (IDFV on iOS)
+  "session_id": "sess_20260301_001", // session-scoped grouping
 
   // Event core
-  "event_name":      "Purchase Completed",
-  "insert_id":       "evt_unique_abc123", // idempotency key
-  "event_time":      "2026-03-01T12:00:00.123Z",  // client timestamp
-  "received_time":   "2026-03-01T12:00:00.512Z",  // server stamp
+  "event_name": "Purchase Completed",
+  "insert_id": "evt_unique_abc123", // idempotency key
+  "event_time": "2026-03-01T12:00:00.123Z", // client timestamp
+  "received_time": "2026-03-01T12:00:00.512Z", // server stamp
 
   // Custom properties (free-form)
   "properties": {
-    "product_id":    "prod_456",
-    "price":         49.99,
-    "currency":      "USD",
-    "category":      "Electronics",
-    "quantity":      2,
-    "coupon_code":   "SPRING10"
+    "product_id": "prod_456",
+    "price": 49.99,
+    "currency": "USD",
+    "category": "Electronics",
+    "quantity": 2,
+    "coupon_code": "SPRING10"
   },
 
   // Auto-collected context
   "context": {
-    "ip":            "203.0.113.45",
-    "country":       "US",           // geo-enriched server-side
-    "region":        "NY",
-    "city":          "New York",
-    "device_type":   "mobile",
-    "os":            "iOS",
-    "os_version":    "17.2",
-    "browser":       null,
-    "app_version":   "3.4.1",
-    "screen_width":  390,
+    "ip": "203.0.113.45",
+    "country": "US", // geo-enriched server-side
+    "region": "NY",
+    "city": "New York",
+    "device_type": "mobile",
+    "os": "iOS",
+    "os_version": "17.2",
+    "browser": null,
+    "app_version": "3.4.1",
+    "screen_width": 390,
     "screen_height": 844,
-    "locale":        "en-US",
-    "timezone":      "America/New_York"
+    "locale": "en-US",
+    "timezone": "America/New_York"
   },
 
   // Attribution
-  "utm_source":      "google",
-  "utm_medium":      "cpc",
-  "utm_campaign":    "spring_sale_2026",
-  "referrer":        "https://google.com/search?q=..."
+  "utm_source": "google",
+  "utm_medium": "cpc",
+  "utm_campaign": "spring_sale_2026",
+  "referrer": "https://google.com/search?q=..."
 }
 ```
 
@@ -1925,16 +1925,16 @@ Tenant isolation strategies:
 
 ### 21.1 Key Design Trade-offs
 
-| Decision | Option A | Option B | Choice | Reasoning |
-|----------|----------|----------|--------|-----------|
-| Query engine | ClickHouse | BigQuery | ClickHouse | Lower latency (<3s vs 5-30s), self-hosted, cost-controlled |
-| Streaming | Kafka + Flink | Kinesis + Lambda | Kafka + Flink | Higher throughput, stateful processing, no per-event cost |
-| Identity resolution | Synchronous (in-request) | Asynchronous (post-ingestion) | Async | Collector stays fast (<10ms); identity join offline |
-| Unique user counting | Exact COUNT DISTINCT | HyperLogLog | HLL | 1-2% error acceptable; 100x memory savings |
-| Funnel computation | Pre-computed | On-demand | Hybrid | Pre-compute common funnels; on-demand for ad-hoc |
-| Session boundaries | Client-side | Server-side | Server-side | Consistent sessionization; clients can't be trusted |
-| Schema | Fixed schema | Dynamic JSON | Hybrid | Core fields fixed; custom properties in JSON blob |
-| Sampling | No sampling | Progressive sampling | Progressive | UX: show result in 200ms vs 30s; accuracy on-demand |
+| Decision             | Option A                 | Option B                      | Choice        | Reasoning                                                  |
+| -------------------- | ------------------------ | ----------------------------- | ------------- | ---------------------------------------------------------- |
+| Query engine         | ClickHouse               | BigQuery                      | ClickHouse    | Lower latency (<3s vs 5-30s), self-hosted, cost-controlled |
+| Streaming            | Kafka + Flink            | Kinesis + Lambda              | Kafka + Flink | Higher throughput, stateful processing, no per-event cost  |
+| Identity resolution  | Synchronous (in-request) | Asynchronous (post-ingestion) | Async         | Collector stays fast (<10ms); identity join offline        |
+| Unique user counting | Exact COUNT DISTINCT     | HyperLogLog                   | HLL           | 1-2% error acceptable; 100x memory savings                 |
+| Funnel computation   | Pre-computed             | On-demand                     | Hybrid        | Pre-compute common funnels; on-demand for ad-hoc           |
+| Session boundaries   | Client-side              | Server-side                   | Server-side   | Consistent sessionization; clients can't be trusted        |
+| Schema               | Fixed schema             | Dynamic JSON                  | Hybrid        | Core fields fixed; custom properties in JSON blob          |
+| Sampling             | No sampling              | Progressive sampling          | Progressive   | UX: show result in 200ms vs 30s; accuracy on-demand        |
 
 ### 21.2 Consistency vs Availability
 
@@ -1962,24 +1962,24 @@ Guaranteed consistency:
 
 ## 22. Comparison: Analytics Platforms
 
-| Feature | Mixpanel | Amplitude | Google Analytics 4 | PostHog |
-|---------|---------|-----------|-------------------|---------|
-| **Primary Focus** | User behavior analytics | Product analytics | Web/app traffic | Open-source product analytics |
-| **Funnel Analysis** | Excellent (best-in-class) | Excellent | Basic | Good |
-| **Cohort Analysis** | Good | Excellent (Journeys) | Limited | Good |
-| **Session Analysis** | Limited | Limited | Excellent | Good |
-| **Real-Time** | Yes (< 1 min) | Yes (< 1 min) | Yes (streaming) | Yes (< 1 min) |
-| **A/B Testing** | Via Experiments | Yes (built-in) | Google Optimize (deprecated) | Feature Flags + Experiments |
-| **SQL Access** | No (proprietary query) | Yes (Amplitude SQL) | BigQuery export | Yes (PostHog SQL) |
-| **Data Ownership** | Vendor holds data | Vendor holds data | Google holds data | Self-hosted option |
-| **Privacy / GDPR** | EU data residency | EU data residency | Data retention limits | Full control (self-hosted) |
-| **Sampling** | No sampling (<=1B events/mo) | Sampling above quota | Heavy sampling (GA4) | No sampling |
-| **Warehouse Sync** | Yes (Mixpanel -> BQ) | Yes (Amplitude -> BQ/Snowflake) | Native BigQuery | Yes (PostHog -> BQ/Snowflake) |
-| **Pricing Model** | MTU-based | Monthly Tracked Users | Free + 360 (enterprise) | Events-based (generous free tier) |
-| **SDK Support** | JS, iOS, Android, server | JS, iOS, Android, server | gtag.js, Firebase | JS, iOS, Android, 15+ SDKs |
-| **Offline Support** | Client SDK queues | Client SDK queues | Basic buffering | Client SDK queues |
-| **Storage Architecture** | Proprietary columnar | Snowflake-based | BigQuery | ClickHouse |
-| **Best For** | Startups, B2C apps | Enterprise product teams | Marketing/SEO teams | Privacy-conscious, open-source |
+| Feature                  | Mixpanel                     | Amplitude                       | Google Analytics 4           | PostHog                           |
+| ------------------------ | ---------------------------- | ------------------------------- | ---------------------------- | --------------------------------- |
+| **Primary Focus**        | User behavior analytics      | Product analytics               | Web/app traffic              | Open-source product analytics     |
+| **Funnel Analysis**      | Excellent (best-in-class)    | Excellent                       | Basic                        | Good                              |
+| **Cohort Analysis**      | Good                         | Excellent (Journeys)            | Limited                      | Good                              |
+| **Session Analysis**     | Limited                      | Limited                         | Excellent                    | Good                              |
+| **Real-Time**            | Yes (< 1 min)                | Yes (< 1 min)                   | Yes (streaming)              | Yes (< 1 min)                     |
+| **A/B Testing**          | Via Experiments              | Yes (built-in)                  | Google Optimize (deprecated) | Feature Flags + Experiments       |
+| **SQL Access**           | No (proprietary query)       | Yes (Amplitude SQL)             | BigQuery export              | Yes (PostHog SQL)                 |
+| **Data Ownership**       | Vendor holds data            | Vendor holds data               | Google holds data            | Self-hosted option                |
+| **Privacy / GDPR**       | EU data residency            | EU data residency               | Data retention limits        | Full control (self-hosted)        |
+| **Sampling**             | No sampling (<=1B events/mo) | Sampling above quota            | Heavy sampling (GA4)         | No sampling                       |
+| **Warehouse Sync**       | Yes (Mixpanel -> BQ)         | Yes (Amplitude -> BQ/Snowflake) | Native BigQuery              | Yes (PostHog -> BQ/Snowflake)     |
+| **Pricing Model**        | MTU-based                    | Monthly Tracked Users           | Free + 360 (enterprise)      | Events-based (generous free tier) |
+| **SDK Support**          | JS, iOS, Android, server     | JS, iOS, Android, server        | gtag.js, Firebase            | JS, iOS, Android, 15+ SDKs        |
+| **Offline Support**      | Client SDK queues            | Client SDK queues               | Basic buffering              | Client SDK queues                 |
+| **Storage Architecture** | Proprietary columnar         | Snowflake-based                 | BigQuery                     | ClickHouse                        |
+| **Best For**             | Startups, B2C apps           | Enterprise product teams        | Marketing/SEO teams          | Privacy-conscious, open-source    |
 
 ### 22.1 Query Language Comparison
 
@@ -2029,7 +2029,7 @@ A: Accept events with timestamps up to 24 hours in the past (configurable per pr
 
 **Q: How does the identity graph scale to 100M users?**
 
-A: The identity graph is a key-value store (Redis Cluster) with 3 shard keys: `anon:{project}:{anon_id}`, `device:{project}:{device_id}`, and `user:{project}:{user_id}`. At 100M users with 2 devices average each, we have 300M keys. Each key is ~100 bytes -> 30 GB total, easily fits in Redis (3 nodes * 64 GB). For very large enterprises, we use a persistent graph store (Apache TinkerPop / Amazon Neptune) for complex multi-hop queries, with Redis as a fast lookup cache.
+A: The identity graph is a key-value store (Redis Cluster) with 3 shard keys: `anon:{project}:{anon_id}`, `device:{project}:{device_id}`, and `user:{project}:{user_id}`. At 100M users with 2 devices average each, we have 300M keys. Each key is ~100 bytes -> 30 GB total, easily fits in Redis (3 nodes \* 64 GB). For very large enterprises, we use a persistent graph store (Apache TinkerPop / Amazon Neptune) for complex multi-hop queries, with Redis as a fast lookup cache.
 
 ---
 

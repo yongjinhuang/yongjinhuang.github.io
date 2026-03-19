@@ -33,11 +33,11 @@ Within that 16.67ms:
 
 ### Target Device Matrix
 
-| Tier | Example Device | CPU Budget | GPU Budget | Memory |
-|------|---------------|------------|------------|--------|
-| Low-end | Samsung Galaxy A10 | 8ms JS | 4ms GPU | 512MB |
-| Mid-range | iPhone SE 2020 | 10ms JS | 6ms GPU | 1GB |
-| High-end | iPhone 14 | 14ms JS | 10ms GPU | 2GB+ |
+| Tier      | Example Device     | CPU Budget | GPU Budget | Memory |
+| --------- | ------------------ | ---------- | ---------- | ------ |
+| Low-end   | Samsung Galaxy A10 | 8ms JS     | 4ms GPU    | 512MB  |
+| Mid-range | iPhone SE 2020     | 10ms JS    | 6ms GPU    | 1GB    |
+| High-end  | iPhone 14          | 14ms JS    | 10ms GPU   | 2GB+   |
 
 **Key principle**: Always develop and test on the lowest-tier device you plan to support. If it runs well on a Galaxy A10, it will fly on an iPhone 14.
 
@@ -45,13 +45,13 @@ Within that 16.67ms:
 
 ```typescript
 interface FrameBudget {
-  readonly total: number;           // 16.67ms
-  readonly input: number;           // ~1ms
-  readonly gameLogic: number;       // ~3ms
-  readonly physics: number;         // ~2ms
-  readonly rendering: number;       // ~6ms
-  readonly audio: number;           // ~0.5ms
-  readonly gc_buffer: number;       // ~4.17ms (critical safety margin)
+  readonly total: number; // 16.67ms
+  readonly input: number; // ~1ms
+  readonly gameLogic: number; // ~3ms
+  readonly physics: number; // ~2ms
+  readonly rendering: number; // ~6ms
+  readonly audio: number; // ~0.5ms
+  readonly gc_buffer: number; // ~4.17ms (critical safety margin)
 }
 
 const BUDGET: FrameBudget = {
@@ -68,6 +68,7 @@ const BUDGET: FrameBudget = {
 ### When 60fps Is Not Required
 
 Not every screen needs 60fps:
+
 - **Menu screens**: 30fps is fine, saves battery
 - **End cards**: Can drop to 24fps for simple animations
 - **Loading screens**: Minimal rendering needed
@@ -116,12 +117,12 @@ The Performance tab is your primary profiling tool.
 
 **What to look for:**
 
-| Issue | Indicator | Typical Cause |
-|-------|-----------|---------------|
-| Long frames | Red bars above the frame timeline | Heavy computation in single frame |
-| GC pauses | Purple blocks labeled "Minor GC" or "Major GC" | Object allocation churn |
-| Layout thrashing | Forced reflow warnings | Reading layout after writing DOM |
-| Long tasks | Any task >50ms blocks the main thread | Unoptimized game logic |
+| Issue            | Indicator                                      | Typical Cause                     |
+| ---------------- | ---------------------------------------------- | --------------------------------- |
+| Long frames      | Red bars above the frame timeline              | Heavy computation in single frame |
+| GC pauses        | Purple blocks labeled "Minor GC" or "Major GC" | Object allocation churn           |
+| Layout thrashing | Forced reflow warnings                         | Reading layout after writing DOM  |
+| Long tasks       | Any task >50ms blocks the main thread          | Unoptimized game logic            |
 
 ### Performance.now() for Custom Timing
 
@@ -245,6 +246,7 @@ class FPSCounter {
 Spector.js captures WebGL frames and shows every draw call, state change, and texture binding.
 
 **What Spector.js reveals:**
+
 - Number of draw calls per frame
 - Texture switches (expensive on mobile)
 - Shader program changes
@@ -310,8 +312,10 @@ class PerformanceDashboard {
     if (this.history.length === 0) return 'unknown';
 
     const recent = this.history.slice(-60);
-    const avgUpdate = recent.reduce((sum, m) => sum + m.updateMs, 0) / recent.length;
-    const avgRender = recent.reduce((sum, m) => sum + m.renderMs, 0) / recent.length;
+    const avgUpdate =
+      recent.reduce((sum, m) => sum + m.updateMs, 0) / recent.length;
+    const avgRender =
+      recent.reduce((sum, m) => sum + m.renderMs, 0) / recent.length;
 
     if (avgUpdate > 8) return 'CPU (game logic)';
     if (avgRender > 8) return 'GPU (rendering)';
@@ -324,12 +328,14 @@ class PerformanceDashboard {
     const first30 = this.history.slice(0, 30);
     const last30 = this.history.slice(-30);
 
-    const avgFirst = first30.reduce((sum, m) => sum + m.memoryMB, 0) / first30.length;
-    const avgLast = last30.reduce((sum, m) => sum + m.memoryMB, 0) / last30.length;
+    const avgFirst =
+      first30.reduce((sum, m) => sum + m.memoryMB, 0) / first30.length;
+    const avgLast =
+      last30.reduce((sum, m) => sum + m.memoryMB, 0) / last30.length;
 
     const delta = avgLast - avgFirst;
 
-    if (delta > 5) return 'growing';   // possible leak
+    if (delta > 5) return 'growing'; // possible leak
     if (delta < -5) return 'shrinking';
     return 'stable';
   }
@@ -370,10 +376,14 @@ function renderBatched(
   for (const sprite of sprites) {
     ctx.drawImage(
       atlas,
-      sprite.srcX, sprite.srcY,
-      sprite.srcW, sprite.srcH,
-      sprite.x, sprite.y,
-      sprite.w, sprite.h
+      sprite.srcX,
+      sprite.srcY,
+      sprite.srcW,
+      sprite.srcH,
+      sprite.x,
+      sprite.y,
+      sprite.w,
+      sprite.h
     );
   }
   ctx.restore();
@@ -459,10 +469,7 @@ class SpriteBatch {
     v1: number
   ): void {
     // Flush if texture changes or batch is full
-    if (
-      this.currentTexture !== null &&
-      this.currentTexture !== texture
-    ) {
+    if (this.currentTexture !== null && this.currentTexture !== texture) {
       this.flush();
     }
     if (this.spriteCount >= this.maxSprites) {
@@ -709,7 +716,8 @@ class ResolutionScaler {
 
     if (this.fpsHistory.length < 30) return this.scale;
 
-    const avgFps = this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length;
+    const avgFps =
+      this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length;
 
     if (avgFps < this.targetFps && this.scale > this.minScale) {
       this.scale = Math.max(this.minScale, this.scale - 0.05);
@@ -763,7 +771,8 @@ class DirtyRectManager {
   getDirtyRegion(): DirtyRect | null {
     if (this.fullRedraw) return null; // null means redraw everything
 
-    if (this.dirtyRects.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
+    if (this.dirtyRects.length === 0)
+      return { x: 0, y: 0, width: 0, height: 0 };
 
     // Compute bounding box of all dirty rects
     let minX = Infinity;
@@ -1054,10 +1063,10 @@ function createEntityBad(type: string): Record<string, unknown> {
   const entity: Record<string, unknown> = { x: 0, y: 0 };
 
   if (type === 'enemy') {
-    entity.health = 100;        // different shape!
+    entity.health = 100; // different shape!
   }
   if (type === 'collectible') {
-    entity.value = 10;          // different shape!
+    entity.value = 10; // different shape!
   }
 
   return entity;
@@ -1094,7 +1103,10 @@ function removePropertyBad(obj: Record<string, unknown>, key: string): void {
 }
 
 // GOOD: Set to undefined or null
-function removePropertyGood(obj: Record<string, unknown>, key: string): Record<string, unknown> {
+function removePropertyGood(
+  obj: Record<string, unknown>,
+  key: string
+): Record<string, unknown> {
   return {
     ...obj,
     [key]: undefined,
@@ -1125,9 +1137,10 @@ class DynamicProperties {
 // BAD: Slow hot loop patterns
 function updateEntitiesBad(entities: Entity[]): void {
   entities
-    .filter(e => e.active)              // Creates new array
-    .forEach(e => {                     // Callback overhead
-      e.x += Math.cos(e.health) * 2;   // Math.cos is expensive
+    .filter((e) => e.active) // Creates new array
+    .forEach((e) => {
+      // Callback overhead
+      e.x += Math.cos(e.health) * 2; // Math.cos is expensive
     });
 }
 
@@ -1143,7 +1156,7 @@ function updateEntitiesGood(
     if (!entity.active) continue;
 
     // Use pre-computed lookup table for trig
-    const angle = entity.health & 0xFF; // Clamp to table size
+    const angle = entity.health & 0xff; // Clamp to table size
     entity.x += cosLookup[angle] * 2;
   }
 }
@@ -1240,14 +1253,19 @@ class TextureMemoryTracker {
     this.budgetBytes = budgetMB * 1024 * 1024;
   }
 
-  register(name: string, width: number, height: number, bpp: number = 4): boolean {
+  register(
+    name: string,
+    width: number,
+    height: number,
+    bpp: number = 4
+  ): boolean {
     const bytes = width * height * bpp;
 
     if (this.totalBytes + bytes > this.budgetBytes) {
       console.warn(
         `Texture "${name}" (${(bytes / 1024 / 1024).toFixed(2)}MB) ` +
-        `would exceed budget. Current: ${(this.totalBytes / 1024 / 1024).toFixed(2)}MB / ` +
-        `${(this.budgetBytes / 1024 / 1024).toFixed(2)}MB`
+          `would exceed budget. Current: ${(this.totalBytes / 1024 / 1024).toFixed(2)}MB / ` +
+          `${(this.budgetBytes / 1024 / 1024).toFixed(2)}MB`
       );
       return false;
     }
@@ -1301,7 +1319,8 @@ class BufferPool {
     }
 
     const pool = this.pools.get(bucket)!;
-    if (pool.length < 10) { // Cap pool size
+    if (pool.length < 10) {
+      // Cap pool size
       pool.push(buffer);
     }
   }
@@ -1327,13 +1346,13 @@ class BufferPool {
 
 **What to look for:**
 
-| Red Flag | Meaning |
-|----------|---------|
-| Growing # of arrays | Allocating arrays each frame |
-| Growing # of objects | Not reusing objects |
-| Detached DOM trees | Elements removed but referenced |
-| Growing closure count | Event handlers accumulating |
-| Large retained size growth | Memory leak confirmed |
+| Red Flag                   | Meaning                         |
+| -------------------------- | ------------------------------- |
+| Growing # of arrays        | Allocating arrays each frame    |
+| Growing # of objects       | Not reusing objects             |
+| Detached DOM trees         | Elements removed but referenced |
+| Growing closure count      | Event handlers accumulating     |
+| Large retained size growth | Memory leak confirmed           |
 
 ```typescript
 // Memory diagnostic utility (development only)
@@ -1470,7 +1489,12 @@ class SpatialGrid<T extends AABB> {
 ```typescript
 class QuadTree<T extends AABB> {
   private readonly objects: T[] = [];
-  private readonly children: Array<QuadTree<T> | null> = [null, null, null, null];
+  private readonly children: Array<QuadTree<T> | null> = [
+    null,
+    null,
+    null,
+    null,
+  ];
   private readonly maxObjects: number = 10;
   private readonly maxLevels: number = 5;
   private readonly level: number;
@@ -1498,10 +1522,22 @@ class QuadTree<T extends AABB> {
     const y = this.bounds.y;
     const nextLevel = this.level + 1;
 
-    this.children[0] = new QuadTree({ x: x + halfW, y, width: halfW, height: halfH }, nextLevel);
-    this.children[1] = new QuadTree({ x, y, width: halfW, height: halfH }, nextLevel);
-    this.children[2] = new QuadTree({ x, y: y + halfH, width: halfW, height: halfH }, nextLevel);
-    this.children[3] = new QuadTree({ x: x + halfW, y: y + halfH, width: halfW, height: halfH }, nextLevel);
+    this.children[0] = new QuadTree(
+      { x: x + halfW, y, width: halfW, height: halfH },
+      nextLevel
+    );
+    this.children[1] = new QuadTree(
+      { x, y, width: halfW, height: halfH },
+      nextLevel
+    );
+    this.children[2] = new QuadTree(
+      { x, y: y + halfH, width: halfW, height: halfH },
+      nextLevel
+    );
+    this.children[3] = new QuadTree(
+      { x: x + halfW, y: y + halfH, width: halfW, height: halfH },
+      nextLevel
+    );
   }
 
   private getIndex(rect: AABB): number {
@@ -1577,23 +1613,29 @@ class QuadTree<T extends AABB> {
 
 ```typescript
 const CollisionLayer = {
-  NONE:        0b00000000,
-  PLAYER:      0b00000001,
-  ENEMY:       0b00000010,
+  NONE: 0b00000000,
+  PLAYER: 0b00000001,
+  ENEMY: 0b00000010,
   PLAYER_BULLET: 0b00000100,
-  ENEMY_BULLET:  0b00001000,
-  WALL:        0b00010000,
+  ENEMY_BULLET: 0b00001000,
+  WALL: 0b00010000,
   COLLECTIBLE: 0b00100000,
-  TRIGGER:     0b01000000,
+  TRIGGER: 0b01000000,
 } as const;
 
 // Define what collides with what using bitmasks
 const CollisionMatrix: Record<number, number> = {
-  [CollisionLayer.PLAYER]:        CollisionLayer.ENEMY | CollisionLayer.ENEMY_BULLET | CollisionLayer.WALL | CollisionLayer.COLLECTIBLE | CollisionLayer.TRIGGER,
-  [CollisionLayer.ENEMY]:         CollisionLayer.PLAYER | CollisionLayer.PLAYER_BULLET | CollisionLayer.WALL,
+  [CollisionLayer.PLAYER]:
+    CollisionLayer.ENEMY |
+    CollisionLayer.ENEMY_BULLET |
+    CollisionLayer.WALL |
+    CollisionLayer.COLLECTIBLE |
+    CollisionLayer.TRIGGER,
+  [CollisionLayer.ENEMY]:
+    CollisionLayer.PLAYER | CollisionLayer.PLAYER_BULLET | CollisionLayer.WALL,
   [CollisionLayer.PLAYER_BULLET]: CollisionLayer.ENEMY | CollisionLayer.WALL,
-  [CollisionLayer.ENEMY_BULLET]:  CollisionLayer.PLAYER | CollisionLayer.WALL,
-  [CollisionLayer.COLLECTIBLE]:   CollisionLayer.PLAYER,
+  [CollisionLayer.ENEMY_BULLET]: CollisionLayer.PLAYER | CollisionLayer.WALL,
+  [CollisionLayer.COLLECTIBLE]: CollisionLayer.PLAYER,
 };
 
 function shouldCollide(layerA: number, layerB: number): boolean {
@@ -1687,12 +1729,16 @@ function updatePhysics(bodies: PhysicsBody[], dt: number): void {
 ```typescript
 // Use circles instead of polygons when possible
 function circleOverlap(
-  ax: number, ay: number, ar: number,
-  bx: number, by: number, br: number
+  ax: number,
+  ay: number,
+  ar: number,
+  bx: number,
+  by: number,
+  br: number
 ): boolean {
   const dx = bx - ax;
   const dy = by - ay;
-  const distSq = dx * dx + dy * dy;        // Avoid sqrt!
+  const distSq = dx * dx + dy * dy; // Avoid sqrt!
   const radiiSum = ar + br;
   return distSq < radiiSum * radiiSum;
 }
@@ -1700,10 +1746,16 @@ function circleOverlap(
 // For complex shapes, use a simpler bounding shape first
 function narrowPhaseCheck(a: ComplexShape, b: ComplexShape): boolean {
   // 1. Circle broad phase (cheapest)
-  if (!circleOverlap(
-    a.centerX, a.centerY, a.boundingRadius,
-    b.centerX, b.centerY, b.boundingRadius
-  )) {
+  if (
+    !circleOverlap(
+      a.centerX,
+      a.centerY,
+      a.boundingRadius,
+      b.centerX,
+      b.centerY,
+      b.boundingRadius
+    )
+  ) {
     return false;
   }
 
@@ -1904,7 +1956,8 @@ class WebViewOptimizer {
     // 5. Prevent double-tap zoom
     const meta = document.createElement('meta');
     meta.name = 'viewport';
-    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    meta.content =
+      'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
     document.head.appendChild(meta);
   }
 
@@ -1912,10 +1965,10 @@ class WebViewOptimizer {
     const ua = navigator.userAgent;
     // Common WebView indicators
     return (
-      ua.includes('wv') ||           // Android WebView
+      ua.includes('wv') || // Android WebView
       ua.includes('WebView') ||
       (ua.includes('iPhone') && !ua.includes('Safari')) || // iOS WKWebView
-      ua.includes('FB_IAB') ||       // Facebook in-app browser
+      ua.includes('FB_IAB') || // Facebook in-app browser
       ua.includes('FBAN')
     );
   }
@@ -1937,7 +1990,11 @@ class FastStartup {
   }
 
   // Phase 1: Show something immediately
-  static renderLoadingFrame(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+  static renderLoadingFrame(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number
+  ): void {
     // Solid color background - renders in <1ms
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, w, h);
@@ -2063,11 +2120,11 @@ class PostProcessing {
 ```typescript
 function preWarmWebGL(canvas: HTMLCanvasElement): WebGLRenderingContext | null {
   const gl = canvas.getContext('webgl', {
-    alpha: false,                    // No transparency needed = faster
-    antialias: false,                // Disable AA for performance
-    depth: false,                    // 2D game, no depth buffer
-    stencil: false,                  // No stencil needed
-    preserveDrawingBuffer: false,    // Don't preserve buffer
+    alpha: false, // No transparency needed = faster
+    antialias: false, // Disable AA for performance
+    depth: false, // 2D game, no depth buffer
+    stencil: false, // No stencil needed
+    preserveDrawingBuffer: false, // Don't preserve buffer
     powerPreference: 'high-performance', // Request GPU
     failIfMajorPerformanceCaveat: false,
   });
@@ -2096,7 +2153,17 @@ function preWarmWebGL(canvas: HTMLCanvasElement): WebGLRenderingContext | null {
   // Warm texture unit
   const tex = gl.createTexture()!;
   gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    1,
+    1,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    new Uint8Array([0, 0, 0, 255])
+  );
 
   // Clean up warm-up resources
   gl.deleteTexture(tex);
@@ -2127,7 +2194,8 @@ class SizeAwareLoader {
   private readonly sizeBudgetKB: number;
   private loadedKB: number = 0;
 
-  constructor(sizeBudgetKB: number = 2048) { // 2MB default
+  constructor(sizeBudgetKB: number = 2048) {
+    // 2MB default
     this.sizeBudgetKB = sizeBudgetKB;
   }
 
@@ -2199,11 +2267,13 @@ class SizeAwareLoader {
 "I'd follow a systematic approach:
 
 **1. Profile first, optimize second:**
+
 - Connect Chrome DevTools via USB debugging
 - Record a Performance trace with 4x CPU throttle
 - Look at the flame chart for long frames
 
 **2. Identify the bottleneck category:**
+
 - **CPU-bound**: Game logic takes >8ms (yellow in flame chart)
 - **GPU-bound**: Rendering takes too long (green areas)
 - **GC pauses**: Purple blocks labeled 'Minor GC' or 'Major GC'
@@ -2211,18 +2281,21 @@ class SizeAwareLoader {
 **3. Common fixes by category:**
 
 For CPU-bound:
+
 - Object pool all allocations (particles, vectors, temp objects)
 - Use typed arrays for numeric data (Float32Array)
 - Replace forEach/map with for loops in hot paths
 - Use lookup tables for Math.sin/cos
 
 For GPU-bound:
+
 - Reduce canvas resolution to 0.5x or 0.75x device pixels
 - Batch draw calls (under 20 per frame)
 - Use a texture atlas instead of individual images
 - Implement viewport culling
 
 For GC pauses:
+
 - Heap snapshot comparison to find allocations
 - Pool all temporary objects
 - Pre-allocate arrays at fixed sizes
@@ -2240,17 +2313,20 @@ As a last resort, implement dynamic resolution scaling that drops resolution whe
 "Object pooling pre-allocates a fixed number of objects and reuses them instead of creating and garbage-collecting new ones.
 
 **Essential when:**
+
 - High-frequency allocation: particles, bullets, effects (created/destroyed 100+ per second)
 - Consistent object shapes: all pooled objects have the same properties
 - Noticeable GC pauses: measured stutters correlating with minor GC events
 - Mobile targets: where GC is slower and more disruptive
 
 **Overkill when:**
+
 - Objects are created rarely (menu buttons, UI panels)
 - Objects are long-lived (game state, managers)
 - The pool would be larger than actual usage (pooling 1000 objects to use 5)
 
 **Key implementation details:**
+
 - Pre-allocate to expected peak count
 - Reset method must clear ALL state (common bug source)
 - Use swap-with-last removal, not splice
@@ -2269,21 +2345,25 @@ The real cost isn't the allocation itself (fast on V8), it's the GC pause when h
 **1. Inline everything** - No external HTTP requests. Base64 encode sprites directly in the JavaScript bundle. Use CSS for simple shapes. Generate sounds with Web Audio oscillators.
 
 **2. Three-phase startup:**
+
 - Phase 1 (0-50ms): Show solid background + loading text using pure canvas calls. No assets needed.
 - Phase 2 (50-300ms): Decode the base64 sprite atlas and create the WebGL context.
 - Phase 3 (300-500ms): Initialize game state, render first gameplay frame.
 
 **3. Defer non-critical work:**
+
 - Particle system: lazy-init on first explosion
 - Sound system: create AudioContext on first user interaction (required by browsers anyway)
 - Post-processing: skip entirely on low-end devices
 
 **4. Pre-warm the GPU:**
+
 - Create WebGL context with optimal flags (no alpha, no antialias, no depth)
 - Do a dummy draw call to force GPU initialization
 - Compile shaders during Phase 2
 
 **5. Measure and enforce:**
+
 - Add performance.now() markers at each phase
 - Set a hard budget: if Phase 2 exceeds 200ms, skip optional features
 - Test on actual low-end devices, not just desktop with CPU throttling"
@@ -2297,6 +2377,7 @@ The real cost isn't the allocation itself (fast on V8), it's the GC pause when h
 "Both are spatial partitioning structures for broad-phase collision detection.
 
 **Spatial Grid:**
+
 - Fixed-size cells covering the world
 - O(1) insert and query per cell
 - Best when objects are uniformly distributed
@@ -2305,6 +2386,7 @@ The real cost isn't the allocation itself (fast on V8), it's the GC pause when h
 - Use for: playable ads, small/medium worlds, uniform object sizes
 
 **Quadtree:**
+
 - Recursively subdivides space into quadrants
 - Adapts to object density (sparse areas have large nodes)
 - Better for non-uniform distribution (e.g., objects clustered in one area)
@@ -2313,6 +2395,7 @@ The real cost isn't the allocation itself (fast on V8), it's the GC pause when h
 - Use for: large worlds, variable density, objects of very different sizes
 
 For playable ads, I almost always use a **spatial grid** because:
+
 - The game area is small and fixed
 - Object counts are low (<100)
 - The simplicity means fewer bugs and smaller code size
@@ -2334,17 +2417,20 @@ I compare the average FPS of the first 2 seconds of gameplay against the most re
 **Mitigation strategy:**
 
 1. **Prevention first:**
+
    - Don't target max GPU utilization. Leave 30% headroom.
    - Use requestAnimationFrame, never setInterval at high rates.
    - Reduce particles and effects on mobile by default.
 
 2. **When throttling is detected:**
+
    - Lower resolution to 0.5x
    - Reduce particle count by 70%
    - Disable screen shake and post-effects
    - Drop to 30fps target (saves a lot of thermal budget)
 
 3. **For playable ads specifically:**
+
    - The ad is 15-30 seconds, so thermal throttling is less of an issue than for full games
    - But the HOST app may have already heated the device
    - Start conservative and only increase quality if FPS is consistently high
@@ -2365,21 +2451,25 @@ I compare the average FPS of the first 2 seconds of gameplay against the most re
 **1. Texture atlas**: Pack all sprites into a single large image. Every drawImage reads from the same source image, which is friendly to the browser's internal batching.
 
 **2. Minimize context state changes:**
+
 - Sort sprites by style (fillStyle, globalAlpha, etc.) before drawing
 - Group all operations that share the same state
 - Avoid save/restore when possible; manually track and restore only what changed
 
 **3. Layer with off-screen canvases:**
+
 - Static background → render once to off-screen canvas, drawImage once per frame
 - Semi-static layer (UI, score) → redraw only when values change
 - Dynamic layer (gameplay) → redraw every frame
 
 **4. Dirty rectangles for partial scenes:**
+
 - Track which regions changed
 - Clip to bounding box of dirty regions
 - Clear and redraw only those areas
 
 **5. Resolution reduction:**
+
 - Render the game canvas at 50-75% of display resolution
 - Use CSS transform to scale up
 - Save 2-4x pixel fill cost
@@ -2395,12 +2485,14 @@ For most playable ads, a texture atlas + off-screen canvas for background + reso
 "Periodic stutters that correlate with no specific game event are the classic GC pause symptom.
 
 **Identification:**
+
 1. Record a Performance trace in Chrome DevTools
 2. Look for purple 'Minor GC' or 'Major GC' events
 3. Correlate their timing with frame drops
 4. Check the Memory timeline for sawtooth patterns (allocate, allocate, GC, repeat)
 
 **Root cause analysis:**
+
 1. Take two heap snapshots 10 seconds apart
 2. Use the 'Comparison' view to see what was allocated between snapshots
 3. Common culprits:
@@ -2449,29 +2541,34 @@ The goal is zero allocations per frame in hot paths. I verify by taking heap sna
 "The key principles are: minimize state changes, maximize data throughput, and respect mobile GPU architecture.
 
 **1. Single draw call per batch:**
+
 - Pack all sprites into one vertex buffer
 - Use a texture atlas so all sprites share one texture bind
 - Flush the batch only when texture changes or buffer is full
 
 **2. Vertex buffer management:**
-- Pre-allocate the maximum buffer size (e.g., 1000 sprites * 4 verts * 8 floats)
+
+- Pre-allocate the maximum buffer size (e.g., 1000 sprites _ 4 verts _ 8 floats)
 - Use Float32Array and write directly — no intermediate objects
 - Use `gl.bufferData` with `DYNAMIC_DRAW` since data changes each frame
 - Pre-compute the index buffer once (it never changes)
 
 **3. Minimize GPU state changes:**
+
 - Sort sprites by texture before batching
 - Set blend mode once at batch start
 - Avoid switching shaders mid-frame
 - Keep uniform uploads to a minimum
 
 **4. Mobile-specific concerns:**
+
 - Tile-based GPUs (Mali, Adreno, PowerVR) penalize overdraw heavily
 - Draw opaque sprites front-to-back, transparent back-to-front
 - Keep vertex shader simple — mobile GPUs have limited vertex throughput
 - Use `lowp`/`mediump` precision in shaders where possible
 
 **5. Batch size:**
+
 - Target 500-1000 sprites per batch max
 - On low-end mobile, smaller batches (200-300) may perform better due to buffer upload costs
 - Profile to find the sweet spot for target devices
@@ -2487,11 +2584,13 @@ A well-optimized sprite batch can render 1000+ sprites in 2-3 draw calls at 60fp
 "Resolution scaling means rendering the game at a lower pixel resolution than the display, then upscaling via CSS or drawImage. It's the single most impactful optimization for mobile GPU performance.
 
 **Implementation:**
+
 1. Set canvas.width/height to a fraction of clientWidth/clientHeight
 2. CSS scales the canvas to fill the screen
 3. The GPU renders fewer pixels, dramatically reducing fill rate
 
 **Adaptive approach:**
+
 - Start at 1.0x scale
 - Monitor FPS over a rolling window of 30-60 frames
 - If average FPS drops below 50, reduce scale by 0.05 (minimum 0.5)
@@ -2499,12 +2598,14 @@ A well-optimized sprite batch can render 1000+ sprites in 2-3 draw calls at 60fp
 - Use hysteresis: different thresholds for scaling down vs up to prevent oscillation
 
 **Quality considerations:**
+
 - 0.75x is usually imperceptible on mobile screens
 - 0.5x is noticeable but acceptable for fast-paced games
 - Below 0.5x, rendering artifacts become too visible
 - Render UI elements at full resolution on a separate canvas
 
 **Cost savings:**
+
 - 0.75x = 56% of the pixels (1.8x faster)
 - 0.5x = 25% of the pixels (4x faster)
 
@@ -2520,12 +2621,14 @@ This is often the difference between 30fps and 60fps on low-end devices."
 
 **1. Measure first:**
 Run the build and analyze what's consuming space:
+
 - JavaScript (minified + gzipped)
 - Images (usually the biggest offender)
 - Audio files
 - Fonts
 
 **2. Image optimization (biggest wins):**
+
 - Use TinyPNG/ImageOptim to compress PNGs
 - Consider JPEG for photographic content (much smaller)
 - Reduce sprite dimensions (do they really need to be 512x512?)
@@ -2534,11 +2637,13 @@ Run the build and analyze what's consuming space:
 - Consider SVG for simple icons
 
 **3. Audio optimization:**
+
 - Replace audio files with Web Audio oscillator synthesis (zero file size)
 - If audio files are needed, use low bitrate (32kbps mono is fine for sound effects)
 - Limit to 2-3 critical sound effects
 
 **4. Code optimization:**
+
 - Terser with aggressive minification
 - Remove dead code (tree shaking)
 - Remove development-only code (profiling, logging)
@@ -2546,11 +2651,13 @@ Run the build and analyze what's consuming space:
 - Inline all modules into a single file (no module loader overhead)
 
 **5. Final tricks:**
+
 - Base64 encoding adds 33% overhead — if over budget, consider loading one small external file
 - Use gzip/brotli if the ad network supports it (most do)
 - Remove unused CSS, HTML comments, whitespace
 
 **Target budget for a 3MB limit:**
+
 - Code: ~80KB (minified)
 - Sprites: ~400KB (compressed PNG atlas)
 - Audio: ~100KB (or 0KB with oscillators)
@@ -2558,6 +2665,7 @@ Run the build and analyze what's consuming space:
 - Final: ~770KB — well under limit
 
 **Target for 5MB limit:**
+
 - More room for higher quality sprites
 - Can include a small audio sprite
 - Consider video thumbnail if needed"

@@ -20,11 +20,11 @@ Interviewers assess whether you can:
 
 ### Level Expectations
 
-| Level | Influence Signal |
-|-------|-----------------|
-| L5 (Senior) | Influences team-level decisions through technical credibility. Persuades 1-2 peers. |
-| L6 (Staff) | Builds consensus across 3-5 teams. Navigates disagreements between senior engineers. Influences engineering directors. |
-| L7 (Principal) | Shapes VP-level decisions. Influences company-wide technical direction. Resolves deep organizational disagreements. |
+| Level          | Influence Signal                                                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| L5 (Senior)    | Influences team-level decisions through technical credibility. Persuades 1-2 peers.                                    |
+| L6 (Staff)     | Builds consensus across 3-5 teams. Navigates disagreements between senior engineers. Influences engineering directors. |
+| L7 (Principal) | Shapes VP-level decisions. Influences company-wide technical direction. Resolves deep organizational disagreements.    |
 
 ---
 
@@ -71,6 +71,7 @@ You must have each level before you can operate at the next. You cannot build co
 The most powerful influence tool. Hard to argue with numbers.
 
 **How to use it:**
+
 - Instrument systems before proposing changes so you have evidence
 - Benchmark alternatives with real workloads, not theoretical analysis
 - Show cost in terms the audience cares about (latency for engineers, dollars for leadership)
@@ -82,6 +83,7 @@ The most powerful influence tool. Hard to argue with numbers.
 Show, do not tell. A working prototype is worth a thousand slides.
 
 **How to use it:**
+
 - Build a minimal proof-of-concept before the debate, not after
 - Demonstrate it in a live session where skeptics can ask questions
 - Frame it as "exploration" rather than "the answer" to avoid defensiveness
@@ -93,6 +95,7 @@ Show, do not tell. A working prototype is worth a thousand slides.
 Get allies before the big meeting. Never walk into a decision meeting cold.
 
 **How to use it:**
+
 - Identify the key decision-makers and their concerns before formal discussions
 - Have 1:1 conversations to understand objections and incorporate feedback
 - Find the 1-2 people whose support will sway the group and get them on board first
@@ -105,6 +108,7 @@ Get allies before the big meeting. Never walk into a decision meeting cold.
 When people disagree, they usually agree on the problem -- they disagree on the solution. Start from shared ground.
 
 **How to use it:**
+
 - Explicitly acknowledge the other person's concerns and constraints
 - Reframe the discussion around shared goals rather than competing solutions
 - Propose a decision framework that all parties agree to before evaluating options
@@ -116,6 +120,7 @@ When people disagree, they usually agree on the problem -- they disagree on the 
 Large, scary changes get rejected. Small, reversible steps get approved.
 
 **How to use it:**
+
 - Propose a pilot or proof-of-concept rather than a full migration
 - Set success criteria upfront: "If the pilot shows X, we proceed. If not, we revert."
 - Use the results of each step to build momentum for the next
@@ -127,6 +132,7 @@ Large, scary changes get rejected. Small, reversible steps get approved.
 Framing technical decisions for leadership in terms they value.
 
 **How to use it:**
+
 - Translate technical benefits into business outcomes
 - Present options with trade-offs rather than a single recommendation
 - Anticipate their questions: "What is the risk?", "What is the cost of delay?", "Can we do this faster?"
@@ -171,12 +177,12 @@ One of the most important influence concepts for Staff+ engineers. It means advo
 
 ### What "Commit" Actually Means
 
-| Commit Means | Commit Does NOT Mean |
-|-------------|---------------------|
-| Supporting the decision publicly | Pretending you agree |
-| Doing your best to make it succeed | Doing the minimum to not get blamed |
-| Giving honest feedback on execution | Saying "I told you so" when problems arise |
-| Recording your concerns in an ADR or doc | Bringing it up in every meeting for months |
+| Commit Means                                | Commit Does NOT Mean                            |
+| ------------------------------------------- | ----------------------------------------------- |
+| Supporting the decision publicly            | Pretending you agree                            |
+| Doing your best to make it succeed          | Doing the minimum to not get blamed             |
+| Giving honest feedback on execution         | Saying "I told you so" when problems arise      |
+| Recording your concerns in an ADR or doc    | Bringing it up in every meeting for months      |
 | Revisiting the decision if new data emerges | Waiting for it to fail so you can be vindicated |
 
 ---
@@ -201,14 +207,14 @@ Disagreements between senior engineers are inevitable and healthy. The question 
 
 ### Disagreement Anti-patterns
 
-| Anti-pattern | Why It Damages Influence | Better Approach |
-|-------------|------------------------|-----------------|
-| **Anchoring to your first opinion** | Looks like ego, not conviction | "I have updated my thinking based on what you shared" |
-| **Appealing to authority** | "Google does it this way" is not a reason | "Given our specific constraints, this approach works because..." |
-| **Weaponizing data** | Cherry-picking metrics to win | Present data honestly, including data that challenges your position |
-| **Silent disagreement** | Not raising concerns, then saying "I told you so" | Voice concerns clearly during the decision process |
-| **Escalating prematurely** | Going to management before trying to resolve peer-to-peer | Always attempt direct resolution first |
-| **Making it personal** | "You always choose the complex solution" | "This particular approach has more moving parts than we need" |
+| Anti-pattern                        | Why It Damages Influence                                  | Better Approach                                                     |
+| ----------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Anchoring to your first opinion** | Looks like ego, not conviction                            | "I have updated my thinking based on what you shared"               |
+| **Appealing to authority**          | "Google does it this way" is not a reason                 | "Given our specific constraints, this approach works because..."    |
+| **Weaponizing data**                | Cherry-picking metrics to win                             | Present data honestly, including data that challenges your position |
+| **Silent disagreement**             | Not raising concerns, then saying "I told you so"         | Voice concerns clearly during the decision process                  |
+| **Escalating prematurely**          | Going to management before trying to resolve peer-to-peer | Always attempt direct resolution first                              |
+| **Making it personal**              | "You always choose the complex solution"                  | "This particular approach has more moving parts than we need"       |
 
 ---
 
@@ -339,29 +345,29 @@ Six months later, after the launch, the Director proactively brought up the Type
 
 ### What Great Answers Have in Common
 
-| Element | Why It Matters |
-|---------|---------------|
-| **Empathy for the other side** | Shows you understand that reasonable people can disagree |
-| **Process, not just outcome** | Shows your influence methodology is repeatable |
-| **Willingness to compromise** | Shows you optimize for org outcomes, not personal wins |
-| **Data and evidence** | Shows you persuade with substance, not politics |
-| **Long-term relationship thinking** | Shows you value working relationships over winning arguments |
-| **Self-awareness** | Shows you recognize when you were wrong or could have done better |
+| Element                             | Why It Matters                                                    |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| **Empathy for the other side**      | Shows you understand that reasonable people can disagree          |
+| **Process, not just outcome**       | Shows your influence methodology is repeatable                    |
+| **Willingness to compromise**       | Shows you optimize for org outcomes, not personal wins            |
+| **Data and evidence**               | Shows you persuade with substance, not politics                   |
+| **Long-term relationship thinking** | Shows you value working relationships over winning arguments      |
+| **Self-awareness**                  | Shows you recognize when you were wrong or could have done better |
 
 ---
 
 ## Anti-patterns to Avoid
 
-| Anti-pattern | Why It Fails | What to Do Instead |
-|-------------|-------------|-------------------|
-| **The Lone Wolf** | Building a solution alone and presenting it as a fait accompli | Involve stakeholders early. Co-design, do not present. |
-| **The Politician** | Saying different things to different audiences | Be consistent. People compare notes. |
-| **The Bulldozer** | Using seniority or technical depth to overpower rather than persuade | Win with evidence and empathy, not authority. |
-| **The Conflict Avoider** | Never raising disagreements to maintain harmony | Productive conflict is essential. Avoiding it creates bigger problems. |
-| **The Passive Aggressor** | Saying "I support this" but undermining it through inaction | If you commit, commit fully. If you cannot, say so. |
-| **The Credit Taker** | Presenting shared ideas as solely your own | Give credit generously. It builds your coalition for next time. |
-| **The Perfectionist** | Refusing to compromise because the solution is not ideal | Perfect is the enemy of shipped. Find the 80% solution everyone supports. |
-| **The Memo Writer** | Relying solely on written communication for persuasion | Documents inform, but relationships persuade. Have the 1:1 conversations. |
+| Anti-pattern              | Why It Fails                                                         | What to Do Instead                                                        |
+| ------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **The Lone Wolf**         | Building a solution alone and presenting it as a fait accompli       | Involve stakeholders early. Co-design, do not present.                    |
+| **The Politician**        | Saying different things to different audiences                       | Be consistent. People compare notes.                                      |
+| **The Bulldozer**         | Using seniority or technical depth to overpower rather than persuade | Win with evidence and empathy, not authority.                             |
+| **The Conflict Avoider**  | Never raising disagreements to maintain harmony                      | Productive conflict is essential. Avoiding it creates bigger problems.    |
+| **The Passive Aggressor** | Saying "I support this" but undermining it through inaction          | If you commit, commit fully. If you cannot, say so.                       |
+| **The Credit Taker**      | Presenting shared ideas as solely your own                           | Give credit generously. It builds your coalition for next time.           |
+| **The Perfectionist**     | Refusing to compromise because the solution is not ideal             | Perfect is the enemy of shipped. Find the 80% solution everyone supports. |
+| **The Memo Writer**       | Relying solely on written communication for persuasion               | Documents inform, but relationships persuade. Have the 1:1 conversations. |
 
 ---
 

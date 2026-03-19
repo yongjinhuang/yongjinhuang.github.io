@@ -15,6 +15,7 @@ Marketplaces are among the most valuable businesses on the internet, and they co
 Every marketplace starts with the same dilemma: buyers won't come without sellers, and sellers won't come without buyers. This is the cold start problem, and how you solve it defines whether the platform survives.
 
 Common strategies:
+
 1. **Single-player mode**: Make the product useful for one side even without the other. Airbnb hosts could use it as a listing page before any bookings happened.
 2. **Subsidize one side**: Uber offered guaranteed minimum earnings to early drivers. Shopee gave sellers zero-commission deals at launch.
 3. **Constrain the market**: Start in one geography or category. Amazon started with books. Uber started in San Francisco.
@@ -66,17 +67,20 @@ The matching mechanism depends on whether the supply is fungible (any Uber drive
 Trust is the core product of a marketplace. Without it, buyers and sellers would just transact directly.
 
 **Reviews & Ratings:**
+
 1. After a transaction, both sides can leave a review (rating + text)
 2. Reviews are tied to verified purchases — you can't review what you didn't buy
 3. Aggregate ratings (4.8 stars from 2,300 reviews) become a seller's reputation
 
 **Fraud Detection in Reviews:**
+
 - **Fake positive reviews**: Sellers pay for 5-star reviews. Detect via reviewer account age, purchase patterns, review timing clusters, text similarity analysis.
 - **Fake negative reviews**: Competitors leave 1-star reviews. Detect via reviewer history with the competitor's products.
 - **Review manipulation**: Sellers offer discounts in exchange for reviews. Monitor for keywords like "free product" in review text.
 - **Behavioral signals**: Genuine reviewers browse before buying. Fraud accounts go straight to purchase and review.
 
 **Seller Verification:**
+
 - Identity checks, address verification, business license validation
 - Ongoing monitoring: sudden changes in listing volume, category shifts, complaint spikes
 
@@ -95,13 +99,13 @@ This protects buyers (they can get refunds if things go wrong) and gives the pla
 
 The take rate is the percentage of each transaction the platform keeps. This is the primary revenue model:
 
-| Platform | Approximate Take Rate | Fee Structure |
-|----------|-----------------------|---------------|
-| Amazon | 8-15% | Referral fee varies by category + optional FBA fees |
-| Shopee | 2-5% | Commission + payment processing + optional ads |
-| Airbnb | 14-20% | Split between host fee (3%) and guest fee (14%+) |
-| Uber | 20-30% | Service fee from rider + commission from driver |
-| Etsy | 6.5% + listing fees | Transaction fee + payment processing + $0.20/listing |
+| Platform | Approximate Take Rate | Fee Structure                                        |
+| -------- | --------------------- | ---------------------------------------------------- |
+| Amazon   | 8-15%                 | Referral fee varies by category + optional FBA fees  |
+| Shopee   | 2-5%                  | Commission + payment processing + optional ads       |
+| Airbnb   | 14-20%                | Split between host fee (3%) and guest fee (14%+)     |
+| Uber     | 20-30%                | Service fee from rider + commission from driver      |
+| Etsy     | 6.5% + listing fees   | Transaction fee + payment processing + $0.20/listing |
 
 Additional revenue streams: promoted listings (ads), subscription plans for premium seller tools, fulfillment services (Amazon FBA, Shopee Xpress), and financial products (seller loans).
 
@@ -129,20 +133,20 @@ As the marketplace grows, you need rules and enforcement:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Take rate** | Percentage of GMV the platform keeps as revenue |
-| **GMV** | Gross Merchandise Value — total value of goods sold through the platform |
-| **Liquidity** | Whether the marketplace has enough supply and demand for transactions to happen reliably |
-| **Network effects** | More buyers attract more sellers, which attract more buyers. The platform's core moat |
-| **Cold start** | The chicken-and-egg problem of getting initial supply and demand |
-| **Buy Box** | The default seller shown on a shared product page (Amazon's model) |
-| **Escrow** | Holding buyer payment until the transaction is confirmed complete |
-| **Take-down** | Removing a listing that violates platform policies |
-| **Seller tier** | Ranking system for sellers (e.g., Shopee Preferred Seller) based on performance metrics |
-| **Chargeback** | Buyer disputes a charge with their bank. The platform (not the seller) usually absorbs this |
-| **Multi-homing** | When sellers list on multiple platforms simultaneously (Shopee + Lazada + Amazon) |
-| **Disintermediation** | Buyers and sellers bypassing the platform to transact directly, avoiding fees |
+| Term                  | What It Means                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------- |
+| **Take rate**         | Percentage of GMV the platform keeps as revenue                                             |
+| **GMV**               | Gross Merchandise Value — total value of goods sold through the platform                    |
+| **Liquidity**         | Whether the marketplace has enough supply and demand for transactions to happen reliably    |
+| **Network effects**   | More buyers attract more sellers, which attract more buyers. The platform's core moat       |
+| **Cold start**        | The chicken-and-egg problem of getting initial supply and demand                            |
+| **Buy Box**           | The default seller shown on a shared product page (Amazon's model)                          |
+| **Escrow**            | Holding buyer payment until the transaction is confirmed complete                           |
+| **Take-down**         | Removing a listing that violates platform policies                                          |
+| **Seller tier**       | Ranking system for sellers (e.g., Shopee Preferred Seller) based on performance metrics     |
+| **Chargeback**        | Buyer disputes a charge with their bank. The platform (not the seller) usually absorbs this |
+| **Multi-homing**      | When sellers list on multiple platforms simultaneously (Shopee + Lazada + Amazon)           |
+| **Disintermediation** | Buyers and sellers bypassing the platform to transact directly, avoiding fees               |
 
 ## Common Patterns
 
@@ -183,15 +187,15 @@ The platform gives sellers tools (inventory management, analytics, marketing) th
 
 ## Quick Reference
 
-| Component | Key Consideration |
-|-----------|-------------------|
-| Cold start | Subsidize one side, constrain the market, seed supply manually |
-| Seller onboarding | Identity verification, store setup, probation period |
-| Product catalog | Category taxonomy, listing moderation, catalog normalization |
-| Search ranking | Relevance, seller quality, conversion signals, paid placement |
-| Trust & safety | Verified reviews, fraud detection, seller tiers |
-| Payments | Escrow model, commission deduction, payout schedules |
-| Dispute resolution | Evidence-based, automated rules for common cases, human escalation |
-| Platform governance | Policies, enforcement tiers, appeals process |
-| Revenue model | Take rate, promoted listings, fulfillment services, seller tools |
-| Retention | Prevent disintermediation by providing ongoing value beyond the transaction |
+| Component           | Key Consideration                                                           |
+| ------------------- | --------------------------------------------------------------------------- |
+| Cold start          | Subsidize one side, constrain the market, seed supply manually              |
+| Seller onboarding   | Identity verification, store setup, probation period                        |
+| Product catalog     | Category taxonomy, listing moderation, catalog normalization                |
+| Search ranking      | Relevance, seller quality, conversion signals, paid placement               |
+| Trust & safety      | Verified reviews, fraud detection, seller tiers                             |
+| Payments            | Escrow model, commission deduction, payout schedules                        |
+| Dispute resolution  | Evidence-based, automated rules for common cases, human escalation          |
+| Platform governance | Policies, enforcement tiers, appeals process                                |
+| Revenue model       | Take rate, promoted listings, fulfillment services, seller tools            |
+| Retention           | Prevent disintermediation by providing ongoing value beyond the transaction |

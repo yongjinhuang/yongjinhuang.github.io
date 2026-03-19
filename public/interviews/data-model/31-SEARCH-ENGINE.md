@@ -6,14 +6,14 @@ A search engine's data model is fundamentally different from relational database
 
 ## Table Responsibilities
 
-| Structure | Purpose | Why It Exists |
-|-----------|---------|---------------|
-| **index_mappings** | Schema definition for an index | Defines field types, analyzers, and shard topology -- the search engine's equivalent of a table schema |
-| **inverted_index** | Term-to-document mapping | The core data structure that makes full-text search fast: O(1) term lookup + linear scan of matching docs |
+| Structure           | Purpose                              | Why It Exists                                                                                                                 |
+| ------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| **index_mappings**  | Schema definition for an index       | Defines field types, analyzers, and shard topology -- the search engine's equivalent of a table schema                        |
+| **inverted_index**  | Term-to-document mapping             | The core data structure that makes full-text search fast: O(1) term lookup + linear scan of matching docs                     |
 | **term_dictionary** | Sorted term index with block offsets | FST (Finite State Transducer) that maps terms to their posting list locations on disk; enables prefix queries and fast lookup |
-| **doc_values** | Columnar field storage | Pre-sorted, columnar representation for sorting and aggregation; avoids loading full documents just to sort by a field |
-| **stored_fields** | Original document storage | The raw JSON source document; returned in search results when requested |
-| **segments** | Immutable Lucene data units | Each segment is a complete mini-index; immutability enables lock-free reads and crash recovery |
+| **doc_values**      | Columnar field storage               | Pre-sorted, columnar representation for sorting and aggregation; avoids loading full documents just to sort by a field        |
+| **stored_fields**   | Original document storage            | The raw JSON source document; returned in search results when requested                                                       |
+| **segments**        | Immutable Lucene data units          | Each segment is a complete mini-index; immutability enables lock-free reads and crash recovery                                |
 
 ---
 
@@ -21,17 +21,17 @@ A search engine's data model is fundamentally different from relational database
 
 ### index_mappings
 
-| Field | Type | Description |
-|-------|------|-------------|
-| index_name | STRING | Logical index name (e.g., "products", "logs-2024-01") |
-| field_definitions | OBJECT[] | Array of field definitions, each containing name, type, analyzer, and sub-fields |
-| -- field.name | STRING | Field name (e.g., "title", "description", "price") |
-| -- field.type | ENUM | text (analyzed for full-text), keyword (exact match), integer, float, date, boolean, geo_point, nested |
-| -- field.analyzer | STRING | Which text analyzer to use: standard, english, custom_synonym, etc. |
-| -- field.sub_fields | OBJECT[] | Multi-fields: index the same content differently (e.g., title as text + title.raw as keyword) |
-| settings.shard_count | INT | Number of primary shards (determines parallelism and max index size) |
-| settings.replica_count | INT | Number of replica shards per primary (determines read throughput and fault tolerance) |
-| settings.refresh_interval | DURATION | How often new documents become searchable (default: 1 second) |
+| Field                     | Type     | Description                                                                                            |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------------------ |
+| index_name                | STRING   | Logical index name (e.g., "products", "logs-2024-01")                                                  |
+| field_definitions         | OBJECT[] | Array of field definitions, each containing name, type, analyzer, and sub-fields                       |
+| -- field.name             | STRING   | Field name (e.g., "title", "description", "price")                                                     |
+| -- field.type             | ENUM     | text (analyzed for full-text), keyword (exact match), integer, float, date, boolean, geo_point, nested |
+| -- field.analyzer         | STRING   | Which text analyzer to use: standard, english, custom_synonym, etc.                                    |
+| -- field.sub_fields       | OBJECT[] | Multi-fields: index the same content differently (e.g., title as text + title.raw as keyword)          |
+| settings.shard_count      | INT      | Number of primary shards (determines parallelism and max index size)                                   |
+| settings.replica_count    | INT      | Number of replica shards per primary (determines read throughput and fault tolerance)                  |
+| settings.refresh_interval | DURATION | How often new documents become searchable (default: 1 second)                                          |
 
 **Why separate text and keyword types?** Text fields are analyzed (tokenized, lowercased, stemmed) for full-text search -- "running shoes" matches "ran" and "shoe." Keyword fields are stored verbatim for exact matching, sorting, and aggregation -- "Nike Air Max" must match exactly. The same field often needs both: title (text) for search and title.raw (keyword) for sorting.
 
@@ -39,13 +39,13 @@ A search engine's data model is fundamentally different from relational database
 
 ### inverted_index (per shard)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| term | STRING | A single indexed term (e.g., "running", "shoe", "nike") |
-| posting_list | OBJECT[] | Array of postings, each containing: |
-| -- doc_id | INT | Internal document identifier within this shard |
-| -- term_frequency | INT | How many times this term appears in this document's field |
-| -- positions | INT[] | Exact positions of the term within the field (enables phrase queries) |
+| Field             | Type     | Description                                                           |
+| ----------------- | -------- | --------------------------------------------------------------------- |
+| term              | STRING   | A single indexed term (e.g., "running", "shoe", "nike")               |
+| posting_list      | OBJECT[] | Array of postings, each containing:                                   |
+| -- doc_id         | INT      | Internal document identifier within this shard                        |
+| -- term_frequency | INT      | How many times this term appears in this document's field             |
+| -- positions      | INT[]    | Exact positions of the term within the field (enables phrase queries) |
 
 **Why store term_frequency?** TF is a key component of the BM25 scoring algorithm. A document mentioning "elasticsearch" 5 times is likely more relevant than one mentioning it once. Without TF, all matches would be scored equally.
 
@@ -53,44 +53,44 @@ A search engine's data model is fundamentally different from relational database
 
 ### term_dictionary (FST)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| term | STRING | The indexed term |
-| block_offset | LONG | Byte offset in the posting list file where this term's data begins |
+| Field        | Type   | Description                                                        |
+| ------------ | ------ | ------------------------------------------------------------------ |
+| term         | STRING | The indexed term                                                   |
+| block_offset | LONG   | Byte offset in the posting list file where this term's data begins |
 
-**Why an FST (Finite State Transducer)?** An FST is a compressed data structure that maps terms to values while sharing common prefixes and suffixes. For a dictionary of millions of terms, an FST uses ~5x less memory than a hash map while supporting prefix queries ("auto*") and fuzzy matching ("elasticsearch" with edit distance 1). This is critical because the term dictionary must fit in memory for fast lookups.
+**Why an FST (Finite State Transducer)?** An FST is a compressed data structure that maps terms to values while sharing common prefixes and suffixes. For a dictionary of millions of terms, an FST uses ~5x less memory than a hash map while supporting prefix queries ("auto\*") and fuzzy matching ("elasticsearch" with edit distance 1). This is critical because the term dictionary must fit in memory for fast lookups.
 
 ### doc_values (columnar)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| field_name | STRING | The field being stored in columnar format |
-| doc_id | INT | Internal document identifier |
-| value | VARIES | The field's value for this document, sorted for efficient access |
+| Field      | Type   | Description                                                      |
+| ---------- | ------ | ---------------------------------------------------------------- |
+| field_name | STRING | The field being stored in columnar format                        |
+| doc_id     | INT    | Internal document identifier                                     |
+| value      | VARIES | The field's value for this document, sorted for efficient access |
 
 **Why columnar storage separate from the inverted index?** The inverted index maps terms to documents (which documents contain "nike"?). Doc values map documents to values (what is the price of document 42?). Sorting search results by price requires reading the price of every matching document. Columnar storage reads only the price column, not the entire document. This is the same principle behind columnar databases like ClickHouse.
 
 ### stored_fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| doc_id | INT | Internal document identifier |
-| _source | JSON | The original JSON document as submitted |
+| Field    | Type | Description                             |
+| -------- | ---- | --------------------------------------- |
+| doc_id   | INT  | Internal document identifier            |
+| \_source | JSON | The original JSON document as submitted |
 
-**Why store the original source?** When returning search results, users expect to see the original document fields (title, description, price). Without stored fields, you would need to reconstruct the document from the inverted index and doc values, which is lossy (analyzed text cannot be reversed). The _source also enables reindexing.
+**Why store the original source?** When returning search results, users expect to see the original document fields (title, description, price). Without stored fields, you would need to reconstruct the document from the inverted index and doc values, which is lossy (analyzed text cannot be reversed). The \_source also enables reindexing.
 
 ### segments (immutable Lucene segments)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| segment_id | STRING | Unique segment identifier within a shard |
-| inverted_index | BINARY | This segment's inverted index data |
-| doc_values | BINARY | This segment's columnar field data |
-| stored_fields | BINARY | This segment's stored source documents |
-| norms | BINARY | Field-length normalization factors (shorter fields score higher) |
-| live_docs | BITSET | Bit vector marking which documents are not deleted |
-| doc_count | INT | Total documents in this segment (including deleted) |
-| max_doc_id | INT | Highest doc_id in this segment |
+| Field          | Type   | Description                                                      |
+| -------------- | ------ | ---------------------------------------------------------------- |
+| segment_id     | STRING | Unique segment identifier within a shard                         |
+| inverted_index | BINARY | This segment's inverted index data                               |
+| doc_values     | BINARY | This segment's columnar field data                               |
+| stored_fields  | BINARY | This segment's stored source documents                           |
+| norms          | BINARY | Field-length normalization factors (shorter fields score higher) |
+| live_docs      | BITSET | Bit vector marking which documents are not deleted               |
+| doc_count      | INT    | Total documents in this segment (including deleted)              |
+| max_doc_id     | INT    | Highest doc_id in this segment                                   |
 
 **Why immutable segments?** Immutability is the key architectural insight. New documents are written to a new segment (never modifying existing ones). This means reads never block on writes, no locking is needed, and crash recovery is simple (incomplete segments are discarded). Deletes are marked in live_docs (a bit vector) rather than physically removed.
 
@@ -176,15 +176,16 @@ segments contain: inverted_index + term_dictionary + doc_values + stored_fields 
 
 ### Indexing (Write Path)
 
-1. **Document ingested** -- A JSON document is submitted to the index API. The coordinating node routes it to the correct primary shard based on a hash of the document's _id.
+1. **Document ingested** -- A JSON document is submitted to the index API. The coordinating node routes it to the correct primary shard based on a hash of the document's \_id.
 
 2. **Text analysis** -- For each text field, the configured analyzer processes the content:
+
    - **Tokenizer**: splits "The quick brown fox" into ["The", "quick", "brown", "fox"]
    - **Lowercase filter**: ["the", "quick", "brown", "fox"]
    - **Stop word filter**: ["quick", "brown", "fox"] (removes "the")
    - **Stemmer**: ["quick", "brown", "fox"] (or ["run", "shoe"] from "running shoes")
 
-3. **In-memory buffer** -- Analyzed terms and their positions are added to an in-memory buffer (the "indexing buffer"). The document's _source is also buffered.
+3. **In-memory buffer** -- Analyzed terms and their positions are added to an in-memory buffer (the "indexing buffer"). The document's \_source is also buffered.
 
 4. **Refresh (new segment)** -- Every refresh_interval (default 1 second), the in-memory buffer is flushed to a new, small, immutable segment on disk. The segment contains the inverted index, doc values, stored fields, and norms for the buffered documents. After refresh, new documents become searchable.
 
@@ -199,12 +200,14 @@ segments contain: inverted_index + term_dictionary + doc_values + stored_fields 
 8. **Shard fan-out** -- The coordinating node sends the query to all shards (primary or replica) in parallel. Each shard searches independently.
 
 9. **Per-shard search** -- On each shard:
+
    - Look up each query term in the **term_dictionary** (FST) to get the block_offset
    - Load the **posting list** from the **inverted_index** at that offset
    - For multi-term queries, intersect or union posting lists (AND/OR)
    - For phrase queries, check term **positions** for adjacency
 
 10. **Scoring with BM25** -- Each matching document is scored:
+
     - **TF (term frequency)**: how often the term appears in the document
     - **IDF (inverse document frequency)**: how rare the term is across all documents
     - **Field length normalization (norms)**: shorter fields score higher (a match in a 5-word title is more relevant than in a 5000-word body)
@@ -213,7 +216,7 @@ segments contain: inverted_index + term_dictionary + doc_values + stored_fields 
 
 12. **Coordinating node merge** -- The coordinating node merges top-N results from all shards, re-sorts globally, and takes the final top-N. If sorting by a field (e.g., price), **doc_values** are used instead of BM25 scores.
 
-13. **Fetch phase** -- For the final top-N documents, **stored_fields** (_source) are fetched from the relevant shards and returned to the client.
+13. **Fetch phase** -- For the final top-N documents, **stored_fields** (\_source) are fetched from the relevant shards and returned to the client.
 
 ---
 

@@ -6,15 +6,15 @@ A comprehensive guide for Senior (L5), Staff (L6), and Principal (L7) engineerin
 
 ## Table of Contents
 
-| # | Topic | Focus Areas |
-|---|-------|-------------|
-| [00](./00-README.md) | **Overview (this file)** | Levels, expectations, how Staff+ differs from IC interviews |
-| [01](./01-TECHNICAL-STRATEGY.md) | Technical Strategy | RFCs, ADRs, tech evaluation, migration strategies, roadmapping |
-| [02](./02-INFLUENCING-WITHOUT-AUTHORITY.md) | Influencing Without Authority | Cross-team collaboration, consensus building, stakeholder management |
-| [03](./03-SYSTEM-THINKING.md) | System Thinking | Org-level bottlenecks, tech debt frameworks, SLOs, platform vs product |
-| [04](./04-MENTORING-GROWING-ENGINEERS.md) | Mentoring & Growing Engineers | Feedback models, 1:1s, sponsorship, engineering culture |
-| [05](./05-EXECUTION-DELIVERY.md) | Execution & Delivery | Scoping ambiguity, risk management, incremental delivery, unblocking |
-| [06](./06-INTERVIEW-FORMATS.md) | Interview Formats & Prep | Architecture review, leadership round, bar raiser, salary negotiation |
+| #                                           | Topic                         | Focus Areas                                                            |
+| ------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
+| [00](./00-README.md)                        | **Overview (this file)**      | Levels, expectations, how Staff+ differs from IC interviews            |
+| [01](./01-TECHNICAL-STRATEGY.md)            | Technical Strategy            | RFCs, ADRs, tech evaluation, migration strategies, roadmapping         |
+| [02](./02-INFLUENCING-WITHOUT-AUTHORITY.md) | Influencing Without Authority | Cross-team collaboration, consensus building, stakeholder management   |
+| [03](./03-SYSTEM-THINKING.md)               | System Thinking               | Org-level bottlenecks, tech debt frameworks, SLOs, platform vs product |
+| [04](./04-MENTORING-GROWING-ENGINEERS.md)   | Mentoring & Growing Engineers | Feedback models, 1:1s, sponsorship, engineering culture                |
+| [05](./05-EXECUTION-DELIVERY.md)            | Execution & Delivery          | Scoping ambiguity, risk management, incremental delivery, unblocking   |
+| [06](./06-INTERVIEW-FORMATS.md)             | Interview Formats & Prep      | Architecture review, leadership round, bar raiser, salary negotiation  |
 
 ---
 
@@ -53,11 +53,11 @@ Understanding the precise expectations at each level is critical. Companies use 
 
 **Scope:** Team-level impact. You are the technical anchor of your team.
 
-| Dimension | Expectation |
-|-----------|-------------|
-| **Technical** | Design systems for your team. Own complex subsystems end-to-end. Make sound trade-off decisions. |
-| **Execution** | Drive medium-complexity projects independently. Break down ambiguous requirements into tasks. |
-| **Influence** | Mentor 1-2 junior engineers. Contribute to team processes. Influence team-level technical decisions. |
+| Dimension         | Expectation                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
+| **Technical**     | Design systems for your team. Own complex subsystems end-to-end. Make sound trade-off decisions.       |
+| **Execution**     | Drive medium-complexity projects independently. Break down ambiguous requirements into tasks.          |
+| **Influence**     | Mentor 1-2 junior engineers. Contribute to team processes. Influence team-level technical decisions.   |
 | **Communication** | Write clear design docs. Present technical proposals to your team. Communicate status to your manager. |
 
 **Interview signal:** "I led the design and implementation of X within my team, considering trade-offs A, B, C."
@@ -66,11 +66,11 @@ Understanding the precise expectations at each level is critical. Companies use 
 
 **Scope:** Multi-team or org-level impact. You are the technical conscience of your area.
 
-| Dimension | Expectation |
-|-----------|-------------|
-| **Technical** | Set technical direction across 2-4 teams. Define architecture for cross-cutting systems. Identify and resolve org-wide technical debt. |
-| **Execution** | Drive large, ambiguous initiatives that span multiple teams and quarters. Remove blockers for other teams. |
-| **Influence** | Build consensus among senior engineers with competing priorities. Influence without managing. Change how teams work. |
+| Dimension         | Expectation                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Technical**     | Set technical direction across 2-4 teams. Define architecture for cross-cutting systems. Identify and resolve org-wide technical debt.    |
+| **Execution**     | Drive large, ambiguous initiatives that span multiple teams and quarters. Remove blockers for other teams.                                |
+| **Influence**     | Build consensus among senior engineers with competing priorities. Influence without managing. Change how teams work.                      |
 | **Communication** | Write RFCs that shape org direction. Present strategy to directors and VPs. Translate technical decisions for non-technical stakeholders. |
 
 **Interview signal:** "I identified that teams X, Y, Z were all building similar solutions. I proposed a unified platform, got buy-in from three tech leads, and led the migration that saved the org 6 months of duplicated effort."
@@ -79,11 +79,11 @@ Understanding the precise expectations at each level is critical. Companies use 
 
 **Scope:** Company-wide or industry impact. You are a technical executive without the title.
 
-| Dimension | Expectation |
-|-----------|-------------|
-| **Technical** | Define company-wide technical strategy. Make decisions that affect every engineer. Set standards that persist for years. |
-| **Execution** | Drive multi-year, multi-org initiatives. Make judgment calls with incomplete data that carry enormous risk. |
-| **Influence** | Influence VP-level decisions. Represent engineering in C-suite conversations. Shape company culture. |
+| Dimension         | Expectation                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Technical**     | Define company-wide technical strategy. Make decisions that affect every engineer. Set standards that persist for years. |
+| **Execution**     | Drive multi-year, multi-org initiatives. Make judgment calls with incomplete data that carry enormous risk.              |
+| **Influence**     | Influence VP-level decisions. Represent engineering in C-suite conversations. Shape company culture.                     |
 | **Communication** | Write strategy documents that set company direction. Present to the board. Be the public technical voice of the company. |
 
 **Interview signal:** "I identified that our entire data infrastructure would not scale to our 3-year growth target. I authored a technical strategy adopted by engineering leadership, coordinated migration across 15 teams, and it became the foundation of our next-generation platform."
@@ -119,14 +119,14 @@ Every Staff+ interview, regardless of company or format, evaluates five core pil
 
 ### How Pillars Map to Interview Rounds
 
-| Interview Round | Primary Pillar | Secondary Pillar |
-|-----------------|---------------|------------------|
-| System Design | Technical Strategy | System Thinking |
-| Architecture Review | Technical Strategy | Execution |
-| Behavioral / Leadership | Influence | People Development |
-| Cross-functional | Influence | Execution |
-| Domain Deep-dive | System Thinking | Technical Strategy |
-| Bar Raiser | All Five | All Five |
+| Interview Round         | Primary Pillar     | Secondary Pillar   |
+| ----------------------- | ------------------ | ------------------ |
+| System Design           | Technical Strategy | System Thinking    |
+| Architecture Review     | Technical Strategy | Execution          |
+| Behavioral / Leadership | Influence          | People Development |
+| Cross-functional        | Influence          | Execution          |
+| Domain Deep-dive        | System Thinking    | Technical Strategy |
+| Bar Raiser              | All Five           | All Five           |
 
 ---
 
@@ -146,11 +146,11 @@ Staff+ requires demonstrating **multi-team** impact. Single-team stories can wor
 
 **Calibrate your stories:**
 
-| Level | Minimum Scope |
-|-------|---------------|
-| L5 | Team (6-10 people) |
-| L6 | Multiple teams (20-40 people) or org-wide initiative |
-| L7 | Division / company-wide (100+ people) |
+| Level | Minimum Scope                                        |
+| ----- | ---------------------------------------------------- |
+| L5    | Team (6-10 people)                                   |
+| L6    | Multiple teams (20-40 people) or org-wide initiative |
+| L7    | Division / company-wide (100+ people)                |
 
 ### 3. Skipping the "Why"
 
@@ -174,14 +174,14 @@ You need 6-8 well-prepared stories that cover all five pillars. Each story shoul
 
 Pick stories that demonstrate:
 
-| Criterion | Why It Matters |
-|-----------|---------------|
-| **Multi-team scope** | Proves you operate beyond your team |
-| **Ambiguity** | Shows you can navigate undefined problems |
-| **Trade-offs** | Demonstrates judgment, not just execution |
-| **People challenges** | Proves you can work through humans, not around them |
-| **Measurable outcome** | Gives the interviewer concrete evidence |
-| **Your unique contribution** | Shows what would not have happened without you |
+| Criterion                    | Why It Matters                                      |
+| ---------------------------- | --------------------------------------------------- |
+| **Multi-team scope**         | Proves you operate beyond your team                 |
+| **Ambiguity**                | Shows you can navigate undefined problems           |
+| **Trade-offs**               | Demonstrates judgment, not just execution           |
+| **People challenges**        | Proves you can work through humans, not around them |
+| **Measurable outcome**       | Gives the interviewer concrete evidence             |
+| **Your unique contribution** | Shows what would not have happened without you      |
 
 ### Story Mapping Matrix
 
@@ -221,11 +221,11 @@ Build vs buy decision    |    X     |     X     |    X    |        |
 
 ### Common Time Splits
 
-| Round Type | Setup/Context | Analysis/Decision | Action/Execution | Impact/Learning |
-|------------|---------------|-------------------|-------------------|-----------------|
-| Behavioral (45 min) | 15% | 25% | 40% | 20% |
-| Architecture Review (60 min) | 20% | 30% | 30% | 20% |
-| System Design (45 min) | 10% | 30% | 45% | 15% |
+| Round Type                   | Setup/Context | Analysis/Decision | Action/Execution | Impact/Learning |
+| ---------------------------- | ------------- | ----------------- | ---------------- | --------------- |
+| Behavioral (45 min)          | 15%           | 25%               | 40%              | 20%             |
+| Architecture Review (60 min) | 20%           | 30%               | 30%              | 20%             |
+| System Design (45 min)       | 10%           | 30%               | 45%              | 15%             |
 
 ---
 

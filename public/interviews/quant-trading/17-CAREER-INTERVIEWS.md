@@ -72,6 +72,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 **What they do**: Discover alpha signals, develop predictive models, and design trading strategies.
 
 **Day-to-day**:
+
 - Analyze large datasets (price, volume, fundamental, alternative data)
 - Form hypotheses about market inefficiencies
 - Build and test statistical/ML models
@@ -80,6 +81,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 - Monitor live strategy performance and iterate
 
 **Required skills**:
+
 - Advanced statistics and probability
 - Machine learning (both classical and deep learning)
 - Python (pandas, numpy, scikit-learn, PyTorch)
@@ -93,6 +95,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 **What they do**: Build the technology infrastructure that powers trading operations.
 
 **Day-to-day**:
+
 - Design and implement low-latency execution systems
 - Build data pipelines for market data ingestion
 - Develop backtesting frameworks and research tools
@@ -101,6 +104,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 - Implement exchange connectivity (FIX protocol, binary protocols)
 
 **Required skills**:
+
 - C++ (modern C++17/20/23), Python
 - Systems programming (Linux, networking, memory management)
 - Data structures and algorithms
@@ -114,6 +118,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 **What they do**: Execute strategies, manage risk in real-time, and own P&L.
 
 **Day-to-day**:
+
 - Monitor live trading positions across multiple strategies
 - Make real-time risk management decisions
 - Adjust strategy parameters based on market conditions
@@ -122,6 +127,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 - Interface with brokers and counterparties
 
 **Required skills**:
+
 - Strong quantitative foundation (probability, statistics)
 - Market microstructure knowledge
 - Risk management frameworks
@@ -135,6 +141,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 **What they do**: Price complex financial products, model risk, and ensure regulatory compliance.
 
 **Day-to-day**:
+
 - Develop and validate pricing models for derivatives
 - Calculate risk metrics (VaR, CVA, Greeks)
 - Perform stress testing and scenario analysis
@@ -143,6 +150,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 - Build Monte Carlo simulation frameworks
 
 **Required skills**:
+
 - Stochastic calculus and PDE methods
 - Derivatives pricing theory
 - Monte Carlo methods
@@ -156,6 +164,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 **What they do**: Source, process, and extract signals from traditional and alternative data.
 
 **Day-to-day**:
+
 - Build and maintain data pipelines (market data, alternative data)
 - Process satellite imagery, web scraping, NLP on news/filings
 - Feature engineering for alpha models
@@ -164,6 +173,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 - Evaluate new data vendors and sources
 
 **Required skills**:
+
 - Python, SQL, Spark/Dask
 - Cloud infrastructure (AWS, GCP)
 - NLP, computer vision (for alternative data)
@@ -177,6 +187,7 @@ Quantitative finance is not a single career -- it is a family of roles that requ
 **What they do**: Allocate capital across strategies, manage overall fund risk, and drive P&L.
 
 **Day-to-day**:
+
 - Oversee multiple strategies and their researchers
 - Make capital allocation decisions
 - Set risk limits and monitor aggregate exposure
@@ -295,6 +306,7 @@ Understanding firm culture is essential for targeting your applications and inte
 ```
 
 **Key facts**:
+
 - The Medallion Fund is the most successful hedge fund in history
 - External funds (RIEF, RIDA) have more modest returns
 - Employees invest their own money in Medallion
@@ -535,6 +547,7 @@ If you do not have a traditional quantitative background, you need to demonstrat
 **What to show on your resume / portfolio**:
 
 1. **GitHub Portfolio Projects**
+
    - Backtesting framework with proper walk-forward validation
    - Alpha signal research with documented methodology
    - Low-latency order book implementation in C++
@@ -542,18 +555,21 @@ If you do not have a traditional quantitative background, you need to demonstrat
    - Options pricing library
 
 2. **Kaggle Competitions**
+
    - Top finishes in tabular data competitions
    - Financial forecasting competitions (Jane Street, Two Sigma, Optiver)
    - Demonstrates practical ML ability
    - Gold/silver medals carry significant weight
 
 3. **Personal Trading Track Record**
+
    - Auditable results (broker statements)
    - Sharpe ratio, max drawdown, alpha vs benchmark
    - Systematic, not discretionary gambling
    - Shows you can apply theory to practice
 
 4. **Academic Publications or Preprints**
+
    - Even one quantitative paper on arXiv shows research ability
    - Blog posts with rigorous analysis (not clickbait)
    - Contributions to quantitative finance literature
@@ -647,14 +663,14 @@ SENIOR LEVEL (5+ years):
 
 ### What Each Stage Tests
 
-| Stage | Tests For | How to Prepare |
-|-------|-----------|----------------|
-| Resume Screen | Credentials, relevance | Tailor resume to quant focus |
-| Online Assessment | Speed + accuracy in math/code | Practice HackerRank, LeetCode |
-| Phone Screen | Communication + technical depth | Practice explaining solutions aloud |
-| Super Day | Breadth of knowledge, culture fit | Full mock interview days |
-| Take-Home | Independent research ability | Practice end-to-end projects |
-| Offer Stage | Negotiation skill | Research comp ranges, have alternatives |
+| Stage             | Tests For                         | How to Prepare                          |
+| ----------------- | --------------------------------- | --------------------------------------- |
+| Resume Screen     | Credentials, relevance            | Tailor resume to quant focus            |
+| Online Assessment | Speed + accuracy in math/code     | Practice HackerRank, LeetCode           |
+| Phone Screen      | Communication + technical depth   | Practice explaining solutions aloud     |
+| Super Day         | Breadth of knowledge, culture fit | Full mock interview days                |
+| Take-Home         | Independent research ability      | Practice end-to-end projects            |
+| Offer Stage       | Negotiation skill                 | Research comp ranges, have alternatives |
 
 ### Firm-Specific Variations
 
@@ -734,6 +750,7 @@ If you would never re-roll, expected value = 3.5. With re-rolling, you should re
 Let E be the expected payoff with optimal strategy.
 
 If we re-roll on values 1, 2, 3 and keep 4, 5, 6:
+
 - E = (1/6)(4 + 5 + 6) + (3/6)(E - 0.50)
 - E = 15/6 + E/2 - 0.25
 - E/2 = 2.5 - 0.25 = 2.25
@@ -787,7 +804,7 @@ The key insight: by optional stopping, the expected value is actually the expect
 
 This is a classic result: the expected value with optimal stopping from a deck of r red and b black cards is:
 
-E(r, b) = max(0, r/(r+b) - b/(r+b) + E(r-1, b) * r/(r+b) + E(r, b-1) * b/(r+b))
+E(r, b) = max(0, r/(r+b) - b/(r+b) + E(r-1, b) _ r/(r+b) + E(r, b-1) _ b/(r+b))
 
 The answer for a standard deck is approximately $2.62.
 
@@ -801,9 +818,9 @@ The answer for a standard deck is approximately $2.62.
 
 **Solution**: Classic answer is 23.
 
-P(no shared birthday among n people) = 365/365 * 364/365 * 363/365 * ... * (365-n+1)/365
+P(no shared birthday among n people) = 365/365 _ 364/365 _ 363/365 _ ... _ (365-n+1)/365
 
-P(no match) = Product_{i=0}^{n-1} (365-i)/365
+P(no match) = Product\_{i=0}^{n-1} (365-i)/365
 
 For n=22: P(no match) ~ 0.524, so P(match) ~ 0.476
 For n=23: P(no match) ~ 0.493, so P(match) ~ 0.507
@@ -826,12 +843,12 @@ Let X_i = number of boxes needed to get a new coupon when you already have i dis
 When you have i coupons, the probability of getting a new one is (n-i)/n.
 So X_i ~ Geometric((n-i)/n), and E[X_i] = n/(n-i).
 
-E[total boxes] = Sum_{i=0}^{n-1} n/(n-i) = n * Sum_{j=1}^{n} 1/j = n * H_n
+E[total boxes] = Sum*{i=0}^{n-1} n/(n-i) = n \* Sum*{j=1}^{n} 1/j = n \* H_n
 
 where H_n is the n-th harmonic number.
 
-**Example**: For n = 10 types: E = 10 * H_10 = 10 * 2.9290 ~ 29.3 boxes.
-For n = 50 types: E = 50 * H_50 = 50 * 4.499 ~ 225 boxes.
+**Example**: For n = 10 types: E = 10 _ H_10 = 10 _ 2.9290 ~ 29.3 boxes.
+For n = 50 types: E = 50 _ H_50 = 50 _ 4.499 ~ 225 boxes.
 
 ---
 
@@ -842,6 +859,7 @@ For n = 50 types: E = 50 * H_50 = 50 * 4.499 ~ 225 boxes.
 **Solution**: The naive argument says: B contains either $50 or $200 with equal probability, so E[B] = $125 > $100, so switch. But this argument is flawed because it applies symmetrically to both envelopes, creating a paradox.
 
 The resolution: the correct analysis depends on your prior over the possible amounts. If the amounts are (x, 2x) with equal probability of which is in which envelope, and you see $100 in A, then:
+
 - Either x = 100 (so B has $200) or x = 50 (so B has $50)
 - Without a prior over x, you cannot determine the probability of each case
 - With a uniform prior, the expected value of switching depends on the prior distribution
@@ -861,13 +879,13 @@ P(positive | user) = 0.99
 P(positive | non-user) = 0.01
 
 P(positive) = P(pos|user)*P(user) + P(pos|non-user)*P(non-user)
-            = 0.99 * 0.005 + 0.01 * 0.995
-            = 0.00495 + 0.00995
-            = 0.01490
+= 0.99 _ 0.005 + 0.01 _ 0.995
+= 0.00495 + 0.00995
+= 0.01490
 
-P(user | positive) = P(pos|user) * P(user) / P(positive)
-                   = 0.00495 / 0.01490
-                   = 0.3322
+P(user | positive) = P(pos|user) \* P(user) / P(positive)
+= 0.00495 / 0.01490
+= 0.3322
 
 **Answer**: Only about 33.2% of people who test positive are actually users, despite the 99% accuracy. This is the base rate fallacy -- when the condition is rare, even accurate tests produce many false positives.
 
@@ -879,9 +897,9 @@ P(user | positive) = P(pos|user) * P(user) / P(positive)
 
 **Solution**: This is a classic result from random walk theory. The probability of returning to 0 is 1 (the walk is recurrent in 1D). However, the expected time to return is infinite.
 
-P(return to 0 at step 2n) = C(2n, n) / 4^n ~ 1/sqrt(pi * n) by Stirling's approximation.
+P(return to 0 at step 2n) = C(2n, n) / 4^n ~ 1/sqrt(pi \* n) by Stirling's approximation.
 
-E[return time] = Sum_{n=1}^{infinity} 2n * P(first return at step 2n)
+E[return time] = Sum\_{n=1}^{infinity} 2n \* P(first return at step 2n)
 
 This sum diverges. So while the drunk will certainly return to 0, the expected time to do so is infinite.
 
@@ -911,7 +929,7 @@ For n=100: E[min] = 1/101
 
 **Question**: How many times must you roll a fair 6-sided die to see all 6 faces? (This is the coupon collector for n=6.)
 
-**Solution**: E = 6 * H_6 = 6 * (1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6) = 6 * 2.45 = 14.7
+**Solution**: E = 6 _ H_6 = 6 _ (1 + 1/2 + 1/3 + 1/4 + 1/5 + 1/6) = 6 \* 2.45 = 14.7
 
 ---
 
@@ -923,7 +941,7 @@ For n=100: E[min] = 1/101
 
 Let X_i = 1 if person i gets their own hat. E[X_i] = 1/N.
 
-E[total matches] = Sum E[X_i] = N * (1/N) = 1.
+E[total matches] = Sum E[X_i] = N \* (1/N) = 1.
 
 Regardless of N, the expected number of fixed points in a random permutation is exactly 1.
 
@@ -956,7 +974,7 @@ Sum 2: 1 way, Sum 3: 2 ways, ..., Sum 7: 6 ways, ..., Sum 12: 1 way.
 This gives a probability of approximately 1/e ~ 36.8% of selecting the best candidate, regardless of N.
 
 **Derivation**: Reject the first k candidates, then pick the next one better than all k.
-P(success) = (k/N) * Sum_{i=k+1}^{N} (1/i) * (1/(i-1)) ... simplifies to:
+P(success) = (k/N) _ Sum\_{i=k+1}^{N} (1/i) _ (1/(i-1)) ... simplifies to:
 Optimal k ~ N/e, giving P(success) -> 1/e as N -> infinity.
 
 **Relevance to trading**: This is an optimal stopping problem, directly analogous to deciding when to enter a trade based on observed prices.
@@ -969,15 +987,16 @@ Optimal k ~ N/e, giving P(success) -> 1/e as N -> infinity.
 
 **Solution for HH**:
 Let E be the expected flips to see HH. Define states:
+
 - State 0: No progress (start)
 - State 1: Just flipped H
 - State 2: HH (done)
 
 E_0 = 1 + (1/2)E_1 + (1/2)E_0
-E_1 = 1 + (1/2)(0) + (1/2)E_0  [if H, done; if T, restart]
+E_1 = 1 + (1/2)(0) + (1/2)E_0 [if H, done; if T, restart]
 
 Wait, let me be more careful:
-E_1 = 1 + (1/2)*0 + (1/2)*E_0   <-- This is wrong. If we are in state 1 (just saw H) and flip H, we reach HH (state 2), so we add 1 flip and are done. If we flip T, we go back to state 0.
+E_1 = 1 + (1/2)*0 + (1/2)*E_0 <-- This is wrong. If we are in state 1 (just saw H) and flip H, we reach HH (state 2), so we add 1 flip and are done. If we flip T, we go back to state 0.
 
 Actually: E_1 = 1 + (1/2)(0) + (1/2)(E_0) means after one flip from state 1, with prob 1/2 we are done (add 0 more), with prob 1/2 we restart.
 
@@ -993,11 +1012,12 @@ E_0 = 6
 **Expected flips for HH = 6.**
 
 **Solution for HT**:
+
 - State 0: No progress
 - State 1: Just flipped H
 
 E_0 = 1 + (1/2)E_1 + (1/2)E_0
-E_1 = 1 + (1/2)E_1 + (1/2)(0)  [if H, stay in state 1; if T, done]
+E_1 = 1 + (1/2)E_1 + (1/2)(0) [if H, stay in state 1; if T, done]
 
 From E_1: E_1 = 1 + (1/2)E_1 -> E_1/2 = 1 -> E_1 = 2
 From E_0: E_0 = 1 + (1/2)(2) + (1/2)E_0 = 2 + (1/2)E_0 -> E_0 = 4
@@ -1014,11 +1034,11 @@ From E_0: E_0 = 1 + (1/2)(2) + (1/2)E_0 = 2 + (1/2)E_0 -> E_0 = 4
 
 **Solution**: This is the St. Petersburg paradox.
 
-E[payment] = Sum_{n=1}^{infinity} 2^n * (1/2)^n = Sum_{n=1}^{infinity} 1 = infinity
+E[payment] = Sum*{n=1}^{infinity} 2^n \* (1/2)^n = Sum*{n=1}^{infinity} 1 = infinity
 
 The expected value is infinite, but no rational person would pay more than about $20-30 to play this game. This illustrates the difference between expected value and expected utility.
 
-**Resolution via utility theory**: If utility is logarithmic (U = log(wealth)), a person with wealth W would pay at most about $2 * log2(W) to play.
+**Resolution via utility theory**: If utility is logarithmic (U = log(wealth)), a person with wealth W would pay at most about $2 \* log2(W) to play.
 
 ---
 
@@ -1079,7 +1099,7 @@ P(no collision) = 2/8 = 1/4.
 1. Generate random points (x, y) uniformly in [-1, 1] x [-1, 1]
 2. Check if x^2 + y^2 <= 1 (inside the circle)
 3. pi/4 = (area of circle)/(area of square) ~ (points inside)/(total points)
-4. pi ~ 4 * (points inside) / (total points)
+4. pi ~ 4 \* (points inside) / (total points)
 
 With N points, the error is O(1/sqrt(N)). For 4 significant digits, you need ~10^8 points.
 
@@ -1097,7 +1117,7 @@ P = (2^{n-1})/n! ... actually this is more complex.
 
 For practical purposes: think about it recursively. Let p(k) = probability of ever hitting exactly k.
 
-p(k) = (1/100) * Sum_{j=1}^{min(k,100)} p(k-j), with p(0) = 1.
+p(k) = (1/100) \* Sum\_{j=1}^{min(k,100)} p(k-j), with p(0) = 1.
 
 For k = 100, the answer can be computed numerically and is approximately 1/50.5 ~ 0.0198 (roughly 2%).
 
@@ -1111,10 +1131,10 @@ For k = 100, the answer can be computed numerically and is approximately 1/50.5 
 Answer: 3/4. P(max > 0) = 1 - P(both <= 0) = 1 - (1/2)(1/2) = 3/4 (by independence).
 
 **Problem 24**: You have 12 balls, one is heavier or lighter. Using a balance scale at most 3 times, find the odd ball and determine if it is heavier or lighter.
-This is a classic information theory puzzle. With 3 weighings, you get 3^3 = 27 outcomes. You need to distinguish among 24 possibilities (12 balls * 2 states), which fits within 27.
+This is a classic information theory puzzle. With 3 weighings, you get 3^3 = 27 outcomes. You need to distinguish among 24 possibilities (12 balls \* 2 states), which fits within 27.
 
 **Problem 25**: A fair coin is flipped 1000 times. What is the expected number of runs (consecutive sequences of the same side)?
-Answer: 500.5. Each position 2 through 1000 starts a new run with probability 1/2 (when it differs from the previous flip). Expected runs = 1 + 999 * (1/2) = 500.5.
+Answer: 500.5. Each position 2 through 1000 starts a new run with probability 1/2 (when it differs from the previous flip). Expected runs = 1 + 999 \* (1/2) = 500.5.
 
 ---
 
@@ -1144,7 +1164,7 @@ These questions test your understanding of the mathematical foundations that und
 
 **Question**: You run a backtest that produces a Sharpe ratio of 1.5 over 5 years of daily data. Is this statistically significant?
 
-**Solution**: 
+**Solution**:
 
 The standard error of the Sharpe ratio is approximately 1/sqrt(T) where T is the number of years (under IID assumption).
 
@@ -1159,7 +1179,7 @@ p-value ~ 0.0004 (two-sided), which is highly significant.
 1. **Multiple testing**: If you tested 100 strategies and picked the best one, the threshold should be adjusted. Using Bonferroni: alpha/100 = 0.0005. Our p-value of 0.0004 barely passes.
 
 2. **Non-IID returns**: Autocorrelated returns inflate the effective Sharpe ratio. The adjusted SE under autocorrelation is:
-   SE_adj = sqrt((1 + 2*sum(rho_k))/T), which can be much larger.
+   SE_adj = sqrt((1 + 2\*sum(rho_k))/T), which can be much larger.
 
 3. **Overfitting**: Backtesting involves implicit data snooping. Marcos Lopez de Prado suggests requiring a minimum backtest length (MBTL) or using the deflated Sharpe ratio.
 
@@ -1185,6 +1205,7 @@ Interpret each component.
 - **t-stat (45.2)**: Beta is extremely statistically significant. With ~1,260 observations (5 years daily), this is expected for a liquid stock.
 
 **Follow-up questions**:
+
 - "Is this alpha exploitable?" Probably not -- after transaction costs, market impact, and adjusting for risk factors (Fama-French), the alpha likely disappears.
 - "What would you do next?" Add more factors (SMB, HML, momentum, quality) and check if the alpha persists. Test out-of-sample.
 
@@ -1197,11 +1218,13 @@ Interpret each component.
 **Solution**:
 
 **Tests for stationarity**:
+
 1. **Augmented Dickey-Fuller (ADF) test**: H0: unit root (non-stationary). Reject if test statistic < critical value (more negative). Most common test.
 2. **KPSS test**: H0: stationary. Reject if test statistic > critical value. Useful as a complement to ADF.
 3. **Phillips-Perron test**: Robust version of ADF, handles serial correlation and heteroskedasticity.
 
 **Why it matters**:
+
 - Most statistical models (linear regression, ARMA) assume stationarity
 - Non-stationary series produce spurious correlations (Granger and Newbold, 1974)
 - Price series are typically non-stationary (unit root), but returns are usually stationary
@@ -1209,6 +1232,7 @@ Interpret each component.
 - A trading strategy built on non-stationary relationships will likely fail out-of-sample
 
 **Making series stationary**:
+
 - Differencing: returns = diff(log(prices))
 - Detrending: subtract rolling mean or fitted trend
 - Seasonal adjustment: remove seasonal components
@@ -1227,11 +1251,13 @@ Interpret each component.
 **Strategy**: Simple momentum rule -- if today's return is positive, go long tomorrow; if negative, go short.
 
 **Expected Sharpe ratio**:
-- If rho_1 = 0.08 and daily vol = 1.5%, the daily expected return from this strategy is approximately rho_1 * sigma ~ 0.08 * 1.5% = 0.12%.
-- Annualized return ~ 0.12% * 252 ~ 30%.
-- Annualized Sharpe ~ 0.08 * sqrt(252) ~ 1.27.
+
+- If rho*1 = 0.08 and daily vol = 1.5%, the daily expected return from this strategy is approximately rho_1 * sigma ~ 0.08 \_ 1.5% = 0.12%.
+- Annualized return ~ 0.12% \* 252 ~ 30%.
+- Annualized Sharpe ~ 0.08 \* sqrt(252) ~ 1.27.
 
 **Reality checks**:
+
 1. Transaction costs will eat significantly into this return
 2. The autocorrelation may not be stable over time
 3. For liquid large-cap stocks, autocorrelation is usually near zero (efficient markets). Significant autocorrelation is more likely in illiquid or small-cap stocks.
@@ -1246,17 +1272,20 @@ Interpret each component.
 **Solution**:
 
 **Procedure**:
+
 1. Compute the 500x500 correlation matrix of daily returns
 2. Eigendecompose: find eigenvalues and eigenvectors
 3. Sort by eigenvalue magnitude (descending)
 
 **Expected findings**:
+
 - **PC1** (largest eigenvalue, ~25-40% of variance): The market factor. All stocks load positively on this component. It is essentially the broad market return.
 - **PC2-PC5** (~5-15% combined): Sector/industry factors. These capture sector-level correlations (tech vs. financials vs. energy).
 - **PC6-PC20** (~10-20% combined): Style factors (value, momentum, size, quality).
 - **Remaining PCs**: Mostly noise.
 
 **Application to trading**:
+
 - Use top k PCs as risk factors in a factor model
 - Project returns onto PCs to construct factor-neutral portfolios
 - Statistical arbitrage: find stocks with residual returns (alpha) after removing factor exposure
@@ -1272,17 +1301,18 @@ Interpret each component.
 
 **Solution**:
 
-The exponential PDF: f(x|lambda) = lambda * exp(-lambda * x) for x >= 0.
+The exponential PDF: f(x|lambda) = lambda _ exp(-lambda _ x) for x >= 0.
 
 Log-likelihood:
-l(lambda) = Sum_{i=1}^{n} log(lambda * exp(-lambda * x_i))
-          = n * log(lambda) - lambda * Sum(x_i)
+l(lambda) = Sum\_{i=1}^{n} log(lambda _ exp(-lambda _ x*i))
+= n * log(lambda) - lambda \_ Sum(x_i)
 
 Take derivative and set to zero:
 dl/dlambda = n/lambda - Sum(x_i) = 0
 lambda_MLE = n / Sum(x_i) = 1 / x_bar
 
 **Properties of this MLE**:
+
 - Consistent: converges to true lambda as n -> infinity
 - Asymptotically efficient: achieves the Cramer-Rao lower bound
 - But biased in finite samples: E[1/x_bar] != lambda in general
@@ -1299,7 +1329,7 @@ lambda_MLE = n / Sum(x_i) = 1 / x_bar
 
 **Correlation**: Measures the linear relationship between returns (stationary series). Two stocks can be highly correlated in returns but drift apart in price levels.
 
-**Cointegration**: A long-term equilibrium relationship between price levels (non-stationary series). If prices X_t and Y_t are cointegrated, there exists a linear combination beta such that X_t - beta*Y_t is stationary (mean-reverting).
+**Cointegration**: A long-term equilibrium relationship between price levels (non-stationary series). If prices X_t and Y_t are cointegrated, there exists a linear combination beta such that X_t - beta\*Y_t is stationary (mean-reverting).
 
 ```
 CORRELATION vs COINTEGRATION:
@@ -1336,12 +1366,12 @@ Price     Stock A       Stock B
 df/dS = 1/S
 d^2f/dS^2 = -1/S^2
 
-Ito's lemma: df = (df/dS)*dS + (1/2)*(d^2f/dS^2)*(dS)^2
+Ito's lemma: df = (df/dS)_dS + (1/2)_(d^2f/dS^2)\*(dS)^2
 
-Since (dS)^2 = sigma^2 * S^2 * dt (keeping only the dt term):
+Since (dS)^2 = sigma^2 _ S^2 _ dt (keeping only the dt term):
 
 d(log S) = (1/S)(mu*S*dt + sigma*S*dW) + (1/2)(-1/S^2)(sigma^2*S^2*dt)
-         = (mu - sigma^2/2)*dt + sigma*dW
+= (mu - sigma^2/2)*dt + sigma*dW
 
 **Key result**: log(S_t) ~ Normal(log(S_0) + (mu - sigma^2/2)*t, sigma^2*t)
 
@@ -1357,8 +1387,8 @@ This is why stock prices are log-normally distributed under GBM. The term -sigma
 
 By CLT, the sum of 100 independent random variables is approximately normal.
 
-Total mean = 100 * $1,000 = $100,000
-Total std dev = $10,000 * sqrt(100) = $100,000
+Total mean = 100 _ $1,000 = $100,000
+Total std dev = $10,000 _ sqrt(100) = $100,000
 
 P&L ~ Normal($100,000, $100,000^2)
 
@@ -1366,10 +1396,11 @@ P(loss > $50,000) = P(P&L < -$50,000)
 z = (-50,000 - 100,000) / 100,000 = -1.5
 P(z < -1.5) = 0.0668 (about 6.7%)
 
-**Caveats**: 
+**Caveats**:
+
 - Independence assumption is unrealistic (positions are often correlated, especially during market stress)
-- With correlation rho between all pairs: Total variance = 100 * sigma^2 * (1 + 99*rho)
-- If rho = 0.3: Total std = $10,000 * sqrt(100 * (1 + 99*0.3)) = $10,000 * sqrt(3070) ~ $554,000. Much larger.
+- With correlation rho between all pairs: Total variance = 100 _ sigma^2 _ (1 + 99\*rho)
+- If rho = 0.3: Total std = $10,000 _ sqrt(100 _ (1 + 99*0.3)) = $10,000 * sqrt(3070) ~ $554,000. Much larger.
 
 ---
 
@@ -1382,7 +1413,7 @@ P(z < -1.5) = 0.0668 (about 6.7%)
 Wait -- we need to be careful. We need more information about the prior probability of a CEO buy. Let us assume CEO buys happen with probability 5% on any given day.
 
 P(up) = 0.60 (our prior)
-P(CEO buy | up) = ? 
+P(CEO buy | up) = ?
 P(CEO buy | down) = ?
 
 Actually, the problem gives us: P(up | CEO buy) = 0.70 and P(up | no CEO buy) = 0.55. We also need P(CEO buy).
@@ -1390,7 +1421,7 @@ Actually, the problem gives us: P(up | CEO buy) = 0.70 and P(up | no CEO buy) = 
 Using the law of total probability:
 P(up) = P(up | CEO buy)*P(CEO buy) + P(up | no CEO buy)*P(no CEO buy)
 0.60 = 0.70*P(CEO buy) + 0.55*(1 - P(CEO buy))
-0.60 = 0.55 + 0.15*P(CEO buy)
+0.60 = 0.55 + 0.15\*P(CEO buy)
 P(CEO buy) = 0.05/0.15 = 1/3
 
 Given that we observe a CEO buy:
@@ -1408,20 +1439,20 @@ Our updated probability should be 70%.
 
 **Solution**:
 
-Each trade is a Bernoulli trial with p = 0.52. After n trades, profit = (#wins - #losses) * size.
+Each trade is a Bernoulli trial with p = 0.52. After n trades, profit = (#wins - #losses) \* size.
 
 Expected profit per trade = 0.52 - 0.48 = 0.04 (in units of trade size)
 Std dev per trade = sqrt(p*(1-p)) = sqrt(0.52*0.48) = 0.4998
 
 After n trades:
 Expected total = 0.04n
-Std dev total = 0.4998 * sqrt(n)
+Std dev total = 0.4998 \* sqrt(n)
 
 For 95% confidence of profit (i.e., P(total > 0) > 0.95):
-z = 0.04n / (0.4998 * sqrt(n)) = 0.04 * sqrt(n) / 0.4998
+z = 0.04n / (0.4998 _ sqrt(n)) = 0.04 _ sqrt(n) / 0.4998
 
 Need z > 1.645 (one-sided 95%):
-0.04 * sqrt(n) / 0.4998 > 1.645
+0.04 \* sqrt(n) / 0.4998 > 1.645
 sqrt(n) > 20.56
 n > 422.7
 
@@ -1463,6 +1494,7 @@ MONTE CARLO PRICING ALGORITHM:
 ```
 
 **Variance reduction techniques**:
+
 - Antithetic variates: for each Z, also use -Z
 - Control variates: use a correlated variable with known expectation
 - Importance sampling: change the probability measure to sample important regions more
@@ -1505,7 +1537,7 @@ For n = 252:
 E[max(Z)] ~ sqrt(2*ln(252)) ~ sqrt(2*5.53) ~ sqrt(11.06) ~ 3.33
 
 Since our returns have mean 0 and std 0.015:
-E[max return] ~ 0 + 0.015 * 3.33 ~ 0.050 = 5.0%
+E[max return] ~ 0 + 0.015 \* 3.33 ~ 0.050 = 5.0%
 
 **Practical meaning**: Even with zero expected return, you should expect the best day in a year to be about a +5% return (and the worst day about -5%). This is important for calibrating expectations about extreme events -- they are expected, not anomalous.
 
@@ -1562,7 +1594,7 @@ import numpy as np
 def compute_bollinger(prices: pd.Series, window: int = 20) -> pd.DataFrame:
     rolling_mean = prices.rolling(window=window).mean()
     rolling_std = prices.rolling(window=window).std()
-    
+
     return pd.DataFrame({
         'price': prices,
         'rolling_mean': rolling_mean,
@@ -1584,22 +1616,22 @@ import numpy as np
 
 def compute_returns(df: pd.DataFrame) -> pd.DataFrame:
     result = df.copy()
-    
+
     # Simple returns
     result['simple_return'] = df['close'].pct_change()
-    
+
     # Log returns
     result['log_return'] = np.log(df['close'] / df['close'].shift(1))
-    
+
     # Intraday return (open to close)
     result['intraday_return'] = (df['close'] - df['open']) / df['open']
-    
+
     # Overnight return (previous close to open)
     result['overnight_return'] = (df['open'] - df['close'].shift(1)) / df['close'].shift(1)
-    
+
     # Cumulative return
     result['cumulative_return'] = (1 + result['simple_return']).cumprod() - 1
-    
+
     return result
 ```
 
@@ -1621,8 +1653,8 @@ import heapq
 
 class Order:
     __slots__ = ['order_id', 'side', 'price', 'quantity', 'timestamp']
-    
-    def __init__(self, order_id: int, side: str, price: float, 
+
+    def __init__(self, order_id: int, side: str, price: float,
                  quantity: int, timestamp: int):
         self.order_id = order_id
         self.side = side
@@ -1642,102 +1674,102 @@ class OrderBook:
         # Track cancelled orders
         self._cancelled: set[int] = set()
         self._timestamp = 0
-    
-    def add_order(self, order_id: int, side: str, price: float, 
+
+    def add_order(self, order_id: int, side: str, price: float,
                   quantity: int) -> list[tuple[int, int, float, int]]:
-        """Add an order and return list of fills: 
+        """Add an order and return list of fills:
            [(buy_id, sell_id, fill_price, fill_qty), ...]"""
         self._timestamp += 1
         order = Order(order_id, side, price, quantity, self._timestamp)
         fills = []
-        
+
         if side == 'buy':
             fills = self._match_buy(order)
         else:
             fills = self._match_sell(order)
-        
+
         # If order still has remaining quantity, add to book
         if order.quantity > 0:
             self._orders[order_id] = order
             if side == 'buy':
-                heapq.heappush(self._bids, 
+                heapq.heappush(self._bids,
                                (-price, order.timestamp, order))
             else:
-                heapq.heappush(self._asks, 
+                heapq.heappush(self._asks,
                                (price, order.timestamp, order))
-        
+
         return fills
-    
+
     def _match_buy(self, buy_order: Order) -> list[tuple]:
         fills = []
-        while (buy_order.quantity > 0 and self._asks and 
+        while (buy_order.quantity > 0 and self._asks and
                self._asks[0][0] <= buy_order.price):
             # Clean up cancelled orders
             while self._asks and self._asks[0][2].order_id in self._cancelled:
                 heapq.heappop(self._asks)
-            
+
             if not self._asks or self._asks[0][0] > buy_order.price:
                 break
-            
+
             ask_price, _, ask_order = self._asks[0]
             fill_qty = min(buy_order.quantity, ask_order.quantity)
             fill_price = ask_price  # Price-time priority: fill at resting order price
-            
-            fills.append((buy_order.order_id, ask_order.order_id, 
+
+            fills.append((buy_order.order_id, ask_order.order_id,
                          fill_price, fill_qty))
-            
+
             buy_order.quantity -= fill_qty
             ask_order.quantity -= fill_qty
-            
+
             if ask_order.quantity == 0:
                 heapq.heappop(self._asks)
                 self._orders.pop(ask_order.order_id, None)
-        
+
         return fills
-    
+
     def _match_sell(self, sell_order: Order) -> list[tuple]:
         fills = []
-        while (sell_order.quantity > 0 and self._bids and 
+        while (sell_order.quantity > 0 and self._bids and
                -self._bids[0][0] >= sell_order.price):
             while self._bids and self._bids[0][2].order_id in self._cancelled:
                 heapq.heappop(self._bids)
-            
+
             if not self._bids or -self._bids[0][0] < sell_order.price:
                 break
-            
+
             neg_bid_price, _, bid_order = self._bids[0]
             bid_price = -neg_bid_price
             fill_qty = min(sell_order.quantity, bid_order.quantity)
-            
-            fills.append((bid_order.order_id, sell_order.order_id, 
+
+            fills.append((bid_order.order_id, sell_order.order_id,
                          bid_price, fill_qty))
-            
+
             sell_order.quantity -= fill_qty
             bid_order.quantity -= fill_qty
-            
+
             if bid_order.quantity == 0:
                 heapq.heappop(self._bids)
                 self._orders.pop(bid_order.order_id, None)
-        
+
         return fills
-    
+
     def cancel_order(self, order_id: int) -> bool:
         if order_id in self._orders:
             self._cancelled.add(order_id)
             del self._orders[order_id]
             return True
         return False
-    
+
     def best_bid(self) -> Optional[float]:
         while self._bids and self._bids[0][2].order_id in self._cancelled:
             heapq.heappop(self._bids)
         return -self._bids[0][0] if self._bids else None
-    
+
     def best_ask(self) -> Optional[float]:
         while self._asks and self._asks[0][2].order_id in self._cancelled:
             heapq.heappop(self._asks)
         return self._asks[0][0] if self._asks else None
-    
+
     def spread(self) -> Optional[float]:
         bid, ask = self.best_bid(), self.best_ask()
         if bid is not None and ask is not None:
@@ -1759,14 +1791,14 @@ from typing import Optional
 
 class StreamingVWAP:
     """Calculates VWAP over a sliding time window."""
-    
+
     def __init__(self, window_seconds: int = 3600):
         self._window = window_seconds
         self._trades: deque[tuple[float, float, float]] = deque()
         self._cumulative_pv = 0.0  # price * volume
         self._cumulative_vol = 0.0
-    
-    def add_trade(self, timestamp: float, price: float, 
+
+    def add_trade(self, timestamp: float, price: float,
                   volume: float) -> float:
         """Add a trade and return the current VWAP."""
         # Add new trade
@@ -1774,21 +1806,21 @@ class StreamingVWAP:
         self._trades.append((timestamp, pv, volume))
         self._cumulative_pv += pv
         self._cumulative_vol += volume
-        
+
         # Remove expired trades
         cutoff = timestamp - self._window
         while self._trades and self._trades[0][0] < cutoff:
             _, old_pv, old_vol = self._trades.popleft()
             self._cumulative_pv -= old_pv
             self._cumulative_vol -= old_vol
-        
+
         return self.vwap()
-    
+
     def vwap(self) -> Optional[float]:
         if self._cumulative_vol == 0:
             return None
         return self._cumulative_pv / self._cumulative_vol
-    
+
     def volume(self) -> float:
         return self._cumulative_vol
 ```
@@ -1802,29 +1834,29 @@ Implement efficient moving average calculators for streaming data.
 
 class SimpleMovingAverage:
     """O(1) update, O(1) query SMA."""
-    
+
     def __init__(self, window: int):
         self._window = window
         self._values: deque[float] = deque()
         self._sum = 0.0
-    
+
     def update(self, value: float) -> float:
         self._values.append(value)
         self._sum += value
-        
+
         if len(self._values) > self._window:
             self._sum -= self._values.popleft()
-        
+
         return self._sum / len(self._values)
 
 
 class ExponentialMovingAverage:
     """O(1) update, O(1) query EMA. No storage needed."""
-    
+
     def __init__(self, span: int):
         self._alpha = 2.0 / (span + 1)
         self._ema: Optional[float] = None
-    
+
     def update(self, value: float) -> float:
         if self._ema is None:
             self._ema = value
@@ -1842,7 +1874,7 @@ Implement Black-Scholes option pricing for European options.
 import math
 from scipy.stats import norm
 
-def black_scholes(S: float, K: float, T: float, r: float, 
+def black_scholes(S: float, K: float, T: float, r: float,
                   sigma: float, option_type: str = 'call') -> dict:
     """
     S:     Current stock price
@@ -1850,7 +1882,7 @@ def black_scholes(S: float, K: float, T: float, r: float,
     T:     Time to expiration (years)
     r:     Risk-free rate (annualized)
     sigma: Volatility (annualized)
-    
+
     Returns: dict with price, delta, gamma, theta, vega, rho
     """
     if T <= 0:
@@ -1860,20 +1892,20 @@ def black_scholes(S: float, K: float, T: float, r: float,
         else:
             return {'price': max(K - S, 0), 'delta': -1.0 if S < K else 0.0,
                     'gamma': 0.0, 'theta': 0.0, 'vega': 0.0, 'rho': 0.0}
-    
+
     sqrt_T = math.sqrt(T)
     d1 = (math.log(S / K) + (r + sigma**2 / 2) * T) / (sigma * sqrt_T)
     d2 = d1 - sigma * sqrt_T
-    
+
     # Standard normal PDF and CDF
     N_d1 = norm.cdf(d1)
     N_d2 = norm.cdf(d2)
     n_d1 = norm.pdf(d1)
-    
+
     if option_type == 'call':
         price = S * N_d1 - K * math.exp(-r * T) * N_d2
         delta = N_d1
-        theta = (-(S * n_d1 * sigma) / (2 * sqrt_T) 
+        theta = (-(S * n_d1 * sigma) / (2 * sqrt_T)
                  - r * K * math.exp(-r * T) * N_d2)
         rho = K * T * math.exp(-r * T) * N_d2
     else:  # put
@@ -1881,14 +1913,14 @@ def black_scholes(S: float, K: float, T: float, r: float,
         N_neg_d2 = norm.cdf(-d2)
         price = K * math.exp(-r * T) * N_neg_d2 - S * N_neg_d1
         delta = N_d1 - 1
-        theta = (-(S * n_d1 * sigma) / (2 * sqrt_T) 
+        theta = (-(S * n_d1 * sigma) / (2 * sqrt_T)
                  + r * K * math.exp(-r * T) * N_neg_d2)
         rho = -K * T * math.exp(-r * T) * N_neg_d2
-    
+
     # Greeks common to both
     gamma = n_d1 / (S * sigma * sqrt_T)
     vega = S * n_d1 * sqrt_T  # per 1 unit change in sigma
-    
+
     return {
         'price': price,
         'delta': delta,
@@ -1899,29 +1931,29 @@ def black_scholes(S: float, K: float, T: float, r: float,
     }
 
 
-def implied_volatility(market_price: float, S: float, K: float, 
-                       T: float, r: float, 
+def implied_volatility(market_price: float, S: float, K: float,
+                       T: float, r: float,
                        option_type: str = 'call') -> float:
     """
     Find implied volatility using Newton-Raphson method.
     """
     sigma = 0.3  # initial guess
-    
+
     for _ in range(100):
         result = black_scholes(S, K, T, r, sigma, option_type)
         diff = result['price'] - market_price
-        
+
         if abs(diff) < 1e-8:
             return sigma
-        
+
         # vega was scaled by 100, undo for Newton step
         vega_unscaled = result['vega'] * 100
         if abs(vega_unscaled) < 1e-12:
             break
-        
+
         sigma = sigma - diff / vega_unscaled
         sigma = max(sigma, 0.001)  # keep sigma positive
-    
+
     return sigma
 ```
 
@@ -1975,6 +2007,7 @@ KEY DESIGN DECISIONS:
 ```
 
 **Key points to discuss**:
+
 - Single-threaded event loop vs. multi-threaded with lock-free queues
 - Memory allocation: pre-allocate everything, no malloc in the hot path
 - Clock synchronization: PTP (Precision Time Protocol) for timestamping

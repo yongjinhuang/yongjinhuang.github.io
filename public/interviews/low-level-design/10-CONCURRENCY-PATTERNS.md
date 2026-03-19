@@ -36,6 +36,7 @@ Concurrent:      [Task A 5s]
 ```
 
 Concurrency is essential when:
+
 - Handling multiple client requests simultaneously (web servers)
 - Performing I/O-bound operations (database queries, API calls)
 - Utilizing multiple CPU cores for computation (data processing)

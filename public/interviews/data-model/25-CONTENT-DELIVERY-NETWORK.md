@@ -6,13 +6,13 @@ A CDN accelerates content delivery by caching content at edge locations close to
 
 ## Table Responsibilities
 
-| Table | Purpose | Why It Exists |
-|-------|---------|---------------|
-| **content_objects** | Canonical content metadata and caching directives | Single source of truth for cache behavior; decouples content identity from where it is cached |
-| **edge_cache_entries** | Per-POP cache state | Tracks what is cached where; enables targeted purging and hit-rate analysis |
-| **edge_pops** | Edge location registry | Models the physical topology; used for routing and capacity planning |
-| **routing_rules** | Customer-defined request handling rules | Determines how requests are processed: cache, passthrough, redirect, or edge function |
-| **origins** | Origin server definitions with health tracking | Manages failover when origin servers go down |
+| Table                  | Purpose                                           | Why It Exists                                                                                 |
+| ---------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **content_objects**    | Canonical content metadata and caching directives | Single source of truth for cache behavior; decouples content identity from where it is cached |
+| **edge_cache_entries** | Per-POP cache state                               | Tracks what is cached where; enables targeted purging and hit-rate analysis                   |
+| **edge_pops**          | Edge location registry                            | Models the physical topology; used for routing and capacity planning                          |
+| **routing_rules**      | Customer-defined request handling rules           | Determines how requests are processed: cache, passthrough, redirect, or edge function         |
+| **origins**            | Origin server definitions with health tracking    | Manages failover when origin servers go down                                                  |
 
 ---
 
@@ -20,19 +20,19 @@ A CDN accelerates content delivery by caching content at edge locations close to
 
 ### content_objects
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | UUID (PK) | Unique content identifier |
-| cdn_url | VARCHAR | The CDN-served URL (e.g., cdn.example.com/img/hero.jpg) |
-| origin_url | VARCHAR | The origin URL to fetch from on cache miss |
-| content_type | VARCHAR | MIME type (image/jpeg, text/html, application/json) |
-| ttl_seconds | INT | Default time-to-live before content is considered stale |
-| cache_control | VARCHAR | Full Cache-Control header value (max-age, s-maxage, stale-while-revalidate) |
-| vary_headers | VARCHAR[] | Headers that create separate cache entries (e.g., Accept-Encoding, Accept-Language) |
-| tags | VARCHAR[] | Cache tags for grouped purging (e.g., "product-123", "homepage") |
-| size_bytes | BIGINT | Content size; used for capacity planning |
-| etag | VARCHAR | Entity tag for conditional requests (If-None-Match) |
-| last_modified | TIMESTAMP | Last modification time for conditional requests (If-Modified-Since) |
+| Field         | Type      | Description                                                                         |
+| ------------- | --------- | ----------------------------------------------------------------------------------- |
+| id            | UUID (PK) | Unique content identifier                                                           |
+| cdn_url       | VARCHAR   | The CDN-served URL (e.g., cdn.example.com/img/hero.jpg)                             |
+| origin_url    | VARCHAR   | The origin URL to fetch from on cache miss                                          |
+| content_type  | VARCHAR   | MIME type (image/jpeg, text/html, application/json)                                 |
+| ttl_seconds   | INT       | Default time-to-live before content is considered stale                             |
+| cache_control | VARCHAR   | Full Cache-Control header value (max-age, s-maxage, stale-while-revalidate)         |
+| vary_headers  | VARCHAR[] | Headers that create separate cache entries (e.g., Accept-Encoding, Accept-Language) |
+| tags          | VARCHAR[] | Cache tags for grouped purging (e.g., "product-123", "homepage")                    |
+| size_bytes    | BIGINT    | Content size; used for capacity planning                                            |
+| etag          | VARCHAR   | Entity tag for conditional requests (If-None-Match)                                 |
+| last_modified | TIMESTAMP | Last modification time for conditional requests (If-Modified-Since)                 |
 
 **Why vary_headers?** A single URL might serve different content based on Accept-Encoding (gzip vs brotli) or Accept-Language. Each unique combination of vary header values creates a separate cache entry. Without this, users would get wrong content.
 
@@ -40,64 +40,64 @@ A CDN accelerates content delivery by caching content at edge locations close to
 
 ### edge_cache_entries
 
-| Field | Type | Description |
-|-------|------|-------------|
-| cache_key | VARCHAR (PK per POP) | Composite of URL + vary header values; unique within a POP |
-| cdn_url | VARCHAR | The cached content's CDN URL |
-| pop_id | UUID (FK) | Which edge POP holds this cache entry |
-| cached_at | TIMESTAMP | When this entry was populated |
-| expires_at | TIMESTAMP | When the entry becomes stale (cached_at + ttl) |
-| hit_count | INT | Number of times this entry was served; used for eviction decisions |
-| size_bytes | BIGINT | Cached content size |
-| etag | VARCHAR | ETag for revalidation with origin |
-| is_stale | BOOLEAN | Whether the entry is past TTL but still servable (stale-while-revalidate) |
-| purge_version | INT | Incremented on purge; entries with old purge_version are invalid |
+| Field         | Type                 | Description                                                               |
+| ------------- | -------------------- | ------------------------------------------------------------------------- |
+| cache_key     | VARCHAR (PK per POP) | Composite of URL + vary header values; unique within a POP                |
+| cdn_url       | VARCHAR              | The cached content's CDN URL                                              |
+| pop_id        | UUID (FK)            | Which edge POP holds this cache entry                                     |
+| cached_at     | TIMESTAMP            | When this entry was populated                                             |
+| expires_at    | TIMESTAMP            | When the entry becomes stale (cached_at + ttl)                            |
+| hit_count     | INT                  | Number of times this entry was served; used for eviction decisions        |
+| size_bytes    | BIGINT               | Cached content size                                                       |
+| etag          | VARCHAR              | ETag for revalidation with origin                                         |
+| is_stale      | BOOLEAN              | Whether the entry is past TTL but still servable (stale-while-revalidate) |
+| purge_version | INT                  | Incremented on purge; entries with old purge_version are invalid          |
 
 **Why purge_version instead of DELETE?** Deleting cache entries across hundreds of POPs is slow and creates inconsistency windows. Incrementing purge_version is a single metadata update; POPs lazily invalidate on the next request when they see a version mismatch.
 
 ### edge_pops
 
-| Field | Type | Description |
-|-------|------|-------------|
-| pop_id | UUID (PK) | Unique POP identifier |
-| region | VARCHAR | Geographic region (us-east, eu-west, ap-southeast) |
-| city | VARCHAR | City name |
-| country | VARCHAR | ISO country code |
-| lat | DECIMAL | Latitude for geo-routing calculations |
-| lng | DECIMAL | Longitude for geo-routing calculations |
-| anycast_prefix | VARCHAR | The anycast IP prefix this POP announces via BGP |
-| capacity_gbps | INT | Total bandwidth capacity |
-| tier | ENUM | L1_edge (closest to users), L2_regional (mid-tier cache), origin_shield (last cache before origin) |
+| Field          | Type      | Description                                                                                        |
+| -------------- | --------- | -------------------------------------------------------------------------------------------------- |
+| pop_id         | UUID (PK) | Unique POP identifier                                                                              |
+| region         | VARCHAR   | Geographic region (us-east, eu-west, ap-southeast)                                                 |
+| city           | VARCHAR   | City name                                                                                          |
+| country        | VARCHAR   | ISO country code                                                                                   |
+| lat            | DECIMAL   | Latitude for geo-routing calculations                                                              |
+| lng            | DECIMAL   | Longitude for geo-routing calculations                                                             |
+| anycast_prefix | VARCHAR   | The anycast IP prefix this POP announces via BGP                                                   |
+| capacity_gbps  | INT       | Total bandwidth capacity                                                                           |
+| tier           | ENUM      | L1_edge (closest to users), L2_regional (mid-tier cache), origin_shield (last cache before origin) |
 
 **Why three tiers?** L1 edge POPs handle most requests but have limited storage. L2 regional POPs aggregate cache misses from multiple L1s, reducing origin load. Origin shield is a single cache layer that absorbs the "thundering herd" -- without it, a cache miss at 100 L1 POPs would generate 100 origin requests simultaneously.
 
 ### routing_rules
 
-| Field | Type | Description |
-|-------|------|-------------|
-| rule_id | UUID (PK) | Unique rule identifier |
-| customer_id | UUID | Which customer owns this rule |
-| priority | INT | Lower number = higher priority; rules evaluated in order |
-| match_host | VARCHAR | Hostname pattern to match (e.g., *.example.com) |
-| match_path | VARCHAR | Path pattern to match (e.g., /api/*, /static/*) |
-| action | ENUM | cache, passthrough, redirect, edge_function |
-| ttl_override | INT | Overrides content_objects.ttl_seconds if set |
-| origin_id | UUID (FK) | Which origin to fetch from on cache miss |
+| Field        | Type      | Description                                              |
+| ------------ | --------- | -------------------------------------------------------- |
+| rule_id      | UUID (PK) | Unique rule identifier                                   |
+| customer_id  | UUID      | Which customer owns this rule                            |
+| priority     | INT       | Lower number = higher priority; rules evaluated in order |
+| match_host   | VARCHAR   | Hostname pattern to match (e.g., \*.example.com)         |
+| match_path   | VARCHAR   | Path pattern to match (e.g., /api/_, /static/_)          |
+| action       | ENUM      | cache, passthrough, redirect, edge_function              |
+| ttl_override | INT       | Overrides content_objects.ttl_seconds if set             |
+| origin_id    | UUID (FK) | Which origin to fetch from on cache miss                 |
 
-**Why priority-based rules?** Customers need fine-grained control: "cache everything under /static/ for 1 year, but /api/* should always passthrough." Priority ordering resolves conflicts when multiple rules match.
+**Why priority-based rules?** Customers need fine-grained control: "cache everything under /static/ for 1 year, but /api/\* should always passthrough." Priority ordering resolves conflicts when multiple rules match.
 
 ### origins
 
-| Field | Type | Description |
-|-------|------|-------------|
-| origin_id | UUID (PK) | Unique origin identifier |
-| customer_id | UUID | Which customer owns this origin |
-| name | VARCHAR | Human-readable name |
-| url | VARCHAR | Origin server URL |
-| health_check_path | VARCHAR | Path to probe for health (e.g., /healthz) |
-| timeout_ms | INT | Request timeout before marking unhealthy |
-| retry_attempts | INT | Number of retries before failover |
-| is_healthy | BOOLEAN | Current health status; updated by health checker |
+| Field             | Type      | Description                                      |
+| ----------------- | --------- | ------------------------------------------------ |
+| origin_id         | UUID (PK) | Unique origin identifier                         |
+| customer_id       | UUID      | Which customer owns this origin                  |
+| name              | VARCHAR   | Human-readable name                              |
+| url               | VARCHAR   | Origin server URL                                |
+| health_check_path | VARCHAR   | Path to probe for health (e.g., /healthz)        |
+| timeout_ms        | INT       | Request timeout before marking unhealthy         |
+| retry_attempts    | INT       | Number of retries before failover                |
+| is_healthy        | BOOLEAN   | Current health status; updated by health checker |
 
 **Why explicit health tracking?** If an origin is down, the CDN should serve stale content (stale-while-revalidate) or fail fast rather than making users wait for timeouts. The is_healthy flag short-circuits routing decisions.
 

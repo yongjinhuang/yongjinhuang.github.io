@@ -111,7 +111,12 @@ export { t, publicProcedure, protectedProcedure, adminProcedure };
 ```typescript
 // server/routers/user.ts -- User router
 import { z } from 'zod';
-import { t, publicProcedure, protectedProcedure, adminProcedure } from '../trpc';
+import {
+  t,
+  publicProcedure,
+  protectedProcedure,
+  adminProcedure,
+} from '../trpc';
 
 const userRouter = t.router({
   // Query: GET-like operation
@@ -135,10 +140,12 @@ const userRouter = t.router({
 
   // Query with cursor-based pagination
   list: publicProcedure
-    .input(z.object({
-      cursor: z.string().uuid().optional(),
-      limit: z.number().min(1).max(100).default(20),
-    }))
+    .input(
+      z.object({
+        cursor: z.string().uuid().optional(),
+        limit: z.number().min(1).max(100).default(20),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const items = await ctx.db.users.findMany({
         take: input.limit + 1,
@@ -157,11 +164,13 @@ const userRouter = t.router({
 
   // Mutation: POST/PUT/DELETE-like operation
   create: adminProcedure
-    .input(z.object({
-      name: z.string().min(1).max(100),
-      email: z.string().email(),
-      role: z.enum(['admin', 'user']).default('user'),
-    }))
+    .input(
+      z.object({
+        name: z.string().min(1).max(100),
+        email: z.string().email(),
+        role: z.enum(['admin', 'user']).default('user'),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const existing = await ctx.db.users.findUnique({
         where: { email: input.email },
@@ -178,14 +187,13 @@ const userRouter = t.router({
     }),
 
   // Subscription: Real-time updates via WebSocket
-  onUserCreated: protectedProcedure
-    .subscription(({ ctx }) => {
-      return observable<User>((emit) => {
-        const handler = (user: User) => emit.next(user);
-        ctx.db.events.on('userCreated', handler);
-        return () => ctx.db.events.off('userCreated', handler);
-      });
-    }),
+  onUserCreated: protectedProcedure.subscription(({ ctx }) => {
+    return observable<User>((emit) => {
+      const handler = (user: User) => emit.next(user);
+      ctx.db.events.on('userCreated', handler);
+      return () => ctx.db.events.off('userCreated', handler);
+    });
+  }),
 });
 
 export type UserRouter = typeof userRouter;
@@ -240,10 +248,12 @@ function UserList() {
 
   return (
     <div>
-      {data?.pages.flatMap(page =>
-        page.items.map(user => (
+      {data?.pages.flatMap((page) =>
+        page.items.map((user) => (
           // user.name, user.email, user.createdAt -- all type-safe
-          <div key={user.id}>{user.name} ({user.email})</div>
+          <div key={user.id}>
+            {user.name} ({user.email})
+          </div>
         ))
       )}
     </div>
@@ -387,7 +397,10 @@ builder.mutationField('createUser', (t) =>
       input: t.arg({
         type: builder.inputType('CreateUserInput', {
           fields: (t) => ({
-            name: t.string({ required: true, validate: { minLength: 1, maxLength: 100 } }),
+            name: t.string({
+              required: true,
+              validate: { minLength: 1, maxLength: 100 },
+            }),
             email: t.string({ required: true, validate: { email: true } }),
           }),
         }),
@@ -457,7 +470,7 @@ function createLoaders(prisma: PrismaClient) {
         postsByUser.get(post.userId)?.push(post);
       }
 
-      return userIds.map(id => postsByUser.get(id) ?? []);
+      return userIds.map((id) => postsByUser.get(id) ?? []);
     }),
   };
 }
@@ -896,12 +909,20 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 
 extendZodWithOpenApi(z);
 
-export const UserSchema = z.object({
-  id: z.string().uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
-  name: z.string().min(1).max(100).openapi({ example: 'Alice Johnson' }),
-  email: z.string().email().openapi({ example: 'alice@example.com' }),
-  createdAt: z.string().datetime().openapi({ example: '2026-01-15T10:30:00Z' }),
-}).openapi('User');
+export const UserSchema = z
+  .object({
+    id: z
+      .string()
+      .uuid()
+      .openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
+    name: z.string().min(1).max(100).openapi({ example: 'Alice Johnson' }),
+    email: z.string().email().openapi({ example: 'alice@example.com' }),
+    createdAt: z
+      .string()
+      .datetime()
+      .openapi({ example: '2026-01-15T10:30:00Z' }),
+  })
+  .openapi('User');
 
 export const CreateUserSchema = UserSchema.omit({ id: true, createdAt: true });
 
@@ -962,10 +983,10 @@ app.get('/docs', swaggerUI({ url: '/openapi.json' }));
 ```typescript
 // errors/problem-details.ts
 interface ProblemDetail {
-  type: string;    // URI identifying the problem type
-  title: string;   // Human-readable summary
-  status: number;  // HTTP status code
-  detail: string;  // Human-readable explanation
+  type: string; // URI identifying the problem type
+  title: string; // Human-readable summary
+  status: number; // HTTP status code
+  detail: string; // Human-readable explanation
   instance: string; // URI for this specific occurrence
 }
 
@@ -1026,6 +1047,7 @@ function handleNotFound(userId: string): Response {
 ## When to Use Which Approach
 
 ### Choose tRPC When:
+
 - Full-stack TypeScript (Next.js, Remix, SvelteKit)
 - Monorepo or shared packages between client and server
 - Rapid prototyping where iteration speed matters most
@@ -1033,6 +1055,7 @@ function handleNotFound(userId: string): Response {
 - Team is TypeScript-fluent
 
 ### Choose GraphQL When:
+
 - Multiple frontend clients (web, mobile, TV) with different data needs
 - Complex, nested data relationships
 - Need to aggregate data from multiple backend services
@@ -1040,6 +1063,7 @@ function handleNotFound(userId: string): Response {
 - Team has GraphQL expertise
 
 ### Choose gRPC When:
+
 - Microservice-to-microservice communication
 - Low-latency, high-throughput requirements
 - Streaming is a primary use case
@@ -1047,6 +1071,7 @@ function handleNotFound(userId: string): Response {
 - Strong contract enforcement between teams
 
 ### Choose REST + OpenAPI When:
+
 - Public-facing APIs consumed by third parties
 - Simple CRUD operations
 - HTTP caching is important

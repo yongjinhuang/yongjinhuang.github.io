@@ -17,9 +17,7 @@ Composition is React's fundamental mechanism for code reuse. Instead of inherita
 ```jsx
 function Card({ children, className }) {
   return (
-    <div className={`rounded-lg shadow-md p-6 ${className}`}>
-      {children}
-    </div>
+    <div className={`rounded-lg shadow-md p-6 ${className}`}>{children}</div>
   );
 }
 
@@ -48,10 +46,7 @@ function Layout({ header, sidebar, children }) {
 
 function App() {
   return (
-    <Layout
-      header={<Navbar />}
-      sidebar={<SideMenu />}
-    >
+    <Layout header={<Navbar />} sidebar={<SideMenu />}>
       <Dashboard />
     </Layout>
   );
@@ -78,7 +73,11 @@ function Tabs({ defaultTab, children }) {
 }
 
 function TabList({ children }) {
-  return <div role="tablist" className="flex gap-2">{children}</div>;
+  return (
+    <div role="tablist" className="flex gap-2">
+      {children}
+    </div>
+  );
 }
 
 function Tab({ value, children }) {
@@ -118,9 +117,15 @@ function App() {
         <Tabs.Tab value="settings">Settings</Tabs.Tab>
         <Tabs.Tab value="billing">Billing</Tabs.Tab>
       </Tabs.List>
-      <Tabs.Panel value="overview"><OverviewContent /></Tabs.Panel>
-      <Tabs.Panel value="settings"><SettingsContent /></Tabs.Panel>
-      <Tabs.Panel value="billing"><BillingContent /></Tabs.Panel>
+      <Tabs.Panel value="overview">
+        <OverviewContent />
+      </Tabs.Panel>
+      <Tabs.Panel value="settings">
+        <SettingsContent />
+      </Tabs.Panel>
+      <Tabs.Panel value="billing">
+        <BillingContent />
+      </Tabs.Panel>
     </Tabs>
   );
 }
@@ -197,11 +202,13 @@ const ProtectedDashboard = withAuth(Dashboard);
 ```
 
 **When to still use HOCs**:
+
 - Cross-cutting concerns that wrap many unrelated components (analytics, error boundaries).
 - Library integration where you need to inject props from external sources.
 - When you need to modify the component tree structure (wrapping in providers).
 
 **Problems with HOCs**:
+
 - Prop collision: the HOC might overwrite the wrapped component's props.
 - Indirection: hard to trace where props come from ("wrapper hell").
 - Static methods and refs are not forwarded automatically.
@@ -221,17 +228,21 @@ function useLocalStorage(key, initialValue) {
     }
   });
 
-  const setStoredValue = useCallback((newValue) => {
-    setValue((prev) => {
-      const resolved = typeof newValue === 'function' ? newValue(prev) : newValue;
-      try {
-        window.localStorage.setItem(key, JSON.stringify(resolved));
-      } catch (error) {
-        // localStorage might be full or disabled
-      }
-      return resolved;
-    });
-  }, [key]);
+  const setStoredValue = useCallback(
+    (newValue) => {
+      setValue((prev) => {
+        const resolved =
+          typeof newValue === 'function' ? newValue(prev) : newValue;
+        try {
+          window.localStorage.setItem(key, JSON.stringify(resolved));
+        } catch (error) {
+          // localStorage might be full or disabled
+        }
+        return resolved;
+      });
+    },
+    [key]
+  );
 
   return [value, setStoredValue];
 }
@@ -270,7 +281,11 @@ function UserProfile({ name, email, avatarUrl, onEditClick }) {
 
 // Container: handles data fetching and state
 function UserProfileContainer({ userId }) {
-  const { data: user, isLoading, error } = useQuery({
+  const {
+    data: user,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['user', userId],
     queryFn: () => fetchUser(userId),
   });
@@ -296,13 +311,13 @@ Modern take: with hooks, you often do not need a separate container component. T
 
 A methodology for creating design systems, organizing components in five levels:
 
-| Level | Description | Examples |
-|-------|-------------|----------|
-| Atoms | Smallest UI elements | Button, Input, Label, Icon |
-| Molecules | Groups of atoms | SearchBar (Input + Button), FormField (Label + Input + Error) |
-| Organisms | Complex UI sections | Header (Logo + Nav + SearchBar), ProductCard |
-| Templates | Page-level layouts | DashboardTemplate (defines slots for organisms) |
-| Pages | Concrete instances | DashboardPage (template filled with real data) |
+| Level     | Description          | Examples                                                      |
+| --------- | -------------------- | ------------------------------------------------------------- |
+| Atoms     | Smallest UI elements | Button, Input, Label, Icon                                    |
+| Molecules | Groups of atoms      | SearchBar (Input + Button), FormField (Label + Input + Error) |
+| Organisms | Complex UI sections  | Header (Logo + Nav + SearchBar), ProductCard                  |
+| Templates | Page-level layouts   | DashboardTemplate (defines slots for organisms)               |
+| Pages     | Concrete instances   | DashboardPage (template filled with real data)                |
 
 ```
 components/
@@ -331,6 +346,7 @@ components/
 Instead of organizing by type (all components together, all hooks together), organize by feature (everything related to a feature lives together).
 
 **Type-based (problematic at scale)**:
+
 ```
 src/
   components/
@@ -351,6 +367,7 @@ src/
 ```
 
 **Feature-based (scales with team size)**:
+
 ```
 src/
   features/
@@ -412,6 +429,7 @@ import { UserList, useUser } from '@/features/users';
 ```
 
 **Tradeoffs**:
+
 - Pro: clean imports, encapsulation (internal files are not part of the public API).
 - Con: can cause bundle size issues if tree-shaking is not configured properly (bundler may import the entire barrel). Webpack and Vite handle this well with `sideEffects: false` in package.json.
 
@@ -474,7 +492,9 @@ render(
     <ProductPage product={testProduct} />
   </AnalyticsContext.Provider>
 );
-expect(mockAnalytics.track).toHaveBeenCalledWith('product_viewed', { productId: '123' });
+expect(mockAnalytics.track).toHaveBeenCalledWith('product_viewed', {
+  productId: '123',
+});
 ```
 
 ### Micro-Frontends
@@ -554,12 +574,12 @@ registerApplication({
 start();
 ```
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| Module Federation | Runtime integration, shared deps | Webpack-specific, version conflicts |
-| single-spa | Framework agnostic, mature | Complex setup, global state challenges |
-| iframe | Complete isolation | No shared state, performance overhead |
-| Web Components | Standard-based, framework agnostic | Limited styling, Shadow DOM complexity |
+| Approach          | Pros                               | Cons                                   |
+| ----------------- | ---------------------------------- | -------------------------------------- |
+| Module Federation | Runtime integration, shared deps   | Webpack-specific, version conflicts    |
+| single-spa        | Framework agnostic, mature         | Complex setup, global state challenges |
+| iframe            | Complete isolation                 | No shared state, performance overhead  |
+| Web Components    | Standard-based, framework agnostic | Limited styling, Shadow DOM complexity |
 
 ### Monorepo Architecture
 
@@ -608,12 +628,14 @@ monorepo/
 ```
 
 Benefits:
+
 - Shared code without publishing to npm.
 - Atomic changes across packages.
 - Consistent tooling configuration.
 - Dependency graph awareness (build only what changed).
 
 Tradeoffs:
+
 - Larger repository size.
 - CI/CD complexity.
 - Requires tooling investment (Turborepo, Nx).
@@ -725,15 +747,18 @@ function Form({ initialValues, onSubmit, validate, children }) {
     setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
 
-  const handleSubmit = useCallback((e) => {
-    e.preventDefault();
-    const validationErrors = validate ? validate(values) : {};
-    setErrors(validationErrors);
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      const validationErrors = validate ? validate(values) : {};
+      setErrors(validationErrors);
 
-    if (Object.keys(validationErrors).length === 0) {
-      onSubmit(values);
-    }
-  }, [values, validate, onSubmit]);
+      if (Object.keys(validationErrors).length === 0) {
+        onSubmit(values);
+      }
+    },
+    [values, validate, onSubmit]
+  );
 
   const context = { values, errors, touched, setFieldValue, setFieldTouched };
 
@@ -836,11 +861,14 @@ function App() {
   return (
     <ErrorBoundary fallback={ErrorFallback} onError={reportToSentry}>
       <Routes>
-        <Route path="/dashboard" element={
-          <ErrorBoundary fallback={ErrorFallback}>
-            <Dashboard />
-          </ErrorBoundary>
-        } />
+        <Route
+          path="/dashboard"
+          element={
+            <ErrorBoundary fallback={ErrorFallback}>
+              <Dashboard />
+            </ErrorBoundary>
+          }
+        />
       </Routes>
     </ErrorBoundary>
   );
@@ -915,18 +943,18 @@ function App() {
 
 ## Quick Reference
 
-| Pattern | Use When | Example |
-|---------|----------|---------|
-| Composition (children) | Flexible content injection | Card, Modal, Layout |
-| Compound Components | Related components sharing implicit state | Tabs, Accordion, Select |
-| Render Props | Logic reuse with rendering flexibility | Downshift, animation values |
-| HOC | Cross-cutting concerns wrapping many components | withAuth, withErrorBoundary |
-| Custom Hooks | Stateful logic reuse without UI | useDebounce, useFetch, useAuth |
-| Container/Presenter | Separating data logic from rendering | UserProfileContainer / UserProfile |
-| Atomic Design | Design system organization | Button (atom) -> SearchBar (molecule) |
-| Feature-based Structure | Scaling to multiple teams | features/users/, features/cart/ |
-| Barrel Exports | Clean public API for modules | index.ts re-exports |
-| Dependency Injection | Testability and decoupling | Context + Provider pattern |
-| Module Federation | Runtime micro-frontend integration | Remote app loaded into host |
-| single-spa | Multi-framework micro-frontends | React + Angular on same page |
-| Monorepo | Shared code across multiple apps | Turborepo with apps/ and packages/ |
+| Pattern                 | Use When                                        | Example                               |
+| ----------------------- | ----------------------------------------------- | ------------------------------------- |
+| Composition (children)  | Flexible content injection                      | Card, Modal, Layout                   |
+| Compound Components     | Related components sharing implicit state       | Tabs, Accordion, Select               |
+| Render Props            | Logic reuse with rendering flexibility          | Downshift, animation values           |
+| HOC                     | Cross-cutting concerns wrapping many components | withAuth, withErrorBoundary           |
+| Custom Hooks            | Stateful logic reuse without UI                 | useDebounce, useFetch, useAuth        |
+| Container/Presenter     | Separating data logic from rendering            | UserProfileContainer / UserProfile    |
+| Atomic Design           | Design system organization                      | Button (atom) -> SearchBar (molecule) |
+| Feature-based Structure | Scaling to multiple teams                       | features/users/, features/cart/       |
+| Barrel Exports          | Clean public API for modules                    | index.ts re-exports                   |
+| Dependency Injection    | Testability and decoupling                      | Context + Provider pattern            |
+| Module Federation       | Runtime micro-frontend integration              | Remote app loaded into host           |
+| single-spa              | Multi-framework micro-frontends                 | React + Angular on same page          |
+| Monorepo                | Shared code across multiple apps                | Turborepo with apps/ and packages/    |

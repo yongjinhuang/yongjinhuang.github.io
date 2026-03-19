@@ -10,8 +10,8 @@
 ## 1. Coordinate Frames and Why They Matter
 
 Every measurement in robotics is relative. When a sensor reports "the obstacle is
-1.5 meters away," the implicit question is: *away from what, and in which
-direction?* A **coordinate frame** (or reference frame) anchors measurements to a
+1.5 meters away," the implicit question is: _away from what, and in which
+direction?_ A **coordinate frame** (or reference frame) anchors measurements to a
 specific origin and set of axes.
 
 ```
@@ -34,13 +34,13 @@ specific origin and set of axes.
 
 Common frames in a robotic system:
 
-| Frame        | Attached to         | Typical use                        |
-|-------------|---------------------|------------------------------------|
-| World       | The environment     | Global planning, mapping           |
-| Base        | Robot base link     | Joint-level control                |
-| End-effector| Robot tool tip      | Grasping, tool operations          |
-| Camera      | Vision sensor       | Perception, object detection       |
-| IMU         | Inertial sensor     | State estimation                   |
+| Frame        | Attached to     | Typical use                  |
+| ------------ | --------------- | ---------------------------- |
+| World        | The environment | Global planning, mapping     |
+| Base         | Robot base link | Joint-level control          |
+| End-effector | Robot tool tip  | Grasping, tool operations    |
+| Camera       | Vision sensor   | Perception, object detection |
+| IMU          | Inertial sensor | State estimation             |
 
 The core problem: given a point described in one frame, express it in another.
 This is the business of **rigid-body transformations**.
@@ -52,6 +52,7 @@ This is the business of **rigid-body transformations**.
 ### 2.1 What Is a Rotation?
 
 A rotation is a linear map that preserves:
+
 - **Distances** (lengths are unchanged)
 - **Orientation** (right-handed frames stay right-handed)
 - **The origin** (the zero vector maps to itself)
@@ -64,7 +65,8 @@ det(R) = +1    (proper rotation, no reflection)
 ```
 
 The set of all such matrices forms the **Special Orthogonal Group SO(3)**. It is a
-*group* because:
+_group_ because:
+
 - The identity I is a rotation (do nothing).
 - The product of two rotations is a rotation.
 - Every rotation has an inverse (R^{-1} = R^T).
@@ -100,7 +102,7 @@ Rz(θ) =  [ sin(θ)   cos(θ)   0 ]
 Rotations compose by matrix multiplication, but **order matters** (matrix
 multiplication is not commutative).
 
-A common source of bugs: rotating first about X then about Z is *not* the same
+A common source of bugs: rotating first about X then about Z is _not_ the same
 as rotating first about Z then about X.
 
 ```
@@ -108,6 +110,7 @@ Rz(90°) * Rx(90°)  ≠  Rx(90°) * Rz(90°)
 ```
 
 Convention matters too:
+
 - **Intrinsic** (body-fixed) rotations: multiply right-to-left.
 - **Extrinsic** (fixed-frame) rotations: multiply left-to-right.
 
@@ -196,8 +199,9 @@ R = Rz(ψ) * Ry(90°) * Rx(φ)
     [ -1        0           0     ]
 ```
 
-Only the *difference* (psi - phi) matters -- the system has lost one independent
+Only the _difference_ (psi - phi) matters -- the system has lost one independent
 parameter. Numerically, this manifests as:
+
 - Rapid oscillation between yaw and roll values.
 - Division-by-zero in `atan2` calls when extracting angles.
 - Singularity in the Jacobian that maps angular velocity to Euler rate.
@@ -228,13 +232,13 @@ def rotation_to_zyx_euler(R: np.ndarray) -> tuple[float, float, float]:
 
 ### 4.1 Why Quaternions?
 
-| Property               | Euler Angles | Rotation Matrix | Quaternion |
-|------------------------|:------------:|:---------------:|:----------:|
-| Storage                | 3 floats     | 9 floats        | 4 floats   |
-| Gimbal lock            | Yes          | No              | No         |
-| Interpolation (SLERP)  | Poor         | Hard            | Excellent  |
-| Composition cost       | Rebuild R    | 27 mults        | 16 mults   |
-| Singularity-free       | No           | Yes             | Yes        |
+| Property              | Euler Angles | Rotation Matrix | Quaternion |
+| --------------------- | :----------: | :-------------: | :--------: |
+| Storage               |   3 floats   |    9 floats     |  4 floats  |
+| Gimbal lock           |     Yes      |       No        |     No     |
+| Interpolation (SLERP) |     Poor     |      Hard       | Excellent  |
+| Composition cost      |  Rebuild R   |    27 mults     |  16 mults  |
+| Singularity-free      |      No      |       Yes       |    Yes     |
 
 A **unit quaternion** q = w + xi + yj + zk with ||q|| = 1 encodes a rotation
 about axis **n** by angle theta as:
@@ -268,8 +272,9 @@ p' = q * (0, p) * q^{-1}
 
 ### 4.3 Double Cover
 
-Both q and -q represent the *same* rotation. This is the **double cover** of
+Both q and -q represent the _same_ rotation. This is the **double cover** of
 SO(3) by the unit quaternion group S^3. In practice, you must handle this when:
+
 - Interpolating: always pick the shorter arc (check dot product sign).
 - Comparing: two quaternions are "equal" if q1 ~ q2 or q1 ~ -q2.
 
@@ -470,6 +475,7 @@ another regardless of applied forces. This assumption underpins almost all
 classical robotics.
 
 A free rigid body in 3D space has **6 degrees of freedom (DOF)**:
+
 - 3 translational (x, y, z position)
 - 3 rotational (orientation about three axes)
 
@@ -597,6 +603,7 @@ V = [ ω ]    ω: angular velocity (3x1)
 ```
 
 There are two standard conventions:
+
 - **Spatial twist** (body velocity expressed in the spatial/world frame).
 - **Body twist** (velocity expressed in the body frame).
 
@@ -713,19 +720,19 @@ it cause?
 **Q5.** Given two homogeneous transforms T_AB and T_BC, how do you compute the
 transform from frame C to frame A?
 
-> **A:** T_AC = T_AB * T_BC. Matrix multiplication composes the transforms in
+> **A:** T_AC = T_AB \* T_BC. Matrix multiplication composes the transforms in
 > sequence: first from C to B, then from B to A.
 
 **Q6.** How do you efficiently invert a homogeneous transformation matrix?
 
-> **A:** Exploit the structure: R_inv = R^T, t_inv = -R^T * t. This avoids
+> **A:** Exploit the structure: R_inv = R^T, t_inv = -R^T \* t. This avoids
 > a full 4x4 matrix inversion and is both faster and more numerically stable.
 
 **Q7.** A rotation matrix is drifting due to accumulated floating-point error.
 How do you fix it?
 
 > **A:** Use SVD-based re-orthogonalization: compute U, S, V^T = svd(R), then
-> set R_corrected = U * diag(1, 1, det(U*V^T)) * V^T. This projects the matrix
+> set R_corrected = U * diag(1, 1, det(U*V^T)) \* V^T. This projects the matrix
 > back onto SO(3).
 
 **Q8.** What is Rodrigues' rotation formula and when would you use it?
@@ -739,7 +746,7 @@ How do you fix it?
 
 > **A:** SO(3) is the group of 3D rotations (3x3 orthogonal matrices with det +1).
 > so(3) is its Lie algebra (3x3 skew-symmetric matrices). The matrix exponential
-> maps from so(3) to SO(3): R = exp([omega]_x * theta). The logarithmic map goes
+> maps from so(3) to SO(3): R = exp([omega]\_x \* theta). The logarithmic map goes
 > the other direction. This is the foundation of screw theory in robotics.
 
 **Q10.** A 6-DOF robot arm has 6 joints. Use Grubler's formula to confirm it has

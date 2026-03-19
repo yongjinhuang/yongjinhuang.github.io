@@ -278,13 +278,13 @@ void reduceArray(int *d_in, int *d_out, int n) {
 
 ### Complexity Summary
 
-| Variant | Work | Span | Notes |
-|---------|------|------|-------|
-| Sequential (CPU) | O(N) | O(N) | Baseline |
-| Naive parallel | O(N) | O(log N) | Warp divergence |
-| Sequential addressing | O(N) | O(log N) | No early divergence |
-| First-add-during-load | O(N) | O(log N) | Half the blocks |
-| Warp shuffle final | O(N) | O(log N) | No shared mem for last 5 steps |
+| Variant               | Work | Span     | Notes                          |
+| --------------------- | ---- | -------- | ------------------------------ |
+| Sequential (CPU)      | O(N) | O(N)     | Baseline                       |
+| Naive parallel        | O(N) | O(log N) | Warp divergence                |
+| Sequential addressing | O(N) | O(log N) | No early divergence            |
+| First-add-during-load | O(N) | O(log N) | Half the blocks                |
+| Warp shuffle final    | O(N) | O(log N) | No shared mem for last 5 steps |
 
 ---
 
@@ -360,6 +360,7 @@ d=2:      |    |    |    |   +|   +|   +|   +|
 ```
 
 **Complexity:**
+
 - Work: O(N log N) -- more work than sequential!
 - Span: O(log N)
 - Not work-efficient, but simple and has few steps
@@ -501,6 +502,7 @@ Result (exclusive scan): [0, 3, 4, 11, 11, 15, 16, 22]
 ```
 
 **Complexity:**
+
 - Up-sweep: N - 1 additions (same as reduction)
 - Down-sweep: N - 1 additions
 - Total work: O(N) -- work-efficient!
@@ -666,15 +668,15 @@ void scanLargeArray(int *d_data, int n) {
 
 ### Applications of Scan
 
-| Application | How Scan is Used |
-|-------------|------------------|
-| Stream compaction | Scan predicate flags to get output positions |
-| Radix sort | Scan digit histograms for scatter addresses |
-| Sparse matrix ops | Scan row pointers for CSR format |
-| Polynomial evaluation | Scan with multiply operator |
-| Run-length encoding | Scan to find run boundaries |
-| Quicksort partition | Scan predicate to split elements |
-| Histogram equalization | Scan to compute CDF |
+| Application            | How Scan is Used                             |
+| ---------------------- | -------------------------------------------- |
+| Stream compaction      | Scan predicate flags to get output positions |
+| Radix sort             | Scan digit histograms for scatter addresses  |
+| Sparse matrix ops      | Scan row pointers for CSR format             |
+| Polynomial evaluation  | Scan with multiply operator                  |
+| Run-length encoding    | Scan to find run boundaries                  |
+| Quicksort partition    | Scan predicate to split elements             |
+| Histogram equalization | Scan to compute CDF                          |
 
 ---
 
@@ -768,9 +770,10 @@ d = descending compare-swap
 ```
 
 **Complexity:**
+
 - Phases: log(N) phases
 - Steps per phase p: p compare-swap rounds
-- Total steps: log(N) * (log(N)+1) / 2 = O(log^2 N)
+- Total steps: log(N) \* (log(N)+1) / 2 = O(log^2 N)
 - Work: O(N log^2 N)
 - Each step is fully parallel (N/2 independent compare-swaps)
 
@@ -916,15 +919,15 @@ GPU merge sort typically uses bitonic sort for small sub-arrays (fits in shared 
 
 ### When GPU Sort Wins
 
-| Scenario | Winner | Why |
-|----------|--------|-----|
-| N < 100K | CPU | Transfer overhead dominates |
-| N > 1M, uniform keys | GPU | Radix sort shines |
-| N > 1M, comparison-based | GPU | Bitonic/merge parallelism |
-| Repeated sorts (data on GPU) | GPU | No transfer cost |
-| Sort as part of GPU pipeline | GPU | Avoids GPU-CPU round trip |
-| Complex comparison function | CPU | GPU branching is expensive |
-| Already nearly sorted | CPU | Adaptive algorithms (Timsort) |
+| Scenario                     | Winner | Why                           |
+| ---------------------------- | ------ | ----------------------------- |
+| N < 100K                     | CPU    | Transfer overhead dominates   |
+| N > 1M, uniform keys         | GPU    | Radix sort shines             |
+| N > 1M, comparison-based     | GPU    | Bitonic/merge parallelism     |
+| Repeated sorts (data on GPU) | GPU    | No transfer cost              |
+| Sort as part of GPU pipeline | GPU    | Avoids GPU-CPU round trip     |
+| Complex comparison function  | CPU    | GPU branching is expensive    |
+| Already nearly sorted        | CPU    | Adaptive algorithms (Timsort) |
 
 ---
 
@@ -1008,6 +1011,7 @@ __global__ void histogramShared(const int *data, int *hist, int n) {
 ```
 
 **Why shared memory atomics are faster:**
+
 - Shared memory atomic operations are resolved within the SM (streaming multiprocessor)
 - Global memory atomics must travel through the memory hierarchy
 - Shared memory atomics: ~5-10 cycles
@@ -1307,13 +1311,13 @@ This is exactly a 2D 5-point stencil iterated over time steps. Each time step re
 
 ### Boundary Handling Strategies
 
-| Strategy | Description | When to Use |
-|----------|-------------|-------------|
-| Zero padding | Treat out-of-bounds as 0 | Signal processing |
-| Clamped | Replicate edge values | Image processing |
-| Periodic (wrap) | Wrap around to opposite edge | Physics simulations |
-| Reflected | Mirror at boundary | Image filtering |
-| Ghost cells | Extra rows/columns with boundary values | PDE solvers |
+| Strategy        | Description                             | When to Use         |
+| --------------- | --------------------------------------- | ------------------- |
+| Zero padding    | Treat out-of-bounds as 0                | Signal processing   |
+| Clamped         | Replicate edge values                   | Image processing    |
+| Periodic (wrap) | Wrap around to opposite edge            | Physics simulations |
+| Reflected       | Mirror at boundary                      | Image filtering     |
+| Ghost cells     | Extra rows/columns with boundary values | PDE solvers         |
 
 ---
 
@@ -1426,14 +1430,14 @@ void compact(int *d_input, int *d_output, int *d_count, int n) {
 
 ### Practical Applications
 
-| Application | Predicate | Purpose |
-|-------------|-----------|---------|
-| Particle simulation | `is_alive(particle)` | Remove dead particles |
-| Collision detection | `has_collision(pair)` | Extract colliding pairs |
-| Ray tracing | `ray_hit(ray)` | Keep only rays that hit geometry |
-| Database query | `matches_where(row)` | Filter rows |
-| Sparse matrix | `value != 0` | Convert dense to sparse |
-| Mesh processing | `is_visible(triangle)` | Frustum culling |
+| Application         | Predicate              | Purpose                          |
+| ------------------- | ---------------------- | -------------------------------- |
+| Particle simulation | `is_alive(particle)`   | Remove dead particles            |
+| Collision detection | `has_collision(pair)`  | Extract colliding pairs          |
+| Ray tracing         | `ray_hit(ray)`         | Keep only rays that hit geometry |
+| Database query      | `matches_where(row)`   | Filter rows                      |
+| Sparse matrix       | `value != 0`           | Convert dense to sparse          |
+| Mesh processing     | `is_visible(triangle)` | Frustum culling                  |
 
 ---
 
@@ -1523,6 +1527,7 @@ __global__ void scatterKernel(const float *in, const int *indices,
 ```
 
 **Performance**: Reads are coalesced, but writes are random. Random writes are more problematic than random reads because:
+
 1. Write conflicts: Two threads may write to the same location (race condition)
 2. Write coalescing is harder for the hardware to optimize
 3. Partial cache line writes waste bandwidth
@@ -1568,7 +1573,7 @@ If you can compute `src(i)` from `i` (the inverse of `dest`), always prefer the 
 
 ### The Problem
 
-Compute y = A * x, where A is a sparse matrix (mostly zeros).
+Compute y = A \* x, where A is a sparse matrix (mostly zeros).
 
 ```
 A = | 1  0  2  0 |      x = | 1 |      y = | 1*1 + 2*3 |   | 7  |
@@ -1772,6 +1777,7 @@ Highly skewed (power-law):
 ### Definitions
 
 For a parallel algorithm:
+
 - **Work (W)**: Total number of operations across all processors. This is what a sequential execution would do.
 - **Span (S)** (also called "depth" or "critical path"): The longest chain of sequential dependencies. This is the runtime on an infinite number of processors.
 
@@ -1824,13 +1830,13 @@ Near-linear speedup because W/p >> S.
 
 Two categories of parallel algorithms:
 
-| Property | Work-Efficient | Step-Efficient |
-|----------|----------------|----------------|
-| Work | O(same as sequential) | O(more than sequential) |
-| Span | O(log N) or O(log^2 N) | O(log N) |
-| Example | Blelloch scan | Hillis-Steele scan |
-| Work | O(N) | O(N log N) |
-| Processors needed | O(N / log N) | O(N) |
+| Property          | Work-Efficient         | Step-Efficient          |
+| ----------------- | ---------------------- | ----------------------- |
+| Work              | O(same as sequential)  | O(more than sequential) |
+| Span              | O(log N) or O(log^2 N) | O(log N)                |
+| Example           | Blelloch scan          | Hillis-Steele scan      |
+| Work              | O(N)                   | O(N log N)              |
+| Processors needed | O(N / log N)           | O(N)                    |
 
 **When does it matter?**
 
@@ -1997,4 +2003,4 @@ When analyzing a parallel algorithm:
 
 ---
 
-*Next chapter: [07-MEMORY-OPTIMIZATION](07-MEMORY-OPTIMIZATION.md) -- Deep dive into memory coalescing, bank conflicts, and the full GPU memory hierarchy.*
+_Next chapter: [07-MEMORY-OPTIMIZATION](07-MEMORY-OPTIMIZATION.md) -- Deep dive into memory coalescing, bank conflicts, and the full GPU memory hierarchy._

@@ -114,21 +114,25 @@ The best practice is to set breakpoints where your **content breaks**, not at de
   margin: 0 auto;
 }
 
-.sidebar { width: 30%; }
-.main    { width: 70%; }
+.sidebar {
+  width: 30%;
+}
+.main {
+  width: 70%;
+}
 ```
 
 #### Viewport Units
 
-| Unit | Description                        |
-|------|------------------------------------|
-| vw   | 1% of viewport width               |
-| vh   | 1% of viewport height              |
-| vmin | 1% of the smaller dimension        |
-| vmax | 1% of the larger dimension         |
-| dvh  | Dynamic viewport height (mobile)   |
-| svh  | Small viewport height              |
-| lvh  | Large viewport height              |
+| Unit | Description                      |
+| ---- | -------------------------------- |
+| vw   | 1% of viewport width             |
+| vh   | 1% of viewport height            |
+| vmin | 1% of the smaller dimension      |
+| vmax | 1% of the larger dimension       |
+| dvh  | Dynamic viewport height (mobile) |
+| svh  | Small viewport height            |
+| lvh  | Large viewport height            |
 
 **Important:** On mobile, `vh` includes the browser chrome (address bar). Use `dvh` for layouts that should fill the visible area.
 
@@ -226,15 +230,9 @@ Container < 400px:         Container >= 400px:
 ```html
 <picture>
   <!-- Cropped portrait version for mobile -->
-  <source
-    media="(max-width: 767px)"
-    srcset="hero-mobile.jpg"
-  />
+  <source media="(max-width: 767px)" srcset="hero-mobile.jpg" />
   <!-- Wide landscape version for desktop -->
-  <source
-    media="(min-width: 768px)"
-    srcset="hero-desktop.jpg"
-  />
+  <source media="(min-width: 768px)" srcset="hero-desktop.jpg" />
   <img src="hero-desktop.jpg" alt="Hero image" />
 </picture>
 ```
@@ -280,13 +278,13 @@ Use a fluid type scale that adapts to viewport width:
 
 ```css
 :root {
-  --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
-  --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
-  --text-base: clamp(1rem,     0.9rem  + 0.5vw,  1.125rem);
-  --text-lg:   clamp(1.125rem, 1rem    + 0.6vw,  1.25rem);
-  --text-xl:   clamp(1.25rem,  1rem    + 1.2vw,  1.75rem);
-  --text-2xl:  clamp(1.5rem,   1rem    + 2vw,    2.5rem);
-  --text-3xl:  clamp(1.875rem, 1rem    + 3vw,    3.5rem);
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.6vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
+  --text-2xl: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  --text-3xl: clamp(1.875rem, 1rem + 3vw, 3.5rem);
 }
 ```
 
@@ -375,10 +373,17 @@ Desktop:                         Mobile:
 
 ```css
 @media (max-width: 640px) {
-  table, thead, tbody, th, td, tr {
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
     display: block;
   }
-  thead { display: none; }
+  thead {
+    display: none;
+  }
   td::before {
     content: attr(data-label);
     font-weight: bold;
@@ -391,13 +396,13 @@ Desktop:                         Mobile:
 
 **Tools for responsive testing:**
 
-| Tool                    | Purpose                              |
-|-------------------------|--------------------------------------|
-| Chrome DevTools         | Device emulation, throttling         |
-| Firefox Responsive Mode | Built-in responsive testing          |
-| BrowserStack            | Real device testing in the cloud     |
-| Responsively            | View multiple viewports at once      |
-| Lighthouse              | Performance + mobile audit           |
+| Tool                    | Purpose                          |
+| ----------------------- | -------------------------------- |
+| Chrome DevTools         | Device emulation, throttling     |
+| Firefox Responsive Mode | Built-in responsive testing      |
+| BrowserStack            | Real device testing in the cloud |
+| Responsively            | View multiple viewports at once  |
+| Lighthouse              | Performance + mobile audit       |
 
 **Testing checklist:**
 
@@ -547,6 +552,7 @@ In practice, most modern sites use a **hybrid** approach: fluid layouts with str
 `clamp(min, preferred, max)` returns the preferred value, clamped between the min and max. It is evaluated as `max(min, min(preferred, max))`.
 
 Use cases:
+
 - **Fluid typography**: `font-size: clamp(1rem, 2.5vw, 2rem)` scales text smoothly
 - **Fluid spacing**: `padding: clamp(1rem, 5vw, 4rem)` adjusts padding fluidly
 - **Fluid widths**: `width: clamp(300px, 50%, 600px)` constrains element width
@@ -560,10 +566,14 @@ It replaces the need for multiple media queries for gradual size changes.
 Container queries are superior for reusable components because the same component can adapt differently depending on where it is placed in the layout -- a card in a sidebar behaves differently than the same card in a full-width area, without any viewport-level logic.
 
 ```css
-.wrapper { container-type: inline-size; }
+.wrapper {
+  container-type: inline-size;
+}
 
 @container (min-width: 500px) {
-  .card { flex-direction: row; }
+  .card {
+    flex-direction: row;
+  }
 }
 ```
 
@@ -582,6 +592,7 @@ Container queries are superior for reusable components because the same componen
 The minimum is **44x44 CSS pixels** per WCAG 2.1 (Success Criterion 2.5.5). Apple recommends 44x44 points, and Material Design recommends 48x48 dp.
 
 This matters because:
+
 - Fingers are imprecise input devices (average fingertip is ~10mm or ~40px)
 - Small targets cause accidental taps, frustration, and accessibility barriers
 - Users with motor impairments need even larger targets
@@ -615,29 +626,35 @@ This matters because:
 ### For a Next.js + Tailwind + Framer Motion Portfolio
 
 1. **Use Tailwind's responsive prefixes consistently**
+
    - Design your sections mobile-first: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
    - Use `clamp()` for hero text instead of multiple breakpoint overrides
 
 2. **Implement a responsive navbar**
+
    - Desktop: horizontal links with theme toggle and language selector
    - Mobile: hamburger menu with Framer Motion slide animation
    - Ensure all nav links and toggles are at least 44x44px
 
 3. **Optimize your experience timeline**
+
    - Desktop: two-column layout with timeline in the center
    - Mobile: single-column stacked cards
    - Use container queries if cards appear in different contexts
 
 4. **Responsive skill tags**
+
    - Use `flex-wrap` so tags flow naturally on narrow screens
    - Keep touch targets adequate on mobile
 
 5. **Test your portfolio on real phones**
+
    - Check that the animated background performs well on mobile
    - Verify the custom cursor is hidden on touch devices
    - Test the language selector on small screens
 
 6. **Use `dvh` for full-height hero sections**
+
    - Replace `100vh` with `100dvh` to account for mobile browser chrome
 
 7. **Add responsive images**

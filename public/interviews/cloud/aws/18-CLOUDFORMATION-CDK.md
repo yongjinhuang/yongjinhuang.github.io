@@ -7,8 +7,8 @@ CloudFormation is AWS's native Infrastructure as Code (IaC) service that lets yo
 Every CloudFormation template follows this structure. Only `Resources` is required.
 
 ```yaml
-AWSTemplateFormatVersion: "2010-09-09"
-Description: "My application stack"
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'My application stack'
 
 Parameters:
   Environment:
@@ -30,44 +30,44 @@ Resources:
   MyBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "my-app-${Environment}-assets"
+      BucketName: !Sub 'my-app-${Environment}-assets'
       VersioningConfiguration:
         Status: !If [IsProd, Enabled, Suspended]
 
 Outputs:
   BucketArn:
-    Description: "S3 bucket ARN"
+    Description: 'S3 bucket ARN'
     Value: !GetAtt MyBucket.Arn
     Export:
-      Name: !Sub "${AWS::StackName}-BucketArn"
+      Name: !Sub '${AWS::StackName}-BucketArn'
 ```
 
-| Section | Purpose |
-|---------|---------|
-| `AWSTemplateFormatVersion` | Template version (always `2010-09-09`) |
-| `Description` | Human-readable stack description |
-| `Parameters` | Input values at deploy time |
-| `Mappings` | Static lookup tables (region-to-AMI, env-to-config) |
-| `Conditions` | Conditional resource creation |
-| `Resources` | AWS resources to create (REQUIRED) |
-| `Outputs` | Values to export or display after deployment |
+| Section                    | Purpose                                             |
+| -------------------------- | --------------------------------------------------- |
+| `AWSTemplateFormatVersion` | Template version (always `2010-09-09`)              |
+| `Description`              | Human-readable stack description                    |
+| `Parameters`               | Input values at deploy time                         |
+| `Mappings`                 | Static lookup tables (region-to-AMI, env-to-config) |
+| `Conditions`               | Conditional resource creation                       |
+| `Resources`                | AWS resources to create (REQUIRED)                  |
+| `Outputs`                  | Values to export or display after deployment        |
 
 ## Intrinsic Functions
 
 These are the functions you will use constantly in templates.
 
-| Function | Purpose | Example |
-|----------|---------|---------|
-| `!Ref` | Reference parameter or resource ID | `!Ref MyBucket` |
-| `!GetAtt` | Get resource attribute | `!GetAtt MyBucket.Arn` |
-| `!Sub` | String interpolation | `!Sub "arn:aws:s3:::${BucketName}/*"` |
-| `!Join` | Join strings with delimiter | `!Join ["-", [my, app, bucket]]` |
-| `!If` | Conditional value | `!If [IsProd, 3, 1]` |
-| `!Select` | Select from list by index | `!Select [0, !GetAZs ""]` |
-| `!Split` | Split string into list | `!Split [",", "a,b,c"]` |
-| `!FindInMap` | Lookup from Mappings | `!FindInMap [RegionMap, !Ref "AWS::Region", AMI]` |
-| `!ImportValue` | Import cross-stack output | `!ImportValue SharedVPC-SubnetId` |
-| `!GetAZs` | Get AZs for region | `!GetAZs ""` |
+| Function       | Purpose                            | Example                                           |
+| -------------- | ---------------------------------- | ------------------------------------------------- |
+| `!Ref`         | Reference parameter or resource ID | `!Ref MyBucket`                                   |
+| `!GetAtt`      | Get resource attribute             | `!GetAtt MyBucket.Arn`                            |
+| `!Sub`         | String interpolation               | `!Sub "arn:aws:s3:::${BucketName}/*"`             |
+| `!Join`        | Join strings with delimiter        | `!Join ["-", [my, app, bucket]]`                  |
+| `!If`          | Conditional value                  | `!If [IsProd, 3, 1]`                              |
+| `!Select`      | Select from list by index          | `!Select [0, !GetAZs ""]`                         |
+| `!Split`       | Split string into list             | `!Split [",", "a,b,c"]`                           |
+| `!FindInMap`   | Lookup from Mappings               | `!FindInMap [RegionMap, !Ref "AWS::Region", AMI]` |
+| `!ImportValue` | Import cross-stack output          | `!ImportValue SharedVPC-SubnetId`                 |
+| `!GetAZs`      | Get AZs for region                 | `!GetAZs ""`                                      |
 
 ## Stacks and Stack Sets
 
@@ -101,7 +101,7 @@ Resources:
     Properties:
       TemplateURL: https://s3.amazonaws.com/my-templates/network.yaml
       Parameters:
-        VpcCidr: "10.0.0.0/16"
+        VpcCidr: '10.0.0.0/16'
 
   AppStack:
     Type: AWS::CloudFormation::Stack
@@ -211,8 +211,8 @@ Resources:
     Type: Custom::AMILookup
     Properties:
       ServiceToken: !GetAtt LookupFunction.Arn
-      Region: !Ref "AWS::Region"
-      OS: "AmazonLinux2"
+      Region: !Ref 'AWS::Region'
+      OS: 'AmazonLinux2'
 
   LookupFunction:
     Type: AWS::Lambda::Function
@@ -237,11 +237,11 @@ Resources:
 
 ### Construct Levels
 
-| Level | Name | Description | Example |
-|-------|------|-------------|---------|
-| L1 | CFN Resources | 1:1 mapping to CloudFormation resources | `CfnBucket` |
-| L2 | Curated | Opinionated defaults, helper methods | `Bucket` (with encryption defaults) |
-| L3 | Patterns | Multi-resource architectures | `LambdaRestApi` (API GW + Lambda + IAM) |
+| Level | Name          | Description                             | Example                                 |
+| ----- | ------------- | --------------------------------------- | --------------------------------------- |
+| L1    | CFN Resources | 1:1 mapping to CloudFormation resources | `CfnBucket`                             |
+| L2    | Curated       | Opinionated defaults, helper methods    | `Bucket` (with encryption defaults)     |
+| L3    | Patterns      | Multi-resource architectures            | `LambdaRestApi` (API GW + Lambda + IAM) |
 
 ### CDK Example (TypeScript)
 
@@ -259,13 +259,17 @@ export class MyStack extends cdk.Stack {
       versioned: true,
       encryption: s3.BucketEncryption.S3_MANAGED,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
-      lifecycleRules: [{
-        expiration: cdk.Duration.days(90),
-        transitions: [{
-          storageClass: s3.StorageClass.INFREQUENT_ACCESS,
-          transitionAfter: cdk.Duration.days(30),
-        }],
-      }],
+      lifecycleRules: [
+        {
+          expiration: cdk.Duration.days(90),
+          transitions: [
+            {
+              storageClass: s3.StorageClass.INFREQUENT_ACCESS,
+              transitionAfter: cdk.Duration.days(30),
+            },
+          ],
+        },
+      ],
     });
 
     const fn = new lambda.Function(this, 'Processor', {
@@ -309,16 +313,16 @@ cdk bootstrap aws://123456789012/us-east-1
 
 ## CDK vs CloudFormation vs Terraform
 
-| Criteria | CloudFormation | CDK | Terraform |
-|----------|---------------|-----|-----------|
-| Language | YAML/JSON | TypeScript, Python, Java, C#, Go | HCL |
-| State | Managed by AWS | Managed by AWS (via CFN) | Self-managed or Terraform Cloud |
-| Multi-cloud | AWS only | AWS only | Multi-cloud |
-| Abstraction | Low (resource-level) | High (constructs, patterns) | Medium (modules) |
-| Drift detection | Built-in | Via CloudFormation | `terraform plan` |
-| Learning curve | Moderate | Lower (familiar languages) | Moderate |
-| Ecosystem | AWS only | CDK Construct Hub | Large provider ecosystem |
-| Import existing | `resource-import` | `cdk import` | `terraform import` |
+| Criteria        | CloudFormation       | CDK                              | Terraform                       |
+| --------------- | -------------------- | -------------------------------- | ------------------------------- |
+| Language        | YAML/JSON            | TypeScript, Python, Java, C#, Go | HCL                             |
+| State           | Managed by AWS       | Managed by AWS (via CFN)         | Self-managed or Terraform Cloud |
+| Multi-cloud     | AWS only             | AWS only                         | Multi-cloud                     |
+| Abstraction     | Low (resource-level) | High (constructs, patterns)      | Medium (modules)                |
+| Drift detection | Built-in             | Via CloudFormation               | `terraform plan`                |
+| Learning curve  | Moderate             | Lower (familiar languages)       | Moderate                        |
+| Ecosystem       | AWS only             | CDK Construct Hub                | Large provider ecosystem        |
+| Import existing | `resource-import`    | `cdk import`                     | `terraform import`              |
 
 **Decision guide**: Use CDK if AWS-only and your team prefers real programming languages. Use Terraform if multi-cloud or already invested in HashiCorp tooling. Use raw CloudFormation for simple stacks or when CDK is overkill.
 
@@ -363,14 +367,14 @@ aws cloudformation create-change-set \
 
 ## Common Gotchas
 
-| Issue | Details |
-|-------|---------|
-| Stack rollback stuck | A resource failed to delete (e.g., non-empty S3 bucket). Use `--retain-resources` to skip it, then clean up manually. |
-| 500 resource limit | Each stack supports max 500 resources. Use nested stacks to break up large deployments. |
-| Circular dependencies | Resource A depends on B, B depends on A. Refactor with `DependsOn`, break into separate stacks, or use `!GetAtt` carefully. |
-| Import existing resources | Only supported via change sets with `IMPORT` type. Resource must not already belong to another stack. |
-| Replacement updates | Some property changes cause resource replacement (new physical ID). Always check change set before applying. |
-| CloudFormation drift | Resources modified outside CFN will drift. Run drift detection regularly. Drifted resources are not auto-corrected. |
-| CDK bootstrap required | CDK deploy fails in new accounts/regions without `cdk bootstrap`. Each account-region pair needs bootstrapping once. |
-| Template size limits | 51,200 bytes for direct upload, 460,800 bytes via S3. Use S3 for larger templates. |
-| Deletion protection | Enable `termination-protection` on production stacks to prevent accidental deletion. |
+| Issue                     | Details                                                                                                                     |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Stack rollback stuck      | A resource failed to delete (e.g., non-empty S3 bucket). Use `--retain-resources` to skip it, then clean up manually.       |
+| 500 resource limit        | Each stack supports max 500 resources. Use nested stacks to break up large deployments.                                     |
+| Circular dependencies     | Resource A depends on B, B depends on A. Refactor with `DependsOn`, break into separate stacks, or use `!GetAtt` carefully. |
+| Import existing resources | Only supported via change sets with `IMPORT` type. Resource must not already belong to another stack.                       |
+| Replacement updates       | Some property changes cause resource replacement (new physical ID). Always check change set before applying.                |
+| CloudFormation drift      | Resources modified outside CFN will drift. Run drift detection regularly. Drifted resources are not auto-corrected.         |
+| CDK bootstrap required    | CDK deploy fails in new accounts/regions without `cdk bootstrap`. Each account-region pair needs bootstrapping once.        |
+| Template size limits      | 51,200 bytes for direct upload, 460,800 bytes via S3. Use S3 for larger templates.                                          |
+| Deletion protection       | Enable `termination-protection` on production stacks to prevent accidental deletion.                                        |

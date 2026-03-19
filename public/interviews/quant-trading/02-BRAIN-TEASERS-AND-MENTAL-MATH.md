@@ -77,6 +77,7 @@ Example: 37 x 43
 ```
 
 **Multiplying by 5**: Divide by 2, multiply by 10.
+
 ```
 84 x 5 = 84/2 x 10 = 42 x 10 = 420
 ```
@@ -84,7 +85,7 @@ Example: 37 x 43
 ### 1.2 Squaring Tricks
 
 **Squaring numbers near 50**:
-n^2 where n = 50 + d: answer is (25 + d) * 100 + d^2
+n^2 where n = 50 + d: answer is (25 + d) \* 100 + d^2
 
 ```
 53^2: 25 + 3 = 28, 3^2 = 9 -> 2809
@@ -94,7 +95,7 @@ n^2 where n = 50 + d: answer is (25 + d) * 100 + d^2
 ```
 
 **Squaring numbers near 100**:
-n^2 where n = 100 + d: answer is (n + d) * 100 + d^2
+n^2 where n = 100 + d: answer is (n + d) \* 100 + d^2
 
 ```
 103^2: (103+3)*100 + 9 = 10600 + 9 = 10609
@@ -112,6 +113,7 @@ n^2 = (n+d)(n-d) + d^2, choose d to make one factor easy.
 ### 1.3 Division and Estimation
 
 **Key fractions to memorize**:
+
 ```
 1/3  = 0.3333    1/7  = 0.142857 (repeating)    1/11 = 0.0909
 1/4  = 0.25      1/8  = 0.125                     1/12 = 0.0833
@@ -120,6 +122,7 @@ n^2 = (n+d)(n-d) + d^2, choose d to make one factor easy.
 ```
 
 **Division by decomposition**:
+
 ```
 847 / 23:
   23 x 30 = 690
@@ -130,6 +133,7 @@ n^2 = (n+d)(n-d) + d^2, choose d to make one factor easy.
 ```
 
 **Percentage estimation**:
+
 ```
 What is 17% of 340?
   10% = 34
@@ -142,6 +146,7 @@ What is 17% of 340?
 ### 1.4 Powers and Logarithms to Memorize
 
 **Powers of 2**:
+
 ```
 2^1  = 2          2^8  = 256        2^15 = 32768
 2^2  = 4          2^9  = 512        2^16 = 65536
@@ -153,6 +158,7 @@ What is 17% of 340?
 ```
 
 **Key factorials**:
+
 ```
 0! = 1      5! = 120       9!  = 362880
 1! = 1      6! = 720       10! = 3628800
@@ -162,6 +168,7 @@ What is 17% of 340?
 ```
 
 **Common logarithms (base 10)**:
+
 ```
 log(2) ≈ 0.301      log(5) ≈ 0.699      log(8) ≈ 0.903
 log(3) ≈ 0.477      log(6) ≈ 0.778      log(9) ≈ 0.954
@@ -169,6 +176,7 @@ log(4) ≈ 0.602      log(7) ≈ 0.845
 ```
 
 **Natural logarithms**:
+
 ```
 ln(2) ≈ 0.693       ln(5) ≈ 1.609       e ≈ 2.71828
 ln(3) ≈ 1.099       ln(10) ≈ 2.303      1/e ≈ 0.3679
@@ -281,6 +289,7 @@ Case C: {5,6,7,8} is heavy -> symmetric to Case B
 **Solution**: The last person (prisoner 100) sacrifices by announcing the PARITY of all hats they see. For example, they say "red" if they see an even number of red hats, "blue" if odd.
 
 Every subsequent prisoner can deduce their own hat color:
+
 - They heard the parity announcement
 - They heard all subsequent guesses (which are correct)
 - They can see all hats in front of them
@@ -295,10 +304,11 @@ Every subsequent prisoner can deduce their own hat color:
 **Solution**: Designate one prisoner as the "counter."
 
 Rules:
+
 - Non-counters: The FIRST time they enter and find the light OFF, they turn it ON. Otherwise, they do nothing.
 - Counter: Every time they enter and find the light ON, they turn it OFF and increment their count. When count reaches 99, they declare.
 
-**Expected time**: Very long. Each non-counter must visit when the light is off and before the counter visits. Expected time is approximately 100 * 100 * ln(99) ≈ 10,000 * 4.6 ≈ 46,000 days.
+**Expected time**: Very long. Each non-counter must visit when the light is off and before the counter visits. Expected time is approximately 100 _ 100 _ ln(99) ≈ 10,000 \* 4.6 ≈ 46,000 days.
 
 ### Teaser 5: Ant on a Cube
 
@@ -330,15 +340,15 @@ From distance 2: 1 edge leads to distance 3, 2 edges lead to distance 1.
 E_2 = 1 + (1/3)*E_3 + (2/3)*E_1
 
 From distance 1: 2 edges lead to distance 2, 1 edge leads to distance 0.
-E_1 = 1 + (2/3)*E_2 + (1/3)*E_0 = 1 + (2/3)*E_2
+E_1 = 1 + (2/3)*E_2 + (1/3)*E_0 = 1 + (2/3)\*E_2
 
 Substituting:
 E_3 = 1 + E_2
 E_2 = 1 + (1/3)(1 + E_2) + (2/3)*E_1 = 4/3 + (1/3)*E_2 + (2/3)*E_1
-(2/3)*E_2 = 4/3 + (2/3)*E_1
+(2/3)*E_2 = 4/3 + (2/3)\*E_1
 E_2 = 2 + E_1
 
-E_1 = 1 + (2/3)*E_2 = 1 + (2/3)*(2 + E_1) = 1 + 4/3 + (2/3)*E_1
+E*1 = 1 + (2/3)\_E_2 = 1 + (2/3)*(2 + E_1) = 1 + 4/3 + (2/3)*E_1
 (1/3)*E_1 = 7/3
 E_1 = 7
 
@@ -350,15 +360,15 @@ E_3 = 1 + 9 = **10**
 **Problem**: A rope is wrapped tightly around the Earth's equator (circumference ~40,000 km). If you add just 1 meter of rope, how high above the surface can you lift the rope uniformly?
 
 **Solution**:
-Original circumference: C = 2 * pi * R
-New circumference: C + 1 = 2 * pi * (R + h)
+Original circumference: C = 2 _ pi _ R
+New circumference: C + 1 = 2 _ pi _ (R + h)
 
 ```
 2*pi*h = 1 meter
 h = 1 / (2*pi) ≈ 0.159 meters ≈ 16 cm
 ```
 
-**Surprising result**: The answer does not depend on the radius of the Earth at all. Whether wrapped around a basketball or Jupiter, adding 1 meter of rope always raises it by 1/(2*pi) meters.
+**Surprising result**: The answer does not depend on the radius of the Earth at all. Whether wrapped around a basketball or Jupiter, adding 1 meter of rope always raises it by 1/(2\*pi) meters.
 
 ---
 
@@ -634,6 +644,7 @@ The expected value is always $1, regardless of n.
 This connects to the St. Petersburg paradox and logarithmic utility.
 
 Under log utility U(x) = ln(x):
+
 ```
 E[U(continue)] = (1/2)*ln(2*current) + (1/2)*ln(0) = -∞
 
@@ -667,7 +678,7 @@ Drop sequence: 14, 27, 39, 50, 60, 69, 77, 84, 90, 95, 99, 100...
 (Each gap decreases by 1 to equalize worst-case across all scenarios)
 ```
 
-**Generalization**: With e eggs and n floors, the answer is approximately (e * n^(1/e)).
+**Generalization**: With e eggs and n floors, the answer is approximately (e \* n^(1/e)).
 
 ### Puzzle 2: The 100 Lockers Problem
 
@@ -694,6 +705,7 @@ That is: 1^2, 2^2, 3^2, ..., 10^2
 A+B (2) + A back (1) + A+C (5) + A back (1) + A+D (10) = 19 minutes.
 
 **Optimal**:
+
 ```
 Step 1: A + B cross        (2 min)   Total: 2
 Step 2: A returns           (1 min)   Total: 3
@@ -809,6 +821,7 @@ This is a classic result that surprises most candidates.
 **Problem**: You have a biased coin with P(H) = p (unknown, 0 < p < 1). How do you use it to make a fair 50/50 decision?
 
 **Solution (Von Neumann's trick)**: Flip twice.
+
 - HT -> output "heads" (probability p(1-p))
 - TH -> output "tails" (probability (1-p)p = p(1-p))
 - HH or TT -> discard and repeat
@@ -822,7 +835,7 @@ Expected number of flips: 2 / (2p(1-p)). Worst case (p near 0 or 1) is very larg
 **Problem**: Given a coin with P(H) = p, how do you simulate a coin with P(H) = p^2?
 
 **Solution**: Flip twice independently. Output "heads" iff both flips are heads.
-P(HH) = p * p = p^2.
+P(HH) = p \* p = p^2.
 
 **Harder variant**: Simulate P(H) = 1/3 from a fair coin.
 
@@ -876,7 +889,7 @@ print(f"E[min piece] ≈ {mins.mean():.4f}")
 
 **Solution**: At any point, if there are r red and b black cards remaining, you should guess whichever color has more remaining cards (if tied, it does not matter).
 
-**Remarkable result**: Your expected winnings are 26 + (1/2) * E[|R_i - B_i|] summed up... Actually, by a beautiful symmetry argument:
+**Remarkable result**: Your expected winnings are 26 + (1/2) \* E[|R_i - B_i|] summed up... Actually, by a beautiful symmetry argument:
 
 ```
 E[correct guesses with optimal play] = 26 + E[number of cards where one color

@@ -20,12 +20,12 @@ The first label (`aws_instance`) is the **resource type** -- the prefix (`aws`) 
 
 ### Resource Addressing
 
-| Address | Meaning |
-|---------|---------|
-| `aws_instance.web` | Resource in the root module |
-| `aws_instance.web[0]` | Specific instance when using `count` |
-| `aws_instance.web["app"]` | Specific instance when using `for_each` |
-| `module.vpc.aws_subnet.private` | Resource inside a child module |
+| Address                         | Meaning                                 |
+| ------------------------------- | --------------------------------------- |
+| `aws_instance.web`              | Resource in the root module             |
+| `aws_instance.web[0]`           | Specific instance when using `count`    |
+| `aws_instance.web["app"]`       | Specific instance when using `for_each` |
+| `module.vpc.aws_subnet.private` | Resource inside a child module          |
 
 ### Arguments vs Computed Attributes
 
@@ -83,13 +83,13 @@ resource "aws_instance" "servers" {
 
 ### count vs for_each
 
-| | count | for_each |
-|-|-------|----------|
-| Identifier | Numeric index (`[0]`, `[1]`) | String key (`["web"]`) |
-| Remove middle item | Shifts all indices, causes recreation | Only the removed item is destroyed |
-| Input type | Number | Set or map |
-| Conditional creation | `count = var.enabled ? 1 : 0` | Works but count is simpler |
-| Best for | On/off toggles | Everything else |
+|                      | count                                 | for_each                           |
+| -------------------- | ------------------------------------- | ---------------------------------- |
+| Identifier           | Numeric index (`[0]`, `[1]`)          | String key (`["web"]`)             |
+| Remove middle item   | Shifts all indices, causes recreation | Only the removed item is destroyed |
+| Input type           | Number                                | Set or map                         |
+| Conditional creation | `count = var.enabled ? 1 : 0`         | Works but count is simpler         |
+| Best for             | On/off toggles                        | Everything else                    |
 
 **Rule of thumb:** Use `for_each` by default. Use `count` only for binary on/off (0 or 1).
 
@@ -139,12 +139,12 @@ resource "aws_instance" "web" {
 }
 ```
 
-| Option | What It Does | When To Use |
-|--------|-------------|-------------|
-| `create_before_destroy` | Creates replacement before destroying original | Zero-downtime replacements |
-| `prevent_destroy` | Terraform errors if plan would destroy this | Databases, critical S3 buckets |
-| `ignore_changes` | Ignores drift on listed attributes | When another system modifies attributes |
-| `replace_triggered_by` | Forces replacement when a dependency changes | Re-provisioning on dependency updates |
+| Option                  | What It Does                                   | When To Use                             |
+| ----------------------- | ---------------------------------------------- | --------------------------------------- |
+| `create_before_destroy` | Creates replacement before destroying original | Zero-downtime replacements              |
+| `prevent_destroy`       | Terraform errors if plan would destroy this    | Databases, critical S3 buckets          |
+| `ignore_changes`        | Ignores drift on listed attributes             | When another system modifies attributes |
+| `replace_triggered_by`  | Forces replacement when a dependency changes   | Re-provisioning on dependency updates   |
 
 `ignore_changes` accepts a list of attribute names or the special value `all` (Terraform never updates the resource after creation).
 
@@ -194,25 +194,25 @@ resource "aws_instance" "web" {
 
 ### Common Data Sources
 
-| Data Source | What It Returns | Typical Use |
-|-------------|----------------|-------------|
-| `aws_ami` | AMI ID matching filters | Find latest Ubuntu/Amazon Linux AMI |
-| `aws_vpc` | VPC attributes | Reference existing VPC |
-| `aws_subnets` | List of subnet IDs | Find subnets for ASG placement |
-| `aws_caller_identity` | Account ID, ARN | Construct ARNs dynamically |
-| `aws_region` | Current region name | Region-aware configurations |
-| `aws_availability_zones` | Available AZs | Spread resources across AZs |
-| `aws_iam_policy_document` | JSON IAM policy | Write policies in HCL instead of JSON |
-| `aws_ssm_parameter` | Parameter Store value | Read config from Parameter Store |
+| Data Source               | What It Returns         | Typical Use                           |
+| ------------------------- | ----------------------- | ------------------------------------- |
+| `aws_ami`                 | AMI ID matching filters | Find latest Ubuntu/Amazon Linux AMI   |
+| `aws_vpc`                 | VPC attributes          | Reference existing VPC                |
+| `aws_subnets`             | List of subnet IDs      | Find subnets for ASG placement        |
+| `aws_caller_identity`     | Account ID, ARN         | Construct ARNs dynamically            |
+| `aws_region`              | Current region name     | Region-aware configurations           |
+| `aws_availability_zones`  | Available AZs           | Spread resources across AZs           |
+| `aws_iam_policy_document` | JSON IAM policy         | Write policies in HCL instead of JSON |
+| `aws_ssm_parameter`       | Parameter Store value   | Read config from Parameter Store      |
 
 ### When to Use Data Sources vs Resources
 
-| Scenario | Use |
-|----------|-----|
-| You are creating the infrastructure | `resource` |
-| Infrastructure exists, managed elsewhere | `data` source |
-| Another Terraform workspace manages it | `data` source or `terraform_remote_state` |
-| You need the latest AMI ID at plan time | `data` source |
+| Scenario                                 | Use                                       |
+| ---------------------------------------- | ----------------------------------------- |
+| You are creating the infrastructure      | `resource`                                |
+| Infrastructure exists, managed elsewhere | `data` source                             |
+| Another Terraform workspace manages it   | `data` source or `terraform_remote_state` |
+| You need the latest AMI ID at plan time  | `data` source                             |
 
 ---
 
@@ -253,20 +253,20 @@ resource "aws_instance" "app" {
 
 Provisioners run scripts on a resource after creation:
 
-| Provisioner | What It Does |
-|-------------|-------------|
+| Provisioner   | What It Does                                      |
+| ------------- | ------------------------------------------------- |
 | `remote-exec` | Run commands on the remote resource via SSH/WinRM |
-| `local-exec` | Run commands on the machine running Terraform |
-| `file` | Copy files to the remote resource |
+| `local-exec`  | Run commands on the machine running Terraform     |
+| `file`        | Copy files to the remote resource                 |
 
 ### Why They Are a Last Resort
 
-| Problem | Explanation |
-|---------|-------------|
-| Not in the state model | Terraform cannot detect drift in provisioner results |
-| Not idempotent | Running apply twice may produce different results |
-| Fragile connections | SSH timeouts, key management headaches |
-| Better alternatives exist | cloud-init/user_data, Packer, Ansible |
+| Problem                   | Explanation                                          |
+| ------------------------- | ---------------------------------------------------- |
+| Not in the state model    | Terraform cannot detect drift in provisioner results |
+| Not idempotent            | Running apply twice may produce different results    |
+| Fragile connections       | SSH timeouts, key management headaches               |
+| Better alternatives exist | cloud-init/user_data, Packer, Ansible                |
 
 ### Better Alternatives
 

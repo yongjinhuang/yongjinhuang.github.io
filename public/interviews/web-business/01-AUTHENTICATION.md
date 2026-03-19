@@ -41,21 +41,21 @@ Auth is the front door to your application. Get it wrong and you've got unauthor
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Authentication (AuthN)** | Verifying identity — "who are you?" |
-| **Authorization (AuthZ)** | Checking permissions — "what can you do?" |
-| **OAuth 2.0** | A protocol that lets users log in via Google, GitHub, etc. without sharing their password with your app |
-| **OpenID Connect (OIDC)** | A layer on top of OAuth 2.0 that adds identity information (who the user is, not just what they can access) |
-| **SSO (Single Sign-On)** | Log in once, access multiple apps. Common in enterprise (e.g., Okta, Azure AD) |
-| **MFA / 2FA** | Multi-factor authentication — requiring a second proof (SMS code, authenticator app, hardware key) |
-| **JWT (JSON Web Token)** | A self-contained token that carries user info and permissions, signed so it can't be tampered with |
-| **Session** | Server-side storage of user state. The client holds a session ID (usually in a cookie), the server holds the data |
-| **RBAC (Role-Based Access Control)** | Assign users roles (admin, editor, viewer), each role has specific permissions |
-| **ABAC (Attribute-Based Access Control)** | Permissions based on attributes (department, location, time of day). More flexible than RBAC, more complex |
-| **Refresh Token** | A long-lived token used to get new access tokens without re-entering credentials |
-| **SAML** | Security Assertion Markup Language — an older SSO protocol, still widely used in enterprise |
-| **API Key** | A simple string identifying a client application (not a user). Used for server-to-server communication |
+| Term                                      | What It Means                                                                                                     |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Authentication (AuthN)**                | Verifying identity — "who are you?"                                                                               |
+| **Authorization (AuthZ)**                 | Checking permissions — "what can you do?"                                                                         |
+| **OAuth 2.0**                             | A protocol that lets users log in via Google, GitHub, etc. without sharing their password with your app           |
+| **OpenID Connect (OIDC)**                 | A layer on top of OAuth 2.0 that adds identity information (who the user is, not just what they can access)       |
+| **SSO (Single Sign-On)**                  | Log in once, access multiple apps. Common in enterprise (e.g., Okta, Azure AD)                                    |
+| **MFA / 2FA**                             | Multi-factor authentication — requiring a second proof (SMS code, authenticator app, hardware key)                |
+| **JWT (JSON Web Token)**                  | A self-contained token that carries user info and permissions, signed so it can't be tampered with                |
+| **Session**                               | Server-side storage of user state. The client holds a session ID (usually in a cookie), the server holds the data |
+| **RBAC (Role-Based Access Control)**      | Assign users roles (admin, editor, viewer), each role has specific permissions                                    |
+| **ABAC (Attribute-Based Access Control)** | Permissions based on attributes (department, location, time of day). More flexible than RBAC, more complex        |
+| **Refresh Token**                         | A long-lived token used to get new access tokens without re-entering credentials                                  |
+| **SAML**                                  | Security Assertion Markup Language — an older SSO protocol, still widely used in enterprise                       |
+| **API Key**                               | A simple string identifying a client application (not a user). Used for server-to-server communication            |
 
 ## Common Patterns
 
@@ -103,12 +103,12 @@ Employee visits your app → redirected to their company's identity provider (Ok
 
 ## Quick Reference
 
-| Scenario | Recommended Approach |
-|----------|---------------------|
-| Traditional web app | Session-based auth with cookies |
-| SPA / Mobile app | JWT with refresh tokens |
-| "Sign in with Google" | OAuth 2.0 + OpenID Connect |
-| Enterprise B2B | SSO via SAML or OIDC |
-| API-to-API | API keys or client credentials grant |
-| Need extra security | Add MFA (TOTP, WebAuthn) |
-| Microservices | JWT passed between services, validated at each gateway |
+| Scenario              | Recommended Approach                                   |
+| --------------------- | ------------------------------------------------------ |
+| Traditional web app   | Session-based auth with cookies                        |
+| SPA / Mobile app      | JWT with refresh tokens                                |
+| "Sign in with Google" | OAuth 2.0 + OpenID Connect                             |
+| Enterprise B2B        | SSO via SAML or OIDC                                   |
+| API-to-API            | API keys or client credentials grant                   |
+| Need extra security   | Add MFA (TOTP, WebAuthn)                               |
+| Microservices         | JWT passed between services, validated at each gateway |

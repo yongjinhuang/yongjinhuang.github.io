@@ -158,16 +158,16 @@ A simplified `document.xml` looks like this:
 
 Key elements:
 
-| XML Element | Meaning |
-|-------------|---------|
-| `<w:p>` | Paragraph |
-| `<w:pPr>` | Paragraph properties (style, alignment) |
-| `<w:r>` | Run (contiguous text with same formatting) |
-| `<w:rPr>` | Run properties (bold, italic, font size) |
-| `<w:t>` | Text content |
-| `<w:tbl>` | Table |
-| `<w:tr>` | Table row |
-| `<w:tc>` | Table cell |
+| XML Element | Meaning                                    |
+| ----------- | ------------------------------------------ |
+| `<w:p>`     | Paragraph                                  |
+| `<w:pPr>`   | Paragraph properties (style, alignment)    |
+| `<w:r>`     | Run (contiguous text with same formatting) |
+| `<w:rPr>`   | Run properties (bold, italic, font size)   |
+| `<w:t>`     | Text content                               |
+| `<w:tbl>`   | Table                                      |
+| `<w:tr>`    | Table row                                  |
+| `<w:tc>`    | Table cell                                 |
 
 ### 1.3 Relationships and Parts
 
@@ -791,6 +791,7 @@ pip install docxtpl
 Create a Word document template with `{{ variable }}` placeholders in the text, then render it with a context dictionary.
 
 **Template file (`invoice_template.docx`):**
+
 ```
 Invoice #{{ invoice_number }}
 Date: {{ date }}
@@ -830,6 +831,7 @@ render_invoice("invoice_template.docx", "invoice_0042.docx", context)
 Templates support full Jinja2 syntax for iteration and conditional logic.
 
 **Template with loops:**
+
 ```
 {% for item in line_items %}
 {{ item.description }}    Qty: {{ item.qty }}    Price: ${{ item.price }}
@@ -882,8 +884,8 @@ For tables with dynamic rows, use the `{% tr %}` tag to indicate which table row
 
 **Template table structure:**
 
-| Item | Quantity | Price |
-|------|----------|-------|
+| Item                                       | Quantity         | Price                             |
+| ------------------------------------------ | ---------------- | --------------------------------- |
 | `{%tr for item in items %}{{ item.name }}` | `{{ item.qty }}` | `${{ item.price }}{%tr endfor %}` |
 
 ```python
@@ -1874,13 +1876,13 @@ tpl.save("output.docx")
 
 ### Common Unit Conversions
 
-| Unit | Constructor | 1 inch = |
-|------|-------------|----------|
-| Inches | `Inches(1)` | 914400 EMU |
-| Points | `Pt(72)` | 1 inch |
-| Centimeters | `Cm(2.54)` | 1 inch |
-| Millimeters | `Mm(25.4)` | 1 inch |
-| EMU | `Emu(914400)` | 1 inch |
+| Unit        | Constructor   | 1 inch =   |
+| ----------- | ------------- | ---------- |
+| Inches      | `Inches(1)`   | 914400 EMU |
+| Points      | `Pt(72)`      | 1 inch     |
+| Centimeters | `Cm(2.54)`    | 1 inch     |
+| Millimeters | `Mm(25.4)`    | 1 inch     |
+| EMU         | `Emu(914400)` | 1 inch     |
 
 ### Legacy .doc Conversion
 
@@ -1910,13 +1912,13 @@ unzip document.docx -d extracted/
 
 ### Common Pitfalls
 
-| Pitfall | Solution |
-|---------|----------|
-| `python-docx` cannot read `.doc` files | Convert to `.docx` with LibreOffice first |
-| Find-and-replace breaks formatting | Replace within runs, not raw XML |
-| Images extracted without filenames | Map relationship IDs to media files |
-| Template `{%tr%}` not working | Must be inside a table cell, not a paragraph |
-| `add_picture` fails with URL | Download the image to a file or BytesIO first |
-| Merged cells in tables | Use `cell.merge(other_cell)` carefully |
-| Paragraph text splits across runs | Use `paragraph.text` for full text, iterate `runs` for formatting |
-| Header/footer not appearing | Set `is_linked_to_previous = False` on the section |
+| Pitfall                                | Solution                                                          |
+| -------------------------------------- | ----------------------------------------------------------------- |
+| `python-docx` cannot read `.doc` files | Convert to `.docx` with LibreOffice first                         |
+| Find-and-replace breaks formatting     | Replace within runs, not raw XML                                  |
+| Images extracted without filenames     | Map relationship IDs to media files                               |
+| Template `{%tr%}` not working          | Must be inside a table cell, not a paragraph                      |
+| `add_picture` fails with URL           | Download the image to a file or BytesIO first                     |
+| Merged cells in tables                 | Use `cell.merge(other_cell)` carefully                            |
+| Paragraph text splits across runs      | Use `paragraph.text` for full text, iterate `runs` for formatting |
+| Header/footer not appearing            | Set `is_linked_to_previous = False` on the section                |

@@ -72,17 +72,17 @@ written in Rust by the Paradigm team.
 
 Most DApps use hosted RPC providers instead of running their own nodes:
 
-| Provider | Free Tier | Features |
-|----------|-----------|----------|
-| Alchemy | 300M compute units/mo | Enhanced APIs, webhooks, NFT API |
-| Infura | 100K requests/day | Oldest provider, IPFS integration |
-| QuickNode | 10M API credits/mo | Multi-chain, streams, marketplace |
-| Ankr | 30M requests/mo | Decentralized RPC, load balancing |
-| Blast API | 40M requests/mo | Multi-region, decentralized nodes |
+| Provider  | Free Tier             | Features                          |
+| --------- | --------------------- | --------------------------------- |
+| Alchemy   | 300M compute units/mo | Enhanced APIs, webhooks, NFT API  |
+| Infura    | 100K requests/day     | Oldest provider, IPFS integration |
+| QuickNode | 10M API credits/mo    | Multi-chain, streams, marketplace |
+| Ankr      | 30M requests/mo       | Decentralized RPC, load balancing |
+| Blast API | 40M requests/mo       | Multi-region, decentralized nodes |
 
 ```typescript
 // Using Alchemy Enhanced APIs
-import { Alchemy, Network } from "alchemy-sdk";
+import { Alchemy, Network } from 'alchemy-sdk';
 
 const alchemy = new Alchemy({
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -91,11 +91,11 @@ const alchemy = new Alchemy({
 
 // Enhanced: Get all ERC-20 tokens owned by an address
 const balances = await alchemy.core.getTokenBalances(
-  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" // vitalik.eth
+  '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' // vitalik.eth
 );
 
 // Enhanced: Get all NFTs owned by an address
-const nfts = await alchemy.nft.getNftsForOwner("vitalik.eth");
+const nfts = await alchemy.nft.getNftsForOwner('vitalik.eth');
 
 // Standard: Call any JSON-RPC method
 const blockNumber = await alchemy.core.getBlockNumber();
@@ -108,6 +108,7 @@ const blockNumber = await alchemy.core.getBlockNumber();
 ### 2.1 Why The Graph Exists
 
 Reading complex data from Ethereum is painful with standard RPC:
+
 - Get all Transfer events for a token in the last 30 days? Scan millions of blocks.
 - Get all positions for a Uniswap V3 LP? Multiple contract calls per position.
 - Get historical TVL of a protocol? Not directly available.
@@ -145,7 +146,7 @@ dataSources:
     name: MyToken
     network: mainnet
     source:
-      address: "0x1234..."
+      address: '0x1234...'
       abi: MyToken
       startBlock: 19000000
     mapping:
@@ -184,12 +185,14 @@ type Account @entity {
 
 ```typescript
 // src/mapping.ts (AssemblyScript)
-import { Transfer as TransferEvent } from "../generated/MyToken/MyToken";
-import { Transfer, Account } from "../generated/schema";
-import { BigInt } from "@graphprotocol/graph-ts";
+import { Transfer as TransferEvent } from '../generated/MyToken/MyToken';
+import { Transfer, Account } from '../generated/schema';
+import { BigInt } from '@graphprotocol/graph-ts';
 
 export function handleTransfer(event: TransferEvent): void {
-  let transfer = new Transfer(event.transaction.hash.toHex() + "-" + event.logIndex.toString());
+  let transfer = new Transfer(
+    event.transaction.hash.toHex() + '-' + event.logIndex.toString()
+  );
   transfer.from = event.params.from;
   transfer.to = event.params.to;
   transfer.value = event.params.value;
@@ -221,9 +224,9 @@ export function handleTransfer(event: TransferEvent): void {
 # Query the subgraph
 {
   transfers(
-    first: 10,
-    orderBy: timestamp,
-    orderDirection: desc,
+    first: 10
+    orderBy: timestamp
+    orderDirection: desc
     where: { from: "0xAlice..." }
   ) {
     id
@@ -273,26 +276,29 @@ How it works:
 
 IPFS does not guarantee persistence — if no one pins (stores) your data, it gets garbage collected.
 
-| Service | Model | Best For |
-|---------|-------|----------|
-| Pinata | Hosted pinning | NFT metadata, DApp assets |
-| nft.storage | Free (Filecoin-backed) | NFT metadata specifically |
-| Web3.storage | Free tier | General Web3 storage |
-| Infura IPFS | Pay-per-use | Enterprise |
-| Filecoin | Incentivized storage | Long-term archival |
-| Arweave | Pay once, store forever | Permanent storage |
+| Service      | Model                   | Best For                  |
+| ------------ | ----------------------- | ------------------------- |
+| Pinata       | Hosted pinning          | NFT metadata, DApp assets |
+| nft.storage  | Free (Filecoin-backed)  | NFT metadata specifically |
+| Web3.storage | Free tier               | General Web3 storage      |
+| Infura IPFS  | Pay-per-use             | Enterprise                |
+| Filecoin     | Incentivized storage    | Long-term archival        |
+| Arweave      | Pay once, store forever | Permanent storage         |
 
 ```javascript
 // Upload to IPFS via Pinata
-const pinataSDK = require("@pinata/sdk");
-const pinata = new pinataSDK({ pinataApiKey: "...", pinataSecretApiKey: "..." });
+const pinataSDK = require('@pinata/sdk');
+const pinata = new pinataSDK({
+  pinataApiKey: '...',
+  pinataSecretApiKey: '...',
+});
 
 // Upload JSON metadata
 const metadata = {
-  name: "My NFT #1",
-  description: "A unique collectible",
-  image: "ipfs://QmImageHash...",
-  attributes: [{ trait_type: "Rarity", value: "Legendary" }],
+  name: 'My NFT #1',
+  description: 'A unique collectible',
+  image: 'ipfs://QmImageHash...',
+  attributes: [{ trait_type: 'Rarity', value: 'Legendary' }],
 };
 
 const result = await pinata.pinJSONToIPFS(metadata);

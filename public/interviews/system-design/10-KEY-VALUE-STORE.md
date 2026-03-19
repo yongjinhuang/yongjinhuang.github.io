@@ -11,11 +11,11 @@ every major design decision from scratch.
 
 ### 1.1 Functional Requirements
 
-| Operation | Signature | Description |
-|-----------|-----------|-------------|
-| **Put** | `put(key, value)` | Insert or update a key-value pair |
-| **Get** | `get(key) -> value` | Retrieve the value for a given key |
-| **Delete** | `delete(key)` | Remove a key-value pair |
+| Operation  | Signature           | Description                        |
+| ---------- | ------------------- | ---------------------------------- |
+| **Put**    | `put(key, value)`   | Insert or update a key-value pair  |
+| **Get**    | `get(key) -> value` | Retrieve the value for a given key |
+| **Delete** | `delete(key)`       | Remove a key-value pair            |
 
 Additional functional needs:
 
@@ -26,13 +26,13 @@ Additional functional needs:
 
 ### 1.2 Non-Functional Requirements
 
-| Requirement | Target |
-|-------------|--------|
-| **Availability** | 99.99% uptime (< 52 min downtime/year) |
-| **Latency** | p99 read/write < 10 ms within a datacenter |
-| **Scalability** | Linear horizontal scale to hundreds of nodes |
+| Requirement             | Target                                       |
+| ----------------------- | -------------------------------------------- |
+| **Availability**        | 99.99% uptime (< 52 min downtime/year)       |
+| **Latency**             | p99 read/write < 10 ms within a datacenter   |
+| **Scalability**         | Linear horizontal scale to hundreds of nodes |
 | **Partition Tolerance** | Continue operating during network partitions |
-| **Durability** | No acknowledged write is ever lost |
+| **Durability**          | No acknowledged write is ever lost           |
 
 ### 1.3 Scale Estimates
 
@@ -123,12 +123,12 @@ class SingleServerKVStore:
 
 ### 2.2 Limitations
 
-| Limitation | Explanation |
-|------------|-------------|
-| **Memory** | All data must fit in RAM. A server with 256 GB RAM at 1 KB/value holds ~250M keys. |
-| **Durability** | Without a WAL, a crash loses everything. |
-| **Availability** | Single point of failure. One server down = total outage. |
-| **Throughput** | Vertical scaling has hard limits (CPU, NIC, disk I/O). |
+| Limitation       | Explanation                                                                        |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| **Memory**       | All data must fit in RAM. A server with 256 GB RAM at 1 KB/value holds ~250M keys. |
+| **Durability**   | Without a WAL, a crash loses everything.                                           |
+| **Availability** | Single point of failure. One server down = total outage.                           |
+| **Throughput**   | Vertical scaling has hard limits (CPU, NIC, disk I/O).                             |
 
 ### 2.3 Persistence: Write-Ahead Log
 
@@ -239,11 +239,11 @@ Physical Node    Virtual Nodes on Ring
 
 **Benefits of virtual nodes:**
 
-| Benefit | Explanation |
-|---------|-------------|
-| **Even distribution** | Each node covers many small arcs instead of one large arc |
-| **Heterogeneous hardware** | Powerful nodes get more virtual nodes |
-| **Smooth rebalancing** | Adding a node spreads load across many existing nodes |
+| Benefit                    | Explanation                                               |
+| -------------------------- | --------------------------------------------------------- |
+| **Even distribution**      | Each node covers many small arcs instead of one large arc |
+| **Heterogeneous hardware** | Powerful nodes get more virtual nodes                     |
+| **Smooth rebalancing**     | Adding a node spreads load across many existing nodes     |
 
 **Typical count:** 100-200 virtual nodes per physical node.
 
@@ -363,6 +363,7 @@ may return stale data temporarily. This is the default for AP systems.
 ### 5.3 Quorum Consensus
 
 With **N** replicas, define:
+
 - **W** = number of replicas that must acknowledge a write
 - **R** = number of replicas that must respond to a read
 
@@ -466,11 +467,11 @@ every write.
 
 **Conflict resolution strategies:**
 
-| Strategy | Description | Used By |
-|----------|-------------|---------|
-| **Last-writer-wins (LWW)** | Use wall-clock timestamp; highest wins | Cassandra |
-| **Application-level** | Return all versions; let app merge | Riak, DynamoDB |
-| **CRDTs** | Conflict-free data structures auto-merge | Riak (optional) |
+| Strategy                   | Description                              | Used By         |
+| -------------------------- | ---------------------------------------- | --------------- |
+| **Last-writer-wins (LWW)** | Use wall-clock timestamp; highest wins   | Cassandra       |
+| **Application-level**      | Return all versions; let app merge       | Riak, DynamoDB  |
+| **CRDTs**                  | Conflict-free data structures auto-merge | Riak (optional) |
 
 **Pseudocode for vector clock comparison:**
 
@@ -566,6 +567,7 @@ make this efficient.
 **How Merkle trees work:**
 
 A Merkle tree is a binary tree where:
+
 - **Leaf nodes** contain hashes of individual data blocks (key ranges).
 - **Internal nodes** contain hashes of their children.
 - The **root hash** summarizes the entire dataset.
@@ -710,10 +712,10 @@ RocksDB, LevelDB, HBase). It converts random writes into sequential I/O.
 
 **Compaction strategies:**
 
-| Strategy | Description | Trade-off |
-|----------|-------------|-----------|
-| **Size-tiered** | Merge SSTables of similar size | Higher space amplification, better write throughput |
-| **Leveled** | Each level is 10x larger; strict non-overlap within levels | Lower space amplification, more compaction I/O |
+| Strategy        | Description                                                | Trade-off                                           |
+| --------------- | ---------------------------------------------------------- | --------------------------------------------------- |
+| **Size-tiered** | Merge SSTables of similar size                             | Higher space amplification, better write throughput |
+| **Leveled**     | Each level is 10x larger; strict non-overlap within levels | Lower space amplification, more compaction I/O      |
 
 ### 7.2 B-Tree (Comparison)
 
@@ -735,14 +737,14 @@ B-Trees are the traditional storage engine for read-heavy workloads (MySQL InnoD
 
 ### 7.3 LSM vs B-Tree Comparison
 
-| Characteristic | LSM Tree | B-Tree |
-|---------------|----------|--------|
-| **Write throughput** | Higher (sequential I/O) | Lower (random I/O) |
-| **Read throughput** | Lower (check multiple levels) | Higher (single tree traversal) |
-| **Write amplification** | Higher (compaction rewrites) | Lower |
-| **Space amplification** | Higher (temporary duplicates) | Lower (in-place updates) |
-| **Best for** | Write-heavy workloads | Read-heavy, range-scan workloads |
-| **Used by** | Cassandra, RocksDB, LevelDB | MySQL, PostgreSQL |
+| Characteristic          | LSM Tree                      | B-Tree                           |
+| ----------------------- | ----------------------------- | -------------------------------- |
+| **Write throughput**    | Higher (sequential I/O)       | Lower (random I/O)               |
+| **Read throughput**     | Lower (check multiple levels) | Higher (single tree traversal)   |
+| **Write amplification** | Higher (compaction rewrites)  | Lower                            |
+| **Space amplification** | Higher (temporary duplicates) | Lower (in-place updates)         |
+| **Best for**            | Write-heavy workloads         | Read-heavy, range-scan workloads |
+| **Used by**             | Cassandra, RocksDB, LevelDB   | MySQL, PostgreSQL                |
 
 **For our key-value store, we choose LSM trees** because key-value workloads are typically
 write-heavy, and LSM trees provide superior write throughput.
@@ -923,13 +925,13 @@ write-heavy, and LSM trees provide superior write throughput.
 
 ### 9.2 Key Design Properties
 
-| Property | Implementation |
-|----------|---------------|
-| **No single point of failure** | Every node is equal (leaderless/peer-to-peer) |
-| **Any node can coordinate** | Client can contact any node; that node becomes coordinator |
-| **Decentralized failure detection** | Gossip protocol; no master to fail |
-| **Decentralized membership** | Gossip-based membership list |
-| **Horizontal scaling** | Add nodes; consistent hashing redistributes minimal data |
+| Property                            | Implementation                                             |
+| ----------------------------------- | ---------------------------------------------------------- |
+| **No single point of failure**      | Every node is equal (leaderless/peer-to-peer)              |
+| **Any node can coordinate**         | Client can contact any node; that node becomes coordinator |
+| **Decentralized failure detection** | Gossip protocol; no master to fail                         |
+| **Decentralized membership**        | Gossip-based membership list                               |
+| **Horizontal scaling**              | Add nodes; consistent hashing redistributes minimal data   |
 
 ### 9.3 Node Components
 
@@ -982,11 +984,11 @@ Each node runs the following components:
 
 The system exposes three parameters that clients can set **per request**:
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| **N** | Number of replicas | 3 |
-| **W** | Write quorum (ACKs needed for write success) | 2 |
-| **R** | Read quorum (responses needed for read success) | 2 |
+| Parameter | Description                                     | Default |
+| --------- | ----------------------------------------------- | ------- |
+| **N**     | Number of replicas                              | 3       |
+| **W**     | Write quorum (ACKs needed for write success)    | 2       |
+| **R**     | Read quorum (responses needed for read success) | 2       |
 
 ### 10.2 Use Case Examples
 
@@ -1090,13 +1092,13 @@ Is strong consistency required?
 
 ### 11.2 Replication Across Data Centers
 
-| Aspect | Implementation |
-|--------|---------------|
-| **Intra-DC replication** | Synchronous (low latency within DC) |
-| **Cross-DC replication** | Asynchronous (avoid cross-DC latency penalty on writes) |
-| **Conflict resolution** | Last-writer-wins or vector clocks (depending on config) |
-| **Replica placement** | Ensure N replicas span at least 2 DCs |
-| **Consistency** | LOCAL_QUORUM (quorum within local DC) or EACH_QUORUM (quorum in each DC) |
+| Aspect                   | Implementation                                                           |
+| ------------------------ | ------------------------------------------------------------------------ |
+| **Intra-DC replication** | Synchronous (low latency within DC)                                      |
+| **Cross-DC replication** | Asynchronous (avoid cross-DC latency penalty on writes)                  |
+| **Conflict resolution**  | Last-writer-wins or vector clocks (depending on config)                  |
+| **Replica placement**    | Ensure N replicas span at least 2 DCs                                    |
+| **Consistency**          | LOCAL_QUORUM (quorum within local DC) or EACH_QUORUM (quorum in each DC) |
 
 ### 11.3 Failure Scenarios
 
@@ -1173,14 +1175,14 @@ Scenario 3: Entire DC failure
 
 ### 12.2 Design Decision Summary
 
-| Decision | DynamoDB | Cassandra | Riak | Our Design |
-|----------|----------|-----------|------|------------|
-| Leader election | None (leaderless) | None (leaderless) | None (leaderless) | None (leaderless) |
-| Write path | In-memory + journal | MemTable + CommitLog | Write-back cache | MemTable + WAL |
-| Read repair | Yes | Yes | Yes | Yes |
-| Hinted handoff | Yes | Yes | Yes | Yes |
-| Merkle trees | Yes | Yes | Yes (AAE) | Yes |
-| Bloom filters | Yes | Yes | Yes | Yes |
+| Decision        | DynamoDB            | Cassandra            | Riak              | Our Design        |
+| --------------- | ------------------- | -------------------- | ----------------- | ----------------- |
+| Leader election | None (leaderless)   | None (leaderless)    | None (leaderless) | None (leaderless) |
+| Write path      | In-memory + journal | MemTable + CommitLog | Write-back cache  | MemTable + WAL    |
+| Read repair     | Yes                 | Yes                  | Yes               | Yes               |
+| Hinted handoff  | Yes                 | Yes                  | Yes               | Yes               |
+| Merkle trees    | Yes                 | Yes                  | Yes (AAE)         | Yes               |
+| Bloom filters   | Yes                 | Yes                  | Yes               | Yes               |
 
 ---
 
@@ -1337,12 +1339,12 @@ last-writer-wins (LWW) conflict resolution.
 
 **Solutions:**
 
-| Approach | Description | Used By |
-|----------|-------------|---------|
-| **NTP** | Network Time Protocol; keeps clocks within ~1-10 ms | Most systems |
-| **Vector clocks** | Logical clocks; no dependency on wall time | Riak, Dynamo |
+| Approach                        | Description                                              | Used By                |
+| ------------------------------- | -------------------------------------------------------- | ---------------------- |
+| **NTP**                         | Network Time Protocol; keeps clocks within ~1-10 ms      | Most systems           |
+| **Vector clocks**               | Logical clocks; no dependency on wall time               | Riak, Dynamo           |
 | **Hybrid logical clocks (HLC)** | Physical + logical component; monotonic within each node | CockroachDB, Cassandra |
-| **TrueTime** | GPS + atomic clocks; bounded uncertainty interval | Google Spanner |
+| **TrueTime**                    | GPS + atomic clocks; bounded uncertainty interval        | Google Spanner         |
 
 **Hybrid Logical Clock (HLC):**
 
@@ -1429,11 +1431,11 @@ Use this checklist to ensure you cover all major points during an interview:
 
 ## 16. Further Reading
 
-| Resource | Description |
-|----------|-------------|
-| **Dynamo Paper** (2007) | Amazon's foundational paper on distributed KV stores |
-| **Cassandra Paper** (2010) | Facebook's wide-column store inspired by Dynamo + BigTable |
-| **DDIA Chapter 5-6** | "Designing Data-Intensive Applications" by Martin Kleppmann |
-| **Riak Documentation** | Excellent practical guide to distributed KV concepts |
-| **RocksDB Wiki** | Deep dive into LSM tree implementation details |
-| **Google Spanner Paper** (2012) | TrueTime and globally consistent transactions |
+| Resource                        | Description                                                 |
+| ------------------------------- | ----------------------------------------------------------- |
+| **Dynamo Paper** (2007)         | Amazon's foundational paper on distributed KV stores        |
+| **Cassandra Paper** (2010)      | Facebook's wide-column store inspired by Dynamo + BigTable  |
+| **DDIA Chapter 5-6**            | "Designing Data-Intensive Applications" by Martin Kleppmann |
+| **Riak Documentation**          | Excellent practical guide to distributed KV concepts        |
+| **RocksDB Wiki**                | Deep dive into LSM tree implementation details              |
+| **Google Spanner Paper** (2012) | TrueTime and globally consistent transactions               |

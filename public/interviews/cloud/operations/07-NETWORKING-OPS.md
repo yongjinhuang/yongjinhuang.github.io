@@ -30,16 +30,16 @@
 
 ### Route 53 Routing Policies Compared
 
-| Policy         | Use Case                                  | Failover | Cost |
-|----------------|-------------------------------------------|----------|------|
-| Simple         | Single resource, no health checks          | No       | Low  |
-| Weighted       | A/B testing, gradual migration             | Optional | Low  |
-| Latency        | Route to lowest-latency region             | Optional | Low  |
-| Failover       | Active-passive HA setup                    | Yes      | Low  |
-| Geolocation    | Compliance, localization                   | Optional | Low  |
-| Geoproximity   | Traffic shifting with bias                 | No       | Low  |
-| Multivalue     | Return up to 8 healthy IPs                 | Yes      | Low  |
-| IP-based       | Route by CIDR block (ISP/corporate splits) | No       | Low  |
+| Policy       | Use Case                                   | Failover | Cost |
+| ------------ | ------------------------------------------ | -------- | ---- |
+| Simple       | Single resource, no health checks          | No       | Low  |
+| Weighted     | A/B testing, gradual migration             | Optional | Low  |
+| Latency      | Route to lowest-latency region             | Optional | Low  |
+| Failover     | Active-passive HA setup                    | Yes      | Low  |
+| Geolocation  | Compliance, localization                   | Optional | Low  |
+| Geoproximity | Traffic shifting with bias                 | No       | Low  |
+| Multivalue   | Return up to 8 healthy IPs                 | Yes      | Low  |
+| IP-based     | Route by CIDR block (ISP/corporate splits) | No       | Low  |
 
 ### Weighted Routing — Canary Deployment
 
@@ -123,15 +123,15 @@ aws route53 change-resource-record-sets \
 
 ### TTL Strategy by Record Type
 
-| Record Type    | Recommended TTL | Reasoning                                      |
-|----------------|-----------------|------------------------------------------------|
-| Root/Apex (A)  | 300s (5 min)    | CDN or ALB rarely changes                      |
-| API endpoints  | 60s             | Allows faster failover                         |
-| Health-checked | 30–60s          | Minimize failover window                       |
-| Internal SRV   | 10s             | Service discovery needs freshness              |
-| MX records     | 3600s           | Mail infra is stable                           |
-| NS records     | 172800s (2 day) | Never change; high cache efficiency            |
-| During incident| 30s             | Pre-lower TTL 24h before planned failover      |
+| Record Type     | Recommended TTL | Reasoning                                 |
+| --------------- | --------------- | ----------------------------------------- |
+| Root/Apex (A)   | 300s (5 min)    | CDN or ALB rarely changes                 |
+| API endpoints   | 60s             | Allows faster failover                    |
+| Health-checked  | 30–60s          | Minimize failover window                  |
+| Internal SRV    | 10s             | Service discovery needs freshness         |
+| MX records      | 3600s           | Mail infra is stable                      |
+| NS records      | 172800s (2 day) | Never change; high cache efficiency       |
+| During incident | 30s             | Pre-lower TTL 24h before planned failover |
 
 ### DNS-Based Service Discovery
 
@@ -188,18 +188,18 @@ dig SRV _http._tcp.payments.internal @169.254.169.253
 
 ### ALB vs NLB vs GWLB — Feature Comparison
 
-| Feature                | ALB              | NLB                   | GWLB              |
-|------------------------|------------------|-----------------------|-------------------|
-| OSI Layer              | 7 (HTTP)         | 4 (TCP/UDP)           | 3/4               |
-| Protocols              | HTTP, HTTPS, gRPC| TCP, UDP, TLS         | GENEVE (UDP 6081) |
-| Latency                | ~1ms             | ~100µs                | Transparent       |
-| Static IP              | No (DNS only)    | Yes (per AZ)          | No                |
-| Preserve Client IP     | Via X-Forwarded  | Native                | Native            |
-| Health Check           | HTTP/HTTPS       | TCP/HTTP/HTTPS        | HTTP              |
-| WAF Support            | Yes              | No                    | No                |
-| Lambda targets         | Yes              | No                    | No                |
-| Cross-zone default     | On (free)        | Off (charged)         | Off (charged)     |
-| Idle timeout           | 60s (adjustable) | 350s TCP              | N/A               |
+| Feature            | ALB               | NLB            | GWLB              |
+| ------------------ | ----------------- | -------------- | ----------------- |
+| OSI Layer          | 7 (HTTP)          | 4 (TCP/UDP)    | 3/4               |
+| Protocols          | HTTP, HTTPS, gRPC | TCP, UDP, TLS  | GENEVE (UDP 6081) |
+| Latency            | ~1ms              | ~100µs         | Transparent       |
+| Static IP          | No (DNS only)     | Yes (per AZ)   | No                |
+| Preserve Client IP | Via X-Forwarded   | Native         | Native            |
+| Health Check       | HTTP/HTTPS        | TCP/HTTP/HTTPS | HTTP              |
+| WAF Support        | Yes               | No             | No                |
+| Lambda targets     | Yes               | No             | No                |
+| Cross-zone default | On (free)         | Off (charged)  | Off (charged)     |
+| Idle timeout       | 60s (adjustable)  | 350s TCP       | N/A               |
 
 ### Health Check Configuration — Best Practices
 
@@ -330,15 +330,15 @@ aws cloudfront get-invalidation \
 
 ### Cache Control Headers Strategy
 
-| Content Type       | Cache-Control                          | TTL     |
-|--------------------|----------------------------------------|---------|
-| HTML pages         | `no-cache, no-store`                   | 0s      |
-| API responses      | `no-cache` or `max-age=60`             | 0-60s   |
-| JS/CSS (hashed)    | `public, max-age=31536000, immutable`  | 1 year  |
-| Images (hashed)    | `public, max-age=31536000, immutable`  | 1 year  |
-| Images (no hash)   | `public, max-age=86400`                | 1 day   |
-| Font files         | `public, max-age=31536000, immutable`  | 1 year  |
-| Config/manifest    | `public, max-age=300`                  | 5 min   |
+| Content Type     | Cache-Control                         | TTL    |
+| ---------------- | ------------------------------------- | ------ |
+| HTML pages       | `no-cache, no-store`                  | 0s     |
+| API responses    | `no-cache` or `max-age=60`            | 0-60s  |
+| JS/CSS (hashed)  | `public, max-age=31536000, immutable` | 1 year |
+| Images (hashed)  | `public, max-age=31536000, immutable` | 1 year |
+| Images (no hash) | `public, max-age=86400`               | 1 day  |
+| Font files       | `public, max-age=31536000, immutable` | 1 year |
+| Config/manifest  | `public, max-age=300`                 | 5 min  |
 
 ### Origin Shield — Reduce Origin Load
 
@@ -365,18 +365,18 @@ aws cloudfront update-distribution \
 
 ### CloudFront Functions vs Lambda@Edge
 
-| Feature             | CloudFront Functions      | Lambda@Edge               |
-|---------------------|---------------------------|---------------------------|
-| Execution location  | 218+ edge locations        | Regional edge caches      |
-| Latency             | Sub-millisecond            | 1-5ms                     |
-| Triggers            | Viewer request/response    | All 4 event types         |
-| Runtime             | JavaScript (ES5.1)         | Node.js, Python           |
-| Max duration        | 1ms                        | 5s (viewer), 30s (origin) |
-| Max memory          | 2MB                        | 128MB–10GB                |
-| Network access      | No                         | Yes                       |
-| File system         | No                         | No                        |
-| Use case            | URL rewrite, header modify | Auth, dynamic routing     |
-| Cost                | $0.10/1M invocations       | $0.60/1M invocations      |
+| Feature            | CloudFront Functions       | Lambda@Edge               |
+| ------------------ | -------------------------- | ------------------------- |
+| Execution location | 218+ edge locations        | Regional edge caches      |
+| Latency            | Sub-millisecond            | 1-5ms                     |
+| Triggers           | Viewer request/response    | All 4 event types         |
+| Runtime            | JavaScript (ES5.1)         | Node.js, Python           |
+| Max duration       | 1ms                        | 5s (viewer), 30s (origin) |
+| Max memory         | 2MB                        | 128MB–10GB                |
+| Network access     | No                         | Yes                       |
+| File system        | No                         | No                        |
+| Use case           | URL rewrite, header modify | Auth, dynamic routing     |
+| Cost               | $0.10/1M invocations       | $0.60/1M invocations      |
 
 ---
 
@@ -440,16 +440,16 @@ Anti-patterns to avoid:
 
 ### VPC Peering vs PrivateLink vs TGW
 
-| Feature              | VPC Peering           | PrivateLink (Endpoint Svc) | Transit Gateway     |
-|----------------------|-----------------------|---------------------------|---------------------|
-| Traffic path         | Direct (no hop)       | NLB-fronted endpoint      | TGW router          |
-| Transitive routing   | No                    | Yes (1:many)              | Yes                 |
-| Cross-account        | Yes                   | Yes                       | Yes                 |
-| Cross-region         | Yes (inter-region)    | Limited                   | Yes (TGW peering)   |
-| Scalability          | 125 peerings/VPC max  | Unlimited consumers       | 5000 VPCs per TGW   |
-| Cost                 | Data transfer only    | Per-hour + data           | Per-hour + data     |
-| Use case             | Small # VPCs          | Expose SaaS services      | Enterprise mesh     |
-| Security             | SG by IP              | SG by VPCE                | Route table segmt   |
+| Feature            | VPC Peering          | PrivateLink (Endpoint Svc) | Transit Gateway   |
+| ------------------ | -------------------- | -------------------------- | ----------------- |
+| Traffic path       | Direct (no hop)      | NLB-fronted endpoint       | TGW router        |
+| Transitive routing | No                   | Yes (1:many)               | Yes               |
+| Cross-account      | Yes                  | Yes                        | Yes               |
+| Cross-region       | Yes (inter-region)   | Limited                    | Yes (TGW peering) |
+| Scalability        | 125 peerings/VPC max | Unlimited consumers        | 5000 VPCs per TGW |
+| Cost               | Data transfer only   | Per-hour + data            | Per-hour + data   |
+| Use case           | Small # VPCs         | Expose SaaS services       | Enterprise mesh   |
+| Security           | SG by IP             | SG by VPCE                 | Route table segmt |
 
 ```bash
 # Create TGW attachment
@@ -512,7 +512,7 @@ spec:
     - match:
         - headers:
             x-canary:
-              exact: "true"
+              exact: 'true'
       route:
         - destination:
             host: payments
@@ -606,14 +606,14 @@ istioctl proxy-config secret payments-abc123 -n production \
 
 ### Mesh Observability — Key Metrics
 
-| Metric             | Tool            | Signal                                        |
-|--------------------|-----------------|-----------------------------------------------|
-| Request rate       | Prometheus/Grafana | Baseline + alert on 2x spike               |
-| Error rate (5xx)   | Prometheus      | Alert at >1% of requests                     |
-| P99 latency        | Prometheus/Jaeger | Alert if >2x baseline                       |
-| Circuit open       | Envoy stats     | `cluster.payments.circuit_breakers.default.open` |
-| mTLS failures      | Istio access log| `response_flags: DC` = downstream connection |
-| Retry budget       | Envoy stats     | `cluster.payments.upstream_rq_retry`         |
+| Metric           | Tool               | Signal                                           |
+| ---------------- | ------------------ | ------------------------------------------------ |
+| Request rate     | Prometheus/Grafana | Baseline + alert on 2x spike                     |
+| Error rate (5xx) | Prometheus         | Alert at >1% of requests                         |
+| P99 latency      | Prometheus/Jaeger  | Alert if >2x baseline                            |
+| Circuit open     | Envoy stats        | `cluster.payments.circuit_breakers.default.open` |
+| mTLS failures    | Istio access log   | `response_flags: DC` = downstream connection     |
+| Retry budget     | Envoy stats        | `cluster.payments.upstream_rq_retry`             |
 
 ---
 
@@ -685,14 +685,14 @@ Checklist:
 
 ### NACL vs Security Group
 
-| Property          | Security Group                  | Network ACL                         |
-|-------------------|---------------------------------|-------------------------------------|
-| Applies to        | Instance (ENI)                  | Subnet                              |
-| State             | Stateful (return traffic auto)  | Stateless (must allow both dirs)    |
-| Rules             | Allow only                      | Allow + Deny                        |
-| Rule evaluation   | All rules evaluated             | Lowest numbered rule wins           |
-| Default           | Deny all inbound, allow all out | Allow all inbound and outbound      |
-| Use case          | Instance-level micro-segmentation| Subnet-level block list (DDoS IPs)  |
+| Property        | Security Group                    | Network ACL                        |
+| --------------- | --------------------------------- | ---------------------------------- |
+| Applies to      | Instance (ENI)                    | Subnet                             |
+| State           | Stateful (return traffic auto)    | Stateless (must allow both dirs)   |
+| Rules           | Allow only                        | Allow + Deny                       |
+| Rule evaluation | All rules evaluated               | Lowest numbered rule wins          |
+| Default         | Deny all inbound, allow all out   | Allow all inbound and outbound     |
+| Use case        | Instance-level micro-segmentation | Subnet-level block list (DDoS IPs) |
 
 ### Packet Capture in Cloud
 
@@ -751,16 +751,16 @@ On-Premises Data Center
 
 ### DX vs VPN — Comparison
 
-| Property          | Direct Connect          | Site-to-Site VPN            |
-|-------------------|-------------------------|-----------------------------|
-| Bandwidth         | 1G, 10G, 100G           | Up to 1.25 Gbps per tunnel  |
-| Latency           | Consistent low latency  | Variable (public internet)  |
-| Reliability       | SLA-backed              | Best-effort                 |
-| Setup time        | Weeks to months         | Minutes to hours            |
-| Cost              | Port hours + data       | VPN hours + data            |
-| Encryption        | No (use MACsec/IPsec)   | Yes (IPsec)                 |
-| BGP               | Yes                     | Yes                         |
-| Typical use       | Production workloads    | Backup/Dev or DX failover   |
+| Property    | Direct Connect         | Site-to-Site VPN           |
+| ----------- | ---------------------- | -------------------------- |
+| Bandwidth   | 1G, 10G, 100G          | Up to 1.25 Gbps per tunnel |
+| Latency     | Consistent low latency | Variable (public internet) |
+| Reliability | SLA-backed             | Best-effort                |
+| Setup time  | Weeks to months        | Minutes to hours           |
+| Cost        | Port hours + data      | VPN hours + data           |
+| Encryption  | No (use MACsec/IPsec)  | Yes (IPsec)                |
+| BGP         | Yes                    | Yes                        |
+| Typical use | Production workloads   | Backup/Dev or DX failover  |
 
 ### Bandwidth Planning for Hybrid
 
@@ -1001,15 +1001,15 @@ AWS Global Accelerator Alternative:
 
 ### Global Accelerator vs CloudFront vs Route 53
 
-| Feature                | Global Accelerator          | CloudFront              | Route 53 (Latency) |
-|------------------------|-----------------------------|-------------------------|--------------------|
-| Static IPs             | Yes (2 anycast IPs)         | No (DNS-based)          | No                 |
-| Protocol               | TCP, UDP, HTTP              | HTTP/HTTPS only         | DNS (any protocol) |
-| Caching                | No                          | Yes                     | No                 |
-| Failover speed         | <30s                        | TTL-based               | TTL-based          |
-| DDoS protection        | Shield (included)           | Shield (Standard)       | No                 |
-| Use case               | Low-latency non-HTTP        | Static + dynamic cache  | DNS-level routing  |
-| Cost                   | $0.025/hr + $0.01/GB        | $0.0085/10K requests    | $0.40/1M queries   |
+| Feature         | Global Accelerator   | CloudFront             | Route 53 (Latency) |
+| --------------- | -------------------- | ---------------------- | ------------------ |
+| Static IPs      | Yes (2 anycast IPs)  | No (DNS-based)         | No                 |
+| Protocol        | TCP, UDP, HTTP       | HTTP/HTTPS only        | DNS (any protocol) |
+| Caching         | No                   | Yes                    | No                 |
+| Failover speed  | <30s                 | TTL-based              | TTL-based          |
+| DDoS protection | Shield (included)    | Shield (Standard)      | No                 |
+| Use case        | Low-latency non-HTTP | Static + dynamic cache | DNS-level routing  |
+| Cost            | $0.025/hr + $0.01/GB | $0.0085/10K requests   | $0.40/1M queries   |
 
 ### GeoDNS Implementation
 
@@ -1204,23 +1204,23 @@ Quick wins:
 
 ## Quick Reference — Key Port Numbers & Protocols
 
-| Service         | Port  | Protocol | Notes                                    |
-|-----------------|-------|----------|------------------------------------------|
-| HTTP            | 80    | TCP      | Redirect to 443 at ALB level             |
-| HTTPS           | 443   | TCP      | TLS termination at ALB or pass-through   |
-| gRPC            | 443   | HTTP/2   | ALB supports gRPC natively               |
-| SSH             | 22    | TCP      | Use SSM Session Manager instead          |
-| RDS PostgreSQL  | 5432  | TCP      | Within VPC only, no public exposure      |
-| RDS MySQL       | 3306  | TCP      | Within VPC only                          |
-| Redis           | 6379  | TCP      | Use ElastiCache endpoint                 |
-| Kafka/MSK       | 9092  | TCP      | Within VPC; 9094 for TLS                 |
-| DNS             | 53    | UDP/TCP  | UDP for queries <512 bytes, TCP otherwise|
-| NTP             | 123   | UDP      | AWS Time Sync: 169.254.169.123           |
-| Envoy admin     | 15000 | HTTP     | Istio sidecar admin interface            |
-| Envoy inbound   | 15006 | TCP      | All inbound traffic intercepted          |
-| Envoy outbound  | 15001 | TCP      | All outbound traffic intercepted         |
-| GENEVE (GWLB)   | 6081  | UDP      | Gateway Load Balancer encapsulation      |
-| BGP             | 179   | TCP      | DX, VPN, TGW routing protocol           |
+| Service        | Port  | Protocol | Notes                                     |
+| -------------- | ----- | -------- | ----------------------------------------- |
+| HTTP           | 80    | TCP      | Redirect to 443 at ALB level              |
+| HTTPS          | 443   | TCP      | TLS termination at ALB or pass-through    |
+| gRPC           | 443   | HTTP/2   | ALB supports gRPC natively                |
+| SSH            | 22    | TCP      | Use SSM Session Manager instead           |
+| RDS PostgreSQL | 5432  | TCP      | Within VPC only, no public exposure       |
+| RDS MySQL      | 3306  | TCP      | Within VPC only                           |
+| Redis          | 6379  | TCP      | Use ElastiCache endpoint                  |
+| Kafka/MSK      | 9092  | TCP      | Within VPC; 9094 for TLS                  |
+| DNS            | 53    | UDP/TCP  | UDP for queries <512 bytes, TCP otherwise |
+| NTP            | 123   | UDP      | AWS Time Sync: 169.254.169.123            |
+| Envoy admin    | 15000 | HTTP     | Istio sidecar admin interface             |
+| Envoy inbound  | 15006 | TCP      | All inbound traffic intercepted           |
+| Envoy outbound | 15001 | TCP      | All outbound traffic intercepted          |
+| GENEVE (GWLB)  | 6081  | UDP      | Gateway Load Balancer encapsulation       |
+| BGP            | 179   | TCP      | DX, VPN, TGW routing protocol             |
 
 ---
 

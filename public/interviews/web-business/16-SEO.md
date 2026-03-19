@@ -62,18 +62,18 @@ Machine-readable metadata that helps Google understand your content:
 
 ```html
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "Running Shoes",
-  "image": "https://example.com/shoes.jpg",
-  "description": "Lightweight running shoes",
-  "offers": {
-    "@type": "Offer",
-    "price": "89.99",
-    "priceCurrency": "USD"
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Running Shoes",
+    "image": "https://example.com/shoes.jpg",
+    "description": "Lightweight running shoes",
+    "offers": {
+      "@type": "Offer",
+      "price": "89.99",
+      "priceCurrency": "USD"
+    }
   }
-}
 </script>
 ```
 
@@ -81,22 +81,22 @@ This enables rich results in Google — star ratings, price info, FAQ dropdowns,
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **SERP** | Search Engine Results Page — what you see when you Google something |
-| **Organic Traffic** | Visitors who find you through search (not ads) |
-| **Keyword** | The search query you want to rank for ("project management tool") |
-| **Backlink** | A link from another website to yours. More quality backlinks = higher authority |
-| **Domain Authority** | A score estimating how likely a domain is to rank (not a Google metric, but widely used) |
-| **Crawl Budget** | How many pages Google will crawl on your site in a given period. Matters for large sites |
-| **Index** | Google's database of web pages. "Getting indexed" = appearing in Google's database |
-| **Canonical URL** | The "official" version of a page when duplicate versions exist |
-| **301 Redirect** | Permanent redirect from old URL to new URL. Passes SEO value |
-| **404 Page** | Page not found. Too many 404s = poor user experience = ranking penalty |
-| **Rich Results** | Enhanced search results with extra visual info (stars, prices, images) powered by structured data |
-| **Core Web Vitals** | Google's page experience metrics (LCP, INP, CLS) |
-| **Sitemap** | An XML file listing all URLs on your site, submitted to search engines |
-| **robots.txt** | A file telling crawlers which URLs to crawl or skip |
+| Term                 | What It Means                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------- |
+| **SERP**             | Search Engine Results Page — what you see when you Google something                               |
+| **Organic Traffic**  | Visitors who find you through search (not ads)                                                    |
+| **Keyword**          | The search query you want to rank for ("project management tool")                                 |
+| **Backlink**         | A link from another website to yours. More quality backlinks = higher authority                   |
+| **Domain Authority** | A score estimating how likely a domain is to rank (not a Google metric, but widely used)          |
+| **Crawl Budget**     | How many pages Google will crawl on your site in a given period. Matters for large sites          |
+| **Index**            | Google's database of web pages. "Getting indexed" = appearing in Google's database                |
+| **Canonical URL**    | The "official" version of a page when duplicate versions exist                                    |
+| **301 Redirect**     | Permanent redirect from old URL to new URL. Passes SEO value                                      |
+| **404 Page**         | Page not found. Too many 404s = poor user experience = ranking penalty                            |
+| **Rich Results**     | Enhanced search results with extra visual info (stars, prices, images) powered by structured data |
+| **Core Web Vitals**  | Google's page experience metrics (LCP, INP, CLS)                                                  |
+| **Sitemap**          | An XML file listing all URLs on your site, submitted to search engines                            |
+| **robots.txt**       | A file telling crawlers which URLs to crawl or skip                                               |
 
 ## Common Patterns
 
@@ -138,17 +138,17 @@ Content is managed in a CMS, pages are statically generated at build time.
 
 ## Quick Reference
 
-| SEO Factor | Developer Action |
-|-----------|-----------------|
-| Page title | Unique `<title>` per page, 50-60 chars, includes target keyword |
-| Meta description | Unique `<meta description>` per page, 150-160 chars |
-| Headings | One `<h1>` per page, logical hierarchy |
-| URLs | Clean, descriptive, lowercase (`/blog/seo-guide` not `/page?id=123`) |
-| Images | Compressed, lazy-loaded, with descriptive `alt` text |
-| Performance | LCP < 2.5s, INP < 200ms, CLS < 0.1 |
-| Mobile | Responsive design, readable text, tappable buttons |
-| Rendering | SSR/SSG for content pages, not client-only rendering |
-| Sitemap | Auto-generated XML sitemap, submitted to Search Console |
-| Redirects | 301 for permanent URL changes, never break old URLs |
-| Structured data | JSON-LD schema markup for products, articles, FAQs |
-| Canonical | `<link rel="canonical">` on every page |
+| SEO Factor       | Developer Action                                                     |
+| ---------------- | -------------------------------------------------------------------- |
+| Page title       | Unique `<title>` per page, 50-60 chars, includes target keyword      |
+| Meta description | Unique `<meta description>` per page, 150-160 chars                  |
+| Headings         | One `<h1>` per page, logical hierarchy                               |
+| URLs             | Clean, descriptive, lowercase (`/blog/seo-guide` not `/page?id=123`) |
+| Images           | Compressed, lazy-loaded, with descriptive `alt` text                 |
+| Performance      | LCP < 2.5s, INP < 200ms, CLS < 0.1                                   |
+| Mobile           | Responsive design, readable text, tappable buttons                   |
+| Rendering        | SSR/SSG for content pages, not client-only rendering                 |
+| Sitemap          | Auto-generated XML sitemap, submitted to Search Console              |
+| Redirects        | 301 for permanent URL changes, never break old URLs                  |
+| Structured data  | JSON-LD schema markup for products, articles, FAQs                   |
+| Canonical        | `<link rel="canonical">` on every page                               |

@@ -5,6 +5,7 @@
 ## 1. Requirements
 
 ### Functional
+
 - Track user clicks on merchant affiliate links
 - Attribute purchases back to the originating click
 - Calculate correct cashback based on merchant commission rates
@@ -12,6 +13,7 @@
 - Support multiple attribution models (last-click, first-click)
 
 ### Non-Functional
+
 - **Accuracy**: > 99.5% attribution accuracy (money is involved)
 - **Latency**: Click tracking < 50ms (must not slow down redirect)
 - **Scale**: 10M+ clicks/day, 500K+ transactions/day
@@ -19,6 +21,7 @@
 - **Durability**: Zero data loss on financial transactions
 
 ### Out of Scope
+
 - Payment processing (separate system)
 - Merchant onboarding
 - User authentication
@@ -69,6 +72,7 @@ Response: 302 Redirect to merchant URL with tracking params
 ```
 
 **Data Model - Click Event:**
+
 ```sql
 CREATE TABLE click_events (
     click_id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -94,6 +98,7 @@ CREATE INDEX idx_click_attribution
 ```
 
 **Design Decisions:**
+
 - Write to Kafka first, respond with redirect immediately (< 50ms)
 - Async consumer writes to database
 - UUID click_id embedded in affiliate URL for direct attribution
@@ -106,6 +111,7 @@ Receives purchase notifications from merchants/affiliate networks.
 **Two ingestion methods:**
 
 #### Method A: Server-to-Server (S2S) Postback
+
 ```
 POST /api/v1/conversions
 {
@@ -123,6 +129,7 @@ POST /api/v1/conversions
 ```
 
 #### Method B: Affiliate Network Batch
+
 ```
 // Daily/hourly batch files from impact.com, Rakuten, etc.
 // CSV/JSON format with transaction details
@@ -146,11 +153,11 @@ Matches purchases to clicks using multiple strategies:
 
 ```typescript
 interface AttributionResult {
-  clickId: string
-  userId: number
-  merchantId: number
-  confidence: 'high' | 'medium' | 'low'
-  method: 'direct' | 'user_merchant' | 'fingerprint' | 'cookie'
+  clickId: string;
+  userId: number;
+  merchantId: number;
+  confidence: 'high' | 'medium' | 'low';
+  method: 'direct' | 'user_merchant' | 'fingerprint' | 'cookie';
 }
 
 // Attribution logic pseudocode:
@@ -193,6 +200,7 @@ CREATE INDEX idx_cashback_status ON cashback_transactions (status, created_at);
 ```
 
 **Cashback Lifecycle:**
+
 ```
 Click → Purchase Detected → Pending (shown to user)
                                 │
@@ -211,6 +219,7 @@ Click → Purchase Detected → Pending (shown to user)
 ```
 
 **Typical timelines:**
+
 - Pending → Confirmed: 30-90 days (merchant validation period)
 - Confirmed → Redeemable: Immediate
 - Redeemable → Paid: On user withdrawal request
@@ -220,6 +229,7 @@ Click → Purchase Detected → Pending (shown to user)
 ## 4. Scaling Considerations
 
 ### Read-Heavy Pattern
+
 - Clicks: 10M writes/day, minimal reads
 - Cashback status: 500K writes/day, millions of reads (users checking status)
 - **Solution**: Write to primary DB, read from replicas. Cache active cashback in Redis.
@@ -237,16 +247,19 @@ Click → Purchase Detected → Pending (shown to user)
 ```
 
 ### Multi-Market
+
 - Partition data by market for isolation
 - Regional read replicas near users
 - Currency conversion handled at display layer
 
 ### Idempotency
+
 - Critical: Same purchase callback received twice must not create double cashback
 - Use `(merchant_id, order_id)` as idempotency key
 - Kafka consumer uses exactly-once semantics where possible
 
 ### Failure Handling
+
 - Click tracking: Fire-and-forget to Kafka (buffered locally if Kafka down)
 - Attribution: Retry with exponential backoff, DLQ for manual review
 - Cashback calculation: Saga pattern with compensating transactions
@@ -255,22 +268,22 @@ Click → Purchase Detected → Pending (shown to user)
 
 ## 5. Key Trade-offs to Discuss
 
-| Decision | Option A | Option B | ShopBack Likely Choice |
-|----------|----------|----------|----------------------|
-| Attribution window | Short (7 days) | Long (30 days) | Per-merchant config |
-| Click storage | Hot only (30 days) | Archive all | Hot + S3 archive |
-| Consistency model | Strong (no double cashback) | Eventual (faster) | Strong for cashback, eventual for analytics |
-| S2S vs Cookie | Server-to-server | Cookie-based | S2S preferred (privacy changes) |
-| Real-time vs Batch | Stream processing | Batch jobs | Hybrid: stream for S2S, batch for network files |
+| Decision           | Option A                    | Option B          | ShopBack Likely Choice                          |
+| ------------------ | --------------------------- | ----------------- | ----------------------------------------------- |
+| Attribution window | Short (7 days)              | Long (30 days)    | Per-merchant config                             |
+| Click storage      | Hot only (30 days)          | Archive all       | Hot + S3 archive                                |
+| Consistency model  | Strong (no double cashback) | Eventual (faster) | Strong for cashback, eventual for analytics     |
+| S2S vs Cookie      | Server-to-server            | Cookie-based      | S2S preferred (privacy changes)                 |
+| Real-time vs Batch | Stream processing           | Batch jobs        | Hybrid: stream for S2S, batch for network files |
 
 ---
 
 ## 6. Monitoring & Alerts
 
-| Metric | Alert Threshold | Why |
-|--------|----------------|-----|
-| Attribution rate | < 95% | Tracking may be broken |
-| Click latency p99 | > 100ms | User experience degradation |
-| Duplicate cashback rate | > 0.1% | Financial loss |
-| Pending cashback age | > 120 days | Merchant integration issue |
-| DLQ depth | > 1000 | Processing failures |
+| Metric                  | Alert Threshold | Why                         |
+| ----------------------- | --------------- | --------------------------- |
+| Attribution rate        | < 95%           | Tracking may be broken      |
+| Click latency p99       | > 100ms         | User experience degradation |
+| Duplicate cashback rate | > 0.1%          | Financial loss              |
+| Pending cashback age    | > 120 days      | Merchant integration issue  |
+| DLQ depth               | > 1000          | Processing failures         |

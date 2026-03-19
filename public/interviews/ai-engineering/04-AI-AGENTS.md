@@ -189,12 +189,12 @@ A dispatcher that routes queries to specialized sub-agents based on intent.
 
 ### Architecture Comparison
 
-| Architecture | Strengths | Weaknesses | Best For |
-|-------------|-----------|------------|----------|
-| **ReAct** | Simple, flexible, adaptive | Can loop, hard to predict | General tasks, chatbots |
-| **Plan-and-Execute** | Structured, predictable | Rigid, expensive planning | Complex multi-step tasks |
-| **Router** | Specialized, efficient | Limited collaboration | Multi-domain systems |
-| **Reflexion** | Self-correcting | Slow, expensive | High-stakes tasks |
+| Architecture         | Strengths                  | Weaknesses                | Best For                 |
+| -------------------- | -------------------------- | ------------------------- | ------------------------ |
+| **ReAct**            | Simple, flexible, adaptive | Can loop, hard to predict | General tasks, chatbots  |
+| **Plan-and-Execute** | Structured, predictable    | Rigid, expensive planning | Complex multi-step tasks |
+| **Router**           | Specialized, efficient     | Limited collaboration     | Multi-domain systems     |
+| **Reflexion**        | Self-correcting            | Slow, expensive           | High-stakes tasks        |
 
 ---
 
@@ -630,14 +630,14 @@ result = run_multi_agent_pipeline(
 
 ### Framework Comparison
 
-| Framework | Architecture | Best For | Complexity | Production Ready |
-|-----------|-------------|----------|-----------|-----------------|
-| **LangChain** | Chain-based | General purpose | Medium | Yes |
-| **LangGraph** | Graph-based | Complex workflows | High | Yes |
-| **CrewAI** | Multi-agent | Role-based teams | Low | Growing |
-| **Autogen** | Multi-agent | Conversational agents | Medium | Growing |
-| **Semantic Kernel** | Plugin-based | Enterprise (.NET/Python) | Medium | Yes |
-| **Haystack** | Pipeline-based | RAG + agents | Medium | Yes |
+| Framework           | Architecture   | Best For                 | Complexity | Production Ready |
+| ------------------- | -------------- | ------------------------ | ---------- | ---------------- |
+| **LangChain**       | Chain-based    | General purpose          | Medium     | Yes              |
+| **LangGraph**       | Graph-based    | Complex workflows        | High       | Yes              |
+| **CrewAI**          | Multi-agent    | Role-based teams         | Low        | Growing          |
+| **Autogen**         | Multi-agent    | Conversational agents    | Medium     | Growing          |
+| **Semantic Kernel** | Plugin-based   | Enterprise (.NET/Python) | Medium     | Yes              |
+| **Haystack**        | Pipeline-based | RAG + agents             | Medium     | Yes              |
 
 ### LangGraph Example
 
@@ -944,16 +944,16 @@ def execute_with_retry(
 
 ### Evaluation Dimensions
 
-| Dimension | What to Measure | Metric |
-|-----------|----------------|--------|
-| **Task completion** | Did the agent complete the task? | Success rate (%) |
-| **Correctness** | Is the final answer correct? | Accuracy, F1 |
-| **Efficiency** | How many steps did it take? | Step count, token usage |
-| **Tool accuracy** | Did it choose the right tools? | Tool selection accuracy |
-| **Robustness** | Does it handle errors gracefully? | Recovery rate |
-| **Safety** | Does it respect boundaries? | Violation rate |
-| **Cost** | How much did it cost? | $/task |
-| **Latency** | How long did it take? | End-to-end seconds |
+| Dimension           | What to Measure                   | Metric                  |
+| ------------------- | --------------------------------- | ----------------------- |
+| **Task completion** | Did the agent complete the task?  | Success rate (%)        |
+| **Correctness**     | Is the final answer correct?      | Accuracy, F1            |
+| **Efficiency**      | How many steps did it take?       | Step count, token usage |
+| **Tool accuracy**   | Did it choose the right tools?    | Tool selection accuracy |
+| **Robustness**      | Does it handle errors gracefully? | Recovery rate           |
+| **Safety**          | Does it respect boundaries?       | Violation rate          |
+| **Cost**            | How much did it cost?             | $/task                  |
+| **Latency**         | How long did it take?             | End-to-end seconds      |
 
 ### Evaluation Framework
 

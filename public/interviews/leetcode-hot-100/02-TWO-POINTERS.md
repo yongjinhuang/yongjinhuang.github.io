@@ -96,6 +96,7 @@ class Solution:
 **Time**: O(n) - single pass through the string
 **Space**: O(1) - no extra space used
 **Edge Cases**:
+
 - Empty string or single character returns `True`
 - String with only non-alphanumeric characters (e.g., `" "`) returns `True`
 - Mixed case: `"Aa"` is a palindrome
@@ -136,6 +137,7 @@ class Solution:
 **Time**: O(n) - each pointer moves at most n times
 **Space**: O(1) - constant extra space
 **Edge Cases**:
+
 - Minimum array length of 2
 - Negative numbers in the array
 - Duplicate values (e.g., `[1, 1, 2]`, target `2`)
@@ -199,6 +201,7 @@ class Solution:
 **Time**: O(n^2) - sorting is O(n log n), two-pointer loop inside a for loop is O(n^2)
 **Space**: O(1) - excluding the output array (sort is in-place)
 **Edge Cases**:
+
 - Array with fewer than 3 elements returns `[]`
 - All zeros: `[0, 0, 0]` returns `[[0, 0, 0]]`
 - No valid triplet exists
@@ -240,6 +243,7 @@ class Solution:
 **Time**: O(n) - each pointer moves at most n times
 **Space**: O(1) - constant extra space
 **Edge Cases**:
+
 - Two elements: area is `min(h[0], h[1]) * 1`
 - All heights equal: first iteration gives the max area
 - Strictly increasing or decreasing heights
@@ -273,6 +277,7 @@ class Solution:
 **Time**: O(n) - single pass through the array
 **Space**: O(1) - in-place swaps
 **Edge Cases**:
+
 - No zeros in the array (no swaps happen, order preserved)
 - All zeros (slow pointer never advances)
 - Single element array
@@ -318,6 +323,7 @@ class Solution:
 **Time**: O(n) - single pass with converging pointers
 **Space**: O(1) - only tracking two max values
 **Edge Cases**:
+
 - Fewer than 3 bars: impossible to trap water
 - Flat elevation (all same height): no water trapped
 - Strictly ascending or descending: no water trapped
@@ -328,11 +334,11 @@ class Solution:
 
 ## Summary
 
-| # | Problem | Difficulty | Pattern | Time | Space |
-|---|---------|------------|---------|------|-------|
-| 125 | Valid Palindrome | Easy | Converging pointers | O(n) | O(1) |
-| 167 | Two Sum II | Medium | Converging on sorted array | O(n) | O(1) |
-| 15 | 3Sum | Medium | Sort + fix one + two pointers | O(n^2) | O(1) |
-| 11 | Container With Most Water | Medium | Greedy converging | O(n) | O(1) |
-| 283 | Move Zeroes | Easy | Fast/slow partitioning | O(n) | O(1) |
-| 42 | Trapping Rain Water | Hard | Converging with running max | O(n) | O(1) |
+| #   | Problem                   | Difficulty | Pattern                       | Time   | Space |
+| --- | ------------------------- | ---------- | ----------------------------- | ------ | ----- |
+| 125 | Valid Palindrome          | Easy       | Converging pointers           | O(n)   | O(1)  |
+| 167 | Two Sum II                | Medium     | Converging on sorted array    | O(n)   | O(1)  |
+| 15  | 3Sum                      | Medium     | Sort + fix one + two pointers | O(n^2) | O(1)  |
+| 11  | Container With Most Water | Medium     | Greedy converging             | O(n)   | O(1)  |
+| 283 | Move Zeroes               | Easy       | Fast/slow partitioning        | O(n)   | O(1)  |
+| 42  | Trapping Rain Water       | Hard       | Converging with running max   | O(n)   | O(1)  |

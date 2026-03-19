@@ -666,15 +666,22 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Load user permissions once per request
-async function loadPermissions(req: AuthenticatedRequest, _res: Response, next: NextFunction) {
+async function loadPermissions(
+  req: AuthenticatedRequest,
+  _res: Response,
+  next: NextFunction
+) {
   try {
-    const permissions = await db.query(`
+    const permissions = await db.query(
+      `
       SELECT DISTINCT p.resource, p.action
       FROM permissions p
       JOIN role_permissions rp ON p.id = rp.permission_id
       JOIN user_roles ur ON rp.role_id = ur.role_id
       WHERE ur.user_id = $1
-    `, [req.user.id]);
+    `,
+      [req.user.id]
+    );
 
     req.user.permissions = permissions.rows.map(
       (p: { resource: string; action: string }) => `${p.resource}:${p.action}`
@@ -707,8 +714,14 @@ function requirePermission(resource: string, action: string) {
 }
 
 // Resource ownership check
-function requireOwnership(getResourceUserId: (req: Request) => Promise<string | null>) {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+function requireOwnership(
+  getResourceUserId: (req: Request) => Promise<string | null>
+) {
+  return async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       // Admins bypass ownership check
       if (req.user.permissions.includes('admin:all')) {
@@ -735,22 +748,38 @@ function requireOwnership(getResourceUserId: (req: Request) => Promise<string | 
 }
 
 // Usage in routes
-router.get('/posts', authenticate, loadPermissions, requirePermission('posts', 'read'), listPosts);
+router.get(
+  '/posts',
+  authenticate,
+  loadPermissions,
+  requirePermission('posts', 'read'),
+  listPosts
+);
 
-router.post('/posts', authenticate, loadPermissions, requirePermission('posts', 'create'), createPost);
+router.post(
+  '/posts',
+  authenticate,
+  loadPermissions,
+  requirePermission('posts', 'create'),
+  createPost
+);
 
-router.patch('/posts/:id',
+router.patch(
+  '/posts/:id',
   authenticate,
   loadPermissions,
   requirePermission('posts', 'update'),
   requireOwnership(async (req) => {
-    const post = await db.query('SELECT user_id FROM posts WHERE id = $1', [req.params.id]);
+    const post = await db.query('SELECT user_id FROM posts WHERE id = $1', [
+      req.params.id,
+    ]);
     return post.rows[0]?.user_id || null;
   }),
   updatePost
 );
 
-router.delete('/posts/:id',
+router.delete(
+  '/posts/:id',
   authenticate,
   loadPermissions,
   requirePermission('posts', 'delete'),
@@ -1204,7 +1233,10 @@ async function hashPassword(password: string): Promise<string> {
   });
 }
 
-async function verifyPassword(storedHash: string, password: string): Promise<boolean> {
+async function verifyPassword(
+  storedHash: string,
+  password: string
+): Promise<boolean> {
   try {
     return await verify(storedHash, password);
   } catch {
@@ -1212,7 +1244,10 @@ async function verifyPassword(storedHash: string, password: string): Promise<boo
   }
 }
 
-async function generateAccessToken(userId: string, role: string): Promise<string> {
+async function generateAccessToken(
+  userId: string,
+  role: string
+): Promise<string> {
   return new SignJWT({ sub: userId, role, type: 'access' })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -1255,11 +1290,16 @@ router.post('/register', async (req, res, next) => {
     const input = RegisterSchema.parse(req.body);
 
     // Check if user exists
-    const existing = await db.query('SELECT id FROM users WHERE email = $1', [input.email]);
+    const existing = await db.query('SELECT id FROM users WHERE email = $1', [
+      input.email,
+    ]);
     if (existing.rows.length > 0) {
       return res.status(409).json({
         success: false,
-        error: { code: 'EMAIL_EXISTS', message: 'An account with this email already exists' },
+        error: {
+          code: 'EMAIL_EXISTS',
+          message: 'An account with this email already exists',
+        },
       });
     }
 
@@ -1284,14 +1324,19 @@ router.post('/login', async (req, res, next) => {
     const input = LoginSchema.parse(req.body);
 
     // Find user
-    const result = await db.query('SELECT * FROM users WHERE email = $1', [input.email]);
+    const result = await db.query('SELECT * FROM users WHERE email = $1', [
+      input.email,
+    ]);
     const user = result.rows[0];
 
     // Constant-time comparison even if user not found
     if (!user || !(await verifyPassword(user.password_hash, input.password))) {
       return res.status(401).json({
         success: false,
-        error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
+        error: {
+          code: 'INVALID_CREDENTIALS',
+          message: 'Invalid email or password',
+        },
       });
     }
 
@@ -1300,7 +1345,10 @@ router.post('/login', async (req, res, next) => {
     const refreshToken = generateRefreshToken();
 
     // Store refresh token hash
-    const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    const refreshTokenHash = crypto
+      .createHash('sha256')
+      .update(refreshToken)
+      .digest('hex');
     await db.query(
       `INSERT INTO refresh_tokens (token_hash, user_id, expires_at)
        VALUES ($1, $2, NOW() + INTERVAL '${REFRESH_TOKEN_TTL_DAYS} days')`,
@@ -1320,7 +1368,12 @@ router.post('/login', async (req, res, next) => {
       success: true,
       data: {
         accessToken,
-        user: { id: user.id, email: user.email, name: user.name, role: user.role },
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
       },
     });
   } catch (error) {
@@ -1339,7 +1392,10 @@ router.post('/refresh', async (req, res, next) => {
       });
     }
 
-    const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(refreshToken)
+      .digest('hex');
 
     // Find and validate the refresh token
     const result = await db.query(
@@ -1352,17 +1408,25 @@ router.post('/refresh', async (req, res, next) => {
     if (result.rows.length === 0) {
       return res.status(401).json({
         success: false,
-        error: { code: 'INVALID_REFRESH_TOKEN', message: 'Invalid or expired refresh token' },
+        error: {
+          code: 'INVALID_REFRESH_TOKEN',
+          message: 'Invalid or expired refresh token',
+        },
       });
     }
 
     const tokenRecord = result.rows[0];
 
     // Rotate: revoke old token, create new one
-    await db.query('UPDATE refresh_tokens SET revoked = true WHERE id = $1', [tokenRecord.id]);
+    await db.query('UPDATE refresh_tokens SET revoked = true WHERE id = $1', [
+      tokenRecord.id,
+    ]);
 
     const newRefreshToken = generateRefreshToken();
-    const newRefreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
+    const newRefreshTokenHash = crypto
+      .createHash('sha256')
+      .update(newRefreshToken)
+      .digest('hex');
 
     await db.query(
       `INSERT INTO refresh_tokens (token_hash, user_id, family_id, expires_at)
@@ -1370,7 +1434,10 @@ router.post('/refresh', async (req, res, next) => {
       [newRefreshTokenHash, tokenRecord.user_id, tokenRecord.family_id]
     );
 
-    const accessToken = await generateAccessToken(tokenRecord.user_id, tokenRecord.role);
+    const accessToken = await generateAccessToken(
+      tokenRecord.user_id,
+      tokenRecord.role
+    );
 
     res.cookie('refresh_token', newRefreshToken, {
       httpOnly: true,
@@ -1394,8 +1461,14 @@ router.post('/logout', authenticate, async (req, res, next) => {
     const refreshToken = req.cookies.refresh_token;
 
     if (refreshToken) {
-      const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-      await db.query('UPDATE refresh_tokens SET revoked = true WHERE token_hash = $1', [tokenHash]);
+      const tokenHash = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
+      await db.query(
+        'UPDATE refresh_tokens SET revoked = true WHERE token_hash = $1',
+        [tokenHash]
+      );
     }
 
     res.clearCookie('refresh_token', { path: '/api/auth' });

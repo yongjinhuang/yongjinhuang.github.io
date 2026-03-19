@@ -33,6 +33,7 @@ Source Code (Rust, C, C++, Go, etc.)
 ```
 
 **Key properties:**
+
 - **Binary format:** Compact encoding, fast to decode and compile (10-100x faster than parsing JS)
 - **Sandboxed:** Runs in the same security sandbox as JavaScript. No direct OS access
 - **Portable:** Same `.wasm` file runs in any browser, any OS, any architecture
@@ -42,12 +43,14 @@ Source Code (Rust, C, C++, Go, etc.)
 ### When to Use WASM (and When Not To)
 
 **Use WASM when:**
+
 - CPU-intensive computation: image processing, audio synthesis, physics, cryptography
 - Porting existing native code: C/C++ libraries, Rust crates, game engines
 - Consistent performance: no GC pauses, no JIT warmup, predictable latency
 - Large computation on binary data: compression, encoding, parsing binary formats
 
 **Do NOT use WASM when:**
+
 - DOM manipulation: WASM cannot touch the DOM directly. Every DOM call goes through JS
 - Simple application logic: the overhead of JS-WASM interop negates performance gains
 - Network-heavy code: fetch, WebSocket, and other I/O are JavaScript's strength
@@ -176,13 +179,13 @@ wasm-pack build --target web --release
 
 ```typescript
 // Using the wasm-pack generated module
-import init, { grayscale, blur } from "./pkg/image_filters";
+import init, { grayscale, blur } from './pkg/image_filters';
 
 async function processImage(canvas: HTMLCanvasElement) {
   // Initialize WASM module (downloads and compiles the .wasm file)
   await init();
 
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext('2d');
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
   // Pass pixel data to WASM -- zero-copy via shared memory
@@ -200,19 +203,19 @@ async function processImage(canvas: HTMLCanvasElement) {
 
 ```typescript
 // Approach 1: wasm-pack generated loader (recommended)
-import init, { myFunction } from "./pkg/my_module";
-await init();  // Fetches and compiles .wasm
+import init, { myFunction } from './pkg/my_module';
+await init(); // Fetches and compiles .wasm
 
 // Approach 2: Manual instantiation
-const response = await fetch("/my_module.wasm");
+const response = await fetch('/my_module.wasm');
 const bytes = await response.arrayBuffer();
 const { instance } = await WebAssembly.instantiate(bytes, importObject);
 instance.exports.myFunction();
 
 // Approach 3: Streaming compilation (most efficient)
 const { instance } = await WebAssembly.instantiateStreaming(
-  fetch("/my_module.wasm"),
-  importObject,
+  fetch('/my_module.wasm'),
+  importObject
 );
 instance.exports.myFunction();
 ```
@@ -232,7 +235,7 @@ const buffer = new Uint8Array(memory.buffer);
 
 // Passing data to WASM:
 // Option 1: Pass typed array directly (wasm-bindgen handles this)
-grayscale(imageData.data);  // wasm-bindgen copies data to WASM memory
+grayscale(imageData.data); // wasm-bindgen copies data to WASM memory
 
 // Option 2: Write to shared memory manually
 const ptr = wasmModule.alloc(data.length);
@@ -260,17 +263,17 @@ wasmModule.process(ptr, data.length);
 
 ### Performance: WASM vs JavaScript
 
-| Operation | JavaScript | WASM (Rust) | Speedup |
-|-----------|-----------|-------------|---------|
-| Image grayscale (4K) | ~45ms | ~8ms | 5-6x |
-| SHA-256 hash (1MB) | ~12ms | ~3ms | 4x |
-| JSON parse (1MB) | ~5ms | ~15ms | 0.3x (JS wins) |
-| Matrix multiply (1000x1000) | ~800ms | ~50ms | 16x |
-| Fibonacci(45) | ~7000ms | ~4000ms | 1.75x |
-| DOM manipulation | ~1ms | N/A | JS only |
-| Regex matching | ~2ms | ~3ms | ~1x (similar) |
-| Sorting 1M integers | ~250ms | ~80ms | 3x |
-| LZ4 compression (1MB) | ~30ms | ~5ms | 6x |
+| Operation                   | JavaScript | WASM (Rust) | Speedup        |
+| --------------------------- | ---------- | ----------- | -------------- |
+| Image grayscale (4K)        | ~45ms      | ~8ms        | 5-6x           |
+| SHA-256 hash (1MB)          | ~12ms      | ~3ms        | 4x             |
+| JSON parse (1MB)            | ~5ms       | ~15ms       | 0.3x (JS wins) |
+| Matrix multiply (1000x1000) | ~800ms     | ~50ms       | 16x            |
+| Fibonacci(45)               | ~7000ms    | ~4000ms     | 1.75x          |
+| DOM manipulation            | ~1ms       | N/A         | JS only        |
+| Regex matching              | ~2ms       | ~3ms        | ~1x (similar)  |
+| Sorting 1M integers         | ~250ms     | ~80ms       | 3x             |
+| LZ4 compression (1MB)       | ~30ms      | ~5ms        | 6x             |
 
 **Key takeaway:** WASM shines for compute-heavy operations on numeric and binary data. JavaScript is faster for string operations, JSON, DOM, and I/O. The crossover point is roughly when computation takes more than 1ms -- below that, the JS-WASM call overhead dominates.
 
@@ -279,7 +282,7 @@ wasmModule.process(ptr, data.length);
 **1. SQLite in the Browser (sql.js / wa-sqlite)**
 
 ```typescript
-import initSqlJs from "sql.js";
+import initSqlJs from 'sql.js';
 
 async function setupDatabase() {
   const SQL = await initSqlJs({
@@ -303,23 +306,26 @@ async function setupDatabase() {
 **2. Image/Video Processing (Photon, FFmpeg.wasm)**
 
 ```typescript
-import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 
 async function convertVideo(inputFile: File): Promise<Blob> {
   const ffmpeg = createFFmpeg({ log: true });
   await ffmpeg.load();
 
-  ffmpeg.FS("writeFile", "input.mp4", await fetchFile(inputFile));
+  ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(inputFile));
 
   await ffmpeg.run(
-    "-i", "input.mp4",
-    "-vf", "scale=640:480",
-    "-c:v", "libx264",
-    "output.mp4",
+    '-i',
+    'input.mp4',
+    '-vf',
+    'scale=640:480',
+    '-c:v',
+    'libx264',
+    'output.mp4'
   );
 
-  const data = ffmpeg.FS("readFile", "output.mp4");
-  return new Blob([data.buffer], { type: "video/mp4" });
+  const data = ffmpeg.FS('readFile', 'output.mp4');
+  return new Blob([data.buffer], { type: 'video/mp4' });
 }
 ```
 
@@ -368,6 +374,7 @@ deno run --allow-read --allow-write program.wasm
 ```
 
 **WASI use cases:**
+
 - Serverless functions (Cloudflare Workers use WASM internally)
 - Plugin systems (extensible applications with sandboxed WASM plugins)
 - Edge computing (lightweight, fast-starting WASM containers)
@@ -379,7 +386,7 @@ For compute-heavy tasks, run WASM in a Web Worker to avoid blocking the main thr
 
 ```typescript
 // worker.ts
-import init, { processImage } from "./pkg/image_processor";
+import init, { processImage } from './pkg/image_processor';
 
 let initialized = false;
 
@@ -401,21 +408,21 @@ self.onmessage = async (event) => {
 
 ```typescript
 // main.ts
-const worker = new Worker(new URL("./worker.ts", import.meta.url), {
-  type: "module",
+const worker = new Worker(new URL('./worker.ts', import.meta.url), {
+  type: 'module',
 });
 
 function processImageInBackground(
   imageData: Uint8ClampedArray,
   width: number,
   height: number,
-  filter: string,
+  filter: string
 ): Promise<Uint8ClampedArray> {
   return new Promise((resolve) => {
     worker.onmessage = (event) => resolve(event.data.result);
     worker.postMessage(
       { imageData, width, height, filter },
-      [imageData.buffer],  // Transfer ownership (zero-copy)
+      [imageData.buffer] // Transfer ownership (zero-copy)
     );
   });
 }
@@ -505,43 +512,43 @@ The long-term vision is "write once, run anywhere" at the binary level -- not ju
 
 ## Quick Reference
 
-| Language | WASM Bundle Size (minimal) | GC Included | Tooling Maturity | Best For |
-|----------|--------------------------|-------------|-----------------|----------|
-| Rust | ~20-30KB | No | Excellent (wasm-pack) | Performance-critical frontend |
-| C/C++ | ~20-50KB | No | Good (Emscripten) | Porting existing code |
-| Go | ~2-5MB | Yes (full runtime) | Moderate (TinyGo: ~200KB) | Go developers targeting web |
-| C# | ~5-10MB | Yes (.NET runtime) | Good (Blazor) | .NET ecosystem |
-| AssemblyScript | ~5-20KB | No (manual) | Good | TypeScript developers |
-| Zig | ~10-30KB | No | Growing | Systems programming |
+| Language       | WASM Bundle Size (minimal) | GC Included        | Tooling Maturity          | Best For                      |
+| -------------- | -------------------------- | ------------------ | ------------------------- | ----------------------------- |
+| Rust           | ~20-30KB                   | No                 | Excellent (wasm-pack)     | Performance-critical frontend |
+| C/C++          | ~20-50KB                   | No                 | Good (Emscripten)         | Porting existing code         |
+| Go             | ~2-5MB                     | Yes (full runtime) | Moderate (TinyGo: ~200KB) | Go developers targeting web   |
+| C#             | ~5-10MB                    | Yes (.NET runtime) | Good (Blazor)             | .NET ecosystem                |
+| AssemblyScript | ~5-20KB                    | No (manual)        | Good                      | TypeScript developers         |
+| Zig            | ~10-30KB                   | No                 | Growing                   | Systems programming           |
 
-| API | Purpose |
-|-----|---------|
-| `WebAssembly.compile(bytes)` | Compile WASM bytes to a Module |
-| `WebAssembly.instantiate(bytes, imports)` | Compile + instantiate in one step |
-| `WebAssembly.instantiateStreaming(fetch, imports)` | Stream-compile (most efficient) |
-| `WebAssembly.Memory({ initial, maximum })` | Create shared memory |
-| `WebAssembly.Table({ initial, element })` | Create function table |
-| `instance.exports.functionName()` | Call WASM function from JS |
+| API                                                | Purpose                           |
+| -------------------------------------------------- | --------------------------------- |
+| `WebAssembly.compile(bytes)`                       | Compile WASM bytes to a Module    |
+| `WebAssembly.instantiate(bytes, imports)`          | Compile + instantiate in one step |
+| `WebAssembly.instantiateStreaming(fetch, imports)` | Stream-compile (most efficient)   |
+| `WebAssembly.Memory({ initial, maximum })`         | Create shared memory              |
+| `WebAssembly.Table({ initial, element })`          | Create function table             |
+| `instance.exports.functionName()`                  | Call WASM function from JS        |
 
-| Tool | Purpose |
-|------|---------|
-| wasm-pack | Build Rust to WASM + JS bindings |
-| wasm-bindgen | Rust-JS interop layer |
-| wasm-opt (binaryen) | Optimize WASM binary size |
-| wasm-strip | Remove debug info from WASM |
-| Emscripten | Compile C/C++ to WASM |
-| wasm-tools | WASM binary inspection tools |
-| Wasmtime | Server-side WASM runtime |
-| Wasmer | Universal WASM runtime |
+| Tool                | Purpose                          |
+| ------------------- | -------------------------------- |
+| wasm-pack           | Build Rust to WASM + JS bindings |
+| wasm-bindgen        | Rust-JS interop layer            |
+| wasm-opt (binaryen) | Optimize WASM binary size        |
+| wasm-strip          | Remove debug info from WASM      |
+| Emscripten          | Compile C/C++ to WASM            |
+| wasm-tools          | WASM binary inspection tools     |
+| Wasmtime            | Server-side WASM runtime         |
+| Wasmer              | Universal WASM runtime           |
 
-| Use Case | Example Project | Why WASM |
-|----------|----------------|----------|
-| In-browser database | sql.js, wa-sqlite | Full SQL engine, ~1MB |
-| Image editing | Photon, Squoosh | Pixel-level processing |
-| Video processing | FFmpeg.wasm | Codec support |
-| CAD/Design tools | Figma, AutoCAD Web | Complex rendering |
-| PDF rendering | pdf.js (partial) | Font/rendering engine |
-| Game engines | Unity WebGL, Bevy | Physics, rendering |
-| Compression | Brotli, zstd in browser | CPU-intensive encoding |
-| Crypto | Ring (Rust), libsodium | Constant-time operations |
-| Code editing | tree-sitter (parsing) | Fast syntax analysis |
+| Use Case            | Example Project         | Why WASM                 |
+| ------------------- | ----------------------- | ------------------------ |
+| In-browser database | sql.js, wa-sqlite       | Full SQL engine, ~1MB    |
+| Image editing       | Photon, Squoosh         | Pixel-level processing   |
+| Video processing    | FFmpeg.wasm             | Codec support            |
+| CAD/Design tools    | Figma, AutoCAD Web      | Complex rendering        |
+| PDF rendering       | pdf.js (partial)        | Font/rendering engine    |
+| Game engines        | Unity WebGL, Bevy       | Physics, rendering       |
+| Compression         | Brotli, zstd in browser | CPU-intensive encoding   |
+| Crypto              | Ring (Rust), libsodium  | Constant-time operations |
+| Code editing        | tree-sitter (parsing)   | Fast syntax analysis     |

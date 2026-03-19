@@ -24,18 +24,21 @@ The testing pyramid is a model for balancing test types:
 ```
 
 **Unit tests (base):**
+
 - Test individual functions, methods, or components in isolation
 - Fast to run (milliseconds each)
 - No external dependencies (databases, APIs, file system)
 - Should make up ~70% of your test suite
 
 **Integration tests (middle):**
+
 - Test how components work together
 - May involve databases, message queues, or external services
 - Slower than unit tests (seconds each)
 - Should make up ~20% of your test suite
 
 **E2E tests (top):**
+
 - Test complete user workflows through the real UI
 - Slowest and most brittle
 - Highest confidence that the system works as a whole
@@ -46,6 +49,7 @@ The testing pyramid is a model for balancing test types:
 Unit tests verify the smallest testable parts of an application in isolation.
 
 **Characteristics:**
+
 - Test one thing at a time
 - No network calls, database queries, or file I/O
 - Mock or stub external dependencies
@@ -53,6 +57,7 @@ Unit tests verify the smallest testable parts of an application in isolation.
 - Deterministic (same input, same output, every time)
 
 **Popular frameworks:**
+
 - **JavaScript/TypeScript**: Jest, Vitest
 - **Python**: pytest, unittest
 - **Go**: testing (built-in), testify
@@ -63,6 +68,7 @@ Unit tests verify the smallest testable parts of an application in isolation.
 Integration tests verify that multiple components work correctly together.
 
 **What to test:**
+
 - API endpoints with real database connections
 - Service-to-service communication
 - Message queue producer/consumer interactions
@@ -70,6 +76,7 @@ Integration tests verify that multiple components work correctly together.
 - Authentication and authorization flows
 
 **Best practices:**
+
 - Use a dedicated test database (Docker containers work well)
 - Reset state between tests (truncate tables, not drop/recreate)
 - Test both happy paths and error scenarios
@@ -80,18 +87,21 @@ Integration tests verify that multiple components work correctly together.
 E2E tests simulate real user behavior in a browser or API client.
 
 **Playwright** (recommended for modern projects):
+
 - Cross-browser support (Chromium, Firefox, WebKit)
 - Auto-wait mechanism reduces flakiness
 - Built-in test generators and trace viewers
 - Supports multiple languages (JS/TS, Python, Java, .NET)
 
 **Cypress:**
+
 - Excellent developer experience with time-travel debugging
 - Real-time reloads during development
 - Limited to Chromium-based browsers and Firefox
 - Runs inside the browser (different architecture from Playwright)
 
 **When to write E2E tests:**
+
 - Critical user flows (login, checkout, payment)
 - Flows that cross multiple services
 - Regression tests for high-severity bugs
@@ -102,21 +112,25 @@ E2E tests simulate real user behavior in a browser or API client.
 Managing test data is one of the hardest parts of testing.
 
 **Factories:**
+
 - Functions that generate test data with sensible defaults
 - Allow overriding specific fields for different test scenarios
 - Example: `createUser({ email: 'test@example.com' })` fills in all other fields
 
 **Fixtures:**
+
 - Pre-defined static data loaded before tests
 - Good for reference data that rarely changes
 - Can become brittle if tightly coupled to tests
 
 **Seeding:**
+
 - Populating a database with initial data for testing
 - Use migration-based seeding for consistency
 - Seed once, use database transactions for isolation within tests
 
 **Database strategies:**
+
 - **Transaction rollback**: Wrap each test in a transaction, roll back after
 - **Truncate and reseed**: Clear tables between test suites
 - **Unique databases**: Each test run gets its own database (expensive but isolated)
@@ -126,18 +140,21 @@ Managing test data is one of the hardest parts of testing.
 Mocking replaces real dependencies with controlled substitutes.
 
 **Types of test doubles:**
+
 - **Stub**: Returns predefined responses (no verification)
 - **Mock**: Records calls and allows assertions on interactions
 - **Spy**: Wraps real implementation, records calls
 - **Fake**: Simplified working implementation (e.g., in-memory database)
 
 **When to mock:**
+
 - External APIs and services
 - Time-dependent operations (dates, timers)
 - Random number generation
 - File system and network operations
 
 **When NOT to mock:**
+
 - The code under test itself
 - Simple pure functions
 - Database queries in integration tests (use a real database)
@@ -148,17 +165,20 @@ Mocking replaces real dependencies with controlled substitutes.
 TDD is a development workflow where you write tests before implementation.
 
 **The TDD cycle:**
+
 1. **RED**: Write a failing test that describes the desired behavior
 2. **GREEN**: Write the minimum code to make the test pass
 3. **REFACTOR**: Improve the code while keeping tests green
 
 **Benefits:**
+
 - Forces you to think about the interface before implementation
 - Produces testable code by design
 - Creates comprehensive test coverage naturally
 - Documents expected behavior as executable specifications
 
 **When TDD works best:**
+
 - Well-understood requirements
 - Pure functions and business logic
 - API endpoint design
@@ -169,17 +189,20 @@ TDD is a development workflow where you write tests before implementation.
 Microservices introduce unique testing challenges.
 
 **Contract testing:**
+
 - Verify that service interfaces match consumer expectations
 - Tools: Pact, Spring Cloud Contract
 - Consumer-driven contracts: the consumer defines what it expects, the provider verifies it meets those expectations
 - Prevents breaking changes across service boundaries
 
 **Service virtualization:**
+
 - Simulate dependent services that are expensive or unavailable
 - Use tools like WireMock or MockServer
 - Record real interactions and replay them
 
 **Testing strategies for microservices:**
+
 1. Test each service independently with unit and integration tests
 2. Use contract tests for inter-service communication
 3. Run E2E tests sparingly against a full environment
@@ -190,12 +213,14 @@ Microservices introduce unique testing challenges.
 Load testing verifies that your system handles expected and peak traffic.
 
 **Tools:**
+
 - **k6** (JavaScript scripting, good for developers)
 - **Locust** (Python scripting)
 - **Apache JMeter** (GUI-based, enterprise)
 - **Artillery** (YAML-based, Node.js)
 
 **Types of load tests:**
+
 - **Smoke test**: Minimal load to verify the system works
 - **Load test**: Expected traffic levels
 - **Stress test**: Beyond expected capacity to find breaking points
@@ -210,6 +235,7 @@ Load testing verifies that your system handles expected and peak traffic.
 You are starting a new full-stack project with a React frontend and Node.js backend.
 
 **Approach:**
+
 1. Set up Vitest for frontend unit tests and Jest for backend unit tests
 2. Configure a test database with Docker Compose
 3. Write integration tests for API endpoints using supertest
@@ -223,6 +249,7 @@ You are starting a new full-stack project with a React frontend and Node.js back
 Your test suite has a 15% flakiness rate, causing developers to ignore failures.
 
 **Approach:**
+
 1. Identify the most flaky tests using test analytics
 2. Replace arbitrary waits (`sleep(5000)`) with proper assertions and auto-wait
 3. Isolate test data so tests do not depend on shared state
@@ -236,6 +263,7 @@ Your test suite has a 15% flakiness rate, causing developers to ignore failures.
 You inherit a codebase with zero test coverage and need to add tests.
 
 **Approach:**
+
 1. Start with characterization tests: tests that document existing behavior
 2. Add integration tests for the most critical API endpoints first
 3. Extract pure functions from complex methods and unit-test them
@@ -249,6 +277,7 @@ You inherit a codebase with zero test coverage and need to add tests.
 You need to test a checkout and payment processing flow.
 
 **Approach:**
+
 1. Unit test the price calculation, tax, and discount logic
 2. Mock the payment provider API for integration tests
 3. Use the payment provider's sandbox environment for staging E2E tests
@@ -278,6 +307,7 @@ E2E tests provide the highest confidence but are the slowest, most expensive, an
 **The anti-pattern is an inverted pyramid** (also called the "ice cream cone"): mostly E2E tests, few unit tests. This leads to slow CI pipelines, flaky test suites, and developers who stop trusting or running tests.
 
 **Practical balance:**
+
 - 70% unit tests: business logic, utilities, component rendering
 - 20% integration tests: API endpoints, database operations
 - 10% E2E tests: login, checkout, critical user journeys
@@ -291,6 +321,7 @@ TDD (Test-Driven Development) is a workflow where you write a failing test first
 **The cycle:** RED (failing test) -> GREEN (make it pass) -> REFACTOR (clean up)
 
 **When I use TDD:**
+
 - Implementing business logic with clear requirements
 - Writing utility functions and parsers
 - Building API endpoints (write the request/response test first)
@@ -298,12 +329,14 @@ TDD (Test-Driven Development) is a workflow where you write a failing test first
 - Designing interfaces (the test forces you to think about the API)
 
 **When I might skip strict TDD:**
+
 - Exploratory prototyping where requirements are unclear
 - UI layout and styling work
 - Configuration-heavy tasks (setting up build tools)
 - One-off scripts
 
 **Benefits of TDD:**
+
 - Every line of code has a test because the test came first
 - Forces small, focused functions that are easy to test
 - Acts as living documentation of expected behavior
@@ -314,18 +347,21 @@ TDD (Test-Driven Development) is a workflow where you write a failing test first
 **Answer:**
 
 **Mock when:**
+
 - The dependency is external and unreliable (third-party APIs)
 - The dependency is slow (network calls, file I/O in unit tests)
 - You need to test specific scenarios that are hard to reproduce (network errors, rate limiting, timeout)
 - The dependency has side effects you want to avoid (sending emails, charging credit cards)
 
 **Use real dependencies when:**
+
 - Testing database queries (use a test database with Docker)
 - The integration itself is what you are testing
 - Mocking would hide real bugs (e.g., SQL syntax errors)
 - The dependency is fast and deterministic
 
 **Dangers of over-mocking:**
+
 - Tests pass but the real system fails because the mock does not match reality
 - Tests become tightly coupled to implementation details
 - Refactoring becomes harder because every internal change breaks mock setups
@@ -350,6 +386,7 @@ Consumer-driven contract tests (using Pact or similar) verify that service APIs 
 A small suite of tests runs against the full system in a staging environment. These test the most critical cross-service flows only.
 
 **Key principles:**
+
 - Each service is independently testable
 - Contract tests replace the need for extensive cross-service integration tests
 - E2E tests are kept to a minimum (they are the most expensive and brittle)
@@ -360,6 +397,7 @@ A small suite of tests runs against the full system in a staging environment. Th
 **Answer:**
 
 **Factories (my preferred approach):**
+
 ```
 createUser({ email: 'test@example.com' })
 // Returns a complete user object with all required fields filled with defaults
@@ -368,11 +406,13 @@ createUser({ email: 'test@example.com' })
 Factories generate test data with sensible defaults. You override only the fields relevant to your test. This keeps tests readable and maintainable because you are not distracted by irrelevant data setup.
 
 **Database isolation strategies:**
+
 - **Transaction rollback**: Wrap each test in a transaction, roll back at the end. Fast but does not work for tests that involve multiple database connections.
 - **Truncate between tests**: Clear all tables between test suites. Slower but simpler.
 - **Unique databases per test run**: Maximum isolation but expensive in CI.
 
 **Best practices:**
+
 - Never rely on data created by another test (tests must be independent)
 - Use factories instead of fixtures for data that varies between tests
 - Keep seed data minimal and focused on reference data
@@ -396,6 +436,7 @@ Factories generate test data with sensible defaults. You override only the field
 5. **Non-deterministic data**: Tests depend on the current time, random values, or dynamic content. Fix by controlling time and using deterministic test data.
 
 **Prevention strategies:**
+
 - Use Playwright's auto-waiting and web-first assertions
 - Use data-testid attributes for reliable element selection
 - Run tests in isolated browser contexts
@@ -410,22 +451,26 @@ Factories generate test data with sensible defaults. You override only the field
 Contract testing verifies that the interface between two services (the "contract") is honored by both sides. It is especially valuable in microservices architectures.
 
 **Consumer-driven contracts:**
+
 1. The consumer (client) writes a contract that describes the requests it makes and the responses it expects
 2. The provider (server) runs these contracts against its real implementation
 3. If the provider changes its API in a way that breaks the contract, the test fails
 
 **Tools:** Pact is the most popular. The workflow is:
+
 - Consumer generates a "pact file" describing its expectations
 - Pact file is shared (via a Pact Broker or CI artifact)
 - Provider verifies the pact against its actual API
 
 **When to use contract testing:**
+
 - Multiple teams own different services
 - Services evolve independently with different release cycles
 - You want to catch breaking API changes before deployment
 - E2E tests across services are too slow or flaky
 
 **When NOT to use contract testing:**
+
 - Monolithic applications
 - Services owned by the same team (communication is easier)
 - Simple CRUD APIs that rarely change
@@ -435,6 +480,7 @@ Contract testing verifies that the interface between two services (the "contract
 **Answer:**
 
 **Process:**
+
 1. Define performance requirements (response time P99, throughput, concurrent users)
 2. Identify critical endpoints and flows to test
 3. Write load test scripts that simulate realistic user behavior
@@ -445,12 +491,14 @@ Contract testing verifies that the interface between two services (the "contract
 8. Set up performance regression tests in CI
 
 **Test types:**
+
 - **Smoke test**: 1-5 users, verify the system works under minimal load
 - **Load test**: Expected peak traffic, verify acceptable response times
 - **Stress test**: 2-3x expected traffic, find breaking points and degradation patterns
 - **Soak test**: Sustained load for hours, find memory leaks and resource exhaustion
 
 **Key metrics to monitor:**
+
 - Response time (P50, P95, P99)
 - Throughput (requests per second)
 - Error rate
@@ -927,11 +975,11 @@ const checkoutDuration = new Trend('checkout_duration');
 
 export const options = {
   stages: [
-    { duration: '1m', target: 10 },   // Ramp up to 10 users
-    { duration: '5m', target: 50 },   // Ramp up to 50 users
-    { duration: '5m', target: 50 },   // Sustain 50 users
-    { duration: '2m', target: 100 },  // Peak at 100 users
-    { duration: '1m', target: 0 },    // Ramp down
+    { duration: '1m', target: 10 }, // Ramp up to 10 users
+    { duration: '5m', target: 50 }, // Ramp up to 50 users
+    { duration: '5m', target: 50 }, // Sustain 50 users
+    { duration: '2m', target: 100 }, // Peak at 100 users
+    { duration: '1m', target: 0 }, // Ramp down
   ],
   thresholds: {
     http_req_duration: ['p(95)<500', 'p(99)<1000'],
@@ -978,7 +1026,8 @@ export default function () {
 
   check(checkout, {
     'checkout status 201': (r) => r.status === 201,
-    'checkout has order ID': (r) => JSON.parse(r.body).data.orderId !== undefined,
+    'checkout has order ID': (r) =>
+      JSON.parse(r.body).data.orderId !== undefined,
   });
 
   sleep(2);
@@ -1008,7 +1057,9 @@ interface TestUser {
   readonly createdAt: Date;
 }
 
-export const buildUser = (overrides: UserOverrides = {}): Omit<TestUser, 'id' | 'createdAt'> => ({
+export const buildUser = (
+  overrides: UserOverrides = {}
+): Omit<TestUser, 'id' | 'createdAt'> => ({
   email: overrides.email ?? faker.internet.email(),
   name: overrides.name ?? faker.person.fullName(),
   role: overrides.role ?? 'user',
@@ -1043,11 +1094,11 @@ export const createTestUsers = async (
 
 ### Testing Pyramid Ratios
 
-| Level | Proportion | Speed | Confidence | Cost |
-|-------|-----------|-------|------------|------|
-| Unit | ~70% | ms | Low-Med | Low |
-| Integration | ~20% | seconds | Medium | Medium |
-| E2E | ~10% | minutes | High | High |
+| Level       | Proportion | Speed   | Confidence | Cost   |
+| ----------- | ---------- | ------- | ---------- | ------ |
+| Unit        | ~70%       | ms      | Low-Med    | Low    |
+| Integration | ~20%       | seconds | Medium     | Medium |
+| E2E         | ~10%       | minutes | High       | High   |
 
 ### TDD Cycle
 
@@ -1060,12 +1111,12 @@ export const createTestUsers = async (
 
 ### Test Double Types
 
-| Type | Purpose | Verifies Calls? |
-|------|---------|----------------|
-| Stub | Returns predetermined data | No |
-| Mock | Returns data + records calls | Yes |
-| Spy | Wraps real implementation | Yes |
-| Fake | Simplified implementation | No |
+| Type | Purpose                      | Verifies Calls? |
+| ---- | ---------------------------- | --------------- |
+| Stub | Returns predetermined data   | No              |
+| Mock | Returns data + records calls | Yes             |
+| Spy  | Wraps real implementation    | Yes             |
+| Fake | Simplified implementation    | No              |
 
 ### Common Test Patterns
 
@@ -1077,6 +1128,7 @@ Given   -> When -> Then   (BDD)
 ### What to Test at Each Level
 
 **Unit tests:**
+
 - Pure functions and business logic
 - Input validation and parsing
 - Data transformations
@@ -1084,6 +1136,7 @@ Given   -> When -> Then   (BDD)
 - Edge cases (empty arrays, null, boundary values)
 
 **Integration tests:**
+
 - API request/response cycles
 - Database CRUD operations
 - Authentication and authorization
@@ -1091,6 +1144,7 @@ Given   -> When -> Then   (BDD)
 - Query filtering, pagination, sorting
 
 **E2E tests:**
+
 - Login and registration
 - Core business flows (checkout, booking, submission)
 - Cross-page navigation

@@ -475,13 +475,13 @@ generate signals, measure signals, or trigger events at precise intervals.
 
 ### 6.1 Timer Modes
 
-| Mode            | Description                                    | Use Case              |
-|-----------------|------------------------------------------------|-----------------------|
-| Basic counting  | Count up/down, generate interrupt on overflow  | Periodic tasks        |
-| PWM generation  | Output Compare toggles pin at match value      | Motor control, LEDs   |
-| Input capture   | Record counter value on external edge          | Frequency measurement |
-| One-pulse       | Generate single pulse of precise width         | Trigger signals       |
-| Encoder mode    | Count quadrature encoder signals               | Rotary position       |
+| Mode           | Description                                   | Use Case              |
+| -------------- | --------------------------------------------- | --------------------- |
+| Basic counting | Count up/down, generate interrupt on overflow | Periodic tasks        |
+| PWM generation | Output Compare toggles pin at match value     | Motor control, LEDs   |
+| Input capture  | Record counter value on external edge         | Frequency measurement |
+| One-pulse      | Generate single pulse of precise width        | Trigger signals       |
+| Encoder mode   | Count quadrature encoder signals              | Rotary position       |
 
 ### 6.2 PWM Generation
 
@@ -759,12 +759,12 @@ SPI communication).
 
 ### 8.2 DMA Modes
 
-| Mode           | Description                                          |
-|----------------|------------------------------------------------------|
-| Normal         | Transfer N words, then stop. CPU must restart.       |
-| Circular       | Auto-restart after N words. Continuous streaming.     |
-| Double Buffer  | Two buffers; DMA fills one while CPU processes other.|
-| Memory-to-Mem  | Copy data between SRAM regions (memcpy via DMA).    |
+| Mode          | Description                                           |
+| ------------- | ----------------------------------------------------- |
+| Normal        | Transfer N words, then stop. CPU must restart.        |
+| Circular      | Auto-restart after N words. Continuous streaming.     |
+| Double Buffer | Two buffers; DMA fills one while CPU processes other. |
+| Memory-to-Mem | Copy data between SRAM regions (memcpy via DMA).      |
 
 ### 8.3 Circular DMA with Double Buffering
 
@@ -838,12 +838,12 @@ configured time window. This is a critical safety mechanism for deployed systems
 
 ### 9.1 Types of Watchdog
 
-| Type                    | Description                                       |
-|-------------------------|---------------------------------------------------|
-| Independent Watchdog    | Clocked by LSI, runs independently of main clock. |
-| (IWDG)                 | Cannot be stopped once started. Simple countdown. |
-| Window Watchdog (WWDG) | Must be fed within a time window (not too early,  |
-|                         | not too late). Detects both stuck and runaway code.|
+| Type                   | Description                                         |
+| ---------------------- | --------------------------------------------------- |
+| Independent Watchdog   | Clocked by LSI, runs independently of main clock.   |
+| (IWDG)                 | Cannot be stopped once started. Simple countdown.   |
+| Window Watchdog (WWDG) | Must be fed within a time window (not too early,    |
+|                        | not too late). Detects both stuck and runaway code. |
 
 ### 9.2 Watchdog Usage Pattern
 

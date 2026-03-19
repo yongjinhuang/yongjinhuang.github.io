@@ -47,6 +47,7 @@ APIs evolve. You need to change endpoints without breaking existing clients:
 3. **Query parameter**: `/users?version=2` — easy but less conventional
 
 When you release `v2`:
+
 - `v1` continues working (for a deprecation period, usually 6-12 months)
 - New features only go to `v2`
 - Communicate the migration timeline clearly
@@ -64,23 +65,23 @@ If your API is a product, developers need:
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Rate Limit** | Maximum number of requests allowed in a time window |
-| **Throttling** | Slowing down requests instead of rejecting them outright |
-| **429 Too Many Requests** | HTTP status code returned when rate limit is exceeded |
-| **API Gateway** | A proxy that sits in front of your API, handling auth, rate limiting, routing (Kong, AWS API Gateway) |
-| **API Key** | A unique identifier for an API consumer |
-| **OAuth 2.0** | Protocol for authorized API access on behalf of a user |
-| **Quota** | A broader usage limit (e.g., 10,000 API calls per month, 1GB storage) |
-| **Burst Limit** | Short-term limit (e.g., 10 requests per second) vs sustained limit (1,000 per hour) |
-| **Token Bucket** | A rate limiting algorithm: tokens are added at a fixed rate, each request consumes a token |
-| **Sliding Window** | A rate limiting approach that considers a rolling time window rather than fixed intervals |
-| **DDoS** | Distributed Denial of Service — flooding your API with requests to take it down |
-| **WAF** | Web Application Firewall — filters malicious traffic before it reaches your API |
-| **API Versioning** | Maintaining multiple API versions simultaneously |
-| **Deprecation** | Announcing that an API version will be removed, giving clients time to migrate |
-| **SLA** | Service Level Agreement — guaranteed uptime and performance (e.g., 99.9% uptime) |
+| Term                      | What It Means                                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Rate Limit**            | Maximum number of requests allowed in a time window                                                   |
+| **Throttling**            | Slowing down requests instead of rejecting them outright                                              |
+| **429 Too Many Requests** | HTTP status code returned when rate limit is exceeded                                                 |
+| **API Gateway**           | A proxy that sits in front of your API, handling auth, rate limiting, routing (Kong, AWS API Gateway) |
+| **API Key**               | A unique identifier for an API consumer                                                               |
+| **OAuth 2.0**             | Protocol for authorized API access on behalf of a user                                                |
+| **Quota**                 | A broader usage limit (e.g., 10,000 API calls per month, 1GB storage)                                 |
+| **Burst Limit**           | Short-term limit (e.g., 10 requests per second) vs sustained limit (1,000 per hour)                   |
+| **Token Bucket**          | A rate limiting algorithm: tokens are added at a fixed rate, each request consumes a token            |
+| **Sliding Window**        | A rate limiting approach that considers a rolling time window rather than fixed intervals             |
+| **DDoS**                  | Distributed Denial of Service — flooding your API with requests to take it down                       |
+| **WAF**                   | Web Application Firewall — filters malicious traffic before it reaches your API                       |
+| **API Versioning**        | Maintaining multiple API versions simultaneously                                                      |
+| **Deprecation**           | Announcing that an API version will be removed, giving clients time to migrate                        |
+| **SLA**                   | Service Level Agreement — guaranteed uptime and performance (e.g., 99.9% uptime)                      |
 
 ## Common Patterns
 
@@ -135,18 +136,18 @@ Enterprise: 10,000 requests/hour
 
 ## Quick Reference
 
-| Scenario | Rate Limiting Strategy |
-|----------|----------------------|
-| Public API | Token bucket per API key, tiered by plan |
-| Login endpoint | Strict limit per IP (prevent brute force) |
-| Webhook receiver | Queue-based buffer with processing rate limit |
-| Internal service | Token bucket per service, generous limits |
-| Free tier | Low limits with clear upgrade path |
-| DDoS protection | WAF + CDN-level rate limiting (Cloudflare, AWS Shield) |
+| Scenario         | Rate Limiting Strategy                                 |
+| ---------------- | ------------------------------------------------------ |
+| Public API       | Token bucket per API key, tiered by plan               |
+| Login endpoint   | Strict limit per IP (prevent brute force)              |
+| Webhook receiver | Queue-based buffer with processing rate limit          |
+| Internal service | Token bucket per service, generous limits              |
+| Free tier        | Low limits with clear upgrade path                     |
+| DDoS protection  | WAF + CDN-level rate limiting (Cloudflare, AWS Shield) |
 
-| Algorithm | Best For |
-|-----------|----------|
-| Fixed window | Simple APIs, low traffic |
-| Sliding window | Consistent enforcement |
-| Token bucket | Bursty traffic with average limit |
-| Leaky bucket | Smooth, constant output rate |
+| Algorithm      | Best For                          |
+| -------------- | --------------------------------- |
+| Fixed window   | Simple APIs, low traffic          |
+| Sliding window | Consistent enforcement            |
+| Token bucket   | Bursty traffic with average limit |
+| Leaky bucket   | Smooth, constant output rate      |

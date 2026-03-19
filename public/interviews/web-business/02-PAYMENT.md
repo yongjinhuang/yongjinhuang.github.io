@@ -48,22 +48,22 @@ At each hop, someone takes a small fee. That's why payment processing costs 2-3%
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **Payment Gateway** | The service you integrate with (Stripe, PayPal, Adyen). Handles secure communication with banks |
-| **Payment Processor** | The backend that routes transactions through card networks. Often the gateway is also the processor |
-| **Merchant Account** | A bank account specifically for receiving payments from card transactions |
-| **Authorization** | Checking if the card is valid and has funds. No money moves yet |
-| **Capture** | Actually pulling the authorized amount. Now money moves |
-| **Auth + Capture** | The two-step process. Some businesses authorize immediately but capture later (e.g., hotels) |
-| **Settlement** | When money actually arrives in your account (1-3 business days) |
-| **Chargeback** | Customer disputes a charge through their bank. Very bad for merchants |
-| **PCI DSS** | Payment Card Industry Data Security Standard — rules for handling card data. If you use Stripe's hosted forms, you're mostly covered |
-| **PCI SAQ** | Self-Assessment Questionnaire — the form you fill out to prove PCI compliance |
-| **3D Secure (3DS)** | Extra authentication step ("Verified by Visa"). Shifts fraud liability from merchant to bank |
-| **Idempotency Key** | A unique key you send with payment requests to prevent duplicate charges if a request is retried |
-| **Webhook** | Payment gateways send you HTTP callbacks when events happen (payment succeeded, refund issued, dispute opened) |
-| **PSP** | Payment Service Provider — another name for the gateway/processor combo |
+| Term                  | What It Means                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Payment Gateway**   | The service you integrate with (Stripe, PayPal, Adyen). Handles secure communication with banks                                      |
+| **Payment Processor** | The backend that routes transactions through card networks. Often the gateway is also the processor                                  |
+| **Merchant Account**  | A bank account specifically for receiving payments from card transactions                                                            |
+| **Authorization**     | Checking if the card is valid and has funds. No money moves yet                                                                      |
+| **Capture**           | Actually pulling the authorized amount. Now money moves                                                                              |
+| **Auth + Capture**    | The two-step process. Some businesses authorize immediately but capture later (e.g., hotels)                                         |
+| **Settlement**        | When money actually arrives in your account (1-3 business days)                                                                      |
+| **Chargeback**        | Customer disputes a charge through their bank. Very bad for merchants                                                                |
+| **PCI DSS**           | Payment Card Industry Data Security Standard — rules for handling card data. If you use Stripe's hosted forms, you're mostly covered |
+| **PCI SAQ**           | Self-Assessment Questionnaire — the form you fill out to prove PCI compliance                                                        |
+| **3D Secure (3DS)**   | Extra authentication step ("Verified by Visa"). Shifts fraud liability from merchant to bank                                         |
+| **Idempotency Key**   | A unique key you send with payment requests to prevent duplicate charges if a request is retried                                     |
+| **Webhook**           | Payment gateways send you HTTP callbacks when events happen (payment succeeded, refund issued, dispute opened)                       |
+| **PSP**               | Payment Service Provider — another name for the gateway/processor combo                                                              |
 
 ## Common Patterns
 
@@ -105,13 +105,13 @@ Your server creates payment intents and manages the entire flow via API. Used fo
 
 ## Quick Reference
 
-| Scenario | Recommended Approach |
-|----------|---------------------|
-| Simple one-time purchase | Hosted checkout (Stripe Checkout) |
-| Custom checkout UI | Embedded payment form (Stripe Elements) |
-| Recurring billing | Subscription API with webhooks |
-| Marketplace payouts | Stripe Connect / PayPal Commerce |
-| International payments | Multi-currency support + local payment methods |
-| High-value orders | Auth + Capture (authorize now, capture when shipping) |
-| Fraud prevention | Enable 3D Secure + use Radar/fraud detection |
-| Refunds | Always process via API, never manually adjust balances |
+| Scenario                 | Recommended Approach                                   |
+| ------------------------ | ------------------------------------------------------ |
+| Simple one-time purchase | Hosted checkout (Stripe Checkout)                      |
+| Custom checkout UI       | Embedded payment form (Stripe Elements)                |
+| Recurring billing        | Subscription API with webhooks                         |
+| Marketplace payouts      | Stripe Connect / PayPal Commerce                       |
+| International payments   | Multi-currency support + local payment methods         |
+| High-value orders        | Auth + Capture (authorize now, capture when shipping)  |
+| Fraud prevention         | Enable 3D Secure + use Radar/fraud detection           |
+| Refunds                  | Always process via API, never manually adjust balances |

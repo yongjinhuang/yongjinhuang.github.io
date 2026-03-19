@@ -13,16 +13,16 @@ product.
 A common source of confusion. The distinction matters because it drives board design,
 cost, and software architecture.
 
-| Feature              | Microprocessor (MPU)           | Microcontroller (MCU)            |
-|----------------------|-------------------------------|----------------------------------|
-| Memory               | External (DDR4/5 SDRAM)       | On-chip Flash + SRAM             |
-| Peripherals          | Requires external ICs         | Built-in (ADC, UART, SPI, etc.) |
-| Operating system     | Usually Linux / RTOS          | Bare-metal or lightweight RTOS   |
-| Clock speed          | 1-3+ GHz                      | 8 MHz - 480 MHz typical          |
-| Power consumption    | 2-15 W                        | 10 uA - 200 mA                  |
-| Boot time            | Seconds                       | Microseconds to milliseconds     |
-| Typical use          | Phones, SBCs, servers         | Sensors, motor control, IoT      |
-| Example              | ARM Cortex-A, Intel Core      | ARM Cortex-M, AVR, RISC-V       |
+| Feature           | Microprocessor (MPU)     | Microcontroller (MCU)           |
+| ----------------- | ------------------------ | ------------------------------- |
+| Memory            | External (DDR4/5 SDRAM)  | On-chip Flash + SRAM            |
+| Peripherals       | Requires external ICs    | Built-in (ADC, UART, SPI, etc.) |
+| Operating system  | Usually Linux / RTOS     | Bare-metal or lightweight RTOS  |
+| Clock speed       | 1-3+ GHz                 | 8 MHz - 480 MHz typical         |
+| Power consumption | 2-15 W                   | 10 uA - 200 mA                  |
+| Boot time         | Seconds                  | Microseconds to milliseconds    |
+| Typical use       | Phones, SBCs, servers    | Sensors, motor control, IoT     |
+| Example           | ARM Cortex-A, Intel Core | ARM Cortex-M, AVR, RISC-V       |
 
 **Key insight**: A microcontroller is a microprocessor plus memory plus peripherals, all
 on one die. This integration trades raw performance for lower power, lower cost, and
@@ -57,15 +57,15 @@ ARM does not manufacture chips. ARM licenses Intellectual Property (IP) cores to
 vendors (ST, NXP, Nordic, TI) who add their own peripherals and memory. The Cortex-M
 family dominates the 32-bit MCU market.
 
-| Core       | Pipeline | Features                          | Typical Use               |
-|------------|----------|-----------------------------------|---------------------------|
-| Cortex-M0  | 2-stage  | Thumb subset, lowest gate count   | Simple sensors, toys       |
-| Cortex-M0+ | 2-stage  | M0 + single-cycle I/O, MTB        | Wearables, low-power IoT  |
-| Cortex-M3  | 3-stage  | Full Thumb-2, HW divide, bit-band | General-purpose MCU        |
-| Cortex-M4  | 3-stage  | M3 + DSP + optional FPU (M4F)     | Motor control, audio       |
-| Cortex-M7  | 6-stage  | Dual-issue, cache, TCM             | High-perf real-time        |
-| Cortex-M33 | 3-stage  | TrustZone security, M4 features   | Secure IoT, payment        |
-| Cortex-M55 | 4-stage  | Helium (M-Profile Vector Ext.)    | TinyML, edge AI            |
+| Core       | Pipeline | Features                          | Typical Use              |
+| ---------- | -------- | --------------------------------- | ------------------------ |
+| Cortex-M0  | 2-stage  | Thumb subset, lowest gate count   | Simple sensors, toys     |
+| Cortex-M0+ | 2-stage  | M0 + single-cycle I/O, MTB        | Wearables, low-power IoT |
+| Cortex-M3  | 3-stage  | Full Thumb-2, HW divide, bit-band | General-purpose MCU      |
+| Cortex-M4  | 3-stage  | M3 + DSP + optional FPU (M4F)     | Motor control, audio     |
+| Cortex-M7  | 6-stage  | Dual-issue, cache, TCM            | High-perf real-time      |
+| Cortex-M33 | 3-stage  | TrustZone security, M4 features   | Secure IoT, payment      |
+| Cortex-M55 | 4-stage  | Helium (M-Profile Vector Ext.)    | TinyML, edge AI          |
 
 ```
   ARM Cortex-M4 Core (Simplified)
@@ -248,16 +248,16 @@ Timer) has a block of SFRs controlling its behavior.
 
 Example -- STM32 GPIO register block:
 
-| Offset | Register | Purpose                           |
-|--------|----------|-----------------------------------|
-| 0x00   | MODER    | Pin mode (input/output/AF/analog) |
-| 0x04   | OTYPER   | Output type (push-pull/open-drain)|
-| 0x08   | OSPEEDR  | Output speed                      |
-| 0x0C   | PUPDR    | Pull-up / pull-down               |
-| 0x10   | IDR      | Input data (read-only)            |
-| 0x14   | ODR      | Output data                       |
-| 0x18   | BSRR     | Bit set/reset (atomic)            |
-| 0x1C   | LCKR     | Configuration lock                |
+| Offset | Register | Purpose                            |
+| ------ | -------- | ---------------------------------- |
+| 0x00   | MODER    | Pin mode (input/output/AF/analog)  |
+| 0x04   | OTYPER   | Output type (push-pull/open-drain) |
+| 0x08   | OSPEEDR  | Output speed                       |
+| 0x0C   | PUPDR    | Pull-up / pull-down                |
+| 0x10   | IDR      | Input data (read-only)             |
+| 0x14   | ODR      | Output data                        |
+| 0x18   | BSRR     | Bit set/reset (atomic)             |
+| 0x1C   | LCKR     | Configuration lock                 |
 | 0x20   | AFRL     | Alternate function low             |
 | 0x24   | AFRH     | Alternate function high            |
 
@@ -286,12 +286,12 @@ derive their clock from this tree.
 
 ### 6.1 Clock Sources
 
-| Source | Name                  | Typical Freq   | Notes                          |
-|--------|-----------------------|----------------|--------------------------------|
-| HSI    | High-Speed Internal   | 8-16 MHz       | RC oscillator, fast startup    |
-| HSE    | High-Speed External   | 4-25 MHz       | Crystal/ceramic, high accuracy |
-| LSI    | Low-Speed Internal    | 32-40 kHz      | For watchdog and RTC           |
-| LSE    | Low-Speed External    | 32.768 kHz     | Crystal, precise RTC timing    |
+| Source | Name                | Typical Freq | Notes                          |
+| ------ | ------------------- | ------------ | ------------------------------ |
+| HSI    | High-Speed Internal | 8-16 MHz     | RC oscillator, fast startup    |
+| HSE    | High-Speed External | 4-25 MHz     | Crystal/ceramic, high accuracy |
+| LSI    | Low-Speed Internal  | 32-40 kHz    | For watchdog and RTC           |
+| LSE    | Low-Speed External  | 32.768 kHz   | Crystal, precise RTC timing    |
 
 ### 6.2 PLL (Phase-Locked Loop)
 
@@ -383,13 +383,13 @@ critical for achieving multi-year battery life.
 
 ### 7.1 Power Mode Comparison
 
-| Mode        | CPU   | SRAM   | Peripherals | Wake Sources         | Current (typ) |
-|-------------|-------|--------|-------------|----------------------|---------------|
-| Run         | ON    | ON     | ON          | N/A                  | 20-100 mA     |
-| Sleep       | OFF   | ON     | ON          | Any interrupt        | 1-10 mA       |
-| Stop/Deep   | OFF   | ON     | Most OFF    | EXTI, RTC, watchdog  | 1-50 uA       |
-| Standby     | OFF   | OFF    | OFF         | WKUP pin, RTC, reset | 0.3-3 uA      |
-| Shutdown    | OFF   | OFF    | OFF         | WKUP pin only        | 20-100 nA     |
+| Mode      | CPU | SRAM | Peripherals | Wake Sources         | Current (typ) |
+| --------- | --- | ---- | ----------- | -------------------- | ------------- |
+| Run       | ON  | ON   | ON          | N/A                  | 20-100 mA     |
+| Sleep     | OFF | ON   | ON          | Any interrupt        | 1-10 mA       |
+| Stop/Deep | OFF | ON   | Most OFF    | EXTI, RTC, watchdog  | 1-50 uA       |
+| Standby   | OFF | OFF  | OFF         | WKUP pin, RTC, reset | 0.3-3 uA      |
+| Shutdown  | OFF | OFF  | OFF         | WKUP pin only        | 20-100 nA     |
 
 ### 7.2 Power Mode Flow
 
@@ -442,14 +442,14 @@ machine.deepsleep()  # Wake only on pin 33 going LOW
 
 Understanding why your MCU reset is essential for debugging field failures.
 
-| Reset Source        | Cause                                       | Detection Register  |
-|---------------------|---------------------------------------------|---------------------|
-| Power-on Reset (POR)| VDD rises above threshold                  | RCC_CSR: PORRSTF   |
-| External Reset      | NRST pin pulled low                         | RCC_CSR: PINRSTF   |
-| Watchdog Reset      | IWDG or WWDG timeout (firmware hung)        | RCC_CSR: IWDGRSTF  |
-| Software Reset      | NVIC_SystemReset() called                   | RCC_CSR: SFTRSTF   |
-| Brown-out Reset     | VDD drops below threshold temporarily       | RCC_CSR: BORRSTF   |
-| Low-power Reset     | Entering Stop/Standby with wrong config     | RCC_CSR: LPWRRSTF  |
+| Reset Source         | Cause                                   | Detection Register |
+| -------------------- | --------------------------------------- | ------------------ |
+| Power-on Reset (POR) | VDD rises above threshold               | RCC_CSR: PORRSTF   |
+| External Reset       | NRST pin pulled low                     | RCC_CSR: PINRSTF   |
+| Watchdog Reset       | IWDG or WWDG timeout (firmware hung)    | RCC_CSR: IWDGRSTF  |
+| Software Reset       | NVIC_SystemReset() called               | RCC_CSR: SFTRSTF   |
+| Brown-out Reset      | VDD drops below threshold temporarily   | RCC_CSR: BORRSTF   |
+| Low-power Reset      | Entering Stop/Standby with wrong config | RCC_CSR: LPWRRSTF  |
 
 Best practice: Read and log the reset cause register at startup, then clear it.
 
@@ -481,15 +481,15 @@ ecosystem: toolchains, HAL libraries, documentation, community, and supply chain
 
 ### 9.1 Major Vendors
 
-| Vendor      | Family      | Core           | Strengths                          |
-|-------------|-------------|----------------|------------------------------------|
-| STMicro     | STM32       | Cortex-M0..M7 | Widest portfolio, CubeMX tools     |
-| NXP         | LPC, i.MX RT| Cortex-M0..M7 | Industrial, automotive             |
-| Nordic Semi | nRF52/53    | Cortex-M4/M33 | BLE leader, low power              |
-| Texas Inst. | MSP430, C2000| MSP430, Cortex| Ultra-low power (MSP430)          |
-| Espressif   | ESP32       | Xtensa, RISC-V| Wi-Fi + BLE, hobbyist favorite    |
-| Microchip   | PIC, SAM    | PIC, Cortex-M | Legacy PIC, AVR (Arduino)         |
-| Raspberry Pi| RP2040/2350 | Cortex-M0+    | Low cost, PIO state machines      |
+| Vendor       | Family        | Core           | Strengths                      |
+| ------------ | ------------- | -------------- | ------------------------------ |
+| STMicro      | STM32         | Cortex-M0..M7  | Widest portfolio, CubeMX tools |
+| NXP          | LPC, i.MX RT  | Cortex-M0..M7  | Industrial, automotive         |
+| Nordic Semi  | nRF52/53      | Cortex-M4/M33  | BLE leader, low power          |
+| Texas Inst.  | MSP430, C2000 | MSP430, Cortex | Ultra-low power (MSP430)       |
+| Espressif    | ESP32         | Xtensa, RISC-V | Wi-Fi + BLE, hobbyist favorite |
+| Microchip    | PIC, SAM      | PIC, Cortex-M  | Legacy PIC, AVR (Arduino)      |
+| Raspberry Pi | RP2040/2350   | Cortex-M0+     | Low cost, PIO state machines   |
 
 ### 9.2 Selection Criteria
 
@@ -506,13 +506,13 @@ When choosing an MCU for a product, evaluate:
 
 ### 9.3 Development Boards
 
-| Board               | MCU             | Price   | Notable Features            |
-|----------------------|-----------------|---------|-----------------------------|
-| STM32 Nucleo-F446RE | STM32F446RE     | ~$15    | Arduino headers, ST-Link    |
-| nRF52840 DK         | nRF52840        | ~$40    | BLE 5, USB, NFC             |
-| ESP32-DevKitC       | ESP32-WROOM-32  | ~$8     | Wi-Fi, BLE, breadboard      |
-| Raspberry Pi Pico   | RP2040          | ~$4     | Dual M0+, PIO, USB          |
-| Arduino Uno R4      | RA4M1 (Renesas) | ~$27    | Arduino ecosystem, BLE      |
+| Board               | MCU             | Price | Notable Features         |
+| ------------------- | --------------- | ----- | ------------------------ |
+| STM32 Nucleo-F446RE | STM32F446RE     | ~$15  | Arduino headers, ST-Link |
+| nRF52840 DK         | nRF52840        | ~$40  | BLE 5, USB, NFC          |
+| ESP32-DevKitC       | ESP32-WROOM-32  | ~$8   | Wi-Fi, BLE, breadboard   |
+| Raspberry Pi Pico   | RP2040          | ~$4   | Dual M0+, PIO, USB       |
+| Arduino Uno R4      | RA4M1 (Renesas) | ~$27  | Arduino ecosystem, BLE   |
 
 ---
 
@@ -599,16 +599,16 @@ while True:
 
 ## 12. Debugging Tools and Techniques
 
-| Tool / Method       | Use Case                                      |
-|---------------------|-----------------------------------------------|
-| SWD / JTAG          | Step debugging, breakpoints, register inspect  |
-| OpenOCD             | Open-source debug server for SWD/JTAG          |
-| GDB                 | Command-line debugger, used with OpenOCD        |
-| Logic Analyzer      | Capture digital signals (SPI, I2C, UART)       |
-| Oscilloscope        | Analog signal measurement, power analysis       |
-| printf via SWO/ITM  | Lightweight trace output through debug port     |
-| Segger RTT          | Real-time transfer, faster than UART printf     |
-| Hard Fault Handler  | Decode fault address from stacked registers     |
+| Tool / Method      | Use Case                                      |
+| ------------------ | --------------------------------------------- |
+| SWD / JTAG         | Step debugging, breakpoints, register inspect |
+| OpenOCD            | Open-source debug server for SWD/JTAG         |
+| GDB                | Command-line debugger, used with OpenOCD      |
+| Logic Analyzer     | Capture digital signals (SPI, I2C, UART)      |
+| Oscilloscope       | Analog signal measurement, power analysis     |
+| printf via SWO/ITM | Lightweight trace output through debug port   |
+| Segger RTT         | Real-time transfer, faster than UART printf   |
+| Hard Fault Handler | Decode fault address from stacked registers   |
 
 ### Reading a Hard Fault
 

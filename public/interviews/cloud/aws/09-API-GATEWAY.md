@@ -6,24 +6,24 @@ Amazon API Gateway is a fully managed service that acts as the front door for yo
 
 ## Three Types of API Gateway
 
-| Feature | REST API | HTTP API | WebSocket API |
-|---------|----------|----------|---------------|
-| Protocol | HTTP/HTTPS | HTTP/HTTPS | WebSocket (wss://) |
-| Relative cost | $$$ | $ (up to 70% cheaper) | $$ |
-| Latency | Higher (~10-30 ms overhead) | Lower (~5-10 ms overhead) | N/A |
-| Request validation | Yes | No | No |
-| Request/response transformation | Yes (VTL templates) | No | Yes (limited) |
-| Caching | Yes (built-in) | No | No |
-| Usage plans + API keys | Yes | No | No |
-| Resource policies | Yes | No | No |
-| WAF integration | Yes | No | Yes |
-| Private endpoints | Yes | No | No |
-| Custom domain names | Yes | Yes | Yes |
-| Lambda authorizers | Yes | Yes (v2 payload format) | Yes |
-| Cognito authorizers | Yes | Yes (JWT) | No |
-| IAM authorization | Yes | Yes | Yes |
-| Mutual TLS | Yes | Yes | No |
-| OpenAPI import/export | Yes (full) | Yes (partial) | No |
+| Feature                         | REST API                    | HTTP API                  | WebSocket API      |
+| ------------------------------- | --------------------------- | ------------------------- | ------------------ |
+| Protocol                        | HTTP/HTTPS                  | HTTP/HTTPS                | WebSocket (wss://) |
+| Relative cost                   | $$$                         | $ (up to 70% cheaper)     | $$                 |
+| Latency                         | Higher (~10-30 ms overhead) | Lower (~5-10 ms overhead) | N/A                |
+| Request validation              | Yes                         | No                        | No                 |
+| Request/response transformation | Yes (VTL templates)         | No                        | Yes (limited)      |
+| Caching                         | Yes (built-in)              | No                        | No                 |
+| Usage plans + API keys          | Yes                         | No                        | No                 |
+| Resource policies               | Yes                         | No                        | No                 |
+| WAF integration                 | Yes                         | No                        | Yes                |
+| Private endpoints               | Yes                         | No                        | No                 |
+| Custom domain names             | Yes                         | Yes                       | Yes                |
+| Lambda authorizers              | Yes                         | Yes (v2 payload format)   | Yes                |
+| Cognito authorizers             | Yes                         | Yes (JWT)                 | No                 |
+| IAM authorization               | Yes                         | Yes                       | Yes                |
+| Mutual TLS                      | Yes                         | Yes                       | No                 |
+| OpenAPI import/export           | Yes (full)                  | Yes (partial)             | No                 |
 
 ### When to Use Each
 
@@ -37,13 +37,13 @@ Amazon API Gateway is a fully managed service that acts as the front door for yo
 
 ## Integration Types
 
-| Integration | Description | Use Case |
-|-------------|------------|----------|
-| **Lambda Proxy** | Passes entire request to Lambda, returns Lambda response directly | Most common. Lambda handles routing and response formatting. |
-| **HTTP Proxy** | Forwards request to an HTTP endpoint (ALB, EC2, external URL) | Existing backend services, microservices behind ALB |
-| **AWS Service** | Direct integration with AWS services (S3, DynamoDB, SQS, Step Functions) | Skip Lambda entirely for simple operations |
-| **Mock** | Returns a hardcoded response | API prototyping, health checks |
-| **VPC Link** | Route to private resources (NLB, ALB, Cloud Map) | Backend services in private subnets |
+| Integration      | Description                                                              | Use Case                                                     |
+| ---------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **Lambda Proxy** | Passes entire request to Lambda, returns Lambda response directly        | Most common. Lambda handles routing and response formatting. |
+| **HTTP Proxy**   | Forwards request to an HTTP endpoint (ALB, EC2, external URL)            | Existing backend services, microservices behind ALB          |
+| **AWS Service**  | Direct integration with AWS services (S3, DynamoDB, SQS, Step Functions) | Skip Lambda entirely for simple operations                   |
+| **Mock**         | Returns a hardcoded response                                             | API prototyping, health checks                               |
+| **VPC Link**     | Route to private resources (NLB, ALB, Cloud Map)                         | Backend services in private subnets                          |
 
 ### Lambda Proxy Integration (Most Common)
 
@@ -108,13 +108,14 @@ aws apigateway create-deployment \
     --description "Release v2.1"
 ```
 
-| Concept | Description |
-|---------|-------------|
-| **Stage** | A named reference to a deployment (e.g., dev, staging, prod). Each stage has its own URL. |
-| **Stage variables** | Key-value pairs per stage. Use to point to different Lambda aliases or backend URLs. |
-| **Canary deployment** | Route a percentage of traffic to a new deployment for gradual rollout (REST API only). |
+| Concept               | Description                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| **Stage**             | A named reference to a deployment (e.g., dev, staging, prod). Each stage has its own URL. |
+| **Stage variables**   | Key-value pairs per stage. Use to point to different Lambda aliases or backend URLs.      |
+| **Canary deployment** | Route a percentage of traffic to a new deployment for gradual rollout (REST API only).    |
 
 Stage URL format:
+
 - REST API: `https://{api-id}.execute-api.{region}.amazonaws.com/{stage}`
 - HTTP API: `https://{api-id}.execute-api.{region}.amazonaws.com/{stage}` (stage is optional, can use `$default`)
 
@@ -176,11 +177,11 @@ curl -H "Authorization: Bearer <id-token>" \
     https://abc123.execute-api.us-east-1.amazonaws.com/prod/users
 ```
 
-| Feature | REST API (Cognito) | HTTP API (JWT) |
-|---------|-------------------|----------------|
-| Token type | ID token or access token | Any JWT (Cognito, Auth0, Okta) |
-| Configuration | Cognito User Pool ARN | Issuer URL + audience |
-| Scope validation | Access token scopes | Yes |
+| Feature          | REST API (Cognito)       | HTTP API (JWT)                 |
+| ---------------- | ------------------------ | ------------------------------ |
+| Token type       | ID token or access token | Any JWT (Cognito, Auth0, Okta) |
+| Configuration    | Cognito User Pool ARN    | Issuer URL + audience          |
+| Scope validation | Access token scopes      | Yes                            |
 
 ### Lambda Authorizer
 
@@ -217,13 +218,13 @@ Authorization results can be cached (TTL 0-3600 seconds) to avoid invoking the a
 
 ## Rate Limiting and Throttling
 
-| Level | Limit | Configurable |
-|-------|-------|-------------|
-| **Account level** | 10,000 requests/sec across all APIs in a region | Can request increase |
-| **Stage level** | Default inherits account limit | Yes (REST API) |
-| **Route/method level** | No default | Yes (REST API only) |
-| **Usage plan** | Per API key rate + burst + quota | Yes (REST API only) |
-| **HTTP API** | Account-level throttle only | Route-level via `$default` stage |
+| Level                  | Limit                                           | Configurable                     |
+| ---------------------- | ----------------------------------------------- | -------------------------------- |
+| **Account level**      | 10,000 requests/sec across all APIs in a region | Can request increase             |
+| **Stage level**        | Default inherits account limit                  | Yes (REST API)                   |
+| **Route/method level** | No default                                      | Yes (REST API only)              |
+| **Usage plan**         | Per API key rate + burst + quota                | Yes (REST API only)              |
+| **HTTP API**           | Account-level throttle only                     | Route-level via `$default` stage |
 
 ```bash
 # Set stage-level throttling (REST API)
@@ -319,15 +320,15 @@ API keys are passed via the `x-api-key` header. They are **not** a security mech
 
 ## Caching (REST API Only)
 
-| Setting | Options |
-|---------|---------|
-| Cache capacity | 0.5 GB to 237 GB |
-| TTL | 0 to 3600 seconds (default: 300) |
-| Encryption | Optional |
-| Per-method override | Yes |
-| Cache key parameters | Query strings, headers, path parameters |
-| Invalidation | `Cache-Control: max-age=0` header (requires authorization) |
-| Cost | $0.02 - $3.80/hour depending on size |
+| Setting              | Options                                                    |
+| -------------------- | ---------------------------------------------------------- |
+| Cache capacity       | 0.5 GB to 237 GB                                           |
+| TTL                  | 0 to 3600 seconds (default: 300)                           |
+| Encryption           | Optional                                                   |
+| Per-method override  | Yes                                                        |
+| Cache key parameters | Query strings, headers, path parameters                    |
+| Invalidation         | `Cache-Control: max-age=0` header (requires authorization) |
+| Cost                 | $0.02 - $3.80/hour depending on size                       |
 
 Caching reduces Lambda invocations and latency for repeated requests. Only available on REST API.
 
@@ -393,17 +394,17 @@ aws apigatewayv2 get-stages --api-id abc123
 
 ## Common Gotchas
 
-| Gotcha | Details |
-|--------|---------|
-| **29-second timeout** | API Gateway has a hard 29-second integration timeout. If your backend takes longer, the client gets a 504. For long operations, return 202 Accepted and poll or use WebSocket. |
-| **10 MB payload limit** | Maximum request/response payload is 10 MB. For larger payloads, use S3 presigned URLs. |
-| **Cold start stacking** | API Gateway + Lambda = API Gateway overhead + Lambda cold start. The combined latency can be 2-5 seconds on the first request. Use provisioned concurrency on Lambda to mitigate. |
-| **REST vs HTTP API pricing** | REST API: ~$3.50/million requests. HTTP API: ~$1.00/million requests. For simple Lambda proxying, HTTP API saves 70%. |
-| **Binary media types** | REST API needs explicit binary media type configuration. HTTP API handles it automatically. REST API is a common source of image/file upload bugs. |
-| **CORS on REST API is painful** | You must manually configure OPTIONS methods and response headers. One missed header and the browser blocks everything. Use HTTP API for simpler CORS. |
-| **Stage variables in HTTP API** | HTTP API does not support stage variables. Use Lambda aliases or environment-specific routes instead. |
-| **API key is not auth** | API keys are for throttling and metering, not security. They are sent in plaintext headers. Always use IAM, Cognito, or Lambda authorizers for authentication. |
-| **Lambda permission required** | API Gateway needs permission to invoke your Lambda. Missing the `lambda:InvokeFunction` resource-based policy is the most common 500 error cause. |
+| Gotcha                                 | Details                                                                                                                                                                                                               |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **29-second timeout**                  | API Gateway has a hard 29-second integration timeout. If your backend takes longer, the client gets a 504. For long operations, return 202 Accepted and poll or use WebSocket.                                        |
+| **10 MB payload limit**                | Maximum request/response payload is 10 MB. For larger payloads, use S3 presigned URLs.                                                                                                                                |
+| **Cold start stacking**                | API Gateway + Lambda = API Gateway overhead + Lambda cold start. The combined latency can be 2-5 seconds on the first request. Use provisioned concurrency on Lambda to mitigate.                                     |
+| **REST vs HTTP API pricing**           | REST API: ~$3.50/million requests. HTTP API: ~$1.00/million requests. For simple Lambda proxying, HTTP API saves 70%.                                                                                                 |
+| **Binary media types**                 | REST API needs explicit binary media type configuration. HTTP API handles it automatically. REST API is a common source of image/file upload bugs.                                                                    |
+| **CORS on REST API is painful**        | You must manually configure OPTIONS methods and response headers. One missed header and the browser blocks everything. Use HTTP API for simpler CORS.                                                                 |
+| **Stage variables in HTTP API**        | HTTP API does not support stage variables. Use Lambda aliases or environment-specific routes instead.                                                                                                                 |
+| **API key is not auth**                | API keys are for throttling and metering, not security. They are sent in plaintext headers. Always use IAM, Cognito, or Lambda authorizers for authentication.                                                        |
+| **Lambda permission required**         | API Gateway needs permission to invoke your Lambda. Missing the `lambda:InvokeFunction` resource-based policy is the most common 500 error cause.                                                                     |
 | **CloudWatch logging requires a role** | REST API does not log to CloudWatch by default. You must create an IAM role and set it at the account level (`aws apigateway update-account --patch-operations op=replace,path=/cloudwatchRoleArn,value=<role-arn>`). |
-| **WebSocket connection limits** | Max connection duration: 2 hours. Idle timeout: 10 minutes. Max message size: 128 KB (32 KB default). Clients must implement reconnection logic. |
-| **Throttling is per-region** | The 10,000 req/sec account limit is shared across ALL APIs in a region. One noisy API can throttle others. Use per-method throttling and consider multiple regions. |
+| **WebSocket connection limits**        | Max connection duration: 2 hours. Idle timeout: 10 minutes. Max message size: 128 KB (32 KB default). Clients must implement reconnection logic.                                                                      |
+| **Throttling is per-region**           | The 10,000 req/sec account limit is shared across ALL APIs in a region. One noisy API can throttle others. Use per-method throttling and consider multiple regions.                                                   |

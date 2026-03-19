@@ -40,12 +40,12 @@ Production Value: Clean audio, stable shots, good lighting
 
 ### 1.2 What Viewers Actually Want
 
-| What They Say | What They Mean |
-|--------------|---------------|
-| "I love your content" | "I feel like I know you" |
-| "Great quality!" | "Audio was clear, I could focus on the story" |
-| "This was so helpful" | "You saved me time by sharing your experience" |
-| "You're so real" | "You show vulnerability, not just highlights" |
+| What They Say                  | What They Mean                                  |
+| ------------------------------ | ----------------------------------------------- |
+| "I love your content"          | "I feel like I know you"                        |
+| "Great quality!"               | "Audio was clear, I could focus on the story"   |
+| "This was so helpful"          | "You saved me time by sharing your experience"  |
+| "You're so real"               | "You show vulnerability, not just highlights"   |
 | "I binge-watched your channel" | "Your personality + consistency kept me hooked" |
 
 ### 1.3 The Authenticity vs Quality Spectrum
@@ -70,16 +70,16 @@ Production Value: Clean audio, stable shots, good lighting
 
 ### 2.1 Format Overview
 
-| Style | Description | Example Creators | Difficulty |
-|-------|-------------|-----------------|------------|
-| **Talking Head** | Direct to camera, desk/studio | Ali Abdaal, Matt D'Avella | Easy |
-| **Day-in-the-Life** | Follow your day, montage style | Many lifestyle creators | Medium |
-| **Travel Vlog** | Document trips and experiences | Kara and Nate, Lost LeBlanc | Medium-Hard |
-| **Tutorial / How-to** | Teach while showing | Tech channels, cooking | Easy-Medium |
-| **Challenge** | Attempt something difficult | MrBeast, Yes Theory | Medium |
-| **Documentary-style** | Deep dive into a topic | Johnny Harris, Wendover | Hard |
-| **Montage / Aesthetic** | Cinematic, music-driven, minimal narration | Film aesthetic channels | Medium |
-| **Podcast-style** | Conversation with guest(s) | Many interview channels | Easy |
+| Style                   | Description                                | Example Creators            | Difficulty  |
+| ----------------------- | ------------------------------------------ | --------------------------- | ----------- |
+| **Talking Head**        | Direct to camera, desk/studio              | Ali Abdaal, Matt D'Avella   | Easy        |
+| **Day-in-the-Life**     | Follow your day, montage style             | Many lifestyle creators     | Medium      |
+| **Travel Vlog**         | Document trips and experiences             | Kara and Nate, Lost LeBlanc | Medium-Hard |
+| **Tutorial / How-to**   | Teach while showing                        | Tech channels, cooking      | Easy-Medium |
+| **Challenge**           | Attempt something difficult                | MrBeast, Yes Theory         | Medium      |
+| **Documentary-style**   | Deep dive into a topic                     | Johnny Harris, Wendover     | Hard        |
+| **Montage / Aesthetic** | Cinematic, music-driven, minimal narration | Film aesthetic channels     | Medium      |
+| **Podcast-style**       | Conversation with guest(s)                 | Many interview channels     | Easy        |
 
 ### 2.2 Choosing Your Style
 
@@ -129,13 +129,13 @@ Basic Talking Head Setup (top-down view):
 
 ### 3.2 Camera Placement
 
-| Placement | Feel | Best For |
-|-----------|------|----------|
-| Eye level | Natural, conversational | Most vlogs, tutorials |
-| Slightly above | Flattering angle | Beauty, lifestyle |
-| Below eye level | Authoritative, powerful | Intentional dramatic effect |
-| Off-center (rule of thirds) | Cinematic, professional | Sit-down vlogs |
-| Centered | Direct, intimate | Confessional, emotional content |
+| Placement                   | Feel                    | Best For                        |
+| --------------------------- | ----------------------- | ------------------------------- |
+| Eye level                   | Natural, conversational | Most vlogs, tutorials           |
+| Slightly above              | Flattering angle        | Beauty, lifestyle               |
+| Below eye level             | Authoritative, powerful | Intentional dramatic effect     |
+| Off-center (rule of thirds) | Cinematic, professional | Sit-down vlogs                  |
+| Centered                    | Direct, intimate        | Confessional, emotional content |
 
 ### 3.3 Where to Look
 
@@ -176,13 +176,13 @@ TOO WIDE (too much space):          JUST RIGHT:                TOO TIGHT:
 
 ### 3.5 Speaking Techniques
 
-| Technique | How | Why |
-|-----------|-----|-----|
-| Speak slightly louder than normal | Project your voice as if talking to someone 10 feet away | Energy translates through the screen |
-| Vary your pace | Speed up for excitement, slow down for emphasis | Monotone voice = viewers leave |
-| Use pauses | Pause before key points for 1-2 seconds | Creates anticipation, emphasis |
-| Move your hands | Natural gestures while speaking | Adds energy and visual interest |
-| Script key points, not every word | Bullet points, not full scripts | Natural delivery, not robotic reading |
+| Technique                         | How                                                      | Why                                   |
+| --------------------------------- | -------------------------------------------------------- | ------------------------------------- |
+| Speak slightly louder than normal | Project your voice as if talking to someone 10 feet away | Energy translates through the screen  |
+| Vary your pace                    | Speed up for excitement, slow down for emphasis          | Monotone voice = viewers leave        |
+| Use pauses                        | Pause before key points for 1-2 seconds                  | Creates anticipation, emphasis        |
+| Move your hands                   | Natural gestures while speaking                          | Adds energy and visual interest       |
+| Script key points, not every word | Bullet points, not full scripts                          | Natural delivery, not robotic reading |
 
 ## 4. B-Roll Techniques for Vlogs
 
@@ -205,34 +205,34 @@ B-roll makes the viewer SEE what you are SAYING.
 
 For any activity, grab these five types of shots:
 
-| Shot | Example (Coffee Shop) | Duration |
-|------|----------------------|----------|
-| **Wide / Establishing** | Exterior of the shop, street view | 3-5 sec |
-| **Medium** | You ordering, counter view | 3-5 sec |
-| **Close-up / Detail** | Coffee pouring, latte art, pastry texture | 2-4 sec |
-| **Movement** | Walking in, camera follows you to table | 3-5 sec |
-| **Hands / Action** | Typing on laptop, picking up cup | 2-4 sec |
+| Shot                    | Example (Coffee Shop)                     | Duration |
+| ----------------------- | ----------------------------------------- | -------- |
+| **Wide / Establishing** | Exterior of the shop, street view         | 3-5 sec  |
+| **Medium**              | You ordering, counter view                | 3-5 sec  |
+| **Close-up / Detail**   | Coffee pouring, latte art, pastry texture | 2-4 sec  |
+| **Movement**            | Walking in, camera follows you to table   | 3-5 sec  |
+| **Hands / Action**      | Typing on laptop, picking up cup          | 2-4 sec  |
 
 ### 4.3 B-Roll Shooting Tips
 
-| Tip | Why |
-|-----|-----|
-| Shoot more than you think you need | You can always cut; you cannot create footage you did not shoot |
-| Hold each shot for at least 10 seconds | Gives you editing flexibility (in/out points) |
-| Shoot 60fps for B-roll | Lets you use slow-motion in the edit |
-| Vary angles (high, low, straight) | Visual variety keeps the viewer interested |
-| Include "transition shots" | Hands covering lens, walking through doors — natural wipes |
+| Tip                                    | Why                                                             |
+| -------------------------------------- | --------------------------------------------------------------- |
+| Shoot more than you think you need     | You can always cut; you cannot create footage you did not shoot |
+| Hold each shot for at least 10 seconds | Gives you editing flexibility (in/out points)                   |
+| Shoot 60fps for B-roll                 | Lets you use slow-motion in the edit                            |
+| Vary angles (high, low, straight)      | Visual variety keeps the viewer interested                      |
+| Include "transition shots"             | Hands covering lens, walking through doors — natural wipes      |
 
 ### 4.4 Cinematic B-Roll Techniques
 
-| Technique | How | Result |
-|-----------|-----|--------|
-| **Parallax** | Move camera sideways past a foreground object | Depth, cinematic feel |
-| **Reveal** | Start blocked by an object, then move to reveal scene | Curiosity, drama |
-| **Slider / dolly** | Smooth lateral movement (gimbal or slider) | Professional, smooth |
-| **Overhead** | Camera directly above subject looking down | Flat-lay, food, desk shots |
-| **Slow zoom** | Very slow lens zoom or digital push | Subtle tension, focus |
-| **Time-lapse** | Sped-up footage of slow processes | Show passage of time |
+| Technique          | How                                                   | Result                     |
+| ------------------ | ----------------------------------------------------- | -------------------------- |
+| **Parallax**       | Move camera sideways past a foreground object         | Depth, cinematic feel      |
+| **Reveal**         | Start blocked by an object, then move to reveal scene | Curiosity, drama           |
+| **Slider / dolly** | Smooth lateral movement (gimbal or slider)            | Professional, smooth       |
+| **Overhead**       | Camera directly above subject looking down            | Flat-lay, food, desk shots |
+| **Slow zoom**      | Very slow lens zoom or digital push                   | Subtle tension, focus      |
+| **Time-lapse**     | Sped-up footage of slow processes                     | Show passage of time       |
 
 ## 5. Travel Vlogging
 
@@ -298,13 +298,13 @@ End Screen / Call to Action
 
 ### 5.4 Audio While Traveling
 
-| Challenge | Solution |
-|-----------|---------|
-| Wind noise | Use a deadcat windscreen on your mic |
-| Crowd noise | Use a lavalier mic close to your mouth |
-| Cannot talk on camera | Record voiceover narration in your hotel room later |
-| Multiple speakers | Each person wears a wireless lav |
-| Background ambience | Record 30 seconds of "room tone" at each location for editing |
+| Challenge             | Solution                                                      |
+| --------------------- | ------------------------------------------------------------- |
+| Wind noise            | Use a deadcat windscreen on your mic                          |
+| Crowd noise           | Use a lavalier mic close to your mouth                        |
+| Cannot talk on camera | Record voiceover narration in your hotel room later           |
+| Multiple speakers     | Each person wears a wireless lav                              |
+| Background ambience   | Record 30 seconds of "room tone" at each location for editing |
 
 ## 6. Day-in-the-Life Vlogs
 
@@ -338,27 +338,27 @@ Evening Wind-Down (1-2 min):
 
 ### 6.2 Making Mundane Days Interesting
 
-| Technique | Example |
-|-----------|---------|
+| Technique              | Example                                               |
+| ---------------------- | ----------------------------------------------------- |
 | **Focus on one theme** | "A day optimizing my workspace" vs "a random Tuesday" |
-| **Create a challenge** | "Trying to write 5,000 words in one day" |
-| **Show the process** | "Watch me build this shelf from scratch" |
-| **Honest narration** | "This was actually a terrible day. Here is why..." |
-| **Aesthetic focus** | Cinematic B-roll turns routine into art |
-| **Comparison** | "My $5 lunch vs $50 lunch" |
+| **Create a challenge** | "Trying to write 5,000 words in one day"              |
+| **Show the process**   | "Watch me build this shelf from scratch"              |
+| **Honest narration**   | "This was actually a terrible day. Here is why..."    |
+| **Aesthetic focus**    | Cinematic B-roll turns routine into art               |
+| **Comparison**         | "My $5 lunch vs $50 lunch"                            |
 
 ### 6.3 Filming Your Own Day
 
 When you are alone (no camera operator):
 
-| Situation | How to Film |
-|-----------|-------------|
-| Cooking | Set up phone on tripod overhead, film hands |
-| Working at desk | Mount camera behind monitor, angled down |
-| Walking outside | Selfie-mode with gimbal or held in hand |
-| Driving | Dashboard mount or suction cup on windshield |
-| Exercising | Prop phone on stable surface nearby |
-| Eating | Set up camera across the table before sitting down |
+| Situation       | How to Film                                        |
+| --------------- | -------------------------------------------------- |
+| Cooking         | Set up phone on tripod overhead, film hands        |
+| Working at desk | Mount camera behind monitor, angled down           |
+| Walking outside | Selfie-mode with gimbal or held in hand            |
+| Driving         | Dashboard mount or suction cup on windshield       |
+| Exercising      | Prop phone on stable surface nearby                |
+| Eating          | Set up camera across the table before sitting down |
 
 ## 7. Sit-Down / Studio Vlogs
 
@@ -391,14 +391,14 @@ Professional sit-down setup:
 
 ### 7.2 Background Design
 
-| Style | Description | Vibe |
-|-------|-------------|------|
-| **Bookshelf** | Books, plants, objects behind you | Intellectual, warm |
-| **Clean / minimal** | Solid wall or subtle texture | Modern, professional |
-| **LED lights** | RGB strips, Nanoleaf panels | Tech, gaming, energetic |
-| **Plants** | Greenery behind and around | Natural, calm, lifestyle |
-| **Workspace** | Show your actual desk/monitor setup | Authentic, relatable |
-| **Art / posters** | Curated wall art | Creative, personality |
+| Style               | Description                         | Vibe                     |
+| ------------------- | ----------------------------------- | ------------------------ |
+| **Bookshelf**       | Books, plants, objects behind you   | Intellectual, warm       |
+| **Clean / minimal** | Solid wall or subtle texture        | Modern, professional     |
+| **LED lights**      | RGB strips, Nanoleaf panels         | Tech, gaming, energetic  |
+| **Plants**          | Greenery behind and around          | Natural, calm, lifestyle |
+| **Workspace**       | Show your actual desk/monitor setup | Authentic, relatable     |
+| **Art / posters**   | Curated wall art                    | Creative, personality    |
 
 ### 7.3 Desk Organization for Camera
 
@@ -507,16 +507,16 @@ Confidence
 
 ### 9.2 Practical Tips for Camera Confidence
 
-| Tip | How | Why |
-|-----|-----|-----|
-| **Talk to one person** | Imagine explaining to a specific friend | Natural, conversational tone |
-| **Record more, delete freely** | Film 10 takes, keep the best | Removes pressure to be perfect |
-| **Do not watch yourself while talking** | Flip the screen or cover it | Stops self-conscious adjustment |
-| **Warm up first** | Talk to yourself for 2 minutes before recording | Gets the awkwardness out |
-| **Use bullet points** | Have key points nearby, not a full script | Sounds natural, not read |
-| **Move your body** | Stand up, walk, gesture | Physical movement reduces nervousness |
-| **Accept imperfection** | Leave in small mistakes, laugh at yourself | Viewers find imperfection relatable |
-| **Watch your old videos** | See how much you have improved | Motivating, shows growth |
+| Tip                                     | How                                             | Why                                   |
+| --------------------------------------- | ----------------------------------------------- | ------------------------------------- |
+| **Talk to one person**                  | Imagine explaining to a specific friend         | Natural, conversational tone          |
+| **Record more, delete freely**          | Film 10 takes, keep the best                    | Removes pressure to be perfect        |
+| **Do not watch yourself while talking** | Flip the screen or cover it                     | Stops self-conscious adjustment       |
+| **Warm up first**                       | Talk to yourself for 2 minutes before recording | Gets the awkwardness out              |
+| **Use bullet points**                   | Have key points nearby, not a full script       | Sounds natural, not read              |
+| **Move your body**                      | Stand up, walk, gesture                         | Physical movement reduces nervousness |
+| **Accept imperfection**                 | Leave in small mistakes, laugh at yourself      | Viewers find imperfection relatable   |
+| **Watch your old videos**               | See how much you have improved                  | Motivating, shows growth              |
 
 ### 9.3 Dealing with Negative Comments
 

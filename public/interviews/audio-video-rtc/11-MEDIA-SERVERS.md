@@ -26,7 +26,7 @@
 
 WebRTC was designed with peer-to-peer (P2P) communication in mind. Two browsers connect directly, exchanging audio and video without any server in the media path. This works well for 1:1 calls, but it breaks down quickly as you scale.
 
-**The N*(N-1) problem**: In a full-mesh P2P topology, every participant sends their media to every other participant. For N participants, each peer must maintain N-1 upstream connections and N-1 downstream connections. The total number of connections is N*(N-1). With 5 participants, each peer sends 4 streams and receives 4 streams. With 10 participants, each peer sends 9 streams and receives 9 streams. The bandwidth, CPU, and battery consumption on each client grows linearly with the number of participants, making full-mesh impractical beyond 4-6 participants on most consumer hardware.
+**The N\*(N-1) problem**: In a full-mesh P2P topology, every participant sends their media to every other participant. For N participants, each peer must maintain N-1 upstream connections and N-1 downstream connections. The total number of connections is N\*(N-1). With 5 participants, each peer sends 4 streams and receives 4 streams. With 10 participants, each peer sends 9 streams and receives 9 streams. The bandwidth, CPU, and battery consumption on each client grows linearly with the number of participants, making full-mesh impractical beyond 4-6 participants on most consumer hardware.
 
 ### Core Functions of a Media Server
 
@@ -85,6 +85,7 @@ An SFU receives media from each participant and selectively forwards it to other
 ```
 
 **Advantages**:
+
 - Low latency (no transcoding delay)
 - Low server CPU (no decode/encode)
 - Preserves end-to-end encryption possibility
@@ -92,6 +93,7 @@ An SFU receives media from each participant and selectively forwards it to other
 - Each receiver can get different quality layers (simulcast)
 
 **Disadvantages**:
+
 - Clients must decode multiple streams (N-1 decoders)
 - Clients need sufficient download bandwidth for all streams
 - No server-side composition or mixing
@@ -122,12 +124,14 @@ An MCU receives all participant streams, decodes them, mixes them into a single 
 ```
 
 **Advantages**:
+
 - Minimal client resources (decode one stream only)
 - Low download bandwidth (single stream)
 - Works on very low-power devices
 - Server controls the layout and quality
 
 **Disadvantages**:
+
 - Very high server CPU (decode + encode for every participant)
 - Added latency from transcoding pipeline
 - Breaks end-to-end encryption
@@ -139,6 +143,7 @@ An MCU receives all participant streams, decodes them, mixes them into a single 
 ### Hybrid Architecture
 
 Many production systems combine SFU and MCU approaches. For example:
+
 - SFU for video (low latency, client decodes individual streams)
 - MCU for audio (server mixes audio, reducing client processing)
 - MCU for recording (server composites a single recording)
@@ -158,6 +163,7 @@ When a single SFU cannot handle all participants or when participants are geogra
 ```
 
 **Key considerations**:
+
 - Inter-SFU links add latency (typically 50-200ms cross-region)
 - Selective forwarding decisions become more complex
 - Need consistent signaling across SFUs
@@ -168,6 +174,7 @@ When a single SFU cannot handle all participants or when participants are geogra
 ### Distributed Media Servers
 
 A fully distributed architecture goes beyond cascading. Media processing is spread across multiple nodes with:
+
 - Load balancing of media streams
 - Automatic failover
 - Geographic optimization (route to nearest server)
@@ -186,6 +193,7 @@ Janus is a general-purpose WebRTC gateway developed by Meetecho (originally fund
 ### Architecture
 
 Janus uses a **plugin-based architecture**. The core handles:
+
 - WebRTC negotiation (ICE, DTLS, SRTP)
 - RTP/RTCP processing
 - Transport management (WebSocket, HTTP, RabbitMQ, MQTT, Nanomsg, Unix sockets)
@@ -245,6 +253,7 @@ With WebSocket transport, all messages flow over a single connection using JSON.
 ### Deployment
 
 Janus is typically deployed as a single process. For scaling:
+
 - Run multiple Janus instances behind a load balancer
 - Use RabbitMQ or MQTT transport for distributed signaling
 - Each instance handles a set of rooms independently
@@ -255,6 +264,7 @@ Janus is typically deployed as a single process. For scaling:
 ### Pros and Cons
 
 **Pros**:
+
 - Extremely lightweight (C, low memory footprint)
 - Very modular plugin architecture
 - Battle-tested, large community
@@ -263,6 +273,7 @@ Janus is typically deployed as a single process. For scaling:
 - Supports multiple transports
 
 **Cons**:
+
 - Plugin development requires C knowledge
 - No built-in clustering or horizontal scaling
 - Custom recording format (.mjr) requires post-processing
@@ -339,8 +350,12 @@ const router = await worker.createRouter({
   mediaCodecs: [
     { kind: 'audio', mimeType: 'audio/opus', clockRate: 48000, channels: 2 },
     { kind: 'video', mimeType: 'video/VP8', clockRate: 90000 },
-    { kind: 'video', mimeType: 'video/H264', clockRate: 90000,
-      parameters: { 'packetization-mode': 1, 'profile-level-id': '42e01f' } },
+    {
+      kind: 'video',
+      mimeType: 'video/H264',
+      clockRate: 90000,
+      parameters: { 'packetization-mode': 1, 'profile-level-id': '42e01f' },
+    },
   ],
 });
 
@@ -423,7 +438,7 @@ mediasoup has first-class support for simulcast and SVC:
 ```typescript
 // Set preferred layers for a consumer
 await consumer.setPreferredLayers({
-  spatialLayer: 2,   // highest quality
+  spatialLayer: 2, // highest quality
   temporalLayer: 2,
 });
 
@@ -436,6 +451,7 @@ consumer.on('layerschange', (layers) => {
 ### Pros and Cons
 
 **Pros**:
+
 - Extreme flexibility and control
 - Clean, well-documented TypeScript API
 - Efficient C++ media engine
@@ -445,6 +461,7 @@ consumer.on('layerschange', (layers) => {
 - No signaling opinions (build your own)
 
 **Cons**:
+
 - No out-of-the-box solution (you build everything)
 - Requires strong understanding of WebRTC internals
 - Signaling server is your responsibility
@@ -503,18 +520,18 @@ The server handles all WebRTC negotiation, ICE, DTLS, and SRTP internally. Clien
 
 LiveKit provides official SDKs for virtually every platform:
 
-| Platform | SDK | Language |
-|----------|-----|----------|
-| Web | livekit-client-sdk-js | TypeScript |
-| React | @livekit/components-react | TypeScript/React |
-| iOS | livekit-client-sdk-swift | Swift |
-| Android | livekit-client-sdk-android | Kotlin |
-| Flutter | livekit-client-sdk-flutter | Dart |
-| Go | livekit-server-sdk-go | Go |
-| Python | livekit-server-sdk-python | Python |
-| Rust | livekit-client-sdk-rust | Rust |
-| Unity | livekit-client-sdk-unity | C# |
-| React Native | livekit-client-sdk-react-native | TypeScript |
+| Platform     | SDK                             | Language         |
+| ------------ | ------------------------------- | ---------------- |
+| Web          | livekit-client-sdk-js           | TypeScript       |
+| React        | @livekit/components-react       | TypeScript/React |
+| iOS          | livekit-client-sdk-swift        | Swift            |
+| Android      | livekit-client-sdk-android      | Kotlin           |
+| Flutter      | livekit-client-sdk-flutter      | Dart             |
+| Go           | livekit-server-sdk-go           | Go               |
+| Python       | livekit-server-sdk-python       | Python           |
+| Rust         | livekit-client-sdk-rust         | Rust             |
+| Unity        | livekit-client-sdk-unity        | C#               |
+| React Native | livekit-client-sdk-react-native | TypeScript       |
 
 All SDKs follow a consistent API pattern:
 
@@ -538,6 +555,7 @@ await room.localParticipant.enableCameraAndMicrophone();
 ### Egress and Ingress
 
 **Egress** (output from LiveKit):
+
 - Room composite recording (all participants in a layout)
 - Individual track recording
 - Streaming to RTMP destinations (YouTube, Twitch)
@@ -545,6 +563,7 @@ await room.localParticipant.enableCameraAndMicrophone();
 - Output formats: MP4, OGG, HLS, WebM, individual tracks
 
 **Ingress** (input to LiveKit):
+
 - Ingest RTMP streams into LiveKit rooms
 - Ingest WHIP (WebRTC-HTTP Ingestion Protocol)
 - Allows OBS, FFmpeg, or other streaming tools to publish into rooms
@@ -577,6 +596,7 @@ if __name__ == "__main__":
 ```
 
 The agent framework supports:
+
 - Voice assistants (STT -> LLM -> TTS pipeline)
 - Real-time video processing
 - Plugin system for AI providers (OpenAI, Deepgram, ElevenLabs, etc.)
@@ -601,6 +621,7 @@ Both use the same codebase. The cloud version adds edge routing, analytics, and 
 ### Pros and Cons
 
 **Pros**:
+
 - Comprehensive platform (server, SDKs, egress, ingress, agents)
 - Excellent developer experience
 - Strong AI integration story
@@ -609,6 +630,7 @@ Both use the same codebase. The cloud version adds edge routing, analytics, and 
 - Rich client SDKs for all platforms
 
 **Cons**:
+
 - Less low-level control compared to mediasoup
 - Opinionated room model may not fit all use cases
 - Self-hosted scaling requires Redis and careful configuration
@@ -699,6 +721,7 @@ func (r *Room) OnTrack(sender *Peer, remoteTrack *webrtc.TrackRemote) {
 ### ion-SFU
 
 **ion-SFU** (also known as Pion SFU or ion) was an open-source SFU built on Pion. It provided:
+
 - Room management
 - Simulcast support
 - Data channels
@@ -710,6 +733,7 @@ ion-SFU served as both a production-ready SFU and a reference implementation for
 ### Pion Ecosystem
 
 Beyond the core library, the Pion ecosystem includes:
+
 - **pion/turn**: A production-ready TURN server written in Go
 - **pion/interceptor**: Middleware pipeline for RTP/RTCP processing
 - **pion/mediadevices**: Access to local media devices (camera, microphone)
@@ -718,6 +742,7 @@ Beyond the core library, the Pion ecosystem includes:
 ### Pros and Cons
 
 **Pros**:
+
 - Pure Go (no CGo, easy deployment, cross-compilation)
 - Highly modular and composable
 - Excellent for building custom solutions
@@ -726,6 +751,7 @@ Beyond the core library, the Pion ecosystem includes:
 - Permissive MIT license
 
 **Cons**:
+
 - Library, not a server (you build everything yourself)
 - Go-only (though you can build services that other languages call)
 - Performance may not match hand-optimized C/C++ for extreme scale
@@ -758,6 +784,7 @@ Kurento is a WebRTC media server written in C++ that introduced the concept of *
 **Media Pipeline Model**: Kurento treats media processing as a directed graph of media elements. You create endpoints (WebRTC, RTP, HTTP), connect them through filters (face detection, image overlay, audio mixing), and the media flows through the pipeline.
 
 **Filter Architecture**: Kurento's unique strength was its filter system:
+
 - **GStreamer-based**: Built on GStreamer, enabling rich media processing
 - **Computer vision**: OpenCV-based filters for face detection, AR overlays
 - **Custom filters**: Developers could write custom GStreamer elements
@@ -766,6 +793,7 @@ Kurento is a WebRTC media server written in C++ that introduced the concept of *
 - **Crowd detection**: Motion analysis
 
 **Key Features**:
+
 - SFU and MCU modes
 - Recording to various formats
 - Media processing pipelines
@@ -876,6 +904,7 @@ Jitsi includes server-side processing capabilities:
 ### Wide Adoption
 
 Jitsi is used by:
+
 - 8x8 (the company that maintains Jitsi, accessible at meet.jit.si)
 - Oeutsche Oelekom
 - Oelgian government
@@ -886,6 +915,7 @@ Jitsi is used by:
 ### Pros and Cons
 
 **Pros**:
+
 - Complete video conferencing solution out of the box
 - Very mature and battle-tested at scale
 - Strong community and commercial backing (8x8)
@@ -894,6 +924,7 @@ Jitsi is used by:
 - Active development
 
 **Cons**:
+
 - Java/Kotlin stack (higher resource usage than C/C++/Go alternatives)
 - XMPP-based signaling adds complexity
 - Customization beyond the standard UI requires significant effort
@@ -911,6 +942,7 @@ While WebRTC media servers focus on real-time bidirectional communication, strea
 An Nginx module that adds RTMP (Real-Time Messaging Protocol) server capabilities.
 
 **Features**:
+
 - Receive RTMP streams from OBS, FFmpeg, or other encoders
 - Transmux to HLS and DASH for browser playback
 - Live stream recording to FLV files
@@ -918,6 +950,7 @@ An Nginx module that adds RTMP (Real-Time Messaging Protocol) server capabilitie
 - Exec directives for calling external programs (FFmpeg for transcoding)
 
 **Configuration example**:
+
 ```nginx
 rtmp {
     server {
@@ -946,6 +979,7 @@ rtmp {
 A comprehensive open-source streaming server written in C++.
 
 **Features**:
+
 - RTMP, HLS, HTTP-FLV, WebRTC, SRT, MPEG-DASH
 - Cluster support (origin/edge architecture)
 - DVR (recording to file)
@@ -989,15 +1023,15 @@ An open-source streaming platform with WebRTC support.
 
 ### Differences from WebRTC Media Servers
 
-| Aspect | Streaming Servers | WebRTC Media Servers |
-|--------|------------------|---------------------|
-| Primary direction | One-to-many | Many-to-many |
-| Latency | 1-30 seconds (HLS/DASH) | Sub-second |
-| Protocols | RTMP, HLS, DASH, SRT | WebRTC (RTP/SRTP) |
-| Interactivity | Limited (chat via separate channel) | Full (audio/video both ways) |
-| Scale | Millions of viewers (CDN) | Hundreds to thousands |
-| Use case | Broadcasting, VOD | Conferencing, collaboration |
-| Encryption | TLS | DTLS-SRTP (mandatory) |
+| Aspect            | Streaming Servers                   | WebRTC Media Servers         |
+| ----------------- | ----------------------------------- | ---------------------------- |
+| Primary direction | One-to-many                         | Many-to-many                 |
+| Latency           | 1-30 seconds (HLS/DASH)             | Sub-second                   |
+| Protocols         | RTMP, HLS, DASH, SRT                | WebRTC (RTP/SRTP)            |
+| Interactivity     | Limited (chat via separate channel) | Full (audio/video both ways) |
+| Scale             | Millions of viewers (CDN)           | Hundreds to thousands        |
+| Use case          | Broadcasting, VOD                   | Conferencing, collaboration  |
+| Encryption        | TLS                                 | DTLS-SRTP (mandatory)        |
 
 Modern platforms increasingly blur these lines. SRS, LiveKit, and Ant Media support both WebRTC and traditional streaming protocols.
 
@@ -1005,26 +1039,26 @@ Modern platforms increasingly blur these lines. SRS, LiveKit, and Ant Media supp
 
 ## 10. Media Server Comparison Table
 
-| Feature | Janus | mediasoup | LiveKit | Pion | Kurento | Jitsi JVB | SRS |
-|---------|-------|-----------|---------|------|---------|-----------|-----|
-| **Language** | C | C++ (Node.js API) | Go | Go | C++ (Java API) | Kotlin/Java | C++ |
-| **Type** | Gateway | SFU Library | SFU Platform | Library | Media Server | SFU | Streaming Server |
-| **Architecture** | Plugin-based | Worker/Router | Room-based | Modular lib | Pipeline | Conference SFU | Origin/Edge |
-| **SFU** | Yes (VideoRoom) | Yes | Yes | Build your own | Yes | Yes | Partial |
-| **MCU** | Yes (AudioBridge) | No | No | Build your own | Yes | No | No |
-| **Simulcast** | Yes | Yes | Yes | Yes | Limited | Yes | Limited |
-| **SVC** | Limited | Yes (VP9, AV1) | Yes | Yes | No | Yes | No |
-| **Recording** | .mjr format | Via FFmpeg | Built-in | Build your own | Built-in | Via Jibri | DVR |
-| **SIP Bridge** | Yes (plugin) | Via PlainRTP | Via SIP trunk | Build your own | Via RTP | Via Jigasi | No |
-| **RTMP** | No | Via FFmpeg | Egress/Ingress | No | No | No | Yes (native) |
-| **Client SDKs** | JS only | None (server lib) | All platforms | Go only | JS, Java, .NET | JS (Jitsi Meet) | JS |
-| **Data Channels** | Yes | Yes | Yes | Yes | Yes | Yes | No |
-| **Scalability** | Manual | PipeTransport | Redis cluster | Manual | Limited | Ocula cascade | Origin/Edge |
-| **License** | GPL-3.0 | ISC | Apache-2.0 | MIT | Apache-2.0 | Apache-2.0 | MIT |
-| **Learning Curve** | Medium | High | Low-Medium | High | Medium | Low (deploy) | Low-Medium |
-| **Community** | Large | Large | Growing fast | Large | Declining | Very large | Large |
-| **Commercial** | Meetecho | None | LiveKit Inc | None | None | 8x8 | Ossrs.io |
-| **Best For** | SIP bridging, plugins | Custom apps | Full platform | Custom solutions | Media processing | Video conferencing | Live streaming |
+| Feature            | Janus                 | mediasoup         | LiveKit        | Pion             | Kurento          | Jitsi JVB          | SRS              |
+| ------------------ | --------------------- | ----------------- | -------------- | ---------------- | ---------------- | ------------------ | ---------------- |
+| **Language**       | C                     | C++ (Node.js API) | Go             | Go               | C++ (Java API)   | Kotlin/Java        | C++              |
+| **Type**           | Gateway               | SFU Library       | SFU Platform   | Library          | Media Server     | SFU                | Streaming Server |
+| **Architecture**   | Plugin-based          | Worker/Router     | Room-based     | Modular lib      | Pipeline         | Conference SFU     | Origin/Edge      |
+| **SFU**            | Yes (VideoRoom)       | Yes               | Yes            | Build your own   | Yes              | Yes                | Partial          |
+| **MCU**            | Yes (AudioBridge)     | No                | No             | Build your own   | Yes              | No                 | No               |
+| **Simulcast**      | Yes                   | Yes               | Yes            | Yes              | Limited          | Yes                | Limited          |
+| **SVC**            | Limited               | Yes (VP9, AV1)    | Yes            | Yes              | No               | Yes                | No               |
+| **Recording**      | .mjr format           | Via FFmpeg        | Built-in       | Build your own   | Built-in         | Via Jibri          | DVR              |
+| **SIP Bridge**     | Yes (plugin)          | Via PlainRTP      | Via SIP trunk  | Build your own   | Via RTP          | Via Jigasi         | No               |
+| **RTMP**           | No                    | Via FFmpeg        | Egress/Ingress | No               | No               | No                 | Yes (native)     |
+| **Client SDKs**    | JS only               | None (server lib) | All platforms  | Go only          | JS, Java, .NET   | JS (Jitsi Meet)    | JS               |
+| **Data Channels**  | Yes                   | Yes               | Yes            | Yes              | Yes              | Yes                | No               |
+| **Scalability**    | Manual                | PipeTransport     | Redis cluster  | Manual           | Limited          | Ocula cascade      | Origin/Edge      |
+| **License**        | GPL-3.0               | ISC               | Apache-2.0     | MIT              | Apache-2.0       | Apache-2.0         | MIT              |
+| **Learning Curve** | Medium                | High              | Low-Medium     | High             | Medium           | Low (deploy)       | Low-Medium       |
+| **Community**      | Large                 | Large             | Growing fast   | Large            | Declining        | Very large         | Large            |
+| **Commercial**     | Meetecho              | None              | LiveKit Inc    | None             | None             | 8x8                | Ossrs.io         |
+| **Best For**       | SIP bridging, plugins | Custom apps       | Full platform  | Custom solutions | Media processing | Video conferencing | Live streaming   |
 
 ---
 
@@ -1033,53 +1067,62 @@ Modern platforms increasingly blur these lines. SRS, LiveKit, and Ant Media supp
 ### Decision Matrix by Use Case
 
 **Video Conferencing (small meetings, 2-50 participants)**:
+
 - **Best choice**: LiveKit or Jitsi
 - LiveKit if you want a platform with SDKs and customization
 - Jitsi if you want a ready-made video conferencing solution
 - mediasoup if you want full control over the experience
 
 **Large-Scale Video Conferencing (hundreds of participants)**:
+
 - **Best choice**: LiveKit (multi-node) or Jitsi (cascaded JVBs)
 - Both support horizontal scaling
 - LiveKit's Redis-based coordination is simpler to manage
 - Jitsi's Ocula is battle-tested at scale
 
 **Live Streaming / Broadcasting**:
+
 - **Best choice**: SRS or LiveKit
 - SRS for traditional RTMP/HLS broadcasting to millions
 - LiveKit for WebRTC-based low-latency streaming
 - Consider hybrid: WebRTC for ultra-low-latency, HLS/DASH for mass distribution
 
 **Recording and Archiving**:
+
 - **Best choice**: LiveKit (built-in egress) or Jitsi (Jibri)
 - mediasoup requires custom recording via PlainTransport + FFmpeg
 - Janus records to .mjr format requiring post-processing
 
 **SIP / Telephony Integration**:
+
 - **Best choice**: Janus (SIP plugin) or Oreeswitch + WebRTC
 - Janus has mature SIP bridging
 - mediasoup can bridge via PlainTransport
 - Jitsi has Jigasi for SIP gateway
 
 **AI-Powered Real-Time Applications**:
+
 - **Best choice**: LiveKit (Agent Framework)
 - Built-in support for voice assistants, real-time AI processing
 - Python and Node.js agent SDKs
 - Plugin ecosystem for STT, LLM, TTS providers
 
 **Custom / Embedded Real-Time Features**:
+
 - **Best choice**: mediasoup or Pion
 - mediasoup for Node.js/TypeScript applications
 - Pion for Go applications
 - Both give maximum flexibility and control
 
 **IoT / Low-Power Devices**:
+
 - **Best choice**: Janus (low resource usage) or MCU architecture
 - Janus's C-based core is very lightweight
 - MCU mode reduces client-side processing
 - Consider mediasoup with aggressive simulcast layer management
 
 **Media Processing / Computer Vision**:
+
 - **Best choice**: Kurento (if processing needs are primary)
 - GStreamer-based pipeline for complex media processing
 - However, consider running processing outside the media server (e.g., receive via mediasoup/LiveKit, process with dedicated service)
@@ -1117,6 +1160,7 @@ The simplest deployment for development or small-scale production:
 ```
 
 **Considerations**:
+
 - Single point of failure
 - Limited by single machine resources
 - UDP port range must be exposed (e.g., 10000-59999)
@@ -1143,34 +1187,35 @@ spec:
         app: livekit
     spec:
       containers:
-      - name: livekit
-        image: livekit/livekit-server:latest
-        ports:
-        - containerPort: 7880  # HTTP/WS
-          protocol: TCP
-        - containerPort: 7881  # RTC (TCP)
-          protocol: TCP
-        - containerPort: 7882  # RTC (UDP)
-          protocol: UDP
-        env:
-        - name: LIVEKIT_KEYS
-          valueFrom:
-            secretKeyRef:
-              name: livekit-secrets
-              key: keys
-        - name: LIVEKIT_REDIS_ADDRESS
-          value: "redis:6379"
-        resources:
-          requests:
-            cpu: "2"
-            memory: "4Gi"
-          limits:
-            cpu: "4"
-            memory: "8Gi"
-      hostNetwork: true  # Required for UDP media
+        - name: livekit
+          image: livekit/livekit-server:latest
+          ports:
+            - containerPort: 7880 # HTTP/WS
+              protocol: TCP
+            - containerPort: 7881 # RTC (TCP)
+              protocol: TCP
+            - containerPort: 7882 # RTC (UDP)
+              protocol: UDP
+          env:
+            - name: LIVEKIT_KEYS
+              valueFrom:
+                secretKeyRef:
+                  name: livekit-secrets
+                  key: keys
+            - name: LIVEKIT_REDIS_ADDRESS
+              value: 'redis:6379'
+          resources:
+            requests:
+              cpu: '2'
+              memory: '4Gi'
+            limits:
+              cpu: '4'
+              memory: '8Gi'
+      hostNetwork: true # Required for UDP media
 ```
 
 **Kubernetes challenges for media servers**:
+
 - **UDP**: Kubernetes services default to TCP. Media requires UDP. Use `hostNetwork: true` or `hostPort` mappings.
 - **Port ranges**: SFUs need large UDP port ranges. NodePort services only support 30000-32767 by default.
 - **Sticky sessions**: WebSocket signaling and media must reach the same pod. Use session affinity.
@@ -1182,11 +1227,13 @@ spec:
 Media server auto-scaling is different from web server auto-scaling:
 
 **Challenges**:
+
 - Cannot simply terminate a pod with active media sessions
 - Sessions are stateful (WebRTC connections, ongoing conferences)
 - Scaling down requires session migration or graceful drain
 
 **Strategies**:
+
 - **Graceful drain**: Mark a pod as "draining," stop accepting new sessions, wait for existing sessions to end, then terminate
 - **Proactive scaling**: Scale up before demand spikes (predictive based on time-of-day patterns)
 - **Room-aware scheduling**: Place new rooms on least-loaded nodes, avoid splitting rooms across nodes when possible
@@ -1206,20 +1253,20 @@ spec:
   minReplicas: 2
   maxReplicas: 20
   metrics:
-  - type: Pods
-    pods:
-      metric:
-        name: active_participants
-      target:
-        type: AverageValue
-        averageValue: "100"
+    - type: Pods
+      pods:
+        metric:
+          name: active_participants
+        target:
+          type: AverageValue
+          averageValue: '100'
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 600  # Wait 10 min before scaling down
+      stabilizationWindowSeconds: 600 # Wait 10 min before scaling down
       policies:
-      - type: Pods
-        value: 1
-        periodSeconds: 300  # Remove max 1 pod every 5 min
+        - type: Pods
+          value: 1
+          periodSeconds: 300 # Remove max 1 pod every 5 min
 ```
 
 ### Geographic Distribution
@@ -1241,6 +1288,7 @@ For global deployments:
 ```
 
 **Key considerations**:
+
 - **Client routing**: DNS-based (GeoDNS) or anycast to route clients to nearest region
 - **Inter-region media relay**: Cascaded SFUs or media relay servers connect regions
 - **Signaling coordination**: Redis or similar for cross-region room state
@@ -1268,6 +1316,7 @@ Same data center or availability zone:
 Essential metrics for media server monitoring:
 
 **Server-level**:
+
 - CPU utilization (per core for media workers)
 - Memory usage
 - Network I/O (bandwidth in/out)
@@ -1275,6 +1324,7 @@ Essential metrics for media server monitoring:
 - Open file descriptors (each connection uses FDs)
 
 **Media-level**:
+
 - Active rooms/sessions
 - Total participants
 - Packet loss rate (inbound and outbound)
@@ -1286,6 +1336,7 @@ Essential metrics for media server monitoring:
 - PLI/FIR count (keyframe requests)
 
 **Quality of Experience (QoE)**:
+
 - MOS (Mean Opinion Score) estimation
 - Video freeze events
 - Audio glitch events
@@ -1293,6 +1344,7 @@ Essential metrics for media server monitoring:
 - Reconnection rate
 
 **Tools**:
+
 - Prometheus + Grafana for metrics visualization
 - Jaeger for distributed tracing
 - Custom WebRTC stats collection (getStats API)
@@ -1305,12 +1357,14 @@ Essential metrics for media server monitoring:
 ### When to Build Your Own
 
 Building a custom SFU makes sense when:
+
 - You need behavior not supported by existing servers
 - You want minimal dependencies and full control
 - Your use case is narrow and specialized
 - You have deep WebRTC expertise on your team
 
 It does NOT make sense when:
+
 - An existing solution covers your needs
 - Time to market is critical
 - Your team lacks WebRTC protocol knowledge
@@ -1342,6 +1396,7 @@ It does NOT make sense when:
 ### Key Components
 
 **SRTP (Secure RTP)**: All WebRTC media is encrypted with SRTP. Your SFU must:
+
 - Complete the DTLS handshake with each client
 - Derive SRTP keys from the DTLS session
 - Decrypt incoming SRTP packets
@@ -1349,6 +1404,7 @@ It does NOT make sense when:
 - Handle key renegotiation
 
 **RTCP (RTP Control Protocol)**: RTCP provides feedback about media quality:
+
 - **Sender Reports (SR)**: Sent by the sender, contain NTP timestamp and packet/byte counts
 - **Receiver Reports (RR)**: Sent by receivers, contain loss fraction, cumulative loss, jitter, RTT
 - **NACK**: Negative acknowledgment requesting retransmission of lost packets
@@ -1360,17 +1416,20 @@ It does NOT make sense when:
 Your SFU must handle all of these correctly. Incorrect RTCP handling leads to poor quality.
 
 **Bandwidth Estimation**: The SFU must estimate available bandwidth for each receiver:
+
 - **TWCC (preferred)**: Collect per-packet arrival times, compute one-way delay variation, use GCC (Google Congestion Control) algorithm
 - **REMB (legacy)**: Use the receiver's reported estimate
 - Adjust forwarded simulcast layers or request sender bitrate changes based on estimates
 
 **Jitter Buffer**: While SFUs typically do not buffer media (they forward immediately), some buffering is needed for:
+
 - NACK retransmissions (need to hold recent packets)
 - Reordering (out-of-order packets)
 - Smooth forwarding during network jitter
 - Typically a short ring buffer of recent RTP packets (500ms-2s)
 
 **Simulcast Layer Selection**: When the sender provides multiple quality layers:
+
 - Track available layers (via RTP header extensions or SSRC mapping)
 - Select appropriate layer per consumer based on:
   - Consumer's available bandwidth
@@ -1389,6 +1448,7 @@ Your SFU must handle all of these correctly. Incorrect RTCP handling leads to po
 4. **ICE connectivity**: Implement ICE-lite (server-side) for simpler ICE processing. The server does not need to gather candidates; it provides its transport addresses directly.
 
 5. **Codec awareness**: The SFU does not decode media but must understand codec framing to:
+
    - Identify keyframes (for layer switching and PLI handling)
    - Parse simulcast layer information
    - Handle codec-specific RTP packetization (VP8, VP9, H.264, AV1 each have different schemes)
@@ -1428,14 +1488,20 @@ const config = {
 
 // --- State ---
 const workers: mediasoup.types.Worker[] = [];
-const rooms = new Map<string, {
-  router: mediasoup.types.Router;
-  peers: Map<string, {
-    transports: Map<string, mediasoup.types.WebRtcTransport>;
-    producers: Map<string, mediasoup.types.Producer>;
-    consumers: Map<string, mediasoup.types.Consumer>;
-  }>;
-}>();
+const rooms = new Map<
+  string,
+  {
+    router: mediasoup.types.Router;
+    peers: Map<
+      string,
+      {
+        transports: Map<string, mediasoup.types.WebRtcTransport>;
+        producers: Map<string, mediasoup.types.Producer>;
+        consumers: Map<string, mediasoup.types.Consumer>;
+      }
+    >;
+  }
+>();
 
 let nextWorkerIdx = 0;
 
@@ -1562,102 +1628,102 @@ async function main(): Promise<void> {
       }
     });
 
-    socket.on('connectTransport', async (
-      { transportId, dtlsParameters },
-      callback
-    ) => {
-      try {
-        if (!currentRoomId || !currentPeerId) {
-          throw new Error('Not in a room');
+    socket.on(
+      'connectTransport',
+      async ({ transportId, dtlsParameters }, callback) => {
+        try {
+          if (!currentRoomId || !currentPeerId) {
+            throw new Error('Not in a room');
+          }
+
+          const room = rooms.get(currentRoomId);
+          const peer = room?.peers.get(currentPeerId);
+          const transport = peer?.transports.get(transportId);
+
+          if (!transport) {
+            throw new Error('Transport not found');
+          }
+
+          await transport.connect({ dtlsParameters });
+          callback({ connected: true });
+        } catch (error) {
+          callback({ error: (error as Error).message });
         }
-
-        const room = rooms.get(currentRoomId);
-        const peer = room?.peers.get(currentPeerId);
-        const transport = peer?.transports.get(transportId);
-
-        if (!transport) {
-          throw new Error('Transport not found');
-        }
-
-        await transport.connect({ dtlsParameters });
-        callback({ connected: true });
-      } catch (error) {
-        callback({ error: (error as Error).message });
       }
-    });
+    );
 
-    socket.on('produce', async (
-      { transportId, kind, rtpParameters },
-      callback
-    ) => {
-      try {
-        if (!currentRoomId || !currentPeerId) {
-          throw new Error('Not in a room');
+    socket.on(
+      'produce',
+      async ({ transportId, kind, rtpParameters }, callback) => {
+        try {
+          if (!currentRoomId || !currentPeerId) {
+            throw new Error('Not in a room');
+          }
+
+          const room = rooms.get(currentRoomId);
+          const peer = room?.peers.get(currentPeerId);
+          const transport = peer?.transports.get(transportId);
+
+          if (!transport || !peer) {
+            throw new Error('Transport not found');
+          }
+
+          const producer = await transport.produce({ kind, rtpParameters });
+          peer.producers.set(producer.id, producer);
+
+          // Notify other peers about the new producer
+          socket.to(currentRoomId).emit('newProducer', {
+            producerId: producer.id,
+            peerId: currentPeerId,
+            kind: producer.kind,
+          });
+
+          callback({ producerId: producer.id });
+        } catch (error) {
+          callback({ error: (error as Error).message });
         }
-
-        const room = rooms.get(currentRoomId);
-        const peer = room?.peers.get(currentPeerId);
-        const transport = peer?.transports.get(transportId);
-
-        if (!transport || !peer) {
-          throw new Error('Transport not found');
-        }
-
-        const producer = await transport.produce({ kind, rtpParameters });
-        peer.producers.set(producer.id, producer);
-
-        // Notify other peers about the new producer
-        socket.to(currentRoomId).emit('newProducer', {
-          producerId: producer.id,
-          peerId: currentPeerId,
-          kind: producer.kind,
-        });
-
-        callback({ producerId: producer.id });
-      } catch (error) {
-        callback({ error: (error as Error).message });
       }
-    });
+    );
 
-    socket.on('consume', async (
-      { producerId, rtpCapabilities, transportId },
-      callback
-    ) => {
-      try {
-        if (!currentRoomId || !currentPeerId) {
-          throw new Error('Not in a room');
+    socket.on(
+      'consume',
+      async ({ producerId, rtpCapabilities, transportId }, callback) => {
+        try {
+          if (!currentRoomId || !currentPeerId) {
+            throw new Error('Not in a room');
+          }
+
+          const room = rooms.get(currentRoomId);
+          const peer = room?.peers.get(currentPeerId);
+          const transport = peer?.transports.get(transportId);
+
+          if (!room || !peer || !transport) {
+            throw new Error('Room, peer, or transport not found');
+          }
+
+          if (!room.router.canConsume({ producerId, rtpCapabilities })) {
+            throw new Error('Cannot consume this producer');
+          }
+
+          const consumer = await transport.consume({
+            producerId,
+            rtpCapabilities,
+            paused: true,
+          });
+
+          peer.consumers.set(consumer.id, consumer);
+
+          callback({
+            consumerId: consumer.id,
+            producerId,
+            kind: consumer.kind,
+            rtpParameters: consumer.rtpParameters,
+          });
+        } catch (error) {
+          callback({ error: (error as Error).message });
         }
-
-        const room = rooms.get(currentRoomId);
-        const peer = room?.peers.get(currentPeerId);
-        const transport = peer?.transports.get(transportId);
-
-        if (!room || !peer || !transport) {
-          throw new Error('Room, peer, or transport not found');
-        }
-
-        if (!room.router.canConsume({ producerId, rtpCapabilities })) {
-          throw new Error('Cannot consume this producer');
-        }
-
-        const consumer = await transport.consume({
-          producerId,
-          rtpCapabilities,
-          paused: true,
-        });
-
-        peer.consumers.set(consumer.id, consumer);
-
-        callback({
-          consumerId: consumer.id,
-          producerId,
-          kind: consumer.kind,
-          rtpParameters: consumer.rtpParameters,
-        });
-      } catch (error) {
-        callback({ error: (error as Error).message });
       }
-    });
+    );
 
     socket.on('disconnect', () => {
       if (currentRoomId && currentPeerId) {
@@ -1809,9 +1875,7 @@ app.post('/api/webhook', async (req, res) => {
         );
         break;
       case 'participant_left':
-        console.log(
-          `${event.participant?.identity} left ${event.room?.name}`
-        );
+        console.log(`${event.participant?.identity} left ${event.room?.name}`);
         break;
       case 'track_published':
         console.log(
@@ -2174,6 +2238,7 @@ In practice, most modern systems use SFU for video and sometimes MCU for audio m
 Simulcast means the sender encodes their video at multiple resolutions and bitrates simultaneously (e.g., 720p at 1.5 Mbps, 360p at 500 Kbps, 180p at 150 Kbps) and sends all layers to the SFU.
 
 The SFU then selects which layer to forward to each receiver based on:
+
 - The receiver's available bandwidth (from TWCC/REMB feedback)
 - The receiver's display size (a thumbnail does not need 720p)
 - Priority (active speaker gets the highest layer)
@@ -2182,14 +2247,15 @@ This is important because it enables adaptive quality without transcoding. The S
 
 ---
 
-**Q3: Explain the N*(N-1) problem in peer-to-peer WebRTC and how media servers solve it.**
+**Q3: Explain the N\*(N-1) problem in peer-to-peer WebRTC and how media servers solve it.**
 
-In a full-mesh P2P topology, each participant establishes a direct connection to every other participant. For N participants, each peer sends N-1 upstream streams and receives N-1 downstream streams. The total connection count is N*(N-1).
+In a full-mesh P2P topology, each participant establishes a direct connection to every other participant. For N participants, each peer sends N-1 upstream streams and receives N-1 downstream streams. The total connection count is N\*(N-1).
 
 For 5 participants: 5*4 = 20 connections, each peer uploads 4 streams.
 For 10 participants: 10*9 = 90 connections, each peer uploads 9 streams.
 
 This is untenable because:
+
 - Upload bandwidth scales linearly with participants
 - CPU usage for encoding scales linearly (one encode per receiver)
 - Battery drain on mobile devices
@@ -2242,6 +2308,7 @@ TWCC is a WebRTC mechanism for estimating available bandwidth. It works as follo
 4. The sender (or the SFU acting as sender) uses these timestamps to compute one-way delay variation, which feeds into the GCC (Google Congestion Control) algorithm to estimate available bandwidth.
 
 For media servers, TWCC is critical because:
+
 - The SFU forwards packets to many receivers, each with different bandwidth
 - TWCC provides per-receiver bandwidth estimates
 - The SFU uses these estimates to select simulcast layers or request bitrate changes
@@ -2263,6 +2330,7 @@ TWCC replaced the older REMB mechanism and provides more accurate, sender-side b
 8. **Monitoring**: Centralized monitoring of per-region quality metrics (loss, latency, MOS scores).
 
 Key tradeoffs:
+
 - Inter-region relay adds 50-200ms latency (acceptable for most conferencing)
 - Room state must be consistent across regions
 - Recording should happen in one region to avoid duplicate processing
@@ -2272,6 +2340,7 @@ Key tradeoffs:
 **Q7: Compare Janus and mediasoup for building a video conferencing application.**
 
 **Janus**:
+
 - Complete gateway with built-in VideoRoom plugin for SFU conferencing
 - Signaling and room management included (via REST/WebSocket API)
 - SIP bridging, streaming, recording plugins available out of the box
@@ -2281,6 +2350,7 @@ Key tradeoffs:
 - Less flexible for custom behavior (plugin boundaries)
 
 **mediasoup**:
+
 - Pure SFU library; no opinions about rooms, signaling, or features
 - You build the signaling server, room logic, and client integration
 - TypeScript/Node.js API with C++ media engine
@@ -2314,11 +2384,13 @@ Key tradeoffs:
 **Q9: How do you handle scalability challenges when a single media server instance is not enough?**
 
 **Vertical scaling**:
+
 - Use all CPU cores (mediasoup: multiple Workers; LiveKit/Pion: Go's goroutines)
 - Increase UDP buffer sizes in the kernel
 - Use faster network interfaces (10 Gbps+)
 
 **Horizontal scaling**:
+
 - **Room sharding**: Each room is assigned to one server. A routing layer directs clients to the correct server. Works well when rooms are independent.
 - **Cascaded SFUs**: For rooms that span servers (large rooms or geographic distribution), connect SFUs via relay links. Each SFU handles a subset of participants.
 - **Load balancing**: Use a load balancer or routing service that considers current load (participant count, CPU, bandwidth) when assigning new rooms.
@@ -2326,6 +2398,7 @@ Key tradeoffs:
 - **Stateless signaling**: Keep signaling servers stateless (or backed by Redis) so they can scale independently from media servers.
 
 **Infrastructure patterns**:
+
 - Kubernetes with custom HPA based on media-specific metrics
 - Redis for coordination between server instances
 - Geographic DNS routing to nearest server cluster
@@ -2336,6 +2409,7 @@ Key tradeoffs:
 **Q10: What is the role of OICE in WebRTC, and how does OICE-lite simplify things for media servers?**
 
 ICE (Interactive Connectivity Establishment) is the protocol that discovers the best network path between two WebRTC endpoints. It handles NAT traversal by:
+
 1. Gathering candidates (host addresses, STUN-derived addresses, TURN relays)
 2. Exchanging candidates via signaling
 3. Performing connectivity checks (STUN binding requests/responses)
@@ -2344,6 +2418,7 @@ ICE (Interactive Connectivity Establishment) is the protocol that discovers the 
 Full ICE is designed for peer-to-peer scenarios where both sides may be behind NATs.
 
 **ICE-lite** is a simplified ICE implementation for servers. Since the server has a public IP address:
+
 - It does not gather candidates (it knows its own addresses)
 - It does not initiate connectivity checks
 - It only responds to connectivity checks from clients
@@ -2362,24 +2437,28 @@ Systematic debugging approach:
 1. **Collect metrics**: Use WebRTC's getStats() API on the client and server-side RTCP stats.
 
 2. **Check sender side**:
+
    - Is the sender's camera producing expected resolution/framerate?
    - Is the sender's encoder hitting its target bitrate?
    - Is the sender experiencing CPU overload (causing frame drops)?
    - What simulcast layers is the sender producing?
 
 3. **Check network (sender to SFU)**:
+
    - Packet loss on the uplink (from Receiver Reports)
    - Jitter measurements
    - RTT between sender and SFU
    - NACK/retransmission counts
 
 4. **Check SFU decisions**:
+
    - Which simulcast layer is being forwarded to the affected receiver?
    - Is bandwidth estimation accurate?
    - Is the SFU experiencing CPU or memory pressure?
    - Are RTCP feedback messages being processed correctly?
 
 5. **Check network (SFU to receiver)**:
+
    - Packet loss on the downlink
    - Jitter and RTT
    - NACK/retransmission counts
@@ -2397,10 +2476,12 @@ Common root causes: insufficient sender bitrate, network congestion causing pack
 **Q12: Explain the difference between LiveKit and mediasoup in terms of architecture and developer experience.**
 
 **Architecture**:
+
 - LiveKit is a complete platform: server binary + SDKs + egress + ingress + agents. Written in Go, single binary deployment. Uses Redis for multi-node coordination.
 - mediasoup is a library: C++ media engine controlled by Node.js API. You provide signaling, room logic, client code, recording, and everything else.
 
 **Developer experience**:
+
 - LiveKit: Generate a token, connect with an SDK, publish/subscribe to tracks. High-level APIs abstract WebRTC details. Most developers never touch SDP, ICE, or RTP directly.
 - mediasoup: Create workers, routers, transports, producers, consumers. Build your own signaling server. Handle WebRTC negotiation details. Requires understanding of RTP capabilities, DTLS parameters, and media routing.
 
@@ -2481,6 +2562,7 @@ Interactive Participants (50)
 ```
 
 **Design**:
+
 1. **SFU layer**: 50 interactive participants connect to an SFU (e.g., LiveKit). They have full real-time audio/video/screen sharing capability.
 
 2. **Egress/transcoding layer**: The SFU produces a composite output (all participants in a grid or speaker layout). This is rendered via a headless browser or server-side composition and encoded to H.264.
@@ -2492,6 +2574,7 @@ Interactive Participants (50)
 5. **Interaction channel**: Viewers can interact via chat (WebSocket), reactions, or a "raise hand" mechanism that temporarily promotes them to the SFU as a full participant.
 
 **Key considerations**:
+
 - The CDN handles the scale; the SFU only handles 50 participants
 - Latency for viewers is 3-10 seconds (HLS) or sub-second (WebRTC CDN)
 - Recording can happen at the egress layer
@@ -2532,6 +2615,7 @@ A: Based on: (1) receiver's estimated bandwidth (from TWCC/REMB), (2) receiver's
 Media servers are the backbone of modern real-time communication at scale. The choice between Janus, mediasoup, LiveKit, Pion, Jitsi, or streaming servers like SRS depends on your use case, team expertise, and requirements for flexibility vs. time-to-market.
 
 Key takeaways:
+
 - **SFU** is the dominant architecture for video conferencing
 - **mediasoup** gives maximum control for custom applications
 - **LiveKit** provides the fastest path to a complete real-time platform

@@ -24,9 +24,9 @@
 
 One of the most fundamental distinctions in media engineering is the difference between a **codec** and a **container**. These terms are frequently confused, but they serve entirely different purposes.
 
-A **codec** (coder-decoder) is an algorithm that compresses and decompresses audio or video data. Examples include H.264, H.265/HEVC, VP9, AV1 (video) and AAC, Opus, MP3, Vorbis (audio). The codec defines *how* the raw media samples are encoded into a compressed bitstream.
+A **codec** (coder-decoder) is an algorithm that compresses and decompresses audio or video data. Examples include H.264, H.265/HEVC, VP9, AV1 (video) and AAC, Opus, MP3, Vorbis (audio). The codec defines _how_ the raw media samples are encoded into a compressed bitstream.
 
-A **container** (also called a wrapper or file format) is a file structure that packages one or more compressed bitstreams together along with metadata. The container defines *how the streams are organized, synchronized, and stored on disk or transmitted over a network*. Examples include MP4, MKV, WebM, FLV, MPEG-TS, and Ogg.
+A **container** (also called a wrapper or file format) is a file structure that packages one or more compressed bitstreams together along with metadata. The container defines _how the streams are organized, synchronized, and stored on disk or transmitted over a network_. Examples include MP4, MKV, WebM, FLV, MPEG-TS, and Ogg.
 
 ```
 Think of it this way:
@@ -112,6 +112,7 @@ The process of combining multiple elementary streams into a single container is 
 MP4 is the most widely used container format on the internet and in consumer media. It is formally specified as MPEG-4 Part 14 and is based on the **ISO Base Media File Format** (ISO BMFF, ISO 14496-12). The format evolved from Apple's QuickTime file format (.mov), and the two share the same fundamental box-based structure.
 
 MP4 supports a wide range of codecs:
+
 - **Video**: H.264/AVC, H.265/HEVC, H.266/VVC, AV1, VP9
 - **Audio**: AAC, MP3, AC-3, E-AC-3, Opus, FLAC
 - **Subtitles**: Timed Text (tx3g), WebVTT (in fMP4)
@@ -354,6 +355,7 @@ The key benefit of CMAF is that content providers can encode once and serve both
 Matroska (.mkv for video, .mka for audio, .mks for subtitles, .mk3d for stereoscopic video) is an open, free container format that aims to be a universal container. It is developed by the Matroska.org community and is specified in RFC 8794 (IETF).
 
 Matroska is the most flexible container format available. It supports:
+
 - Virtually any video codec (H.264, H.265, AV1, VP9, MPEG-2, etc.)
 - Virtually any audio codec (AAC, FLAC, Opus, DTS, TrueHD, etc.)
 - Unlimited number of tracks of any type
@@ -485,10 +487,10 @@ MKV File
 
 Unlike MKV which accepts virtually any codec, WebM restricts the allowed codecs:
 
-| Type   | Allowed Codecs                |
-|--------|-------------------------------|
-| Video  | VP8, VP9, AV1                 |
-| Audio  | Vorbis, Opus                  |
+| Type  | Allowed Codecs |
+| ----- | -------------- |
+| Video | VP8, VP9, AV1  |
+| Audio | Vorbis, Opus   |
 
 All of these codecs are royalty-free, which was a primary design goal. The EBML DocType for a WebM file is `"webm"` rather than `"matroska"`.
 
@@ -527,6 +529,7 @@ WebM was created to provide a royalty-free alternative to H.264 in the `<video>`
 ### Streaming with WebM
 
 WebM supports streaming through:
+
 - **WebM Byte Stream Format** for Media Source Extensions (MSE)
 - Progressive download (the Cues element enables seeking)
 - Live streaming via chunked WebM (similar to how fMP4 works, using Clusters as natural segment boundaries)
@@ -543,10 +546,10 @@ FLV (Flash Video) was developed by Macromedia (later Adobe) for use with Adobe F
 
 ### Supported Codecs
 
-| Type  | Codecs                                      |
-|-------|---------------------------------------------|
+| Type  | Codecs                                       |
+| ----- | -------------------------------------------- |
 | Video | H.264/AVC, Sorenson Spark, VP6, Screen Video |
-| Audio | AAC, MP3, Speex, ADPCM, Nellymoser          |
+| Audio | AAC, MP3, Speex, ADPCM, Nellymoser           |
 
 Modern RTMP/FLV usage is almost exclusively H.264 + AAC. An extension called **Enhanced RTMP** adds support for HEVC, VP9, and AV1.
 
@@ -831,6 +834,7 @@ Multiple logical bitstreams (e.g., Theora video + Vorbis audio) are multiplexed 
 ### Usage Today
 
 Ogg is used in:
+
 - Many video games (Ogg Vorbis for game audio)
 - Podcasts (Opus in Ogg)
 - Wikipedia (Ogg Theora/Vorbis for embedded media, though WebM is now preferred)
@@ -887,6 +891,7 @@ Remuxing Flow:
 ```
 
 Remuxing limitations:
+
 - The target container must support the codecs in the source. For example, you cannot remux VP9 into FLV (FLV does not support VP9 without Enhanced RTMP).
 - Some features may be lost (e.g., MKV attachments when remuxing to MP4, or ASS subtitle styling when converting to SRT).
 
@@ -968,6 +973,7 @@ ID3v2 Tag Structure (at beginning of file):
 ```
 
 Common ID3 frames:
+
 - TIT2: Title
 - TPE1: Artist
 - TALB: Album
@@ -1042,6 +1048,7 @@ Target type values: 70=Collection, 60=Season/Sequel, 50=Album/Movie, 40=Part/Ses
 Chapters allow defining named time ranges within a media file.
 
 **MKV Chapters** (native support):
+
 ```xml
 <Chapters>
   <EditionEntry>
@@ -1072,6 +1079,7 @@ Chapters allow defining named time ranges within a media file.
 ### Embedded Artwork
 
 Both MP4 and MKV support embedded images:
+
 - **MP4**: `covr` atom in ilst, contains raw JPEG or PNG
 - **MKV**: Attachments element, with MIME type "image/jpeg" or "image/png"
 - **ID3**: APIC frame, supports front cover, back cover, artist photo, etc.
@@ -1185,13 +1193,13 @@ DVD bitmap subtitles, stored as .idx (index) + .sub (bitmaps) files or embedded 
 ### Embedded vs. Sidecar Subtitles
 
 | Aspect         | Embedded                          | Sidecar                          |
-|----------------|-----------------------------------|----------------------------------|
+| -------------- | --------------------------------- | -------------------------------- |
 | Location       | Inside the container (MKV, MP4)   | Separate file (.srt, .vtt, .ass) |
 | Distribution   | Single file to distribute         | Must distribute video + subtitle |
 | Editing        | Requires remuxing to change       | Edit the text file directly      |
 | Player support | Player must support the container | Most players auto-detect by name |
 | Streaming      | Works with all delivery methods   | Requires separate HTTP request   |
-| File naming    | N/A                               | movie.en.srt, movie.zh.srt      |
+| File naming    | N/A                               | movie.en.srt, movie.zh.srt       |
 
 ### Subtitle Conversion
 
@@ -1212,6 +1220,7 @@ WebVTT -> SRT:  Loses CSS styling, keeps text
 ### FFmpeg Muxing Examples
 
 **Mux raw H.264 and AAC into MP4:**
+
 ```bash
 ffmpeg -i video.h264 -i audio.aac \
   -c:v copy -c:a copy \
@@ -1220,6 +1229,7 @@ ffmpeg -i video.h264 -i audio.aac \
 ```
 
 **Mux video + multiple audio tracks + subtitles into MKV:**
+
 ```bash
 ffmpeg -i video.h264 \
   -i audio_en.aac \
@@ -1238,21 +1248,25 @@ ffmpeg -i video.h264 \
 ### FFmpeg Demuxing Examples
 
 **Extract video stream only (no re-encoding):**
+
 ```bash
 ffmpeg -i input.mp4 -map 0:v -c copy video_only.h264
 ```
 
 **Extract audio stream to a separate file:**
+
 ```bash
 ffmpeg -i input.mp4 -map 0:a -c copy audio_only.aac
 ```
 
 **Extract subtitles from MKV:**
+
 ```bash
 ffmpeg -i input.mkv -map 0:s:0 subtitles.srt
 ```
 
 **Extract all streams separately:**
+
 ```bash
 ffmpeg -i input.mkv \
   -map 0:v:0 -c copy video.h264 \
@@ -1265,18 +1279,23 @@ ffmpeg -i input.mkv \
 ### FFmpeg Remuxing Examples
 
 **Remux MKV to MP4 (no re-encoding):**
+
 ```bash
 ffmpeg -i input.mkv -c copy -movflags +faststart output.mp4
 ```
+
 Note: `-movflags +faststart` moves the moov atom to the beginning for web streaming.
 
 **Remux MPEG-TS to MP4:**
+
 ```bash
 ffmpeg -i input.ts -c copy -bsf:a aac_adtstoasc output.mp4
 ```
+
 Note: `-bsf:a aac_adtstoasc` converts AAC from ADTS framing (used in TS) to raw framing (used in MP4).
 
 **Remux MP4 to fragmented MP4:**
+
 ```bash
 ffmpeg -i input.mp4 -c copy \
   -movflags +frag_keyframe+empty_moov+default_base_moof \
@@ -1284,6 +1303,7 @@ ffmpeg -i input.mp4 -c copy \
 ```
 
 **Remux to WebM (may require re-encoding if codecs are incompatible):**
+
 ```bash
 # If source is already VP9+Opus, just remux:
 ffmpeg -i input.mkv -c copy output.webm
@@ -1293,6 +1313,7 @@ ffmpeg -i input.mp4 -c:v libvpx-vp9 -c:a libopus output.webm
 ```
 
 **Remux FLV to MP4:**
+
 ```bash
 ffmpeg -i input.flv -c copy output.mp4
 ```
@@ -1300,6 +1321,7 @@ ffmpeg -i input.flv -c copy output.mp4
 ### Adding Subtitles
 
 **Add SRT subtitles to MP4 (as a sidecar track):**
+
 ```bash
 ffmpeg -i input.mp4 -i subtitles.srt \
   -map 0:v -map 0:a -map 1:s \
@@ -1308,13 +1330,16 @@ ffmpeg -i input.mp4 -i subtitles.srt \
 ```
 
 **Burn (hardcode) subtitles into video:**
+
 ```bash
 ffmpeg -i input.mp4 -vf "subtitles=subtitles.srt" \
   -c:v libx264 -c:a copy output.mp4
 ```
+
 Note: Burning subtitles requires re-encoding the video.
 
 **Add WebVTT to fragmented MP4 for DASH/HLS:**
+
 ```bash
 ffmpeg -i input.mp4 -i subtitles.vtt \
   -map 0:v -map 0:a -map 1:s \
@@ -1326,6 +1351,7 @@ ffmpeg -i input.mp4 -i subtitles.vtt \
 ### Creating HLS Segments
 
 **Create HLS with MPEG-TS segments:**
+
 ```bash
 ffmpeg -i input.mp4 \
   -c:v copy -c:a copy \
@@ -1337,6 +1363,7 @@ ffmpeg -i input.mp4 \
 ```
 
 **Create HLS with fMP4 segments:**
+
 ```bash
 ffmpeg -i input.mp4 \
   -c:v copy -c:a copy \
@@ -1351,16 +1378,19 @@ ffmpeg -i input.mp4 \
 ### Inspecting Container Structure
 
 **Show all streams in a file:**
+
 ```bash
 ffprobe -show_streams input.mp4
 ```
 
 **Show container format details:**
+
 ```bash
 ffprobe -show_format input.mp4
 ```
 
 **Show MP4 box structure:**
+
 ```bash
 # Using mp4dump (from Bento4 tools)
 mp4dump input.mp4
@@ -1370,11 +1400,13 @@ ffprobe -show_entries format_tags input.mp4
 ```
 
 **Show MPEG-TS stream info:**
+
 ```bash
 ffprobe -show_programs -show_streams input.ts
 ```
 
 **Show all packets with timestamps:**
+
 ```bash
 ffprobe -show_packets -select_streams v:0 input.mp4 | head -100
 ```
@@ -1382,12 +1414,14 @@ ffprobe -show_packets -select_streams v:0 input.mp4 | head -100
 ### Advanced: Splitting and Joining
 
 **Split a file at specific times (no re-encoding):**
+
 ```bash
 # Extract from 00:05:00 to 00:10:00
 ffmpeg -i input.mp4 -ss 00:05:00 -to 00:10:00 -c copy segment.mp4
 ```
 
 **Concatenate files (same codec/format):**
+
 ```bash
 # Create a file list
 echo "file 'part1.mp4'" > filelist.txt
@@ -1404,75 +1438,74 @@ ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp4
 
 ### General Features
 
-| Feature            | MP4        | MKV         | WebM       | FLV        | MPEG-TS    | Ogg        |
-|--------------------|------------|-------------|------------|------------|------------|------------|
-| File extension     | .mp4, .m4a | .mkv, .mka  | .webm      | .flv       | .ts, .m2ts | .ogg, .ogv |
-| Specification      | ISO 14496  | RFC 8794    | WebM spec  | Adobe spec | ISO 13818  | RFC 3533   |
-| License            | Patented   | Free/Open   | Free/Open  | Proprietary| Patented   | Free/Open  |
-| Structure          | Box/Atom   | EBML        | EBML       | Tags       | Packets    | Pages      |
-| Max video tracks   | Multiple   | Unlimited   | 1 (typical)| 1          | Multiple   | Multiple   |
-| Max audio tracks   | Multiple   | Unlimited   | 1 (typical)| 1          | Multiple   | Multiple   |
-| Subtitle tracks    | Limited    | Unlimited   | Limited    | None       | DVB/Teletext| Limited   |
-| Chapters           | Yes        | Yes (rich)  | Basic      | No         | No         | Basic      |
-| Attachments        | No         | Yes         | No         | No         | No         | No         |
-| Metadata           | iTunes/XMP | Flexible    | Limited    | AMF        | Limited    | Vorbis Comment|
-| Seeking            | Excellent  | Excellent   | Good       | Limited    | Poor*      | Good       |
-| Streaming          | Excellent  | Good        | Good       | Good (RTMP)| Excellent  | Fair       |
-| Error resilience   | Low        | Low         | Low        | Low        | High       | Medium     |
-| Overhead           | Low        | Low-Medium  | Low        | Low        | High       | Medium     |
+| Feature          | MP4        | MKV        | WebM        | FLV         | MPEG-TS      | Ogg            |
+| ---------------- | ---------- | ---------- | ----------- | ----------- | ------------ | -------------- |
+| File extension   | .mp4, .m4a | .mkv, .mka | .webm       | .flv        | .ts, .m2ts   | .ogg, .ogv     |
+| Specification    | ISO 14496  | RFC 8794   | WebM spec   | Adobe spec  | ISO 13818    | RFC 3533       |
+| License          | Patented   | Free/Open  | Free/Open   | Proprietary | Patented     | Free/Open      |
+| Structure        | Box/Atom   | EBML       | EBML        | Tags        | Packets      | Pages          |
+| Max video tracks | Multiple   | Unlimited  | 1 (typical) | 1           | Multiple     | Multiple       |
+| Max audio tracks | Multiple   | Unlimited  | 1 (typical) | 1           | Multiple     | Multiple       |
+| Subtitle tracks  | Limited    | Unlimited  | Limited     | None        | DVB/Teletext | Limited        |
+| Chapters         | Yes        | Yes (rich) | Basic       | No          | No           | Basic          |
+| Attachments      | No         | Yes        | No          | No          | No           | No             |
+| Metadata         | iTunes/XMP | Flexible   | Limited     | AMF         | Limited      | Vorbis Comment |
+| Seeking          | Excellent  | Excellent  | Good        | Limited     | Poor\*       | Good           |
+| Streaming        | Excellent  | Good       | Good        | Good (RTMP) | Excellent    | Fair           |
+| Error resilience | Low        | Low        | Low         | Low         | High         | Medium         |
+| Overhead         | Low        | Low-Medium | Low         | Low         | High         | Medium         |
 
-*MPEG-TS seeking requires scanning unless an external index is provided.
+\*MPEG-TS seeking requires scanning unless an external index is provided.
 
 ### Codec Support
 
-| Codec          | MP4 | MKV | WebM | FLV | MPEG-TS | Ogg |
-|----------------|-----|-----|------|-----|---------|-----|
-| H.264/AVC      | Yes | Yes | No   | Yes | Yes     | No  |
-| H.265/HEVC     | Yes | Yes | No   | Yes*| Yes     | No  |
-| H.266/VVC      | Yes | Yes | No   | No  | Yes     | No  |
-| VP8            | Yes | Yes | Yes  | Yes | No      | No  |
-| VP9            | Yes | Yes | Yes  | Yes*| No      | No  |
-| AV1            | Yes | Yes | Yes  | Yes*| Yes     | No  |
-| MPEG-2         | Yes | Yes | No   | No  | Yes     | No  |
-| Theora         | No  | Yes | No   | No  | No      | Yes |
-| AAC            | Yes | Yes | No   | Yes | Yes     | No  |
-| MP3            | Yes | Yes | No   | Yes | Yes     | No  |
-| Opus           | Yes | Yes | Yes  | No  | No      | Yes |
-| Vorbis         | No  | Yes | Yes  | No  | No      | Yes |
-| FLAC           | Yes | Yes | No   | No  | No      | Yes |
-| AC-3 / E-AC-3  | Yes | Yes | No   | No  | Yes     | No  |
-| DTS / DTS-HD   | No  | Yes | No   | No  | Yes     | No  |
-| TrueHD / Atmos | No  | Yes | No   | No  | Yes     | No  |
+| Codec          | MP4 | MKV | WebM | FLV   | MPEG-TS | Ogg |
+| -------------- | --- | --- | ---- | ----- | ------- | --- |
+| H.264/AVC      | Yes | Yes | No   | Yes   | Yes     | No  |
+| H.265/HEVC     | Yes | Yes | No   | Yes\* | Yes     | No  |
+| H.266/VVC      | Yes | Yes | No   | No    | Yes     | No  |
+| VP8            | Yes | Yes | Yes  | Yes   | No      | No  |
+| VP9            | Yes | Yes | Yes  | Yes\* | No      | No  |
+| AV1            | Yes | Yes | Yes  | Yes\* | Yes     | No  |
+| MPEG-2         | Yes | Yes | No   | No    | Yes     | No  |
+| Theora         | No  | Yes | No   | No    | No      | Yes |
+| AAC            | Yes | Yes | No   | Yes   | Yes     | No  |
+| MP3            | Yes | Yes | No   | Yes   | Yes     | No  |
+| Opus           | Yes | Yes | Yes  | No    | No      | Yes |
+| Vorbis         | No  | Yes | Yes  | No    | No      | Yes |
+| FLAC           | Yes | Yes | No   | No    | No      | Yes |
+| AC-3 / E-AC-3  | Yes | Yes | No   | No    | Yes     | No  |
+| DTS / DTS-HD   | No  | Yes | No   | No    | Yes     | No  |
+| TrueHD / Atmos | No  | Yes | No   | No    | Yes     | No  |
 
-*Enhanced RTMP/FLV extension required.
+\*Enhanced RTMP/FLV extension required.
 
 ### Browser Support (HTML5 `<video>`)
 
-| Container | Chrome | Firefox | Safari | Edge  |
-|-----------|--------|---------|--------|-------|
-| MP4       | Yes    | Yes     | Yes    | Yes   |
-| WebM      | Yes    | Yes     | Partial| Yes   |
-| Ogg       | Yes    | Yes     | No     | Yes   |
-| MKV       | No*    | No      | No     | No*   |
-| FLV       | No     | No      | No     | No    |
-| MPEG-TS   | No**   | No      | Yes*** | No    |
+| Container | Chrome | Firefox | Safari    | Edge |
+| --------- | ------ | ------- | --------- | ---- |
+| MP4       | Yes    | Yes     | Yes       | Yes  |
+| WebM      | Yes    | Yes     | Partial   | Yes  |
+| Ogg       | Yes    | Yes     | No        | Yes  |
+| MKV       | No\*   | No      | No        | No\* |
+| FLV       | No     | No      | No        | No   |
+| MPEG-TS   | No\*\* | No      | Yes\*\*\* | No   |
 
-*Chromium-based browsers may play some MKV files since MKV is a superset of WebM.
-**MPEG-TS via MSE (Media Source Extensions) in JavaScript.
-***Safari supports MPEG-TS natively for HLS playback.
+\*Chromium-based browsers may play some MKV files since MKV is a superset of WebM.
+**MPEG-TS via MSE (Media Source Extensions) in JavaScript. \***Safari supports MPEG-TS natively for HLS playback.
 
 ### Streaming Protocol Compatibility
 
-| Container  | HLS       | DASH | RTMP | MSE  | Progressive |
-|------------|-----------|------|------|------|-------------|
-| MP4        | Yes (fMP4)| Yes  | No   | Yes  | Yes*        |
-| MPEG-TS    | Yes       | No   | No   | Yes  | No          |
-| FLV        | No        | No   | Yes  | No   | Yes         |
-| WebM       | No        | Rare | No   | Yes  | Yes         |
-| MKV        | No        | No   | No   | No   | No          |
-| Ogg        | No        | No   | No   | No   | Yes         |
+| Container | HLS        | DASH | RTMP | MSE | Progressive |
+| --------- | ---------- | ---- | ---- | --- | ----------- |
+| MP4       | Yes (fMP4) | Yes  | No   | Yes | Yes\*       |
+| MPEG-TS   | Yes        | No   | No   | Yes | No          |
+| FLV       | No         | No   | Yes  | No  | Yes         |
+| WebM      | No         | Rare | No   | Yes | Yes         |
+| MKV       | No         | No   | No   | No  | No          |
+| Ogg       | No         | No   | No   | No  | Yes         |
 
-*Requires faststart (moov before mdat).
+\*Requires faststart (moov before mdat).
 
 ---
 
@@ -1575,6 +1608,7 @@ Codec-level causes: (1) The stream uses open GOPs where B-frames reference the p
 **Q15: How would you reduce the startup latency of an adaptive bitrate stream?**
 
 Container-level optimizations:
+
 1. Use fMP4 instead of MPEG-TS for segments (lower overhead, smaller init segment).
 2. Use CMAF chunks to enable sub-segment delivery (player receives data before the full segment is ready).
 3. Reduce segment duration (4s -> 2s segments, with tradeoff of more HTTP requests and potentially lower compression efficiency).

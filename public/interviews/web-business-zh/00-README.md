@@ -20,42 +20,42 @@
 
 ## 目录
 
-| # | 主题 | 一句话 |
-|---|------|--------|
-| 01 | [认证与授权](01-AUTHENTICATION.md) | 你是谁？你能干什么？ |
-| 02 | [支付处理](02-PAYMENT.md) | 钱是怎么从买家到卖家的 |
-| 03 | [电商](03-ECOMMERCE.md) | 网上购物的完整生命周期 |
-| 04 | [订阅与计费](04-SUBSCRIPTION-BILLING.md) | 会员、套餐、自动续费那些事儿 |
-| 05 | [用户管理](05-USER-MANAGEMENT.md) | 一个账号从注册到注销 |
-| 06 | [邮件与通知](06-EMAIL-NOTIFICATION.md) | 怎么把消息靠谱地送到用户手上 |
-| 07 | [内容管理](07-CMS.md) | 内容的创建、编辑和发布 |
-| 08 | [搜索与筛选](08-SEARCH-FILTERING.md) | 帮用户找到他想要的东西 |
-| 09 | [文件上传与存储](09-FILE-UPLOAD-STORAGE.md) | 大规模处理用户文件 |
-| 10 | [DevOps 流水线](10-DEVOPS-PIPELINE.md) | 从提交代码到上线生产 |
-| 11 | [数据分析与埋点](11-ANALYTICS-TRACKING.md) | 看看用户到底在干什么 |
-| 12 | [多租户](12-MULTI-TENANCY.md) | 一套系统服务多个客户 |
-| 13 | [数据隐私与合规](13-DATA-PRIVACY.md) | GDPR、个保法，别让公司被罚 |
-| 14 | [第三方集成](14-THIRD-PARTY-INTEGRATION.md) | 对接外部服务 |
-| 15 | [国际化](15-INTERNATIONALIZATION.md) | 让你的应用全球可用 |
-| 16 | [SEO](16-SEO.md) | 让搜索引擎找到你 |
-| 17 | [限流与 API 管理](17-RATE-LIMITING-API.md) | 保护和商业化你的 API |
-| 18 | [缓存策略](18-CACHING.md) | 快而不乱 |
-| 19 | [功能开关与灰度发布](19-FEATURE-FLAGS.md) | 安全地一步步上线新功能 |
-| 20 | [日志与监控](20-LOGGING-MONITORING.md) | 在用户发现问题之前你先发现 |
-| 21 | [配送与供应链](21-DELIVERY-SUPPLY-CHAIN.md) | 商品从仓库到家门口的全流程 |
-| 22 | [大语言模型与 RAG 的商业应用](22-LLM-RAG-BUSINESS.md) | 企业怎么用 AI 搜索、总结和生成内容 |
-| 23 | [即时通讯与实时聊天](23-INSTANT-MESSAGING.md) | 消息怎么实时送达 |
-| 24 | [社交信息流与内容审核](24-SOCIAL-FEED-MODERATION.md) | 做信息流、管内容 |
-| 25 | [电商平台与双边市场](25-MARKETPLACE.md) | 买卖双方怎么在平台上撮合 |
-| 26 | [广告与广告技术](26-AD-TECH.md) | 广告怎么投、怎么算、怎么防作弊 |
-| 27 | [预订与预约系统](27-BOOKING-RESERVATION.md) | 管理有限资源的时间分配 |
-| 28 | [金融科技与数字钱包](28-FINTECH-WALLET.md) | KYC、钱包、合规，安全地搬钱 |
-| 29 | [视频与直播](29-VIDEO-LIVE-STREAMING.md) | 视频怎么转码、分发、变现 |
-| 30 | [客户支持与工单系统](30-CUSTOMER-SUPPORT.md) | 从用户反馈到问题解决的全流程 |
-| 31 | [工作流与审批系统](31-WORKFLOW-APPROVAL.md) | 审批链、状态机、流程自动化 |
-| 32 | [会员与积分体系](32-LOYALTY-REWARDS.md) | 积分、等级、让用户留下来 |
-| 33 | [外卖与即时配送](33-FOOD-DELIVERY.md) | 从下单到送达的全流程 |
-| 34 | [在线教育](34-ONLINE-EDUCATION.md) | 课程、学习进度、证书 |
+| #   | 主题                                                  | 一句话                             |
+| --- | ----------------------------------------------------- | ---------------------------------- |
+| 01  | [认证与授权](01-AUTHENTICATION.md)                    | 你是谁？你能干什么？               |
+| 02  | [支付处理](02-PAYMENT.md)                             | 钱是怎么从买家到卖家的             |
+| 03  | [电商](03-ECOMMERCE.md)                               | 网上购物的完整生命周期             |
+| 04  | [订阅与计费](04-SUBSCRIPTION-BILLING.md)              | 会员、套餐、自动续费那些事儿       |
+| 05  | [用户管理](05-USER-MANAGEMENT.md)                     | 一个账号从注册到注销               |
+| 06  | [邮件与通知](06-EMAIL-NOTIFICATION.md)                | 怎么把消息靠谱地送到用户手上       |
+| 07  | [内容管理](07-CMS.md)                                 | 内容的创建、编辑和发布             |
+| 08  | [搜索与筛选](08-SEARCH-FILTERING.md)                  | 帮用户找到他想要的东西             |
+| 09  | [文件上传与存储](09-FILE-UPLOAD-STORAGE.md)           | 大规模处理用户文件                 |
+| 10  | [DevOps 流水线](10-DEVOPS-PIPELINE.md)                | 从提交代码到上线生产               |
+| 11  | [数据分析与埋点](11-ANALYTICS-TRACKING.md)            | 看看用户到底在干什么               |
+| 12  | [多租户](12-MULTI-TENANCY.md)                         | 一套系统服务多个客户               |
+| 13  | [数据隐私与合规](13-DATA-PRIVACY.md)                  | GDPR、个保法，别让公司被罚         |
+| 14  | [第三方集成](14-THIRD-PARTY-INTEGRATION.md)           | 对接外部服务                       |
+| 15  | [国际化](15-INTERNATIONALIZATION.md)                  | 让你的应用全球可用                 |
+| 16  | [SEO](16-SEO.md)                                      | 让搜索引擎找到你                   |
+| 17  | [限流与 API 管理](17-RATE-LIMITING-API.md)            | 保护和商业化你的 API               |
+| 18  | [缓存策略](18-CACHING.md)                             | 快而不乱                           |
+| 19  | [功能开关与灰度发布](19-FEATURE-FLAGS.md)             | 安全地一步步上线新功能             |
+| 20  | [日志与监控](20-LOGGING-MONITORING.md)                | 在用户发现问题之前你先发现         |
+| 21  | [配送与供应链](21-DELIVERY-SUPPLY-CHAIN.md)           | 商品从仓库到家门口的全流程         |
+| 22  | [大语言模型与 RAG 的商业应用](22-LLM-RAG-BUSINESS.md) | 企业怎么用 AI 搜索、总结和生成内容 |
+| 23  | [即时通讯与实时聊天](23-INSTANT-MESSAGING.md)         | 消息怎么实时送达                   |
+| 24  | [社交信息流与内容审核](24-SOCIAL-FEED-MODERATION.md)  | 做信息流、管内容                   |
+| 25  | [电商平台与双边市场](25-MARKETPLACE.md)               | 买卖双方怎么在平台上撮合           |
+| 26  | [广告与广告技术](26-AD-TECH.md)                       | 广告怎么投、怎么算、怎么防作弊     |
+| 27  | [预订与预约系统](27-BOOKING-RESERVATION.md)           | 管理有限资源的时间分配             |
+| 28  | [金融科技与数字钱包](28-FINTECH-WALLET.md)            | KYC、钱包、合规，安全地搬钱        |
+| 29  | [视频与直播](29-VIDEO-LIVE-STREAMING.md)              | 视频怎么转码、分发、变现           |
+| 30  | [客户支持与工单系统](30-CUSTOMER-SUPPORT.md)          | 从用户反馈到问题解决的全流程       |
+| 31  | [工作流与审批系统](31-WORKFLOW-APPROVAL.md)           | 审批链、状态机、流程自动化         |
+| 32  | [会员与积分体系](32-LOYALTY-REWARDS.md)               | 积分、等级、让用户留下来           |
+| 33  | [外卖与即时配送](33-FOOD-DELIVERY.md)                 | 从下单到送达的全流程               |
+| 34  | [在线教育](34-ONLINE-EDUCATION.md)                    | 课程、学习进度、证书               |
 
 ## 推荐阅读顺序
 

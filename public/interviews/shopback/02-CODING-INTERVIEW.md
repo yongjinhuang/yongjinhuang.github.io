@@ -1,6 +1,7 @@
 # Round 2: Technical Assessment - Live Coding
 
 ## Format
+
 - **Duration**: 1 hour on HackerRank (live, with interviewer)
 - **Difficulty**: LeetCode Easy to Medium (rated 2.8-3.0/5.0)
 - **Language**: Your choice (TypeScript/JavaScript recommended given ShopBack's stack)
@@ -9,6 +10,7 @@
 ## Strategy for the Interview
 
 ### Time Management (60 minutes)
+
 ```
 0-5 min   → Read problem, ask clarifying questions
 5-10 min  → Discuss approach with interviewer
@@ -18,6 +20,7 @@
 ```
 
 ### Communication Tips
+
 - **Think aloud**: Explain your reasoning as you code
 - **Ask clarifications**: Input size? Edge cases? Can I use built-in methods?
 - **Start simple**: Brute force first, then optimize
@@ -33,37 +36,37 @@
 
 ```typescript
 class RandomizedSet {
-  private map: Map<number, number> // value -> index
-  private list: number[]
+  private map: Map<number, number>; // value -> index
+  private list: number[];
 
   constructor() {
-    this.map = new Map()
-    this.list = []
+    this.map = new Map();
+    this.list = [];
   }
 
   insert(val: number): boolean {
-    if (this.map.has(val)) return false
-    this.map.set(val, this.list.length)
-    this.list.push(val)
-    return true
+    if (this.map.has(val)) return false;
+    this.map.set(val, this.list.length);
+    this.list.push(val);
+    return true;
   }
 
   remove(val: number): boolean {
-    if (!this.map.has(val)) return false
-    const idx = this.map.get(val)!
-    const last = this.list[this.list.length - 1]
+    if (!this.map.has(val)) return false;
+    const idx = this.map.get(val)!;
+    const last = this.list[this.list.length - 1];
     // Swap with last element
-    this.list[idx] = last
-    this.map.set(last, idx)
+    this.list[idx] = last;
+    this.map.set(last, idx);
     // Remove last
-    this.list.pop()
-    this.map.delete(val)
-    return true
+    this.list.pop();
+    this.map.delete(val);
+    return true;
   }
 
   getRandom(): number {
-    const idx = Math.floor(Math.random() * this.list.length)
-    return this.list[idx]
+    const idx = Math.floor(Math.random() * this.list.length);
+    return this.list[idx];
   }
 }
 ```
@@ -80,24 +83,24 @@ class RandomizedSet {
 
 ```typescript
 class Solution {
-  private original: number[]
+  private original: number[];
 
   constructor(nums: number[]) {
-    this.original = [...nums]
+    this.original = [...nums];
   }
 
   reset(): number[] {
-    return [...this.original]
+    return [...this.original];
   }
 
   shuffle(): number[] {
-    const arr = [...this.original]
+    const arr = [...this.original];
     // Fisher-Yates shuffle
     for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    return arr
+    return arr;
   }
 }
 ```
@@ -114,38 +117,38 @@ class Solution {
 
 ```typescript
 function minSwaps(arr1: number[], arr2: number[]): number {
-  const sum1 = arr1.reduce((a, b) => a + b, 0)
-  const sum2 = arr2.reduce((a, b) => a + b, 0)
-  const totalSum = sum1 + sum2
+  const sum1 = arr1.reduce((a, b) => a + b, 0);
+  const sum2 = arr2.reduce((a, b) => a + b, 0);
+  const totalSum = sum1 + sum2;
 
   // Total must be even to split equally
-  if (totalSum % 2 !== 0) return -1
+  if (totalSum % 2 !== 0) return -1;
 
-  const target = totalSum / 2
-  let diff = sum1 - target // How much arr1 needs to lose
+  const target = totalSum / 2;
+  let diff = sum1 - target; // How much arr1 needs to lose
 
-  if (diff === 0) return 0
+  if (diff === 0) return 0;
 
   // For each possible swap (a from arr1, b from arr2):
   // new_sum1 = sum1 - a + b, so change = a - b
   // We need change = diff, so a - b = diff
 
-  const set2 = new Set(arr2)
+  const set2 = new Set(arr2);
   // Sort arr1 to try largest differences first
-  const sorted1 = [...arr1].sort((a, b) => b - a)
+  const sorted1 = [...arr1].sort((a, b) => b - a);
 
-  let swaps = 0
+  let swaps = 0;
   for (const a of sorted1) {
-    if (diff === 0) break
-    const needed_b = a - diff
+    if (diff === 0) break;
+    const needed_b = a - diff;
     if (set2.has(needed_b)) {
-      set2.delete(needed_b)
-      diff -= (a - needed_b)
-      swaps++
+      set2.delete(needed_b);
+      diff -= a - needed_b;
+      swaps++;
     }
   }
 
-  return diff === 0 ? swaps : -1
+  return diff === 0 ? swaps : -1;
 }
 ```
 
@@ -157,15 +160,15 @@ function minSwaps(arr1: number[], arr2: number[]): number {
 
 ```typescript
 function maxProfit(prices: number[]): number {
-  let minPrice = Infinity
-  let maxProfit = 0
+  let minPrice = Infinity;
+  let maxProfit = 0;
 
   for (const price of prices) {
-    minPrice = Math.min(minPrice, price)
-    maxProfit = Math.max(maxProfit, price - minPrice)
+    minPrice = Math.min(minPrice, price);
+    maxProfit = Math.max(maxProfit, price - minPrice);
   }
 
-  return maxProfit
+  return maxProfit;
 }
 ```
 
@@ -182,15 +185,15 @@ Based on reported questions and e-commerce domain relevance:
 ```typescript
 // Two Sum - classic hash map pattern
 function twoSum(nums: number[], target: number): number[] {
-  const seen = new Map<number, number>()
+  const seen = new Map<number, number>();
   for (let i = 0; i < nums.length; i++) {
-    const complement = target - nums[i]
+    const complement = target - nums[i];
     if (seen.has(complement)) {
-      return [seen.get(complement)!, i]
+      return [seen.get(complement)!, i];
     }
-    seen.set(nums[i], i)
+    seen.set(nums[i], i);
   }
-  return []
+  return [];
 }
 ```
 
@@ -201,19 +204,19 @@ function twoSum(nums: number[], target: number): number[] {
 ```typescript
 // Merge Intervals - common in scheduling/deals systems
 function merge(intervals: number[][]): number[][] {
-  intervals.sort((a, b) => a[0] - b[0])
-  const result: number[][] = [intervals[0]]
+  intervals.sort((a, b) => a[0] - b[0]);
+  const result: number[][] = [intervals[0]];
 
   for (let i = 1; i < intervals.length; i++) {
-    const last = result[result.length - 1]
+    const last = result[result.length - 1];
     if (intervals[i][0] <= last[1]) {
-      last[1] = Math.max(last[1], intervals[i][1])
+      last[1] = Math.max(last[1], intervals[i][1]);
     } else {
-      result.push(intervals[i])
+      result.push(intervals[i]);
     }
   }
 
-  return result
+  return result;
 }
 ```
 
@@ -224,18 +227,18 @@ function merge(intervals: number[][]): number[][] {
 ```typescript
 // Max subarray sum of size k
 function maxSumSubarray(arr: number[], k: number): number {
-  let windowSum = 0
-  let maxSum = -Infinity
+  let windowSum = 0;
+  let maxSum = -Infinity;
 
   for (let i = 0; i < arr.length; i++) {
-    windowSum += arr[i]
+    windowSum += arr[i];
     if (i >= k - 1) {
-      maxSum = Math.max(maxSum, windowSum)
-      windowSum -= arr[i - k + 1]
+      maxSum = Math.max(maxSum, windowSum);
+      windowSum -= arr[i - k + 1];
     }
   }
 
-  return maxSum
+  return maxSum;
 }
 ```
 
@@ -245,25 +248,22 @@ function maxSumSubarray(arr: number[], k: number): number {
 
 ```typescript
 // Activity Selection (relevant: scheduling deals/promotions)
-function maxActivities(
-  start: number[],
-  end: number[]
-): number {
+function maxActivities(start: number[], end: number[]): number {
   const activities = start
     .map((s, i) => ({ start: s, end: end[i] }))
-    .sort((a, b) => a.end - b.end)
+    .sort((a, b) => a.end - b.end);
 
-  let count = 1
-  let lastEnd = activities[0].end
+  let count = 1;
+  let lastEnd = activities[0].end;
 
   for (let i = 1; i < activities.length; i++) {
     if (activities[i].start >= lastEnd) {
-      count++
-      lastEnd = activities[i].end
+      count++;
+      lastEnd = activities[i].end;
     }
   }
 
-  return count
+  return count;
 }
 ```
 
@@ -274,15 +274,15 @@ function maxActivities(
 ```typescript
 // Group Anagrams
 function groupAnagrams(strs: string[]): string[][] {
-  const map = new Map<string, string[]>()
+  const map = new Map<string, string[]>();
 
   for (const s of strs) {
-    const key = [...s].sort().join('')
-    const group = map.get(key) || []
-    map.set(key, [...group, s])
+    const key = [...s].sort().join('');
+    const group = map.get(key) || [];
+    map.set(key, [...group, s]);
   }
 
-  return [...map.values()]
+  return [...map.values()];
 }
 ```
 
@@ -298,18 +298,15 @@ These might appear given ShopBack's business:
 
 ```typescript
 interface CashbackTier {
-  minSpend: number
-  rate: number // percentage
+  minSpend: number;
+  rate: number; // percentage
 }
 
-function calculateCashback(
-  amount: number,
-  tiers: CashbackTier[]
-): number {
+function calculateCashback(amount: number, tiers: CashbackTier[]): number {
   // Sort tiers by minSpend descending to find highest applicable tier
-  const sorted = [...tiers].sort((a, b) => b.minSpend - a.minSpend)
-  const tier = sorted.find(t => amount >= t.minSpend)
-  return tier ? amount * (tier.rate / 100) : 0
+  const sorted = [...tiers].sort((a, b) => b.minSpend - a.minSpend);
+  const tier = sorted.find((t) => amount >= t.minSpend);
+  return tier ? amount * (tier.rate / 100) : 0;
 }
 
 // Example:
@@ -326,16 +323,16 @@ function bestDeals(
   costs: number[],
   cashbacks: number[]
 ): number {
-  const n = costs.length
-  const dp = new Array(budget + 1).fill(0)
+  const n = costs.length;
+  const dp = new Array(budget + 1).fill(0);
 
   for (let i = 0; i < n; i++) {
     for (let w = budget; w >= costs[i]; w--) {
-      dp[w] = Math.max(dp[w], dp[w - costs[i]] + cashbacks[i])
+      dp[w] = Math.max(dp[w], dp[w - costs[i]] + cashbacks[i]);
     }
   }
 
-  return dp[budget]
+  return dp[budget];
 }
 ```
 
@@ -344,6 +341,7 @@ function bestDeals(
 ## LeetCode Practice List (Priority Order)
 
 ### Must Do (Top 15)
+
 1. Two Sum (#1)
 2. Best Time to Buy and Sell Stock (#121)
 3. Contains Duplicate (#217)
@@ -361,6 +359,7 @@ function bestDeals(
 15. Jump Game (#55)
 
 ### Should Do (Next 10)
+
 16. Coin Change (#322)
 17. Word Break (#139)
 18. Subsets (#78)

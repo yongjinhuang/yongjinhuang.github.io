@@ -60,11 +60,13 @@ Backtesting is the process of applying a trading strategy to historical market d
 Backtesting rests on one critical assumption: **past patterns contain information about future behavior**. This does not mean history repeats exactly. It means that the statistical relationships you discover have some persistence.
 
 This assumption holds when:
+
 - The market microstructure has not fundamentally changed
 - The strategy exploits a persistent behavioral or structural edge
 - The strategy capacity has not been exhausted by crowding
 
 This assumption breaks when:
+
 - Regulatory changes alter market structure (e.g., decimalization in 2001)
 - A crowded trade unwinds (e.g., the quant meltdown of August 2007)
 - A regime shift occurs (e.g., zero interest rate policy post-2008)
@@ -91,6 +93,7 @@ This assumption breaks when:
 ```
 
 A backtest is a **necessary first filter**, not a guarantee. Think of it as a medical screening test:
+
 - A strategy that fails in backtest will almost certainly fail live (high negative predictive value)
 - A strategy that passes backtest may still fail live (moderate positive predictive value)
 
@@ -98,15 +101,15 @@ A backtest is a **necessary first filter**, not a guarantee. Think of it as a me
 
 Even after a successful backtest, there is a gap between paper trading (simulated live) and actual live trading:
 
-| Aspect | Backtest | Paper Trading | Live Trading |
-|--------|----------|---------------|--------------|
-| Data | Historical | Real-time | Real-time |
-| Fills | Assumed | Simulated | Actual |
-| Market impact | None | None | Real |
-| Latency | Zero | Simulated | Real |
-| Emotions | None | Low | High |
-| Costs | Modeled | Modeled | Actual |
-| Slippage | Estimated | Estimated | Real |
+| Aspect        | Backtest   | Paper Trading | Live Trading |
+| ------------- | ---------- | ------------- | ------------ |
+| Data          | Historical | Real-time     | Real-time    |
+| Fills         | Assumed    | Simulated     | Actual       |
+| Market impact | None       | None          | Real         |
+| Latency       | Zero       | Simulated     | Real         |
+| Emotions      | None       | Low           | High         |
+| Costs         | Modeled    | Modeled       | Actual       |
+| Slippage      | Estimated  | Estimated     | Real         |
 
 **Rule of thumb**: Expect live performance to be 30-50% worse than backtest performance for a well-constructed backtest. If your backtest Sharpe is 1.0, plan for a live Sharpe of 0.5-0.7.
 
@@ -831,7 +834,7 @@ Impact = 0.02 * sqrt(100,000 / 1,000,000)
        = 0.0063 = 63 bps per trade
 ```
 
-For a strategy that trades daily with 100% turnover, 63 bps per trade means 63 * 252 * 2 = 31,752 bps = 317% annual cost. This strategy is impossible at that size.
+For a strategy that trades daily with 100% turnover, 63 bps per trade means 63 _ 252 _ 2 = 31,752 bps = 317% annual cost. This strategy is impossible at that size.
 
 ### Pitfall 7: Time-Period Bias
 
@@ -993,6 +996,7 @@ print(f"  Sqrt impact:    ${fill_sqrt:.4f}  (cost: {(fill_sqrt/price-1)*10000:.1
 ```
 
 Output:
+
 ```
 Small order (1,000 shares, 0.1% of volume):
   Fixed 2 bps:    $100.0200  (cost: 2.0 bps)
@@ -1783,15 +1787,15 @@ print(f"PBO (1 real signal + 49 noise):   {pbo_signal:.2%}")
 
 ### Framework Overview
 
-| Framework | Language | Architecture | Speed | Complexity | Active |
-|-----------|----------|-------------|-------|------------|--------|
-| Zipline | Python | Event-driven | Medium | Medium | Forked |
-| Backtrader | Python | Event-driven | Slow | High | Stable |
-| VectorBT | Python | Vectorized | Fast | Low | Active |
-| QuantConnect | C#/Python | Event-driven | Medium | High | Active |
-| PyAlgoTrade | Python | Event-driven | Medium | Medium | Dormant |
-| bt | Python | Tree-based | Medium | Low | Active |
-| Custom | Any | Any | Any | High | N/A |
+| Framework    | Language  | Architecture | Speed  | Complexity | Active  |
+| ------------ | --------- | ------------ | ------ | ---------- | ------- |
+| Zipline      | Python    | Event-driven | Medium | Medium     | Forked  |
+| Backtrader   | Python    | Event-driven | Slow   | High       | Stable  |
+| VectorBT     | Python    | Vectorized   | Fast   | Low        | Active  |
+| QuantConnect | C#/Python | Event-driven | Medium | High       | Active  |
+| PyAlgoTrade  | Python    | Event-driven | Medium | Medium     | Dormant |
+| bt           | Python    | Tree-based   | Medium | Low        | Active  |
+| Custom       | Any       | Any          | Any    | High       | N/A     |
 
 ### Detailed Comparison
 
@@ -2793,4 +2797,4 @@ for trigger in result["triggers"]:
 
 ---
 
-*Next chapter: [Chapter 9: Risk Management](09-RISK-MANAGEMENT.md) -- Position sizing, VaR, drawdown control, and portfolio risk.*
+_Next chapter: [Chapter 9: Risk Management](09-RISK-MANAGEMENT.md) -- Position sizing, VaR, drawdown control, and portfolio risk._

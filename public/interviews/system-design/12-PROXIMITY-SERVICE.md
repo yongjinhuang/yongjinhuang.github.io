@@ -13,24 +13,24 @@ scaling, and common interview follow-ups.
 
 ### 1.1 Functional Requirements
 
-| Requirement            | Description                                                |
-|------------------------|------------------------------------------------------------|
-| **Nearby search**      | Search businesses by location (lat/lng) + radius           |
-| **Business details**   | View detailed info (name, address, hours, photos, reviews) |
-| **Business CRUD**      | Owners can add, update, delete business listings           |
-| **Filtering**          | Filter by category (restaurant, gas station, hotel, etc.)  |
-| **Sorting**            | Sort by distance, rating, popularity, or relevance         |
-| **Autocomplete**       | Suggest businesses as user types (out of scope here)       |
+| Requirement          | Description                                                |
+| -------------------- | ---------------------------------------------------------- |
+| **Nearby search**    | Search businesses by location (lat/lng) + radius           |
+| **Business details** | View detailed info (name, address, hours, photos, reviews) |
+| **Business CRUD**    | Owners can add, update, delete business listings           |
+| **Filtering**        | Filter by category (restaurant, gas station, hotel, etc.)  |
+| **Sorting**          | Sort by distance, rating, popularity, or relevance         |
+| **Autocomplete**     | Suggest businesses as user types (out of scope here)       |
 
 ### 1.2 Non-Functional Requirements
 
-| Requirement               | Target                                               |
-|---------------------------|------------------------------------------------------|
-| **Latency**               | < 200ms for search (p99)                             |
-| **Availability**          | 99.99% uptime                                        |
-| **Consistency**           | Eventual consistency for business updates is OK       |
-| **Scalability**           | Handle billions of queries per day                   |
-| **Accuracy**              | Accurate distance calculation within search radius   |
+| Requirement      | Target                                             |
+| ---------------- | -------------------------------------------------- |
+| **Latency**      | < 200ms for search (p99)                           |
+| **Availability** | 99.99% uptime                                      |
+| **Consistency**  | Eventual consistency for business updates is OK    |
+| **Scalability**  | Handle billions of queries per day                 |
+| **Accuracy**     | Accurate distance calculation within search radius |
 
 ### 1.3 Scale Estimation
 
@@ -72,15 +72,15 @@ GET /v1/search/nearby
 
 **Query Parameters:**
 
-| Parameter    | Type   | Required | Description                           |
-|-------------|--------|----------|---------------------------------------|
-| `lat`       | float  | Yes      | Latitude of the search center         |
-| `lng`       | float  | Yes      | Longitude of the search center        |
-| `radius`    | int    | No       | Search radius in meters (default 5000)|
-| `category`  | string | No       | Business category filter              |
-| `sort_by`   | string | No       | distance, rating, popularity          |
-| `page`      | int    | No       | Page number (default 1)               |
-| `page_size` | int    | No       | Results per page (default 20, max 50) |
+| Parameter   | Type   | Required | Description                            |
+| ----------- | ------ | -------- | -------------------------------------- |
+| `lat`       | float  | Yes      | Latitude of the search center          |
+| `lng`       | float  | Yes      | Longitude of the search center         |
+| `radius`    | int    | No       | Search radius in meters (default 5000) |
+| `category`  | string | No       | Business category filter               |
+| `sort_by`   | string | No       | distance, rating, popularity           |
+| `page`      | int    | No       | Page number (default 1)                |
+| `page_size` | int    | No       | Results per page (default 20, max 50)  |
 
 **Response:**
 
@@ -92,7 +92,7 @@ GET /v1/search/nearby
       {
         "id": "biz_abc123",
         "name": "Joe's Pizza",
-        "lat": 40.7580,
+        "lat": 40.758,
         "lng": -73.9855,
         "distance_meters": 234,
         "category": "restaurant",
@@ -128,7 +128,7 @@ GET /v1/businesses/{business_id}
   "data": {
     "id": "biz_abc123",
     "name": "Joe's Pizza",
-    "lat": 40.7580,
+    "lat": 40.758,
     "lng": -73.9855,
     "address": "123 Broadway, New York, NY 10001",
     "phone": "+1-212-555-0123",
@@ -233,16 +233,16 @@ Precision 8: "9q8yykbv"
 
 #### Precision Levels Table
 
-| Precision | Cell Width  | Cell Height | Use Case                      |
-|-----------|-------------|-------------|-------------------------------|
-| 1         | ~5,000 km   | ~5,000 km   | Continent-level               |
-| 2         | ~1,250 km   | ~625 km     | Large country region          |
-| 3         | ~156 km     | ~156 km     | State/Province                |
-| 4         | ~39 km      | ~19.5 km    | City-level                    |
-| 5         | ~4.9 km     | ~4.9 km     | District/neighborhood         |
-| 6         | ~1.2 km     | ~0.6 km     | Street-level (~1 km radius)   |
-| 7         | ~153 m      | ~153 m      | Building block                |
-| 8         | ~38 m       | ~19 m       | Individual building           |
+| Precision | Cell Width | Cell Height | Use Case                    |
+| --------- | ---------- | ----------- | --------------------------- |
+| 1         | ~5,000 km  | ~5,000 km   | Continent-level             |
+| 2         | ~1,250 km  | ~625 km     | Large country region        |
+| 3         | ~156 km    | ~156 km     | State/Province              |
+| 4         | ~39 km     | ~19.5 km    | City-level                  |
+| 5         | ~4.9 km    | ~4.9 km     | District/neighborhood       |
+| 6         | ~1.2 km    | ~0.6 km     | Street-level (~1 km radius) |
+| 7         | ~153 m     | ~153 m      | Building block              |
+| 8         | ~38 m      | ~19 m       | Individual building         |
 
 #### Mapping Radius to Geohash Precision
 
@@ -361,6 +361,7 @@ def encode_geohash(lat, lng, precision=6):
 #### How Quadtree Works
 
 A quadtree recursively divides a 2D space into four quadrants. Each node either:
+
 - Contains points (leaf node), or
 - Has exactly four children (internal node)
 
@@ -525,14 +526,14 @@ This fits comfortably in a single server's RAM (64-128 GB typical).
 
 #### Dynamic vs Static Quadtree
 
-| Aspect          | Static Quadtree          | Dynamic Quadtree          |
-|----------------|--------------------------|---------------------------|
-| Build time     | Batch (offline)          | Incremental (online)      |
-| Updates        | Requires full rebuild    | Insert/delete in O(log n) |
-| Balance        | Optimal at build time    | May become unbalanced     |
-| Use case       | Rarely changing data     | Frequently changing data  |
-| Our choice     | **Preferred** (200M biz, | Use for moving objects    |
-|                | infrequent updates)      | like Uber drivers         |
+| Aspect     | Static Quadtree          | Dynamic Quadtree          |
+| ---------- | ------------------------ | ------------------------- |
+| Build time | Batch (offline)          | Incremental (online)      |
+| Updates    | Requires full rebuild    | Insert/delete in O(log n) |
+| Balance    | Optimal at build time    | May become unbalanced     |
+| Use case   | Rarely changing data     | Frequently changing data  |
+| Our choice | **Preferred** (200M biz, | Use for moving objects    |
+|            | infrequent updates)      | like Uber drivers         |
 
 ---
 
@@ -638,14 +639,14 @@ data entries.
 
 #### When to Use R-tree
 
-| Scenario                              | Best Index      |
-|---------------------------------------|-----------------|
-| Rectangular region queries            | **R-tree**      |
-| Point-in-polygon queries             | R-tree or S2    |
-| Radius search (our use case)          | Geohash or S2   |
-| Spatial joins (overlapping regions)   | **R-tree**      |
-| Database with PostGIS                 | R-tree (GiST)   |
-| In-memory distributed system          | Geohash or Quadtree |
+| Scenario                            | Best Index          |
+| ----------------------------------- | ------------------- |
+| Rectangular region queries          | **R-tree**          |
+| Point-in-polygon queries            | R-tree or S2        |
+| Radius search (our use case)        | Geohash or S2       |
+| Spatial joins (overlapping regions) | **R-tree**          |
+| Database with PostGIS               | R-tree (GiST)       |
+| In-memory distributed system        | Geohash or Quadtree |
 
 R-trees excel in PostGIS (PostgreSQL + GIS extension) and are the default spatial
 index in most relational databases. For custom in-memory systems, geohash or
@@ -655,23 +656,23 @@ quadtree is simpler to implement and shard.
 
 ### 3.5 Comparison Table
 
-| Feature            | Geohash          | Quadtree          | S2 Geometry        | R-tree            |
-|--------------------|------------------|-------------------|--------------------|-------------------|
-| **Type**           | Space-filling    | Tree (in-memory)  | Space-filling      | Balanced tree     |
-|                    | curve + hash     |                   | curve (Hilbert)    |                   |
-| **Dimension**      | 2D -> 1D string  | 2D subdivision    | Sphere -> 1D int   | nD bounding rects |
-| **Storage**        | String column    | In-memory tree    | 64-bit integer     | Disk-based tree   |
-| **DB friendly**    | Very (B-tree)    | No (custom)       | Yes (integer range) | Yes (GiST/R*)    |
-| **Precision**      | Fixed per level  | Adaptive          | Adaptive           | Adaptive          |
-| **Boundary issue** | Yes (need 8      | No (tree handles  | No (Hilbert curve  | No (MBR overlap)  |
-|                    | neighbors)       | naturally)        | continuity)        |                   |
-| **Update cost**    | O(1) re-hash     | O(log n) or       | O(1) re-compute    | O(log n) rebalance|
-|                    |                  | full rebuild      |                    |                   |
-| **Sharding**       | Easy (prefix)    | Hard              | Easy (cell range)  | Hard              |
-| **Complexity**     | Simple           | Medium            | Complex            | Medium            |
-| **Used by**        | Redis, Elastic   | Custom (Uber)     | Google Maps        | PostGIS, MongoDB  |
-| **Best for**       | Simple proximity | Dense/sparse      | Global-scale       | Polygon/region    |
-|                    | search           | adaptive needs    | variable coverage  | queries           |
+| Feature            | Geohash          | Quadtree         | S2 Geometry         | R-tree             |
+| ------------------ | ---------------- | ---------------- | ------------------- | ------------------ |
+| **Type**           | Space-filling    | Tree (in-memory) | Space-filling       | Balanced tree      |
+|                    | curve + hash     |                  | curve (Hilbert)     |                    |
+| **Dimension**      | 2D -> 1D string  | 2D subdivision   | Sphere -> 1D int    | nD bounding rects  |
+| **Storage**        | String column    | In-memory tree   | 64-bit integer      | Disk-based tree    |
+| **DB friendly**    | Very (B-tree)    | No (custom)      | Yes (integer range) | Yes (GiST/R\*)     |
+| **Precision**      | Fixed per level  | Adaptive         | Adaptive            | Adaptive           |
+| **Boundary issue** | Yes (need 8      | No (tree handles | No (Hilbert curve   | No (MBR overlap)   |
+|                    | neighbors)       | naturally)       | continuity)         |                    |
+| **Update cost**    | O(1) re-hash     | O(log n) or      | O(1) re-compute     | O(log n) rebalance |
+|                    |                  | full rebuild     |                     |                    |
+| **Sharding**       | Easy (prefix)    | Hard             | Easy (cell range)   | Hard               |
+| **Complexity**     | Simple           | Medium           | Complex             | Medium             |
+| **Used by**        | Redis, Elastic   | Custom (Uber)    | Google Maps         | PostGIS, MongoDB   |
+| **Best for**       | Simple proximity | Dense/sparse     | Global-scale        | Polygon/region     |
+|                    | search           | adaptive needs   | variable coverage   | queries            |
 
 **Recommendation for this system: Geohash** -- simplest, works with standard databases,
 easy to shard, and sufficient for radius-based search. Use S2 for Google-scale global
@@ -1853,7 +1854,7 @@ Pre-computed cluster counts:
 
 ## References
 
-- *System Design Interview* by Alex Xu, Chapter 13: Design a Proximity Service
+- _System Design Interview_ by Alex Xu, Chapter 13: Design a Proximity Service
 - Google S2 Geometry Library: https://s2geometry.io/
 - Redis Geospatial Commands: https://redis.io/docs/data-types/geospatial/
 - Geohash Explorer: https://geohash.softeng.co/

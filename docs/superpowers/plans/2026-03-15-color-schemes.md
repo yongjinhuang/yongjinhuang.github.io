@@ -14,17 +14,17 @@
 
 ## File Structure
 
-| File | Action | Responsibility |
-|------|--------|---------------|
-| `app/globals.css` | Modify | @property declarations, scheme CSS variables, blob variables, transitions |
-| `lib/color-schemes.ts` | Create | Scheme name constants and type definitions |
+| File                                 | Action | Responsibility                                                                   |
+| ------------------------------------ | ------ | -------------------------------------------------------------------------------- |
+| `app/globals.css`                    | Modify | @property declarations, scheme CSS variables, blob variables, transitions        |
+| `lib/color-schemes.ts`               | Create | Scheme name constants and type definitions                                       |
 | `components/ColorSchemeProvider.tsx` | Create | React context, hourly timer, localStorage persistence, data-attribute management |
-| `components/ColorSchemePicker.tsx` | Create | Navbar popover UI with colored dots + auto option |
-| `components/AnimatedBackground.tsx` | Modify | Replace hardcoded amber colors with CSS variable references |
-| `components/ThemeToggle.tsx` | Modify | Replace hardcoded hex colors with CSS variable references |
-| `tailwind.config.ts` | Modify | Replace hardcoded amber in glow-accent shadow |
-| `components/layout/Navbar.tsx` | Modify | Add ColorSchemePicker to right-side nav group |
-| `app/[lang]/layout.tsx` | Modify | Wrap content with ColorSchemeProvider |
+| `components/ColorSchemePicker.tsx`   | Create | Navbar popover UI with colored dots + auto option                                |
+| `components/AnimatedBackground.tsx`  | Modify | Replace hardcoded amber colors with CSS variable references                      |
+| `components/ThemeToggle.tsx`         | Modify | Replace hardcoded hex colors with CSS variable references                        |
+| `tailwind.config.ts`                 | Modify | Replace hardcoded amber in glow-accent shadow                                    |
+| `components/layout/Navbar.tsx`       | Modify | Add ColorSchemePicker to right-side nav group                                    |
+| `app/[lang]/layout.tsx`              | Modify | Wrap content with ColorSchemeProvider                                            |
 
 ---
 
@@ -33,6 +33,7 @@
 ### Task 1: Define color scheme constants
 
 **Files:**
+
 - Create: `lib/color-schemes.ts`
 
 - [ ] **Step 1: Create the color scheme constants file**
@@ -75,6 +76,7 @@ git commit -m "feat: add color scheme constants and types"
 ### Task 2: Add @property declarations and scheme CSS variables to globals.css
 
 **Files:**
+
 - Modify: `app/globals.css:1-39` (top of file, before and including `:root` and `.dark` blocks)
 
 - [ ] **Step 1: Add @property declarations at the top of globals.css (after the imports, before :root)**
@@ -121,12 +123,17 @@ Insert after line 5 (`@tailwind utilities;`):
 Add to the existing `:root` block (after `--accent-dark`):
 
 ```css
-  /* Blob Colors for AnimatedBackground */
-  --blob-primary: #fbbf24;
-  --blob-secondary: #d97706;
+/* Blob Colors for AnimatedBackground */
+--blob-primary: #fbbf24;
+--blob-secondary: #d97706;
 
-  /* Smooth color scheme transitions */
-  transition: --accent 1s ease, --accent-light 1s ease, --accent-dark 1s ease, --blob-primary 1s ease, --blob-secondary 1s ease;
+/* Smooth color scheme transitions */
+transition:
+  --accent 1s ease,
+  --accent-light 1s ease,
+  --accent-dark 1s ease,
+  --blob-primary 1s ease,
+  --blob-secondary 1s ease;
 ```
 
 - [ ] **Step 3: Add blob variables to `.dark` block**
@@ -134,8 +141,8 @@ Add to the existing `:root` block (after `--accent-dark`):
 Add to the existing `.dark` block (after `--accent-dark`):
 
 ```css
-  --blob-primary: #fcd34d;
-  --blob-secondary: #f59e0b;
+--blob-primary: #fcd34d;
+--blob-secondary: #f59e0b;
 ```
 
 - [ ] **Step 4: Add all 6 color scheme selector blocks after the `.dark` block**
@@ -148,14 +155,14 @@ Insert after the `.dark { ... }` block (after line 39):
    ================================ */
 
 /* Amber (default - values match :root) */
-[data-color-scheme="amber"] {
+[data-color-scheme='amber'] {
   --accent: #d97706;
   --accent-light: #f59e0b;
   --accent-dark: #b45309;
   --blob-primary: #fbbf24;
   --blob-secondary: #d97706;
 }
-.dark[data-color-scheme="amber"] {
+.dark[data-color-scheme='amber'] {
   --accent: #fbbf24;
   --accent-light: #fcd34d;
   --accent-dark: #f59e0b;
@@ -164,14 +171,14 @@ Insert after the `.dark { ... }` block (after line 39):
 }
 
 /* Aurora - Cool Emerald */
-[data-color-scheme="aurora"] {
+[data-color-scheme='aurora'] {
   --accent: #059669;
   --accent-light: #34d399;
   --accent-dark: #047857;
   --blob-primary: #34d399;
   --blob-secondary: #059669;
 }
-.dark[data-color-scheme="aurora"] {
+.dark[data-color-scheme='aurora'] {
   --accent: #34d399;
   --accent-light: #6ee7b7;
   --accent-dark: #10b981;
@@ -180,14 +187,14 @@ Insert after the `.dark { ... }` block (after line 39):
 }
 
 /* Sunset - Bold Crimson */
-[data-color-scheme="sunset"] {
+[data-color-scheme='sunset'] {
   --accent: #dc2626;
   --accent-light: #f87171;
   --accent-dark: #b91c1c;
   --blob-primary: #f87171;
   --blob-secondary: #dc2626;
 }
-.dark[data-color-scheme="sunset"] {
+.dark[data-color-scheme='sunset'] {
   --accent: #f87171;
   --accent-light: #fca5a5;
   --accent-dark: #ef4444;
@@ -196,14 +203,14 @@ Insert after the `.dark { ... }` block (after line 39):
 }
 
 /* Ocean - Deep Blue */
-[data-color-scheme="ocean"] {
+[data-color-scheme='ocean'] {
   --accent: #2563eb;
   --accent-light: #60a5fa;
   --accent-dark: #1d4ed8;
   --blob-primary: #60a5fa;
   --blob-secondary: #2563eb;
 }
-.dark[data-color-scheme="ocean"] {
+.dark[data-color-scheme='ocean'] {
   --accent: #60a5fa;
   --accent-light: #93c5fd;
   --accent-dark: #3b82f6;
@@ -212,14 +219,14 @@ Insert after the `.dark { ... }` block (after line 39):
 }
 
 /* Violet - Rich Purple */
-[data-color-scheme="violet"] {
+[data-color-scheme='violet'] {
   --accent: #7c3aed;
   --accent-light: #a78bfa;
   --accent-dark: #6d28d9;
   --blob-primary: #a78bfa;
   --blob-secondary: #7c3aed;
 }
-.dark[data-color-scheme="violet"] {
+.dark[data-color-scheme='violet'] {
   --accent: #a78bfa;
   --accent-light: #c4b5fd;
   --accent-dark: #8b5cf6;
@@ -228,14 +235,14 @@ Insert after the `.dark { ... }` block (after line 39):
 }
 
 /* Rose - Pink-Red Elegance */
-[data-color-scheme="rose"] {
+[data-color-scheme='rose'] {
   --accent: #e11d48;
   --accent-light: #fb7185;
   --accent-dark: #be123c;
   --blob-primary: #fb7185;
   --blob-secondary: #e11d48;
 }
-.dark[data-color-scheme="rose"] {
+.dark[data-color-scheme='rose'] {
   --accent: #fb7185;
   --accent-light: #fda4af;
   --accent-dark: #f43f5e;
@@ -247,19 +254,22 @@ Insert after the `.dark { ... }` block (after line 39):
 - [ ] **Step 5: Update hardcoded amber references in globals.css**
 
 Replace `.accent-glow` text-shadow (line 104):
+
 ```css
 /* Before */
-  text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
 /* After */
-  text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 30%, transparent);
+text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 30%, transparent);
 ```
 
 Replace `.dark .glass-card:hover` box-shadow (line 293):
+
 ```css
 /* Before */
-  box-shadow: var(--shadow-brutal-lg) rgba(251, 191, 36, 0.2);
+box-shadow: var(--shadow-brutal-lg) rgba(251, 191, 36, 0.2);
 /* After */
-  box-shadow: var(--shadow-brutal-lg) color-mix(in srgb, var(--accent) 20%, transparent);
+box-shadow: var(--shadow-brutal-lg)
+  color-mix(in srgb, var(--accent) 20%, transparent);
 ```
 
 - [ ] **Step 6: Verify build**
@@ -279,6 +289,7 @@ git commit -m "feat: add @property declarations and color scheme CSS variables"
 ### Task 3: Replace hardcoded colors in AnimatedBackground
 
 **Files:**
+
 - Modify: `components/AnimatedBackground.tsx:30-58`
 
 - [ ] **Step 1: Update gradient background (lines 31-34)**
@@ -331,12 +342,14 @@ git commit -m "feat: use CSS variables for animated background blob colors"
 ### Task 4: Replace hardcoded colors in ThemeToggle and tailwind.config
 
 **Files:**
+
 - Modify: `components/ThemeToggle.tsx:30`
 - Modify: `tailwind.config.ts:28`
 
 - [ ] **Step 1: Update ThemeToggle hover shadow classes (line 30)**
 
 Replace the hardcoded hex values in the className:
+
 ```tsx
 // Before (within className string)
 hover:shadow-[3px_3px_0_#d97706] ... dark:hover:shadow-[3px_3px_0_#fbbf24]
@@ -374,6 +387,7 @@ git commit -m "feat: replace hardcoded amber colors with CSS variable references
 ### Task 5: Create ColorSchemeProvider
 
 **Files:**
+
 - Create: `components/ColorSchemeProvider.tsx`
 
 - [ ] **Step 1: Create the provider component**
@@ -511,6 +525,7 @@ git commit -m "feat: add ColorSchemeProvider with hourly rotation and manual ove
 ### Task 6: Create ColorSchemePicker
 
 **Files:**
+
 - Create: `components/ColorSchemePicker.tsx`
 
 - [ ] **Step 1: Create the picker component**
@@ -651,6 +666,7 @@ git commit -m "feat: add ColorSchemePicker popover component"
 ### Task 7: Wire up providers and navbar
 
 **Files:**
+
 - Modify: `app/[lang]/layout.tsx`
 - Modify: `components/layout/Navbar.tsx`
 
@@ -674,7 +690,7 @@ import { ColorSchemeProvider } from '@/components/ColorSchemeProvider';
       {/* ... existing content unchanged ... */}
     </div>
   </ColorSchemeProvider>
-</ThemeProvider>
+</ThemeProvider>;
 ```
 
 - [ ] **Step 2: Add ColorSchemePicker to Navbar**
@@ -691,7 +707,7 @@ import ColorSchemePicker from '@/components/ColorSchemePicker';
   <NavLink href="#experience">{nav.experience}</NavLink>
   <ColorSchemePicker />
   <ThemeToggle />
-</div>
+</div>;
 ```
 
 - [ ] **Step 3: Verify build**
@@ -702,6 +718,7 @@ Expected: Build succeeds with static export.
 - [ ] **Step 4: Manual test**
 
 Run: `npm run dev`
+
 - Verify the site loads with amber scheme (or hour-based scheme)
 - Click the color dot in navbar - popover opens with 6 schemes + Auto
 - Click each scheme - colors transition smoothly (~1s)

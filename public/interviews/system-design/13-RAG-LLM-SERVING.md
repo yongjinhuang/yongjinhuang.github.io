@@ -4,28 +4,28 @@
 
 ### Functional Requirements
 
-| Requirement | Description |
-|---|---|
-| Document Ingestion | Upload and process documents (PDF, HTML, Markdown, DOCX) |
-| Chunking & Embedding | Split documents into chunks, generate vector embeddings |
-| Vector Storage | Store embeddings in a vector database for fast retrieval |
-| Semantic Retrieval | Retrieve relevant context given a user query |
-| Answer Generation | Generate grounded answers using an LLM with retrieved context |
-| Multi-turn Conversation | Maintain conversational context across turns |
-| Citation Tracking | Attribute generated answers to source documents and passages |
-| Feedback Collection | Collect user ratings (thumbs up/down) for continuous improvement |
+| Requirement             | Description                                                      |
+| ----------------------- | ---------------------------------------------------------------- |
+| Document Ingestion      | Upload and process documents (PDF, HTML, Markdown, DOCX)         |
+| Chunking & Embedding    | Split documents into chunks, generate vector embeddings          |
+| Vector Storage          | Store embeddings in a vector database for fast retrieval         |
+| Semantic Retrieval      | Retrieve relevant context given a user query                     |
+| Answer Generation       | Generate grounded answers using an LLM with retrieved context    |
+| Multi-turn Conversation | Maintain conversational context across turns                     |
+| Citation Tracking       | Attribute generated answers to source documents and passages     |
+| Feedback Collection     | Collect user ratings (thumbs up/down) for continuous improvement |
 
 ### Non-Functional Requirements
 
-| Requirement | Target |
-|---|---|
-| End-to-end latency | < 2 seconds (time to first token < 500ms) |
-| Document scale | 10 million documents indexed |
-| Query throughput | 100K queries/day (~1.2 QPS average, 10 QPS peak) |
-| Availability | 99.9% uptime |
-| Freshness | New documents searchable within 15 minutes |
-| Cost efficiency | < $0.02 per query average |
-| Accuracy | < 5% hallucination rate on factual queries |
+| Requirement        | Target                                           |
+| ------------------ | ------------------------------------------------ |
+| End-to-end latency | < 2 seconds (time to first token < 500ms)        |
+| Document scale     | 10 million documents indexed                     |
+| Query throughput   | 100K queries/day (~1.2 QPS average, 10 QPS peak) |
+| Availability       | 99.9% uptime                                     |
+| Freshness          | New documents searchable within 15 minutes       |
+| Cost efficiency    | < $0.02 per query average                        |
+| Accuracy           | < 5% hallucination rate on factual queries       |
 
 ### Scale Estimation
 
@@ -71,6 +71,7 @@ generating an answer. Instead of relying solely on the model's parametric knowle
 data), RAG grounds responses in specific, up-to-date documents.
 
 **Why RAG matters:**
+
 - Reduces hallucinations by providing factual grounding
 - Enables domain-specific answers without fine-tuning
 - Knowledge can be updated without retraining the model
@@ -96,6 +97,7 @@ data), RAG grounds responses in specific, up-to-date documents.
 ```
 
 **When to use each:**
+
 - **Prompt Engineering**: Simple tasks, formatting, persona control
 - **RAG**: Enterprise knowledge bases, documentation Q&A, customer support
 - **Fine-Tuning**: Custom tone/style, specialized reasoning, task-specific behavior
@@ -520,6 +522,7 @@ degradation. This enables a "try small first, upgrade if needed" approach.
 ```
 
 **Decision guide:**
+
 - **Startup/Prototype**: pgvector (if < 10M vectors) or ChromaDB (local dev)
 - **Production (managed)**: Pinecone or Qdrant Cloud
 - **Production (self-hosted, max control)**: Qdrant or Milvus
@@ -705,6 +708,7 @@ Pipeline:
 ```
 
 **Popular reranker models:**
+
 - Cohere Rerank v3 (API, best quality)
 - BGE-Reranker-v2-m3 (open-source, multilingual)
 - cross-encoder/ms-marco-MiniLM-L-12-v2 (lightweight, fast)
@@ -1162,10 +1166,12 @@ async def chat(query: str):
 
 ```javascript
 // Client-side (JavaScript)
-const eventSource = new EventSource(`/api/chat?query=${encodeURIComponent(query)}`);
+const eventSource = new EventSource(
+  `/api/chat?query=${encodeURIComponent(query)}`
+);
 
 eventSource.onmessage = (event) => {
-  if (event.data === "[DONE]") {
+  if (event.data === '[DONE]') {
     eventSource.close();
     return;
   }
@@ -2103,25 +2109,25 @@ spec:
         app: vllm
     spec:
       nodeSelector:
-        nvidia.com/gpu.product: "A100"
+        nvidia.com/gpu.product: 'A100'
       containers:
         - name: vllm
           image: vllm/vllm-openai:latest
           args:
-            - "--model=meta-llama/Llama-3.1-70B-Instruct"
-            - "--quantization=awq"
-            - "--tensor-parallel-size=1"
-            - "--max-model-len=8192"
-            - "--gpu-memory-utilization=0.9"
+            - '--model=meta-llama/Llama-3.1-70B-Instruct'
+            - '--quantization=awq'
+            - '--tensor-parallel-size=1'
+            - '--max-model-len=8192'
+            - '--gpu-memory-utilization=0.9'
           resources:
             limits:
               nvidia.com/gpu: 1
-              memory: "96Gi"
-              cpu: "16"
+              memory: '96Gi'
+              cpu: '16'
             requests:
               nvidia.com/gpu: 1
-              memory: "80Gi"
-              cpu: "8"
+              memory: '80Gi'
+              cpu: '8'
           ports:
             - containerPort: 8000
           readinessProbe:
@@ -2149,7 +2155,7 @@ spec:
           name: gpu_utilization
         target:
           type: AverageValue
-          averageValue: "70"
+          averageValue: '70'
 ```
 
 ### Multi-Region Considerations
@@ -2424,6 +2430,7 @@ When designing a RAG system in an interview, make sure to cover:
 ```
 
 **Key differentiators in interviews:**
+
 - Mention parent-child chunking (shows depth beyond naive RAG)
 - Discuss hybrid search (dense + sparse) over pure vector search
 - Bring up semantic caching as a cost/latency optimization

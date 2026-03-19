@@ -4,39 +4,39 @@ A distributed unique ID generator produces globally unique, roughly time-ordered
 
 ## Table Responsibilities
 
-| Table | Purpose | Storage | Key Characteristic |
-|-------|---------|---------|-------------------|
-| **generator_nodes** | Registry of all ID generator instances | PostgreSQL | Node lifecycle management and health tracking |
-| **id_format** | Bit layout specification for generated IDs | N/A (in-memory constant) | Defines the 64-bit structure: timestamp + datacenter + machine + sequence |
-| **coordination_leases** | Distributed lock for machine_id assignment | ZooKeeper / etcd | Prevents two nodes from claiming the same machine_id |
+| Table                   | Purpose                                    | Storage                  | Key Characteristic                                                        |
+| ----------------------- | ------------------------------------------ | ------------------------ | ------------------------------------------------------------------------- |
+| **generator_nodes**     | Registry of all ID generator instances     | PostgreSQL               | Node lifecycle management and health tracking                             |
+| **id_format**           | Bit layout specification for generated IDs | N/A (in-memory constant) | Defines the 64-bit structure: timestamp + datacenter + machine + sequence |
+| **coordination_leases** | Distributed lock for machine_id assignment | ZooKeeper / etcd         | Prevents two nodes from claiming the same machine_id                      |
 
 ## Detailed Field Descriptions
 
 ### generator_nodes
 
-| Field | Type | Description |
-|-------|------|-------------|
-| node_id | BIGINT, PK | Auto-incrementing identifier for audit purposes. Not used in ID generation itself. |
-| datacenter_id | SMALLINT, NOT NULL | 5-bit datacenter identifier (0-31). Allows up to 32 datacenters. Assigned based on the physical/cloud region where the node runs. |
-| machine_id | SMALLINT, NOT NULL | 5-bit machine identifier within a datacenter (0-31). Combined with datacenter_id, uniquely identifies this generator. The (datacenter_id, machine_id) pair must be globally unique. |
-| hostname | VARCHAR(255) | Server hostname for operational identification. Used by ops teams to locate a specific generator node. |
-| ip_address | VARCHAR(45) | Server IP address (supports IPv6). Used for health checks and network debugging. |
-| registered_at | TIMESTAMP | When this node first registered. Useful for capacity planning ("how many generators have we deployed over time?"). |
-| last_heartbeat | TIMESTAMP, INDEX | Last time this node reported healthy. Nodes that miss heartbeats for >30 seconds are considered dead, and their machine_id can be reassigned. Indexed for the health checker to efficiently find stale nodes. |
-| status | ENUM('active', 'draining', 'dead') | Node lifecycle state. `draining` means the node is shutting down gracefully and will not accept new ID requests. `dead` means the lease has expired. |
-| lease_expires_at | TIMESTAMP | When this node's claim on its (datacenter_id, machine_id) expires. The node must renew before expiry or lose its assignment. Prevents permanently reserved but unused machine_ids. |
+| Field            | Type                               | Description                                                                                                                                                                                                   |
+| ---------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| node_id          | BIGINT, PK                         | Auto-incrementing identifier for audit purposes. Not used in ID generation itself.                                                                                                                            |
+| datacenter_id    | SMALLINT, NOT NULL                 | 5-bit datacenter identifier (0-31). Allows up to 32 datacenters. Assigned based on the physical/cloud region where the node runs.                                                                             |
+| machine_id       | SMALLINT, NOT NULL                 | 5-bit machine identifier within a datacenter (0-31). Combined with datacenter_id, uniquely identifies this generator. The (datacenter_id, machine_id) pair must be globally unique.                           |
+| hostname         | VARCHAR(255)                       | Server hostname for operational identification. Used by ops teams to locate a specific generator node.                                                                                                        |
+| ip_address       | VARCHAR(45)                        | Server IP address (supports IPv6). Used for health checks and network debugging.                                                                                                                              |
+| registered_at    | TIMESTAMP                          | When this node first registered. Useful for capacity planning ("how many generators have we deployed over time?").                                                                                            |
+| last_heartbeat   | TIMESTAMP, INDEX                   | Last time this node reported healthy. Nodes that miss heartbeats for >30 seconds are considered dead, and their machine_id can be reassigned. Indexed for the health checker to efficiently find stale nodes. |
+| status           | ENUM('active', 'draining', 'dead') | Node lifecycle state. `draining` means the node is shutting down gracefully and will not accept new ID requests. `dead` means the lease has expired.                                                          |
+| lease_expires_at | TIMESTAMP                          | When this node's claim on its (datacenter_id, machine_id) expires. The node must renew before expiry or lose its assignment. Prevents permanently reserved but unused machine_ids.                            |
 
 **Why only 5 bits for datacenter and machine?** The Snowflake format has a fixed 64-bit budget. 5 bits per field gives 32 datacenters x 32 machines = 1024 generators. Each generator can produce 4096 IDs per millisecond (12-bit sequence). That is 4 billion IDs per second across the system. For most organizations, this is more than sufficient. If more machines are needed, the bit allocation can be adjusted (e.g., 10 bits for machine = 1024 machines per datacenter).
 
 ### id_format (Snowflake 64-bit Layout)
 
-| Field | Bits | Range | Description |
-|-------|------|-------|-------------|
-| sign | 1 | 0 | Always 0 (positive number). Ensures the ID is positive in signed 64-bit integer languages (Java long, Go int64). |
-| timestamp_ms | 41 | 0 to 2^41-1 | Milliseconds since a custom epoch (e.g., 2024-01-01). 41 bits cover ~69 years from the epoch. Using a custom epoch (not Unix epoch 1970) maximizes the usable range. |
-| datacenter_id | 5 | 0-31 | Identifies which datacenter generated this ID. Encoded directly from generator_nodes.datacenter_id. |
-| machine_id | 5 | 0-31 | Identifies which machine within the datacenter. Together with datacenter_id, ensures no two generators produce the same bit pattern. |
-| sequence | 12 | 0-4095 | Per-millisecond counter. Incremented for each ID generated within the same millisecond on the same machine. 12 bits allow 4096 IDs per millisecond per machine. Resets to 0 on the next millisecond. |
+| Field         | Bits | Range       | Description                                                                                                                                                                                          |
+| ------------- | ---- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sign          | 1    | 0           | Always 0 (positive number). Ensures the ID is positive in signed 64-bit integer languages (Java long, Go int64).                                                                                     |
+| timestamp_ms  | 41   | 0 to 2^41-1 | Milliseconds since a custom epoch (e.g., 2024-01-01). 41 bits cover ~69 years from the epoch. Using a custom epoch (not Unix epoch 1970) maximizes the usable range.                                 |
+| datacenter_id | 5    | 0-31        | Identifies which datacenter generated this ID. Encoded directly from generator_nodes.datacenter_id.                                                                                                  |
+| machine_id    | 5    | 0-31        | Identifies which machine within the datacenter. Together with datacenter_id, ensures no two generators produce the same bit pattern.                                                                 |
+| sequence      | 12   | 0-4095      | Per-millisecond counter. Incremented for each ID generated within the same millisecond on the same machine. 12 bits allow 4096 IDs per millisecond per machine. Resets to 0 on the next millisecond. |
 
 ```
 Bit layout (64 bits total):
@@ -60,12 +60,12 @@ Bit layout (64 bits total):
 
 ### coordination_leases (ZooKeeper/etcd)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| path | STRING, PK | Hierarchical path: `/id-gen/workers/{datacenter_id}/{machine_id}`. The path structure encodes the (dc, machine) assignment. |
-| hostname | STRING | Which server holds this lease. Used for conflict detection if two servers claim the same path. |
-| ip | STRING | Lease holder's IP address. Used for health checks. |
-| lease_expiry | TIMESTAMP | When the lease must be renewed. If not renewed, ZooKeeper's ephemeral node is automatically deleted, freeing the machine_id for reassignment. |
+| Field        | Type       | Description                                                                                                                                   |
+| ------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| path         | STRING, PK | Hierarchical path: `/id-gen/workers/{datacenter_id}/{machine_id}`. The path structure encodes the (dc, machine) assignment.                   |
+| hostname     | STRING     | Which server holds this lease. Used for conflict detection if two servers claim the same path.                                                |
+| ip           | STRING     | Lease holder's IP address. Used for health checks.                                                                                            |
+| lease_expiry | TIMESTAMP  | When the lease must be renewed. If not renewed, ZooKeeper's ephemeral node is automatically deleted, freeing the machine_id for reassignment. |
 
 **Why ZooKeeper/etcd for coordination?** The most critical invariant is that no two nodes simultaneously use the same (datacenter_id, machine_id). This requires distributed consensus. ZooKeeper provides ephemeral nodes that are automatically deleted when a node's session expires (crashes, network partition). This guarantees machine_id recovery without manual intervention.
 

@@ -8,11 +8,11 @@ Terraform state is the bridge between your configuration files and the real infr
 
 Terraform needs state for three reasons:
 
-| Purpose | Explanation |
-|---------|-------------|
-| **Resource mapping** | Maps each `resource` block to a real cloud resource (e.g., `aws_instance.web` -> `i-0abc123def456`) |
-| **Metadata tracking** | Stores dependency information, resource attributes, and provider details |
-| **Performance** | Caches resource attributes so `terraform plan` does not need to query every resource from the provider API on every run |
+| Purpose               | Explanation                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Resource mapping**  | Maps each `resource` block to a real cloud resource (e.g., `aws_instance.web` -> `i-0abc123def456`)                     |
+| **Metadata tracking** | Stores dependency information, resource attributes, and provider details                                                |
+| **Performance**       | Caches resource attributes so `terraform plan` does not need to query every resource from the provider API on every run |
 
 Without state, Terraform would need to crawl your entire cloud account, attempt to match resources by name or tags, and guess which ones it manages. That approach is brittle and slow. State makes the mapping explicit.
 
@@ -31,11 +31,13 @@ main.tf  terraform.tfstate  terraform.tfstate.backup
 The `.tfstate` file is JSON. The `.backup` file is the previous version (created on every write).
 
 **Local state is fine for:**
+
 - Learning Terraform
 - Solo projects with no CI/CD
 - Quick prototypes you will tear down
 
 **Local state is dangerous for:**
+
 - Any team environment (no locking, no shared access)
 - CI/CD pipelines (state lives on ephemeral runners)
 - Anything you care about losing (laptop dies, state is gone)
@@ -48,13 +50,13 @@ A remote backend stores state in a shared, durable location with locking to prev
 
 ### Backend Options
 
-| Backend | Locking | Encryption | Best For |
-|---------|---------|------------|----------|
-| **S3 + DynamoDB** | Yes (DynamoDB) | Yes (SSE) | AWS-native teams; most common in production |
-| **GCS** | Yes (built-in) | Yes (default) | GCP-native teams |
-| **Azure Blob** | Yes (blob lease) | Yes (SSE) | Azure-native teams |
-| **Terraform Cloud** | Yes (built-in) | Yes | Teams wanting managed state + runs |
-| **Consul** | Yes (built-in) | Optional | HashiCorp-stack shops |
+| Backend             | Locking              | Encryption       | Best For                                    |
+| ------------------- | -------------------- | ---------------- | ------------------------------------------- |
+| **S3 + DynamoDB**   | Yes (DynamoDB)       | Yes (SSE)        | AWS-native teams; most common in production |
+| **GCS**             | Yes (built-in)       | Yes (default)    | GCP-native teams                            |
+| **Azure Blob**      | Yes (blob lease)     | Yes (SSE)        | Azure-native teams                          |
+| **Terraform Cloud** | Yes (built-in)       | Yes              | Teams wanting managed state + runs          |
+| **Consul**          | Yes (built-in)       | Optional         | HashiCorp-stack shops                       |
 | **pg (PostgreSQL)** | Yes (advisory locks) | Depends on setup | Teams with existing Postgres infrastructure |
 
 ### S3 Backend -- The Industry Standard
@@ -149,10 +151,10 @@ With locking, Developer B's `terraform apply` blocks until Developer A's lock is
 
 Terraform writes a lock record to the DynamoDB table with the state file path as the `LockID`. The record contains:
 
-| Field | Value |
-|-------|-------|
+| Field    | Value                                                                                  |
+| -------- | -------------------------------------------------------------------------------------- |
 | `LockID` | S3 bucket + key (e.g., `my-company-terraform-state/prod/networking/terraform.tfstate`) |
-| `Info` | JSON with who acquired the lock, when, and the operation |
+| `Info`   | JSON with who acquired the lock, when, and the operation                               |
 
 When the operation completes, Terraform deletes the lock record.
 
@@ -222,12 +224,12 @@ The state file is JSON. Here is a simplified view:
 
 Key fields:
 
-| Field | Purpose |
-|-------|---------|
-| `serial` | Incrementing counter; prevents stale writes |
-| `lineage` | Unique ID for this state; prevents accidentally pointing two configs at the same state |
-| `outputs` | Values exported by `output` blocks |
-| `resources` | Every managed resource with all its attributes |
+| Field       | Purpose                                                                                |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `serial`    | Incrementing counter; prevents stale writes                                            |
+| `lineage`   | Unique ID for this state; prevents accidentally pointing two configs at the same state |
+| `outputs`   | Values exported by `output` blocks                                                     |
+| `resources` | Every managed resource with all its attributes                                         |
 
 ### Sensitive Data Warning
 
@@ -358,6 +360,7 @@ terraform state rm aws_instance.legacy_server
 ```
 
 Use this when:
+
 - Handing a resource to another team's Terraform config
 - Migrating a resource to a different state file
 - Removing something Terraform should no longer manage
@@ -399,6 +402,7 @@ infrastructure/
 ```
 
 Benefits:
+
 - Smaller blast radius (a bad apply in compute does not touch networking)
 - Faster plans (fewer resources to refresh)
 - Better team autonomy (networking team owns networking state)
@@ -560,14 +564,14 @@ State keys become: `env:/staging/prod/networking/terraform.tfstate`. Workspaces 
 
 ## Quick Reference
 
-| Task | Command |
-|------|---------|
-| List all managed resources | `terraform state list` |
-| Inspect a resource | `terraform state show <address>` |
-| Rename/move a resource | `terraform state mv <old> <new>` |
-| Remove from management | `terraform state rm <address>` |
-| Download state | `terraform state pull` |
-| Upload state | `terraform state push <file>` |
-| Force release a lock | `terraform force-unlock <lock-id>` |
-| Migrate backend | `terraform init -migrate-state` |
-| Reinitialize without migration | `terraform init -reconfigure` |
+| Task                           | Command                            |
+| ------------------------------ | ---------------------------------- |
+| List all managed resources     | `terraform state list`             |
+| Inspect a resource             | `terraform state show <address>`   |
+| Rename/move a resource         | `terraform state mv <old> <new>`   |
+| Remove from management         | `terraform state rm <address>`     |
+| Download state                 | `terraform state pull`             |
+| Upload state                   | `terraform state push <file>`      |
+| Force release a lock           | `terraform force-unlock <lock-id>` |
+| Migrate backend                | `terraform init -migrate-state`    |
+| Reinitialize without migration | `terraform init -reconfigure`      |

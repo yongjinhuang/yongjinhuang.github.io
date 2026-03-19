@@ -184,12 +184,14 @@ FP4 x FP4 -> FP16/FP32 |       |        |        |        |   Yes
 ### Performance Numbers
 
 On an A100 GPU:
+
 - FP32 (CUDA Cores): **19.5 TFLOPS**
 - TF32 (Tensor Cores): **156 TFLOPS** (8x speedup)
 - FP16 (Tensor Cores): **312 TFLOPS** (16x speedup)
 - INT8 (Tensor Cores): **624 TOPS** (32x speedup)
 
 On an H100 GPU:
+
 - FP32 (CUDA Cores): **67 TFLOPS**
 - TF32 (Tensor Cores): **989 TFLOPS**
 - FP16 (Tensor Cores): **1979 TFLOPS**
@@ -412,6 +414,7 @@ torch.backends.cudnn.allow_tf32 = True
 ```
 
 What happens transparently:
+
 ```
 FP32 input A                    FP32 input B
      |                               |
@@ -796,6 +799,7 @@ Final: O = O_prev  (correct softmax attention output)
 ```
 
 The mathematical correctness relies on the identity:
+
 ```
 softmax(x)_i = exp(x_i - m) / sum(exp(x_j - m))
 
@@ -1319,6 +1323,7 @@ def my_kernel(
 ```
 
 Key concepts:
+
 - **`tl.program_id`**: Equivalent to CUDA blockIdx
 - **`tl.arange`**: Creates a range within a block (like threadIdx)
 - **`tl.load/tl.store`**: Block-level memory operations with masking
@@ -1521,6 +1526,7 @@ def my_kernel(...):
 ```
 
 How it works:
+
 ```
 First call with new (M, N, K):
   1. Compile kernel for EACH config
@@ -1640,6 +1646,7 @@ void cublas_mixed_precision_gemm(
 ### cuDNN: Optimized Deep Learning Primitives
 
 cuDNN provides optimized implementations for:
+
 - Convolutions (forward, backward data, backward filter)
 - Pooling (max, average)
 - Normalization (batch norm, layer norm, group norm)
@@ -1767,6 +1774,7 @@ WINOGRAD_NONFUSED               | High    | Fastest  | 3x3 kernels
 ```
 
 PyTorch's cuDNN benchmark mode tries all algorithms:
+
 ```python
 torch.backends.cudnn.benchmark = True  # enable auto-tuning
 # First forward pass: benchmarks all algorithms
@@ -1895,6 +1903,7 @@ Systolic Array:
 ```
 
 Key characteristics:
+
 - **Systolic array** architecture (vs NVIDIA's SIMT + Tensor Core)
 - **BF16 native** (Google co-invented BF16)
 - **Pod-level scaling**: TPU pods connect thousands of chips via custom interconnect (ICI)
@@ -2088,6 +2097,7 @@ Speedup comes from:
 ```
 
 Common fusion patterns in transformers:
+
 ```
 Pattern                                    | Savings
 -------------------------------------------|-------------------
@@ -2180,6 +2190,7 @@ PagedAttention (vLLM):
 ### Serving Frameworks
 
 **TensorRT (NVIDIA)**:
+
 ```python
 # TensorRT optimization pipeline
 import tensorrt as trt
@@ -2200,6 +2211,7 @@ outputs = llm.generate(
 ```
 
 **ONNX Runtime**:
+
 ```python
 import onnxruntime as ort
 
@@ -2221,6 +2233,7 @@ outputs = session.run(None, {"input": input_array})
 ```
 
 **vLLM**:
+
 ```python
 from vllm import LLM, SamplingParams
 
@@ -2617,7 +2630,7 @@ A regular CUDA core performs one fused multiply-add (FMA) per cycle: `d = a * b 
 
 **Q2: Explain the WMMA API lifecycle. What are the four key operations?**
 
-The WMMA API has four operations: (1) `fill_fragment` initializes a fragment with a scalar value (typically zero for accumulators), (2) `load_matrix_sync` loads a tile from memory into a fragment distributed across the warp, (3) `mma_sync` performs the matrix multiply-accumulate D = A * B + C using Tensor Cores, and (4) `store_matrix_sync` writes the result fragment back to memory. All operations have `_sync` suffix because they require warp-level synchronization -- all 32 threads must participate.
+The WMMA API has four operations: (1) `fill_fragment` initializes a fragment with a scalar value (typically zero for accumulators), (2) `load_matrix_sync` loads a tile from memory into a fragment distributed across the warp, (3) `mma_sync` performs the matrix multiply-accumulate D = A \* B + C using Tensor Cores, and (4) `store_matrix_sync` writes the result fragment back to memory. All operations have `_sync` suffix because they require warp-level synchronization -- all 32 threads must participate.
 
 **Q3: Why must GEMM dimensions be multiples of 16 (or 8) for Tensor Cores?**
 
@@ -2645,7 +2658,7 @@ BF16 has 8 exponent bits (same range as FP32, up to ~3.4e38) but only 7 mantissa
 
 **Q7: What is the key insight behind FlashAttention? Why is it faster than standard attention?**
 
-Standard attention materializes the N x N attention matrix in HBM (GPU global memory), requiring O(N^2) memory reads and writes. Since HBM bandwidth (~2 TB/s) is much slower than compute (~300 TFLOPS), attention is memory-bound. FlashAttention tiles the computation so that Q, K, V tiles are loaded into fast SRAM (shared memory, ~19 TB/s), the attention scores are computed and softmax is applied entirely in SRAM, and only the final output is written to HBM. The N x N matrix is never materialized in HBM. Total HBM I/O drops from O(N^2) to O(N^2 * d^2 / M) where M is SRAM size, which is significantly less for practical values.
+Standard attention materializes the N x N attention matrix in HBM (GPU global memory), requiring O(N^2) memory reads and writes. Since HBM bandwidth (~2 TB/s) is much slower than compute (~300 TFLOPS), attention is memory-bound. FlashAttention tiles the computation so that Q, K, V tiles are loaded into fast SRAM (shared memory, ~19 TB/s), the attention scores are computed and softmax is applied entirely in SRAM, and only the final output is written to HBM. The N x N matrix is never materialized in HBM. Total HBM I/O drops from O(N^2) to O(N^2 \* d^2 / M) where M is SRAM size, which is significantly less for practical values.
 
 **Q8: Explain the online softmax trick used in FlashAttention.**
 

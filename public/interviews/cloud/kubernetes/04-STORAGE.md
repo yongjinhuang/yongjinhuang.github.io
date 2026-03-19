@@ -40,24 +40,24 @@ metadata:
   name: shared-data
 spec:
   containers:
-  - name: writer
-    image: busybox
-    command: ['sh', '-c', 'echo "hello" > /data/message; sleep 3600']
-    volumeMounts:
-    - name: shared
-      mountPath: /data
-  - name: reader
-    image: busybox
-    command: ['sh', '-c', 'cat /data/message; sleep 3600']
-    volumeMounts:
-    - name: shared
-      mountPath: /data
+    - name: writer
+      image: busybox
+      command: ['sh', '-c', 'echo "hello" > /data/message; sleep 3600']
+      volumeMounts:
+        - name: shared
+          mountPath: /data
+    - name: reader
+      image: busybox
+      command: ['sh', '-c', 'cat /data/message; sleep 3600']
+      volumeMounts:
+        - name: shared
+          mountPath: /data
   volumes:
-  - name: shared
-    emptyDir: {}            # Default: uses node disk
-    # emptyDir:
-    #   medium: Memory      # Uses tmpfs (RAM) — faster, limited by memory
-    #   sizeLimit: 1Gi      # Limit size (evicted if exceeded)
+    - name: shared
+      emptyDir: {} # Default: uses node disk
+      # emptyDir:
+      #   medium: Memory      # Uses tmpfs (RAM) — faster, limited by memory
+      #   sizeLimit: 1Gi      # Limit size (evicted if exceeded)
 ```
 
 **Use cases:** Cache directory, checkpoint directory, shared data between init container and app container, scratch space for computation.
@@ -70,13 +70,14 @@ Mounts a file or directory from the **host node's filesystem** into a pod.
 
 ```yaml
 volumes:
-- name: host-data
-  hostPath:
-    path: /var/log/containers
-    type: DirectoryOrCreate    # Directory, DirectoryOrCreate, File, FileOrCreate, etc.
+  - name: host-data
+    hostPath:
+      path: /var/log/containers
+      type: DirectoryOrCreate # Directory, DirectoryOrCreate, File, FileOrCreate, etc.
 ```
 
 **WARNING:** hostPath is dangerous in production:
+
 - Pod is tied to a specific node (not portable)
 - Can access ANY host file (security risk)
 - Data does not survive node failure
@@ -88,16 +89,16 @@ Mount ConfigMap or Secret data as files in the pod filesystem.
 
 ```yaml
 volumes:
-- name: config
-  configMap:
-    name: app-config
-    items:                    # Optional: mount specific keys
-    - key: config.yaml
-      path: config.yaml       # File name in the mount path
-- name: certs
-  secret:
-    secretName: tls-certs
-    defaultMode: 0400         # File permissions (read-only for owner)
+  - name: config
+    configMap:
+      name: app-config
+      items: # Optional: mount specific keys
+        - key: config.yaml
+          path: config.yaml # File name in the mount path
+  - name: certs
+    secret:
+      secretName: tls-certs
+      defaultMode: 0400 # File permissions (read-only for owner)
 ```
 
 **Hot-reload behavior:** When a ConfigMap or Secret is updated, the mounted files are eventually updated too (kubelet sync period, default ~1 minute). However, environment variables sourced from ConfigMap/Secret are NOT updated — the pod must be restarted.
@@ -108,22 +109,22 @@ Combines multiple volume sources into a single mount point.
 
 ```yaml
 volumes:
-- name: all-config
-  projected:
-    sources:
-    - configMap:
-        name: app-config
-    - secret:
-        name: app-secret
-    - serviceAccountToken:
-        path: token
-        expirationSeconds: 3600
-        audience: api
-    - downwardAPI:
-        items:
-        - path: labels
-          fieldRef:
-            fieldPath: metadata.labels
+  - name: all-config
+    projected:
+      sources:
+        - configMap:
+            name: app-config
+        - secret:
+            name: app-secret
+        - serviceAccountToken:
+            path: token
+            expirationSeconds: 3600
+            audience: api
+        - downwardAPI:
+            items:
+              - path: labels
+                fieldRef:
+                  fieldPath: metadata.labels
 ```
 
 ### 1.5 downwardAPI Volume
@@ -132,16 +133,16 @@ Exposes pod metadata as files.
 
 ```yaml
 volumes:
-- name: podinfo
-  downwardAPI:
-    items:
-    - path: "labels"
-      fieldRef:
-        fieldPath: metadata.labels
-    - path: "cpu_limit"
-      resourceFieldRef:
-        containerName: app
-        resource: limits.cpu
+  - name: podinfo
+    downwardAPI:
+      items:
+        - path: 'labels'
+          fieldRef:
+            fieldPath: metadata.labels
+        - path: 'cpu_limit'
+          resourceFieldRef:
+            containerName: app
+            resource: limits.cpu
 ```
 
 ---
@@ -165,22 +166,22 @@ volumes:
 
 ### 2.2 Access Modes
 
-| Mode | Abbreviation | Description |
-|------|-------------|-------------|
-| ReadWriteOnce | RWO | Single node read-write (most block storage) |
-| ReadOnlyMany | ROX | Multiple nodes read-only |
-| ReadWriteMany | RWX | Multiple nodes read-write (NFS, EFS, CephFS) |
-| ReadWriteOncePod | RWOP | Single pod read-write (1.27+ GA, strictest) |
+| Mode             | Abbreviation | Description                                  |
+| ---------------- | ------------ | -------------------------------------------- |
+| ReadWriteOnce    | RWO          | Single node read-write (most block storage)  |
+| ReadOnlyMany     | ROX          | Multiple nodes read-only                     |
+| ReadWriteMany    | RWX          | Multiple nodes read-write (NFS, EFS, CephFS) |
+| ReadWriteOncePod | RWOP         | Single pod read-write (1.27+ GA, strictest)  |
 
 **Critical detail:** RWO means one NODE, not one POD. Multiple pods on the same node CAN share an RWO volume. Use RWOP if you truly need single-pod access.
 
 ### 2.3 Reclaim Policies
 
-| Policy | Behavior | Use Case |
-|--------|----------|----------|
-| `Retain` | PV is kept after PVC deletion (manual cleanup needed) | Production data (safety first) |
-| `Delete` | PV and underlying storage are deleted with PVC | Dev/test (automatic cleanup) |
-| `Recycle` | DEPRECATED — do not use | |
+| Policy    | Behavior                                              | Use Case                       |
+| --------- | ----------------------------------------------------- | ------------------------------ |
+| `Retain`  | PV is kept after PVC deletion (manual cleanup needed) | Production data (safety first) |
+| `Delete`  | PV and underlying storage are deleted with PVC        | Dev/test (automatic cleanup)   |
+| `Recycle` | DEPRECATED — do not use                               |                                |
 
 ### 2.4 PV/PVC Example
 
@@ -194,12 +195,12 @@ spec:
   capacity:
     storage: 100Gi
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: ""            # Empty = do not match any StorageClass
+  storageClassName: '' # Empty = do not match any StorageClass
   csi:
     driver: ebs.csi.aws.com
-    volumeHandle: vol-0abc123def  # Pre-existing EBS volume ID
+    volumeHandle: vol-0abc123def # Pre-existing EBS volume ID
 
 ---
 # Developer creates PVC
@@ -210,11 +211,11 @@ metadata:
   namespace: production
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
       storage: 100Gi
-  storageClassName: ""            # Bind to a PV with no StorageClass
+  storageClassName: '' # Bind to a PV with no StorageClass
 
 ---
 # Pod uses PVC
@@ -224,15 +225,15 @@ metadata:
   name: database
 spec:
   containers:
-  - name: postgres
-    image: postgres:16
-    volumeMounts:
-    - name: data
-      mountPath: /var/lib/postgresql/data
+    - name: postgres
+      image: postgres:16
+      volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
   volumes:
-  - name: data
-    persistentVolumeClaim:
-      claimName: database-pvc
+    - name: data
+      persistentVolumeClaim:
+        claimName: database-pvc
 ```
 
 ### 2.5 PV Lifecycle States
@@ -268,26 +269,26 @@ kind: StorageClass
 metadata:
   name: fast-ssd
   annotations:
-    storageclass.kubernetes.io/is-default-class: "true"   # Default SC
+    storageclass.kubernetes.io/is-default-class: 'true' # Default SC
 provisioner: ebs.csi.aws.com
 parameters:
   type: gp3
-  iops: "5000"
-  throughput: "250"            # MB/s
-  encrypted: "true"
-  kmsKeyId: "arn:aws:kms:..."
-reclaimPolicy: Delete          # PV deleted when PVC is deleted
-allowVolumeExpansion: true     # Allow resizing PVCs
-volumeBindingMode: WaitForFirstConsumer   # See below
+  iops: '5000'
+  throughput: '250' # MB/s
+  encrypted: 'true'
+  kmsKeyId: 'arn:aws:kms:...'
+reclaimPolicy: Delete # PV deleted when PVC is deleted
+allowVolumeExpansion: true # Allow resizing PVCs
+volumeBindingMode: WaitForFirstConsumer # See below
 mountOptions:
-- noatime
+  - noatime
 ```
 
 ### 3.2 Volume Binding Modes
 
-| Mode | Behavior | When to Use |
-|------|----------|-------------|
-| `Immediate` | PV is provisioned immediately when PVC is created | When storage is accessible from any node |
+| Mode                   | Behavior                                           | When to Use                                                                    |
+| ---------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `Immediate`            | PV is provisioned immediately when PVC is created  | When storage is accessible from any node                                       |
 | `WaitForFirstConsumer` | PV is provisioned when a pod actually uses the PVC | Zone-aware storage (EBS, GCE PD) — ensures volume is in the same AZ as the pod |
 
 **Critical:** Always use `WaitForFirstConsumer` with zone-aware storage (AWS EBS, GCE PD). Otherwise, the volume might be created in AZ-a but the pod gets scheduled to AZ-b, and the pod is stuck Pending forever.
@@ -315,7 +316,7 @@ provisioner: efs.csi.aws.com
 parameters:
   provisioningMode: efs-ap
   fileSystemId: fs-0abc123
-  directoryPerms: "700"
+  directoryPerms: '700'
 
 ---
 # GKE Persistent Disk (SSD)
@@ -416,15 +417,15 @@ Container sees mounted filesystem at specified mountPath
 
 ### 4.3 Common CSI Drivers
 
-| Driver | Storage Backend | Access Modes | Features |
-|--------|----------------|-------------|----------|
-| `ebs.csi.aws.com` | AWS EBS | RWO | Snapshots, encryption, resizing |
-| `efs.csi.aws.com` | AWS EFS | RWX | Shared filesystem, access points |
-| `pd.csi.storage.gke.io` | GCE Persistent Disk | RWO, ROX | Regional PDs, snapshots |
-| `disk.csi.azure.com` | Azure Managed Disk | RWO | Snapshots, encryption |
-| `file.csi.azure.com` | Azure Files | RWX | SMB/NFS shares |
-| `nfs.csi.k8s.io` | NFS servers | RWX | Any NFS server |
-| `rook-ceph.ceph.com` | Ceph (via Rook) | RWO, RWX, ROX | Block, file, object |
+| Driver                  | Storage Backend     | Access Modes  | Features                         |
+| ----------------------- | ------------------- | ------------- | -------------------------------- |
+| `ebs.csi.aws.com`       | AWS EBS             | RWO           | Snapshots, encryption, resizing  |
+| `efs.csi.aws.com`       | AWS EFS             | RWX           | Shared filesystem, access points |
+| `pd.csi.storage.gke.io` | GCE Persistent Disk | RWO, ROX      | Regional PDs, snapshots          |
+| `disk.csi.azure.com`    | Azure Managed Disk  | RWO           | Snapshots, encryption            |
+| `file.csi.azure.com`    | Azure Files         | RWX           | SMB/NFS shares                   |
+| `nfs.csi.k8s.io`        | NFS servers         | RWX           | Any NFS server                   |
+| `rook-ceph.ceph.com`    | Ceph (via Rook)     | RWO, RWX, ROX | Block, file, object              |
 
 ---
 
@@ -449,30 +450,30 @@ spec:
         app: postgres
     spec:
       containers:
-      - name: postgres
-        image: postgres:16
-        volumeMounts:
-        - name: data
-          mountPath: /var/lib/postgresql/data
-        - name: wal
-          mountPath: /var/lib/postgresql/wal
+        - name: postgres
+          image: postgres:16
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: wal
+              mountPath: /var/lib/postgresql/wal
   volumeClaimTemplates:
-  - metadata:
-      name: data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      storageClassName: fast-ssd
-      resources:
-        requests:
-          storage: 100Gi
-  - metadata:
-      name: wal
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      storageClassName: ultra-fast-ssd    # Higher IOPS for WAL
-      resources:
-        requests:
-          storage: 20Gi
+    - metadata:
+        name: data
+      spec:
+        accessModes: ['ReadWriteOnce']
+        storageClassName: fast-ssd
+        resources:
+          requests:
+            storage: 100Gi
+    - metadata:
+        name: wal
+      spec:
+        accessModes: ['ReadWriteOnce']
+        storageClassName: ultra-fast-ssd # Higher IOPS for WAL
+        resources:
+          requests:
+            storage: 20Gi
 ```
 
 **What happens:**
@@ -491,11 +492,13 @@ Pod: postgres-2 ──> PVC: data-postgres-2 ──> PV: pv-mno345
 ```
 
 **If postgres-1 crashes and gets rescheduled to a different node:**
+
 - The PVC `data-postgres-1` persists (it is not deleted)
 - The PV is detached from old node and attached to new node
 - Pod restarts with the same data
 
 **If the StatefulSet is deleted:**
+
 - Pods are deleted
 - PVCs are NOT deleted (data safety by design)
 - PVs remain bound to the PVCs
@@ -506,8 +509,8 @@ Pod: postgres-2 ──> PVC: data-postgres-2 ──> PV: pv-mno345
 # Auto-cleanup PVCs (1.27+)
 spec:
   persistentVolumeClaimRetentionPolicy:
-    whenDeleted: Delete       # Delete PVCs when StatefulSet is deleted
-    whenScaled: Retain        # Keep PVCs when scaling down (safety)
+    whenDeleted: Delete # Delete PVCs when StatefulSet is deleted
+    whenScaled: Retain # Keep PVCs when scaling down (safety)
 ```
 
 ---
@@ -524,7 +527,7 @@ metadata:
 driver: ebs.csi.aws.com
 deletionPolicy: Delete
 parameters:
-  tagSpecification_1: "Name=k8s-snapshot"
+  tagSpecification_1: 'Name=k8s-snapshot'
 
 ---
 apiVersion: snapshot.storage.k8s.io/v1
@@ -546,7 +549,7 @@ metadata:
   name: database-pvc-restored
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: fast-ssd
   resources:
     requests:
@@ -596,21 +599,21 @@ metadata:
   name: data-processor
 spec:
   containers:
-  - name: processor
-    image: data-processor:v1
-    volumeMounts:
-    - name: scratch
-      mountPath: /scratch
+    - name: processor
+      image: data-processor:v1
+      volumeMounts:
+        - name: scratch
+          mountPath: /scratch
   volumes:
-  - name: scratch
-    ephemeral:
-      volumeClaimTemplate:
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          storageClassName: fast-ssd
-          resources:
-            requests:
-              storage: 50Gi
+    - name: scratch
+      ephemeral:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ['ReadWriteOnce']
+            storageClassName: fast-ssd
+            resources:
+              requests:
+                storage: 50Gi
 ```
 
 **Use case:** Batch jobs that need fast temporary storage larger than emptyDir, without leaving orphan PVCs.
@@ -621,12 +624,12 @@ Provided by CSI drivers that support ephemeral inline volumes. Useful for secret
 
 ```yaml
 volumes:
-- name: secrets
-  csi:
-    driver: secrets-store.csi.k8s.io
-    readOnly: true
-    volumeAttributes:
-      secretProviderClass: aws-secrets
+  - name: secrets
+    csi:
+      driver: secrets-store.csi.k8s.io
+      readOnly: true
+      volumeAttributes:
+        secretProviderClass: aws-secrets
 ```
 
 ---
@@ -635,38 +638,38 @@ volumes:
 
 ### 9.1 Key Metrics
 
-| Metric | What It Measures | Impact |
-|--------|-----------------|--------|
-| **IOPS** | I/O operations per second | Database transaction throughput |
-| **Throughput** | MB/s read/write | Large file transfers, backups |
-| **Latency** | Time per I/O operation | Query response time, write commit |
+| Metric         | What It Measures          | Impact                            |
+| -------------- | ------------------------- | --------------------------------- |
+| **IOPS**       | I/O operations per second | Database transaction throughput   |
+| **Throughput** | MB/s read/write           | Large file transfers, backups     |
+| **Latency**    | Time per I/O operation    | Query response time, write commit |
 
 ### 9.2 Storage Tier Comparison
 
-| Storage Type | IOPS | Throughput | Latency | Access Mode | Use Case |
-|-------------|------|-----------|---------|-------------|----------|
-| Local NVMe | 100k+ | 3+ GB/s | <0.1ms | RWO (node-local) | etcd, high-perf DB |
-| AWS gp3 | 3,000-16,000 | 125-1,000 MB/s | 1-2ms | RWO | General purpose |
-| AWS io2 | Up to 256,000 | 4,000 MB/s | <1ms | RWO | Critical databases |
-| AWS EFS | Burst-based | Up to 10 GB/s | 1-10ms | RWX | Shared config, CMS |
-| GCE PD SSD | Up to 100,000 | Up to 2,400 MB/s | <1ms | RWO | Databases |
-| NFS | Varies | Varies | 1-50ms | RWX | Legacy, shared data |
+| Storage Type | IOPS          | Throughput       | Latency | Access Mode      | Use Case            |
+| ------------ | ------------- | ---------------- | ------- | ---------------- | ------------------- |
+| Local NVMe   | 100k+         | 3+ GB/s          | <0.1ms  | RWO (node-local) | etcd, high-perf DB  |
+| AWS gp3      | 3,000-16,000  | 125-1,000 MB/s   | 1-2ms   | RWO              | General purpose     |
+| AWS io2      | Up to 256,000 | 4,000 MB/s       | <1ms    | RWO              | Critical databases  |
+| AWS EFS      | Burst-based   | Up to 10 GB/s    | 1-10ms  | RWX              | Shared config, CMS  |
+| GCE PD SSD   | Up to 100,000 | Up to 2,400 MB/s | <1ms    | RWO              | Databases           |
+| NFS          | Varies        | Varies           | 1-50ms  | RWX              | Legacy, shared data |
 
 ### 9.3 Performance Tuning Tips
 
 ```yaml
 # Use separate volumes for data and WAL (databases)
 volumeMounts:
-- name: data
-  mountPath: /var/lib/postgresql/data
-- name: wal
-  mountPath: /var/lib/postgresql/wal    # Higher IOPS storage class
+  - name: data
+    mountPath: /var/lib/postgresql/data
+  - name: wal
+    mountPath: /var/lib/postgresql/wal # Higher IOPS storage class
 
 # Mount options for performance
 mountOptions:
-- noatime       # Disable access time updates
-- nodiratime    # Disable directory access time updates
-- nobarrier     # Disable write barriers (risk: data loss on power failure)
+  - noatime # Disable access time updates
+  - nodiratime # Disable directory access time updates
+  - nobarrier # Disable write barriers (risk: data loss on power failure)
 ```
 
 ---
@@ -676,18 +679,21 @@ mountOptions:
 ### 10.1 Running Databases on Kubernetes
 
 **When it makes sense:**
+
 - Development and staging environments
 - Databases with Kubernetes operators (CloudNativePG, Vitess, CockroachDB)
 - Team has strong K8s operational expertise
 - Need rapid database provisioning
 
 **When to use managed databases instead:**
+
 - Critical production data (RDS, Cloud SQL, Aurora)
 - Team lacks K8s storage expertise
 - Need cross-region replication managed by the provider
 - Compliance requirements that managed services satisfy
 
 **If you DO run databases on K8s:**
+
 ```
 DO:
   ✓ Use StatefulSets with volumeClaimTemplates
@@ -805,23 +811,23 @@ NFS performance degrades significantly under high I/O. NFS file locking is unrel
 
 ## 13. Quick Reference
 
-| Volume Type | Persistence | Scope | Use Case |
-|------------|-------------|-------|----------|
-| `emptyDir` | Pod lifetime | Pod | Scratch space, inter-container sharing |
-| `hostPath` | Node lifetime | Node | DaemonSet node access (logs, sockets) |
-| `configMap` | ConfigMap lifetime | Namespace | Configuration files |
-| `secret` | Secret lifetime | Namespace | Credentials, TLS certs |
-| `PVC` | Until PVC deleted | Namespace | Persistent application data |
-| `ephemeral` | Pod lifetime | Pod | Temporary fast storage |
+| Volume Type | Persistence        | Scope     | Use Case                               |
+| ----------- | ------------------ | --------- | -------------------------------------- |
+| `emptyDir`  | Pod lifetime       | Pod       | Scratch space, inter-container sharing |
+| `hostPath`  | Node lifetime      | Node      | DaemonSet node access (logs, sockets)  |
+| `configMap` | ConfigMap lifetime | Namespace | Configuration files                    |
+| `secret`    | Secret lifetime    | Namespace | Credentials, TLS certs                 |
+| `PVC`       | Until PVC deleted  | Namespace | Persistent application data            |
+| `ephemeral` | Pod lifetime       | Pod       | Temporary fast storage                 |
 
-| Binding Mode | When PV Is Provisioned | Use With |
-|-------------|----------------------|----------|
-| `Immediate` | When PVC is created | NFS, EFS, any zone-agnostic storage |
-| `WaitForFirstConsumer` | When pod uses the PVC | EBS, GCE PD, any zone-aware storage |
+| Binding Mode           | When PV Is Provisioned | Use With                            |
+| ---------------------- | ---------------------- | ----------------------------------- |
+| `Immediate`            | When PVC is created    | NFS, EFS, any zone-agnostic storage |
+| `WaitForFirstConsumer` | When pod uses the PVC  | EBS, GCE PD, any zone-aware storage |
 
-| Access Mode | Short | Single Node | Multi-Node | Single Pod |
-|------------|-------|------------|-----------|-----------|
-| ReadWriteOnce | RWO | Yes | No | No (multiple pods on same node OK) |
-| ReadOnlyMany | ROX | Yes | Yes | No |
-| ReadWriteMany | RWX | Yes | Yes | No |
-| ReadWriteOncePod | RWOP | Yes | No | Yes (strictest) |
+| Access Mode      | Short | Single Node | Multi-Node | Single Pod                         |
+| ---------------- | ----- | ----------- | ---------- | ---------------------------------- |
+| ReadWriteOnce    | RWO   | Yes         | No         | No (multiple pods on same node OK) |
+| ReadOnlyMany     | ROX   | Yes         | Yes        | No                                 |
+| ReadWriteMany    | RWX   | Yes         | Yes        | No                                 |
+| ReadWriteOncePod | RWOP  | Yes         | No         | Yes (strictest)                    |

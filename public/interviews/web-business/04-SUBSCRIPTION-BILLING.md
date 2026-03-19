@@ -28,12 +28,14 @@ Subscriptions are the dominant business model for modern SaaS. Most of the web a
 ### Plan Changes (Upgrades / Downgrades)
 
 **Upgrading mid-cycle (e.g., Basic → Pro):**
+
 1. Customer clicks "Upgrade"
 2. System calculates proration: "You've used 15 days of your Basic plan. Here's the credit. The Pro plan costs X more."
 3. Customer is charged the prorated difference immediately (or on next invoice)
 4. Access to Pro features is granted right away
 
 **Downgrading:**
+
 1. Customer clicks "Downgrade"
 2. Usually takes effect at the end of the current billing period (so they keep access until they've paid for)
 3. Next invoice reflects the lower plan price
@@ -64,23 +66,23 @@ Subscriptions are the dominant business model for modern SaaS. Most of the web a
 
 ## Key Terms You'll Hear
 
-| Term | What It Means |
-|------|---------------|
-| **MRR** | Monthly Recurring Revenue — the holy metric for subscription businesses |
-| **ARR** | Annual Recurring Revenue — MRR × 12 |
-| **Churn** | Percentage of customers who cancel per period. 5% monthly churn = you lose half your customers in a year |
-| **Proration** | Adjusting charges when a customer changes plans mid-cycle |
-| **Dunning** | The process of recovering failed payments through retries and emails |
-| **Seat-Based Pricing** | Charging per user (e.g., $10/user/month). Common in B2B SaaS |
-| **Usage-Based Pricing** | Charging based on consumption (API calls, storage, compute hours) |
-| **Tiered Pricing** | Different price per unit at different volume levels |
-| **Flat-Rate Pricing** | One price for everything. Simple but less flexible |
-| **Freemium** | Free tier with limited features + paid tiers with more. Not the same as a free trial |
-| **Invoice** | A formal billing document sent to the customer for each charge |
-| **Billing Period** | The time between charges (monthly, quarterly, annually) |
-| **Grace Period** | Extra time given after a failed payment before cutting off access |
-| **Entitlements** | What features/resources a plan includes (e.g., Pro plan gets 100GB storage) |
-| **Coupon / Discount** | A reduction applied to the subscription price (percentage or fixed amount, limited or ongoing) |
+| Term                    | What It Means                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| **MRR**                 | Monthly Recurring Revenue — the holy metric for subscription businesses                                  |
+| **ARR**                 | Annual Recurring Revenue — MRR × 12                                                                      |
+| **Churn**               | Percentage of customers who cancel per period. 5% monthly churn = you lose half your customers in a year |
+| **Proration**           | Adjusting charges when a customer changes plans mid-cycle                                                |
+| **Dunning**             | The process of recovering failed payments through retries and emails                                     |
+| **Seat-Based Pricing**  | Charging per user (e.g., $10/user/month). Common in B2B SaaS                                             |
+| **Usage-Based Pricing** | Charging based on consumption (API calls, storage, compute hours)                                        |
+| **Tiered Pricing**      | Different price per unit at different volume levels                                                      |
+| **Flat-Rate Pricing**   | One price for everything. Simple but less flexible                                                       |
+| **Freemium**            | Free tier with limited features + paid tiers with more. Not the same as a free trial                     |
+| **Invoice**             | A formal billing document sent to the customer for each charge                                           |
+| **Billing Period**      | The time between charges (monthly, quarterly, annually)                                                  |
+| **Grace Period**        | Extra time given after a failed payment before cutting off access                                        |
+| **Entitlements**        | What features/resources a plan includes (e.g., Pro plan gets 100GB storage)                              |
+| **Coupon / Discount**   | A reduction applied to the subscription price (percentage or fixed amount, limited or ongoing)           |
 
 ## Common Patterns
 
@@ -129,13 +131,13 @@ Base plan + usage overage. "Pro plan includes 10,000 API calls. After that, $0.0
 
 ## Quick Reference
 
-| Scenario | Recommended Approach |
-|----------|---------------------|
-| Starting out | Simple plan-based pricing (2-3 tiers) |
-| B2B SaaS | Seat-based + plan tiers |
-| API / Infrastructure | Usage-based or hybrid |
-| Free trial | 14 days with card required → higher conversion |
-| Failed payments | Automated dunning (3+ retries over 2 weeks) |
-| Plan changes | Use gateway's proration logic (don't build your own) |
-| Cancellation | Cancel at period end + winback email sequence |
-| Revenue tracking | Track MRR, churn rate, LTV, CAC |
+| Scenario             | Recommended Approach                                 |
+| -------------------- | ---------------------------------------------------- |
+| Starting out         | Simple plan-based pricing (2-3 tiers)                |
+| B2B SaaS             | Seat-based + plan tiers                              |
+| API / Infrastructure | Usage-based or hybrid                                |
+| Free trial           | 14 days with card required → higher conversion       |
+| Failed payments      | Automated dunning (3+ retries over 2 weeks)          |
+| Plan changes         | Use gateway's proration logic (don't build your own) |
+| Cancellation         | Cancel at period end + winback email sequence        |
+| Revenue tracking     | Track MRR, churn rate, LTV, CAC                      |
