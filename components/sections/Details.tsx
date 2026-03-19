@@ -16,6 +16,7 @@ interface DetailItem {
   label: string;
   value: string;
   icon: IconType;
+  sensitive?: boolean;
 }
 
 const container = {
@@ -57,10 +58,12 @@ function CopyButton({ value }: { readonly value: string }) {
 }
 
 export function Details({ details }: DetailsProps) {
+  const [revealed, setRevealed] = useState(false);
+
   const detailItems: DetailItem[] = [
     { ...details.email, icon: FiMail },
-    { ...details.phone, icon: FiPhone },
-    { ...details.wechat, icon: FiMessageSquare },
+    { ...details.phone, icon: FiPhone, sensitive: true },
+    { ...details.wechat, icon: FiMessageSquare, sensitive: true },
     { ...details.address, icon: FiMapPin },
   ];
 
@@ -92,10 +95,21 @@ export function Details({ details }: DetailsProps) {
                       {detail.label}
                     </dt>
                     <dd className="flex items-center gap-1 text-gray-900 dark:text-white font-semibold text-sm md:text-base">
-                      <span className="break-words min-w-0">
-                        {detail.value}
-                      </span>
-                      <CopyButton value={detail.value} />
+                      {detail.sensitive && !revealed ? (
+                        <button
+                          onClick={() => setRevealed(true)}
+                          className="text-xs text-accent hover:underline"
+                        >
+                          Click to reveal
+                        </button>
+                      ) : (
+                        <>
+                          <span className="break-words min-w-0">
+                            {detail.value}
+                          </span>
+                          <CopyButton value={detail.value} />
+                        </>
+                      )}
                     </dd>
                   </div>
                 </div>

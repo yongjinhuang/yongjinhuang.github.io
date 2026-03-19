@@ -9,11 +9,11 @@ export const metadata: Metadata = {
     template: '%s | Yongjin Huang',
   },
   description:
-    'Full-stack engineer with experience at Shopee, Huawei & startups. Go, TypeScript, Python, React, distributed systems.',
+    'Web software engineer with experience at Shopee, Huawei & startups. Go, TypeScript, Python, React, distributed systems.',
   keywords: [
     'Yongjin Huang',
     'software engineer',
-    'full-stack developer',
+    'web software engineer',
     'Shopee',
     'Huawei',
     'Java',
