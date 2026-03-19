@@ -18,26 +18,33 @@ export default async function LangLayout({ children, params }: Props) {
   const t = await getTranslations(lang);
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <ColorSchemeProvider>
-        <div className="min-h-screen relative">
-          <AnimatedBackground />
-          <CustomCursor />
-          <Navbar nav={t.nav} />
+    <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `document.documentElement.lang="${lang}";`,
+        }}
+      />
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <ColorSchemeProvider>
+          <div className="min-h-screen relative">
+            <AnimatedBackground />
+            <CustomCursor />
+            <Navbar nav={t.nav} />
 
-          <main className="container mx-auto px-4 pt-28 md:pt-32 pb-16">
-            {children}
-          </main>
+            <main className="container mx-auto px-4 pt-28 md:pt-32 pb-16">
+              {children}
+            </main>
 
-          <Footer params={params} />
-          <ScrollToTop />
-        </div>
-      </ColorSchemeProvider>
-    </ThemeProvider>
+            <Footer params={params} />
+            <ScrollToTop />
+          </div>
+        </ColorSchemeProvider>
+      </ThemeProvider>
+    </>
   );
 }

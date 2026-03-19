@@ -9,7 +9,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "deploy": "gh-pages -d out",
-    "postbuild": "touch out/.nojekyll && node -e \"const f='out/sitemap.xml';require('fs').writeFileSync(f,require('fs').readFileSync(f,'utf8').replace('<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>','<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><?xml-stylesheet type=\\\"text/xsl\\\" href=\\\"/sitemap.xsl\\\"?>'));\""
+    "postbuild": "node scripts/postbuild.js"
   },
   "homepage": "https://yongjinhuang.github.io",
   "dependencies": {
