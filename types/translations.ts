@@ -4,8 +4,11 @@
  */
 
 export interface NavTranslations {
+  about: string;
   skills: string;
   experience: string;
+  education: string;
+  contact: string;
 }
 
 export interface NameTranslations {

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { FaCode, FaTools, FaLayerGroup } from 'react-icons/fa';
-import { SectionHeader, Card, IconContainer, SkillTag } from '@/components/ui';
+import { Card, IconContainer, SkillTag } from '@/components/ui';
 import type { SkillsTranslations } from '@/types';
 import { IconType } from 'react-icons';
 
@@ -49,31 +49,29 @@ export function Skills({ skills }: SkillsProps) {
   ];
 
   return (
-    <section className="py-12" id="skills">
-      <SectionHeader tagline={skills.tagline} title={skills.title} />
-
+    <section id="skills">
       <motion.div
         variants={container}
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="grid grid-cols-1 gap-6 md:gap-8 max-w-6xl mx-auto"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
       >
         {categories.map((category, catIndex) => (
           <motion.div key={category.title} variants={item}>
-            <Card>
-              <div className="flex items-center gap-4 mb-6">
+            <Card className="p-4 md:p-5">
+              <div className="flex items-center gap-3 mb-3">
                 <IconContainer
-                  size="md"
+                  size="sm"
                   variant="accent"
-                  icon={<category.icon className="text-accent text-xl" />}
+                  icon={<category.icon className="text-accent text-lg" />}
                 />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">
                   {category.title}
                 </h3>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {category.skills.map((skill, index) => (
                   <SkillTag key={skill} delay={index * 0.05 + catIndex * 0.1}>
                     {skill}

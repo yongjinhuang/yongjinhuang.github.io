@@ -36,7 +36,7 @@ export default async function LangLayout({ children, params }: Props) {
             <CustomCursor />
             <Navbar nav={t.nav} />
 
-            <main className="container mx-auto px-4 pt-28 md:pt-32 pb-16">
+            <main className="container mx-auto px-4 pt-24 md:pt-28 pb-8">
               {children}
             </main>
 

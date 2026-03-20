@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { FiPhone, FiMail, FiMapPin, FiMessageSquare } from 'react-icons/fi';
 import { HiCheck, HiClipboard } from 'react-icons/hi2';
-import { SectionHeader, Card, IconContainer } from '@/components/ui';
+import { Card, IconContainer } from '@/components/ui';
 import type { DetailsTranslations } from '@/types';
 import { IconType } from 'react-icons';
 
@@ -68,15 +68,13 @@ export function Details({ details }: DetailsProps) {
   ];
 
   return (
-    <section id="details" className="py-12">
-      <SectionHeader tagline={details.tagline} title={details.title} />
-
+    <section id="contact">
       <motion.div
         variants={container}
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 max-w-3xl mx-auto"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4"
       >
         {detailItems.map((detail, index) => {
           const Icon = detail.icon;

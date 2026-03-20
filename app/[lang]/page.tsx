@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Locale, i18n, getTranslations } from '@/app/i18n/settings';
 import { PageTransition } from '@/components/PageTransition';
-import { Divider } from '@/components/ui';
+import { SectionHeader } from '@/components/ui';
 import {
   Intro,
   Details,
@@ -102,24 +102,38 @@ export default async function Home({ params }: Props) {
     <PageTransition>
       <JsonLd data={personSchema} />
       <JsonLd data={websiteSchema} />
-      <div className="max-w-7xl mx-auto">
-        {/* Two-column layout: left stacks info sections, right has Experience */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-          {/* Left column */}
-          <div className="lg:col-span-5 space-y-8 md:space-y-12">
-            <Intro intro={t.intro} />
-            <Education education={t.education} />
-            <Divider className="lg:hidden" />
-            <Skills skills={t.skills} />
-          </div>
+      <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
+        {/* Hero - Full Width */}
+        <Intro intro={t.intro} />
 
-          {/* Right column - Details + Experience */}
-          <div className="lg:col-span-7 space-y-8 md:space-y-12">
-            <Divider className="lg:hidden" />
+        {/* Experience - 2x2 Grid */}
+        <Experience experience={t.experience} />
+
+        {/* Skills - Full Width */}
+        <section id="about">
+          <SectionHeader
+            tagline={t.skills.tagline}
+            title={t.skills.title}
+          />
+          <Skills skills={t.skills} />
+        </section>
+
+        {/* Education + Contact - Two Column */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+          <section>
+            <SectionHeader
+              tagline={t.education.tagline}
+              title={t.education.title}
+            />
+            <Education education={t.education} />
+          </section>
+          <section>
+            <SectionHeader
+              tagline={t.details.tagline}
+              title={t.details.title}
+            />
             <Details details={t.details} />
-            <Divider className="lg:hidden" />
-            <Experience experience={t.experience} />
-          </div>
+          </section>
         </div>
       </div>
     </PageTransition>

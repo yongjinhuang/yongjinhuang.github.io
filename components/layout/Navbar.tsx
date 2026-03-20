@@ -45,8 +45,10 @@ export function Navbar({ nav }: NavbarProps) {
 
             {/* Nav Links + Theme Toggle */}
             <div className="flex items-center gap-4 md:gap-6">
-              <NavLink href="#skills">{nav.skills}</NavLink>
               <NavLink href="#experience">{nav.experience}</NavLink>
+              <NavLink href="#about">{nav.about}</NavLink>
+              <NavLink href="#education">{nav.education}</NavLink>
+              <NavLink href="#contact">{nav.contact}</NavLink>
               <ColorSchemePicker />
               <ThemeToggle />
             </div>

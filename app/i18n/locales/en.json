@@ -1,7 +1,10 @@
 {
   "nav": {
+    "about": "About",
     "skills": "Skills",
-    "experience": "Experience"
+    "experience": "Experience",
+    "education": "Education",
+    "contact": "Contact"
   },
   "intro": {
     "resumeFile": "/en/resume.pdf",

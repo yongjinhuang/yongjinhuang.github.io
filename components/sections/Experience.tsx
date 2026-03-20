@@ -14,63 +14,113 @@ interface ExperienceProps {
   experience: ExperienceTranslations;
 }
 
-function TimelineDot({
-  index,
-  logoUrl,
-  name,
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15 },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0 },
+};
+
+function ExperienceCard({
+  exp,
+  isCurrent,
 }: {
-  readonly index: number;
-  readonly logoUrl: string;
-  readonly name: string;
+  readonly exp: CompanyExperienceTranslations;
+  readonly isCurrent: boolean;
 }) {
   return (
-    <div className="absolute left-0 z-10 flex items-center">
-      {/* Outer pulsing ring */}
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        whileInView={{ scale: 1, opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
-        className="relative w-12 h-12"
-      >
-        {/* Pulse animation ring */}
-        <motion.div
-          animate={{
-            scale: [1, 1.4, 1],
-            opacity: [0.4, 0, 0.4],
-          }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            delay: index * 0.5,
-          }}
-          className="absolute inset-0 rounded-full border-2 border-accent"
-        />
+    <Card className="p-5 md:p-6 relative overflow-hidden h-full">
+      {/* Accent top border */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-accent via-accent/50 to-transparent" />
 
-        {/* Glow background */}
-        <div className="absolute inset-0 rounded-full bg-accent/20 dark:bg-accent/10 blur-sm" />
-
-        {/* Logo container */}
-        <div className="relative w-12 h-12 rounded-full border-[3px] border-accent bg-white dark:bg-surface-darker overflow-hidden shadow-[0_0_20px_color-mix(in_srgb,var(--accent)_40%,transparent)]">
+      {/* Header: Logo + Company + Badge */}
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 rounded-lg border-2 border-gray-200 dark:border-white/10 overflow-hidden flex-shrink-0 bg-white">
           <Image
-            width={48}
-            height={48}
-            src={logoUrl}
-            alt={`${name} logo`}
+            width={40}
+            height={40}
+            src={exp.logoUrl}
+            alt={`${exp.name} logo`}
             className="w-full h-full object-cover"
           />
         </div>
-      </motion.div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white truncate">
+              <a
+                href={exp.linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-accent transition-colors"
+              >
+                {exp.name}
+              </a>
+            </h3>
+            {isCurrent && (
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-accent/15 text-accent border border-accent/30 rounded-full flex-shrink-0">
+                Current
+              </span>
+            )}
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">
+            {exp.position}
+          </p>
+        </div>
+      </div>
 
-      {/* Connector line from dot to card */}
-      <motion.div
-        initial={{ scaleX: 0 }}
-        whileInView={{ scaleX: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4, delay: index * 0.1 + 0.4 }}
-        className="h-[2px] w-4 origin-left bg-gradient-to-r from-accent to-accent/30"
-      />
-    </div>
+      {/* Period */}
+      <div className="flex items-center gap-1.5 mb-3 text-accent">
+        <FaCalendarAlt className="text-xs" />
+        <span className="text-xs font-mono font-semibold">{exp.period}</span>
+      </div>
+
+      {/* Tech Stack */}
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {exp.techStack.split(',').map((tech, techIndex) => (
+          <span
+            key={techIndex}
+            className="px-2 py-0.5 text-[11px] font-medium bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-accent hover:text-accent transition-colors duration-300"
+          >
+            {tech.trim()}
+          </span>
+        ))}
+      </div>
+
+      {/* Responsibilities (top 3) */}
+      <ul className="space-y-1.5">
+        {exp.responsibilities.slice(0, 3).map((responsibility, respIndex) => (
+          <li
+            key={respIndex}
+            className="flex items-start gap-2 text-gray-700 dark:text-gray-200 text-xs md:text-sm"
+          >
+            <span className="flex-shrink-0 w-1 h-1 mt-1.5 bg-accent rounded-full" />
+            <div className="flex-1 line-clamp-2">
+              <ReactMarkdown
+                components={{
+                  p: ({ ...props }) => <span {...props} />,
+                  a: ({ ...props }) => (
+                    <a
+                      {...props}
+                      className="text-accent hover:underline underline-offset-2"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  ),
+                }}
+              >
+                {responsibility}
+              </ReactMarkdown>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
 
@@ -83,152 +133,22 @@ export function Experience({ experience }: ExperienceProps) {
   ];
 
   return (
-    <section id="experience" className="py-12">
+    <section id="experience" className="py-4 md:py-6">
       <SectionHeader tagline={experience.tagline} title={experience.title} />
 
-      <div className="relative max-w-5xl mx-auto">
-        {/* Animated gradient timeline line */}
-        <div className="absolute left-[23px] top-0 bottom-0 w-[2px]">
-          {/* Base line */}
-          <div className="absolute inset-0 bg-gradient-to-b from-accent via-accent/60 to-accent/20 rounded-full" />
-
-          {/* Animated glow traveling down */}
-          <motion.div
-            animate={{
-              top: ['-20%', '120%'],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-            className="absolute left-1/2 -translate-x-1/2 w-[6px] h-24 rounded-full"
-            style={{
-              background:
-                'linear-gradient(to bottom, transparent, var(--accent), transparent)',
-              filter: 'blur(3px)',
-            }}
-          />
-
-          {/* Subtle static glow */}
-          <div
-            className="absolute inset-0 w-[6px] -left-[2px] rounded-full opacity-30"
-            style={{
-              background:
-                'linear-gradient(to bottom, var(--accent), transparent, var(--accent), transparent)',
-              filter: 'blur(4px)',
-            }}
-          />
-        </div>
-
-        <div className="space-y-10 md:space-y-14">
-          {experiences.map((exp, index) => (
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              key={index}
-              className="relative flex items-start"
-            >
-              <TimelineDot
-                index={index}
-                logoUrl={exp.logoUrl}
-                name={exp.name}
-              />
-
-              {/* Content Card */}
-              <div className="w-full ml-[4.5rem]">
-                <Card className="p-6 relative overflow-hidden">
-                  {/* Accent top border gradient */}
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-accent via-accent/50 to-transparent" />
-
-                  {/* Header */}
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white group-hover:text-accent transition-colors duration-300">
-                        <a
-                          href={exp.linkUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:underline underline-offset-4"
-                        >
-                          {exp.name}
-                        </a>
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-300 font-medium text-sm md:text-base">
-                        {exp.position}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Period */}
-                  <div className="flex items-center gap-2 mb-4 text-accent">
-                    <FaCalendarAlt className="text-sm" />
-                    <span className="text-sm font-mono font-semibold">
-                      {exp.period}
-                    </span>
-                  </div>
-
-                  {/* Tech Stack */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {exp.techStack.split(',').map((tech, techIndex) => (
-                      <span
-                        key={techIndex}
-                        className="px-2.5 py-1 text-xs font-medium bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-accent hover:text-accent transition-colors duration-300"
-                      >
-                        {tech.trim()}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Responsibilities */}
-                  <ul className="space-y-2">
-                    {exp.responsibilities.map((responsibility, respIndex) => (
-                      <motion.li
-                        initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 0.3,
-                          delay: respIndex * 0.05,
-                        }}
-                        key={respIndex}
-                        className="flex items-start gap-2.5 text-gray-700 dark:text-gray-200 text-sm"
-                      >
-                        <span className="flex-shrink-0 w-1.5 h-1.5 mt-2 bg-accent rounded-full shadow-[0_0_6px_color-mix(in_srgb,var(--accent)_50%,transparent)]" />
-                        <div className="flex-1">
-                          <ReactMarkdown
-                            components={{
-                              p: ({ ...props }) => <span {...props} />,
-                              a: ({ ...props }) => (
-                                <a
-                                  {...props}
-                                  className="text-accent hover:underline underline-offset-2"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                />
-                              ),
-                              strong: ({ ...props }) => (
-                                <strong
-                                  {...props}
-                                  className="text-accent font-semibold"
-                                />
-                              ),
-                            }}
-                          >
-                            {responsibility}
-                          </ReactMarkdown>
-                        </div>
-                      </motion.li>
-                    ))}
-                  </ul>
-                </Card>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+      <motion.div
+        variants={container}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true }}
+        className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-6xl mx-auto"
+      >
+        {experiences.map((exp, index) => (
+          <motion.div key={index} variants={item} className="h-full">
+            <ExperienceCard exp={exp} isCurrent={index === 0} />
+          </motion.div>
+        ))}
+      </motion.div>
     </section>
   );
 }

@@ -23,7 +23,7 @@ export function SectionHeader({
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className={cn(
-        'mb-12 md:mb-16',
+        'mb-6 md:mb-8',
         align === 'center' && 'text-center',
         className
       )}

@@ -1,7 +1,10 @@
 {
   "nav": {
+    "about": "关于",
     "skills": "技能",
-    "experience": "工作经验"
+    "experience": "工作经验",
+    "education": "教育",
+    "contact": "联系"
   },
   "intro": {
     "resumeFile": "/zh/resume.pdf",
