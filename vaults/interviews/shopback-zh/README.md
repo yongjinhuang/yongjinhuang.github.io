@@ -21,6 +21,7 @@
 | 5   | [05-DEALS-PROMOTION-SYSTEM.md](05-DEALS-PROMOTION-SYSTEM.md)       | 设计：高流量优惠与促销平台                       |
 | 6   | [06-MULTI-TENANT-ARCHITECTURE.md](06-MULTI-TENANT-ARCHITECTURE.md) | 设计：服务 13 个市场的多租户架构                 |
 | 7   | [07-BEHAVIORAL.md](07-BEHAVIORAL.md)                               | 文化与行为面试准备（第四轮）                     |
+| 8   | [08-FLIGHT-STATUS-SYSTEM.md](08-FLIGHT-STATUS-SYSTEM.md)           | 设计：GDS 航班状态查询系统（限流+缓存+降级）     |
 
 ## 学习计划
 
