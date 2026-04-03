@@ -4,6 +4,59 @@ A loyalty program must track points earning, redemption, expiration, and tier qu
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    subgraph Client Touchpoints
+        POS[Point of Sale]
+        App[Mobile App]
+        Partner[Partner API]
+    end
+
+    subgraph Loyalty Platform
+        EarnSvc[Earning Service]
+        RedeemSvc[Redemption Service]
+        TierSvc[Tier Management Service]
+        RuleSvc[Rule Engine]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL<br/>members, tiers,<br/>rewards, earning_rules)]
+        Ledger[(Points Ledger<br/>Append-Only)]
+    end
+
+    subgraph Background Jobs
+        ExpiryJob[Point Expiration Job<br/>Daily FIFO scan]
+        TierJob[Tier Recalculation Job]
+    end
+
+    subgraph External
+        Catalog[Rewards Catalog]
+        Fulfillment[Fulfillment Service]
+        Notify[Notification Service]
+    end
+
+    POS --> EarnSvc
+    App --> EarnSvc
+    App --> RedeemSvc
+    Partner --> EarnSvc
+    EarnSvc --> RuleSvc
+    RuleSvc --> PG
+    EarnSvc --> Ledger
+    EarnSvc --> TierSvc
+    TierSvc --> PG
+    RedeemSvc --> Catalog
+    RedeemSvc --> Ledger
+    RedeemSvc --> Fulfillment
+    ExpiryJob --> Ledger
+    ExpiryJob --> PG
+    TierJob --> PG
+    TierJob --> Notify
+```
+
+---
+
 ## Table Responsibilities
 
 | Table               | Purpose                                                   | Why It Exists                                                                                                  |
@@ -286,6 +339,34 @@ Relationships:
     - **Confirm**: Deduct from oldest `point_lots` first (FIFO), create a `redeem` entry in points_ledger, update status to `confirmed`
     - **Fulfill**: Deliver the reward (ship product, generate voucher_code), update status to `fulfilled`
     - **Cancel** (if needed): Create a `release` entry in points_ledger, restore `points_balances.balance`, update status to `cancelled`
+
+```mermaid
+flowchart TD
+    A[Transaction event arrives<br/>POS / App / Partner] --> B[Match earning_rules<br/>by type and effective dates]
+    B --> C[Calculate points:<br/>amount x points_per_unit x tier_multiplier]
+    C --> D{Daily cap<br/>exceeded?}
+    D -->|Yes| E[Cap at daily_cap]
+    D -->|No| F[Use full amount]
+    E --> G{Idempotency check<br/>against ledger}
+    F --> G
+    G -->|Duplicate| H[Skip - already processed]
+    G -->|New| I[Append earn entry<br/>to points_ledger]
+    I --> J[Update points_balances<br/>with optimistic locking]
+    J --> K[Create point_lot<br/>with expires_at]
+    K --> L{Qualifying points ><br/>next tier threshold?}
+    L -->|Yes| M[Upgrade tier<br/>Record in tier_history]
+    L -->|No| N[Done]
+
+    O[Daily Expiration Job] --> P[Scan point_lots<br/>expires_at < now]
+    P --> Q[Zero remaining_amount<br/>Append expire entry to ledger<br/>Decrement balance]
+
+    R[Member selects reward] --> S{Tier eligible?<br/>Inventory available?<br/>Daily limit OK?}
+    S -->|No| T[Reject redemption]
+    S -->|Yes| U[Hold: reserve points<br/>held_amount += cost]
+    U --> V[Confirm: deduct from<br/>oldest point_lots FIFO]
+    V --> W[Fulfill: deliver reward<br/>or generate voucher_code]
+    W --> X[Status = fulfilled]
+```
 
 ---
 

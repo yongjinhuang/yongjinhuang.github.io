@@ -2,6 +2,53 @@
 
 A Retrieval-Augmented Generation (RAG) system grounds LLM responses in factual documents by retrieving relevant context before generation. The data model must support two pipelines: an ingestion pipeline that chunks documents and computes embeddings, and a query pipeline that performs vector search, reranks results, and feeds context to the LLM. The key challenge is balancing retrieval quality (recall) against latency.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    subgraph Ingestion Pipeline
+        SRC[Source Systems<br/>Confluence, GDrive, GitHub]
+        PARSE[Document Parser<br/>PDF, HTML, Markdown]
+        CHUNK[Chunking Engine]
+        EMB_W[Embedding Model]
+    end
+
+    subgraph Storage
+        PG[(PostgreSQL<br/>Documents, Chunks,<br/>Retrieval Logs)]
+        S3[S3<br/>Raw Documents]
+        VDB[(Vector DB<br/>Pinecone / Milvus<br/>HNSW Index)]
+    end
+
+    subgraph Query Pipeline
+        USER[User Query]
+        REWRITE[Query Rewriter]
+        EMB_Q[Embedding Model]
+        VSEARCH[Vector Search<br/>ANN Top-K]
+        BM25[BM25 Keyword Search]
+        RERANK[Cross-Encoder<br/>Reranker]
+        LLM[LLM<br/>Response Generation]
+    end
+
+    SRC --> PARSE
+    PARSE --> S3
+    PARSE --> CHUNK
+    CHUNK --> EMB_W
+    EMB_W --> PG
+    EMB_W --> VDB
+
+    USER --> REWRITE
+    REWRITE --> EMB_Q
+    EMB_Q --> VSEARCH
+    EMB_Q --> BM25
+    VSEARCH --> VDB
+    BM25 --> PG
+    VSEARCH --> RERANK
+    BM25 --> RERANK
+    RERANK -->|Top-N chunks| LLM
+    LLM -->|Response + Citations| USER
+    LLM -->|Log| PG
+```
+
 ## Table Responsibilities
 
 | Table               | Purpose                                     | Storage                              | Key Characteristic                                           |
@@ -159,6 +206,23 @@ Relationships:
    with chunk_id as the key
 ```
 
+```mermaid
+flowchart TD
+    A[Document uploaded or crawled] --> B[INSERT metadata into documents table]
+    B --> C[Store raw content in S3]
+    C --> D[Parse document<br/>PDF, HTML, Markdown]
+    D --> E[Clean: remove headers/footers<br/>normalize whitespace]
+    E --> F{Chunking strategy}
+    F --> F1[Fixed-size: 512 tokens<br/>50-token overlap]
+    F --> F2[Semantic: split on<br/>paragraph/section boundaries]
+    F --> F3[Recursive: headers →<br/>paragraphs → sentences]
+    F1 --> G[Generate embedding<br/>per chunk via API]
+    F2 --> G
+    F3 --> G
+    G --> H[INSERT chunks with embeddings<br/>into chunks table]
+    H --> I[Upsert vectors into<br/>Vector DB with chunk_id]
+```
+
 ### Query Pipeline (Read Path)
 
 ```
@@ -202,6 +266,27 @@ Relationships:
           │
           ▼
 11. Return response with source citations to user
+```
+
+```mermaid
+flowchart TD
+    A[User submits question] --> B[Query rewriting]
+    B --> B1[Expand acronyms]
+    B --> B2[Decompose multi-part questions]
+    B --> B3[Generate HyDE answer]
+    B1 --> C[Embed query using<br/>same embedding model]
+    B2 --> C
+    B3 --> C
+    C --> D[Vector search: top-K=20-50<br/>nearest chunks in Vector DB]
+    C --> E[BM25 keyword search<br/>in parallel]
+    D --> F[Merge results<br/>Hybrid retrieval]
+    E --> F
+    F --> G[Rerank with cross-encoder<br/>Select top-N=5-10]
+    G --> H[Filter by access_level<br/>Join with documents table]
+    H --> I[Assemble LLM prompt<br/>System msg + chunks + question]
+    I --> J[Generate response via LLM<br/>Include chunk citations]
+    J --> K[Log to retrieval_logs]
+    K --> L[Return response with<br/>source citations to user]
 ```
 
 **Why hybrid retrieval (vector + BM25)?** Vector search excels at semantic similarity ("how to deploy" matches "deployment guide") but can miss exact keyword matches (error codes, product names). BM25 catches exact matches. Combining both consistently outperforms either alone by 5-15% on retrieval benchmarks.

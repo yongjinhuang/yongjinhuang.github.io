@@ -2,6 +2,30 @@
 
 A URL shortener maps short keys (e.g., `abc123`) to long URLs, enabling compact sharing. The data model must support fast redirects (read-heavy), analytics tracking, and duplicate detection via hashing. The system is read-heavy (~100:1 read-to-write ratio), so caching and efficient key lookups are critical.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client / Browser] -->|POST /shorten| LB[Load Balancer]
+    Client -->|GET /abc123| LB
+    LB --> API[URL Shortener Service]
+    API -->|Read/Write| PG[(PostgreSQL)]
+    API -->|Cache Lookup / Set| Redis[(Redis Cache)]
+    API -->|Publish Click Events| Kafka[Kafka]
+    Kafka --> ClickConsumer[Click Consumer]
+    ClickConsumer -->|Batch Insert| PG
+
+    subgraph Storage
+        PG
+        Redis
+    end
+
+    subgraph Async Analytics
+        Kafka
+        ClickConsumer
+    end
+```
+
 ## Table Responsibilities
 
 | Table      | Purpose                                 | Storage                          | Key Characteristic                        |
@@ -117,6 +141,17 @@ Relationships:
 7. Return short URL to user
 ```
 
+```mermaid
+flowchart TD
+    A[User submits long URL] --> B[Compute SHA-256 hash]
+    B --> C{Hash exists in DB?}
+    C -->|Yes| D[Return existing short_key]
+    C -->|No| E[Generate Base62 short_key]
+    E --> F[INSERT into urls table]
+    F --> G[SET in Redis cache with TTL]
+    G --> H[Return short URL to user]
+```
+
 ### Redirecting (Read Path)
 
 ```
@@ -143,6 +178,17 @@ Relationships:
          │
          ▼
 6. Return HTTP 301/302 redirect to long_url
+```
+
+```mermaid
+flowchart TD
+    A[User visits short URL] --> B{Redis cache hit?}
+    B -->|Yes| C[Get long_url from cache]
+    B -->|No| D[Query urls table by PK]
+    D --> E[Populate Redis cache]
+    E --> C
+    C --> F[Async: publish click event to Kafka]
+    F --> G[Return HTTP 301/302 redirect]
 ```
 
 **Why 301 vs 302?** Use 302 (temporary) if you want to track every click. Use 301 (permanent) for better performance since browsers cache it, but you lose analytics visibility.

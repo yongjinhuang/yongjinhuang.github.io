@@ -2,6 +2,36 @@
 
 A news feed system aggregates posts from followed users into a personalized timeline. The core challenge is fan-out: when a user with 10 million followers posts, how do you update 10 million timelines? The data model supports both push (fan-out on write) and pull (fan-out on read) strategies, with a hybrid approach for optimal performance.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client App] --> LB[Load Balancer]
+    LB --> PostSvc[Post Service]
+    LB --> FeedSvc[Feed Service]
+    PostSvc -->|Write posts| PG[(PostgreSQL)]
+    PostSvc -->|Upload media| CDN[CDN]
+    PostSvc -->|Publish post.created| Kafka[Kafka]
+    Kafka --> FanOutWorker[Fan-out Worker]
+    FanOutWorker -->|Normal users: push to feeds| Redis[(Redis Feed Cache)]
+    FanOutWorker -->|Update counters| CounterSvc[Counter Service]
+    CounterSvc --> PG
+    FeedSvc -->|Read feed| Redis
+    FeedSvc -->|Celebrity posts: pull on read| PG
+    FeedSvc --> RankSvc[Ranking Service]
+
+    subgraph Write Path
+        PostSvc
+        Kafka
+        FanOutWorker
+    end
+
+    subgraph Read Path
+        FeedSvc
+        RankSvc
+    end
+```
+
 ## Table Responsibilities
 
 | Table          | Purpose                                | Storage          | Key Characteristic                      |
@@ -200,6 +230,21 @@ Relationships:
 6. Post is now visible in followers' feeds
 ```
 
+```mermaid
+flowchart TD
+    A[User creates a post] --> B[INSERT into posts table]
+    B --> C[Upload media to CDN]
+    C --> D[Publish post.created to Kafka]
+    D --> E[Fan-out Worker consumes event]
+    E --> F{Author is celebrity? > 100K followers}
+    F -->|No: Fan-out on WRITE| G[Query all followers]
+    G --> H[ZADD post_id to each follower feed in Redis]
+    H --> I[Trim feed to MAX_FEED_SIZE]
+    F -->|Yes: Fan-out on READ| J[Do nothing at write time]
+    I --> K[Post visible in feeds]
+    J --> K
+```
+
 ### Reading the Feed
 
 ```
@@ -228,6 +273,22 @@ Relationships:
          │
          ▼
 6. Return ranked, paginated feed to client
+```
+
+```mermaid
+flowchart TD
+    A[User opens app] --> B[ZREVRANGE feed from Redis - top 20 post IDs]
+    B --> C{Follows any celebrities?}
+    C -->|Yes| D[Query celebrity posts from DB]
+    D --> E[Merge celebrity posts into feed by timestamp]
+    C -->|No| F[Use cached feed as-is]
+    E --> F
+    F --> G[Hydrate post IDs to full objects]
+    G --> G1[Batch GET from Redis post cache]
+    G --> G2[Cache misses: batch SELECT from DB]
+    G1 --> H[Ranking Service re-orders by relevance]
+    G2 --> H
+    H --> I[Return ranked, paginated feed]
 ```
 
 **Why the hybrid push/pull approach?** Pure push: a celebrity post fans out to 10M+ followers, taking minutes and wasting Redis memory for inactive users. Pure pull: every feed read must query all followed users' posts and merge — slow for users following thousands. Hybrid gives the best of both: instant feeds for normal users (push), lazy merging for celebrity posts (pull).

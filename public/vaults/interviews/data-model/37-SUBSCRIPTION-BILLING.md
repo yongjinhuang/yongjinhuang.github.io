@@ -4,6 +4,52 @@ A subscription billing system must handle recurring charges, usage-based meterin
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client App / Dashboard]
+    Admin[Admin / Billing Portal]
+
+    subgraph Application Layer
+        SubSvc[Subscription Service]
+        BillSvc[Billing Engine]
+        PaySvc[Payment Service]
+        UsageSvc[Usage Tracking Service]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL<br/>plans, subscriptions,<br/>invoices, payments)]
+        UsageDB[(Usage Events Store)]
+    end
+
+    subgraph External
+        PayGW[Payment Gateway<br/>Stripe / Braintree]
+        Notify[Notification Service<br/>Email / SMS]
+    end
+
+    subgraph Background Jobs
+        BillJob[Invoice Generation Job]
+        DunningJob[Dunning / Retry Job]
+        RenewalJob[Subscription Renewal Job]
+    end
+
+    Client --> SubSvc
+    Admin --> SubSvc
+    Client --> UsageSvc
+    SubSvc --> PG
+    UsageSvc --> UsageDB
+    BillJob -->|aggregate usage| UsageDB
+    BillJob -->|create invoices| PG
+    PaySvc --> PayGW
+    PaySvc --> PG
+    DunningJob -->|retry failed payments| PaySvc
+    DunningJob --> Notify
+    RenewalJob --> BillJob
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                  | Purpose                           | Why It Exists                                                                                                             |
@@ -231,6 +277,29 @@ Relationships:
 9. **Subscription Renewal**: On successful payment, `current_period_start` and `current_period_end` advance by one billing_interval. The cycle repeats from step 3.
 
 10. **Mid-Cycle Changes**: If a customer upgrades or downgrades mid-cycle, proration `invoice_line_items` are calculated: a credit for the unused portion of the old plan and a charge for the remaining portion of the new plan.
+
+```mermaid
+flowchart TD
+    A[Customer Subscribes] --> B[Create subscription<br/>status = trialing or active]
+    B --> C[Set billing period<br/>and anchor day]
+    C --> D{Metered plan?}
+    D -->|Yes| E[Collect usage_events<br/>throughout period]
+    D -->|No| F[Wait for period_end]
+    E --> F
+    F --> G[Create Invoice<br/>status = draft]
+    G --> H[Generate line items:<br/>base charge + usage +<br/>prorations + discounts + tax]
+    H --> I[Finalize invoice<br/>status = open]
+    I --> J[Attempt Payment<br/>attempt_number = 1]
+    J --> K{Payment<br/>succeeded?}
+    K -->|Yes| L[Invoice status = paid<br/>Advance billing period]
+    L --> F
+    K -->|No| M[Mark payment failed<br/>Set next_retry_at]
+    M --> N[Subscription status = past_due]
+    N --> O{Max retries<br/>reached?}
+    O -->|No| P[Wait for next_retry_at<br/>Exponential backoff]
+    P --> J
+    O -->|Yes| Q[Invoice status = uncollectible<br/>Cancel subscription]
+```
 
 ---
 

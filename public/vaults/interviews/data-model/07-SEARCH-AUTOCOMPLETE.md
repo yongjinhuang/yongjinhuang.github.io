@@ -2,6 +2,42 @@
 
 Search autocomplete suggests completions as the user types, requiring sub-50ms latency for a responsive feel. The data model spans three layers: a collection pipeline that aggregates search query frequencies, a build pipeline that constructs an in-memory Trie with precomputed top-K results at each node, and a serving layer that walks the Trie in O(L) time where L is the prefix length.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client / Search Box] -->|Debounced prefix query| LB[Load Balancer]
+    LB --> TrieSvc[Trie Service]
+    TrieSvc -->|Check cache| Redis[(Redis Cache)]
+    TrieSvc -->|Trie lookup| InMem[In-Memory Trie]
+    InMem -.->|Load on startup| S3[(S3 - Trie Snapshots)]
+
+    SearchSvc[Search Service] -->|Log events| Kafka[Kafka]
+    Kafka --> AggJob[Aggregation Job]
+    AggJob -->|Upsert frequencies| PG[(PostgreSQL)]
+    PG --> BuildJob[Trie Build Job]
+    BuildJob -->|Upload snapshot| S3
+    BuildJob -.->|Notify new version| TrieSvc
+
+    subgraph Collection Pipeline
+        SearchSvc
+        Kafka
+        AggJob
+    end
+
+    subgraph Build Pipeline
+        PG
+        BuildJob
+        S3
+    end
+
+    subgraph Serving Layer
+        TrieSvc
+        Redis
+        InMem
+    end
+```
+
 ## Table Responsibilities
 
 | Table/Structure       | Purpose                        | Storage                | Key Characteristic                          |
@@ -131,6 +167,18 @@ database relationships.
        last_updated = now
 ```
 
+```mermaid
+flowchart TD
+    A[User submits search query] --> B[Search Service returns results]
+    B --> C[Async: publish event to Kafka]
+    C --> D[Aggregation Consumer - hourly/daily]
+    D --> E[Group by normalized query_text]
+    E --> F[Filter zero-result queries]
+    F --> G[Filter offensive/spam via blocklist]
+    G --> H[Apply time-decay weighting]
+    H --> I[UPSERT into query_frequencies]
+```
+
 ### Build Pipeline (How the Trie is constructed)
 
 ```
@@ -164,6 +212,17 @@ database relationships.
    (via Kafka event, config change, or rolling restart)
 ```
 
+```mermaid
+flowchart TD
+    A[Periodic build job triggers] --> B[Read all rows from query_frequencies]
+    B --> C[Build Trie: walk/create nodes per query]
+    C --> D[Update top_k_suggestions at each node]
+    D --> E[Optimization: prune dead branches + compact memory]
+    E --> F[Serialize Trie to binary format]
+    F --> G[Upload to S3 as new snapshot]
+    G --> H[Notify Trie Service to load new version]
+```
+
 ### Query Pipeline (How suggestions are served)
 
 ```
@@ -195,6 +254,18 @@ database relationships.
          │
          ▼
 7. Return suggestions to client (latency: <10ms)
+```
+
+```mermaid
+flowchart TD
+    A["User types 'fac' in search box"] --> B[Client debounces input - 100ms]
+    B --> C["GET /autocomplete?q=fac"]
+    C --> D{Redis cache hit?}
+    D -->|Yes| E["Return cached suggestions - under 5ms"]
+    D -->|No| F["Trie Service walks: root -> f -> a -> c"]
+    F --> G[Read precomputed top_k_suggestions]
+    G --> H[Cache in Redis with 1-hour TTL]
+    H --> I["Return suggestions - under 10ms"]
 ```
 
 **Why debounce on the client?** Without debouncing, typing "facebook" sends 8 requests (f, fa, fac, face, ...). With a 100ms debounce, fast typers send 2-3 requests instead, reducing server load by 60-70%.

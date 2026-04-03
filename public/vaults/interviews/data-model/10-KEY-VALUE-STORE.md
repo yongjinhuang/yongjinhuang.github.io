@@ -2,6 +2,43 @@
 
 A distributed key-value store provides high availability and horizontal scalability by partitioning data across a ring of nodes using consistent hashing. The data model covers the application-facing key-value pairs, the cluster topology that determines data placement, and the conflict resolution mechanisms (vector clocks, hinted handoff) that maintain consistency in the face of network partitions and node failures.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    CLIENT[Client Application]
+
+    subgraph Consistent Hash Ring
+        NA[Node A<br/>vnodes: 0-63]
+        NB[Node B<br/>vnodes: 64-127]
+        NC[Node C<br/>vnodes: 128-191]
+        ND[Node D<br/>vnodes: 192-255]
+    end
+
+    subgraph Each Node
+        KV[(KV Pairs<br/>Local Storage)]
+        HINTS[(Hint Store)]
+        GOSSIP[Gossip Protocol]
+        RING[Ring Topology<br/>Metadata]
+    end
+
+    subgraph Coordination
+        COORD[Coordinator Node<br/>Any node can coordinate]
+    end
+
+    CLIENT -->|PUT/GET| COORD
+    COORD -->|"hash(key) → ring position"| NA
+    COORD --> NB
+    COORD --> NC
+    NA <-->|Gossip| NB
+    NB <-->|Gossip| NC
+    NC <-->|Gossip| ND
+    ND <-->|Gossip| NA
+    NA --> KV
+    NA -->|Node down?| HINTS
+    HINTS -->|Recovery replay| NC
+```
+
 ## Table Responsibilities
 
 | Structure         | Purpose                             | Storage                  | Key Characteristic                      |
@@ -175,6 +212,23 @@ Relationships:
    └─ Anti-entropy (Merkle tree) catches anything hints missed
 ```
 
+```mermaid
+flowchart TD
+    A["Client: PUT key=user:123<br/>value={name: Alice}"] --> B["Coordinator hashes key<br/>hash(user:123) → ring position"]
+    B --> C[Find N=3 replica nodes<br/>clockwise on ring]
+    C --> D[Send write to ALL 3 nodes]
+    D --> D1["Node A: write + increment<br/>version_vector[A]"]
+    D --> D2["Node B: write + increment<br/>version_vector[B]"]
+    D --> D3["Node C: UNAVAILABLE<br/>network partition"]
+    D3 --> E[Node D stores hint<br/>for Node C]
+    D1 --> F{W=2 ACKs received?}
+    D2 --> F
+    F -->|Yes| G[Return SUCCESS to client]
+    G --> H[Later: Node C recovers]
+    H --> H1[Node D replays hint to Node C]
+    H --> H2[Anti-entropy via Merkle tree<br/>catches missed writes]
+```
+
 ### Read Path (Quorum Read, R = 2 of N = 3)
 
 ```
@@ -212,6 +266,25 @@ Relationships:
    (piggyback consistency fix on the read)
 ```
 
+```mermaid
+flowchart TD
+    A["Client: GET key=user:123"] --> B[Hash key → find 3 replica nodes]
+    B --> C[Send read to ALL 3 nodes]
+    C --> D{Wait for R=2 responses}
+    D --> D1["Node A: {name:Alice}<br/>version={A:3, B:2}"]
+    D --> D2["Node B: {name:Bob}<br/>version={A:2, B:3}"]
+    D1 --> E[Compare version vectors]
+    D2 --> E
+    E --> F{"Neither dominates?<br/>{A:3,B:2} vs {A:2,B:3}"}
+    F -->|Concurrent conflict| G{Resolution strategy}
+    G --> G1["Last-Write-Wins (LWW)<br/>Use updated_at timestamp"]
+    G --> G2["Application-level merge<br/>Return both to client<br/>e.g. CRDT, union sets"]
+    F -->|One dominates| H[Return newer version]
+    G1 --> I[Read repair: send latest<br/>to stale replicas]
+    G2 --> I
+    H --> I
+```
+
 ### Rebalancing (Node Join)
 
 ```
@@ -237,6 +310,19 @@ Relationships:
 5. Migration complete → E status changes to 'active'
    ├─ E starts serving reads and writes for its ranges
    └─ Previous owners delete migrated data
+```
+
+```mermaid
+flowchart TD
+    A[New Node E joins cluster] --> B[Gossip protocol propagates<br/>membership change]
+    B --> C[Node E assigned virtual nodes<br/>on the ring]
+    C --> D[Takes over hash ranges<br/>from existing nodes]
+    D --> E[Data migration begins]
+    E --> E1[For each vnode assigned to E:<br/>Previous owner streams KV pairs]
+    E --> E2[Reads/writes continue<br/>during migration]
+    E1 --> F["Migration complete<br/>E status → active"]
+    F --> F1[E serves reads and writes<br/>for its ranges]
+    F --> F2[Previous owners delete<br/>migrated data]
 ```
 
 **Why W + R > N for consistency?** If N=3, W=2, R=2, then W+R=4 > 3. This guarantees at least one node in the read set has the latest write (pigeonhole principle). This provides strong consistency with quorum overlap. If W=1, R=1, you get eventual consistency (faster but stale reads possible).

@@ -4,6 +4,57 @@ A search engine's data model is fundamentally different from relational database
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client Application]
+    Coord[Coordinating Node]
+
+    subgraph Cluster
+        direction TB
+        subgraph Shard1[Primary Shard 1]
+            S1Seg1[Segment A]
+            S1Seg2[Segment B]
+        end
+        subgraph Shard2[Primary Shard 2]
+            S2Seg1[Segment C]
+            S2Seg2[Segment D]
+        end
+        subgraph Replicas
+            R1[Replica Shard 1]
+            R2[Replica Shard 2]
+        end
+    end
+
+    subgraph Segment Internals
+        InvIdx[Inverted Index]
+        TermDict[Term Dictionary / FST]
+        DocVals[Doc Values]
+        Stored[Stored Fields]
+    end
+
+    Buffer[In-Memory Buffer]
+    MergePolicy[Segment Merge Policy]
+
+    Client -- Index/Search --> Coord
+    Coord -- Route by _id hash --> Shard1
+    Coord -- Route by _id hash --> Shard2
+    Shard1 -- Replicate --> R1
+    Shard2 -- Replicate --> R2
+    Coord -- Fan-out query --> Shard1
+    Coord -- Fan-out query --> Shard2
+    Coord -- Fan-out query --> Replicas
+    Buffer -- Refresh --> S1Seg1
+    MergePolicy -- Compact --> Shard1
+    S1Seg1 --- InvIdx
+    S1Seg1 --- TermDict
+    S1Seg1 --- DocVals
+    S1Seg1 --- Stored
+```
+
+---
+
 ## Table Responsibilities
 
 | Structure           | Purpose                              | Why It Exists                                                                                                                 |
@@ -217,6 +268,50 @@ segments contain: inverted_index + term_dictionary + doc_values + stored_fields 
 12. **Coordinating node merge** -- The coordinating node merges top-N results from all shards, re-sorts globally, and takes the final top-N. If sorting by a field (e.g., price), **doc_values** are used instead of BM25 scores.
 
 13. **Fetch phase** -- For the final top-N documents, **stored_fields** (\_source) are fetched from the relevant shards and returned to the client.
+
+### Indexing (Write Path) Flow
+
+```mermaid
+flowchart TD
+    A[JSON document submitted] --> B[Coordinating node routes\nto primary shard by _id hash]
+    B --> C[Text analysis pipeline]
+    C --> C1[Tokenizer: split into tokens]
+    C1 --> C2[Lowercase filter]
+    C2 --> C3[Stop word removal]
+    C3 --> C4[Stemmer]
+    C4 --> D[Add to in-memory buffer]
+    D --> E{Refresh interval\nelapsed?}
+    E -- Yes --> F[Flush to new immutable segment]
+    F --> G[Segment contains:\ninverted index + doc values\n+ stored fields + norms]
+    G --> H[Documents become searchable]
+    E -- No --> D
+    G --> I[Replicate to replica shards]
+    G --> J{Too many small\nsegments?}
+    J -- Yes --> K[Merge segments\n+ remove deleted docs]
+    J -- No --> L[Done]
+```
+
+### Querying (Read Path) Flow
+
+```mermaid
+flowchart TD
+    A[Query string received] --> B[Parse and analyze query\nwith same analyzer as index]
+    B --> C[Coordinating node fans out\nto all shards in parallel]
+    C --> D[Per-shard search]
+    D --> D1[Look up terms in\nTerm Dictionary / FST]
+    D1 --> D2[Load posting lists\nfrom inverted index]
+    D2 --> D3{Multi-term query?}
+    D3 -- AND --> D4[Intersect posting lists]
+    D3 -- OR --> D5[Union posting lists]
+    D3 -- Phrase --> D6[Check term positions\nfor adjacency]
+    D4 --> E[Score with BM25:\nTF x IDF x norms]
+    D5 --> E
+    D6 --> E
+    E --> F[Return top-N doc IDs + scores]
+    F --> G[Coordinating node merges\ntop-N from all shards]
+    G --> H[Fetch stored_fields\nfor final top-N]
+    H --> I[Return results to client]
+```
 
 ---
 

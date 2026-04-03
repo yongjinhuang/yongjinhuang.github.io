@@ -4,6 +4,63 @@ A food delivery platform coordinates three parties in real time: customers order
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Customer[Customer App]
+    Restaurant[Restaurant App]
+    Driver[Driver App]
+    LB[Load Balancer]
+    API[API Gateway]
+
+    subgraph Application Services
+        OrderSvc[Order Service]
+        MatchSvc[Driver Matching Service]
+        MenuSvc[Menu Service]
+        TrackSvc[Tracking Service]
+        PaySvc[Payment Service]
+        PayoutSvc[Payout Service]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL)]
+        Redis[(Redis\nDriver Locations)]
+    end
+
+    subgraph External
+        PayGW[Payment Gateway]
+        MapAPI[Maps / Routing API]
+    end
+
+    MQ[Message Queue / Events]
+
+    Customer --> LB
+    Restaurant --> LB
+    Driver --> LB
+    LB --> API
+    API --> OrderSvc
+    API --> MenuSvc
+    API --> TrackSvc
+    OrderSvc --> PG
+    OrderSvc --> PaySvc
+    OrderSvc --> MQ
+    MatchSvc --> Redis
+    MatchSvc --> PG
+    MenuSvc --> PG
+    TrackSvc --> Redis
+    PaySvc --> PayGW
+    PaySvc --> PG
+    PayoutSvc --> PG
+    PayoutSvc --> PayGW
+    MQ --> MatchSvc
+    MQ --> PayoutSvc
+    Driver -- GPS updates --> TrackSvc
+    MatchSvc --> MapAPI
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                | Purpose                                  | Storage  | Why It Exists                                                                       |
@@ -300,6 +357,52 @@ drivers        1───* deliveries       (one driver handles many deliveries)
     - Restaurant: subtotal - (subtotal x commission_rate)
     - Driver: base_pay + distance_bonus + tip
     - Payouts are scheduled per the settlement frequency (daily for drivers, weekly for restaurants).
+
+### Order Lifecycle Flow
+
+```mermaid
+flowchart TD
+    A[Customer browses restaurants] --> B[View menu, add items to cart]
+    B --> C[Checkout: compute total + delivery fee + tax]
+    C --> D[Authorize payment]
+    D --> E[Create order: status=placed]
+    E --> F{Restaurant accepts\nwithin timeout?}
+    F -- No --> G[Auto-cancel, notify customer]
+    F -- Yes --> H[status=accepted]
+    H --> I[status=preparing]
+    I --> J[Approaching ready time]
+    J --> K[GEORADIUS query for nearest drivers]
+    K --> L[Score drivers: distance, rating, acceptance_rate]
+    L --> M[Offer delivery to top driver]
+    M --> N{Driver accepts?}
+    N -- No --> O[Offer to next driver]
+    N -- Yes --> P[Create delivery, status=assigned]
+    P --> Q[Restaurant marks ready]
+    Q --> R[Driver picks up: status=picked_up]
+    R --> S[status=en_route\nLive tracking via Redis]
+    S --> T[Driver confirms delivery]
+    T --> U[Capture payment]
+    U --> V[Schedule payouts:\nRestaurant + Driver]
+```
+
+### Driver Matching Flow
+
+```mermaid
+flowchart TD
+    A[Order approaching ready time] --> B[Query Redis GEORADIUS\nnear restaurant location]
+    B --> C[Filter: driver status=online]
+    C --> D[Score candidates]
+    D --> E[Rank by distance + rating + acceptance_rate]
+    E --> F[Offer to top-ranked driver]
+    F --> G{Accepted?}
+    G -- Yes --> H[Create deliveries record]
+    H --> I[Set driver status=assigned]
+    I --> J[Set orders.driver_id]
+    G -- No / Timeout --> K[Remove from candidates]
+    K --> L{More candidates?}
+    L -- Yes --> F
+    L -- No --> M[Expand search radius and retry]
+```
 
 ---
 

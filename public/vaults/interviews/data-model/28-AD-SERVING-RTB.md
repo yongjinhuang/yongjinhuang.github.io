@@ -2,6 +2,37 @@
 
 An ad serving platform matches advertisers' ads with publisher inventory in real time, typically within 100ms. The data model spans the full lifecycle: campaign configuration, real-time auction mechanics, event tracking (impressions, clicks, conversions), and budget enforcement. Hot-path data (user profiles, budget counters) lives in Redis, while event analytics uses a columnar store like ClickHouse for fast aggregation over billions of rows.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Publisher[Publisher Ad Server] -->|Bid Request| AdExchange[Ad Exchange / SSP]
+    AdExchange -->|Ad Request| AdServer[Ad Serving Platform]
+
+    subgraph Hot Path - Real Time < 100ms
+        AdServer --> Redis[(Redis<br/>user_profiles +<br/>budget_counters)]
+        AdServer --> AuctionEngine[Auction Engine<br/>predicted_ctr x bid]
+    end
+
+    subgraph Config - PostgreSQL
+        CampaignDB[(campaigns, ad_groups,<br/>ads, creatives,<br/>advertisers)]
+    end
+
+    AdServer --> CampaignDB
+
+    AuctionEngine -->|Winning Ad| Publisher
+    Publisher -->|Tracking Pixel| EventCollector[Event Collector]
+    Publisher -->|Click Redirect| EventCollector
+    Publisher -->|Conversion Pixel| EventCollector
+
+    EventCollector --> ClickHouse[(ClickHouse<br/>impression_events,<br/>click_events,<br/>conversion_events)]
+
+    BudgetSync[Budget Sync Job] --> Redis
+    BudgetSync --> CampaignDB
+
+    Dashboard[Reporting Dashboard] --> ClickHouse
+```
+
 ---
 
 ## Table Responsibilities
@@ -306,6 +337,31 @@ click          1───* conversion_events    (one click may lead to conversio
 10. **Budget sync** -- Periodically (every few minutes), Redis budget_counters are synced back to campaigns.spend_today and spend_total in Postgres. If spend_total >= budget_total, the campaign status is set to exhausted.
 
 11. **Reporting** -- Dashboards query ClickHouse to aggregate impression, click, and conversion events by campaign, ad_group, ad, date, geo, and device. CTR, CPC, CPA, and ROAS are computed on the fly.
+
+```mermaid
+flowchart TD
+    A[Publisher sends bid request<br/>ad slot, user_id_hash, page URL] --> B[Load user_profiles from Redis<br/>segments, interests, freq_caps]
+    B --> C[Filter eligible campaigns<br/>status=active, date in range]
+    C --> D[Check budget_counters in Redis<br/>daily spend < budget_daily?]
+    D --> E[Apply targeting rules<br/>geo, device, age, interests]
+    E --> F[Check frequency caps<br/>freq_cap not exceeded?]
+    F --> G[Run auction<br/>Score = predicted_ctr x effective_bid]
+    G --> H[Winner pays second-price<br/>just enough to beat runner-up]
+    H --> I[Return winning creative<br/>to publisher with tracking pixel]
+    I --> J[Tracking pixel fires<br/>on page load]
+    J --> K[Log impression_events<br/>to ClickHouse]
+    K --> L[Atomic increment<br/>budget_counters in Redis]
+    L --> M[Update user freq_caps<br/>in Redis]
+
+    N[User clicks ad] --> O[Redirect through ad server<br/>Log click_events to ClickHouse]
+    O --> P[Forward to click_through_url]
+
+    Q[User converts<br/>purchase/signup] --> R[Conversion pixel fires<br/>Log conversion_events<br/>attributed to impression + click]
+
+    S[Budget sync job<br/>every few minutes] --> T[Sync Redis counters<br/>to Postgres spend_today/spend_total]
+    T --> U{spend_total >=<br/>budget_total?}
+    U -->|Yes| V[Set campaign<br/>status = exhausted]
+```
 
 ---
 

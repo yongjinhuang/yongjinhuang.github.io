@@ -2,6 +2,63 @@
 
 A recommendation system suggests relevant items (products, videos, articles) to users based on their behavior and preferences. The data model must support both real-time feature serving (millisecond latency) and batch feature engineering (hourly/daily). The two-tower architecture (user embedding + item embedding) enables fast candidate generation via ANN search, followed by a ranking model that scores candidates using rich features.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    subgraph Clients
+        APP[Mobile / Web App]
+    end
+
+    subgraph Real-Time Path
+        KAFKA[Kafka<br/>user-events]
+        FLINK[Flink Stream<br/>Processor]
+        REDIS[(Redis<br/>Online Features)]
+    end
+
+    subgraph Serving Layer
+        API[Recommendation API]
+        CG[Candidate Generation<br/>ANN Search]
+        RANK[Ranking Model<br/>DCN / DeepFM]
+        RERANK[Re-Ranking<br/>Business Rules]
+    end
+
+    subgraph Storage
+        PG[(PostgreSQL<br/>Users, Items,<br/>Interactions)]
+        S3[S3<br/>Training Data<br/>Model Artifacts]
+        ANN_IDX[(ANN Index<br/>Item Embeddings)]
+    end
+
+    subgraph Batch Pipeline
+        SPARK[Spark<br/>Feature Engineering]
+        TRAIN[Model Training<br/>Two-Tower + Ranking]
+        REG[(Model Registry)]
+    end
+
+    APP -->|User action| KAFKA
+    KAFKA --> FLINK
+    FLINK --> REDIS
+    FLINK -->|Append| PG
+    FLINK -->|Archive| S3
+
+    APP -->|Recommendation request| API
+    API -->|Fetch features| REDIS
+    API -->|Fetch embedding| PG
+    API --> CG
+    CG --> ANN_IDX
+    CG --> RANK
+    RANK --> RERANK
+    RERANK -->|Top 20| APP
+
+    S3 --> SPARK
+    PG --> SPARK
+    SPARK --> TRAIN
+    TRAIN --> REG
+    TRAIN -->|Update embeddings| PG
+    TRAIN -->|Rebuild index| ANN_IDX
+    REG -->|Deploy| RANK
+```
+
 ## Table Responsibilities
 
 | Table                    | Purpose                                    | Storage                | Key Characteristic                                     |
@@ -175,6 +232,17 @@ Relationships:
               for batch training
 ```
 
+```mermaid
+flowchart TD
+    A[User performs action<br/>click, view, purchase] --> B[Event published to Kafka<br/>topic: user-events]
+    B --> C[Flink stream processor<br/>consumes event]
+    C --> D[Update Redis:<br/>user_features_online]
+    D --> D1[Increment session_count]
+    D --> D2[Recalculate rolling_ctr]
+    D --> D3["Append to recent_items<br/>(trim to last 20)"]
+    C --> E[Append to interactions log<br/>S3 / PostgreSQL<br/>for batch training]
+```
+
 ### Batch Training Pipeline
 
 ```
@@ -205,6 +273,26 @@ Relationships:
 7. Write updated user_embeddings to users table
    Write updated item_embeddings to items table
    Rebuild ANN index on item_embeddings
+```
+
+```mermaid
+flowchart TD
+    A[Scheduled daily job] --> B[Read interactions from S3/PostgreSQL]
+    B --> C[Spark feature engineering]
+    C --> C1[Compute item_features_batch<br/>view_count, like_ratio, trending_score]
+    C --> C2["Generate training examples<br/>(user, item, label, features)"]
+    C1 --> D[Train two-tower model]
+    C2 --> D
+    D --> D1["User tower: demographics +<br/>history → user_embedding"]
+    D --> D2["Item tower: metadata +<br/>content → item_embedding"]
+    D1 --> E["Train ranking model<br/>(DCN, DeepFM)"]
+    D2 --> E
+    E --> F[Evaluate on holdout set]
+    F --> G{Metrics improved?}
+    G -->|Yes| H[Deploy model<br/>Update artifact_url, deployed_at]
+    G -->|No| I[Keep current model]
+    H --> J[Write updated embeddings<br/>to users and items tables]
+    J --> K[Rebuild ANN index<br/>on item_embeddings]
 ```
 
 ### Serving a Recommendation Request
@@ -239,6 +327,25 @@ Relationships:
          │
          ▼
 7. Return top 20 recommendations to user
+```
+
+```mermaid
+flowchart TD
+    A["User opens app<br/>→ recommendation request"] --> B[Feature Lookup - Parallel]
+    B --> B1[Fetch user_embedding<br/>from users table]
+    B --> B2[Fetch user_features_online<br/>from Redis]
+    B --> B3[Fetch recent_items<br/>for filtering]
+    B1 --> C[Candidate Generation<br/>ANN: user_embedding vs item_embeddings]
+    C --> D[Top 500 candidates]
+    D --> E[Feature Enrichment<br/>Fetch item_features_batch per candidate]
+    E --> F[Ranking Model scores each candidate<br/>user + item + cross features]
+    F --> G[Re-Ranking with business rules]
+    G --> G1[Remove recently seen items]
+    G --> G2["Enforce diversity<br/>(max 3 per category)"]
+    G --> G3[Apply promotion boosts]
+    G1 --> H[Return top 20 recommendations]
+    G2 --> H
+    G3 --> H
 ```
 
 **Why two stages (candidate generation + ranking)?** Scoring all items (millions) with the full ranking model would take seconds. The two-tower ANN search narrows candidates to ~500 in <10ms using cheap dot-product similarity. The expensive ranking model then only scores 500 items instead of millions, keeping total latency under 100ms.

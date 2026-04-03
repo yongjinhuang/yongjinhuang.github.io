@@ -2,6 +2,30 @@
 
 A ride-sharing platform matches riders with nearby drivers in real-time and manages the full trip lifecycle from request to payment. The data model must support sub-second geospatial queries to find available drivers, track driver locations continuously, handle concurrent trip state transitions, and process payments reliably. The key challenge is the real-time matching: every second of delay in finding a driver reduces rider conversion.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Rider[Rider App] -->|Request ride| LB[Load Balancer]
+    Driver[Driver App] -->|Location updates| LB
+    LB --> API[Trip API Service]
+    API -->|Read/write trips, riders, drivers| PG[(PostgreSQL)]
+    API -->|GEORADIUS matching| Redis[(Redis GEOADD<br/>driver_locations)]
+    Driver -->|GPS every 3-5s| LocService[Location Service]
+    LocService --> Redis
+    LocService -->|Append history| Cassandra[(Cassandra<br/>driver_location_history)]
+    API -->|Charge rider| PayProcessor[Payment Processor]
+    API -->|Push notifications| NotifService[Notification Service]
+    NotifService --> Rider
+    NotifService --> Driver
+
+    subgraph Data Stores
+        PG
+        Redis
+        Cassandra
+    end
+```
+
 ## Table Responsibilities
 
 | Table                       | Purpose                                  | Storage        | Key Characteristic                                    |
@@ -213,6 +237,18 @@ Relationships:
 7. Notify rider with driver details (name, car, ETA)
 ```
 
+```mermaid
+flowchart TD
+    A[Rider requests ride:<br/>pickup, dropoff, vehicle_type] --> B[INSERT trip<br/>status = requested]
+    B --> C[GEORADIUS in Redis:<br/>Find drivers within 3km<br/>status = available, matching type]
+    C --> D[Score candidates:<br/>Distance, rating,<br/>heading, accept rate]
+    D --> E[Send offer to top driver]
+    E --> F{Driver accepts?}
+    F -->|No / timeout| D
+    F -->|Yes| G[Update trip: status = matched<br/>Update driver: en_route_to_pickup<br/>Update Redis status]
+    G --> H[Notify rider with<br/>driver details & ETA]
+```
+
 ### Trip Lifecycle
 
 ```
@@ -254,6 +290,18 @@ Relationships:
          ▼
 16. Update driver: status = 'available'
     Update Redis: driver status = 'available'
+```
+
+```mermaid
+flowchart TD
+    A[Driver navigates to pickup<br/>GPS trail recorded] --> B[Driver arrives<br/>status = arrived_at_pickup]
+    B --> C[Rider enters vehicle<br/>status = in_progress]
+    C --> D[Trip in progress:<br/>Location updates every 3-5s<br/>Redis + Cassandra<br/>ETA recalculated]
+    D --> E[Driver ends trip<br/>status = completed]
+    E --> F[Calculate fare:<br/>distance_km from GPS trace<br/>duration_min from timestamps<br/>Apply surge_multiplier]
+    F --> G[Process payment:<br/>Charge rider default method<br/>INSERT payment record]
+    G --> H[Both parties rate each other<br/>Update ratings async]
+    H --> I[Update driver:<br/>status = available]
 ```
 
 **Why offer to one driver at a time instead of broadcasting?** Broadcasting to multiple drivers creates a thundering herd: multiple drivers might accept simultaneously, requiring complex conflict resolution and disappointing rejected drivers. Sequential offers with short timeouts (10-15 seconds) provide a cleaner UX and simpler concurrency model.

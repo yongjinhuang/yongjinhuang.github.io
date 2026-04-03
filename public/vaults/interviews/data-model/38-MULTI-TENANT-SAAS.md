@@ -4,6 +4,51 @@ A multi-tenant SaaS platform serves hundreds to millions of organizations from a
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client App / Browser]
+
+    subgraph Ingress
+        LB[Load Balancer]
+        TenantResolver[Tenant Resolver<br/>subdomain / header / JWT]
+    end
+
+    subgraph Application Layer
+        API[API Server]
+        AuthZ[Authorization<br/>Role-Based Access]
+        FeatureGate[Feature Flag Gate]
+    end
+
+    subgraph Data Layer
+        PG[(PostgreSQL<br/>with Row-Level Security)]
+        RLS[RLS Policy<br/>SET app.tenant_id]
+    end
+
+    subgraph Supporting Services
+        UsageTracker[Usage Tracking<br/>Buffered Counters]
+        AuditLogger[Audit Logger<br/>Append-Only]
+        QuotaEnforcer[Quota Enforcer]
+    end
+
+    Client --> LB
+    LB --> TenantResolver
+    TenantResolver --> API
+    API --> AuthZ
+    AuthZ --> FeatureGate
+    FeatureGate --> RLS
+    RLS --> PG
+    API --> UsageTracker
+    UsageTracker --> PG
+    API --> AuditLogger
+    AuditLogger --> PG
+    API --> QuotaEnforcer
+    QuotaEnforcer --> PG
+```
+
+---
+
 ## Table Responsibilities
 
 | Table              | Purpose                                        | Why It Exists                                                                                                    |
@@ -239,6 +284,28 @@ ALL tables include tenant_id for RLS enforcement
 7. **Audit Logging**: The action is recorded in `audit_logs` with the tenant_id, user_id, and affected resource. This is append-only and tenant-scoped.
 
 8. **Feature Gating**: Before executing feature-specific logic, `feature_flags` is checked. This enables plan-based gating (enterprise features), gradual rollout (beta features), and tenant-specific customization.
+
+```mermaid
+flowchart TD
+    A[API Request Arrives] --> B{Identify Tenant}
+    B -->|Subdomain| C[Resolve slug to tenant_id]
+    B -->|Header| D[Read X-Tenant-ID]
+    B -->|JWT| E[Extract tenant_id from token]
+    C --> F[SET app.tenant_id in DB session]
+    D --> F
+    E --> F
+    F --> G[RLS auto-filters all queries<br/>by tenant_id]
+    G --> H{Check user role<br/>owner/admin/member/guest}
+    H -->|Unauthorized| I[Reject 403]
+    H -->|Authorized| J{Check quota<br/>max_users / max_storage_gb}
+    J -->|Exceeded| K[Reject with upgrade prompt]
+    J -->|Within limits| L{Check feature_flags<br/>for this tenant}
+    L -->|Disabled| M[Return feature unavailable]
+    L -->|Enabled| N[Execute business logic]
+    N --> O[Update usage_tracking<br/>buffered counter]
+    N --> P[Append audit_log entry]
+    N --> Q[Return response]
+```
 
 ---
 

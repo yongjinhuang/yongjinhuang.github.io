@@ -4,6 +4,56 @@ A content moderation system must handle billions of posts daily across multiple 
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    User[User / Content Creator]
+    Reporter[Reporting User]
+    Reviewer[Human Reviewer]
+    API[API Gateway]
+
+    subgraph Moderation Pipeline
+        HashCheck[Hash Matching Service]
+        MLPipeline[ML Classification Service]
+        QueueMgr[Review Queue Manager]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL)]
+        HashDB[(Hash Database\ncontent_hashes)]
+        ObjStore[Object Storage\nS3 / CDN]
+    end
+
+    subgraph Policy Engine
+        PolicySvc[Policy Evaluation Service]
+        PolicyDB[(Versioned Policies)]
+    end
+
+    subgraph Feedback
+        AppealSvc[Appeals Service]
+        Retrain[ML Retraining Pipeline]
+    end
+
+    User -- Submit content --> API
+    Reporter -- File report --> API
+    API --> HashCheck
+    HashCheck --> HashDB
+    HashCheck -- No match --> MLPipeline
+    HashCheck -- Match: instant remove --> PG
+    MLPipeline --> PolicySvc
+    PolicySvc --> PolicyDB
+    MLPipeline -- High confidence --> PG
+    MLPipeline -- Low confidence --> QueueMgr
+    QueueMgr --> PG
+    Reviewer --> QueueMgr
+    API --> AppealSvc --> PG
+    PG --> Retrain
+    API --> ObjStore
+```
+
+---
+
 ## Table Responsibilities
 
 | Table               | Purpose                                         | Why It Exists                                                                                               |
@@ -200,6 +250,51 @@ Relationships:
 8. **Policy Enforcement**: `policies` are evaluated as rules at decision time. Versioning ensures that content is judged by the policy in effect when it was posted, and policy changes can be rolled out gradually.
 
 9. **Feedback Loop**: Patterns from reports, appeals, and reviewer decisions feed back into ML model retraining. Model version tracking in `moderation_jobs` enables A/B comparison of model performance.
+
+### Content Moderation Pipeline
+
+```mermaid
+flowchart TD
+    A[User submits content] --> B[Insert into content table\nstatus=pending]
+    B --> C[Compute perceptual hashes]
+    C --> D{Match in\ncontent_hashes?}
+    D -- Yes: CSAM/terrorism --> E[Immediately remove\nReport to authorities]
+    D -- No --> F[ML Classification]
+    F --> G[Create moderation_job\nwith confidence_score]
+    G --> H{Confidence level?}
+    H -- ">0.95 approve" --> I[Auto-approve\nstatus=published]
+    H -- ">0.99 remove" --> J[Auto-remove\nstatus=removed]
+    H -- Gray zone --> K[decision=escalate]
+    K --> L[Create review_queue entry\nwith priority_score]
+    L --> M[Assign to human reviewer\nby language + region]
+    M --> N[Reviewer makes decision]
+    N --> O[Update moderation_job\n+ content status]
+```
+
+### Appeals Flow
+
+```mermaid
+flowchart TD
+    A[Content removed] --> B[Author files appeal]
+    B --> C[Create appeal: tier=1]
+    C --> D[Different reviewer\nassigned]
+    D --> E{Tier 1 decision}
+    E -- Overturned --> F[Restore content\nstatus=published]
+    E -- Upheld --> G{Author accepts?}
+    G -- No --> H[Escalate to tier=2\nSenior reviewer]
+    H --> I{Tier 2 decision}
+    I -- Overturned --> F
+    I -- Upheld --> J{Author accepts?}
+    J -- No --> K[Escalate to tier=3\nPolicy specialist]
+    K --> L{Tier 3 decision}
+    L -- Overturned --> F
+    L -- Upheld --> M{Novel edge case?}
+    M -- Yes --> N[Policy committee\npanel review]
+    M -- No --> O[Final: removal stands]
+    N --> P[Decision sets precedent]
+    G -- Yes --> O
+    J -- Yes --> O
+```
 
 ---
 

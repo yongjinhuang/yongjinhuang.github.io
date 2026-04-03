@@ -1,6 +1,32 @@
 # Data Model: Distributed Cache (Redis)
 
-A distributed cache sits between the application and database to reduce latency and database load. The data model covers both the cached data structures and the cluster management metadata needed to shard data across nodes. Redis uses hash slots (0–16383) to deterministically map keys to nodes, enabling horizontal scaling without a central coordinator.
+A distributed cache sits between the application and database to reduce latency and database load. The data model covers both the cached data structures and the cluster management metadata needed to shard data across nodes. Redis uses hash slots (0-16383) to deterministically map keys to nodes, enabling horizontal scaling without a central coordinator.
+
+## High-Level Architecture
+
+```mermaid
+graph TD
+    App[Application] -->|GET/SET| SmartClient[Smart Client]
+    SmartClient -->|CRC16 key mod 16384| SlotMap[Local Slot Map]
+    SlotMap -->|Route to correct node| Master1[Master Node A]
+    SlotMap -->|Route to correct node| Master2[Master Node B]
+    SlotMap -->|Route to correct node| Master3[Master Node C]
+    Master1 -->|Replication| Replica1[Replica A]
+    Master2 -->|Replication| Replica2[Replica B]
+    Master3 -->|Replication| Replica3[Replica C]
+    Master1 <-->|Gossip Protocol| Master2
+    Master2 <-->|Gossip Protocol| Master3
+    App -->|Cache miss| DB[(Database)]
+
+    subgraph Redis Cluster
+        Master1
+        Master2
+        Master3
+        Replica1
+        Replica2
+        Replica3
+    end
+```
 
 ## Table Responsibilities
 
@@ -122,6 +148,20 @@ On data update:
       Risk: race condition between concurrent update + read
 ```
 
+```mermaid
+flowchart TD
+    A[Application needs data] --> B{Redis cache hit?}
+    B -->|Yes| C[Deserialize and return - latency under 1ms]
+    B -->|No| D[Query database]
+    D --> E[SET in Redis with TTL]
+    E --> F[Return data - latency 10-50ms]
+
+    G[Data updated in DB] --> H{Invalidation strategy?}
+    H -->|Option A: Invalidate| I[DELETE key from Redis]
+    I --> J[Next read triggers cache miss + re-populate]
+    H -->|Option B: Update| K[SET key with new data]
+```
+
 **Why invalidate (delete) instead of update?** In concurrent systems, a stale read can overwrite a newer cache value. Invalidation is safer: the next reader fetches fresh data from the database. The brief cache miss is an acceptable tradeoff for consistency.
 
 ### Write-Through
@@ -144,6 +184,14 @@ Cons: Higher write latency (cache + DB in serial)
 Best for: Data that is read immediately after writing
 ```
 
+```mermaid
+flowchart TD
+    A[Application writes data] --> B[Write to Redis cache]
+    B --> C[Cache writes to database synchronously]
+    C --> D[DB confirms write]
+    D --> E[Return success to application]
+```
+
 ### Write-Behind (Write-Back)
 
 ```
@@ -163,6 +211,14 @@ Best for: Data that is read immediately after writing
 
 Best for: High write throughput where brief data loss is tolerable
          (e.g., view counters, analytics)
+```
+
+```mermaid
+flowchart TD
+    A[Application writes data] --> B[Write to Redis cache]
+    B --> C[Return success immediately]
+    C --> D[Background: batch flush to database]
+    D --> E[Multiple writes batched together]
 ```
 
 ### Cluster Key Routing
@@ -190,6 +246,18 @@ Best for: High write throughput where brief data loss is tolerable
          ▼
 6. Client updates slot map and retries on correct node
    (MOVED responses happen after rebalancing)
+```
+
+```mermaid
+flowchart TD
+    A[Client sends GET user:123] --> B["Compute CRC16('user:123') mod 16384 = slot 5649"]
+    B --> C[Lookup local slot map: slot 5649 = node-A]
+    C --> D[Send GET to node-A]
+    D --> E{Correct node?}
+    E -->|Yes| F[Node-A returns value]
+    E -->|No: MOVED| G[Node returns MOVED redirect]
+    G --> H[Client updates slot map]
+    H --> I[Retry on correct node]
 ```
 
 **Why client-side routing?** A proxy-based approach adds a network hop on every request. Client-side routing (smart clients) sends requests directly to the correct node, halving latency. The slot map is cached locally and updated only on MOVED redirections or periodic refresh.

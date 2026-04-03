@@ -4,6 +4,47 @@ A headless CMS provides content infrastructure that decouples content creation f
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Editor[Content Editor / Admin]
+    Consumer[Website / Mobile App]
+
+    subgraph CMS Platform
+        MgmtAPI[Management API<br/>CRUD content]
+        DeliveryAPI[Delivery API<br/>Read-only, published content]
+        WorkflowEngine[Workflow Engine]
+        WebhookDispatcher[Webhook Dispatcher]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL<br/>content_types, entries,<br/>versions, references)]
+        S3[(S3 / Object Storage<br/>assets, media files)]
+    end
+
+    subgraph External Services
+        CDN[CDN<br/>Asset delivery +<br/>cache invalidation]
+        SSG[Static Site Generator<br/>Gatsby / Next.js]
+        SearchIdx[Search Index<br/>Algolia / Elasticsearch]
+    end
+
+    Editor -->|create/edit content| MgmtAPI
+    MgmtAPI --> PG
+    MgmtAPI -->|upload media| S3
+    MgmtAPI --> WorkflowEngine
+    WorkflowEngine -->|publish event| WebhookDispatcher
+    WebhookDispatcher --> SSG
+    WebhookDispatcher --> SearchIdx
+    WebhookDispatcher --> CDN
+    Consumer --> CDN
+    CDN --> DeliveryAPI
+    DeliveryAPI --> PG
+    S3 --> CDN
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                   | Purpose                                      | Why It Exists                                                                                                      |
@@ -240,6 +281,27 @@ Relationships:
 9. **Content Delivery**: The delivery API serves only published entries. Queries filter by `status = published` and return `fields_json` for the requested locale, falling back to `default_locale` for missing translations.
 
 10. **Rollback**: If a published entry has issues, editors can revert to any previous `entry_versions` by copying its `fields_json` back to the entry and creating a new version (preserving the rollback action in history).
+
+```mermaid
+flowchart TD
+    A[Admin defines content_type<br/>with content_type_fields] --> B[Editor creates entry<br/>fields_json with locale values]
+    B --> C[Save creates entry_version<br/>version_number = 1]
+    C --> D[Edit and save again]
+    D --> E[New entry_version created<br/>full snapshot preserved]
+    E --> F{References other entries?}
+    F -->|Yes| G[Create entry_references rows<br/>Enable reverse lookups]
+    F -->|No| H{Workflow configured?}
+    G --> H
+    H -->|Yes| I[Move through workflow stages<br/>draft -> review -> approval]
+    H -->|No| J[Publish directly]
+    I --> J[Publish entry]
+    J --> K[status = published<br/>published_version set<br/>published_at set]
+    K --> L[Trigger active webhooks<br/>entry.publish event]
+    L --> M[CDN cache invalidation]
+    L --> N[Static site rebuild]
+    L --> O[Search index update]
+    M --> P[Delivery API serves<br/>published entries by locale]
+```
 
 ---
 

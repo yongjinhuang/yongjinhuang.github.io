@@ -2,6 +2,65 @@
 
 Kafka is a distributed append-only log that achieves high throughput by treating messages as sequential writes to disk. The data model is fundamentally different from traditional databases: there are no tables with rows, just ordered logs of records partitioned for parallelism. Understanding the data model means understanding topics, partitions, offsets, and consumer groups — the core abstractions that enable Kafka's performance characteristics.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    subgraph Producers
+        P1[Producer App 1]
+        P2[Producer App 2]
+    end
+
+    subgraph Kafka Cluster
+        subgraph Broker 1
+            L1[Partition 0<br/>Leader]
+            F2[Partition 1<br/>Follower]
+        end
+        subgraph Broker 2
+            F1[Partition 0<br/>Follower]
+            L2[Partition 1<br/>Leader]
+        end
+        subgraph Broker 3
+            F3[Partition 0<br/>Follower]
+            F4[Partition 1<br/>Follower]
+        end
+        KRAFT[KRaft Controller<br/>Metadata]
+        OFFSETS[__consumer_offsets<br/>Internal Topic]
+    end
+
+    subgraph Consumer Groups
+        subgraph Group A
+            C1[Consumer 1]
+            C2[Consumer 2]
+        end
+        subgraph Group B
+            C3[Consumer 3]
+        end
+    end
+
+    subgraph Storage
+        DISK[(Log Segments<br/>on Disk)]
+        IDX[Index Files<br/>+ Time Index]
+    end
+
+    P1 -->|Produce| L1
+    P2 -->|Produce| L2
+    L1 -->|Replicate| F1
+    L1 -->|Replicate| F3
+    L2 -->|Replicate| F2
+    L2 -->|Replicate| F4
+    L1 --> DISK
+    L2 --> DISK
+    DISK --> IDX
+    C1 -->|Consume Partition 0| L1
+    C2 -->|Consume Partition 1| L2
+    C3 -->|Consume All| L1
+    C3 -->|Consume All| L2
+    C1 -->|Commit Offset| OFFSETS
+    C2 -->|Commit Offset| OFFSETS
+    C3 -->|Commit Offset| OFFSETS
+```
+
 ## Table Responsibilities
 
 | Structure            | Purpose                         | Storage                             | Key Characteristic               |
@@ -178,6 +237,25 @@ internal Kafka topic. The "ER diagram" shows logical relationships.
    └─ acks=all: ACK after all ISR replicas write (safest, slower)
 ```
 
+```mermaid
+flowchart TD
+    A[Application creates record<br/>key: user-123, value: purchase event] --> B[Producer serializes key + value<br/>e.g. Avro via Schema Registry]
+    B --> C{Key present?}
+    C -->|Non-null| D["hash(key) % partition_count<br/>e.g. partition 7"]
+    C -->|Null| E[Round-robin across partitions]
+    D --> F[Add to batch buffer<br/>linger.ms=5, batch.size=16KB]
+    E --> F
+    F --> G[Batch sent to partition leader broker]
+    G --> H[Leader appends to log segment<br/>Sequential write]
+    H --> I[Update in-memory index]
+    I --> J[Replicate to ISR followers]
+    J --> K[Followers write + ACK leader]
+    K --> L{acks setting?}
+    L -->|acks=0| M1[No ACK - fire and forget]
+    L -->|acks=1| M2[ACK after leader write]
+    L -->|acks=all| M3[ACK after all ISR write]
+```
+
 ### Consuming Records
 
 ```
@@ -212,6 +290,26 @@ internal Kafka topic. The "ER diagram" shows logical relationships.
          ▼
 7. Offset written to __consumer_offsets topic
    (compacted, so only latest offset per group+topic+partition is kept)
+```
+
+```mermaid
+flowchart TD
+    A["Consumer polls partition 7<br/>offset = last_committed + 1"] --> B[Broker locates records on disk]
+    B --> B1[Binary search index file]
+    B1 --> B2[Seek to byte position in log]
+    B2 --> B3[Sequential read from disk<br/>OS page cache]
+    B3 --> C["Zero-copy transfer<br/>sendfile() syscall"]
+    C --> D[Consumer receives batch of records]
+    D --> E[Process each record]
+    E --> E1[Deserialize]
+    E1 --> E2[Execute business logic]
+    E2 --> E3{Error?}
+    E3 -->|Yes| E4[Dead-letter queue]
+    E3 -->|No| F{Commit strategy?}
+    F -->|Auto-commit| G1[Commit every 5s<br/>At-least-once]
+    F -->|Manual commit| G2[Commit after processing<br/>Exactly-once with idempotency]
+    G1 --> H[Offset written to<br/>__consumer_offsets topic]
+    G2 --> H
 ```
 
 **Why sequential disk writes?** Kafka's key insight is that sequential disk I/O (100-200 MB/s on spinning disks) approaches network speed and far exceeds random I/O (100-200 IOPS). By only appending to the end of log files, Kafka achieves database-impossible write throughput.

@@ -2,6 +2,31 @@
 
 A mapping and navigation service renders map tiles for visual display and computes optimal routes between locations. The data model must represent the road network as a weighted directed graph, serve pre-rendered map tiles at multiple zoom levels via CDN, and overlay real-time traffic data for accurate ETAs. The system serves billions of tile requests per day and computes millions of routes, demanding extreme read optimization.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client App] -->|Viewport / Route request| CDN[CDN Edge]
+    CDN -->|Cache miss| TileServer[Tile Server]
+    Client -->|Route request| LB[Load Balancer]
+    LB --> RoutingService[Routing Service]
+    TileServer -->|Query spatial data| PG[(PostgreSQL<br/>road_nodes, road_edges, places)]
+    TileServer -->|Store/serve tiles| S3[(S3 Tile Storage)]
+    RoutingService --> PG
+    RoutingService -->|Real-time traffic| Redis[(Redis / TSDB<br/>traffic_segments)]
+    Probes[GPS Probes<br/>Phones & Cars] -->|Speed data| TrafficPipeline[Traffic Ingestion]
+    TrafficPipeline --> Redis
+    Client -->|Place search| SearchAPI[Search Service]
+    SearchAPI --> ES[(Elasticsearch<br/>places)]
+
+    subgraph Data Stores
+        PG
+        S3
+        Redis
+        ES
+    end
+```
+
 ## Table Responsibilities
 
 | Table                | Purpose                                         | Storage                    | Key Characteristic                                      |
@@ -184,6 +209,18 @@ Relationships:
 7. Return tile to client for rendering
 ```
 
+```mermaid
+flowchart TD
+    A[Client sends viewport:<br/>center_lat, center_lng, zoom] --> B[Calculate tile coordinates<br/>6-12 tiles]
+    B --> C[Request tiles from CDN]
+    C --> D{CDN cache hit?}
+    D -->|Yes| E[Return cached tile<br/>sub-10ms]
+    D -->|No| F[Forward to tile server]
+    F --> G[Render tile:<br/>Query road_edges, places<br/>Apply styling rules<br/>Encode vector/raster]
+    G --> H[Cache at CDN<br/>TTL based on zoom level]
+    H --> I[Return tile to client]
+```
+
 ### Route Calculation (Read Path)
 
 ```
@@ -222,6 +259,20 @@ Relationships:
          │
          ▼
 8. Return route to client
+```
+
+```mermaid
+flowchart TD
+    A[User requests route:<br/>origin, destination, mode] --> B[Snap origin & destination<br/>to nearest road_nodes]
+    B --> C[Load road graph subgraph]
+    C --> D[Overlay traffic_segments on edges]
+    D --> E{Route distance?}
+    E -->|Short < 50km| F["Run A* with<br/>haversine heuristic"]
+    E -->|Long > 50km| G[Run Contraction<br/>Hierarchies]
+    F --> H[Reconstruct path:<br/>sequence of road_edges]
+    G --> H
+    H --> I[Generate response:<br/>Route geometry<br/>Turn-by-turn instructions<br/>ETA + alternatives]
+    I --> J[Return route to client]
 ```
 
 **Why Contraction Hierarchies over plain A\*?** A\* explores nodes proportional to the geographic distance between origin and destination. For a cross-country route, this means millions of node evaluations. Contraction Hierarchies pre-compute "shortcut edges" that skip intermediate nodes on highways, reducing query time from seconds to milliseconds. The trade-off is a preprocessing step that takes hours, but this is done offline.

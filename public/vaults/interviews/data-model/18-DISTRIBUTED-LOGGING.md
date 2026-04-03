@@ -2,6 +2,41 @@
 
 A distributed logging system collects, stores, and queries three pillars of observability: logs (events), metrics (measurements), and traces (request flows). The data model must handle massive write throughput (millions of events per second), support flexible querying across heterogeneous schemas, and correlate signals across the three pillars via trace IDs. Each pillar uses a purpose-built storage backend optimized for its access patterns.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Apps[Application Services] -->|Logs, Metrics, Traces| Agents[Telemetry Agents<br/>OTel SDK / Log Agent]
+    Agents -->|Publish| Kafka[Apache Kafka]
+
+    subgraph Ingestion
+        Kafka -->|Topic: logs| Flink1[Flink: Log Processor]
+        Kafka -->|Topic: metrics| Flink2[Flink: Metric Processor]
+        Kafka -->|Topic: traces| Flink3[Flink: Trace Processor]
+    end
+
+    Flink1 --> ES[(Elasticsearch<br/>log_events)]
+    Flink2 --> CH[(ClickHouse<br/>metrics)]
+    Flink3 --> Jaeger[(Jaeger / Tempo<br/>spans)]
+
+    QueryService[Query Service] --> ES
+    QueryService --> CH
+    QueryService --> Jaeger
+
+    Dashboard[User Dashboard] --> QueryService
+    AlertEngine[Alert Engine] --> CH
+    AlertEngine --> ES
+    AlertEngine -->|Read rules| PG[(PostgreSQL<br/>alert_rules)]
+    AlertEngine -->|Notify| Channels[Slack / PagerDuty / Email]
+
+    subgraph Storage Backends
+        ES
+        CH
+        Jaeger
+        PG
+    end
+```
+
 ## Table Responsibilities
 
 | Table           | Purpose                            | Storage               | Key Characteristic                     |
@@ -160,6 +195,18 @@ Relationships:
         compute trace duration → write to trace backend (Jaeger/Tempo)
 ```
 
+```mermaid
+flowchart TD
+    A[Applications emit telemetry:<br/>Logs, Metrics, Traces] --> B[Ship to Kafka]
+    B --> C[Flink stream processors]
+    C --> D[Logs: parse, enrich,<br/>validate schema]
+    C --> E[Metrics: validate,<br/>downsample, pre-aggregate]
+    C --> F[Traces: validate,<br/>link parent/child spans]
+    D --> G[(Elasticsearch<br/>daily index)]
+    E --> H[(ClickHouse)]
+    F --> I[(Jaeger / Tempo)]
+```
+
 ### Query Flow
 
 ```
@@ -184,6 +231,20 @@ Relationships:
    User finds an error log → clicks trace_id → sees full trace
    → identifies slow span → pivots to metrics for that service
    → confirms elevated latency across all requests
+```
+
+```mermaid
+flowchart TD
+    A[User opens dashboard<br/>or runs ad-hoc query] --> B[Query Service routes request]
+    B --> C[Log search]
+    B --> D[Metric query]
+    B --> E[Trace lookup]
+    C --> F[Elasticsearch: time range +<br/>service + severity filters]
+    D --> G[ClickHouse: aggregation<br/>GROUP BY service, time bucket]
+    E --> H[Fetch spans by trace_id<br/>Reconstruct span tree<br/>Render waterfall]
+    F --> I[Cross-signal correlation:<br/>Error log -> trace_id -> slow span<br/>-> metrics for that service]
+    G --> I
+    H --> I
 ```
 
 ### Alert Evaluation
@@ -213,6 +274,16 @@ Relationships:
          ▼
 10. Fire alert: send to notification_channels
     based on severity routing rules
+```
+
+```mermaid
+flowchart TD
+    A[Alert engine runs<br/>every 30-60 seconds] --> B[For each alert_rule:<br/>Execute query against backend]
+    B --> C{Condition met?}
+    C -->|No| D[Reset firing timer]
+    C -->|Yes| E{"Sustained for<br/>'for' duration?"}
+    E -->|No| F[Continue monitoring]
+    E -->|Yes| G[Fire alert: send to<br/>notification_channels<br/>based on severity]
 ```
 
 **Why Kafka as the ingestion bus?** Telemetry data is fire-and-forget from the application's perspective. Kafka decouples producers (applications) from consumers (storage backends), provides durability (data survives consumer downtime), and enables replay (re-process data if a consumer bug is fixed). Without Kafka, a slow Elasticsearch cluster would cause back-pressure on applications, potentially causing outages in the systems being monitored.
