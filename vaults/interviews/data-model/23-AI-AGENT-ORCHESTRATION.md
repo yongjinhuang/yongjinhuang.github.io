@@ -2,6 +2,35 @@
 
 An AI agent orchestration platform manages the lifecycle of autonomous agents that use LLMs and tools to complete complex tasks. The data model must track agent configurations, task execution with full step-level observability, tool invocations, vector-based memory, and safety guardrails -- all while maintaining token and cost accounting.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    User[User / Client] -->|Submit Task| API[API Gateway]
+    API --> Orchestrator[Agent Orchestrator]
+
+    Orchestrator --> AgentCfg[(agents<br/>PostgreSQL)]
+    Orchestrator --> Guardrails[(guardrails<br/>PostgreSQL)]
+    Orchestrator --> ToolReg[(tools Registry<br/>PostgreSQL)]
+
+    Orchestrator --> LLM[LLM Service<br/>Primary / Fallback Model]
+
+    subgraph ReAct Loop
+        Think[Think Step] --> ToolCall[Tool Call Step]
+        ToolCall --> ToolExec[Tool Execution<br/>function / api / sandbox]
+        ToolExec --> ToolResult[Tool Result Step]
+        ToolResult --> Think
+    end
+
+    LLM --> Think
+    Orchestrator --> ReAct Loop
+
+    Orchestrator --> VectorDB[(memory_chunks<br/>Vector DB / pgvector)]
+    Orchestrator --> TaskDB[(tasks + task_steps<br/>PostgreSQL)]
+
+    VectorDB -->|Similarity Search| Orchestrator
+```
+
 ---
 
 ## Table Responsibilities
@@ -216,6 +245,31 @@ agents ····*···· tools         (many-to-many via tool_ids array)
 8. **Memory storage** -- Key information from the task is embedded and stored in `memory_chunks` (short_term for session context, episodic as a task summary).
 
 9. **Task completion** -- The task row is updated with output_json, total_tokens (summed from all task_steps), total_cost (computed from tokens x model pricing), and status=completed.
+
+```mermaid
+flowchart TD
+    A[User submits task] --> B[Insert task row<br/>status=queued]
+    B --> C[Load agent config<br/>system_prompt, tool_ids, memory_config]
+    C --> D[Load guardrails]
+    D --> E{Input guardrail<br/>check passes?}
+    E -->|No| F[Fail task immediately]
+    E -->|Yes| G[Query memory_chunks<br/>via vector similarity search]
+    G --> H{Token usage within<br/>token_budget?}
+    H -->|Yes| I[Use primary_model]
+    H -->|No| J[Use fallback_model]
+    I --> K[ReAct Loop]
+    J --> K
+    K --> L[Think: model reasons<br/>log task_step type=think]
+    L --> M[Tool Call: select tool + args<br/>validate against input_schema<br/>log task_step type=tool_call]
+    M --> N[Tool Execution + Result<br/>log task_step type=tool_result]
+    N --> O{Agent ready<br/>to respond?}
+    O -->|No| L
+    O -->|Yes| P{Output guardrail<br/>check passes?}
+    P -->|No| Q[Retry or safe fallback]
+    Q --> L
+    P -->|Yes| R[Store memory chunks<br/>short_term + episodic]
+    R --> S[Update task: output_json,<br/>total_tokens, total_cost,<br/>status=completed]
+```
 
 ---
 

@@ -2,6 +2,52 @@
 
 A proximity service lets users find nearby businesses by location. The data model must support fast geospatial queries ("restaurants within 2km"), scale to millions of businesses, and handle skewed density (Manhattan has far more businesses per square km than rural Montana). Geohash-based indexing replaces traditional B-tree indexes for spatial lookups.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    subgraph Clients
+        WEB[Web App]
+        MOB[Mobile App]
+    end
+
+    subgraph API Layer
+        LB[Load Balancer]
+        API[API Servers]
+    end
+
+    subgraph Search Path
+        GEO[Geohash Calculator]
+        REDIS[(Redis<br/>Geohash Index)]
+    end
+
+    subgraph Data Layer
+        PG[(PostgreSQL<br/>Businesses, Reviews,<br/>Categories)]
+        GEOCODE[Geocoding API]
+    end
+
+    subgraph Background
+        AGG[Rating Aggregator<br/>Async Job]
+    end
+
+    WEB --> LB
+    MOB --> LB
+    LB --> API
+
+    API -->|Nearby search| GEO
+    GEO -->|Compute prefix + neighbors| REDIS
+    REDIS -->|business_ids| API
+    API -->|Batch fetch details| PG
+
+    API -->|Add business| GEOCODE
+    GEOCODE -->|lat, lng| GEO
+    GEO -->|Update index| REDIS
+    API -->|Write business| PG
+
+    API -->|Submit review| PG
+    AGG -->|Recompute rating| PG
+```
+
 ## Table Responsibilities
 
 | Table             | Purpose                                   | Storage                                 | Key Characteristic                            |
@@ -163,6 +209,19 @@ Relationships:
 9. Return paginated results with distance from user
 ```
 
+```mermaid
+flowchart TD
+    A["User sends search request<br/>(lat, lng, radius_km, filters)"] --> B[Compute geohash of user location<br/>6-char for ~1km, 5-char for ~5km]
+    B --> C[Calculate neighboring geohash prefixes<br/>Center cell + 8 surrounding cells]
+    C --> D[Query geohash_index<br/>for each prefix]
+    D --> E[Collect all business_ids]
+    E --> F[Batch-fetch business details<br/>from businesses table]
+    F --> G[Post-filter by exact<br/>Haversine distance]
+    G --> H[Apply additional filters<br/>category, price_range, is_active, hours]
+    H --> I[Sort by relevance<br/>distance + rating + review_count]
+    I --> J[Return paginated results<br/>with distance from user]
+```
+
 **Why post-filter by exact distance?** Geohash cells are rectangles, not circles. A business in the corner of a neighboring cell might be 1.5km away when the user requested a 1km radius. The Haversine formula on (lat, lng) provides exact distance for the final filter.
 
 ### Adding a Business (Write Path)
@@ -186,6 +245,16 @@ Relationships:
          │
          ▼
 6. Invalidate any cached search results for affected geohash cells
+```
+
+```mermaid
+flowchart TD
+    A[Business owner submits details] --> B["Validate and normalize address"]
+    B --> C["Geocoding API → compute (lat, lng)"]
+    C --> D["Compute geohash from (lat, lng)"]
+    D --> E[INSERT into businesses table]
+    E --> F[Update geohash_index<br/>Append business_id to prefix entry]
+    F --> G[Invalidate cached search results<br/>for affected geohash cells]
 ```
 
 **Why not use a database-level geospatial index directly?** Database geospatial indexes (R-trees, quad-trees) work well for single-node databases but are difficult to shard and cache. Geohash-based indexing maps naturally to key-value stores (Redis, DynamoDB), enabling horizontal scaling. The trade-off is slightly more application-level complexity for the neighbor-cell calculation.

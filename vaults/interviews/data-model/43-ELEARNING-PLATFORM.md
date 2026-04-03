@@ -4,6 +4,66 @@ An e-learning platform must support course creation with structured content (vid
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Student[Student / Learner]
+    Instructor[Instructor]
+
+    subgraph Platform
+        CourseSvc[Course Management Service]
+        EnrollSvc[Enrollment Service]
+        ProgressSvc[Progress Tracking Service]
+        QuizSvc[Quiz & Grading Service]
+        CertSvc[Certificate Service]
+    end
+
+    subgraph Media Pipeline
+        Upload[Upload Service]
+        Transcoder[Transcoder<br/>FFmpeg / MediaConvert]
+        DRM[DRM Encryption<br/>Widevine / FairPlay]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL<br/>courses, enrollments,<br/>progress, quizzes)]
+        S3[(S3 / Object Storage<br/>videos, certificates)]
+    end
+
+    subgraph Delivery
+        CDN[CDN<br/>HLS Streaming]
+        CertPage[Public Verification Page]
+    end
+
+    subgraph External
+        PayGW[Payment Gateway]
+        CodeRunner[Sandboxed Code Runner]
+    end
+
+    Instructor --> CourseSvc
+    CourseSvc --> PG
+    Instructor --> Upload
+    Upload --> S3
+    Upload --> Transcoder
+    Transcoder --> DRM
+    DRM --> S3
+    Student --> EnrollSvc
+    EnrollSvc --> PayGW
+    EnrollSvc --> PG
+    Student --> CDN
+    CDN --> S3
+    Student --> ProgressSvc
+    ProgressSvc --> PG
+    Student --> QuizSvc
+    QuizSvc --> CodeRunner
+    QuizSvc --> PG
+    CertSvc --> S3
+    CertSvc --> PG
+    CertPage --> PG
+```
+
+---
+
 ## Table Responsibilities
 
 | Table               | Purpose                                         | Why It Exists                                                                                                     |
@@ -331,6 +391,41 @@ Relationships:
 10. **Certificate Generation**: Upon completion, a `certificates` record is created with a unique `verification_code`. A PDF certificate is rendered with the student's name, course title, completion date, and instructor signature. The PDF is stored in S3 and `certificate_url` is set. The verification code enables employers to verify the certificate via a public URL.
 
 11. **Analytics**: The instructor views a dashboard showing: total enrollments, completion rates, average quiz scores per question, video drop-off points (from aggregated `video_position_sec` data), and revenue.
+
+```mermaid
+flowchart TD
+    A[Instructor creates course<br/>status = draft] --> B[Add sections and lessons<br/>with position ordering]
+    B --> C{Lesson type?}
+    C -->|Video| D[Upload video -> S3<br/>Transcode to 360p/720p/1080p<br/>Generate HLS manifest + DRM]
+    C -->|Quiz| E[Create quiz with questions<br/>Set passing_score, max_attempts]
+    C -->|Article| F[Save content directly]
+    D --> G[Publish course<br/>Calculate duration_hours, total_lessons]
+    E --> G
+    F --> G
+
+    H[Student enrolls] --> I[Create enrollment<br/>status = active]
+    I --> J[Initialize lesson_progress<br/>for all lessons = not_started]
+    J --> K[Student watches video]
+    K --> L[Update video_position_sec<br/>every 10-30 seconds]
+    L --> M{Watched >= 90%?}
+    M -->|Yes| N[Mark lesson completed]
+    M -->|No| O[Continue tracking]
+
+    J --> P[Student takes quiz]
+    P --> Q[Create quiz_attempt<br/>Grade answers]
+    Q --> R{Score >= passing_score?}
+    R -->|Yes| N
+    R -->|No| S{Attempts remaining?}
+    S -->|Yes| P
+    S -->|No| T[Quiz failed]
+
+    N --> U[Recalculate progress_percent]
+    U --> V{progress_percent = 100%?}
+    V -->|No| K
+    V -->|Yes| W[enrollment status = completed]
+    W --> X[Generate certificate<br/>with verification_code]
+    X --> Y[Render PDF -> S3<br/>Set certificate_url]
+```
 
 ---
 

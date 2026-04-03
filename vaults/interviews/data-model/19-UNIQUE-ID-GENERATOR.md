@@ -2,6 +2,32 @@
 
 A distributed unique ID generator produces globally unique, roughly time-ordered 64-bit integers without central coordination. The data model is minimal by design: the "tables" are mostly the ID bit layout itself and the coordination mechanism that assigns machine identifiers. The key insight is encoding enough information into 64 bits to guarantee uniqueness across thousands of machines generating millions of IDs per second, while maintaining temporal ordering for database index friendliness.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client Service] -->|Request ID| LB[Load Balancer]
+    LB --> Gen1[Generator Node 1<br/>dc=0, machine=0]
+    LB --> Gen2[Generator Node 2<br/>dc=0, machine=1]
+    LB --> GenN[Generator Node N<br/>dc=1, machine=0]
+
+    Gen1 -->|Heartbeat + lease renewal| ZK[ZooKeeper / etcd<br/>coordination_leases]
+    Gen2 --> ZK
+    GenN --> ZK
+
+    Gen1 -->|Audit trail| PG[(PostgreSQL<br/>generator_nodes)]
+    Gen2 --> PG
+    GenN --> PG
+
+    subgraph ID Bit Layout
+        direction LR
+        Sign[1 bit: sign] --- TS[41 bits: timestamp]
+        TS --- DC[5 bits: dc_id]
+        DC --- MC[5 bits: machine_id]
+        MC --- SEQ[12 bits: sequence]
+    end
+```
+
 ## Table Responsibilities
 
 | Table                   | Purpose                                    | Storage                  | Key Characteristic                                                        |
@@ -161,6 +187,18 @@ Relationships:
 6. Node is ready to generate IDs
 ```
 
+```mermaid
+flowchart TD
+    A[ID generator service starts] --> B[Read datacenter_id<br/>from environment config]
+    B --> C[Try creating ephemeral node<br/>/id-gen/workers/dc_id/machine_id]
+    C --> D{Lease acquired?}
+    D -->|Yes| E[Store dc_id + machine_id<br/>in memory]
+    D -->|"No (all 32 taken)"| F[FATAL: Cannot start<br/>Alert ops]
+    E --> G[INSERT into generator_nodes<br/>for audit trail]
+    G --> H[Start heartbeat loop:<br/>Renew lease every 10s]
+    H --> I[Node ready to generate IDs]
+```
+
 ### ID Generation (Hot Path)
 
 ```
@@ -206,6 +244,22 @@ Relationships:
 6. Return ID to client
 ```
 
+```mermaid
+flowchart TD
+    A[Client requests new unique ID] --> B[Read current clock<br/>timestamp_ms]
+    B --> C{Same millisecond<br/>as last?}
+    C -->|Yes| D[Increment sequence counter]
+    C -->|No| E[Reset sequence = 0<br/>Update last_timestamp_ms]
+    D --> F{sequence > 4095?}
+    F -->|Yes| G[Wait until next millisecond]
+    G --> B
+    F -->|No| H{Clock regression?<br/>timestamp < last_timestamp?}
+    E --> H
+    H -->|Yes| I[REJECT: clock went backwards]
+    H -->|No| J["Compose 64-bit ID:<br/>(timestamp << 22) |<br/>(dc_id << 17) |<br/>(machine_id << 12) |<br/>sequence"]
+    J --> K[Return ID to client]
+```
+
 ### Node Shutdown / Failure
 
 ```
@@ -222,6 +276,20 @@ Relationships:
    - generator_nodes.last_heartbeat goes stale
    - Health checker detects stale heartbeat
      → updates status = 'dead'
+```
+
+```mermaid
+flowchart TD
+    A[Graceful shutdown] --> B[Set status = draining]
+    B --> C[Stop accepting ID requests]
+    C --> D[Release coordination_lease<br/>Delete ZooKeeper node]
+    D --> E[Update generator_nodes:<br/>status = dead]
+
+    F[Crash / network partition] --> G[ZooKeeper session timeout<br/>~30 seconds]
+    G --> H[Ephemeral node auto-deleted]
+    H --> I[machine_id available<br/>for replacement node]
+    I --> J[Health checker detects<br/>stale heartbeat]
+    J --> K[Update status = dead]
 ```
 
 **Why reject on clock regression instead of compensating?** If the system clock jumps backward (NTP correction, VM migration), generating IDs with the old timestamp would produce IDs that collide with previously generated IDs (same timestamp + same dc + same machine + potentially same sequence). Rejecting is the safe choice. The generator becomes temporarily unavailable (typically <1 second for NTP adjustments), which is far better than producing duplicate IDs.

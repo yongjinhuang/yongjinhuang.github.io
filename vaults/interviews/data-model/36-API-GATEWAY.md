@@ -4,6 +4,52 @@ An API gateway sits at the edge of a microservices architecture, handling cross-
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client / Browser / Mobile]
+    
+    subgraph API Gateway
+        TLS[TLS Termination]
+        Auth[Authentication]
+        RL[Rate Limiter]
+        Router[Route Matcher]
+        CB[Circuit Breaker]
+        LB[Load Balancer]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL<br/>routes, api_keys,<br/>certificates, rules)]
+        Redis[(Redis<br/>rate_limit_counters)]
+        Memory[(In-Memory<br/>circuit_breaker_state)]
+        ServiceReg[(etcd / Consul<br/>service_registry)]
+    end
+
+    subgraph Backend Services
+        SvcA[Service A]
+        SvcB[Service B]
+        SvcC[Service C]
+    end
+
+    Client -->|HTTPS| TLS
+    TLS --> Auth
+    Auth -->|key_hash lookup| PG
+    Auth --> RL
+    RL -->|INCR counter| Redis
+    RL --> Router
+    Router -->|match route| PG
+    Router --> CB
+    CB -->|check state| Memory
+    CB --> LB
+    LB -->|resolve instances| ServiceReg
+    LB --> SvcA
+    LB --> SvcB
+    LB --> SvcC
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                     | Purpose                                       | Why It Exists                                                                                             |
@@ -182,6 +228,32 @@ Relationships:
 9. **Circuit Breaker Update**: If the request succeeds, the failure_count is reset. If it fails, failure_count is incremented. When failure_count exceeds the threshold, the breaker transitions to **open** with a recovery_timeout.
 
 10. **Response**: The gateway adds tracing headers (X-Request-ID, X-Trace-ID) and returns the response to the client.
+
+```mermaid
+flowchart TD
+    A[Request Arrives over HTTPS] --> B[TLS Termination<br/>Match SNI hostname to certificates]
+    B --> C[Extract API Key from Header]
+    C --> D{Key valid,<br/>active, not expired?}
+    D -->|No| E[Reject 401 Unauthorized]
+    D -->|Yes| F[Construct Redis Key<br/>from rate_limit_rules]
+    F --> G[INCR rate_limit_counter]
+    G --> H{Counter ><br/>max_requests?}
+    H -->|Yes| I[Reject 429 Too Many Requests<br/>+ Retry-After header]
+    H -->|No| J[Match Route by<br/>host, path, method, priority]
+    J --> K[Resolve target_service<br/>via service_registry]
+    K --> L[Select Instance<br/>weighted round-robin / zone-aware]
+    L --> M{Circuit Breaker<br/>state?}
+    M -->|Open| N[Reject 503 Service Unavailable]
+    M -->|Half-Open| O[Allow One Test Request]
+    M -->|Closed| P[Forward Request to Instance]
+    O --> P
+    P --> Q{Request<br/>succeeded?}
+    Q -->|Yes| R[Reset failure_count<br/>Add tracing headers<br/>Return response]
+    Q -->|No| S{Retries<br/>remaining?}
+    S -->|Yes| L
+    S -->|No| T[Increment failure_count<br/>Open breaker if threshold exceeded]
+    T --> U[Return Error Response]
+```
 
 ---
 

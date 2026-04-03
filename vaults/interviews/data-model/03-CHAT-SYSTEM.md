@@ -2,6 +2,35 @@
 
 A chat system requires real-time message delivery, offline support, and read receipts at massive scale. The data model splits across PostgreSQL for user/conversation metadata and Cassandra for messages and read status. Cassandra is chosen for messages because chat data is partitioned naturally by conversation, append-heavy, and requires high write throughput across global datacenters.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    ClientA[Client A] <-->|WebSocket| CS1[Chat Server 1]
+    ClientB[Client B] <-->|WebSocket| CS2[Chat Server 2]
+    CS1 -->|Write messages| Cassandra[(Cassandra)]
+    CS2 -->|Read messages| Cassandra
+    CS1 -->|Publish events| Kafka[Kafka]
+    Kafka --> FanOut[Fan-out Service]
+    FanOut -->|Route to recipient| CS2
+    FanOut -->|Offline users| Push[Push Notification - APNs/FCM]
+    CS1 -->|User/conversation metadata| PG[(PostgreSQL)]
+
+    subgraph Metadata
+        PG
+    end
+
+    subgraph Message Storage
+        Cassandra
+    end
+
+    subgraph Async Delivery
+        Kafka
+        FanOut
+        Push
+    end
+```
+
 ## Table Responsibilities
 
 | Table                    | Purpose                                  | Storage    | Key Characteristic                                   |
@@ -194,6 +223,26 @@ Relationships (logical, not enforced in Cassandra):
    └─ Reset unread_count in user_conversations
 ```
 
+```mermaid
+flowchart TD
+    A[User A types message] --> B[Client encrypts with recipient public key]
+    B --> C[Send via WebSocket to Chat Server]
+    C --> D[Generate Snowflake message_id]
+    D --> E[Write to Cassandra in parallel]
+    E --> E1[INSERT into messages]
+    E --> E2[UPDATE user_conversations for all members]
+    E --> E3[INSERT message_status as sent]
+    E1 --> F[Publish event to Kafka]
+    F --> G[Fan-out Service reads event]
+    G --> H{Recipient online?}
+    H -->|Yes| I[Route via WebSocket]
+    I --> J[Update status to delivered]
+    H -->|No| K[Send push notification]
+    J --> L[User B opens conversation]
+    L --> M[Send read receipt via WebSocket]
+    M --> N[Update status to read + reset unread_count]
+```
+
 ### Loading the Inbox
 
 ```
@@ -216,6 +265,17 @@ Relationships (logical, not enforced in Cassandra):
          │
          ▼
 6. Scroll up → query next page with message_id < last_seen_id
+```
+
+```mermaid
+flowchart TD
+    A[User opens app] --> B[Query user_conversations by user_id]
+    B --> C[Return conversation list with previews + unread counts]
+    C --> D[User taps a conversation]
+    D --> E[Query messages by conversation_id LIMIT 50]
+    E --> F[Display most recent messages]
+    F --> G[User scrolls up]
+    G --> H[Query next page: message_id < last_seen_id]
 ```
 
 **Why Kafka between Chat Server and Fan-out?** The sending user's Chat Server should not be responsible for delivering to all recipients. Kafka decouples the write path from the delivery path, allowing independent scaling of each. It also provides durability: if the fan-out service crashes, messages are not lost.

@@ -2,6 +2,31 @@
 
 An authentication system manages user identity, credentials, sessions, and authorization. This model implements OAuth 2.0 / OpenID Connect with support for social login, multi-factor authentication (MFA), and role-based access control (RBAC). Every security-sensitive field uses hashing or encryption, and every action is audit-logged. The design prioritizes defense in depth: even if one layer is compromised, others still protect the user.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    User[User / Browser] --> App[Client Application<br/>SPA / Mobile]
+    App -->|Login / Register| AuthSvc[Auth Service]
+    App -->|API Requests + JWT| APIGw[API Gateway]
+
+    AuthSvc --> UserDB[(PostgreSQL<br/>users, sessions,<br/>mfa_credentials)]
+    AuthSvc --> OAuthDB[(PostgreSQL<br/>oauth_clients,<br/>authorization_codes)]
+    AuthSvc --> RBACDB[(PostgreSQL<br/>roles, permissions,<br/>user_roles)]
+    AuthSvc --> AuditDB[(PostgreSQL<br/>audit_logs)]
+
+    AuthSvc -->|Social Login| Google[Google OAuth]
+    AuthSvc -->|Social Login| GitHub[GitHub OAuth]
+    AuthSvc -->|Social Login| Apple[Apple OAuth]
+
+    AuthSvc -->|Issue JWT| App
+    APIGw -->|Validate JWT Signature| APIGw
+    APIGw -->|Check Permissions| RBACDB
+
+    AuthSvc --> KMS[KMS<br/>Encryption Keys]
+    AuthSvc --> Redis[(Redis<br/>JWT Blocklist)]
+```
+
 ---
 
 ## Table Responsibilities
@@ -275,6 +300,20 @@ users              1───* authorization_codes  (one user authorizes many co
 
 3. **MFA enrollment (optional)** -- User enrolls a TOTP app or WebAuthn key. A `mfa_credentials` row is created with the encrypted secret. `users.mfa_enabled` is set to true.
 
+```mermaid
+flowchart TD
+    A[User submits registration<br/>email + password] --> B[Create users row<br/>password_hash = Argon2id<br/>email_verified = false]
+    B --> C[Send signed verification<br/>token via email]
+    C --> D{User clicks<br/>verification link?}
+    D -->|Yes| E[Set email_verified = true]
+    D -->|No| F[Limited access]
+    E --> G{Enroll MFA?}
+    G -->|Yes| H[Create mfa_credentials<br/>encrypted TOTP secret or WebAuthn key]
+    H --> I[Set mfa_enabled = true]
+    G -->|No| J[Registration complete]
+    I --> J
+```
+
 ### Login Flow
 
 4. **Credential check** -- User submits email and password. The system loads the user, checks `status` (not suspended/deactivated), checks `locked_until` (not locked). If `failed_login_attempts` exceeds threshold (e.g., 5), the account is locked for a duration.
@@ -285,11 +324,49 @@ users              1───* authorization_codes  (one user authorizes many co
 
 7. **Session creation** -- On success, a `sessions` row is created. The refresh token is generated, hashed, and stored as `refresh_token_hash`. An access token (JWT, short-lived, 15-minute TTL) is issued. `failed_login_attempts` is reset to 0.
 
+```mermaid
+flowchart TD
+    A[User submits email + password] --> B{Account status<br/>active?}
+    B -->|No| C[Reject: account suspended/deactivated]
+    B -->|Yes| D{Account locked?<br/>locked_until > now}
+    D -->|Yes| E[Reject: account locked]
+    D -->|No| F[Hash password with Argon2id<br/>Compare to password_hash]
+    F --> G{Password<br/>matches?}
+    G -->|No| H[Increment failed_login_attempts<br/>Log audit: login_failed]
+    H --> I{Attempts ><br/>threshold?}
+    I -->|Yes| J[Lock account<br/>Set locked_until]
+    I -->|No| K[Return error]
+    G -->|Yes| L{mfa_enabled?}
+    L -->|No| N[Create session]
+    L -->|Yes| M[MFA challenge:<br/>verify TOTP / WebAuthn / backup code]
+    M --> O{MFA valid?}
+    O -->|No| H
+    O -->|Yes| N
+    N --> P[Generate refresh token<br/>Store hash in sessions]
+    P --> Q[Issue JWT access token<br/>15-min TTL]
+    Q --> R[Reset failed_login_attempts = 0<br/>Log audit: login_success]
+```
+
 ### Social Login Flow
 
 8. **OAuth redirect** -- User clicks "Login with Google." The system redirects to Google with client_id, redirect_uri, scope, and a PKCE code_challenge.
 
 9. **Authorization callback** -- Google redirects back with an authorization code. The system exchanges it for tokens, extracts the provider_user_id, and looks up `social_identities`. If found, log in the linked user. If not found, create a new user and social_identity.
+
+```mermaid
+flowchart TD
+    A[User clicks Login with Google] --> B[Redirect to Google with<br/>client_id, redirect_uri,<br/>scope, PKCE code_challenge]
+    B --> C[User authorizes at Google]
+    C --> D[Google redirects back<br/>with authorization code]
+    D --> E[Exchange code for tokens<br/>Extract provider_user_id]
+    E --> F{social_identities<br/>record exists?}
+    F -->|Yes| G[Log in linked user<br/>Create session]
+    F -->|No| H{Email matches<br/>existing user?}
+    H -->|Yes| I[Prompt to link accounts<br/>Create social_identity row]
+    H -->|No| J[Create new user +<br/>social_identity row]
+    I --> G
+    J --> G
+```
 
 ### API Authorization Flow
 
@@ -304,6 +381,26 @@ users              1───* authorization_codes  (one user authorizes many co
 13. **Session revocation** -- The session's `revoked_at` is set to NOW(). Subsequent refresh attempts with this session's token are rejected. The client discards its tokens.
 
 14. **All events audit-logged** -- Every step above generates an `audit_logs` entry with event_type, user context, IP, and user_agent.
+
+```mermaid
+flowchart TD
+    A[API request with<br/>access token JWT] --> B[Validate JWT signature<br/>Check expiry]
+    B --> C{Token valid?}
+    C -->|No| D{Refresh token<br/>available?}
+    D -->|Yes| E[Hash refresh token<br/>Look up session]
+    E --> F{Session active?<br/>Not revoked or expired?}
+    F -->|Yes| G[Issue new access token JWT]
+    F -->|No| H[Force re-login]
+    D -->|No| H
+    C -->|Yes| I[Extract user_id + scopes]
+    I --> J[Load user_roles<br/>Resolve role_permissions]
+    J --> K{Required resource +<br/>action granted?}
+    K -->|Yes| L[Allow request]
+    K -->|No| M[Return 403 Forbidden]
+
+    N[User logs out] --> O[Set session.revoked_at = NOW]
+    O --> P[Subsequent refresh<br/>attempts rejected]
+```
 
 ---
 

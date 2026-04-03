@@ -2,6 +2,33 @@
 
 A CDN accelerates content delivery by caching content at edge locations close to users. The data model must capture content metadata, cache state across hundreds of edge POPs (Points of Presence), routing rules, and origin server health. The tiered caching architecture (L1 edge, L2 regional, origin shield) is a key design choice that reduces origin load.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    User[User / Browser] -->|DNS Query| GeoDNS[GeoDNS / Anycast BGP]
+    GeoDNS --> L1[L1 Edge POP<br/>Closest to user]
+
+    subgraph CDN Tiered Cache
+        L1 -->|Cache Miss| L2[L2 Regional POP<br/>Aggregates L1 misses]
+        L2 -->|Cache Miss| Shield[Origin Shield POP<br/>Last cache layer]
+    end
+
+    Shield -->|Cache Miss| Origin[Origin Server]
+
+    L1 -->|Cache Hit| User
+    L2 -->|Cache Hit| L1
+    Shield -->|Cache Hit| L2
+
+    Admin[Customer / Admin] --> RulesAPI[Routing Rules API]
+    RulesAPI --> ConfigDB[(PostgreSQL<br/>routing_rules, origins,<br/>content_objects)]
+
+    Admin -->|Purge Request| PurgeAPI[Purge API]
+    PurgeAPI --> L1
+    PurgeAPI --> L2
+    PurgeAPI --> Shield
+```
+
 ---
 
 ## Table Responsibilities
@@ -183,6 +210,30 @@ edge_pops      1───* edge_cache_entries  (one POP holds many cache entries
 8. **Cache invalidation** -- When content changes, a purge request increments `purge_version` on the content_object. POPs lazily invalidate: on the next request, they compare their cached purge_version against the current one and treat mismatches as cache misses. Tag-based purging invalidates all content_objects matching a given tag.
 
 9. **Response to client** -- The content is served with appropriate Cache-Control headers. The client and any intermediate proxies can cache based on these headers.
+
+```mermaid
+flowchart TD
+    A[Client DNS query] --> B[GeoDNS / Anycast routes<br/>to nearest L1 Edge POP]
+    B --> C[Evaluate routing_rules<br/>by priority: host + path match]
+    C --> D{Action?}
+    D -->|passthrough| E[Forward directly to origin]
+    D -->|redirect| F[Return redirect response]
+    D -->|cache| G[Construct cache_key<br/>URL + vary header values]
+    G --> H{L1 cache hit?}
+    H -->|Hit| I[Serve from L1<br/>Increment hit_count]
+    H -->|Miss| J{L2 regional<br/>cache hit?}
+    J -->|Hit| K[Serve from L2<br/>Cache at L1]
+    J -->|Miss| L{Origin shield<br/>cache hit?}
+    L -->|Hit| M[Serve from shield<br/>Cache at L2 + L1]
+    L -->|Miss| N{Origin healthy?}
+    N -->|Yes| O[Fetch from origin server]
+    N -->|No| P[Serve stale content<br/>or return error]
+    O --> Q[Cache response at<br/>shield, L2, and L1]
+    Q --> R[Serve to client with<br/>Cache-Control headers]
+
+    S[Content changes] --> T[Purge: increment purge_version]
+    T --> U[POPs lazily invalidate<br/>on next request via version mismatch]
+```
 
 ---
 

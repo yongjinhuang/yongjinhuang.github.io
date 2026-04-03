@@ -2,6 +2,38 @@
 
 A notification system delivers messages across multiple channels (push, SMS, email, in-app) while respecting user preferences, quiet hours, and rate limits. The data model must support reliable delivery with exactly-once semantics, multi-channel routing, and detailed delivery tracking for debugging and analytics.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    EventSource[Event Sources] -->|Events| NotifSvc[Notification Service]
+    NotifSvc -->|Dedup + Route| PG[(PostgreSQL)]
+    NotifSvc -->|High priority| KafkaHigh[Kafka - High Priority Topic]
+    NotifSvc -->|Normal priority| KafkaNorm[Kafka - Normal Priority Topic]
+    KafkaHigh --> PushWorker[Push Worker]
+    KafkaHigh --> SMSWorker[SMS Worker]
+    KafkaNorm --> EmailWorker[Email Worker]
+    KafkaNorm --> InAppWorker[In-App Worker]
+    PushWorker --> APNs[APNs / FCM]
+    SMSWorker --> Twilio[Twilio]
+    EmailWorker --> SendGrid[SendGrid]
+    APNs -->|Webhooks| NotifSvc
+    SendGrid -->|Webhooks| NotifSvc
+
+    subgraph Channel Workers
+        PushWorker
+        SMSWorker
+        EmailWorker
+        InAppWorker
+    end
+
+    subgraph External Providers
+        APNs
+        Twilio
+        SendGrid
+    end
+```
+
 ## Table Responsibilities
 
 | Table                | Purpose                                | Storage    | Key Characteristic                  |
@@ -214,6 +246,31 @@ Relationships:
    ├─ Email opened → UPDATE delivery_log (status = 'opened')
    ├─ Link clicked → UPDATE delivery_log (status = 'clicked')
    └─ Bounce/complaint → UPDATE device_tokens (is_active = false)
+```
+
+```mermaid
+flowchart TD
+    A[Event occurs] --> B[Notification Service receives event]
+    B --> C{Idempotency key exists?}
+    C -->|Yes| D[Skip - already processed]
+    C -->|No| E[Query user_preferences]
+    E --> F[Filter enabled channels]
+    F --> G{In quiet hours AND priority != P0?}
+    G -->|Yes| H[Defer notification]
+    G -->|No| I{Frequency cap exceeded?}
+    I -->|Yes| J[Skip channel]
+    I -->|No| K[INSERT notification as pending]
+    K --> L[Resolve + render template]
+    L --> M{Priority level?}
+    M -->|P0/P1| N[Enqueue to high-priority Kafka topic]
+    M -->|P2/P3| O[Enqueue to normal-priority Kafka topic]
+    N --> P[Channel Worker delivers]
+    O --> P
+    P --> Q{Delivery succeeded?}
+    Q -->|Yes| R[Log success in delivery_log]
+    Q -->|No| S{Retries remaining?}
+    S -->|Yes| T[Retry with exponential backoff]
+    S -->|No| U[Try fallback channel]
 ```
 
 **Why priority-based queues?** A security alert (P0: "Someone logged in from a new device") must not wait behind 100K marketing emails (P3). Separate Kafka topics with dedicated consumer groups ensure high-priority notifications are processed within seconds.

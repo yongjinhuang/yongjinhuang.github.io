@@ -4,6 +4,55 @@ A digital wallet system must guarantee that money never appears or disappears --
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Mobile / Web Client]
+    LB[Load Balancer]
+    API[API Gateway]
+
+    subgraph Application Services
+        TxnSvc[Transaction Service]
+        WalletSvc[Wallet Service]
+        FraudSvc[Fraud Detection Service]
+        LedgerSvc[Ledger Service]
+        IdempSvc[Idempotency Service]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL\nWallets + Ledger)]
+        AuditDB[(Audit Log\nAppend-Only)]
+    end
+
+    subgraph External
+        PayProcessor[Payment Processor\nStripe / Plaid]
+    end
+
+    Kafka[Kafka Event Bus]
+
+    subgraph Downstream
+        NotifSvc[Notification Service]
+        AnalyticsSvc[Analytics]
+        ReconJob[Daily Reconciliation Job]
+    end
+
+    Client --> LB --> API
+    API --> TxnSvc
+    TxnSvc --> IdempSvc --> PG
+    TxnSvc --> FraudSvc
+    TxnSvc --> LedgerSvc --> PG
+    TxnSvc --> WalletSvc --> PG
+    WalletSvc --> PayProcessor
+    TxnSvc --> Kafka
+    Kafka --> NotifSvc
+    Kafka --> AnalyticsSvc
+    ReconJob --> PG
+    TxnSvc --> AuditDB
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                | Purpose                                                  | Why It Exists                                                                                                                      |
@@ -196,6 +245,53 @@ Relationships:
 9. **Notifications**: Notification service consumes the event and sends push/email to both sender and receiver.
 
 10. **Daily Reconciliation**: A batch job verifies that the sum of all `ledger_entries` across all wallets equals zero (total debits = total credits). Any discrepancy triggers an alert for immediate investigation.
+
+### P2P Transfer Flow
+
+```mermaid
+flowchart TD
+    A[User requests P2P transfer\nwith idempotency_key] --> B{Key exists in\nidempotency_keys?}
+    B -- Yes --> C[Return cached response_json]
+    B -- No --> D[Fraud scoring:\nvelocity, amount, device]
+    D --> E{Flagged?}
+    E -- Yes --> F[Block transaction]
+    E -- No --> G[Create transaction: status=pending\n+ idempotency_keys row atomically]
+    G --> H[Create ledger_entries:\nDEBIT sender + CREDIT receiver]
+    H --> I[Update wallet_balances:\ndecrement sender, increment receiver]
+    I --> J{Optimistic lock\nversion match?}
+    J -- No --> K[Retry with fresh version]
+    K --> I
+    J -- Yes --> L[Set transaction status=completed]
+    L --> M[Commit DB transaction]
+    M --> N[Publish Kafka event]
+    N --> O[Notification service:\nalert sender + receiver]
+```
+
+### Top-Up and Withdrawal Flow
+
+```mermaid
+flowchart TD
+    subgraph Top-Up
+        T1[User initiates top-up\nfrom payment_method] --> T2[Charge external source\nvia payment processor]
+        T2 --> T3{Charge successful?}
+        T3 -- Yes --> T4[Create transaction: type=topup]
+        T4 --> T5[Ledger: DEBIT external_source\nCREDIT user_wallet]
+        T5 --> T6[Increment available_amount]
+        T3 -- No --> T7[Transaction failed]
+    end
+
+    subgraph Withdrawal
+        W1[User requests withdrawal\nto bank account] --> W2[Check available_amount >= amount]
+        W2 --> W3{Sufficient funds?}
+        W3 -- No --> W4[Reject: insufficient balance]
+        W3 -- Yes --> W5[Reserve funds:\nincrement reserved_amount]
+        W5 --> W6[Initiate bank transfer\nvia payment processor]
+        W6 --> W7{Transfer confirmed?}
+        W7 -- Yes --> W8[Ledger: DEBIT user_wallet\nCREDIT external_destination]
+        W8 --> W9[Decrement available + reserved]
+        W7 -- No --> W10[Release reserved_amount]
+    end
+```
 
 ---
 

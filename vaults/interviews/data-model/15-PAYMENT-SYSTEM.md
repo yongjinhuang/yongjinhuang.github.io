@@ -2,6 +2,33 @@
 
 A payment system processes financial transactions between customers and merchants. The data model must guarantee correctness above all else: every cent must be accounted for via double-entry bookkeeping, every operation must be idempotent to handle retries safely, and the system must maintain a complete audit trail. Financial regulations (PCI-DSS, SOX) impose strict requirements on data handling, encryption, and retention.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client App] -->|PaymentIntent| LB[Load Balancer]
+    LB --> API[Payment API Service]
+    API -->|Validate merchant & method| PG[(PostgreSQL)]
+    API -->|Idempotency check| PG
+    API -->|Authorize / Capture| PP[Payment Processor<br/>Stripe / Adyen]
+    PP -->|Result| API
+    API -->|Write payment + ledger entries| PG
+    API -->|Enqueue webhook| Redis[(Redis Queue)]
+    Redis --> WW[Webhook Worker]
+    WW -->|POST event| Merchant[Merchant Server]
+    WW -->|Update delivery status| PG
+
+    subgraph Data Stores
+        PG
+        Redis
+    end
+
+    subgraph External
+        PP
+        Merchant
+    end
+```
+
 ## Table Responsibilities
 
 | Table               | Purpose                                 | Storage                  | Key Characteristic                                         |
@@ -214,6 +241,22 @@ Relationships:
 10. Merchant fulfills order based on webhook
 ```
 
+```mermaid
+flowchart TD
+    A[Client creates PaymentIntent<br/>with idempotency_key] --> B{Duplicate<br/>idempotency_key?}
+    B -->|Yes| C[Return existing payment result]
+    B -->|No| D[Validate merchant & payment_method]
+    D --> E[INSERT payment<br/>status = pending]
+    E --> F[Send authorization to processor]
+    F --> G{Approved?}
+    G -->|No| H[Update status = failed<br/>Fire webhook]
+    G -->|Yes| I[Update status = authorized<br/>Store processor_id]
+    I --> J[Capture payment<br/>status = captured]
+    J --> K[Create ledger_entries atomically:<br/>DEBIT customer liability<br/>CREDIT merchant receivable<br/>CREDIT platform fee]
+    K --> L[Fire webhook: payment.captured]
+    L --> M[Merchant fulfills order]
+```
+
 ### Processing a Refund
 
 ```
@@ -242,6 +285,18 @@ Relationships:
          │
          ▼
 7. Fire webhook_events: "refund.succeeded" to merchant
+```
+
+```mermaid
+flowchart TD
+    A[Merchant requests refund<br/>payment_id + amount] --> B{payment.status = captured<br/>AND refund within limit?}
+    B -->|No| B1[Reject request]
+    B -->|Yes| C[INSERT refund<br/>status = pending]
+    C --> D[Send refund to processor]
+    D --> E[Processor confirms]
+    E --> F[Update refund status = succeeded<br/>Update payment.amount_refunded]
+    F --> G[Create reverse ledger_entries:<br/>CREDIT customer liability<br/>DEBIT merchant receivable<br/>DEBIT platform fee]
+    G --> H[Fire webhook: refund.succeeded]
 ```
 
 **Why separate authorize and capture?** Hotels and car rentals authorize a hold amount at booking but capture a different amount at checkout (longer stay, damage, etc.). Separating these steps enables this common business pattern. For simple e-commerce, authorization and capture can happen in a single step.

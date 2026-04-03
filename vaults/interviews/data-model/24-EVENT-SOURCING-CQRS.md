@@ -2,6 +2,31 @@
 
 Event sourcing stores every state change as an immutable event rather than overwriting current state. CQRS (Command Query Responsibility Segregation) separates the write model (events) from the read model (projections). This data model captures the foundational tables needed to implement both patterns, including snapshot optimization and projection checkpoint tracking.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client / API] -->|Commands| CmdHandler[Command Handler<br/>Write Side]
+    Client -->|Queries| QueryAPI[Query API<br/>Read Side]
+
+    subgraph Write Side - Event Sourcing
+        CmdHandler --> AggLoad[Load Aggregate<br/>Snapshot + Events]
+        AggLoad --> EventStore[(events<br/>Append-Only Store)]
+        AggLoad --> Snapshots[(snapshots)]
+        CmdHandler -->|Append New Events| EventStore
+    end
+
+    EventStore -->|Publish| MsgBus[Message Bus / CDC]
+
+    subgraph Read Side - CQRS
+        MsgBus --> ProjectionEngine[Projection Engine]
+        ProjectionEngine --> Checkpoints[(projection_checkpoints)]
+        ProjectionEngine --> ReadModels[(read_projections<br/>Denormalized Views)]
+    end
+
+    QueryAPI --> ReadModels
+```
+
 ---
 
 ## Table Responsibilities
@@ -157,6 +182,24 @@ Note: These are not traditional FK relationships. Event sourcing uses aggregate_
 
 7. **Publish events** -- Successfully appended events are published to subscribers (message bus, CDC, or polling).
 
+```mermaid
+flowchart TD
+    A[Command received<br/>e.g. PlaceOrder] --> B[Find latest snapshot for<br/>aggregate_type + aggregate_id]
+    B --> C[Load events with<br/>version > snapshot.version]
+    C --> D[Replay events on top<br/>of snapshot state]
+    D --> E{Business rules<br/>valid?}
+    E -->|No| F[Reject command]
+    E -->|Yes| G[Generate new events<br/>e.g. OrderPlaced, InventoryReserved]
+    G --> H{Optimistic concurrency:<br/>next version exists?}
+    H -->|Conflict| I[Retry command<br/>with fresh state]
+    I --> B
+    H -->|OK| J[Append events to<br/>events table]
+    J --> K{Event count since<br/>last snapshot > threshold?}
+    K -->|Yes| L[Write new snapshot]
+    K -->|No| M[Publish events to<br/>message bus / CDC]
+    L --> M
+```
+
 ### Read Path (Query Side)
 
 8. **Event consumption** -- The projection engine reads `projection_checkpoints` to find its last processed `global_position`.
@@ -166,6 +209,20 @@ Note: These are not traditional FK relationships. Event sourcing uses aggregate_
 10. **Checkpoint update** -- After processing a batch, `projection_checkpoints.last_processed_position` is updated atomically with the projection writes (same transaction for consistency).
 
 11. **Serve queries** -- API queries read directly from `read_projections`. These are eventually consistent with the write side (typical lag: milliseconds to low seconds).
+
+```mermaid
+flowchart TD
+    A[Projection engine starts] --> B[Read projection_checkpoints<br/>get last_processed_position]
+    B --> C[Fetch events where<br/>global_position > last_processed_position]
+    C --> D{New events<br/>available?}
+    D -->|No| E[Wait / Poll]
+    E --> C
+    D -->|Yes| F[Process events in order<br/>Update read_projections tables]
+    F --> G[Update checkpoint<br/>atomically with projection writes]
+    G --> C
+    H[API Query] --> I[Read directly from<br/>read_projections]
+    I --> J[Return eventually<br/>consistent results]
+```
 
 ---
 

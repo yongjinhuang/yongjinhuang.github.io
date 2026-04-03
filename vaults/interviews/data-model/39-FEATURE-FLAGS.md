@@ -4,6 +4,44 @@ A feature flag system enables teams to decouple deployment from release by toggl
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Admin[Admin Dashboard]
+    AppServer[Application Server]
+    SDK[Client SDK<br/>Local Cache]
+
+    subgraph Flag Service
+        API[Flag Management API]
+        Evaluator[Flag Evaluator]
+        StreamSvc[Streaming Service]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL<br/>flags, environments,<br/>segments, experiments)]
+        Redis[(Redis<br/>Pub/Sub + SDK connections)]
+    end
+
+    subgraph Experimentation
+        EventCollector[Event Collector]
+        StatsEngine[Statistical Analysis Engine]
+    end
+
+    Admin -->|CRUD flags & rules| API
+    API --> PG
+    API -->|publish change| Redis
+    Redis -->|push update| StreamSvc
+    StreamSvc -->|stream flag config| SDK
+    AppServer -->|getFlag call| SDK
+    SDK -->|evaluate locally| Evaluator
+    SDK -->|report experiment events| EventCollector
+    EventCollector --> StatsEngine
+    StatsEngine --> PG
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                 | Purpose                                  | Why It Exists                                                                                                 |
@@ -245,6 +283,29 @@ Relationships:
 7. **Experimentation**: When an experiment is running, the SDK reports which variation each user received and whether the metric event occurred. Results are aggregated server-side with statistical significance testing (p-values, confidence intervals).
 
 8. **Audit Trail**: Every change to flags, segments, or environments creates an `audit_log` entry with the old and new state. This enables one-click rollback and regulatory compliance.
+
+```mermaid
+flowchart TD
+    A[Admin creates/updates flag] --> B[Save flag_environments config<br/>Increment version counter]
+    B --> C[Broadcast via Redis Pub/Sub]
+    C --> D[Connected SDKs receive update<br/>within 500ms]
+    D --> E[SDK updates local cache]
+
+    F[App calls getFlag key, user] --> G{Flag enabled?}
+    G -->|No| H[Return off_variation]
+    G -->|Yes| I[Evaluate targeting_rules in order]
+    I --> J{Rule matches<br/>user attributes?}
+    J -->|Yes| K{Check segment<br/>membership?}
+    K -->|Match| L[Apply rollout percentage<br/>consistent hashing]
+    K -->|No match| J
+    J -->|No rules match| M[Return fallthrough_variation]
+    L --> N[Return matched variation]
+
+    O{Experiment running?} -->|Yes| P[Report variation + metric<br/>to event collector]
+    N --> O
+    P --> Q[Aggregate results<br/>statistical significance testing]
+    Q --> R[Store results_json<br/>p-values, confidence intervals]
+```
 
 ---
 

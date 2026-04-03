@@ -2,6 +2,35 @@
 
 A distributed task scheduler orchestrates complex workflows composed of interdependent tasks across a fleet of workers. The data model must represent workflow DAGs (Directed Acyclic Graphs), track execution state reliably through failures and retries, and maintain a complete event history for debugging and replay. The core design principle is event sourcing: the workflow's state is derived from an append-only event log, enabling full auditability and deterministic replay.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client / API] -->|Submit Workflow| API[API Gateway]
+    API --> Scheduler[Scheduler Service]
+    Scheduler --> PG[(PostgreSQL)]
+    Scheduler --> TQ[Task Queues<br/>Redis / SQS]
+
+    subgraph Workers
+        W1[Worker Pool A<br/>CPU-intensive]
+        W2[Worker Pool B<br/>I/O tasks]
+        W3[Worker Pool C<br/>General]
+    end
+
+    TQ --> W1
+    TQ --> W2
+    TQ --> W3
+    W1 -->|Heartbeat + Results| Scheduler
+    W2 -->|Heartbeat + Results| Scheduler
+    W3 -->|Heartbeat + Results| Scheduler
+
+    CronSvc[Cron Scheduler] -->|Poll next_trigger_at| PG
+    CronSvc -->|Trigger Workflows| Scheduler
+
+    Scheduler -->|Event Sourcing| EventLog[(workflow_events<br/>Append-Only Log)]
+    Scheduler -->|State Reconstruction| EventLog
+```
+
 ## Table Responsibilities
 
 | Table                    | Purpose                                     | Storage                                     | Key Characteristic                    |
@@ -209,6 +238,18 @@ Relationships:
 8. Return execution ID to client
 ```
 
+```mermaid
+flowchart TD
+    A[Client submits workflow<br/>workflow_type, namespace_id, input_json, run_id] --> B[Look up workflow_definitions<br/>namespace + type + latest version]
+    B --> C{run_id already exists?}
+    C -->|Yes| D[Return existing execution<br/>Idempotent response]
+    C -->|No| E[INSERT workflow_executions<br/>status = running]
+    E --> F[Log WorkflowStarted event]
+    F --> G[Parse definition_json DAG<br/>Identify initial tasks with no dependencies]
+    G --> H[For each initial task:<br/>INSERT tasks, enqueue onto task_queue<br/>Log TaskScheduled event]
+    H --> I[Return execution ID to client]
+```
+
 ### Task Execution (Worker Loop)
 
 ```
@@ -260,6 +301,23 @@ Relationships:
     └────┴───────────┘
 ```
 
+```mermaid
+flowchart TD
+    A[Worker polls task_queue<br/>for matching task_type] --> B[Dequeue highest-priority task<br/>Set status=running, worker_id=self<br/>Log TaskStarted event]
+    B --> C[Execute task logic with input_json]
+    C --> D{Success?}
+    D -->|Yes| E[Update task: status=success<br/>Log TaskCompleted event]
+    E --> F{All downstream<br/>dependencies complete?}
+    F -->|Yes, more tasks| G[Schedule downstream tasks<br/>INSERT + enqueue<br/>Log TaskScheduled event]
+    F -->|No more tasks| H[Workflow complete<br/>Update execution: status=completed<br/>Log WorkflowCompleted event]
+    G --> A
+    D -->|No| I{attempt < max_attempts?}
+    I -->|Yes| J[Increment attempt<br/>Compute backoff delay<br/>Re-enqueue task<br/>Log TaskRetried event]
+    J --> A
+    I -->|No| K[Task permanently failed<br/>Log TaskFailed event]
+    K --> L[Update execution: status=failed<br/>Log WorkflowFailed event<br/>Cancel running sibling tasks]
+```
+
 ### Cron Schedule Trigger
 
 ```
@@ -285,6 +343,24 @@ Relationships:
     │    Compute next_trigger_at from cron_expression + timezone
     │
     └──► (follows steps 5-8 from "Submitting a Workflow")
+```
+
+```mermaid
+flowchart TD
+    A[Timer fires / poll next_trigger_at] --> B[Find schedules where<br/>next_trigger_at <= now AND is_paused = false]
+    B --> C[For each due schedule]
+    C --> D{Check overlap_policy}
+    D -->|skip| E{Previous execution<br/>still running?}
+    E -->|Yes| F[Skip this trigger]
+    E -->|No| G[Proceed]
+    D -->|allow| G
+    D -->|buffer| H[Queue trigger for after<br/>current execution finishes]
+    D -->|cancel_other| I[Cancel running execution]
+    I --> G
+    G --> J[Generate run_id from<br/>schedule_id + trigger_time]
+    J --> K[Create workflow_execution<br/>with workflow_input_json]
+    K --> L[Update schedule:<br/>last_triggered_at = now<br/>Compute next_trigger_at]
+    L --> M[Continue with workflow<br/>submission steps 5-8]
 ```
 
 **Why enqueue tasks onto a separate task_queue instead of having workers query the tasks table directly?** Direct polling of the tasks table by thousands of workers would create extreme contention (hot rows, lock conflicts). A message queue (Redis, SQS, or Temporal's built-in task queue) provides efficient fan-out, visibility timeouts (task auto-requeues if the worker crashes), and priority ordering without database contention.

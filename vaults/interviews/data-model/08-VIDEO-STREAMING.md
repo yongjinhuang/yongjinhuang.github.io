@@ -2,6 +2,61 @@
 
 A video streaming platform handles two fundamentally different workloads: the upload pipeline (ingest, transcode, store) and the streaming pipeline (serve adaptive bitrate video segments via CDN). The data model reflects this split — PostgreSQL for metadata and social features, Cassandra for high-volume per-user data like watch history, and S3/CDN for the actual video segments.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    subgraph Clients
+        WEB[Web Client]
+        MOB[Mobile Client]
+    end
+
+    subgraph Upload Pipeline
+        API[API Server]
+        S3_UP[S3 Upload<br/>Pre-signed URL]
+        KAFKA[Kafka]
+        TRANS[Transcoding Workers]
+    end
+
+    subgraph Storage
+        PG[(PostgreSQL<br/>Metadata)]
+        CASS[(Cassandra<br/>Watch History)]
+        S3[S3<br/>Video Segments]
+    end
+
+    subgraph Streaming Pipeline
+        CDN[CDN<br/>Edge Cache]
+        ABR[ABR Algorithm<br/>on Client]
+    end
+
+    subgraph Async Services
+        COUNTER[Counter Service]
+        RECOM[Recommendation Engine]
+    end
+
+    WEB -->|Upload| API
+    MOB -->|Upload| API
+    API -->|Pre-signed URL| S3_UP
+    S3_UP -->|Event Notification| KAFKA
+    KAFKA --> TRANS
+    TRANS -->|Segments + Manifests| S3
+    TRANS -->|Metadata| PG
+    API -->|Video Metadata| PG
+
+    WEB -->|Stream| CDN
+    MOB -->|Stream| CDN
+    CDN -->|Cache Miss| S3
+    ABR -->|Select Resolution| CDN
+
+    KAFKA --> COUNTER
+    KAFKA --> RECOM
+    COUNTER -->|Update view_count| PG
+    RECOM -->|Read| CASS
+    WEB -->|Watch Events| KAFKA
+    MOB -->|Watch Events| KAFKA
+    KAFKA -->|Write History| CASS
+```
+
 ## Table Responsibilities
 
 | Table               | Purpose                            | Storage    | Key Characteristic                   |
@@ -214,6 +269,31 @@ Relationships:
 7. CDN pulls segments on first viewer request (pull-through cache)
 ```
 
+```mermaid
+flowchart TD
+    A[Creator initiates upload] --> B[Server generates pre-signed S3 URL]
+    B --> C[INSERT into videos<br/>status = uploading]
+    C --> D[Client uploads directly to S3<br/>Multipart upload - 5MB chunks]
+    D --> E[S3 triggers event notification]
+    E --> F[Publish to Kafka:<br/>video.uploaded]
+    F --> G[Transcoding Workers consume event]
+    G --> G1[UPDATE videos<br/>status = processing]
+    G --> G2[Download original from S3]
+    G2 --> H{Transcode to multiple resolutions}
+    H --> H1[360p segments + manifest]
+    H --> H2[720p segments + manifest]
+    H --> H3[1080p segments + manifest]
+    H --> H4[4K segments + manifest]
+    H1 --> I[Upload segments to S3]
+    H2 --> I
+    H3 --> I
+    H4 --> I
+    I --> J[Generate thumbnail]
+    J --> K[INSERT video_encodings<br/>per resolution]
+    K --> L[UPDATE videos<br/>status = published]
+    L --> M[CDN pulls segments<br/>on first viewer request]
+```
+
 ### Streaming Pipeline (Adaptive Bitrate)
 
 ```
@@ -249,6 +329,31 @@ Relationships:
    ├─ UPDATE watch_history (resume_position, watched_duration)
    ├─ Increment view_count via counter service
    └─ Feed data to recommendation engine
+```
+
+```mermaid
+flowchart TD
+    A[User clicks play] --> B[Client requests video metadata<br/>videos + video_encodings]
+    B --> C[Client fetches HLS manifest<br/>from CDN]
+    C --> D[ABR Algorithm]
+    D --> D1[Measure current bandwidth]
+    D1 --> D2{Select resolution}
+    D2 -->|Fast WiFi| E1[1080p / 4K]
+    D2 -->|Slow cellular| E2[360p / 720p]
+    E1 --> F[Request segment from CDN]
+    E2 --> F
+    F --> G{CDN Cache?}
+    G -->|Hit| H1[Return immediately ~10ms]
+    G -->|Miss| H2[Fetch from S3 origin]
+    H2 --> H3[Cache and return]
+    H1 --> I[Client plays segment]
+    H3 --> I
+    I --> J[Monitor bandwidth continuously]
+    J -->|Bandwidth changes| D
+    I --> K[Async: log watch event to Kafka]
+    K --> K1[UPDATE watch_history]
+    K --> K2[Increment view_count]
+    K --> K3[Feed recommendation engine]
 ```
 
 **Why pre-signed URLs for upload?** Routing video file bytes through app servers would consume enormous bandwidth and memory. Pre-signed URLs let clients upload directly to S3, keeping app servers free for metadata operations. The pre-signed URL expires after a short time for security.

@@ -4,6 +4,52 @@ A product analytics platform ingests billions of user events, resolves user iden
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    WebSDK[Web SDK]
+    iOSSDK[iOS SDK]
+    AndroidSDK[Android SDK]
+
+    subgraph Ingestion Layer
+        Collector[Collector / Validator]
+        Kafka[Kafka]
+    end
+
+    subgraph Stream Processing
+        StreamProc[Stream Processor]
+        IdentityRes[Identity Resolution]
+        Sessionizer[Sessionization]
+        Dedup[Deduplication]
+    end
+
+    subgraph Data Stores
+        ClickHouse[(ClickHouse\nevents + profiles\n+ aggregates)]
+        Redis[(Redis\nIdentity Graph)]
+    end
+
+    subgraph Query Layer
+        QuerySvc[Query Service]
+        Dashboard[Dashboard / API]
+    end
+
+    WebSDK --> Collector
+    iOSSDK --> Collector
+    AndroidSDK --> Collector
+    Collector -- Enrich: geo, device --> Kafka
+    Kafka --> StreamProc
+    StreamProc --> IdentityRes
+    IdentityRes --> Redis
+    StreamProc --> Sessionizer
+    StreamProc --> Dedup
+    StreamProc --> ClickHouse
+    ClickHouse --> QuerySvc
+    QuerySvc --> Dashboard
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                      | Purpose                          | Storage                           | Why It Exists                                                                 |
@@ -237,6 +283,49 @@ user_profiles   1───* events           (one user produces many events)
     - **Retention** (% of users who return in week 2, 3, 4): query events grouped by first_seen cohort
     - **Cohort analysis**: query user_profiles for trait-based segments, then join with events
     - **Experiment results**: query experiment_assignments, compute conversion rate per variant, run statistical significance test
+
+### Event Ingestion Pipeline
+
+```mermaid
+flowchart TD
+    A[SDK captures user action] --> B[Batch events every 10-30s]
+    B --> C[Send to Collector endpoint]
+    C --> D[Validate schema]
+    D --> E[Geo-IP lookup]
+    E --> F[Parse user agent]
+    F --> G[Adjust clock skew]
+    G --> H[Write to Kafka]
+    H --> I[Stream Processor]
+    I --> J[Query Redis Identity Graph]
+    J --> K{anonymous_id\nmapped?}
+    K -- Yes --> L[Set distinct_id from mapping]
+    K -- No --> M[Use anonymous_id\nas temporary distinct_id]
+    L --> N[Assign session_id\n30-min inactivity window]
+    M --> N
+    N --> O{Duplicate\ninsert_id?}
+    O -- Yes --> P[Drop event]
+    O -- No --> Q[Batch insert to ClickHouse]
+    Q --> R[Update user_profiles]
+    Q --> S[Materialized view updates\nevent_counts_minutely]
+```
+
+### Identity Resolution Flow
+
+```mermaid
+flowchart TD
+    A[identify call arrives:\nanonymous_id + user_id] --> B[Store in Redis:\nanonymous_id -> user_id]
+    B --> C[Store in Redis:\ndevice_id -> user_id]
+    C --> D[Retroactively update\nrecent events]
+    D --> E[Add anonymous_id to\nuser_profiles.anonymous_ids array]
+
+    F[New event arrives] --> G[Look up anonymous_id in Redis]
+    G --> H{Mapping exists?}
+    H -- Yes --> I[Resolve to canonical distinct_id]
+    H -- No --> J[Use anonymous_id as distinct_id]
+
+    K[Same user logs in on Device B] --> L[Store anonymous_id_B -> user_id]
+    L --> M[Events from both devices\nnow attributed to same user]
+```
 
 ---
 

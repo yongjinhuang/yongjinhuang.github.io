@@ -2,6 +2,39 @@
 
 An e-commerce inventory system must handle the critical challenge of selling physical goods without overselling. The core tension is between showing accurate availability to millions of concurrent browsers while ensuring that checkout does not sell more units than exist. This model uses a reservation-based pattern with TTLs to hold inventory during checkout without permanently locking it.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    User[User / Browser] --> LB[Load Balancer]
+    LB --> API[API Gateway]
+
+    subgraph Application Services
+        CatalogSvc[Catalog Service]
+        CartSvc[Cart Service]
+        CheckoutSvc[Checkout Service]
+        InventorySvc[Inventory Service]
+        OrderSvc[Order Service]
+    end
+
+    API --> CatalogSvc
+    API --> CartSvc
+    API --> CheckoutSvc
+
+    CatalogSvc --> PG[(PostgreSQL<br/>products, skus)]
+    CartSvc --> PG
+    CheckoutSvc --> InventorySvc
+    CheckoutSvc --> PaymentGW[Payment Gateway<br/>Stripe]
+    CheckoutSvc --> OrderSvc
+
+    InventorySvc --> PG
+    InventorySvc -->|Optimistic Lock| InvTable[(inventory +<br/>inventory_reservations)]
+    OrderSvc --> PG
+
+    BgJob[Background Job<br/>Reservation Expiry] -->|Sweep expired TTLs| InvTable
+    Warehouse[Warehouse / Fulfillment] --> OrderSvc
+```
+
 ---
 
 ## Table Responsibilities
@@ -225,6 +258,28 @@ orders            1───* order_items          (one order has many line item
 7. **Fulfillment** -- Warehouse picks, packs, and ships items. Order_items status updated to shipped, then delivered. Order status follows the latest item status.
 
 8. **Cancellation** -- If an order is cancelled before shipping, inventory is restored: available_qty incremented, sold_qty decremented. Refund is issued via the payment processor.
+
+```mermaid
+flowchart TD
+    A[User browses products] --> B[Query products + skus<br/>Check available_qty > 0]
+    B --> C[Add to cart<br/>Create cart_item with price_snapshot<br/>No inventory reserved yet]
+    C --> D[User initiates checkout]
+    D --> E[For each cart item:<br/>Create inventory_reservation<br/>TTL = 15 minutes]
+    E --> F{available_qty<br/>sufficient?}
+    F -->|No| G[Show Out of Stock]
+    F -->|Yes| H[Decrement available_qty<br/>Increment reserved_qty<br/>Optimistic lock on version]
+    H --> I[Process payment<br/>Create order with idempotency_key]
+    I --> J{Payment<br/>successful?}
+    J -->|No| K[Release reservation<br/>Restore available_qty]
+    J -->|Yes| L[Update order status = paid<br/>Reservation status = confirmed]
+    L --> M[Decrement reserved_qty<br/>Increment sold_qty]
+    M --> N[Create order_items<br/>with warehouse + unit_price]
+    N --> O[Fulfillment:<br/>pick, pack, ship]
+    O --> P[Update order_items<br/>shipped then delivered]
+
+    Q[Background job] --> R{Scan reservations<br/>expires_at < NOW?}
+    R -->|Expired| S[Release: status=released<br/>Restore available_qty<br/>Decrement reserved_qty]
+```
 
 ---
 

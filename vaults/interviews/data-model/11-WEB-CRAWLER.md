@@ -2,6 +2,58 @@
 
 A web crawler systematically discovers and downloads web pages by following links. The data model must manage a massive URL frontier, respect robots.txt policies, deduplicate content via fingerprinting, and track link structure. The system is write-heavy with billions of URLs and requires politeness controls to avoid overwhelming individual domains.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    subgraph Seed & Scheduling
+        SEED[Seed URLs]
+        SCHED[URL Scheduler<br/>Priority Queue]
+    end
+
+    subgraph Frontier
+        FRONTIER[(URL Frontier<br/>PostgreSQL<br/>Partitioned by Domain)]
+    end
+
+    subgraph Politeness & DNS
+        ROBOTS[(Robots Rules<br/>Cache)]
+        DNS[(DNS Cache<br/>Redis)]
+    end
+
+    subgraph Crawl Workers
+        W1[Worker 1]
+        W2[Worker 2]
+        W3[Worker N]
+    end
+
+    subgraph Processing
+        DEDUP[Content Dedup<br/>SimHash]
+        PARSER[HTML Parser<br/>Link Extractor]
+    end
+
+    subgraph Storage
+        PAGES[(Crawled Pages<br/>PostgreSQL)]
+        S3[S3<br/>Raw HTML]
+        LINKS[(Outlinks<br/>PostgreSQL)]
+    end
+
+    SEED --> FRONTIER
+    SCHED -->|Select highest priority| FRONTIER
+    FRONTIER --> ROBOTS
+    ROBOTS -->|Allowed?| DNS
+    DNS --> W1
+    DNS --> W2
+    DNS --> W3
+    W1 -->|HTTP GET| DEDUP
+    W2 -->|HTTP GET| DEDUP
+    W3 -->|HTTP GET| DEDUP
+    DEDUP -->|New content| PAGES
+    PAGES --> S3
+    DEDUP --> PARSER
+    PARSER --> LINKS
+    LINKS -->|New URLs| FRONTIER
+```
+
 ## Table Responsibilities
 
 | Table             | Purpose                                           | Storage                            | Key Characteristic                             |
@@ -205,6 +257,33 @@ Relationships:
          ▼
 11. Update url_frontier: status='done', last_crawled_at=now(),
     next_crawl_at = now() + change_frequency
+```
+
+```mermaid
+flowchart TD
+    A[Scheduler selects highest-priority URLs<br/>status=pending, next_crawl_at <= now] --> B[Group URLs by domain<br/>Enforce politeness delays]
+    B --> C[Check robots_rules for domain]
+    C --> D{Allowed by<br/>robots.txt?}
+    D -->|No| D1["Mark status = done<br/>Skip permanently"]
+    D -->|Yes| E{DNS cache hit?}
+    E -->|Yes| F[Use cached IP]
+    E -->|No| G[DNS lookup<br/>Store in dns_cache with TTL]
+    G --> F
+    F --> H["HTTP GET page<br/>Set status = crawling"]
+    H --> I[Compute SimHash of content]
+    I --> J{Content hash<br/>changed?}
+    J -->|No| K[Update last_crawled_at<br/>Skip storage]
+    J -->|Yes| L[INSERT into crawled_pages]
+    L --> M[Parse HTML, extract links]
+    M --> N[INSERT into outlinks]
+    N --> O{For each outlink}
+    O --> P[Normalize URL]
+    P --> Q{Already in<br/>frontier?}
+    Q -->|Yes| R[Skip]
+    Q -->|No| S["INSERT with priority<br/>depth = source_depth + 1"]
+    K --> T["Update url_frontier<br/>status=done, next_crawl_at"]
+    S --> T
+    R --> T
 ```
 
 **Why check content_hash before storing?** Many pages do not change between crawls. Comparing SimHash fingerprints avoids storing redundant copies and lets the crawler learn each page's actual change frequency, dynamically adjusting `next_crawl_at` to avoid wasting resources on static pages.

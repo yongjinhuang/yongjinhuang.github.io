@@ -2,6 +2,27 @@
 
 A collaborative editor allows multiple users to simultaneously edit a document with real-time visibility of each other's changes. The data model must support an append-only operation log for conflict resolution (Operational Transformation or CRDT), periodic snapshots for fast document loading, and fine-grained access control. The core challenge is that concurrent edits from different clients can arrive in different orders, and the system must converge to the same final state regardless of arrival order.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client1[Client A] <-->|WebSocket| LB[Load Balancer]
+    Client2[Client B] <-->|WebSocket| LB
+    ClientN[Client N] <-->|WebSocket| LB
+    LB <--> CollabService[Collaboration Service<br/>OT Transform Engine]
+    CollabService -->|Append ops| PG[(PostgreSQL<br/>document_ops<br/>documents<br/>permissions)]
+    CollabService -->|Read snapshot| PG
+    CollabService -->|Broadcast ops| PubSub[Pub/Sub<br/>Redis / NATS]
+    PubSub --> LB
+    SnapJob[Snapshot Worker<br/>Background Job] --> PG
+    SnapJob -->|Large docs| S3[(S3<br/>document_snapshots)]
+
+    subgraph Data Stores
+        PG
+        S3
+    end
+```
+
 ## Table Responsibilities
 
 | Table                  | Purpose                               | Storage                            | Key Characteristic                                       |
@@ -174,6 +195,18 @@ Relationships:
 8. Client establishes WebSocket connection for real-time updates
 ```
 
+```mermaid
+flowchart TD
+    A[Client opens document<br/>with doc_id] --> B{User authorized?}
+    B -->|No| C[Return 403 Forbidden]
+    B -->|Yes| D[Fetch documents row:<br/>snapshot_revision, latest_revision]
+    D --> E[Load snapshot at<br/>snapshot_revision]
+    E --> F[Fetch ops from<br/>snapshot_revision+1 to latest_revision]
+    F --> G[Apply each op sequentially<br/>to snapshot content]
+    G --> H[Return document content +<br/>latest_revision to client]
+    H --> I[Client establishes<br/>WebSocket connection]
+```
+
 ### Editing (Write Path - OT)
 
 ```
@@ -222,6 +255,23 @@ Relationships:
     pending local ops → apply to local document
 ```
 
+```mermaid
+flowchart TD
+    A[Client makes local edit<br/>Generate op in Delta format] --> B[Apply op optimistically<br/>to local document]
+    B --> C[Send op via WebSocket:<br/>doc_id, ops_json, client_revision]
+    C --> D[Server acquires<br/>document-level lock]
+    D --> E{client_rev ==<br/>latest_rev?}
+    E -->|Yes| F[Op applies cleanly]
+    E -->|No| G[Transform op against<br/>concurrent ops via OT]
+    F --> H[Assign next revision<br/>Append to document_ops]
+    G --> H
+    H --> I[Update documents.latest_revision]
+    I --> J[Release document lock]
+    J --> K[Send ACK to originating client]
+    J --> L[Broadcast transformed op<br/>to all other clients]
+    L --> M[Other clients: transform against<br/>pending local ops, apply]
+```
+
 ### Snapshotting (Background)
 
 ```
@@ -241,6 +291,15 @@ Relationships:
           ▼
 16. INSERT into document_snapshots
     Update documents.snapshot_revision
+```
+
+```mermaid
+flowchart TD
+    A[Background job checks:<br/>latest_revision - snapshot_revision > 100?] --> B{Enough new ops?}
+    B -->|No| C[Skip]
+    B -->|Yes| D[Load current snapshot +<br/>replay ops to latest_revision]
+    D --> E[Serialize full document state]
+    E --> F[INSERT into document_snapshots<br/>Update documents.snapshot_revision]
 ```
 
 **Why a document-level lock during op processing?** OT requires strict sequential processing of operations for a single document. If two ops are processed concurrently, the revision number assignment would race. A per-document lock (not a global lock) allows different documents to be processed in parallel while ensuring sequential consistency within each document. The lock is held for microseconds (just the transform + append), so contention is minimal even for heavily edited documents.

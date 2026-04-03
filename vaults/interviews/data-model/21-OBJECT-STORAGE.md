@@ -2,6 +2,36 @@
 
 An object storage system stores arbitrary binary objects (files) organized into buckets (namespaces) with rich metadata, versioning, and lifecycle management. The data model separates metadata (object name, size, permissions) from data (the actual bytes), enabling independent scaling of the metadata tier and the data tier. Objects are split into chunks and erasure-coded across multiple data nodes for durability, achieving 99.999999999% (11 nines) durability without triple replication.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client App] -->|PUT/GET/DELETE| LB[Load Balancer]
+    LB --> API[S3 API Service]
+    API -->|Auth: ACL + IAM| AuthService[Auth Service]
+    API -->|Read/write metadata| MetaDB[(PostgreSQL<br/>object_metadata<br/>buckets)]
+    API -->|Write fragments| DN1[Data Node 1]
+    API -->|Write fragments| DN2[Data Node 2]
+    API -->|Write fragments| DNN[Data Node N]
+    API -->|Erasure coding| EC[Erasure Coding<br/>RS 10,4]
+
+    GC[Garbage Collector<br/>Background] --> MetaDB
+    GC -->|Delete fragments| DN1
+    GC -->|Delete fragments| DN2
+    Lifecycle[Lifecycle Manager<br/>Background] --> MetaDB
+    Lifecycle -->|Transition storage class| DN1
+
+    subgraph Data Tier
+        DN1
+        DN2
+        DNN
+    end
+
+    subgraph Metadata Tier
+        MetaDB
+    end
+```
+
 ## Table Responsibilities
 
 | Table                 | Purpose                                | Storage                        | Key Characteristic                                  |
@@ -190,6 +220,24 @@ Relationships:
 11. Return 200 OK with ETag
 ```
 
+```mermaid
+flowchart TD
+    A[Client sends PUT:<br/>bucket, key, data, metadata] --> B[Validate bucket, auth,<br/>size limits]
+    B --> C[Compute checksum<br/>verify against client checksum]
+    C --> D[Split data into 64MB chunks]
+    D --> E["Erasure code each chunk:<br/>RS(10,4) = 14 fragments"]
+    E --> F[Write 14 fragments to<br/>14 different data nodes]
+    F --> G{Write quorum:<br/>11 of 14 ACKs?}
+    G -->|No| H[Retry / fail]
+    G -->|Yes| I[Build data_location_json]
+    I --> J[INSERT object_metadata<br/>or new version]
+    J --> K{Versioning enabled?}
+    K -->|Yes| L[Previous version<br/>remains accessible]
+    K -->|No| M[Previous version marked<br/>for garbage collection]
+    L --> N[Return 200 OK with ETag]
+    M --> N
+```
+
 ### GET Object (Read Path)
 
 ```
@@ -229,6 +277,21 @@ Relationships:
    Content-Length headers from object_metadata
 ```
 
+```mermaid
+flowchart TD
+    A[Client sends GET:<br/>bucket, key, version_id] --> B[Lookup object_metadata]
+    B --> C{Found and not<br/>a delete marker?}
+    C -->|No| D[Return 404 Not Found]
+    C -->|Yes| E[Parse data_location_json]
+    E --> F["Read K of N fragments<br/>(10 of 14) in parallel"]
+    F --> G{All K fragments<br/>available?}
+    G -->|Yes| H[Decode directly]
+    G -->|No| I[Reconstruct missing via<br/>erasure coding<br/>tolerate up to 4 missing]
+    I --> H
+    H --> J[Assemble chunks into<br/>complete object]
+    J --> K[Stream response with<br/>Content-Type, ETag headers]
+```
+
 ### DELETE Object
 
 ```
@@ -258,6 +321,17 @@ Relationships:
    - Delete data fragments from data nodes
    - Remove object_metadata entries
    - Reclaim storage
+```
+
+```mermaid
+flowchart TD
+    A[Client sends DELETE:<br/>bucket, key] --> B[Check authorization]
+    B --> C{Versioning enabled?}
+    C -->|Yes| D[INSERT delete marker<br/>as new version<br/>Data still accessible via version_id]
+    C -->|No| E[Mark object_metadata<br/>as deleted - logical delete]
+    D --> F[Return 204 No Content]
+    E --> F
+    F --> G[Async garbage collector:<br/>Find deleted/superseded objects<br/>Delete fragments from data nodes<br/>Remove metadata entries<br/>Reclaim storage]
 ```
 
 **Why erasure coding instead of triple replication?** Triple replication stores 3 copies = 3x storage overhead for 2-failure tolerance. RS(10,4) erasure coding stores 14 fragments of a 10-fragment object = 1.4x storage overhead for 4-failure tolerance. At exabyte scale, the difference between 3x and 1.4x overhead is enormous (petabytes of saved storage). The trade-off is CPU cost for encoding/decoding and slightly higher read latency (must read 10 fragments and decode vs. reading 1 replica).

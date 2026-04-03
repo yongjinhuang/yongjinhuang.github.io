@@ -4,6 +4,55 @@ A booking and reservation system must solve the double-booking problem: two gues
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Guest / Host Client]
+    LB[Load Balancer]
+    API[API Gateway]
+
+    subgraph Application Services
+        SearchSvc[Search Service]
+        BookingSvc[Booking Service]
+        PricingSvc[Pricing Service]
+        WaitlistSvc[Waitlist Service]
+        HoldSvc[Hold Manager]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL)]
+        Cache[(Redis Cache)]
+        GeoIdx[(Geo Index)]
+    end
+
+    subgraph Background Jobs
+        HoldExpiry[Hold Expiry Worker]
+        WaitlistNotifier[Waitlist Notifier]
+    end
+
+    PaymentGW[Payment Gateway]
+
+    Client --> LB --> API
+    API --> SearchSvc
+    API --> BookingSvc
+    API --> PricingSvc
+    API --> WaitlistSvc
+    SearchSvc --> GeoIdx
+    SearchSvc --> Cache
+    SearchSvc --> PG
+    BookingSvc --> HoldSvc
+    HoldSvc --> PG
+    BookingSvc --> PaymentGW
+    BookingSvc --> PG
+    PricingSvc --> PG
+    WaitlistSvc --> PG
+    HoldExpiry --> PG
+    WaitlistNotifier --> PG
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                | Purpose                                      | Why It Exists                                                                     |
@@ -243,6 +292,50 @@ holds          1───* availability       (one hold marks multiple dates as 
    - Notify top-priority waitlisted guests; set notified_at and status=notified
 
 7. **Waitlist conversion** -- Notified guest has a time window (e.g., 4 hours) to book. If they do, waitlist status=converted. If they do not, notify the next guest.
+
+### Search and Booking Flow
+
+```mermaid
+flowchart TD
+    A[Guest searches by location, dates, guests] --> B[Geo-query listings within radius]
+    B --> C[Filter by availability, max_guests, amenities]
+    C --> D[Return ranked results]
+    D --> E[Guest selects listing]
+    E --> F[Compute per-night pricing via pricing_rules]
+    F --> G[Guest clicks Reserve]
+    G --> H[Create hold with 15-min TTL]
+    H --> I{UPDATE availability\nWHERE status=available\nAND version matches}
+    I -- Row count matches --> J[Hold placed successfully]
+    I -- Row count mismatch --> K[Dates unavailable - rollback]
+    J --> L[Guest enters payment details]
+    L --> M[Charge via payment processor]
+    M --> N[Create booking record]
+    N --> O[UPDATE availability: status=booked]
+    O --> P[UPDATE hold: status=converted]
+```
+
+### Hold Expiry and Cancellation Flow
+
+```mermaid
+flowchart TD
+    subgraph Hold Expiry
+        HE1[Background job scans holds\nwhere expires_at < NOW] --> HE2[Reset availability to available]
+        HE2 --> HE3[Set hold status=expired]
+        HE3 --> HE4[Increment calendar_version]
+    end
+
+    subgraph Cancellation
+        C1[Guest cancels booking] --> C2[Apply refund policy]
+        C2 --> C3[Reset availability to available]
+        C3 --> C4[Set booking status=cancelled]
+        C4 --> C5{Waitlisted guests\nfor these dates?}
+        C5 -- Yes --> C6[Notify top-priority guest]
+        C6 --> C7{Guest books\nwithin window?}
+        C7 -- Yes --> C8[Waitlist status=converted]
+        C7 -- No --> C9[Notify next guest]
+        C5 -- No --> C10[Dates remain available]
+    end
+```
 
 ---
 

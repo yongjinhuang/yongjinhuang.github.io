@@ -4,6 +4,58 @@ A two-sided marketplace connects buyers and sellers, earning revenue by facilita
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Buyer[Buyer Client]
+    Seller[Seller Client]
+    LB[Load Balancer]
+    API[API Gateway]
+
+    subgraph Application Services
+        UserSvc[User / KYC Service]
+        CatalogSvc[Catalog Service]
+        SearchSvc[Search Service]
+        OrderSvc[Order Service]
+        EscrowSvc[Escrow Service]
+        ReviewSvc[Review Service]
+        DisputeSvc[Dispute Service]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL)]
+        SearchIdx[(Search Index)]
+        CDN[CDN / Image Storage]
+    end
+
+    subgraph External
+        PayGW[Payment Gateway\ne.g. Stripe Connect]
+        KYCProvider[KYC Verification Provider]
+        ShipTrack[Shipping / Tracking API]
+    end
+
+    MQ[Message Queue]
+
+    Buyer --> LB --> API
+    Seller --> LB
+    API --> UserSvc --> PG
+    API --> CatalogSvc --> PG
+    API --> SearchSvc --> SearchIdx
+    API --> OrderSvc --> PG
+    OrderSvc --> EscrowSvc --> PayGW
+    API --> ReviewSvc --> PG
+    API --> DisputeSvc --> PG
+    UserSvc --> KYCProvider
+    CatalogSvc --> CDN
+    OrderSvc --> ShipTrack
+    OrderSvc --> MQ
+    MQ --> ReviewSvc
+    MQ --> EscrowSvc
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                | Purpose                           | Why It Exists                                                                      |
@@ -310,6 +362,50 @@ orders          1───1 disputes            (one order can have one active d
     - If unresolved, status changes to mediation and platform staff reviews
     - Resolution options: full_refund (escrow returned to buyer), partial_refund, replacement (seller ships new item), dismissed (escrow released to seller)
     - If either party disagrees, dispute can be escalated
+
+### Purchase and Escrow Flow
+
+```mermaid
+flowchart TD
+    A[Buyer selects listing + shipping] --> B[Authorize payment]
+    B --> C[Create order: status=paid]
+    C --> D[Calculate platform_fee + seller_payout]
+    D --> E[Decrement listing quantity]
+    E --> F[Hold funds in escrow: status=escrowed]
+    F --> G[Notify seller to ship]
+    G --> H[Seller ships + enters tracking_number]
+    H --> I[status=shipped]
+    I --> J[Tracking shows delivered]
+    J --> K[status=delivered]
+    K --> L[Grace period: 3 days]
+    L --> M{Buyer files dispute?}
+    M -- No --> N[status=completed]
+    N --> O[Release escrow to seller]
+    O --> P[Platform retains platform_fee]
+    M -- Yes --> Q[Open dispute]
+```
+
+### Dispute Resolution Flow
+
+```mermaid
+flowchart TD
+    A[Buyer opens dispute\nwith reason + evidence] --> B[status=open]
+    B --> C[Seller responds\nwith counter-evidence]
+    C --> D{Resolved between\nbuyer and seller?}
+    D -- Yes --> E[Apply agreed resolution]
+    D -- No --> F[status=mediation\nPlatform staff reviews]
+    F --> G{Resolution decision}
+    G --> H[Full refund:\nescrow returned to buyer]
+    G --> I[Partial refund]
+    G --> J[Replacement:\nseller ships new item]
+    G --> K[Dismissed:\nescrow released to seller]
+    H --> L{Party disagrees?}
+    I --> L
+    J --> L
+    K --> L
+    L -- Yes --> M[status=escalated\nSenior review]
+    L -- No --> N[Dispute closed]
+```
 
 ---
 

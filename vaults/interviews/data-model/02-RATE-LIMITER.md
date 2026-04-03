@@ -2,6 +2,29 @@
 
 A rate limiter controls how many requests a user can make within a time window. The data model spans two storage systems: a relational database for rule configuration and Redis for real-time counter tracking. Redis is essential because rate limiting must be evaluated on every single request with sub-millisecond latency.
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    Client[Client] -->|Request| GW[API Gateway]
+    GW --> RL[Rate Limiter Middleware]
+    RL -->|Check counters| Redis[(Redis)]
+    RL -->|Rules cached in memory| AppMem[In-Memory Rule Cache]
+    AppMem -.->|Load on startup / refresh| PG[(PostgreSQL)]
+    RL -->|Allowed| API[Application Service]
+    RL -->|Rejected 429| Client
+
+    subgraph Rate Limiter
+        RL
+        AppMem
+    end
+
+    subgraph Storage
+        Redis
+        PG
+    end
+```
+
 ## Table Responsibilities
 
 | Table/Structure         | Purpose                             | Storage    | Key Characteristic                         |
@@ -125,6 +148,20 @@ not enforced by constraints.
     Headers: Retry-After: seconds_until_reset
 ```
 
+```mermaid
+flowchart TD
+    A[Request arrives] --> B[Extract user_id + endpoint]
+    B --> C[Lookup rule from memory cache]
+    C --> D[Compute Redis key with window_start]
+    D --> E[Redis INCR on key]
+    E --> F{Key is new?}
+    F -->|Yes| G[Set TTL = window_seconds]
+    F -->|No| H{counter <= max_requests?}
+    G --> H
+    H -->|Yes| I[Allow request + set rate limit headers]
+    H -->|No| J[Return HTTP 429 with Retry-After]
+```
+
 ### Token Bucket Algorithm
 
 ```
@@ -154,6 +191,19 @@ not enforced by constraints.
     └────┬─────┘
          ▼
     Return 429, Retry-After: (1 - new_tokens) / refill_rate
+```
+
+```mermaid
+flowchart TD
+    A[Request arrives] --> B[Extract user_id + endpoint]
+    B --> C[Lookup rule + compute refill_rate]
+    C --> D[Redis GET bucket state]
+    D --> E[Calculate elapsed time + new tokens]
+    E --> F{new_tokens >= 1.0?}
+    F -->|Yes| G[Deduct 1 token]
+    G --> H[Redis SET updated bucket state]
+    H --> I[Allow request]
+    F -->|No| J[Return 429 with Retry-After]
 ```
 
 **Why token bucket over fixed window?** Fixed window has a boundary problem: a user could make 100 requests at 11:59:59 and 100 more at 12:00:01, effectively doubling their rate. Token bucket smooths this by tracking a continuous refill rate.

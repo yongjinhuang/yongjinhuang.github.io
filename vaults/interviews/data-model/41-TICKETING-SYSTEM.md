@@ -4,6 +4,57 @@ A customer support ticketing system must route incoming requests from multiple c
 
 ---
 
+## High-Level Architecture
+
+```mermaid
+graph TD
+    subgraph Channels
+        Email[Email]
+        Chat[Live Chat]
+        Web[Web Form]
+        Phone[Phone / IVR]
+    end
+
+    subgraph Ticketing Platform
+        Intake[Ticket Intake Service]
+        AIClassifier[AI Auto-Classifier]
+        SLAEngine[SLA Engine]
+        AutoEngine[Automation Engine]
+        RoutingEngine[Routing Engine]
+        AgentUI[Agent Dashboard]
+    end
+
+    subgraph Data Stores
+        PG[(PostgreSQL<br/>tickets, comments,<br/>agents, teams, SLAs)]
+    end
+
+    subgraph Background Jobs
+        SLAMonitor[SLA Monitor Job]
+        CSATSurvey[CSAT Survey Sender]
+    end
+
+    subgraph Notifications
+        Notify[Email / SMS / Push]
+    end
+
+    Email --> Intake
+    Chat --> Intake
+    Web --> Intake
+    Phone --> Intake
+    Intake --> AIClassifier
+    AIClassifier --> SLAEngine
+    SLAEngine --> AutoEngine
+    AutoEngine --> RoutingEngine
+    RoutingEngine --> PG
+    AgentUI --> PG
+    SLAMonitor --> PG
+    SLAMonitor --> Notify
+    CSATSurvey --> Notify
+    AgentUI --> Notify
+```
+
+---
+
 ## Table Responsibilities
 
 | Table                | Purpose                                     | Why It Exists                                                                                                   |
@@ -257,6 +308,38 @@ Relationships:
 10. **Resolution**: The agent marks the ticket as `solved` and `resolved_at` is recorded. After a cooldown period (e.g., 48 hours without customer reply), the ticket auto-closes. If the customer replies during cooldown, it reopens.
 
 11. **Customer Satisfaction**: After resolution, a CSAT survey is sent. The rating is stored and used for agent performance analytics.
+
+```mermaid
+flowchart TD
+    A[Customer submits request<br/>via email/chat/web/phone] --> B[Create ticket<br/>status = new]
+    B --> C[AI classifies: category,<br/>priority, sentiment]
+    C --> D[Match SLA policy<br/>by conditions]
+    D --> E[Calculate first_response_due<br/>and resolution_due<br/>using business_hours]
+    E --> F[Run automation_rules<br/>trigger = on_create]
+    F --> G[Route to team]
+    G --> H{Assignment mode?}
+    H -->|Round Robin| I[Next agent in rotation]
+    H -->|Load Balanced| J[Agent with lowest load]
+    H -->|Skill Based| K[Agent matching<br/>required skills]
+    I --> L[Assign agent<br/>status = open]
+    J --> L
+    K --> L
+    L --> M[Agent responds<br/>create comment]
+    M --> N{First public reply?}
+    N -->|Yes| O[Set first_responded_at<br/>Check SLA compliance]
+    N -->|No| P[Continue conversation]
+    O --> P
+    P --> Q{Waiting on customer?}
+    Q -->|Yes| R[status = pending]
+    Q -->|No| S[status = open]
+    R --> T{Customer replied?}
+    T -->|Yes| S
+    S --> U[Agent marks solved<br/>Set resolved_at]
+    U --> V{Customer replies<br/>within cooldown?}
+    V -->|Yes| S
+    V -->|No| W[Auto-close ticket]
+    W --> X[Send CSAT survey]
+```
 
 ---
 
