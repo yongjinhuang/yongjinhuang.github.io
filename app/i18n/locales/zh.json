@@ -52,12 +52,10 @@
         "period": "2024 年 4 月 - 2026 年 4 月",
         "techStack": "Java 21 / Spring Boot 3, MySQL, MongoDB, Redis, Kafka, K8s",
         "responsibilities": [
-          "构建 [超能文献](https://suppr.wilddata.cn/)，AI 学术研究平台，采用 API/Consumer 分离架构部署于 K8s，支持独立扩缩容",
-          "开发三大核心 AI 服务：LLM 文献检索、多语言文件翻译、深度研究报告生成，使用 Kafka 异步处理 + SSE + Redis pub/sub 实时推送",
-          "设计三阶段积分系统（冻结→扣减→回滚），实现微信支付/支付宝幂等回调",
-          "管理[腾讯云](https://cloud.tencent.com/)基础设施：TKE K8s 集群、EdgeOne WAF/CDN/SSL、CLB 负载均衡，以及 Docker Compose 自建 MySQL/Redis/MongoDB/Kafka",
-          "搭建 CI/CD 流水线：Jenkins + Docker 多阶段构建 + Helm + Orbit CD K8s 滚动更新，部署效率提升 100%",
-          "开发 `Wilddata Payment Module`，新应用支付接入时间缩短 200%"
+          "构建 [超能文献](https://suppr.wilddata.cn/) AI 学术研究平台，采用 K8s 部署 API 与 Worker 服务并支持独立扩缩容",
+          "开发文献检索、文件翻译和研究报告生成等 AI 服务，结合 Kafka 异步处理与 SSE 实时推送",
+          "设计积分与支付流程，支持冻结、扣减、回滚及微信支付/支付宝幂等回调",
+          "管理腾讯云基础设施与 CI/CD 流水线，覆盖 TKE、EdgeOne、Jenkins、Docker、Helm 和 Orbit CD"
         ]
       },
       "tarro": {

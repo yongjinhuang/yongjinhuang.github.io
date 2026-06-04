@@ -52,12 +52,10 @@
         "position": "Software Engineer (Technical Partner)",
         "period": "April 2024 - April 2026",
         "responsibilities": [
-          "Built [Suppr](https://suppr.wilddata.cn/), an AI-powered research platform with API/Consumer profile split on K8s for independent scaling",
-          "Developed three core AI services: LLM-based literature search, multi-language file translation, and deep research report generation, using Kafka for async processing and SSE + Redis pub/sub for real-time streaming",
-          "Designed a three-stage point system (freeze → consume → rollback) with idempotent payment callbacks for WeChat Pay / Alipay",
-          "Managed [Tencent Cloud](https://cloud.tencent.com/) infrastructure: TKE K8s cluster, EdgeOne WAF/CDN/SSL, CLB load balancer, and self-hosted MySQL/Redis/MongoDB/Kafka via Docker Compose",
-          "Built CI/CD pipeline with Jenkins, Docker multi-stage builds, and Helm-based K8s rolling updates via Orbit CD, doubling deployment efficiency",
-          "Developed Wilddata Payment Module, cutting new app integration time by 200%"
+          "Built [Suppr](https://suppr.wilddata.cn/), an AI-powered research platform deployed on K8s with independently scalable API and worker services",
+          "Developed AI services for literature search, file translation, and research report generation with Kafka async processing and SSE streaming",
+          "Designed payment and point workflows with freeze/consume/rollback logic and idempotent WeChat Pay / Alipay callbacks",
+          "Managed Tencent Cloud infrastructure and CI/CD with TKE, EdgeOne, Jenkins, Docker, Helm, and Orbit CD"
         ]
       },
       "tarro": {
