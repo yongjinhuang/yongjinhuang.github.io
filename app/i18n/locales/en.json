@@ -49,7 +49,7 @@
         "linkUrl": "https://www.wilddata.cn",
         "logoUrl": "/logo/wilddata.png",
         "name": "WildData",
-        "position": "Technical Partner",
+        "position": "Software Engineer (Technical Partner)",
         "period": "April 2024 - April 2026",
         "responsibilities": [
           "Built [Suppr](https://suppr.wilddata.cn/), an AI-powered research platform with API/Consumer profile split on K8s for independent scaling",
