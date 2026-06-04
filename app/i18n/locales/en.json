@@ -50,7 +50,7 @@
         "logoUrl": "/logo/wilddata.png",
         "name": "WildData",
         "position": "Technical Partner",
-        "period": "April 2024 - Present",
+        "period": "April 2024 - April 2026",
         "responsibilities": [
           "Built [Suppr](https://suppr.wilddata.cn/), an AI-powered research platform with API/Consumer profile split on K8s for independent scaling",
           "Developed three core AI services: LLM-based literature search, multi-language file translation, and deep research report generation, using Kafka for async processing and SSE + Redis pub/sub for real-time streaming",

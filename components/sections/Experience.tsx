@@ -151,7 +151,10 @@ export function Experience({ experience }: ExperienceProps) {
       >
         {experiences.map((exp, index) => (
           <motion.div key={index} variants={item} className="h-full">
-            <ExperienceCard exp={exp} isCurrent={index === 0} />
+            <ExperienceCard
+              exp={exp}
+              isCurrent={/present|至今/i.test(exp.period)}
+            />
           </motion.div>
         ))}
       </motion.div>

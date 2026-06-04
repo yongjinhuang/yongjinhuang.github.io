@@ -49,7 +49,7 @@
         "logoUrl": "/logo/wilddata.png",
         "name": "数野科技",
         "position": "技术合伙人",
-        "period": "2024 年 4 月 - 至今",
+        "period": "2024 年 4 月 - 2026 年 4 月",
         "techStack": "Java 21 / Spring Boot 3, MySQL, MongoDB, Redis, Kafka, K8s",
         "responsibilities": [
           "构建 [超能文献](https://suppr.wilddata.cn/)，AI 学术研究平台，采用 API/Consumer 分离架构部署于 K8s，支持独立扩缩容",
