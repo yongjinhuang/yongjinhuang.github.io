@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Private originals used to prepare Ely's encrypted memory album
+/.ely-private/

@@ -46,4 +46,14 @@ for (const [locale, lang] of Object.entries(localeMap)) {
   }
 }
 
-console.log('postbuild: .nojekyll, sitemap XSL, lang attributes done');
+// 4. /ely also contains the encrypted album. Give the directory an index so
+// GitHub Pages serves the entrance for both /ely and /ely/.
+const elyPage = path.join(outDir, 'ely.html');
+if (fs.existsSync(elyPage)) {
+  fs.mkdirSync(path.join(outDir, 'ely'), { recursive: true });
+  fs.copyFileSync(elyPage, path.join(outDir, 'ely', 'index.html'));
+}
+
+console.log(
+  'postbuild: .nojekyll, sitemap XSL, lang attributes, Ely index done'
+);
