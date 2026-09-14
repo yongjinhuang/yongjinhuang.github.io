@@ -468,9 +468,11 @@
   padding: 27px 0 51px;
   color: #ab8189;
 }
-.more > span:first-child {
-  font-size: 28px;
-  color: #d3a2aa;
+.petFamily {
+  display: block;
+  width: 215px;
+  max-width: 100%;
+  margin: 0 auto 17px;
 }
 .more p {
   font-family: Georgia, serif;

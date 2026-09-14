@@ -56,7 +56,101 @@ function SmallIcon({ name }: { name: 'key' | 'lock' | 'arrow' | 'back' }) {
   );
 }
 
-function Door({ open = false }: { open?: boolean }) {
+function LittleCat({
+  x,
+  y,
+  scale = 1,
+  coat,
+  patch,
+}: {
+  x: number;
+  y: number;
+  scale?: number;
+  coat: string;
+  patch?: string;
+}) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${scale})`}>
+      <path
+        d="M39 55c24 3 27-13 18-18"
+        stroke={coat}
+        strokeWidth="8"
+        strokeLinecap="round"
+      />
+      <path d="M10 60c-4-12 0-27 6-33h23c8 8 12 24 7 33Z" fill={coat} />
+      <path d="m10 20 1-18 14 10h7L46 2l1 19c6 19-42 22-37-1Z" fill={coat} />
+      <path d="m14 15 1-7 7 6m14 0 7-6v8" fill="#dca8a6" />
+      {patch && <path d="M29 10h3L46 2l1 19c-4 5-10 5-15 1Z" fill={patch} />}
+      <path
+        d="m18 23 3 1 3-1m10 0 3 1 3-1"
+        stroke="#675552"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path d="m27 27 3 3 3-3" fill="#bb8486" />
+      <path
+        d="M30 30v3m-5 22v6m10-6v6"
+        stroke="#8e7971"
+        strokeOpacity=".5"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="m8 26-7-2m7 6-7 1m47-5 7-2m-7 6 7 1"
+        stroke="#a58c84"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <ellipse cx="19" cy="60" rx="9" ry="3" fill={coat} />
+      <ellipse cx="38" cy="60" rx="9" ry="3" fill={coat} />
+    </g>
+  );
+}
+
+function LittleDog({
+  x = 325,
+  y = 328,
+  scale = 0.88,
+}: {
+  x?: number;
+  y?: number;
+  scale?: number;
+}) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${scale})`}>
+      <path
+        d="M46 47q28-8 20-22"
+        stroke="#c69c78"
+        strokeWidth="9"
+        strokeLinecap="round"
+      />
+      <path d="M15 32c-7 9-8 23-3 30h38c5-15-1-26-10-30Z" fill="#cba17d" />
+      <ellipse cx="30" cy="49" rx="11" ry="16" fill="#f4e3cd" />
+      <path d="M9 19C7-5 48-6 51 17l-1 13c-8 15-35 13-40 0Z" fill="#dfb88f" />
+      <path
+        d="M12 7C-1 2-8 27 1 33c9 4 18-19 11-26m33 0c13-5 20 20 11 26-9 4-18-19-11-26"
+        fill="#aa7e60"
+      />
+      <ellipse cx="30" cy="29" rx="12" ry="9" fill="#f5e4d0" />
+      <circle cx="19" cy="20" r="2" fill="#67524b" />
+      <circle cx="40" cy="20" r="2" fill="#67524b" />
+      <path d="M26 27q4-4 8 0l-4 4Z" fill="#67524b" />
+      <path d="M27 34q3 10 6 0" fill="#d59c9d" />
+      <path d="M14 39q16 6 31-1" stroke="#bf8794" strokeWidth="4" />
+      <circle cx="30" cy="43" r="3" fill="#e7c586" />
+      <ellipse cx="15" cy="62" rx="10" ry="4" fill="#dfb88f" />
+      <ellipse cx="45" cy="62" rx="10" ry="4" fill="#dfb88f" />
+    </g>
+  );
+}
+
+function Door({
+  open = false,
+  pets = false,
+}: {
+  open?: boolean;
+  pets?: boolean;
+}) {
   return (
     <svg
       className={`${styles.door} ${open ? styles.doorOpen : ''}`}
@@ -90,6 +184,7 @@ function Door({ open = false }: { open?: boolean }) {
           strokeWidth="3"
         />
         <path d="M215 132v68m-52-27h104" stroke="#aa7885" strokeWidth="3" />
+        {pets && <LittleCat x={197} y={162} scale={0.58} coat="#8c827f" />}
         <rect
           x="176"
           y="222"
@@ -153,6 +248,42 @@ function Door({ open = false }: { open?: boolean }) {
         <ellipse cx="361" cy="302" rx="10" ry="5" />
       </g>
       <circle cx="351" cy="302" r="5" fill="#d5b56d" />
+      {pets && (
+        <g>
+          <ellipse
+            cx="116"
+            cy="382"
+            rx="40"
+            ry="6"
+            fill="#d8cbbd"
+            opacity=".3"
+          />
+          <ellipse
+            cx="321"
+            cy="387"
+            rx="64"
+            ry="6"
+            fill="#d8cbbd"
+            opacity=".3"
+          />
+          <LittleCat
+            x={78}
+            y={330}
+            scale={0.84}
+            coat="#d5aa82"
+            patch="#b58362"
+          />
+          <LittleCat
+            x={128}
+            y={341}
+            scale={0.64}
+            coat="#f8eee1"
+            patch="#b0a39b"
+          />
+          <LittleCat x={271} y={338} scale={0.74} coat="#a59b97" />
+          <LittleDog />
+        </g>
+      )}
       <path d="m335 140 3-8 3 8 8 3-8 3-3 8-3-8-8-3Z" fill="#c7a16e" />
       <path d="m104 105 2-6 2 6 6 2-6 2-2 6-2-6-6-2Z" fill="#c7a16e" />
     </svg>
@@ -436,7 +567,7 @@ export default function ElyCorner() {
                 <span className={styles.pictureNote}>
                   there’s a light on for you
                 </span>
-                <Door open={entering} />
+                <Door open={entering} pets />
                 <span className={styles.pictureCaption}>come as you are.</span>
               </div>
               <div className={styles.welcome}>
@@ -531,7 +662,7 @@ export default function ElyCorner() {
                   </p>
                 </div>
                 <div className={styles.homeVignette}>
-                  <Door open />
+                  <Door open pets />
                   <span>you’re always welcome here.</span>
                 </div>
               </section>
@@ -584,7 +715,30 @@ export default function ElyCorner() {
                 ))}
               </ol>
               <div className={styles.more}>
-                <span aria-hidden="true">✳</span>
+                <svg
+                  className={styles.petFamily}
+                  viewBox="0 0 265 85"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <ellipse cx="130" cy="74" rx="120" ry="5" fill="#e9dcd4" />
+                  <LittleCat
+                    x={8}
+                    y={17}
+                    scale={0.85}
+                    coat="#d5aa82"
+                    patch="#b58362"
+                  />
+                  <LittleCat
+                    x={66}
+                    y={27}
+                    scale={0.7}
+                    coat="#f8eee1"
+                    patch="#b0a39b"
+                  />
+                  <LittleCat x={119} y={14} scale={0.9} coat="#a59b97" />
+                  <LittleDog x={191} y={15} scale={0.9} />
+                </svg>
                 <p>
                   More little things,
                   <br />
