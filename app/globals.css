@@ -15,9 +15,6 @@
 
   --shadow-glow-accent: 0 0 20px color-mix(in srgb, var(--accent) 40%, transparent);
 
-  --animate-mesh-gradient: mesh-gradient 15s ease infinite;
-  --animate-float: float 6s ease-in-out infinite;
-
   --font-sans: 'Plus Jakarta Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
 }
@@ -409,29 +406,6 @@ body {
   border-color: var(--accent);
   box-shadow: 3px 3px 0 var(--accent);
   color: var(--accent);
-}
-
-/* ================================
-   KEYFRAME ANIMATIONS
-   ================================ */
-@keyframes mesh-gradient {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
 }
 
 /* ================================

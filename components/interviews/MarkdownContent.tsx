@@ -144,7 +144,7 @@ function CodeBlock({ language, rawCode, children }: CodeBlockProps) {
   }, [rawCode]);
 
   return (
-    <div className="my-5 rounded-lg border-2 border-gray-200 dark:border-white/10 overflow-hidden bg-gray-50/80 dark:bg-black/20">
+    <div className="my-5 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden bg-gray-50/80 dark:bg-black/20">
       <div className="flex items-center justify-between px-3.5 py-1.5 bg-gray-100/90 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 text-xs text-gray-500 dark:text-gray-400">
         <span className="font-mono uppercase tracking-wider text-[11px] font-semibold">
           {language || 'text'}
@@ -347,11 +347,11 @@ function createMarkdownComponents(
       </strong>
     ),
     input: (props) => (
-      <input {...props} className="mr-2 accent-amber-500" disabled />
+      <input {...props} className="mr-2 accent-[var(--accent)]" disabled />
     ),
     table: ({ children }) => (
-      <div className="overflow-x-auto my-5">
-        <table className="min-w-full border-2 border-gray-200 dark:border-white/10 rounded-lg text-[14px]">
+      <div className="overflow-x-auto my-5 rounded-lg border border-gray-200 dark:border-white/10">
+        <table className="min-w-full border-collapse text-[13.5px]">
           {children}
         </table>
       </div>

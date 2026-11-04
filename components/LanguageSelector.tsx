@@ -55,7 +55,7 @@ export default function LanguageSelector() {
     <div
       role="group"
       aria-label="Language selector"
-      className="inline-flex items-center p-0.5 rounded-full bg-gray-100 dark:bg-white/5 border-2 border-gray-300 dark:border-white/20 shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_rgba(255,255,255,0.05)]"
+      className="inline-flex items-center p-0.5 rounded-lg bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/15"
     >
       {i18n.locales.map((locale) => {
         const isActive = activeLocale === locale;
@@ -68,10 +68,10 @@ export default function LanguageSelector() {
             aria-label={
               locale === 'zh' ? 'Switch to Chinese' : 'Switch to English'
             }
-            className={`px-2.5 py-1 rounded-full text-xs leading-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            className={`px-2.5 py-1 rounded-md text-xs font-mono leading-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               isActive
-                ? 'bg-accent text-[var(--accent-foreground,#000)] font-bold shadow-sm'
-                : 'font-medium text-gray-700 dark:text-gray-200 hover:text-accent dark:hover:text-accent'
+                ? 'bg-accent text-[var(--accent-foreground,#000)] font-bold'
+                : 'font-medium text-gray-600 dark:text-gray-300 hover:text-accent dark:hover:text-accent'
             }`}
           >
             {LOCALE_LABELS[locale] ?? locale.toUpperCase()}

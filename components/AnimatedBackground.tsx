@@ -11,7 +11,6 @@ export function AnimatedBackground() {
     setMounted(true);
   }, []);
 
-  // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
     return <div className="fixed inset-0 -z-10" />;
   }
@@ -23,46 +22,22 @@ export function AnimatedBackground() {
       key={resolvedTheme}
       className="fixed inset-0 -z-10 overflow-hidden pointer-events-none transition-opacity duration-300"
     >
-      {/* Subtle Warm Gradient Background */}
+      {/* Static Architectural Spotlight */}
       <div
         className="absolute inset-0"
         style={{
-          opacity: isDark ? 0.25 : 0.15,
+          opacity: isDark ? 0.22 : 0.14,
           background: `
-            radial-gradient(ellipse 80% 50% at 20% 40%, color-mix(in srgb, var(--blob-primary) 20%, transparent), transparent),
-            radial-gradient(ellipse 60% 40% at 80% 60%, color-mix(in srgb, var(--blob-secondary) 15%, transparent), transparent)
+            radial-gradient(ellipse 70% 45% at 15% 20%, color-mix(in srgb, var(--blob-primary) 28%, transparent), transparent),
+            radial-gradient(ellipse 55% 40% at 85% 75%, color-mix(in srgb, var(--blob-secondary) 20%, transparent), transparent)
           `,
-          backgroundSize: '200% 200%',
-          animation: 'mesh-gradient 15s ease infinite',
         }}
       />
 
-      {/* Large Subtle Blob - Amber (Top Left) */}
-      <div
-        className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[120px]"
-        style={{
-          opacity: isDark ? 0.2 : 0.1,
-          background:
-            'radial-gradient(circle, color-mix(in srgb, var(--blob-primary) 60%, transparent) 0%, transparent 70%)',
-          animation: 'float 20s ease-in-out infinite',
-        }}
-      />
-
-      {/* Large Subtle Blob - Amber (Bottom Right) */}
-      <div
-        className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full blur-[120px]"
-        style={{
-          opacity: isDark ? 0.15 : 0.1,
-          background:
-            'radial-gradient(circle, color-mix(in srgb, var(--blob-secondary) 50%, transparent) 0%, transparent 70%)',
-          animation: 'float 20s ease-in-out infinite 5s',
-        }}
-      />
-
-      {/* Subtle Grid Overlay */}
+      {/* Precision Blueprint Grid Overlay */}
       <div
         className="absolute inset-0 grid-pattern"
-        style={{ opacity: isDark ? 0.4 : 0.2 }}
+        style={{ opacity: isDark ? 0.45 : 0.35 }}
       />
     </div>
   );

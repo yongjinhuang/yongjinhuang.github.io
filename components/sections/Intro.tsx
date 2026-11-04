@@ -12,7 +12,6 @@ import {
 import { SiLeetcode } from 'react-icons/si';
 import { FiPhone, FiMail, FiMapPin, FiMessageSquare } from 'react-icons/fi';
 import { HiCheck, HiClipboard } from 'react-icons/hi2';
-import { motion } from 'framer-motion';
 import { IconButton } from '@/components/ui';
 import { formatFullName, isCJK } from '@/lib/utils';
 import type {
@@ -117,12 +116,7 @@ export function Intro({ intro, details, education }: IntroProps) {
 
   return (
     <section id="intro" className="scroll-mt-28">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="glass-card glass-card-static p-5 sm:p-7 md:p-8"
-      >
+      <div className="glass-card glass-card-static rounded-xl p-5 sm:p-7 md:p-8">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-10">
           {/* Left: Editorial Dossier Typography */}
           <div className="flex-1 min-w-0 text-left">
@@ -146,7 +140,7 @@ export function Intro({ intro, details, education }: IntroProps) {
             <div className="flex flex-wrap items-center gap-2.5 md:gap-3">
               <Link
                 href="#contact"
-                className="brutal-btn brutal-btn-accent px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="brutal-btn brutal-btn-accent rounded-lg px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 <span>{intro.hireMe}</span>
               </Link>
@@ -155,7 +149,7 @@ export function Intro({ intro, details, education }: IntroProps) {
                 href={intro.resumeFile}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="brutal-btn px-4 py-2 text-xs sm:text-sm bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="brutal-btn rounded-lg px-4 py-2 text-xs sm:text-sm bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 <FaDownload className="w-3 h-3" />
                 <span>{intro.viewResume}</span>
@@ -327,7 +321,7 @@ export function Intro({ intro, details, education }: IntroProps) {
             </div>
           ))}
         </dl>
-      </motion.div>
+      </div>
     </section>
   );
 }

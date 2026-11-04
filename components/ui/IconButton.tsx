@@ -1,9 +1,6 @@
-'use client';
-
-import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-interface IconButtonProps extends Omit<HTMLMotionProps<'a'>, 'children'> {
+interface IconButtonProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   icon: React.ReactNode;
   href: string;
   size?: 'sm' | 'md' | 'lg';
@@ -13,9 +10,9 @@ interface IconButtonProps extends Omit<HTMLMotionProps<'a'>, 'children'> {
 }
 
 const sizeClasses = {
-  sm: 'w-10 h-10',
-  md: 'w-12 h-12 md:w-14 md:h-14',
-  lg: 'w-14 h-14 md:w-16 md:h-16',
+  sm: 'w-9 h-9',
+  md: 'w-11 h-11',
+  lg: 'w-13 h-13',
 };
 
 export function IconButton({
@@ -27,26 +24,24 @@ export function IconButton({
   ...props
 }: IconButtonProps) {
   return (
-    <motion.a
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+    <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        'rounded-full flex items-center justify-center transition-colors transition-shadow duration-300',
+        'rounded-lg flex items-center justify-center transition-all duration-200',
         'bg-white dark:bg-surface-dark border-2',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         variant === 'default' &&
-          'border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:border-accent hover:text-accent hover:shadow-glow-accent',
+          'border-gray-200 dark:border-white/15 text-gray-600 dark:text-gray-300 hover:border-accent hover:text-accent hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[2px_2px_0_var(--accent)]',
         variant === 'accent' &&
-          'border-accent/30 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent hover:shadow-glow-accent',
+          'border-accent/30 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[2px_2px_0_var(--accent)]',
         sizeClasses[size],
         className
       )}
       {...props}
     >
       {icon}
-    </motion.a>
+    </a>
   );
 }

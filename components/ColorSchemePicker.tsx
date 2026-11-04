@@ -87,7 +87,7 @@ export default function ColorSchemePicker() {
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="relative w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-300 dark:border-white/20 shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_rgba(255,255,255,0.05)] hover:border-accent hover:shadow-[3px_3px_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-300"
+        className="relative w-9 h-9 rounded-lg flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-white/15 hover:border-accent hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[2px_2px_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-200"
         aria-label="Change color scheme"
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -122,7 +122,7 @@ export default function ColorSchemePicker() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.95 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute right-0 top-12 w-60 rounded-xl border-2 border-gray-200 dark:border-white/20 bg-white dark:bg-surface-dark shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)] p-2 z-50 origin-top-right"
+            className="absolute right-0 top-11 w-60 rounded-xl border-2 border-gray-200 dark:border-white/20 bg-white dark:bg-surface-dark shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)] p-2 z-50 origin-top-right"
           >
             {/* Auto option */}
             <button

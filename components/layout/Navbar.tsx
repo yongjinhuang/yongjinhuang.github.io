@@ -144,11 +144,11 @@ export function Navbar({ nav }: NavbarProps) {
   return (
     <nav className="fixed w-full top-0 z-50 transition-all duration-300">
       <div ref={navRef} className="max-w-6xl mx-auto px-4 sm:px-6 pt-3 md:pt-4">
-        <div className="glass-card glass-card-static hover:!translate-x-0 hover:!translate-y-0 relative px-4 py-3 md:px-6 md:py-3.5">
+        <div className="glass-card glass-card-static rounded-xl hover:!translate-x-0 hover:!translate-y-0 relative px-4 py-2.5 md:px-5 md:py-3">
           {/* Top Scroll Progress Bar */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute top-0 left-0 right-0 h-[3px] overflow-hidden"
+            className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] rounded-t-xl overflow-hidden"
           >
             <div
               className="h-full bg-accent transition-[width] duration-150 ease-out"
@@ -161,7 +161,7 @@ export function Navbar({ nav }: NavbarProps) {
             <div className="flex items-center gap-3 md:gap-4">
               <Link
                 href={`/${lang}`}
-                className="brutal-btn brutal-btn-accent px-3 py-1 md:px-4 md:py-1.5 text-lg md:text-xl font-black tracking-tight"
+                className="brutal-btn brutal-btn-accent rounded-lg px-3 py-1 text-base md:text-lg font-extrabold tracking-tight"
               >
                 YH
               </Link>
@@ -204,7 +204,7 @@ export function Navbar({ nav }: NavbarProps) {
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen((prev) => !prev)}
-                  className="md:hidden w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-300 dark:border-white/20 shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_rgba(255,255,255,0.05)] text-gray-700 dark:text-gray-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-300"
+                  className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-white/15 text-gray-700 dark:text-gray-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-200"
                   aria-label={
                     mobileMenuOpen
                       ? 'Close navigation menu'

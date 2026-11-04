@@ -12,15 +12,14 @@ export default function ThemeToggle() {
     setMounted(true);
   }, []);
 
-  // Avoid hydration mismatch by not rendering until mounted
   if (!mounted) {
     return (
       <button
         type="button"
-        className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-300 dark:border-white/20 shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_rgba(255,255,255,0.05)] text-gray-700 dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-300"
+        className="w-9 h-9 rounded-lg flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-white/15 text-gray-700 dark:text-gray-200"
         aria-label="Toggle theme"
       >
-        <span className="h-5 w-5" />
+        <span className="h-4 w-4" />
       </button>
     );
   }
@@ -31,13 +30,14 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-300 dark:border-white/20 shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_rgba(255,255,255,0.05)] text-gray-700 dark:text-gray-200 hover:border-accent hover:shadow-[3px_3px_0_var(--accent)] hover:text-accent dark:hover:border-accent dark:hover:shadow-[3px_3px_0_var(--accent-light)] dark:hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-300"
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="w-9 h-9 rounded-lg flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-white/15 text-gray-700 dark:text-gray-200 hover:border-accent hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[2px_2px_0_var(--accent)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-all duration-200"
+      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
     >
       {isDark ? (
-        <SunIcon className="h-5 w-5" />
+        <SunIcon className="h-4 w-4" />
       ) : (
-        <MoonIcon className="h-5 w-5" />
+        <MoonIcon className="h-4 w-4" />
       )}
     </button>
   );

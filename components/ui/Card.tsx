@@ -1,9 +1,6 @@
-'use client';
-
-import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-interface CardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   variant?: 'default' | 'accent';
   hover?: boolean;
@@ -18,9 +15,9 @@ export function Card({
   ...props
 }: CardProps) {
   return (
-    <motion.div
+    <div
       className={cn(
-        'glass-card p-6 md:p-8 group',
+        'glass-card rounded-xl p-6 md:p-8 group',
         !hover && 'glass-card-static',
         variant === 'accent' && '!border-accent',
         className
@@ -28,6 +25,6 @@ export function Card({
       {...props}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
