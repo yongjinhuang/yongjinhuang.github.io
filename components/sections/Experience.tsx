@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { FaCalendarAlt } from 'react-icons/fa';
 import { FiExternalLink } from 'react-icons/fi';
 import { SectionHeader, Card } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import type {
   ExperienceTranslations,
   CompanyExperienceTranslations,
@@ -15,32 +16,18 @@ interface ExperienceProps {
   experience: ExperienceTranslations;
 }
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15 },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0 },
-};
-
 function ExperienceCard({
   exp,
-  index,
   isCurrent,
 }: {
   readonly exp: CompanyExperienceTranslations;
-  readonly index: number;
   readonly isCurrent: boolean;
 }) {
-  const orderBadge = String(index + 1).padStart(2, '0');
-
   return (
-    <Card className="relative h-full overflow-hidden p-5 md:p-6">
+    <Card
+      variant={isCurrent ? 'accent' : 'default'}
+      className="relative h-full overflow-hidden p-5 md:p-6"
+    >
       {/* Accent top border */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-accent via-accent/50 to-transparent" />
 
@@ -56,28 +43,23 @@ function ExperienceCard({
           />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <h3 className="min-w-0 text-base font-bold text-gray-900 md:text-lg dark:text-white">
-                <a
-                  href={exp.linkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 break-words transition-colors hover:text-accent group/link"
-                >
-                  <span>{exp.name}</span>
-                  <FiExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 group-hover/link:text-accent group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
-                </a>
-              </h3>
-              {isCurrent && (
-                <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-accent/15 text-accent border border-accent/30 rounded-full flex-shrink-0">
-                  Current
-                </span>
-              )}
-            </div>
-            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20 flex-shrink-0">
-              {orderBadge}
-            </span>
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            <h3 className="min-w-0 text-base font-bold text-gray-900 md:text-lg dark:text-white">
+              <a
+                href={exp.linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 break-words transition-colors hover:text-accent group/link"
+              >
+                <span>{exp.name}</span>
+                <FiExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 group-hover/link:text-accent group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+              </a>
+            </h3>
+            {isCurrent && (
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-accent/15 text-accent border border-accent/30 rounded-full flex-shrink-0">
+                Current
+              </span>
+            )}
           </div>
           <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
             {exp.position}
@@ -145,34 +127,43 @@ function ExperienceCard({
 }
 
 export function Experience({ experience }: ExperienceProps) {
-  const experiences: CompanyExperienceTranslations[] = [
-    experience.company.wilddata,
-    experience.company.tarro,
-    experience.company.shopee,
-    experience.company.huawei,
+  const experiences: Array<{
+    id: string;
+    data: CompanyExperienceTranslations;
+  }> = [
+    { id: 'cognizant', data: experience.company.cognizant },
+    { id: 'wilddata', data: experience.company.wilddata },
+    { id: 'tarro', data: experience.company.tarro },
+    { id: 'shopee', data: experience.company.shopee },
+    { id: 'huawei', data: experience.company.huawei },
   ];
+
+  const hasFeaturedLead = experiences.length % 2 === 1;
 
   return (
     <section id="experience" className="py-4 md:py-6 scroll-mt-28">
       <SectionHeader tagline={experience.tagline} title={experience.title} />
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-6xl mx-auto"
-      >
-        {experiences.map((exp, index) => (
-          <motion.div key={index} variants={item} className="h-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-6xl mx-auto">
+        {experiences.map(({ id, data: exp }, index) => (
+          <motion.div
+            key={id}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: index * 0.08 }}
+            className={cn(
+              'h-full',
+              hasFeaturedLead && index === 0 && 'md:col-span-2'
+            )}
+          >
             <ExperienceCard
               exp={exp}
-              index={index}
               isCurrent={/present|至今/i.test(exp.period)}
             />
           </motion.div>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }

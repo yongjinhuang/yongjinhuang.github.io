@@ -68,6 +68,7 @@ export interface ExperienceTranslations {
   title: string;
   tagline: string;
   company: {
+    cognizant: CompanyExperienceTranslations;
     wilddata: CompanyExperienceTranslations;
     tarro: CompanyExperienceTranslations;
     shopee: CompanyExperienceTranslations;

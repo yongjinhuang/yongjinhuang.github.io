@@ -19,9 +19,18 @@
     "hireMe": "Hire Me",
     "introduction": "I'm Yongjin Huang, a software engineer with a passion for coding and technology. In my free time, you can find me listening to hip-hop music, watching entertainment videos, playing video games, and of course, coding.",
     "stats": [
-      { "value": "8+", "label": "Years Exp." },
-      { "value": "4", "label": "Companies" },
-      { "value": "5+", "label": "Tech Talks" }
+      {
+        "value": "9+",
+        "label": "Years Exp."
+      },
+      {
+        "value": "5",
+        "label": "Companies"
+      },
+      {
+        "value": "5+",
+        "label": "Tech Talks"
+      }
     ],
     "links": {
       "github": "https://github.com/YongjinHuang",
@@ -37,8 +46,18 @@
       "value": ["Golang", "Python", "TypeScript", "Java", "SQL"]
     },
     "frameworks": {
-      "title": "Frameworks",
-      "value": ["Gin", "Django", "Spring Boot", "React", "Next.js"]
+      "title": "AI & Frameworks",
+      "value": [
+        "AI Agents",
+        "LLM / RAG",
+        "LangChain",
+        "FastAPI",
+        "Spring Boot",
+        "Gin",
+        "Django",
+        "React",
+        "Next.js"
+      ]
     },
     "tools": {
       "title": "Tools & Technologies",
@@ -47,11 +66,13 @@
         "Linux",
         "Docker",
         "K8s",
+        "PostgreSQL",
         "MySQL",
         "Redis",
         "MongoDB",
         "Kafka",
-        "Helm"
+        "Helm",
+        "OpenTelemetry"
       ]
     }
   },
@@ -59,6 +80,20 @@
     "title": "Work Experience",
     "tagline": "My Journey",
     "company": {
+      "cognizant": {
+        "techStack": "Python / FastAPI, AI Agents / LLM, LangChain, TypeScript / React, PostgreSQL, Redis, AWS S3, OpenTelemetry, K8s",
+        "linkUrl": "https://www.cognizant.com",
+        "logoUrl": "/logo/cognizant.svg",
+        "name": "Cognizant (Supporting Apple)",
+        "position": "Full-Stack AI & Platform Engineer",
+        "period": "Oct 2026 - Present",
+        "responsibilities": [
+          "Architected **Fuyao**, the unified AI data plane and LLM gateway for Apple's **Kunpeng** multi-agent supply chain platform, powering **Responses API LLM inference** with real-time **SSE token streaming**, **LangChain / LangGraph** (`FuyaoChatModel`) integration, and isolated agent workspaces",
+          "Built a **human-in-the-loop Studio AI Agent Copilot** with live registry context injection, structured tool-action synthesis, and Pydantic/SQL DDL guardrails for natural-language governance of resources, auth configs, and RBAC policies",
+          "Engineered end-to-end **AI Agent & SDK observability** with **OpenTelemetry** trace propagation and CloudWatch EMF sinks, tracking per-agent LLM/DB/S3 latency, actor attribution, and external agent egress traffic",
+          "Led the **4-phase React + TanStack Query** migration of Fuyao Studio Console and implemented **S3 object versioning** and cursor pagination across `apple-fuyao-sdk` and FastAPI microservices to support high-volume agent artifacts"
+        ]
+      },
       "wilddata": {
         "techStack": "Java 21 / Spring Boot 3, MySQL, MongoDB, Redis, Kafka, K8s",
         "linkUrl": "https://www.wilddata.cn",

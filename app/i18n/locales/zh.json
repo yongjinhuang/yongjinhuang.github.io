@@ -19,9 +19,18 @@
     "hireMe": "联系我",
     "introduction": "我是黄勇进，一名热爱编程和技术的软件开发工程师。在空闲时间，我喜欢听嘻哈音乐、看娱乐视频、玩电子游戏，当然还有编程。",
     "stats": [
-      { "value": "8+", "label": "年研发经验" },
-      { "value": "4", "label": "家知名企业" },
-      { "value": "5+", "label": "场技术分享" }
+      {
+        "value": "9+",
+        "label": "年研发经验"
+      },
+      {
+        "value": "5",
+        "label": "家知名企业"
+      },
+      {
+        "value": "5+",
+        "label": "场技术分享"
+      }
     ],
     "links": {
       "github": "https://github.com/YongjinHuang",
@@ -37,8 +46,18 @@
       "value": ["Golang", "Python", "TypeScript", "Java", "SQL"]
     },
     "frameworks": {
-      "title": "框架",
-      "value": ["Gin", "Django", "Spring Boot", "React", "Next.js"]
+      "title": "AI 与开发框架",
+      "value": [
+        "AI Agents",
+        "LLM / RAG",
+        "LangChain",
+        "FastAPI",
+        "Spring Boot",
+        "Gin",
+        "Django",
+        "React",
+        "Next.js"
+      ]
     },
     "tools": {
       "title": "工具和技术",
@@ -47,11 +66,13 @@
         "Linux",
         "Docker",
         "K8s",
+        "PostgreSQL",
         "MySQL",
         "Redis",
         "MongoDB",
         "Kafka",
-        "Helm"
+        "Helm",
+        "OpenTelemetry"
       ]
     }
   },
@@ -59,6 +80,20 @@
     "title": "工作经验",
     "tagline": "我的历程",
     "company": {
+      "cognizant": {
+        "linkUrl": "https://www.cognizant.com",
+        "logoUrl": "/logo/cognizant.svg",
+        "name": "Cognizant（派驻 Apple）",
+        "position": "全栈与 AI 平台开发工程师",
+        "period": "2026 年 10 月 - 至今",
+        "techStack": "Python / FastAPI, AI Agents / LLM, LangChain, TypeScript / React, PostgreSQL, Redis, AWS S3, OpenTelemetry, K8s",
+        "responsibilities": [
+          "构建 Apple **Kunpeng（鲲鹏）** 多智能体（Multi-Agent）供应链 AI 平台的统一数据底座与大模型网关 **Fuyao（扶摇）**，提供 **Responses API 大模型推理代理**、**SSE 流式输出**、**LangChain / LangGraph**（`FuyaoChatModel`）适配及 Agent 专属工作区存储",
+          "研发 **Human-in-the-Loop（人机协同）Studio AI Agent 助手**，支持实时元数据上下文注入、结构化变更提案生成与 Pydantic/SQL DDL 安全护栏校验，实现自然语言驱动的资源与双层 RBAC 权限治理",
+          "构建面向 **AI Agent 与 SDK 的 OpenTelemetry 全链路可观测体系**与 CloudWatch EMF 指标汇聚，实现 Agent 调用链路追踪、身份归因、LLM/DB/S3 耗时监控及外部流量审计",
+          "主导 Fuyao Studio 控制台向 **React + TanStack Query** 的 **4 阶段**架构演进，并在 `apple-fuyao-sdk` 与 FastAPI 微服务中落地 **S3 多版本管理**与游标分页机制，支撑大规模 Agent 产物存储"
+        ]
+      },
       "wilddata": {
         "linkUrl": "https://www.wilddata.cn",
         "logoUrl": "/logo/wilddata.png",
