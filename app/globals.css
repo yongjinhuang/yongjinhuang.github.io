@@ -1,8 +1,39 @@
 @import './fonts/poppins.css';
+@import 'tailwindcss';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-light: var(--accent-light);
+  --color-accent-dark: var(--accent-dark);
+  --color-surface-dark: #0f0f14;
+  --color-surface-darker: #0a0a0f;
+  --color-surface-card: rgba(15, 15, 20, 0.9);
+
+  --shadow-brutal: 4px 4px 0 0 currentColor;
+  --shadow-brutal-sm: 2px 2px 0 0 currentColor;
+  --shadow-brutal-lg: 6px 6px 0 0 currentColor;
+  --shadow-brutal-accent: 4px 4px 0 0 var(--accent);
+  --shadow-glow-accent: 0 0 20px color-mix(in srgb, var(--accent) 40%, transparent);
+
+  --animate-mesh-gradient: mesh-gradient 15s ease infinite;
+  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+  --animate-border-flow: border-flow 3s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 /* ================================
    CSS @property for animated transitions
@@ -56,8 +87,8 @@
 
   /* Brutal Design Tokens */
   --border-brutal: 3px solid;
-  --shadow-brutal: 4px 4px 0;
-  --shadow-brutal-lg: 6px 6px 0;
+  --offset-brutal: 4px 4px 0;
+  --offset-brutal-lg: 6px 6px 0;
 
   /* Surface Colors */
   --bg-dark: #0a0a0f;
@@ -221,32 +252,32 @@ body {
 .brutal-card {
   background: var(--bg-card);
   border: 3px solid currentColor;
-  box-shadow: var(--shadow-brutal) currentColor;
+  box-shadow: var(--offset-brutal) currentColor;
   transition: var(--transition);
   position: relative;
 }
 
 .brutal-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: var(--shadow-brutal-lg) currentColor;
+  box-shadow: var(--offset-brutal-lg) currentColor;
 }
 
 /* Dark mode brutal cards */
 .dark .brutal-card {
   background: rgba(15, 15, 20, 0.9);
   border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: var(--shadow-brutal) rgba(255, 255, 255, 0.1);
+  box-shadow: var(--offset-brutal) rgba(255, 255, 255, 0.1);
 }
 
 .dark .brutal-card:hover {
   border-color: var(--accent);
-  box-shadow: var(--shadow-brutal-lg) var(--accent);
+  box-shadow: var(--offset-brutal-lg) var(--accent);
 }
 
 /* Accent-colored brutal cards */
 .brutal-card-accent {
   border-color: var(--accent);
-  box-shadow: var(--shadow-brutal) var(--accent);
+  box-shadow: var(--offset-brutal) var(--accent);
 }
 
 /* ================================
@@ -297,14 +328,14 @@ body {
    ================================ */
 .brutal-btn {
   border: 3px solid currentColor;
-  box-shadow: var(--shadow-brutal) currentColor;
+  box-shadow: var(--offset-brutal) currentColor;
   transition: var(--transition);
   font-weight: 600;
 }
 
 .brutal-btn:hover {
   transform: translate(-2px, -2px);
-  box-shadow: var(--shadow-brutal-lg) currentColor;
+  box-shadow: var(--offset-brutal-lg) currentColor;
 }
 
 .brutal-btn:active {
@@ -316,21 +347,21 @@ body {
   background: var(--accent);
   color: var(--accent-foreground, #000);
   border-color: #000;
-  box-shadow: var(--shadow-brutal) #000;
+  box-shadow: var(--offset-brutal) #000;
 }
 
 .brutal-btn-accent:hover {
-  box-shadow: var(--shadow-brutal-lg) #000;
+  box-shadow: var(--offset-brutal-lg) #000;
 }
 
 .dark .brutal-btn-accent {
   border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: var(--shadow-brutal) color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: var(--offset-brutal) color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .dark .brutal-btn-accent:hover {
   border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: var(--shadow-brutal-lg) color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow: var(--offset-brutal-lg) color-mix(in srgb, var(--accent) 65%, transparent);
 }
 
 /* ================================
@@ -442,25 +473,25 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 2px solid rgba(15, 23, 42, 0.14);
-  box-shadow: var(--shadow-brutal) rgba(15, 23, 42, 0.08);
+  box-shadow: var(--offset-brutal) rgba(15, 23, 42, 0.08);
   transition: var(--transition);
 }
 
 .dark .glass-card {
   background: rgba(15, 15, 20, 0.88);
   border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: var(--shadow-brutal) rgba(255, 255, 255, 0.05);
+  box-shadow: var(--offset-brutal) rgba(255, 255, 255, 0.05);
 }
 
 .glass-card:not(.glass-card-static):hover {
   transform: translate(-2px, -2px);
   border-color: var(--accent);
-  box-shadow: var(--shadow-brutal-lg) rgba(15, 23, 42, 0.14);
+  box-shadow: var(--offset-brutal-lg) rgba(15, 23, 42, 0.14);
 }
 
 .dark .glass-card:not(.glass-card-static):hover {
   border-color: var(--accent);
-  box-shadow: var(--shadow-brutal-lg) color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow: var(--offset-brutal-lg) color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 /* ================================

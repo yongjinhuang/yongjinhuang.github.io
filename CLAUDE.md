@@ -68,7 +68,7 @@ Production deployments run automatically via GitHub Actions (`.github/workflows/
 - **Dual Theme Layers**:
   1. **Light/Dark Mode**: Managed by `next-themes` (`attribute="class"`, default `dark`) in `app/[lang]/layout.tsx`.
   2. **Accent Color Schemes**: Managed by `components/ColorSchemeProvider.tsx` and `lib/color-schemes.ts` (`amber`, `aurora`, `sunset`, `ocean`, `violet`, `rose`). By default, the accent scheme rotates hourly based on the user's local clock unless overridden in `localStorage` (`color-scheme-override`). Sets `data-color-scheme` on `<html>`.
-- **CSS Variables (`app/globals.css`)**: Uses CSS `@property` declarations (`--accent`, `--accent-light`, `--accent-dark`, `--blob-primary`, `--blob-secondary`) for smooth 1s color transitions across schemes, alongside brutalist shadow/border utility classes and Tailwind CSS (`tailwind.config.ts`).
+- **CSS Variables (`app/globals.css`)**: Uses CSS `@property` declarations (`--accent`, `--accent-light`, `--accent-dark`, `--blob-primary`, `--blob-secondary`) for smooth 1s color transitions across schemes, alongside brutalist shadow/border utility classes and Tailwind CSS v4 (`@theme inline` in `app/globals.css` and `@tailwindcss/postcss` in `postcss.config.mjs`).
 
 ### SEO Architecture
 
