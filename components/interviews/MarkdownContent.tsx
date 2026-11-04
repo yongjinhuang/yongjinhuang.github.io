@@ -1,6 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+  isValidElement,
+} from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -13,9 +21,19 @@ import {
 import './hljs-themes.css';
 import type { InterviewFile } from '@/types';
 import type { Components } from 'react-markdown';
+import type { CodeThemeId } from './CodeThemePicker';
 import { MermaidDiagram } from './MermaidDiagram';
 
 const DEFAULT_VAULT = 'interviews';
+
+type ReactMarkdownProps = ComponentProps<typeof ReactMarkdown>;
+
+const REMARK_PLUGINS: NonNullable<ReactMarkdownProps['remarkPlugins']> = [
+  remarkGfm,
+];
+const REHYPE_PLUGINS: NonNullable<ReactMarkdownProps['rehypePlugins']> = [
+  [rehypeHighlight, { ignoreMissing: true }],
+];
 
 type FileSelectHandler = (slug: string) => void;
 
@@ -51,20 +69,12 @@ export function createHeadingSlugger(): (text: string) => string {
   };
 }
 
-function getTextContent(children: React.ReactNode): string {
+function getTextContent(children: ReactNode): string {
   if (typeof children === 'string') return children;
   if (typeof children === 'number') return String(children);
   if (Array.isArray(children)) return children.map(getTextContent).join('');
-  if (
-    children &&
-    typeof children === 'object' &&
-    'props' in children &&
-    (children as React.ReactElement).props
-  ) {
-    return getTextContent(
-      (children as React.ReactElement<{ children?: React.ReactNode }>).props
-        .children
-    );
+  if (isValidElement<{ children?: ReactNode }>(children)) {
+    return getTextContent(children.props.children);
   }
   return '';
 }
@@ -84,17 +94,32 @@ function resolveImageSrc(src: string | undefined, vaultName: string): string {
 interface CodeBlockProps {
   readonly language: string;
   readonly rawCode: string;
-  readonly children: React.ReactNode;
+  readonly children: ReactNode;
 }
 
 function CodeBlock({ language, rawCode, children }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current !== null) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(rawCode.replace(/\n$/, ''));
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      if (copyTimeoutRef.current !== null) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = setTimeout(() => {
+        setCopied(false);
+        copyTimeoutRef.current = null;
+      }, 1800);
     } catch {
       // Fallback if clipboard API fails
     }
@@ -199,18 +224,19 @@ function createMarkdownComponents(
       let language = '';
       let rawCode = '';
 
-      if (child && typeof child === 'object' && 'props' in child) {
-        const codeElement = child as React.ReactElement<{
+      if (
+        isValidElement<{
           className?: string;
-          children?: React.ReactNode;
-        }>;
-        const className = codeElement.props.className || '';
+          children?: ReactNode;
+        }>(child)
+      ) {
+        const className = child.props.className || '';
         const isMermaid =
           className.includes('language-mermaid') ||
           className.includes('language-sequence') ||
           className.includes('language-flowchart') ||
           className.includes('language-graph');
-        rawCode = getTextContent(codeElement.props.children);
+        rawCode = getTextContent(child.props.children);
         if (isMermaid) {
           return <MermaidDiagram chart={rawCode} />;
         }
@@ -318,7 +344,7 @@ function createMarkdownComponents(
 interface MarkdownContentProps {
   readonly file: InterviewFile;
   readonly onFileSelect?: FileSelectHandler;
-  readonly codeTheme?: string;
+  readonly codeTheme?: CodeThemeId | string;
   readonly vaultName?: string;
   readonly prevFile?: InterviewFile | null;
   readonly nextFile?: InterviewFile | null;
@@ -332,10 +358,9 @@ export function MarkdownContent({
   prevFile,
   nextFile,
 }: MarkdownContentProps) {
-  const components = createMarkdownComponents(
-    onFileSelect,
-    file.category,
-    vaultName
+  const components = useMemo(
+    () => createMarkdownComponents(onFileSelect, file.category, vaultName),
+    [onFileSelect, file.category, vaultName]
   );
 
   return (
@@ -345,8 +370,8 @@ export function MarkdownContent({
     >
       <div className="max-w-4xl mx-auto">
         <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
+          remarkPlugins={REMARK_PLUGINS}
+          rehypePlugins={REHYPE_PLUGINS}
           components={components}
         >
           {file.content}

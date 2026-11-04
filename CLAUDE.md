@@ -23,7 +23,9 @@ _Note: There is no test suite configured in this repository._
 ```bash
 npm run lint         # Run ESLint across the project
 npm run lint:fix     # Auto-fix ESLint issues
+npm run typecheck    # Run TypeScript type checking (tsc --noEmit)
 npm run format       # Format TypeScript, JSON, and Markdown files with Prettier
+npm run format:check # Check Prettier formatting across project files
 ```
 
 ### Deployment & Assets
@@ -44,7 +46,7 @@ Production deployments run automatically via GitHub Actions (`.github/workflows/
 - **Post-Build (`scripts/postbuild.js`)**: Triggered automatically via the `postbuild` npm lifecycle script after `next build`. It:
   1. Creates `out/.nojekyll` so GitHub Pages serves `_next/` assets.
   2. Injects the `/sitemap.xsl` stylesheet reference into `out/sitemap.xml`.
-  3. Rewrites `<html lang="en">` to the matching locale attribute in generated non-English HTML files (e.g., `out/zh.html`, `out/zh/*.html`) because RootLayout is shared across all static routes.
+  3. Recursively rewrites `<html lang="en">` to the matching locale attribute in generated non-English HTML files (e.g., `out/zh.html`, `out/zh/**/*.html`) because RootLayout is shared across all static routes.
 
 ### Routing & Internationalization (i18n)
 
@@ -58,7 +60,7 @@ Production deployments run automatically via GitHub Actions (`.github/workflows/
 ### Markdown Vaults & Docs Viewer (`/[lang]/docs`)
 
 - **Build-Time Ingestion (`lib/vaults.ts`)**: Reads Markdown files from `public/vaults/<vault-name>/` (supporting top-level `.md` files and up to two levels of category subdirectories) at build time during static generation.
-- **Client Viewer (`components/interviews/`)**: Renders a multi-tab, split-pane documentation reader (`InterviewViewer`, `SplitPaneViewer`, `TabBar`, `Sidebar`, `TableOfContents`) with GFM Markdown (`react-markdown` + `remark-gfm`), syntax highlighting (`rehype-highlight` with selectable themes in `CodeThemePicker`), client-side Mermaid diagram rendering (`MermaidDiagram`), and PDF export (`html2pdf.js`).
+- **Client Viewer (`components/interviews/`)**: Renders a multi-tab, split-pane documentation reader (`InterviewViewer`, `SplitPaneViewer`, `TabBar`, `Sidebar`, `TableOfContents`) with GFM Markdown (`react-markdown` + `remark-gfm`), syntax highlighting (`rehype-highlight` with selectable themes in `CodeThemePicker`), client-side Mermaid diagram rendering (`MermaidDiagram`), and native browser print-to-PDF export.
 - **URL State (`lib/useFileSelection.ts`)**: Synchronizes selected vault and open file tabs with URL query parameters.
 
 ### Theming & Styling System

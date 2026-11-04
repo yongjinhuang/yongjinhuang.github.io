@@ -46,9 +46,12 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
+    if (!resolvedTheme) return;
+
     let cancelled = false;
     renderCountRef.current += 1;
     const renderId = renderCountRef.current;
+    const diagramId = `mermaid-${uniqueId}-${renderId}`;
 
     async function renderChart() {
       try {
@@ -57,24 +60,23 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
 
         mermaid.initialize({
           startOnLoad: false,
+          suppressErrorRendering: true,
           theme: isDark ? 'dark' : 'default',
-          securityLevel: 'loose',
+          securityLevel: 'strict',
           fontFamily: 'ui-monospace, monospace',
           flowchart: { curve: 'basis', padding: 16 },
           sequence: { actorMargin: 50, messageMargin: 40 },
           themeVariables: isDark ? darkThemeVariables : lightThemeVariables,
         });
 
-        const { svg: rendered } = await mermaid.render(
-          `mermaid-${uniqueId}-${renderId}`,
-          chart.trim()
-        );
+        const { svg: rendered } = await mermaid.render(diagramId, chart.trim());
 
         if (!cancelled) {
           setSvg(rendered);
           setError('');
         }
       } catch (err) {
+        document.getElementById(`d${diagramId}`)?.remove();
         if (!cancelled) {
           setError(
             err instanceof Error ? err.message : 'Failed to render diagram'

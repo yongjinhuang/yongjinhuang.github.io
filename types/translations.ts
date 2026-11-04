@@ -67,13 +67,8 @@ export interface CompanyExperienceTranslations {
 export interface ExperienceTranslations {
   title: string;
   tagline: string;
-  company: {
-    cognizant: CompanyExperienceTranslations;
-    wilddata: CompanyExperienceTranslations;
-    tarro: CompanyExperienceTranslations;
-    shopee: CompanyExperienceTranslations;
-    huawei: CompanyExperienceTranslations;
-  };
+  currentBadge?: string;
+  company: Record<string, CompanyExperienceTranslations>;
 }
 
 export interface ContactDetailTranslations {
@@ -99,6 +94,7 @@ export interface EducationTranslations {
   university: string;
   major: string;
   period: string;
+  highlights?: string[];
 }
 
 export interface FooterTranslations {

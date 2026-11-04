@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
-import { Locale, i18n, getTranslations } from '@/app/i18n/settings';
+import {
+  i18n,
+  isValidLocale,
+  getTranslations,
+  type Locale,
+} from '@/app/i18n/settings';
 import { PageTransition } from '@/components/PageTransition';
 import { SectionHeader } from '@/components/ui';
 import {
@@ -11,6 +16,7 @@ import {
 } from '@/components/sections';
 import { JsonLd } from '@/components/JsonLd';
 import { BASE_URL, META, OG_IMAGE, SELFIE_IMAGE, SITE_NAME } from '@/lib/seo';
+import { formatFullName } from '@/lib/utils';
 
 interface Props {
   params: Promise<{ lang: string }>;
@@ -18,7 +24,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang: rawLang } = await params;
-  const lang = rawLang as Locale;
+  const lang: Locale = isValidLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const meta = META[lang] ?? META.en;
 
   return {
@@ -41,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           url: OG_IMAGE,
           width: 1200,
           height: 630,
-          alt: 'Yongjin Huang — Software Engineer',
+          alt: SITE_NAME,
         },
       ],
       locale: lang === 'zh' ? 'zh_CN' : 'en_US',
@@ -50,21 +56,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: meta.homeTitle,
       description: meta.homeDescription,
-      images: [{ url: OG_IMAGE, alt: 'Yongjin Huang — Software Engineer' }],
+      images: [{ url: OG_IMAGE, alt: SITE_NAME }],
     },
   };
 }
 
 export default async function Home({ params }: Props) {
   const { lang: rawLang } = await params;
-  const lang = rawLang as Locale;
+  const lang: Locale = isValidLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const t = await getTranslations(lang);
 
-  const isCJK =
-    /[一-鿿]/.test(t.intro.name.first) || /[一-鿿]/.test(t.intro.name.last);
-  const fullName = isCJK
-    ? `${t.intro.name.last}${t.intro.name.first}`
-    : `${t.intro.name.first} ${t.intro.name.last}`;
+  const fullName = formatFullName(t.intro.name.first, t.intro.name.last);
 
   const personSchema = {
     '@context': 'https://schema.org',

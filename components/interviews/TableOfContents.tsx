@@ -92,7 +92,7 @@ export function TableOfContents({
     const slugs = items.map((item) => item.slug);
     const elements = slugs
       .map((slug) => findHeadingElement(rootEl, slug))
-      .filter(Boolean) as HTMLElement[];
+      .filter((el): el is HTMLElement => el !== null);
 
     if (elements.length === 0) return;
 

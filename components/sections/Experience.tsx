@@ -1,12 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import { motion } from 'framer-motion';
 import { FaCalendarAlt } from 'react-icons/fa';
 import { FiExternalLink } from 'react-icons/fi';
 import { SectionHeader, Card } from '@/components/ui';
-import { cn } from '@/lib/utils';
+import { cn, isCJK } from '@/lib/utils';
 import type {
   ExperienceTranslations,
   CompanyExperienceTranslations,
@@ -16,12 +16,35 @@ interface ExperienceProps {
   experience: ExperienceTranslations;
 }
 
+const markdownComponents: Components = {
+  p: ({ ...props }) => <span {...props} />,
+  a: ({ ...props }) => (
+    <a
+      {...props}
+      className="break-words text-accent underline-offset-2 hover:underline"
+      target="_blank"
+      rel="noopener noreferrer"
+    />
+  ),
+  strong: ({ ...props }) => (
+    <strong {...props} className="font-bold text-accent" />
+  ),
+  code: ({ ...props }) => (
+    <code
+      {...props}
+      className="break-words rounded bg-gray-100 px-1 py-0.5 text-[0.85em] text-gray-800 dark:bg-white/10 dark:text-gray-100"
+    />
+  ),
+};
+
 function ExperienceCard({
   exp,
   isCurrent,
+  currentLabel,
 }: {
   readonly exp: CompanyExperienceTranslations;
   readonly isCurrent: boolean;
+  readonly currentLabel: string;
 }) {
   return (
     <Card
@@ -57,7 +80,7 @@ function ExperienceCard({
             </h3>
             {isCurrent && (
               <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-accent/15 text-accent border border-accent/30 rounded-full flex-shrink-0">
-                Current
+                {currentLabel}
               </span>
             )}
           </div>
@@ -94,28 +117,7 @@ function ExperienceCard({
           >
             <span className="flex-shrink-0 w-1 h-1 mt-1.5 bg-accent rounded-full" />
             <div className="min-w-0 flex-1">
-              <ReactMarkdown
-                components={{
-                  p: ({ ...props }) => <span {...props} />,
-                  a: ({ ...props }) => (
-                    <a
-                      {...props}
-                      className="break-words text-accent underline-offset-2 hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    />
-                  ),
-                  strong: ({ ...props }) => (
-                    <strong {...props} className="font-bold text-accent" />
-                  ),
-                  code: ({ ...props }) => (
-                    <code
-                      {...props}
-                      className="break-words rounded bg-gray-100 px-1 py-0.5 text-[0.85em] text-gray-800 dark:bg-white/10 dark:text-gray-100"
-                    />
-                  ),
-                }}
-              >
+              <ReactMarkdown components={markdownComponents}>
                 {responsibility}
               </ReactMarkdown>
             </div>
@@ -127,18 +129,13 @@ function ExperienceCard({
 }
 
 export function Experience({ experience }: ExperienceProps) {
-  const experiences: Array<{
-    id: string;
-    data: CompanyExperienceTranslations;
-  }> = [
-    { id: 'cognizant', data: experience.company.cognizant },
-    { id: 'wilddata', data: experience.company.wilddata },
-    { id: 'tarro', data: experience.company.tarro },
-    { id: 'shopee', data: experience.company.shopee },
-    { id: 'huawei', data: experience.company.huawei },
-  ];
+  const experiences = Object.entries(experience.company).map(([id, data]) => ({
+    id,
+    data,
+  }));
 
   const hasFeaturedLead = experiences.length % 2 === 1;
+  const defaultCurrentLabel = isCJK(experience.title) ? '在职' : 'Current';
 
   return (
     <section id="experience" className="py-4 md:py-6 scroll-mt-28">
@@ -160,6 +157,7 @@ export function Experience({ experience }: ExperienceProps) {
             <ExperienceCard
               exp={exp}
               isCurrent={/present|至今/i.test(exp.period)}
+              currentLabel={experience.currentBadge ?? defaultCurrentLabel}
             />
           </motion.div>
         ))}

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { InterviewCategory, VaultInfo } from '@/types';
 import { SidebarItem } from './SidebarItem';
 import {
+  HiArchiveBox,
   HiChevronDown,
   HiChevronRight,
   HiFolderOpen,
@@ -14,7 +15,6 @@ import {
   HiMinus,
   HiBars3BottomLeft,
 } from 'react-icons/hi2';
-import { HiArchiveBox } from 'react-icons/hi2';
 
 interface SidebarProps {
   readonly categories: readonly InterviewCategory[];
@@ -78,7 +78,7 @@ export function Sidebar({
       const input = searchInputRef.current;
       if (!input || input.offsetParent === null) return;
 
-      const target = e.target as HTMLElement | null;
+      const target = e.target instanceof HTMLElement ? e.target : null;
       const isEditable =
         target instanceof HTMLInputElement ||
         target instanceof HTMLTextAreaElement ||

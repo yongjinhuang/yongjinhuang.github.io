@@ -4,21 +4,31 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { FaGraduationCap, FaAward } from 'react-icons/fa';
 import { Card } from '@/components/ui';
+import { isCJK } from '@/lib/utils';
 import type { EducationTranslations } from '@/types';
 
 interface EducationProps {
   education: EducationTranslations;
 }
 
+const DEFAULT_HIGHLIGHTS_ZH = [
+  '985 / 211 / 双一流高校',
+  '软件工程工学学士',
+  '全日制本科（4 年）',
+];
+
+const DEFAULT_HIGHLIGHTS_EN = [
+  'Project 985 / Double First-Class',
+  'B.Eng. in Software Engineering',
+  'Full-time (4 Years)',
+];
+
 export function Education({ education }: EducationProps) {
-  const isCJK = /[一-鿿]/.test(education.university);
-  const highlights = isCJK
-    ? ['985 / 211 / 双一流高校', '软件工程工学学士', '全日制本科（4 年）']
-    : [
-        'Project 985 / Double First-Class',
-        'B.Eng. in Software Engineering',
-        'Full-time (4 Years)',
-      ];
+  const highlights =
+    education.highlights ??
+    (isCJK(education.university)
+      ? DEFAULT_HIGHLIGHTS_ZH
+      : DEFAULT_HIGHLIGHTS_EN);
 
   return (
     <motion.div

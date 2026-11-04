@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseFileSelectionOptions {
   readonly defaultSlug: string;
@@ -57,7 +57,10 @@ function writeToUrl(state: FileSelectionState, defaultVault: string) {
   const newUrl = query
     ? `${window.location.pathname}?${query}`
     : window.location.pathname;
-  window.history.replaceState(null, '', newUrl);
+  const currentUrl = `${window.location.pathname}${window.location.search}`;
+  if (newUrl !== currentUrl) {
+    window.history.replaceState(null, '', newUrl);
+  }
 }
 
 export function useFileSelection({
@@ -69,14 +72,24 @@ export function useFileSelection({
     splitSlug: null,
     vault: defaultVault,
   });
+  const isInitialized = useRef(false);
 
-  // Read URL on mount
+  // Read URL on mount and listen to browser Back/Forward navigation
   useEffect(() => {
     setState(readFromUrl(defaultSlug, defaultVault));
+    isInitialized.current = true;
+
+    const handlePopState = () => {
+      setState(readFromUrl(defaultSlug, defaultVault));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [defaultSlug, defaultVault]);
 
-  // Sync state to URL
+  // Sync state to URL after initial hydration
   useEffect(() => {
+    if (!isInitialized.current) return;
     writeToUrl(state, defaultVault);
   }, [state, defaultVault]);
 
@@ -88,8 +101,8 @@ export function useFileSelection({
     setState((prev) => ({ ...prev, splitSlug: slug }));
   }, []);
 
-  const setVault = useCallback((vault: string) => {
-    setState({ activeTab: '', splitSlug: null, vault });
+  const setVault = useCallback((vault: string, initialSlug = '') => {
+    setState({ activeTab: initialSlug, splitSlug: null, vault });
   }, []);
 
   return {

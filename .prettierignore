@@ -1,0 +1,8 @@
+node_modules/
+.next/
+out/
+build/
+public/vaults/
+pnpm-lock.yaml
+package-lock.json
+*.tsbuildinfo

@@ -48,15 +48,16 @@ const CATEGORY_LABELS: Record<string, string> = {
   whatnot: 'Whatnot',
 };
 
+function formatLabel(slug: string): string {
+  return slug.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function extractTitle(content: string, filename: string): string {
   const match = content.match(/^#\s+(.+)$/m);
   if (match) {
     return match[1].trim();
   }
-  return filename
-    .replace(/\.md$/, '')
-    .replace(/[-_]/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return formatLabel(filename.replace(/\.md$/, ''));
 }
 
 function readMarkdownFiles(
@@ -83,6 +84,22 @@ function readMarkdownFiles(
   }
 }
 
+function resolveSafeVaultDir(vaultName: string): string | null {
+  if (
+    !vaultName ||
+    vaultName.includes('..') ||
+    vaultName.includes('/') ||
+    vaultName.includes('\\')
+  ) {
+    return null;
+  }
+  const resolved = path.resolve(VAULTS_DIR, vaultName);
+  if (!resolved.startsWith(`${VAULTS_DIR}${path.sep}`)) {
+    return null;
+  }
+  return resolved;
+}
+
 export function getAvailableVaults(): readonly VaultInfo[] {
   try {
     const entries = fs.readdirSync(VAULTS_DIR, { withFileTypes: true });
@@ -90,9 +107,7 @@ export function getAvailableVaults(): readonly VaultInfo[] {
       .filter((e) => e.isDirectory())
       .map((e) => ({
         name: e.name,
-        label: e.name
-          .replace(/[-_]/g, ' ')
-          .replace(/\b\w/g, (c) => c.toUpperCase()),
+        label: formatLabel(e.name),
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
   } catch {
@@ -101,7 +116,10 @@ export function getAvailableVaults(): readonly VaultInfo[] {
 }
 
 export function getVaultFiles(vaultName: string): readonly InterviewFile[] {
-  const vaultDir = path.join(VAULTS_DIR, vaultName);
+  const vaultDir = resolveSafeVaultDir(vaultName);
+  if (!vaultDir) {
+    return [];
+  }
 
   try {
     // Top-level .md files (flat vault structure)
@@ -114,14 +132,19 @@ export function getVaultFiles(vaultName: string): readonly InterviewFile[] {
         const subDir = path.join(vaultDir, entry.name);
         const mdFiles = readMarkdownFiles(subDir, entry.name);
 
-        const nestedEntries = fs
-          .readdirSync(subDir, { withFileTypes: true })
-          .filter((e) => e.isDirectory());
-        const nestedFiles = nestedEntries.flatMap((nested) => {
-          const nestedDir = path.join(subDir, nested.name);
-          const category = `${entry.name}/${nested.name}`;
-          return readMarkdownFiles(nestedDir, category);
-        });
+        let nestedFiles: readonly InterviewFile[] = [];
+        try {
+          const nestedEntries = fs
+            .readdirSync(subDir, { withFileTypes: true })
+            .filter((e) => e.isDirectory());
+          nestedFiles = nestedEntries.flatMap((nested) => {
+            const nestedDir = path.join(subDir, nested.name);
+            const category = `${entry.name}/${nested.name}`;
+            return readMarkdownFiles(nestedDir, category);
+          });
+        } catch {
+          nestedFiles = [];
+        }
 
         return [...mdFiles, ...nestedFiles];
       });
@@ -140,15 +163,17 @@ export function getVaultCategories(
   const categoryMap = new Map<string, InterviewFile[]>();
 
   for (const file of files) {
-    const existing = categoryMap.get(file.category) ?? [];
-    categoryMap.set(file.category, [...existing, file]);
+    let existing = categoryMap.get(file.category);
+    if (!existing) {
+      existing = [];
+      categoryMap.set(file.category, existing);
+    }
+    existing.push(file);
   }
 
   return Array.from(categoryMap.entries()).map(([name, catFiles]) => ({
     name,
-    label:
-      CATEGORY_LABELS[name] ??
-      name.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    label: CATEGORY_LABELS[name] ?? formatLabel(name),
     files: catFiles,
   }));
 }

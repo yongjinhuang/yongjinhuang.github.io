@@ -7,6 +7,7 @@ import { SiLeetcode } from 'react-icons/si';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { IconButton } from '@/components/ui';
+import { formatFullName, isCJK } from '@/lib/utils';
 import type { IntroTranslations } from '@/types';
 
 interface IntroProps {
@@ -17,11 +18,8 @@ export function Intro({ intro }: IntroProps) {
   const [mounted, setMounted] = useState(false);
   const [typedText, setTypedText] = useState('');
   const fullText = intro.tagline;
-  const isCJK =
-    /[一-鿿]/.test(intro.name.first) || /[一-鿿]/.test(intro.name.last);
-  const fullName = isCJK
-    ? `${intro.name.last}${intro.name.first}`
-    : `${intro.name.first} ${intro.name.last}`;
+  const hasCJKName = isCJK(intro.name.first) || isCJK(intro.name.last);
+  const fullName = formatFullName(intro.name.first, intro.name.last);
 
   useEffect(() => {
     setMounted(true);
@@ -66,10 +64,9 @@ export function Intro({ intro }: IntroProps) {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 tracking-tight"
             >
-              {isCJK ? (
+              {hasCJKName ? (
                 <span className="inline-block text-gray-900 dark:text-white hover:text-accent transition-all duration-300 cursor-default">
-                  {intro.name.last}
-                  {intro.name.first}
+                  {fullName}
                 </span>
               ) : (
                 <>

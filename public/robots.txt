@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /docs
 Disallow: /en/docs
 Disallow: /zh/docs
 Disallow: /vaults/
