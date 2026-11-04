@@ -1,0 +1,44 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-6 -10 64.1 64" xml:space="preserve">
+  <defs>
+    <path id="c_mark_bounds" d="M0 0h52.1v44H0z"/>
+    <path id="c_facet_bl" d="m0 22 15.3 22 15.8-9.5L22.2 22z"/>
+    <path id="c_facet_br" d="M15.3 44h21.8l15-22z"/>
+    <path id="c_facet_tl" d="M15.3 0 0 22h22.2l8.9-12.5z"/>
+    <path id="c_facet_tr" d="m15.3 0 36.8 22-15-22z"/>
+  </defs>
+  <clipPath id="clip_bounds"><use xlink:href="#c_mark_bounds" overflow="visible"/></clipPath>
+  <g clip-path="url(#clip_bounds)">
+    <clipPath id="clip_bl"><use xlink:href="#c_facet_bl" overflow="visible"/></clipPath>
+    <g clip-path="url(#clip_bl)">
+      <linearGradient id="grad_bl" gradientUnits="userSpaceOnUse" x1="-391.039" y1="277.815" x2="-390.039" y2="277.815" gradientTransform="matrix(31.1065 0 0 -21.9795 12163.862 6139.21)">
+        <stop offset="0" stop-color="#3d54ce"/>
+        <stop offset="1" stop-color="#35cacf"/>
+      </linearGradient>
+      <path fill="url(#grad_bl)" d="M0 22h31.1v22H0z"/>
+    </g>
+    <clipPath id="clip_br"><use xlink:href="#c_facet_br" overflow="visible"/></clipPath>
+    <g clip-path="url(#clip_br)">
+      <linearGradient id="grad_br" gradientUnits="userSpaceOnUse" x1="-393.062" y1="277.815" x2="-392.062" y2="277.815" gradientTransform="matrix(36.8476 0 0 -21.9795 14498.684 6139.21)">
+        <stop offset="0" stop-color="#13457d"/>
+        <stop offset="1" stop-color="#279698"/>
+      </linearGradient>
+      <path fill="url(#grad_br)" d="M15.3 22h36.8v22H15.3z"/>
+    </g>
+    <clipPath id="clip_tl"><use xlink:href="#c_facet_tl" overflow="visible"/></clipPath>
+    <g clip-path="url(#clip_tl)">
+      <linearGradient id="grad_tl" gradientUnits="userSpaceOnUse" x1="-391.049" y1="277.815" x2="-390.049" y2="277.815" gradientTransform="matrix(31.1316 0 0 -21.9796 12173.976 6117.246)">
+        <stop offset="0" stop-color="#090086"/>
+        <stop offset="1" stop-color="#2f96a9"/>
+      </linearGradient>
+      <path fill="url(#grad_tl)" d="M0 0h31.1v22H0z"/>
+    </g>
+    <clipPath id="clip_tr"><use xlink:href="#c_facet_tr" overflow="visible"/></clipPath>
+    <g clip-path="url(#clip_tr)">
+      <linearGradient id="grad_tr" gradientUnits="userSpaceOnUse" x1="-393.062" y1="277.815" x2="-392.062" y2="277.815" gradientTransform="matrix(36.8476 0 0 -21.9796 14498.684 6117.246)">
+        <stop offset="0" stop-color="#3b62ca"/>
+        <stop offset="1" stop-color="#93dfe3"/>
+      </linearGradient>
+      <path fill="url(#grad_tr)" d="M15.3 0h36.8v22H15.3z"/>
+    </g>
+  </g>
+</svg>
