@@ -60,7 +60,7 @@ export function Navbar({ nav }: NavbarProps) {
     {
       id: 'docs',
       label: docsLabel,
-      href: `/${lang}/docs`,
+      href: '/docs',
       isRoute: true,
     },
   ];

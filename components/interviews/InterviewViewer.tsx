@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useTheme } from '@/components/ThemeProvider';
 import {
   HiBars3,
@@ -10,10 +12,14 @@ import {
   HiChevronDown,
   HiArrowDownTray,
   HiListBullet,
+  HiArrowLeft,
+  HiBookOpen,
 } from 'react-icons/hi2';
 import { cn } from '@/lib/utils';
 import type { InterviewFile, InterviewCategory, VaultInfo } from '@/types';
 import { useFileSelection } from '@/lib/useFileSelection';
+import ThemeToggle from '@/components/ThemeToggle';
+import ColorSchemePicker from '@/components/ColorSchemePicker';
 import { Sidebar } from './Sidebar';
 import { MarkdownContent } from './MarkdownContent';
 import { TableOfContents, parseTocItems } from './TableOfContents';
@@ -106,6 +112,8 @@ function printArticleHtml(title: string, bodyHtml: string): void {
 }
 
 export function InterviewViewer({ vaults, vaultData }: InterviewViewerProps) {
+  usePathname();
+
   const firstVault =
     vaults.find((v) => v.name === DEFAULT_VAULT)?.name ??
     vaults[0]?.name ??
@@ -168,6 +176,14 @@ export function InterviewViewer({ vaults, vaultData }: InterviewViewerProps) {
   );
 
   const selectedFile = selectedFileIndex >= 0 ? files[selectedFileIndex] : null;
+  const activeCategoryLabel = useMemo(() => {
+    if (!selectedFile) return '';
+    return (
+      categories.find((c) => c.name === selectedFile.category)?.label ??
+      selectedFile.category
+    );
+  }, [categories, selectedFile]);
+
   const prevFile = selectedFileIndex > 0 ? files[selectedFileIndex - 1] : null;
   const nextFile =
     selectedFileIndex >= 0 && selectedFileIndex < files.length - 1
@@ -210,8 +226,8 @@ export function InterviewViewer({ vaults, vaultData }: InterviewViewerProps) {
 
   useEffect(() => {
     const width = window.innerWidth;
-    if (width < 1536) setRightPanelOpen(false);
-    if (width < 1280) setLeftPanelOpen(false);
+    if (width < 1440) setRightPanelOpen(false);
+    if (width < 1024) setLeftPanelOpen(false);
   }, []);
 
   const handleFileSelect = useCallback(
@@ -288,53 +304,127 @@ export function InterviewViewer({ vaults, vaultData }: InterviewViewerProps) {
     printArticleHtml(selectedFile.title, article.innerHTML);
   }, [selectedFile]);
 
-  if (files.length === 0) {
-    return (
-      <div className="glass-card p-8 text-center">
-        <p className="text-gray-500 dark:text-gray-400">
-          No files found in this vault.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex min-h-[70vh]">
-      {/* ===== Mobile Sidebar Overlay ===== */}
-      {mobileSidebarOpen && (
-        <div
-          className="fixed inset-0 top-24 z-30 bg-black/50 lg:hidden"
-          onClick={() => setMobileSidebarOpen(false)}
-        />
-      )}
-      <div
-        className={cn(
-          'fixed top-24 left-0 bottom-0 z-40 w-72 lg:hidden',
-          'transition-transform duration-300',
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
-        <Sidebar
-          categories={categories}
-          selectedSlug={activeTab}
-          onSelect={handleFileSelect}
-          vaults={vaults}
-          currentVault={currentVault}
-          onVaultChange={handleVaultChange}
-        />
-      </div>
+    <div className="h-dvh w-screen flex flex-col overflow-hidden bg-gray-50 dark:bg-[#0a0a0f] text-gray-900 dark:text-gray-100">
+      {/* ===== Standalone Docs App Header Bar ===== */}
+      <header className="h-12 shrink-0 border-b border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#0d0d12] px-3 sm:px-4 flex items-center justify-between gap-3 z-30">
+        {/* Left: Mobile Drawer Toggle + Portfolio Back Link + App Brand + Breadcrumb */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen((prev) => !prev)}
+            className="lg:hidden p-1.5 rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-accent hover:text-accent transition-colors"
+            aria-label={mobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+          >
+            {mobileSidebarOpen ? (
+              <HiXMark className="w-4 h-4" />
+            ) : (
+              <HiBars3 className="w-4 h-4" />
+            )}
+          </button>
 
-      {/* ===== Desktop Left Panel (collapsible, sticky) ===== */}
-      <div
-        className={cn(
-          'hidden lg:block shrink-0 transition-[width,margin] duration-300',
-          leftPanelOpen ? 'w-72 xl:w-80 mr-6' : 'w-0 mr-0'
+          <button
+            type="button"
+            onClick={() => setLeftPanelOpen((prev) => !prev)}
+            className="hidden lg:inline-flex p-1.5 rounded-md border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-accent hover:text-accent transition-colors"
+            title={leftPanelOpen ? 'Hide sidebar' : 'Show sidebar'}
+            aria-label={leftPanelOpen ? 'Hide sidebar' : 'Show sidebar'}
+          >
+            {leftPanelOpen ? (
+              <HiChevronLeft className="w-3.5 h-3.5" />
+            ) : (
+              <HiChevronRight className="w-3.5 h-3.5" />
+            )}
+          </button>
+
+          <Link
+            href="/en"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:border-accent hover:text-accent transition-colors shrink-0"
+            title="Back to Portfolio"
+          >
+            <HiArrowLeft className="w-3.5 h-3.5" />
+            <span>Portfolio</span>
+          </Link>
+
+          <div className="h-4 w-px bg-gray-200 dark:bg-white/10 hidden sm:block" />
+
+          <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-gray-900 dark:text-white shrink-0">
+            <HiBookOpen className="w-4 h-4 text-accent" />
+            <span>Docs</span>
+          </div>
+
+          {selectedFile && (
+            <div className="hidden md:flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 min-w-0 font-mono">
+              <span>/</span>
+              <span className="truncate max-w-[160px] text-gray-500 dark:text-gray-400">
+                {activeCategoryLabel}
+              </span>
+              <span>/</span>
+              <span className="truncate max-w-[240px] text-gray-800 dark:text-gray-200 font-sans font-medium">
+                {selectedFile.title}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Right: App Controls (Code Theme, PDF, Language, Color Scheme, Theme, TOC Toggle) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <CodeThemePicker value={codeTheme} onChange={handleCodeThemeChange} />
+
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-accent hover:bg-accent/10 transition-colors"
+            title="Export current document to PDF"
+          >
+            <HiArrowDownTray className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">PDF</span>
+          </button>
+
+          <div className="h-4 w-px bg-gray-200 dark:bg-white/10 mx-0.5 hidden sm:block" />
+
+          <ColorSchemePicker />
+          <ThemeToggle />
+
+          <button
+            type="button"
+            onClick={() => setRightPanelOpen((prev) => !prev)}
+            className={cn(
+              'hidden lg:inline-flex p-1.5 rounded-md border transition-colors',
+              rightPanelOpen
+                ? 'border-accent/40 bg-accent/10 text-accent'
+                : 'border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-accent hover:text-accent'
+            )}
+            title={
+              rightPanelOpen
+                ? 'Hide table of contents'
+                : 'Show table of contents'
+            }
+            aria-label={
+              rightPanelOpen
+                ? 'Hide table of contents'
+                : 'Show table of contents'
+            }
+          >
+            <HiListBullet className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* ===== 3-Pane IDE Workspace Body ===== */}
+      <div className="flex-1 flex min-h-0 relative overflow-hidden">
+        {/* Mobile Sidebar Backdrop + Drawer */}
+        {mobileSidebarOpen && (
+          <div
+            className="fixed inset-0 top-12 z-30 bg-black/50 lg:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
         )}
-      >
-        <div
+        <aside
           className={cn(
-            'w-72 xl:w-80 sticky top-28 transition-opacity duration-300',
-            leftPanelOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            'fixed top-12 left-0 bottom-0 z-40 w-72 lg:hidden border-r border-gray-200 dark:border-white/10',
+            'transition-transform duration-200',
+            mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
           <Sidebar
@@ -345,186 +435,132 @@ export function InterviewViewer({ vaults, vaultData }: InterviewViewerProps) {
             currentVault={currentVault}
             onVaultChange={handleVaultChange}
           />
-        </div>
-      </div>
+        </aside>
 
-      {/* ===== Main Content ===== */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        {/* Toggle bar */}
-        <div className="flex items-center gap-2 mb-2">
-          {/* Mobile: hamburger toggle */}
-          <button
-            onClick={() => setMobileSidebarOpen((prev) => !prev)}
-            className="lg:hidden brutal-btn px-3 py-2 flex items-center gap-2 text-sm font-bold"
-            aria-label={mobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-          >
-            {mobileSidebarOpen ? (
-              <HiXMark className="w-5 h-5" />
-            ) : (
-              <HiBars3 className="w-5 h-5" />
-            )}
-            <span>{mobileSidebarOpen ? 'Close' : 'Files'}</span>
-          </button>
-
-          {/* Desktop: left panel arrow toggle */}
-          <button
-            onClick={() => setLeftPanelOpen((prev) => !prev)}
-            className="hidden lg:flex items-center justify-center w-7 h-7 rounded-full border-2 border-gray-300 dark:border-white/20 hover:border-accent hover:text-accent text-gray-400 dark:text-gray-500 transition-colors"
-            title={leftPanelOpen ? 'Hide file list' : 'Show file list'}
-          >
-            {leftPanelOpen ? (
-              <HiChevronLeft className="w-3.5 h-3.5" />
-            ) : (
-              <HiChevronRight className="w-3.5 h-3.5" />
-            )}
-          </button>
-
-          <div className="flex-1" />
-
-          {/* Code theme picker */}
-          <CodeThemePicker value={codeTheme} onChange={handleCodeThemeChange} />
-
-          {/* PDF export */}
-          <button
-            onClick={handleExportPdf}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-accent hover:bg-accent/10 transition-colors"
-            title="Download as PDF"
-          >
-            <HiArrowDownTray className="w-4 h-4" />
-            <span className="hidden sm:inline">PDF</span>
-          </button>
-
-          {/* Desktop: right panel arrow toggle */}
-          <button
-            onClick={() => setRightPanelOpen((prev) => !prev)}
-            className="hidden lg:flex items-center justify-center w-7 h-7 rounded-full border-2 border-gray-300 dark:border-white/20 hover:border-accent hover:text-accent text-gray-400 dark:text-gray-500 transition-colors"
-            title={
-              rightPanelOpen
-                ? 'Hide table of contents'
-                : 'Show table of contents'
-            }
-          >
-            {rightPanelOpen ? (
-              <HiChevronRight className="w-3.5 h-3.5" />
-            ) : (
-              <HiChevronLeft className="w-3.5 h-3.5" />
-            )}
-          </button>
-        </div>
-
-        {/* Tab Bar */}
-        <TabBar
-          tabs={openTabs}
-          activeTab={activeTab}
-          splitSlug={splitSlug}
-          files={files}
-          onSelectTab={handleFileSelect}
-          onCloseTab={handleCloseTab}
-          onSplitTab={handleSplitTab}
-        />
-
-        {/* Mobile / Tablet Collapsible TOC Bar */}
-        {selectedFile && hasTocItems && (
-          <div className="lg:hidden mt-2">
-            <button
-              type="button"
-              onClick={() => setMobileTocOpen((prev) => !prev)}
-              aria-expanded={mobileTocOpen}
-              className="w-full flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-accent"
-            >
-              <span className="flex items-center gap-2">
-                <HiListBullet className="w-4 h-4" />
-                On this page
-              </span>
-              <HiChevronDown
-                className={cn(
-                  'w-4 h-4 transition-transform duration-200',
-                  mobileTocOpen && 'rotate-180'
-                )}
-              />
-            </button>
-            {mobileTocOpen && (
-              <div className="mt-1 p-3 rounded-lg bg-white/95 dark:bg-surface-dark/95 border border-gray-200 dark:border-white/10 max-h-64 overflow-y-auto shadow-md">
-                <TableOfContents
-                  content={selectedFile.content}
-                  scrollContainerRef={contentRef}
-                  onItemSelect={() => setMobileTocOpen(false)}
-                  hideHeader
-                />
-              </div>
-            )}
-          </div>
+        {/* Desktop Left Explorer Sidebar */}
+        {leftPanelOpen && (
+          <aside className="hidden lg:block w-68 xl:w-72 shrink-0 h-full border-r border-gray-200/80 dark:border-white/10">
+            <Sidebar
+              categories={categories}
+              selectedSlug={activeTab}
+              onSelect={handleFileSelect}
+              vaults={vaults}
+              currentVault={currentVault}
+              onVaultChange={handleVaultChange}
+            />
+          </aside>
         )}
 
-        {/* Content */}
-        <div className="mt-2 relative">
-          {splitFile && selectedFile ? (
-            <SplitPaneViewer
-              mainFile={selectedFile}
-              splitFile={splitFile}
-              onFileSelect={handleFileSelect}
-              onCloseSplit={() => setSplitSlug(null)}
-              codeTheme={codeTheme}
-              vaultName={currentVault}
-            />
-          ) : selectedFile ? (
-            <div
-              ref={contentRef}
-              onScroll={handleContentScroll}
-              className="h-[calc(100vh-12rem)] overflow-y-auto scrollbar-thin"
-            >
-              <MarkdownContent
-                file={selectedFile}
-                onFileSelect={handleFileSelect}
-                codeTheme={codeTheme}
-                vaultName={currentVault}
-                prevFile={prevFile}
-                nextFile={nextFile}
-              />
-            </div>
-          ) : (
-            <div className="glass-card p-10 text-center my-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                Document not found
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                The requested document &ldquo;{activeTab}&rdquo; does not exist
-                in this vault.
-              </p>
-              {files.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => handleFileSelect(files[0].slug)}
-                  className="brutal-btn px-4 py-2 text-xs font-bold"
-                >
-                  Open first document
-                </button>
+        {/* Center Document Pane */}
+        <div className="flex-1 min-w-0 flex flex-col h-full bg-white dark:bg-[#121218]">
+          {/* Document Tab Bar */}
+          <TabBar
+            tabs={openTabs}
+            activeTab={activeTab}
+            splitSlug={splitSlug}
+            files={files}
+            onSelectTab={handleFileSelect}
+            onCloseTab={handleCloseTab}
+            onSplitTab={handleSplitTab}
+          />
+
+          {/* Mobile Collapsible TOC Bar */}
+          {selectedFile && hasTocItems && (
+            <div className="lg:hidden border-b border-gray-200/80 dark:border-white/10 bg-gray-50 dark:bg-[#0d0d12] px-3 py-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setMobileTocOpen((prev) => !prev)}
+                aria-expanded={mobileTocOpen}
+                className="w-full flex items-center justify-between text-xs font-mono font-semibold text-accent"
+              >
+                <span className="flex items-center gap-1.5">
+                  <HiListBullet className="w-3.5 h-3.5" />
+                  On this page
+                </span>
+                <HiChevronDown
+                  className={cn(
+                    'w-3.5 h-3.5 transition-transform duration-200',
+                    mobileTocOpen && 'rotate-180'
+                  )}
+                />
+              </button>
+              {mobileTocOpen && (
+                <div className="mt-1.5 max-h-56 overflow-y-auto border-t border-gray-200/70 dark:border-white/10 pt-1">
+                  <TableOfContents
+                    content={selectedFile.content}
+                    scrollContainerRef={contentRef}
+                    onItemSelect={() => setMobileTocOpen(false)}
+                    hideHeader
+                  />
+                </div>
               )}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* ===== Desktop Right Panel (collapsible, sticky TOC) ===== */}
-      <div
-        className={cn(
-          'hidden lg:block shrink-0 transition-[width,margin] duration-300',
-          rightPanelOpen ? 'w-56 2xl:w-64 ml-6' : 'w-0 ml-0'
-        )}
-      >
-        <div
-          className={cn(
-            'w-56 2xl:w-64 sticky top-28 transition-opacity duration-300',
-            rightPanelOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          )}
-        >
-          {selectedFile && (
+          {/* Scrollable Reader / Split View */}
+          <div className="flex-1 min-h-0 relative">
+            {files.length === 0 ? (
+              <div className="p-10 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No files found in this vault.
+                </p>
+              </div>
+            ) : splitFile && selectedFile ? (
+              <SplitPaneViewer
+                mainFile={selectedFile}
+                splitFile={splitFile}
+                onFileSelect={handleFileSelect}
+                onCloseSplit={() => setSplitSlug(null)}
+                codeTheme={codeTheme}
+                vaultName={currentVault}
+              />
+            ) : selectedFile ? (
+              <div
+                ref={contentRef}
+                onScroll={handleContentScroll}
+                className="h-full overflow-y-auto scrollbar-thin"
+              >
+                <MarkdownContent
+                  file={selectedFile}
+                  onFileSelect={handleFileSelect}
+                  codeTheme={codeTheme}
+                  vaultName={currentVault}
+                  prevFile={prevFile}
+                  nextFile={nextFile}
+                />
+              </div>
+            ) : (
+              <div className="p-12 text-center">
+                <h2 className="text-base font-bold text-gray-900 dark:text-white mb-1.5">
+                  Document not found
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                  The requested document &ldquo;{activeTab}&rdquo; does not
+                  exist in this vault.
+                </p>
+                {files.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleFileSelect(files[0].slug)}
+                    className="brutal-btn px-3.5 py-1.5 text-xs font-bold"
+                  >
+                    Open first document
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Right Outline (TOC) Sidebar */}
+        {rightPanelOpen && selectedFile && hasTocItems && (
+          <aside className="hidden lg:block w-56 2xl:w-64 shrink-0 h-full border-l border-gray-200/80 dark:border-white/10 bg-gray-50/60 dark:bg-[#0d0d12]">
             <TableOfContents
               content={selectedFile.content}
               scrollContainerRef={contentRef}
             />
-          )}
-        </div>
+          </aside>
+        )}
       </div>
     </div>
   );

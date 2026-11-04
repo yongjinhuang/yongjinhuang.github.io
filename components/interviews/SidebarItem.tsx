@@ -29,16 +29,22 @@ export function SidebarItem({
   return (
     <button
       ref={ref}
+      type="button"
       onClick={() => onSelect(file.slug)}
       className={cn(
-        'w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-3 transition-all duration-200',
-        'text-sm font-medium',
+        'w-full text-left px-2.5 py-1.5 rounded-md flex items-center gap-2 transition-colors duration-150',
+        'text-xs font-medium',
         isSelected
-          ? 'bg-accent/20 text-accent border-l-4 border-accent'
-          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-accent'
+          ? 'bg-accent/15 text-accent font-semibold'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
       )}
     >
-      <HiDocumentText className="w-4 h-4 shrink-0" />
+      <HiDocumentText
+        className={cn(
+          'w-3.5 h-3.5 shrink-0',
+          isSelected ? 'text-accent' : 'text-gray-400 dark:text-gray-500'
+        )}
+      />
       <span className="truncate">{file.title}</span>
     </button>
   );

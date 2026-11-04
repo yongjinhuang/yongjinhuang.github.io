@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
-import { i18n } from '@/app/i18n/settings';
 import { getAvailableVaults, getVaultCategories } from '@/lib/vaults';
 import { InterviewViewer } from '@/components/interviews/InterviewViewer';
-import { PageTransition } from '@/components/PageTransition';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { ColorSchemeProvider } from '@/components/ColorSchemeProvider';
 
 export const metadata: Metadata = {
+  title: 'Knowledge Base & Docs',
   robots: { index: false, follow: false },
 };
 
-export default function InterviewsPage() {
+export default function DocsAppPage() {
   const vaults = getAvailableVaults();
   const vaultData = Object.fromEntries(
     vaults.map((v) => {
@@ -19,14 +20,10 @@ export default function InterviewsPage() {
   );
 
   return (
-    <PageTransition>
-      <div className="w-full max-w-[1600px] mx-auto">
+    <ThemeProvider defaultTheme="dark" disableTransitionOnChange>
+      <ColorSchemeProvider>
         <InterviewViewer vaults={vaults} vaultData={vaultData} />
-      </div>
-    </PageTransition>
+      </ColorSchemeProvider>
+    </ThemeProvider>
   );
-}
-
-export function generateStaticParams() {
-  return i18n.locales.map((lang) => ({ lang }));
 }

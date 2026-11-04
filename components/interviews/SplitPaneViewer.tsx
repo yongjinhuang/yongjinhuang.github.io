@@ -60,10 +60,10 @@ export function SplitPaneViewer({
   }, []);
 
   return (
-    <div ref={containerRef} className="flex h-[calc(100vh-12rem)]">
+    <div ref={containerRef} className="flex h-full w-full">
       {/* Left pane */}
       <div
-        className="overflow-y-auto scrollbar-thin"
+        className="h-full overflow-y-auto scrollbar-thin"
         style={{ width: `${leftPct}%` }}
       >
         <MarkdownContent
@@ -81,9 +81,8 @@ export function SplitPaneViewer({
         aria-orientation="vertical"
         aria-label="Resize split panes"
         className={cn(
-          'w-2 shrink-0 cursor-col-resize flex flex-col items-center justify-center',
-          'bg-gray-200 dark:bg-white/10 hover:bg-accent/30 transition-colors',
-          'rounded-full mx-1'
+          'w-1.5 shrink-0 cursor-col-resize flex flex-col items-center justify-center',
+          'bg-gray-200/80 dark:bg-white/10 hover:bg-accent/40 transition-colors'
         )}
       >
         <div className="w-0.5 h-8 bg-gray-400 dark:bg-gray-500 rounded-full" />
@@ -91,14 +90,14 @@ export function SplitPaneViewer({
 
       {/* Right pane */}
       <div
-        className="overflow-y-auto scrollbar-thin relative"
+        className="h-full overflow-y-auto scrollbar-thin relative"
         style={{ width: `${100 - leftPct}%` }}
       >
-        <div className="sticky top-2 z-10 flex justify-end px-2 pointer-events-none">
+        <div className="sticky top-2 z-10 flex justify-end px-3 pointer-events-none">
           <button
             type="button"
             onClick={onCloseSplit}
-            className="pointer-events-auto p-1.5 rounded-lg bg-gray-200/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-500 transition-colors shadow-sm"
+            className="pointer-events-auto p-1.5 rounded-md bg-gray-200/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-500 transition-colors shadow-sm"
             title="Close split view"
             aria-label="Close split view"
           >

@@ -55,9 +55,9 @@ Production deployments run automatically via GitHub Actions (`.github/workflows/
 - **Root Redirect (`app/page.tsx`)**: Because static export does not support Next.js middleware redirects, `/` renders a `noindex` server page with a crawlable `<a href="/en">` link.
 - **Locale Routes (`app/[lang]/`)**: Pages use `generateStaticParams()` to pre-render for every locale in `i18n.locales`.
   - `app/[lang]/page.tsx` — Portfolio home page (Intro, Details, Experience, Education, Skills sections).
-  - `app/[lang]/docs/page.tsx` — Markdown vault viewer (marked `noindex, nofollow`).
+  - `app/docs/page.tsx` — Markdown vault viewer (marked `noindex, nofollow`).
 
-### Markdown Vaults & Docs Viewer (`/[lang]/docs`)
+### Markdown Vaults & Docs Viewer (`/docs`)
 
 - **Build-Time Ingestion (`lib/vaults.ts`)**: Reads Markdown files from `public/vaults/<vault-name>/` (supporting top-level `.md` files and up to two levels of category subdirectories) at build time during static generation.
 - **Client Viewer (`components/interviews/`)**: Renders a multi-tab, split-pane documentation reader (`InterviewViewer`, `SplitPaneViewer`, `TabBar`, `Sidebar`, `TableOfContents`) with GFM Markdown (`react-markdown` + `remark-gfm`), syntax highlighting (`rehype-highlight` with selectable themes in `CodeThemePicker`), client-side Mermaid diagram rendering (`MermaidDiagram`), and native browser print-to-PDF export.
@@ -74,4 +74,4 @@ Production deployments run automatically via GitHub Actions (`.github/workflows/
 
 - Centralized constants and localized metadata live in `lib/seo.ts`.
 - `app/[lang]/page.tsx` generates per-locale Open Graph tags, `hreflang` alternates, and a JSON-LD `Person` schema (`components/JsonLd.tsx`).
-- `app/sitemap.ts` statically generates `sitemap.xml` for portfolio pages while excluding `/[lang]/docs`.
+- `app/sitemap.ts` statically generates `sitemap.xml` for portfolio pages while excluding `/docs`.

@@ -3,10 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { RefObject } from 'react';
 import { cn } from '@/lib/utils';
-import {
-  stripMarkdownFormatting,
-  createHeadingSlugger,
-} from './MarkdownContent';
+import { stripMarkdownFormatting, buildHeadingIdMap } from './MarkdownContent';
 
 interface TocItem {
   readonly level: number;
@@ -43,11 +40,12 @@ function findHeadingElement(
 
 export function parseTocItems(markdown: string): readonly TocItem[] {
   const lines = markdown.split('\n');
+  const headingIdMap = buildHeadingIdMap(markdown);
   const items: TocItem[] = [];
-  const getHeadingId = createHeadingSlugger();
   let inCodeBlock = false;
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     if (line.trimStart().startsWith('```')) {
       inCodeBlock = !inCodeBlock;
       continue;
@@ -60,7 +58,7 @@ export function parseTocItems(markdown: string): readonly TocItem[] {
       items.push({
         level: match[1].length,
         text,
-        slug: getHeadingId(text),
+        slug: headingIdMap.get(i + 1) ?? 'heading',
       });
     }
   }
@@ -133,22 +131,23 @@ export function TableOfContents({
   };
 
   return (
-    <div className="max-h-[calc(100vh-8rem)] overflow-y-auto">
+    <div className="h-full overflow-y-auto p-4 scrollbar-thin">
       {!hideHeader && (
-        <h3 className="text-sm font-bold uppercase tracking-wider text-accent mb-3">
+        <h3 className="text-[11px] font-mono font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">
           On this page
         </h3>
       )}
-      <nav className="space-y-0.5 border-l-2 border-gray-200 dark:border-white/10">
+      <nav className="space-y-0.5 border-l border-gray-200 dark:border-white/10">
         {items.map((item, index) => (
           <button
             key={`${item.slug}-${index}`}
+            type="button"
             onClick={() => handleClick(item.slug)}
             className={cn(
-              'block w-full text-left text-xs leading-relaxed py-1 transition-all duration-200 border-l-2 -ml-[2px]',
+              'block w-full text-left text-xs leading-relaxed py-1 transition-colors duration-150 border-l-2 -ml-[1px]',
               activeSlug === item.slug
                 ? 'border-accent text-accent font-medium'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-accent hover:border-accent/50'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-white/20'
             )}
             style={{
               paddingLeft: `${(item.level - minLevel) * 12 + 12}px`,

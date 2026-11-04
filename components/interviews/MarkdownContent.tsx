@@ -59,14 +59,32 @@ export function slugify(text: string): string {
     .trim();
 }
 
-export function createHeadingSlugger(): (text: string) => string {
+export function buildHeadingIdMap(
+  markdown: string
+): ReadonlyMap<number, string> {
+  const lines = markdown.split('\n');
   const counts = new Map<string, number>();
-  return (text: string): string => {
-    const base = slugify(text) || 'heading';
-    const count = counts.get(base) ?? 0;
-    counts.set(base, count + 1);
-    return count === 0 ? base : `${base}-${count}`;
-  };
+  const lineToId = new Map<number, string>();
+  let inCodeBlock = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trimStart().startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+    if (inCodeBlock) continue;
+
+    const match = /^(#{1,4})\s+(.+)$/.exec(line);
+    if (match) {
+      const base = slugify(match[2]) || 'heading';
+      const count = counts.get(base) ?? 0;
+      counts.set(base, count + 1);
+      lineToId.set(i + 1, count === 0 ? base : `${base}-${count}`);
+    }
+  }
+
+  return lineToId;
 }
 
 function getTextContent(children: ReactNode): string {
@@ -157,42 +175,54 @@ function CodeBlock({ language, rawCode, children }: CodeBlockProps) {
   );
 }
 
+function resolveHeadingId(
+  node: { position?: { start?: { line?: number } } } | undefined,
+  children: ReactNode,
+  headingIdMap: ReadonlyMap<number, string>
+): string {
+  const line = node?.position?.start?.line;
+  if (line !== undefined) {
+    const mapped = headingIdMap.get(line);
+    if (mapped) return mapped;
+  }
+  return slugify(getTextContent(children)) || 'heading';
+}
+
 function createMarkdownComponents(
+  headingIdMap: ReadonlyMap<number, string>,
   onFileSelect?: FileSelectHandler,
   fileCategory?: string,
   vaultName: string = DEFAULT_VAULT
 ): Components {
-  const getHeadingId = createHeadingSlugger();
-
   return {
-    h1: ({ children }) => (
+    h1: ({ node, children }) => (
       <h1
-        id={getHeadingId(getTextContent(children))}
-        className="text-3xl font-black text-accent mb-6 scroll-mt-28"
+        id={resolveHeadingId(node, children, headingIdMap)}
+        className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-6 scroll-mt-20"
       >
         {children}
       </h1>
     ),
-    h2: ({ children }) => (
+    h2: ({ node, children }) => (
       <h2
-        id={getHeadingId(getTextContent(children))}
-        className="text-2xl font-bold mt-10 mb-4 border-b-2 border-accent/30 pb-2 text-gray-900 dark:text-white scroll-mt-28"
+        id={resolveHeadingId(node, children, headingIdMap)}
+        className="text-2xl font-bold mt-10 mb-4 border-b border-gray-200 dark:border-white/10 pb-2 text-gray-900 dark:text-white tracking-tight scroll-mt-20"
       >
         {children}
       </h2>
     ),
-    h3: ({ children }) => (
+    h3: ({ node, children }) => (
       <h3
-        id={getHeadingId(getTextContent(children))}
-        className="text-xl font-bold mt-6 mb-3 text-gray-900 dark:text-white scroll-mt-28"
+        id={resolveHeadingId(node, children, headingIdMap)}
+        className="text-xl font-bold mt-6 mb-3 text-gray-900 dark:text-white scroll-mt-20"
       >
         {children}
       </h3>
     ),
-    h4: ({ children }) => (
+    h4: ({ node, children }) => (
       <h4
-        id={getHeadingId(getTextContent(children))}
-        className="text-lg font-bold mt-4 mb-2 text-gray-900 dark:text-white scroll-mt-28"
+        id={resolveHeadingId(node, children, headingIdMap)}
+        className="text-lg font-bold mt-4 mb-2 text-gray-900 dark:text-white scroll-mt-20"
       >
         {children}
       </h4>
@@ -292,6 +322,7 @@ function createMarkdownComponents(
             : slug;
         return (
           <button
+            type="button"
             onClick={() => onFileSelect(fullSlug)}
             className="text-accent hover:underline underline-offset-2 cursor-pointer"
           >
@@ -358,14 +389,25 @@ export function MarkdownContent({
   prevFile,
   nextFile,
 }: MarkdownContentProps) {
+  const headingIdMap = useMemo(
+    () => buildHeadingIdMap(file.content),
+    [file.content]
+  );
+
   const components = useMemo(
-    () => createMarkdownComponents(onFileSelect, file.category, vaultName),
-    [onFileSelect, file.category, vaultName]
+    () =>
+      createMarkdownComponents(
+        headingIdMap,
+        onFileSelect,
+        file.category,
+        vaultName
+      ),
+    [headingIdMap, onFileSelect, file.category, vaultName]
   );
 
   return (
     <article
-      className="glass-card p-6 md:p-8 lg:p-10 max-w-none"
+      className="px-5 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10 max-w-none"
       data-code-theme={codeTheme}
     >
       <div className="max-w-4xl mx-auto">
@@ -380,13 +422,13 @@ export function MarkdownContent({
         {(prevFile || nextFile) && onFileSelect && (
           <nav
             aria-label="Document navigation"
-            className="mt-12 pt-6 border-t-2 border-gray-200 dark:border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-4"
+            className="mt-12 pt-6 border-t border-gray-200 dark:border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-4"
           >
             {prevFile ? (
               <button
                 type="button"
                 onClick={() => onFileSelect(prevFile.slug)}
-                className="group text-left p-4 rounded-xl border-2 border-gray-200 dark:border-white/10 hover:border-accent/60 hover:bg-accent/5 transition-all duration-200"
+                className="group text-left p-4 rounded-xl border border-gray-200 dark:border-white/10 hover:border-accent/60 hover:bg-accent/5 transition-all duration-200"
               >
                 <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 group-hover:text-accent mb-1">
                   <HiChevronLeft className="w-3.5 h-3.5" />
@@ -404,7 +446,7 @@ export function MarkdownContent({
               <button
                 type="button"
                 onClick={() => onFileSelect(nextFile.slug)}
-                className="group text-right p-4 rounded-xl border-2 border-gray-200 dark:border-white/10 hover:border-accent/60 hover:bg-accent/5 transition-all duration-200"
+                className="group text-right p-4 rounded-xl border border-gray-200 dark:border-white/10 hover:border-accent/60 hover:bg-accent/5 transition-all duration-200"
               >
                 <span className="flex items-center justify-end gap-1 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 group-hover:text-accent mb-1">
                   Next

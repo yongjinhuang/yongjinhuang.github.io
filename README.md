@@ -6,7 +6,7 @@ Personal portfolio and multi-vault Markdown documentation viewer built with **Ne
 
 - **Bilingual i18n (`en` / `zh`)**: Localized routes (`/en`, `/zh`) backed by strongly typed translation dictionaries (`app/i18n/locales/` and `types/translations.ts`).
 - **Dual-Layer Theming**: Light/dark mode via `next-themes` combined with 6 dynamic accent color schemes (`amber`, `aurora`, `sunset`, `ocean`, `violet`, `rose`) that rotate hourly by default or persist user overrides in `localStorage`.
-- **Multi-Vault Documentation Viewer (`/[lang]/docs`)**: Interactive reader for Markdown vaults in `public/vaults/` featuring multi-tab navigation, resizable split-pane reading, GFM Markdown, syntax-highlighted code blocks with theme selection, Mermaid diagram rendering, table of contents, and browser print-to-PDF export.
+- **Multi-Vault Documentation Viewer (`/docs`)**: Interactive reader for Markdown vaults in `public/vaults/` featuring multi-tab navigation, resizable split-pane reading, GFM Markdown, syntax-highlighted code blocks with theme selection, Mermaid diagram rendering, table of contents, and browser print-to-PDF export.
 - **Static Export Pipeline**: Configured with `output: 'export'` and a post-build script (`scripts/postbuild.js`) that generates `.nojekyll`, injects `/sitemap.xsl` into `sitemap.xml`, and patches locale `<html lang="...">` attributes across generated HTML pages.
 
 ## Development & Commands
