@@ -28,10 +28,10 @@ export function SectionHeader({
         className
       )}
     >
-      <span className="text-accent text-sm font-bold uppercase tracking-wider block mb-2">
+      <span className="text-accent text-xs md:text-sm font-bold uppercase tracking-widest block mb-2">
         {tagline}
       </span>
-      <h2 className="text-3xl md:text-4xl lg:text-5xl font-black gradient-text">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
         {title}
       </h2>
     </motion.div>

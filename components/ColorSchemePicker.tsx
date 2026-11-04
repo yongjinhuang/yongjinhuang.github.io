@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useColorScheme } from './ColorSchemeProvider';
 import {
   COLOR_SCHEME_NAMES,
@@ -21,8 +22,11 @@ function SchemeOption({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10"
+      className={`flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 ${
+        isActive ? 'text-accent font-semibold' : ''
+      }`}
       aria-label={`Set color scheme to ${name}`}
     >
       <span
@@ -34,6 +38,9 @@ function SchemeOption({
         }}
       />
       <span className="capitalize">{name}</span>
+      {isActive && (
+        <span className="ml-auto text-xs text-accent">&#10003;</span>
+      )}
     </button>
   );
 }
@@ -44,7 +51,7 @@ export default function ColorSchemePicker() {
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Close popover on outside click
+  // Close popover on outside click or Escape key
   useEffect(() => {
     if (!isOpen) return;
 
@@ -59,64 +66,100 @@ export default function ColorSchemePicker() {
       }
     }
 
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen]);
 
   return (
     <div className="relative">
       <button
         ref={buttonRef}
+        type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-300 dark:border-white/20 shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_rgba(255,255,255,0.05)] hover:border-accent hover:shadow-[3px_3px_0_var(--accent)] transition-all duration-300"
+        className="relative w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-300 dark:border-white/20 shadow-[2px_2px_0_rgba(0,0,0,0.1)] dark:shadow-[2px_2px_0_rgba(255,255,255,0.05)] hover:border-accent hover:shadow-[3px_3px_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-300"
         aria-label="Change color scheme"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
         <span
-          className="w-5 h-5 rounded-full"
+          className={`w-5 h-5 rounded-full transition-transform duration-200 ${
+            isAuto
+              ? 'ring-2 ring-offset-1 ring-dashed ring-accent/70 dark:ring-offset-surface-dark'
+              : ''
+          }`}
           style={{ backgroundColor: SCHEME_DISPLAY_COLORS[scheme] }}
           suppressHydrationWarning
         />
+        {isAuto && (
+          <span
+            suppressHydrationWarning
+            title="Auto color rotation active"
+            className="absolute -bottom-0.5 -right-0.5 px-1 py-[1px] text-[9px] font-black leading-none rounded-full bg-accent text-black border border-black dark:border-surface-dark"
+          >
+            A
+          </span>
+        )}
       </button>
 
-      {isOpen && (
-        <div
-          ref={popoverRef}
-          className="absolute right-0 top-12 w-44 rounded-lg border-2 border-gray-200 dark:border-white/20 bg-white dark:bg-surface-dark shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)] p-2 z-50"
-        >
-          {/* Auto option */}
-          <button
-            onClick={() => {
-              setAuto();
-              setIsOpen(false);
-            }}
-            className={`flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 ${
-              isAuto ? 'text-accent' : ''
-            }`}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            ref={popoverRef}
+            role="menu"
+            aria-label="Color schemes"
+            initial={{ opacity: 0, y: -6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="absolute right-0 top-12 w-44 rounded-lg border-2 border-gray-200 dark:border-white/20 bg-white dark:bg-surface-dark shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)] p-2 z-50 origin-top-right"
           >
-            <span className="w-4 h-4 rounded-full shrink-0 border-2 border-dashed border-gray-400 dark:border-white/40" />
-            <span>Auto</span>
-            {isAuto && (
-              <span className="ml-auto text-xs text-accent">&#10003;</span>
-            )}
-          </button>
-
-          <div className="h-px bg-gray-200 dark:bg-white/10 my-1" />
-
-          {/* Scheme options */}
-          {COLOR_SCHEME_NAMES.map((name: ColorSchemeName) => (
-            <SchemeOption
-              key={name}
-              name={name}
-              color={SCHEME_DISPLAY_COLORS[name]}
-              isActive={!isAuto && scheme === name}
+            {/* Auto option */}
+            <button
+              type="button"
               onClick={() => {
-                setScheme(name);
+                setAuto();
                 setIsOpen(false);
               }}
-            />
-          ))}
-        </div>
-      )}
+              className={`flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 ${
+                isAuto ? 'text-accent font-semibold' : ''
+              }`}
+            >
+              <span className="w-4 h-4 rounded-full shrink-0 border-2 border-dashed border-gray-400 dark:border-white/40" />
+              <span>Auto</span>
+              {isAuto && (
+                <span className="ml-auto text-xs text-accent">&#10003;</span>
+              )}
+            </button>
+
+            <div className="h-px bg-gray-200 dark:bg-white/10 my-1" />
+
+            {/* Scheme options */}
+            {COLOR_SCHEME_NAMES.map((name: ColorSchemeName) => (
+              <SchemeOption
+                key={name}
+                name={name}
+                color={SCHEME_DISPLAY_COLORS[name]}
+                isActive={!isAuto && scheme === name}
+                onClick={() => {
+                  setScheme(name);
+                  setIsOpen(false);
+                }}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

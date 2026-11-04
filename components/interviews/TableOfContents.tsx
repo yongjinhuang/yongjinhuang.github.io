@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import type { RefObject } from 'react';
 import { cn } from '@/lib/utils';
-import { slugify } from './MarkdownContent';
+import {
+  stripMarkdownFormatting,
+  createHeadingSlugger,
+} from './MarkdownContent';
 
 interface TocItem {
   readonly level: number;
@@ -12,11 +16,35 @@ interface TocItem {
 
 interface TableOfContentsProps {
   readonly content: string;
+  readonly scrollContainerRef?: RefObject<HTMLElement | null>;
+  readonly onItemSelect?: () => void;
+  readonly hideHeader?: boolean;
 }
 
-function parseTocItems(markdown: string): readonly TocItem[] {
+function findHeadingElement(
+  root: HTMLElement | null | undefined,
+  slug: string
+): HTMLElement | null {
+  if (!slug) return null;
+  if (root) {
+    try {
+      const escaped =
+        typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+          ? CSS.escape(slug)
+          : slug.replace(/([!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, '\\$1');
+      const scoped = root.querySelector<HTMLElement>(`#${escaped}`);
+      if (scoped) return scoped;
+    } catch {
+      // Fallback to getElementById below
+    }
+  }
+  return document.getElementById(slug);
+}
+
+export function parseTocItems(markdown: string): readonly TocItem[] {
   const lines = markdown.split('\n');
   const items: TocItem[] = [];
+  const getHeadingId = createHeadingSlugger();
   let inCodeBlock = false;
 
   for (const line of lines) {
@@ -28,13 +56,11 @@ function parseTocItems(markdown: string): readonly TocItem[] {
 
     const match = /^(#{1,4})\s+(.+)$/.exec(line);
     if (match) {
-      const text = match[2]
-        .replace(/\*\*(.+?)\*\*/g, '$1')
-        .replace(/`(.+?)`/g, '$1');
+      const text = stripMarkdownFormatting(match[2]);
       items.push({
         level: match[1].length,
         text,
-        slug: slugify(text),
+        slug: getHeadingId(text),
       });
     }
   }
@@ -42,7 +68,12 @@ function parseTocItems(markdown: string): readonly TocItem[] {
   return items;
 }
 
-export function TableOfContents({ content }: TableOfContentsProps) {
+export function TableOfContents({
+  content,
+  scrollContainerRef,
+  onItemSelect,
+  hideHeader = false,
+}: TableOfContentsProps) {
   const items = useMemo(() => {
     const allItems = parseTocItems(content);
     if (allItems.length === 0) return allItems;
@@ -52,14 +83,20 @@ export function TableOfContents({ content }: TableOfContentsProps) {
   const [activeSlug, setActiveSlug] = useState<string>('');
 
   useEffect(() => {
-    if (items.length === 0) return;
+    if (items.length === 0) {
+      setActiveSlug('');
+      return;
+    }
 
+    const rootEl = scrollContainerRef?.current ?? null;
     const slugs = items.map((item) => item.slug);
     const elements = slugs
-      .map((slug) => document.getElementById(slug))
+      .map((slug) => findHeadingElement(rootEl, slug))
       .filter(Boolean) as HTMLElement[];
 
     if (elements.length === 0) return;
+
+    setActiveSlug(elements[0].id);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -71,29 +108,37 @@ export function TableOfContents({ content }: TableOfContentsProps) {
           setActiveSlug(visible[0].target.id);
         }
       },
-      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+      {
+        root: rootEl,
+        rootMargin: '-16px 0px -65% 0px',
+        threshold: 0,
+      }
     );
 
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [items]);
+  }, [items, scrollContainerRef]);
 
   if (items.length === 0) return null;
 
   const minLevel = Math.min(...items.map((i) => i.level));
 
   const handleClick = (slug: string) => {
-    const el = document.getElementById(slug);
+    const el = findHeadingElement(scrollContainerRef?.current, slug);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveSlug(slug);
     }
+    onItemSelect?.();
   };
 
   return (
     <div className="max-h-[calc(100vh-8rem)] overflow-y-auto">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-accent mb-3">
-        On this page
-      </h3>
+      {!hideHeader && (
+        <h3 className="text-sm font-bold uppercase tracking-wider text-accent mb-3">
+          On this page
+        </h3>
+      )}
       <nav className="space-y-0.5 border-l-2 border-gray-200 dark:border-white/10">
         {items.map((item, index) => (
           <button

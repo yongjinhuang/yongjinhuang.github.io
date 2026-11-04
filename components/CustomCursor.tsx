@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 
+const INTERACTIVE_SELECTOR = 'a, button, [role="button"], .skill-tag, .btn';
+
 export function CustomCursor() {
   const [isVisible, setIsVisible] = useState(false);
   const dotRef = useRef<HTMLDivElement>(null);
@@ -12,22 +14,21 @@ export function CustomCursor() {
   const cursorY = useRef(0);
 
   useEffect(() => {
-    // Only show on desktop
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
-    if (isMobile) return;
+    const canShowCursor = window.matchMedia(
+      '(pointer: fine) and (prefers-reduced-motion: no-preference)'
+    ).matches;
+    if (!canShowCursor) return;
 
     setIsVisible(true);
+    let animationFrameId: number;
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.current = e.clientX;
       mouseY.current = e.clientY;
 
       if (dotRef.current) {
-        dotRef.current.style.left = `${mouseX.current}px`;
-        dotRef.current.style.top = `${mouseY.current}px`;
+        dotRef.current.style.left = `${mouseX.current - 4}px`;
+        dotRef.current.style.top = `${mouseY.current - 4}px`;
       }
     };
 
@@ -35,45 +36,48 @@ export function CustomCursor() {
       const diffX = mouseX.current - cursorX.current;
       const diffY = mouseY.current - cursorY.current;
 
-      cursorX.current += diffX * 0.1;
-      cursorY.current += diffY * 0.1;
+      cursorX.current += diffX * 0.15;
+      cursorY.current += diffY * 0.15;
 
       if (outlineRef.current) {
         outlineRef.current.style.left = `${cursorX.current - 15}px`;
         outlineRef.current.style.top = `${cursorY.current - 15}px`;
       }
 
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
     };
 
-    const handleMouseEnter = () => {
-      if (dotRef.current) dotRef.current.style.transform = 'scale(2)';
-      if (outlineRef.current) outlineRef.current.style.transform = 'scale(1.5)';
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as Element | null;
+      if (target?.closest?.(INTERACTIVE_SELECTOR)) {
+        if (dotRef.current) dotRef.current.style.transform = 'scale(2)';
+        if (outlineRef.current)
+          outlineRef.current.style.transform = 'scale(1.5)';
+      }
     };
 
-    const handleMouseLeave = () => {
-      if (dotRef.current) dotRef.current.style.transform = 'scale(1)';
-      if (outlineRef.current) outlineRef.current.style.transform = 'scale(1)';
+    const handleMouseOut = (e: MouseEvent) => {
+      const target = e.target as Element | null;
+      const related = e.relatedTarget as Element | null;
+      if (
+        target?.closest?.(INTERACTIVE_SELECTOR) &&
+        !related?.closest?.(INTERACTIVE_SELECTOR)
+      ) {
+        if (dotRef.current) dotRef.current.style.transform = 'scale(1)';
+        if (outlineRef.current) outlineRef.current.style.transform = 'scale(1)';
+      }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    animate();
-
-    // Add event listeners to interactive elements
-    const interactiveElements = document.querySelectorAll(
-      'a, button, [role="button"], .skill-tag, .btn'
-    );
-    interactiveElements.forEach((el) => {
-      el.addEventListener('mouseenter', handleMouseEnter);
-      el.addEventListener('mouseleave', handleMouseLeave);
-    });
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('mouseover', handleMouseOver, { passive: true });
+    document.addEventListener('mouseout', handleMouseOut, { passive: true });
+    animationFrameId = requestAnimationFrame(animate);
 
     return () => {
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener('mousemove', handleMouseMove);
-      interactiveElements.forEach((el) => {
-        el.removeEventListener('mouseenter', handleMouseEnter);
-        el.removeEventListener('mouseleave', handleMouseLeave);
-      });
+      document.removeEventListener('mouseover', handleMouseOver);
+      document.removeEventListener('mouseout', handleMouseOut);
     };
   }, []);
 
@@ -85,14 +89,14 @@ export function CustomCursor() {
         ref={dotRef}
         className="fixed w-2 h-2 rounded-full pointer-events-none z-[9999] transition-transform duration-100"
         style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'var(--accent)',
         }}
       />
       <div
         ref={outlineRef}
         className="fixed w-[30px] h-[30px] border-2 rounded-full pointer-events-none z-[9999] transition-transform duration-150"
         style={{
-          borderColor: 'rgba(102, 126, 234, 0.5)',
+          borderColor: 'color-mix(in srgb, var(--accent) 50%, transparent)',
         }}
       />
     </>

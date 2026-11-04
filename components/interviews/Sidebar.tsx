@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import type { InterviewCategory, VaultInfo } from '@/types';
 import { SidebarItem } from './SidebarItem';
@@ -36,6 +36,7 @@ export function Sidebar({
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [locateTrigger, setLocateTrigger] = useState(0);
   const [query, setQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const toggleCategory = (name: string) => {
     setCollapsed((prev) => ({ ...prev, [name]: !prev[name] }));
@@ -57,28 +58,76 @@ export function Sidebar({
     setCollapsed(next);
   };
 
-  // Auto-expand the category containing the selected file
+  // Auto-expand the category containing the selected file when selection changes
   useEffect(() => {
     const selectedCategory = categories.find((c) =>
       c.files.some((f) => f.slug === selectedSlug)
     );
-    if (selectedCategory && collapsed[selectedCategory.name]) {
-      setCollapsed((prev) => ({ ...prev, [selectedCategory.name]: false }));
+    if (selectedCategory) {
+      setCollapsed((prev) =>
+        prev[selectedCategory.name]
+          ? { ...prev, [selectedCategory.name]: false }
+          : prev
+      );
     }
-  }, [selectedSlug, categories, collapsed]);
+  }, [selectedSlug, categories]);
+
+  // Keyboard shortcut (Cmd/Ctrl+K or /) to focus the visible search input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const input = searchInputRef.current;
+      if (!input || input.offsetParent === null) return;
+
+      const target = e.target as HTMLElement | null;
+      const isEditable =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        Boolean(target?.isContentEditable);
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        input.focus();
+        input.select();
+        return;
+      }
+
+      if (
+        e.key === '/' &&
+        !isEditable &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey
+      ) {
+        e.preventDefault();
+        input.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const isSearching = query.trim().length > 0;
 
   const filteredCategories = useMemo(() => {
     if (!isSearching) return categories;
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = query.trim().toLowerCase();
     return categories
-      .map((category) => ({
-        ...category,
-        files: category.files.filter((f) =>
-          f.title.toLowerCase().includes(lowerQuery)
-        ),
-      }))
+      .map((category) => {
+        const categoryMatches = category.label
+          .toLowerCase()
+          .includes(lowerQuery);
+        return {
+          ...category,
+          files: category.files.filter(
+            (f) =>
+              categoryMatches ||
+              f.title.toLowerCase().includes(lowerQuery) ||
+              f.content.toLowerCase().includes(lowerQuery)
+          ),
+        };
+      })
       .filter((category) => category.files.length > 0);
   }, [categories, query, isSearching]);
 
@@ -166,12 +215,20 @@ export function Sidebar({
       <div className="relative mb-3 px-1">
         <HiMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
         <input
+          ref={searchInputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search files..."
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setQuery('');
+              searchInputRef.current?.blur();
+            }
+          }}
+          placeholder="Search files or content..."
+          aria-label="Search files"
           className={cn(
-            'w-full pl-9 pr-8 py-2 text-sm rounded-lg',
+            'w-full pl-9 pr-12 py-2 text-sm rounded-lg',
             'bg-gray-100 dark:bg-white/5',
             'border border-gray-200 dark:border-white/10',
             'text-gray-800 dark:text-gray-200',
@@ -180,13 +237,18 @@ export function Sidebar({
             'transition-colors duration-200'
           )}
         />
-        {isSearching && (
+        {isSearching ? (
           <button
             onClick={() => setQuery('')}
+            aria-label="Clear search"
             className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <HiXMark className="w-4 h-4" />
           </button>
+        ) : (
+          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 bg-gray-200/70 dark:bg-white/10 rounded border border-gray-300/60 dark:border-white/10 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            ⌘K
+          </kbd>
         )}
       </div>
 
@@ -194,6 +256,20 @@ export function Sidebar({
         <p className="text-xs text-gray-400 dark:text-gray-500 px-3 mb-2">
           {totalResults} result{totalResults !== 1 ? 's' : ''}
         </p>
+      )}
+
+      {isSearching && totalResults === 0 && (
+        <div className="py-8 px-4 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            No matching documents for &ldquo;{query.trim()}&rdquo;.
+          </p>
+          <button
+            onClick={() => setQuery('')}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-accent/15 text-accent hover:bg-accent/25 transition-colors"
+          >
+            Clear search
+          </button>
+        </div>
       )}
 
       <nav className="space-y-3">

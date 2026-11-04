@@ -9,14 +9,11 @@ export function ScrollToTop() {
 
   useEffect(() => {
     const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
+      setIsVisible(window.scrollY > 300);
     };
 
-    window.addEventListener('scroll', toggleVisibility);
+    toggleVisibility();
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 
@@ -31,14 +28,15 @@ export function ScrollToTop() {
     <AnimatePresence>
       {isVisible && (
         <motion.button
+          type="button"
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 w-12 h-12 flex items-center justify-center bg-white dark:bg-surface-dark border-3 border-black dark:border-white/20 shadow-[4px_4px_0_#000] dark:shadow-[4px_4px_0_rgba(255,255,255,0.1)] text-gray-900 dark:text-white hover:bg-accent hover:border-black hover:shadow-[5px_5px_0_#000] hover:text-black transition-all duration-300 z-50"
+          className="fixed bottom-5 right-5 md:bottom-8 md:right-8 w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center bg-white dark:bg-surface-dark border-3 border-black dark:border-white/20 shadow-[4px_4px_0_#000] dark:shadow-[4px_4px_0_rgba(255,255,255,0.1)] text-gray-900 dark:text-white hover:bg-accent hover:border-black hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#000] hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-300 z-50"
           aria-label="Scroll to top"
         >
-          <FaArrowUp className="text-lg" />
+          <FaArrowUp className="text-base md:text-lg" />
         </motion.button>
       )}
     </AnimatePresence>

@@ -77,6 +77,9 @@ export function SplitPaneViewer({
       {/* Divider */}
       <div
         onPointerDown={handlePointerDown}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize split panes"
         className={cn(
           'w-2 shrink-0 cursor-col-resize flex flex-col items-center justify-center',
           'bg-gray-200 dark:bg-white/10 hover:bg-accent/30 transition-colors',
@@ -91,13 +94,17 @@ export function SplitPaneViewer({
         className="overflow-y-auto scrollbar-thin relative"
         style={{ width: `${100 - leftPct}%` }}
       >
-        <button
-          onClick={onCloseSplit}
-          className="absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-gray-200 dark:bg-white/10 hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-500 transition-colors"
-          title="Close split view"
-        >
-          <HiXMark className="w-4 h-4" />
-        </button>
+        <div className="sticky top-2 z-10 flex justify-end px-2 pointer-events-none">
+          <button
+            type="button"
+            onClick={onCloseSplit}
+            className="pointer-events-auto p-1.5 rounded-lg bg-gray-200/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-500 transition-colors shadow-sm"
+            title="Close split view"
+            aria-label="Close split view"
+          >
+            <HiXMark className="w-4 h-4" />
+          </button>
+        </div>
         <MarkdownContent
           file={splitFile}
           onFileSelect={onFileSelect}

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 import { FaCalendarAlt } from 'react-icons/fa';
+import { FiExternalLink } from 'react-icons/fi';
 import { SectionHeader, Card } from '@/components/ui';
 import type {
   ExperienceTranslations,
@@ -29,11 +30,15 @@ const item = {
 
 function ExperienceCard({
   exp,
+  index,
   isCurrent,
 }: {
   readonly exp: CompanyExperienceTranslations;
+  readonly index: number;
   readonly isCurrent: boolean;
 }) {
+  const orderBadge = String(index + 1).padStart(2, '0');
+
   return (
     <Card className="relative h-full overflow-hidden p-5 md:p-6">
       {/* Accent top border */}
@@ -51,22 +56,28 @@ function ExperienceCard({
           />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="min-w-0 text-base font-bold text-gray-900 md:text-lg dark:text-white">
-              <a
-                href={exp.linkUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="break-words transition-colors hover:text-accent"
-              >
-                {exp.name}
-              </a>
-            </h3>
-            {isCurrent && (
-              <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-accent/15 text-accent border border-accent/30 rounded-full flex-shrink-0">
-                Current
-              </span>
-            )}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
+              <h3 className="min-w-0 text-base font-bold text-gray-900 md:text-lg dark:text-white">
+                <a
+                  href={exp.linkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 break-words transition-colors hover:text-accent group/link"
+                >
+                  <span>{exp.name}</span>
+                  <FiExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 group-hover/link:text-accent group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+                </a>
+              </h3>
+              {isCurrent && (
+                <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-accent/15 text-accent border border-accent/30 rounded-full flex-shrink-0">
+                  Current
+                </span>
+              )}
+            </div>
+            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20 flex-shrink-0">
+              {orderBadge}
+            </span>
           </div>
           <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
             {exp.position}
@@ -112,6 +123,9 @@ function ExperienceCard({
                       rel="noopener noreferrer"
                     />
                   ),
+                  strong: ({ ...props }) => (
+                    <strong {...props} className="font-bold text-accent" />
+                  ),
                   code: ({ ...props }) => (
                     <code
                       {...props}
@@ -139,7 +153,7 @@ export function Experience({ experience }: ExperienceProps) {
   ];
 
   return (
-    <section id="experience" className="py-4 md:py-6">
+    <section id="experience" className="py-4 md:py-6 scroll-mt-28">
       <SectionHeader tagline={experience.tagline} title={experience.title} />
 
       <motion.div
@@ -153,6 +167,7 @@ export function Experience({ experience }: ExperienceProps) {
           <motion.div key={index} variants={item} className="h-full">
             <ExperienceCard
               exp={exp}
+              index={index}
               isCurrent={/present|至今/i.test(exp.period)}
             />
           </motion.div>

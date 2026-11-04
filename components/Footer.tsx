@@ -28,7 +28,7 @@ export async function Footer({ params }: FooterProps) {
           {t.footer.name}
         </p>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {socialLinks.map(({ icon: Icon, key, label }) => (
             <a
               key={label}
@@ -36,7 +36,7 @@ export async function Footer({ params }: FooterProps) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={label}
-              className="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors duration-300"
+              className="w-9 h-9 rounded-lg border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors duration-300"
             >
               <Icon className="text-lg" />
             </a>

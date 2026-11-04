@@ -25,13 +25,14 @@ export function IconContainer({
     <div
       className={cn(
         'rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         sizeClasses[size],
         variant === 'default' &&
-          'border-2 border-gray-300 dark:border-white/20 bg-white dark:bg-surface-dark group-hover:border-accent group-hover:shadow-[0_0_15px_rgba(251,191,36,0.3)]',
+          'border-2 border-gray-300 dark:border-white/20 bg-white dark:bg-surface-dark group-hover:border-accent group-hover:shadow-glow-accent',
         variant === 'accent' &&
-          'border-2 border-accent/30 bg-accent/10 group-hover:bg-accent/20 group-hover:border-accent',
+          'border-2 border-accent/30 bg-accent/10 group-hover:bg-accent/20 group-hover:border-accent group-hover:shadow-glow-accent',
         variant === 'accent-filled' &&
-          'bg-accent border-3 border-black shadow-[4px_4px_0_#000] group-hover:shadow-[6px_6px_0_#000]',
+          'bg-accent text-accent-foreground border-3 border-black shadow-[4px_4px_0_#000] group-hover:shadow-[6px_6px_0_#000]',
         className
       )}
     >

@@ -4,28 +4,34 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface SkillTagProps {
-  children: string;
+  children: React.ReactNode;
+  icon?: React.ReactNode;
   delay?: number;
   className?: string;
 }
 
-export function SkillTag({ children, delay = 0, className }: SkillTagProps) {
+export function SkillTag({
+  children,
+  icon,
+  delay = 0,
+  className,
+}: SkillTagProps) {
   return (
     <motion.span
       initial={{ opacity: 0, scale: 0.9 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.3, delay }}
-      whileHover={{ y: -2 }}
       className={cn(
-        'px-4 py-2 bg-gray-100 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10',
-        'text-sm font-semibold text-gray-700 dark:text-gray-200',
-        'hover:border-accent hover:text-accent hover:shadow-[0_0_10px_rgba(251,191,36,0.2)]',
-        'transition-all duration-300 cursor-default',
+        'brutal-pill inline-flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-white/5',
+        'text-sm font-semibold text-gray-800 dark:text-gray-200',
+        'hover:border-accent hover:text-accent hover:shadow-glow-accent',
+        'cursor-default',
         className
       )}
     >
-      {children}
+      {icon && <span className="text-accent flex-shrink-0">{icon}</span>}
+      <span>{children}</span>
     </motion.span>
   );
 }

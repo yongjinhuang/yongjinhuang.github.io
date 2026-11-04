@@ -20,7 +20,7 @@ export default function InterviewsPage() {
 
   return (
     <PageTransition>
-      <div className="w-[100vw] relative left-1/2 -translate-x-1/2 px-4 md:px-6 lg:px-8">
+      <div className="w-full max-w-[1600px] mx-auto">
         <InterviewViewer vaults={vaults} vaultData={vaultData} />
       </div>
     </PageTransition>

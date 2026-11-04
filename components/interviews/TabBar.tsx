@@ -72,7 +72,7 @@ export function TabBar({
                 onSplitTab(slug);
               }}
               className={cn(
-                'p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity',
+                'hidden md:inline-flex p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity',
                 'hover:bg-black/10 dark:hover:bg-white/10',
                 isSplit && 'opacity-100 text-blue-500'
               )}
@@ -86,7 +86,11 @@ export function TabBar({
                   e.stopPropagation();
                   onCloseTab(slug);
                 }}
-                className="p-1 pr-2 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/10 dark:hover:bg-white/10"
+                className={cn(
+                  'p-1 pr-2 rounded transition-opacity hover:bg-black/10 dark:hover:bg-white/10',
+                  'opacity-100 lg:opacity-0 lg:group-hover:opacity-100',
+                  isActive && 'lg:opacity-100'
+                )}
                 title="Close tab"
               >
                 <HiXMark className="w-3 h-3" />

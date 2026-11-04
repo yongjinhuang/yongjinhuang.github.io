@@ -12,14 +12,16 @@ interface ButtonBaseProps {
 }
 
 interface ButtonAsButton
-  extends ButtonBaseProps,
+  extends
+    ButtonBaseProps,
     Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof ButtonBaseProps> {
   as?: 'button';
   href?: never;
 }
 
 interface ButtonAsLink
-  extends ButtonBaseProps,
+  extends
+    ButtonBaseProps,
     Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof ButtonBaseProps> {
   as: 'link';
   href: string;
@@ -36,10 +38,10 @@ const sizeClasses = {
 
 const variantClasses = {
   default:
-    'bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30',
-  accent: 'brutal-btn-accent',
+    'brutal-btn bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent',
+  accent: 'brutal-btn brutal-btn-accent',
   ghost:
-    'bg-transparent border-transparent shadow-none hover:shadow-none hover:transform-none',
+    'bg-transparent border-transparent shadow-none hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 hover:text-accent',
 };
 
 export const Button = forwardRef<
@@ -55,7 +57,8 @@ export const Button = forwardRef<
   } = props;
 
   const baseClasses = cn(
-    'brutal-btn inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300',
+    'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
     sizeClasses[size],
     variantClasses[variant],
     className

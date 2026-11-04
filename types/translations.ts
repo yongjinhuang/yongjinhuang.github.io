@@ -22,6 +22,11 @@ export interface LinksTranslations {
   leetcode: string;
 }
 
+export interface StatItemTranslations {
+  value: string;
+  label: string;
+}
+
 export interface IntroTranslations {
   resumeFile: string;
   title: string;
@@ -31,6 +36,7 @@ export interface IntroTranslations {
   viewResume: string;
   hireMe: string;
   introduction: string;
+  stats: Array<StatItemTranslations>;
   links: LinksTranslations;
 }
 
@@ -77,6 +83,9 @@ export interface ContactDetailTranslations {
 export interface DetailsTranslations {
   title: string;
   tagline: string;
+  clickToReveal: string;
+  copyToClipboard: string;
+  copied: string;
   email: ContactDetailTranslations;
   phone: ContactDetailTranslations;
   wechat: ContactDetailTranslations;

@@ -4,158 +4,72 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Personal portfolio website built with Next.js 15, deployed to GitHub Pages. Features internationalization (i18n) support for English and Chinese, with custom animations and theming.
+Personal portfolio and technical documentation viewer built with Next.js 16 (App Router) and React 19, statically exported and deployed to GitHub Pages (`https://yongjinhuang.github.io`). Supports English (`en`) and Chinese (`zh`) locales, dark/light themes, dynamic accent color schemes, and a multi-vault Markdown documentation viewer.
 
 ## Common Commands
 
-### Development
+### Development & Build
 
 ```bash
-npm run dev          # Start dev server with Turbopack
-npm run build        # Build static export for production
-npm start            # Start production server
+npm run dev          # Start Next.js development server
+npm run build        # Build static export to ./out ( automatically runs scripts/postbuild.js)
+npm start            # Start Next.js server
 ```
+
+_Note: There is no test suite configured in this repository._
 
 ### Code Quality
 
 ```bash
-npm run lint         # Run ESLint
-npm run lint:fix     # Auto-fix linting issues
-npm run format       # Format code with Prettier
+npm run lint         # Run ESLint across the project
+npm run lint:fix     # Auto-fix ESLint issues
+npm run format       # Format TypeScript, JSON, and Markdown files with Prettier
 ```
 
-### Deployment
+### Deployment & Assets
 
 ```bash
-npm run deploy       # Deploy to GitHub Pages (builds and pushes to gh-pages branch)
+npm run deploy                      # Manually publish ./out to gh-pages branch
+./download-fonts.sh                 # Download self-hosted Poppins fonts to public/fonts/
+python3 scripts/generate-og-image.py # Regenerate public/og-image.png (requires Pillow)
 ```
 
-### Font Management
-
-```bash
-./download-fonts.sh  # Download Poppins font files to public/fonts/
-```
+Production deployments run automatically via GitHub Actions (`.github/workflows/deploy.yml`) on pushes to `main`.
 
 ## Architecture
 
-### Static Export Configuration
+### Static Export & Post-Build Pipeline
 
-- **Output Mode**: Static export (`output: 'export'` in next.config.ts)
-- **Deployment Target**: GitHub Pages at https://yongjinhuang.github.io
-- **Image Optimization**: Disabled (required for static exports)
-- **Post-build**: Automatically creates `.nojekyll` file in output directory
+- **Static Export**: `next.config.ts` sets `output: 'export'` and `images: { unoptimized: true }`. Server features (middleware, dynamic API routes, ISR) are incompatible with this build mode.
+- **Post-Build (`scripts/postbuild.js`)**: Triggered automatically via the `postbuild` npm lifecycle script after `next build`. It:
+  1. Creates `out/.nojekyll` so GitHub Pages serves `_next/` assets.
+  2. Injects the `/sitemap.xsl` stylesheet reference into `out/sitemap.xml`.
+  3. Rewrites `<html lang="en">` to the matching locale attribute in generated non-English HTML files (e.g., `out/zh.html`, `out/zh/*.html`) because RootLayout is shared across all static routes.
 
-### Internationalization (i18n)
+### Routing & Internationalization (i18n)
 
-The app uses a custom i18n implementation with locale-based routing:
+- **Locales**: Configured in `app/i18n/settings.ts` (`en` default, `zh`).
+- **Translation Data**: Stored in `app/i18n/locales/{en,zh}.json` and strictly typed via `types/translations.ts` (`Translations` interface). Always update both locale JSON files and `types/translations.ts` when adding or changing portfolio copy.
+- **Root Redirect (`app/page.tsx`)**: Because static export does not support Next.js middleware redirects, `/` renders a `noindex` server page with a crawlable `<a href="/en">` link and a client-side router redirect (`components/ClientRedirect.tsx`).
+- **Locale Routes (`app/[lang]/`)**: Pages use `generateStaticParams()` to pre-render for every locale in `i18n.locales`.
+  - `app/[lang]/page.tsx` — Portfolio home page (Intro, Details, Experience, Education, Skills sections).
+  - `app/[lang]/docs/page.tsx` — Markdown vault viewer (marked `noindex, nofollow`).
 
-- **Supported Locales**: English (`en`), Chinese (`zh`)
-- **Default Locale**: `en`
-- **Translation Files**: `app/i18n/locales/{locale}.json`
-- **Route Structure**: `/[lang]/...` - all pages are nested under language parameter
-- **Root Redirect**: Client-side redirect from `/` to `/en` (app/page.tsx)
-- **Translation Loading**: Async function `getTranslations(locale)` in app/i18n/settings.ts with fallback to English
+### Markdown Vaults & Docs Viewer (`/[lang]/docs`)
 
-Key files:
+- **Build-Time Ingestion (`lib/vaults.ts`)**: Reads Markdown files from `public/vaults/<vault-name>/` (supporting top-level `.md` files and up to two levels of category subdirectories) at build time during static generation.
+- **Client Viewer (`components/interviews/`)**: Renders a multi-tab, split-pane documentation reader (`InterviewViewer`, `SplitPaneViewer`, `TabBar`, `Sidebar`, `TableOfContents`) with GFM Markdown (`react-markdown` + `remark-gfm`), syntax highlighting (`rehype-highlight` with selectable themes in `CodeThemePicker`), client-side Mermaid diagram rendering (`MermaidDiagram`), and PDF export (`html2pdf.js`).
+- **URL State (`lib/useFileSelection.ts`)**: Synchronizes selected vault and open file tabs with URL query parameters.
 
-- `app/page.tsx` - Client-side redirect to default locale (middleware not compatible with static export)
-- `app/i18n/settings.ts` - i18n configuration and translation loader
-- `app/i18n/locales/` - Translation JSON files
-- `app/[lang]/` - Locale-specific pages
+### Theming & Styling System
 
-### Layout Structure
+- **Dual Theme Layers**:
+  1. **Light/Dark Mode**: Managed by `next-themes` (`attribute="class"`, default `dark`) in `app/[lang]/layout.tsx`.
+  2. **Accent Color Schemes**: Managed by `components/ColorSchemeProvider.tsx` and `lib/color-schemes.ts` (`amber`, `aurora`, `sunset`, `ocean`, `violet`, `rose`). By default, the accent scheme rotates hourly based on the user's local clock unless overridden in `localStorage` (`color-scheme-override`). Sets `data-color-scheme` on `<html>`.
+- **CSS Variables (`app/globals.css`)**: Uses CSS `@property` declarations (`--accent`, `--accent-light`, `--accent-dark`, `--blob-primary`, `--blob-secondary`) for smooth 1s color transitions across schemes, alongside brutalist shadow/border utility classes and Tailwind CSS (`tailwind.config.ts`).
 
-Two-level layout system:
+### SEO Architecture
 
-1. **Root Layout** (`app/layout.tsx`) - Minimal HTML wrapper with suppressHydrationWarning
-2. **Locale Layout** (`app/[lang]/layout.tsx`) - Contains theme provider, animated background, custom cursor, and all UI chrome
-
-### Component Organization
-
-The codebase uses a clean component architecture with separation of concerns:
-
-- **UI Components** (`components/ui/`) - Reusable primitives:
-
-  - `Card.tsx` - Glass card with hover effects
-  - `Button.tsx` - Brutal-style buttons with variants
-  - `IconButton.tsx` - Circular icon buttons for social links
-  - `IconContainer.tsx` - Styled icon wrappers
-  - `SectionHeader.tsx` - Consistent section headers with tagline/title
-  - `Divider.tsx` - Section divider component
-  - `SkillTag.tsx` - Animated skill tags
-
-- **Section Components** (`components/sections/`) - Page sections:
-
-  - `Intro.tsx` - Hero/introduction section
-  - `Details.tsx` - Personal contact details
-  - `Experience.tsx` - Work experience timeline
-  - `Education.tsx` - Educational background
-  - `Skills.tsx` - Technical skills grid
-
-- **Layout Components** (`components/layout/`) - Layout primitives:
-
-  - `Navbar.tsx` - Navigation bar with theme toggle and language selector
-
-- **Utility Components** (`components/`) - Standalone utilities:
-  - `AnimatedBackground.tsx` - CSS-based animated background
-  - `CustomCursor.tsx` - Custom cursor with hover effects
-  - `ThemeToggle.tsx` - Dark/light mode switcher
-  - `LanguageSelector.tsx` - Language switcher (en/zh)
-  - `PageTransition.tsx` - Page transition animations
-  - `ScrollToTop.tsx` - Scroll-to-top button
-  - `Footer.tsx` - Footer component
-
-### Type System
-
-- **Translation Types** (`types/translations.ts`) - Strongly-typed i18n
-  - All translation keys are typed, eliminating `any` usage
-  - Types are exported from `@/types` for easy import
-
-### Utility Functions
-
-- **Utils** (`lib/utils.ts`) - Shared utilities
-  - `cn()` - Class name utility using `clsx` and `tailwind-merge`
-
-### Design System
-
-- **Design Tokens** (`lib/design-system.ts`) - Centralized design tokens
-  - Colors, shadows, animations, keyframes, spacing
-  - Used by both Tailwind config and components
-
-### Styling System
-
-- **CSS Framework**: Tailwind CSS with custom plugin
-- **Design Tokens**: `lib/design-system.ts` defines colors, shadows, animations
-- **Custom CSS**: `app/globals.css` defines CSS variables and utility classes
-- **Theme Variables**: Supports both light and dark modes with custom color palettes
-- **Font**: Poppins (self-hosted in public/fonts/, loaded via app/globals.css)
-- **Animation Library**: Framer Motion for animations
-- **Class Merging**: Uses `clsx` + `tailwind-merge` via `cn()` utility
-
-### Docker Support
-
-Multi-stage Dockerfile for production deployment:
-
-- Stage 1: Install dependencies
-- Stage 2: Build application
-- Stage 3: Run with node:22-alpine, non-root user, exposes port 3000
-
-Note: The Dockerfile appears to be for standard Next.js server deployment, but this project uses static export for GitHub Pages.
-
-## Key Dependencies
-
-- **next-themes** - Theme management (dark/light mode)
-- **framer-motion** - Animation library
-- **react-icons** - Icon library
-- **@heroicons/react** - Hero icons
-- **react-markdown** - Markdown rendering
-- **gh-pages** - GitHub Pages deployment utility
-- **clsx** - Conditional class name construction
-- **tailwind-merge** - Merge Tailwind classes without conflicts
-
-## Development Notes
-
-- All content is stored in locale JSON files for easy translation management
-- The site uses static site generation (SSG) for all pages
-- Custom fonts are downloaded locally to avoid external requests
-- ESLint configured with TypeScript, React, and Prettier integration
+- Centralized constants and localized metadata live in `lib/seo.ts`.
+- `app/[lang]/page.tsx` generates per-locale Open Graph tags, `hreflang` alternates, and a JSON-LD `Person` schema (`components/JsonLd.tsx`).
+- `app/sitemap.ts` statically generates `sitemap.xml` for portfolio pages while excluding `/[lang]/docs`.

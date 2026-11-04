@@ -60,10 +60,16 @@ export default async function Home({ params }: Props) {
   const lang = rawLang as Locale;
   const t = await getTranslations(lang);
 
+  const isCJK =
+    /[一-鿿]/.test(t.intro.name.first) || /[一-鿿]/.test(t.intro.name.last);
+  const fullName = isCJK
+    ? `${t.intro.name.last}${t.intro.name.first}`
+    : `${t.intro.name.first} ${t.intro.name.last}`;
+
   const personSchema = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: `${t.intro.name.first} ${t.intro.name.last}`,
+    name: fullName,
     jobTitle: t.intro.tagline,
     description: t.intro.introduction,
     url: `${BASE_URL}/${lang}`,
@@ -94,7 +100,7 @@ export default async function Home({ params }: Props) {
     inLanguage: [lang === 'zh' ? 'zh-CN' : 'en'],
     author: {
       '@type': 'Person',
-      name: `${t.intro.name.first} ${t.intro.name.last}`,
+      name: fullName,
     },
   };
 
@@ -110,24 +116,21 @@ export default async function Home({ params }: Props) {
         <Experience experience={t.experience} />
 
         {/* Skills - Full Width */}
-        <section id="about">
-          <SectionHeader
-            tagline={t.skills.tagline}
-            title={t.skills.title}
-          />
+        <section id="skills" className="scroll-mt-28">
+          <SectionHeader tagline={t.skills.tagline} title={t.skills.title} />
           <Skills skills={t.skills} />
         </section>
 
         {/* Education + Contact - Two Column */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
-          <section>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+          <section id="education" className="scroll-mt-28 flex flex-col">
             <SectionHeader
               tagline={t.education.tagline}
               title={t.education.title}
             />
             <Education education={t.education} />
           </section>
-          <section>
+          <section id="contact" className="scroll-mt-28 flex flex-col">
             <SectionHeader
               tagline={t.details.tagline}
               title={t.details.title}

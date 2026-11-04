@@ -34,12 +34,13 @@ export function IconButton({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        'rounded-full flex items-center justify-center transition-all duration-300',
+        'rounded-full flex items-center justify-center transition-colors transition-shadow duration-300',
         'bg-white dark:bg-surface-dark border-2',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         variant === 'default' &&
-          'border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:border-accent hover:text-accent hover:shadow-[0_0_15px_rgba(251,191,36,0.3)]',
+          'border-gray-300 dark:border-white/20 text-gray-700 dark:text-white hover:border-accent hover:text-accent hover:shadow-glow-accent',
         variant === 'accent' &&
-          'border-accent/30 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent',
+          'border-accent/30 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent hover:shadow-glow-accent',
         sizeClasses[size],
         className
       )}

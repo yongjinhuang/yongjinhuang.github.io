@@ -13,16 +13,15 @@ interface IntroProps {
   intro: IntroTranslations;
 }
 
-const stats = [
-  { value: '8+', label: 'Years Exp.' },
-  { value: '4', label: 'Companies' },
-  { value: '5+', label: 'Tech Talks' },
-];
-
 export function Intro({ intro }: IntroProps) {
   const [mounted, setMounted] = useState(false);
   const [typedText, setTypedText] = useState('');
   const fullText = intro.tagline;
+  const isCJK =
+    /[一-鿿]/.test(intro.name.first) || /[一-鿿]/.test(intro.name.last);
+  const fullName = isCJK
+    ? `${intro.name.last}${intro.name.first}`
+    : `${intro.name.first} ${intro.name.last}`;
 
   useEffect(() => {
     setMounted(true);
@@ -67,12 +66,21 @@ export function Intro({ intro }: IntroProps) {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 tracking-tight"
             >
-              <span className="inline-block text-gray-900 dark:text-white hover:text-accent transition-all duration-300 cursor-default">
-                {intro.name.first}
-              </span>{' '}
-              <span className="inline-block text-gray-900 dark:text-white hover:text-accent transition-all duration-300 cursor-default">
-                {intro.name.last}
-              </span>
+              {isCJK ? (
+                <span className="inline-block text-gray-900 dark:text-white hover:text-accent transition-all duration-300 cursor-default">
+                  {intro.name.last}
+                  {intro.name.first}
+                </span>
+              ) : (
+                <>
+                  <span className="inline-block text-gray-900 dark:text-white hover:text-accent transition-all duration-300 cursor-default">
+                    {intro.name.first}
+                  </span>{' '}
+                  <span className="inline-block text-gray-900 dark:text-white hover:text-accent transition-all duration-300 cursor-default">
+                    {intro.name.last}
+                  </span>
+                </>
+              )}
             </motion.h1>
 
             {/* Tagline with Typing Animation */}
@@ -106,7 +114,7 @@ export function Intro({ intro }: IntroProps) {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="flex justify-center lg:justify-start gap-6 md:gap-8 mb-6"
             >
-              {stats.map((stat) => (
+              {intro.stats.map((stat) => (
                 <div key={stat.label} className="text-center">
                   <div className="text-2xl md:text-3xl font-black text-accent">
                     {stat.value}
@@ -126,22 +134,22 @@ export function Intro({ intro }: IntroProps) {
               className="flex justify-center lg:justify-start gap-3 md:gap-4 flex-wrap"
             >
               <Link
-                href="#experience"
+                href="#contact"
                 className="brutal-btn brutal-btn-accent px-6 py-3 md:px-8 md:py-4 text-sm md:text-base inline-flex items-center gap-2 group"
               >
                 <span>{intro.hireMe}</span>
                 <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
               </Link>
 
-              <Link
+              <a
                 href={intro.resumeFile}
-                className="brutal-btn px-6 py-3 md:px-8 md:py-4 text-sm md:text-base bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 inline-flex items-center gap-2 group"
-                style={{ boxShadow: '4px 4px 0 rgba(0,0,0,0.8)' }}
-                download
+                target="_blank"
+                rel="noopener noreferrer"
+                className="brutal-btn px-6 py-3 md:px-8 md:py-4 text-sm md:text-base bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 group"
               >
                 <FaDownload className="group-hover:animate-bounce" />
                 <span>{intro.viewResume}</span>
-              </Link>
+              </a>
             </motion.div>
 
             {/* Social Icons */}
@@ -152,9 +160,17 @@ export function Intro({ intro }: IntroProps) {
               className="flex justify-center lg:justify-start gap-3 md:gap-4 mt-6"
             >
               {[
-                { icon: SiLeetcode, href: intro.links.leetcode, label: 'LeetCode' },
+                {
+                  icon: SiLeetcode,
+                  href: intro.links.leetcode,
+                  label: 'LeetCode',
+                },
                 { icon: FaGithub, href: intro.links.github, label: 'GitHub' },
-                { icon: FaLinkedin, href: intro.links.linkedin, label: 'LinkedIn' },
+                {
+                  icon: FaLinkedin,
+                  href: intro.links.linkedin,
+                  label: 'LinkedIn',
+                },
               ].map(({ icon: Icon, href, label }) => (
                 <IconButton
                   key={label}
@@ -182,7 +198,7 @@ export function Intro({ intro }: IntroProps) {
               <div className="absolute inset-[6px] rounded-full overflow-hidden">
                 <Image
                   src="/selfie.png"
-                  alt={`${intro.name.first} ${intro.name.last}`}
+                  alt={fullName}
                   width={280}
                   height={280}
                   className="w-full h-full object-cover"

@@ -19,11 +19,10 @@ export function Card({
 }: CardProps) {
   return (
     <motion.div
-      whileHover={hover ? { y: -4 } : undefined}
       className={cn(
         'glass-card p-6 md:p-8 group transition-all duration-300',
-        hover && 'hover:border-accent',
-        variant === 'accent' && 'border-accent',
+        hover ? 'hover:border-accent' : 'glass-card-static',
+        variant === 'accent' && '!border-accent',
         className
       )}
       {...props}

@@ -18,6 +18,11 @@
     "viewResume": "View Resume",
     "hireMe": "Hire Me",
     "introduction": "I'm Yongjin Huang, a software engineer with a passion for coding and technology. In my free time, you can find me listening to hip-hop music, watching entertainment videos, playing video games, and of course, coding.",
+    "stats": [
+      { "value": "8+", "label": "Years Exp." },
+      { "value": "4", "label": "Companies" },
+      { "value": "5+", "label": "Tech Talks" }
+    ],
     "links": {
       "github": "https://github.com/YongjinHuang",
       "linkedin": "https://www.linkedin.com/in/yongjin-huang-b95558107/",
@@ -37,7 +42,17 @@
     },
     "tools": {
       "title": "Tools & Technologies",
-      "value": ["Git", "Linux", "Docker", "K8S", "MySQL", "Redis", "MongoDB"]
+      "value": [
+        "Git",
+        "Linux",
+        "Docker",
+        "K8s",
+        "MySQL",
+        "Redis",
+        "MongoDB",
+        "Kafka",
+        "Helm"
+      ]
     }
   },
   "experience": {
@@ -59,7 +74,7 @@
         ]
       },
       "tarro": {
-        "techStack": "Golang / Gin, Typescript / React",
+        "techStack": "Golang / Gin, TypeScript / React",
         "linkUrl": "https://www.tarro.com",
         "logoUrl": "/logo/tarro.webp",
         "name": "Tarro",
@@ -67,12 +82,12 @@
         "period": "Apr 2023 - Apr 2024",
         "responsibilities": [
           "Built RESTful APIs for POS ordering with seamless frontend integration",
-          "Optimized POS receipt printing logic, reducing errors by 50%",
-          "Migrated legacy menu data to new POS system, reducing retrieval time by 30%"
+          "Optimized POS receipt printing logic, reducing errors by **50%**",
+          "Migrated legacy menu data to new POS system, reducing retrieval time by **30%**"
         ]
       },
       "shopee": {
-        "techStack": "Python / Django, Golang / Gin, Typescript / React",
+        "techStack": "Python / Django, Golang / Gin, TypeScript / React",
         "linkUrl": "https://shopee.sg/",
         "logoUrl": "/logo/shopee.jpg",
         "name": "Shopee",
@@ -81,9 +96,9 @@
         "responsibilities": [
           "Designed scalable billing platform solutions, improving efficiency and maintainability",
           "Led project execution with risk management and resource optimization",
-          "Led weekly code reviews, reducing deployment defects by 30%",
-          "Optimized billing API: reduced DB connections from 4k to 1k, increased QPS from 2k to 5k",
-          "Delivered 5 tech talks on architecture and performance optimization"
+          "Led weekly code reviews, reducing deployment defects by **30%**",
+          "Optimized billing API: reduced DB connections from **4k to 1k**, increased **QPS from 2k to 5k**",
+          "Delivered **5** tech talks on architecture and performance optimization"
         ]
       },
       "huawei": {
@@ -95,7 +110,7 @@
         "period": "Jul 2017 - Aug 2019",
         "responsibilities": [
           "Built and launched CodeHubEdge middleware for third-party service integration",
-          "Optimized repository operations (create, commit, etc.), improving efficiency by 30%",
+          "Optimized repository operations (create, commit, etc.), improving efficiency by **30%**",
           "Studied GitLab source code and published [technical blog posts](https://juejin.cn/post/6844903860033552391)"
         ]
       }
@@ -104,6 +119,9 @@
   "details": {
     "title": "Details",
     "tagline": "Get To Know",
+    "clickToReveal": "Click to reveal",
+    "copyToClipboard": "Copy to clipboard",
+    "copied": "Copied!",
     "email": {
       "label": "Email",
       "value": "keep_straight_up@foxmail.com"
