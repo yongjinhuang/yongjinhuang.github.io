@@ -1,10 +1,7 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface SectionHeaderProps {
-  tagline: string;
+  tagline?: string;
   title: string;
   className?: string;
   align?: 'left' | 'center';
@@ -14,26 +11,25 @@ export function SectionHeader({
   tagline,
   title,
   className,
-  align = 'center',
+  align = 'left',
 }: SectionHeaderProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
+    <div
       className={cn(
-        'mb-6 md:mb-8',
-        align === 'center' && 'text-center',
+        'mb-6 md:mb-8 pb-3 border-b-2 border-gray-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-4',
+        align === 'center' &&
+          'text-center sm:flex-col sm:items-center sm:justify-center',
         className
       )}
     >
-      <span className="text-accent text-xs md:text-sm font-bold uppercase tracking-widest block mb-2">
-        {tagline}
-      </span>
       <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
         {title}
       </h2>
-    </motion.div>
+      {tagline && (
+        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+          {tagline}
+        </span>
+      )}
+    </div>
   );
 }

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     'TypeScript',
     'React',
     'distributed systems',
-    'Shenzhen',
+    'Shanghai',
   ],
   openGraph: {
     type: 'website',

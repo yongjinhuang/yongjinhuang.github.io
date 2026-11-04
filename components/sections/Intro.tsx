@@ -2,10 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaDownload, FaGithub, FaLinkedin, FaArrowRight } from 'react-icons/fa';
+import { FaDownload, FaGithub, FaLinkedin } from 'react-icons/fa';
 import { SiLeetcode } from 'react-icons/si';
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
 import { IconButton } from '@/components/ui';
 import { formatFullName, isCJK } from '@/lib/utils';
 import type { IntroTranslations } from '@/types';
@@ -15,184 +14,97 @@ interface IntroProps {
 }
 
 export function Intro({ intro }: IntroProps) {
-  const [mounted, setMounted] = useState(false);
-  const [typedText, setTypedText] = useState('');
-  const fullText = intro.tagline;
   const hasCJKName = isCJK(intro.name.first) || isCJK(intro.name.last);
   const fullName = formatFullName(intro.name.first, intro.name.last);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    let index = 0;
-    const timer = setInterval(() => {
-      if (index <= fullText.length) {
-        setTypedText(fullText.substring(0, index));
-        index++;
-      } else {
-        clearInterval(timer);
-      }
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, [fullText, mounted]);
-
   return (
     <section id="intro" className="py-4 md:py-6">
-      <div className="w-full max-w-6xl mx-auto px-4">
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-          {/* Left: Text Content */}
-          <div className="flex-1 text-center lg:text-left">
-            {/* Greeting */}
-            <motion.span
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-lg md:text-xl text-gray-600 dark:text-gray-400 block mb-3"
-            >
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="glass-card glass-card-static p-6 sm:p-8 md:p-10 lg:p-12"
+      >
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12">
+          {/* Left: Editorial Dossier Typography */}
+          <div className="flex-1 min-w-0 text-left">
+            <p className="text-sm md:text-base font-medium text-gray-500 dark:text-gray-400 mb-2">
               {intro.greeting}
-            </motion.span>
+            </p>
 
-            {/* Name */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 tracking-tight"
-            >
-              {hasCJKName ? (
-                <span className="inline-block text-gray-900 dark:text-white hover:text-accent transition-all duration-300 cursor-default">
-                  {fullName}
-                </span>
-              ) : (
-                <>
-                  <span className="inline-block text-gray-900 dark:text-white hover:text-accent transition-all duration-300 cursor-default">
-                    {intro.name.first}
-                  </span>{' '}
-                  <span className="inline-block text-gray-900 dark:text-white hover:text-accent transition-all duration-300 cursor-default">
-                    {intro.name.last}
-                  </span>
-                </>
-              )}
-            </motion.h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-3 leading-[1.08]">
+              {hasCJKName ? fullName : `${intro.name.first} ${intro.name.last}`}
+            </h1>
 
-            {/* Tagline with Typing Animation */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-lg sm:text-xl md:text-2xl text-gray-700 dark:text-gray-100 mb-4 min-h-[36px] font-medium"
-              suppressHydrationWarning
-            >
-              <span className="inline-block" suppressHydrationWarning>
-                {mounted ? typedText : ''}
-              </span>
-              <span className="inline-block w-[3px] h-6 md:h-7 bg-accent ml-1 animate-[blink_1s_infinite]" />
-            </motion.p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-accent mb-4">
+              {intro.tagline}
+            </p>
 
-            {/* Description */}
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0"
-            >
+            <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed mb-8 max-w-[62ch]">
               {intro.introduction}
-            </motion.p>
+            </p>
 
-            {/* Stats Row */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="flex justify-center lg:justify-start gap-6 md:gap-8 mb-6"
-            >
-              {intro.stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="text-2xl md:text-3xl font-black text-accent">
-                    {stat.value}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-
-            {/* Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.7 }}
-              className="flex justify-center lg:justify-start gap-3 md:gap-4 flex-wrap"
-            >
+            {/* Primary Actions + Social Links */}
+            <div className="flex flex-wrap items-center gap-3 md:gap-4">
               <Link
                 href="#contact"
-                className="brutal-btn brutal-btn-accent px-6 py-3 md:px-8 md:py-4 text-sm md:text-base inline-flex items-center gap-2 group"
+                className="brutal-btn brutal-btn-accent px-6 py-3 text-sm md:text-base inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 <span>{intro.hireMe}</span>
-                <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <a
                 href={intro.resumeFile}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="brutal-btn px-6 py-3 md:px-8 md:py-4 text-sm md:text-base bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 group"
+                className="brutal-btn px-6 py-3 text-sm md:text-base bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
-                <FaDownload className="group-hover:animate-bounce" />
+                <FaDownload className="w-3.5 h-3.5" />
                 <span>{intro.viewResume}</span>
               </a>
-            </motion.div>
 
-            {/* Social Icons */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="flex justify-center lg:justify-start gap-3 md:gap-4 mt-6"
-            >
-              {[
-                {
-                  icon: SiLeetcode,
-                  href: intro.links.leetcode,
-                  label: 'LeetCode',
-                },
-                { icon: FaGithub, href: intro.links.github, label: 'GitHub' },
-                {
-                  icon: FaLinkedin,
-                  href: intro.links.linkedin,
-                  label: 'LinkedIn',
-                },
-              ].map(({ icon: Icon, href, label }) => (
-                <IconButton
-                  key={label}
-                  href={href}
-                  icon={<Icon className="text-xl md:text-2xl" />}
-                  aria-label={label}
-                />
-              ))}
-            </motion.div>
+              <div className="h-6 w-px bg-gray-200 dark:bg-white/10 mx-1 hidden sm:block" />
+
+              <div className="flex items-center gap-2.5">
+                {[
+                  {
+                    icon: FaGithub,
+                    href: intro.links.github,
+                    label: 'GitHub',
+                  },
+                  {
+                    icon: FaLinkedin,
+                    href: intro.links.linkedin,
+                    label: 'LinkedIn',
+                  },
+                  {
+                    icon: SiLeetcode,
+                    href: intro.links.leetcode,
+                    label: 'LeetCode',
+                  },
+                ].map(({ icon: Icon, href, label }) => (
+                  <IconButton
+                    key={label}
+                    href={href}
+                    size="sm"
+                    icon={<Icon className="text-lg" />}
+                    aria-label={label}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Right: Avatar */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex-shrink-0"
-          >
-            <div className="relative w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72">
-              {/* Gradient border ring */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent via-accent-light to-accent opacity-80 animate-[spin_8s_linear_infinite]" />
-              {/* Inner white ring */}
-              <div className="absolute inset-[3px] rounded-full bg-white dark:bg-surface-darker" />
-              {/* Photo */}
-              <div className="absolute inset-[6px] rounded-full overflow-hidden">
+          {/* Right: Architectural Portrait Frame */}
+          <div className="flex-shrink-0 self-center lg:self-auto">
+            <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-60 md:h-60">
+              {/* Architectural offset accent frame */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 translate-x-3 translate-y-3 rounded-2xl border-2 border-accent bg-accent/10"
+              />
+              {/* Portrait container */}
+              <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-gray-900 dark:border-white/25 bg-white dark:bg-surface-darker">
                 <Image
                   src="/selfie.png"
                   alt={fullName}
@@ -203,9 +115,30 @@ export function Intro({ intro }: IntroProps) {
                 />
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
-      </div>
+
+        {/* Bottom Ledger Bar */}
+        <dl className="mt-8 pt-6 border-t-2 border-gray-200/80 dark:border-white/10 grid grid-cols-3 gap-4 md:gap-8">
+          {intro.stats.map((stat, idx) => (
+            <div
+              key={stat.label}
+              className={
+                idx > 0
+                  ? 'border-l-2 border-gray-200/80 dark:border-white/10 pl-4 md:pl-8'
+                  : ''
+              }
+            >
+              <dt className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">
+                {stat.label}
+              </dt>
+              <dd className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight font-mono">
+                {stat.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </motion.div>
     </section>
   );
 }

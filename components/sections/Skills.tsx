@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import {
   FaCode,
   FaTools,
@@ -101,45 +100,35 @@ export function Skills({ skills }: SkillsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {categories.map((category, catIndex) => (
-        <motion.div
-          key={category.id}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: catIndex * 0.1 }}
-          className="h-full"
-        >
-          <Card className="p-4 md:p-5 h-full">
-            <div className="flex items-center gap-3 mb-3">
-              <IconContainer
-                size="sm"
-                variant="accent"
-                icon={<category.icon className="text-accent text-lg" />}
-              />
-              <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white flex-1 min-w-0">
-                {category.title}
-              </h3>
-            </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+      {categories.map((category) => (
+        <Card key={category.id} className="p-5 md:p-6 h-full">
+          <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200/70 dark:border-white/10">
+            <IconContainer
+              size="sm"
+              variant="accent"
+              icon={<category.icon className="text-accent text-lg" />}
+            />
+            <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white flex-1 min-w-0">
+              {category.title}
+            </h3>
+          </div>
 
-            <div className="flex flex-wrap gap-2">
-              {category.skills.map((skill, index) => {
-                const SkillIcon =
-                  skillIcons[skill.trim().toLowerCase()] ?? FaCode;
-                return (
-                  <SkillTag
-                    key={skill}
-                    delay={index * 0.04 + catIndex * 0.08}
-                    icon={<SkillIcon className="w-4 h-4 text-accent/80" />}
-                  >
-                    {skill}
-                  </SkillTag>
-                );
-              })}
-            </div>
-          </Card>
-        </motion.div>
+          <div className="flex flex-wrap gap-2">
+            {category.skills.map((skill) => {
+              const SkillIcon =
+                skillIcons[skill.trim().toLowerCase()] ?? FaCode;
+              return (
+                <SkillTag
+                  key={skill}
+                  icon={<SkillIcon className="w-4 h-4 text-accent/80" />}
+                >
+                  {skill}
+                </SkillTag>
+              );
+            })}
+          </div>
+        </Card>
       ))}
     </div>
   );

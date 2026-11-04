@@ -13,15 +13,15 @@ interface CardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
 export function Card({
   children,
   variant = 'default',
-  hover = true,
+  hover = false,
   className,
   ...props
 }: CardProps) {
   return (
     <motion.div
       className={cn(
-        'glass-card p-6 md:p-8 group transition-all duration-300',
-        hover ? 'hover:border-accent' : 'glass-card-static',
+        'glass-card p-6 md:p-8 group',
+        !hover && 'glass-card-static',
         variant === 'accent' && '!border-accent',
         className
       )}
