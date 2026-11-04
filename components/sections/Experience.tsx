@@ -33,7 +33,7 @@ const markdownComponents: Components = {
   code: ({ ...props }) => (
     <code
       {...props}
-      className="break-words rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[0.85em] text-gray-800 dark:bg-white/10 dark:text-gray-100"
+      className="break-words rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[0.84em] text-gray-800 dark:bg-white/10 dark:text-gray-100"
     />
   ),
 };
@@ -56,37 +56,37 @@ function ExperienceCard({
     <Card
       variant={isCurrent ? 'accent' : 'default'}
       className={cn(
-        'relative overflow-hidden p-6 md:p-8',
+        'relative overflow-hidden p-6 sm:p-7 md:p-8',
         isCurrent && 'border-l-4 !border-l-accent'
       )}
     >
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
         {/* Left Column: Tenure, Company Identity & Stack */}
-        <div className="md:col-span-4 flex flex-col gap-3 md:border-r md:border-gray-200/80 md:dark:border-white/10 md:pr-6">
-          <div className="flex items-center gap-2 flex-wrap">
-            <time className="text-xs font-mono font-semibold text-accent">
+        <div className="md:col-span-4 flex flex-col gap-3.5 md:border-r md:border-gray-200/80 md:dark:border-white/10 md:pr-6">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <time className="text-xs font-mono font-medium text-accent tracking-tight">
               {exp.period}
             </time>
             {isCurrent && (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold bg-accent/15 text-accent border border-accent/30 rounded-full">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold bg-accent/15 text-accent border border-accent/30 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 {currentLabel}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg border border-gray-200 dark:border-white/15 overflow-hidden flex-shrink-0 bg-white p-0.5">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl border border-gray-200 dark:border-white/15 overflow-hidden flex-shrink-0 bg-white p-1">
               <Image
-                width={40}
-                height={40}
+                width={44}
+                height={44}
                 src={exp.logoUrl}
                 alt={`${exp.name} logo`}
-                className="w-full h-full object-contain rounded"
+                className="w-full h-full object-contain rounded-lg"
               />
             </div>
             <div className="min-w-0">
-              <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white leading-snug">
+              <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white leading-snug tracking-[-0.015em]">
                 <a
                   href={exp.linkUrl}
                   target="_blank"
@@ -97,7 +97,7 @@ function ExperienceCard({
                   <FiExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 group-hover/link:text-accent group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
                 </a>
               </h3>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-0.5">
                 {exp.position}
               </p>
             </div>
@@ -107,7 +107,7 @@ function ExperienceCard({
             {techItems.map((tech) => (
               <span
                 key={tech}
-                className="border border-gray-200/90 bg-gray-100/80 px-2 py-0.5 font-mono text-[11px] font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 rounded"
+                className="border border-gray-200/90 bg-gray-100/80 px-2.5 py-0.5 font-mono text-[11.5px] font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 rounded"
               >
                 {tech}
               </span>
@@ -117,13 +117,13 @@ function ExperienceCard({
 
         {/* Right Column: Engineering Impact */}
         <div className="md:col-span-8">
-          <ul className="space-y-2.5">
+          <ul className="space-y-3">
             {exp.responsibilities.map((responsibility, respIndex) => (
               <li
                 key={respIndex}
-                className="flex items-start gap-3 text-sm leading-relaxed text-gray-700 dark:text-gray-200 max-w-[68ch]"
+                className="flex items-start gap-3 text-[14.5px] md:text-[15px] leading-[1.7] text-gray-700 dark:text-gray-200 max-w-[68ch]"
               >
-                <span className="flex-shrink-0 w-1.5 h-1.5 mt-2 bg-accent rounded-full" />
+                <span className="flex-shrink-0 w-1.5 h-1.5 mt-2.5 bg-accent rounded-full" />
                 <div className="min-w-0 flex-1">
                   <ReactMarkdown components={markdownComponents}>
                     {responsibility}
@@ -147,10 +147,10 @@ export function Experience({ experience }: ExperienceProps) {
   const defaultCurrentLabel = isCJK(experience.title) ? '在职' : 'Current';
 
   return (
-    <section id="experience" className="py-4 md:py-6 scroll-mt-28">
+    <section id="experience" className="scroll-mt-28">
       <SectionHeader tagline={experience.tagline} title={experience.title} />
 
-      <div className="space-y-4 md:space-y-5 max-w-6xl mx-auto">
+      <div className="space-y-5 md:space-y-6 max-w-6xl mx-auto">
         {experiences.map(({ id, data: exp }) => (
           <ExperienceCard
             key={id}

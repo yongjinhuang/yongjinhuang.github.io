@@ -32,7 +32,7 @@ npm run format:check # Check Prettier formatting across project files
 
 ```bash
 npm run deploy                      # Manually publish ./out to gh-pages branch
-./download-fonts.sh                 # Download self-hosted Poppins fonts to public/fonts/
+./download-fonts.sh                 # Download self-hosted Plus Jakarta Sans & JetBrains Mono fonts to public/fonts/
 python3 scripts/generate-og-image.py # Regenerate public/og-image.png (requires Pillow)
 ```
 

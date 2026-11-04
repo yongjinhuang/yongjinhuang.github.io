@@ -25,12 +25,12 @@ export default async function LangLayout({ children, params }: Props) {
       disableTransitionOnChange
     >
       <ColorSchemeProvider>
-        <div className="min-h-screen relative">
+        <div className="min-h-screen relative flex flex-col">
           <AnimatedBackground />
           <CustomCursor />
           <Navbar nav={t.nav} />
 
-          <main className="max-w-6xl mx-auto px-4 pt-24 md:pt-28 pb-8">
+          <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-28 md:pt-32 pb-12 md:pb-16">
             {children}
           </main>
 

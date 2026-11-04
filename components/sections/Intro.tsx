@@ -18,29 +18,29 @@ export function Intro({ intro }: IntroProps) {
   const fullName = formatFullName(intro.name.first, intro.name.last);
 
   return (
-    <section id="intro" className="py-4 md:py-6">
+    <section id="intro">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className="glass-card glass-card-static p-6 sm:p-8 md:p-10 lg:p-12"
       >
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-14">
           {/* Left: Editorial Dossier Typography */}
           <div className="flex-1 min-w-0 text-left">
-            <p className="text-sm md:text-base font-medium text-gray-500 dark:text-gray-400 mb-2">
+            <p className="text-sm md:text-base font-mono font-medium text-gray-500 dark:text-gray-400 mb-2.5">
               {intro.greeting}
             </p>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-3 leading-[1.08]">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-[-0.03em] text-gray-900 dark:text-white mb-3 leading-[1.06]">
               {hasCJKName ? fullName : `${intro.name.first} ${intro.name.last}`}
             </h1>
 
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-accent mb-4">
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-accent mb-5 tracking-[-0.01em]">
               {intro.tagline}
             </p>
 
-            <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed mb-8 max-w-[62ch]">
+            <p className="text-gray-600 dark:text-gray-300 text-[15px] md:text-base leading-[1.75] mb-8 max-w-[60ch]">
               {intro.introduction}
             </p>
 
@@ -48,7 +48,7 @@ export function Intro({ intro }: IntroProps) {
             <div className="flex flex-wrap items-center gap-3 md:gap-4">
               <Link
                 href="#contact"
-                className="brutal-btn brutal-btn-accent px-6 py-3 text-sm md:text-base inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="brutal-btn brutal-btn-accent px-6 py-3 text-sm md:text-[15px] inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 <span>{intro.hireMe}</span>
               </Link>
@@ -57,7 +57,7 @@ export function Intro({ intro }: IntroProps) {
                 href={intro.resumeFile}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="brutal-btn px-6 py-3 text-sm md:text-base bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                className="brutal-btn px-6 py-3 text-sm md:text-[15px] bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 <FaDownload className="w-3.5 h-3.5" />
                 <span>{intro.viewResume}</span>
@@ -119,7 +119,7 @@ export function Intro({ intro }: IntroProps) {
         </div>
 
         {/* Bottom Ledger Bar */}
-        <dl className="mt-8 pt-6 border-t-2 border-gray-200/80 dark:border-white/10 grid grid-cols-3 gap-4 md:gap-8">
+        <dl className="mt-9 pt-7 border-t-2 border-gray-200/80 dark:border-white/10 grid grid-cols-3 gap-4 md:gap-8">
           {intro.stats.map((stat, idx) => (
             <div
               key={stat.label}
@@ -132,7 +132,7 @@ export function Intro({ intro }: IntroProps) {
               <dt className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">
                 {stat.label}
               </dt>
-              <dd className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight font-mono">
+              <dd className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight font-mono tabular-nums">
                 {stat.value}
               </dd>
             </div>

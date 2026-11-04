@@ -38,7 +38,7 @@ components/
   ui/                # Shared brutalist UI primitives
 lib/                 # Vault ingestion, color schemes, SEO metadata, and URL hooks
 public/
-  fonts/             # Self-hosted Poppins font files
+  fonts/             # Self-hosted Plus Jakarta Sans & JetBrains Mono font files
   vaults/            # Markdown documentation vaults
 scripts/
   postbuild.js       # Static export post-processing for GitHub Pages

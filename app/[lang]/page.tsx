@@ -110,11 +110,11 @@ export default async function Home({ params }: Props) {
     <PageTransition>
       <JsonLd data={personSchema} />
       <JsonLd data={websiteSchema} />
-      <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
+      <div className="space-y-12 md:space-y-16 lg:space-y-20">
         {/* Hero - Full Width */}
         <Intro intro={t.intro} />
 
-        {/* Experience - 2x2 Grid */}
+        {/* Experience */}
         <Experience experience={t.experience} />
 
         {/* Skills - Full Width */}
@@ -124,7 +124,7 @@ export default async function Home({ params }: Props) {
         </section>
 
         {/* Education + Contact - Two Column */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-stretch">
           <section id="education" className="scroll-mt-28 flex flex-col">
             <SectionHeader
               tagline={t.education.tagline}
