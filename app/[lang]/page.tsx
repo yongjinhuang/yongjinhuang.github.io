@@ -6,14 +6,8 @@ import {
   type Locale,
 } from '@/app/i18n/settings';
 import { PageTransition } from '@/components/PageTransition';
-import { SectionHeader } from '@/components/ui';
-import {
-  Intro,
-  Details,
-  Education,
-  Skills,
-  Experience,
-} from '@/components/sections';
+import { CollapsibleSection } from '@/components/ui';
+import { Intro, Skills, Experience } from '@/components/sections';
 import { JsonLd } from '@/components/JsonLd';
 import { BASE_URL, META, OG_IMAGE, SELFIE_IMAGE, SITE_NAME } from '@/lib/seo';
 import { formatFullName } from '@/lib/utils';
@@ -110,36 +104,21 @@ export default async function Home({ params }: Props) {
     <PageTransition>
       <JsonLd data={personSchema} />
       <JsonLd data={websiteSchema} />
-      <div className="space-y-12 md:space-y-16 lg:space-y-20">
-        {/* Hero - Full Width */}
-        <Intro intro={t.intro} />
+      <div className="space-y-8 md:space-y-10">
+        {/* Hero Dossier (with Avatar + Education & Contact Details beside Avatar) */}
+        <Intro intro={t.intro} details={t.details} education={t.education} />
 
         {/* Experience */}
         <Experience experience={t.experience} />
 
-        {/* Skills - Full Width */}
-        <section id="skills" className="scroll-mt-28">
-          <SectionHeader tagline={t.skills.tagline} title={t.skills.title} />
+        {/* Skills */}
+        <CollapsibleSection
+          id="skills"
+          tagline={t.skills.tagline}
+          title={t.skills.title}
+        >
           <Skills skills={t.skills} />
-        </section>
-
-        {/* Education + Contact - Two Column */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-stretch">
-          <section id="education" className="scroll-mt-28 flex flex-col">
-            <SectionHeader
-              tagline={t.education.tagline}
-              title={t.education.title}
-            />
-            <Education education={t.education} />
-          </section>
-          <section id="contact" className="scroll-mt-28 flex flex-col">
-            <SectionHeader
-              tagline={t.details.tagline}
-              title={t.details.title}
-            />
-            <Details details={t.details} />
-          </section>
-        </div>
+        </CollapsibleSection>
       </div>
     </PageTransition>
   );

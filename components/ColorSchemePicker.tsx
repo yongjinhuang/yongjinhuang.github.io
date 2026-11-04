@@ -24,22 +24,22 @@ function SchemeOption({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 ${
-        isActive ? 'text-accent font-semibold' : ''
+      className={`flex items-center gap-2 w-full px-2.5 py-2 text-xs font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 ${
+        isActive ? 'text-accent font-semibold bg-accent/10' : ''
       }`}
       aria-label={`Set color scheme to ${name}`}
     >
       <span
-        className="w-4 h-4 rounded-full border-2 shrink-0"
+        className="w-3.5 h-3.5 rounded-full border-2 shrink-0"
         style={{
           backgroundColor: color,
           borderColor: isActive ? 'currentColor' : 'transparent',
-          boxShadow: isActive ? `0 0 0 2px ${color}` : 'none',
+          boxShadow: isActive ? `0 0 0 1.5px ${color}` : 'none',
         }}
       />
-      <span className="capitalize">{name}</span>
+      <span className="capitalize truncate">{name}</span>
       {isActive && (
-        <span className="ml-auto text-xs text-accent">&#10003;</span>
+        <span className="ml-auto text-[11px] text-accent">&#10003;</span>
       )}
     </button>
   );
@@ -122,7 +122,7 @@ export default function ColorSchemePicker() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.95 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute right-0 top-12 w-44 rounded-lg border-2 border-gray-200 dark:border-white/20 bg-white dark:bg-surface-dark shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)] p-2 z-50 origin-top-right"
+            className="absolute right-0 top-12 w-60 rounded-xl border-2 border-gray-200 dark:border-white/20 bg-white dark:bg-surface-dark shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(255,255,255,0.05)] p-2 z-50 origin-top-right"
           >
             {/* Auto option */}
             <button
@@ -131,32 +131,34 @@ export default function ColorSchemePicker() {
                 setAuto();
                 setIsOpen(false);
               }}
-              className={`flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 ${
-                isAuto ? 'text-accent font-semibold' : ''
+              className={`flex items-center gap-2 w-full px-2.5 py-2 text-xs font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 ${
+                isAuto ? 'text-accent font-semibold bg-accent/10' : ''
               }`}
             >
-              <span className="w-4 h-4 rounded-full shrink-0 border-2 border-dashed border-gray-400 dark:border-white/40" />
-              <span>Auto</span>
+              <span className="w-3.5 h-3.5 rounded-full shrink-0 border-2 border-dashed border-gray-400 dark:border-white/40" />
+              <span>Auto (Hourly)</span>
               {isAuto && (
                 <span className="ml-auto text-xs text-accent">&#10003;</span>
               )}
             </button>
 
-            <div className="h-px bg-gray-200 dark:bg-white/10 my-1" />
+            <div className="h-px bg-gray-200 dark:bg-white/10 my-1.5" />
 
-            {/* Scheme options */}
-            {COLOR_SCHEME_NAMES.map((name: ColorSchemeName) => (
-              <SchemeOption
-                key={name}
-                name={name}
-                color={SCHEME_DISPLAY_COLORS[name]}
-                isActive={!isAuto && scheme === name}
-                onClick={() => {
-                  setScheme(name);
-                  setIsOpen(false);
-                }}
-              />
-            ))}
+            {/* Scheme options in 2-column grid */}
+            <div className="grid grid-cols-2 gap-1">
+              {COLOR_SCHEME_NAMES.map((name: ColorSchemeName) => (
+                <SchemeOption
+                  key={name}
+                  name={name}
+                  color={SCHEME_DISPLAY_COLORS[name]}
+                  isActive={!isAuto && scheme === name}
+                  onClick={() => {
+                    setScheme(name);
+                    setIsOpen(false);
+                  }}
+                />
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

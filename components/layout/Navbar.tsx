@@ -144,13 +144,17 @@ export function Navbar({ nav }: NavbarProps) {
   return (
     <nav className="fixed w-full top-0 z-50 transition-all duration-300">
       <div ref={navRef} className="max-w-6xl mx-auto px-4 sm:px-6 pt-3 md:pt-4">
-        <div className="glass-card glass-card-static hover:!translate-x-0 hover:!translate-y-0 relative overflow-hidden px-4 py-3 md:px-6 md:py-3.5">
+        <div className="glass-card glass-card-static hover:!translate-x-0 hover:!translate-y-0 relative px-4 py-3 md:px-6 md:py-3.5">
           {/* Top Scroll Progress Bar */}
           <div
             aria-hidden="true"
-            className="absolute top-0 left-0 h-[3px] bg-accent transition-[width] duration-150 ease-out"
-            style={{ width: `${scrollProgress}%` }}
-          />
+            className="pointer-events-none absolute top-0 left-0 right-0 h-[3px] overflow-hidden"
+          >
+            <div
+              className="h-full bg-accent transition-[width] duration-150 ease-out"
+              style={{ width: `${scrollProgress}%` }}
+            />
+          </div>
 
           <div className="flex justify-between items-center">
             {/* Logo + Language */}

@@ -1,4 +1,4 @@
-import { ThemeProvider } from 'next-themes';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import { resolveLocale, getTranslations } from '../i18n/settings';
 import { Footer } from '@/components/Footer';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -18,12 +18,7 @@ export default async function LangLayout({ children, params }: Props) {
   const t = await getTranslations(lang);
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <ThemeProvider defaultTheme="dark" disableTransitionOnChange>
       <ColorSchemeProvider>
         <div className="min-h-screen relative flex flex-col">
           <AnimatedBackground />
