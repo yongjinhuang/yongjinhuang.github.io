@@ -10,8 +10,8 @@ export function SkillTag({ children, icon, className }: SkillTagProps) {
   return (
     <span
       className={cn(
-        'brutal-pill inline-flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-white/5',
-        'text-sm font-semibold text-gray-800 dark:text-gray-200',
+        'brutal-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white dark:bg-white/5',
+        'font-mono text-xs font-medium text-gray-800 dark:text-gray-200',
         'cursor-default',
         className
       )}

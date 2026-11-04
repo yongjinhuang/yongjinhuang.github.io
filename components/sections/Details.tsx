@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { FiPhone, FiMail, FiMapPin, FiMessageSquare } from 'react-icons/fi';
 import { HiCheck, HiClipboard } from 'react-icons/hi2';
-import { Card, IconContainer } from '@/components/ui';
+import { Card } from '@/components/ui';
 import type { DetailsTranslations } from '@/types';
 import { IconType } from 'react-icons';
 
@@ -54,13 +54,13 @@ function CopyButton({
       onClick={handleCopy}
       type="button"
       aria-label={copied ? copiedLabel : copyLabel}
-      className="shrink-0 p-1.5 rounded-md text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-accent/10 transition-all opacity-100 sm:opacity-60 sm:group-hover/card:opacity-100"
+      className="shrink-0 p-1 rounded text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-accent/10 transition-colors"
       title={copied ? copiedLabel : copyLabel}
     >
       {copied ? (
-        <HiCheck className="w-4 h-4 text-green-500" />
+        <HiCheck className="w-3.5 h-3.5 text-green-500" />
       ) : (
-        <HiClipboard className="w-4 h-4" />
+        <HiClipboard className="w-3.5 h-3.5" />
       )}
     </button>
   );
@@ -95,25 +95,23 @@ export function Details({ details }: DetailsProps) {
   ];
 
   return (
-    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 flex-1">
-      {detailItems.map((detail) => {
-        const Icon = detail.icon;
-        const isRevealed = !detail.sensitive || !!revealedItems[detail.key];
+    <div className="flex-1 flex flex-col">
+      <Card className="p-5 md:p-6 h-full flex flex-col justify-center">
+        <dl className="divide-y divide-gray-200/80 dark:divide-white/10">
+          {detailItems.map((detail) => {
+            const Icon = detail.icon;
+            const isRevealed = !detail.sensitive || !!revealedItems[detail.key];
 
-        return (
-          <Card key={detail.key} className="p-5 md:p-6 h-full group/card">
-            <div className="flex items-start gap-3.5">
-              <IconContainer
-                size="sm"
-                icon={
-                  <Icon className="text-lg text-gray-600 dark:text-gray-300 group-hover/card:text-accent transition-colors duration-300" />
-                }
-              />
-              <div className="flex-1 min-w-0">
-                <dt className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-1">
-                  {detail.label}
+            return (
+              <div
+                key={detail.key}
+                className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-4"
+              >
+                <dt className="flex items-center gap-2.5 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 shrink-0">
+                  <Icon className="w-4 h-4 text-accent shrink-0" />
+                  <span>{detail.label}</span>
                 </dt>
-                <dd className="flex items-center gap-1 text-gray-900 dark:text-white font-semibold text-sm md:text-base">
+                <dd className="flex items-center justify-end gap-1.5 text-gray-900 dark:text-white font-medium text-xs sm:text-sm min-w-0">
                   {!isRevealed ? (
                     <button
                       type="button"
@@ -123,7 +121,7 @@ export function Details({ details }: DetailsProps) {
                           [detail.key]: true,
                         }))
                       }
-                      className="text-xs font-medium text-accent hover:underline"
+                      className="text-xs font-mono font-medium text-accent hover:underline"
                     >
                       {details.clickToReveal}
                     </button>
@@ -132,12 +130,12 @@ export function Details({ details }: DetailsProps) {
                       {detail.href ? (
                         <a
                           href={detail.href}
-                          className="break-all min-w-0 hover:text-accent transition-colors"
+                          className="truncate hover:text-accent transition-colors font-mono"
                         >
                           {detail.value}
                         </a>
                       ) : (
-                        <span className="break-words min-w-0">
+                        <span className="truncate font-mono">
                           {detail.value}
                         </span>
                       )}
@@ -150,10 +148,10 @@ export function Details({ details }: DetailsProps) {
                   )}
                 </dd>
               </div>
-            </div>
-          </Card>
-        );
-      })}
-    </dl>
+            );
+          })}
+        </dl>
+      </Card>
+    </div>
   );
 }
