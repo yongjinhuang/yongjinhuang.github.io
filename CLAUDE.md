@@ -32,6 +32,7 @@ npm run format:check # Check Prettier formatting across project files
 
 ```bash
 npm run deploy                      # Manually publish ./out to gh-pages branch
+npm run pdf                         # Generate portfolio-styled public/{en,zh}/resume.pdf from locale JSON
 ./download-fonts.sh                 # Download self-hosted Plus Jakarta Sans & JetBrains Mono fonts to public/fonts/
 python3 scripts/generate-og-image.py # Regenerate public/og-image.png (requires Pillow)
 ```

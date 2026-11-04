@@ -13,11 +13,14 @@ import { SiLeetcode } from 'react-icons/si';
 import { FiPhone, FiMail, FiMapPin, FiMessageSquare } from 'react-icons/fi';
 import { HiCheck, HiClipboard } from 'react-icons/hi2';
 import { IconButton } from '@/components/ui';
+import { useColorScheme } from '@/components/ColorSchemeProvider';
+import { exportResumePdf } from '@/lib/export-resume-pdf';
 import { formatFullName, isCJK } from '@/lib/utils';
 import type {
   IntroTranslations,
   DetailsTranslations,
   EducationTranslations,
+  Translations,
 } from '@/types';
 import type { IconType } from 'react-icons';
 
@@ -25,6 +28,8 @@ interface IntroProps {
   intro: IntroTranslations;
   details: DetailsTranslations;
   education: EducationTranslations;
+  translations: Translations;
+  locale: string;
 }
 
 interface DetailItem {
@@ -82,7 +87,14 @@ function CopyButton({
   );
 }
 
-export function Intro({ intro, details, education }: IntroProps) {
+export function Intro({
+  intro,
+  details,
+  education,
+  translations,
+  locale,
+}: IntroProps) {
+  const { scheme } = useColorScheme();
   const hasCJKName = isCJK(intro.name.first) || isCJK(intro.name.last);
   const fullName = formatFullName(intro.name.first, intro.name.last);
   const [revealedItems, setRevealedItems] = useState<Record<string, boolean>>(
@@ -117,8 +129,8 @@ export function Intro({ intro, details, education }: IntroProps) {
   return (
     <section id="intro" className="scroll-mt-28">
       <div className="glass-card glass-card-static rounded-xl p-5 sm:p-7 md:p-8">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-10">
-          {/* Left: Editorial Dossier Typography */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 lg:gap-8">
+          {/* Left: Editorial Dossier Typography + Actions */}
           <div className="flex-1 min-w-0 text-left">
             <p className="text-xs sm:text-sm font-mono font-medium text-gray-500 dark:text-gray-400 mb-1.5">
               {intro.greeting}
@@ -132,12 +144,12 @@ export function Intro({ intro, details, education }: IntroProps) {
               {intro.tagline}
             </p>
 
-            <p className="text-gray-600 dark:text-gray-300 text-sm md:text-[15px] leading-[1.65] mb-5 max-w-[56ch]">
+            <p className="text-gray-600 dark:text-gray-300 text-sm md:text-[15px] leading-[1.65] mb-5 max-w-[54ch]">
               {intro.introduction}
             </p>
 
-            {/* Primary Actions + Social Links */}
-            <div className="flex flex-wrap items-center gap-2.5 md:gap-3">
+            {/* Primary Actions + Social Icon Buttons */}
+            <div className="flex flex-wrap items-center gap-2.5">
               <Link
                 href="#contact"
                 className="brutal-btn brutal-btn-accent rounded-lg px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
@@ -145,17 +157,16 @@ export function Intro({ intro, details, education }: IntroProps) {
                 <span>{intro.hireMe}</span>
               </Link>
 
-              <a
-                href={intro.resumeFile}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={() => exportResumePdf(translations, locale, scheme)}
                 className="brutal-btn rounded-lg px-4 py-2 text-xs sm:text-sm bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 <FaDownload className="w-3 h-3" />
                 <span>{intro.viewResume}</span>
-              </a>
+              </button>
 
-              <div className="h-5 w-px bg-gray-200 dark:bg-white/10 mx-0.5 hidden sm:block" />
+              <div className="h-5 w-px bg-gray-200 dark:bg-white/10 mx-1 hidden sm:block" />
 
               <div className="flex items-center gap-2">
                 {[
@@ -187,38 +198,18 @@ export function Intro({ intro, details, education }: IntroProps) {
             </div>
           </div>
 
-          {/* Right: Avatar + Education & Contact Dossier beside Avatar */}
+          {/* Right: Education & Contact Ledger + Avatar on the Far Right */}
           <div
             id="contact"
-            className="scroll-mt-28 w-full lg:w-auto flex flex-col sm:flex-row items-center gap-5 sm:gap-6 lg:pl-8 lg:border-l-2 lg:border-gray-200/80 lg:dark:border-white/10"
+            className="scroll-mt-28 w-full lg:w-auto flex flex-col-reverse sm:flex-row items-center sm:items-start justify-between lg:justify-end gap-5 sm:gap-6 pt-5 lg:pt-0 border-t lg:border-t-0 lg:pl-7 lg:border-l-2 border-gray-200/80 dark:border-white/10 shrink-0"
           >
-            {/* Architectural Portrait Frame */}
-            <div className="flex-shrink-0">
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36">
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 translate-x-2 translate-y-2 rounded-2xl border-2 border-accent bg-accent/10"
-                />
-                <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-gray-900 dark:border-white/25 bg-white dark:bg-surface-darker">
-                  <Image
-                    src="/selfie.png"
-                    alt={fullName}
-                    width={180}
-                    height={180}
-                    className="w-full h-full object-cover"
-                    priority
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Compact Education + Contact Ledger beside Avatar */}
+            {/* Compact Education + Contact Ledger */}
             <dl
               id="education"
-              className="scroll-mt-28 w-full sm:w-auto min-w-[240px] divide-y divide-gray-200/80 dark:divide-white/10"
+              className="scroll-mt-28 w-full sm:w-[300px] md:w-[315px] divide-y divide-gray-200/80 dark:divide-white/10"
             >
               {/* Education Row */}
-              <div className="pb-2 flex items-start justify-between gap-3">
+              <div className="pb-2 flex items-start justify-between gap-4">
                 <dt className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 shrink-0 mt-0.5">
                   <FaGraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
                   <span>{education.title}</span>
@@ -298,6 +289,26 @@ export function Intro({ intro, details, education }: IntroProps) {
                 );
               })}
             </dl>
+
+            {/* Architectural Portrait Frame on the Far Right */}
+            <div className="flex-shrink-0 mr-2 mb-2">
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36">
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 translate-x-2 translate-y-2 rounded-2xl border-2 border-accent bg-accent/10"
+                />
+                <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-gray-900 dark:border-white/25 bg-white dark:bg-surface-darker">
+                  <Image
+                    src="/selfie.png"
+                    alt={fullName}
+                    width={180}
+                    height={180}
+                    className="w-full h-full object-cover"
+                    priority
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

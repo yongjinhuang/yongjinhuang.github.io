@@ -28,10 +28,7 @@ const markdownComponents: Components = {
     />
   ),
   strong: ({ ...props }) => (
-    <strong
-      {...props}
-      className="font-semibold text-gray-900 dark:text-white underline decoration-accent/50 decoration-2 underline-offset-2"
-    />
+    <strong {...props} className="font-semibold text-accent" />
   ),
   code: ({ ...props }) => (
     <code

@@ -106,7 +106,13 @@ export default async function Home({ params }: Props) {
       <JsonLd data={websiteSchema} />
       <div className="space-y-8 md:space-y-10">
         {/* Hero Dossier (with Avatar + Education & Contact Details beside Avatar) */}
-        <Intro intro={t.intro} details={t.details} education={t.education} />
+        <Intro
+          intro={t.intro}
+          details={t.details}
+          education={t.education}
+          translations={t}
+          locale={lang}
+        />
 
         {/* Experience */}
         <Experience experience={t.experience} />
