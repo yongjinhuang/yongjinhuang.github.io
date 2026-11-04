@@ -36,6 +36,10 @@ export default function LanguageSelector() {
   };
 
   React.useEffect(() => {
+    document.documentElement.lang = activeLocale;
+  }, [activeLocale]);
+
+  React.useEffect(() => {
     try {
       const scrollPosition = sessionStorage.getItem('scrollPosition');
       if (scrollPosition) {

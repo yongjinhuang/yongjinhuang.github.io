@@ -90,13 +90,7 @@ export function Navbar({ nav }: NavbarProps) {
       return;
     }
 
-    const sectionIds = [
-      'experience',
-      'skills',
-      'about',
-      'education',
-      'contact',
-    ];
+    const sectionIds = ['experience', 'skills', 'education', 'contact'];
     const elements = sectionIds
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
@@ -110,8 +104,7 @@ export function Navbar({ nav }: NavbarProps) {
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
 
         if (visible.length > 0) {
-          const rawId = visible[0].target.id;
-          setActiveSection(rawId === 'about' ? 'skills' : rawId);
+          setActiveSection(visible[0].target.id);
         }
       },
       {

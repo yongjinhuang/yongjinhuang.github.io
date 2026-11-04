@@ -52,7 +52,7 @@ Production deployments run automatically via GitHub Actions (`.github/workflows/
 
 - **Locales**: Configured in `app/i18n/settings.ts` (`en` default, `zh`).
 - **Translation Data**: Stored in `app/i18n/locales/{en,zh}.json` and strictly typed via `types/translations.ts` (`Translations` interface). Always update both locale JSON files and `types/translations.ts` when adding or changing portfolio copy.
-- **Root Redirect (`app/page.tsx`)**: Because static export does not support Next.js middleware redirects, `/` renders a `noindex` server page with a crawlable `<a href="/en">` link and a client-side router redirect (`components/ClientRedirect.tsx`).
+- **Root Redirect (`app/page.tsx`)**: Because static export does not support Next.js middleware redirects, `/` renders a `noindex` server page with a crawlable `<a href="/en">` link.
 - **Locale Routes (`app/[lang]/`)**: Pages use `generateStaticParams()` to pre-render for every locale in `i18n.locales`.
   - `app/[lang]/page.tsx` — Portfolio home page (Intro, Details, Experience, Education, Skills sections).
   - `app/[lang]/docs/page.tsx` — Markdown vault viewer (marked `noindex, nofollow`).

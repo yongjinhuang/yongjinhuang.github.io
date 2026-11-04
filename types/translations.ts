@@ -58,7 +58,6 @@ export interface CompanyExperienceTranslations {
   position: string;
   period: string;
   techStack: string;
-  project?: string;
   responsibilities: string[];
   logoUrl: string;
   linkUrl: string;

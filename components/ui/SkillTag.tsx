@@ -3,7 +3,6 @@ import { cn } from '@/lib/utils';
 interface SkillTagProps {
   children: React.ReactNode;
   icon?: React.ReactNode;
-  delay?: number;
   className?: string;
 }
 
