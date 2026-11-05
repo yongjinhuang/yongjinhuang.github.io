@@ -95,6 +95,7 @@ export function Intro({
   locale,
 }: IntroProps) {
   const { scheme } = useColorScheme();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const hasCJKName = isCJK(intro.name.first) || isCJK(intro.name.last);
   const fullName = formatFullName(intro.name.first, intro.name.last);
   const [revealedItems, setRevealedItems] = useState<Record<string, boolean>>(
@@ -159,8 +160,16 @@ export function Intro({
 
               <button
                 type="button"
-                onClick={() => exportResumePdf(translations, locale, scheme)}
-                className="brutal-btn rounded-lg px-4 py-2 text-xs sm:text-sm bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                disabled={isGeneratingPdf}
+                onClick={async () => {
+                  setIsGeneratingPdf(true);
+                  try {
+                    await exportResumePdf(translations, locale, scheme);
+                  } finally {
+                    setIsGeneratingPdf(false);
+                  }
+                }}
+                className="brutal-btn rounded-lg px-4 py-2 text-xs sm:text-sm bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-60"
               >
                 <FaDownload className="w-3 h-3" />
                 <span>{intro.viewResume}</span>

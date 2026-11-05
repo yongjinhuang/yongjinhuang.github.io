@@ -28,7 +28,6 @@ export interface StatItemTranslations {
 }
 
 export interface IntroTranslations {
-  resumeFile: string;
   title: string;
   greeting: string;
   name: NameTranslations;

@@ -1,59 +1,90 @@
+import { createElement } from 'react';
 import type { Translations } from '@/types';
-import { buildResumeBodyHtml } from './resume-template';
+
+const ASSET_PATHS = [
+  '/selfie.png',
+  '/logo/school.png',
+  '/logo/cognizant.svg',
+  '/logo/wilddata.png',
+  '/logo/tarro.webp',
+  '/logo/shopee.jpg',
+  '/logo/huawei.jpeg',
+];
+
+async function rasterizeImageToPngDataUrl(
+  url: string,
+  targetSize = 240
+): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = targetSize;
+      canvas.height = targetSize;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(url);
+        return;
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, targetSize, targetSize);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, targetSize, targetSize);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve('');
+    img.src = url;
+  });
+}
+
+async function prepareAssetMap(): Promise<Record<string, string>> {
+  const entries = await Promise.all(
+    ASSET_PATHS.map(async (p) => {
+      const size = p === '/selfie.png' ? 280 : 128;
+      const dataUrl = await rasterizeImageToPngDataUrl(p, size);
+      return [p, dataUrl] as const;
+    })
+  );
+  return Object.fromEntries(entries);
+}
 
 export async function exportResumePdf(
   translations: Translations,
   locale: string,
   schemeName: string
 ): Promise<void> {
-  const html2pdfModule = await import('html2pdf.js');
-  const html2pdf = html2pdfModule.default ?? html2pdfModule;
+  const [{ pdf }, { ResumePdfDocument, registerResumeFonts }, assetMap] =
+    await Promise.all([
+      import('@react-pdf/renderer'),
+      import('./ResumePdfDocument'),
+      prepareAssetMap(),
+    ]);
 
-  const wrapper = document.createElement('div');
-  wrapper.style.position = 'fixed';
-  wrapper.style.left = '-9999px';
-  wrapper.style.top = '0';
-  wrapper.style.width = '730px';
-  wrapper.style.background = '#ffffff';
-  wrapper.innerHTML = buildResumeBodyHtml(translations, locale, schemeName);
-  document.body.appendChild(wrapper);
+  registerResumeFonts(window.location.origin);
 
-  try {
-    const imgs = Array.from(wrapper.querySelectorAll('img'));
-    await Promise.all(
-      imgs.map((img) =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise<void>((resolve) => {
-              img.onload = () => resolve();
-              img.onerror = () => resolve();
-            })
-      )
-    );
+  const docElement = createElement(ResumePdfDocument, {
+    translations,
+    locale,
+    schemeName,
+    assetMap,
+  });
 
-    const target =
-      wrapper.querySelector<HTMLElement>('.resume-root') ?? wrapper;
-    const filename =
-      locale === 'zh'
-        ? `黄勇进_简历_${schemeName}.pdf`
-        : `Yongjin_Huang_Resume_${schemeName}.pdf`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const blob = await pdf(docElement as any).toBlob();
+  const blobUrl = URL.createObjectURL(blob);
 
-    await html2pdf()
-      .set({
-        margin: [6, 7.5, 6, 7.5],
-        filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2.5,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          windowWidth: 740,
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      })
-      .from(target)
-      .save();
-  } finally {
-    document.body.removeChild(wrapper);
-  }
+  const filename =
+    locale === 'zh'
+      ? `黄勇进_简历_${schemeName}.pdf`
+      : `Yongjin_Huang_Resume_${schemeName}.pdf`;
+
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
 }
