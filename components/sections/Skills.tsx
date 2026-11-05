@@ -1,39 +1,10 @@
 'use client';
 
-import {
-  FaCode,
-  FaTools,
-  FaLayerGroup,
-  FaJava,
-  FaDatabase,
-  FaRobot,
-  FaBrain,
-} from 'react-icons/fa';
-import {
-  SiGo,
-  SiPython,
-  SiTypescript,
-  SiFastapi,
-  SiLangchain,
-  SiDjango,
-  SiSpringboot,
-  SiReact,
-  SiNextdotjs,
-  SiGit,
-  SiLinux,
-  SiDocker,
-  SiKubernetes,
-  SiPostgresql,
-  SiMysql,
-  SiRedis,
-  SiMongodb,
-  SiApachekafka,
-  SiHelm,
-  SiOpentelemetry,
-} from 'react-icons/si';
+import { FaCode, FaTools, FaLayerGroup } from 'react-icons/fa';
 import { Card, SkillTag } from '@/components/ui';
+import { getSkillIcon } from '@/lib/skills';
 import type { SkillsTranslations } from '@/types';
-import { IconType } from 'react-icons';
+import type { IconType } from 'react-icons';
 
 interface SkillsProps {
   skills: SkillsTranslations;
@@ -45,37 +16,6 @@ interface SkillCategory {
   skills: string[];
   icon: IconType;
 }
-
-const skillIcons: Record<string, IconType> = {
-  golang: SiGo,
-  go: SiGo,
-  python: SiPython,
-  typescript: SiTypescript,
-  java: FaJava,
-  sql: FaDatabase,
-  gin: SiGo,
-  fastapi: SiFastapi,
-  langchain: SiLangchain,
-  'langchain / langgraph': SiLangchain,
-  'ai agents': FaRobot,
-  'llm / rag': FaBrain,
-  django: SiDjango,
-  'spring boot': SiSpringboot,
-  react: SiReact,
-  'next.js': SiNextdotjs,
-  git: SiGit,
-  linux: SiLinux,
-  docker: SiDocker,
-  k8s: SiKubernetes,
-  kubernetes: SiKubernetes,
-  postgresql: SiPostgresql,
-  mysql: SiMysql,
-  redis: SiRedis,
-  mongodb: SiMongodb,
-  kafka: SiApachekafka,
-  helm: SiHelm,
-  opentelemetry: SiOpentelemetry,
-};
 
 export function Skills({ skills }: SkillsProps) {
   const categories: SkillCategory[] = [
@@ -115,8 +55,7 @@ export function Skills({ skills }: SkillsProps) {
               </dt>
               <dd className="flex flex-wrap gap-1.5 flex-1">
                 {category.skills.map((skill) => {
-                  const SkillIcon =
-                    skillIcons[skill.trim().toLowerCase()] ?? FaCode;
+                  const SkillIcon = getSkillIcon(skill);
                   return (
                     <SkillTag
                       key={skill}

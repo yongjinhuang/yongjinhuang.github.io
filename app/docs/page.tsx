@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { getAvailableVaults, getVaultCategories } from '@/lib/vaults';
-import { InterviewViewer } from '@/components/interviews/InterviewViewer';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import { ColorSchemeProvider } from '@/components/ColorSchemeProvider';
+import { getAvailableVaults, getVaultCategories } from '@/lib/docs/vaults';
+import { DocsViewer } from '@/components/docs';
+import { ThemeProvider, ColorSchemeProvider } from '@/components/theme';
 
 export const metadata: Metadata = {
   title: 'Knowledge Base & Docs',
@@ -22,7 +21,7 @@ export default function DocsAppPage() {
   return (
     <ThemeProvider defaultTheme="dark" disableTransitionOnChange>
       <ColorSchemeProvider>
-        <InterviewViewer vaults={vaults} vaultData={vaultData} />
+        <DocsViewer vaults={vaults} vaultData={vaultData} />
       </ColorSchemeProvider>
     </ThemeProvider>
   );

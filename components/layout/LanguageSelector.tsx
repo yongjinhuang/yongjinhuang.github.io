@@ -9,7 +9,7 @@ const LOCALE_LABELS: Record<string, string> = {
   zh: '中',
 };
 
-export default function LanguageSelector() {
+export function LanguageSelector() {
   const router = useRouter();
   const pathname = usePathname() || '/en';
 
@@ -81,3 +81,5 @@ export default function LanguageSelector() {
     </div>
   );
 }
+
+export default LanguageSelector;

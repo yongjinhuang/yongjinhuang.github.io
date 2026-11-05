@@ -1,28 +1,7 @@
 import { Font } from '@react-pdf/renderer';
-import { FaCode, FaJava, FaDatabase, FaRobot, FaBrain } from 'react-icons/fa';
-import {
-  SiGo,
-  SiPython,
-  SiTypescript,
-  SiFastapi,
-  SiLangchain,
-  SiDjango,
-  SiSpringboot,
-  SiReact,
-  SiNextdotjs,
-  SiGit,
-  SiLinux,
-  SiDocker,
-  SiKubernetes,
-  SiPostgresql,
-  SiMysql,
-  SiRedis,
-  SiMongodb,
-  SiApachekafka,
-  SiHelm,
-  SiOpentelemetry,
-} from 'react-icons/si';
-import type { IconType } from 'react-icons';
+import { SKILL_ICONS, getSkillIcon } from '@/lib/skills';
+
+export { SKILL_ICONS, getSkillIcon };
 
 export interface ResumeSchemePalette {
   readonly accent: string;
@@ -104,38 +83,6 @@ export const RESUME_SCHEMES: Record<string, ResumeSchemePalette> = {
     accentLight: '#f1f5f9',
     accentBorder: '#64748b',
   },
-};
-
-export const SKILL_ICONS: Record<string, IconType> = {
-  golang: SiGo,
-  go: SiGo,
-  python: SiPython,
-  typescript: SiTypescript,
-  java: FaJava,
-  sql: FaDatabase,
-  gin: SiGo,
-  fastapi: SiFastapi,
-  langchain: SiLangchain,
-  'langchain / langgraph': SiLangchain,
-  'ai agents': FaRobot,
-  'llm / rag': FaBrain,
-  django: SiDjango,
-  'spring boot': SiSpringboot,
-  react: SiReact,
-  'next.js': SiNextdotjs,
-  git: SiGit,
-  linux: SiLinux,
-  docker: SiDocker,
-  k8s: SiKubernetes,
-  kubernetes: SiKubernetes,
-  postgresql: SiPostgresql,
-  mysql: SiMysql,
-  redis: SiRedis,
-  mongodb: SiMongodb,
-  kafka: SiApachekafka,
-  helm: SiHelm,
-  opentelemetry: SiOpentelemetry,
-  default: FaCode,
 };
 
 let fontsRegistered = false;

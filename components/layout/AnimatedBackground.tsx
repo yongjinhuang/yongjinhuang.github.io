@@ -1,6 +1,6 @@
 'use client';
 
-import { useTheme } from '@/components/ThemeProvider';
+import { useTheme } from '@/components/theme';
 import { useEffect, useState } from 'react';
 
 export function AnimatedBackground() {

@@ -5,9 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import ThemeToggle from '@/components/ThemeToggle';
-import LanguageSelector from '@/components/LanguageSelector';
-import ColorSchemePicker from '@/components/ColorSchemePicker';
+import { ThemeToggle, ColorSchemePicker } from '@/components/theme';
+import { LanguageSelector } from './LanguageSelector';
 import type { NavTranslations } from '@/types';
 
 interface NavbarProps {

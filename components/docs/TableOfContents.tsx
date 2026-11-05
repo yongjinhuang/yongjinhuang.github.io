@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { RefObject } from 'react';
 import { cn } from '@/lib/utils';
-import { stripMarkdownFormatting, buildHeadingIdMap } from './MarkdownContent';
+import { stripMarkdownFormatting, buildHeadingIdMap } from '@/lib/docs';
 
 interface TocItem {
   readonly level: number;

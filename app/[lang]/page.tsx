@@ -5,10 +5,9 @@ import {
   getTranslations,
   type Locale,
 } from '@/app/i18n/settings';
-import { PageTransition } from '@/components/PageTransition';
+import { JsonLd, PageTransition } from '@/components/layout';
 import { CollapsibleSection } from '@/components/ui';
 import { Intro, Skills, Experience } from '@/components/sections';
-import { JsonLd } from '@/components/JsonLd';
 import { BASE_URL, META, OG_IMAGE, SELFIE_IMAGE, SITE_NAME } from '@/lib/seo';
 import { formatFullName } from '@/lib/utils';
 

@@ -45,7 +45,7 @@ function SchemeOption({
   );
 }
 
-export default function ColorSchemePicker() {
+export function ColorSchemePicker() {
   const { scheme, isAuto, setScheme, setAuto } = useColorScheme();
   const [isOpen, setIsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -165,3 +165,5 @@ export default function ColorSchemePicker() {
     </div>
   );
 }
+
+export default ColorSchemePicker;

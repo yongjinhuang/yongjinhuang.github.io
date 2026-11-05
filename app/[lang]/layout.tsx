@@ -1,10 +1,11 @@
-import { ThemeProvider } from '@/components/ThemeProvider';
+import { ThemeProvider, ColorSchemeProvider } from '@/components/theme';
+import {
+  Navbar,
+  Footer,
+  ScrollToTop,
+  AnimatedBackground,
+} from '@/components/layout';
 import { resolveLocale, getTranslations } from '../i18n/settings';
-import { Footer } from '@/components/Footer';
-import { ScrollToTop } from '@/components/ScrollToTop';
-import { AnimatedBackground } from '@/components/AnimatedBackground';
-import { Navbar } from '@/components/layout';
-import { ColorSchemeProvider } from '@/components/ColorSchemeProvider';
 
 interface Props {
   children: React.ReactNode;

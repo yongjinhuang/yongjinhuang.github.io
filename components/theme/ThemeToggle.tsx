@@ -1,10 +1,10 @@
 'use client';
 
-import { useTheme } from '@/components/ThemeProvider';
+import { useTheme } from './ThemeProvider';
 import { SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 
-export default function ThemeToggle() {
+export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -42,3 +42,5 @@ export default function ThemeToggle() {
     </button>
   );
 }
+
+export default ThemeToggle;

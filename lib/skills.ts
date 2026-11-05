@@ -1,0 +1,60 @@
+import { FaCode, FaJava, FaDatabase, FaRobot, FaBrain } from 'react-icons/fa';
+import {
+  SiGo,
+  SiPython,
+  SiTypescript,
+  SiFastapi,
+  SiLangchain,
+  SiDjango,
+  SiSpringboot,
+  SiReact,
+  SiNextdotjs,
+  SiGit,
+  SiLinux,
+  SiDocker,
+  SiKubernetes,
+  SiPostgresql,
+  SiMysql,
+  SiRedis,
+  SiMongodb,
+  SiApachekafka,
+  SiHelm,
+  SiOpentelemetry,
+} from 'react-icons/si';
+import type { IconType } from 'react-icons';
+
+export const SKILL_ICONS: Record<string, IconType> = {
+  golang: SiGo,
+  go: SiGo,
+  python: SiPython,
+  typescript: SiTypescript,
+  java: FaJava,
+  sql: FaDatabase,
+  gin: SiGo,
+  fastapi: SiFastapi,
+  langchain: SiLangchain,
+  'langchain / langgraph': SiLangchain,
+  'ai agents': FaRobot,
+  'llm / rag': FaBrain,
+  django: SiDjango,
+  'spring boot': SiSpringboot,
+  react: SiReact,
+  'next.js': SiNextdotjs,
+  git: SiGit,
+  linux: SiLinux,
+  docker: SiDocker,
+  k8s: SiKubernetes,
+  kubernetes: SiKubernetes,
+  postgresql: SiPostgresql,
+  mysql: SiMysql,
+  redis: SiRedis,
+  mongodb: SiMongodb,
+  kafka: SiApachekafka,
+  helm: SiHelm,
+  opentelemetry: SiOpentelemetry,
+  default: FaCode,
+};
+
+export function getSkillIcon(name: string): IconType {
+  return SKILL_ICONS[name.trim().toLowerCase()] ?? FaCode;
+}

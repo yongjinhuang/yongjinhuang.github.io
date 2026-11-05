@@ -17,10 +17,10 @@ import {
 } from 'react-icons/fi';
 import { SiLeetcode } from 'react-icons/si';
 import type { Translations } from '@/types';
-import { formatFullName } from './utils';
-import { RESUME_SCHEMES, SKILL_ICONS, registerResumeFonts } from './pdf/config';
-import { renderPdfIcon, renderMarkdownText } from './pdf/helpers';
-import { createResumeStyles } from './pdf/styles';
+import { formatFullName } from '../utils';
+import { RESUME_SCHEMES, SKILL_ICONS, registerResumeFonts } from './config';
+import { renderPdfIcon, renderMarkdownText } from './helpers';
+import { createResumeStyles } from './styles';
 
 export { registerResumeFonts };
 
