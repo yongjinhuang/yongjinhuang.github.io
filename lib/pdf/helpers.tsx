@@ -140,7 +140,7 @@ export function renderMarkdownText(
           key={i}
           style={{
             fontFamily: monoFont,
-            fontSize: 7.2,
+            fontSize: 6.7,
             backgroundColor: '#f1f5f9',
             color: '#0f172a',
           }}

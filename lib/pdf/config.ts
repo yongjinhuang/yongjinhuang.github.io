@@ -148,24 +148,16 @@ export function registerResumeFonts(baseUrl = ''): void {
     family: 'PlusJakartaSans',
     fonts: [
       {
-        src: `${baseUrl}/fonts/plus-jakarta-sans-v12-latin-regular.woff2`,
+        src: `${baseUrl}/fonts/PlusJakartaSans-Regular.ttf`,
         fontWeight: 400,
       },
       {
-        src: `${baseUrl}/fonts/plus-jakarta-sans-v12-latin-500.woff2`,
+        src: `${baseUrl}/fonts/PlusJakartaSans-Medium.ttf`,
         fontWeight: 500,
       },
       {
-        src: `${baseUrl}/fonts/plus-jakarta-sans-v12-latin-600.woff2`,
-        fontWeight: 600,
-      },
-      {
-        src: `${baseUrl}/fonts/plus-jakarta-sans-v12-latin-700.woff2`,
+        src: `${baseUrl}/fonts/PlusJakartaSans-Bold.ttf`,
         fontWeight: 700,
-      },
-      {
-        src: `${baseUrl}/fonts/plus-jakarta-sans-v12-latin-800.woff2`,
-        fontWeight: 800,
       },
     ],
   });
@@ -174,19 +166,15 @@ export function registerResumeFonts(baseUrl = ''): void {
     family: 'JetBrainsMono',
     fonts: [
       {
-        src: `${baseUrl}/fonts/jetbrains-mono-v24-latin-regular.woff2`,
+        src: `${baseUrl}/fonts/JetBrainsMono-Regular.ttf`,
         fontWeight: 400,
       },
       {
-        src: `${baseUrl}/fonts/jetbrains-mono-v24-latin-500.woff2`,
+        src: `${baseUrl}/fonts/JetBrainsMono-Medium.ttf`,
         fontWeight: 500,
       },
       {
-        src: `${baseUrl}/fonts/jetbrains-mono-v24-latin-600.woff2`,
-        fontWeight: 600,
-      },
-      {
-        src: `${baseUrl}/fonts/jetbrains-mono-v24-latin-700.woff2`,
+        src: `${baseUrl}/fonts/JetBrainsMono-Bold.ttf`,
         fontWeight: 700,
       },
     ],
@@ -196,11 +184,11 @@ export function registerResumeFonts(baseUrl = ''): void {
     family: 'NotoSansSC',
     fonts: [
       {
-        src: `${baseUrl}/fonts/noto-sans-sc-v37-chinese-simplified-regular.woff`,
+        src: `${baseUrl}/fonts/NotoSansSC-Regular.otf`,
         fontWeight: 400,
       },
       {
-        src: `${baseUrl}/fonts/noto-sans-sc-v37-chinese-simplified-700.woff`,
+        src: `${baseUrl}/fonts/NotoSansSC-Bold.otf`,
         fontWeight: 700,
       },
     ],

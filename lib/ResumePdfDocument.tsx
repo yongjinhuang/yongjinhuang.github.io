@@ -67,7 +67,7 @@ export function ResumePdfDocument({
 
   return (
     <Document title={`${fullName} — ${t.intro.tagline}`} author={fullName}>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" wrap={false} style={styles.page}>
         {/* Hero Dossier */}
         <View style={[styles.card, styles.heroCard]}>
           <View style={styles.heroTop}>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useId } from 'react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface MermaidDiagramProps {
   readonly chart: string;
