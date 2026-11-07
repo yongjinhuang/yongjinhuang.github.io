@@ -171,94 +171,99 @@ graph TD
 
 ## ER Diagram
 
-```
-+------------------+
-|      spaces      |
-|------------------|
-| space_id (PK)    |
-| name             |
-| plan_tier        |
-| default_locale   |
-| settings_json    |
-+------------------+
-   |    |    |    |
-   |    |    |    +───* webhooks
-   |    |    |
-   |    |    +────────* assets
-   |    |
-   |    +─────────────* workflows
-   |
-   +──────────────────* content_types
-                          |
-                          | 1
-                          |
-              +-----------+-----------+
-              |                       |
-              +───* content_type_     +───* entries
-              |    fields             |
-              |                       |
-+-------------+-------+    +---------+----------+
-| content_type_fields  |    |      entries       |
-|-----------------------|    |--------------------|
-| content_type_id(FK,PK)|    | entry_id (PK)      |
-| field_id (PK)         |    | space_id (FK)       |
-| name                  |    | content_type_id(FK) |
-| field_type            |    | fields_json         |
-| required              |    | status              |
-| localized             |    | published_version   |
-| validations_json      |    | created_by          |
-| default_value         |    | published_at        |
-+-----------------------+    +--------------------+
-                                |           |
-                                | 1         | (source)
-                                |           |
-                     +----------+---+    +--+-----------------+
-                     |entry_versions|    | entry_references   |
-                     |--------------|    |--------------------|
-                     |version_id(PK)|    |source_entry_id(PK) |
-                     |entry_id (FK) |    |target_entry_id(PK) |
-                     |version_number|    |field_id (PK)       |
-                     |fields_json   |    |reference_type      |
-                     |changed_by    |    +--------------------+
-                     |created_at    |         |
-                     +--------------+         | target_entry_id
-                                              | references
-                                              | entries.entry_id
-+------------------+    +------------------+
-|    webhooks      |    |      assets      |
-|------------------|    |------------------|
-| webhook_id (PK)  |    | asset_id (PK)    |
-| space_id (FK)    |    | space_id (FK)    |
-| name             |    | title_json       |
-| url              |    | file_name        |
-| events           |    | content_type     |
-| headers_json     |    | file_size        |
-| is_active        |    | storage_key      |
-+------------------+    | cdn_url          |
-                        | width            |
-+------------------+    | height           |
-|    workflows     |    +------------------+
-|------------------|
-| workflow_id (PK) |
-| space_id (FK)    |
-| name             |
-| stages_json      |
-| current_stage    |
-+------------------+
+```mermaid
+erDiagram
+    spaces ||--o{ content_types : "relates"
+    spaces ||--o{ entries : "relates"
+    spaces ||--o{ assets : "relates"
+    spaces ||--o{ workflows : "relates"
+    spaces ||--o{ webhooks : "relates"
+    content_types ||--o{ content_type_fields : "relates"
+    content_types ||--o{ entries : "relates"
+    entries ||--o{ entry_versions : "relates"
+    entries }o--o{ entries : "via entry_references, self-referential"
 
-Relationships:
-  spaces 1───* content_types
-  spaces 1───* entries
-  spaces 1───* assets
-  spaces 1───* workflows
-  spaces 1───* webhooks
-  content_types 1───* content_type_fields
-  content_types 1───* entries
-  entries 1───* entry_versions
-  entries *───* entries  (via entry_references, self-referential)
+    spaces {
+        UUID space_id PK
+        VARCHAR name
+        ENUM plan_tier
+        VARCHAR default_locale
+        JSONB settings_json
+    }
+    content_types {
+        UUID content_type_id PK
+        SPACES space_id FK
+        VARCHAR name
+        TEXT description
+        VARCHAR api_identifier
+        INT version
+    }
+    content_type_fields {
+        COMPOSITE content_type_id PK, FK
+        VARCHAR field_id PK
+        VARCHAR name
+        ENUM field_type
+        BOOLEAN required
+        BOOLEAN localized
+        JSONB validations_json
+        JSONB default_value
+    }
+    entries {
+        UUID entry_id PK
+        SPACES space_id FK
+        CONTENT_TYPES content_type_id FK
+        JSONB fields_json
+        ENUM status
+        INT published_version
+        USERS created_by FK
+        TIMESTAMP published_at
+    }
+    entry_versions {
+        UUID version_id PK
+        ENTRIES entry_id FK
+        INT version_number
+        JSONB fields_json
+        USERS changed_by FK
+        TIMESTAMP created_at
+    }
+    entry_references {
+        COMPOSITE source_entry_id PK, FK
+        COMPOSITE target_entry_id PK, FK
+        VARCHAR field_id PK
+        VARCHAR reference_type
+    }
+    assets {
+        UUID asset_id PK
+        SPACES space_id FK
+        JSONB title_json
+        VARCHAR file_name
+        VARCHAR content_type
+        BIGINT file_size
+        VARCHAR storage_key
+        VARCHAR cdn_url
+        INT width
+        INT height
+    }
+    workflows {
+        UUID workflow_id PK
+        SPACES space_id FK
+        VARCHAR name
+        JSONB stages_json
+        VARCHAR current_stage
+    }
+    webhooks {
+        UUID webhook_id PK
+        SPACES space_id FK
+        VARCHAR name
+        VARCHAR url
+        ARRAY events
+        JSONB headers_json
+        BOOLEAN is_active
+    }
 ```
 
 ---
+
 
 ## Data Flow
 

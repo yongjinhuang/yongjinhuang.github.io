@@ -149,63 +149,72 @@ graph TD
 
 ## ER Diagram
 
-```
-                    +-------------------+
-                    |      routes       |
-                    |-------------------|
-                    | route_id (PK)     |
-                    | match_host        |
-                    | match_path_pattern|
-                    | match_methods     |
-                    | target_service ───|──────────────────────┐
-                    | target_port       |                      |
-                    | strip_prefix      |                      |
-                    | timeout_ms        |                      |
-                    | retry_count       |                      |
-                    | priority          |                      |
-                    +-------------------+                      |
-                                                               |
-+-------------------+     +--------------------+    +----------+----------+
-|    api_keys       |     | rate_limit_rules   |    | service_registry    |
-|-------------------|     |--------------------|    |   (etcd/Consul)     |
-| key_id (PK)       |     | rule_id (PK)       |    |---------------------|
-| key_hash          |     | scope              |    | service_name (KEY)  |
-| client_name       |     | key_pattern ───────|──┐ | instances[]         |
-| scopes            |     | max_requests       |  | |   host, port,       |
-| rate_limit_tier──|──┐  | window_seconds     |  | |   health, weight,   |
-| is_active         |  |  +--------------------+  | |   zone              |
-| created_at        |  |                          | +---------------------+
-| expires_at        |  |                          |
-+-------------------+  |  +--------------------+  |
-                       |  | rate_limit_counters |  |
-                       └──|     (Redis)         |──┘
-                          |--------------------|
-                          | key: rl:{client}:  |
-                          |  {endpoint}:{win}  |
-                          | counter            |
-                          | TTL                |
-                          +--------------------+
+```mermaid
+erDiagram
+    routes }o--|| service_registry : "many routes target one service"
 
-+---------------------+     +-------------------+
-| circuit_breaker_    |     |   certificates    |
-|  state (in-memory)  |     |-------------------|
-|---------------------|     | cert_id (PK)      |
-| service_name (KEY)  |     | domain            |
-| state               |     | cert_pem          |
-| failure_count       |     | key_pem_encrypted |
-| last_failure_at     |     | expires_at        |
-| recovery_timeout    |     | auto_renew        |
-+---------------------+     +-------------------+
-
-Relationships:
-  routes *───1 service_registry   (many routes target one service)
-  api_keys ──── rate_limit_rules  (linked by rate_limit_tier)
-  rate_limit_rules ── rate_limit_counters (rules define pattern, counters track usage)
-  circuit_breaker_state ──── service_registry (one breaker per service)
-  certificates: standalone (matched by domain during TLS handshake)
+    routes {
+        UUID route_id PK
+        VARCHAR match_host
+        VARCHAR match_path_pattern
+        ARRAY match_methods
+        VARCHAR target_service
+        INT target_port
+        BOOLEAN strip_prefix
+        INT timeout_ms
+        INT retry_count
+        INT priority
+    }
+    api_keys {
+        UUID key_id PK
+        VARCHAR key_hash
+        VARCHAR client_name
+        ARRAY scopes
+        VARCHAR rate_limit_tier
+        BOOLEAN is_active
+        TIMESTAMP created_at
+        TIMESTAMP expires_at
+    }
+    rate_limit_rules {
+        UUID rule_id PK
+        ENUM scope
+        VARCHAR key_pattern
+        INT max_requests
+        INT window_seconds
+    }
+    rate_limit_counters {
+        STRING key
+        INT counter
+        INT TTL
+    }
+    circuit_breaker_state {
+        KEY service_name
+        ENUM state
+        INT failure_count
+        TIMESTAMP last_failure_at
+        DURATION recovery_timeout
+    }
+    certificates {
+        UUID cert_id PK
+        VARCHAR domain
+        TEXT cert_pem
+        TEXT key_pem_encrypted
+        TIMESTAMP expires_at
+        BOOLEAN auto_renew
+    }
+    service_registry {
+        KEY service_name
+        ARRAY instances
+        VARCHAR host
+        INT port
+        ENUM health
+        INT weight
+        VARCHAR zone
+    }
 ```
 
 ---
+
 
 ## Data Flow
 

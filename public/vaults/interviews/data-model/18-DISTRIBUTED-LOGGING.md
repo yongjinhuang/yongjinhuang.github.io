@@ -115,85 +115,56 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐       ┌──────────────────────┐
-│   log_events          │       │      metrics          │
-│   (Elasticsearch)     │       │   (ClickHouse)        │
-│──────────────────────│       │──────────────────────│
-│ timestamp             │       │ metric_name           │
-│ severity              │       │ tag_keys              │
-│ service               │       │ tag_values            │
-│ host                  │       │ timestamp             │
-│ body                  │       │ value                 │
-│ trace_id ─────────────│──┐    │ metric_type           │
-│ span_id               │  │    └──────────────────────┘
-│ resource_tags         │  │
-│ attributes_json       │  │       correlated via
-└──────────────────────┘  │       trace_id
-                           │
-                           │    ┌──────────────────────┐
-                           │    │      spans            │
-                           │    │   (Trace Backend)     │
-                           │    │──────────────────────│
-                           └───►│ trace_id (INDEX)      │
-                                │ span_id (PK)          │
-                                │ parent_span_id ───────│──┐ self-ref
-                                │ service_name          │  │ (parent span)
-                                │ operation_name        │  │
-                                │ start_time            │◄─┘
-                                │ duration_ns           │
-                                │ status_code           │
-                                │ tags_json             │
-                                └──────────────────────┘
+```mermaid
+erDiagram
+    log_events }o--|| spans : "many log lines link to one trace via trace_id"
+    spans ||--o{ spans : "self-ref: parent span has many child spans"
 
-┌──────────────────────┐
-│    alert_rules        │        queries metrics
-│   (PostgreSQL)        │        and log_events
-│──────────────────────│
-│ rule_id (PK)          │
-│ name                  │
-│ type                  │
-│ query ────────────────│──► evaluates against metrics / log_events
-│ conditions_json       │
-│ severity              │
-│ notification_channels │
-└──────────────────────┘
-
-Relationships:
-  log_events *───1 spans    (many log lines link to one trace via trace_id)
-  spans      1───* spans    (self-ref: parent span has many child spans)
-  alert_rules ───► metrics  (alert queries evaluate against metric data)
-  alert_rules ───► log_events (some alerts query log patterns)
+    log_events {
+        DATETIME timestamp
+        KEYWORD severity
+        KEYWORD service
+        KEYWORD host
+        TEXT body
+        KEYWORD trace_id
+        KEYWORD span_id
+        OBJECT resource_tags
+        OBJECT attributes_json
+    }
+    metrics {
+        STRING metric_name
+        STRING tag_keys
+        STRING tag_values
+        DATETIME timestamp
+        FLOAT64 value
+        ENUM metric_type
+    }
+    spans {
+        STRING trace_id
+        STRING span_id PK
+        STRING parent_span_id
+        STRING service_name
+        STRING operation_name
+        DATETIME start_time
+        BIGINT duration_ns
+        ENUM status_code
+        JSONB tags_json
+    }
+    alert_rules {
+        BIGINT rule_id PK
+        VARCHAR name
+        ENUM type
+        TEXT query
+        JSONB conditions_json
+        ENUM severity
+        TEXT notification_channels
+    }
 ```
+
 
 ## Data Flow
 
 ### Ingestion Pipeline
-
-```
-1. Applications emit telemetry:
-   - Logs: structured JSON to stdout / log agent
-   - Metrics: Prometheus exposition format / StatsD
-   - Traces: OpenTelemetry SDK exports spans
-         │
-         ▼
-2. Ship to Kafka (single ingestion bus):
-   - Topic "logs" for log events
-   - Topic "metrics" for metric samples
-   - Topic "traces" for span data
-         │
-         ▼
-3. Stream processor (Flink) consumes each topic:
-   │
-   ├──► Logs: parse, enrich (add resource_tags from service registry),
-   │    validate schema → write to Elasticsearch (daily index)
-   │
-   ├──► Metrics: validate, downsample if needed,
-   │    pre-aggregate common rollups → write to ClickHouse
-   │
-   └──► Traces: validate, link parent/child spans,
-        compute trace duration → write to trace backend (Jaeger/Tempo)
-```
 
 ```mermaid
 flowchart TD
@@ -208,30 +179,6 @@ flowchart TD
 ```
 
 ### Query Flow
-
-```
-4. User opens dashboard or runs ad-hoc query
-         │
-         ▼
-5. Query service receives request and routes to appropriate backend:
-   │
-   ├──► Log search: "errors in payment-api last 1 hour"
-   │    → Elasticsearch query with time range + service + severity filters
-   │
-   ├──► Metric query: "p99 latency by service, 5-minute windows"
-   │    → ClickHouse aggregation query with GROUP BY service, time bucket
-   │
-   └──► Trace lookup: "show trace abc-123"
-        → Fetch all spans with trace_id = "abc-123" from trace backend
-        → Reconstruct span tree using parent_span_id
-        → Render waterfall visualization
-         │
-         ▼
-6. Cross-signal correlation:
-   User finds an error log → clicks trace_id → sees full trace
-   → identifies slow span → pivots to metrics for that service
-   → confirms elevated latency across all requests
-```
 
 ```mermaid
 flowchart TD
@@ -248,33 +195,6 @@ flowchart TD
 ```
 
 ### Alert Evaluation
-
-```
-7. Alert engine runs on a fixed schedule (every 30-60 seconds)
-         │
-         ▼
-8. For each alert_rule:
-   - Execute the query against metrics/logs backend
-   - Evaluate conditions_json against the result
-         │
-    ┌────┴───────────┐
-    │Condition met?  │
-    ├─No─────────────┤──► Reset "firing" timer
-    │ Yes            │
-    └────┬───────────┘
-         ▼
-9. Check "for" duration (has the condition been true
-   continuously for the required period?)
-         │
-    ┌────┴──────┐
-    │Sustained? │
-    ├─No────────┤──► Continue monitoring
-    │ Yes       │
-    └────┬──────┘
-         ▼
-10. Fire alert: send to notification_channels
-    based on severity routing rules
-```
 
 ```mermaid
 flowchart TD

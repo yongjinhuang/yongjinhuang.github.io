@@ -137,109 +137,79 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐       ┌──────────────────────┐
-│     merchants         │       │   webhook_events      │
-│──────────────────────│       │──────────────────────│
-│ id (PK)               │       │ id (PK)               │
-│ name                  │       │ merchant_id (FK)      │
-│ email                 │  1    │ event_type            │
-│ country               │──────►│ payload_json          │
-│ currency              │  *    │ status                │
-│ payout_schedule       │       │ attempts              │
-│ status                │       │ next_retry_at         │
-│ api_key_hash          │       └──────────────────────┘
-└──────────────────────┘
-          │
-          │ 1
-          │
-          │ *
-┌──────────────────────┐       ┌──────────────────────┐
-│      payments         │       │  payment_methods      │
-│──────────────────────│       │──────────────────────│
-│ id (PK)               │       │ id (PK)               │
-│ merchant_id (FK)      │       │ customer_id (FK)      │
-│ customer_id (FK)      │       │ type                  │
-│ amount                │       │ token                 │
-│ currency              │       │ is_default            │
-│ status                │       │ last_four             │
-│ idempotency_key       │       │ brand                 │
-│ processor_id          │       │ exp_month             │
-│ amount_captured       │       │ exp_year              │
-│ amount_refunded       │       └──────────────────────┘
-└──────────────────────┘
-     │              │
-     │ 1            │ 1
-     │              │
-     │ *            │ *
-┌────────────┐  ┌──────────────────────┐
-│  refunds    │  │   ledger_entries      │
-│────────────│  │──────────────────────│
-│ id (PK)     │  │ id (PK)               │
-│ payment_id  │  │ payment_id (FK)       │
-│ amount      │  │ account_id            │
-│ status      │  │ entry_type            │
-│ reason      │  │ amount                │
-│ processor_id│  │ balance_after         │
-└────────────┘  │ created_at            │
-                 └──────────────────────┘
+```mermaid
+erDiagram
+    merchants ||--o{ payments : "one merchant receives many payments"
+    merchants ||--o{ webhook_events : "one merchant receives many webhooks"
+    payments ||--o{ ledger_entries : "one payment creates multiple debit/credit entries"
+    payments ||--o{ refunds : "one payment can have multiple partial refunds"
+    customers ||--o{ payment_methods : "one customer has many payment methods"
 
-Relationships:
-  merchants 1───* payments         (one merchant receives many payments)
-  merchants 1───* webhook_events   (one merchant receives many webhooks)
-  payments  1───* ledger_entries   (one payment creates multiple debit/credit entries)
-  payments  1───* refunds          (one payment can have multiple partial refunds)
-  customers 1───* payment_methods  (one customer has many payment methods)
+    merchants {
+        BIGINT id PK
+        VARCHAR name
+        VARCHAR email UK
+        VARCHAR country
+        VARCHAR currency
+        VARCHAR payout_schedule
+        ENUM status
+        VARCHAR api_key_hash
+    }
+    payment_methods {
+        BIGINT id PK
+        BIGINT customer_id FK
+        ENUM type
+        VARCHAR token UK
+        BOOLEAN is_default
+        VARCHAR last_four
+        VARCHAR brand
+        SMALLINT exp_month
+        SMALLINT exp_year
+    }
+    payments {
+        BIGINT id PK
+        BIGINT merchant_id FK
+        BIGINT customer_id FK
+        BIGINT amount
+        VARCHAR currency
+        ENUM status
+        VARCHAR idempotency_key UK
+        VARCHAR processor_id
+        BIGINT amount_captured
+        BIGINT amount_refunded
+    }
+    ledger_entries {
+        BIGINT id PK
+        BIGINT payment_id FK
+        VARCHAR account_id
+        ENUM entry_type
+        BIGINT amount
+        BIGINT balance_after
+        TIMESTAMP created_at
+    }
+    refunds {
+        BIGINT id PK
+        BIGINT payment_id FK
+        BIGINT amount
+        ENUM status
+        VARCHAR reason
+        VARCHAR processor_id
+    }
+    webhook_events {
+        BIGINT id PK
+        BIGINT merchant_id FK
+        VARCHAR event_type
+        JSONB payload_json
+        ENUM status
+        INT attempts
+        TIMESTAMP next_retry_at
+    }
 ```
+
 
 ## Data Flow
 
 ### Processing a Payment (Write Path)
-
-```
-1. Client creates PaymentIntent with idempotency_key
-         │
-         ▼
-2. Check idempotency_key in payments table
-         │
-    ┌────┴──────┐
-    │Duplicate? │
-    ├─Yes───────┤──► Return existing payment result (idempotent)
-    │ No        │
-    └────┬──────┘
-         ▼
-3. Validate merchant (status = active) and payment_method (token valid)
-         │
-         ▼
-4. INSERT payment record (status = 'pending')
-         │
-         ▼
-5. Send authorization request to payment processor
-         │
-    ┌────┴──────┐
-    │Approved?  │
-    ├─No────────┤──► Update status = 'failed', fire webhook
-    │ Yes       │
-    └────┬──────┘
-         ▼
-6. Update payment status = 'authorized', store processor_id
-         │
-         ▼
-7. Capture payment (can be immediate or deferred):
-   Update status = 'captured', amount_captured = amount
-         │
-         ▼
-8. Create ledger_entries (atomic transaction):
-   - DEBIT  customer liability account   (amount)
-   - CREDIT merchant receivable account  (amount - platform_fee)
-   - CREDIT platform fee account         (platform_fee)
-         │
-         ▼
-9. Fire webhook_events: "payment.captured" to merchant
-         │
-         ▼
-10. Merchant fulfills order based on webhook
-```
 
 ```mermaid
 flowchart TD
@@ -258,34 +228,6 @@ flowchart TD
 ```
 
 ### Processing a Refund
-
-```
-1. Merchant requests refund for payment_id with amount
-         │
-         ▼
-2. Validate: payment.status = 'captured'
-   and (amount_refunded + refund_amount) <= amount_captured
-         │
-         ▼
-3. INSERT refund record (status = 'pending')
-         │
-         ▼
-4. Send refund request to payment processor
-         │
-         ▼
-5. On processor confirmation:
-   Update refund status = 'succeeded'
-   Update payment: amount_refunded += refund_amount
-         │
-         ▼
-6. Create reverse ledger_entries (atomic):
-   - CREDIT customer liability account   (refund_amount)
-   - DEBIT  merchant receivable account  (refund_amount - fee_reversal)
-   - DEBIT  platform fee account         (fee_reversal)
-         │
-         ▼
-7. Fire webhook_events: "refund.succeeded" to merchant
-```
 
 ```mermaid
 flowchart TD

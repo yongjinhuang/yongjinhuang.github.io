@@ -140,102 +140,56 @@ graph TD
 
 ## ER Diagram
 
+```mermaid
+erDiagram
+    topics ||--o{ partitions : "one topic has many partitions"
+    partitions ||--o{ records : "one partition has many records"
+    consumer_groups ||--o{ consumer_offsets : "one group tracks offsets per partition"
+
+    topics {
+        STRING topic_name PK
+        INT partition_count
+        INT replication_factor
+        BIGINT retention_ms
+        BIGINT retention_bytes
+        ENUM cleanup_policy
+    }
+    partitions {
+        STRING topic
+        INT partition_id
+        FILE log_segments
+        FILE index_files
+        FILE timeindex
+    }
+    records {
+        BYTES key
+        BYTES value
+        BIGINT timestamp
+        BIGINT offset
+        MAP headers
+    }
+    consumer_groups {
+        STRING group_id
+        STRING topic
+        MAP partition_assignments
+        MAP committed_offset
+    }
+    consumer_offsets {
+        STRING group_id
+        STRING topic
+        INT partition
+        BIGINT offset
+        STRING metadata
+        BIGINT timestamp
+    }
 ```
-┌──────────────────────┐
-│       topics          │
-│──────────────────────│
-│ topic_name (PK)       │
-│ partition_count       │
-│ replication_factor    │
-│ retention_ms          │
-│ retention_bytes       │
-│ cleanup_policy        │
-└──────────────────────┘
-         │ 1
-         │
-         │          *
-┌────────┴─────────────┐
-│     partitions        │
-│──────────────────────│
-│ topic + partition_id  │
-│ log_segments[]        │
-│ index_files[]         │
-│ timeindex[]           │
-└──────────────────────┘
-         │ 1
-         │
-         │          *
-┌────────┴─────────────┐
-│      records          │
-│──────────────────────│
-│ key (bytes)           │
-│ value (bytes)         │
-│ timestamp             │
-│ offset (auto)         │
-│ headers               │
-└──────────────────────┘
 
-┌──────────────────────┐       ┌──────────────────────┐
-│   consumer_groups     │       │  consumer_offsets     │
-│──────────────────────│       │  (__consumer_offsets)  │
-│ group_id              │1     *│──────────────────────│
-│ topic                 │───────│ group_id              │
-│ partition_assignments │       │ topic                 │
-│ committed_offsets     │       │ partition             │
-└──────────────────────┘       │ offset                │
-                                │ metadata              │
-                                │ timestamp             │
-                                └──────────────────────┘
+> **Note:** These are not database tables. Topics/partitions are log files on disk. Consumer offsets are records in a special internal Kafka topic. The "ER diagram" shows logical relationships.
 
-Relationships:
-  topics     1───* partitions       (one topic has many partitions)
-  partitions 1───* records          (one partition has many records)
-  consumer_groups 1───* consumer_offsets (one group tracks offsets per partition)
-
-Note: These are not database tables. Topics/partitions are
-log files on disk. Consumer offsets are records in a special
-internal Kafka topic. The "ER diagram" shows logical relationships.
-```
 
 ## Data Flow
 
 ### Producing a Record
-
-```
-1. Application creates a record:
-   {key: "user-123", value: {event: "purchase", amount: 99.99}}
-         │
-         ▼
-2. Producer serializes key and value (e.g., Avro via Schema Registry)
-         │
-         ▼
-3. Partitioner determines target partition:
-   ├─ Key is non-null: hash(key) % partition_count
-   │   (e.g., hash("user-123") % 12 = partition 7)
-   └─ Key is null: round-robin across partitions
-         │
-         ▼
-4. Record added to producer's batch buffer for partition 7
-   (batching: linger.ms=5, batch.size=16KB — whichever triggers first)
-         │
-         ▼
-5. Batch sent to partition leader broker (single network call for many records)
-         │
-         ▼
-6. Leader broker:
-   ├─ Append batch to active log segment file (sequential write)
-   ├─ Update in-memory index
-   └─ Replicate to ISR (In-Sync Replicas) followers
-         │
-         ▼
-7. Followers write to their log and ACK the leader
-         │
-         ▼
-8. Leader ACKs the producer based on acks setting:
-   ├─ acks=0: no ACK (fire-and-forget, fastest, data loss risk)
-   ├─ acks=1: ACK after leader write (fast, risk on leader crash)
-   └─ acks=all: ACK after all ISR replicas write (safest, slower)
-```
 
 ```mermaid
 flowchart TD
@@ -257,40 +211,6 @@ flowchart TD
 ```
 
 ### Consuming Records
-
-```
-1. Consumer in group "order-service" polls partition 7
-   (sends: fetch request with last_committed_offset + 1)
-         │
-         ▼
-2. Broker locates records on disk:
-   ├─ Binary search index file for target offset
-   ├─ Seek to byte position in log segment
-   └─ Sequential read from disk (OS page cache makes this fast)
-         │
-         ▼
-3. Zero-copy transfer:
-   sendfile() syscall copies directly from page cache to network socket
-   (skips user-space copy, ~10x throughput improvement)
-         │
-         ▼
-4. Consumer receives batch of records
-         │
-         ▼
-5. Consumer processes each record:
-   ├─ Deserialize
-   ├─ Execute business logic
-   └─ Handle errors (dead-letter queue for poison pills)
-         │
-         ▼
-6. Consumer commits offset:
-   ├─ Auto-commit (every 5s by default) — at-least-once, risk of reprocessing
-   └─ Manual commit (after processing) — exactly-once with idempotent writes
-         │
-         ▼
-7. Offset written to __consumer_offsets topic
-   (compacted, so only latest offset per group+topic+partition is kept)
-```
 
 ```mermaid
 flowchart TD

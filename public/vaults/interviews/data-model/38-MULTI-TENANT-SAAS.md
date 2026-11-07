@@ -138,85 +138,84 @@ graph TD
 
 ## ER Diagram
 
-```
-+--------------------+
-|      tenants       |
-|--------------------|
-| tenant_id (PK)     |
-| name               |
-| slug               |
-| plan_tier          |
-| status             |
-| custom_domain      |
-| config_json        |
-| max_users          |
-| max_storage_gb     |
-| created_at         |
-+--------------------+
-   |    |    |    |    |
-   |    |    |    |    |
-   |    |    |    |    +────────* feature_flags
-   |    |    |    |
-   |    |    |    +─────────────* audit_logs
-   |    |    |
-   |    |    +──────────────────* usage_tracking
-   |    |
-   |    +───────────────────────* resources
-   |
-   +────────────────────────────* users
+```mermaid
+erDiagram
+    tenants ||--o{ users : "one tenant, many users"
+    tenants ||--o{ resources : "one tenant, many resources"
+    tenants ||--o{ usage_tracking : "one tenant, many usage records"
+    tenants ||--o{ audit_logs : "one tenant, many audit entries"
+    tenants ||--o{ feature_flags : "one tenant, many feature toggles"
+    users ||--o{ resources : "one user owns many resources"
 
-+-----------------+     +------------------+     +------------------+
-|     users       |     |    resources     |     | usage_tracking   |
-|-----------------|     |   (projects)     |     |------------------|
-| user_id (PK)    |     |------------------|     | tenant_id (FK)   |
-| tenant_id (FK)  |     | resource_id (PK) |     | metric_name      |
-| email           |     | tenant_id (FK)   |     | metric_value     |
-| display_name    |     | name             |     | recorded_at      |
-| role            |     | description      |     +------------------+
-| status          |     | owner_id (FK)────|──┐
-| last_login_at   |     | status           |  |  +------------------+
-+-----------------+     | created_at       |  |  |   audit_logs     |
-        |               +------------------+  |  |------------------|
-        |                                     |  | id (PK)          |
-        +─────────────────────────────────────┘  | tenant_id (FK)   |
-        resources.owner_id references users      | user_id (FK)     |
-                                                 | action           |
-+------------------+                             | resource_type    |
-|  feature_flags   |                             | resource_id      |
-|------------------|                             | metadata_json    |
-| tenant_id (FK,PK)|                             | created_at       |
-| feature_name (PK)|                             +------------------+
-| enabled          |
-| config_json      |
-+------------------+
-
-Relationships:
-  tenants 1───* users           (one tenant, many users)
-  tenants 1───* resources       (one tenant, many resources)
-  tenants 1───* usage_tracking  (one tenant, many usage records)
-  tenants 1───* audit_logs      (one tenant, many audit entries)
-  tenants 1───* feature_flags   (one tenant, many feature toggles)
-  users 1───* resources         (one user owns many resources)
-
-ALL tables include tenant_id for RLS enforcement
+    tenants {
+        UUID tenant_id PK
+        VARCHAR name
+        VARCHAR slug UK
+        ENUM plan_tier
+        ENUM status
+        VARCHAR custom_domain
+        JSONB config_json
+        INT max_users
+        INT max_storage_gb
+        TIMESTAMP created_at
+    }
+    users {
+        UUID user_id PK
+        TENANTS tenant_id FK
+        VARCHAR email
+        VARCHAR display_name
+        ENUM role
+        ENUM status
+        TIMESTAMP last_login_at
+    }
+    resources {
+        UUID resource_id PK
+        TENANTS tenant_id FK
+        VARCHAR name
+        TEXT description
+        USERS owner_id FK
+        ENUM status
+        TIMESTAMP created_at
+    }
+    usage_tracking {
+        TENANTS tenant_id FK
+        VARCHAR metric_name
+        BIGINT metric_value
+        TIMESTAMP recorded_at
+    }
+    audit_logs {
+        UUID id PK
+        TENANTS tenant_id FK
+        USERS user_id FK
+        VARCHAR action
+        VARCHAR resource_type
+        UUID resource_id
+        JSONB metadata_json
+        TIMESTAMP created_at
+    }
+    feature_flags {
+        COMPOSITE tenant_id PK, FK
+        VARCHAR feature_name PK
+        BOOLEAN enabled
+        JSONB config_json
+    }
 ```
 
 ---
+
 
 ## Isolation Strategies
 
 ### Strategy A: Shared Schema (This Model)
 
-```
-+------------------------------------------+
-|            Shared Database                |
-|  +------+  +------+  +------+  +------+  |
-|  |Tenant|  |Tenant|  |Tenant|  |Tenant|  |
-|  |  A   |  |  B   |  |  C   |  |  D   |  |
-|  |rows  |  |rows  |  |rows  |  |rows  |  |
-|  +------+  +------+  +------+  +------+  |
-|     Same tables, filtered by tenant_id    |
-+------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph SharedDB["Shared Database (Same tables, filtered by tenant_id)"]
+        TA["Tenant A rows"]
+        TB["Tenant B rows"]
+        TC["Tenant C rows"]
+        TD["Tenant D rows"]
+    end
 ```
 
 - **Tenant count**: 1M+ tenants
@@ -227,16 +226,16 @@ ALL tables include tenant_id for RLS enforcement
 
 ### Strategy B: Separate Schema
 
-```
-+------------------------------------------+
-|            Shared Database                |
-|  +-----------+  +-----------+            |
-|  | Schema:   |  | Schema:   |            |
-|  | tenant_a  |  | tenant_b  |  ...       |
-|  |  users    |  |  users    |            |
-|  |  resources|  |  resources|            |
-|  +-----------+  +-----------+            |
-+------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph SharedDB["Shared Database"]
+        subgraph SchemaA["Schema: tenant_a"]
+            UA["users / resources"]
+        end
+        subgraph SchemaB["Schema: tenant_b"]
+            UB["users / resources"]
+        end
+    end
 ```
 
 - **Tenant count**: ~10K tenants
@@ -246,13 +245,17 @@ ALL tables include tenant_id for RLS enforcement
 
 ### Strategy C: Dedicated Database
 
-```
-+-------------+  +-------------+  +-------------+
-| Database:   |  | Database:   |  | Database:   |
-| tenant_a    |  | tenant_b    |  | tenant_c    |
-|  users      |  |  users      |  |  users      |
-|  resources  |  |  resources  |  |  resources  |
-+-------------+  +-------------+  +-------------+
+```mermaid
+flowchart LR
+    subgraph DBA["Database: tenant_a"]
+        TA["users / resources"]
+    end
+    subgraph DBB["Database: tenant_b"]
+        TB["users / resources"]
+    end
+    subgraph DBC["Database: tenant_c"]
+        TC["users / resources"]
+    end
 ```
 
 - **Tenant count**: ~100 enterprise tenants

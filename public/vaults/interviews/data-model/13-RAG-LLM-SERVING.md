@@ -120,91 +120,52 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐
-│     documents         │
-│──────────────────────│
-│ document_id (PK)      │
-│ source                │
-│ title                 │
-│ author                │
-│ category              │
-│ access_level          │
-│ raw_content_url       │
-│ created_at            │
-└──────────────────────┘
-          │
-          │ 1
-          │
-          │ *
-┌──────────────────────┐       ┌──────────────────────┐
-│      chunks           │       │   embedding_index     │
-│──────────────────────│       │   (Vector DB)         │
-│ chunk_id (PK) ────────│──────►│ chunk_id (PK)         │
-│ document_id (FK)      │       │ vector                │
-│ chunk_index           │       └──────────────────────┘
-│ text                  │
-│ token_count           │
-│ embedding             │
-│ metadata_json         │
-└──────────────────────┘
-          │
-          │ *
-          │
-          │ referenced by
-          │
-┌──────────────────────┐
-│   retrieval_logs      │
-│──────────────────────│
-│ query_id (PK)         │
-│ user_id               │
-│ query_text            │
-│ query_embedding       │
-│ retrieved_chunk_ids   │──── references chunk_ids
-│ reranked_chunk_ids    │──── references chunk_ids
-│ llm_response          │
-│ latency_ms            │
-│ feedback              │
-└──────────────────────┘
+```mermaid
+erDiagram
+    documents ||--o{ chunks : "one document split into many chunks"
+    chunks ||--|| embedding_index : "each chunk has exactly one vector entry"
+    chunks }o--o{ retrieval_logs : "chunks referenced in query results"
 
-Relationships:
-  documents 1───* chunks           (one document split into many chunks)
-  chunks    1───1 embedding_index  (each chunk has exactly one vector entry)
-  chunks    *───* retrieval_logs   (chunks referenced in query results)
+    documents {
+        UUID document_id PK
+        VARCHAR source
+        VARCHAR title
+        VARCHAR author
+        VARCHAR category
+        VARCHAR access_level
+        TEXT raw_content_url
+        TIMESTAMP created_at
+    }
+    chunks {
+        UUID chunk_id PK
+        UUID document_id FK
+        INT chunk_index
+        TEXT text
+        INT token_count
+        VECTOR embedding
+        JSONB metadata_json
+    }
+    embedding_index {
+        UUID chunk_id PK
+        FLOAT vector
+    }
+    retrieval_logs {
+        UUID query_id PK
+        BIGINT user_id
+        TEXT query_text
+        VECTOR query_embedding
+        UUID retrieved_chunk_ids
+        UUID reranked_chunk_ids
+        TEXT llm_response
+        INT latency_ms
+        SMALLINT feedback
+    }
 ```
+
 
 ## Data Flow
 
 ### Ingestion Pipeline (Write Path)
-
-```
-1. Document uploaded or crawled from source system
-         │
-         ▼
-2. INSERT metadata into documents table
-   Store raw content at raw_content_url (S3)
-         │
-         ▼
-3. Parse document (PDF, HTML, Markdown, etc.)
-   Clean: remove headers/footers, normalize whitespace
-         │
-         ▼
-4. Chunk the document
-   Strategy options:
-   - Fixed-size: 512 tokens with 50-token overlap
-   - Semantic: split on paragraph/section boundaries
-   - Recursive: split by headers, then paragraphs, then sentences
-         │
-         ▼
-5. For each chunk: generate embedding via embedding model API
-         │
-         ▼
-6. INSERT chunks with embeddings into chunks table
-         │
-         ▼
-7. Upsert vectors into embedding_index (Vector DB)
-   with chunk_id as the key
-```
 
 ```mermaid
 flowchart TD
@@ -224,49 +185,6 @@ flowchart TD
 ```
 
 ### Query Pipeline (Read Path)
-
-```
-1. User submits question
-         │
-         ▼
-2. Query rewriting (optional):
-   - Expand acronyms
-   - Decompose multi-part questions
-   - Generate hypothetical answer (HyDE) for better embedding
-         │
-         ▼
-3. Embed the query using same embedding model as ingestion
-         │
-         ▼
-4. Vector search: find top-K nearest chunks in embedding_index
-   (typically K=20-50 candidates)
-         │
-         ▼
-5. (Optional) BM25 keyword search in parallel
-   Merge results with vector search (hybrid retrieval)
-         │
-         ▼
-6. Rerank candidates using cross-encoder model
-   (scores each query-chunk pair, more accurate but slower)
-   Select top-N (typically N=5-10)
-         │
-         ▼
-7. Filter by access_level (join with documents table)
-         │
-         ▼
-8. Assemble LLM prompt:
-   System message + retrieved chunks + user question
-         │
-         ▼
-9. Generate response via LLM
-   Include chunk citations in response
-         │
-         ▼
-10. Log everything to retrieval_logs
-          │
-          ▼
-11. Return response with source citations to user
-```
 
 ```mermaid
 flowchart TD

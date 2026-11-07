@@ -130,105 +130,70 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────┐           ┌──────────────────┐
-│     users         │           │     media         │
-│──────────────────│           │──────────────────│
-│ user_id (PK)      │           │ media_id (PK)     │
-│ username          │           │ post_id (FK)      │
-│ display_name      │           │ media_type        │
-│ bio               │           │ url               │
-│ avatar_url        │           │ thumbnail_url     │
-│ follower_count    │           │ dimensions        │
-│ following_count   │           └──────────────────┘
-└──────────────────┘                  *
-    │          │                       │
-    │          │                       │
-    │ 1        │ 1                     │
-    │          │                       │
-    │     *    │     *                 │
-┌───┴──────────┴───┐           ┌──────┴───────────┐
-│    follows        │           │     posts         │
-│──────────────────│           │─────────���────────│
-│ follower_id (PK,FK)│          │ post_id (PK)      │
-│ followee_id (PK,FK)│    1     │ author_id (FK)    │
-│ created_at        │◄─────────│ content           │
-└──────────────────┘           │ media_ids         │
-                                │ like_count        │
-                 ┌──────────── │ comment_count     │
-                 │              │ created_at        │
-                 │              └──────────────────┘
-                 │ 1                    │ 1
-                 │                      │
-            *    │                 *    │
-┌────────────────┴─┐         ┌─────────┴────────┐
-│    comments       │         │     likes         │
-│──────────────────│         │──────────────────│
-│ comment_id (PK)   │         │ post_id (PK,FK)   │
-│ post_id (FK)      │         │ user_id (PK,FK)   │
-│ author_id (FK)    │         │ created_at        │
-│ text              │         └──────────────────┘
-│ parent_comment_id │───┐
-│ created_at        │   │ self-ref
-└──────────────────┘◄──┘ (nested replies)
+```mermaid
+erDiagram
+    users ||--o{ posts : "one user authors many posts"
+    users }o--o{ users : "via follows table, many-to-many"
+    posts ||--o{ likes : "one post has many likes"
+    posts ||--o{ comments : "one post has many comments"
+    posts ||--o{ media : "one post has many media"
+    comments ||--o{ comments : "self-ref for nested replies"
 
-Redis:
-┌──────────────────────────────────┐
-│  feed_cache (Sorted Set)          │
-│──────────────────────────────────│
-│  feed:{user_id}                   │
-│    member: post_id                │
-│    score: timestamp               │
-└──────────────────────────────────┘
-
-Relationships:
-  users  1───* posts       (one user authors many posts)
-  users  *───* users       (via follows table, many-to-many)
-  posts  1───* likes       (one post has many likes)
-  posts  1───* comments    (one post has many comments)
-  posts  1───* media       (one post has many media)
-  comments 1───* comments  (self-ref for nested replies)
+    users {
+        BIGINT user_id PK
+        VARCHAR username UK
+        VARCHAR display_name
+        TEXT bio
+        VARCHAR avatar_url
+        INT follower_count
+        INT following_count
+    }
+    posts {
+        BIGINT post_id PK
+        BIGINT author_id FK
+        TEXT content
+        BIGINT media_ids
+        INT like_count
+        INT comment_count
+        TIMESTAMP created_at
+    }
+    follows {
+        BIGINT follower_id PK, FK
+        BIGINT followee_id PK, FK
+        TIMESTAMP created_at
+    }
+    likes {
+        BIGINT post_id PK, FK
+        BIGINT user_id PK, FK
+        TIMESTAMP created_at
+    }
+    comments {
+        BIGINT comment_id PK
+        BIGINT post_id FK
+        BIGINT author_id FK
+        TEXT text
+        BIGINT parent_comment_id FK
+        TIMESTAMP created_at
+    }
+    media {
+        BIGINT media_id PK
+        BIGINT post_id FK
+        ENUM media_type
+        VARCHAR url
+        VARCHAR thumbnail_url
+        VARCHAR dimensions
+    }
+    feed_cache {
+        STRING key
+        BIGINT members
+        FLOAT scores
+    }
 ```
+
 
 ## Data Flow
 
 ### Publishing a Post (Fan-Out on Write)
-
-```
-1. User creates a post
-         │
-         ▼
-2. INSERT into posts table (post_id, author_id, content, media_ids)
-         │
-         ▼
-3. Upload media → CDN, store URLs in media table
-         │
-         ▼
-4. Publish event to Kafka: post.created
-         │
-         ▼
-5. Fan-out Worker consumes event:
-         │
-         ├─ Check: is author a "celebrity" (>100K followers)?
-         │   ├─ NO (normal user): Fan-out on WRITE (push model)
-         │   │    │
-         │   │    ▼
-         │   │   Query follows WHERE followee_id = author_id
-         │   │    │
-         │   │    ▼
-         │   │   For each follower:
-         │   │     ZADD feed:{follower_id} timestamp post_id
-         │   │     ZREMRANGEBYRANK feed:{follower_id} 0 -(MAX_FEED_SIZE+1)
-         │   │
-         │   └─ YES (celebrity): Fan-out on READ (pull model)
-         │        │
-         │        ▼
-         │       Do nothing at write time. Followers will
-         │       merge celebrity posts at read time.
-         │
-         ▼
-6. Post is now visible in followers' feeds
-```
 
 ```mermaid
 flowchart TD
@@ -246,34 +211,6 @@ flowchart TD
 ```
 
 ### Reading the Feed
-
-```
-1. User opens app, requests feed page 1
-         │
-         ▼
-2. ZREVRANGE feed:{user_id} 0 19 (top 20 post IDs, newest first)
-         │
-         ▼
-3. If user follows any celebrities:
-   ├─ Query posts WHERE author_id IN (celebrity_ids)
-   │   AND created_at > feed_cache_oldest_timestamp
-   └─ Merge celebrity posts into feed by timestamp
-         │
-         ▼
-4. Hydrate post IDs → full post objects:
-   ├─ Batch GET from Redis post cache
-   └─ Cache misses: batch SELECT from posts table
-         │
-         ▼
-5. Ranking Service re-orders by relevance:
-   ├─ Engagement signals (like_count, comment_count)
-   ├─ Recency
-   ├─ User affinity (how often they interact with author)
-   └─ Content type preferences
-         │
-         ▼
-6. Return ranked, paginated feed to client
-```
 
 ```mermaid
 flowchart TD

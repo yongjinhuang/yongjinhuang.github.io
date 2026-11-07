@@ -163,111 +163,79 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────┐       ┌──────────────────────┐
-│    channels       │       │   video_encodings     │
-│──────────────────│       │──────────────────────│
-│ channel_id (PK)   │       │ video_id (FK)         │
-│ owner_id (FK)     │       │ resolution            │
-│ name              │       │ bitrate               │
-│ description       │       │ codec                 │
-│ subscriber_count  │       │ manifest_url          │
-└──────────────────┘       │ segment_prefix        │
-         │ 1                └──────────────────────┘
-         │                            *
-         │                            │
-    *    │                            │
-┌────────┴─────────┐       ┌──────────┴───────────┐
-│  subscriptions    │       │      videos           │
-│──────────────────│       │──────────────────────│
-│ user_id (PK,FK)   │       │ video_id (PK)         │
-│ channel_id (PK,FK)│       │ uploader_id (FK)      │
-│ subscribed_at     │       │ title                 │
-└──────────────────┘       │ description           │
-                            │ duration_sec          │
-                            │ status                │
-                            │ view_count            │
-                            │ like_count            │
-                            └──────────────────────┘
-                              │ 1           │ 1
-                              │             │
-                         *    │        *    │
-                   ┌──────────┴──┐  ┌──────┴───────────┐
-                   │  comments    │  │  playlist_items   │
-                   │─────────────│  │──────────────────│
-                   │ comment_id   │  │ playlist_id (FK)  │
-                   │ video_id(FK) │  │ video_id (FK)     │
-                   │ author_id    │  │ position          │
-                   │ text         │  │ added_at          │
-                   │ like_count   │  └──────────────────┘
-                   │ created_at   │           *
-                   └─────────────┘           │
-                                              │
-                                   ┌──────────┴───────┐
-                                   │   playlists       │
-                                   │──────────────────│
-                                   │ playlist_id (PK)  │
-                                   │ owner_id (FK)     │
-                                   │ name              │
-                                   │ is_public         │
-                                   └──────────────────┘
+```mermaid
+erDiagram
+    channels ||--o{ videos : "one channel has many videos"
+    videos ||--o{ video_encodings : "one video has many resolutions"
+    videos ||--o{ comments : "one video has many comments"
+    videos }o--o{ playlists : "via playlist_items, many-to-many"
+    users }o--o{ channels : "via subscriptions, many-to-many"
 
-Cassandra:
-┌──────────────────────┐
-│   watch_history       │
-│──────────────────────│
-│ user_id (PK)          │
-│ watched_at (CK DESC) │
-│ video_id              │
-│ watched_duration      │
-│ resume_position       │
-└──────────────────────┘
-
-Relationships:
-  channels 1───* videos          (one channel has many videos)
-  videos   1───* video_encodings (one video has many resolutions)
-  videos   1───* comments        (one video has many comments)
-  videos   *───* playlists       (via playlist_items, many-to-many)
-  users    *───* channels        (via subscriptions, many-to-many)
+    videos {
+        BIGINT video_id PK
+        BIGINT uploader_id FK
+        VARCHAR title
+        TEXT description
+        INT duration_sec
+        BIGINT file_size
+        ENUM status
+        VARCHAR thumbnail_url
+        BIGINT view_count
+        INT like_count
+    }
+    video_encodings {
+        BIGINT video_id FK
+        ENUM resolution
+        INT bitrate
+        VARCHAR codec
+        VARCHAR manifest_url
+        VARCHAR segment_prefix
+    }
+    channels {
+        BIGINT channel_id PK
+        BIGINT owner_id FK, UK
+        VARCHAR name
+        TEXT description
+        BIGINT subscriber_count
+    }
+    comments {
+        BIGINT comment_id PK
+        BIGINT video_id FK
+        BIGINT author_id FK
+        TEXT text
+        INT like_count
+        TIMESTAMP created_at
+    }
+    watch_history {
+        BIGINT user_id
+        TIMESTAMP watched_at
+        BIGINT video_id
+        INT watched_duration
+        INT resume_position
+    }
+    subscriptions {
+        BIGINT user_id PK, FK
+        BIGINT channel_id PK, FK
+        TIMESTAMP subscribed_at
+    }
+    playlists {
+        BIGINT playlist_id PK
+        BIGINT owner_id FK
+        VARCHAR name
+        BOOLEAN is_public
+    }
+    playlist_items {
+        BIGINT playlist_id FK
+        BIGINT video_id FK
+        INT position
+        TIMESTAMP added_at
+    }
 ```
+
 
 ## Data Flow
 
 ### Upload Pipeline
-
-```
-1. Creator initiates upload via web/mobile client
-         │
-         ▼
-2. Server generates pre-signed S3 upload URL
-   INSERT into videos (status = 'uploading')
-         │
-         ▼
-3. Client uploads directly to S3 (bypasses app servers)
-   Large files use multipart upload (5MB chunks)
-         │
-         ▼
-4. S3 triggers event notification on upload complete
-         │
-         ▼
-5. Publish to Kafka: video.uploaded
-         │
-         ▼
-6. Transcoding Workers consume event:
-   ├─ UPDATE videos SET status = 'processing'
-   ├─ Download original from S3
-   ├─ Transcode to multiple resolutions (parallel):
-   │   ├─ 360p  → segments + manifest → S3
-   │   ├─ 720p  → segments + manifest → S3
-   │   ├─ 1080p → segments + manifest → S3
-   │   └─ 4K    → segments + manifest → S3
-   ├─ Generate thumbnail (frame extraction)
-   ├─ INSERT video_encodings for each resolution
-   └─ UPDATE videos SET status = 'published', thumbnail_url = ...
-         │
-         ▼
-7. CDN pulls segments on first viewer request (pull-through cache)
-```
 
 ```mermaid
 flowchart TD
@@ -295,41 +263,6 @@ flowchart TD
 ```
 
 ### Streaming Pipeline (Adaptive Bitrate)
-
-```
-1. User clicks play on a video
-         │
-         ▼
-2. Client requests video metadata:
-   Query videos + video_encodings WHERE video_id = X
-         │
-         ▼
-3. Client fetches HLS manifest from CDN (manifest_url)
-   Manifest lists all available resolutions and segment URLs
-         │
-         ▼
-4. Client's ABR (Adaptive Bitrate) algorithm:
-   ├─ Measure current bandwidth
-   ├─ Select appropriate resolution
-   │   (e.g., 1080p on fast WiFi, 360p on slow cellular)
-   └─ Request first segment at chosen resolution
-         │
-         ▼
-5. CDN serves segment:
-   ├─ Cache hit: return immediately (~10ms)
-   └─ Cache miss: fetch from S3 origin → cache → return
-         │
-         ▼
-6. Client plays segment, continuously monitors bandwidth
-   ├─ Bandwidth drops: switch to lower resolution mid-stream
-   └─ Bandwidth improves: switch to higher resolution
-         │
-         ▼
-7. Async: log watch event to Kafka
-   ├─ UPDATE watch_history (resume_position, watched_duration)
-   ├─ Increment view_count via counter service
-   └─ Feed data to recommendation engine
-```
 
 ```mermaid
 flowchart TD

@@ -110,115 +110,57 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐
-│       buckets         │
-│──────────────────────│
-│ bucket_name (PK)      │
-│ owner_account         │
-│ region                │
-│ versioning_enabled    │
-│ default_encryption    │
-│ acl_json              │
-│ lifecycle_rules_json  │
-│ replication_config    │
-└──────────────────────┘
-     │              │
-     │ 1            │ 1
-     │              │
-     │ *            │ *
-     │    ┌──────────────────────┐
-     │    │  multipart_uploads    │
-     │    │──────────────────────│
-     │    │ upload_id (PK)        │
-     │    │ bucket_name (FK)      │
-     │    │ key                   │
-     │    │ initiated_at          │
-     │    │ storage_class         │
-     │    └──────────────────────┘
-     │              │
-     │              │ 1
-     │              │
-     │              │ *
-     │    ┌──────────────────────┐
-     │    │  multipart_parts      │
-     │    │──────────────────────│
-     │    │ upload_id (FK, PK)    │
-     │    │ part_number (PK)      │
-     │    │ etag                  │
-     │    │ size                  │
-     │    │ data_location_json    │──► physical data nodes
-     │    │ uploaded_at           │
-     │    └──────────────────────┘
-     │
-┌──────────────────────┐
-│   object_metadata     │
-│──────────────────────│
-│ bucket_name (PK, FK)  │
-│ key (PK)              │
-│ version_id (PK)       │
-│ is_delete_marker      │
-│ size_bytes            │
-│ etag                  │
-│ content_type          │
-│ storage_class         │
-│ last_modified         │
-│ user_metadata_json    │
-│ checksum              │
-│ data_location_json ───│──► physical data nodes
-└──────────────────────┘     (chunk locations after
-                              erasure coding)
+```mermaid
+erDiagram
+    buckets ||--o{ object_metadata : "one bucket contains many objects"
+    buckets ||--o{ multipart_uploads : "one bucket has many in-progress uploads"
+    multipart_uploads ||--o{ multipart_parts : "one upload has many parts"
 
-Relationships:
-  buckets 1───* object_metadata    (one bucket contains many objects)
-  buckets 1───* multipart_uploads  (one bucket has many in-progress uploads)
-  multipart_uploads 1───* multipart_parts (one upload has many parts)
+    buckets {
+        VARCHAR bucket_name PK
+        BIGINT owner_account FK
+        VARCHAR region
+        BOOLEAN versioning_enabled
+        VARCHAR default_encryption
+        JSONB acl_json
+        JSONB lifecycle_rules_json
+        JSONB replication_config_json
+    }
+    object_metadata {
+        VARCHAR bucket_name PK
+        VARCHAR key PK
+        VARCHAR version_id PK
+        BOOLEAN is_delete_marker
+        BIGINT size_bytes
+        VARCHAR etag
+        VARCHAR content_type
+        ENUM storage_class
+        TIMESTAMP last_modified
+        JSONB user_metadata_json
+        VARCHAR checksum
+        JSONB data_location_json
+    }
+    multipart_uploads {
+        UUID upload_id PK
+        VARCHAR bucket_name FK
+        VARCHAR key
+        TIMESTAMP initiated_at
+        ENUM storage_class
+    }
+    multipart_parts {
+        UUID upload_id PK, FK
+        INT part_number PK
+        VARCHAR etag
+        BIGINT size
+        JSONB data_location_json
+        TIMESTAMP uploaded_at
+    }
 ```
+
 
 ## Data Flow
 
 ### PUT Object (Write Path)
-
-```
-1. Client sends PUT request: bucket_name, key, data, metadata
-         │
-         ▼
-2. Validate: bucket exists, caller authorized (ACL + IAM policy),
-   object size within limits
-         │
-         ▼
-3. Compute checksum of incoming data (verify against client-provided
-   checksum if present)
-         │
-         ▼
-4. Split data into chunks (e.g., 64MB each for large objects)
-         │
-         ▼
-5. For each chunk, apply erasure coding:
-   RS(10, 4) → 10 data fragments + 4 parity fragments = 14 total
-         │
-         ▼
-6. Write 14 fragments to 14 different data nodes
-   (spread across failure domains: different racks, AZs)
-         │
-         ▼
-7. Wait for write quorum (e.g., 11 of 14 ACKs)
-         │
-         ▼
-8. Build data_location_json:
-   [{chunk: 0, nodes: [n1, n2, ..., n14], fragments: [f1, ..., f14]},
-    {chunk: 1, ...}]
-         │
-         ▼
-9. INSERT object_metadata (or new version if versioning enabled)
-         │
-         ▼
-10. If versioning enabled: previous version remains accessible
-    If not: previous version's data marked for garbage collection
-         │
-         ▼
-11. Return 200 OK with ETag
-```
 
 ```mermaid
 flowchart TD
@@ -240,43 +182,6 @@ flowchart TD
 
 ### GET Object (Read Path)
 
-```
-1. Client sends GET request: bucket_name, key [, version_id]
-         │
-         ▼
-2. Lookup object_metadata by (bucket_name, key, version_id)
-         │
-    ┌────┴──────────────┐
-    │Found? Not a       │
-    │delete marker?     │
-    ├─No────────────────┤──► Return 404 Not Found
-    │ Yes               │
-    └────┬──────────────┘
-         ▼
-3. Parse data_location_json → list of chunks and fragment locations
-         │
-         ▼
-4. For each chunk: read any K of N fragments (e.g., 10 of 14)
-   from data nodes in parallel
-         │
-    ┌────┴──────────────┐
-    │All K fragments    │
-    │available?         │
-    ├─Yes───────────────┤──► Decode directly
-    │ No (some failed)  │
-    └────┬──────────────┘
-         ▼
-5. Reconstruct missing fragments using erasure coding
-   (can tolerate up to 4 missing fragments with RS(10,4))
-         │
-         ▼
-6. Assemble chunks into complete object data
-         │
-         ▼
-7. Stream response to client with Content-Type, ETag,
-   Content-Length headers from object_metadata
-```
-
 ```mermaid
 flowchart TD
     A[Client sends GET:<br/>bucket, key, version_id] --> B[Lookup object_metadata]
@@ -293,35 +198,6 @@ flowchart TD
 ```
 
 ### DELETE Object
-
-```
-1. Client sends DELETE request: bucket_name, key
-         │
-         ▼
-2. Check authorization
-         │
-    ┌────┴─────────────────┐
-    │Versioning enabled?   │
-    ├─Yes──────────────────┤
-    │                      ▼
-    │     INSERT delete marker as new version
-    │     (data still accessible via version_id)
-    │
-    ├─No───────────────────┤
-    │                      ▼
-    │     Mark object_metadata as deleted
-    │     (logical delete)
-    └──────────┬───────────┘
-               ▼
-3. Return 204 No Content
-         │
-         ▼
-4. Async garbage collector (background):
-   - Find deleted/superseded objects
-   - Delete data fragments from data nodes
-   - Remove object_metadata entries
-   - Reclaim storage
-```
 
 ```mermaid
 flowchart TD

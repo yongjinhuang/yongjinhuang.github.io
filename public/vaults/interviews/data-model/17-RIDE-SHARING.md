@@ -133,109 +133,80 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐       ┌──────────────────────┐
-│      riders           │       │   driver_locations    │
-│──────────────────────│       │   (Redis GEOADD)     │
-│ rider_id (PK)         │       │──────────────────────│
-│ name                  │       │ driver_id             │
-│ phone                 │       │ lat, lng              │
-│ email                 │       │ heading, speed        │
-│ rating                │       │ timestamp             │
-│ default_payment_      │       │ status                │
-│   method_id           │       └──────────────────────┘
-└──────────────────────┘                │
-          │                             │ 1
-          │ 1                           │
-          │                             │ 1
-          │ *              ┌──────────────────────┐
-          │                │      drivers          │
-          │                │──────────────────────│
-          │                │ driver_id (PK)        │
-          │                │ name                  │
-          │                │ phone                 │
-          │                │ vehicle_type          │
-          │                │ vehicle_model         │
-          │                │ license_plate         │
-          │                │ rating                │
-          │                │ status                │
-          │                │ bank_account_id       │
-          │                │ documents_verified    │
-          │                └──────────────────────┘
-          │                         │          │
-          │                         │ 1        │ 1
-          │                         │          │
-          │           ┌─────────────┘          │ *
-          │           │ *         ┌──────────────────────┐
-          │    ┌──────────────┐   │ driver_location_     │
-          │    │    trips      │   │   history (Cassandra)│
-          └───►│──────────────│   │──────────────────────│
-               │ trip_id (PK)  │   │ driver_id (partition)│
-               │ rider_id (FK) │   │ timestamp (cluster)  │
-               │ driver_id (FK)│   │ lat, lng             │
-               │ pickup/dropoff│   │ heading, speed       │
-               │ status        │   └──────────────────────┘
-               │ distance_km   │
-               │ duration_min  │
-               │ fare_amount   │
-               │ surge_mult.   │
-               │ payment_id────│──► ┌──────────────┐
-               └──────────────┘    │   payments    │
-                                    │──────────────│
-                                    │ payment_id   │
-                                    │ trip_id (FK)  │
-                                    │ amount        │
-                                    │ method        │
-                                    │ status        │
-                                    │ processor_id  │
-                                    └──────────────┘
+```mermaid
+erDiagram
+    riders ||--o{ trips : "one rider takes many trips"
+    drivers ||--o{ trips : "one driver completes many trips"
+    drivers ||--|| driver_locations : "one current location per driver"
+    drivers ||--o{ driver_location_history : "many historical GPS points"
+    trips ||--|| payments : "one payment per trip"
 
-Relationships:
-  riders  1───* trips                  (one rider takes many trips)
-  drivers 1───* trips                  (one driver completes many trips)
-  drivers 1───1 driver_locations       (one current location per driver)
-  drivers 1───* driver_location_history (many historical GPS points)
-  trips   1───1 payments               (one payment per trip)
+    riders {
+        BIGINT rider_id PK
+        VARCHAR name
+        VARCHAR phone UK
+        VARCHAR email
+        DECIMAL rating
+        BIGINT default_payment_method_id FK
+    }
+    drivers {
+        BIGINT driver_id PK
+        VARCHAR name
+        VARCHAR phone UK
+        ENUM vehicle_type
+        VARCHAR vehicle_model
+        VARCHAR license_plate UK
+        DECIMAL rating
+        ENUM status
+        BIGINT bank_account_id FK
+        BOOLEAN documents_verified
+    }
+    trips {
+        BIGINT trip_id PK
+        BIGINT rider_id FK
+        BIGINT driver_id FK
+        DECIMAL pickup_lat
+        DECIMAL pickup_lng
+        DECIMAL dropoff_lat
+        DECIMAL dropoff_lng
+        ENUM status
+        DECIMAL distance_km
+        DECIMAL duration_min
+        BIGINT fare_amount
+        DECIMAL surge_multiplier
+        BIGINT payment_id FK
+    }
+    driver_locations {
+        STRING driver_id
+        FLOAT lat
+        FLOAT lng
+        FLOAT heading
+        FLOAT speed
+        TIMESTAMP timestamp
+        STRING status
+    }
+    driver_location_history {
+        BIGINT driver_id
+        TIMESTAMP timestamp
+        FLOAT lat
+        FLOAT lng
+        FLOAT heading
+        FLOAT speed
+    }
+    payments {
+        BIGINT payment_id PK
+        BIGINT trip_id FK, UK
+        BIGINT amount
+        VARCHAR method
+        ENUM status
+        VARCHAR processor_id
+    }
 ```
+
 
 ## Data Flow
 
 ### Ride Matching (Critical Path)
-
-```
-1. Rider requests ride: (pickup_lat/lng, dropoff_lat/lng, vehicle_type)
-         │
-         ▼
-2. INSERT trip record (status = 'requested')
-         │
-         ▼
-3. Query driver_locations (Redis GEORADIUS):
-   "Find all drivers within 3km of (pickup_lat, pickup_lng)
-    where status = 'available' and vehicle_type matches"
-         │
-         ▼
-4. Score candidate drivers:
-   - Distance to pickup (closer is better)
-   - Driver rating (higher is better)
-   - Heading toward pickup (already driving toward rider)
-   - Accept rate history (reliable drivers preferred)
-         │
-         ▼
-5. Send trip offer to highest-scored driver
-         │
-    ┌────┴──────────┐
-    │Driver accepts? │
-    ├─Yes────────────┤
-    │ No / timeout   │──► Try next driver (step 4 loop)
-    └────┬───────────┘
-         ▼
-6. Update trip: status = 'matched', driver_id = assigned
-   Update driver: status = 'en_route_to_pickup'
-   Update Redis: driver status = 'en_route_to_pickup'
-         │
-         ▼
-7. Notify rider with driver details (name, car, ETA)
-```
 
 ```mermaid
 flowchart TD
@@ -250,47 +221,6 @@ flowchart TD
 ```
 
 ### Trip Lifecycle
-
-```
-8. Driver navigates to pickup
-   driver_location_history records GPS trail
-         │
-         ▼
-9. Driver arrives → trip status = 'arrived_at_pickup'
-         │
-         ▼
-10. Rider enters vehicle → trip status = 'in_progress'
-    Start recording trip GPS trace
-         │
-         ▼
-11. Trip in progress:
-    - driver_locations updated every 3-5 seconds (Redis)
-    - driver_location_history appended (Cassandra)
-    - ETA continuously recalculated
-         │
-         ▼
-12. Driver ends trip → trip status = 'completed'
-         │
-         ▼
-13. Calculate fare:
-    - Compute distance_km from GPS trace (driver_location_history)
-    - Compute duration_min from trip start/end timestamps
-    - fare = (base + distance * per_km + duration * per_min) * surge
-         │
-         ▼
-14. Process payment:
-    - Charge rider's default payment method
-    - INSERT payment record
-    - Update trip: fare_amount, payment_id
-         │
-         ▼
-15. Both parties rate each other
-    Update rider.rating and driver.rating (async)
-         │
-         ▼
-16. Update driver: status = 'available'
-    Update Redis: driver status = 'available'
-```
 
 ```mermaid
 flowchart TD

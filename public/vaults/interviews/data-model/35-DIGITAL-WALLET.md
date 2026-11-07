@@ -160,69 +160,86 @@ graph TD
 
 ## ER Diagram
 
-```
-+------------------+        +-------------------+        +------------------+
-|     wallets      |        |   transactions    |        | payment_methods  |
-|------------------|        |-------------------|        |------------------|
-| wallet_id (PK)   |<──┐    | transaction_id(PK)|        | id (PK)          |
-| user_id (FK)     |   |    | type              |        | wallet_id (FK)───|──┐
-| wallet_type      |   |    | sender_wallet_id  |───┐    | type             |  |
-| status           |   |    |  (FK)             |   |    | token            |  |
-| kyc_tier         |   |    | receiver_wallet_id|───┤    | is_default       |  |
-| currency         |   |    |  (FK)             |   |    | last_four        |  |
-| created_at       |   |    | amount            |   |    | brand            |  |
-+------------------+   |    | currency          |   |    +------------------+  |
-        |              |    | fx_rate           |   |                          |
-        | 1            |    | status            |   |                          |
-        |              |    | idempotency_key   |   |                          |
-        |──* wallet_   |    | metadata_json     |   |                          |
-        |   balances   |    | created_at        |   |                          |
-        |              |    +-------------------+   |                          |
-        |              |            |               |                          |
-+-------+----------+  |            | 1              |                          |
-| wallet_balances  |  |            |                |                          |
-|------------------|  |            |──* ledger_     |                          |
-| wallet_id (FK,PK)|──┘            |   entries      |                          |
-| currency (PK)    |               |                |                          |
-| available_amount |    +----------+--------+       |                          |
-| pending_amount   |    |  ledger_entries   |       |                          |
-| reserved_amount  |    |   (append-only)   |       |                          |
-| version          |    |-------------------|       |                          |
-+------------------+    | entry_id (PK)     |       |                          |
-                        | transaction_id(FK)|       |                          |
-                        | wallet_id (FK)────|───────┘                          |
-                        | entry_type        |                                  |
-                        | amount            |    +-------------------+         |
-                        | running_balance   |    | idempotency_keys  |         |
-                        | created_at        |    |-------------------|         |
-                        +-------------------+    | key (PK)          |         |
-                                                 | transaction_id(FK)|         |
-                        +-------------------+    | response_json     |         |
-                        |    audit_log      |    | created_at        |         |
-                        |   (append-only)   |    | expires_at        |         |
-                        |-------------------|    +-------------------+         |
-                        | id (PK)           |                                  |
-                        | entity_type       |    wallets 1───* payment_methods─┘
-                        | entity_id         |
-                        | action            |
-                        | actor_id          |
-                        | old_state_json    |
-                        | new_state_json    |
-                        | ip_address        |
-                        | created_at        |
-                        +-------------------+
+```mermaid
+erDiagram
+    wallets ||--o{ payment_methods : "relates"
+    wallets ||--o{ wallet_balances : "one wallet, multiple currencies"
+    wallets ||--o{ transactions : "as sender or receiver"
+    wallets ||--o{ ledger_entries : "all entries affecting this wallet"
+    wallets ||--o{ payment_methods : "multiple funding sources"
+    transactions ||--o{ ledger_entries : "each transaction has 2+ entries"
+    transactions ||--|| idempotency_keys : "one key per transaction"
 
-Relationships:
-  wallets 1───* wallet_balances    (one wallet, multiple currencies)
-  wallets 1───* transactions       (as sender or receiver)
-  wallets 1───* ledger_entries     (all entries affecting this wallet)
-  wallets 1───* payment_methods    (multiple funding sources)
-  transactions 1───* ledger_entries (each transaction has 2+ entries)
-  transactions 1───1 idempotency_keys (one key per transaction)
-  audit_log: standalone            (references entities by type+id, not FK)
+    wallets {
+        UUID wallet_id PK
+        USERS user_id FK
+        ENUM wallet_type
+        ENUM status
+        INT kyc_tier
+        VARCHAR currency
+        TIMESTAMP created_at
+    }
+    wallet_balances {
+        COMPOSITE wallet_id PK, FK
+        VARCHAR currency PK
+        DECIMAL available_amount
+        DECIMAL pending_amount
+        DECIMAL reserved_amount
+        INT version
+    }
+    transactions {
+        UUID transaction_id PK
+        ENUM type
+        WALLETS sender_wallet_id FK
+        WALLETS receiver_wallet_id FK
+        DECIMAL amount
+        VARCHAR currency
+        DECIMAL fx_rate
+        ENUM status
+        VARCHAR idempotency_key UK
+        JSONB metadata_json
+        TIMESTAMP created_at
+    }
+    ledger_entries {
+        UUID entry_id PK
+        TRANSACTIONS transaction_id FK
+        WALLETS wallet_id FK
+        ENUM entry_type
+        DECIMAL amount
+        DECIMAL running_balance
+        TIMESTAMP created_at
+    }
+    payment_methods {
+        UUID id PK
+        WALLETS wallet_id FK
+        ENUM type
+        VARCHAR token
+        BOOLEAN is_default
+        VARCHAR last_four
+        VARCHAR brand
+    }
+    idempotency_keys {
+        VARCHAR key PK
+        TRANSACTIONS transaction_id FK
+        JSONB response_json
+        TIMESTAMP created_at
+        TIMESTAMP expires_at
+    }
+    audit_log {
+        UUID id PK
+        VARCHAR entity_type
+        UUID entity_id
+        VARCHAR action
+        UUID actor_id
+        JSONB old_state_json
+        JSONB new_state_json
+        INET ip_address
+        TIMESTAMP created_at
+    }
 ```
 
 ---
+
 
 ## Data Flow
 

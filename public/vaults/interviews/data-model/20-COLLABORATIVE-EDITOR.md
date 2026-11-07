@@ -109,91 +109,60 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐
-│     permissions       │
-│──────────────────────│
-│ perm_id (PK)          │
-│ doc_id (FK)           │
-│ principal_type        │
-│ principal_id          │
-│ role                  │
-│ expires_at            │
-└──────────────────────┘
-          │ *
-          │
-          │
-          │ 1
-┌──────────────────────┐       ┌──────────────────────┐
-│     documents         │       │   named_revisions     │
-│──────────────────────│       │──────────────────────│
-│ doc_id (PK)           │  1    │ revision_id (PK)      │
-│ owner_id (FK)         │──────►│ doc_id (FK)           │
-│ title                 │  *    │ revision              │
-│ created_at            │       │ name                  │
-│ updated_at            │       │ is_auto               │
-│ latest_revision       │       │ created_at            │
-│ snapshot_revision     │       └──────────────────────┘
-└──────────────────────┘
-     │              │
-     │ 1            │ 1
-     │              │
-     │ *            │ *
-┌──────────────┐  ┌──────────────────────┐
-│ document_ops  │  │ document_snapshots    │
-│ (append-only) │  │──────────────────────│
-│──────────────│  │ doc_id (FK)           │
-│ doc_id (FK)   │  │ revision (PK in doc)  │
-│ revision (PK) │  │ content_json          │
-│ client_id     │  │ byte_size             │
-│ user_id (FK)  │  │ created_at            │
-│ ops_json      │  └──────────────────────┘
-│ client_rev.   │
-│ created_at    │
-└──────────────┘
+```mermaid
+erDiagram
+    documents ||--o{ document_ops : "one document has many operations"
+    documents ||--o{ document_snapshots : "one document has periodic snapshots"
+    documents ||--o{ permissions : "one document has many permission entries"
+    documents ||--o{ named_revisions : "one document has many named versions"
 
-Relationships:
-  documents 1───* document_ops        (one document has many operations)
-  documents 1───* document_snapshots  (one document has periodic snapshots)
-  documents 1───* permissions         (one document has many permission entries)
-  documents 1───* named_revisions     (one document has many named versions)
+    documents {
+        UUID doc_id PK
+        BIGINT owner_id FK
+        VARCHAR title
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+        BIGINT latest_revision
+        BIGINT snapshot_revision
+    }
+    document_ops {
+        UUID doc_id FK
+        BIGINT revision PK
+        VARCHAR client_id
+        BIGINT user_id FK
+        JSONB ops_json
+        BIGINT client_revision
+        TIMESTAMP created_at
+    }
+    document_snapshots {
+        UUID doc_id FK
+        BIGINT revision PK
+        JSONB content_json
+        INT byte_size
+        TIMESTAMP created_at
+    }
+    permissions {
+        BIGINT perm_id PK
+        UUID doc_id FK
+        ENUM principal_type
+        BIGINT principal_id
+        ENUM role
+        TIMESTAMP expires_at
+    }
+    named_revisions {
+        BIGINT revision_id PK
+        UUID doc_id FK
+        BIGINT revision
+        VARCHAR name
+        BOOLEAN is_auto
+        TIMESTAMP created_at
+    }
 ```
+
 
 ## Data Flow
 
 ### Loading a Document (Read Path)
-
-```
-1. Client opens document with doc_id
-         │
-         ▼
-2. Check permissions: does user have viewer/editor access?
-         │
-    ┌────┴──────┐
-    │Authorized?│
-    ├─No────────┤──► Return 403 Forbidden
-    │ Yes       │
-    └────┬──────┘
-         ▼
-3. Fetch documents row → get snapshot_revision, latest_revision
-         │
-         ▼
-4. Load document_snapshots at snapshot_revision
-   (full document state at that point)
-         │
-         ▼
-5. Fetch document_ops from (snapshot_revision + 1) to latest_revision
-         │
-         ▼
-6. Apply each op sequentially to the snapshot content
-   → produces current document state
-         │
-         ▼
-7. Return document content + latest_revision to client
-         │
-         ▼
-8. Client establishes WebSocket connection for real-time updates
-```
 
 ```mermaid
 flowchart TD
@@ -208,52 +177,6 @@ flowchart TD
 ```
 
 ### Editing (Write Path - OT)
-
-```
-1. Client makes a local edit → generates op in Delta format
-         │
-         ▼
-2. Apply op optimistically to local document (instant UI feedback)
-         │
-         ▼
-3. Send op to server via WebSocket:
-   { doc_id, ops_json, client_revision }
-         │
-         ▼
-4. Server receives op and acquires document-level lock
-         │
-         ▼
-5. Compare client_revision with latest_revision
-         │
-    ┌────┴─────────────────────┐
-    │client_rev == latest_rev? │
-    ├─Yes──────────────────────┤──► Op applies cleanly (no conflicts)
-    │ No (concurrent edits)    │
-    └────┬─────────────────────┘
-         ▼
-6. Transform the incoming op against all ops from
-   (client_revision + 1) to latest_revision
-   (Operational Transformation)
-         │
-         ▼
-7. Assign next revision number, append to document_ops
-         │
-         ▼
-8. Update documents.latest_revision
-         │
-         ▼
-9. Release document lock
-         │
-         ▼
-10. Send ACK to originating client with assigned revision
-          │
-          ▼
-11. Broadcast transformed op to all other connected clients
-          │
-          ▼
-12. Other clients receive op → transform against their
-    pending local ops → apply to local document
-```
 
 ```mermaid
 flowchart TD
@@ -273,25 +196,6 @@ flowchart TD
 ```
 
 ### Snapshotting (Background)
-
-```
-13. Background job checks: latest_revision - snapshot_revision > 100?
-          │
-     ┌────┴──┐
-     │ Yes?  │
-     ├─No────┤──► Skip (not enough new ops)
-     │ Yes   │
-     └───┬───┘
-         ▼
-14. Load current snapshot + replay ops to latest_revision
-          │
-          ▼
-15. Serialize full document state as content_json
-          │
-          ▼
-16. INSERT into document_snapshots
-    Update documents.snapshot_revision
-```
 
 ```mermaid
 flowchart TD

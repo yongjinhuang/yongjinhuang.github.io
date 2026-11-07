@@ -134,130 +134,60 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐
-│     robots_rules      │
-│──────────────────────│
-│ domain (PK)           │
-│ rules_text            │
-│ crawl_delay_sec       │
-│ allowed_paths         │
-│ disallowed_paths      │
-│ fetched_at            │
-│ expires_at            │
-└──────────────────────┘
-          │ checked before crawl
-          │
-          ▼
-┌──────────────────────┐       ┌──────────────────────┐
-│    url_frontier       │       │     dns_cache         │
-│──────────────────────│       │──────────────────────│
-│ url_id (PK)           │       │ domain (PK)           │
-│ url                   │       │ ip_addresses          │
-│ domain ───────────────│──────►│ resolved_at           │
-│ priority              │       │ ttl_seconds           │
-│ depth                 │       └──────────────────────┘
-│ status                │
-│ last_crawled_at       │
-│ next_crawl_at         │
-│ change_frequency      │
-└──────────────────────┘
-          │
-          │ 1
-          │
-          │ *
-┌──────────────────────┐
-│    crawled_pages      │
-│──────────────────────│
-│ page_id (PK)          │
-│ url_id (FK)           │
-│ content_hash          │
-│ html_size             │
-│ title                 │
-│ status_code           │
-│ crawled_at            │
-└──────────────────────┘
-          │
-          │ 1
-          │
-          │ *
-┌──────────────────────┐
-│      outlinks         │
-│──────────────────────│
-│ source_page_id (FK)   │
-│ target_url ───────────│───► (normalized, inserted into url_frontier)
-│ anchor_text           │
-│ discovered_at         │
-└──────────────────────┘
+```mermaid
+erDiagram
+    url_frontier ||--o{ crawled_pages : "one URL crawled multiple times"
+    crawled_pages ||--o{ outlinks : "one page has many outgoing links"
+    url_frontier }o--|| dns_cache : "many URLs share one domain's DNS"
+    url_frontier }o--|| robots_rules : "many URLs share one domain's robots.txt"
 
-Relationships:
-  url_frontier   1───* crawled_pages   (one URL crawled multiple times)
-  crawled_pages  1───* outlinks        (one page has many outgoing links)
-  url_frontier   *───1 dns_cache       (many URLs share one domain's DNS)
-  url_frontier   *───1 robots_rules    (many URLs share one domain's robots.txt)
+    url_frontier {
+        BIGINT url_id PK
+        TEXT url
+        VARCHAR domain
+        FLOAT priority
+        INT depth
+        ENUM status
+        TIMESTAMP last_crawled_at
+        TIMESTAMP next_crawl_at
+        INTERVAL change_frequency
+    }
+    crawled_pages {
+        BIGINT page_id PK
+        BIGINT url_id FK
+        BIGINT content_hash
+        INT html_size
+        VARCHAR title
+        SMALLINT status_code
+        TIMESTAMP crawled_at
+    }
+    robots_rules {
+        VARCHAR domain PK
+        TEXT rules_text
+        INT crawl_delay_sec
+        TEXT allowed_paths
+        TEXT disallowed_paths
+        TIMESTAMP fetched_at
+        TIMESTAMP expires_at
+    }
+    dns_cache {
+        VARCHAR domain PK
+        TEXT ip_addresses
+        TIMESTAMP resolved_at
+        INT ttl_seconds
+    }
+    outlinks {
+        BIGINT source_page_id FK
+        TEXT target_url
+        VARCHAR anchor_text
+        TIMESTAMP discovered_at
+    }
 ```
+
 
 ## Data Flow
 
 ### Crawling a URL (Main Loop)
-
-```
-1. Scheduler selects highest-priority URLs from url_frontier
-   where status = 'pending' and next_crawl_at <= now()
-         │
-         ▼
-2. Group selected URLs by domain; enforce politeness
-   (check robots_rules.crawl_delay_sec between requests)
-         │
-         ▼
-3. For each URL, check robots_rules for the domain
-         │
-    ┌────┴────┐
-    │Allowed? │
-    ├─No──────┤──► Mark url_frontier.status = 'done' (skip permanently)
-    │ Yes     │
-    └────┬────┘
-         ▼
-4. Resolve domain via dns_cache
-         │
-    ┌────┴─────┐
-    │Cache hit?│
-    ├─Yes──────┤──► Use cached IP
-    │ No       │
-    └────┬─────┘
-         ▼
-   DNS lookup → store in dns_cache with TTL
-         │
-         ▼
-5. Download page (HTTP GET), set url_frontier.status = 'crawling'
-         │
-         ▼
-6. Compute SimHash of page content
-         │
-         ▼
-7. Check content_hash against recent crawled_pages for this URL
-         │
-    ┌────┴──────────┐
-    │Hash changed?  │
-    ├─No────────────┤──► Update last_crawled_at, skip storage
-    │ Yes           │
-    └────┬──────────┘
-         ▼
-8. INSERT into crawled_pages (page content, hash, status code)
-         │
-         ▼
-9. Parse HTML, extract links → INSERT into outlinks
-         │
-         ▼
-10. For each outlink target_url:
-    - Normalize URL
-    - Check if already in url_frontier
-    - If new: INSERT with priority based on source page rank and depth+1
-         │
-         ▼
-11. Update url_frontier: status='done', last_crawled_at=now(),
-    next_crawl_at = now() + change_frequency
-```
 
 ```mermaid
 flowchart TD

@@ -111,103 +111,62 @@ graph TD
 
 ## ER Diagram
 
+```mermaid
+erDiagram
+    road_nodes ||--o{ road_edges : "one node is source/target of many edges"
+    road_edges ||--|| traffic_segments : "each edge has at most one current traffic reading"
+
+    map_tiles {
+        VARCHAR tile_id PK
+        ENUM content_type
+        TEXT tile_data_url
+        TIMESTAMP last_modified
+        INT size_bytes
+    }
+    road_nodes {
+        BIGINT node_id PK
+        DECIMAL latitude
+        DECIMAL longitude
+        FLOAT elevation
+        ENUM node_type
+    }
+    road_edges {
+        BIGINT edge_id PK
+        BIGINT source_node_id FK
+        BIGINT target_node_id FK
+        INT distance_m
+        SMALLINT speed_limit
+        ENUM road_class
+        SMALLINT lanes
+        BOOLEAN is_oneway
+        TEXT geometry_polyline
+        INT base_travel_time_sec
+    }
+    traffic_segments {
+        BIGINT segment_id FK
+        SMALLINT average_speed
+        ENUM congestion_level
+        FLOAT confidence
+        TIMESTAMP timestamp
+    }
+    places {
+        BIGINT place_id PK
+        VARCHAR name
+        DECIMAL latitude
+        DECIMAL longitude
+        TEXT address
+        VARCHAR category
+        DECIMAL rating
+        INT review_count
+        JSONB hours_json
+        VARCHAR phone
+    }
 ```
-┌──────────────────────┐
-│     map_tiles         │
-│──────────────────────│
-│ tile_id (PK)          │
-│ content_type          │
-│ tile_data_url         │
-│ last_modified         │        (independent, served via CDN)
-│ size_bytes            │
-└──────────────────────┘
 
-
-┌──────────────────────┐         ┌──────────────────────┐
-│    road_nodes         │         │   traffic_segments    │
-│──────────────────────│         │──────────────────────│
-│ node_id (PK)          │         │ segment_id (FK)       │
-│ latitude              │         │ average_speed         │
-│ longitude             │         │ congestion_level      │
-│ elevation             │         │ confidence            │
-│ node_type             │         │ timestamp             │
-└──────────────────────┘         └──────────────────────┘
-     │              │                       │
-     │ 1            │ 1                     │ 1
-     │              │                       │
-     │ *            │ *                     │ 1
-     │    ┌──────────────────────┐          │
-     │    │     road_edges        │          │
-     │    │──────────────────────│          │
-     └───►│ edge_id (PK)          │◄─────────┘
-     ┌───►│ source_node_id (FK)   │
-     │    │ target_node_id (FK)   │
-     │    │ distance_m            │
-     │    │ speed_limit           │
-     │    │ road_class            │
-     │    │ lanes                 │
-     │    │ is_oneway             │
-     │    │ geometry_polyline     │
-     │    │ base_travel_time_sec  │
-     │    └──────────────────────┘
-     │
-     │ (source or target)
-
-┌──────────────────────┐
-│      places           │
-│──────────────────────│
-│ place_id (PK)         │
-│ name                  │       (independent, linked to map
-│ latitude              │        via coordinates)
-│ longitude             │
-│ address               │
-│ category              │
-│ rating                │
-│ review_count          │
-│ hours_json            │
-│ phone                 │
-└──────────────────────┘
-
-Relationships:
-  road_nodes    1───* road_edges         (one node is source/target of many edges)
-  road_edges    1───1 traffic_segments   (each edge has at most one current traffic reading)
-```
 
 ## Data Flow
 
 ### Map Rendering (Read Path)
-
-```
-1. Client sends viewport: (center_lat, center_lng, zoom_level)
-         │
-         ▼
-2. Calculate tile coordinates covering the viewport
-   (typically 6-12 tiles depending on screen size)
-         │
-         ▼
-3. Request tiles from CDN: /tiles/z{zoom}/x{x}/y{y}
-         │
-    ┌────┴─────┐
-    │CDN hit?  │
-    ├─Yes──────┤──► Return cached tile (sub-10ms)
-    │ No       │
-    └────┬─────┘
-         ▼
-4. CDN forwards to tile server (origin)
-         │
-         ▼
-5. Tile server renders tile:
-   - Query road_edges, places for this tile's bounding box
-   - Apply styling rules (road widths, colors, labels)
-   - Encode as vector tile (protobuf) or raster (PNG)
-         │
-         ▼
-6. Cache at CDN with TTL based on zoom level
-   (high zoom = changes more often = shorter TTL)
-         │
-         ▼
-7. Return tile to client for rendering
-```
 
 ```mermaid
 flowchart TD
@@ -222,44 +181,6 @@ flowchart TD
 ```
 
 ### Route Calculation (Read Path)
-
-```
-1. User requests route: (origin_lat/lng, destination_lat/lng, mode)
-         │
-         ▼
-2. Snap origin and destination to nearest road_nodes
-   (spatial index lookup)
-         │
-         ▼
-3. Load road_nodes + road_edges subgraph
-   (for short routes: full graph in memory;
-    for long routes: use hierarchical graph)
-         │
-         ▼
-4. Overlay traffic_segments on road_edges:
-   For each edge with fresh traffic data (confidence > threshold):
-     effective_time = distance_m / average_speed
-   Otherwise: use base_travel_time_sec
-         │
-         ▼
-5. Run shortest-path algorithm:
-   - Short routes (<50km): A* with haversine heuristic
-   - Long routes (>50km): Contraction Hierarchies
-     (pre-computed shortcuts over highway network)
-         │
-         ▼
-6. Reconstruct path: sequence of road_edges
-         │
-         ▼
-7. Generate response:
-   - Route geometry (concatenated geometry_polylines)
-   - Turn-by-turn instructions (from node_types and edge transitions)
-   - ETA (sum of effective travel times)
-   - Alternative routes (run k-shortest-paths)
-         │
-         ▼
-8. Return route to client
-```
 
 ```mermaid
 flowchart TD

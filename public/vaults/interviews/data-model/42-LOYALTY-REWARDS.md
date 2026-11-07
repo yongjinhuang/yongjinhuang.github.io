@@ -192,126 +192,108 @@ graph TD
 
 ## ER Diagram
 
-```
-+------------------+       +------------------+
-|     members      |       |      tiers       |
-|------------------|       |------------------|
-| member_id (PK)   |       | tier_id (PK)     |
-| user_id (FK)     |       | name             |
-| enrollment_status|       | qualification_   |
-| current_tier_id  |───────|  threshold       |
-|  (FK)            |       | retention_       |
-| tier_qualified_  |       |  threshold       |
-|  until           |       | earn_multiplier  |
-| lifetime_earned  |       | benefits_json    |
-| lifetime_redeemed|       +------------------+
-| lifetime_expired |              |
-| joined_at        |              |
-+------------------+              |
-   |    |    |    |               |
-   |    |    |    |               |
-   |    |    |    +──* tier_history
-   |    |    |    |
-   |    |    |    |    +------------------+
-   |    |    |    |    |  tier_history    |
-   |    |    |    |    |------------------|
-   |    |    |    └────| member_id (FK)   |
-   |    |    |         | old_tier_id (FK) |
-   |    |    |         | new_tier_id (FK) |
-   |    |    |         | change_type      |
-   |    |    |         | qualifying_points|
-   |    |    |         | qual_window_     |
-   |    |    |         |  start/end       |
-   |    |    |         | changed_at       |
-   |    |    |         +------------------+
-   |    |    |
-   |    |    +──────────* points_ledger
-   |    |    |
-   |    |    |    +---------------------+
-   |    |    |    | points_ledger       |
-   |    |    |    |  (append-only)      |
-   |    |    |    |---------------------|
-   |    |    └────| member_id (FK)      |
-   |    |         | entry_id (PK)       |
-   |    |         | point_type          |
-   |    |         | operation           |
-   |    |         | amount              |
-   |    |         | running_balance     |
-   |    |         | reference_id        |
-   |    |         | idempotency_key     |
-   |    |         | created_at          |
-   |    |         +---------------------+
-   |    |
-   |    +─────────────* points_balances
-   |    |
-   |    |    +---------------------+
-   |    |    | points_balances     |
-   |    |    |---------------------|
-   |    └────| member_id (FK, PK)  |
-   |         | point_type (PK)     |
-   |         | balance             |
-   |         | held_amount         |
-   |         | version             |
-   |         +---------------------+
-   |
-   +──────────────────* point_lots
-   |         |
-   |    +----+-------------+
-   |    |    point_lots     |
-   |    |   (FIFO expiry)   |
-   |    |-------------------|
-   |    | lot_id (PK)       |
-   |    | member_id (FK)    |
-   |    | earned_amount     |
-   |    | remaining_amount  |
-   |    | earned_at         |
-   |    | expires_at        |
-   |    | source_rule_id(FK)|───────┐
-   |    +-------------------+       |
-   |                                |
-   +──────────────* redemptions     |
-                  |                 |
-   +--------------+---+    +-------+----------+
-   |   redemptions    |    |  earning_rules   |
-   |------------------|    |------------------|
-   | redemption_id(PK)|    | rule_id (PK)     |
-   | member_id (FK)   |    | name             |
-   | reward_id (FK)───|──┐ | rule_type        |
-   | points_spent     |  | | points_per_unit  |
-   | status           |  | | tier_multiplier_ |
-   | hold_id          |  | |  json            |
-   | voucher_code     |  | | daily_cap        |
-   | fulfilled_at     |  | | effective_from   |
-   +-----------------+   | | effective_until  |
-                         | +------------------+
-                  +------+-------+
-                  |    rewards   |
-                  |--------------|
-                  | reward_id(PK)|
-                  | name         |
-                  | description  |
-                  | points_cost  |
-                  | reward_type  |
-                  | inventory_   |
-                  |  count       |
-                  | daily_limit  |
-                  | tier_        |
-                  |  eligibility |
-                  +--------------+
+```mermaid
+erDiagram
+    members }o--|| tiers : "current tier"
+    members ||--o{ points_balances : "one per point type"
+    members ||--o{ points_ledger : "all point operations"
+    members ||--o{ point_lots : "all earned batches"
+    members ||--o{ tier_history : "all tier changes"
+    members ||--o{ redemptions : "all redemptions"
+    redemptions }o--|| rewards : "which reward was redeemed"
+    point_lots }o--|| earning_rules : "which rule generated the lot"
+    tier_history }o--|| tiers : "old and new tier references"
 
-Relationships:
-  members *───1 tiers              (current tier)
-  members 1───* points_balances    (one per point type)
-  members 1───* points_ledger      (all point operations)
-  members 1───* point_lots         (all earned batches)
-  members 1───* tier_history       (all tier changes)
-  members 1───* redemptions        (all redemptions)
-  redemptions *───1 rewards        (which reward was redeemed)
-  point_lots *───1 earning_rules   (which rule generated the lot)
-  tier_history *───1 tiers         (old and new tier references)
+    members {
+        UUID member_id PK
+        USERS user_id FK
+        ENUM enrollment_status
+        TIERS current_tier_id FK
+        DATE tier_qualified_until
+        BIGINT lifetime_earned
+        BIGINT lifetime_redeemed
+        BIGINT lifetime_expired
+        TIMESTAMP joined_at
+    }
+    points_balances {
+        COMPOSITE member_id PK, FK
+        VARCHAR point_type PK
+        BIGINT balance
+        BIGINT held_amount
+        INT version
+    }
+    points_ledger {
+        UUID entry_id PK
+        MEMBERS member_id FK
+        VARCHAR point_type
+        ENUM operation
+        BIGINT amount
+        BIGINT running_balance
+        UUID reference_id
+        VARCHAR idempotency_key UK
+        TIMESTAMP created_at
+    }
+    point_lots {
+        UUID lot_id PK
+        MEMBERS member_id FK
+        BIGINT earned_amount
+        BIGINT remaining_amount
+        TIMESTAMP earned_at
+        TIMESTAMP expires_at
+        EARNING_RULES source_rule_id FK
+    }
+    tiers {
+        UUID tier_id PK
+        ENUM name
+        BIGINT qualification_threshold
+        BIGINT retention_threshold
+        DECIMAL earn_multiplier
+        JSONB benefits_json
+    }
+    tier_history {
+        MEMBERS member_id FK
+        TIERS old_tier_id FK
+        TIERS new_tier_id FK
+        ENUM change_type
+        BIGINT qualifying_points
+        DATE qualification_window_start
+        DATE qualification_window_end
+        TIMESTAMP changed_at
+    }
+    earning_rules {
+        UUID rule_id PK
+        VARCHAR name
+        ENUM rule_type
+        INT points_per_unit
+        JSONB tier_multiplier_json
+        INT daily_cap
+        TIMESTAMP effective_from
+        TIMESTAMP effective_until
+    }
+    rewards {
+        UUID reward_id PK
+        VARCHAR name
+        TEXT description
+        BIGINT points_cost
+        ENUM reward_type
+        INT inventory_count
+        INT daily_limit
+        ARRAY tier_eligibility
+    }
+    redemptions {
+        UUID redemption_id PK
+        MEMBERS member_id FK
+        REWARDS reward_id FK
+        BIGINT points_spent
+        ENUM status
+        UUID hold_id
+        VARCHAR voucher_code
+        TIMESTAMP fulfilled_at
+    }
 ```
 
 ---
+
 
 ## Data Flow
 

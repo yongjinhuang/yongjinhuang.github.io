@@ -106,111 +106,46 @@ graph TD
 
 ## ER Diagram
 
+```mermaid
+erDiagram
+    cluster_nodes ||--o{ ring_topology : "one physical node owns many vnodes"
+
+    kv_pairs {
+        BYTES key PK
+        BYTES value
+        MAP version_vector
+        INT ttl
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    ring_topology {
+        INT virtual_node_id PK
+        STRING physical_node_id FK
+        BIGINT hash_range_start
+        BIGINT hash_range_end
+    }
+    cluster_nodes {
+        STRING node_id PK
+        VARCHAR host
+        INT port
+        ENUM status
+        VARCHAR datacenter
+        VARCHAR rack
+    }
+    hint_store {
+        STRING target_node_id
+        BYTES key
+        BYTES value
+        MAP version
+        TIMESTAMP timestamp
+        TIMESTAMP hint_created_at
+    }
 ```
-┌──────────────────────────┐
-│      cluster_nodes        │
-│──────────────────────────│
-│ node_id (PK)              │
-│ host                      │
-│ port                      │
-│ status                    │
-│ datacenter                │
-│ rack                      │
-└──────────────────────────┘
-         │ 1
-         │
-         │          *
-┌────────┴─────────────────┐
-│     ring_topology         │
-│──────────────────────────│
-│ virtual_node_id (PK)      │
-│ physical_node_id (FK)     │
-│ hash_range_start          │
-│ hash_range_end            │
-└──────────────────────────┘
-         │
-         │ determines placement of
-         ▼
-┌──────────────────────────┐
-│       kv_pairs            │
-│──────────────────────────│
-│ key (PK)                  │
-│ value (bytes)             │
-│ version_vector            │
-│ ttl                       │
-│ created_at                │
-│ updated_at                │
-└──────────────────────────┘
 
-┌──────────────────────────┐
-│      hint_store           │
-│──────────────────────────│
-│ target_node_id            │
-│ key                       │
-│ value                     │
-│ version                   │
-│ timestamp                 │
-│ hint_created_at           │
-└──────────────────────────┘
-
-Consistent Hash Ring (visual):
-
-           Node A
-            ╱  ╲
-      ┌────╱────╲────┐
-      │   ╱      ╲   │
- Node D──╱── Ring ──╲──Node B
-      │   ╲      ╱   │
-      └────╲────╱────┘
-            ╲  ╱
-           Node C
-
-  Key "user:123" → hash → position on ring
-  → Stored on next N nodes clockwise (N = replication factor)
-
-Relationships:
-  cluster_nodes 1───* ring_topology  (one physical node owns many vnodes)
-  ring_topology determines kv_pairs placement (hash → vnode → node)
-  hint_store references target cluster_node (for replay on recovery)
-```
 
 ## Data Flow
 
 ### Write Path (Quorum Write, W = 2 of N = 3)
-
-```
-1. Client writes: PUT key="user:123", value={name: "Alice"}
-         │
-         ▼
-2. Client (or coordinator node) hashes key:
-   hash("user:123") → position on ring
-         │
-         ▼
-3. Find N=3 replica nodes by walking ring clockwise:
-   Node A (primary), Node B (replica 1), Node C (replica 2)
-         │
-         ▼
-4. Send write request to ALL 3 nodes simultaneously
-         │
-         ├─ Node A: write to local storage, increment version_vector[A]
-         ├─ Node B: write to local storage, increment version_vector[B]
-         └─ Node C: unavailable (network partition)
-              │
-              ▼
-         Node D stores hint for Node C (hinted handoff)
-         │
-         ▼
-5. Wait for W=2 ACKs (got 2: A and B)
-         │
-         ▼
-6. Return success to client
-   (write succeeded despite Node C being down — AP system)
-         │
-         ▼
-7. Later: Node C recovers
-   ├─ Node D replays hint → Node C gets the write
-   └─ Anti-entropy (Merkle tree) catches anything hints missed
-```
 
 ```mermaid
 flowchart TD
@@ -230,41 +165,6 @@ flowchart TD
 ```
 
 ### Read Path (Quorum Read, R = 2 of N = 3)
-
-```
-1. Client reads: GET key="user:123"
-         │
-         ▼
-2. Hash key → find 3 replica nodes (A, B, C)
-         │
-         ▼
-3. Send read request to ALL 3 nodes
-         │
-         ▼
-4. Wait for R=2 responses:
-   ├─ Node A returns: value={name:"Alice"}, version={A:3, B:2}
-   └─ Node B returns: value={name:"Bob"},   version={A:2, B:3}
-         │
-         ▼
-5. Compare version vectors:
-   {A:3, B:2} vs {A:2, B:3}
-   Neither dominates → CONFLICT (concurrent writes)
-         │
-    ┌────┴──────────────────────────┐
-    │ Resolution strategy:          │
-    ├─ Last-Write-Wins (LWW):      │
-    │   Use updated_at timestamp    │
-    │   Simple but loses data       │
-    ├─ Application-level merge:     │
-    │   Return both versions to     │
-    │   client, let app merge       │
-    │   (e.g., CRDT, union sets)    │
-    └───────────────────────────────┘
-         │
-         ▼
-6. Read repair: send latest version to stale replicas
-   (piggyback consistency fix on the read)
-```
 
 ```mermaid
 flowchart TD
@@ -286,31 +186,6 @@ flowchart TD
 ```
 
 ### Rebalancing (Node Join)
-
-```
-1. New Node E joins the cluster
-         │
-         ▼
-2. Gossip protocol propagates membership change
-   (all nodes learn about E within seconds)
-         │
-         ▼
-3. Node E is assigned virtual nodes on the ring
-   ├─ Takes over hash ranges from existing nodes
-   └─ Ranges are small (vnodes), so impact is spread across many nodes
-         │
-         ▼
-4. Data migration:
-   ├─ For each vnode assigned to E:
-   │   Previous owner streams relevant key-value pairs to E
-   └─ Reads/writes continue during migration
-       (coordinator routes to old or new owner based on progress)
-         │
-         ▼
-5. Migration complete → E status changes to 'active'
-   ├─ E starts serving reads and writes for its ranges
-   └─ Previous owners delete migrated data
-```
 
 ```mermaid
 flowchart TD

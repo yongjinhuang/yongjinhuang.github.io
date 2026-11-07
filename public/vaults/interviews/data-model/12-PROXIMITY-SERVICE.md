@@ -119,95 +119,54 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐
-│     categories        │
-│──────────────────────│
-│ category_id (PK)      │
-│ name                  │
-│ parent_id (FK) ───────│──┐ self-referencing
-│ icon_url              │  │ (parent category)
-└──────────────────────┘  │
-          │                │
-          │ 1              │
-          │                │
-          │ *              │
-┌──────────────────────┐  │
-│     businesses        │  │
-│──────────────────────│  │
-│ business_id (PK)      │  │
-│ name                  │  │
-│ latitude              │  │
-│ longitude             │  │
-│ geohash ──────────────│──│──► geohash_index (lookup)
-│ category              │  │
-│ address               │  │
-│ city                  │  │
-│ country               │  │
-│ rating                │
-│ review_count          │
-│ price_range           │
-│ is_active             │
-│ hours_json            │
-└──────────────────────┘
-          │
-          │ 1
-          │
-          │ *
-┌──────────────────────┐       ┌──────────────────────┐
-│      reviews          │       │   geohash_index       │
-│──────────────────────│       │──────────────────────│
-│ review_id (PK)        │       │ geohash_prefix (PK)   │
-│ business_id (FK)      │       │ business_ids          │
-│ user_id (FK)          │       │ updated_at            │
-│ rating                │       └──────────────────────┘
-│ text                  │
-│ photos                │
-│ created_at            │
-└──────────────────────┘
+```mermaid
+erDiagram
+    categories ||--o{ businesses : "one category has many businesses"
+    categories ||--o{ categories : "self-ref: parent has many children"
+    businesses ||--o{ reviews : "one business has many reviews"
 
-Relationships:
-  categories  1───* businesses   (one category has many businesses)
-  categories  1───* categories   (self-ref: parent has many children)
-  businesses  1───* reviews      (one business has many reviews)
-  geohash_index ───► businesses  (index maps to business IDs)
+    businesses {
+        BIGINT business_id PK
+        VARCHAR name
+        DECIMAL latitude
+        DECIMAL longitude
+        VARCHAR geohash
+        VARCHAR category
+        TEXT address
+        VARCHAR city
+        VARCHAR country
+        DECIMAL rating
+        INT review_count
+        SMALLINT price_range
+        BOOLEAN is_active
+        JSONB hours_json
+    }
+    categories {
+        BIGINT category_id PK
+        VARCHAR name
+        BIGINT parent_id FK
+        VARCHAR icon_url
+    }
+    reviews {
+        BIGINT review_id PK
+        BIGINT business_id FK
+        BIGINT user_id FK
+        SMALLINT rating
+        TEXT text
+        TEXT photos
+        TIMESTAMP created_at
+    }
+    geohash_index {
+        VARCHAR geohash_prefix PK
+        BIGINT business_ids
+        TIMESTAMP updated_at
+    }
 ```
+
 
 ## Data Flow
 
 ### Nearby Search (Read Path)
-
-```
-1. User sends search request: (latitude, longitude, radius_km, filters)
-         │
-         ▼
-2. Compute geohash of user's location at appropriate precision
-   (e.g., 6-char for ~1km radius, 5-char for ~5km radius)
-         │
-         ▼
-3. Calculate neighboring geohash prefixes that cover the search radius
-   (typically the center cell + 8 surrounding cells)
-         │
-         ▼
-4. Query geohash_index for each prefix → collect business_ids
-         │
-         ▼
-5. Batch-fetch business details from businesses table
-         │
-         ▼
-6. Post-filter by exact Haversine distance
-   (geohash cells are rectangular, so corner businesses
-    may be outside the circular radius)
-         │
-         ▼
-7. Apply additional filters (category, price_range, is_active, hours)
-         │
-         ▼
-8. Sort by relevance (distance, rating, review_count weighted)
-         │
-         ▼
-9. Return paginated results with distance from user
-```
 
 ```mermaid
 flowchart TD
@@ -225,27 +184,6 @@ flowchart TD
 **Why post-filter by exact distance?** Geohash cells are rectangles, not circles. A business in the corner of a neighboring cell might be 1.5km away when the user requested a 1km radius. The Haversine formula on (lat, lng) provides exact distance for the final filter.
 
 ### Adding a Business (Write Path)
-
-```
-1. Business owner submits business details
-         │
-         ▼
-2. Validate and normalize address, compute (latitude, longitude)
-   via geocoding API
-         │
-         ▼
-3. Compute geohash from (latitude, longitude)
-         │
-         ▼
-4. INSERT into businesses table
-         │
-         ▼
-5. Update geohash_index: append business_id to the
-   matching geohash_prefix entry (or create new entry)
-         │
-         ▼
-6. Invalidate any cached search results for affected geohash cells
-```
 
 ```mermaid
 flowchart TD
