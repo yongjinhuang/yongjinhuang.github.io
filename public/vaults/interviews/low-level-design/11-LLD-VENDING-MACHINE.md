@@ -56,84 +56,88 @@ design patterns.
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   Denomination    |       |   VendingState      |
-|   (Enum)          |       |   (Enum)            |
-|-------------------|       |---------------------|
-| NICKEL (5)        |       | IDLE                |
-| DIME (10)         |       | HAS_MONEY           |
-| QUARTER (25)      |       | DISPENSING           |
-| HALF_DOLLAR (50)  |       | OUT_OF_SERVICE       |
-| DOLLAR_COIN (100) |       +---------------------+
-| BILL_1 (100)      |
-| BILL_5 (500)      |       +---------------------+
-+-------------------+       |   Product           |
-                            |---------------------|
-+-------------------+       | name                |
-|   Slot            |       | price_cents         |
-|-------------------|       +---------------------+
-| code              |              |
-| product           |       +---------------------+
-| quantity           |       |   ChangeCalculator  |
-| price_cents        |       |---------------------|
-|-------------------|       | available_coins     |
-| is_available()    |       |---------------------|
-| dispense()        |       | make_change(amount) |
-+-------------------+       +---------------------+
-        |
-+-------------------+       +---------------------+
-|   StateHandler    |       |   VendingMachine    |
-|   (ABC)           |       |---------------------|
-|-------------------|       | slots               |
-| insert_money()    |       | balance_cents       |
-| select_product()  |       | state               |
-| dispense()        |       | change_calculator   |
-| refund()          |       |---------------------|
-+-------------------+       | insert_money(denom) |
-   ^    ^    ^              | select_product(code)|
-   |    |    |              | refund()            |
- Idle HasMoney Dispensing   | get_display()       |
-                            +---------------------+
+```mermaid
+classDiagram
+    class Denomination {
+        <<enumeration>>
+        NICKEL_5
+        DIME_10
+        QUARTER_25
+        HALF_DOLLAR_50
+        DOLLAR_COIN_100
+        BILL_100
+        BILL_500
+    }
+    class VendingState {
+        <<enumeration>>
+        IDLE
+        HAS_MONEY
+        DISPENSING
+        OUT_OF_SERVICE
+    }
+    class Product {
+        +str name
+        +int price_cents
+    }
+    class Slot {
+        +str code
+        +Product product
+        +int quantity
+        +int price_cents
+        +is_available() bool
+        +dispense() Product
+    }
+    class ChangeCalculator {
+        +Dict available_coins
+        +make_change(amount) List~int~
+    }
+    class StateHandler {
+        <<abstract>>
+        +insert_money(machine, denom)*
+        +select_product(machine, code)*
+        +dispense(machine)*
+        +refund(machine)*
+    }
+    class IdleState
+    class HasMoneyState
+    class DispensingState
+    StateHandler <|-- IdleState
+    StateHandler <|-- HasMoneyState
+    StateHandler <|-- DispensingState
+
+    class VendingMachine {
+        +Dict~str, Slot~ slots
+        +int balance_cents
+        +VendingState state
+        +ChangeCalculator change_calculator
+        +insert_money(denom)
+        +select_product(code)
+        +refund() List~int~
+        +get_display() str
+    }
+
+    VendingMachine *-- Slot
+    Slot *-- Product
+    VendingMachine *-- ChangeCalculator
+    VendingMachine --> StateHandler
+    VendingMachine --> VendingState
 ```
 
 ---
 
 ## 3. State Machine
 
-```
-                +------------------+
-      +-------->|      IDLE        |<-----------+
-      |         +------------------+            |
-      |           |                             |
-      |     insert money                        |
-      |           |                             |
-      |           v                             |
-      |   +------------------+                  |
-      +---| HAS_MONEY        |--+               |
-  refund  +------------------+  |               |
-          | |                   |               |
-          | +-- insert more     |               |
-          |     money (loop)    |               |
-          |                     |               |
-          | select product      |               |
-          | (sufficient funds   |               |
-          |  + in stock)        |               |
-          v                     |               |
-    +------------------+        |               |
-    | DISPENSING        |-------+               |
-    +------------------+  (insufficient funds   |
-          |               or out of stock ->    |
-          |                stay HAS_MONEY)      |
-     dispense complete                          |
-     + return change                            |
-          |                                     |
-          +-------------------------------------+
-
-    +------------------+
-    | OUT_OF_SERVICE    |  (admin maintenance / all slots empty)
-    +------------------+
-```
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> HAS_MONEY : insert_money()
+    HAS_MONEY --> HAS_MONEY : insert more money / insufficient funds / out of stock
+    HAS_MONEY --> IDLE : refund()
+    HAS_MONEY --> DISPENSING : select_product() (sufficient funds + in stock + exact change available)
+    DISPENSING --> IDLE : dispense complete + return change
+    IDLE --> OUT_OF_SERVICE : admin maintenance / all slots empty
+    OUT_OF_SERVICE --> IDLE : restock / repair
+````
 
 **Transitions:**
 

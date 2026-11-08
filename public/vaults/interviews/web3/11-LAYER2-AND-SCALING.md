@@ -4,30 +4,14 @@
 
 Ethereum mainnet (Layer 1) processes ~15 transactions per second at $1-50+ per transaction. This is unusable for mainstream applications. Layer 2 (L2) solutions execute transactions off the main chain while inheriting Ethereum's security guarantees. Understanding L2 architecture is essential because most new DApp development now happens on L2s, and the design space is evolving rapidly with zero-knowledge proofs.
 
-```
-+------------------------------------------------------------------------+
-|                    SCALING SOLUTIONS                                    |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  OPTIMISTIC ROLLUPS            ZK ROLLUPS                              |
-|  +------------------------+   +---------------------------+            |
-|  | Optimism (OP Stack)     |   | zkSync Era                |            |
-|  | Arbitrum One / Nova     |   | StarkNet                  |            |
-|  | Base (Coinbase)         |   | Polygon zkEVM             |            |
-|  | Mantle                  |   | Scroll                    |            |
-|  | 7-day challenge period  |   | Linea                     |            |
-|  | EVM equivalent          |   | Validity proofs (instant) |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-|  SIDECHAINS                    OTHER APPROACHES                        |
-|  +------------------------+   +---------------------------+            |
-|  | Polygon PoS             |   | State channels (Raiden)   |            |
-|  | BNB Chain               |   | Plasma (legacy)           |            |
-|  | Own consensus/security  |   | Validiums (off-chain DA)  |            |
-|  | NOT L2 (own security)   |   | Volitions (hybrid DA)     |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Scaling["BLOCKCHAIN SCALING SOLUTIONS"]
+        Opt["OPTIMISTIC ROLLUPS<br/>Optimism (OP Stack), Arbitrum One, Base, Mantle<br/>- Fraud proofs (7-day challenge window)<br/>- Full EVM equivalence"]
+        ZKR["ZK ROLLUPS<br/>zkSync Era, StarkNet, Polygon zkEVM, Scroll, Linea<br/>- Cryptographic validity proofs (SNARKs / STARKs)<br/>- Fast finality once proof verified on L1"]
+        Side["SIDECHAINS (Independent Security)<br/>Polygon PoS, Gnosis Chain, Ronin<br/>- Own validator set (does not inherit L1 security)"]
+        Other["OTHER APPROACHES<br/>State Channels, Plasma, Validiums (off-chain DA), Volitions (hybrid DA)"]
+    end
 ```
 
 ---
@@ -56,27 +40,10 @@ The blockchain trilemma forces a choice:
 
 All rollups share the same fundamental design: execute transactions off-chain, post compressed transaction data to L1, and use a proof mechanism to ensure correctness.
 
-```
-ROLLUP ARCHITECTURE
-
-Users submit transactions to L2 sequencer
-        |
-        v
-+------------------+
-| L2 SEQUENCER     |  Executes transactions locally (fast, cheap)
-|                  |  Batches them together
-|                  |  Compresses data
-+------------------+
-        |
-        v
-+------------------+
-| ETHEREUM L1      |  Receives compressed batch data
-|                  |  Stores it in calldata/blobs
-|                  |  Verifies correctness via proof
-+------------------+
-
-Key insight: L1 doesn't re-execute transactions.
-It only verifies that the L2 executed them correctly.
+```mermaid
+flowchart TD
+    Users["Users submit transactions"] --> Seq["L2 SEQUENCER<br/>- Executes transactions off-chain (fast, cheap)<br/>- Orders, batches, and compresses transactions"]
+    Seq -->|"Post state root + compressed batch (EIP-4844 blobs) + Fraud/Validity Proof"| L1["ETHEREUM L1<br/>- Stores DA in blobs/calldata<br/>- Verifies proof without re-executing all txs"]
 ```
 
 ---
@@ -262,25 +229,18 @@ Blobs:
 
 ### 6.1 How Bridges Work
 
-```
-BRIDGE ARCHITECTURE
+```mermaid
+sequenceDiagram
+    participant L1 as "L1 Bridge Contract (Ethereum)"
+    participant L2 as "L2 Bridge Contract (Arbitrum)"
 
-L1 (Ethereum)                    L2 (Arbitrum)
-+-------------------+            +-------------------+
-| Bridge Contract   |            | Bridge Contract   |
-|                   |  message   |                   |
-| 1. Lock 10 ETH   |----------->| 3. Mint 10 arbETH |
-|    in escrow      |            |    to user         |
-|                   |  message   |                   |
-| 6. Unlock 10 ETH  |<-----------| 4. Burn 10 arbETH |
-|    to user        |            |    from user       |
-+-------------------+            +-------------------+
+    Note over L1,L2: Deposit (L1 -> L2: Lock & Mint)
+    L1->>L2: 1. Lock 10 ETH in L1 escrow -> Relay cross-chain message
+    Note over L2: 2. Mint 10 L2 ETH to user
 
-Canonical bridge: Official bridge run by the rollup
-                  Most secure, but slow (7-day withdrawal for optimistic)
-
-Third-party bridge: Hop, Across, Stargate, Wormhole
-                    Fast, but introduces additional trust assumptions
+    Note over L1,L2: Withdrawal (L2 -> L1: Burn & Unlock)
+    L2->>L1: 3. Burn 10 L2 ETH on L2 -> Relay withdrawal proof
+    Note over L1: 4. Unlock 10 ETH from escrow to user
 ```
 
 ### 6.2 Bridge Security Risks

@@ -58,73 +58,90 @@ expect a clean, extensible design with proper handling of due dates, fines, and 
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   BookStatus      |       |   MemberType (Enum) |
-|   (Enum)          |       |---------------------|
-|-------------------|       | STUDENT             |
-| AVAILABLE         |       | FACULTY             |
-| BORROWED          |       +---------------------+
-| RESERVED          |
-| LOST              |       +---------------------+
-+-------------------+       |   Author            |
-                            |---------------------|
-+-------------------+       | name                |
-|   Book            |       | biography           |
-|-------------------|       +---------------------+
-| isbn              |              |
-| title             |       +---------------------+
-| authors           |       |   Subject (Enum)    |
-| subject           |       |---------------------|
-| copies: BookItem[]|       | FICTION, SCIENCE,   |
-+-------------------+       | HISTORY, TECH, ...  |
-        |                   +---------------------+
-        v
-+-------------------+       +---------------------+
-|   BookItem (Copy) |       |   RackLocation      |
-|-------------------|       |---------------------|
-| barcode           |       | rack_id             |
-| book (ref)        |       | shelf               |
-| status            |       | position            |
-| location          |       +---------------------+
-| due_date          |
-| borrowed_by       |       +---------------------+
-+-------------------+       |   BorrowRecord      |
-                            |---------------------|
-+-------------------+       | member              |
-|   Member          |       | book_item           |
-|-------------------|       | borrow_date         |
-| member_id         |       | due_date            |
-| name              |       | return_date         |
-| member_type       |       | fine_cents          |
-| borrowed_items    |       +---------------------+
-| active_fines      |
-|-------------------|       +---------------------+
-| can_borrow()      |       |   FineStrategy(ABC) |
-| borrow_limit      |       |---------------------|
-+-------------------+       | calculate(days_late)|
-   ^           ^            +---------------------+
-   |           |               ^       ^       ^
- Student    Faculty          Flat  Progressive Capped
+```mermaid
+classDiagram
+    class BookStatus {
+        <<enumeration>>
+        AVAILABLE
+        BORROWED
+        RESERVED
+        LOST
+    }
+    class MemberType {
+        <<enumeration>>
+        STUDENT
+        FACULTY
+    }
+    class Book {
+        +str isbn
+        +str title
+        +List~Author~ authors
+        +Subject subject
+        +List~BookItem~ copies
+    }
+    class BookItem {
+        +str barcode
+        +Book book
+        +BookStatus status
+        +RackLocation location
+        +date due_date
+        +Member borrowed_by
+    }
+    class Member {
+        +str member_id
+        +str name
+        +MemberType member_type
+        +List~BookItem~ borrowed_items
+        +int active_fines
+        +can_borrow() bool
+        +borrow_limit() int
+    }
+    class StudentMember
+    class FacultyMember
+    Member <|-- StudentMember
+    Member <|-- FacultyMember
 
-+-------------------+       +---------------------+
-| SearchCriteria    |       |   Library           |
-|   (ABC)           |       |---------------------|
-|-------------------|       | catalog             |
-| matches(book)     |       | members             |
-+-------------------+       | reservations        |
-  ^   ^   ^   ^             |---------------------|
-  |   |   |   |             | search()            |
-Title Author Subject ISBN   | borrow()            |
-                            | return_book()       |
-+-------------------+       | place_hold()        |
-| EventBus          |       | get_fines()         |
-|   (Observer)      |       +---------------------+
-|-------------------|
-| subscribe(event,  |
-|   listener)       |
-| publish(event)    |
-+-------------------+
+    class BorrowRecord {
+        +Member member
+        +BookItem book_item
+        +date borrow_date
+        +date due_date
+        +date return_date
+        +int fine_cents
+    }
+    class FineStrategy {
+        <<abstract>>
+        +calculate(days_late)* int
+    }
+    class FlatFine
+    class ProgressiveFine
+    class CappedFine
+    FineStrategy <|-- FlatFine
+    FineStrategy <|-- ProgressiveFine
+    FineStrategy <|-- CappedFine
+
+    class SearchCriteria {
+        <<abstract>>
+        +matches(book)* bool
+    }
+    class Library {
+        +Dict catalog
+        +Dict members
+        +Dict reservations
+        +EventBus event_bus
+        +search(criteria) List~Book~
+        +borrow(member_id, barcode) BorrowRecord
+        +return_book(barcode) int
+        +place_hold(member_id, isbn)
+    }
+
+    Library *-- Book
+    Book *-- BookItem
+    Library *-- Member
+    Library --> FineStrategy
+    Library --> SearchCriteria
+    BorrowRecord --> Member
+    BorrowRecord --> BookItem
 ```
 
 ---

@@ -60,52 +60,87 @@ frequently asked at senior levels because logging is foundational to every produ
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   LogLevel        |       |   LogRecord         |
-|   (Enum)          |       |---------------------|
-|-------------------|       | timestamp           |
-| DEBUG = 10        |       | level               |
-| INFO = 20         |       | logger_name         |
-| WARNING = 30      |       | message             |
-| ERROR = 40        |       | context             |
-| CRITICAL = 50     |       +---------------------+
-+-------------------+
-                            +---------------------+
-+-------------------+       |   Formatter (ABC)   |
-|   Logger          |       |---------------------|
-|-------------------|       | format(record)      |
-| name              |       +---------------------+
-| level             |         ^            ^
-| handlers          |         |            |
-| parent            |       TextFmt     JsonFmt
-| propagate         |
-|-------------------|       +---------------------+
-| debug(msg)        |       |   Handler (ABC)     |
-| info(msg)         |       |---------------------|
-| warning(msg)      |       | level               |
-| error(msg)        |       | formatter           |
-| critical(msg)     |       |---------------------|
-| log(level, msg)   |       | emit(record)        |
-+-------------------+       | should_handle()     |
-        |                   +---------------------+
-        |                     ^    ^    ^    ^
-+-------------------+         |    |    |    |
-|   LogManager      |     Console File Rotating HTTP
-|   (Singleton)     |
-|-------------------|       +---------------------+
-| get_logger(name)  |       | AsyncHandler        |
-| configure(dict)   |       |   (Decorator)       |
-+-------------------+       |---------------------|
-                            | queue               |
-+-------------------+       | worker_thread       |
-| LogContext         |       |---------------------|
-|   (Thread-local)  |       | emit(record)        |
-|-------------------|       | start()             |
-| request_id        |       | stop()              |
-| user_id           |       +---------------------+
-| extra             |
-+-------------------+
+```mermaid
+classDiagram
+    class LogLevel {
+        <<enumeration>>
+        DEBUG_10
+        INFO_20
+        WARNING_30
+        ERROR_40
+        CRITICAL_50
+    }
+    class LogRecord {
+        +datetime timestamp
+        +LogLevel level
+        +str logger_name
+        +str message
+        +Dict context
+    }
+    class Formatter {
+        <<abstract>>
+        +format(record)* str
+    }
+    class TextFormatter
+    class JsonFormatter
+    Formatter <|-- TextFormatter
+    Formatter <|-- JsonFormatter
+
+    class Handler {
+        <<abstract>>
+        +LogLevel level
+        +Formatter formatter
+        +should_handle(record) bool
+        +emit(record)*
+    }
+    class ConsoleHandler
+    class FileHandler
+    class RotatingFileHandler
+    class HTTPHandler
+    class AsyncHandler {
+        +Queue queue
+        +Thread worker_thread
+        +emit(record)
+        +start()
+        +stop()
+    }
+    Handler <|-- ConsoleHandler
+    Handler <|-- FileHandler
+    Handler <|-- RotatingFileHandler
+    Handler <|-- HTTPHandler
+    Handler <|-- AsyncHandler
+    AsyncHandler o-- Handler
+    Handler *-- Formatter
+
+    class Logger {
+        +str name
+        +LogLevel level
+        +List~Handler~ handlers
+        +Logger parent
+        +bool propagate
+        +debug(msg)
+        +info(msg)
+        +warning(msg)
+        +error(msg)
+        +critical(msg)
+        +log(level, msg)
+    }
+    class LogManager {
+        <<Singleton>>
+        +get_logger(name) Logger
+        +configure(config_dict)
+    }
+    class LogContext {
+        <<ThreadLocal>>
+        +str request_id
+        +str user_id
+        +Dict extra
+    }
+
+    LogManager *-- Logger
+    Logger o-- Handler
+    Logger ..> LogRecord
+    Logger ..> LogContext
 ```
 
 ---

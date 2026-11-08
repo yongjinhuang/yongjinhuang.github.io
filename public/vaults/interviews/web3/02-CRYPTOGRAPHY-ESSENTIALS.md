@@ -6,30 +6,16 @@ Every wallet address, every transaction signature, every Merkle proof, and every
 
 This chapter covers the cryptographic building blocks that secure the entire Web3 ecosystem: hash functions, elliptic curve cryptography, digital signatures, Merkle proofs, key management, and the conceptual foundations of zero-knowledge proofs.
 
-```
-+------------------------------------------------------------------------+
-|                   CRYPTOGRAPHY IN WEB3                                  |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  HASH FUNCTIONS              ASYMMETRIC CRYPTO     DIGITAL SIGNATURES  |
-|  +----------------------+   +------------------+  +------------------+ |
-|  | SHA-256 (Bitcoin)      |   | secp256k1 curve  |  | ECDSA (Ethereum) | |
-|  | Keccak-256 (Ethereum)  |   | ed25519 (Solana)  |  | EdDSA (Solana)   | |
-|  | BLAKE2b (ZCash)        |   | BN254 (ZK proofs) |  | BLS (aggregation)| |
-|  | Poseidon (ZK-friendly) |   | Private -> Public |  | EIP-712 typed    | |
-|  | Pedersen (commitments) |   | Public -> Address |  | Schnorr (Bitcoin)| |
-|  +----------------------+   +------------------+  +------------------+ |
-|                                                                        |
-|  MERKLE STRUCTURES           KEY MANAGEMENT        ZERO-KNOWLEDGE      |
-|  +----------------------+   +------------------+  +------------------+ |
-|  | Binary Merkle trees   |   | BIP-39 mnemonics |  | SNARKs (Groth16) | |
-|  | Patricia Tries (ETH)  |   | BIP-32 HD wallets|  | STARKs           | |
-|  | Verkle trees (future)  |   | BIP-44 derivation|  | PLONK            | |
-|  | Inclusion/exclusion    |   | Hardware wallets  |  | Bulletproofs     | |
-|  | proofs                |   | MPC wallets       |  | KZG commitments  | |
-|  +----------------------+   +------------------+  +------------------+ |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Crypto["CRYPTOGRAPHY IN WEB3"]
+        Hash["HASH FUNCTIONS<br/>SHA-256 (Bitcoin), Keccak-256 (Ethereum), BLAKE2b, Poseidon &amp; Pedersen (ZK)"]
+        Asym["ASYMMETRIC CRYPTO<br/>secp256k1, ed25519, BN254<br/>Private Key -&gt; Public Key -&gt; Address"]
+        Sig["DIGITAL SIGNATURES<br/>ECDSA (Ethereum), EdDSA (Solana), BLS (aggregation), Schnorr, EIP-712"]
+        Merkle["MERKLE STRUCTURES<br/>Binary Merkle Trees, Merkle Patricia Tries (ETH), Verkle Trees, Inclusion Proofs"]
+        Keys["KEY MANAGEMENT<br/>BIP-39 Mnemonics, BIP-32/44 HD Wallets, Hardware Wallets, MPC"]
+        ZK["ZERO-KNOWLEDGE PROOFS<br/>SNARKs (Groth16, PLONK), STARKs, Bulletproofs, KZG Commitments"]
+    end
 ```
 
 ---
@@ -496,31 +482,14 @@ With ZK:     Cut a hole in a large piece of cardboard
 
 ### 7.2 Real Web3 Applications
 
-```
-ZK PROOF APPLICATIONS IN WEB3
-
-+------------------------------------------------------------------------+
-|                                                                        |
-|  SCALING (ZK Rollups)                                                  |
-|  "I processed 10,000 transactions correctly"                           |
-|  Prove all state transitions are valid without re-executing them       |
-|  Used by: zkSync Era, StarkNet, Polygon zkEVM, Scroll                 |
-|                                                                        |
-|  PRIVACY                                                               |
-|  "I have enough balance" (without revealing my balance)                |
-|  "I am in the allowed set" (without revealing which member I am)       |
-|  Used by: Tornado Cash (deprecated), Zcash, Aztec                     |
-|                                                                        |
-|  IDENTITY                                                              |
-|  "I am over 18" (without revealing my birthday)                        |
-|  "I am a US citizen" (without revealing my passport number)            |
-|  Used by: Polygon ID, Worldcoin, Sismo                                |
-|                                                                        |
-|  BRIDGES                                                               |
-|  "This block was finalized on Ethereum" (light client proof)           |
-|  Used by: Succinct, Polyhedra                                          |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph ZKApps["ZERO-KNOWLEDGE PROOF APPLICATIONS IN WEB3"]
+        S["SCALING (ZK Rollups)<br/>'I processed 10,000 txs correctly'<br/>(zkSync Era, StarkNet, Polygon zkEVM, Scroll)"]
+        P["PRIVACY<br/>'I have sufficient balance / set membership' without revealing identity<br/>(Zcash, Aztec)"]
+        I["IDENTITY (ZK Credentials)<br/>'I am over 18 / US citizen' without revealing DOB or passport<br/>(Polygon ID, Worldcoin)"]
+        B["TRUSTLESS BRIDGES (ZK Light Clients)<br/>'This block was finalized on Ethereum'<br/>(Succinct, Polyhedra)"]
+    end
 ```
 
 ### 7.3 SNARKs vs STARKs
@@ -596,44 +565,14 @@ for (let i = 0; i < 5; i++) {
 
 ### 8.2 Wallet Types Comparison
 
-```
-+------------------------------------------------------------------------+
-|                      WALLET TYPES                                       |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  HOT WALLETS (connected to internet)                                   |
-|  +----------------------------+   +----------------------------+       |
-|  | Browser Extension           |   | Mobile Wallet              |       |
-|  | MetaMask, Rabby, Coinbase  |   | Rainbow, Trust Wallet      |       |
-|  | Pro: Convenient, fast      |   | Pro: Always accessible     |       |
-|  | Con: Vulnerable to phishing|   | Con: Phone compromise risk |       |
-|  +----------------------------+   +----------------------------+       |
-|                                                                        |
-|  COLD WALLETS (offline)                                                |
-|  +----------------------------+   +----------------------------+       |
-|  | Hardware Wallet             |   | Paper / Steel              |       |
-|  | Ledger, Trezor, GridPlus   |   | Mnemonic on metal plate    |       |
-|  | Pro: Keys never touch net  |   | Pro: Impervious to hacks   |       |
-|  | Con: $80-200 cost          |   | Con: Physical theft risk   |       |
-|  +----------------------------+   +----------------------------+       |
-|                                                                        |
-|  SMART WALLETS (contract-based)                                        |
-|  +----------------------------+   +----------------------------+       |
-|  | Multisig (Safe/Gnosis)     |   | Account Abstraction (4337) |       |
-|  | M-of-N approval required   |   | Social recovery, sessions  |       |
-|  | Pro: No single point of    |   | Pro: UX like Web2          |       |
-|  |   failure                  |   | Con: Higher gas costs      |       |
-|  +----------------------------+   +----------------------------+       |
-|                                                                        |
-|  MPC WALLETS (distributed key)                                         |
-|  +------------------------------------------------------------+       |
-|  | Key split across multiple parties (no single party has key) |       |
-|  | Fireblocks, Fordefi, Lit Protocol                           |       |
-|  | Pro: Institutional-grade security without hardware wallets  |       |
-|  | Con: Complex setup, vendor dependence                       |       |
-|  +------------------------------------------------------------+       |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Wallets["WEB3 WALLET TAXONOMY"]
+        Hot["HOT WALLETS (Connected to Internet)<br/>- Browser Extension (MetaMask, Rabby, Coinbase)<br/>- Mobile Wallet (Rainbow, Trust Wallet)<br/>Pro: Convenient / Con: Phishing &amp; device risk"]
+        Cold["COLD WALLETS (Offline)<br/>- Hardware Wallet (Ledger, Trezor, GridPlus)<br/>- Steel / Paper Backup (BIP-39 seed)<br/>Pro: Keys never touch network / Con: Physical custody"]
+        Smart["SMART CONTRACT WALLETS<br/>- Multisig (Safe: M-of-N threshold)<br/>- Account Abstraction (ERC-4337: social recovery, gas sponsorship, session keys)"]
+        MPC["MPC WALLETS (Distributed Key Shares)<br/>- Key split via threshold cryptography (Fireblocks, Fordefi, Lit Protocol)<br/>Pro: Institutional security, chain-agnostic"]
+    end
 ```
 
 ---

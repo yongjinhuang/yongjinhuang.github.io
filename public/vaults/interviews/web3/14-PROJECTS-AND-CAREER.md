@@ -4,30 +4,20 @@
 
 The best way to learn Web3 development is to build. This chapter provides five progressively complex projects that exercise every skill from the previous chapters, followed by career guidance for the various roles in the Web3 ecosystem. Each project includes requirements, architecture decisions, and the key learning outcomes.
 
-```
-+------------------------------------------------------------------------+
-|                    PORTFOLIO PROJECTS                                    |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  BEGINNER                      INTERMEDIATE                            |
-|  +------------------------+   +---------------------------+            |
-|  | 1. ERC-20 Token + DApp  |   | 3. DEX (AMM)              |            |
-|  |    Solidity, Hardhat,   |   |    Uniswap V2 mechanics,  |            |
-|  |    ethers.js, React     |   |    liquidity, pricing      |            |
-|  |                         |   |                            |            |
-|  | 2. NFT Collection       |   | 4. DAO Governance          |            |
-|  |    ERC-721, IPFS,       |   |    Governor, Timelock,     |            |
-|  |    metadata, minting    |   |    voting, proposals       |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-|  ADVANCED                                                              |
-|  +------------------------------------------------------------+       |
-|  | 5. Lending Protocol                                          |       |
-|  |    Interest rates, collateral, liquidation, oracles, flash   |       |
-|  |    loans, multi-asset, fuzz testing, formal verification     |       |
-|  +------------------------------------------------------------+       |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Beg["BEGINNER"]
+        P1["1. ERC-20 Token + Staking DApp<br/>(Solidity, Foundry/Hardhat, viem, React)"]
+        P2["2. NFT Collection + Marketplace<br/>(ERC-721, IPFS metadata, minting)"]
+    end
+    subgraph Int["INTERMEDIATE"]
+        P3["3. Constant-Product DEX (AMM)<br/>(Uniswap V2 x*y=k, LP tokens, slippage)"]
+        P4["4. On-Chain DAO Governance<br/>(ERC20Votes, Governor, TimelockController)"]
+    end
+    subgraph Adv["ADVANCED"]
+        P5["5. Multi-Asset Lending Protocol<br/>(Collateral factors, Chainlink oracles, liquidations, flash loans, invariant fuzzing)"]
+    end
+    Beg --> Int --> Adv
 ```
 
 ---

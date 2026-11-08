@@ -6,36 +6,16 @@ Decentralized Finance (DeFi) recreates traditional financial services — tradin
 
 This chapter covers the core DeFi primitives: automated market makers (AMMs), lending/borrowing protocols, stablecoins, oracles, flash loans, and yield aggregation.
 
-```
-+------------------------------------------------------------------------+
-|                        DEFI ECOSYSTEM                                   |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  TRADING (DEXs)               LENDING / BORROWING                      |
-|  +----------------------+    +---------------------------+             |
-|  | Uniswap (AMM)         |    | Aave (variable/stable)    |             |
-|  | Curve (stableswaps)   |    | Compound (cTokens)        |             |
-|  | Balancer (weighted)   |    | MakerDAO (CDP + DAI)      |             |
-|  | SushiSwap, PancakeSwap|    | Morpho (peer-to-peer)     |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-|  STABLECOINS                  ORACLES                                  |
-|  +----------------------+    +---------------------------+             |
-|  | USDC (centralized)    |    | Chainlink (decentralized) |             |
-|  | DAI (crypto-backed)   |    | Uniswap TWAP (on-chain)   |             |
-|  | USDT (centralized)    |    | Pyth (low-latency)        |             |
-|  | FRAX (algorithmic)    |    | Band Protocol             |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-|  YIELD                        DERIVATIVES                              |
-|  +----------------------+    +---------------------------+             |
-|  | Yearn (auto-compound) |    | GMX (perpetuals)          |             |
-|  | Convex (Curve boost)  |    | dYdX (orderbook)          |             |
-|  | Pendle (yield trading)|    | Synthetix (synthetic)     |             |
-|  | EigenLayer (restaking)|    | Options (Lyra, Premia)    |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph DeFi["DEFI ECOSYSTEM"]
+        DEX["TRADING (DEXs)<br/>Uniswap (AMM), Curve (Stableswap), Balancer (Weighted), PancakeSwap"]
+        Lend["LENDING / BORROWING<br/>Aave, Compound (cTokens), MakerDAO / Sky (CDP), Morpho"]
+        Stable["STABLECOINS<br/>USDC &amp; USDT (Fiat-backed), DAI/USDS (Crypto-backed), FRAX"]
+        Oracle["ORACLES<br/>Chainlink, Uniswap v3 TWAP, Pyth (Low-latency pull), Band"]
+        Yield["YIELD &amp; RESTAKING<br/>Yearn (Auto-compound), Convex, Pendle (Yield tokenization), EigenLayer"]
+        Deriv["DERIVATIVES<br/>GMX (Perpetuals), dYdX (Orderbook), Synthetix, Lyra/Premia (Options)"]
+    end
 ```
 
 ---
@@ -236,31 +216,14 @@ This mechanism ensures the protocol remains solvent even during crashes.
 
 ### 3.1 Types of Stablecoins
 
-```
-+------------------------------------------------------------------------+
-|                    STABLECOIN TAXONOMY                                   |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  FIAT-BACKED (Centralized)                                             |
-|  USDC (Circle): 1 USDC = $1 in bank reserves                          |
-|  USDT (Tether): Largest by market cap, controversial reserves          |
-|  Pro: Stable, simple | Con: Centralized, can freeze accounts           |
-|                                                                        |
-|  CRYPTO-BACKED (Over-collateralized)                                   |
-|  DAI (MakerDAO): Backed by ETH/WBTC/USDC at 150%+ collateral         |
-|  Lock $150 of ETH -> mint $100 DAI                                    |
-|  Pro: Decentralized | Con: Capital inefficient, can depeg in crashes  |
-|                                                                        |
-|  ALGORITHMIC (Under/un-collateralized)                                 |
-|  FRAX: Partially algorithmic, partially backed                        |
-|  UST (collapsed): Was backed by LUNA — death spiral in May 2022       |
-|  Pro: Capital efficient | Con: Fragile, UST collapse lost ~$40B       |
-|                                                                        |
-|  REAL-WORLD ASSET BACKED                                               |
-|  USDY (Ondo): Backed by US Treasuries                                 |
-|  Pro: Yield-bearing, transparent | Con: Regulatory complexity         |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Stables["STABLECOIN TAXONOMY"]
+        Fiat["FIAT-BACKED (Centralized: USDC, USDT)<br/>1:1 off-chain cash/T-bills<br/>Pro: Capital efficient &amp; stable / Con: Custodial &amp; blacklistable"]
+        Crypto["CRYPTO-BACKED (Over-Collateralized: DAI)<br/>Lock $150 ETH -&gt; Mint $100 DAI (150%+ collateral)<br/>Pro: Decentralized on-chain / Con: Capital inefficient"]
+        Algo["ALGORITHMIC / HYBRID (FRAX, collapsed UST)<br/>Pro: Capital efficient / Con: Reflexive death-spiral risk"]
+        RWA["REAL-WORLD ASSET BACKED (Ondo USDY, Mountain USDM)<br/>Backed by tokenized US Treasuries (Passes yield to holders)"]
+    end
 ```
 
 ### 3.2 MakerDAO / DAI
@@ -289,18 +252,9 @@ Example:
 
 Smart contracts cannot access external data (prices, weather, sports scores) by themselves. Oracles bridge the gap between on-chain and off-chain data.
 
-```
-THE ORACLE PROBLEM
-
-On-chain world:              Off-chain world:
-+------------------+         +------------------+
-| Smart contracts  |   ???   | ETH/USD price    |
-| DeFi protocols   | <------ | Stock data       |
-| Need real prices |         | Weather data     |
-+------------------+         +------------------+
-
-Without oracles: Contracts have NO idea what ETH is worth in USD
-With oracles:    Chainlink nodes feed price data on-chain
+```mermaid
+flowchart LR
+    OffChain["Off-Chain World<br/>- ETH/USD market prices<br/>- Stock / RWA data<br/>- Sports / Weather events"] -->|"Decentralized Oracle Network<br/>(Chainlink / Pyth)"| OnChain["On-Chain World (Deterministic EVM)<br/>- Smart contracts<br/>- DeFi lending / derivatives"]
 ```
 
 ### 4.2 Chainlink Price Feeds
@@ -438,26 +392,13 @@ contract MyFlashLoan is FlashLoanSimpleReceiverBase {
 
 ### 6.1 How Yield Aggregators Work
 
-```
-YIELD AGGREGATION (Yearn Finance model)
-
-User deposits USDC into Yearn Vault
-                |
-                v
-    +----------------------------+
-    | Yearn Strategy Controller  |
-    |                            |
-    |  Strategy 1: Aave (3.5%)   |
-    |  Strategy 2: Compound (4%) |
-    |  Strategy 3: Curve (6%)    |
-    |                            |
-    |  Auto-rebalance to highest |
-    |  yield, auto-compound      |
-    +----------------------------+
-                |
-                v
-    User's USDC earns optimized yield
-    with automatic compounding
+```mermaid
+flowchart TD
+    User["User deposits USDC into Yearn Vault (ERC-4626)"] --> Ctrl["Yearn Strategy Controller<br/>(Auto-rebalances &amp; harvests rewards)"]
+    Ctrl --> S1["Strategy 1: Aave (3.5% APY)"]
+    Ctrl --> S2["Strategy 2: Compound (4.0% APY)"]
+    Ctrl --> S3["Strategy 3: Curve (6.0% APY)"]
+    S1 & S2 & S3 --> Out["User's vault shares accrue auto-compounded yield"]
 ```
 
 ---

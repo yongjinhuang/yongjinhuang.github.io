@@ -59,70 +59,94 @@ The core challenge is preventing double booking when multiple users try to selec
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   SeatType        |       |   BookingStatus     |
-|   (Enum)          |       |   (Enum)            |
-|-------------------|       |---------------------|
-| REGULAR           |       | PENDING             |
-| PREMIUM           |       | CONFIRMED           |
-| VIP               |       | CANCELLED           |
-+-------------------+       | EXPIRED             |
-                            +---------------------+
-+-------------------+
-|   SeatStatus      |       +---------------------+
-|   (Enum)          |       |   Movie             |
-|-------------------|       |---------------------|
-| AVAILABLE         |       | movie_id            |
-| LOCKED            |       | title               |
-| BOOKED            |       | duration_min        |
-+-------------------+       | genre               |
-                            +---------------------+
-+-------------------+
-|   Seat            |       +---------------------+
-|-------------------|       |   Screen            |
-| seat_id           |       |---------------------|
-| row               |       | screen_id           |
-| column            |       | name                |
-| seat_type         |       | seats               |
-+-------------------+       +---------------------+
-                                    |
-+-------------------+       +---------------------+
-|   ShowSeat        |       |   Show              |
-|-------------------|       |---------------------|
-| show              |       | show_id             |
-| seat              |       | movie               |
-| status            |       | screen              |
-| locked_by         |       | start_time          |
-| lock_expiry       |       | price_map           |
-| price             |       |---------------------|
-|-------------------|       | get_available_seats()|
-| lock(user_id)     |       | lock_seats()        |
-| unlock()          |       +---------------------+
-| book()            |               |
-+-------------------+       +---------------------+
-                            |   Theater           |
-+-------------------+       |---------------------|
-| PricingStrategy   |       | theater_id          |
-|   (ABC)           |       | name                |
-|-------------------|       | city                |
-| calculate(base,   |       | screens             |
-|   seats, coupon)  |       +---------------------+
-+-------------------+
-  ^        ^                +---------------------+
-  |        |                |   Booking           |
-Standard  Discount          |---------------------|
-                            | booking_id          |
-+-------------------+       | user_id             |
-|   Coupon          |       | show                |
-|-------------------|       | seats               |
-| code              |       | total_amount        |
-| discount_pct      |       | status              |
-| max_discount      |       | created_at          |
-| valid_until       |       |---------------------|
-| min_seats         |       | confirm()           |
-+-------------------+       | cancel()            |
-                            +---------------------+
+```mermaid
+classDiagram
+    class SeatType {
+        <<enumeration>>
+        REGULAR
+        PREMIUM
+        VIP
+    }
+    class SeatStatus {
+        <<enumeration>>
+        AVAILABLE
+        LOCKED
+        BOOKED
+    }
+    class BookingStatus {
+        <<enumeration>>
+        PENDING
+        CONFIRMED
+        CANCELLED
+        EXPIRED
+    }
+    class Movie {
+        +str movie_id
+        +str title
+        +int duration_min
+        +str genre
+    }
+    class Seat {
+        +str seat_id
+        +str row
+        +int column
+        +SeatType seat_type
+    }
+    class Screen {
+        +str screen_id
+        +str name
+        +List~Seat~ seats
+    }
+    class ShowSeat {
+        +Show show
+        +Seat seat
+        +SeatStatus status
+        +str locked_by
+        +datetime lock_expiry
+        +int price_cents
+        +lock(user_id) bool
+        +unlock()
+        +book()
+    }
+    class Show {
+        +str show_id
+        +Movie movie
+        +Screen screen
+        +datetime start_time
+        +Dict price_map
+        +get_available_seats() List~ShowSeat~
+        +lock_seats(user_id, seat_ids) bool
+    }
+    class Theater {
+        +str theater_id
+        +str name
+        +str city
+        +List~Screen~ screens
+    }
+    class Booking {
+        +str booking_id
+        +str user_id
+        +Show show
+        +List~ShowSeat~ seats
+        +int total_amount_cents
+        +BookingStatus status
+        +confirm()
+        +cancel()
+    }
+    class PricingStrategy {
+        <<abstract>>
+        +calculate(base, seats, coupon)* int
+    }
+
+    Theater *-- Screen
+    Screen *-- Seat
+    Show --> Movie
+    Show --> Screen
+    Show *-- ShowSeat
+    ShowSeat --> Seat
+    Booking --> Show
+    Booking o-- ShowSeat
+    Booking --> PricingStrategy
 ```
 
 ---

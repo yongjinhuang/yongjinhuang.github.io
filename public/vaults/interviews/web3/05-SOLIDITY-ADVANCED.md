@@ -6,30 +6,16 @@ Once you can write basic contracts, you need to master the patterns that enable 
 
 This chapter covers the advanced patterns that separate a junior Solidity developer from a senior protocol engineer: inline assembly (Yul), proxy patterns, gas optimization, design patterns, access control, meta-transactions, and low-level EVM interactions.
 
-```
-+------------------------------------------------------------------------+
-|                    ADVANCED SOLIDITY PATTERNS                           |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  PROXY PATTERNS           GAS OPTIMIZATION        ASSEMBLY (YUL)       |
-|  +--------------------+  +--------------------+  +------------------+  |
-|  | Transparent Proxy   |  | Storage packing    |  | Inline assembly  |  |
-|  | UUPS (EIP-1822)     |  | unchecked{} blocks |  | mstore / mload   |  |
-|  | Beacon Proxy        |  | Calldata vs memory |  | sstore / sload   |  |
-|  | Diamond (EIP-2535)  |  | Custom errors      |  | calldataload     |  |
-|  | Minimal Proxy (1167)|  | Batch operations   |  | Bit manipulation |  |
-|  +--------------------+  +--------------------+  +------------------+  |
-|                                                                        |
-|  DESIGN PATTERNS          ACCESS CONTROL          META-TRANSACTIONS    |
-|  +--------------------+  +--------------------+  +------------------+  |
-|  | Checks-Effects-     |  | Ownable            |  | EIP-712 typed    |  |
-|  |   Interactions      |  | AccessControl      |  | EIP-2612 permit  |  |
-|  | Pull over Push      |  | Timelock           |  | EIP-2771 forward |  |
-|  | Commit-Reveal       |  | Multi-sig (Safe)   |  | Gasless txs      |  |
-|  | Factory             |  | Governor           |  | Relayers         |  |
-|  +--------------------+  +--------------------+  +------------------+  |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Adv["ADVANCED SOLIDITY PATTERNS"]
+        Proxy["PROXY PATTERNS<br/>Transparent Proxy, UUPS (EIP-1822), Beacon Proxy, Diamond (EIP-2535), Minimal Clones (EIP-1167)"]
+        Gas["GAS OPTIMIZATION<br/>Storage packing, unchecked{} blocks, calldata vs memory, Custom errors, Batch ops"]
+        Yul["INLINE ASSEMBLY (YUL)<br/>mstore / mload, sstore / sload, calldataload, Bit manipulation"]
+        Pat["DESIGN PATTERNS<br/>Checks-Effects-Interactions (CEI), Pull over Push, Commit-Reveal, Factory (CREATE2)"]
+        Access["ACCESS CONTROL<br/>Ownable, AccessControl (RBAC), Timelock, Multi-sig (Safe), Governor"]
+        Meta["META-TRANSACTIONS<br/>EIP-712 Typed Data, EIP-2612 Permit, EIP-2771 Trusted Forwarder, Relayers"]
+    end
 ```
 
 ---
@@ -141,25 +127,10 @@ contract AssemblyPatterns {
 
 Smart contracts are immutable once deployed — that is a feature, not a bug. But real software needs updates. Proxy patterns solve this by separating **storage** (proxy contract, never changes) from **logic** (implementation contract, can be replaced).
 
-```
-PROXY PATTERN ARCHITECTURE
-
-User calls Proxy              Proxy delegates to Implementation
-+------------------+          +------------------+
-| Proxy Contract   |          | Implementation   |
-|                  |  ------> |                  |
-| Storage lives    | delegate | Logic lives      |
-| HERE             |   call   | HERE             |
-|                  |          |                  |
-| admin: 0xAdmin   |          | function foo() { |
-| impl:  0xImplV1  |          |   // business    |
-| slot0: userData  |          |   // logic        |
-| slot1: balances  |          | }                |
-+------------------+          +------------------+
-
-Key insight: delegatecall executes implementation code
-but reads/writes the PROXY's storage and uses the
-PROXY's msg.sender and msg.value.
+```mermaid
+flowchart LR
+    User["User"] -->|"Calls Proxy"| Proxy["Proxy Contract (Storage Lives Here)<br/>- EIP-1967 admin: 0xAdmin<br/>- EIP-1967 impl: 0xImplV1<br/>- slot 0: userData<br/>- slot 1: balances"]
+    Proxy -->|"delegatecall<br/>(Preserves Proxy storage, msg.sender, msg.value)"| Impl["Implementation Contract (Logic Lives Here)<br/>function foo() { ... }"]
 ```
 
 ### 2.2 delegatecall Explained

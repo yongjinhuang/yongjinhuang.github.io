@@ -4,34 +4,16 @@
 
 The difference between a productive Web3 developer and a frustrated one is mastery of the tooling. Hardhat and Foundry are the two dominant smart contract development frameworks; understanding both makes you versatile across teams and projects. This chapter covers the complete local development workflow — from project setup through testing, deployment, verification, and CI/CD.
 
-```
-+------------------------------------------------------------------------+
-|                 SMART CONTRACT DEV TOOLING                              |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  IDE & EDITING                FRAMEWORKS                               |
-|  +----------------------+    +---------------------------+             |
-|  | VS Code + Solidity    |    | Hardhat (JS/TS ecosystem) |             |
-|  | Remix IDE (browser)   |    | Foundry (Solidity-native) |             |
-|  | IntelliJ + Solidity   |    | Truffle (legacy)          |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-|  TESTING                      DEPLOYMENT & VERIFY                      |
-|  +----------------------+    +---------------------------+             |
-|  | Unit tests            |    | Hardhat Ignition          |             |
-|  | Fork testing           |    | Foundry scripts           |             |
-|  | Fuzz testing           |    | Etherscan verification    |             |
-|  | Coverage reporting    |    | Sourcify                  |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-|  LOCAL NODES                  UTILITIES                                |
-|  +----------------------+    +---------------------------+             |
-|  | Hardhat Network       |    | OpenZeppelin Contracts    |             |
-|  | Anvil (Foundry)       |    | Tenderly (simulation)     |             |
-|  | Ganache (legacy)      |    | cast (CLI Swiss-army)     |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Tooling["SMART CONTRACT DEVELOPMENT TOOLING"]
+        IDE["IDE &amp; EDITING<br/>VS Code + Solidity, Remix IDE, IntelliJ + Solidity"]
+        FW["FRAMEWORKS<br/>Hardhat (JS/TS ecosystem), Foundry (Solidity-native), Truffle (legacy)"]
+        Test["TESTING<br/>Unit tests, Mainnet fork testing, Fuzz/Invariant testing, Coverage"]
+        Dep["DEPLOYMENT &amp; VERIFICATION<br/>Hardhat Ignition, Foundry scripts, Etherscan verification, Sourcify"]
+        Node["LOCAL NODES<br/>Hardhat Network, Anvil (Foundry), Ganache"]
+        Util["UTILITIES<br/>OpenZeppelin Contracts, Tenderly (simulation), cast (CLI)"]
+    end
 ```
 
 ---

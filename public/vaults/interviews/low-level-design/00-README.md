@@ -37,34 +37,15 @@ LLD interviews ask you to write the _classes and methods_ inside one of those se
 
 Every LLD interview can be approached with this 4-step method:
 
-```
-+---------------------------------------------------------------+
-|               LLD INTERVIEW (45-90 minutes)                   |
-+---------------------------------------------------------------+
-|                                                                |
-|  STEP 1: Clarify Requirements            [5 min]     ~10%     |
-|  +-----------------------------------------------------------+|
-|  | Functional scope, edge cases, constraints, scale hints     ||
-|  +-----------------------------------------------------------+|
-|                                                                |
-|  STEP 2: Identify Core Entities          [5-10 min]  ~15%     |
-|  +-----------------------------------------------------------+|
-|  | Nouns = classes, Verbs = methods, Adjectives = attributes  ||
-|  | Draw class diagram, define relationships                   ||
-|  +-----------------------------------------------------------+|
-|                                                                |
-|  STEP 3: Implement Code                  [25-50 min]  ~60%    |
-|  +-----------------------------------------------------------+|
-|  | Write clean, working code with proper OOP patterns         ||
-|  | Handle edge cases, use design patterns where appropriate   ||
-|  +-----------------------------------------------------------+|
-|                                                                |
-|  STEP 4: Discuss & Extend               [5-10 min]   ~15%     |
-|  +-----------------------------------------------------------+|
-|  | Trade-offs, extensibility, testing strategy, improvements  ||
-|  +-----------------------------------------------------------+|
-|                                                                |
-+---------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph LLD["LLD INTERVIEW FRAMEWORK (45-90 Minutes)"]
+        S1["STEP 1: Clarify Requirements [5 min, ~10%]<br/>Functional scope, edge cases, constraints, concurrency/scale hints"]
+        S2["STEP 2: Identify Core Entities [5-10 min, ~15%]<br/>Nouns = classes, Verbs = methods, Adjectives = attributes<br/>Draw class diagram &amp; define relationships"]
+        S3["STEP 3: Implement Code [25-50 min, ~60%]<br/>Write clean, working OOP code with design patterns &amp; edge case handling"]
+        S4["STEP 4: Discuss &amp; Extend [5-10 min, ~15%]<br/>Trade-offs, extensibility, concurrency, testing strategy"]
+        S1 --> S2 --> S3 --> S4
+    end
 ```
 
 ---

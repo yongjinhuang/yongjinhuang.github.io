@@ -4,33 +4,16 @@
 
 A decentralized application (DApp) is only useful if users can interact with it. The frontend connects wallets to smart contracts, reads on-chain state, submits transactions, and handles the asynchronous, error-prone nature of blockchain interactions. Modern Web3 frontend development uses TypeScript libraries like ethers.js, viem, and wagmi to bridge the gap between React/Next.js UIs and Ethereum smart contracts.
 
-```
-+------------------------------------------------------------------------+
-|                    DAPP FRONTEND STACK                                   |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  USER INTERFACE               WALLET CONNECTION                        |
-|  +----------------------+    +---------------------------+             |
-|  | React / Next.js       |    | RainbowKit (modal UI)     |             |
-|  | Tailwind CSS          |    | ConnectKit (alternative)  |             |
-|  | Framer Motion          |    | WalletConnect (protocol)  |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-|  BLOCKCHAIN INTERACTION       STATE MANAGEMENT                         |
-|  +----------------------+    +---------------------------+             |
-|  | viem (low-level)      |    | wagmi (React hooks)       |             |
-|  | ethers.js v6          |    | TanStack Query (caching)  |             |
-|  | ABI encoding/decoding |    | Zustand / Jotai           |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-|  RPC PROVIDERS                UTILITIES                                |
-|  +----------------------+    +---------------------------+             |
-|  | Alchemy               |    | ENS resolution            |             |
-|  | Infura                |    | IPFS metadata             |             |
-|  | QuickNode             |    | Block explorers           |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Stack["DAPP FRONTEND STACK"]
+        UI["USER INTERFACE<br/>React / Next.js, Tailwind CSS, Framer Motion"]
+        Wallet["WALLET CONNECTION<br/>RainbowKit / ConnectKit, WalletConnect, EIP-6963"]
+        State["STATE MANAGEMENT<br/>wagmi (React hooks), TanStack Query, Zustand / Jotai"]
+        Chain["BLOCKCHAIN INTERACTION<br/>viem (TypeScript-first) / ethers.js v6, ABI encoding"]
+        RPC["RPC PROVIDERS &amp; UTILITIES<br/>Alchemy / Infura / QuickNode, ENS resolution, IPFS metadata"]
+        UI --> Wallet & State --> Chain --> RPC
+    end
 ```
 
 ---

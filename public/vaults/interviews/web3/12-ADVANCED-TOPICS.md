@@ -4,30 +4,14 @@
 
 This chapter covers the cutting-edge topics shaping the future of Web3: MEV (the invisible tax on users), account abstraction (making wallets usable), zero-knowledge applications beyond rollups, restaking (EigenLayer), and the modular blockchain thesis. These are the areas where the most active research and development is happening.
 
-```
-+------------------------------------------------------------------------+
-|                    ADVANCED WEB3 TOPICS                                  |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  MEV                           ACCOUNT ABSTRACTION                     |
-|  +------------------------+   +---------------------------+            |
-|  | Sandwich attacks        |   | ERC-4337                  |            |
-|  | Arbitrage bots          |   | Smart contract wallets    |            |
-|  | Liquidation bots        |   | Paymasters (gas in ERC20) |            |
-|  | Flashbots / MEV-Boost   |   | Session keys              |            |
-|  | PBS (Proposer-Builder)  |   | Social recovery            |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-|  ZK APPLICATIONS               RESTAKING & MODULARITY                  |
-|  +------------------------+   +---------------------------+            |
-|  | ZK identity (Worldcoin) |   | EigenLayer (restaking)    |            |
-|  | ZK privacy (Aztec)      |   | AVS (Active Valid. Svc.)  |            |
-|  | ZK bridges (Succinct)   |   | Modular blockchains       |            |
-|  | ZK coprocessors          |   | Celestia (DA layer)       |            |
-|  | ZK machine learning     |   | Shared sequencing         |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Topics["ADVANCED WEB3 TOPICS"]
+        MEV["MEV (Maximal Extractable Value)<br/>Sandwich attacks, DEX arbitrage, Liquidations, Flashbots / MEV-Boost, Proposer-Builder Separation (PBS)"]
+        AA["ACCOUNT ABSTRACTION (ERC-4337)<br/>Smart contract wallets, UserOperations &amp; Bundlers, Paymasters (ERC-20/sponsored gas), Session keys, Social recovery"]
+        ZK["ZK APPLICATIONS<br/>ZK Identity (Worldcoin), ZK Privacy (Aztec), ZK Bridges (Succinct), ZK Coprocessors (Axiom), zkML"]
+        Mod["RESTAKING &amp; MODULARITY<br/>EigenLayer Restaking, AVS (Actively Validated Services), Celestia / EigenDA, Shared Sequencing"]
+    end
 ```
 
 ---
@@ -160,17 +144,13 @@ Flow:
    b. If paymaster: calls paymaster's validatePaymasterUserOp()
    c. Executes the callData on the wallet
 
-+--------+     +---------+     +------------+     +--------+
-| User   |---->| Bundler |---->| EntryPoint |---->| Wallet |
-| (signs |     | (off-   |     | (on-chain  |     | (smart |
-|  UserOp)|    |  chain) |     |  singleton)|     |  cont.)|
-+--------+     +---------+     +------------+     +--------+
-                                     |
-                               +----------+
-                               | Paymaster|
-                               | (pays gas|
-                               |  in ERC20)|
-                               +----------+
+```
+
+```mermaid
+flowchart LR
+    User["User<br/>(Signs UserOperation)"] --> Bundler["Bundler<br/>(Alt-Mempool Node)"] --> EP["EntryPoint Contract<br/>(On-Chain Singleton)"]
+    EP --> Wallet["Smart Contract Wallet<br/>(validateUserOp + execute)"]
+    EP <--> PM["Paymaster Contract<br/>(Optional: sponsors gas or accepts ERC-20)"]
 ```
 
 ### 2.3 Key Features Enabled
@@ -322,21 +302,11 @@ Problem:
 Solution:
   ETH stakers "restake" their ETH to secure additional protocols
   One validator secures BOTH Ethereum AND other services
+```
 
-+-------------------+
-| 32 ETH Staked     |
-| on Ethereum       |
-+-------------------+
-         |
-    Restaked to:
-    +----------+  +----------+  +----------+
-    | Oracle   |  | Bridge   |  | DA Layer |
-    | Network  |  | Protocol |  |          |
-    +----------+  +----------+  +----------+
-
-    Each of these is an AVS (Actively Validated Service)
-    If the validator misbehaves, their ETH is slashed
-    by BOTH Ethereum AND the AVS they opted into
+```mermaid
+flowchart TD
+    Stake["32 ETH Staked on Ethereum L1<br/>(Withdrawal credentials pointed to EigenPods)"] -->|"Restaked via EigenLayer"| AVS1["AVS 1: Oracle Network"] & AVS2["AVS 2: Cross-Chain Bridge"] & AVS3["AVS 3: Data Availability (EigenDA)"]
 ```
 
 ### 4.2 Actively Validated Services (AVS)
@@ -355,28 +325,15 @@ Solution:
 
 ### 5.1 Monolithic vs Modular
 
-```
-MONOLITHIC BLOCKCHAIN (traditional):
-  One chain does everything:
-  +------------------------------------------+
-  | Execution + Consensus + DA + Settlement  |
-  |            (Ethereum L1)                  |
-  +------------------------------------------+
-
-MODULAR BLOCKCHAIN (emerging):
-  Each layer is specialized:
-  +-------------+  +-------------+  +-------------+
-  | Execution   |  | Data Avail. |  | Consensus   |
-  | (Rollups)   |  | (Celestia)  |  | (Ethereum)  |
-  | Arbitrum,   |  | EigenDA     |  | Settlement  |
-  | zkSync, etc |  | Avail       |  | layer       |
-  +-------------+  +-------------+  +-------------+
-
-Benefits:
-  - Each layer optimized for its function
-  - Mix and match components
-  - Cheaper (specialized DA costs less)
-  - More scalable (parallel execution layers)
+```mermaid
+flowchart LR
+    subgraph Mono["Monolithic Blockchain (Single Chain Does All 4 Functions)"]
+        M1["Execution + Consensus + Data Availability + Settlement<br/>(e.g., Solana, Traditional L1)"]
+    end
+    subgraph Mod["Modular Blockchain Stack (Specialized Layers)"]
+        Exec["Execution Layer<br/>(Arbitrum, Optimism, zkSync)"] --> Settle["Settlement &amp; Consensus<br/>(Ethereum L1)"]
+        Exec --> DA["Data Availability (DA)<br/>(Celestia, EigenDA, Avail, EIP-4844)"]
+    end
 ```
 
 ### 5.2 Key Modular Projects
@@ -396,27 +353,11 @@ Benefits:
 
 ### 6.1 Intent-Based Architecture
 
-```
-TRADITIONAL FLOW:
-  User specifies HOW: "Swap 100 USDC for ETH on Uniswap V3
-                       on Arbitrum, using pool fee tier 0.3%"
-
-INTENT-BASED FLOW:
-  User specifies WHAT: "I want to swap 100 USDC for the most ETH possible"
-  Solver figures out HOW: optimal route, chain, DEX, timing
-
-+--------+     +--------+     +---------+     +--------+
-| User   |---->| Intent |---->| Solver  |---->| Execute|
-| "swap  |     | Pool   |     | Network |     | on-    |
-|  100   |     | (off-  |     | (compete|     | chain  |
-|  USDC" |     |  chain)|     |  to fill)|    |        |
-+--------+     +--------+     +---------+     +--------+
-
-Examples:
-  UniswapX:     Intent-based DEX aggregation
-  CoW Protocol: Batch auction solver
-  Across:       Cross-chain intent-based bridging
-  1inch Fusion: Resolver competition for best execution
+```mermaid
+flowchart LR
+    User["User Signs Intent<br/>('Swap 100 USDC for min X ETH')"] --> Pool["Off-Chain Intent Pool"]
+    Pool --> Solvers["Solver / Filler Network<br/>(Compete in Dutch auction / batch auction<br/>to find optimal route across DEXs/chains)"]
+    Solvers --> Exec["On-Chain Settlement<br/>(UniswapX, CoW Protocol, Across, 1inch Fusion)"]
 ```
 
 ### 6.2 Chain Abstraction

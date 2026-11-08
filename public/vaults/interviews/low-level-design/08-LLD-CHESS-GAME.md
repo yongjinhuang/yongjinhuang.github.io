@@ -52,48 +52,75 @@ brief designs for Tic-Tac-Toe and Snake.
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   Color (Enum)    |       |   GameStatus (Enum) |
-|-------------------|       |---------------------|
-| WHITE             |       | ACTIVE              |
-| BLACK             |       | WHITE_WINS          |
-+-------------------+       | BLACK_WINS          |
-                            | STALEMATE           |
-+-------------------+       | RESIGNED            |
-|   Position        |       +---------------------+
-|-------------------|
-| row: int (0-7)    |       +---------------------+
-| col: int (0-7)    |       |   Move              |
-|-------------------|       |---------------------|
-| is_valid()        |       | piece               |
-| __eq__, __hash__  |       | from_pos            |
-+-------------------+       | to_pos              |
-                            | captured_piece      |
-+-------------------+       +---------------------+
-|   Piece (ABC)     |
-|-------------------|       +---------------------+
-| color             |       |   Board             |
-| position          |       |---------------------|
-| has_moved         |       | grid[8][8]          |
-|-------------------|       |---------------------|
-| get_valid_moves() |       | get_piece(pos)      |
-| symbol()          |       | move_piece(from,to) |
-+-------------------+       | is_under_attack(pos)|
-    ^   ^   ^               +---------------------+
-    |   |   |
-  King Queen Rook           +---------------------+
-  Bishop Knight Pawn        |   ChessGame         |
-                            |---------------------|
-                            | board               |
-                            | current_turn        |
-                            | status              |
-                            | move_history        |
-                            |---------------------|
-                            | make_move(from, to) |
-                            | is_check()          |
-                            | is_checkmate()      |
-                            +---------------------+
+```mermaid
+classDiagram
+    class Color {
+        <<enumeration>>
+        WHITE
+        BLACK
+    }
+    class GameStatus {
+        <<enumeration>>
+        ACTIVE
+        WHITE_WINS
+        BLACK_WINS
+        STALEMATE
+        RESIGNED
+    }
+    class Position {
+        +int row
+        +int col
+        +is_valid() bool
+    }
+    class Piece {
+        <<abstract>>
+        +Color color
+        +Position position
+        +bool has_moved
+        +get_valid_moves(board)* List~Position~
+        +symbol()* str
+    }
+    class King
+    class Queen
+    class Rook
+    class Bishop
+    class Knight
+    class Pawn
+    Piece <|-- King
+    Piece <|-- Queen
+    Piece <|-- Rook
+    Piece <|-- Bishop
+    Piece <|-- Knight
+    Piece <|-- Pawn
+
+    class Move {
+        +Piece piece
+        +Position from_pos
+        +Position to_pos
+        +Piece captured_piece
+    }
+    class Board {
+        +List~List~Piece~~ grid
+        +get_piece(pos) Piece
+        +move_piece(from_pos, to_pos) Move
+        +is_under_attack(pos, by_color) bool
+    }
+    class ChessGame {
+        +Board board
+        +Color current_turn
+        +GameStatus status
+        +List~Move~ move_history
+        +make_move(from_pos, to_pos) bool
+        +is_check(color) bool
+        +is_checkmate(color) bool
+    }
+
+    ChessGame *-- Board
+    ChessGame --> GameStatus
+    ChessGame *-- Move
+    Board o-- Piece
+    Piece --> Position
+    Piece --> Color
 ```
 
 ---

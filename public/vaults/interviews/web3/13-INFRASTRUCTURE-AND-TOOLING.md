@@ -4,37 +4,16 @@
 
 Behind every DApp is a stack of infrastructure: nodes that serve RPC requests, indexers that make on-chain data queryable, decentralized storage for NFT metadata, and oracles that feed off-chain data to smart contracts. Understanding this infrastructure layer is essential for building production-grade applications and for the growing career path of blockchain infrastructure engineering.
 
-```
-+------------------------------------------------------------------------+
-|                    WEB3 INFRASTRUCTURE                                  |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  NODES & RPC                   INDEXING & DATA                         |
-|  +------------------------+   +---------------------------+            |
-|  | Geth (Go Ethereum)     |   | The Graph (subgraphs)     |            |
-|  | Reth (Rust Ethereum)   |   | Dune Analytics (SQL)      |            |
-|  | Alchemy / Infura       |   | Nansen / Arkham           |            |
-|  | QuickNode              |   | Etherscan API             |            |
-|  | Lodestar (consensus)   |   | Covalent / Moralis        |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-|  STORAGE                       ORACLES & AUTOMATION                    |
-|  +------------------------+   +---------------------------+            |
-|  | IPFS (content-addressed)|   | Chainlink (price feeds)   |            |
-|  | Arweave (permanent)    |   | Chainlink Automation      |            |
-|  | Filecoin (incentivized)|   | Gelato (web3 automation)  |            |
-|  | Pinata / nft.storage   |   | OpenZeppelin Defender     |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-|  MONITORING & SECURITY         MULTI-SIG & GOVERNANCE                  |
-|  +------------------------+   +---------------------------+            |
-|  | Tenderly (simulation)  |   | Safe (Gnosis Safe)        |            |
-|  | Forta (threat detect.) |   | Tally (governance UI)     |            |
-|  | OpenZeppelin Defender  |   | Snapshot (off-chain votes) |            |
-|  | PagerDuty / OpsGenie   |   | Timelock controllers      |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Infra["WEB3 INFRASTRUCTURE STACK"]
+        Nodes["NODES &amp; RPC<br/>Geth, Reth, Lighthouse/Prysm, Alchemy, Infura, QuickNode"]
+        Idx["INDEXING &amp; DATA<br/>The Graph (Subgraphs), Dune Analytics, Nansen, Etherscan API"]
+        Stor["DECENTRALIZED STORAGE<br/>IPFS (Content-addressed), Arweave (Permanent), Filecoin, Pinata"]
+        Oracle["ORACLES &amp; AUTOMATION<br/>Chainlink Price Feeds &amp; Automation, Gelato, OpenZeppelin Defender"]
+        Mon["MONITORING &amp; SECURITY<br/>Tenderly (Simulation), Forta (Threat Detection), PagerDuty"]
+        Gov["MULTI-SIG &amp; GOVERNANCE<br/>Safe (Gnosis Safe), Tally, Snapshot (Off-chain EIP-712 voting), Timelocks"]
+    end
 ```
 
 ---
@@ -45,27 +24,9 @@ Behind every DApp is a stack of infrastructure: nodes that serve RPC requests, i
 
 Post-Merge Ethereum requires running two clients:
 
-```
-ETHEREUM NODE ARCHITECTURE
-
-+------------------+        +-------------------+
-| Execution Client |        | Consensus Client  |
-| (processes txs)  | <----> | (PoS consensus)   |
-|                  | Engine  |                   |
-| Geth (Go)        |  API   | Prysm (Go)        |
-| Nethermind (C#)  |        | Lighthouse (Rust)  |
-| Besu (Java)      |        | Teku (Java)        |
-| Reth (Rust)      |        | Lodestar (TS)      |
-| Erigon (Go)      |        | Nimbus (Nim)       |
-+------------------+        +-------------------+
-
-Node Requirements:
-  Full node:    8+ cores, 16 GB RAM, 2 TB SSD, 25 Mbps
-  Archive node: 8+ cores, 64 GB RAM, 15+ TB SSD
-  Validator:    Full node + 32 ETH stake
-
-Reth is the newest and fastest execution client,
-written in Rust by the Paradigm team.
+```mermaid
+flowchart LR
+    EC["Execution Client (EVM, Mempool, State)<br/>- Geth (Go)<br/>- Reth (Rust)<br/>- Nethermind (C#)<br/>- Besu (Java)<br/>- Erigon (Go)"] <-->|"Engine API (JWT Auth, localhost:8551)"| CC["Consensus Client (Beacon Chain, PoS, Fork Choice)<br/>- Lighthouse (Rust)<br/>- Prysm (Go)<br/>- Teku (Java)<br/>- Nimbus (Nim)<br/>- Lodestar (TS)"]
 ```
 
 ### 1.2 RPC Providers
@@ -117,21 +78,9 @@ The Graph indexes blockchain data into queryable subgraphs accessible via GraphQ
 
 ### 2.2 Subgraph Architecture
 
-```
-THE GRAPH PIPELINE
-
-Ethereum Node                 Graph Node              DApp
-+----------+                 +----------+            +------+
-| Blocks & |  events/calls   | Index &  |  GraphQL   | React|
-| Events   |  ------------> | Store in |  -------->  | UI   |
-|          |                 | Postgres |  queries    |      |
-+----------+                 +----------+            +------+
-
-1. Developer writes a subgraph manifest (subgraph.yaml)
-2. Defines entities (data schema) in schema.graphql
-3. Writes mapping handlers in AssemblyScript
-4. Deploys to The Graph Network (or self-hosted)
-5. DApp queries via GraphQL endpoint
+```mermaid
+flowchart LR
+    Eth["Ethereum Node<br/>(Blocks &amp; Events)"] -->|"events / calls"| Graph["Graph Node<br/>(AssemblyScript Mappings -&gt;<br/>Index &amp; Store in Postgres)"] -->|"GraphQL queries"| DApp["React DApp UI"]
 ```
 
 ### 2.3 Example Subgraph

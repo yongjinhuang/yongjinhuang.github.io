@@ -52,51 +52,77 @@ real-world edge cases like payment calculation and capacity tracking.
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   VehicleType     |       |    SpotSize         |
-|   (Enum)          |       |    (Enum)           |
-|-------------------|       |---------------------|
-| MOTORCYCLE        |       | SMALL               |
-| CAR               |       | MEDIUM              |
-| BUS               |       | LARGE               |
-+-------------------+       +---------------------+
+```mermaid
+classDiagram
+    class VehicleType {
+        <<enumeration>>
+        MOTORCYCLE
+        CAR
+        BUS
+    }
+    class SpotSize {
+        <<enumeration>>
+        SMALL
+        MEDIUM
+        LARGE
+    }
+    class Vehicle {
+        +str license_plate
+        +VehicleType vehicle_type
+    }
+    class Motorcycle
+    class Car
+    class Bus
+    Vehicle <|-- Motorcycle
+    Vehicle <|-- Car
+    Vehicle <|-- Bus
 
-+-------------------+       +---------------------+
-|   Vehicle         |       |   ParkingSpot       |
-|-------------------|       |---------------------|
-| license_plate     |       | spot_id             |
-| vehicle_type      |       | floor               |
-|                   |       | size                |
-+-------------------+       | is_available        |
-        ^                   | vehicle             |
-        |                   |---------------------|
-   +---------+-----+        | park(vehicle)       |
-   |         |     |        | remove_vehicle()    |
-   Motor   Car   Bus        +---------------------+
-                                     |
-+-------------------+                |
-|   ParkingTicket   |       +---------------------+
-|-------------------|       |   ParkingFloor      |
-| ticket_id         |       |---------------------|
-| vehicle           |       | floor_number        |
-| spot              |       | spots               |
-| entry_time        |       |---------------------|
-| exit_time         |       | get_available_spots()|
-| amount_paid       |       | park_vehicle()      |
-+-------------------+       +---------------------+
-                                     |
-+-------------------+       +---------------------+
-| PaymentStrategy   |       |   ParkingLot        |
-|   (ABC)           |       |---------------------|
-|-------------------|       | floors              |
-| calculate(ticket) |       | entry_gates         |
-+-------------------+       | exit_gates          |
-   ^         ^              |---------------------|
-   |         |              | enter(vehicle)      |
-  Hourly   FlatRate         | exit(ticket_id)     |
-                            | get_availability()  |
-                            +---------------------+
+    class ParkingSpot {
+        +str spot_id
+        +int floor
+        +SpotSize size
+        +bool is_available
+        +Vehicle vehicle
+        +park(vehicle)
+        +remove_vehicle()
+    }
+    class ParkingFloor {
+        +int floor_number
+        +List~ParkingSpot~ spots
+        +get_available_spots()
+        +park_vehicle(vehicle)
+    }
+    class ParkingLot {
+        +List~ParkingFloor~ floors
+        +List entry_gates
+        +List exit_gates
+        +enter(vehicle) ParkingTicket
+        +exit(ticket_id) float
+        +get_availability()
+    }
+    class ParkingTicket {
+        +str ticket_id
+        +Vehicle vehicle
+        +ParkingSpot spot
+        +datetime entry_time
+        +datetime exit_time
+        +float amount_paid
+    }
+    class PaymentStrategy {
+        <<abstract>>
+        +calculate(ticket)* float
+    }
+    class HourlyPricing
+    class FlatRatePricing
+    PaymentStrategy <|-- HourlyPricing
+    PaymentStrategy <|-- FlatRatePricing
+
+    ParkingLot *-- ParkingFloor
+    ParkingFloor *-- ParkingSpot
+    ParkingSpot o-- Vehicle
+    ParkingTicket --> Vehicle
+    ParkingTicket --> ParkingSpot
+    ParkingLot --> PaymentStrategy
 ```
 
 ---

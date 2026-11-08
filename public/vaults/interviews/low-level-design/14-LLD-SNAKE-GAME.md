@@ -58,74 +58,81 @@ are many edge cases around direction handling, food placement, and game state tr
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   Direction       |       |   GameState (Enum)  |
-|   (Enum)          |       |---------------------|
-|-------------------|       | PLAYING             |
-| UP    (-1, 0)     |       | PAUSED              |
-| DOWN  ( 1, 0)     |       | GAME_OVER           |
-| LEFT  ( 0,-1)     |       +---------------------+
-| RIGHT ( 0, 1)     |
-+-------------------+       +---------------------+
-                            |   Position          |
-+-------------------+       |   (frozen)          |
-|   Food            |       |---------------------|
-|-------------------|       | row: int            |
-| position          |       | col: int            |
-| points            |       +---------------------+
-+-------------------+
-                            +---------------------+
-+-------------------+       |   Snake             |
-|   MoveCommand     |       |---------------------|
-|   (frozen)        |       | body: deque[Position]|
-|-------------------|       | body_set: set        |
-| direction         |       | direction            |
-| timestamp         |       |---------------------|
-+-------------------+       | head()              |
-                            | move(grew)          |
-+-------------------+       | change_direction()  |
-|   GameEngine      |       | collides_with_self()|
-|-------------------|       +---------------------+
-| board_width       |
-| board_height      |       +---------------------+
-| snake             |       |   FoodSpawner       |
-| food              |       |---------------------|
-| score             |       | spawn(board, snake) |
-| state             |       +---------------------+
-| move_history      |
-|-------------------|
-| tick()            |
-| change_direction()|
-| pause() / resume()|
-| replay()          |
-+-------------------+
+```mermaid
+classDiagram
+    class Direction {
+        <<enumeration>>
+        UP
+        DOWN
+        LEFT
+        RIGHT
+    }
+    class GameState {
+        <<enumeration>>
+        PLAYING
+        PAUSED
+        GAME_OVER
+    }
+    class Position {
+        +int row
+        +int col
+    }
+    class Food {
+        +Position position
+        +int points
+    }
+    class MoveCommand {
+        +Direction direction
+        +int timestamp
+    }
+    class Snake {
+        +Deque~Position~ body
+        +Set~Position~ body_set
+        +Direction direction
+        +head() Position
+        +move(grew)
+        +change_direction(new_dir)
+        +collides_with_self() bool
+    }
+    class FoodSpawner {
+        +spawn(board_w, board_h, snake) Food
+    }
+    class GameEngine {
+        +int board_width
+        +int board_height
+        +Snake snake
+        +Food food
+        +int score
+        +GameState state
+        +List~MoveCommand~ move_history
+        +tick()
+        +change_direction(dir)
+        +pause()
+        +resume()
+        +replay()
+    }
+
+    GameEngine *-- Snake
+    GameEngine *-- Food
+    GameEngine *-- FoodSpawner
+    GameEngine *-- MoveCommand
+    GameEngine --> GameState
+    Snake *-- Position
+    Snake --> Direction
 ```
 
 ---
 
 ## 3. State Machine
 
-```
-                +------------------+
-      +-------->|    PLAYING       |<--------+
-      |         +------------------+         |
-      |           |            |             |
-      |       pause        collision         |
-      |           |        (wall/self)       |
-      |           v            |             |
-      |   +------------------+ |             |
-      +---| PAUSED           | |             |
-  resume  +------------------+ |             |
-                               v             |
-                        +------------------+ |
-                        | GAME_OVER        | |
-                        +------------------+ |
-                               |             |
-                           restart           |
-                               |             |
-                               +-------------+
-```
+```mermaid
+stateDiagram-v2
+    [*] --> PLAYING
+    PLAYING --> PAUSED : pause()
+    PAUSED --> PLAYING : resume()
+    PLAYING --> GAME_OVER : collision (wall or self)
+    GAME_OVER --> PLAYING : restart()
+````
 
 **Transitions:**
 

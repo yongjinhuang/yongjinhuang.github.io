@@ -57,86 +57,101 @@ cancellation policies, and dynamic pricing.
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   RoomType (Enum) |       | ReservationStatus   |
-|-------------------|       |   (Enum)            |
-| SINGLE            |       |---------------------|
-| DOUBLE            |       | PENDING             |
-| SUITE             |       | CONFIRMED           |
-| DELUXE            |       | CHECKED_IN          |
-+-------------------+       | CHECKED_OUT         |
-                            | CANCELLED           |
-+-------------------+       +---------------------+
-|   Room            |
-|-------------------|       +---------------------+
-| room_number       |       |   Guest             |
-| room_type         |       |---------------------|
-| floor             |       | guest_id            |
-| base_rate_cents   |       | name                |
-| is_available(     |       | email               |
-|   check_in,       |       | phone               |
-|   check_out)      |       +---------------------+
-+-------------------+
-        |               +---------------------+
-        |               |   Reservation       |
-        |               |---------------------|
-        +-------------->| reservation_id      |
-                        | guest               |
-+-------------------+   | room                |
-| PricingStrategy   |   | check_in_date       |
-|   (ABC)           |   | check_out_date      |
-|-------------------|   | status              |
-| calculate(room,   |   | total_price_cents   |
-|   check_in,       |   | amount_paid_cents   |
-|   check_out)      |   +---------------------+
-+-------------------+
-   ^    ^    ^          +---------------------+
-   |    |    |          |   Hotel             |
- Base Season Weekend    |---------------------|
-                        | rooms               |
-+-------------------+   | reservations        |
-| CancellationPolicy|   | pricing_strategy    |
-|   (ABC)           |   |---------------------|
-|-------------------|   | search_available()  |
-| calculate_refund()|   | make_reservation()  |
-+-------------------+   | check_in()          |
-   ^         ^          | check_out()         |
-   |         |          | cancel()            |
- Free    TimeBased      +---------------------+
+```mermaid
+classDiagram
+    class RoomType {
+        <<enumeration>>
+        SINGLE
+        DOUBLE
+        SUITE
+        DELUXE
+    }
+    class ReservationStatus {
+        <<enumeration>>
+        PENDING
+        CONFIRMED
+        CHECKED_IN
+        CHECKED_OUT
+        CANCELLED
+    }
+    class Guest {
+        +str guest_id
+        +str name
+        +str email
+        +str phone
+    }
+    class Room {
+        +str room_number
+        +RoomType room_type
+        +int floor
+        +int base_rate_cents
+        +is_available(check_in, check_out) bool
+    }
+    class Reservation {
+        +str reservation_id
+        +Guest guest
+        +Room room
+        +date check_in_date
+        +date check_out_date
+        +ReservationStatus status
+        +int total_price_cents
+        +int amount_paid_cents
+    }
+    class PricingStrategy {
+        <<abstract>>
+        +calculate(room, check_in, check_out)* int
+    }
+    class BasePricing
+    class SeasonalPricing
+    class WeekendPricing
+    PricingStrategy <|-- BasePricing
+    PricingStrategy <|-- SeasonalPricing
+    PricingStrategy <|-- WeekendPricing
+
+    class CancellationPolicy {
+        <<abstract>>
+        +calculate_refund(reservation, cancel_date)* int
+    }
+    class FreeCancellation
+    class TimeBasedCancellation
+    CancellationPolicy <|-- FreeCancellation
+    CancellationPolicy <|-- TimeBasedCancellation
+
+    class Hotel {
+        +Dict~str, Room~ rooms
+        +Dict~str, Reservation~ reservations
+        +PricingStrategy pricing_strategy
+        +search_available(room_type, check_in, check_out) List~Room~
+        +make_reservation(guest, room, check_in, check_out) Reservation
+        +check_in(reservation_id)
+        +check_out(reservation_id)
+        +cancel(reservation_id) int
+    }
+
+    Hotel *-- Room
+    Hotel *-- Reservation
+    Reservation --> Guest
+    Reservation --> Room
+    Reservation --> ReservationStatus
+    Hotel --> PricingStrategy
+    Hotel --> CancellationPolicy
 ```
 
 ---
 
 ## 3. Reservation Lifecycle
 
-```
-    +------------------+
-    |    PENDING       |  (reservation created, awaiting deposit)
-    +------------------+
-          |         |
-    deposit paid    |
-          |     cancel (full refund)
-          v         |
-    +------------------+       +------------------+
-    |   CONFIRMED      |------>|   CANCELLED      |
-    +------------------+       +------------------+
-          |                      (refund per policy)
-     guest arrives
-          |
-          v
-    +------------------+
-    |   CHECKED_IN     |
-    +------------------+
-          |
-     guest departs
-     (full payment)
-          |
-          v
-    +------------------+
-    |   CHECKED_OUT    |
-    +------------------+
-```
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : reservation created (awaiting deposit)
+    PENDING --> CONFIRMED : deposit paid
+    PENDING --> CANCELLED : cancel (full refund)
+    CONFIRMED --> CANCELLED : cancel (refund per policy)
+    CONFIRMED --> CHECKED_IN : guest arrives
+    CHECKED_IN --> CHECKED_OUT : guest departs (full payment)
+    CHECKED_OUT --> [*]
+    CANCELLED --> [*]
+````
 
 **Transitions:**
 

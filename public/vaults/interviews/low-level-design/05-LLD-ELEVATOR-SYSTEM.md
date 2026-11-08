@@ -48,46 +48,67 @@ levels because it has real complexity in coordinating multiple elevators efficie
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   Direction       |       |   ElevatorState     |
-|   (Enum)          |       |   (Enum)            |
-|-------------------|       |---------------------|
-| UP                |       | IDLE                |
-| DOWN              |       | MOVING_UP           |
-| IDLE              |       | MOVING_DOWN         |
-+-------------------+       | DOOR_OPEN           |
-                            | MAINTENANCE         |
-+-------------------+       +---------------------+
-|   RequestType     |
-|   (Enum)          |       +---------------------+
-|-------------------|       |   Request           |
-| EXTERNAL          |       |---------------------|
-| INTERNAL          |       | floor               |
-| EMERGENCY         |       | direction           |
-+-------------------+       | request_type        |
-                            | timestamp           |
-                            | priority            |
-+-------------------+       +---------------------+
-| ScheduleStrategy  |
-|   (ABC)           |       +---------------------+
-|-------------------|       |   Elevator          |
-| assign(request,   |       |---------------------|
-|   elevators)      |       | id                  |
-+-------------------+       | current_floor       |
-   ^       ^       ^        | state               |
-   |       |       |        | direction           |
-  SCAN   LOOK   SSF        | request_queue       |
-                            |---------------------|
-+-------------------+       | move()              |
-| ElevatorController|       | add_request(floor)  |
-|-------------------|       | open_door()         |
-| elevators         |       | close_door()        |
-| strategy          |       +---------------------+
-|-------------------|
-| request(floor,dir)|
-| step()            |
-+-------------------+
+```mermaid
+classDiagram
+    class Direction {
+        <<enumeration>>
+        UP
+        DOWN
+        IDLE
+    }
+    class ElevatorState {
+        <<enumeration>>
+        IDLE
+        MOVING_UP
+        MOVING_DOWN
+        DOOR_OPEN
+        MAINTENANCE
+    }
+    class RequestType {
+        <<enumeration>>
+        EXTERNAL
+        INTERNAL
+        EMERGENCY
+    }
+    class Request {
+        +int floor
+        +Direction direction
+        +RequestType request_type
+        +float timestamp
+        +int priority
+    }
+    class Elevator {
+        +int id
+        +int current_floor
+        +ElevatorState state
+        +Direction direction
+        +Set~int~ request_queue
+        +move()
+        +add_request(floor)
+        +open_door()
+        +close_door()
+    }
+    class ScheduleStrategy {
+        <<abstract>>
+        +assign(request, elevators)* Elevator
+    }
+    class SCANStrategy
+    class LOOKStrategy
+    class SSFStrategy
+    ScheduleStrategy <|-- SCANStrategy
+    ScheduleStrategy <|-- LOOKStrategy
+    ScheduleStrategy <|-- SSFStrategy
+
+    class ElevatorController {
+        +List~Elevator~ elevators
+        +ScheduleStrategy strategy
+        +request(floor, direction)
+        +step()
+    }
+
+    ElevatorController *-- Elevator
+    ElevatorController --> ScheduleStrategy
+    ElevatorController ..> Request
 ```
 
 ---
@@ -96,32 +117,20 @@ levels because it has real complexity in coordinating multiple elevators efficie
 
 Each elevator operates as a finite state machine:
 
-```
-                    +------------------+
-         +-------->|      IDLE        |<--------+
-         |         +------------------+         |
-         |           |              |           |
-         |     request UP     request DOWN      |
-         |           |              |           |
-         |           v              v           |
-         |   +-------------+  +-------------+  |
-         |   | MOVING_UP   |  | MOVING_DOWN |  |
-         |   +-------------+  +-------------+  |
-         |     |       |        |       |       |
-         |  arrived  continue arrived continue  |
-         |     |       |        |       |       |
-         |     v       +--------+       v       |
-         |   +------------------+               |
-         +---| DOOR_OPEN        |---------------+
-             +------------------+
-                  |
-              emergency
-                  |
-                  v
-             +------------------+
-             | MAINTENANCE      |
-             +------------------+
-```
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> MOVING_UP : request UP
+    IDLE --> MOVING_DOWN : request DOWN
+    MOVING_UP --> MOVING_UP : continue
+    MOVING_DOWN --> MOVING_DOWN : continue
+    MOVING_UP --> DOOR_OPEN : arrived at target floor
+    MOVING_DOWN --> DOOR_OPEN : arrived at target floor
+    DOOR_OPEN --> MOVING_UP : more UP requests
+    DOOR_OPEN --> MOVING_DOWN : more DOWN requests
+    DOOR_OPEN --> IDLE : queue empty
+    DOOR_OPEN --> MAINTENANCE : emergency
+````
 
 **Transitions:**
 
