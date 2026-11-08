@@ -20,15 +20,11 @@ RabbitMQ is the most widely deployed open-source message broker. It implements A
 
 ## AMQP Model
 
-```
-Producer -> Exchange -> Binding -> Queue -> Consumer
-
-+-----------+     +----------+     routing key     +-------+     +-----------+
-| Producer  | --> | Exchange | ---- "orders.*" --> | Queue | --> | Consumer  |
-+-----------+     +----------+                     +-------+     +-----------+
-                       |           routing key     +-------+     +-----------+
-                       +-------- "payments.*" ---> | Queue | --> | Consumer  |
-                                                   +-------+     +-----------+
+```mermaid
+flowchart LR
+    Prod["Producer"] --> Ex["Exchange"]
+    Ex -->|"Binding: orders.*"| Q1["Orders Queue"] --> C1["Order Consumer"]
+    Ex -->|"Binding: payments.*"| Q2["Payments Queue"] --> C2["Payment Consumer"]
 ```
 
 ### Key Concepts

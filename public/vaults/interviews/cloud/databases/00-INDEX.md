@@ -45,23 +45,17 @@ Databases are the backbone of every backend system. As a backend engineer, you n
 
 ## Decision Framework
 
-```
-                    Need ACID transactions?
-                    /                     \
-                  Yes                      No
-                  /                         \
-          Need global distribution?    Need flexible schema?
-          /              \              /              \
-        Yes              No           Yes              No
-        |                |             |                |
-    Spanner/         PostgreSQL     MongoDB        Need low-latency
-    CockroachDB      MySQL                        key-value?
-                                                   /        \
-                                                 Yes         No
-                                                  |           |
-                                               Redis/      Elasticsearch
-                                               DynamoDB    ClickHouse
-                                                           (analytics)
+```mermaid
+flowchart TD
+    Q1{"Need ACID transactions?"}
+    Q1 -->|"Yes"| Q2{"Need global multi-region writes?"}
+    Q2 -->|"Yes"| NewSQL["Cloud Spanner / CockroachDB / TiDB"]
+    Q2 -->|"No"| RDBMS["PostgreSQL / MySQL"]
+    Q1 -->|"No"| Q3{"Need flexible document schema?"}
+    Q3 -->|"Yes"| Doc["MongoDB / Firestore"]
+    Q3 -->|"No"| Q4{"Need low-latency key-value?"}
+    Q4 -->|"Yes"| KV["Redis / DynamoDB"]
+    Q4 -->|"No"| OLAP["Elasticsearch (Search) / ClickHouse (OLAP)"]
 ```
 
 ---

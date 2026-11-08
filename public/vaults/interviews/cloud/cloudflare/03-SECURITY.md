@@ -22,37 +22,14 @@ Cloudflare's security stack is a core differentiator -- every HTTP request to a 
 
 Every request passes through these layers in order:
 
-```
-Incoming Request
-     |
-     v
-+------------------+
-| DDoS Mitigation  |  L3/L4/L7 -- always on, unmetered
-+------------------+
-     |
-     v
-+------------------+
-| Bot Management   |  ML scoring, JavaScript challenges, fingerprinting
-+------------------+
-     |
-     v
-+------------------+
-| WAF              |  OWASP rules, Cloudflare managed rules, custom rules
-+------------------+
-     |
-     v
-+------------------+
-| Rate Limiting    |  Per-IP, per-path, custom expressions
-+------------------+
-     |
-     v
-+------------------+
-| Access / Zero    |  Identity-based access for internal apps
-| Trust            |
-+------------------+
-     |
-     v
-Origin Server
+```mermaid
+flowchart TD
+    Req["Incoming Request"] --> S1["1. DDoS Mitigation<br/>(L3/L4/L7 always-on unmetered scrubbing)"]
+    S1 --> S2["2. Bot Management<br/>(ML scoring, Turnstile challenges, JA3/JA4 fingerprinting)"]
+    S2 --> S3["3. WAF (Web Application Firewall)<br/>(OWASP Core Ruleset, Managed &amp; Custom Rules)"]
+    S3 --> S4["4. Rate Limiting<br/>(Per-IP, per-path, token/header rules)"]
+    S4 --> S5["5. Cloudflare Access (Zero Trust)<br/>(Identity-aware proxy for internal apps)"]
+    S5 --> Orig["Origin Server"]
 ```
 
 ---

@@ -851,31 +851,10 @@ aws ssm describe-instance-patch-states \
 
 ### Full Pipeline Architecture
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                    Image Pipeline (automated)                        │
-│                                                                      │
-│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐            │
-│  │  Base   │──▶│ Harden  │──▶│  Deps   │──▶│  Test   │            │
-│  │  Image  │   │  Layer  │   │  Layer  │   │  Suite  │            │
-│  │(weekly) │   │(CIS+SEL)│   │(runtime)│   │(inspec) │            │
-│  └─────────┘   └─────────┘   └─────────┘   └────┬────┘            │
-│                                                   │ PASS            │
-│                                          ┌────────▼────────┐        │
-│                                          │  Golden AMI     │        │
-│                                          │  (staging)      │        │
-│                                          └────────┬────────┘        │
-│                                                   │ integration test │
-│                                          ┌────────▼────────┐        │
-│                                          │  Golden AMI     │        │
-│                                          │  (production)   │        │
-│                                          └────────┬────────┘        │
-│                                                   │                 │
-│                                          ┌────────▼────────┐        │
-│                                          │  Distributed to │        │
-│                                          │  all regions    │        │
-│                                          └─────────────────┘        │
-└──────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    Base["Base OS Image<br/>(Weekly)"] --> Hard["CIS Hardening<br/>&amp; Security Agents"] --> Deps["Runtime Deps &amp;<br/>Observability Agents"] --> Test["InSpec + Trivy<br/>Verification Suite"]
+    Test -->|"PASS"| Stg["Staging Golden AMI"] -->|"Integration Tests"| Prod["Production Golden AMI"] --> Dist["Distribute Across Regions<br/>&amp; Update Launch Templates"]
 ```
 
 ### EC2 Image Builder (AWS Native Pipeline)

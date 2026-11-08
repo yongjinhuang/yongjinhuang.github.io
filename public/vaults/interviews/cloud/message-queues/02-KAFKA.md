@@ -50,23 +50,15 @@ Kafka is the dominant event streaming platform, used by LinkedIn (its creator), 
 
 ## Architecture
 
-```
-+----------------------------------------------------------+
-|                    Kafka Cluster                          |
-|                                                           |
-|  Broker 1              Broker 2              Broker 3     |
-|  +--------+            +--------+            +--------+   |
-|  | T:orders|           | T:orders|           | T:orders|  |
-|  | P0(L)  |           | P0(F)  |           | P1(L)  |   |
-|  | P1(F)  |           | P2(L)  |           | P2(F)  |   |
-|  +--------+            +--------+            +--------+   |
-|  L = Leader, F = Follower                                 |
-|                                                           |
-|  +----------------------------------------------------+  |
-|  | KRaft Controller (replaces ZooKeeper)               |  |
-|  | Manages metadata, leader election, cluster config   |  |
-|  +----------------------------------------------------+  |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Kafka["APACHE KAFKA CLUSTER (Replication Factor = 2)"]
+        B1["Broker 1<br/>Topic 'orders': P0 (Leader), P1 (Follower)"]
+        B2["Broker 2<br/>Topic 'orders': P0 (Follower), P2 (Leader)"]
+        B3["Broker 3<br/>Topic 'orders': P1 (Leader), P2 (Follower)"]
+        KRaft["KRaft Consensus Controller Quorum (Replaces ZooKeeper)<br/>Manages partition metadata, ISR leader election, cluster config"]
+        KRaft --> B1 & B2 & B3
+    end
 ```
 
 ### How Data Flows

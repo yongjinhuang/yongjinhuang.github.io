@@ -65,17 +65,10 @@ This chain only works if all three share a **common identifier**: `trace_id`, `s
 Every metric travels through a defined pipeline. Understanding each stage helps you debug
 collection gaps, cardinality explosions, and alert delays.
 
-```
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  Instrumented │    │  Collection  │    │ Aggregation  │    │   Storage    │
-│   Services   │───▶│   (scrape/   │───▶│  (recording  │───▶│  (TSDB /     │
-│              │    │   push)      │    │   rules)     │    │   Thanos)    │
-└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
-                                                                    │
-                    ┌──────────────┐    ┌──────────────┐           │
-                    │    Alert     │    │   Dashboard  │           │
-                    │   Manager   │◀───│   (Grafana)  │◀──────────┘
-                    └──────────────┘    └──────────────┘
+```mermaid
+flowchart LR
+    S1["1. Instrumented Services<br/>(/metrics / OTLP)"] --> S2["2. Collection<br/>(Prometheus Scrape / Push)"] --> S3["3. Aggregation<br/>(Recording &amp; Alert Rules)"]
+    S3 --> S4["4. Long-Term Storage<br/>(TSDB / Thanos / Mimir)"] --> S5["5. Visualization<br/>(Grafana Dashboards)"] & S6["6. Alerting<br/>(Alertmanager -&gt; PagerDuty)"]
 ```
 
 ### Collection methods

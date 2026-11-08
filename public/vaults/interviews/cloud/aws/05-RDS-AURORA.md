@@ -31,18 +31,10 @@ Aurora is not just "RDS but faster." It has a fundamentally different architectu
 
 ### Aurora Storage Architecture
 
-```
-                    Writer Instance
-                         |
-         +-----------+---+---+-----------+
-         |           |       |           |
-    +---------+ +---------+ +---------+
-    |  AZ-1   | |  AZ-2   | |  AZ-3   |
-    | Copy 1  | | Copy 3  | | Copy 5  |
-    | Copy 2  | | Copy 4  | | Copy 6  |
-    +---------+ +---------+ +---------+
-         |           |           |
-    Reader Replicas (up to 15)
+```mermaid
+flowchart TD
+    Writer["Aurora Writer Instance"] -->|"4/6 Write Quorum"| AZ1["AZ-1 Shared Storage<br/>(Copy 1, Copy 2)"] & AZ2["AZ-2 Shared Storage<br/>(Copy 3, Copy 4)"] & AZ3["AZ-3 Shared Storage<br/>(Copy 5, Copy 6)"]
+    AZ1 & AZ2 & AZ3 --> Readers["Up to 15 Low-Lag Reader Replicas<br/>(Share underlying storage volume)"]
 ```
 
 Writes succeed as long as 4 of 6 copies acknowledge. Reads succeed with 3 of 6. This means Aurora can tolerate losing an entire AZ plus one additional copy and still serve reads.

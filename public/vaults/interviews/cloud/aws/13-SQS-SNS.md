@@ -143,12 +143,10 @@ SNS is a pub/sub service. You publish a message to a **topic**, and all **subscr
 
 The most common pattern in AWS messaging. Publish once to an SNS topic, and multiple SQS queues each receive a copy.
 
-```
-                        +--> [SQS: OrderProcessing]
-                        |
-[Producer] --> [SNS] ---+--> [SQS: Analytics]
-                        |
-                        +--> [SQS: Notifications]
+```mermaid
+flowchart LR
+    Prod["Producer"] --> SNS["SNS Topic"]
+    SNS --> Q1["SQS: OrderProcessing"] & Q2["SQS: Analytics"] & Q3["SQS: Notifications"]
 ```
 
 Each queue processes independently. If one consumer is slow or fails, it does not affect the others.

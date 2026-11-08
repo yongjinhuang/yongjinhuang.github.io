@@ -19,15 +19,9 @@ Terraform by HashiCorp is the industry-standard tool for defining, provisioning,
 
 ## Core Concepts at a Glance
 
-```
-+-------------------+     +-------------------+     +-------------------+
-|   CONFIGURATION   |     |      STATE        |     |   REAL INFRA      |
-|   (.tf files)     | --> |  (terraform.tfstate)| --> |   (AWS, GCP, etc) |
-|   "desired state" |     |  "known state"    |     |   "actual state"  |
-+-------------------+     +-------------------+     +-------------------+
-        |                         |                         |
-        +--- terraform plan ------+---- compares -----------+
-        +--- terraform apply -----+---- reconciles ---------+
+```mermaid
+flowchart LR
+    Cfg["Configuration (.tf files)<br/>'Desired State'"] <-->|"terraform plan (diff)<br/>terraform apply (reconcile)"| State["State (terraform.tfstate)<br/>'Recorded State'"] <-->|"Provider API Calls"| Real["Real Cloud Infrastructure<br/>'Actual State'"]
 ```
 
 **Configuration** = what you want (`.tf` files)

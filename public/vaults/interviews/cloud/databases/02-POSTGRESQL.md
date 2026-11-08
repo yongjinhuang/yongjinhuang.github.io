@@ -23,34 +23,18 @@ PostgreSQL is the most advanced open-source relational database. It powers every
 
 ## Architecture Overview
 
-```
-Client Connections
-       |
-       v
-+------------------+
-| Postmaster       |  <-- Main process, spawns backends
-+------------------+
-       |
-       v (fork per connection)
-+------------------+     +------------------+     +------------------+
-| Backend Process  |     | Backend Process  |     | Backend Process  |
-| (per connection) |     | (per connection) |     | (per connection) |
-+------------------+     +------------------+     +------------------+
-       |                        |                        |
-       v                        v                        v
-+----------------------------------------------------------------+
-|                    Shared Memory                                |
-|  +-------------------+  +-----------------+  +---------------+ |
-|  | Shared Buffers    |  | WAL Buffers     |  | Lock Table    | |
-|  | (page cache)      |  | (write-ahead)   |  | (row locks)   | |
-|  +-------------------+  +-----------------+  +---------------+ |
-+----------------------------------------------------------------+
-       |                        |
-       v                        v
-+------------------+     +------------------+
-| Data Files       |     | WAL Files        |
-| (heap, index)    |     | (pg_wal/)        |
-+------------------+     +------------------+
+```mermaid
+flowchart TD
+    Clients["Client Connections"] --> PM["Postmaster Supervisor Process"]
+    PM -->|"Fork per connection"| B1["Backend Process 1"] & B2["Backend Process 2"] & B3["Backend Process N"]
+    subgraph SHM["Shared Memory"]
+        SB["Shared Buffers (8KB Page Cache)"]
+        WB["WAL Buffers"]
+        LT["Lock Table"]
+    end
+    B1 & B2 & B3 --> SB & WB & LT
+    SB --> DF["Data Files (Heap &amp; B-Tree Indexes)"]
+    WB --> WF["WAL Segment Files (pg_wal/)"]
 ```
 
 PostgreSQL uses a **process-per-connection** model (not threads). Each connection gets its own backend process. This is simple and safe but means connections are expensive (~10 MB each). This is why connection pooling is critical.

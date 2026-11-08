@@ -137,25 +137,14 @@ Apache Pulsar is a distributed messaging and streaming platform with built-in mu
 
 ### Architecture (Separating Compute and Storage)
 
-```
-+----------------------------------------------------------+
-|                    Pulsar Cluster                          |
-|                                                           |
-|  Brokers (stateless compute):                             |
-|  +--------+     +--------+     +--------+                 |
-|  | Broker |     | Broker |     | Broker |                 |
-|  +--------+     +--------+     +--------+                 |
-|       |              |              |                      |
-|  BookKeeper (distributed storage):                        |
-|  +--------+     +--------+     +--------+                 |
-|  | Bookie |     | Bookie |     | Bookie |                 |
-|  +--------+     +--------+     +--------+                 |
-|                      |                                    |
-|  Tiered Storage:     v                                    |
-|  +---------------------------+                            |
-|  | S3 / GCS / Azure Blob    |  <-- Offload old data      |
-|  +---------------------------+                            |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Pulsar["APACHE PULSAR DISAGGREGATED ARCHITECTURE"]
+        Brk["Stateless Pulsar Brokers (Compute &amp; Pub/Sub Serving)<br/>Broker 1 | Broker 2 | Broker 3"]
+        BK["Apache BookKeeper Bookies (Distributed Segment Log Storage)<br/>Bookie 1 | Bookie 2 | Bookie 3"]
+        Tier["Tiered Object Storage (S3 / GCS / Azure Blob)<br/>Cold Historical Segment Offload"]
+        Brk --> BK --> Tier
+    end
 ```
 
 ### Key Differentiators

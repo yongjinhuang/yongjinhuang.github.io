@@ -72,20 +72,13 @@ Docker is the industry-standard tool for packaging and running applications in c
 
 Understanding where Docker fits in the ecosystem:
 
-```
-+-------------------------------------------------------+
-|                    User Interface                       |
-|  docker CLI    podman CLI    nerdctl    crictl          |
-+-------------------------------------------------------+
-|                   High-Level Runtime                    |
-|  dockerd/containerd    CRI-O    Podman (daemonless)    |
-+-------------------------------------------------------+
-|                    OCI Runtime                          |
-|  runc    crun    gVisor(runsc)    Kata(kata-runtime)   |
-+-------------------------------------------------------+
-|                   Linux Kernel                          |
-|  namespaces    cgroups    seccomp    LSMs    OverlayFS |
-+-------------------------------------------------------+
+```mermaid
+flowchart TD
+    L4["User Interface CLI<br/>docker | podman | nerdctl | crictl"]
+    L3["High-Level Container Runtime<br/>dockerd / containerd | CRI-O | Podman (daemonless)"]
+    L2["Low-Level OCI Runtime<br/>runc | crun | gVisor (runsc) | Kata Containers"]
+    L1["Linux Kernel Primitives<br/>namespaces | cgroups v2 | seccomp-bpf | AppArmor/SELinux | OverlayFS"]
+    L4 --> L3 --> L2 --> L1
 ```
 
 | Runtime             | Description                                          | Used By                                          |

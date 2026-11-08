@@ -256,19 +256,10 @@ To rebuild state:
 
 Capture row-level changes from a database and stream them to other systems.
 
-```
-+------------------+     CDC           +------------------+
-| PostgreSQL       | ----------------> | Kafka            |
-| (source of truth)|   (Debezium)      | (event stream)   |
-+------------------+                   +------------------+
-                                              |
-                        +---------------------+---------------------+
-                        |                     |                     |
-                        v                     v                     v
-                +------------------+  +------------------+  +------------------+
-                | Elasticsearch    |  | Redis Cache      |  | Analytics DW     |
-                | (search index)   |  | (invalidation)   |  | (reporting)      |
-                +------------------+  +------------------+  +------------------+
+```mermaid
+flowchart LR
+    PG["PostgreSQL<br/>(Source of Truth)"] -->|"Logical Replication / Debezium CDC"| Kafka["Apache Kafka<br/>(Event Stream)"]
+    Kafka --> ES["Elasticsearch<br/>(Search Index)"] & Redis["Redis Cache<br/>(Cache Invalidation)"] & DW["Analytics Warehouse<br/>(Snowflake / ClickHouse)"]
 ```
 
 ### How CDC Works

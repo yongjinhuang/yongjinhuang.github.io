@@ -8,21 +8,10 @@ Security in Kubernetes is not a single feature — it is a layered defense spann
 
 Think of Kubernetes security as **concentric rings**, each providing a layer of defense:
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  Ring 1: AUTHENTICATION (Who are you?)                    │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │  Ring 2: AUTHORIZATION (What can you do?)           │  │
-│  │  ┌──────────────────────────────────────────────┐  │  │
-│  │  │  Ring 3: ADMISSION CONTROL (Is this allowed?) │  │  │
-│  │  │  ┌────────────────────────────────────────┐  │  │  │
-│  │  │  │  Ring 4: RUNTIME SECURITY               │  │  │  │
-│  │  │  │  (Container isolation, seccomp, AppArmor│  │  │  │
-│  │  │  │   network policies, pod security)       │  │  │  │
-│  │  │  └────────────────────────────────────────┘  │  │  │
-│  │  └──────────────────────────────────────────────┘  │  │
-│  └────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    R1["Ring 1: Authentication<br/>(Who are you? OIDC / X.509 / ServiceAccount)"] --> R2["Ring 2: Authorization<br/>(What can you do? RBAC / Webhook)"]
+    R2 --> R3["Ring 3: Admission Control<br/>(Is spec compliant? Mutating &amp; Validating / Kyverno / OPA)"] --> R4["Ring 4: Runtime Security<br/>(seccomp, AppArmor, NetworkPolicy, Falco)"]
 ```
 
 Every API request passes through rings 1-3 in order. Ring 4 operates at runtime on the nodes.

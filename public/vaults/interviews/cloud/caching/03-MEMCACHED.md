@@ -17,17 +17,9 @@ Memcached is the original distributed caching system, created by Brad Fitzpatric
 
 ## Architecture
 
-```
-+--Client Library--+
-| Consistent hash  |  <-- Client decides which server to talk to
-| ring             |
-+--+-------+-------+
-   |       |       |
-   v       v       v
-+------+ +------+ +------+
-|Server| |Server| |Server|  <-- Servers don't communicate with each other
-| 1    | | 2    | | 3    |      Each is independent
-+------+ +------+ +------+
+```mermaid
+flowchart TD
+    Client["Memcached Client Library<br/>(Consistent Hash Ring)"] --> N1["Memcached Node 1<br/>(Shared-nothing)"] & N2["Memcached Node 2<br/>(Shared-nothing)"] & N3["Memcached Node 3<br/>(Shared-nothing)"]
 ```
 
 **Key insight:** Memcached servers are completely independent. There is no replication, no clustering protocol, no inter-node communication. The client library handles all distribution via consistent hashing.

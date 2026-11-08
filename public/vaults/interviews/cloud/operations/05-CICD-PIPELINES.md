@@ -8,30 +8,10 @@
 
 Every production deployment follows the same fundamental flow. The goal is to fail fast, catch issues early, and never let untested artifacts touch production.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         DEPLOYMENT PIPELINE OVERVIEW                            │
-└─────────────────────────────────────────────────────────────────────────────────┘
-
-Developer Push
-     │
-     ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   SOURCE    │───▶│    BUILD    │───▶│    TEST     │───▶│  ARTIFACT   │
-│   COMMIT    │    │  Compile    │    │ Unit / Int  │    │  REGISTRY   │
-│  git push   │    │  Lint       │    │ SAST / DAST │    │  Push Image │
-│  PR merge   │    │  Dockerfile │    │  Coverage   │    │  Sign/SBOM  │
-└─────────────┘    └─────────────┘    └─────────────┘    └──────┬──────┘
-                                                                  │
-     ┌────────────────────────────────────────────────────────────┘
-     │
-     ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   STAGING   │───▶│    CANARY   │───▶│   METRICS   │───▶│ PRODUCTION  │
-│  Deploy 1:1 │    │  5% traffic │    │  Analysis   │    │  Full Roll  │
-│  Smoke Test │    │  Real users │    │  Auto/Human │    │  All Regions│
-│  E2E Tests  │    │  30 minutes │    │  Gate/Block │    │  Completed  │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+```mermaid
+flowchart LR
+    S1["1. Source Commit<br/>git push / PR merge"] --> S2["2. Build<br/>Compile, Lint,<br/>Multi-stage Docker"] --> S3["3. Test &amp; Scan<br/>Unit/Integration,<br/>SAST, CVE Scan"] --> S4["4. Artifact Registry<br/>Push SHA Tag,<br/>Cosign Sign + SBOM"]
+    S4 --> S5["5. Staging<br/>Deploy 1:1,<br/>Smoke &amp; E2E Tests"] --> S6["6. Canary<br/>5% Production Traffic<br/>(15-30 min)"] --> S7["7. Metrics Gate<br/>Automated Error/Latency<br/>Analysis"] --> S8["8. Production<br/>Progressive Multi-Region<br/>Rollout"]
 ```
 
 ### Pipeline Stages in Detail

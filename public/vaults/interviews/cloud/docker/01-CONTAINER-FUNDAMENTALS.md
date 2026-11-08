@@ -366,35 +366,12 @@ The `containerd-shim` is a small process that:
 
 ### Full Architecture Diagram
 
-```
-+----------------------------------------------------------+
-|                      docker CLI                           |
-+----------------------------------------------------------+
-          | REST API (/var/run/docker.sock)
-          v
-+----------------------------------------------------------+
-|                      dockerd                              |
-|  (image management, API, build, networking, volumes)      |
-+----------------------------------------------------------+
-          | gRPC
-          v
-+----------------------------------------------------------+
-|                    containerd                              |
-|  (container lifecycle, image distribution, snapshots)      |
-+----------------------------------------------------------+
-          | OCI runtime spec
-          v
-+----------------------------------------------------------+
-|                       runc                                 |
-|  (creates namespaces, cgroups, exec entrypoint, exits)     |
-+----------------------------------------------------------+
-          | clone() + exec()
-          v
-+----------------------------------------------------------+
-|                containerd-shim                              |
-|  (keeps container alive, reports exit status)               |
-|     └── container process (nginx, python, etc.)            |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    CLI["docker CLI"] -->|"REST API (/var/run/docker.sock)"| Daemon["dockerd<br/>(API, BuildKit, networking, volumes)"]
+    Daemon -->|"gRPC"| Contd["containerd<br/>(Container lifecycle, image pull, overlay snapshots)"]
+    Contd -->|"OCI Runtime Spec"| Runc["runc<br/>(Creates namespaces/cgroups, execs entrypoint, then exits)"]
+    Runc -->|"clone() + exec()"| Shim["containerd-shim<br/>(Parent of container PID 1, holds stdio &amp; reports exit status)"]
 ```
 
 ---

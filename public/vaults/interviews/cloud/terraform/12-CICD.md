@@ -6,21 +6,21 @@ Infrastructure changes should flow through the same rigorous review process as a
 
 ## The GitOps Model for Infrastructure
 
-```
-Developer        GitHub              CI/CD              Cloud
-   |                |                  |                  |
-   |-- push branch->|                  |                  |
-   |-- open PR ---->|                  |                  |
-   |                |-- trigger ------>|                  |
-   |                |                  |-- terraform plan->|
-   |                |<-- plan output --|                  |
-   |                |   (PR comment)   |                  |
-   |                |                  |                  |
-   |<- review plan -|                  |                  |
-   |-- merge PR --->|                  |                  |
-   |                |-- trigger ------>|                  |
-   |                |                  |-- terraform apply>|
-   |                |<-- apply result--|                  |
+```mermaid
+sequenceDiagram
+    participant Dev as "Developer"
+    participant GH as "GitHub PR"
+    participant CI as "CI/CD (Atlantis / Actions)"
+    participant Cloud as "Cloud Provider API"
+
+    Dev->>GH: Push branch and open Pull Request
+    GH->>CI: Webhook trigger
+    CI->>Cloud: terraform plan (with state lock)
+    CI-->>GH: Post plan diff as PR comment
+    Dev->>GH: Review plan and approve/merge PR
+    GH->>CI: Merge trigger
+    CI->>Cloud: terraform apply (with state lock)
+    CI-->>GH: Report apply status
 ```
 
 The principle: **no human ever runs `terraform apply` from their laptop.** All changes go through version control and automated pipelines.

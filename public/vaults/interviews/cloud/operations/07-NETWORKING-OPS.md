@@ -167,23 +167,12 @@ dig SRV _http._tcp.payments.internal @169.254.169.253
 
 ### ALB vs NLB vs GLB Decision Tree
 
-```
-                     Traffic Type?
-                          │
-            ┌─────────────┼──────────────┐
-            │             │              │
-         HTTP/S        TCP/UDP        L3/L4 Inline
-            │             │              │
-           ALB           NLB            GWLB
-            │             │              │
-     ┌──────┘      ┌──────┘        ┌────┘
-     │             │               │
-  - Content     - Ultra-low      - 3rd-party
-    routing       latency          firewalls
-  - Auth        - Static IP     - IDS/IPS
-  - gRPC        - TLS passthru  - Deep packet
-  - WebSocket   - Gaming/VoIP     inspection
-  - WAF
+```mermaid
+flowchart TD
+    Q{"Traffic Type?"}
+    Q -->|"HTTP / HTTPS / gRPC / WebSocket"| ALB["Application Load Balancer (ALB — L7)<br/>Path/Host routing, OIDC Auth, WAF integration"]
+    Q -->|"TCP / UDP / TLS Passthrough"| NLB["Network Load Balancer (NLB — L4)<br/>Ultra-low latency, static Elastic IPs, millions of RPS"]
+    Q -->|"L3/L4 Inline Inspection"| GWLB["Gateway Load Balancer (GWLB — GENEVE)<br/>3rd-party virtual firewalls, IDS/IPS appliances"]
 ```
 
 ### ALB vs NLB vs GWLB — Feature Comparison

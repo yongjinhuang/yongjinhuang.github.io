@@ -13,33 +13,10 @@ cloud costs across engineering, finance, and business teams.
 
 ### The FinOps Cycle
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    THE FINOPS CYCLE                              │
-│                                                                  │
-│   ┌───────────┐       ┌───────────┐       ┌───────────┐         │
-│   │           │       │           │       │           │         │
-│   │  INFORM   │──────▶│ OPTIMIZE  │──────▶│  OPERATE  │         │
-│   │           │       │           │       │           │         │
-│   └─────▲─────┘       └───────────┘       └─────┬─────┘         │
-│         │                                        │               │
-│         └────────────────────────────────────────┘               │
-│                                                                  │
-│  INFORM:                                                         │
-│  • Visibility into cloud spend (who, what, where)                │
-│  • Cost allocation by team/product/environment                   │
-│  • Unit economics (cost per transaction, cost per user)          │
-│                                                                  │
-│  OPTIMIZE:                                                       │
-│  • Right-sizing and waste elimination                            │
-│  • Reserved instances, savings plans, spot usage                 │
-│  • Architecture optimization (moving to cheaper services)        │
-│                                                                  │
-│  OPERATE:                                                        │
-│  • Continuous cost governance and policy enforcement             │
-│  • Budget alerts and anomaly detection                           │
-│  • Cost reviews embedded in engineering workflows                │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    Inf["1. INFORM<br/>- Cloud spend visibility<br/>- Tagging &amp; team chargeback<br/>- Unit economics ($/request)"] --> Opt["2. OPTIMIZE<br/>- Right-sizing &amp; waste cleanup<br/>- Savings Plans / RIs / Spot<br/>- Graviton &amp; S3 lifecycle"] --> Op["3. OPERATE<br/>- Continuous cost governance<br/>- Budget &amp; anomaly alerts<br/>- FinOps in PR reviews"]
+    Op --> Inf
 ```
 
 ### FinOps Team Structure
