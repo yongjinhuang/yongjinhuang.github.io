@@ -482,14 +482,11 @@ Live streaming requires redundant ingest paths because a single point of failure
 
 **Dual-path ingest**:
 
-```
-Encoder A (primary)   --RTMP/SRT-->  Ingest Server A (primary)
-Encoder B (backup)    --RTMP/SRT-->  Ingest Server B (backup)
-                                          |
-                                    Ingest Selector
-                                    (picks best feed)
-                                          |
-                                    Transcoder / Packager
+```mermaid
+flowchart LR
+    EA["Encoder A (Primary)"] -->|"RTMP / SRT"| IA["Ingest Server A (Primary)"]
+    EB["Encoder B (Backup)"] -->|"RTMP / SRT"| IB["Ingest Server B (Backup)"]
+    IA & IB --> Sel["Automatic Ingest Failover Selector"] --> Trans["Transcoder / Packager"]
 ```
 
 The ingest selector monitors both feeds for:
@@ -555,17 +552,16 @@ DVR (Digital Video Recording) or time-shift allows viewers to pause, rewind, and
 
 DRM (Digital Rights Management) protects premium content from unauthorized copying. The license server is the central component:
 
-```
-Player                License Server          Key Management
-  |                        |                       |
-  |-- License Request ---->|                       |
-  |   (device cert,        |-- Key Request ------->|
-  |    content ID,         |                       |
-  |    auth token)         |<-- Content Keys ------|
-  |                        |                       |
-  |<-- License Response ---|
-  |   (encrypted keys,
-  |    usage rules)
+```mermaid
+sequenceDiagram
+    participant P as "Player / CDM"
+    participant L as "DRM License Server"
+    participant K as "Key Management (KMS)"
+
+    P->>L: License Request (device cert, content ID, auth token)
+    L->>K: Fetch Content Decryption Keys
+    K-->>L: Content Keys
+    L-->>P: Encrypted License Response (keys + usage policies)
 ```
 
 License server responsibilities:
@@ -883,15 +879,19 @@ Edge functions enable per-viewer content personalization:
 
 Server-Side Ad Insertion stitches ads into the video stream on the server side, before content reaches the viewer. Unlike client-side ad insertion (CSAI), the viewer receives a single continuous stream with no visible distinction between content and ads.
 
-```
-Content Origin     Ad Server       SSAI Service        CDN Edge       Viewer
-     |                |                 |                  |             |
-     |-- Content segments ------------>|                  |             |
-     |                |-- Ad decision ->|                  |             |
-     |                |<- Ad URLs ------|                  |             |
-     |                |                 |-- Stitched ----->|             |
-     |                |                 |   manifest       |             |
-     |                |                 |                  |-- Stream -->|
+```mermaid
+sequenceDiagram
+    participant O as "Content Origin"
+    participant A as "VAST Ad Server"
+    participant S as "SSAI Manifest Manipulator"
+    participant C as "CDN Edge"
+    participant V as "Viewer"
+
+    O->>S: Content Manifest + SCTE-35 Markers
+    S->>A: Ad Decision Request (viewer context)
+    A-->>S: VAST Response (Targeted Ad Segment URLs)
+    S->>C: Per-Viewer Stitched HLS/DASH Manifest
+    C->>V: Continuous Content + Ad Segments
 ```
 
 Advantages of SSAI over CSAI:

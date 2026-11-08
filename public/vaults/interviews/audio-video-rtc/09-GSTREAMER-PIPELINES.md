@@ -122,11 +122,16 @@ gst-launch-1.0 videotestsrc ! "video/x-raw,width=640,height=480" ! autovideosink
 
 Every element (and the pipeline as a whole) has a state. The states form a strict hierarchy:
 
-```
-NULL  -->  READY  -->  PAUSED  -->  PLAYING
-                                      |
-NULL  <--  READY  <--  PAUSED  <------+
-```
+```mermaid
+stateDiagram-v2
+    [*] --> NULL
+    NULL --> READY : Allocate resources
+    READY --> PAUSED : Open stream / preroll
+    PAUSED --> PLAYING : Start clock &amp; data flow
+    PLAYING --> PAUSED : Pause clock
+    PAUSED --> READY : Close stream
+    READY --> NULL : Free all resources
+````
 
 | State       | Description                                                                    |
 | ----------- | ------------------------------------------------------------------------------ |

@@ -201,23 +201,14 @@ Janus uses a **plugin-based architecture**. The core handles:
 
 All application logic lives in plugins. This makes Janus extremely flexible: you compose functionality by loading the plugins you need.
 
-```
-+---------------------------------------------+
-|              Janus Core                      |
-|  +----------+  +--------+  +-----------+    |
-|  | ICE/DTLS |  |  RTP   |  | Transport |    |
-|  | Handler  |  | Engine |  | Manager   |    |
-|  +----------+  +--------+  +-----------+    |
-+---------------------------------------------+
-         |            |            |
-   +----------+ +----------+ +----------+
-   | VideoRoom| | AudioBrdg| |Streaming |
-   | Plugin   | | Plugin   | | Plugin   |
-   +----------+ +----------+ +----------+
-   +----------+ +----------+ +----------+
-   |   SIP    | | TextRoom | |Record&Ply|
-   | Plugin   | | Plugin   | | Plugin   |
-   +----------+ +----------+ +----------+
+```mermaid
+flowchart TD
+    subgraph Core["Janus WebRTC Gateway Core"]
+        ICE["ICE / DTLS Handler"]
+        RTP["RTP / SRTP Engine"]
+        TM["Transport Manager (WS / REST / RabbitMQ)"]
+    end
+    Core --> P1["VideoRoom Plugin (SFU)"] & P2["AudioBridge Plugin (MCU)"] & P3["Streaming Plugin"] & P4["SIP Gateway Plugin"] & P5["Record&amp;Play Plugin"]
 ```
 
 ### Key Plugins
@@ -292,18 +283,12 @@ mediasoup is a WebRTC SFU designed for building custom real-time applications. I
 
 mediasoup's architecture is built around a clear hierarchy of objects:
 
-```
-Application (Node.js)
-  |
-  +-- Worker (C++ process, one per CPU core)
-       |
-       +-- Router (equivalent to a "room" or media routing domain)
-            |
-            +-- Transport (WebRTC, Plain RTP, Pipe, or Direct)
-                 |
-                 +-- Producer (a media source: audio or video track)
-                 |
-                 +-- Consumer (a media sink: receiving a Producer's media)
+```mermaid
+flowchart TD
+    App["Node.js Application (Control Plane)"] --> W["mediasoup C++ Worker<br/>(1 Process per CPU Core)"]
+    W --> R["Router<br/>(Room / Media Routing Domain)"]
+    R --> T["Transport<br/>(WebRtcTransport, PlainTransport, PipeTransport)"]
+    T --> Prod["Producer<br/>(Incoming Audio / Video Track)"] & Cons["Consumer<br/>(Outgoing Subscribed Track)"]
 ```
 
 **Worker**: A separate C++ process that handles all media processing. Each Worker runs on a single CPU core. You typically create one Worker per available core. Workers are isolated: a crash in one does not affect others.
@@ -481,26 +466,19 @@ LiveKit is an open-source, real-time communication platform built in Go. It prov
 
 LiveKit's architecture centers on the concept of **Rooms**:
 
-```
-+--------------------------------------------------+
-|                  LiveKit Server                   |
-|                                                   |
-|  +-----------+  +----------+  +-----------+       |
-|  |   Room    |  |   Room   |  |   Room    |       |
-|  | Manager   |  | Manager  |  | Manager   |       |
-|  +-----------+  +----------+  +-----------+       |
-|                                                   |
-|  +----------+  +----------+  +-----------+        |
-|  |   SFU    |  | Signaling|  |  Routing   |       |
-|  |  Engine  |  |  (Protobuf|  |  Layer    |       |
-|  |  (Pion)  |  |  over WS) |  |          |       |
-|  +----------+  +----------+  +-----------+        |
-|                                                   |
-|  +----------+  +----------+  +-----------+        |
-|  |  Egress  |  |  Ingress |  |  Agent    |        |
-|  | Service  |  |  Service |  | Framework |        |
-|  +----------+  +----------+  +-----------+        |
-+--------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph LK["LiveKit Distributed Server Architecture"]
+        RM["Room Managers"]
+        SFU["SFU Engine<br/>(Pion WebRTC in Go)"]
+        Sig["Signaling<br/>(Protobuf over WebSocket)"]
+        Route["Distributed Routing Layer<br/>(Redis Mesh)"]
+        Eg["Egress Service<br/>(Recording / HLS / RTMP)"]
+        Ing["Ingress Service<br/>(RTMP / WHIP Ingest)"]
+        Ag["AI Agent Framework<br/>(Real-time Voice/Video Agents)"]
+        RM --> SFU & Sig & Route
+        SFU --> Eg & Ing & Ag
+    end
 ```
 
 The SFU engine is built on **Pion** (Go WebRTC library). Signaling uses Protocol Buffers over WebSocket for efficient, typed communication.
@@ -2537,28 +2515,12 @@ When a new participant joins and subscribes to existing video streams:
 
 This requires a hybrid architecture combining an SFU for the interactive participants and a streaming pipeline for the large audience:
 
-```
-Interactive Participants (50)
-         |
-    +---------+
-    |   SFU   |  (LiveKit, mediasoup, or Janus)
-    +---------+
-         |
-    Composite Egress
-         |
-    +---------+
-    | Encoder |  (FFmpeg or LiveKit Egress)
-    +---------+
-         |
-    RTMP / SRT
-         |
-    +---------+
-    |   CDN   |  (CloudFront, Akamai, Cloudflare)
-    +---------+
-         |
-    HLS / DASH / LL-HLS
-         |
-    Viewers (10,000)
+```mermaid
+flowchart TD
+    Part["Interactive Participants (Up to 50)<br/>Sub-200ms WebRTC"] <--> SFU["SFU Cluster<br/>(LiveKit / mediasoup / Janus)"]
+    SFU -->|"Composite Egress"| Enc["Egress Encoder<br/>(FFmpeg / Headless Compositor)"]
+    Enc -->|"RTMP / SRT"| CDN["Global CDN<br/>(CloudFront / Cloudflare)"]
+    CDN -->|"LL-HLS / DASH (2-5s latency)"| Viewers["Passive Broadcast Viewers (10,000+)"]
 ```
 
 **Design**:

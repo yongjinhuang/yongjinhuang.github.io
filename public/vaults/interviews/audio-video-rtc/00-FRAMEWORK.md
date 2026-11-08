@@ -33,28 +33,14 @@ Audio, video, and real-time communication engineering is the discipline of captu
 
 Audio, video, and RTC engineering spans a broad stack that can be decomposed into five layers:
 
-```
-+-------------------------------------------------------------------+
-|                     APPLICATION LAYER                              |
-|  Video calling, live streaming, VoD, surveillance, gaming,        |
-|  podcasting, broadcasting, AR/VR, telemedicine                    |
-+-------------------------------------------------------------------+
-|                     ORCHESTRATION LAYER                            |
-|  Media servers (SFU, MCU), signaling servers, recording,          |
-|  transcription, AI/ML processing, analytics                       |
-+-------------------------------------------------------------------+
-|                     TRANSPORT LAYER                                |
-|  RTP/RTCP, WebRTC, HLS, DASH, RTMP, SRT, RIST,                  |
-|  QUIC, WebTransport, WebSocket                                    |
-+-------------------------------------------------------------------+
-|                     ENCODING / CONTAINER LAYER                     |
-|  Codecs: H.264, H.265/HEVC, VP9, AV1, Opus, AAC                 |
-|  Containers: MP4, MKV, WebM, TS, FLV, fMP4                       |
-+-------------------------------------------------------------------+
-|                     CAPTURE & RENDER LAYER                         |
-|  Cameras, microphones, screens, speakers, displays,               |
-|  Web APIs (getUserMedia, Canvas, Web Audio)                       |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    L5["APPLICATION LAYER<br/>Video calling, live streaming, VoD, surveillance, gaming, podcasting, broadcasting, AR/VR, telemedicine"]
+    L4["ORCHESTRATION LAYER<br/>Media servers (SFU, MCU), signaling servers, recording, transcription, AI/ML processing, analytics"]
+    L3["TRANSPORT LAYER<br/>RTP/RTCP, WebRTC, HLS, DASH, RTMP, SRT, RIST, QUIC, WebTransport, WebSocket"]
+    L2["ENCODING / CONTAINER LAYER<br/>Codecs: H.264, H.265/HEVC, VP9, AV1, Opus, AAC<br/>Containers: MP4, MKV, WebM, TS, FLV, fMP4"]
+    L1["CAPTURE &amp; RENDER LAYER<br/>Cameras, microphones, screens, speakers, displays, Web APIs (getUserMedia, Canvas, Web Audio)"]
+    L5 --> L4 --> L3 --> L2 --> L1
 ```
 
 Each layer has its own concerns, trade-offs, and specialized knowledge. A complete media engineer understands how data flows through every layer and can diagnose problems at any point in the pipeline.
@@ -75,12 +61,10 @@ Beyond traffic volume, media engineering presents some of the hardest problems i
 
 Every media system, from a simple voice memo to a Netflix-scale streaming platform, follows the same fundamental pipeline:
 
-```
-Capture --> Encode --> Package --> Transport --> Decode --> Render
-
-  mic/       codec      container    protocol     codec      speaker/
-  camera     (H.264,    (MP4, TS,    (HLS, RTP,   (inverse   display
-             Opus)      fMP4)        WebRTC)      of encode)
+```mermaid
+flowchart LR
+    C["1. Capture<br/>(Mic / Camera)"] --> E["2. Encode<br/>Codec (H.264, Opus)"] --> P["3. Package<br/>Container (MP4, TS, fMP4)"]
+    P --> T["4. Transport<br/>Protocol (HLS, RTP, WebRTC)"] --> D["5. Decode<br/>Codec (Inverse of encode)"] --> R["6. Render<br/>(Speaker / Display)"]
 ```
 
 **Capture**: Analog signals (sound waves, light) are digitized into raw samples. Audio becomes PCM (pulse-code modulation) samples. Video becomes a sequence of pixel frames in a color space like YUV or RGB.
@@ -183,22 +167,31 @@ This roadmap is structured in four phases. Each phase builds on the previous one
 
 **Milestone**: You can diagnose a choppy video call by analyzing WebRTC stats and RTP packet captures, design a complete live streaming architecture from ingest to playback, evaluate codec performance using objective quality metrics, and build a production-ready media application.
 
-```
-Phase 1                Phase 2              Phase 3                Phase 4
-Foundations            Transport            Systems                Mastery
-(Weeks 1-4)            (Weeks 5-8)          (Weeks 9-14)           (Weeks 15-20)
-
-Audio/Video ──────> Protocols ──────> Media Servers ──────> Debugging
-Fundamentals           HLS/DASH             SFU/MCU                Wireshark
-                       WebRTC               LiveKit/Janus          webrtc-internals
-Codecs ───────────> RTP/RTCP ──────> CDN Delivery ────────> Quality Metrics
-H.264, Opus            STUN/TURN            Origin/Edge            VMAF, SSIM
-AV1, AAC               ICE/SDP              Multi-CDN
-
-Containers ───────> Signaling ─────> Processing ──────────> Projects
-MP4, TS, WebM          WebSocket            FFmpeg advanced         End-to-end
-                       SIP                  GStreamer               systems
-                                            Web APIs
+```mermaid
+flowchart LR
+    subgraph P1["Phase 1: Foundations (Weeks 1-4)"]
+        F1["Audio/Video Fundamentals"]
+        F2["Codecs (H.264, Opus, AV1, AAC)"]
+        F3["Containers (MP4, TS, WebM)"]
+    end
+    subgraph P2["Phase 2: Transport (Weeks 5-8)"]
+        T1["Protocols (HLS/DASH, WebRTC)"]
+        T2["RTP/RTCP, STUN/TURN, ICE/SDP"]
+        T3["Signaling (WebSocket, SIP)"]
+    end
+    subgraph P3["Phase 3: Systems (Weeks 9-14)"]
+        S1["Media Servers (SFU/MCU, LiveKit/Janus)"]
+        S2["CDN Delivery (Origin/Edge, Multi-CDN)"]
+        S3["Processing (FFmpeg, GStreamer, Web APIs)"]
+    end
+    subgraph P4["Phase 4: Mastery (Weeks 15-20)"]
+        M1["Debugging (Wireshark, webrtc-internals)"]
+        M2["Quality Metrics (VMAF, SSIM)"]
+        M3["End-to-End Projects"]
+    end
+    F1 --> T1 --> S1 --> M1
+    F2 --> T2 --> S2 --> M2
+    F3 --> T3 --> S3 --> M3
 ```
 
 ---
@@ -293,24 +286,25 @@ A server that receives media from all participants, decodes, mixes/composes into
 **Origin-Edge (CDN)**:
 Content is encoded and packaged at an origin server, then distributed through a hierarchical network of edge caches close to viewers. The standard architecture for live streaming and video-on-demand at scale.
 
-```
-P2P Mesh (1:1 or small group):      SFU (conference):
-
-  A <---------> B                      A -----> SFU -----> B
-  ^             ^                             |    ^
-  |             |                             v    |
-  +------> C <--+                      C <----+    +---- D
-
-
-MCU (legacy conferencing):           CDN (broadcast/VoD):
-
-  A ---+                                Origin
-  B ---+--> MCU --+--> A                  |
-  C ---+          +--> B             +----+----+
-  D ---+          +--> C             |    |    |
-                  +--> D           Edge  Edge  Edge
-                                    |    |    |
-                                  Users Users Users
+```mermaid
+flowchart TD
+    subgraph Mesh["P2P Mesh (1:1 or Small Group)"]
+        MA["Peer A"] <--> MB["Peer B"]
+        MA <--> MC["Peer C"]
+        MB <--> MC
+    end
+    subgraph SFUGraph["SFU (Selective Forwarding Unit — Conferencing)"]
+        SA["Peer A"] & SB["Peer B"] & SC["Peer C"] & SD["Peer D"] <--> SFU["SFU<br/>(Routes packets without transcoding)"]
+    end
+    subgraph MCUGraph["MCU (Multipoint Control Unit)"]
+        UA["Peers A, B, C, D"] --> MCU["MCU<br/>(Decodes, mixes &amp; re-encodes)"] --> UOut["1 Composite Stream per Peer"]
+    end
+    subgraph CDNGraph["CDN (Broadcast / VoD)"]
+        Orig["Origin Server"] --> E1["Edge PoP 1"] & E2["Edge PoP 2"] & E3["Edge PoP 3"]
+        E1 --> V1["Viewers"]
+        E2 --> V2["Viewers"]
+        E3 --> V3["Viewers"]
+    end
 ```
 
 ---

@@ -60,43 +60,16 @@ Raw compressed bitstreams are not self-describing. A naked H.264 bitstream (an A
 
 At a high level, every container format stores:
 
-```
-+--------------------------------------------------+
-|                  CONTAINER FILE                   |
-|                                                   |
-|  +--------------------------------------------+  |
-|  |  HEADER / FILE METADATA                    |  |
-|  |  - Format identification (magic bytes)     |  |
-|  |  - Version, compatibility flags            |  |
-|  |  - Duration, creation date                 |  |
-|  +--------------------------------------------+  |
-|                                                   |
-|  +--------------------------------------------+  |
-|  |  STREAM DESCRIPTIONS (Track Info)          |  |
-|  |  - Track 1: H.264 video, 1920x1080, 24fps |  |
-|  |  - Track 2: AAC audio, 48kHz, stereo       |  |
-|  |  - Track 3: SRT subtitles, English         |  |
-|  +--------------------------------------------+  |
-|                                                   |
-|  +--------------------------------------------+  |
-|  |  INDEX / SEEK TABLE                        |  |
-|  |  - Sample-to-chunk mappings                |  |
-|  |  - Byte offsets for keyframes              |  |
-|  |  - Timestamps for each sample              |  |
-|  +--------------------------------------------+  |
-|                                                   |
-|  +--------------------------------------------+  |
-|  |  INTERLEAVED MEDIA DATA                    |  |
-|  |  [Video Frame 1][Audio Samples 1-1024]     |  |
-|  |  [Video Frame 2][Audio Samples 1025-2048]  |  |
-|  |  [Video Frame 3][Audio Samples 2049-3072]  |  |
-|  |  ...                                       |  |
-|  +--------------------------------------------+  |
-|                                                   |
-|  +--------------------------------------------+  |
-|  |  OPTIONAL: Chapters, Attachments, Tags     |  |
-|  +--------------------------------------------+  |
-+--------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Cont["MEDIA CONTAINER FILE ANATOMY"]
+        H["1. Header / File Metadata<br/>Magic bytes, version, compatibility brands, duration"]
+        S["2. Stream Descriptions (Tracks)<br/>Track 1: H.264 Video (1920x1080, 24fps)<br/>Track 2: AAC Audio (48kHz, stereo)<br/>Track 3: Subtitles (English)"]
+        Idx["3. Index / Seek Table<br/>Sample-to-chunk mappings, keyframe byte offsets, PTS/DTS timestamps"]
+        Data["4. Interleaved Media Data<br/>[Video Frame 1][Audio Samples 1-1024][Video Frame 2]..."]
+        Opt["5. Optional Metadata<br/>Chapters, font attachments, cover art, tags"]
+        H --> S --> Idx --> Data --> Opt
+    end
 ```
 
 ### The Multiplexing Concept
@@ -850,26 +823,17 @@ However, Ogg has largely been eclipsed by WebM for web video and by MP4/M4A for 
 
 **Muxing (Multiplexing)**: The process of combining multiple elementary streams (video, audio, subtitles) into a single container file. The muxer interleaves the streams, creates index tables, writes metadata, and produces a conformant container file.
 
-```
-Elementary Streams -> Muxer -> Container File
-
-  H.264 bitstream ----+
-                       |
-  AAC bitstream -------+---> [MUXER] ---> output.mp4
-                       |
-  SRT subtitles -------+
+```mermaid
+flowchart LR
+    V["H.264 Video Bitstream"] & A["AAC Audio Bitstream"] & S["SRT Subtitles"] --> Mux["MUXER<br/>(Interleaves &amp; writes index)"] --> Out["output.mp4"]
 ```
 
 **Demuxing (Demultiplexing)**: The reverse process. The demuxer reads the container, parses the structure, and separates the interleaved data back into individual elementary streams.
 
-```
-Container File -> Demuxer -> Elementary Streams
-
-                          +---> H.264 bitstream
-                          |
-  input.mp4 ---> [DEMUXER]+---> AAC bitstream
-                          |
-                          +---> SRT subtitles
+```mermaid
+flowchart LR
+    In["input.mp4"] --> Demux["DEMUXER<br/>(Parses container &amp; splits tracks)"]
+    Demux --> V["H.264 Video Bitstream"] & A["AAC Audio Bitstream"] & S["SRT Subtitles"]
 ```
 
 ### Remuxing
@@ -880,14 +844,9 @@ Container File -> Demuxer -> Elementary Streams
 - **Lossless** (no quality change since the codec bitstream is untouched)
 - **Common use cases**: MKV to MP4, TS to MP4, FLV to MP4
 
-```
-Remuxing Flow:
-
-  input.mkv ---> [DEMUXER] ---> H.264 + AAC + SRT
-                                    |
-                                    v
-  output.mp4 <--- [MUXER] <--- H.264 + AAC (SRT may be dropped
-                                             if MP4 doesn't support it)
+```mermaid
+flowchart LR
+    In["input.mkv"] --> Demux["DEMUXER"] --> Streams["Compressed Elementary Streams<br/>(H.264 + AAC — No re-encoding!)"] --> Mux["MUXER"] --> Out["output.mp4"]
 ```
 
 Remuxing limitations:

@@ -120,34 +120,14 @@ However, the "peer-to-peer" nature has important caveats:
 
 ### The Full Stack
 
-```
-+-------------------------------------------------------------------+
-|                        APPLICATION LAYER                           |
-|                                                                    |
-|  getUserMedia()     RTCPeerConnection     RTCDataChannel           |
-|       |                    |                    |                   |
-|  MediaStream         Offer/Answer           SCTP                   |
-+-------------------------------------------------------------------+
-|                        SESSION LAYER                               |
-|                                                                    |
-|              SDP (Session Description Protocol)                    |
-|              JSEP (JS Session Establishment Protocol)              |
-+-------------------------------------------------------------------+
-|                        SECURITY LAYER                              |
-|                                                                    |
-|         DTLS (Datagram Transport Layer Security)                   |
-|         SRTP (Secure Real-time Transport Protocol)                 |
-+-------------------------------------------------------------------+
-|                       TRANSPORT LAYER                              |
-|                                                                    |
-|     ICE (Interactive Connectivity Establishment)                   |
-|     STUN (Session Traversal Utilities for NAT)                     |
-|     TURN (Traversal Using Relays around NAT)                       |
-+-------------------------------------------------------------------+
-|                        NETWORK LAYER                               |
-|                                                                    |
-|                    UDP (preferred) / TCP                            |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    L5["APPLICATION LAYER<br/>getUserMedia() (MediaStream) | RTCPeerConnection (Offer/Answer) | RTCDataChannel (SCTP)"]
+    L4["SESSION LAYER<br/>SDP (Session Description Protocol) &amp; JSEP (JS Session Establishment Protocol)"]
+    L3["SECURITY LAYER<br/>DTLS (Datagram TLS) &amp; SRTP (Secure Real-Time Transport Protocol)"]
+    L2["TRANSPORT &amp; NAT TRAVERSAL LAYER<br/>ICE (Interactive Connectivity Establishment) | STUN | TURN"]
+    L1["NETWORK LAYER<br/>UDP (preferred) / TCP fallback"]
+    L5 --> L4 --> L3 --> L2 --> L1
 ```
 
 ### Layer-by-Layer Breakdown
@@ -237,27 +217,18 @@ Signaling must convey three types of information:
 
 WebRTC uses an offer/answer model defined by JSEP (RFC 8829):
 
-```
-Caller (Offerer)                           Callee (Answerer)
-      |                                          |
-      |  1. createOffer()                        |
-      |  2. setLocalDescription(offer)           |
-      |                                          |
-      |  --- SDP Offer via Signaling --------->  |
-      |                                          |
-      |                   3. setRemoteDescription(offer)
-      |                   4. createAnswer()
-      |                   5. setLocalDescription(answer)
-      |                                          |
-      |  <--- SDP Answer via Signaling --------  |
-      |                                          |
-      |  6. setRemoteDescription(answer)         |
-      |                                          |
-      |  --- ICE Candidates (trickle) -------->  |
-      |  <--- ICE Candidates (trickle) --------  |
-      |                                          |
-      |  ====== Media Flows ==================>  |
-      |  <===== Media Flows ===================  |
+```mermaid
+sequenceDiagram
+    participant A as "Caller (Offerer)"
+    participant B as "Callee (Answerer)"
+
+    Note over A: 1. createOffer()<br/>2. setLocalDescription(offer)
+    A->>B: SDP Offer (via Signaling Server)
+    Note over B: 3. setRemoteDescription(offer)<br/>4. createAnswer()<br/>5. setLocalDescription(answer)
+    B-->>A: SDP Answer (via Signaling Server)
+    Note over A: 6. setRemoteDescription(answer)
+    A<<->>B: Trickle ICE Candidates (via Signaling)
+    A<<->>B: Bidirectional SRTP Media Flows
 ```
 
 ### Common Signaling Approaches
@@ -648,31 +619,21 @@ ICE uses nomination to select which candidate pair will carry media:
 
 The `RTCPeerConnection.iceConnectionState` property tracks the ICE state:
 
-```
-              +--------+
-              |  new   |
-              +--------+
-                  |
-                  v
-             +----------+
-             | checking |
-             +----------+
-              /        \
-             v          v
-     +-----------+  +--------+
-     | connected |  | failed |
-     +-----------+  +--------+
-          |              |
-          v              v
-     +-----------+  +-----------+
-     | completed |  | closed    |
-     +-----------+  +-----------+
-          |
-          v
-    +---------------+
-    | disconnected  | (temporary, may recover)
-    +---------------+
-```
+```mermaid
+stateDiagram-v2
+    [*] --> new
+    new --> checking : ICE candidates received
+    checking --> connected : Nominated pair found
+    checking --> failed : All candidate pairs failed
+    connected --> completed : All checks finished
+    connected --> disconnected : Temporary connectivity loss
+    completed --> disconnected : Temporary connectivity loss
+    disconnected --> connected : Connectivity recovered
+    disconnected --> failed : Timeout
+    failed --> closed
+    connected --> closed : close()
+    completed --> closed : close()
+````
 
 ### ICE Restart
 
@@ -1019,48 +980,15 @@ BUNDLE), the first byte of each packet is used to demultiplex:
 
 ### End-to-End Media Flow
 
-```
-SENDER PIPELINE                              RECEIVER PIPELINE
-===============                              =================
-
-+------------------+                         +------------------+
-| 1. CAPTURE       |                         | 10. RENDER       |
-| Camera / Mic     |                         | <video> / <audio>|
-| getUserMedia()   |                         | element          |
-+--------+---------+                         +--------+---------+
-         |                                            ^
-         v                                            |
-+------------------+                         +------------------+
-| 2. PRE-PROCESS   |                         | 9. POST-PROCESS  |
-| Echo Cancel (AEC)|                         | Jitter Buffer    |
-| Noise Suppress.  |                         | Concealment      |
-| Auto Gain (AGC)  |                         | De-jitter        |
-+--------+---------+                         +--------+---------+
-         |                                            ^
-         v                                            |
-+------------------+                         +------------------+
-| 3. ENCODE        |                         | 8. DECODE        |
-| VP8/VP9/H.264/AV1|                        | VP8/VP9/H.264/AV1|
-| Opus/G.722       |                         | Opus/G.722       |
-+--------+---------+                         +--------+---------+
-         |                                            ^
-         v                                            |
-+------------------+                         +------------------+
-| 4. PACKETIZE     |                         | 7. DEPACKETIZE   |
-| Split into RTP   |                         | Reassemble from  |
-| packets          |                         | RTP packets      |
-| Add RTP headers  |                         | Reorder          |
-+--------+---------+                         +--------+---------+
-         |                                            ^
-         v                                            |
-+------------------+                         +------------------+
-| 5. ENCRYPT       |                         | 6. DECRYPT       |
-| SRTP encryption  |                         | SRTP decryption  |
-| Auth tag         |                         | Auth verify      |
-+--------+---------+                         +--------+---------+
-         |                                            ^
-         v                                            |
-         +-------- UDP / Network Transport -----------+
+```mermaid
+flowchart LR
+    subgraph Sender["SENDER PIPELINE"]
+        S1["1. Capture<br/>getUserMedia()"] --> S2["2. Pre-Process<br/>AEC, NS, AGC"] --> S3["3. Encode<br/>VP8/VP9/H.264/AV1, Opus"] --> S4["4. Packetize<br/>RTP packets"] --> S5["5. Encrypt<br/>SRTP + Auth Tag"]
+    end
+    subgraph Receiver["RECEIVER PIPELINE"]
+        R6["6. Decrypt<br/>SRTP verify &amp; decrypt"] --> R7["7. Depacketize<br/>Reorder &amp; reassemble"] --> R8["8. Decode<br/>Video / Audio Decoder"] --> R9["9. Post-Process<br/>Jitter Buffer &amp; PLC"] --> R10["10. Render<br/>&lt;video&gt; / &lt;audio&gt;"]
+    end
+    S5 -->|"UDP / Network Transport"| R6
 ```
 
 ### Audio Pipeline Details
