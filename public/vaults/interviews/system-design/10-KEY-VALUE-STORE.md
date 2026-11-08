@@ -1381,7 +1381,7 @@ Benefits:
 ├────────────────────────┼──────────────────────────────────────┤
 │ Consistency model      │ Tunable: W + R > N for strong,       │
 │                        │ W=1/R=1 for eventual                 │
-├────────────���───────────┼──────────────────────────────────────┤
+├────────────────────────┼──────────────────────────────────────┤
 │ Conflict resolution    │ Vector clocks + app-level resolution │
 ├────────────────────────┼──────────────────────────────────────┤
 │ Failure detection      │ Gossip protocol                      │

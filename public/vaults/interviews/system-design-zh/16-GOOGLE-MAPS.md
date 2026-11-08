@@ -1121,7 +1121,7 @@ Google Maps 系统架构：
     防抖 100ms → 发送查询
 
   服务端：
-    ┌─��────────────┐
+    ┌──────────────┐
     │  Trie 索引    │  "star" → [starbucks, star pizza, starlight cafe, ...]
     │  （内存中）   │
     └──────┬───────┘
@@ -1148,7 +1148,7 @@ Google Maps 系统架构：
 
   数据结构：
     - Trie：用于地点名称的前缀匹配
-    - Elasticsearch：用于模糊/容错���索
+    - Elasticsearch：用于模糊/容错搜索
     - S2 cell 索引：用于地理空间过滤
     - Redis：用于缓存每个区域的热门查询
 ```

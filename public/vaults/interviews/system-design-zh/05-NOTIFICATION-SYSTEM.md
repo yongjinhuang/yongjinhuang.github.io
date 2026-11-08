@@ -937,7 +937,7 @@ async function shouldSendNotification(
 
   全局：     每天最多 20 条跨所有渠道
   Push：     每天最多 10 条 Push 通知
-  邮件：     每天最多 3 封邮���
+  邮件：     每天最多 3 封邮件
   营销：     每周最多 1 条营销通知
 
   基于 Redis 的实现：

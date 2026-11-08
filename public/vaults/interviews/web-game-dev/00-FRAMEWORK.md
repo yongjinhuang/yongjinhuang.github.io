@@ -180,7 +180,7 @@ HTML5 games distributed through portals (Poki, CrazyGames, Newgrounds) or instan
 ```
 ┌──────────────────────────────────────────────────┐
 │         Core Technical Areas to Master           │
-├───────────────────────────────────���──────────────┤
+├──────────────────────────────────────────────────┤
 │                                                  │
 │  1. Rendering                                    │
 │     ├── Canvas 2D API                            │

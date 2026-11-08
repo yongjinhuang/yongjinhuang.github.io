@@ -455,7 +455,7 @@ File structure (fMP4):
   [ftyp] [moov] [moof1][mdat1] [moof2][mdat2] [moof3][mdat3] ...
           │       └──chunk 1──┘  └──chunk 2──┘  └──chunk 3──┘
           │
-          └�� Initialization segment (sent once)
+          └─ Initialization segment (sent once)
 ```
 
 ### 4.2 Chunked Transfer Encoding

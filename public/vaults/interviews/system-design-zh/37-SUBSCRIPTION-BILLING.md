@@ -1161,7 +1161,7 @@ def calculate_volume(units: int, tiers: list) -> int:
 
 ### Proration 行为
 
-| 行为                | 描述                                 | ��用场景           |
+| 行为                | 描述                                 | 使用场景           |
 | ------------------- | ------------------------------------ | ------------------ |
 | `create_prorations` | 在下一张账单上生成 proration 行项目  | 默认值；最常用     |
 | `always_invoice`    | 立即生成并收取 proration 账单        | 用于重大升级       |
@@ -1586,7 +1586,7 @@ Customer Browser                Our System              Payment Gateway
       │────────────────────────────►│                        │
       │                             │                        │
       │                             │  Charge with token     │
-      │                             │───────────────────────���│
+      │                             │───────────────────────►│
       │                             │                        │
       │                             │◄── Charge result ──────│
       │                             │                        │

@@ -2238,7 +2238,7 @@ flowchart LR
 
 ```
 Component           Raw      Base64    Notes
-─────────────────��───────────────────────────────
+─────────────────────────────────────────────────
 TypeScript (min)    18KB     18KB      No base64 needed
 Sprite atlas        150KB    200KB     33% base64 overhead
 Audio               0KB      0KB      Web Audio synthesis

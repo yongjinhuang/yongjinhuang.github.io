@@ -764,7 +764,7 @@ JWT 验证流水线：
    - iss：匹配允许的发行者
    - aud：匹配当前网关/服务
 6. 提取自定义声明：
-   - sub：消费��标识
+   - sub：消费者标识
    - roles: ["admin", "user"]
    - tenant: "acme-corp"
 7. 注入上游请求头：
@@ -2085,7 +2085,7 @@ WebSocket 以 HTTP/1.1 upgrade 请求开始。网关代理 upgrade，然后变�
 
 ---
 
-**问：如果 control plane（Istiod）���机会发生什么？**
+**问：如果 control plane（Istiod）宕机会发生什么？**
 
 Data plane（Envoy sidecar）使用最后已知的良好配置继续运行。所有现有流量流继续正常。新的配置变更不会生效（无法部署新的 VirtualService，无法更新 AuthorizationPolicy）。如果 SPIRE/Citadel 也宕机，证书续期可能失败，但现有证书在剩余有效期内（通常数小时）仍然有效。这是 Istio 架构的关键弹性特性：在稳态运行时，data plane 独立于 control plane。
 

@@ -166,7 +166,7 @@ GET /v1/suggestions?prefix={prefix}&limit={limit}&lang={lang}&user_id={user_id}
   ...共 4 个请求（减少 60%）
 ```
 
-**额外的客户端��化：**
+**额外的客户端优化：**
 
 | 优化               | 描述                                 |
 | ------------------ | ------------------------------------ |
@@ -875,7 +875,7 @@ def handle_suggestion_request(prefix, limit, locale, user_id):
 
 ### 个性化层
 
-将全局建议与用户特��历史混合：
+将全局建议与用户特定历史混合：
 
 ```python
 def personalize(global_results, user_id, limit):
