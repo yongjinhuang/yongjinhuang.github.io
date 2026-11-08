@@ -6,19 +6,9 @@ Every trading strategy begins as a hypothesis: "stocks that dropped 10% in a wee
 
 This chapter covers the entire backtesting pipeline: architectures, pitfalls, cost modeling, validation techniques, overfitting prevention, framework selection, performance reporting, and the transition from backtest to live trading.
 
-```
-+------------------------------------------------------------------+
-|                  THE BACKTESTING PIPELINE                         |
-+------------------------------------------------------------------+
-|                                                                  |
-|  HYPOTHESIS  -->  DATA  -->  BACKTEST  -->  VALIDATE  -->  LIVE  |
-|                                                                  |
-|  "Momentum     Clean,       Simulate      Walk-forward   Paper   |
-|   works in     adjusted,    trades on     analysis,      trade,  |
-|   large caps"  survivorship historical    out-of-sample  then    |
-|                free data    data          testing        deploy  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    H["1. Hypothesis<br/>Economic rationale"] --> D["2. Point-in-Time Data<br/>Adjusted &amp; survivorship-free"] --> B["3. Backtest<br/>Simulate trades + realistic costs"] --> V["4. Validate<br/>Walk-forward, Purged CV, DSR"] --> L["5. Live Deployment<br/>Paper trade -&gt; Gradual capital scale"]
 ```
 
 ---
@@ -294,43 +284,13 @@ Event-driven backtesting processes data bar-by-bar (or tick-by-tick), simulating
 
 **The Event Loop in Detail:**
 
-```
-+------------------------------------------------------------------+
-|                     EVENT LOOP FLOW                               |
-+------------------------------------------------------------------+
-|                                                                  |
-|  1. MARKET EVENT                                                 |
-|     DataHandler reads next bar/tick                              |
-|     Pushes MarketEvent(timestamp, OHLCV) to queue                |
-|          |                                                       |
-|          v                                                       |
-|  2. SIGNAL EVENT                                                 |
-|     Strategy receives MarketEvent                                |
-|     Computes indicators, checks rules                            |
-|     Pushes SignalEvent(symbol, direction, strength)               |
-|          |                                                       |
-|          v                                                       |
-|  3. ORDER EVENT                                                  |
-|     Portfolio receives SignalEvent                                |
-|     Checks risk limits, position sizing                          |
-|     Pushes OrderEvent(symbol, qty, order_type, limit_price)      |
-|          |                                                       |
-|          v                                                       |
-|  4. FILL EVENT                                                   |
-|     ExecutionHandler receives OrderEvent                         |
-|     Simulates fill with slippage and costs                       |
-|     Pushes FillEvent(symbol, qty, fill_price, commission)        |
-|          |                                                       |
-|          v                                                       |
-|  5. PORTFOLIO UPDATE                                             |
-|     Portfolio receives FillEvent                                 |
-|     Updates positions, cash, equity                              |
-|     Logs trade                                                   |
-|          |                                                       |
-|          v                                                       |
-|     Return to step 1 (next bar/tick)                             |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    E1["1. MarketEvent<br/>DataHandler emits next bar/tick"] --> E2["2. SignalEvent<br/>Strategy computes indicators &amp; alpha signal"]
+    E2 --> E3["3. OrderEvent<br/>Portfolio applies risk limits &amp; sizing"]
+    E3 --> E4["4. FillEvent<br/>ExecutionHandler simulates fill, slippage &amp; commission"]
+    E4 --> E5["5. Portfolio Update<br/>Update positions, cash, mark-to-market equity"]
+    E5 -->|"Next timestamp"| E1
 ```
 
 **Implementation: Event-Driven Backtest Engine**

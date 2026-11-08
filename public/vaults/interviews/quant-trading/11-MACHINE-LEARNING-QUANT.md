@@ -6,21 +6,10 @@ Machine learning has transformed quantitative finance. Every major quant fund no
 
 This chapter covers the entire ML pipeline for quant trading: feature engineering, supervised and unsupervised models, deep learning, reinforcement learning, NLP, proper cross-validation, ensemble methods, alternative data, and the many pitfalls that separate profitable ML systems from expensive curve-fitting exercises.
 
-```
-+------------------------------------------------------------------+
-|              ML IN QUANTITATIVE TRADING                           |
-+------------------------------------------------------------------+
-|                                                                  |
-|  RAW DATA  -->  FEATURES  -->  MODEL  -->  SIGNAL  -->  TRADES   |
-|                                                                  |
-|  Price,        Returns,       XGBoost,    Alpha       Portfolio  |
-|  Volume,       Momentum,      LSTM,       scores,     positions, |
-|  Alt data,     Volatility,    RL agent,   confidence  execution  |
-|  News          Cross-section  Ensemble    estimates    orders     |
-|                                                                  |
-|  THE CRITICAL DIFFERENCE: In finance, tomorrow's exam questions  |
-|  are DIFFERENT from today's. The distribution shifts constantly.  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Raw["1. Raw Data<br/>Prices, Volume, Order Book,<br/>Alt Data, News/Filings"] --> Feat["2. Feature Engineering<br/>Fractional Diff, Momentum,<br/>Vol, Cross-Sectional Ranks"]
+    Feat --> Mod["3. ML Model<br/>Ridge / LightGBM / XGBoost /<br/>Deep Learning Ensemble"] --> Sig["4. Alpha Signal<br/>Expected Return +<br/>Meta-Label Confidence"] --> Trd["5. Portfolio &amp; Trades<br/>Risk-Constrained Weights<br/>&amp; Execution Orders"]
 ```
 
 ---
@@ -1720,21 +1709,10 @@ class StackedAlphaModel(BaseEstimator, RegressorMixin):
 
 Meta-labeling is a two-model approach: the primary model decides direction, the secondary model decides whether to bet and how much.
 
-```
-META-LABELING FRAMEWORK
-
-  Primary Model (Direction)         Meta Model (Sizing)
-  +-----------------------+         +---------------------+
-  | Input: Features       |         | Input: Features +   |
-  | Output: {Buy, Sell}   |-------->| primary model pred  |
-  | Goal: High recall     |         | Output: [0, 1]      |
-  | (catch all signals)   |         | Goal: High precision|
-  +-----------------------+         | (filter false pos)  |
-                                    +---------------------+
-                                            |
-                                            v
-                                    Final position =
-                                    direction * size * confidence
+```mermaid
+flowchart LR
+    P["Primary Model (Direction)<br/>Input: Market Features<br/>Output: Side in {-1, +1}<br/>Goal: High Recall"] --> M["Secondary Meta-Model (Sizing)<br/>Input: Features + Primary Prediction<br/>Output: Probability P(Profit) in [0, 1]<br/>Goal: High Precision (Filter False Positives)"]
+    M --> Out["Final Position = Direction * f(Confidence)"]
 ```
 
 ```python

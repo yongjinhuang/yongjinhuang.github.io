@@ -6,28 +6,14 @@ This chapter is the strategic core of the guide. Everything before this -- marke
 math, programming, microstructure, time series -- was preparation. Now we assemble
 those tools into complete trading strategies.
 
-```
-+------------------------------------------------------------------------+
-|                    STRATEGY FAMILY TAXONOMY                             |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  DIRECTIONAL                      RELATIVE VALUE                       |
-|  +-------------------------+      +-----------------------------+      |
-|  | Momentum / Trend         |      | Mean Reversion               |      |
-|  | Event-Driven             |      | Statistical Arbitrage        |      |
-|  | Factor Investing         |      | Pairs Trading                |      |
-|  | ML-Based Signals         |      | Convertible Bond Arb         |      |
-|  +-------------------------+      +-----------------------------+      |
-|                                                                        |
-|  MARKET-NEUTRAL                   STRUCTURAL                           |
-|  +-------------------------+      +-----------------------------+      |
-|  | Market Making            |      | ETF Arbitrage                |      |
-|  | Long-Short Equity        |      | Index Arbitrage              |      |
-|  | Beta-Hedged Factors      |      | Cross-Exchange Arbitrage     |      |
-|  | Dispersion Trading       |      | Triangular FX Arbitrage      |      |
-|  +-------------------------+      +-----------------------------+      |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Tax["QUANTITATIVE STRATEGY FAMILY TAXONOMY"]
+        Dir["DIRECTIONAL<br/>Time-Series Momentum / CTA,<br/>Event-Driven, Factor Timing, ML Signals"]
+        RV["RELATIVE VALUE<br/>Mean Reversion, Statistical Arbitrage,<br/>Cointegrated Pairs, Convertible Arb"]
+        MN["MARKET-NEUTRAL<br/>Market Making, Long-Short Equity,<br/>Beta-Neutral Factors, Dispersion Trading"]
+        Str["STRUCTURAL / ARBITRAGE<br/>ETF Create/Redeem Arb, Index Futures Basis,<br/>Cross-Exchange Arb, Triangular FX"]
+    end
 ```
 
 Every strategy rests on a single belief about price behavior. Momentum bets that
@@ -36,25 +22,15 @@ things should have identical prices. Market making bets that the bid-ask spread
 compensates you for providing liquidity. Understanding the _why_ behind each
 strategy matters more than memorizing the mechanics.
 
-```
-Strategy Selection Decision Tree:
-
-                     What do you believe about this asset?
-                                    |
-                 +------------------+------------------+
-                 |                                     |
-          Prices trend                          Prices revert
-                 |                                     |
-        +--------+--------+                  +---------+---------+
-        |                 |                  |                   |
-   Single asset      Cross-section     Single asset        Asset pairs
-        |                 |                  |                   |
-  Time-Series       Cross-Sectional    Mean Reversion      Stat Arb /
-  Momentum          Momentum           (Bollinger, RSI)    Pairs Trading
-        |                 |                  |                   |
-   Trend Following   Factor Investing   OU Process         Cointegration
-   (CTA / Managed    (Fama-French,      Z-score signals    Spread trading
-    Futures)          AQR-style)
+```mermaid
+flowchart TD
+    Q1{"What is the primary price dynamic?"}
+    Q1 -->|"Prices Trend"| Q2{"Single Asset or Cross-Section?"}
+    Q2 -->|"Single Asset"| TSM["Time-Series Momentum<br/>Trend Following (CTA / Managed Futures)"]
+    Q2 -->|"Cross-Section"| XSM["Cross-Sectional Momentum<br/>Long-Short Factor Investing"]
+    Q1 -->|"Prices Revert"| Q3{"Single Asset or Asset Pairs/Baskets?"}
+    Q3 -->|"Single Asset"| MR["Single-Asset Mean Reversion<br/>OU Process / Z-Score / RSI"]
+    Q3 -->|"Asset Pairs / Baskets"| SA["Statistical Arbitrage &amp; Pairs Trading<br/>Cointegration / PCA Eigenportfolios"]
 ```
 
 ---

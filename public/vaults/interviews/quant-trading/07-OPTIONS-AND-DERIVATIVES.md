@@ -6,30 +6,12 @@ Options are the most intellectually rich instruments in finance. They introduce 
 
 This chapter covers options from the ground up, with rigorous treatment of the Greeks, volatility, pricing models, strategies, and exotics. The mathematics here is essential for interviews at any options market-making firm (Citadel Securities, Jane Street, Optiver, IMC, Susquehanna).
 
-```
-+------------------------------------------------------------------------+
-|              OPTIONS & DERIVATIVES - CONCEPT MAP                        |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  FUNDAMENTALS              GREEKS                  VOLATILITY          |
-|  +------------------+     +------------------+    +------------------+ |
-|  | Payoffs           |     | Delta            |    | Historical       | |
-|  | Moneyness         | --> | Gamma            | -->| Implied          | |
-|  | Put-Call Parity   |     | Theta            |    | Surface          | |
-|  | Early Exercise    |     | Vega             |    | Smile/Skew       | |
-|  +------------------+     | Higher-Order     |    | Term Structure   | |
-|                            +------------------+    +------------------+ |
-|           |                        |                       |           |
-|           v                        v                       v           |
-|  PRICING MODELS          STRATEGIES              EXOTICS              |
-|  +------------------+   +------------------+    +------------------+  |
-|  | Black-Scholes     |   | Spreads          |    | Barrier          |  |
-|  | Binomial Tree     |   | Straddle/Strangle|    | Asian            |  |
-|  | Monte Carlo       |   | Butterfly        |    | Lookback         |  |
-|  | Local Vol         |   | Iron Condor      |    | Digital          |  |
-|  +------------------+   +------------------+    +------------------+  |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Fund["1. Fundamentals<br/>Payoffs, Moneyness,<br/>Put-Call Parity, Early Exercise"] --> Greeks["2. The Greeks<br/>Delta, Gamma, Theta, Vega,<br/>Vanna, Volga, Charm"] --> Vol["3. Volatility<br/>Realized vs Implied Vol,<br/>Vol Surface, Smile/Skew"]
+    Fund --> Mod["4. Pricing Models<br/>Black-Scholes, Binomial Trees,<br/>Monte Carlo, Local/Stoch Vol"]
+    Greeks --> Strat["5. Vol Strategies<br/>Spreads, Straddles, Butterflies,<br/>Gamma Scalping, Dispersion"]
+    Vol --> Exot["6. Exotic Options<br/>Barrier, Asian, Lookback,<br/>Digital / Binary"]
 ```
 
 ---

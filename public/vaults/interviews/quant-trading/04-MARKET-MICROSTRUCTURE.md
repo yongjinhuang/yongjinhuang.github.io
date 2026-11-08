@@ -735,42 +735,12 @@ Window of opportunity: ~5 microseconds
 
 ### Technology Stack
 
-```
-+-----------------------------------------------------------------------+
-|                    HFT TECHNOLOGY STACK                                |
-+-----------------------------------------------------------------------+
-|                                                                       |
-|  APPLICATION LAYER                                                    |
-|  +----------------------------+                                       |
-|  | Trading Strategy Logic     |  C++ / FPGA                          |
-|  | Risk Management            |  Custom memory allocators             |
-|  | Order Management System    |  Lock-free data structures            |
-|  +----------------------------+                                       |
-|              |                                                        |
-|  NETWORKING LAYER                                                     |
-|  +----------------------------+                                       |
-|  | Kernel Bypass (DPDK/RDMA)  |  Avoid OS network stack              |
-|  | Custom NIC drivers         |  Solarflare OpenOnload               |
-|  | Hardware timestamping      |  Nanosecond precision                |
-|  +----------------------------+                                       |
-|              |                                                        |
-|  HARDWARE LAYER                                                       |
-|  +----------------------------+                                       |
-|  | FPGA (for fastest path)    |  Xilinx Alveo, Intel Stratix        |
-|  | Co-located servers         |  In exchange data center             |
-|  | Cross-connects             |  Direct fiber to matching engine     |
-|  | Microwave/laser links      |  Inter-exchange communication        |
-|  +----------------------------+                                       |
-|                                                                       |
-|  Latency Budget:                                                      |
-|    Network (co-lo → exchange):    ~1 μs                               |
-|    Feed handler (parse market data): ~1-5 μs                          |
-|    Strategy logic:                ~1-5 μs                             |
-|    Order generation:              ~1 μs                               |
-|    Network (order → exchange):    ~1 μs                               |
-|    TOTAL tick-to-trade:           ~5-15 μs                            |
-|                                                                       |
-+-----------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    L3["APPLICATION LAYER (~2-10 us)<br/>Trading Strategy Logic (C++ / FPGA) | Inline Risk Checks | Lock-Free OMS"]
+    L2["NETWORKING LAYER (~0.5-2 us)<br/>Kernel Bypass (DPDK / Solarflare ef_vi / OpenOnload) | HW PTP Timestamping"]
+    L1["HARDWARE &amp; PHYSICAL LAYER (~1 us)<br/>FPGA SmartNICs (Xilinx Alveo) | Co-Located Servers | Direct Fiber Cross-Connects | Microwave Links"]
+    L3 --> L2 --> L1
 ```
 
 ---
@@ -907,39 +877,11 @@ For HFT, binary protocols (e.g., OUCH, ITCH, PILLAR) replace FIX for lower laten
 
 ### Matching Engine Architecture
 
-```
-+-------------------------------------------------------+
-|              EXCHANGE MATCHING ENGINE                  |
-+-------------------------------------------------------+
-|                                                       |
-|  MARKET DATA        ORDER GATEWAY        DROP COPY    |
-|  (multicast out)    (TCP in)             (TCP out)    |
-|       ↑                  |                    ↑       |
-|       |                  v                    |       |
-|  +------------------------------------------+        |
-|  |          SEQUENCER / ARBITER              |        |
-|  |  (Serializes all incoming messages into   |        |
-|  |   a single deterministic sequence)         |        |
-|  +------------------------------------------+        |
-|                      |                                |
-|                      v                                |
-|  +------------------------------------------+        |
-|  |          MATCHING CORE                    |        |
-|  |  For each symbol:                         |        |
-|  |    - Maintain bid/ask price levels        |        |
-|  |    - FIFO queue at each price level       |        |
-|  |    - Match incoming orders against book   |        |
-|  |    - Generate execution reports           |        |
-|  |    - Generate market data updates         |        |
-|  +------------------------------------------+        |
-|                                                       |
-|  Performance:                                         |
-|    - Matching latency: < 10 microseconds              |
-|    - Throughput: millions of messages/second           |
-|    - Deterministic: same input → same output          |
-|    - Fault-tolerant: hot standby replicas             |
-|                                                       |
-+-------------------------------------------------------+
+```mermaid
+flowchart TD
+    OG["Order Gateway<br/>(OUCH / FIX / BOE TCP In)"] --> Seq["Deterministic Sequencer / Arbiter<br/>(Serializes all inbound events into total order)"]
+    Seq --> Core["Matching Engine Core (&lt;10 us latency)<br/>- Maintains per-symbol L3 Limit Order Book<br/>- Matches orders via Price-Time Priority (FIFO)<br/>- Emits Execution Reports &amp; Market Data"]
+    Core --> MD["Market Data Feed<br/>(ITCH / MDP UDP Multicast Out)"] & DC["Drop Copy &amp; Exec Reports<br/>(TCP Out)"]
 ```
 
 ---

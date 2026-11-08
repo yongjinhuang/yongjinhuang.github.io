@@ -1077,51 +1077,13 @@ Rule 15c3-5 (the "Market Access Rule") requires broker-dealers providing market 
 
 A properly designed algorithmic trading system implements multiple layers of risk checks:
 
-```
-+-----------------------------------------------------------------------+
-|              MULTI-LAYER RISK CHECK ARCHITECTURE                       |
-+-----------------------------------------------------------------------+
-|                                                                       |
-|  LAYER 1: STRATEGY LEVEL (fastest, in-process)                        |
-|  +-----------------------------------------------------------+       |
-|  | - Position limits per instrument                           |       |
-|  | - P&L limits (stop-loss triggers)                          |       |
-|  | - Order rate limits (messages per second)                   |       |
-|  | - Exposure limits (gross/net notional)                      |       |
-|  | - Latency: < 1 microsecond                                 |       |
-|  +-----------------------------------------------------------+       |
-|       |                                                               |
-|       v                                                               |
-|  LAYER 2: GATEWAY LEVEL (pre-exchange, firm-wide)                     |
-|  +-----------------------------------------------------------+       |
-|  | - Aggregate position limits across strategies               |       |
-|  | - Firm-wide capital utilization                             |       |
-|  | - Cross-strategy netting                                    |       |
-|  | - Fat finger checks (price collar)                          |       |
-|  | - Duplicate order detection                                 |       |
-|  | - Latency: < 10 microseconds                               |       |
-|  +-----------------------------------------------------------+       |
-|       |                                                               |
-|       v                                                               |
-|  LAYER 3: BROKER/CLEARING LEVEL                                       |
-|  +-----------------------------------------------------------+       |
-|  | - Credit checks                                            |       |
-|  | - Margin calculations                                      |       |
-|  | - Reg SHO locate verification                              |       |
-|  | - Restricted list checks                                    |       |
-|  | - Latency: < 100 microseconds                              |       |
-|  +-----------------------------------------------------------+       |
-|       |                                                               |
-|       v                                                               |
-|  LAYER 4: EXCHANGE LEVEL                                              |
-|  +-----------------------------------------------------------+       |
-|  | - Price bands / circuit breakers                            |       |
-|  | - Maximum order size                                        |       |
-|  | - Message rate throttling                                   |       |
-|  | - Self-trade prevention                                     |       |
-|  +-----------------------------------------------------------+       |
-|                                                                       |
-+-----------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    L1["Layer 1: Strategy-Level Risk (&lt; 1 us, In-Process)<br/>Per-instrument position limits, stop-loss P&amp;L triggers, message rate limits"]
+    L2["Layer 2: Order Gateway Risk (&lt; 10 us, Firm-Wide SEC 15c3-5)<br/>Aggregate position &amp; capital limits, price collars (fat-finger), duplicate detection"]
+    L3["Layer 3: Sponsoring Broker / Clearing Risk (&lt; 100 us)<br/>Credit &amp; margin checks, Reg SHO short-locate verification, restricted list"]
+    L4["Layer 4: Exchange Matching Engine Risk<br/>LULD price bands, market-wide circuit breakers, self-trade prevention (STP)"]
+    L1 --> L2 --> L3 --> L4
 ```
 
 ### 16.7.3 Kill Switch Mandates

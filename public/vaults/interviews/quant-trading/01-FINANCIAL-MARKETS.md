@@ -256,26 +256,9 @@ An index is a calculated number that represents the performance of a group of st
 
 An IPO is when a private company sells shares to the public for the first time.
 
-```
-  IPO PROCESS TIMELINE
-
-  Private Company                                    Public Company
-  |                                                        |
-  v                                                        v
-  [Select banks] -> [File S-1] -> [Road show] -> [Price] -> [Trade]
-       |               |              |             |           |
-    6-12 months    SEC review     2-3 weeks     Night before  Day 1
-    before         45-90 days     Pitch to       Set final    Shares
-                                  investors      IPO price    trade on
-                                                              exchange
-
-  Example: Acme Corp IPO
-  - IPO price set at: $25/share
-  - Shares offered: 20,000,000
-  - Capital raised: $500,000,000
-  - First day closing price: $38 (52% "pop")
-  - The "pop" represents money left on the table for the company
-    but is profit for IPO investors who got allocated shares
+```mermaid
+flowchart LR
+    S1["1. Select Underwriters<br/>(6-12 months prior)"] --> S2["2. File Form S-1<br/>(SEC review: 45-90 days)"] --> S3["3. Institutional Road Show<br/>(2-3 weeks bookbuilding)"] --> S4["4. Pricing<br/>(Night before: set offer price)"] --> S5["5. Public Trading<br/>(Day 1 secondary market)"]
 ```
 
 #### Stock Splits
@@ -1580,27 +1563,10 @@ The EMH is the most important and controversial theory in finance. It says that 
 
 Understanding who you trade against is critical. Each participant type has different objectives, constraints, time horizons, and information advantages.
 
-```
-+------------------------------------------------------------------------+
-|                    MARKET PARTICIPANT ECOSYSTEM                         |
-+------------------------------------------------------------------------+
-|                                                                        |
-|                        REGULATORS                                      |
-|                   (SEC, CFTC, FINRA)                                   |
-|                          |                                             |
-|    +-----------+---------+---------+------------+                      |
-|    |           |                   |            |                      |
-|    v           v                   v            v                      |
-| SELL SIDE   EXCHANGES          BUY SIDE     DATA/INFRA                |
-| (Banks)     (NYSE,NASDAQ)      (Funds)      (Bloomberg)              |
-|    |           |                   |            |                      |
-|    +-----+-----+-----+-----+------+            |                      |
-|          |           |           |              |                      |
-|          v           v           v              |                      |
-|      MARKET       LARGE       RETAIL            |                      |
-|      MAKERS     INSTITUTIONS  TRADERS           |                      |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Reg["Regulators<br/>(SEC, CFTC, FINRA)"] --> Sell["Sell Side<br/>(Investment Banks / Prime Brokers)"] & Exch["Exchanges &amp; Venues<br/>(NYSE, NASDAQ, CME)"] & Buy["Buy Side<br/>(Hedge Funds, Asset Managers)"] & Infra["Data &amp; Infrastructure<br/>(Bloomberg, Databento, Equinix)"]
+    Sell & Exch & Buy --> MM["Market Makers / HFT"] & Inst["Large Institutions<br/>(Pensions, Endowments)"] & Retail["Retail Traders"]
 ```
 
 ### 6.1 Participant Types in Detail

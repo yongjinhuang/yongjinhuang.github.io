@@ -58,37 +58,14 @@ This chapter takes you from "I know some Python" to "I can build a complete quan
 
 Python dominates quantitative finance for one reason: the ecosystem. No other language comes close to the breadth and depth of libraries available for numerical computing, data analysis, machine learning, and financial modeling.
 
-```
-+------------------------------------------------------------------------+
-|              THE PYTHON QUANT ECOSYSTEM                                  |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  LAYER 4: DOMAIN-SPECIFIC                                              |
-|  +------------------------------------------------------------+       |
-|  | zipline | backtrader | QuantLib | pyfolio | alphalens       |       |
-|  +------------------------------------------------------------+       |
-|                          |                                             |
-|  LAYER 3: MACHINE LEARNING & STATS                                     |
-|  +------------------------------------------------------------+       |
-|  | scikit-learn | statsmodels | tensorflow | pytorch | xgboost |       |
-|  +------------------------------------------------------------+       |
-|                          |                                             |
-|  LAYER 2: DATA ANALYSIS                                                |
-|  +------------------------------------------------------------+       |
-|  | pandas | scipy | matplotlib | plotly | seaborn              |       |
-|  +------------------------------------------------------------+       |
-|                          |                                             |
-|  LAYER 1: NUMERICAL FOUNDATION                                         |
-|  +------------------------------------------------------------+       |
-|  | numpy (C/Fortran core) | numba (JIT) | cython              |       |
-|  +------------------------------------------------------------+       |
-|                          |                                             |
-|  LAYER 0: PYTHON RUNTIME                                               |
-|  +------------------------------------------------------------+       |
-|  | CPython interpreter | C extensions API                      |       |
-|  +------------------------------------------------------------+       |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    L4["LAYER 4: DOMAIN-SPECIFIC QUANT LIBRARIES<br/>vectorbt | zipline | backtrader | QuantLib | pyfolio | alphalens"]
+    L3["LAYER 3: MACHINE LEARNING &amp; ECONOMETRICS<br/>scikit-learn | statsmodels | LightGBM / XGBoost | PyTorch"]
+    L2["LAYER 2: DATA ANALYSIS &amp; VISUALIZATION<br/>pandas / Polars | scipy | matplotlib | plotly"]
+    L1["LAYER 1: NUMERICAL FOUNDATION<br/>NumPy (C/Fortran BLAS/LAPACK) | Numba (LLVM JIT) | Cython"]
+    L0["LAYER 0: PYTHON RUNTIME<br/>CPython Interpreter &amp; C/C++ Extension API (pybind11)"]
+    L4 --> L3 --> L2 --> L1 --> L0
 ```
 
 The key insight: **Python is slow, but Python code that calls C is fast.** NumPy, Pandas, and scikit-learn are all thin Python wrappers around highly optimized C and Fortran routines. When you multiply two NumPy arrays, you are not running Python -- you are running compiled BLAS (Basic Linear Algebra Subprograms) routines that have been optimized for decades.
@@ -144,23 +121,10 @@ This is one of the most common questions in quant interviews.
 
 ### 1.3 Python's Role in the Quant Workflow
 
-```
-  DATA           RESEARCH        BACKTEST        PRODUCTION
-  PIPELINE       PHASE           PHASE           PHASE
-
-  +--------+    +----------+    +----------+    +-----------+
-  | Ingest |    | Explore  |    | Simulate |    | Execute   |
-  | Clean  |--->| Hypothe- |--->| Validate |--->| Monitor   |
-  | Store  |    | size     |    | Stress   |    | Report    |
-  +--------+    +----------+    | test     |    +-----------+
-                                +----------+
-
-  Tools:         Tools:          Tools:          Tools:
-  - pandas       - numpy         - zipline       - asyncio
-  - sqlalchemy   - scipy         - backtrader    - websockets
-  - yfinance     - statsmodels   - custom        - REST APIs
-  - websockets   - sklearn       - pyfolio       - logging
-  - arctic       - jupyter       - matplotlib    - monitoring
+```mermaid
+flowchart LR
+    P1["1. Data Pipeline<br/>Ingest, Clean, Store<br/>(pandas, Parquet, Arctic)"] --> P2["2. Research Phase<br/>Explore &amp; Hypothesize<br/>(NumPy, SciPy, statsmodels, Jupyter)"]
+    P2 --> P3["3. Backtest Phase<br/>Simulate, Validate, Stress Test<br/>(vectorbt, custom event engine)"] --> P4["4. Production Phase<br/>Execute, Monitor, Report<br/>(C++ / asyncio, FIX, Prometheus)"]
 ```
 
 Every phase except the innermost execution loop of high-frequency trading is Python-dominated at most quant firms.

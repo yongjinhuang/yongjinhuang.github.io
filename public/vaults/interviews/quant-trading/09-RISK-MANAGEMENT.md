@@ -4,17 +4,15 @@
 
 In quantitative trading, alpha is fleeting but risk is permanent. Every legendary blowup -- LTCM, Knight Capital, Archegos -- shares a common thread: not a lack of intelligence, but a failure of risk management. The best quant firms are risk management machines that happen to generate returns.
 
-```
-+------------------------------------------------------------------+
-|                  RISK MANAGEMENT HIERARCHY                        |
-+------------------------------------------------------------------+
-|  LEVEL 5: Tail Risk / Black Swans     (Survival)                |
-|  LEVEL 4: Portfolio Risk               (Diversification)         |
-|  LEVEL 3: Position Sizing              (Capital Allocation)      |
-|  LEVEL 2: Risk Measurement             (VaR, Drawdown)           |
-|  LEVEL 1: Risk Identification          (Know Your Risks)         |
-|  Foundation: Operational Risk Controls  (Kill Switches, Checks)  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart BT
+    L0["Foundation: Operational Risk Controls (Pre-Trade Checks, Kill Switches)"]
+    L1["Level 1: Risk Identification (Market, Liquidity, Model, Counterparty)"]
+    L2["Level 2: Risk Measurement (VaR, CVaR / Expected Shortfall, Max Drawdown)"]
+    L3["Level 3: Position Sizing (Fractional Kelly, Volatility Targeting)"]
+    L4["Level 4: Portfolio Risk (Factor Neutrality, Stress Testing, Correlation)"]
+    L5["Level 5: Tail Risk &amp; Black Swan Protection (Survival)"]
+    L0 --> L1 --> L2 --> L3 --> L4 --> L5
 ```
 
 ---

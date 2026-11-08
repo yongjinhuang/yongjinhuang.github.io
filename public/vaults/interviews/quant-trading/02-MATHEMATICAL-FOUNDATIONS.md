@@ -6,49 +6,18 @@ Every trading strategy is, at its core, a mathematical statement about the world
 
 This chapter covers the mathematical toolkit that separates quantitative traders from everyone else. We start with probability and statistics (the language of uncertainty), move through linear algebra and calculus (the language of structure and change), ascend to stochastic calculus (the crown jewel of quant finance math), and finish with numerical methods and information theory.
 
-```
-+------------------------------------------------------------------------+
-|              MATHEMATICAL FOUNDATIONS - DEPENDENCY MAP                   |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  PROBABILITY & STATISTICS                                              |
-|  +-----------------------+                                             |
-|  | Random Variables       |                                             |
-|  | Distributions          | ----+                                      |
-|  | Hypothesis Testing     |     |                                      |
-|  | Regression             |     |                                      |
-|  +-----------------------+     |                                      |
-|           |                     |                                      |
-|           v                     v                                      |
-|  LINEAR ALGEBRA           CALCULUS & OPTIMIZATION                      |
-|  +-----------------------+  +------------------------+                 |
-|  | Matrices & Vectors     |  | Derivatives & Integrals |                 |
-|  | Eigendecomposition     |  | Gradients & Hessians    |                 |
-|  | Covariance Matrices    |  | Lagrange Multipliers    |                 |
-|  +-----------------------+  +------------------------+                 |
-|           |                     |                                      |
-|           +----------+----------+                                      |
-|                      |                                                 |
-|                      v                                                 |
-|           STOCHASTIC CALCULUS                                          |
-|           +--------------------------+                                 |
-|           | Brownian Motion           |                                 |
-|           | Ito's Lemma               |                                 |
-|           | SDEs & Risk-Neutral       |                                 |
-|           | Pricing                   |                                 |
-|           +--------------------------+                                 |
-|                      |                                                 |
-|           +----------+----------+                                      |
-|           |                     |                                      |
-|           v                     v                                      |
-|  NUMERICAL METHODS      INFORMATION THEORY                             |
-|  +-------------------+  +--------------------+                         |
-|  | Monte Carlo        |  | Entropy             |                         |
-|  | Finite Differences  |  | KL Divergence       |                         |
-|  | Root Finding       |  | Feature Selection   |                         |
-|  +-------------------+  +--------------------+                         |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Prob["1. Probability &amp; Statistics<br/>Random Variables, Distributions,<br/>Hypothesis Testing, Regression"]
+    LA["2. Linear Algebra<br/>Matrices &amp; Vectors, Eigendecomposition,<br/>PCA, Covariance Matrices"]
+    Calc["3. Calculus &amp; Optimization<br/>Derivatives &amp; Integrals, Gradients &amp; Hessians,<br/>Convex Optimization, Lagrange Multipliers"]
+    Stoch["4. Stochastic Calculus<br/>Brownian Motion, Ito's Lemma,<br/>SDEs &amp; Risk-Neutral Pricing"]
+    Num["5. Numerical Methods<br/>Monte Carlo Simulation,<br/>Finite Difference PDEs, Root Finding"]
+    Info["6. Information Theory<br/>Shannon Entropy, KL Divergence,<br/>Mutual Information Feature Selection"]
+
+    Prob --> LA & Calc
+    LA & Calc --> Stoch
+    Stoch --> Num & Info
 ```
 
 ---

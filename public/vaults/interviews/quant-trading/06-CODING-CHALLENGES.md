@@ -1093,91 +1093,25 @@ for method, data in result.items():
 
 ### 4.1 Real-Time Market Data Pipeline
 
-```
-MARKET DATA PIPELINE ARCHITECTURE
-===================================
-
-  Exchange       Exchange       Exchange
-  (NYSE)         (NASDAQ)       (BATS)
-     |              |              |
-     v              v              v
-  +------------------------------------------+
-  |         FEED HANDLER LAYER                |
-  |  - Protocol adapters (FIX, ITCH, PITCH)  |
-  |  - Sequence gap detection                |
-  |  - Wire-level parsing                    |
-  +------------------------------------------+
-              |
-              v
-  +------------------------------------------+
-  |         TICKER PLANT                      |
-  |  - Normalization (unified format)         |
-  |  - Conflation (throttle to consumers)     |
-  |  - Book building (maintain full LOB)      |
-  |  - Derived data (VWAP, TWAP, spreads)    |
-  +------------------------------------------+
-         |           |           |
-         v           v           v
-   +---------+  +---------+  +---------+
-   | Strategy|  | Risk    |  | GUI     |
-   | Engine  |  | Engine  |  | Display |
-   +---------+  +---------+  +---------+
-
-Key Design Decisions:
-- Multicast vs TCP for distribution
-- Snapshot + incremental updates for book state
-- Conflation policy: last-value vs time-based vs change-based
-- Persistence: write-ahead log for replay capability
+```mermaid
+flowchart TD
+    NYSE["NYSE"] & NAS["NASDAQ"] & BATS["Cboe / BATS"] --> FH["Feed Handler Layer<br/>Protocol adapters (ITCH, PITCH, SBE),<br/>Sequence gap detection &amp; wire parsing"]
+    FH --> TP["Ticker Plant<br/>Normalization, L2/L3 Book Building,<br/>Conflation, Derived Metrics (NBBO/VWAP)"]
+    TP --> SE["Strategy Engine"] & RE["Risk Engine"] & GUI["Trader GUI Display"]
 ```
 
 ### 4.2 Order Management System (OMS) Design
 
-```
-OMS ARCHITECTURE
-=================
-
-  Strategy Engine
-       |
-       v
-  +-------------------------------------------------+
-  |              ORDER MANAGEMENT SYSTEM              |
-  |                                                   |
-  |  +-------------+    +------------------+          |
-  |  | Order        |    | Position Keeper  |          |
-  |  | Validator    |    | (real-time P&L)  |          |
-  |  | - Limit chk  |    |                  |          |
-  |  | - Risk chk   |    | Qty, AvgPx, UPL |          |
-  |  | - Duplicate  |    | RPL, Margin      |          |
-  |  +------+------+    +--------+---------+          |
-  |         |                     |                    |
-  |  +------v------+    +--------v---------+          |
-  |  | Order State  |    | Execution        |          |
-  |  | Machine      |    | Report Handler  |          |
-  |  |              |    |                  |          |
-  |  | NEW -> SENT  |    | Fill routing     |          |
-  |  | SENT -> ACK  |    | Partial fills    |          |
-  |  | ACK -> FILL  |    | Corrections      |          |
-  |  | ACK -> CXL   |    | Busts            |          |
-  |  +------+------+    +------------------+          |
-  |         |                                          |
-  +---------v------------------------------------------+
-            |
-  +---------v------------------------------------------+
-  |         SMART ORDER ROUTER (SOR)                   |
-  |  - Venue selection (best price, liquidity)         |
-  |  - Order splitting (iceberg, TWAP, VWAP)           |
-  |  - Dark pool routing                               |
-  +---------+------------------------------------------+
-            |
-     +------+------+------+
-     v      v      v      v
-   NYSE  NASDAQ  BATS   Dark
-                         Pool
-
-Order State Machine:
-  CREATED -> PENDING_NEW -> NEW -> PARTIALLY_FILLED -> FILLED
-                                -> PENDING_CANCEL -> CANCELLED
-                                -> REJECTED
+```mermaid
+flowchart TD
+    Strat["Strategy Engine"] --> OV["Order Validator<br/>(Pre-trade risk, limit &amp; duplicate checks)"]
+    subgraph OMS["Order Management System (OMS)"]
+        OV --> OSM["Order State Machine<br/>(NEW -&gt; SENT -&gt; ACK -&gt; FILL / CXL)"]
+        ERH["Execution Report Handler<br/>(Fills, partial fills, busts)"] --> PK["Position Keeper<br/>(Real-time Qty, AvgPx, UPL, RPL, Margin)"]
+        ERH --> OSM
+    end
+    OSM --> SOR["Smart Order Router (SOR)<br/>Venue selection, TWAP/VWAP slicing, Dark routing"]
+    SOR --> V1["NYSE"] & V2["NASDAQ"] & V3["BATS"] & V4["Dark Pools"]
 ```
 
 ### 4.3 Backtesting Framework Architecture
