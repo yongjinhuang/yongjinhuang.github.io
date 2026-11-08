@@ -22,25 +22,16 @@ flowchart TD
 
 MEV is the profit that block builders/validators can extract by reordering, inserting, or censoring transactions within a block. It is an invisible tax on users.
 
-```
-MEV TAXONOMY
-
-GOOD MEV (beneficial):
-  Arbitrage:     Equalizes prices across DEXs
-  Liquidation:   Keeps lending protocols solvent
-
-BAD MEV (harmful):
-  Sandwich:      Front-run + back-run user trades
-  Time-bandit:   Reorg blocks to steal MEV from past blocks
-  JIT liquidity: Just-in-time LP that extracts value from traders
-
-MEV SUPPLY CHAIN (post-Merge Ethereum):
-
-User -> Wallet -> Mempool -> Searcher -> Builder -> Relay -> Proposer
-                                |           |         |        |
-                         Finds MEV     Builds    Routes    Proposes
-                         opportunities optimal   blocks    to network
-                                       blocks
+```mermaid
+flowchart TD
+    subgraph Tax["MEV TAXONOMY"]
+        Good["Good MEV (Beneficial)<br/>- Arbitrage: Equalizes prices across DEXs<br/>- Liquidation: Keeps lending protocols solvent"]
+        Bad["Bad MEV (Harmful)<br/>- Sandwich: Front-run + back-run user trades<br/>- Time-bandit: Reorg blocks to steal past MEV<br/>- JIT Liquidity: Just-in-time LP extracting value from traders"]
+    end
+    subgraph Chain["MEV SUPPLY CHAIN (Post-Merge Ethereum PBS)"]
+        direction LR
+        U["User"] --> W["Wallet"] --> Mem["Mempool"] --> S["Searcher<br/>(Finds MEV opportunities)"] --> B["Builder<br/>(Builds optimal blocks)"] --> R["Relay<br/>(Verifies &amp; routes blocks)"] --> P["Proposer<br/>(Proposes block to network)"]
+    end
 ```
 
 ### 1.2 Sandwich Attacks

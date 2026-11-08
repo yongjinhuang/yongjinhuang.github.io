@@ -13,9 +13,9 @@
 
 Apply a pre-computed input and hope for the best. No feedback, no correction.
 
-```
-  Reference ---> [Controller] ---> [Plant] ---> Output
-       r(t)          u(t)           y(t)
+```mermaid
+flowchart LR
+    Ref["Reference r(t)"] --> Ctrl["Controller"] -->|"Control u(t)"| Plant["Plant"] --> Out["Output y(t)"]
 ```
 
 Example: sending a fixed PWM signal to a motor to rotate "about 90 degrees."
@@ -30,12 +30,13 @@ Problems:
 
 Measure the output, compare it to the reference, and adjust the input.
 
-```
-  Reference ---> [+] ---> [Controller] ---> [Plant] ---> Output
-       r(t)      |   e(t)      u(t)           y(t)       |
-                 |                                        |
-                 +---------- [Sensor] <-------------------+
-                      -y(t)
+```mermaid
+flowchart LR
+    Ref["Reference r(t)"] --> Sum(("+ / -"))
+    Sum -->|"Error e(t) = r(t) - y_m(t)"| Ctrl["Controller"]
+    Ctrl -->|"Control u(t)"| Plant["Plant"]
+    Plant --> Out["Output y(t)"]
+    Out --> Sensor["Sensor"] -->|"-y_m(t)"| Sum
 ```
 
 The error signal e(t) = r(t) - y(t) drives the controller. This is the
@@ -139,17 +140,16 @@ different aspect of the error:
 u(t) = Kp * e(t) + Ki * integral(e(τ)dτ) + Kd * de(t)/dt
 ```
 
-```
-                    +--------+
-          e(t)      |        |
-   +----->[ Kp ]--->|        |
-   |                |        |
-   +----->[ Ki ]----| Summer |----> u(t)
-   |      [∫dt ]    |        |
-   |                |        |
-   +----->[ Kd ]--->|        |
-          [d/dt]    |        |
-                    +--------+
+```mermaid
+flowchart LR
+    E["Error e(t)"]
+    P["Proportional:<br/>Kp * e(t)"]
+    I["Integral:<br/>Ki * integral(e(t) dt)"]
+    D["Derivative:<br/>Kd * de(t)/dt"]
+    Sum(("Summer (+)"))
+    U["Control Output u(t)"]
+
+    E --> P & I & D --> Sum --> U
 ```
 
 In the Laplace domain:
@@ -687,11 +687,10 @@ contour = control.nyquist_response(L)
 
 ### 9.1 Standard Feedback Configuration
 
-```
-  R(s) -->[+]--> C(s) ---> G(s) ---+--> Y(s)
-           ^-                      |
-           |                       |
-           +----- H(s) <-----------+
+```mermaid
+flowchart LR
+    R["R(s)"] --> Sum(("+ / -")) --> C["Controller C(s)"] --> G["Plant G(s)"] --> Y["Y(s)"]
+    Y --> H["Sensor H(s)"] -->|"- Feedback"| Sum
 ```
 
 **Closed-loop transfer function** (reference to output):
@@ -722,12 +721,12 @@ sensitivity integral).
 
 ### 9.3 Disturbance Rejection
 
-```
-  R(s) -->[+]--> C(s) -->[+]--> G(s) ---+--> Y(s)
-           ^-             ^+             |
-           |              D(s)           |
-           |        (disturbance)        |
-           +-----------------------------+
+```mermaid
+flowchart LR
+    R["R(s)"] --> Sum1(("+ / -")) --> C["Controller C(s)"] --> Sum2(("+"))
+    D["Disturbance D(s)"] --> Sum2
+    Sum2 --> G["Plant G(s)"] --> Y["Y(s)"]
+    Y -->|"- Unity Feedback"| Sum1
 ```
 
 The effect of disturbance D(s) on output:
@@ -817,12 +816,13 @@ def discretize_pid_tustin(
 
 In robotics, a common architecture is cascaded loops:
 
-```
-  Position  --> [Pos   ] --> Velocity --> [Vel    ] --> Torque --> [Motor]
-  reference     [Ctrl  ]    reference     [Ctrl   ]    command     [Plant]
-                (outer)                   (inner)
-                  |                          |
-                  +<-- position feedback     +<-- velocity feedback
+```mermaid
+flowchart LR
+    PosRef["Position Reference"] --> PosCtrl["Position Controller<br/>(Outer Loop — e.g., 100 Hz)"]
+    PosCtrl -->|"Velocity Reference"| VelCtrl["Velocity Controller<br/>(Inner Loop — e.g., 1 kHz)"]
+    VelCtrl -->|"Torque / Current Command"| Motor["Motor Plant"]
+    Motor -->|"Velocity Feedback"| VelCtrl
+    Motor -->|"Position Feedback"| PosCtrl
 ```
 
 - **Inner loop** (velocity/torque): fast, high bandwidth, handles disturbances.

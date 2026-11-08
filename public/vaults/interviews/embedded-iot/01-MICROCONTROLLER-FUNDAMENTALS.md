@@ -28,23 +28,18 @@ cost, and software architecture.
 on one die. This integration trades raw performance for lower power, lower cost, and
 deterministic real-time behavior.
 
-```
-  Microprocessor (MPU) System              Microcontroller (MCU)
-  ========================               =========================
-  +-------+  +---------+                +---------------------------+
-  |  CPU  |--| DDR RAM |                |  +-----+  +-------+      |
-  +-------+  +---------+                |  | CPU |  | Flash |      |
-      |                                  |  +-----+  +-------+      |
-  +-------+  +---------+                |     |      | SRAM  |      |
-  | GPU   |--| Storage |                |  +-----+  +-------+      |
-  +-------+  +---------+                |  | NVIC|                  |
-      |                                  |  +-----+  +-----------+  |
-  +-----------+                          |  | DMA |  |Peripherals|  |
-  |Peripherals|                          |  +-----+  | UART,SPI  |  |
-  | (external)|                          |           | I2C,ADC.. |  |
-  +-----------+                          |           +-----------+  |
-                                         +---------------------------+
-                                              Single Chip
+```mermaid
+flowchart LR
+    subgraph MPU["Microprocessor (MPU) System — Multi-Chip"]
+        M_CPU["CPU"] --- DDR["External DDR RAM"]
+        M_CPU --- GPU["GPU"] --- Stor["External Flash / eMMC"]
+        GPU --- ExtP["External Peripherals"]
+    end
+
+    subgraph MCU["Microcontroller (MCU) — Single Chip SoC"]
+        U_CPU["CPU Core"] --- Flash["On-Chip Flash"] & SRAM["On-Chip SRAM"]
+        U_CPU --- NVIC["NVIC &amp; DMA"] --- Periph["On-Chip Peripherals<br/>(UART, SPI, I2C, ADC, Timers)"]
+    end
 ```
 
 ---
@@ -67,37 +62,20 @@ family dominates the 32-bit MCU market.
 | Cortex-M33 | 3-stage  | TrustZone security, M4 features   | Secure IoT, payment      |
 | Cortex-M55 | 4-stage  | Helium (M-Profile Vector Ext.)    | TinyML, edge AI          |
 
-```
-  ARM Cortex-M4 Core (Simplified)
-  ================================
+```mermaid
+flowchart TD
+    subgraph Core["ARM Cortex-M4 Core"]
+        Fetch["Fetch Stage<br/>(+ Branch Predictor)"] --> Dec["Decode Stage"] --> Exec["Execute Stage<br/>(ALU + FPU + DSP)"] --> WB["Write Back"]
+        MPU["MPU (Memory Protection)"]
+        NVIC["NVIC (Interrupt Controller)"]
+    end
 
-  +--------------------------------------------------+
-  |                  Cortex-M4 Core                   |
-  |                                                    |
-  |  +--------+   +--------+   +------+   +-------+  |
-  |  | Fetch  |-->| Decode |-->| Exec |-->| Write |  |
-  |  | Stage  |   | Stage  |   | ALU  |   | Back  |  |
-  |  +--------+   +--------+   | FPU  |   +-------+  |
-  |       |                     | DSP  |              |
-  |  +--------+                 +------+              |
-  |  | Branch |                                        |
-  |  | Predict|   +------+   +------+                 |
-  |  +--------+   | MPU  |   | NVIC |                 |
-  |               +------+   +------+                 |
-  +------------|---------|----------|-----------------+
-               |         |          |
-          +---------+ +------+ +---------+
-          |  I-Bus  | | S-Bus| |  D-Bus  |
-          | (Code)  | |(Sys) | | (Data)  |
-          +---------+ +------+ +---------+
-               |         |          |
-          +------------------------------------+
-          |        Bus Matrix (AHB)            |
-          +------------------------------------+
-               |              |          |
-          +---------+   +---------+ +----------+
-          |  Flash  |   |  SRAM   | |Peripherals|
-          +---------+   +---------+ +----------+
+    IBus["I-Bus (Code)"]
+    DBus["D-Bus (Data)"]
+    SBus["S-Bus (System)"]
+
+    Core --> IBus & DBus & SBus --> AHB["AHB Bus Matrix"]
+    AHB --> Flash[("Flash")] & SRAM[("SRAM")] & Periph["Peripherals"]
 ```
 
 ### 2.2 RISC-V
@@ -298,45 +276,29 @@ derive their clock from this tree.
 The PLL multiplies a source clock to produce higher frequencies. On STM32F4, a typical
 configuration:
 
-```
-  HSE (8 MHz) --> /M (divide by 8) --> 1 MHz VCO input
-              --> *N (multiply by 336) --> 336 MHz VCO output
-              --> /P (divide by 2) --> 168 MHz SYSCLK
-              --> /Q (divide by 7) --> 48 MHz USB clock
+```mermaid
+flowchart LR
+    HSE["HSE Crystal<br/>(8 MHz)"] -->|"/M (div 8)"| VCOIn["VCO Input<br/>(1 MHz)"] -->|"*N (mul 336)"| VCOOut["VCO Output<br/>(336 MHz)"]
+    VCOOut -->|"/P (div 2)"| SYS["SYSCLK<br/>(168 MHz)"]
+    VCOOut -->|"/Q (div 7)"| USB["USB Clock<br/>(48 MHz)"]
 ```
 
 ### 6.3 Clock Tree
 
-```
-  Clock Tree (STM32F4 Simplified)
-  ================================
+```mermaid
+flowchart LR
+    HSI["HSI RC<br/>(16 MHz)"] --> MUX["System Clock MUX"]
+    HSE["HSE Crystal<br/>(8 MHz)"] --> MUX
+    HSI & HSE --> PLL["Main PLL<br/>(/M, *N, /P, /Q)"]
+    PLL -->|"/P"| MUX
+    PLL -->|"/Q"| USB["USB 48 MHz"]
 
-  +-----+       +-----+
-  | HSI |--+--->| MUX |---> System Clock (SYSCLK)
-  | 16M |  |   |     |        |
-  +-----+  |   +-----+        |
-            |     ^            v
-  +-----+  |     |      +----------+
-  | HSE |--+-----+      | AHB Prescaler |---> HCLK (CPU, DMA, memory)
-  | 8M  |--+            |  /1,2,..,512  |       |
-  +-----+  |            +----------+       |
-            v                              v
-  +-----+ +-----+                  +-------------+
-  | /M  |>| PLL |>-----+          | APB1 Prescaler|---> PCLK1 (42 MHz max)
-  +-----+ | *N  |      |          |  /1,2,4,8,16  |     (UART, I2C, TIM2-7)
-           | /P  |------+          +-------------+
-           | /Q  |----> USB 48M          |
-           +-----+                 +-------------+
-                                   | APB2 Prescaler|---> PCLK2 (84 MHz max)
-  +-----+                         |  /1,2,4,8,16  |     (SPI1, USART1, TIM1)
-  | LSI |---> IWDG                +-------------+
-  | 32k |
-  +-----+
+    MUX --> SYS["SYSCLK"] --> AHB["AHB Prescaler<br/>(/1..512)"] --> HCLK["HCLK<br/>(CPU, DMA, Memory)"]
+    HCLK --> APB1["APB1 Prescaler<br/>(/1..16)"] --> PCLK1["PCLK1 (42 MHz max)<br/>(UART, I2C, TIM2-7)"]
+    HCLK --> APB2["APB2 Prescaler<br/>(/1..16)"] --> PCLK2["PCLK2 (84 MHz max)<br/>(SPI1, USART1, TIM1)"]
 
-  +-----+
-  | LSE |---> RTC
-  |32768|
-  +-----+
+    LSI["LSI (32 kHz)"] --> IWDG["Independent Watchdog (IWDG)"]
+    LSE["LSE (32.768 kHz)"] --> RTC["Real-Time Clock (RTC)"]
 ```
 
 ### 6.4 Clock Configuration in Code
@@ -393,29 +355,21 @@ critical for achieving multi-year battery life.
 
 ### 7.2 Power Mode Flow
 
-```
-                     +--------+
-                     |  RUN   |  CPU executing instructions
-                     +--------+
-                      |      ^
-               WFI/WFE    Interrupt
-                      v      |
-                     +--------+
-                     | SLEEP  |  CPU halted, peripherals running
-                     +--------+
-                      |      ^
-               SLEEPDEEP  EXTI/RTC
-                      v      |
-                     +--------+
-                     |  STOP  |  Most clocks off, SRAM retained
-                     +--------+
-                      |      ^
-               PDDS bit   WKUP/RTC
-                      v      |
-                     +--------+
-                     |STANDBY |  Only wakeup logic powered
-                     +--------+  (SRAM content lost!)
-```
+```mermaid
+stateDiagram-v2
+    RUN : RUN (CPU + Peripherals active)
+    SLEEP : SLEEP (CPU halted, peripherals running)
+    STOP : STOP (PLL/HSI/HSE off, SRAM retained)
+    STANDBY : STANDBY (Only wakeup logic powered, SRAM lost)
+
+    [*] --> RUN
+    RUN --> SLEEP : WFI / WFE
+    SLEEP --> RUN : Any Interrupt
+    SLEEP --> STOP : SLEEPDEEP
+    STOP --> RUN : EXTI / RTC Wakeup
+    STOP --> STANDBY : PDDS bit set
+    STANDBY --> RUN : WKUP Pin / RTC Reset
+````
 
 ### 7.3 MicroPython Deep Sleep Example (ESP32)
 
@@ -520,32 +474,14 @@ When choosing an MCU for a product, evaluate:
 
 When you power on an MCU, here is what happens before your `main()` runs:
 
-```
-  MCU Power-On Sequence
-  =====================
-
-  1. Power applied, voltage ramps up
-         |
-  2. POR circuit detects VDD > threshold
-         |
-  3. Internal RC oscillator (HSI) starts
-         |
-  4. CPU released from reset
-         |
-  5. CPU reads address 0x00000000 --> Initial Stack Pointer (MSP)
-         |
-  6. CPU reads address 0x00000004 --> Reset Handler address
-         |
-  7. CPU jumps to Reset Handler
-         |
-  8. Reset Handler:
-     a) Copy .data section from Flash to SRAM
-     b) Zero-fill .bss section in SRAM
-     c) Initialize C runtime (libc_init_array)
-     d) Call SystemInit() -- configure clocks
-     e) Call main()
-         |
-  9. main() begins executing your application
+```mermaid
+flowchart TD
+    S1["1. Power applied, VDD ramps up"] --> S2["2. POR circuit detects VDD &gt; threshold"]
+    S2 --> S3["3. Internal RC oscillator (HSI) starts"] --> S4["4. CPU released from reset"]
+    S4 --> S5["5. Read 0x00000000 -&gt; Load Main Stack Pointer (MSP)"]
+    S5 --> S6["6. Read 0x00000004 -&gt; Load Reset_Handler address into PC"]
+    S6 --> S7["7. Execute Reset_Handler:<br/>a) Copy .data from Flash to SRAM<br/>b) Zero-fill .bss in SRAM<br/>c) __libc_init_array()<br/>d) SystemInit() (configure clocks)<br/>e) Call main()"]
+    S7 --> S8["8. main() application loop executes"]
 ```
 
 This sequence is explored in depth in Chapter 2 (Bare-Metal Programming).

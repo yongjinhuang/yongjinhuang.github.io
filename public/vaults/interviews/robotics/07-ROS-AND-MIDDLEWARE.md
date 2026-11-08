@@ -56,24 +56,15 @@ ROS 2 is the current standard. ROS 1 reached end-of-life in May 2025.
 
 ### 2.1 The Layered Architecture
 
-```
-┌─────────────────────────────────────────────┐
-│              User Application               │
-│         (your nodes, launch files)          │
-├─────────────────────────────────────────────┤
-│         Client Libraries (rclpy, rclcpp)    │
-├─────────────────────────────────────────────┤
-│                rcl (ROS Client Library)      │
-│              Common C implementation        │
-├─────────────────────────────────────────────┤
-│              rmw (ROS Middleware Interface)  │
-│           Abstract middleware layer         │
-├─────────────────────────────────────────────┤
-│         DDS Implementation                  │
-│   (CycloneDDS, FastDDS, Connext, etc.)     │
-├─────────────────────────────────────────────┤
-│              UDP/TCP/Shared Memory           │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["User Application<br/>(Your ROS 2 nodes, launch files)"]
+    L2["Client Libraries<br/>(rclcpp, rclpy)"]
+    L3["rcl (ROS Client Library)<br/>Common C implementation"]
+    L4["rmw (ROS Middleware Interface)<br/>Abstract middleware layer"]
+    L5["DDS Implementation<br/>(CycloneDDS, FastDDS, RTI Connext)"]
+    L6["Transport Layer<br/>(UDP / TCP / Shared Memory Zero-Copy)"]
+    L1 --> L2 --> L3 --> L4 --> L5 --> L6
 ```
 
 The key insight: the `rmw` layer is an abstraction. You can swap DDS vendors
@@ -89,15 +80,10 @@ publish/subscribe communication. Key concepts:
 - **Quality of Service (QoS)**: Policies controlling reliability, durability, etc.
 - **Discovery**: Automatic, decentralized peer discovery (no central broker)
 
-```
-┌──────────────┐                    ┌──────────────┐
-│   Node A     │   DDS Discovery    │   Node B     │
-│              │◄──────────────────►│              │
-│  Publisher   │                    │  Subscriber  │
-│  /cmd_vel    │────── Topic ──────►│  /cmd_vel    │
-│              │   Twist message    │              │
-└──────────────┘                    └──────────────┘
-        No central broker needed!
+```mermaid
+flowchart LR
+    NA["Node A<br/>(Publisher: /cmd_vel)"] <-->|"DDS Multicast Discovery<br/>(No central broker needed)"| NB["Node B<br/>(Subscriber: /cmd_vel)"]
+    NA -->|"Topic /cmd_vel (geometry_msgs/Twist)"| NB
 ```
 
 ### 2.3 QoS Profiles
@@ -212,21 +198,12 @@ int main(int argc, char** argv) {
 
 Topics provide anonymous, many-to-many, asynchronous communication.
 
-```
-                    /camera/image_raw
-  ┌──────────┐    ─────────────────►    ┌─────────────┐
-  │  Camera   │                         │  Detector   │
-  │  Driver   │    /camera/info         │  Node       │
-  │  Node     │    ─────────────────►   │             │
-  └──────────┘                          └─────────────┘
-       │                                      │
-       │         /camera/image_raw            │
-       │    ─────────────────►    ┌───────────┴──┐
-       │                         │  SLAM Node    │
-       └─────────────────────────┤              │
-                                 └──────────────┘
-
-  One publisher, multiple subscribers. Fully decoupled.
+```mermaid
+flowchart LR
+    Cam["Camera Driver Node"] -->|"/camera/image_raw"| Det["Detector Node"]
+    Cam -->|"/camera/info"| Det
+    Cam -->|"/camera/image_raw"| SLAM["SLAM Node"]
+    Det --> SLAM
 ```
 
 ### 3.3 Services -- Request/Reply
@@ -279,22 +256,17 @@ class GripperClient(Node):
 Actions combine a goal, feedback, and a result. They are the correct
 abstraction for tasks like "navigate to point B" or "pick up the cup."
 
-```
-┌──────────┐                        ┌──────────────┐
-│  Action  │    Goal Request        │   Action     │
-│  Client  │───────────────────────►│   Server     │
-│          │◄───────────────────────│              │
-│          │    Goal Response       │              │
-│          │                        │              │
-│          │    Feedback (stream)   │              │
-│          │◄───────────────────────│              │
-│          │    (progress updates)  │              │
-│          │                        │              │
-│          │    Result              │              │
-│          │◄───────────────────────│              │
-│          │    (final outcome)     │              │
-└──────────┘                        └──────────────┘
-        Client can cancel at any time!
+```mermaid
+sequenceDiagram
+    participant C as "Action Client"
+    participant S as "Action Server"
+
+    C->>S: Send Goal Request
+    S-->>C: Goal Response (Accepted / Rejected)
+    loop Periodic Progress (Preemptible / Cancellable)
+        S-->>C: Feedback Stream (progress updates)
+    end
+    S-->>C: Final Result (Outcome)
 ```
 
 ```python
@@ -347,31 +319,18 @@ processing node is ready?
 
 Lifecycle (managed) nodes follow a state machine:
 
-```
-                ┌──────────────┐
-                │  Unconfigured │
-                └──────┬───────┘
-                       │ on_configure()
-                ┌──────▼───────┐
-                │   Inactive   │
-                └──────┬───────┘
-                       │ on_activate()
-                ┌──────▼───────┐
-                │    Active    │◄──────┐
-                └──────┬───────┘       │
-                       │ on_deactivate()
-                ┌──────▼───────┐       │
-                │   Inactive   │───────┘
-                └──────┬───────┘  on_activate()
-                       │ on_cleanup()
-                ┌──────▼───────┐
-                │  Unconfigured │
-                └──────┬───────┘
-                       │ on_shutdown()
-                ┌──────▼───────┐
-                │   Finalized  │
-                └──────────────┘
-```
+```mermaid
+stateDiagram-v2
+    [*] --> Unconfigured
+    Unconfigured --> Inactive : on_configure()
+    Inactive --> Active : on_activate()
+    Active --> Inactive : on_deactivate()
+    Inactive --> Unconfigured : on_cleanup()
+    Unconfigured --> Finalized : on_shutdown()
+    Inactive --> Finalized : on_shutdown()
+    Active --> Finalized : on_shutdown()
+    Finalized --> [*]
+````
 
 ```cpp
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
@@ -524,27 +483,11 @@ Raw URDF is verbose. Xacro adds macros, properties, and conditionals:
 Every sensor and actuator on a robot has its own coordinate frame. tf2
 maintains a tree of transforms between all frames, updated in real time.
 
-```
-                    map
-                     │
-                     │ (localization)
-                     ▼
-                    odom
-                     │
-                     │ (odometry)
-                     ▼
-                 base_link
-                 ┌───┼───┐
-                 │   │   │
-                 ▼   ▼   ▼
-            left_  base_  right_
-            wheel  laser  wheel
-                   │
-                   ▼
-                 camera_link
-                   │
-                   ▼
-              camera_optical
+```mermaid
+flowchart TD
+    Map["map"] -->|"localization (AMCL / SLAM)"| Odom["odom"] -->|"wheel / visual odometry"| Base["base_link"]
+    Base --> LW["left_wheel"] & Laser["base_laser"] & RW["right_wheel"]
+    Laser --> Cam["camera_link"] --> Opt["camera_optical_frame"]
 ```
 
 ### 6.2 Broadcasting Transforms
@@ -710,34 +653,17 @@ container = ComposableNodeContainer(
 
 ### 8.2 Gazebo Architecture (Ignition/Gz)
 
-```
-┌──────────────────────────────────────────┐
-│              Gazebo Simulator             │
-│                                          │
-│  ┌──────────┐  ┌──────────┐  ┌────────┐ │
-│  │ Physics  │  │ Rendering│  │Sensors │ │
-│  │ Engine   │  │ Engine   │  │Plugins │ │
-│  │ (DART/   │  │ (OGRE2)  │  │(LiDAR, │ │
-│  │  Bullet) │  │          │  │Camera) │ │
-│  └────┬─────┘  └────┬─────┘  └───┬────┘ │
-│       │              │            │      │
-│       └──────┬───────┴────────────┘      │
-│              │                           │
-│       ┌──────▼──────┐                    │
-│       │  gz-transport│                   │
-│       │  (internal)  │                   │
-│       └──────┬──────┘                    │
-│              │                           │
-│       ┌──────▼──────┐                    │
-│       │  ros_gz_     │                   │
-│       │  bridge      │                   │
-│       └──────┬──────┘                    │
-└──────────────┼───────────────────────────┘
-               │
-        ┌──────▼──────┐
-        │   ROS 2     │
-        │   Topics    │
-        └─────────────┘
+```mermaid
+flowchart TD
+    subgraph Gazebo["Gazebo Simulator"]
+        Phys["Physics Engine<br/>(DART / Bullet)"]
+        Rend["Rendering Engine<br/>(OGRE2)"]
+        Sens["Sensor Plugins<br/>(LiDAR, Camera, IMU)"]
+        GZT["gz-transport<br/>(Internal Pub/Sub)"]
+        Bridge["ros_gz_bridge"]
+        Phys & Rend & Sens --> GZT --> Bridge
+    end
+    Bridge <--> ROS2["ROS 2 Topics"]
 ```
 
 ### 8.3 Spawning a Robot in Gazebo
@@ -782,31 +708,16 @@ MoveIt is the standard framework for robotic arm manipulation:
 
 ### 9.2 MoveIt Architecture
 
-```
-┌─────────────────────────────────────────────────┐
-│                   MoveIt 2                       │
-│                                                 │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────┐ │
-│  │ Planning │  │ Collision│  │  Kinematics   │ │
-│  │ Pipeline │  │ Checking │  │  (KDL/TRAC-IK)│ │
-│  │ (OMPL)   │  │ (FCL)    │  │               │ │
-│  └────┬─────┘  └────┬─────┘  └───────┬───────┘ │
-│       └──────────────┼────────────────┘         │
-│                      │                          │
-│              ┌───────▼────────┐                 │
-│              │  Move Group    │                 │
-│              │  (Action Server)│                │
-│              └───────┬────────┘                 │
-└──────────────────────┼──────────────────────────┘
-                       │
-               ┌───────▼────────┐
-               │  ros2_control  │
-               │  (controllers) │
-               └───────┬────────┘
-                       │
-               ┌───────▼────────┐
-               │  Robot Hardware│
-               └────────────────┘
+```mermaid
+flowchart TD
+    subgraph MoveIt["MoveIt 2"]
+        OMPL["Planning Pipeline<br/>(OMPL / Pilz)"]
+        FCL["Collision Checking<br/>(FCL)"]
+        IK["Kinematics<br/>(KDL / TRAC-IK / PickNik)"]
+        MG["Move Group<br/>(Action Server)"]
+        OMPL & FCL & IK --> MG
+    end
+    MG --> Ctrl["ros2_control<br/>(JointTrajectoryController)"] --> HW["Robot Hardware"]
 ```
 
 ### 9.3 Using MoveIt from Python
@@ -850,30 +761,20 @@ class PickAndPlace(Node):
 
 Nav2 provides everything a mobile robot needs to navigate autonomously:
 
-```
-┌──────────────────────────────────────────────────────┐
-│                      Nav2                             │
-│                                                      │
-│  ┌──────────┐  ┌──────────────┐  ┌────────────────┐ │
-│  │  Global  │  │   Local      │  │   Recovery     │ │
-│  │  Planner │  │   Controller │  │   Behaviors    │ │
-│  │(NavFn/   │  │(DWB/MPPI/    │  │(Spin/BackUp/  │ │
-│  │ Smac)    │  │ TEB)         │  │ Wait)          │ │
-│  └────┬─────┘  └──────┬───────┘  └───────┬────────┘ │
-│       │               │                  │          │
-│  ┌────▼───────────────▼──────────────────▼────────┐ │
-│  │              Behavior Tree (BT)                 │ │
-│  │         (Orchestrates the full pipeline)        │ │
-│  └─────────────────────┬──────────────────────────┘ │
-│                        │                            │
-│  ┌─────────────────────▼──────────────────────────┐ │
-│  │              Costmap 2D                         │ │
-│  │  ┌──────────┐ ┌──────────┐ ┌────────────────┐  │ │
-│  │  │ Static   │ │ Obstacle │ │  Inflation     │  │ │
-│  │  │ Layer    │ │ Layer    │ │  Layer         │  │ │
-│  │  └──────────┘ └──────────┘ └────────────────┘  │ │
-│  └────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Nav2["ROS 2 Navigation Stack (Nav2)"]
+        GP["Global Planner<br/>(NavFn / Smac)"]
+        LC["Local Controller<br/>(DWB / MPPI / RPP)"]
+        Rec["Recovery Behaviors<br/>(Spin / BackUp / Wait)"]
+        BT["Behavior Tree (BT.CPP)<br/>(Orchestrates navigation pipeline)"]
+        subgraph Costmap["Costmap 2D"]
+            SL["Static Layer"]
+            OL["Obstacle / Voxel Layer"]
+            IL["Inflation Layer"]
+        end
+        GP & LC & Rec <--> BT <--> Costmap
+    end
 ```
 
 ### 10.2 The Costmap
@@ -922,29 +823,20 @@ controller must know about specific motor drivers, encoders, etc.
 
 ### 11.2 Architecture
 
-```
-┌───────────────────────────────────────────────┐
-│              Controller Manager                │
-│                                               │
-│  ┌─────────────┐  ┌─────────────────────────┐ │
-│  │ Joint       │  │ Diff Drive Controller   │ │
-│  │ Trajectory  │  │ (converts cmd_vel to    │ │
-│  │ Controller  │  │  wheel velocities)      │ │
-│  └──────┬──────┘  └───────────┬─────────────┘ │
-│         │                     │               │
-│  ┌──────▼─────────────────────▼─────────────┐ │
-│  │         Hardware Interface (API)          │ │
-│  │   read() / write() at fixed frequency    │ │
-│  └──────┬───────────────────────────────────┘ │
-└─────────┼─────────────────────────────────────┘
-          │
-┌─────────▼─────────────────────────────────────┐
-│        Hardware Resource Layer                 │
-│  ┌─────────────┐  ┌──────────┐  ┌──────────┐ │
-│  │  GPIO       │  │  CAN Bus │  │  EtherCAT│ │
-│  │  Driver     │  │  Driver  │  │  Driver  │ │
-│  └─────────────┘  └──────────┘  └──────────┘ │
-└───────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CM["ros2_control Controller Manager"]
+        JTC["Joint Trajectory Controller"]
+        DDC["Diff Drive Controller<br/>(cmd_vel -&gt; wheel velocities)"]
+        HWI["Hardware Interface (SystemInterface)<br/>read() / write() at deterministic real-time rate"]
+        JTC & DDC --> HWI
+    end
+    subgraph HWL["Hardware Resource Layer"]
+        GPIO["GPIO Driver"]
+        CAN["CAN Bus Driver"]
+        ECAT["EtherCAT Driver"]
+    end
+    HWI --> GPIO & CAN & ECAT
 ```
 
 ### 11.3 Writing a Hardware Interface
@@ -990,37 +882,21 @@ private:
 
 A complete ROS 2 system for a mobile manipulator:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    ROS 2 Computation Graph                      │
-│                                                                 │
-│  ┌──────────┐   /scan    ┌──────────┐  /map   ┌──────────────┐│
-│  │  LiDAR   │──────────►│   SLAM   │────────►│  Map Server  ││
-│  │  Driver  │            │          │         │              ││
-│  └──────────┘            └──────────┘         └──────┬───────┘│
-│                                                       │       │
-│  ┌──────────┐  /image    ┌──────────┐                │       │
-│  │  Camera  │──────────►│ Object   │  /detections    │       │
-│  │  Driver  │            │ Detector │───────┐        │       │
-│  └──────────┘            └──────────┘       │        │       │
-│                                              ▼        ▼       │
-│  ┌──────────┐  /odom     ┌──────────────────────────────────┐│
-│  │  Motor   │──────────►│           Nav2                    ││
-│  │  Driver  │◄──────────│  (planner + controller + costmap) ││
-│  │          │  /cmd_vel  └──────────────────────────────────┘│
-│  └──────────┘                                                │
-│                                                               │
-│  ┌──────────┐  /joint_states  ┌──────────────┐              │
-│  │  Arm     │────────────────►│   MoveIt 2   │              │
-│  │  Driver  │◄────────────────│              │              │
-│  │          │  /joint_cmds    └──────────────┘              │
-│  └──────────┘                                                │
-│                                                               │
-│  ┌──────────┐                 ┌──────────────┐              │
-│  │   tf2    │◄────────────────│ Robot State  │              │
-│  │  Buffer  │   /tf, /tf_static│ Publisher   │              │
-│  └──────────┘                 └──────────────┘              │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Graph["ROS 2 Computation Graph"]
+        LiDAR["LiDAR Driver"] -->|"/scan"| SLAM["SLAM Node"] -->|"/map"| MapSrv["Map Server"]
+        Cam["Camera Driver"] -->|"/image"| Det["Object Detector"]
+        Motor["Motor Driver"] -->|"/odom"| Nav2["Nav2<br/>(Planner + Controller + Costmap)"]
+        Det -->|"/detections"| Nav2
+        MapSrv --> Nav2
+        Nav2 -->|"/cmd_vel"| Motor
+
+        Arm["Arm Driver"] -->|"/joint_states"| MoveIt["MoveIt 2"]
+        MoveIt -->|"/joint_cmds"| Arm
+
+        RSP["Robot State Publisher"] -->|"/tf, /tf_static"| TF2["tf2 Buffer"]
+    end
 ```
 
 ---

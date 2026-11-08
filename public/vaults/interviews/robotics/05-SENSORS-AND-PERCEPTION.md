@@ -129,15 +129,10 @@ LiDAR (Light Detection And Ranging) emits laser pulses and measures the time of 
   distance = (speed_of_light * time_of_flight) / 2
 ```
 
-```
-  LiDAR Sensor
-  ┌─────┐
-  │ TX ─┼──── laser pulse ──────►  ┌────┐
-  │     │                          │    │
-  │ RX ◄┼──── reflected pulse ◄──  │obj │
-  │     │                          │    │
-  └─────┘                          └────┘
-  │◄───────── distance d ─────────►│
+```mermaid
+flowchart LR
+    LiDAR["LiDAR Sensor<br/>(TX Laser + RX Photodiode)"] -->|"Emits laser pulse (t_0)"| Obj["Target Object<br/>(Distance d = c * delta_t / 2)"]
+    Obj -->|"Reflected pulse returns (t_0 + delta_t)"| LiDAR
 ```
 
 ### 3.2 Types of LiDAR
@@ -323,19 +318,12 @@ We want to estimate x[k] given all measurements z[1], ..., z[k].
 
 ### 6.2 The Two-Step Algorithm
 
-```
-  ┌─────────────────────────────────────────────────────┐
-  │                KALMAN FILTER CYCLE                  │
-  │                                                     │
-  │  ┌──────────┐         ┌────────────┐               │
-  │  │ PREDICT  │ ──────► │  UPDATE    │               │
-  │  │          │         │ (Correct)  │               │
-  │  └──────────┘         └─────┬──────┘               │
-  │       ▲                     │                      │
-  │       │                     │                      │
-  │       └─────────────────────┘                      │
-  │              next time step                        │
-  └─────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph KF["KALMAN FILTER RECURSIVE CYCLE"]
+        Pred["1. PREDICT (Time Update)<br/>Project state &amp; covariance forward using motion model:<br/>x_hat_k|k-1 = F * x_hat_k-1<br/>P_k|k-1 = F * P_k-1 * F^T + Q"] --> Upd["2. UPDATE (Measurement Update)<br/>Correct prediction using sensor measurement z_k:<br/>K_k = P * H^T * (H * P * H^T + R)^-1<br/>x_hat_k = x_hat_k|k-1 + K_k * (z_k - H * x_hat_k|k-1)"]
+        Upd -->|"Next time step (k -> k+1)"| Pred
+    end
 ```
 
 **Predict step** (propagate through model):
@@ -491,12 +479,12 @@ Instead of linearizing, the UKF propagates a set of carefully chosen **sigma poi
 
 Each sensor runs its own processing pipeline, and results are fused at a high level.
 
-```
-  IMU ──► Attitude Estimation ──►┐
-                                  ├──► Fusion ──► State Estimate
-  GPS ──► Position Fix ──────────►┤
-                                  │
-  LiDAR ──► Odometry ───────────►┘
+```mermaid
+flowchart LR
+    IMU["IMU"] --> Att["Attitude Estimation"]
+    GPS["GPS"] --> Pos["Position Fix"]
+    LiDAR["LiDAR"] --> Odom["Scan-Matching Odometry"]
+    Att & Pos & Odom --> Fusion["Loosely Coupled Fusion"] --> Est["State Estimate"]
 ```
 
 **Pros:** Simple, modular, each sensor can fail independently.
@@ -506,12 +494,9 @@ Each sensor runs its own processing pipeline, and results are fused at a high le
 
 Raw sensor data is fused in a single estimator.
 
-```
-  IMU raw data ──────────►┐
-                           ├──► Single EKF/UKF ──► State Estimate
-  Camera raw features ────►┤
-                           │
-  LiDAR raw points ───────►┘
+```mermaid
+flowchart LR
+    IMU["IMU Raw Accel / Gyro"] & Cam["Camera Raw Features"] & LiDAR["LiDAR Raw Points"] --> EKF["Tightly Coupled Single EKF / UKF / Factor Graph"] --> Est["State Estimate"]
 ```
 
 **Pros:** No information loss, handles correlations, better accuracy.
@@ -587,17 +572,10 @@ The covariance matrix captures correlations between robot pose and all landmarks
 
 Modern SLAM formulates the problem as a graph optimization:
 
-```
-  Pose Graph:
-
-  x0 ────── x1 ────── x2 ────── x3
-  │          │                    │
-  │          │                    │
-  └──────────┘────────────────────┘
-       loop closure constraint
-
-  Nodes: robot poses at different times
-  Edges: constraints from odometry or loop closures
+```mermaid
+flowchart LR
+    X0(("x0")) -->|"Odometry"| X1(("x1")) -->|"Odometry"| X2(("x2")) -->|"Odometry"| X3(("x3"))
+    X3 -.->|"Loop Closure Constraint"| X0 & X1
 ```
 
 **Front-end:** Detects loop closures (recognizes previously visited places) and builds the graph.
@@ -726,18 +704,10 @@ Different sensors produce data at different times. Even a few milliseconds of mi
 
 Every sensor has its own coordinate frame. Transformations between frames (extrinsic calibration) must be known precisely.
 
-```
-  World Frame
-      │
-      ├── Robot Base Frame
-      │       │
-      │       ├── IMU Frame
-      │       │
-      │       ├── LiDAR Frame
-      │       │
-      │       └── Camera Frame
-      │
-      └── Map Frame
+```mermaid
+flowchart TD
+    World["World Frame"] --> Base["Robot Base Frame (base_link)"] & Map["Map Frame"]
+    Base --> IMU["IMU Frame"] & LiDAR["LiDAR Frame"] & Cam["Camera Frame"]
 ```
 
 Use TF (Transform) libraries (e.g., ROS tf2) to manage these transformations. A common source of bugs is incorrect or inconsistent frame conventions (e.g., x-forward vs. z-forward, left-hand vs. right-hand coordinates).

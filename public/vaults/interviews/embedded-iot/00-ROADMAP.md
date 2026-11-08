@@ -12,30 +12,13 @@ This guide takes you from zero embedded experience to understanding and building
 
 **Short answer**: Not to start, but eventually yes.
 
-```
-+------------------------------------------------------------------------+
-|                     LEARNING WITHOUT HARDWARE                           |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  SIMULATORS / EMULATORS              ONLINE PLATFORMS                  |
-|  +-------------------------+         +---------------------------+     |
-|  | QEMU (ARM, RISC-V)       |         | Wokwi (Arduino/ESP32)     |     |
-|  | Renode (multi-node)       |         | TinkerCAD Circuits         |     |
-|  | SimAVR (AVR family)       |         | ARM Mbed Simulator         |     |
-|  | Keil uVision simulator   |         | PlatformIO + CI            |     |
-|  +-------------------------+         +---------------------------+     |
-|                                                                        |
-|  RECOMMENDED STARTER HARDWARE (Budget: ~$50-100)                       |
-|  +------------------------------------------------------------------+ |
-|  | Raspberry Pi Pico W  ($6)   -- RP2040, great for bare-metal       | |
-|  | ESP32-S3 DevKit      ($10)  -- WiFi + BLE, perfect for IoT        | |
-|  | STM32 Nucleo board   ($15)  -- Industry-standard ARM Cortex-M     | |
-|  | Raspberry Pi 4/5     ($35+) -- Full Linux, good for IoT gateway   | |
-|  | Logic analyzer       ($10)  -- Essential for debugging protocols  | |
-|  | Breadboard + LEDs    ($10)  -- For hands-on experiments           | |
-|  +------------------------------------------------------------------+ |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Starter["LEARNING EMBEDDED SYSTEMS (Simulators &amp; Starter Hardware)"]
+        Sim["SIMULATORS / EMULATORS<br/>QEMU (ARM, RISC-V), Renode (multi-node), SimAVR, Keil uVision"]
+        Online["ONLINE PLATFORMS<br/>Wokwi (Arduino/ESP32), TinkerCAD Circuits, ARM Mbed Simulator, PlatformIO + CI"]
+        HW["RECOMMENDED STARTER HARDWARE (~$50-100)<br/>- Raspberry Pi Pico W ($6, RP2040 bare-metal)<br/>- ESP32-S3 DevKit ($10, WiFi + BLE IoT)<br/>- STM32 Nucleo ($15, ARM Cortex-M)<br/>- Raspberry Pi 4/5 ($35+, Embedded Linux)<br/>- USB Logic Analyzer ($10, SPI/I2C/UART debugging)"]
+    end
 ```
 
 Start with chapters 01-03 using simulators. Buy hardware when you reach chapter 04.
@@ -44,39 +27,16 @@ Start with chapters 01-03 using simulators. Buy hardware when you reach chapter 
 
 ## The Embedded & IoT Landscape
 
-```
-+------------------------------------------------------------------------+
-|                   EMBEDDED SYSTEMS & IoT ECOSYSTEM                      |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  BARE-METAL / FIRMWARE              RTOS-BASED SYSTEMS                 |
-|  +-------------------------+        +---------------------------+      |
-|  | Bootloaders              |        | FreeRTOS                   |      |
-|  | Interrupt handlers        |        | Zephyr                     |      |
-|  | Device drivers            |        | RT-Thread                  |      |
-|  | Peripheral programming   |        | ThreadX (Azure RTOS)       |      |
-|  | Power management          |        | Task scheduling            |      |
-|  +-------------------------+        +---------------------------+      |
-|                                                                        |
-|  IoT / CONNECTED DEVICES            LINUX-BASED EMBEDDED              |
-|  +-------------------------+        +---------------------------+      |
-|  | MQTT / CoAP protocols     |        | Yocto / Buildroot          |      |
-|  | BLE / WiFi / LoRa / Zigbee|        | Device tree                |      |
-|  | Edge computing            |        | Kernel modules             |      |
-|  | OTA firmware updates      |        | Embedded Linux drivers     |      |
-|  | Cloud integration         |        | Raspberry Pi ecosystem     |      |
-|  +-------------------------+        +---------------------------+      |
-|                                                                        |
-|  AUTOMOTIVE / SAFETY-CRITICAL       INDUSTRIAL / PLC                   |
-|  +-------------------------+        +---------------------------+      |
-|  | AUTOSAR                   |        | Modbus / OPC-UA            |      |
-|  | ISO 26262 (ASIL)          |        | PLC programming (IEC 61131)|      |
-|  | CAN bus / LIN / FlexRay   |        | SCADA systems              |      |
-|  | ECU development           |        | Industrial protocols        |      |
-|  | Functional safety          |        | Predictive maintenance     |      |
-|  +-------------------------+        +---------------------------+      |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Eco["EMBEDDED SYSTEMS &amp; IoT ECOSYSTEM"]
+        BM["BARE-METAL / FIRMWARE<br/>Bootloaders, Interrupt handlers, Device drivers, Peripherals, Power mgmt"]
+        RTOS["RTOS-BASED SYSTEMS<br/>FreeRTOS, Zephyr, RT-Thread, ThreadX, Deterministic task scheduling"]
+        IoT["IoT / CONNECTED DEVICES<br/>MQTT / CoAP, BLE / WiFi / LoRa / Zigbee, Edge computing, OTA, Cloud"]
+        Linux["LINUX-BASED EMBEDDED<br/>Yocto / Buildroot, Device Tree, Kernel modules, Drivers"]
+        Auto["AUTOMOTIVE / SAFETY-CRITICAL<br/>AUTOSAR, ISO 26262 (ASIL), CAN / LIN / FlexRay, ECU development"]
+        Ind["INDUSTRIAL / PLC<br/>Modbus / OPC-UA, PLC (IEC 61131), SCADA, Predictive maintenance"]
+    end
 ```
 
 ---
@@ -87,95 +47,60 @@ Start with chapters 01-03 using simulators. Buy hardware when you reach chapter 
 
 **Goal**: Understand how microcontrollers work and how software interacts with hardware.
 
-```
-01-MICROCONTROLLER-FUNDAMENTALS     02-BARE-METAL-PROGRAMMING
-+---------------------------+       +---------------------------+
-| CPU architectures (ARM,    |       | Startup code & linker      |
-|   RISC-V, AVR)             |       | Memory-mapped I/O          |
-| Memory map (Flash, SRAM)   |       | GPIO programming           |
-| Registers & peripherals    |       | Timers & counters          |
-| Clock system               |       | Interrupts & NVIC          |
-| Power modes                |       | DMA transfers              |
-+---------------------------+       +---------------------------+
+```mermaid
+flowchart LR
+    M1["01-MICROCONTROLLER-FUNDAMENTALS<br/>- CPU architectures (ARM, RISC-V, AVR)<br/>- Memory map (Flash, SRAM)<br/>- Registers, Clock system, Power modes"]
+    M2["02-BARE-METAL-PROGRAMMING<br/>- Startup code &amp; Linker scripts<br/>- Memory-mapped I/O &amp; GPIO<br/>- Timers, Interrupts (NVIC), DMA"]
+    M1 --> M2
 ```
 
 ### Phase 2: Communication & Protocols (Chapters 03-04)
 
 **Goal**: Master the protocols that connect embedded systems to the world.
 
-```
-03-SERIAL-PROTOCOLS                 04-WIRELESS-AND-NETWORKING
-+---------------------------+       +---------------------------+
-| UART / RS-232 / RS-485     |       | WiFi (ESP32, station/AP)   |
-| SPI (master/slave)          |       | BLE (GATT, advertising)    |
-| I2C (multi-device bus)      |       | LoRa / LoRaWAN             |
-| CAN bus                     |       | Zigbee / Thread / Matter   |
-| 1-Wire, PWM, ADC/DAC       |       | TCP/IP on embedded          |
-+---------------------------+       +---------------------------+
+```mermaid
+flowchart LR
+    M3["03-SERIAL-PROTOCOLS<br/>- UART / RS-232 / RS-485<br/>- SPI &amp; I2C<br/>- CAN bus, 1-Wire, PWM, ADC/DAC"]
+    M4["04-WIRELESS-AND-NETWORKING<br/>- WiFi (ESP32 STA/AP) &amp; BLE (GATT)<br/>- LoRa / LoRaWAN<br/>- Zigbee / Thread / Matter &amp; lwIP"]
+    M3 --> M4
 ```
 
 ### Phase 3: RTOS & Concurrency (Chapter 05)
 
 **Goal**: Write reliable concurrent firmware using real-time operating systems.
 
-```
-05-RTOS-FUNDAMENTALS
-+---------------------------+
-| Task scheduling             |
-| Semaphores & mutexes        |
-| Message queues              |
-| Memory management           |
-| Priority inversion          |
-| Deadline guarantees         |
-+---------------------------+
+```mermaid
+flowchart LR
+    M5["05-RTOS-FUNDAMENTALS<br/>- Preemptive task scheduling<br/>- Semaphores, Mutexes, Message queues<br/>- Memory pools, Priority inversion, Deadlines"]
 ```
 
 ### Phase 4: IoT Architecture (Chapters 06-07)
 
 **Goal**: Build connected systems that communicate with the cloud.
 
-```
-06-IoT-PROTOCOLS-AND-CLOUD         07-EDGE-COMPUTING
-+---------------------------+       +---------------------------+
-| MQTT (QoS levels)           |       | TinyML (TensorFlow Lite)   |
-| CoAP / LwM2M               |       | Edge inference              |
-| HTTP/REST on constrained    |       | Anomaly detection           |
-|   devices                   |       | Federated learning          |
-| AWS IoT / Azure IoT Hub    |       | Model optimization          |
-| OTA firmware updates        |       | Hardware accelerators       |
-+---------------------------+       +---------------------------+
+```mermaid
+flowchart LR
+    M6["06-IoT-PROTOCOLS-AND-CLOUD<br/>- MQTT (QoS 0/1/2) &amp; CoAP / LwM2M<br/>- AWS IoT Core / Azure IoT Hub<br/>- A/B OTA Firmware Updates"]
+    M7["07-EDGE-COMPUTING<br/>- TinyML (TFLite Micro)<br/>- INT8 Quantization &amp; Edge TPUs<br/>- Anomaly detection &amp; Federated learning"]
+    M6 --> M7
 ```
 
 ### Phase 5: Embedded Linux (Chapter 08)
 
 **Goal**: Build Linux-based embedded systems (Raspberry Pi and beyond).
 
-```
-08-EMBEDDED-LINUX
-+---------------------------+
-| Cross-compilation           |
-| Yocto / Buildroot           |
-| Device tree                 |
-| Kernel modules              |
-| Root filesystem              |
-| systemd & init systems      |
-+---------------------------+
+```mermaid
+flowchart LR
+    M8["08-EMBEDDED-LINUX<br/>- Cross-compilation &amp; Boot sequence (ROM -&gt; SPL -&gt; U-Boot -&gt; Kernel)<br/>- Yocto / Buildroot, Device Tree, Kernel modules, systemd"]
 ```
 
 ### Phase 6: Production & Safety (Chapter 09)
 
 **Goal**: Ship embedded products that are reliable, secure, and certifiable.
 
-```
-09-PRODUCTION-AND-SAFETY
-+---------------------------+
-| Hardware-software co-design |
-| EMC / EMI considerations    |
-| Functional safety (IEC 61508)|
-| Security (secure boot, TLS) |
-| Testing (HIL, SIL)          |
-| Manufacturing & deployment   |
-+---------------------------+
+```mermaid
+flowchart LR
+    M9["09-PRODUCTION-AND-SAFETY<br/>- HW/SW co-design &amp; EMC/EMI<br/>- Functional safety (IEC 61508 SIL / ISO 26262 ASIL)<br/>- Secure Boot, HIL testing, Manufacturing"]
 ```
 
 ---

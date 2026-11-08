@@ -29,20 +29,14 @@ Where:
 
 ### 1.2 Block Diagram
 
-```
-                    State-Space System
-  ┌─────────────────────────────────────────────┐
-  │                                             │
-  │   u(t) ──► [B] ──►(+)──► ∫ ──► x(t) ──►  │
-  │                    ▲            │     │     │
-  │                    │            │     │     │
-  │                    └── [A] ◄────┘     │     │
-  │                                       │     │
-  │                    ┌── [C] ◄──────────┘     │
-  │                    │                        │
-  │   u(t) ──► [D] ──►(+)──► y(t)              │
-  │                                             │
-  └─────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph SS["State-Space System: x_dot = A*x + B*u, y = C*x + D*u"]
+        U["Input u(t)"] --> B["[B]"] --> SumX(("+")) --> Int["Integrator (∫)"] --> X["State x(t)"]
+        X --> A["[A]"] --> SumX
+        X --> C["[C]"] --> SumY(("+")) --> Y["Output y(t)"]
+        U --> D["[D]"] --> SumY
+    end
 ```
 
 The integrator block (∫) is the key insight: state variables are the outputs of integrators. This means the state captures the "memory" of the system.
@@ -304,20 +298,15 @@ The observer is a copy of the system with a correction term:
   x_hat_dot = A x_hat + B u + L (y - C x_hat)
 ```
 
-```
-  ┌──────────────────────────────────────────────────┐
-  │              Luenberger Observer                  │
-  │                                                  │
-  │  y ──────────────────────►(-)──► [L] ──►(+)      │
-  │                            ▲              │      │
-  │                            │              ▼      │
-  │  u ──► [B] ──────────────►(+)◄─── [A] ◄── ∫     │
-  │                                           │      │
-  │                            ▲              │      │
-  │                    y_hat ◄─┤── [C] ◄──────┘      │
-  │                            │                     │
-  │                          x_hat (output)          │
-  └──────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Obs["Luenberger State Observer: x_hat_dot = A*x_hat + B*u + L*(y - C*x_hat)"]
+        U["Control Input u"] --> B["[B]"] --> SumObs(("+"))
+        Y["Measured Output y"] --> Diff(("+ / -")) --> L["Observer Gain [L]"] --> SumObs
+        SumObs --> Int["Integrator (∫)"] --> XHat["Estimated State x_hat"]
+        XHat --> A["[A]"] --> SumObs
+        XHat --> C["[C]"] -->|"y_hat"| Diff
+    end
 ```
 
 The estimation error e = x - x_hat evolves as:
@@ -505,20 +494,11 @@ All controllers so far assume we know the model (A, B, C, D) perfectly. In reali
 
 The idea: define a **reference model** that describes desired behavior, then adjust controller parameters so the plant tracks the reference model.
 
-```
-  Reference  ┌──────────────┐
-  input r ──►│ Reference     │──► y_m (desired output)
-              │ Model         │           │
-              └──────────────┘           │
-                                          ▼
-                                        (-)──► e (error)
-                                          ▲
-              ┌──────────────┐           │
-  r ─────────►│ Adaptive     │──► u ──► Plant ──► y
-              │ Controller   │                     │
-              └──────┬───────┘                     │
-                     ▲                             │
-                     └─── Adaptation Law ◄─────────┘
+```mermaid
+flowchart LR
+    R["Reference Input r"] --> RefModel["Reference Model"] -->|"Desired y_m"| Diff(("+ / -"))
+    R --> Ctrl["Adaptive Controller"] -->|"u"| Plant["Plant"] -->|"Actual y"| Diff
+    Diff -->|"Tracking Error e = y - y_m"| Law["Adaptation Law<br/>(Updates controller parameters)"] --> Ctrl
 ```
 
 The adaptation law adjusts controller gains to drive the tracking error e = y - y_m to zero. MIT rule and Lyapunov-based methods are common approaches.
@@ -551,18 +531,10 @@ Uncertainty is modeled as perturbations:
 
 H-infinity (H∞) control minimizes the worst-case gain from disturbance to performance output. The "infinity" refers to the infinity norm of the transfer function.
 
-```
-                    ┌──────────┐
-  disturbance w ──► │          │ ──► performance z
-                    │  Plant P │
-  control u ──────► │          │ ──► measurement y
-                    └──────────┘
-                         ▲
-                         │
-                    ┌────┴─────┐
-                    │Controller│
-                    │    K     │
-                    └──────────┘
+```mermaid
+flowchart LR
+    W["Exogenous Disturbance w"] --> P["Generalized Plant P"] --> Z["Performance Output z"]
+    P -->|"Measurement y"| K["H-infinity Controller K"] -->|"Control u"| P
 ```
 
 The H∞ problem: find K that minimizes `||T_zw||_∞`, the worst-case amplification from w to z across all frequencies.

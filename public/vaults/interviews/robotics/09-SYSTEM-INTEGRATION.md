@@ -18,22 +18,13 @@ Hardware and software are not independent. A fast planner is useless with
 slow actuators. A brilliant vision algorithm is useless on a processor
 that cannot run it in real time.
 
-```
-┌─────────────────────────────────────────────────────┐
-│          The Co-Design Triangle                      │
-│                                                     │
-│               Compute                               │
-│              /       \                              │
-│             /         \                             │
-│            /    Task    \                            │
-│           /   Requirements\                         │
-│          /                 \                         │
-│     Sensing ──────────── Actuation                  │
-│                                                     │
-│  All three must be balanced for a given task.       │
-│  Over-investing in one while neglecting another     │
-│  produces a robot that cannot function.             │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CoDesign["THE ROBOTICS CO-DESIGN TRIANGLE (Balanced for Task Requirements)"]
+        Comp["Compute"] <--> Sens["Sensing"]
+        Sens <--> Act["Actuation"]
+        Comp <--> Act
+    end
 ```
 
 ### 1.2 Compute Selection
@@ -48,31 +39,13 @@ that cannot run it in real time.
 
 A common architecture splits compute across tiers:
 
-```
-┌──────���──────────────────────────────────────────────┐
-│               Compute Architecture                   │
-│                                                     │
-│  ┌──────────────────────────────────────┐           │
-│  │  Tier 1: Real-time microcontroller   │  1 kHz    │
-│  │  - Motor PID loops                   │           │
-│  │  - Safety monitoring                 │           │
-│  │  - Sensor sampling (IMU, encoders)   │           │
-│  └──────────────┬───────────────────────┘           │
-│                 │ CAN / EtherCAT / SPI              │
-│  ┌──────────────▼───────────────────────┐           │
-│  │  Tier 2: Embedded Linux (Jetson)     │  100 Hz   │
-│  │  - Perception (object detection)     │           │
-│  │  - State estimation (SLAM, EKF)      │           │
-│  │  - Local planning                    │           │
-│  └──────────────┬───────────────────────┘           │
-│                 │ Ethernet / WiFi                    │
-│  ┌──────────────▼───────────────────────┐           │
-│  │  Tier 3: Cloud / Edge Server         │  1 Hz     │
-│  │  - Fleet management                  │           │
-│  │  - Map updates                       │           │
-│  │  - ML model updates                  │           │
-│  └──────────────────────────────────────┘           │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    T1["Tier 1: Real-Time Microcontroller (1 kHz+)<br/>- Motor current / velocity / position PID loops<br/>- Hardware safety monitoring<br/>- High-rate IMU &amp; encoder sampling"]
+    T2["Tier 2: Onboard Compute — Embedded Linux / Jetson (10-100 Hz)<br/>- Perception (object detection, point clouds)<br/>- State estimation (SLAM, VIO, EKF)<br/>- Local motion planning (MPC / Nav2)"]
+    T3["Tier 3: Cloud / Edge Server (0.1-1 Hz)<br/>- Multi-robot fleet management &amp; task dispatch<br/>- Global map updates &amp; OTA ML model deployment"]
+
+    T1 <-->|"CAN / EtherCAT / SPI"| T2 <-->|"Ethernet / WiFi / 5G"| T3
 ```
 
 ### 1.3 Actuator Selection
@@ -361,19 +334,9 @@ CAN frame structure:
 
 EtherCAT achieves microsecond-level synchronization over Ethernet hardware:
 
-```
-EtherCAT Ring Topology:
-
-  Master ──► Slave 1 ──► Slave 2 ──► Slave 3 ──┐
-    ▲                                            │
-    └────────────────────────────────────────────┘
-
-  - Ethernet frame passes through each slave
-  - Each slave reads/writes its portion on the fly
-  - Single frame services ALL slaves in one pass
-  - Cycle time: 100 μs for 100 slaves
-  - Jitter: < 1 μs
-  - Uses standard Ethernet PHYs (cheap hardware)
+```mermaid
+flowchart LR
+    M["EtherCAT Master"] -->|"Frame processed on-the-fly<br/>(100 us cycle, &lt;1 us jitter)"| S1["Slave 1<br/>(Joint 1 Drive)"] --> S2["Slave 2<br/>(Joint 2 Drive)"] --> S3["Slave 3<br/>(F/T Sensor)"] --> M
 ```
 
 ### 3.4 SPI and I2C
@@ -392,22 +355,19 @@ For chip-to-chip communication on a single board:
 
 ### 3.5 Protocol Selection Guide
 
-```
-Decision tree for communication bus selection:
-
-Need > 10 Mbps?
-├── Yes → Ethernet or EtherCAT
-│         Need real-time? → EtherCAT
-│         Standard networking? → UDP/TCP over Ethernet
-└── No
-    Need multi-device bus?
-    ├── Yes → CAN bus
-    │         Need > 8 bytes/frame? → CAN FD
-    │         Automotive-grade reliability? → CAN
-    └── No
-        On same PCB?
-        ├── Yes → SPI (fast) or I2C (fewer wires)
-        └── No → RS-485 or CAN
+```mermaid
+flowchart TD
+    Q1{"Need &gt; 10 Mbps?"}
+    Q1 -->|"Yes"| Q1b{"Deterministic hard real-time?"}
+    Q1b -->|"Yes"| ECAT["EtherCAT"]
+    Q1b -->|"No"| Eth["UDP / TCP over Ethernet (DDS)"]
+    Q1 -->|"No"| Q2{"Multi-drop bus across cables?"}
+    Q2 -->|"Yes"| Q2b{"Need &gt; 8 bytes/frame?"}
+    Q2b -->|"Yes"| CANFD["CAN FD (up to 64B, 5 Mbps)"]
+    Q2b -->|"No"| CAN["Classical CAN 2.0 (8B, 1 Mbps)"]
+    Q2 -->|"No"| Q3{"On the same PCB?"}
+    Q3 -->|"Yes"| PCB["SPI (high speed) or I2C (2 wires)"]
+    Q3 -->|"No"| RS["RS-485 / Modbus or CAN"]
 ```
 
 ---
@@ -428,40 +388,15 @@ Need > 10 Mbps?
 
 ### 4.2 Safety Architecture
 
-```
-┌──────────────────────────────────────────────────────┐
-│              Safety System Architecture                │
-│                                                      │
-│  ┌────────────────────────────────────────────────┐  │
-│  │  Layer 0: Mechanical Safety                     │  │
-│  │  - Padded surfaces, compliant joints            │  │
-│  │  - Breakaway couplings                          │  │
-│  │  - Current-limiting motor drivers               │  │
-│  └────────────────────────────────────────────────┘  │
-│                                                      │
-│  ┌────────────────────────────────────────────────┐  │
-│  │  Layer 1: Hardware Safety (independent circuit) │  │
-│  │  - Emergency stop (hardwired, not software)     │  │
-│  │  - Watchdog timer (resets if software hangs)    │  │
-│  │  - Hardware torque/force limits                 │  │
-│  │  - Safety-rated PLCs (redundant, certified)     │  │
-│  └────────────────────────────────────────────────┘  │
-│                                                      │
-│  ┌────────────────────────────────────────────────┐  │
-│  │  Layer 2: Software Safety                       │  │
-│  │  - Collision detection (force/torque sensing)   │  │
-│  │  - Speed/force monitoring                       │  │
-│  │  - Geofencing (virtual safety zones)            │  │
-│  │  - State machine with safe transitions          │  │
-│  └────────────────────────────────────────────────┘  │
-│                                                      │
-│  ┌────────────────────────────────────────────────┐  │
-│  │  Layer 3: Operational Safety                    │  │
-│  │  - Operator training                            │  │
-│  │  - Safety zones (fencing, light curtains)       │  │
-│  │  - Procedures for maintenance, recovery         │  │
-│  └────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph SafetyArch["ROBOTICS DEFENSE-IN-DEPTH SAFETY ARCHITECTURE"]
+        L0["Layer 0: Mechanical &amp; Passive Safety<br/>Padded surfaces, compliant/series-elastic joints, breakaway couplings"]
+        L1["Layer 1: Independent Hardware Safety<br/>Hardwired NC E-Stop, Safe Torque Off (STO), Hardware Watchdog, Safety PLC"]
+        L2["Layer 2: Software Safety<br/>Force/torque collision detection, velocity/geofence limits, safe state machines"]
+        L3["Layer 3: Operational Safety<br/>Light curtains / safety scanners, operator training, lockout-tagout (LOTO)"]
+        L0 --> L1 --> L2 --> L3
+    end
 ```
 
 ### 4.3 Emergency Stop (E-Stop)
@@ -581,24 +516,14 @@ Power and Force Limiting:
 
 ### 5.1 The Testing Pyramid for Robotics
 
-```
-                    ▲
-                   / \
-                  /   \
-                 / Field\         (hours, expensive)
-                / Testing \
-               /───────────\
-              / Hardware-in \      (minutes, moderate)
-             /   -the-Loop   \
-            /─────────────────\
-           /   Simulation      \   (seconds, cheap)
-          /     Testing         \
-         /───────────────────────\
-        /     Integration         \  (seconds, cheap)
-       /       Tests               \
-      /─────────────────────────────\
-     /        Unit Tests             \  (milliseconds, very cheap)
-    /─────────────────────────────────\
+```mermaid
+flowchart BT
+    T1["1. Unit Tests<br/>(Milliseconds, very cheap — kinematics, filters, math)"]
+    T2["2. Integration Tests<br/>(Seconds, cheap — ROS 2 node interfaces)"]
+    T3["3. Simulation Testing (SIL)<br/>(Seconds, cheap — Gazebo / Isaac Sim scenarios)"]
+    T4["4. Hardware-in-the-Loop (HIL)<br/>(Minutes, moderate — real compute/drivers + simulated plant)"]
+    T5["5. Field Testing<br/>(Hours, expensive — full physical robot in real environment)"]
+    T1 --> T2 --> T3 --> T4 --> T5
 ```
 
 ### 5.2 Unit Testing
@@ -694,29 +619,9 @@ def test_navigation_reaches_goal(sim_environment):
 
 Real hardware + simulated environment:
 
-```
-┌───────────────────────────────────────────────────┐
-│           Hardware-in-the-Loop Setup               │
-│                                                   │
-│  ┌──────────────┐         ┌──────────────────┐   │
-│  │ Real Robot    │ ◄─────► │ Simulated World  │   │
-│  │ Controller    │ commands│ (physics,        │   │
-│  │ (actual HW)  │ ◄─────► │  sensors)        │   │
-│  │              │ feedback │                  │   │
-│  └──────────────┘         └──────────────────┘   │
-│                                                   │
-│  Real components:        Simulated:              │
-│  - Compute board         - Physics              │
-│  - Motor drivers         - Obstacles             │
-│  - Safety circuits       - Sensor data           │
-│  - Communication bus     - Environment           │
-│                                                   │
-│  Benefits:                                        │
-│  - Tests real software on real hardware           │
-│  - No risk of physical damage                     │
-│  - Repeatable scenarios                           │
-│  - Can test edge cases safely                     │
-└───────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    Real["Real Robot Controller (Actual Hardware)<br/>- Target compute board<br/>- Motor drivers &amp; Safety circuits<br/>- Real CAN / EtherCAT bus"] <-->|"Actuator commands &amp;<br/>Synthetic sensor feedback"| Sim["Simulated World (Real-Time Simulator)<br/>- Rigid/contact physics<br/>- Obstacles &amp; Environment<br/>- Synthetic LiDAR / Camera / IMU"]
 ```
 
 ### 5.5 Field Testing
@@ -790,63 +695,25 @@ class RobotRegressionSuite:
 
 ### 6.1 From Prototype to Production
 
-```
-┌─────────────────────────────────────────────────────┐
-│          Deployment Maturity Model                    │
-│                                                     │
-│  TRL 1-3: Research                                  │
-│    - Runs on developer laptop                       │
-│    - Manual launch, manual monitoring               │
-│    - "It works on my machine"                       │
-│                                                     │
-│  TRL 4-5: Integration                               │
-│    - Runs on target hardware                        │
-│    - Docker/containerized                           │
-│    - Automated testing                              │
-│                                                     │
-│  TRL 6-7: Validation                                │
-│    - OTA update system                              │
-│    - Fleet management dashboard                     │
-│    - Remote monitoring and logging                  │
-│                                                     │
-│  TRL 8-9: Production                                │
-│    - Canary deployments (update 1 robot first)      │
-│    - Automatic rollback on failure                  │
-│    - 24/7 fleet monitoring                          │
-│    - Predictive maintenance                         │
-└─────────────────────────────────────────────────────┘
-
-TRL = Technology Readiness Level (NASA scale)
+```mermaid
+flowchart LR
+    TRL1["TRL 1-3: Research<br/>- Developer laptop<br/>- Manual launch &amp; monitoring"] --> TRL4["TRL 4-5: Integration<br/>- Runs on target hardware<br/>- Containerized + CI tests"]
+    TRL4 --> TRL6["TRL 6-7: Validation<br/>- A/B OTA update system<br/>- Fleet dashboard &amp; remote logs"] --> TRL8["TRL 8-9: Production<br/>- Canary rollouts + auto-rollback<br/>- 24/7 fleet ops &amp; predictive maintenance"]
 ```
 
 ### 6.2 Over-the-Air (OTA) Updates
 
-```
-OTA Update Pipeline:
+```mermaid
+flowchart LR
+    Dev["Developer"] --> CICD["CI/CD<br/>(Build + SIL/HIL)"] --> Stg["Staging Robot"] --> Canary["Canary Deployment<br/>(1 Robot in Field)"] --> Fleet["Full Fleet Rollout"]
 
-  Developer ──► CI/CD ──► Staging ──► Canary ──► Fleet
-                                     (1 robot)   (all)
-
-  ┌──────────────────────────────────────────────┐
-  │  OTA Update Package                           │
-  │                                              │
-  │  ┌──────────────────────┐                    │
-  │  │ manifest.json        │                    │
-  │  │  - version: "2.3.1"  │                    │
-  │  │  - min_battery: 50%  │                    │
-  │  │  - rollback: "2.3.0" │                    │
-  │  │  - checksum: "sha256"│                    │
-  │  └──────────────────────┘                    │
-  │  ┌──────────────────────┐                    │
-  │  │ firmware.bin         │ (MCU firmware)     │
-  │  └──────────────────────┘                    │
-  │  ┌──────────────────────┐                    │
-  │  │ rootfs.squashfs      │ (Linux image)     │
-  │  └──────────────────────┘                    │
-  │  ┌──────────────────────┐                    │
-  │  │ models/              │ (ML model weights)│
-  │  └──────────────────────┘                    │
-  └──────────────────────────────────────────────┘
+    subgraph Pkg["Signed OTA Update Bundle"]
+        M["manifest.json<br/>(version: 2.3.1, min_battery: 50%, rollback: 2.3.0, sha256)"]
+        FW["firmware.bin (MCU)"]
+        OS["rootfs.squashfs (Linux A/B)"]
+        ML["models/ (TensorRT / ONNX weights)"]
+    end
+    CICD -.-> Pkg
 ```
 
 ### 6.3 Fleet Monitoring

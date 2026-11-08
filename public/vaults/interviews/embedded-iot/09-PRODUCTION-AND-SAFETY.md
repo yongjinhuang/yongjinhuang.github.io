@@ -241,34 +241,13 @@ For perpetual operation without batteries:
 
 ### 5.1 Secure Boot Chain
 
-```
-+----------------------------------------------------------+
-|              SECURE BOOT CHAIN                             |
-+----------------------------------------------------------+
-|                                                            |
-|  ROM Bootloader (immutable, in silicon)                    |
-|  +----------------------------------------------------+   |
-|  | Contains Root of Trust public key (OTP fuses)       |   |
-|  | Verifies signature of Stage 1 bootloader            |   |
-|  +----------------------------------------------------+   |
-|                         | Signature OK?                    |
-|                         v                                  |
-|  Stage 1 Bootloader (signed)                               |
-|  +----------------------------------------------------+   |
-|  | Verifies signature of main firmware image           |   |
-|  +----------------------------------------------------+   |
-|                         | Signature OK?                    |
-|                         v                                  |
-|  Main Firmware (signed)                                    |
-|  +----------------------------------------------------+   |
-|  | Application runs with verified integrity            |   |
-|  | Can verify additional assets (config, ML models)    |   |
-|  +----------------------------------------------------+   |
-|                                                            |
-|  If ANY signature fails:                                   |
-|  -> Device enters recovery mode or halts                   |
-|  -> Prevents execution of tampered firmware                |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    ROM["ROM Bootloader (Immutable in Silicon)<br/>Contains Root of Trust Public Key in OTP / eFuses"] -->|"Verifies Stage 1 Signature"| S1{"Stage 1 Bootloader<br/>Signature Valid?"}
+    S1 -->|"Fail"| Halt["Enter Recovery Mode / Halt"]
+    S1 -->|"Pass"| S2{"Main Firmware Image<br/>Signature Valid?"}
+    S2 -->|"Fail"| Halt
+    S2 -->|"Pass"| App["Main Firmware Executes with Verified Integrity<br/>(Verifies ML models &amp; config assets)"]
 ```
 
 ### 5.2 Hardware Root of Trust
@@ -577,34 +556,15 @@ test: $(SRCS)
 
 ### 7.2 Hardware-in-the-Loop (HIL)
 
-```
-+----------------------------------------------------------+
-|         HARDWARE-IN-THE-LOOP TEST SETUP                    |
-+----------------------------------------------------------+
-|                                                            |
-|  Test Host (PC)                                            |
-|  +----------------------------+                            |
-|  | pytest / Robot Framework   |                            |
-|  | - Send commands via serial |                            |
-|  | - Verify GPIO states       |                            |
-|  | - Measure power consumption|                            |
-|  | - Inject sensor stimuli    |                            |
-|  +----------------------------+                            |
-|         |  USB/Serial  |  GPIO  |  Power                   |
-|         v              v        v                          |
-|  +----------------------------+                            |
-|  | Device Under Test (DUT)   |                            |
-|  | - Runs production firmware |                            |
-|  | - Connected to real HW     |                            |
-|  +----------------------------+                            |
-|         |                                                  |
-|  +----------------------------+                            |
-|  | Signal Generator / DAQ     |                            |
-|  | - Simulate sensor inputs   |                            |
-|  | - Capture analog outputs   |                            |
-|  +----------------------------+                            |
-|                                                            |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    Host["Test Host (PC: pytest / Robot Framework)<br/>- Send commands via UART/USB<br/>- Verify GPIO states<br/>- Measure power consumption<br/>- Inject sensor stimuli"]
+    DUT["Device Under Test (DUT)<br/>Runs production firmware on target PCB"]
+    DAQ["Signal Generator / DAQ / Programmable Power Supply<br/>Simulates analog/digital sensors &amp; captures outputs"]
+
+    Host <-->|"USB / Serial / SWD"| DUT
+    Host <-->|"Control"| DAQ
+    DAQ <-->|"GPIO / Analog / Power"| DUT
 ```
 
 ### 7.3 Software-in-the-Loop (SIL)
@@ -641,42 +601,13 @@ ls findings/crashes/
 
 ### 8.1 Production Pipeline
 
-```
-+----------------------------------------------------------+
-|         MANUFACTURING PIPELINE                             |
-+----------------------------------------------------------+
-|                                                            |
-|  1. PCB Fabrication                                        |
-|  +--------------------------------------------------+     |
-|  | Gerber files -> PCB factory -> bare boards         |     |
-|  +--------------------------------------------------+     |
-|                         |                                  |
-|  2. SMT Assembly                                           |
-|  +--------------------------------------------------+     |
-|  | Solder paste -> Pick & place -> Reflow oven        |     |
-|  | Through-hole components -> Wave solder             |     |
-|  +--------------------------------------------------+     |
-|                         |                                  |
-|  3. Programming                                            |
-|  +--------------------------------------------------+     |
-|  | Bed-of-nails jig -> Flash bootloader + firmware    |     |
-|  | Provision unique ID, keys, certificates            |     |
-|  +--------------------------------------------------+     |
-|                         |                                  |
-|  4. Factory Test                                           |
-|  +--------------------------------------------------+     |
-|  | Run factory test firmware                          |     |
-|  | Test all interfaces (LED, buttons, sensors, radio) |     |
-|  | Record test results with serial number             |     |
-|  | PASS -> label & package  |  FAIL -> rework bin     |     |
-|  +--------------------------------------------------+     |
-|                         |                                  |
-|  5. Final QC & Packaging                                   |
-|  +--------------------------------------------------+     |
-|  | Visual inspection, label, barcode, box             |     |
-|  +--------------------------------------------------+     |
-|                                                            |
-+----------------------------------------------------------+
+```mermaid
+flowchart LR
+    S1["1. PCB Fabrication<br/>Gerber files -&gt; Bare PCBs"] --> S2["2. SMT &amp; Wave Assembly<br/>Solder paste -&gt; Pick &amp; place -&gt; Reflow + AOI"]
+    S2 --> S3["3. Flashing &amp; Provisioning<br/>Bed-of-nails pogo jig -&gt; Flash bootloader/FW + inject X.509 certs"]
+    S3 --> S4{"4. Automated Factory Test<br/>Verify sensors, RF, current draw"}
+    S4 -->|"FAIL"| Rework["Rework / Debug Bin"]
+    S4 -->|"PASS"| S5["5. Final QC &amp; Packaging<br/>Label, serial barcode, box"]
 ```
 
 ### 8.2 Programming Jigs
@@ -881,36 +812,11 @@ bool is_provisioned(void)
 
 ### 10.2 CE Marking Process
 
-```
-+----------------------------------------------------------+
-|         CE MARKING PROCESS                                 |
-+----------------------------------------------------------+
-|                                                            |
-|  1. Identify applicable directives                         |
-|     - EMC Directive (2014/30/EU)                           |
-|     - Low Voltage Directive (2014/35/EU)                   |
-|     - Radio Equipment Directive (2014/53/EU) if wireless   |
-|     - RoHS Directive (2011/65/EU)                          |
-|                                                            |
-|  2. Apply harmonized standards                             |
-|     - EN 55032 (emissions)                                 |
-|     - EN 55035 (immunity)                                  |
-|     - EN 62368-1 (safety)                                  |
-|     - EN 300 328 (2.4 GHz radio)                           |
-|                                                            |
-|  3. Test at accredited lab                                  |
-|     - EMC chamber testing                                  |
-|     - Safety evaluation                                    |
-|     - Radio measurements                                   |
-|                                                            |
-|  4. Prepare technical documentation                         |
-|     - Test reports                                         |
-|     - Declaration of Conformity (DoC)                      |
-|     - User manual with safety warnings                     |
-|     - Circuit schematics and BOM                           |
-|                                                            |
-|  5. Affix CE mark and ship                                  |
-+----------------------------------------------------------+
+```mermaid
+flowchart LR
+    S1["1. Identify Directives<br/>EMC, LVD, RED (wireless), RoHS"] --> S2["2. Apply Harmonized Standards<br/>EN 55032/55035, EN 62368-1, EN 300 328"]
+    S2 --> S3["3. Accredited Lab Testing<br/>Anechoic EMC chamber, safety, RF"] --> S4["4. Technical Construction File<br/>Test reports, schematics, BOM, Declaration of Conformity (DoC)"]
+    S4 --> S5["5. Affix CE Mark &amp; Ship"]
 ```
 
 ---

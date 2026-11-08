@@ -25,15 +25,14 @@ The ESP32 from Espressif has become the de facto WiFi-capable microcontroller fo
 
 An ESP32 can operate in two WiFi modes:
 
-```
-Station (STA) Mode             Access Point (AP) Mode
-==================             ======================
-
-  [ESP32] ---WiFi---> [Router] ---> Internet
-  (client)            (AP)
-
-  [Phone/Laptop] ---WiFi---> [ESP32]
-                              (acts as AP)
+```mermaid
+flowchart LR
+    subgraph STA["Station (STA) Mode"]
+        E1["ESP32 (Client)"] -->|"WiFi"| Router["WiFi Router (AP)"] --> Net["Internet"]
+    end
+    subgraph AP["Access Point (AP) Mode"]
+        Phone["Phone / Laptop"] -->|"WiFi"| E2["ESP32 (SoftAP)"]
+    end
 ```
 
 **Station mode**: The ESP32 joins an existing WiFi network, receives an IP via DHCP, and can reach the internet. This is the most common mode for cloud-connected IoT devices.
@@ -184,55 +183,31 @@ GAP controls how devices discover each other and establish connections. It defin
 - **Peripheral**: Advertises and accepts connections (e.g., a heart rate sensor)
 - **Central**: Scans and initiates connections (e.g., a smartphone)
 
-```
-  Advertising (GAP)
-  =================
+```mermaid
+sequenceDiagram
+    participant P as "BLE Peripheral (Sensor)"
+    participant C as "BLE Central (Phone / Gateway)"
 
-  [Peripheral]  --- ADV_IND (advertising packet) --->  [Central]
-  [Peripheral]  <-- SCAN_REQ -----------------------  [Central]
-  [Peripheral]  --- SCAN_RSP (more data) ---------->  [Central]
-  [Peripheral]  <-- CONNECT_REQ -------------------  [Central]
-
-  --- Connection established ---
+    P->>C: ADV_IND (Advertising Packet)
+    C->>P: SCAN_REQ (Active Scan Request)
+    P->>C: SCAN_RSP (Additional Scan Response Data)
+    C->>P: CONNECT_REQ (Establish GATT Connection)
+    Note over P,C: BLE Connection Established
 ```
 
 ### 2.3 GATT: Generic Attribute Profile
 
 Once connected, data exchange follows the GATT model. GATT organizes data into a hierarchy:
 
-```
-  GATT Server Structure
-  =====================
-
-  +--------------------------------------------+
-  |  GATT Server (Peripheral)                  |
-  |                                            |
-  |  +--------------------------------------+  |
-  |  |  Service: Heart Rate (UUID: 0x180D)  |  |
-  |  |                                      |  |
-  |  |  +--------------------------------+  |  |
-  |  |  | Characteristic: HR Measurement  |  |  |
-  |  |  | UUID: 0x2A37                    |  |  |
-  |  |  | Properties: Notify              |  |  |
-  |  |  | Value: [0x06, 72]  (72 bpm)     |  |  |
-  |  |  |                                 |  |  |
-  |  |  | Descriptor: CCCD (0x2902)       |  |  |
-  |  |  | Value: [0x01, 0x00] (notify on) |  |  |
-  |  |  +--------------------------------+  |  |
-  |  |                                      |  |
-  |  |  +--------------------------------+  |  |
-  |  |  | Characteristic: Body Sensor Loc |  |  |
-  |  |  | UUID: 0x2A38                    |  |  |
-  |  |  | Properties: Read                |  |  |
-  |  |  | Value: [0x01] (Chest)           |  |  |
-  |  |  +--------------------------------+  |  |
-  |  +--------------------------------------+  |
-  |                                            |
-  |  +--------------------------------------+  |
-  |  |  Service: Battery (UUID: 0x180F)     |  |
-  |  |  ...                                 |  |
-  |  +--------------------------------------+  |
-  +--------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph GATT["GATT Server (BLE Peripheral)"]
+        subgraph S1["Service: Heart Rate (UUID: 0x180D)"]
+            C1["Characteristic: HR Measurement (UUID: 0x2A37)<br/>- Properties: Notify<br/>- Value: [0x06, 72] (72 bpm)<br/>- Descriptor: CCCD (0x2902) = [0x01, 0x00] (Notify ON)"]
+            C2["Characteristic: Body Sensor Location (UUID: 0x2A38)<br/>- Properties: Read<br/>- Value: [0x01] (Chest)"]
+        end
+        S2["Service: Battery (UUID: 0x180F)"]
+    end
 ```
 
 Key concepts:
@@ -367,33 +342,11 @@ Maximum payload per message is typically 51-222 bytes depending on SF and region
 
 LoRaWAN adds a MAC layer and network architecture on top of LoRa modulation:
 
-```
-  LoRaWAN Network Architecture
-  ============================
-
-  +--------+     +--------+     +--------+
-  | End    |     | End    |     | End    |
-  | Device | ... | Device | ... | Device |
-  +---+----+     +---+----+     +---+----+
-      |  LoRa        |  LoRa        |  LoRa
-      v              v              v
-  +--------+     +--------+
-  |Gateway |     |Gateway |    (multiple gateways
-  |(+ GPS) |     |(+ GPS) |     hear same packet)
-  +---+----+     +---+----+
-      |  IP           |  IP
-      v              v
-  +---------------------------+
-  |    Network Server         |
-  |  (TTN / Chirpstack /      |
-  |   AWS IoT Core for LoRa)  |
-  +------------+--------------+
-               |
-               v
-  +---------------------------+
-  |    Application Server     |
-  |  (your backend / cloud)   |
-  +---------------------------+
+```mermaid
+flowchart TD
+    D1["End Device 1"] & D2["End Device 2"] & D3["End Device N"] -->|"LoRa RF (Star-of-Stars)"| GW1["Gateway 1 (+ GPS)"] & GW2["Gateway 2 (+ GPS)"]
+    GW1 & GW2 -->|"IP Backhaul"| NS["Network Server<br/>(TTN / ChirpStack / AWS IoT Core for LoRaWAN)"]
+    NS --> AS["Application Server<br/>(Backend / Cloud)"]
 ```
 
 Key LoRaWAN concepts:
@@ -459,30 +412,15 @@ Thread does not define an application layer -- that role is filled by Matter.
 
 Matter (formerly Project CHIP) is an application-layer protocol backed by Apple, Google, Amazon, and Samsung. It runs over WiFi, Thread, and Ethernet, providing a single standard for smart home devices.
 
-```
-  Matter Protocol Stack
-  =====================
-
-  +---------------------------+
-  |     Matter Application    |
-  |  (Device types: light,    |
-  |   lock, thermostat, etc.) |
-  +---------------------------+
-  |     Matter Data Model     |
-  |  (Clusters, Attributes,   |
-  |   Commands, Events)       |
-  +---------------------------+
-  |  Matter Interaction Model |
-  |  (Read, Write, Subscribe, |
-  |   Invoke)                 |
-  +---------------------------+
-  |     Matter Security       |
-  |  (CASE, PASE, certs)      |
-  +---------------------------+
-  |     Transport (TCP/UDP)   |
-  +---------------------------+
-  |  WiFi | Thread | Ethernet |
-  +---------------------------+
+```mermaid
+flowchart TD
+    L1["Matter Application Layer<br/>(Device types: light, lock, thermostat)"]
+    L2["Matter Data Model<br/>(Clusters, Attributes, Commands, Events)"]
+    L3["Matter Interaction Model<br/>(Read, Write, Subscribe, Invoke)"]
+    L4["Matter Security Layer<br/>(PASE commissioning, CASE operational sessions, DAC/PAI certs)"]
+    L5["IPv6 Transport Layer (TCP / UDP)"]
+    L6["Link Layer: WiFi / Thread (802.15.4) / Ethernet (+ BLE for Commissioning)"]
+    L1 --> L2 --> L3 --> L4 --> L5 --> L6
 ```
 
 Matter commissioning uses BLE for initial device setup, then hands off to the operational network (WiFi or Thread).
@@ -624,27 +562,21 @@ AT+QMTPUB=0,0,0,0,"sensor/temp"          // Publish MQTT message
 
 ### 8.2 Decision Flowchart
 
-```
-  Start
-    |
-    v
-  Need >1 Mbps data rate? --Yes--> WiFi
-    |
-    No
-    v
-  Range >1 km needed? --Yes--> Existing cellular? --Yes--> NB-IoT / LTE-M
-    |                                |
-    No                               No --> LoRa / LoRaWAN
-    v
-  Battery life >1 year? --Yes--> Mesh needed? --Yes--> Thread / Zigbee
-    |                                |
-    No                               No --> BLE
-    v
-  Real-time control? --Yes--> WiFi or Thread
-    |
-    No
-    v
-  Default: BLE (simplest, lowest power for short range)
+```mermaid
+flowchart TD
+    Q1{"Need &gt;1 Mbps data rate?"}
+    Q1 -->|"Yes"| WiFi["WiFi"]
+    Q1 -->|"No"| Q2{"Range &gt;1 km needed?"}
+    Q2 -->|"Yes"| Q2b{"Existing cellular coverage?"}
+    Q2b -->|"Yes"| Cell["NB-IoT / LTE-M"]
+    Q2b -->|"No"| LoRa["LoRa / LoRaWAN"]
+    Q2 -->|"No"| Q3{"Battery life &gt;1 year?"}
+    Q3 -->|"Yes"| Q3b{"Mesh topology needed?"}
+    Q3b -->|"Yes"| Mesh["Thread / Zigbee"]
+    Q3b -->|"No"| BLE1["BLE"]
+    Q3 -->|"No"| Q4{"Real-time control?"}
+    Q4 -->|"Yes"| RT["WiFi or Thread"]
+    Q4 -->|"No"| Def["Default: BLE (simplest, lowest power for short range)"]
 ```
 
 ### 8.3 Practical Considerations

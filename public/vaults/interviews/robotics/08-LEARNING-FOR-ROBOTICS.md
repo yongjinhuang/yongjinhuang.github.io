@@ -47,22 +47,10 @@ This is why simulation and data-efficient methods matter enormously.
 In NLP, a bad output is wrong text. In robotics, a bad output is a
 real-world collision:
 
-```
-┌─────────────────────────────────────────────┐
-│         The Robotics ML Safety Ladder        │
-│                                             │
-│  Level 4: Safe exploration in real world    │
-│           (constrained RL, safety filters)  │
-│                                             │
-│  Level 3: Sim-to-real transfer              │
-│           (train in sim, deploy in real)    │
-│                                             │
-│  Level 2: Imitation learning                │
-│           (copy expert, no exploration)     │
-│                                             │
-│  Level 1: Classical control                 │
-│           (hand-designed, fully understood) │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart BT
+    L1["Level 1: Classical Control<br/>(Hand-designed, analytical guarantees)"] --> L2["Level 2: Imitation Learning<br/>(Clone expert demonstrations, no exploration)"]
+    L2 --> L3["Level 3: Sim-to-Real Transfer<br/>(Train RL in simulation with domain randomization, deploy on real robot)"] --> L4["Level 4: Safe Real-World Exploration<br/>(Constrained RL + Control Barrier Function safety filters)"]
 ```
 
 ---
@@ -182,22 +170,13 @@ Algorithm: DAgger
    e. Train πᵢ₊₁ on Dᵢ
 ```
 
-```
-┌──────────────────────────────────────────────────┐
-│                DAgger Pipeline                    │
-│                                                  │
-│  ┌──────────┐    ┌──────────┐    ┌────────────┐ │
-│  │  Expert  │    │  Train   │    │  Execute   │ │
-│  │  Demos   │───►│  Policy  │───►│  Policy    │ │
-│  │  D₀      │    │  πᵢ      │    │  in Env    │ │
-│  └──────────┘    └──────────┘    └─────┬──────┘ │
-│       ▲                                │        │
-│       │          ┌──────────┐          │        │
-│       └──────────│  Expert  │◄─────────┘        │
-│     New labels   │  Labels  │  Visited states   │
-│     added to D   │  a*      │  from πᵢ          │
-│                  └──────────┘                    │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph DAgger["DAgger (Dataset Aggregation) Pipeline"]
+        Demos["Aggregated Dataset D"] --> Train["Train Policy pi_i"] --> Exec["Execute Policy pi_i in Env"]
+        Exec -->|"States visited by pi_i"| Query["Expert Queries Action a*"]
+        Query -->|"Aggregate (s, a*) into D"| Demos
+    end
 ```
 
 DAgger reduces error from O(T^2) to O(T), but requires an expert available
@@ -232,16 +211,10 @@ Diffusion Policy: s → sample from    (multimodal, picks one option)
 
 ### 3.1 The RL Framework
 
-```
-┌──────────────┐  action aₜ   ┌──────────────┐
-│              │──────────────►│              │
-│    Agent     │               │  Environment │
-│   (Policy)   │◄──────────────│              │
-│              │  state sₜ₊₁   │              │
-│              │  reward rₜ    │              │
-└──────────────┘               └──────────────┘
-
-Objective: maximize E[Σ γᵗ rₜ]  (discounted cumulative reward)
+```mermaid
+flowchart LR
+    Agent["Agent (Policy pi_theta)<br/>Objective: max E[sum(gamma^t * r_t)]"] -->|"Action a_t"| Env["Robot Environment"]
+    Env -->|"Next State s_{t+1} + Reward r_t"| Agent
 ```
 
 ### 3.2 Why RL Is Hard in Robotics
@@ -388,30 +361,13 @@ Reward hacking examples:
 
 Simulation is cheap and safe, but imperfect:
 
-```
-┌───────────────────────────────┐
-│     Sources of Sim-to-Real    │
-│         Gap                   │
-│                               │
-│  ┌─────────────────────────┐  │
-│  │ Visual:                 │  │
-│  │  - Textures, lighting   │  │
-│  │  - Reflections, shadows │  │
-│  │  - Camera noise         │  │
-│  └─────────────────────────┘  │
-│  ┌─────────────────────────┐  │
-│  │ Dynamics:               │  │
-│  │  - Friction, damping    │  │
-│  │  - Contact mechanics    │  │
-│  │  - Motor delays/limits  │  │
-│  └─────────────────────────┘  │
-│  ┌─────────────────────────┐  │
-│  │ Structural:             │  │
-│  │  - Object shapes        │  │
-│  │  - Deformable objects   │  │
-│  │  - Fluid dynamics       │  │
-│  └─────────────────────────┘  │
-└───────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Gap["SOURCES OF THE SIM-TO-REAL GAP"]
+        Vis["Visual Gap<br/>- Textures, lighting<br/>- Reflections, shadows<br/>- Sensor noise &amp; motion blur"]
+        Dyn["Dynamics Gap<br/>- Coulomb/viscous friction, damping<br/>- Rigid/compliant contact mechanics<br/>- Actuator latency &amp; bandwidth"]
+        Str["Structural Gap<br/>- Unmodeled object geometry<br/>- Deformable objects, cables, fluids"]
+    end
 ```
 
 ### 4.2 Domain Randomization
@@ -494,28 +450,10 @@ System Identification Pipeline:
 
 ### 4.4 The Sim-to-Real Pipeline
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Build Sim   │     │  Train in    │     │  Transfer    │
-│  Environment │────►│  Simulation  │────►│  to Real     │
-│  (URDF +     │     │  (RL or IL)  │     │  Robot       │
-│   physics)   │     │              │     │              │
-└──────────────┘     └──────────────┘     └──────┬───────┘
-                                                  │
-                           ┌──────────────────────┘
-                           │
-                           ▼
-                     ┌──────────────┐
-                     │  Fine-tune   │
-                     │  on Real     │
-                     │  Data        │
-                     │  (optional)  │
-                     └──────────────┘
-
-Approaches to transfer:
-  1. Zero-shot: Train in sim, deploy directly (domain randomization)
-  2. Few-shot: Fine-tune on small real dataset
-  3. Progressive: Gradually reduce sim reliance
+```mermaid
+flowchart LR
+    Sim["1. Build Sim Environment<br/>(URDF/MJCF + Physics + Domain Randomization)"] --> Train["2. Train in Simulation<br/>(Massively Parallel RL / IL)"]
+    Train --> Transfer["3. Transfer to Real Robot<br/>(Zero-shot or System ID)"] --> FT["4. Optional Fine-Tuning<br/>on Real-World Rollouts"]
 ```
 
 ---
@@ -527,23 +465,11 @@ Approaches to transfer:
 Large pretrained models (LLMs, VLMs) encode vast world knowledge. Can we
 leverage this knowledge for robot control?
 
-```
-┌────────────────────────────────────────────────────┐
-│        Foundation Models in Robotics                │
-│                                                    │
-│  Language:     "Pick up the red cup"               │
-│       │                                            │
-│       ▼                                            │
-│  ┌──────────┐    ┌──────────┐    ┌──────────────┐ │
-│  │  LLM /   │───►│ Task     │───►│  Low-level  │ │
-│  │  VLM     │    │ Planner  │    │  Controller │ │
-│  │          │    │          │    │             │ │
-│  └──────────┘    └──────────┘    └──────┬──────┘ │
-│                                         │        │
-│  Vision:   Camera images ───────────────┘        │
-│                                                    │
-│  Action:   Joint torques / velocities              │
-└────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    Lang["Language Instruction:<br/>'Pick up the red cup'"] --> VLM["LLM / VLM"] --> Plan["High-Level Task Planner"] --> Ctrl["Low-Level Visuomotor / Impedance Controller"]
+    Cam["Camera Images"] --> VLM & Ctrl
+    Ctrl --> Act["Joint Torques / Velocities"]
 ```
 
 ### 5.2 SayCan -- Grounding Language in Robot Affordances
@@ -647,27 +573,11 @@ End-to-End Visuomotor:
 
 ### 6.2 Architecture Choices
 
-```
-┌─────────────────────────────────────────────────────┐
-│           Visuomotor Policy Architecture             │
-│                                                     │
-│  ┌──────────┐                                       │
-│  │  Camera  │                                       │
-│  │  Image   │─┐                                     │
-│  │  (RGB)   │ │  ┌──────────┐  ┌────────────────┐  │
-│  └──────────┘ ├─►│  Vision  │  │   Policy Head  │  │
-│               │  │  Encoder │─►│   (MLP or      │──► Actions
-│  ┌──────────┐ │  │  (ResNet/│  │    Transformer)│  │
-│  │  Depth   │─┘  │   ViT)  │  │                │  │
-│  │  Image   │    └──────────┘  └────────────────┘  │
-│  └──────────┘         ▲                             │
-│                       │                             │
-│  ┌──────────┐         │                             │
-│  │ Proprio- │─────────┘ (concatenated with          │
-│  │ ception  │            visual features)           │
-│  │ (joints) │                                       │
-│  └──────────┘                                       │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    RGB["Camera Image (RGB)"] & Depth["Depth Image"] --> Vis["Vision Encoder<br/>(ResNet / ViT)"]
+    Prop["Proprioception<br/>(Joint positions, velocities, gripper)"]
+    Vis & Prop --> Head["Policy Head<br/>(MLP / Action Chunking Transformer / Diffusion)"] --> Act["Action Trajectory"]
 ```
 
 ```python
@@ -712,27 +622,13 @@ class VisuomotorPolicy(nn.Module):
 
 Real-world manipulation benefits from multiple viewpoints:
 
-```
-        ┌─────────┐
-        │  Wrist  │  (close-up view of gripper + object)
-        │  Camera │
-        └────┬────┘
-             │
-    ┌────────┼────────┐
-    │        │        │
-┌───┴───┐   │   ┌───┴───┐
-│ Left  │   │   │ Right │  (workspace overview)
-│ Camera│   │   │ Camera│
-└───────┘   │   └───────┘
-            │
-     ┌──────┴──────┐
-     │    Robot    │
-     │    Arm      │
-     └─────────────┘
-
-Each camera provides complementary information:
-  - Wrist: Fine manipulation, contact detection
-  - External: Global positioning, obstacle awareness
+```mermaid
+flowchart TD
+    Wrist["Wrist Camera (Eye-in-Hand)<br/>Close-up view of gripper + object contact"]
+    Left["Left External Camera<br/>Workspace overview"]
+    Right["Right External Camera<br/>Workspace overview"]
+    Arm["Multi-View Visuomotor Policy<br/>-&gt; Robot Arm"]
+    Wrist & Left & Right --> Arm
 ```
 
 ---
@@ -822,30 +718,14 @@ deployment.
 
 ### 8.2 Safety Approaches
 
-```
-┌────────────────────────────────────────────────────────┐
-│              Safety Architecture                        │
-│                                                        │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Layer 1: Constrained Learning                    │  │
-│  │  - Constrained RL (cost limits during training)   │  │
-│  │  - Safe exploration (barrier functions)            │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                        │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Layer 2: Runtime Safety Filter                   │  │
-│  │  - Check learned action against safety constraint │  │
-│  │  - Override with safe action if violation          │  │
-│  │  - Control Barrier Functions (CBFs)                │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                        │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Layer 3: Hardware Safety                         │  │
-│  │  - Force/torque limits in motor controllers       │  │
-│  │  - E-stop (always available, not software)        │  │
-│  │  - Collision detection via current sensing         │  │
-│  └──────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Safety["LEARNED ROBOTICS SAFETY ARCHITECTURE"]
+        L1["Layer 1: Constrained Learning<br/>Constrained RL (CMDP cost limits) &amp; safe exploration"]
+        L2["Layer 2: Runtime Safety Filter (Shield)<br/>Control Barrier Functions (CBFs) &amp; QP action projection"]
+        L3["Layer 3: Hardware Safety<br/>Low-level torque/current limits + Hardwired E-Stop"]
+        L1 --> L2 --> L3
+    end
 ```
 
 ### 8.3 Control Barrier Functions
