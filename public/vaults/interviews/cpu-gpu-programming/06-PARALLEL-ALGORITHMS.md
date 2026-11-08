@@ -1891,23 +1891,11 @@ If available parallelism >> p (number of processors), the algorithm scales well 
 
 ### Practical Implications for GPU Programming
 
-```
-Decision tree for choosing algorithms:
-
-Is N large relative to GPU cores?
-  |
-  +-- Yes (N >> num_cores * 10)
-  |     |
-  |     +-- Prefer WORK-EFFICIENT algorithms
-  |         (Blelloch scan, merge sort)
-  |         Reason: W/p dominates T_p
-  |
-  +-- No (N ~ num_cores)
-        |
-        +-- Prefer STEP-EFFICIENT algorithms
-            (Hillis-Steele scan, bitonic sort)
-            Reason: S dominates T_p, and simpler code
-                    with fewer synchronization points
+```mermaid
+flowchart TD
+    Q1{"Is N large relative to GPU cores?"}
+    Q1 -->|"Yes (N &gt;&gt; num_cores * 10)"| Work["Prefer WORK-EFFICIENT Algorithms<br/>(Blelloch O(N) Scan, Radix/Merge Sort)<br/>Reason: Work term W/P dominates runtime"]
+    Q1 -->|"No (N ~ num_cores)"| Step["Prefer STEP-EFFICIENT Algorithms<br/>(Hillis-Steele Scan, Bitonic Sort)<br/>Reason: Span S &amp; sync overhead dominate runtime"]
 ```
 
 ### Work-Span Analysis Checklist

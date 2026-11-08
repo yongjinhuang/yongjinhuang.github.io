@@ -616,28 +616,10 @@ HLS tools compile **C/C++ code into hardware circuits**. This dramatically lower
 
 ### 12.5.1 How HLS Works
 
-```
-+================================================================+
-|                    HLS COMPILATION FLOW                          |
-+================================================================+
-|                                                                |
-|  C/C++ Source Code (with pragmas)                               |
-|          |                                                      |
-|          v                                                      |
-|  +------------------+                                           |
-|  | HLS Compiler     |  1. Parse C/C++                           |
-|  | (Vitis HLS /     |  2. Build CDFG (Control-Data Flow Graph)  |
-|  |  Intel HLS)      |  3. Schedule operations to clock cycles   |
-|  |                  |  4. Bind operations to hardware resources  |
-|  |                  |  5. Generate RTL (Verilog/VHDL)           |
-|  +------------------+                                           |
-|          |                                                      |
-|          v                                                      |
-|  RTL (Verilog / VHDL)                                           |
-|          |                                                      |
-|          v                                                      |
-|  Standard FPGA Flow (Synthesis -> P&R -> Bitstream)              |
-+================================================================+
+```mermaid
+flowchart TD
+    Src["C / C++ Source Code (with #pragma HLS directives)"] --> HLS["HLS Compiler (Vitis HLS / Intel HLS)<br/>1. Parse C/C++ &amp; build Control-Data Flow Graph (CDFG)<br/>2. Schedule operations to clock cycles<br/>3. Bind to LUTs / DSPs / BRAMs<br/>4. Generate synthesizable RTL"]
+    HLS --> RTL["Generated RTL (Verilog / VHDL)"] --> Flow["Standard FPGA Flow<br/>Synthesis -&gt; Place &amp; Route -&gt; Timing Closure -&gt; Bitstream"]
 ```
 
 ### 12.5.2 HLS Pragmas for Optimization
@@ -903,26 +885,17 @@ Fix: add pipeline stages, reduce logic levels, constrain placement,
 
 ### 12.7.2 When to Use Each
 
-```
-Decision Tree:
-
-  Start Here
-      |
-      v
-  Is latency critical (< 10 us)?
-      |
-      +-- Yes --> Is volume > 100K units?
-      |               |
-      |               +-- Yes --> ASIC
-      |               +-- No  --> FPGA
-      |
-      +-- No  --> Need massive parallelism?
-                      |
-                      +-- Yes --> GPU
-                      +-- No  --> Need custom data types/precision?
-                                      |
-                                      +-- Yes --> FPGA or ASIC
-                                      +-- No  --> CPU (simplest)
+```mermaid
+flowchart TD
+    Q1{"Deterministic ultra-low latency (&lt; 10 us)?"}
+    Q1 -->|"Yes"| Q2{"Production volume &gt; 100K units?"}
+    Q2 -->|"Yes"| ASIC1["Custom ASIC"]
+    Q2 -->|"No"| FPGA1["FPGA"]
+    Q1 -->|"No"| Q3{"Need massive data parallelism?"}
+    Q3 -->|"Yes"| GPU["GPU"]
+    Q3 -->|"No"| Q4{"Need custom bit-width / sensor I/O?"}
+    Q4 -->|"Yes"| FPGA2["FPGA or ASIC"]
+    Q4 -->|"No"| CPU["General-Purpose CPU"]
 ```
 
 ### 12.7.3 Concrete Examples

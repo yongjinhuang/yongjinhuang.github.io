@@ -8,39 +8,16 @@ CPU and GPU programming is the foundation of high-performance computing. From vi
 
 ## The Hardware Programming Landscape
 
-```
-+------------------------------------------------------------------------+
-|                   CPU/GPU PROGRAMMING ECOSYSTEM                         |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  HIGH-PERFORMANCE COMPUTING        AI / DEEP LEARNING                  |
-|  +-------------------------+       +---------------------------+       |
-|  | Scientific simulation    |       | Training (PyTorch, TF)    |       |
-|  | Weather/climate models   |       | Inference engines          |       |
-|  | Molecular dynamics       |       | Custom CUDA kernels        |       |
-|  | Computational fluid      |       | Tensor Core programming    |       |
-|  | Nuclear/particle physics |       | Model optimization          |       |
-|  +-------------------------+       +---------------------------+       |
-|                                                                        |
-|  GRAPHICS / GAMING                 FINANCE / CRYPTO                    |
-|  +-------------------------+       +---------------------------+       |
-|  | Real-time rendering      |       | Options pricing (Monte C.) |       |
-|  | Ray tracing               |       | Risk simulation            |       |
-|  | Shader programming        |       | Crypto mining algorithms   |       |
-|  | Compute shaders           |       | High-frequency trading     |       |
-|  | Vulkan / DirectX / Metal |       | Blockchain verification    |       |
-|  +-------------------------+       +---------------------------+       |
-|                                                                        |
-|  SYSTEMS / EMBEDDED                DATA ENGINEERING                    |
-|  +-------------------------+       +---------------------------+       |
-|  | OS kernel development     |       | Database query engines     |       |
-|  | Driver development        |       | Apache Arrow / DataFusion  |       |
-|  | FPGA programming          |       | GPU-accelerated analytics  |       |
-|  | Embedded real-time        |       | RAPIDS / cuDF / cuML       |       |
-|  | Signal processing         |       | Video transcoding           |       |
-|  +-------------------------+       +---------------------------+       |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Eco["CPU / GPU PROGRAMMING ECOSYSTEM"]
+        HPC["HIGH-PERFORMANCE COMPUTING<br/>Scientific simulation, Weather/climate, Molecular dynamics, CFD, Particle physics"]
+        AI["AI / DEEP LEARNING<br/>Training (PyTorch/TF), Inference engines, Custom CUDA kernels, Tensor Cores"]
+        GFX["GRAPHICS / GAMING<br/>Real-time rendering, Ray tracing, Shaders, Vulkan / DirectX / Metal"]
+        FIN["FINANCE / CRYPTO<br/>Monte Carlo options pricing, Risk simulation, Low-latency HFT, Cryptography"]
+        SYS["SYSTEMS / EMBEDDED<br/>OS kernels, Drivers, FPGA programming, Embedded real-time DSP"]
+        DATA["DATA ENGINEERING<br/>GPU-accelerated analytics (RAPIDS/cuDF), Apache Arrow/DataFusion, Video transcoding"]
+    end
 ```
 
 ---

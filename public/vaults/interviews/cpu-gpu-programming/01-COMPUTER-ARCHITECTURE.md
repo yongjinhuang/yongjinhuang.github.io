@@ -24,48 +24,21 @@ in memory.
 
 A von Neumann machine has four core components:
 
-```
-+================================================================+
-|                     VON NEUMANN ARCHITECTURE                    |
-+================================================================+
-|                                                                 |
-|                   +---------------------------+                 |
-|                   |      CONTROL UNIT (CU)     |                |
-|                   |                             |                |
-|                   | - Fetches instructions      |                |
-|                   | - Decodes opcodes           |                |
-|                   | - Sequences execution        |                |
-|                   | - Manages pipeline           |                |
-|                   +------------+----------------+                |
-|                                |                                 |
-|                   +------------v----------------+                |
-|                   |   ARITHMETIC LOGIC UNIT      |                |
-|                   |          (ALU)               |                |
-|                   |                             |                |
-|                   | - Integer add/sub/mul/div   |                |
-|                   | - Bitwise AND/OR/XOR/NOT    |                |
-|                   | - Comparisons (==, <, >)    |                |
-|                   | - Floating-point math (FPU) |                |
-|                   +------------+----------------+                |
-|                                |                                 |
-|         +----------+     +----v-----+     +----------+          |
-|         |          |     |          |     |          |          |
-|         | REGISTER |<--->| DATA BUS |<--->|  MEMORY  |          |
-|         |   FILE   |     |          |     |  (RAM)   |          |
-|         |          |     +----+-----+     |          |          |
-|         | R0..R15  |          |           | Instruc- |          |
-|         | SP, PC   |     +----+-----+     | tions &  |          |
-|         | FLAGS    |     | ADDRESS  |     | Data     |          |
-|         |          |     |   BUS    |     | live     |          |
-|         +----------+     +----------+     | together |          |
-|                                           +----------+          |
-|                                                                 |
-|    +------------------------------------------------------+     |
-|    |                    I/O SUBSYSTEM                      |     |
-|    |   Keyboard, Display, Disk, Network, GPU, USB, ...    |     |
-|    +------------------------------------------------------+     |
-|                                                                 |
-+================================================================+
+```mermaid
+flowchart TD
+    subgraph VN["VON NEUMANN ARCHITECTURE"]
+        CU["Control Unit (CU)<br/>Fetches instructions, decodes opcodes, sequences pipeline"]
+        ALU["Arithmetic Logic Unit (ALU / FPU)<br/>Integer math, bitwise ops, comparisons, floating-point"]
+        RF["Register File<br/>R0..R15, SP, PC, FLAGS"]
+        Bus["System Bus<br/>(Data Bus + Address Bus + Control Bus)"]
+        RAM["Unified Memory (RAM)<br/>Instructions &amp; Data live together"]
+        IO["I/O Subsystem<br/>Disk, Network, GPU, Display, Peripherals"]
+
+        CU --> ALU
+        ALU <--> Bus
+        RF <--> Bus
+        Bus <--> RAM & IO
+    end
 ```
 
 ### 1.2 Component-by-Component Breakdown
@@ -101,32 +74,10 @@ data bus carries _what_ to read/write, and the control bus carries signals like 
 
 Every CPU runs an infinite loop:
 
-```
-                    THE FETCH-DECODE-EXECUTE CYCLE
-                    ===============================
-
-    +-------+       +--------+       +---------+       +----------+
-    |       |       |        |       |         |       |          |
-    | FETCH |------>| DECODE |------>| EXECUTE |------>| WRITE    |---+
-    |       |       |        |       |         |       | BACK     |   |
-    +-------+       +--------+       +---------+       +----------+   |
-        ^                                                             |
-        |                                                             |
-        +-------------------------------------------------------------+
-                         (repeat forever)
-
-    FETCH:      Read instruction at address in Program Counter (PC)
-                PC = PC + instruction_size (advance to next)
-
-    DECODE:     Break instruction into opcode + operands
-                Example: ADD R1, R2, R3
-                opcode = ADD, dest = R1, src1 = R2, src2 = R3
-
-    EXECUTE:    Send operands to ALU, perform operation
-                Result = R2 + R3
-
-    WRITE BACK: Store result in destination register
-                R1 = Result
+```mermaid
+flowchart LR
+    F["1. FETCH<br/>Read instruction at PC,<br/>advance PC"] --> D["2. DECODE<br/>Parse opcode +<br/>source/dest operands"] --> E["3. EXECUTE<br/>Perform ALU / Memory<br/>operation"] --> WB["4. WRITE BACK<br/>Store result into<br/>destination register"]
+    WB -->|"Repeat cycle"| F
 ```
 
 **A concrete example -- adding two numbers in memory:**
@@ -478,53 +429,14 @@ as their inputs are ready, regardless of program order. This dramatically increa
 The OoO execution engine is one of the most complex pieces of hardware ever built. Here is
 a simplified view of its major components:
 
-```
-    OUT-OF-ORDER EXECUTION ENGINE
-    ==============================
-
-                    +-------------------+
-                    |   INSTRUCTION     |
-                    |   FETCH & DECODE  |
-                    +--------+----------+
-                             |
-                             v
-                    +--------+----------+
-                    |   REGISTER        |
-                    |   RENAME          |   Maps architectural registers
-                    |   (RAT)           |   to physical registers to
-                    +--------+----------+   eliminate false dependencies
-                             |
-                             v
-                    +--------+----------+
-                    |   REORDER BUFFER  |   Tracks all in-flight
-                    |   (ROB)           |   instructions, ensures
-                    |                   |   results commit in order
-                    +--------+----------+
-                             |
-                    +--------+----------+
-                    |   RESERVATION     |   Instructions wait here
-                    |   STATIONS (RS)   |   until operands are ready
-                    +--------+----------+
-                             |
-             +-------+-------+-------+-------+
-             |       |       |       |       |
-             v       v       v       v       v
-          +-----+ +-----+ +-----+ +-----+ +-----+
-          | ALU | | ALU | | FPU | |LOAD | |STORE|
-          |  1  | |  2  | |     | |UNIT | |UNIT |
-          +-----+ +-----+ +-----+ +-----+ +-----+
-             |       |       |       |       |
-             v       v       v       v       v
-                    +--------+----------+
-                    |   COMMON DATA BUS |   Results broadcast
-                    |   (CDB)           |   to all waiting RS
-                    +--------+----------+
-                             |
-                             v
-                    +--------+----------+
-                    |   RETIRE / COMMIT |   Write results to
-                    |   (in order!)     |   architectural state
-                    +-------------------+
+```mermaid
+flowchart TD
+    FD["Instruction Fetch &amp; Decode"] --> RAT["Register Rename (RAT)<br/>Maps architectural regs to physical regs<br/>(Eliminates WAR &amp; WAW false dependencies)"]
+    RAT --> ROB["Reorder Buffer (ROB)<br/>Tracks all in-flight instructions"]
+    ROB --> RS["Reservation Stations (RS)<br/>Instructions wait until source operands are ready"]
+    RS --> ALU1["ALU 1"] & ALU2["ALU 2"] & FPU["FPU / SIMD"] & LD["Load Unit"] & ST["Store Unit"]
+    ALU1 & ALU2 & FPU & LD & ST --> CDB["Common Data Bus (CDB)<br/>Broadcasts results to waiting RS entries"]
+    CDB --> Retire["Retire / Commit (In Program Order!)<br/>Updates architectural state from ROB head"]
 ```
 
 ### 3.4 Register Renaming
@@ -643,40 +555,16 @@ The CPU processes data at ~4 GHz (one operation every 0.25 nanoseconds). Main me
 responds in ~100 nanoseconds. That is a 400x speed gap. Without caches, the CPU would spend
 99.75% of its time waiting for memory. Caches bridge this gap.
 
-```
-    MEMORY HIERARCHY: Speed vs. Size Tradeoff
-    ==========================================
-
-    +----------+     ~0.3 ns     ~1 KB
-    | REGISTERS|     (1 cycle)   (per core)
-    +----+-----+
-         |
-    +----v-----+     ~1 ns       ~64 KB      (32 KB I$ + 32 KB D$)
-    |  L1 CACHE|     (4 cycles)  (per core)
-    +----+-----+
-         |
-    +----v-----+     ~3-5 ns     ~256 KB - 1 MB
-    |  L2 CACHE|     (12 cycles) (per core)
-    +----+-----+
-         |
-    +----v-----+     ~10-30 ns   ~8-64 MB
-    |  L3 CACHE|     (40 cycles) (shared across cores)
-    +----+-----+
-         |
-    +----v-----+     ~100 ns     ~16-128 GB
-    | MAIN MEM |     (400 cyc)   (shared across all)
-    | (DRAM)   |
-    +----+-----+
-         |
-    +----v-----+     ~100 us     ~1-8 TB
-    | SSD/NVMe |     (400K cyc)
-    +----+-----+
-         |
-    +----v-----+     ~10 ms      ~1-20 TB
-    | HARD DISK|     (40M cyc)
-    +----------+
-
-    Rule of thumb: each level is ~3-10x slower and ~10-100x larger
+```mermaid
+flowchart TD
+    R["Registers (Per Core)<br/>~0.3 ns (1 cycle) | ~1 KB"]
+    L1["L1 Cache (Per Core: 32KB I$ + 32KB D$)<br/>~1 ns (4 cycles) | ~64 KB"]
+    L2["L2 Cache (Per Core)<br/>~3-5 ns (12 cycles) | 256 KB - 1 MB"]
+    L3["L3 Cache / LLC (Shared Across Cores)<br/>~10-30 ns (40 cycles) | 8 - 64 MB"]
+    RAM["Main Memory (DRAM)<br/>~100 ns (400 cycles) | 16 - 512 GB"]
+    SSD["NVMe SSD<br/>~100 us (400K cycles) | 1 - 8 TB"]
+    HDD["Hard Disk<br/>~10 ms (40M cycles) | 1 - 20 TB"]
+    R --> L1 --> L2 --> L3 --> RAM --> SSD --> HDD
 ```
 
 ### 4.2 Latency Numbers Every Programmer Should Know
@@ -1374,43 +1262,17 @@ translations.
 A page fault occurs when the CPU accesses a virtual page that is not currently in physical
 memory. The OS must handle it:
 
-```
-    PAGE FAULT HANDLING
-    ===================
-
-    1. CPU accesses virtual address 0x1234000
-    2. Page table entry found: Present bit = 0 (not in RAM!)
-    3. CPU raises PAGE FAULT exception
-    4. OS page fault handler runs:
-
-       +--------------------+
-       | Is the address     |--NO--> Segmentation Fault (SIGSEGV)
-       | valid for this     |        Process killed
-       | process?           |
-       +--------+-----------+
-                | YES
-                v
-       +--------+-----------+
-       | Is a free physical |--NO--> Evict a page (LRU/Clock algorithm)
-       | frame available?   |        Write to swap if dirty
-       +--------+-----------+
-                | YES
-                v
-       +--------+-----------+
-       | Load page from     |  Sources:
-       | backing store      |  - Swap partition (previously evicted)
-       |                    |  - Executable file (code pages)
-       |                    |  - Zero-fill (new heap/stack pages)
-       +--------+-----------+
-                |
-                v
-       +--------+-----------+
-       | Update page table  |  Set present bit = 1
-       | entry              |  Set frame number
-       +--------+-----------+
-                |
-                v
-       Restart the faulting instruction (CPU re-executes it)
+```mermaid
+flowchart TD
+    Access["1. CPU Accesses Virtual Address (PTE Present = 0)"] --> Trap["2. CPU Raises Page Fault Exception -&gt; OS Handler"]
+    Trap --> Q1{"Is Virtual Address Valid<br/>for This Process (VMA)?"}
+    Q1 -->|"No"| Seg["Send SIGSEGV (Segmentation Fault)"]
+    Q1 -->|"Yes"| Q2{"Free Physical Frame Available?"}
+    Q2 -->|"No"| Evict["Evict Page (LRU/Clock)<br/>Write to swap if dirty"]
+    Evict --> Load
+    Q2 -->|"Yes"| Load["Load Page from Backing Store<br/>(Swap / File / Demand-Zero)"]
+    Load --> Update["Update PTE (Present = 1, PFN) &amp; Flush TLB"]
+    Update --> Restart["Restart Faulting Instruction"]
 ```
 
 ### 6.6 Huge Pages (Large Pages)
@@ -2094,37 +1956,12 @@ The two fundamental approaches to instruction set design:
 
 ## Summary: The Full Picture
 
-```
-    HOW A MODERN CPU EXECUTES YOUR CODE
-    ====================================
-
-    Your C/C++ code
-         |
-         v
-    [Compiler] --> Machine code (x86/ARM/RISC-V instructions)
-         |
-         v
-    +----+----------------------------------------------------+
-    |              FRONT END                                   |
-    |  Branch Predictor --> Instruction Fetch --> Decode        |
-    |  (TAGE predictor)    (L1-I cache)         (to micro-ops) |
-    +---------------------------+------------------------------+
-                                |
-    +---------------------------v------------------------------+
-    |              OUT-OF-ORDER ENGINE                          |
-    |  Register Rename --> Reservation Stations --> Execute     |
-    |  (eliminate false   (wait for operands)    (ALU, FPU,    |
-    |   dependencies)                             SIMD, Load,  |
-    |                                             Store units) |
-    |  Reorder Buffer (commit results in program order)        |
-    +---------------------------+------------------------------+
-                                |
-    +---------------------------v------------------------------+
-    |              MEMORY HIERARCHY                             |
-    |  L1 Cache (1ns) --> L2 (5ns) --> L3 (20ns) --> DRAM     |
-    |  TLB (virtual to physical translation)          (100ns)  |
-    |  Prefetchers (detect patterns, fetch ahead)              |
-    +----------------------------------------------------------+
+```mermaid
+flowchart TD
+    Src["C / C++ / Rust Source Code"] --> Comp["Compiler -&gt; Machine Code (x86-64 / ARM64 / RISC-V)"]
+    Comp --> FE["1. FRONT END<br/>Branch Predictor (TAGE) -&gt; Instruction Fetch (L1-I$) -&gt; Decode to Micro-Ops"]
+    FE --> OoO["2. OUT-OF-ORDER ENGINE<br/>Register Rename (RAT) -&gt; Reservation Stations -&gt; Execution Ports (ALU/FPU/SIMD/LD/ST)<br/>Reorder Buffer (ROB) commits in program order"]
+    OoO --> Mem["3. MEMORY SUBSYSTEM<br/>L1-D$ (1ns) -&gt; L2$ (5ns) -&gt; L3$ (20ns) -&gt; DRAM (100ns)<br/>+ TLB Virtual-to-Physical Translation + Hardware Prefetchers"]
 ```
 
 Every optimization technique we will study in the rest of this guide -- SIMD vectorization,
