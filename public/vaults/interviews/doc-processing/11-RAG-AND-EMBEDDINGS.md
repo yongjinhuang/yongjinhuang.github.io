@@ -4,39 +4,15 @@
 
 Retrieval-Augmented Generation (RAG) is the technique that makes LLMs useful for document processing at scale. Instead of trying to fit entire documents into a prompt, you split documents into chunks, convert them to embeddings (numerical vectors), store them in a vector database, and retrieve only the most relevant chunks when answering a question. This chapter covers the complete RAG pipeline from document chunking to production deployment.
 
-```
-+------------------------------------------------------------------------+
-|                    RAG PIPELINE                                          |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  INGESTION                                                              |
-|  +--------------------------------------------------------------+     |
-|  | 1. Load     | 2. Chunk      | 3. Embed       | 4. Store      |     |
-|  | Documents   | Split into    | Convert to     | Save in       |     |
-|  | (PDF, DOCX, | overlapping   | vectors using  | vector DB     |     |
-|  |  HTML, etc.) | text segments | embedding model| (pgvector,    |     |
-|  |              |               |                | Pinecone, etc)|     |
-|  +--------------------------------------------------------------+     |
-|                                                                        |
-|  RETRIEVAL                                                              |
-|  +--------------------------------------------------------------+     |
-|  | 5. Query    | 6. Search     | 7. Rerank     | 8. Generate    |     |
-|  | User asks   | Find similar  | Score and     | LLM answers    |     |
-|  | a question  | chunks by     | filter top    | using retrieved|     |
-|  |             | vector sim.   | results       | context        |     |
-|  +--------------------------------------------------------------+     |
-|                                                                        |
-|  COMPONENTS                                                             |
-|  +------------------------+     +---------------------------+          |
-|  | Embedding Models        |     | Vector Databases           |          |
-|  |   OpenAI text-embedding |     |   pgvector (PostgreSQL)    |          |
-|  |   Voyage AI              |     |   Pinecone (managed)       |          |
-|  |   Cohere embed           |     |   Chroma (local/embedded)  |          |
-|  |   sentence-transformers  |     |   Weaviate                 |          |
-|  |   (local, free)          |     |   Qdrant                   |          |
-|  +------------------------+     +---------------------------+          |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Ingest["INGESTION PIPELINE"]
+        S1["1. Load Documents<br/>(PDF, DOCX, HTML)"] --> S2["2. Chunk<br/>(Overlapping segments)"] --> S3["3. Embed<br/>(OpenAI, Voyage, Cohere, BGE)"] --> S4[("4. Store in Vector DB<br/>(pgvector, Pinecone, Qdrant, Weaviate)")]
+    end
+    subgraph Ret["RETRIEVAL &amp; GENERATION"]
+        S5["5. User Query"] --> S6["6. Vector Similarity Search"] --> S7["7. Cross-Encoder Rerank"] --> S8["8. LLM Generate with Citations"]
+    end
+    S4 -.-> S6
 ```
 
 ---

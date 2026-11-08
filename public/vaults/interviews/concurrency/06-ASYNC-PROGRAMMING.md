@@ -30,27 +30,13 @@ separates juniors from seniors in interviews.
 
 ### How the Event Loop Works
 
-```
-Event Loop Architecture:
-
-+-----------------------------------------------------------+
-|                      EVENT LOOP                            |
-|                                                            |
-|  1. Check ready queue for runnable coroutines              |
-|  2. Run the next coroutine until it hits an 'await'        |
-|  3. Register the awaited I/O with the OS (epoll/kqueue)   |
-|  4. Check for completed I/O events                        |
-|  5. Move completed coroutines back to the ready queue     |
-|  6. Repeat from step 1                                    |
-|                                                            |
-|  +----------+     +-----------+     +------------------+  |
-|  | Ready    | --> | Running   | --> | Waiting for I/O  |  |
-|  | Queue    |     | Coroutine |     | (OS multiplexer) |  |
-|  +----------+     +-----------+     +------------------+  |
-|       ^                                     |              |
-|       |           I/O complete              |              |
-|       +-------------------------------------+              |
-+-----------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Loop["EVENT LOOP ARCHITECTURE"]
+        Ready["Ready Queue<br/>(Runnable coroutines)"] -->|"Schedule next"| Run["Running Coroutine<br/>(Executes until 'await')"]
+        Run -->|"Register non-blocking I/O"| Wait["Waiting for I/O<br/>(OS epoll / kqueue / IOCP)"]
+        Wait -->|"I/O complete event"| Ready
+    end
 ```
 
 ### Under the Hood: OS I/O Multiplexing
@@ -123,37 +109,15 @@ def simplified_event_loop():
 
 ## 2. Decision Tree
 
-```
-Choosing Between Coroutines, Threads, and Processes:
-
-Is the work CPU-bound?
-|
-+-- YES --> Use multiprocessing (or ProcessPoolExecutor)
-|           Python's GIL prevents thread-level CPU parallelism
-|
-+-- NO (I/O-bound) -->
-    |
-    How many concurrent connections/operations?
-    |
-    +-- < 100 --> threading is fine (simpler, good library support)
-    |
-    +-- 100 - 10,000 --> asyncio is better (less memory, no context switch)
-    |
-    +-- > 10,000 --> asyncio is required (threads cannot scale this far)
-    |
-    Do all your libraries support async?
-    |
-    +-- YES --> asyncio
-    |
-    +-- NO (some libraries are sync-only) -->
-        |
-        Use asyncio + loop.run_in_executor() for sync libraries
-        Or use threading if most work is sync
-
-Mixed CPU + I/O workloads:
-  Use ProcessPoolExecutor for CPU work
-  Use asyncio for I/O coordination
-  Bridge with loop.run_in_executor(process_pool, cpu_func)
+```mermaid
+flowchart TD
+    Q1{"Is the work CPU-bound?"}
+    Q1 -->|"YES"| MP["Use multiprocessing / ProcessPoolExecutor<br/>(Bypasses Python GIL)"]
+    Q1 -->|"NO (I/O-Bound)"| Q2{"How many concurrent operations?"}
+    Q2 -->|"&lt; 100"| Thr["threading is fine<br/>(Simpler, sync library support)"]
+    Q2 -->|"100 - 10,000+"| Q3{"Do all libraries support async?"}
+    Q3 -->|"YES"| Async["asyncio<br/>(Low memory, no OS context switches)"]
+    Q3 -->|"NO (some sync libs)"| Bridge["asyncio + loop.run_in_executor()<br/>(Offload blocking calls to thread/process pool)"]
 ```
 
 ---

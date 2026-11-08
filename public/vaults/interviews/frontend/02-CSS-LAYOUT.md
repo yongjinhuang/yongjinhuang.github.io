@@ -22,20 +22,15 @@ The most commonly tested areas are:
 
 Every element in CSS generates a rectangular box. The box model defines how the dimensions of that box are calculated.
 
-```
-+------------------------------------------+
-|              margin                       |
-|  +------------------------------------+  |
-|  |            border                  |  |
-|  |  +------------------------------+  |  |
-|  |  |          padding             |  |  |
-|  |  |  +------------------------+  |  |  |
-|  |  |  |       content          |  |  |  |
-|  |  |  |   width x height      |  |  |  |
-|  |  |  +------------------------+  |  |  |
-|  |  +------------------------------+  |  |
-|  +------------------------------------+  |
-+------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Margin["Margin (Outer Spacing)"]
+        subgraph Border["Border"]
+            subgraph Padding["Padding (Inner Spacing)"]
+                Content["Content<br/>(width x height)"]
+            end
+        end
+    end
 ```
 
 #### box-sizing

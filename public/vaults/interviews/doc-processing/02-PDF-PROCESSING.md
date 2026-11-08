@@ -4,37 +4,14 @@
 
 PDF (Portable Document Format) is the most important document format in business. Contracts, invoices, reports, research papers, government forms — they are all PDFs. Yet PDF is one of the hardest formats to process programmatically because it is a _page description language_, not a data format. Text is positioned character by character, tables are just lines and text at coordinates, and a "paragraph" is a visual construct that no PDF reader natively understands.
 
-```
-+------------------------------------------------------------------------+
-|                    PDF PROCESSING ECOSYSTEM                             |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  READING                         WRITING                               |
-|  +------------------------+     +---------------------------+          |
-|  | PyMuPDF (fitz)          |     | ReportLab                 |          |
-|  |   - Fast text extraction|     |   - Full PDF generation   |          |
-|  |   - Image extraction    |     |   - Tables, charts, images|          |
-|  |   - Rendering to image  |     |                           |          |
-|  | pdfplumber              |     | FPDF2                     |          |
-|  |   - Table extraction    |     |   - Simple PDF creation   |          |
-|  |   - Visual debugging    |     |   - Lightweight            |          |
-|  | PyPDF                   |     | WeasyPrint                |          |
-|  |   - Merge, split, rotate|     |   - HTML/CSS to PDF       |          |
-|  |   - Form reading        |     |                           |          |
-|  +------------------------+     +---------------------------+          |
-|                                                                        |
-|  MANIPULATION                    ADVANCED                              |
-|  +------------------------+     +---------------------------+          |
-|  | pikepdf                 |     | Camelot (table extraction) |          |
-|  |   - Low-level PDF ops   |     | Tabula (Java-based tables) |          |
-|  |   - Encryption/decrypt  |     | pdf2image (PDF to images)  |          |
-|  |   - Metadata editing    |     | OCRmyPDF (add OCR layer)   |          |
-|  | PyPDF                   |     | pdfminer.six (low-level)   |          |
-|  |   - Watermarks          |     |                           |          |
-|  |   - Page manipulation   |     |                           |          |
-|  +------------------------+     +---------------------------+          |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph PDF["PDF PROCESSING ECOSYSTEM"]
+        Read["READING<br/>- PyMuPDF (fitz): Fast text/image extraction &amp; page rendering<br/>- pdfplumber: Table extraction &amp; visual debugging<br/>- PyPDF: Merge, split, rotate, form reading"]
+        Write["WRITING<br/>- ReportLab: Full programmatic PDF generation (tables, charts)<br/>- FPDF2: Lightweight PDF creation<br/>- WeasyPrint: HTML/CSS to PDF"]
+        Manip["MANIPULATION<br/>- pikepdf: Low-level ops, encryption/decryption, metadata<br/>- PyPDF: Watermarks &amp; page manipulation"]
+        Adv["ADVANCED<br/>- Camelot &amp; Tabula: Table extraction<br/>- pdf2image: PDF to images<br/>- OCRmyPDF: Add searchable OCR layer<br/>- pdfminer.six: Low-level layout analysis"]
+    end
 ```
 
 ---

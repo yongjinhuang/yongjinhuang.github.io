@@ -2,54 +2,18 @@
 
 Microsoft Word's `.docx` format is the de facto standard for business documents worldwide. From contracts and invoices to reports and resumes, Word files dominate corporate communication. Understanding how to programmatically read, write, and transform Word documents unlocks powerful automation: generating hundreds of personalized letters in seconds, extracting structured data from legacy reports, or building template-driven document pipelines that eliminate manual formatting entirely. This chapter dissects the `.docx` format from its XML internals to high-level template engines, giving you complete mastery over Word document processing in Python.
 
-```
-+------------------------------------------------------------------+
-|                 WORD DOCUMENT PROCESSING ECOSYSTEM                |
-+------------------------------------------------------------------+
-|                                                                  |
-|   .docx File (ZIP Archive)                                       |
-|   +---------------------------+                                  |
-|   | [Content_Types].xml       |                                  |
-|   | _rels/.rels               |                                  |
-|   | word/                     |                                  |
-|   |   document.xml  <-------- Core content (paragraphs, tables)  |
-|   |   styles.xml              |                                  |
-|   |   settings.xml            |                                  |
-|   |   header1.xml             |                                  |
-|   |   footer1.xml             |                                  |
-|   |   media/                  |                                  |
-|   |     image1.png            |                                  |
-|   |   _rels/                  |                                  |
-|   |     document.xml.rels     |                                  |
-|   +---------------------------+                                  |
-|              |                                                   |
-|              v                                                   |
-|   +---------------------------+    +-------------------------+   |
-|   |      python-docx          |    |     docxtpl             |   |
-|   |  (Read / Write / Edit)    |    | (Jinja2 Templates)      |   |
-|   +---------------------------+    +-------------------------+   |
-|              |                              |                    |
-|              v                              v                    |
-|   +---------------------------+    +-------------------------+   |
-|   |  Document Object Model    |    | Template Variables       |  |
-|   |  - Document               |    |  {{ name }}              |  |
-|   |    - Paragraph[]          |    |  {% for item in list %}  |  |
-|   |      - Run[]              |    |  {{ item }}              |  |
-|   |    - Table[]              |    |  {% endfor %}            |  |
-|   |      - Row[]              |    +-------------------------+   |
-|   |        - Cell[]           |                                  |
-|   |    - Section[]            |    +-------------------------+   |
-|   |      - Header             |    |  Legacy .doc Support    |   |
-|   |      - Footer             |    |  LibreOffice CLI        |   |
-|   +---------------------------+    |  antiword / textract    |   |
-|                                    +-------------------------+   |
-|                                                                  |
-|   Pipeline:                                                      |
-|   JSON/CSV/DB --> Python --> .docx Template --> Rendered .docx    |
-|                      |                              |             |
-|                      v                              v             |
-|                  Analysis                     PDF / Print         |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Word["WORD DOCUMENT PROCESSING ECOSYSTEM"]
+        Zip[".docx File (OOXML ZIP Archive)<br/>- [Content_Types].xml &amp; _rels/.rels<br/>- word/document.xml (Core paragraphs &amp; tables)<br/>- word/styles.xml, settings.xml, header1.xml, footer1.xml<br/>- word/media/image1.png"]
+        PyDocx["python-docx<br/>(Read / Write / Edit)"]
+        DocxTpl["docxtpl<br/>(Jinja2 Templates: {{ name }}, {% for ... %})"]
+        DOM["Document Object Model<br/>Document -&gt; Paragraph[] -&gt; Run[]<br/>Document -&gt; Table[] -&gt; Row[] -&gt; Cell[]<br/>Document -&gt; Section[] -&gt; Header / Footer"]
+        Legacy["Legacy .doc Support<br/>LibreOffice CLI / antiword / textract"]
+
+        Zip --> PyDocx & DocxTpl
+        PyDocx --> DOM
+    end
 ```
 
 ---

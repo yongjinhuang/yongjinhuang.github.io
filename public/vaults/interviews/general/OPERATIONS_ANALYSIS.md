@@ -4,79 +4,30 @@
 
 ### 1.1 Cloud Provider: Tencent Cloud (Region: ap-nanjing / ap-shanghai)
 
-```
-                         ┌──────────────────────────────┐
-                         │        DNS (Xinnet)           │
-                         │    *.wilddata.cn records      │
-                         └──────────────┬───────────────┘
-                                        │
-                         ┌──────────────▼───────────────┐
-                         │   EdgeOne (CDN + WAF + SSL)   │
-                         │  - Covers entire domain       │
-                         │  - DDoS / bot protection      │
-                         │  - Auto SSL certificate renew │
-                         │  - Static response caching    │
-                         └──────────────┬───────────────┘
-                                        │
-                  ┌─────────────────────▼─────────────────────┐
-                  │        CLB (Cloud Load Balancer)           │
-                  │                                           │
-                  │  Routes by subdomain:                     │
-                  │  suppr.wilddata.cn      → K8s Ingress     │
-                  │  api.suppr.wilddata.cn  → K8s Ingress     │
-                  │  docs.suppr.wilddata.cn → K8s Ingress     │
-                  │  seomanage.wilddata.cn  → K8s Ingress     │
-                  └─────────────────────┬─────────────────────┘
-                                        │
-          ┌─────────────────────────────▼─────────────────────────────┐
-          │                    TKE (K8s Cluster)                      │
-          │                                                           │
-          │  ┌─────────────────────────────────────────────────────┐  │
-          │  │              NGINX Ingress Controller                │  │
-          │  └───────────────────────┬─────────────────────────────┘  │
-          │                          │                                │
-          │  ┌───────────────────────▼─────────────────────────────┐  │
-          │  │  Namespace: production                              │  │
-          │  │                                                     │  │
-          │  │  suppr-backend x7    suppr-consumer x1              │  │
-          │  │  suppr-fed x1        suppr-api x1                   │  │
-          │  │  wilddata-module-pay x1    gotenberg x1             │  │
-          │  └─────────────────────────────────────────────────────┘  │
-          │                                                           │
-          │  Cloud Servers (Worker Nodes): 2 nodes (node affinity)   │
-          └───────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    DNS["DNS (Xinnet)<br/>*.wilddata.cn records"] --> EdgeOne["EdgeOne (CDN + WAF + SSL)<br/>- Covers entire domain<br/>- DDoS / bot protection<br/>- Auto SSL certificate renewal<br/>- Static response caching"]
+    EdgeOne --> CLB["CLB (Cloud Load Balancer)<br/>Routes by subdomain:<br/>suppr / api.suppr / docs.suppr / seomanage.wilddata.cn"]
 
-  ┌────────────────────────────────────────────────────────────────────┐
-  │     External AI Services (on TKE, owned by another team)          │
-  │                                                                    │
-  │  paper-search        — LLM-based academic document search          │
-  │  translation-service — Multi-language file translation engine      │
-  │  deep-research       — Research report generation                  │
-  └────────────────────────────────────────────────────────────────────┘
+    subgraph TKE["TKE (K8s Cluster — 2 Worker Nodes with Node Affinity)"]
+        Ingress["NGINX Ingress Controller"] --> ProdNS["Namespace: production<br/>- suppr-backend x7<br/>- suppr-consumer x1<br/>- suppr-fed x1<br/>- suppr-api x1<br/>- wilddata-module-pay x1<br/>- gotenberg x1"]
+    end
 
-  ┌────────────────────────────────────────────────────────────────────┐
-  │    Lightweight Servers (Stateful Services via Docker Compose)      │
-  │    (docker-compose files exist locally but NOT persisted to repo)  │
-  │                                                                    │
-  │  Production Server       Shared Server          DevOps Server     │
-  │  ├── MySQL               ├── MongoDB (60GB,     ├── Jenkins CI    │
-  │  └── Redis               │   3 billion records) └── Strapi CMS   │
-  │                          └── Kafka                                │
-  └────────────────────────────────────────────────────────────────────┘
+    CLB --> Ingress
 
-  ┌────────────────────────────────────────────────────────────────────┐
-  │                Tencent COS (Object Storage)                        │
-  │                                                                    │
-  │  Private bucket: Production user files (signed URLs)               │
-  │  Public bucket:  Avatars, share images (public read)               │
-  └────────────────────────────────────────────────────────────────────┘
+    ExtAI["External AI Services (on TKE, partner team)<br/>- paper-search (LLM academic search)<br/>- translation-service (Multi-language translation)<br/>- deep-research (Research report generation)"]
 
-  ┌────────────────────────────────────────────────────────────────────┐
-  │                Tencent CDN (dedicated domain)                      │
-  │                                                                    │
-  │  Serves ONLY /_next/static/* assets from suppr-fed                 │
-  │  via a dedicated CDN domain (not through EdgeOne)                  │
-  └────────────────────────────────────────────────────────────────────┘
+    subgraph Stateful["Lightweight Servers (Stateful Services via Docker Compose)"]
+        S_Prod[("Production Server<br/>- MySQL<br/>- Redis")]
+        S_Shared[("Shared Server<br/>- MongoDB (60GB, 3B records)<br/>- Kafka")]
+        S_DevOps["DevOps Server<br/>- Jenkins CI<br/>- Strapi CMS"]
+    end
+
+    COS[("Tencent COS (Object Storage)<br/>- Private bucket: User files (signed URLs)<br/>- Public bucket: Avatars, share images")]
+    CDN["Tencent CDN (Dedicated Domain)<br/>Serves ONLY /_next/static/* from suppr-fed"]
+
+    ProdNS --> ExtAI & S_Prod & S_Shared & COS
+    CDN --> ProdNS
 ```
 
 ### 1.2 Service Inventory
@@ -105,25 +56,16 @@
 
 ### 2.1 Domain Routing
 
-```
-*.wilddata.cn (Xinnet DNS)
-  │
-  ├── suppr.wilddata.cn ──────────► Production
-  │     ├── /suppr-backend/*       → suppr-backend (production ns)
-  │     ├── /dashboard/*           → suppr-fed (production ns)
-  │     └── /pay/*                 → wilddata-module-pay (production ns)
-  │
-  ├── test.suppr.wilddata.cn ─────► Test
-  │     ├── /suppr-backend/*       → suppr-backend (test ns)
-  │     ├── /dashboard/*           → suppr-fed (test ns)
-  │     └── /pay/*                 → wilddata-module-pay (testing ns)
-  │
-  ├── api.suppr.wilddata.cn ──────► Public API
-  │     └── /api/v1/*              → suppr-api (rate-limited gateway)
-  │
-  ├── docs.suppr.wilddata.cn ─────► API Documentation
-  │
-  └── seomanage.wilddata.cn ──────► SEO Management Tool
+```mermaid
+flowchart LR
+    DNS["*.wilddata.cn<br/>(Xinnet DNS)"]
+    Prod["suppr.wilddata.cn (Production)<br/>- /suppr-backend/* -&gt; suppr-backend (production ns)<br/>- /dashboard/* -&gt; suppr-fed (production ns)<br/>- /pay/* -&gt; wilddata-module-pay (production ns)"]
+    Test["test.suppr.wilddata.cn (Test)<br/>- /suppr-backend/* -&gt; suppr-backend (test ns)<br/>- /dashboard/* -&gt; suppr-fed (test ns)<br/>- /pay/* -&gt; wilddata-module-pay (testing ns)"]
+    API["api.suppr.wilddata.cn (Public API)<br/>- /api/v1/* -&gt; suppr-api (rate-limited gateway)"]
+    Docs["docs.suppr.wilddata.cn<br/>API Documentation"]
+    SEO["seomanage.wilddata.cn<br/>SEO Management Tool"]
+
+    DNS --> Prod & Test & API & Docs & SEO
 ```
 
 ### 2.2 Traffic Flow
@@ -162,28 +104,11 @@ Static assets (separate path):
 
 ### 3.1 Pipeline Architecture
 
-```
-Developer pushes to coding.net branch
-  │
-  ▼
-coding.net webhook triggers Jenkins
-  │
-  ▼
-Jenkins (on dedicated lightweight server)
-  ├── Pull source code from coding.net
-  ├── Build Docker image (multi-stage)
-  │     ├── Maven build (Java 21) or npm build (Next.js)
-  │     └── Produce minimal runtime image
-  ├── Push image to Coding Docker Registry (private)
-  └── Trigger Orbit CD deployment
-        │
-        ▼
-Orbit CD (Tencent Coding CD)
-  ├── Select environment (test / production)
-  ├── Apply Helm chart with environment-specific values
-  │     ├── values-test.yaml
-  │     └── values-production.yaml
-  └── K8s rolling update in target namespace
+```mermaid
+flowchart TD
+    Push["Developer pushes to coding.net branch"] --> Hook["coding.net webhook triggers Jenkins"]
+    Hook --> Jenkins["Jenkins (Dedicated Lightweight Server)<br/>1. Pull source code from coding.net<br/>2. Build multi-stage Docker image (Maven Java 21 / Next.js)<br/>3. Push image to Coding Private Docker Registry<br/>4. Trigger Orbit CD deployment"]
+    Jenkins --> Orbit["Orbit CD (Tencent Coding CD)<br/>1. Select environment (test / production)<br/>2. Apply Helm chart (values-test.yaml / values-production.yaml)<br/>3. K8s rolling update in target namespace"]
 ```
 
 ### 3.2 Container Registry

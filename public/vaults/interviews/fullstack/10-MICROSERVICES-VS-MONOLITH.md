@@ -900,16 +900,15 @@ If you don't have ALL of the above → stay with the monolith.
 
 ### Communication Pattern Decision Tree
 
-```
-Does the caller need an immediate response?
-  Yes → Synchronous (REST or gRPC)
-    Is it internal service-to-service?
-      Yes → gRPC (performance, type safety)
-      No  → REST (simplicity, broad compatibility)
-  No  → Asynchronous
-    Do multiple consumers need the event?
-      Yes → Event streaming (Kafka) or Pub/Sub
-      No  → Message queue (RabbitMQ, SQS)
+```mermaid
+flowchart TD
+    Q1{"Does the caller need an immediate response?"}
+    Q1 -->|"Yes (Synchronous)"| Q2{"Internal service-to-service?"}
+    Q2 -->|"Yes"| gRPC["gRPC<br/>(Performance, strict protobuf types)"]
+    Q2 -->|"No"| REST["REST<br/>(Simplicity, broad compatibility)"]
+    Q1 -->|"No (Asynchronous)"| Q3{"Do multiple consumers need the event?"}
+    Q3 -->|"Yes"| Stream["Event Streaming (Kafka) or Pub/Sub"]
+    Q3 -->|"No"| MQ["Message Queue (RabbitMQ, SQS)"]
 ```
 
 ### Saga Decision: Choreography vs Orchestration

@@ -880,19 +880,11 @@ public void expirePoints() {
 
 ### Observability Checklist (What Suppr Needs)
 
-```
-┌─────────────┐     ┌────────────┐     ┌─────────┐
-│ Application │────→│ Micrometer │────→│Prometheus│────→ Grafana dashboards
-│  (metrics)  │     └────────────┘     └─────────┘
-└─────────────┘
-┌─────────────┐     ┌──────────────┐     ┌──────┐
-│ Application │────→│OpenTelemetry │────→│Jaeger │────→ Distributed traces
-│  (traces)   │     └──────────────┘     └──────┘
-└─────────────┘
-┌─────────────┐     ┌────────┐     ┌───────────────┐
-│ Application │────→│Logback │────→│ELK / Loki     │────→ Centralized logs
-│   (logs)    │     └────────┘     └───────────────┘
-└─────────────┘
+```mermaid
+flowchart LR
+    AppM["Application (Metrics)"] --> Mic["Micrometer"] --> Prom["Prometheus"] --> Graf["Grafana Dashboards"]
+    AppT["Application (Traces)"] --> OTel["OpenTelemetry"] --> Jaeger["Jaeger"] --> Traces["Distributed Traces"]
+    AppL["Application (Logs)"] --> Logback["Logback"] --> ELK["ELK / Loki"] --> Logs["Centralized Logs"]
 ```
 
 **Key metrics to track**:

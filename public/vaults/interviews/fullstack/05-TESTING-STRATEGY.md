@@ -14,13 +14,9 @@ Testing is not just about catching bugs. It is about enabling confident refactor
 
 The testing pyramid is a model for balancing test types:
 
-```
-        /  E2E  \          Few, slow, expensive
-       /----------\
-      / Integration \      Moderate number
-     /----------------\
-    /    Unit Tests     \  Many, fast, cheap
-   /____________________\
+```mermaid
+flowchart BT
+    Unit["Unit Tests<br/>(Many, fast, cheap)"] --> Int["Integration Tests<br/>(Moderate number, real DB/API boundaries)"] --> E2E["E2E Tests<br/>(Few, slow, expensive — critical user journeys)"]
 ```
 
 **Unit tests (base):**
@@ -1102,11 +1098,9 @@ export const createTestUsers = async (
 
 ### TDD Cycle
 
-```
-1. RED    -> Write a failing test
-2. GREEN  -> Write minimum code to pass
-3. REFACTOR -> Clean up while tests remain green
-4. REPEAT
+```mermaid
+flowchart LR
+    Red["1. RED<br/>Write a failing test"] --> Green["2. GREEN<br/>Write minimum code to pass"] --> Refactor["3. REFACTOR<br/>Clean up while tests stay green"] -->|"4. REPEAT"| Red
 ```
 
 ### Test Double Types

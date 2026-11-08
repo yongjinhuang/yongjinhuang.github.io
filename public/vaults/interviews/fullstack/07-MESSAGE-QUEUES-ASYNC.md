@@ -56,11 +56,10 @@ Kafka is a distributed event streaming platform designed for high-throughput, fa
 
 **Architecture:**
 
-```
-Producers -> Brokers (Cluster) -> Consumers
-              |
-              v
-          Topics -> Partitions -> Segments (on disk)
+```mermaid
+flowchart LR
+    Prod["Producers"] --> Brokers["Kafka Brokers (Cluster)"] --> Cons["Consumers"]
+    Brokers --> Topics["Topics"] --> Parts["Partitions"] --> Segs[("Segments (on disk)")]
 ```
 
 **Key concepts:**
@@ -99,8 +98,9 @@ RabbitMQ is a traditional message broker that implements AMQP (Advanced Message 
 
 **Architecture:**
 
-```
-Producers -> Exchange -> Bindings -> Queues -> Consumers
+```mermaid
+flowchart LR
+    Prod["Producers"] --> Ex["Exchange"] --> Bind["Bindings"] --> Q["Queues"] --> Cons["Consumers"]
 ```
 
 **Exchange types:**
@@ -193,11 +193,12 @@ The saga pattern manages distributed transactions across multiple services witho
 - Services react autonomously to events
 - Simpler for small numbers of steps
 
-```
-OrderService -> publishes OrderCreated
-PaymentService -> listens for OrderCreated -> processes payment -> publishes PaymentCompleted
-InventoryService -> listens for PaymentCompleted -> reserves stock -> publishes StockReserved
-ShippingService -> listens for StockReserved -> creates shipment -> publishes ShipmentCreated
+```mermaid
+flowchart LR
+    Order["OrderService"] -->|"OrderCreated"| Pay["PaymentService<br/>(process payment)"]
+    Pay -->|"PaymentCompleted"| Inv["InventoryService<br/>(reserve stock)"]
+    Inv -->|"StockReserved"| Ship["ShippingService<br/>(create shipment)"]
+    Ship -->|"ShipmentCreated"| Done(["Done"])
 ```
 
 **Orchestration-based saga:**
@@ -1281,14 +1282,16 @@ Exp + jitter:  attempt 1 -> 1.3s -> attempt 2 -> 2.7s -> attempt 3 -> 5.1s -> DL
 
 ### Common Queue Patterns
 
-```
-Point-to-point:    1 producer -> Queue -> 1 consumer
-Pub/Sub:           1 producer -> Topic -> N consumers
-Fan-out:           1 producer -> Exchange -> N queues -> N consumers
-Work queue:        N producers -> Queue -> N consumers (competing)
-Request/Reply:     Producer -> Queue -> Consumer -> Reply Queue -> Producer
-Priority:          Producer -> Priority Queue -> Highest-first consumer
-Delay:             Producer -> Delay Queue -> Wait -> Processing Queue
+```mermaid
+flowchart LR
+    subgraph Patterns["MESSAGING PATTERNS"]
+        P1["Point-to-Point: 1 Producer -&gt; Queue -&gt; 1 Consumer"]
+        P2["Pub/Sub: 1 Producer -&gt; Topic -&gt; N Consumers"]
+        P3["Fan-Out: 1 Producer -&gt; Exchange -&gt; N Queues -&gt; N Consumers"]
+        P4["Work Queue: N Producers -&gt; Queue -&gt; N Competing Consumers"]
+        P5["Request/Reply: Producer -&gt; Queue -&gt; Consumer -&gt; Reply Queue -&gt; Producer"]
+        P6["Priority &amp; Delay: Producer -&gt; Priority / Delay Queue -&gt; Consumer"]
+    end
 ```
 
 ### Monitoring Metrics

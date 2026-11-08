@@ -27,32 +27,14 @@ basics covered in the LLD concurrency file.
 Deadlock occurs if and only if ALL four of the following conditions hold simultaneously.
 Breaking ANY one condition prevents deadlock.
 
-```
-+-----------------------------------------------------------------------+
-| COFFMAN CONDITIONS (all 4 required for deadlock)                      |
-+-----------------------------------------------------------------------+
-|                                                                       |
-| 1. MUTUAL EXCLUSION                                                   |
-|    At least one resource must be held in a non-sharable mode.         |
-|    Only one thread can use the resource at a time.                    |
-|                                                                       |
-| 2. HOLD AND WAIT                                                      |
-|    A thread holding at least one resource is waiting to acquire       |
-|    additional resources held by other threads.                        |
-|                                                                       |
-| 3. NO PREEMPTION                                                      |
-|    Resources cannot be forcibly taken from a thread. They can only    |
-|    be released voluntarily by the thread holding them.                |
-|                                                                       |
-| 4. CIRCULAR WAIT                                                      |
-|    A circular chain of threads exists where each thread holds a       |
-|    resource that the next thread in the chain is waiting for.         |
-|                                                                       |
-|    T1 --> R1 (held by T2)                                             |
-|    T2 --> R2 (held by T3)                                             |
-|    T3 --> R3 (held by T1)     <-- circular!                          |
-|                                                                       |
-+-----------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Coffman["COFFMAN CONDITIONS (All 4 Required for Deadlock)"]
+        C1["1. Mutual Exclusion<br/>Resource held in non-sharable mode"]
+        C2["2. Hold and Wait<br/>Thread holds one resource while waiting for another"]
+        C3["3. No Preemption<br/>Resources cannot be forcibly taken away"]
+        C4["4. Circular Wait<br/>T1 waits for R1 (held by T2) -&gt; T2 waits for R2 (held by T3) -&gt; T3 waits for R3 (held by T1)"]
+    end
 ```
 
 ### Demonstrating Each Condition
@@ -98,16 +80,14 @@ def deadlock_demonstration():
 Build a directed graph where an edge from T_i to T_j means "thread i is waiting for a
 resource held by thread j." Deadlock exists if and only if there is a cycle in this graph.
 
-```
-Wait-For Graph (no deadlock):
-T1 --> T2 --> T3
-              (no cycle)
-
-Wait-For Graph (deadlock):
-T1 --> T2 --> T3 --> T1
-       ^             |
-       +-------------+
-       (cycle detected = DEADLOCK)
+```mermaid
+flowchart LR
+    subgraph NoDeadlock["Wait-For Graph (No Cycle = No Deadlock)"]
+        A1["T1"] --> A2["T2"] --> A3["T3"]
+    end
+    subgraph Deadlock["Wait-For Graph (Cycle Detected = DEADLOCK)"]
+        B1["T1"] --> B2["T2"] --> B3["T3"] --> B1
+    end
 ```
 
 ### Cycle Detection Implementation
@@ -206,21 +186,10 @@ def test_deadlock_detection():
 
 ### Periodic Detection Strategy
 
-```
-Deadlock Detection Strategy:
-+-------------------------------------------------------+
-| 1. Run detector periodically (e.g., every 5 seconds)  |
-| 2. When cycle found, choose a VICTIM thread            |
-| 3. Abort the victim (rollback its transaction)         |
-| 4. Release the victim's resources                      |
-| 5. Other threads in the cycle can proceed              |
-+-------------------------------------------------------+
-
-Victim Selection Criteria:
-  - Thread with least work done (minimize rollback cost)
-  - Thread holding fewest resources
-  - Thread with lowest priority
-  - Thread that is youngest (timestamp-based)
+```mermaid
+flowchart LR
+    S1["1. Run cycle detector periodically"] --> S2["2. Cycle found -&gt; Choose VICTIM thread<br/>(least work done, fewest resources, youngest)"]
+    S2 --> S3["3. Abort victim &amp; rollback transaction"] --> S4["4. Release victim's resources"] --> S5["5. Remaining threads proceed"]
 ```
 
 ---

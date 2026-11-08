@@ -4,33 +4,14 @@
 
 When local OCR and rule-based extraction are not enough — poor scan quality, complex layouts, handwriting, or the need for high accuracy at scale — cloud AI document services provide pre-trained models that understand document structure. AWS Textract, Azure AI Document Intelligence, and Google Document AI can extract tables, forms, and key-value pairs from documents with far higher accuracy than Tesseract alone. Additionally, vision-capable LLMs like Claude and GPT-4o can understand document images directly.
 
-```
-+------------------------------------------------------------------------+
-|                    CLOUD DOCUMENT AI SERVICES                           |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  AWS                             AZURE                                 |
-|  +------------------------+     +---------------------------+          |
-|  | Textract                |     | AI Document Intelligence  |          |
-|  |   Text extraction       |     |   (formerly Form Recognizer)|        |
-|  |   Table extraction      |     |   Pre-built models         |          |
-|  |   Form key-value pairs |     |   Custom models            |          |
-|  |   Expense analysis     |     |   Invoice, receipt, ID     |          |
-|  |   Identity documents   |     |   Layout analysis          |          |
-|  +------------------------+     +---------------------------+          |
-|                                                                        |
-|  GOOGLE                          LLM VISION                            |
-|  +------------------------+     +---------------------------+          |
-|  | Document AI             |     | Claude (Anthropic)         |          |
-|  |   OCR                   |     |   Image understanding      |          |
-|  |   Form parsing          |     |   Structured extraction    |          |
-|  |   Custom processors    |     | GPT-4o (OpenAI)            |          |
-|  |   Document classification|    |   Image understanding      |          |
-|  | Cloud Vision API        |     | Gemini (Google)            |          |
-|  |   OCR, label detection  |     |   Multimodal               |          |
-|  +------------------------+     +---------------------------+          |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph CloudAI["CLOUD DOCUMENT AI SERVICES"]
+        AWS["AWS Textract<br/>- Text &amp; Table extraction<br/>- Form key-value pairs<br/>- Expense &amp; Identity analysis"]
+        Azure["Azure AI Document Intelligence<br/>- Pre-built &amp; Custom models<br/>- Invoice, receipt, ID<br/>- Layout analysis"]
+        GCP["Google Document AI &amp; Cloud Vision<br/>- Enterprise OCR &amp; Form parsing<br/>- Custom processors &amp; classification"]
+        LLM["Multimodal LLM Vision<br/>- Anthropic Claude / OpenAI GPT-4o / Google Gemini<br/>- Zero-shot structured extraction from complex layouts"]
+    end
 ```
 
 ---

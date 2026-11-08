@@ -229,15 +229,11 @@ customers, the barber sleeps. When a customer arrives: if all waiting chairs are
 customer leaves; if the barber is sleeping, the customer wakes the barber; otherwise, the
 customer sits in a waiting chair.
 
-```
-+------------------------------------+
-|          Barber Shop               |
-|                                    |
-|  [Barber Chair]  [Wait][Wait][Wait]|
-|   (barber here)   1     2     3   |
-|                                    |
-| Door: customers enter/leave here   |
-+------------------------------------+
+```mermaid
+flowchart LR
+    Door["Shop Door<br/>(Customers arrive)"] --> Wait{"Waiting Chairs (N = 3)<br/>[Chair 1] [Chair 2] [Chair 3]"}
+    Wait -->|"Space available"| Barber["Barber Chair<br/>(Barber sleeps if 0 customers;<br/>wakes when customer arrives)"]
+    Wait -->|"Full (All 3 occupied)"| Leave["Customer leaves immediately"]
 ```
 
 ### Solution

@@ -126,33 +126,13 @@ Flow:
 
 #### Token Rotation
 
-```
-Why rotate refresh tokens:
-- If a refresh token is stolen, attacker can get new access tokens
-- Rotation ensures each refresh token is used only once
-- If both real user and attacker try to use the same token,
-  the server detects the reuse and invalidates the entire family
-
-Implementation:
-
-Token Family Approach:
-┌─────────────────────────────────────────────────┐
-│ refresh_tokens table                            │
-│                                                 │
-│ id | token_hash | family_id | user_id | used    │
-│ 1  | abc123...  | fam_1     | user_1  | true    │
-│ 2  | def456...  | fam_1     | user_1  | false   │
-│                                                 │
-│ When token 2 is used:                           │
-│  - Mark token 2 as used                         │
-│  - Create token 3 in the same family            │
-│  - Return new access_token + token 3            │
-│                                                 │
-│ If someone tries to reuse token 1:              │
-│  - Token 1 is already used → BREACH DETECTED    │
-│  - Invalidate ALL tokens in family fam_1        │
-│  - Force user to re-authenticate                │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Family["Refresh Token Rotation &amp; Reuse Detection (Token Family: fam_1)"]
+        Req["Client presents Refresh Token"] --> Check{"Is token already marked<br/>used = true in refresh_tokens?"}
+        Check -->|"NO (Valid unused token 2)"| Rotate["1. Mark token 2 as used = true<br/>2. Issue token 3 in family fam_1<br/>3. Return new access_token + token 3"]
+        Check -->|"YES (Reuse of token 1 — BREACH DETECTED)"| Revoke["1. Revoke ALL tokens in family fam_1<br/>2. Force user to re-authenticate"]
+    end
 ```
 
 ### OAuth 2.0
@@ -365,66 +345,42 @@ Key properties:
 
 ### Role-Based Access Control (RBAC) vs Attribute-Based Access Control (ABAC)
 
+```mermaid
+erDiagram
+    users ||--o{ user_roles : "has"
+    roles ||--o{ user_roles : "assigned_to"
+    roles ||--o{ role_perms : "grants"
+    permissions ||--o{ role_perms : "included_in"
+
+    users {
+        UUID id PK
+        VARCHAR name
+    }
+    user_roles {
+        UUID user_id FK
+        UUID role_id FK
+    }
+    roles {
+        UUID id PK
+        VARCHAR name "super_admin > admin > editor > viewer"
+    }
+    role_perms {
+        UUID role_id FK
+        UUID perm_id FK
+    }
+    permissions {
+        UUID id PK
+        VARCHAR name
+        VARCHAR resource
+        VARCHAR action "create, read, update, delete"
+    }
 ```
-RBAC (Role-Based Access Control):
-  Users are assigned roles, roles have permissions.
 
-  Simple RBAC:
-  ├── Roles: admin, editor, viewer
-  ├── Permissions per role:
-  │   admin  → create, read, update, delete
-  │   editor → create, read, update
-  │   viewer → read
-  └── Check: user.role === 'admin' || user.role === 'editor'
-
-  Hierarchical RBAC:
-  ├── Roles inherit from parent roles
-  │   super_admin → admin → editor → viewer
-  └── Each level includes permissions of lower levels
-
-  Database schema:
-  ┌─────────┐     ┌────────────┐     ┌─────────────┐
-  │  users  │────→│ user_roles │←────│   roles     │
-  │         │     │            │     │             │
-  │ id      │     │ user_id    │     │ id          │
-  │ name    │     │ role_id    │     │ name        │
-  └─────────┘     └────────────┘     └──────┬──────┘
-                                            │
-                                     ┌──────┴──────┐
-                                     │ role_perms  │
-                                     │             │
-                                     │ role_id     │
-                                     │ perm_id     │
-                                     └──────┬──────┘
-                                            │
-                                     ┌──────┴──────┐
-                                     │ permissions │
-                                     │             │
-                                     │ id          │
-                                     │ name        │
-                                     │ resource    │
-                                     │ action      │
-                                     └─────────────┘
-
-ABAC (Attribute-Based Access Control):
-  Decisions based on attributes of user, resource, action, and environment.
-
-  Example policy:
-  "Allow if user.department === resource.department
-   AND user.clearance_level >= resource.sensitivity_level
-   AND environment.time is within business_hours"
-
-  More flexible but more complex:
-  ├── Can express any access control policy
-  ├── Policies evaluated at runtime
-  ├── Common frameworks: OPA (Open Policy Agent), Casbin, Cedar
-  └── Good for: Complex enterprise environments
-
-When to use which:
-├── RBAC: Most applications (simpler, well-understood)
-├── ABAC: When RBAC becomes too many roles (role explosion)
-├── Hybrid: RBAC for basic permissions + ABAC for fine-grained
-└── Start with RBAC, migrate to ABAC if needed
+```mermaid
+flowchart LR
+    RBAC["RBAC (Role-Based Access Control)<br/>- Users -&gt; Roles -&gt; Permissions<br/>- Hierarchical: super_admin -&gt; admin -&gt; editor -&gt; viewer<br/>- Best for: Most applications (simple, auditable)"]
+    ABAC["ABAC (Attribute-Based Access Control)<br/>- Evaluates user, resource, action, environment attributes<br/>- Engines: OPA, Casbin, AWS Cedar<br/>- Best for: Avoiding role explosion &amp; fine-grained policies"]
+    RBAC -->|"Hybrid / Migrate when needed"| ABAC
 ```
 
 ### Multi-Factor Authentication (MFA)
@@ -1050,57 +1006,19 @@ Recommendation for SPAs:
 
 ### Q6: "How do you handle authentication in a microservices architecture?"
 
-```
-Approaches:
+```mermaid
+flowchart LR
+    subgraph A1["1. API Gateway Authentication (Centralized)"]
+        C1["Client"] --> GW["API Gateway<br/>(Verifies JWT &amp; attaches X-User-Id)"]
+        GW --> SA1["Service A (trusts gateway)"]
+        GW --> SB1["Service B (trusts gateway)"]
+    end
 
-1. API Gateway Authentication (most common):
-   ┌────────┐     ┌──────────┐     ┌──────────────┐
-   │ Client │────→│ Gateway  │────→│ Service A    │
-   │        │     │          │     │ (trusts gw)  │
-   └────────┘     │ Verifies │     └──────────────┘
-                  │ JWT      │     ┌──────────────┐
-                  │          │────→│ Service B    │
-                  │ Attaches │     │ (trusts gw)  │
-                  │ user ctx │     └──────────────┘
-                  └──────────┘
-
-   - Gateway validates JWT
-   - Forwards user context to services (header or token)
-   - Services trust the gateway
-   - Services do not need to know the JWT secret
-   Pro: Centralized auth logic
-   Con: Gateway is a single point of failure
-
-2. Token Verification in Each Service:
-   ┌────────┐     ┌──────────────┐
-   │ Client │────→│ Service A    │
-   │        │     │ Verifies JWT │
-   └────────┘     └──────────────┘
-   │
-   └────────────→ ┌──────────────┐
-                  │ Service B    │
-                  │ Verifies JWT │
-                  └──────────────┘
-
-   - Each service has the public key to verify JWTs
-   - Use RS256/ES256 (asymmetric) so services do not need the private key
-   - Only the auth service has the private key (to sign tokens)
-   Pro: No single point of failure
-   Con: Each service needs JWT library, harder to update auth logic
-
-3. Service-to-Service Authentication:
-   - Services authenticate to each other using:
-     - Mutual TLS (mTLS): Both sides present certificates
-     - Service tokens: Short-lived JWTs for service identity
-     - API keys: For simpler internal communication
-   - User context propagated via headers (X-User-Id, X-User-Role)
-   - Service mesh (Istio, Linkerd) handles mTLS automatically
-
-Recommendation:
-  - API Gateway for external requests (validate user JWTs)
-  - mTLS or service mesh for internal service-to-service
-  - Propagate user context as headers inside the mesh
-  - Use short-lived tokens for inter-service API calls
+    subgraph A2["2. Asymmetric JWT Verification in Each Service (RS256 / ES256)"]
+        C2["Client"] --> SA2["Service A<br/>(Verifies JWT via public key)"]
+        C2 --> SB2["Service B<br/>(Verifies JWT via public key)"]
+        SA2 <-->|"3. mTLS / Service Mesh (Istio/Linkerd)"| SB2
+    end
 ```
 
 ### Q7: "What security headers should every web application set?"

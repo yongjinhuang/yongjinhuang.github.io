@@ -889,24 +889,24 @@ groups:
 
 ### Observability at a Glance
 
-```
-Metrics  --> "Something is wrong"     --> Dashboards, Alerts
-Traces   --> "Where is it wrong"      --> Distributed trace view
-Logs     --> "Why is it wrong"        --> Log search, context
+```mermaid
+flowchart LR
+    M["Metrics<br/>'Something is wrong'<br/>-&gt; Dashboards, Alerts"] --> T["Traces<br/>'Where is it wrong'<br/>-&gt; Distributed trace view"] --> L["Logs<br/>'Why is it wrong'<br/>-&gt; Log search, stack trace"]
 ```
 
 ### Log Level Decision Tree
 
-```
-Did the request/operation FAIL?
-  Yes --> Is it unexpected?
-    Yes --> ERROR
-    No  --> WARN (expected failure, e.g., validation)
-  No  --> Is it a normal business event?
-    Yes --> INFO
-    No  --> Is it useful for debugging?
-      Yes --> DEBUG
-      No  --> Don't log it
+```mermaid
+flowchart TD
+    Q1{"Did the request/operation FAIL?"}
+    Q1 -->|"Yes"| Q2{"Is it unexpected?"}
+    Q2 -->|"Yes"| Err["ERROR"]
+    Q2 -->|"No (expected, e.g., validation)"| Warn["WARN"]
+    Q1 -->|"No"| Q3{"Normal business event?"}
+    Q3 -->|"Yes"| Info["INFO"]
+    Q3 -->|"No"| Q4{"Useful for debugging?"}
+    Q4 -->|"Yes"| Debug["DEBUG"]
+    Q4 -->|"No"| Skip["Do not log it"]
 ```
 
 ### The Four Golden Signals

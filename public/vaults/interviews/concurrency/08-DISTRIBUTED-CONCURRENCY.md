@@ -28,19 +28,14 @@ ensures mutual exclusion across machine boundaries.
 
 ### Why Not Just Use a Regular Lock?
 
-```
-Single Machine:
-  Thread A --|
-             |--> threading.Lock() --> Shared Resource
-  Thread B --|
-
-Distributed System:
-  Service A (Machine 1) --|
-                          |--> ??? --> Shared Resource (Database/S3/API)
-  Service B (Machine 2) --|
-
-  threading.Lock() only works within one process.
-  We need a lock that spans machines.
+```mermaid
+flowchart LR
+    subgraph Single["Single Machine (In-Process)"]
+        TA["Thread A"] & TB["Thread B"] --> Lock1["threading.Lock()"] --> Res1["Shared Memory Resource"]
+    end
+    subgraph Dist["Distributed System (Cross-Machine)"]
+        SA["Service A (Machine 1)"] & SB["Service B (Machine 2)"] --> Lock2["Distributed Lock<br/>(Redis / ZooKeeper / etcd)"] --> Res2[("Shared Resource<br/>(Database / S3 / API)")]
+    end
 ```
 
 ### Redis SETNX Lock (Simple)
@@ -425,23 +420,27 @@ class AdvisoryLockManager:
 
 ### Two-Phase Commit (2PC)
 
-```
-Two-Phase Commit Protocol:
+```mermaid
+sequenceDiagram
+    participant C as "Coordinator"
+    participant A as "Participant A"
+    participant B as "Participant B"
 
-Phase 1: PREPARE (Voting)
-  Coordinator --> Participant A: "Can you commit?"
-  Coordinator --> Participant B: "Can you commit?"
-  Participant A --> Coordinator: "Yes, prepared"
-  Participant B --> Coordinator: "Yes, prepared"
+    rect rgb(35, 50, 70)
+    Note over C,B: Phase 1: PREPARE (Voting)
+    C->>A: Prepare ("Can you commit?")
+    C->>B: Prepare ("Can you commit?")
+    A-->>C: Vote YES (Prepared)
+    B-->>C: Vote YES (Prepared)
+    end
 
-Phase 2: COMMIT (Decision)
-  Coordinator --> Participant A: "COMMIT"
-  Coordinator --> Participant B: "COMMIT"
-  Participant A --> Coordinator: "ACK"
-  Participant B --> Coordinator: "ACK"
-
-If ANY participant votes "No" in Phase 1:
-  Coordinator --> All: "ABORT"
+    rect rgb(35, 60, 45)
+    Note over C,B: Phase 2: COMMIT (Or ABORT if any voted NO)
+    C->>A: COMMIT
+    C->>B: COMMIT
+    A-->>C: ACK
+    B-->>C: ACK
+    end
 ```
 
 ```python
@@ -946,29 +945,11 @@ class IdempotentProcessor:
 
 ### Exactly-Once with Transactional Outbox
 
-```
-Transactional Outbox Pattern:
-Instead of sending a message directly (which can fail after DB commit),
-write the message to an outbox table in the SAME database transaction.
-
-1. BEGIN TRANSACTION
-2. Update business data (e.g., order status)
-3. INSERT message into outbox table
-4. COMMIT
-
-A separate process polls the outbox table and publishes messages.
-This guarantees: if the DB transaction committed, the message WILL be sent.
-
-+------------------+     +------------------+     +------------------+
-| Service          |     | Database         |     | Message Queue    |
-|                  |     |                  |     |                  |
-| 1. Process order |---->| 2. Update order  |     |                  |
-|                  |     | 3. Write outbox  |     |                  |
-|                  |     | 4. COMMIT        |     |                  |
-|                  |     |                  |     |                  |
-| Outbox Relay     |---->| 5. Read outbox   |---->| 6. Publish msg   |
-| (background)     |     | 7. Mark sent     |     |                  |
-+------------------+     +------------------+     +------------------+
+```mermaid
+flowchart LR
+    Svc["Service<br/>1. Process order"] -->|"BEGIN TX ... COMMIT<br/>2. Update order<br/>3. INSERT outbox"| DB[("Database<br/>(orders + outbox tables)")]
+    Relay["Outbox Relay<br/>(Background Poller / CDC)"] <-->|"5. Read unsent outbox<br/>7. Mark sent"| DB
+    Relay -->|"6. Publish message"| MQ["Message Queue"]
 ```
 
 ---

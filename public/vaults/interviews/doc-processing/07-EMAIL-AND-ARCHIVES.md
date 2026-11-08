@@ -4,37 +4,14 @@
 
 Email is one of the most common document sources in business. Invoices arrive as PDF attachments in EML files, customer communications are stored in MBOX archives, and automated reports are sent as HTML emails with embedded data. Understanding email parsing — MIME structure, attachment extraction, encoding issues — is essential for any document processing pipeline. Similarly, archives (ZIP, TAR, GZIP, 7z) are how documents are packaged for transfer and storage.
 
-```
-+------------------------------------------------------------------------+
-|                    EMAIL & ARCHIVE PROCESSING                           |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  EMAIL FORMATS                   ARCHIVE FORMATS                       |
-|  +------------------------+     +---------------------------+          |
-|  | EML (.eml)              |     | ZIP (.zip)                |          |
-|  |   Single email file     |     |   Most common, PKZIP      |          |
-|  | MSG (.msg)              |     | TAR (.tar)                |          |
-|  |   Outlook proprietary   |     |   Unix tape archive       |          |
-|  | MBOX (.mbox)            |     | GZIP (.gz, .tar.gz)       |          |
-|  |   Mailbox archive       |     |   Single-file compression  |          |
-|  | PST (.pst)              |     | BZ2 (.bz2, .tar.bz2)     |          |
-|  |   Outlook data file     |     |   Better compression       |          |
-|  +------------------------+     | 7z (.7z)                  |          |
-|                                  |   Best compression ratio   |          |
-|  PYTHON LIBRARIES                | RAR (.rar)                |          |
-|  +------------------------+     |   Proprietary              |          |
-|  | email (stdlib)          |     +---------------------------+          |
-|  | mailbox (stdlib)        |                                            |
-|  | extract-msg             |     PYTHON LIBRARIES                       |
-|  | imapclient              |     +---------------------------+          |
-|  | beautifulsoup4          |     | zipfile (stdlib)           |          |
-|  +------------------------+     | tarfile (stdlib)           |          |
-|                                  | gzip, bz2, lzma (stdlib)  |          |
-|                                  | py7zr (7z support)         |          |
-|                                  | rarfile                    |          |
-|                                  +---------------------------+          |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Email["EMAIL PROCESSING"]
+        EF["Formats:<br/>EML (.eml) / MSG (.msg)<br/>MBOX (.mbox) / PST (.pst)"] --> EL["Python Libraries:<br/>email (stdlib) / mailbox (stdlib)<br/>extract-msg / imapclient / beautifulsoup4"]
+    end
+    subgraph Arch["ARCHIVE PROCESSING"]
+        AF["Formats:<br/>ZIP (.zip) / TAR (.tar)<br/>GZIP (.tar.gz) / BZ2 / 7z / RAR"] --> AL["Python Libraries:<br/>zipfile / tarfile / gzip / bz2 / lzma<br/>py7zr / rarfile"]
+    end
 ```
 
 ---
@@ -43,38 +20,16 @@ Email is one of the most common document sources in business. Invoices arrive as
 
 ### 1.1 What Is MIME?
 
-```
-MIME (Multipurpose Internet Mail Extensions)
+```mermaid
+flowchart TD
+    Root["MIME Message (Content-Type: multipart/mixed)<br/>Headers: From, To, Subject, Date"]
+    P1["Part 1: multipart/alternative"]
+    P1a["Part 1a: text/plain<br/>'Please find the invoice attached.'"]
+    P1b["Part 1b: text/html<br/>'&lt;p&gt;Please find the invoice attached.&lt;/p&gt;'"]
+    P2["Part 2: application/pdf<br/>Content-Disposition: attachment; filename='invoice_12345.pdf'<br/>[Base64-encoded PDF data]"]
 
-An email is NOT just text. It is a structured MIME message:
-
-+--------------------------------------------------+
-| Headers                                           |
-|   From: alice@example.com                        |
-|   To: bob@example.com                            |
-|   Subject: Invoice Attached                      |
-|   Date: Mon, 15 Jan 2024 10:30:00 +0000         |
-|   Content-Type: multipart/mixed                  |
-+--------------------------------------------------+
-| Part 1: multipart/alternative                    |
-|   +----------------------------------------------+
-|   | Part 1a: text/plain                          |
-|   |   "Please find the invoice attached."        |
-|   +----------------------------------------------+
-|   | Part 1b: text/html                           |
-|   |   "<p>Please find the invoice attached.</p>" |
-|   +----------------------------------------------+
-+--------------------------------------------------+
-| Part 2: application/pdf                          |
-|   Content-Disposition: attachment                |
-|   filename="invoice_12345.pdf"                   |
-|   [Base64-encoded PDF data]                      |
-+--------------------------------------------------+
-
-Key concepts:
-  multipart/mixed:       Main message + attachments
-  multipart/alternative: Same content in different formats (text + HTML)
-  Content-Transfer-Encoding: base64, quoted-printable, 7bit
+    Root --> P1 & P2
+    P1 --> P1a & P1b
 ```
 
 ---

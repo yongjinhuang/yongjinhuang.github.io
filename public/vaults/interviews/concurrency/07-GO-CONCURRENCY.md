@@ -78,39 +78,16 @@ func main() {
 
 ### GMP Scheduler Model
 
-```
-G = Goroutine (user-space thread)
-M = Machine  (OS thread)
-P = Processor (execution context, holds run queue)
-
-+--------+    +--------+    +--------+
-|   P0   |    |   P1   |    |   P2   |
-|        |    |        |    |        |
-| Local  |    | Local  |    | Local  |
-| Queue: |    | Queue: |    | Queue: |
-| G1,G2  |    | G4,G5  |    | G7     |
-| G3     |    | G6     |    |        |
-+---+----+    +---+----+    +---+----+
-    |             |             |
-+---+----+    +---+----+    +---+----+
-|   M0   |    |   M1   |    |   M2   |
-|(OS thd)|    |(OS thd)|    |(OS thd)|
-+--------+    +--------+    +--------+
-
-                +------------+
-                | Global     |
-                | Run Queue: |
-                | G8, G9     |
-                +------------+
-
-When P's local queue is empty:
-1. Check global queue
-2. Steal from another P's local queue (work stealing)
-
-When a goroutine blocks on syscall:
-1. M releases P
-2. Another M picks up P
-3. Blocked M waits for syscall, then G returns to a P's queue
+```mermaid
+flowchart TD
+    subgraph GMP["Go Runtime GMP Scheduler"]
+        GRQ["Global Run Queue: [G8, G9]"]
+        P0["P0 (Logical Processor)<br/>Local Queue: [G1, G2, G3]"] --> M0["M0 (OS Thread)"]
+        P1["P1 (Logical Processor)<br/>Local Queue: [G4, G5, G6]"] --> M1["M1 (OS Thread)"]
+        P2["P2 (Logical Processor)<br/>Local Queue: [G7]"] --> M2["M2 (OS Thread)"]
+        GRQ -.->|"Fallback pull"| P0 & P1 & P2
+        P2 <-.->|"Work stealing when empty"| P0 & P1
+    end
 ```
 
 ---

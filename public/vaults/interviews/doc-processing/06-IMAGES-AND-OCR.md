@@ -11,53 +11,16 @@ image formats and metadata, through preprocessing with Pillow and OpenCV, to
 extraction with Tesseract, EasyOCR, and OCRmyPDF, and finally to structured
 table detection from scanned documents.
 
-```
-+------------------------------------------------------------------+
-|                  IMAGE / OCR ECOSYSTEM OVERVIEW                  |
-+------------------------------------------------------------------+
-|                                                                  |
-|  RAW IMAGE                                                       |
-|  +------------------+                                            |
-|  | JPEG / PNG / TIFF|                                            |
-|  | BMP / WebP       |                                            |
-|  | (with EXIF, DPI) |                                            |
-|  +--------+---------+                                            |
-|           |                                                      |
-|           v                                                      |
-|  PREPROCESSING PIPELINE                                          |
-|  +----------------------------------------------------------+   |
-|  |  Pillow / OpenCV                                          |   |
-|  |                                                           |   |
-|  |  Grayscale --> Binarize --> Denoise --> Deskew --> Scale   |   |
-|  |                                                           |   |
-|  |  Color adjust   Threshold   Median     Rotation   DPI     |   |
-|  |  Crop/Resize    Otsu/Adapt  Gaussian   Hough      Up      |   |
-|  +-----------------------------+-----------------------------+   |
-|                                |                                 |
-|                                v                                 |
-|  OCR ENGINES                                                     |
-|  +------------------+  +----------------+  +--------------+     |
-|  | Tesseract        |  | EasyOCR        |  | OCRmyPDF     |     |
-|  | (pytesseract)    |  | (GPU-accel)    |  | (PDF layer)  |     |
-|  |                  |  |                |  |              |     |
-|  | PSM modes        |  | Multi-lang     |  | Batch proc   |     |
-|  | OEM modes        |  | Deep learning  |  | Searchable   |     |
-|  | HOCR output      |  | Bounding boxes |  | PDF output   |     |
-|  | Confidence       |  |                |  |              |     |
-|  +--------+---------+  +-------+--------+  +------+-------+     |
-|           |                    |                   |             |
-|           +--------------------+-------------------+             |
-|                                |                                 |
-|                                v                                 |
-|  POST-PROCESSING                                                 |
-|  +----------------------------------------------------------+   |
-|  |  Raw text --> Clean --> Structure --> Validate             |   |
-|  |                                                           |   |
-|  |  Table detection (img2table)                              |   |
-|  |  Receipt parsing    Form extraction    Batch workflows    |   |
-|  +----------------------------------------------------------+   |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Raw["RAW IMAGE<br/>JPEG / PNG / TIFF / BMP / WebP (EXIF, DPI)"]
+    Pre["PREPROCESSING PIPELINE (Pillow / OpenCV)<br/>Grayscale -&gt; Binarize (Otsu/Adaptive) -&gt; Denoise (Median/Gaussian) -&gt; Deskew (Hough) -&gt; Scale DPI"]
+    E1["Tesseract (pytesseract)<br/>PSM/OEM modes, HOCR, confidence"]
+    E2["EasyOCR / PaddleOCR<br/>GPU-accelerated, multilingual, bounding boxes"]
+    E3["OCRmyPDF<br/>Batch searchable PDF layer"]
+    Post["POST-PROCESSING<br/>Raw text -&gt; Clean -&gt; Structure -&gt; Validate<br/>(Table detection via img2table, receipt/form extraction)"]
+
+    Raw --> Pre --> E1 & E2 & E3 --> Post
 ```
 
 ---
@@ -1481,24 +1444,17 @@ ocrmypdf.ocr("in.pdf", "out.pdf", language="eng", deskew=True, skip_text=True)
 
 ### PSM Mode Decision Tree
 
-```
-What does your image contain?
-|
-+-- Full document page? ---------> PSM 3 (default) or PSM 1 (with OSD)
-|
-+-- Single column of text? ------> PSM 4
-|
-+-- Single text block? ----------> PSM 6
-|
-+-- Single line of text? --------> PSM 7
-|
-+-- Single word? -----------------> PSM 8
-|
-+-- Single character? ------------> PSM 10
-|
-+-- Scattered/sparse text? ------> PSM 11
-|
-+-- Need orientation detection? -> PSM 0
+```mermaid
+flowchart LR
+    Q{"What does your image contain?<br/>(Tesseract Page Segmentation Mode)"}
+    Q -->|"Full document page"| P3["PSM 3 (default) or PSM 1 (with OSD)"]
+    Q -->|"Single column of text"| P4["PSM 4"]
+    Q -->|"Single uniform text block"| P6["PSM 6"]
+    Q -->|"Single line of text"| P7["PSM 7"]
+    Q -->|"Single word"| P8["PSM 8"]
+    Q -->|"Single character"| P10["PSM 10"]
+    Q -->|"Scattered / sparse text"| P11["PSM 11"]
+    Q -->|"Orientation detection only"| P0["PSM 0"]
 ```
 
 ### Preprocessing Decision Guide

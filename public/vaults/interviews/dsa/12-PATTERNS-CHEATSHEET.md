@@ -511,59 +511,18 @@ fib.cache_clear()
 
 ## 6. Decision Tree for Common Problems
 
-```
-Problem asks for...
+```mermaid
+flowchart LR
+    Root{"Problem Asks For..."}
+    P1["Shortest Path / Min Steps<br/>- Unweighted -&gt; BFS<br/>- Non-negative weights -&gt; Dijkstra<br/>- Negative weights -&gt; Bellman-Ford<br/>- All pairs -&gt; Floyd-Warshall"]
+    P2["Find / Count Subarrays<br/>- Contiguous -&gt; Sliding Window<br/>- Sum == K -&gt; Prefix Sum + Hash Map<br/>- All subarrays -&gt; O(n^2) or DP"]
+    P3["Find Pairs / Triplets<br/>- Sorted -&gt; Two Pointers<br/>- Unsorted -&gt; Hash Map<br/>- Target sum -&gt; Sort + Two Pointers"]
+    P4["Optimization (Min / Max / Count)<br/>- Greedy property -&gt; Greedy<br/>- Overlapping subproblems -&gt; DP<br/>- All possibilities -&gt; Backtracking"]
+    P5["String Matching<br/>- Exact -&gt; Hash Map / Two Pointers<br/>- Prefix / Wildcard -&gt; Trie (+ DFS)<br/>- Subsequence -&gt; DP (LCS)"]
+    P6["Sorted Data &amp; Top-K<br/>- Search -&gt; Binary Search<br/>- Dynamic insert/delete -&gt; BST<br/>- Merge K / Stream Top-K -&gt; Heap<br/>- Static Kth -&gt; Quickselect O(n)"]
+    P7["Graphs &amp; Combinatorics<br/>- Connected components -&gt; Union-Find / BFS / DFS<br/>- Dependencies -&gt; Topological Sort<br/>- Subsets / Permutations -&gt; Backtracking"]
 
-SHORTEST PATH / MINIMUM STEPS?
-├── Unweighted graph → BFS
-├── Weighted (non-negative) → Dijkstra
-├── Weighted (negative ok) → Bellman-Ford
-└── All pairs → Floyd-Warshall
-
-FIND/COUNT SUBARRAYS?
-├── Contiguous subarray → Sliding Window
-├── Sum equals K → Prefix Sum + Hash Map
-└── All subarrays → Consider O(n^2) or DP
-
-FIND PAIRS/TRIPLETS?
-├── Sorted → Two Pointers
-├── Unsorted → Hash Map
-└── Sum target → Sort + Two Pointers or Hash Map
-
-OPTIMIZATION (min/max/count)?
-├── Greedy choice works → Greedy
-├── Overlapping subproblems → DP
-└── All possibilities → Backtracking
-
-STRING MATCHING?
-├── Exact match → Hash Map or Two Pointers
-├── Prefix/autocomplete → Trie
-├── Wildcard → Trie + DFS
-└── Subsequence → DP (LCS)
-
-SORTED DATA?
-├── Search → Binary Search
-├── Insert/delete dynamically → BST/SortedList
-└── Merge K sorted → Heap
-
-TOP-K / KTH ELEMENT?
-├── Static array → Quickselect O(n) avg
-├── Stream → Heap of size K
-└── Frequency-based → Counter + Heap
-
-CONNECTED COMPONENTS / UNION?
-├── Static → Union-Find
-├── Dynamic → Union-Find
-└── With traversal → BFS/DFS
-
-DEPENDENCY ORDERING?
-└── Topological Sort (Kahn's BFS or DFS postorder)
-
-GENERATE ALL POSSIBILITIES?
-├── Subsets → Backtracking (include/exclude)
-├── Permutations → Backtracking (swap/used set)
-├── Combinations → Backtracking (start index)
-└── Constraint satisfaction → Backtracking + pruning
+    Root --> P1 & P2 & P3 & P4 & P5 & P6 & P7
 ```
 
 ---
