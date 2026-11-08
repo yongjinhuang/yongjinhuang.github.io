@@ -271,29 +271,14 @@ For each location or day:
 
 ### 5.3 Travel Vlog Storytelling Structure
 
-```
-Opening Hook (0-15 sec):
-  Most exciting/beautiful moment from the trip
-       │
-       ▼
-Context (15-60 sec):
-  Where are you? Why are you here? What is the plan?
-       │
-       ▼
-The Journey (main body):
-  ┌──────────┐   ┌──────────┐   ┌──────────┐
-  │Location 1│──►│Location 2│──►│Location 3│
-  │  Story   │   │  Story   │   │  Story   │
-  │  + shots │   │  + shots │   │  + shots │
-  └──────────┘   └──────────┘   └──────────┘
-  Each location is a mini-chapter with its own mini-arc
-       │
-       ▼
-Reflection / Conclusion:
-  What did you learn? How did it feel? What is next?
-       │
-       ▼
-End Screen / Call to Action
+```mermaid
+flowchart TD
+    Hook["Opening Hook (0-15s)<br/>Most exciting/beautiful moment from the trip"] --> Ctx["Context (15-60s)<br/>Where are you? Why are you here? What is the plan?"]
+    subgraph Journey["The Journey (Main Body — Mini-Chapters)"]
+        direction LR
+        L1["Location 1<br/>Story + B-roll"] --> L2["Location 2<br/>Story + B-roll"] --> L3["Location 3<br/>Story + B-roll"]
+    end
+    Ctx --> Journey --> Ref["Reflection / Conclusion<br/>What did you learn? How did it feel?"] --> CTA["End Screen / Call to Action"]
 ```
 
 ### 5.4 Audio While Traveling
@@ -310,30 +295,11 @@ End Screen / Call to Action
 
 ### 6.1 Structure
 
-```
-Morning Routine (2-3 min):
-  Wake up, morning routine, coffee, breakfast
-  Set the tone for the day
-       │
-       ▼
-Main Activity 1 (3-4 min):
-  Work, project, errand, or adventure
-  This is the "meat" of the vlog
-       │
-       ▼
-Transition / Midday Break (1-2 min):
-  Lunch, travel between locations
-  Pacing break — slower, reflective
-       │
-       ��
-Main Activity 2 (3-4 min):
-  Second major event or activity
-  Build toward the day's climax
-       │
-       ▼
-Evening Wind-Down (1-2 min):
-  Dinner, reflection, what you learned
-  Satisfying conclusion to the day
+```mermaid
+flowchart TD
+    M1["Morning Routine (2-3 min)<br/>Wake up, coffee, set tone for the day"] --> A1["Main Activity 1 (3-4 min)<br/>Work, project, or primary adventure"]
+    A1 --> Brk["Midday Transition (1-2 min)<br/>Lunch, travel, slower reflective pacing break"] --> A2["Main Activity 2 (3-4 min)<br/>Second major activity building to day's climax"]
+    A2 --> Eve["Evening Wind-Down (1-2 min)<br/>Dinner, reflection, takeaways"]
 ```
 
 ### 6.2 Making Mundane Days Interesting
@@ -364,29 +330,12 @@ When you are alone (no camera operator):
 
 ### 7.1 The Studio Setup
 
-```
-Professional sit-down setup:
-
-                    ┌────────────┐
-                    │  Back Light│
-                    │     💡     │
-                    └──────┬─────┘
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-     ┌────┴────┐      ┌───┴────┐      ┌────┴────┐
-     │Key Light│      │  You   │      │Fill Light│
-     │   💡    │      │   👤   │      │   💡    │
-     │ (45°L)  │      │        │      │ (45°R)  │
-     └─────────┘      │  Desk  │      └─────────┘
-                      │ 🎙 Mic │
-                      └────┬───┘
-                           │
-                      ┌────┴────┐
-                      │ Camera  │
-                      │   📷   │
-                      │(eye lvl)│
-                      └─────────┘
+```mermaid
+flowchart TD
+    BL["Back Light"] --> You["You at Desk + Boom Mic"]
+    KL["Key Light (45 deg Left)"] --> You
+    FL["Fill Light (45 deg Right)"] --> You
+    You --- Cam["Camera (Eye Level)"]
 ```
 
 ### 7.2 Background Design
@@ -421,43 +370,11 @@ Everything off-camera can be chaos.
 
 ### 8.1 The Hook-Story-Payoff Framework
 
-```
-HOOK (0-15 seconds):
-  "Grab them before they scroll away"
-  - Start with the most interesting/surprising moment
-  - Ask a compelling question
-  - Show a stunning visual
-  - Make a bold statement
-       │
-       ▼
-SETUP (15-60 seconds):
-  "Give them context to care"
-  - Who are you?
-  - What is happening?
-  - Why should they care?
-  - Where is this going?
-       │
-       ▼
-STORY (main body, 3-15 minutes):
-  "Take them on a journey"
-  - Rising action: things get more interesting
-  - Obstacles: problems make stories compelling
-  - Mini-peaks: keep giving payoffs throughout
-  - Character: show your personality, vulnerabilities
-       │
-       ▼
-PAYOFF (final 1-2 minutes):
-  "Deliver on the promise"
-  - Answer the hook's question
-  - Show the final result
-  - Share what you learned
-  - Emotional resolution
-       │
-       ▼
-CTA (final 15-30 seconds):
-  "What should the viewer do next?"
-  - Subscribe, comment, watch next video
-  - Keep it brief and genuine
+```mermaid
+flowchart TD
+    H["1. HOOK (0-15s)<br/>Grab attention: surprising moment, question, bold visual"] --> S["2. SETUP (15-60s)<br/>Context: Who, what, why care, where is this going?"]
+    S --> Body["3. STORY (3-15 min)<br/>Rising action, obstacles, mini-peaks, personality"] --> Pay["4. PAYOFF (Final 1-2 min)<br/>Answer hook's question, show result, emotional resolution"]
+    Pay --> CTA["5. CTA (Final 15-30s)<br/>Subscribe, comment, watch next video"]
 ```
 
 ### 8.2 The "What Changed?" Test

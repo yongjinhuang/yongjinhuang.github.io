@@ -22,41 +22,16 @@ This guide covers what makes up a design system, how design tokens work, compone
 
 A design system is more than a component library. It includes multiple layers:
 
-```
-┌─────────────────────────────────────────────┐
-│              Design System                  │
-│                                             │
-│  ┌─────────────────────────────────────┐    │
-│  │  Principles                         │    │
-│  │  "Clarity over cleverness"          │    │
-│  │  "Accessible by default"            │    │
-│  └─────────────────────────────────────┘    │
-│                                             │
-│  ┌─────────────────────────────────────┐    │
-│  │  Design Tokens                      │    │
-│  │  Colors, spacing, typography,       │    │
-│  │  shadows, motion, breakpoints       │    │
-│  └─────────────────────────────────────┘    │
-│                                             │
-│  ┌─────────────────────────────────────┐    │
-│  │  Components                         │    │
-│  │  Buttons, Cards, Modals, Forms,     │    │
-│  │  Navigation, Data Display           │    │
-│  └─────────────────────────────────────┘    │
-│                                             │
-│  ┌─────────────────────────────────────┐    │
-│  │  Patterns                           │    │
-│  │  Form validation, error handling,   │    │
-│  │  empty states, loading states       │    │
-│  └─────────────────────────────────────┘    │
-│                                             │
-│  ┌─────────────────────────────────────┐    │
-│  │  Documentation                      │    │
-│  │  Usage guidelines, do/don't,        │    │
-│  │  API reference, accessibility notes │    │
-│  └─────────────────────────────────────┘    │
-│                                             │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph DS["DESIGN SYSTEM ARCHITECTURE"]
+        L1["1. Principles<br/>'Clarity over cleverness', 'Accessible by default'"]
+        L2["2. Design Tokens<br/>Colors, spacing, typography, shadows, motion, breakpoints"]
+        L3["3. Components<br/>Buttons, Cards, Modals, Forms, Navigation, Data Display"]
+        L4["4. Patterns<br/>Form validation, error handling, empty states, loading states"]
+        L5["5. Documentation<br/>Usage guidelines, do/don't, API reference, accessibility notes"]
+        L1 --> L2 --> L3 --> L4 --> L5
+    end
 ```
 
 **Principles** are the guiding values (e.g., "Progressive disclosure," "Content first"). They help teams make decisions when components do not cover a specific case.
@@ -160,12 +135,11 @@ COMPONENT TOKENS (describe the component context):
 
 The layered approach:
 
-```
-Primitive          Semantic             Component
-──────────        ──────────           ──────────
-blue-500    →     color-primary    →   button-bg-primary
-gray-100    →     color-surface    →   card-bg
-gray-900    →     color-text       →   heading-color
+```mermaid
+flowchart LR
+    P1["Primitive: blue-500"] --> S1["Semantic: color-primary"] --> C1["Component: button-bg-primary"]
+    P2["Primitive: gray-100"] --> S2["Semantic: color-surface"] --> C2["Component: card-bg"]
+    P3["Primitive: gray-900"] --> S3["Semantic: color-text"] --> C3["Component: heading-color"]
 ```
 
 **Why this matters:** When you rebrand, you only change the primitive-to-semantic mapping. All components update automatically.
@@ -221,33 +195,11 @@ Figma Component Structure:
 
 Brad Frost's Atomic Design methodology organizes components into five levels:
 
-```
-┌─────────────────────────────────────────────────┐
-│                                                 │
-│  ATOMS          The smallest building blocks    │
-│  ─────          Button, Input, Label, Icon,     │
-│                 Badge, Avatar, Divider           │
-│                                                 │
-│  MOLECULES      Groups of atoms                 │
-│  ─────────      Search bar (input + button),    │
-│                 Form field (label + input +      │
-│                 error message), Nav item         │
-│                                                 │
-│  ORGANISMS      Groups of molecules             │
-│  ─────────      Navigation bar, Hero section,   │
-│                 Card grid, Comment thread,       │
-│                 Footer                           │
-│                                                 │
-│  TEMPLATES      Page-level layouts              │
-│  ─────────      Blog post template,             │
-│                 Dashboard layout,                │
-│                 Profile page wireframe           │
-│                                                 │
-│  PAGES          Specific instances              │
-│  ─────          "About Me" page with real data, │
-│                 "Blog Post #42" with content     │
-│                                                 │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    A["1. ATOMS<br/>Button, Input, Label,<br/>Icon, Badge, Avatar"] --> M["2. MOLECULES<br/>Search bar, Form field,<br/>Nav item"]
+    M --> O["3. ORGANISMS<br/>Navbar, Hero section,<br/>Card grid, Footer"] --> T["4. TEMPLATES<br/>Blog post layout,<br/>Dashboard wireframe"]
+    T --> P["5. PAGES<br/>Specific instances<br/>with real data"]
 ```
 
 Example decomposition:
@@ -352,16 +304,9 @@ export const Disabled: Story = {
 
 Governance defines how the system evolves:
 
-```
-Contribution Flow:
-┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
-│ Proposal │ --> │ Review   │ --> │ Build    │ --> │ Release  │
-│          │     │          │     │          │     │          │
-│ RFC or   │     │ Design   │     │ Code +   │     │ Version  │
-│ issue    │     │ review + │     │ tests +  │     │ bump +   │
-│ filed    │     │ team     │     │ docs +   │     │ changelog│
-│          │     │ feedback │     │ Storybook│     │ + announce│
-└──────────┘     └──────────┘     └──────────┘     └──────────┘
+```mermaid
+flowchart LR
+    S1["1. Proposal<br/>RFC or issue filed"] --> S2["2. Review<br/>Design review +<br/>team feedback"] --> S3["3. Build<br/>Code + tests +<br/>docs + Storybook"] --> S4["4. Release<br/>SemVer bump +<br/>changelog + announce"]
 ```
 
 Key governance decisions:
@@ -448,21 +393,9 @@ Keeping design and code in sync is one of the hardest problems in design systems
    - Use Chromatic or Percy to catch visual differences
    - Screenshot tests prevent unintentional style changes
 
-```
-Design-Dev Sync Pipeline:
-┌──────────┐     ┌──────────────┐     ┌──────────────┐
-│ Figma    │     │ Token        │     │ Code         │
-│ Tokens   │ --> │ Transform    │ --> │ Generation   │
-│ Plugin   │     │ (Style       │     │ (CSS vars,   │
-│          │     │  Dictionary) │     │  Tailwind)   │
-└──────────┘     └──────────────┘     └──────────────┘
-                                            │
-                                            ▼
-                                      ┌──────────────┐
-                                      │ Visual       │
-                                      │ Regression   │
-                                      │ Tests        │
-                                      └──────────────┘
+```mermaid
+flowchart LR
+    Figma["Figma Tokens Plugin<br/>(Variables JSON)"] --> SD["Token Transform<br/>(Style Dictionary)"] --> Gen["Code Generation<br/>(CSS Variables, Tailwind Config)"] --> VRT["Visual Regression Tests<br/>(Chromatic / Playwright)"]
 ```
 
 ---

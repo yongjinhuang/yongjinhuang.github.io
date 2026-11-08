@@ -66,30 +66,15 @@ For each viewer, for each video candidate:
 
 ### 1.3 The Feedback Loop
 
-```
-Good video published
-       │
-       ▼
-YouTube shows to small test audience (subscribers, search)
-       │
-       ▼
-┌──── Good CTR + Good retention? ────┐
-│                                     │
-│  YES                                │  NO
-│  ▼                                  │  ▼
-│  Show to larger audience            │  Stop promoting
-│  (Browse, Suggested)                │  Video dies
-│  ▼                                  │
-│  Still good metrics?                │
-│  ▼                                  │
-│  YES → Even larger audience         │
-│  ▼                                  │
-│  Potentially viral                  │
-│                                     │
-└─────────────────────────────────────┘
-
-The algorithm tests in expanding circles.
-Each circle only opens if the previous performed well.
+```mermaid
+flowchart TD
+    Pub["Video Published"] --> Test["Shown to Small Test Audience<br/>(Subscribers &amp; Search)"]
+    Test --> Q1{"Good CTR + Good Retention?"}
+    Q1 -->|"No"| Stop["Algorithm Stops Promoting<br/>(Impressions flatten)"]
+    Q1 -->|"Yes"| Larger["Expand to Larger Audience<br/>(Browse &amp; Suggested Feeds)"]
+    Larger --> Q2{"Metrics still strong?"}
+    Q2 -->|"Yes"| Viral["Expand to Broad Audience<br/>(Potential Viral Growth)"]
+    Q2 -->|"No"| Plateau["Reach Plateaus at Current Circle"]
 ```
 
 ### 1.4 What the Algorithm Does NOT Care About
@@ -259,25 +244,10 @@ Each playlist should make sense as a standalone binge session.
 
 ### 4.2 Niche Down, Then Expand
 
-```
-Phase 1 (0-1K subscribers):
-  ONE specific niche
-  "Video editing tutorials for beginners"
-       │
-       ▼
-Phase 2 (1K-10K):
-  Slightly broader within niche
-  "Video editing + camera tips + gear reviews"
-       │
-       ▼
-Phase 3 (10K-100K):
-  Expand to adjacent topics
-  "Content creation + freelancing + creative career"
-       │
-       ▼
-Phase 4 (100K+):
-  Personal brand carries topics
-  "Anything I find interesting" (audience follows YOU, not the topic)
+```mermaid
+flowchart TD
+    P1["Phase 1 (0 - 1K Subs): ONE Specific Niche<br/>'Video editing tutorials for beginners'"] --> P2["Phase 2 (1K - 10K Subs): Broader Within Niche<br/>'Video editing + camera tips + gear reviews'"]
+    P2 --> P3["Phase 3 (10K - 100K Subs): Adjacent Topics<br/>'Content creation + freelancing + creative career'"] --> P4["Phase 4 (100K+ Subs): Personal Brand<br/>Audience follows YOU across topics"]
 ```
 
 ### 4.3 Content Calendar Template
@@ -439,24 +409,14 @@ Collab formats:
 
 ### 7.3 Repurposing Content
 
-```
-One long-form video can become:
-
-📹 10-minute YouTube video
-    │
-    ├──► 📱 3 YouTube Shorts (best 30-60 sec moments)
-    │
-    ├──► 📱 3 TikTok/Instagram Reels (same Shorts, reposted)
-    │
-    ├──► 🐦 5 Twitter/X posts (key quotes or tips as text)
-    │
-    ├──► 📸 1 Instagram carousel (key points as slides)
-    │
-    ├──► 📝 1 Blog post (transcript + images)
-    │
-    └──► 🎧 1 Podcast episode (audio extracted)
-
-Maximum reach from minimum production effort.
+```mermaid
+flowchart LR
+    Main["10-Minute Long-Form<br/>YouTube Video"] --> S1["3 YouTube Shorts<br/>(Best 30-60s moments)"]
+    Main --> S2["3 TikTok / IG Reels<br/>(Cross-posted vertical clips)"]
+    Main --> S3["5 X / Twitter Posts<br/>(Key quotes &amp; takeaways)"]
+    Main --> S4["1 Instagram Carousel<br/>(Key points as slides)"]
+    Main --> S5["1 Blog Post / Newsletter<br/>(Edited transcript + stills)"]
+    Main --> S6["1 Podcast Episode<br/>(Extracted audio track)"]
 ```
 
 ## 8. YouTube Shorts Strategy
@@ -520,25 +480,14 @@ Numbers on a dashboard             Real people who support you
 
 ### 9.3 The Community Flywheel
 
-```
-Create great content
-       │
-       ▼
-Viewers engage (comment, like, share)
-       │
-       ▼
-You respond and acknowledge
-       │
-       ▼
-Viewers feel valued, become loyal fans
-       │
-       ▼
-Fans promote your content organically
-       │
-       ▼
-New viewers discover you
-       │
-       └──────► (back to top — the flywheel accelerates)
+```mermaid
+flowchart TD
+    C1["1. Create Great Content"] --> C2["2. Viewers Engage (Comment, Like, Share)"]
+    C2 --> C3["3. Creator Responds &amp; Acknowledges"]
+    C3 --> C4["4. Viewers Feel Valued -&gt; Become Loyal Fans"]
+    C4 --> C5["5. Fans Promote Content Organically"]
+    C5 --> C6["6. New Viewers Discover Channel"]
+    C6 -->|"Flywheel accelerates"| C1
 ```
 
 ## 10. Common Growth Mistakes

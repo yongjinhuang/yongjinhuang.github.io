@@ -25,20 +25,12 @@ practical shooting techniques you will use every day.
 
 ### 1.1 The Light Path
 
-```
-                                         Image Sensor
-    Scene                                (CMOS/CCD)
-      │                                      │
-      │    Light rays                        │
-      │  ──────────►  ┌──────┐   ──────►   ┌─┤
-      │               │      │              │ │  ──► ADC ──► Image Processor ──► File
-      │  ──────────►  │ Lens │   ──────►   │ │
-      │               │      │              └─┤
-      │  ──────────►  └──────┘   ──────►     │
-      │                  │                    │
-                    Aperture              Shutter
-                    (iris)            (mechanical or
-                                      electronic)
+```mermaid
+flowchart LR
+    Scene["Scene (Light Rays)"] --> Lens["Lens + Aperture<br/>(Iris controls light amount &amp; DOF)"]
+    Lens --> Shutter["Shutter<br/>(Mechanical or Electronic exposure time)"]
+    Shutter --> Sensor["Image Sensor<br/>(CMOS / CCD)"]
+    Sensor --> ADC["ADC"] --> ISP["Image Processor"] --> File["Video / Photo File"]
 ```
 
 Light from the scene passes through the **lens**, which focuses it. The **aperture** (a
@@ -122,24 +114,16 @@ Focal length determines how "zoomed in" your image appears and affects perspecti
 The three settings that control how bright your image is. Changing one requires
 compensating with the others.
 
-```
-                         APERTURE (f-stop)
-                        Controls light amount
-                        + depth of field
-                              ▲
-                             / \
-                            /   \
-                           /     \
-                          / IMAGE \
-                         / BRIGHT- \
-                        /   NESS    \
-                       /             \
-                      /               \
-          SHUTTER ◄──────────────────────► ISO
-          SPEED                            Controls sensor
-          Controls                         sensitivity
-          motion blur                      + noise
-          + exposure time
+```mermaid
+flowchart TD
+    subgraph Tri["THE EXPOSURE TRIANGLE (Controls Image Brightness)"]
+        Ap["APERTURE (f-stop)<br/>Controls light amount + depth of field"]
+        SS["SHUTTER SPEED<br/>Controls motion blur + exposure time"]
+        ISO["ISO<br/>Controls sensor sensitivity + digital noise"]
+        Ap <--> SS
+        SS <--> ISO
+        Ap <--> ISO
+    end
 ```
 
 ### 2.1 Aperture (f-stop)
@@ -449,28 +433,12 @@ bad lighting. Light is the single most impactful thing you can control.
 
 The classic setup used in interviews, tutorials, and talking head videos.
 
-```
-                    (top-down view)
-
-                    Back Light
-                        💡
-                        │
-                        │
-                   ┌────┴────┐
-                   │ Subject │
-                   │    👤    │
-                   └────┬────┘
-                  ╱           ╲
-                ╱               ╲
-              ╱                   ╲
-         💡                         💡
-      Key Light                  Fill Light
-    (Main, brightest)        (Softer, dimmer)
-    45° to one side          Opposite side
-                                reduces shadows
-
-                        📷
-                      Camera
+```mermaid
+flowchart TD
+    Back["Back / Hair Light<br/>(Separates subject from background)"] --> Subj["Subject"]
+    Key["Key Light<br/>(Main, brightest light — 45 deg to one side)"] --> Subj
+    Fill["Fill Light<br/>(Softer, dimmer — opposite side, reduces shadows)"] --> Subj
+    Subj --- Cam["Camera"]
 ```
 
 | Light      | Purpose                          | Intensity          | Position                        |

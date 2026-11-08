@@ -31,17 +31,9 @@ ingredients; editing is the cooking.
 
 ### 1.1 The Editor's Job
 
-```
-Raw Footage (hours)         Edited Video (minutes)
-┌─────────────────┐         ┌─────────────────┐
-│ Take 1 (bad)    │         │ Best parts of    │
-│ Take 2 (okay)   │         │ Take 3 + B-roll  │
-│ Take 3 (great)  │  ────►  │ + music + SFX    │
-│ B-roll clips    │         │ + titles + color  │
-│ Failed attempts │         │ = Compelling story│
-│ Random shots    │         └─────────────────┘
-└─────────────────┘
-     10:1 ratio is normal (10 hours shot : 1 hour used)
+```mermaid
+flowchart LR
+    Raw["Raw Footage (Hours)<br/>- Take 1 (bad), Take 2 (okay), Take 3 (great)<br/>- B-roll clips, failed attempts, random shots"] -->|"Editing (10:1 Shooting Ratio)"| Edited["Edited Video (Minutes)<br/>Best of Take 3 + B-roll + Music + SFX<br/>+ Titles + Color = Compelling Story"]
 ```
 
 ### 1.2 The Six Rules of Editing (Walter Murch)
@@ -66,16 +58,10 @@ a cut, in order of priority:
 
 ### 2.1 Overview
 
-```
-┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│  Import  │──►│ Organize │──►│ Assembly │──►│  Rough   │──►│  Fine    │
-│  & Ingest│   │ & Review │   │   Cut    │   │   Cut    │   │   Cut    │
-└──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────┬───┘
-                                                                    │
-┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐          │
-│  Export  │◄──│  Review  │◄──│  Sound   │◄──│  Color   │◄─────────┘
-│ & Upload │   │ & Polish │   │  Design  │   │  Grade   │
-└──────────┘   └──────────┘   └──────────┘   └──────────┘
+```mermaid
+flowchart LR
+    S1["1. Import &amp; Ingest"] --> S2["2. Organize &amp; Review"] --> S3["3. Assembly Cut"] --> S4["4. Rough Cut"] --> S5["5. Fine Cut"]
+    S5 --> S6["6. Color Grade"] --> S7["7. Sound Design"] --> S8["8. Review &amp; Polish"] --> S9["9. Export &amp; Upload"]
 ```
 
 ### 2.2 Step-by-Step
@@ -573,20 +559,12 @@ Professional editors rarely use the mouse for cuts. Learning keyboard shortcuts 
 When your computer struggles with 4K footage, use proxies (lower-resolution copies for
 editing, then swap back to full-res for export).
 
-```
-Original 4K footage (100 Mbps)
-         │
-         ▼
-  Create proxy files (1080p, 20 Mbps)
-         │
-         ▼
-  Edit with proxies (smooth playback)
-         │
-         ▼
-  Export → software automatically uses original 4K files
-         │
-         ▼
-  Full quality 4K output
+```mermaid
+flowchart TD
+    Orig["Original 4K Footage (100 Mbps)"] --> Proxy["Generate Proxy Files (1080p / 720p, 20 Mbps)"]
+    Proxy --> Edit["Edit Timeline with Proxies (Smooth, lag-free playback)"]
+    Edit --> Export["Export: NLE automatically relinks to original 4K files"]
+    Export --> Out["Full-Quality 4K Master Output"]
 ```
 
 All major NLEs (DaVinci Resolve, Premiere Pro, Final Cut) support proxy workflows.

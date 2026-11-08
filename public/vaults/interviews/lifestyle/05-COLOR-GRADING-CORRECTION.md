@@ -25,20 +25,10 @@ video from professional, cinematic content.
 
 These are two distinct steps that are often confused.
 
-```
-RAW FOOTAGE                    CORRECTED                      GRADED
-┌──────────────┐              ┌──────────────┐              ┌──────────────┐
-│              │              │              │              │              │
-│  Too warm    │   Correct    │  Neutral     │   Grade      │  Teal/Orange │
-│  Overexposed │  ────────►  │  Balanced    │  ────────►  │  Cinematic   │
-│  Low contrast│   (fix)     │  Natural     │   (style)   │  Moody       │
-│              │              │              │              │              │
-└──────────────┘              └──────────────┘              └──────────────┘
-
-  Step 1: CORRECTION              Step 2: GRADING
-  Make it look "right"            Make it look "beautiful"
-  Technical process               Creative process
-  Fix exposure, WB, contrast      Add mood, style, atmosphere
+```mermaid
+flowchart LR
+    Raw["RAW FOOTAGE<br/>- Too warm<br/>- Overexposed<br/>- Low contrast"] -->|"Step 1: Correction (Technical)<br/>Fix exposure, white balance, contrast"| Corr["CORRECTED<br/>- Neutral<br/>- Balanced<br/>- Natural"]
+    Corr -->|"Step 2: Grading (Creative)<br/>Add mood, style, atmosphere"| Graded["GRADED<br/>- Teal / Orange<br/>- Cinematic<br/>- Moody"]
 ```
 
 | Aspect      | Color Correction                      | Color Grading                          |
@@ -220,19 +210,10 @@ Shows individual Red, Green, and Blue channel waveforms side by side.
 
 ### 5.1 Step-by-Step
 
-```
-Step 1: FIX EXPOSURE          Step 2: FIX WHITE BALANCE
-Set black point (lift)        Neutralize color cast
-Set white point (gain)        Adjust temperature and tint
-Adjust midtones (gamma)       Use scopes, not eyes
-
-         │                              │
-         ▼                              ▼
-
-Step 3: FIX CONTRAST          Step 4: FIX SATURATION
-Adjust contrast curve         Boost or reduce overall sat
-Set shadow/highlight roll-off  Fix individual colors
-Create separation             Match shots to each other
+```mermaid
+flowchart LR
+    S1["Step 1: Fix Exposure<br/>- Black point (Lift)<br/>- White point (Gain)<br/>- Midtones (Gamma)"] --> S2["Step 2: Fix White Balance<br/>- Neutralize color cast<br/>- Temp &amp; tint via scopes"]
+    S2 --> S3["Step 3: Fix Contrast<br/>- S-curve adjustment<br/>- Shadow/highlight roll-off"] --> S4["Step 4: Fix Saturation &amp; Match<br/>- Overall &amp; HSL saturation<br/>- Match shots across scene"]
 ```
 
 ### 5.2 Exposure Correction
@@ -379,14 +360,16 @@ Every possible color gets mapped to a new value.
 
 ### 7.3 How to Use LUTs Correctly
 
-```
-WRONG way to use a LUT:
-Raw footage ──► Apply LUT ──► Done
-(LUT applied to uncorrected footage = inconsistent, often ugly)
-
-RIGHT way to use a LUT:
-Raw footage ──► Correct exposure/WB ──► Apply LUT ──► Fine-tune ──► Done
-(LUT applied to corrected footage = consistent, beautiful)
+```mermaid
+flowchart TD
+    subgraph Wrong["WRONG Way (Inconsistent, Clipped)"]
+        direction LR
+        W1["Raw Footage"] --> W2["Apply LUT Directly"] --> W3["Done"]
+    end
+    subgraph Right["RIGHT Way (Consistent, Balanced)"]
+        direction LR
+        R1["Raw Footage"] --> R2["Correct Exposure &amp; WB"] --> R3["Apply LUT (50-80% intensity)"] --> R4["Fine-Tune Contrast &amp; Skin"] --> R5["Done"]
+    end
 ```
 
 ### 7.4 Recommended Free LUT Packs
@@ -409,15 +392,9 @@ Raw footage ──► Correct exposure/WB ──► Apply LUT ──► Fine-tun
 DaVinci Resolve uses nodes (like a processing pipeline) instead of stacked layers.
 Each node applies one adjustment, and they chain together.
 
-```
-Node tree example:
-
-[Input] ──► [Node 1:     ] ──► [Node 2:   ] ──► [Node 3:  ] ──► [Output]
-             Exposure fix       White balance     Creative LUT
-             Contrast           Skin tone fix     Vignette
-
-Each node is independent — you can disable, reorder, or adjust any node
-without affecting the others. Think of it like middleware in a web server.
+```mermaid
+flowchart LR
+    In["Input Clip"] --> N1["Node 1: Primary Exposure<br/>Lift / Gamma / Gain + Contrast"] --> N2["Node 2: Balance &amp; Skin<br/>White balance + Skin tone qualifier"] --> N3["Node 3: Look &amp; Polish<br/>Creative LUT + Vignette"] --> Out["Output"]
 ```
 
 ### 8.2 Essential Color Page Tools
@@ -500,15 +477,9 @@ All skin: same hue angle on vectorscope
 
 When applying a creative grade, protect skin tones so people still look natural:
 
-```
-Node chain:
-[Correction] ──► [Creative Grade] ──► [Skin Tone Protection]
-
-In the Skin Tone Protection node:
-1. Use Qualifier to select skin color
-2. Invert the selection (everything except skin)
-3. Apply your creative grade to this node
-4. Result: Grade affects everything EXCEPT skin
+```mermaid
+flowchart LR
+    N1["Node 1: Primary Correction<br/>(Exposure + White Balance)"] --> N2["Node 2: HSL Skin Qualifier<br/>(Select skin tone &amp; invert mask)"] --> N3["Node 3: Creative Grade<br/>(Applies look to everything EXCEPT skin)"]
 ```
 
 ## 10. Common Color Looks and How to Achieve Them

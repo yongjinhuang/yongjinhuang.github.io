@@ -39,24 +39,12 @@ Dark interfaces convey a premium, focused aesthetic. Media-heavy applications (p
 
 A well-architected theme system separates **design decisions** from **implementation details**. The standard approach uses three layers:
 
-```
-+--------------------------------------------------+
-|  Layer 1: Design Tokens (semantic names)         |
-|  --color-bg-primary, --color-text-primary        |
-+--------------------------------------------------+
-         |
-         v
-+--------------------------------------------------+
-|  Layer 2: Theme Definitions (token assignments)  |
-|  light: --color-bg-primary = #FFFFFF             |
-|  dark:  --color-bg-primary = #1A1A2E             |
-+--------------------------------------------------+
-         |
-         v
-+--------------------------------------------------+
-|  Layer 3: Component Styles (consume tokens)      |
-|  background: var(--color-bg-primary)             |
-+--------------------------------------------------+
+```mermaid
+flowchart TD
+    L1["Layer 1: Semantic Design Tokens<br/>--color-bg-primary, --color-text-primary"]
+    L2["Layer 2: Theme Definitions (Token Assignments)<br/>light: --color-bg-primary = #FFFFFF<br/>dark: --color-bg-primary = #1A1A2E"]
+    L3["Layer 3: Component Styles (Consume Tokens)<br/>background: var(--color-bg-primary)"]
+    L1 --> L2 --> L3
 ```
 
 **Layer 1: Design Tokens**

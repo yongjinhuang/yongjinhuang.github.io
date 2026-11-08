@@ -21,42 +21,14 @@ This guide covers the full spectrum of responsive design: philosophy, breakpoint
 
 **Mobile-first** means you start designing and coding for the smallest screen, then progressively enhance for larger viewports. **Desktop-first** means you start with the full experience and strip things away for smaller screens.
 
-```
-Mobile-First Approach:
-┌─────────┐
-│ Base    │  <- Default styles (mobile)
-│ Styles  │
-└────┬────┘
-     │ @media (min-width: 768px)
-     ▼
-┌──────────────┐
-│ Tablet       │  <- Enhanced layout
-│ Enhancements │
-└────┬─────────┘
-     │ @media (min-width: 1024px)
-     ▼
-┌───────────────────┐
-│ Desktop           │  <- Full experience
-│ Enhancements      │
-└───────────────────┘
-
-Desktop-First Approach:
-┌───────────────────┐
-│ Base Styles       │  <- Default (desktop)
-│ Full Experience   │
-└────┬──────────────┘
-     │ @media (max-width: 1023px)
-     ▼
-┌──────────────┐
-│ Tablet       │  <- Reduced layout
-│ Overrides    │
-└────┬─────────┘
-     │ @media (max-width: 767px)
-     ▼
-┌─────────┐
-│ Mobile  │  <- Stripped down
-│ Overrides│
-└─────────┘
+```mermaid
+flowchart TD
+    subgraph MF["Mobile-First Approach (Progressive Enhancement)"]
+        M1["Base Styles (Mobile Default)"] -->|"@media (min-width: 768px)"| M2["Tablet Enhancements"] -->|"@media (min-width: 1024px)"| M3["Desktop Full Experience"]
+    end
+    subgraph DF["Desktop-First Approach (Graceful Degradation)"]
+        D1["Base Styles (Desktop Default)"] -->|"@media (max-width: 1023px)"| D2["Tablet Overrides"] -->|"@media (max-width: 767px)"| D3["Mobile Overrides"]
+    end
 ```
 
 **Why mobile-first wins:**

@@ -37,32 +37,14 @@ IA is the practice of making these three things work together through organizati
 
 Information architecture is composed of four interconnected systems:
 
-```
-+---------------------------+---------------------------+
-|   1. ORGANIZATION         |   2. LABELING             |
-|   SYSTEMS                 |   SYSTEMS                 |
-|                           |                           |
-|   How you categorize      |   How you name            |
-|   and structure content   |   categories and links    |
-|                           |                           |
-|   - Alphabetical          |   - Headings              |
-|   - Chronological         |   - Navigation labels     |
-|   - Topical               |   - Link text             |
-|   - Task-based            |   - Icon labels           |
-|   - Audience-based        |   - Button text           |
-+---------------------------+---------------------------+
-|   3. NAVIGATION           |   4. SEARCH               |
-|   SYSTEMS                 |   SYSTEMS                 |
-|                           |                           |
-|   How users move          |   How users find          |
-|   through content         |   specific content        |
-|                           |                           |
-|   - Global nav            |   - Search bar            |
-|   - Local nav             |   - Filters               |
-|   - Breadcrumbs           |   - Autocomplete          |
-|   - Sitemaps              |   - Faceted search        |
-|   - Footer nav            |   - Search results page   |
-+---------------------------+---------------------------+
+```mermaid
+flowchart LR
+    subgraph IA["FOUR INFORMATION ARCHITECTURE SYSTEMS"]
+        S1["1. ORGANIZATION SYSTEMS<br/>How you categorize &amp; structure content<br/>- Alphabetical, Chronological<br/>- Topical, Task-based, Audience-based"]
+        S2["2. LABELING SYSTEMS<br/>How you name categories &amp; links<br/>- Headings, Nav labels<br/>- Link text, Icon/Button labels"]
+        S3["3. NAVIGATION SYSTEMS<br/>How users move through content<br/>- Global nav, Local nav<br/>- Breadcrumbs, Sitemaps, Footer nav"]
+        S4["4. SEARCH SYSTEMS<br/>How users find specific content<br/>- Search bar, Filters, Autocomplete<br/>- Faceted search, Results page"]
+    end
 ```
 
 ### Content Hierarchy
@@ -113,34 +95,22 @@ A sitemap is a visual representation of a site's structure. It shows the hierarc
 
 **Portfolio site sitemap example:**
 
-```
-                        [Homepage /]
-                             |
-          +------------------+------------------+
-          |                  |                  |
-     [About /about]   [Projects /projects]  [Contact /contact]
-                             |
-                   +---------+---------+
-                   |         |         |
-              [Project 1] [Project 2] [Project 3]
-                   |
-            [Case Study]
+```mermaid
+flowchart TD
+    Home["Homepage /"] --> About["About /about"] & Proj["Projects /projects"] & Contact["Contact /contact"]
+    Proj --> P1["Project 1"] & P2["Project 2"] & P3["Project 3"]
+    P1 --> CS["Case Study Detail"]
 ```
 
 **With i18n routing (like your Next.js setup):**
 
-```
-                          [/ redirect]
-                               |
-                    +----------+----------+
-                    |                     |
-               [/en/]                [/zh/]
-                    |                     |
-         +----+----+----+      +----+----+----+
-         |    |    |    |      |    |    |    |
-       About Proj Skill Contact  About Proj Skill Contact
-              |                        |
-         [/en/projects/1]        [/zh/projects/1]
+```mermaid
+flowchart TD
+    Root["/ (Locale Redirect)"] --> EN["/en/"] & ZH["/zh/"]
+    EN --> E1["About"] & E2["Projects"] & E3["Skills"] & E4["Contact"]
+    E2 --> EP1["/en/projects/1"]
+    ZH --> Z1["About"] & Z2["Projects"] & Z3["Skills"] & Z4["Contact"]
+    Z2 --> ZP1["/zh/projects/1"]
 ```
 
 **Tips for sitemaps:**
@@ -202,16 +172,10 @@ Navigation is how users move through your information architecture. Different st
 
 The most common model. Users drill down through levels.
 
-```
-  Home
-   |
-   +-- About
-   |
-   +-- Projects
-   |     +-- Project A
-   |     +-- Project B
-   |
-   +-- Contact
+```mermaid
+flowchart TD
+    Home["Home"] --> About["About"] & Proj["Projects"] & Contact["Contact"]
+    Proj --> PA["Project A"] & PB["Project B"]
 ```
 
 **Best for:** Sites with clear parent-child relationships. Most portfolio sites use this model.
@@ -220,9 +184,9 @@ The most common model. Users drill down through levels.
 
 Users move through content in a defined order (like a wizard or onboarding flow).
 
-```
-  Step 1 --> Step 2 --> Step 3 --> Step 4 --> Done
-  [Info]    [Skills]   [Upload]   [Review]   [Submit]
+```mermaid
+flowchart LR
+    S1["Step 1: Info"] --> S2["Step 2: Skills"] --> S3["Step 3: Upload"] --> S4["Step 4: Review"] --> S5["Done: Submit"]
 ```
 
 **Best for:** Multi-step processes, tutorials, onboarding flows.
@@ -249,13 +213,9 @@ Users can move in multiple dimensions -- filtering by different attributes.
 
 Users always return to a central hub before navigating elsewhere. Common in mobile apps.
 
-```
-            +------+
-     +----> | HOME | <----+
-     |      +------+      |
-     |      ^ |  ^ |      |
-     v      | v  | v      v
-  [About]   [Proj] [Contact]
+```mermaid
+flowchart TD
+    Home["HOME (Central Hub)"] <--> About["About"] & Proj["Projects"] & Contact["Contact"]
 ```
 
 **Best for:** Mobile apps, dashboards, sites where tasks are independent.
@@ -321,18 +281,12 @@ Project C: [React, Node.js, Full-stack, E-commerce]
 
 **Hierarchical taxonomy:**
 
-```
-Technology
-  +-- Frontend
-  |     +-- React
-  |     +-- Vue
-  |     +-- CSS
-  +-- Backend
-  |     +-- Node.js
-  |     +-- Python
-  +-- Database
-        +-- PostgreSQL
-        +-- MongoDB
+```mermaid
+flowchart TD
+    Tech["Technology"] --> FE["Frontend"] & BE["Backend"] & DB["Database"]
+    FE --> React["React"] & Vue["Vue"] & CSS["CSS"]
+    BE --> Node["Node.js"] & Py["Python"]
+    DB --> PG["PostgreSQL"] & Mongo["MongoDB"]
 ```
 
 **Faceted taxonomy** (multiple independent dimensions):

@@ -82,47 +82,19 @@ You do not need to become a designer. But understanding design makes you signifi
 
 The 15 topics in this series map to a natural workflow. Here is how they connect:
 
-```
-RESEARCH PHASE
-  01 User Research & Discovery
-      |
-      v
-STRUCTURE PHASE
-  02 Information Architecture
-  03 Wireframing & Prototyping
-      |
-      v
-VISUAL FOUNDATIONS PHASE
-  04 Visual Hierarchy & Layout
-  05 Typography
-  06 Color Systems
-      |
-      v
-PATTERNS PHASE
-  07 Common UI Patterns
-  08 Forms & Input Design
-      |
-      v
-INTERACTION PHASE
-  09 Animation & Micro-interactions
-  10 Responsive & Adaptive Design
-      |
-      v
-SYSTEMS PHASE
-  11 Design Systems & Tokens
-  12 Accessibility (Design Perspective)
-  13 Dark Mode & Theming
-      |
-      v
-DELIVERY PHASE
-  14 Design Tools & Dev Handoff
-      |
-      v
-EVALUATION PHASE
-  15 Design Critique & Heuristic Evaluation
-      |
-      v
-  (Loop back to any phase as needed)
+```mermaid
+flowchart TD
+    P1["1. RESEARCH PHASE<br/>01 User Research &amp; Discovery"]
+    P2["2. STRUCTURE PHASE<br/>02 Information Architecture<br/>03 Wireframing &amp; Prototyping"]
+    P3["3. VISUAL FOUNDATIONS PHASE<br/>04 Visual Hierarchy &amp; Layout<br/>05 Typography<br/>06 Color Systems"]
+    P4["4. PATTERNS PHASE<br/>07 Common UI Patterns<br/>08 Forms &amp; Input Design"]
+    P5["5. INTERACTION PHASE<br/>09 Animation &amp; Micro-interactions<br/>10 Responsive &amp; Adaptive Design"]
+    P6["6. SYSTEMS PHASE<br/>11 Design Systems &amp; Tokens<br/>12 Accessibility (Design Perspective)<br/>13 Dark Mode &amp; Theming"]
+    P7["7. DELIVERY PHASE<br/>14 Design Tools &amp; Dev Handoff"]
+    P8["8. EVALUATION PHASE<br/>15 Design Critique &amp; Heuristic Evaluation"]
+
+    P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> P8
+    P8 -.->|"Iterative loop back as needed"| P1
 ```
 
 This is not a rigid waterfall. In practice, you jump between phases constantly. But understanding the flow helps you see where each topic fits in the bigger picture.

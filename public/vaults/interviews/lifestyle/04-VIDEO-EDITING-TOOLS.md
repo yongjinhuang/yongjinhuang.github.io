@@ -25,24 +25,17 @@ choose the right tool and start editing immediately.
 
 ### 1.1 Decision Flowchart
 
-```
-START
-  │
-  ├─ Do you have $0 budget?
-  │   ├─ Yes ──► DaVinci Resolve (Free)
-  │   └─ No ──┐
-  │            │
-  │   ├─ Do you primarily edit on a phone/tablet?
-  │   │   ├─ Yes ──► CapCut (Free) or LumaFusion ($30, iPad)
-  │   │   └─ No ──┐
-  │   │            │
-  │   │   ├─ Are you on a Mac?
-  │   │   │   ├─ Yes ──► Final Cut Pro ($300 one-time) or DaVinci Resolve
-  │   │   │   └─ No ──┐
-  │   │   │            │
-  │   │   │   ├─ Do you need Adobe ecosystem integration?
-  │   │   │   │   ├─ Yes ──► Premiere Pro ($23/mo)
-  │   │   │   │   └─ No ──► DaVinci Resolve (Free or Studio $295)
+```mermaid
+flowchart TD
+    Q1{"$0 budget?"}
+    Q1 -->|"Yes"| DR1["DaVinci Resolve (Free)"]
+    Q1 -->|"No"| Q2{"Primarily edit on phone/tablet?"}
+    Q2 -->|"Yes"| Cap["CapCut (Free) or LumaFusion ($30, iPad)"]
+    Q2 -->|"No"| Q3{"Are you on a Mac?"}
+    Q3 -->|"Yes"| FCP["Final Cut Pro ($300 one-time) or DaVinci Resolve"]
+    Q3 -->|"No"| Q4{"Need Adobe ecosystem (After Effects / Photoshop)?"}
+    Q4 -->|"Yes"| PR["Adobe Premiere Pro ($23/mo)"]
+    Q4 -->|"No"| DR2["DaVinci Resolve (Free or Studio $295)"]
 ```
 
 ### 1.2 The Short Answer
@@ -74,22 +67,10 @@ START
 
 DaVinci Resolve organizes work into separate "pages," each focused on a specific task.
 
-```
-┌──────────┬───────────┬──────────┬──────────┬──────────┬──────────┐
-│  Media   │   Cut     │  Edit    │ Fusion   │  Color   │ Fairlight│
-│  Page    │   Page    │  Page    │  Page    │  Page    │  Page    │
-├──────────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ Import   │ Quick     │ Full     │ Visual   │ Color    │ Audio    │
-│ & manage │ assembly  │ timeline │ effects  │ grading  │ mixing   │
-│ media    │ editing   │ editing  │ & motion │ & color  │ & sound  │
-│          │           │          │ graphics │ correct. │ design   │
-└──────────┴───────────┴──────────┴──────────┴──────────┴──────────┘
-                                                              │
-                                                        ┌─────▼─────┐
-                                                        │  Deliver  │
-                                                        │  Page     │
-                                                        │  (Export) │
-                                                        └───────────┘
+```mermaid
+flowchart LR
+    P1["1. Media Page<br/>Import &amp; manage media"] --> P2["2. Cut Page<br/>Quick assembly editing"] --> P3["3. Edit Page<br/>Full timeline editing"]
+    P3 --> P4["4. Fusion Page<br/>VFX &amp; motion graphics"] --> P5["5. Color Page<br/>Color correction &amp; grading"] --> P6["6. Fairlight Page<br/>Audio mixing &amp; sound design"] --> P7["7. Deliver Page<br/>Render &amp; Export"]
 ```
 
 | Page          | When to Use                                | Beginner Priority          |
@@ -309,15 +290,9 @@ free tool, with an excellent mobile experience and growing desktop app.
 
 ### 5.3 CapCut Workflow
 
-```
-Phone Workflow:
-┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│  Import  │──►│  Trim &  │──►│  Add     │──►│  Export  │
-│  from    │   │  arrange │   │  captions│   │  & share │
-│  camera  │   │  clips   │   │  + music │   │  direct  │
-│  roll    │   │          │   │  + effects│   │  to app  │
-└──────────┘   └──────────┘   └──────────┘   └──────────┘
-     Total time: 15-30 minutes for a short video
+```mermaid
+flowchart LR
+    S1["1. Import<br/>from Camera Roll"] --> S2["2. Trim &amp; Arrange<br/>Clips"] --> S3["3. Add Captions,<br/>Music &amp; Effects"] --> S4["4. Export &amp; Share<br/>Direct to App (15-30 min total)"]
 ```
 
 ### 5.4 Best Use Cases for CapCut
@@ -439,19 +414,9 @@ Expert│                              ╭────────╯
 
 ### 8.3 Storage Strategy
 
-```
-Fast SSD (NVMe):          External HDD (archive):
-┌──────────────┐          ┌──────────────┐
-│ Current      │          │ Completed    │
-│ project      │          │ projects     │
-│ files        │  ────►   │ (raw footage │
-│              │  when    │  backups)    │
-│ 500GB-2TB   │  done    │ 4TB-8TB     │
-└──────────────┘          └──────────────┘
-
-Rule: Keep active project on fast SSD.
-      Archive completed projects to cheaper external storage.
-      Always keep raw footage backed up somewhere.
+```mermaid
+flowchart LR
+    SSD["Fast NVMe SSD (500GB - 2TB)<br/>Active project files &amp; cache"] -->|"Archive when project is complete"| HDD["External HDD / NAS (4TB - 8TB+)<br/>Completed projects &amp; raw footage backups"]
 ```
 
 ## 9. Project Organization
