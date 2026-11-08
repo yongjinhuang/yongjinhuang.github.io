@@ -67,30 +67,22 @@ A time series:  metric_name{label1="value1", label2="value2"}
 
 ## 3. Prometheus Architecture
 
-```
-┌──────────────────────────────────────────────────────┐
-│                   PROMETHEUS                          │
-│                                                       │
-│  ┌──────────┐  scrape   ┌──────────┐                 │
-│  │ Targets  │──────────>│Prometheus│                  │
-│  │(app:9090)│  /metrics │ Server   │                  │
-│  │(node:9100│           │┌────────┐│                  │
-│  │(k8s:...) │           ││  TSDB  ││  Time Series DB  │
-│  └──────────┘           │└────────┘│                  │
-│                         │┌────────┐│                  │
-│  ┌──────────┐           ││ Rules  ││  Recording +     │
-│  │ Service  │           ││ Engine ││  Alerting rules  │
-│  │Discovery │──────────>│└────────┘│                  │
-│  │(K8s, DNS)│           └─────┬────┘                  │
-│  └──────────┘                 │                        │
-│                    ┌──────────┤                        │
-│                    ▼          ▼                        │
-│              ┌──────────┐ ┌──────────┐                │
-│              │Alertmgr  │ │ Grafana  │                │
-│              │(routing,  │ │(dashboards│               │
-│              │ grouping) │ │ queries) │                │
-│              └──────────┘ └──────────┘                │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Prom["PROMETHEUS ARCHITECTURE"]
+        Targets["Targets<br/>(app:9090, node:9100, k8s:...)"]
+        SD["Service Discovery<br/>(K8s, DNS)"]
+        subgraph Server["Prometheus Server"]
+            TSDB[("TSDB<br/>(Time Series DB)")]
+            Rules["Rules Engine<br/>(Recording + Alerting rules)"]
+        end
+        AM["Alertmanager<br/>(routing, grouping)"]
+        Graf["Grafana<br/>(dashboards, PromQL queries)"]
+
+        Targets -->|"scrape /metrics"| Server
+        SD -->|"discover targets"| Server
+        Server --> AM & Graf
+    end
 ```
 
 **Pull-based model**: Prometheus scrapes targets at configured intervals (default 15s).

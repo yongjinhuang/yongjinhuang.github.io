@@ -10,39 +10,18 @@ This guide takes you from having zero blockchain knowledge to understanding and 
 
 ## The Web3 Landscape
 
-```
-+------------------------------------------------------------------------+
-|                        WEB3 ECOSYSTEM                                   |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  LAYER 0 (Networking)            LAYER 1 (Base Chains)                 |
-|  +-------------------------+     +---------------------------+          |
-|  | libp2p / Devp2p          |     | Ethereum (PoS, EVM)       |          |
-|  | GossipSub protocol       |     | Bitcoin (PoW, UTXO)       |          |
-|  | Kademlia DHT             |     | Solana (PoH, SVM)         |          |
-|  | Peer discovery           |     | Avalanche, BNB Chain      |          |
-|  | Wire protocol            |     | Cosmos (Tendermint/IBC)   |          |
-|  +-------------------------+     +---------------------------+          |
-|                                                                        |
-|  LAYER 2 (Scaling)               INFRASTRUCTURE                        |
-|  +-------------------------+     +---------------------------+          |
-|  | Optimism / Base           |     | IPFS / Filecoin (storage) |          |
-|  | Arbitrum / Arbitrum Nova  |     | Chainlink (oracles)       |          |
-|  | zkSync Era / StarkNet     |     | The Graph (indexing)      |          |
-|  | Polygon zkEVM             |     | Alchemy / Infura (nodes)  |          |
-|  | State Channels            |     | ENS (naming)              |          |
-|  +-------------------------+     +---------------------------+          |
-|                                                                        |
-|  APPLICATION LAYER               TOOLING & LANGUAGES                   |
-|  +-------------------------+     +---------------------------+          |
-|  | DeFi (DEX, lending, yield)|     | Solidity / Vyper           |          |
-|  | NFTs / Gaming / Metaverse |     | Hardhat / Foundry          |          |
-|  | DAOs / Governance         |     | ethers.js / viem / wagmi   |          |
-|  | Identity / SBTs / DIDs    |     | OpenZeppelin libraries    |          |
-|  | Real World Assets (RWA)   |     | Slither / Echidna / Mythril|          |
-|  +-------------------------+     +---------------------------+          |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Eco["WEB3 ECOSYSTEM"]
+        L0["LAYER 0 (Networking)<br/>libp2p / Devp2p, GossipSub, Kademlia DHT, Peer discovery, Wire protocol"]
+        L1["LAYER 1 (Base Chains)<br/>Ethereum (PoS, EVM), Bitcoin (PoW, UTXO), Solana (PoH, SVM), Avalanche, Cosmos (IBC)"]
+        L2["LAYER 2 (Scaling)<br/>Optimism / Base, Arbitrum, zkSync Era / StarkNet, Polygon zkEVM, State Channels"]
+        Infra["INFRASTRUCTURE<br/>IPFS / Filecoin (storage), Chainlink (oracles), The Graph (indexing), Alchemy / Infura, ENS"]
+        App["APPLICATION LAYER<br/>DeFi (DEX, lending, yield), NFTs / Gaming, DAOs / Governance, Identity (SBTs/DIDs), RWA"]
+        Tools["TOOLING &amp; LANGUAGES<br/>Solidity / Vyper, Hardhat / Foundry, ethers.js / viem / wagmi, OpenZeppelin, Slither / Echidna"]
+        L0 --> L1 --> L2 --> App
+        Infra & Tools -.-> App
+    end
 ```
 
 ---
@@ -53,26 +32,12 @@ This guide takes you from having zero blockchain knowledge to understanding and 
 
 **Goal**: Understand how blockchains work at the data structure and protocol level, master the cryptographic primitives that secure everything, and deeply understand Ethereum's architecture.
 
-```
-01-BLOCKCHAIN-FUNDAMENTALS        02-CRYPTOGRAPHY-ESSENTIALS
-+---------------------------+     +---------------------------+
-| Linked blocks & Merkle     |     | Hash functions (keccak256) |
-| trees                      |     | Elliptic curve crypto      |
-| Consensus (PoW, PoS, BFT)  |     | Digital signatures (ECDSA) |
-| UTXO vs Account model      |     | HD wallets (BIP-32/39/44)  |
-| Forks, finality, nodes     |     | Merkle proofs on-chain     |
-| Network topology           |     | ZK proofs (conceptual)     |
-+---------------------------+     +---------------------------+
-
-03-ETHEREUM-AND-EVM
-+---------------------------+
-| Accounts (EOA vs contract) |
-| Transactions & gas          |
-| EVM stack machine opcodes  |
-| ABI encoding/decoding      |
-| State tries & storage      |
-| Events, logs, bloom filter |
-+---------------------------+
+```mermaid
+flowchart LR
+    M1["01-BLOCKCHAIN-FUNDAMENTALS<br/>- Linked blocks &amp; Merkle trees<br/>- Consensus (PoW, PoS, BFT)<br/>- UTXO vs Account model<br/>- Forks, finality, nodes, P2P"]
+    M2["02-CRYPTOGRAPHY-ESSENTIALS<br/>- Hash functions (keccak256)<br/>- Elliptic curve &amp; ECDSA signatures<br/>- HD wallets (BIP-32/39/44)<br/>- Merkle proofs &amp; ZK proofs"]
+    M3["03-ETHEREUM-AND-EVM<br/>- Accounts (EOA vs contract)<br/>- Transactions, gas &amp; EVM opcodes<br/>- ABI encoding &amp; State tries<br/>- Events, logs, bloom filter"]
+    M1 --> M2 --> M3
 ```
 
 You cannot write secure smart contracts without understanding:
@@ -86,145 +51,71 @@ You cannot write secure smart contracts without understanding:
 
 **Goal**: Master Solidity from basic types through advanced patterns, and become proficient with production development tools.
 
-```
-04-SOLIDITY-BASICS                05-SOLIDITY-ADVANCED
-+---------------------------+     +---------------------------+
-| Types, variables, functions|     | Inline assembly (Yul)      |
-| storage / memory / calldata|     | Proxy patterns (UUPS, etc) |
-| Visibility & modifiers     |     | Gas optimization            |
-| Inheritance & interfaces   |     | Design patterns (CEI, Pull)|
-| Events & custom errors     |     | Meta-transactions           |
-| Constructor & fallback     |     | Low-level calls             |
-+---------------------------+     +---------------------------+
-
-06-DEVELOPMENT-TOOLS
-+---------------------------+
-| Hardhat (JS/TS framework)  |
-| Foundry (Solidity-native)  |
-| Testing strategies         |
-| Deployment & verification  |
-| Remix IDE                  |
-| CI/CD for smart contracts  |
-+---------------------------+
+```mermaid
+flowchart LR
+    M4["04-SOLIDITY-BASICS<br/>- Types, variables, functions<br/>- storage / memory / calldata<br/>- Visibility, modifiers, inheritance<br/>- Events, custom errors, fallback"]
+    M5["05-SOLIDITY-ADVANCED<br/>- Inline assembly (Yul)<br/>- Proxy patterns (UUPS, Transparent)<br/>- Gas optimization &amp; CEI/Pull<br/>- Meta-txs &amp; low-level calls"]
+    M6["06-DEVELOPMENT-TOOLS<br/>- Hardhat &amp; Foundry<br/>- Testing strategies<br/>- Deployment &amp; verification<br/>- Remix IDE &amp; CI/CD"]
+    M4 --> M5 --> M6
 ```
 
 ### Phase 3: Protocols & Standards (Chapters 07-08)
 
 **Goal**: Understand token standards that power the ecosystem and the DeFi protocols that generate billions in volume.
 
-```
-07-TOKEN-STANDARDS                08-DEFI-PROTOCOLS
-+---------------------------+     +---------------------------+
-| ERC-20 (fungible tokens)   |     | AMMs (Uniswap V2/V3)      |
-| ERC-721 (NFTs)             |     | Lending (Aave, Compound)   |
-| ERC-1155 (multi-token)     |     | Stablecoins (DAI, USDC)    |
-| ERC-4626 (tokenized vaults)|     | Oracles (Chainlink)        |
-| Soulbound Tokens (SBTs)    |     | Flash loans & flash mints  |
-| Token extensions           |     | Yield aggregation          |
-+---------------------------+     +---------------------------+
+```mermaid
+flowchart LR
+    M7["07-TOKEN-STANDARDS<br/>- ERC-20 (fungible tokens)<br/>- ERC-721 (NFTs) &amp; ERC-1155 (multi-token)<br/>- ERC-4626 (tokenized vaults)<br/>- Soulbound Tokens (SBTs)"]
+    M8["08-DEFI-PROTOCOLS<br/>- AMMs (Uniswap V2/V3)<br/>- Lending (Aave, Compound)<br/>- Stablecoins (DAI, USDC) &amp; Oracles<br/>- Flash loans &amp; Yield aggregation"]
+    M7 --> M8
 ```
 
 ### Phase 4: Frontend Integration (Chapter 09)
 
 **Goal**: Build complete DApp frontends that connect wallets, read chain state, and submit transactions.
 
-```
-09-FRONTEND-DAPP-DEVELOPMENT
-+---------------------------+
-| ethers.js & viem           |
-| wagmi React hooks          |
-| RainbowKit / ConnectKit    |
-| Reading contract state     |
-| Writing transactions       |
-| Listening to events        |
-| ENS resolution             |
-| IPFS metadata              |
-+---------------------------+
+```mermaid
+flowchart LR
+    M9["09-FRONTEND-DAPP-DEVELOPMENT<br/>- ethers.js, viem, wagmi React hooks<br/>- RainbowKit / ConnectKit<br/>- Reading state, writing txs, events<br/>- ENS resolution &amp; IPFS metadata"]
 ```
 
 ### Phase 5: Security & Scaling (Chapters 10-11)
 
 **Goal**: Learn to think like an attacker to write secure code, and understand how Layer 2 solutions make Ethereum scalable.
 
-```
-10-SMART-CONTRACT-SECURITY        11-LAYER2-AND-SCALING
-+---------------------------+     +---------------------------+
-| Reentrancy attacks         |     | Optimistic rollups         |
-| Access control flaws       |     | ZK rollups (zkSync, Stark) |
-| Oracle manipulation        |     | State channels             |
-| Flash loan attacks         |     | Sidechains vs rollups      |
-| Audit methodology          |     | Data availability          |
-| Tools: Slither, Echidna    |     | Cross-chain bridges        |
-+---------------------------+     +---------------------------+
+```mermaid
+flowchart LR
+    M10["10-SMART-CONTRACT-SECURITY<br/>- Reentrancy &amp; Access control flaws<br/>- Oracle manipulation &amp; Flash loan attacks<br/>- Audit methodology<br/>- Slither, Echidna, Mythril"]
+    M11["11-LAYER2-AND-SCALING<br/>- Optimistic &amp; ZK Rollups<br/>- State channels &amp; Sidechains<br/>- Data Availability (EIP-4844 / Celestia)<br/>- Cross-chain bridges"]
+    M10 --> M11
 ```
 
 ### Phase 6: Advanced & Production (Chapters 12-14)
 
 **Goal**: Master cutting-edge topics, build production infrastructure, and create portfolio projects.
 
-```
-12-ADVANCED-TOPICS                13-INFRASTRUCTURE-AND-TOOLING
-+---------------------------+     +---------------------------+
-| MEV (Maximal Extractable   |     | Running nodes (Geth, Reth) |
-|   Value)                   |     | RPC providers              |
-| Account Abstraction         |     | The Graph (subgraphs)      |
-|   (ERC-4337)               |     | IPFS / Arweave             |
-| ZK applications            |     | Chainlink oracles          |
-| EigenLayer & restaking     |     | Monitoring & analytics     |
-| Modular blockchains        |     | Multisig wallets           |
-+---------------------------+     +---------------------------+
-
-14-PROJECTS-AND-CAREER
-+---------------------------+
-| Project: ERC-20 token      |
-| Project: NFT marketplace   |
-| Project: DEX (AMM)         |
-| Project: DAO governance    |
-| Career paths & roles       |
-| Interview preparation      |
-+---------------------------+
+```mermaid
+flowchart LR
+    M12["12-ADVANCED-TOPICS<br/>- MEV &amp; Flashbots<br/>- Account Abstraction (ERC-4337)<br/>- ZK applications &amp; EigenLayer<br/>- Modular blockchains"]
+    M13["13-INFRASTRUCTURE-AND-TOOLING<br/>- Running nodes (Geth, Reth) &amp; RPCs<br/>- The Graph (subgraphs)<br/>- IPFS / Arweave &amp; Chainlink<br/>- Monitoring &amp; Safe multisig"]
+    M14["14-PROJECTS-AND-CAREER<br/>- ERC-20, NFT Marketplace, DEX, DAO<br/>- Career paths &amp; Interview prep"]
+    M12 --> M13 --> M14
 ```
 
 ---
 
 ## How the Roles Break Down
 
-```
-+------------------------------------------------------------------------+
-|                    WEB3 ROLE TAXONOMY                                    |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  SMART CONTRACT DEVELOPER                                              |
-|  Focus: Writing and deploying Solidity/Vyper contracts                 |
-|  Skills: Solidity, EVM internals, gas optimization, testing            |
-|  Day: Write contracts -> test -> deploy -> verify -> monitor           |
-|                                                                        |
-|  PROTOCOL ENGINEER                                                     |
-|  Focus: Designing DeFi protocols, tokenomics, mechanism design         |
-|  Skills: Advanced Solidity, financial math, game theory, auditing      |
-|  Day: Design mechanisms -> model economics -> implement -> audit       |
-|                                                                        |
-|  SMART CONTRACT AUDITOR / SECURITY RESEARCHER                          |
-|  Focus: Finding vulnerabilities before attackers do                     |
-|  Skills: EVM bytecode, attack patterns, formal verification            |
-|  Day: Review code -> write PoC exploits -> report findings             |
-|                                                                        |
-|  DAPP FRONTEND DEVELOPER                                               |
-|  Focus: Building user interfaces for decentralized applications        |
-|  Skills: React/Next.js, ethers.js/wagmi, wallet integration           |
-|  Day: Build UI -> integrate contracts -> handle chain events           |
-|                                                                        |
-|  BLOCKCHAIN INFRASTRUCTURE ENGINEER                                    |
-|  Focus: Running nodes, indexers, RPCs, and monitoring                  |
-|  Skills: Go/Rust, P2P networking, DevOps, database management         |
-|  Day: Operate nodes -> optimize RPC -> build indexing pipelines        |
-|                                                                        |
-|  WEB3 FULL-STACK ENGINEER                                              |
-|  Focus: End-to-end DApp development (contracts + frontend + infra)     |
-|  Skills: Solidity + React + Node.js + cloud infrastructure             |
-|  Day: Ship features across the entire stack                            |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Roles["WEB3 ROLE TAXONOMY"]
+        R1["SMART CONTRACT DEVELOPER<br/>Solidity/Vyper, EVM internals, gas optimization, testing"]
+        R2["PROTOCOL ENGINEER<br/>DeFi mechanism design, financial math, game theory, tokenomics"]
+        R3["SMART CONTRACT AUDITOR / SECURITY RESEARCHER<br/>EVM bytecode, exploit PoCs, fuzzing, formal verification"]
+        R4["DAPP FRONTEND DEVELOPER<br/>React/Next.js, viem/wagmi/ethers.js, wallet integration, chain events"]
+        R5["BLOCKCHAIN INFRASTRUCTURE ENGINEER<br/>Go/Rust clients, P2P networking, RPC nodes, subgraphs/indexers"]
+        R6["WEB3 FULL-STACK ENGINEER<br/>End-to-end DApp delivery (Contracts + Frontend + Indexer + Infra)"]
+    end
 ```
 
 ---
@@ -262,33 +153,16 @@ You cannot write secure smart contracts without understanding:
 
 ## Essential Tools & Platforms
 
-```
-DEVELOPMENT                        LANGUAGES
-+--------------------------+       +---------------------------+
-| Hardhat (JS/TS framework) |       | Solidity (EVM contracts)   |
-| Foundry (forge, cast, anvil)|     | Vyper (Pythonic EVM)       |
-| Remix IDE (browser-based)  |       | Rust (Solana, Substrate)   |
-| OpenZeppelin Contracts     |       | TypeScript (frontend/tools)|
-| Tenderly (debugging)       |       | Yul (EVM assembly)         |
-+--------------------------+       +---------------------------+
-
-FRONTEND                           SECURITY
-+--------------------------+       +---------------------------+
-| ethers.js v6              |       | Slither (static analysis)  |
-| viem (TypeScript-first)   |       | Echidna (fuzzing)          |
-| wagmi (React hooks)       |       | Mythril (symbolic exec.)   |
-| RainbowKit / ConnectKit   |       | Foundry fuzzing            |
-| WalletConnect             |       | Certora (formal verify.)   |
-+--------------------------+       +---------------------------+
-
-INFRASTRUCTURE                     TESTNETS & EXPLORERS
-+--------------------------+       +---------------------------+
-| Alchemy / Infura (RPC)    |       | Sepolia (Ethereum testnet) |
-| The Graph (indexing)       |       | Etherscan (block explorer) |
-| IPFS / Pinata (storage)   |       | Tenderly (tx simulation)   |
-| Chainlink (oracles)       |       | Sourcify (verification)    |
-| Safe (multisig wallets)   |       | Dune Analytics (data)      |
-+--------------------------+       +---------------------------+
+```mermaid
+flowchart TD
+    subgraph Stack["WEB3 DEVELOPER TOOLKIT"]
+        Dev["DEVELOPMENT<br/>Hardhat / Foundry (forge, cast, anvil) / Remix / OpenZeppelin / Tenderly"]
+        Lang["LANGUAGES<br/>Solidity / Vyper / Rust / TypeScript / Yul"]
+        FE["FRONTEND<br/>ethers.js v6 / viem / wagmi / RainbowKit / WalletConnect"]
+        Sec["SECURITY<br/>Slither / Echidna / Mythril / Foundry Fuzzing / Certora"]
+        Infra["INFRASTRUCTURE<br/>Alchemy &amp; Infura / The Graph / IPFS &amp; Pinata / Chainlink / Safe"]
+        Test["TESTNETS &amp; EXPLORERS<br/>Sepolia / Etherscan / Tenderly / Sourcify / Dune Analytics"]
+    end
 ```
 
 ---

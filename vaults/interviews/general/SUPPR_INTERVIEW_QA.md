@@ -163,20 +163,14 @@ if (updated == 0) {
 
 ### Q6: 积分生命周期完整流程？
 
-```
-AWARD（获取积分：购买/注册/签到/邀请）
-  ↓
-AVAILABLE（可用状态，有过期时间）
-  ↓ freezePoints()
-FROZEN（冻结状态：预留给异步任务，FIFO 先过期的先冻结）
-  ↓                          ↓
-consumePoint()          unfreezePoints()
-  ↓                          ↓
-CONSUMED（已消费）      AVAILABLE（回滚，恢复到原积分池）
-
-另外两条路径：
-AVAILABLE → expireUserAvailablePoints() → EXPIRED（过期，软删除）
-AVAILABLE → withdrawPoints() → WITHDRAWN（退款回收，FIFO 先过期的先扣）
+```mermaid
+flowchart TD
+    Award["AWARD<br/>（获取积分：购买/注册/签到/邀请）"] --> Avail["AVAILABLE<br/>（可用状态，有过期时间）"]
+    Avail -->|"freezePoints()（FIFO 先过期先冻结）"| Frozen["FROZEN<br/>（冻结状态：预留给异步任务）"]
+    Frozen -->|"consumePoint()"| Consumed["CONSUMED<br/>（已消费）"]
+    Frozen -->|"unfreezePoints()（回滚恢复）"| Avail
+    Avail -->|"expireUserAvailablePoints()"| Expired["EXPIRED<br/>（过期，软删除）"]
+    Avail -->|"withdrawPoints()（FIFO 先过期先扣）"| Withdrawn["WITHDRAWN<br/>（退款回收）"]
 ```
 
 **核心设计亮点（主动说）：**
@@ -221,16 +215,11 @@ AVAILABLE → withdrawPoints() → WITHDRAWN（退款回收，FIFO 先过期的�
 
 **三重保护：**
 
-```
-回调到达
-  ↓
-① 条件更新：UPDATE ... SET status=SUCCESS WHERE status=WAITING
-   → 第二次影响 0 行 → 跳过
-  ↓
-② Redis 分布式锁：获取锁后再读 notifyTimes → double-check
-   → 另一个请求已处理过 → 跳过
-  ↓
-③ 审计日志：每次回调都记录 PayNotifyLogDO → 可追溯
+```mermaid
+flowchart TD
+    Arr["支付回调到达"] --> S1["① 条件更新：UPDATE ... SET status=SUCCESS WHERE status=WAITING<br/>（重复回调影响 0 行 -> 直接跳过）"]
+    S1 --> S2["② Redis 分布式锁：获取锁后再读 notifyTimes (Double-Check)<br/>（并发请求已处理 -> 直接跳过）"]
+    S2 --> S3["③ 审计日志：每次回调均记录 PayNotifyLogDO（全程可追溯）"]
 ```
 
 **结果：** 精确一次的权益发放（积分/会员），即使网络重试导致多次回调。
@@ -288,32 +277,13 @@ file_translation:stop:{sessionId}    → 取消标志，consumer 周期检查
 
 **分阶段规划：**
 
-```
-阶段 1：快速修复（1-2 周）
-├── MySQL 连接池 2 → 20-30
-├── 加 Resilience4j 熔断器 + 舱壁
-├── SSE 加心跳 + 定期清理
-├── Kafka 加 DLQ
-└── 积分加乐观锁
-
-阶段 2：可观测性（2-4 周）
-├── Micrometer → Prometheus → Grafana（指标）
-├── OpenTelemetry → Jaeger（分布式追踪）
-├── 关键告警：consumer lag、连接池等待、外部服务错误率
-├── Flyway 数据库迁移管理
-└── 集中日志：Logback → ELK / Loki
-
-阶段 3：扩展性（1-3 月）
-├── MySQL 读写分离（AbstractRoutingDataSource）
-├── Redis Sentinel / Cluster
-├── Caffeine L1 + Redis L2 多级缓存
-├── SSE 从 Pub/Sub 迁移到 Redis Streams
-└── 积分幂等键防重复操作
-
-阶段 4：服务拆分（3-6 月，按业务需要）
-├── 积分服务 → 独立微服务（金融数据，严格一致性）
-├── 翻译编排器 → 独立服务（Kafka 消费者 + 状态机）
-└── 通知服务 → 统一微信 / SSE / 邮件推送
+```mermaid
+flowchart LR
+    P1["阶段 1：快速修复（1-2 周）<br/>- MySQL 连接池 2 -&gt; 20-30<br/>- Resilience4j 熔断器 + 舱壁<br/>- SSE 心跳 + 定期清理<br/>- Kafka DLQ &amp; 积分乐观锁"]
+    P2["阶段 2：可观测性（2-4 周）<br/>- Micrometer -&gt; Prometheus -&gt; Grafana<br/>- OpenTelemetry -&gt; Jaeger<br/>- 核心告警 + Flyway + ELK/Loki"]
+    P3["阶段 3：扩展性（1-3 月）<br/>- MySQL 读写分离<br/>- Redis Sentinel / Cluster<br/>- Caffeine L1 + Redis L2<br/>- SSE 迁移至 Redis Streams + 积分幂等键"]
+    P4["阶段 4：服务拆分（3-6 月）<br/>- 独立积分微服务<br/>- 独立翻译编排器服务<br/>- 统一通知服务"]
+    P1 --> P2 --> P3 --> P4
 ```
 
 ---

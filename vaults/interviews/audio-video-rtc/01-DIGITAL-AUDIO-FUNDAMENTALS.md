@@ -150,18 +150,13 @@ perceptual quality loss.
 
 ### 2.1 The ADC/DAC Pipeline
 
-```
-                         DIGITAL DOMAIN
-                    +-----------------------+
-                    |                       |
-  Microphone        |   Storage / Process   |        Speaker
-  (Analog) -------->| ADC ---> DSP ---> DAC |------> (Analog)
-                    |                       |
-                    +-----------------------+
-
-  ADC = Analog-to-Digital Converter
-  DAC = Digital-to-Audio Converter
-  DSP = Digital Signal Processing
+```mermaid
+flowchart LR
+    Mic["Microphone<br/>(Analog Acoustic/Electrical)"] --> ADC
+    subgraph Digital["DIGITAL DOMAIN (Storage / Processing)"]
+        ADC["ADC<br/>(Analog-to-Digital)"] --> DSP["DSP<br/>(Digital Signal Processing)"] --> DAC["DAC<br/>(Digital-to-Analog)"]
+    end
+    DAC --> Spk["Speaker<br/>(Analog Acoustic)"]
 ```
 
 The real-world audio signal is continuous in both time and amplitude. To store and
@@ -241,8 +236,9 @@ lower frequencies. This is called **aliasing**.
 frequencies above the Nyquist frequency. Without it, those frequencies fold down
 and corrupt the digital signal irreversibly.
 
-```
-  Analog Signal ---> [Anti-Aliasing LPF] ---> [Sampler] ---> Digital Samples
+```mermaid
+flowchart LR
+    A["Analog Signal"] --> LPF["Anti-Aliasing Low-Pass Filter<br/>(fc &lt; fs / 2)"] --> S["Sampler (ADC)"] --> D["Digital Samples"]
 ```
 
 ### 2.5 Quantization
@@ -295,8 +291,9 @@ Higher SNR = cleaner audio. Professional equipment targets SNR > 90 dB.
 The DAC converts digital samples back to an analog signal. A **reconstruction filter**
 (low-pass) smooths the staircase output into a continuous waveform.
 
-```
-  Digital Samples ---> [DAC / Zero-Order Hold] ---> [Reconstruction LPF] ---> Analog
+```mermaid
+flowchart LR
+    D["Digital Samples"] --> DAC["DAC / Zero-Order Hold"] --> LPF["Reconstruction Low-Pass Filter"] --> A["Continuous Analog Signal"]
 ```
 
 ---
@@ -542,17 +539,13 @@ Modern spatial audio goes beyond fixed speaker layouts:
 
 ### 5.1 Format Categories
 
-```
-  Audio Formats
-  |
-  +-- Container formats (file wrapper)
-  |   WAV, AIFF, MKV, MP4, OGG, WebM
-  |
-  +-- Codec (encoder/decoder algorithm)
-      |
-      +-- Uncompressed: PCM
-      +-- Lossless: FLAC, ALAC, WavPack, APE
-      +-- Lossy: MP3, AAC, Opus, Vorbis, AC-3
+```mermaid
+flowchart TD
+    AF["Audio Formats"] --> Cont["Container Formats (File Wrapper)<br/>WAV, AIFF, MKV, MP4, OGG, WebM"]
+    AF --> Codec["Audio Codecs (Compression Algorithm)"]
+    Codec --> Uncomp["Uncompressed<br/>PCM (LPCM / Float)"]
+    Codec --> Lossless["Lossless<br/>FLAC, ALAC, WavPack, APE"]
+    Codec --> Lossy["Lossy<br/>Opus, AAC, MP3, Vorbis, AC-3"]
 ```
 
 A **container** wraps one or more streams (audio, video, subtitles, metadata).
@@ -932,16 +925,11 @@ In real-time applications (VoIP, gaming, live performance), low latency is criti
 
 ### 7.2 Sources of Latency
 
-```
-  [Microphone] -> [ADC] -> [OS Buffer] -> [App Buffer] -> [Processing]
-       |            |          |              |               |
-       v            v          v              v               v
-     ~0 ms       ~1 ms     1-20 ms        1-50 ms         0-50 ms
-
-  -> [App Buffer] -> [OS Buffer] -> [DAC] -> [Speaker] -> [Air] -> [Ear]
-         |              |            |          |            |
-         v              v            v          v            v
-       1-50 ms       1-20 ms      ~1 ms      ~0 ms      ~3 ms/m
+```mermaid
+flowchart LR
+    Mic["Microphone<br/>(~0 ms)"] --> ADC["ADC<br/>(~1 ms)"] --> OSB1["OS Input Buffer<br/>(1-20 ms)"] --> App1["App Input Buffer<br/>(1-50 ms)"]
+    App1 --> Proc["DSP Processing<br/>(0-50 ms)"] --> App2["App Output Buffer<br/>(1-50 ms)"] --> OSB2["OS Output Buffer<br/>(1-20 ms)"]
+    OSB2 --> DAC["DAC<br/>(~1 ms)"] --> Spk["Speaker<br/>(~0 ms)"] --> Air["Air to Ear<br/>(~3 ms/m)"]
 ```
 
 **Total round-trip latency budget for real-time communication:**
@@ -1056,39 +1044,26 @@ audible glitches:
 
 ### 8.1 Platform Audio APIs
 
-```
-  +------------------+     +------------------+     +------------------+
-  |   Application    |     |   Application    |     |   Application    |
-  +--------+---------+     +--------+---------+     +--------+---------+
-           |                        |                        |
-  +--------v---------+     +--------v---------+     +--------v---------+
-  | PortAudio / SDL  |     | PortAudio / SDL  |     | PortAudio / SDL  |
-  | (Cross-Platform) |     | (Cross-Platform) |     | (Cross-Platform) |
-  +--------+---------+     +--------+---------+     +--------+---------+
-           |                        |                        |
-  +--------v---------+     +--------v---------+     +--------v---------+
-  |   CoreAudio      |     |   PipeWire       |     |   WASAPI         |
-  |   (macOS/iOS)    |     |   (Linux)        |     |   (Windows)      |
-  +------------------+     +------------------+     +------------------+
+```mermaid
+flowchart TD
+    subgraph Mac["macOS / iOS"]
+        A1["Application"] --> PA1["PortAudio / SDL / miniaudio"] --> CA["CoreAudio"]
+    end
+    subgraph Lin["Linux"]
+        A2["Application"] --> PA2["PortAudio / SDL / miniaudio"] --> PW["PipeWire / ALSA"]
+    end
+    subgraph Win["Windows"]
+        A3["Application"] --> PA3["PortAudio / SDL / miniaudio"] --> WA["WASAPI"]
+    end
 ```
 
 ### 8.2 Linux Audio Stack
 
-```
-  Application
-       |
-       v
-  +----------+     +----------+
-  | PipeWire | <-> | PulseAudio|  (PipeWire provides PulseAudio compat)
-  +----+-----+     +----------+
-       |
-       v
-  +----------+
-  |   ALSA   |  (Advanced Linux Sound Architecture)
-  +----+-----+
-       |
-       v
-  [ Kernel Driver / Hardware ]
+```mermaid
+flowchart TD
+    App["Application"] --> PW["PipeWire"]
+    PW <-->|"PulseAudio / JACK compatibility"| PA["PulseAudio Clients"]
+    PW --> ALSA["ALSA (Advanced Linux Sound Architecture)"] --> HW["Kernel Driver / Audio Hardware"]
 ```
 
 | Layer      | Purpose                                    | Latency  |
@@ -1100,24 +1075,10 @@ audible glitches:
 
 ### 8.3 macOS / iOS: CoreAudio
 
-```
-  Application
-       |
-       v
-  +-----------+
-  | Audio Unit|  (plugin/processing framework)
-  +-----+-----+
-        |
-        v
-  +-----------+
-  | AudioQueue|  (high-level playback/recording)
-  | or AVAudio|  (Swift/ObjC high-level API)
-  +-----+-----+
-        |
-        v
-  +-----------+
-  | CoreAudio |  (HAL - Hardware Abstraction Layer)
-  +-----------+
+```mermaid
+flowchart TD
+    App["Application"] --> AU["Audio Units / AVAudioEngine<br/>(Plugin &amp; Real-Time DSP Graph)"]
+    AU --> AQ["AudioQueue / AVAudioSession<br/>(High-Level Playback &amp; Recording)"] --> HAL["CoreAudio HAL<br/>(Hardware Abstraction Layer)"]
 ```
 
 - **AudioToolbox:** Codec support, file I/O
@@ -1126,18 +1087,11 @@ audible glitches:
 
 ### 8.4 Windows: WASAPI
 
-```
-  Application
-       |
-       +--------> WASAPI Shared Mode (mixing with other apps, ~10-30 ms)
-       |
-       +--------> WASAPI Exclusive Mode (direct hardware, ~3-10 ms)
-       |
-       v
-  [ Windows Audio Session API ]
-       |
-       v
-  [ Kernel Streaming / Hardware ]
+```mermaid
+flowchart TD
+    App["Application"] --> Shared["WASAPI Shared Mode<br/>(OS Audio Engine mixing, ~10-30 ms)"]
+    App --> Excl["WASAPI Exclusive Mode<br/>(Direct hardware access, ~3-10 ms)"]
+    Shared & Excl --> KS["Windows Kernel Streaming / Audio Hardware"]
 ```
 
 - **WASAPI Shared Mode:** Audio is mixed by Windows with other applications.

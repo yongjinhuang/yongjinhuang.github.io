@@ -362,22 +362,12 @@ aws ec2 modify-vpc-attribute \
 
 This is the most common production network architecture:
 
-```
-                    Internet
-                       |
-                  Internet Gateway
-                       |
-          +------ Public Subnets ------+
-          |  ALB    NAT GW   Bastion   |
-          +----------------------------+
-                       |
-          +------ Private Subnets -----+
-          |  EC2    ECS    Lambda(VPC)  |
-          +----------------------------+
-                       |
-          +------ Isolated Subnets ----+
-          |  RDS    ElastiCache  ES    |
-          +----------------------------+
+```mermaid
+flowchart TD
+    Net["Internet"] --> IGW["Internet Gateway (IGW)"]
+    IGW --> Pub["Public Subnets<br/>(ALB, NAT Gateway, Bastion)"]
+    Pub --> Priv["Private Subnets<br/>(EC2, ECS/EKS, VPC Lambda)"]
+    Priv --> Iso["Isolated Data Subnets<br/>(RDS, ElastiCache, OpenSearch)"]
 ```
 
 | Tier        | Subnet Type | Internet Access           | Contains                  |

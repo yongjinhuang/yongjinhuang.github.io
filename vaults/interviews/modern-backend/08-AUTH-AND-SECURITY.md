@@ -12,80 +12,35 @@ This guide covers modern authentication protocols, authorization models, API sec
 
 ### The Authentication Landscape
 
-```
-+------------------------------------------------------------------+
-|              AUTHENTICATION METHODS (2026)                         |
-+------------------------------------------------------------------+
-|                                                                  |
-|  LEGACY (Avoid)            CURRENT                EMERGING       |
-|  +-------------+          +---------------+      +-------------+ |
-|  | Password    |          | OAuth 2.1     |      | Passkeys    | |
-|  | (plain)     |          | + PKCE        |      | (WebAuthn)  | |
-|  +-------------+          +---------------+      +-------------+ |
-|  | OAuth 2.0   |          | OpenID Connect|      | Verifiable  | |
-|  | (implicit)  |          | (OIDC)        |      | Credentials | |
-|  +-------------+          +---------------+      +-------------+ |
-|  | Basic Auth  |          | Magic Links   |      | DPoP Tokens | |
-|  | (API)       |          |               |      |             | |
-|  +-------------+          +---------------+      +-------------+ |
-|                                                                  |
-|  KEY CHANGES IN 2026:                                            |
-|  - Implicit flow removed entirely (OAuth 2.1)                    |
-|  - PKCE required for ALL clients (not just public)               |
-|  - Passkeys supported by all major browsers and platforms         |
-|  - Password-only auth is considered a security liability          |
-|  - DPoP (sender-constrained tokens) gaining adoption             |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Auth2026["AUTHENTICATION METHODS (2026)"]
+        Leg["LEGACY (Avoid)<br/>- Plain Passwords<br/>- OAuth 2.0 Implicit Flow<br/>- Basic Auth (API)"]
+        Cur["CURRENT STANDARD<br/>- OAuth 2.1 + PKCE (required for all clients)<br/>- OpenID Connect (OIDC)<br/>- Magic Links"]
+        Emg["EMERGING / MODERN<br/>- Passkeys (WebAuthn / FIDO2)<br/>- Verifiable Credentials<br/>- DPoP (Sender-Constrained Tokens)"]
+        Leg --> Cur --> Emg
+    end
 ```
 
 ### Passkeys (WebAuthn / FIDO2)
 
 Passkeys are cryptographic credentials that replace passwords. They are phishing-resistant, unguessable, and synced across devices via platform authenticators (iCloud Keychain, Google Password Manager, Windows Hello).
 
-```
-+------------------------------------------------------------------+
-|              PASSKEY REGISTRATION FLOW                             |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Browser               Server             Authenticator          |
-|  |                     |                  (TouchID/FaceID)       |
-|  |                     |                  |                      |
-|  | 1. Register req --->|                  |                      |
-|  |                     |                  |                      |
-|  | 2. Challenge <------|                  |                      |
-|  |    (random bytes,   |                  |                      |
-|  |     user info,      |                  |                      |
-|  |     relying party)  |                  |                      |
-|  |                     |                  |                      |
-|  | 3. navigator.credentials.create() ---->|                      |
-|  |                     |                  | 4. User verifies     |
-|  |                     |                  |    (biometric/PIN)   |
-|  |                     |                  |                      |
-|  |                     |                  | 5. Generate key pair |
-|  |                     |                  |    Store private key |
-|  | 6. Attestation <------------------------| Return public key   |
-|  |    (public key,     |                  |   + signed challenge |
-|  |     credential ID,  |                  |                      |
-|  |     attestation)    |                  |                      |
-|  |                     |                  |                      |
-|  | 7. Send to server ->|                  |                      |
-|  |                     | 8. Verify        |                      |
-|  |                     |    attestation   |                      |
-|  |                     |    Store pubkey  |                      |
-|  | 9. Success <--------|                  |                      |
-|                                                                  |
-|  AUTHENTICATION FLOW:                                            |
-|  Same flow but uses navigator.credentials.get()                  |
-|  Server sends challenge, authenticator signs it with private key |
-|  Server verifies signature with stored public key                |
-|                                                                  |
-|  WHY PASSKEYS ARE PHISHING-RESISTANT:                            |
-|  The credential is bound to the origin (domain).                 |
-|  A phishing site at evil.com cannot trigger a credential         |
-|  created for example.com -- the browser enforces this.           |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+sequenceDiagram
+    participant B as "Browser (Origin-bound)"
+    participant S as "Server (Relying Party)"
+    participant A as "Authenticator (TouchID / FaceID)"
+
+    B->>S: 1. Registration request
+    S-->>B: 2. Challenge (random bytes, user info, RP ID)
+    B->>A: 3. navigator.credentials.create(challenge)
+    Note over A: 4. User verifies (biometric / PIN)<br/>5. Generate key pair & store private key
+    A-->>B: 6. Attestation (public key, credential ID, signed challenge)
+    B->>S: 7. Send attestation response
+    Note over S: 8. Verify attestation & store public key
+    S-->>B: 9. Registration success
+    Note over B,A: Authentication uses navigator.credentials.get() to sign challenge with private key
 ```
 
 ```typescript
@@ -259,63 +214,22 @@ async function finishAuthentication(
 
 OAuth 2.1 consolidates OAuth 2.0 best practices. Key changes: PKCE is mandatory for all clients, implicit flow is removed, and refresh tokens must be sender-constrained or one-time-use.
 
-```
-+------------------------------------------------------------------+
-|              OAUTH 2.1 AUTHORIZATION CODE + PKCE                   |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Client (SPA)        Auth Server         Resource Server         |
-|  |                   |                   |                       |
-|  | 1. Generate:      |                   |                       |
-|  |    code_verifier  |                   |                       |
-|  |    (random 43-128 |                   |                       |
-|  |     chars)        |                   |                       |
-|  |    code_challenge  |                   |                       |
-|  |    = SHA256(       |                   |                       |
-|  |      code_verifier)|                  |                       |
-|  |                   |                   |                       |
-|  | 2. Redirect user  |                   |                       |
-|  |    /authorize?    |                   |                       |
-|  |    code_challenge=|                   |                       |
-|  |    &method=S256   |                   |                       |
-|  | ----------------->|                   |                       |
-|  |                   | 3. User logs in   |                       |
-|  |                   |    and consents   |                       |
-|  |                   |                   |                       |
-|  | 4. Redirect back  |                   |                       |
-|  |    ?code=ABC123   |                   |                       |
-|  | <-----------------|                   |                       |
-|  |                   |                   |                       |
-|  | 5. Exchange code: |                   |                       |
-|  |    POST /token    |                   |                       |
-|  |    code=ABC123    |                   |                       |
-|  |    code_verifier= |                   |                       |
-|  |    (original)     |                   |                       |
-|  | ----------------->|                   |                       |
-|  |                   | 6. Server         |                       |
-|  |                   |    SHA256(verifier)|                      |
-|  |                   |    == challenge?   |                       |
-|  |                   |    YES -> issue    |                       |
-|  |                   |    tokens         |                       |
-|  |                   |                   |                       |
-|  | 7. access_token + |                   |                       |
-|  |    refresh_token  |                   |                       |
-|  | <-----------------|                   |                       |
-|  |                   |                   |                       |
-|  | 8. API call with  |                   |                       |
-|  |    Bearer token   |                   |                       |
-|  | -------------------------------------->|                      |
-|  |                   |                   | 9. Validate token     |
-|  |                   |                   |    Return resource    |
-|  | <--------------------------------------|                      |
-|                                                                  |
-|  WHY PKCE?                                                       |
-|  Without PKCE, an attacker who intercepts the authorization code |
-|  (e.g., through a malicious browser extension or redirect) can   |
-|  exchange it for tokens. With PKCE, the attacker also needs the  |
-|  code_verifier, which never leaves the client.                   |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+sequenceDiagram
+    participant C as "Client (SPA / Native)"
+    participant AS as "Auth Server"
+    participant RS as "Resource Server"
+
+    Note over C: 1. Generate random code_verifier (43-128 chars)<br/>Compute code_challenge = SHA256(code_verifier)
+    C->>AS: 2. GET /authorize?code_challenge=...&code_challenge_method=S256
+    Note over AS: 3. User logs in and consents
+    AS-->>C: 4. Redirect back with ?code=ABC123
+    C->>AS: 5. POST /token (code=ABC123, code_verifier=original)
+    Note over AS: 6. Verify SHA256(code_verifier) == code_challenge
+    AS-->>C: 7. Issue access_token + refresh_token
+    C->>RS: 8. API Request (Authorization: Bearer access_token)
+    Note over RS: 9. Validate token & return resource
+    RS-->>C: Protected Resource
 ```
 
 ---
@@ -499,56 +413,15 @@ async function verifyAccessToken(
 
 ## Authorization Models
 
-```
-+------------------------------------------------------------------+
-|              AUTHORIZATION MODELS COMPARISON                       |
-+------------------------------------------------------------------+
-|                                                                  |
-|  RBAC (Role-Based Access Control)                                |
-|  +-----------------------------------------------------------+  |
-|  | User -> Role -> Permissions                                |  |
-|  | "Alice is an admin, admins can delete users"               |  |
-|  | + Simple, well-understood                                  |  |
-|  | - Role explosion (admin-east, admin-west, admin-readonly)  |  |
-|  | - Cannot express relationships (own resources)             |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  ABAC (Attribute-Based Access Control)                           |
-|  +-----------------------------------------------------------+  |
-|  | Policy evaluates attributes of user, resource, and context |  |
-|  | "If user.department == resource.department AND              |  |
-|  |  time.hour >= 9 AND time.hour <= 17 THEN allow"           |  |
-|  | + Very flexible, handles complex policies                  |  |
-|  | - Complex to implement and audit                           |  |
-|  | - Hard to answer "what can user X do?"                     |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  ReBAC (Relationship-Based Access Control)                       |
-|  +-----------------------------------------------------------+  |
-|  | Access based on relationships between entities              |  |
-|  | "Alice can edit doc123 because Alice is a member of        |  |
-|  |  team-eng, and team-eng is the owner of doc123"            |  |
-|  |                                                           |  |
-|  |  User:alice --member--> Team:eng --owner--> Doc:123        |  |
-|  |  Therefore: alice CAN edit Doc:123                         |  |
-|  |                                                           |  |
-|  | + Natural model for sharing (Google Docs, Notion)          |  |
-|  | + Handles hierarchies (org -> team -> member)              |  |
-|  | - Complex graph traversal at scale                         |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  GOOGLE ZANZIBAR MODEL (used by Google for Docs, Drive, etc.)    |
-|  +-----------------------------------------------------------+  |
-|  | ReBAC at global scale. Stores relationship tuples:          |  |
-|  | (object, relation, user)                                   |  |
-|  | "doc:readme#viewer@user:alice"                             |  |
-|  | "doc:readme#viewer@group:eng#member"                       |  |
-|  |                                                           |  |
-|  | Implementations: SpiceDB, OpenFGA (by Auth0/Okta),        |  |
-|  |                  Permify, Ory Keto                         |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Authz["AUTHORIZATION MODELS COMPARISON"]
+        RBAC["RBAC (Role-Based Access Control)<br/>User -&gt; Role -&gt; Permissions<br/>+ Simple, well-understood<br/>- Role explosion, cannot express resource ownership"]
+        ABAC["ABAC (Attribute-Based Access Control)<br/>Policy(user.dept == resource.dept &amp;&amp; 9 &lt;= hour &lt;= 17)<br/>+ Very flexible<br/>- Complex to audit ('what can user X do?')"]
+        ReBAC["ReBAC (Relationship-Based Access Control)<br/>User:alice --member--&gt; Team:eng --owner--&gt; Doc:123<br/>+ Natural for hierarchies &amp; sharing (Docs, Notion)"]
+        Zanz["GOOGLE ZANZIBAR MODEL (Global ReBAC)<br/>Relationship tuples: (object, relation, user)<br/>e.g., doc:readme#viewer@group:eng#member<br/>(SpiceDB, OpenFGA, Permify, Ory Keto)"]
+        ReBAC --> Zanz
+    end
 ```
 
 ### OPA (Open Policy Agent) Example
@@ -999,114 +872,33 @@ const corsOptions: cors.CorsOptions = {
 
 ## Secrets Management
 
-```
-+------------------------------------------------------------------+
-|              SECRETS MANAGEMENT HIERARCHY                          |
-+------------------------------------------------------------------+
-|                                                                  |
-|  WORST (never do)                                                |
-|  +-----------------------------------------------------------+  |
-|  | Hardcoded in source code: const KEY = "sk-proj-..."        |  |
-|  | Committed .env files: .env with secrets in git             |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  BETTER (acceptable for development)                             |
-|  +-----------------------------------------------------------+  |
-|  | .env files (gitignored) loaded by dotenv                   |  |
-|  | Environment variables set in deployment platform           |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  GOOD (production minimum)                                       |
-|  +-----------------------------------------------------------+  |
-|  | Cloud secret managers: AWS Secrets Manager, GCP Secret     |  |
-|  | Manager, Azure Key Vault                                   |  |
-|  | - Automatic rotation                                       |  |
-|  | - Audit logging                                            |  |
-|  | - IAM-based access control                                 |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  BEST (enterprise / high security)                               |
-|  +-----------------------------------------------------------+  |
-|  | HashiCorp Vault:                                           |  |
-|  | - Dynamic secrets (generate on demand, auto-expire)        |  |
-|  | - Database credential rotation (Vault generates new        |  |
-|  |   DB passwords automatically)                              |  |
-|  | - PKI certificate management                               |  |
-|  | - Transit secrets engine (encryption as a service)         |  |
-|  | - Audit log for every secret access                        |  |
-|  |                                                           |  |
-|  | Infisical (modern alternative):                            |  |
-|  | - Developer-friendly UI                                    |  |
-|  | - Native K8s operator                                      |  |
-|  | - Client SDKs for all languages                            |  |
-|  | - Secret rotation and versioning                           |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  KUBERNETES-SPECIFIC:                                            |
-|  - Sealed Secrets: encrypt secrets client-side, safe to commit  |
-|  - External Secrets Operator: sync from Vault/AWS/GCP to K8s   |
-|  - SOPS: encrypt files with KMS keys, decrypt at deploy time    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Secrets["SECRETS MANAGEMENT HIERARCHY"]
+        L1["1. WORST (Never Do)<br/>Hardcoded in source code or committed .env files in Git"]
+        L2["2. BETTER (Development Only)<br/>Gitignored .env files (dotenv) / Platform environment variables"]
+        L3["3. GOOD (Production Minimum)<br/>Cloud Secret Managers (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault)<br/>Automatic rotation, audit logging, IAM access control"]
+        L4["4. BEST (Enterprise / High Security)<br/>HashiCorp Vault / Infisical + K8s External Secrets Operator / SOPS / Sealed Secrets<br/>Dynamic short-lived secrets, auto DB credential rotation, PKI, Transit EaaS"]
+        L1 --> L2 --> L3 --> L4
+    end
 ```
 
 ---
 
 ## Zero Trust Architecture
 
-```
-+------------------------------------------------------------------+
-|              ZERO TRUST ARCHITECTURE                               |
-+------------------------------------------------------------------+
-|                                                                  |
-|  TRADITIONAL (Perimeter-based):                                  |
-|  +-----------------------------------------------------------+  |
-|  |  Internet  |  Firewall  |  Internal Network (TRUSTED)      |  |
-|  |  (untrust) |            |  Everything talks to everything  |  |
-|  +-----------------------------------------------------------+  |
-|  Problem: Once inside the firewall, attacker has free reign.     |
-|                                                                  |
-|  ZERO TRUST (Never trust, always verify):                        |
-|  +-----------------------------------------------------------+  |
-|  |  EVERY request is authenticated and authorized, regardless |  |
-|  |  of network location.                                      |  |
-|  |                                                           |  |
-|  |  Service A --mTLS--> Service B --mTLS--> Service C        |  |
-|  |       |                    |                   |           |  |
-|  |       v                    v                   v           |  |
-|  |  Identity verified    Identity verified    Identity        |  |
-|  |  Policy evaluated     Policy evaluated     verified        |  |
-|  |  Request logged       Request logged       Policy eval     |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  KEY PRINCIPLES:                                                 |
-|  1. Verify explicitly: authenticate every request                |
-|  2. Least privilege: minimal permissions, just-in-time access   |
-|  3. Assume breach: encrypt everything, log everything,           |
-|     segment networks, minimize blast radius                      |
-|                                                                  |
-|  IMPLEMENTATION WITH SERVICE MESH (Istio):                       |
-|  +-----------------------------------------------------------+  |
-|  | Sidecar proxy (Envoy) intercepts all traffic:              |  |
-|  |                                                           |  |
-|  | +--------+  +-------+       +-------+  +--------+        |  |
-|  | |Service |->|Envoy  |--mTLS-->|Envoy |->|Service |        |  |
-|  | |  A     |  |Proxy A|       |Proxy B|  |  B     |        |  |
-|  | +--------+  +-------+       +-------+  +--------+        |  |
-|  |                                                           |  |
-|  | Envoy handles: TLS termination, certificate rotation,      |  |
-|  | authorization policies, observability, retries             |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  SPIFFE/SPIRE:                                                   |
-|  +-----------------------------------------------------------+  |
-|  | Platform-agnostic identity framework for workloads.        |  |
-|  | SPIFFE ID: spiffe://example.com/service/order-service      |  |
-|  | SPIRE: server that issues and rotates X.509 SVIDs          |  |
-|  | (Short-lived identity documents for each workload)         |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Trad["TRADITIONAL (Perimeter-Based — Castle &amp; Moat)"]
+        Net["Internet (Untrusted)"] --> FW["Firewall"] --> Int["Internal Network (TRUSTED)<br/>Problem: Lateral movement once inside"]
+    end
+
+    subgraph ZT["ZERO TRUST ('Never Trust, Always Verify' — Explicit Verify, Least Privilege, Assume Breach)"]
+        SA["Service A"] --> EA["Envoy Proxy A<br/>(SPIFFE X.509 SVID)"]
+        EA -->|"mTLS + Authz Policy + Audit Log"| EB["Envoy Proxy B<br/>(SPIFFE X.509 SVID)"]
+        EB --> SB["Service B"]
+        SPIRE["SPIRE Server<br/>(Issues &amp; rotates short-lived X.509 SVIDs:<br/>spiffe://example.com/service/...)"] -.-> EA & EB
+    end
 ```
 
 ---

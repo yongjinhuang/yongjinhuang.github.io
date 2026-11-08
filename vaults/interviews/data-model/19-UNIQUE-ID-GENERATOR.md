@@ -64,18 +64,13 @@ graph TD
 | machine_id    | 5    | 0-31        | Identifies which machine within the datacenter. Together with datacenter_id, ensures no two generators produce the same bit pattern.                                                                 |
 | sequence      | 12   | 0-4095      | Per-millisecond counter. Incremented for each ID generated within the same millisecond on the same machine. 12 bits allow 4096 IDs per millisecond per machine. Resets to 0 on the next millisecond. |
 
-```
-Bit layout (64 bits total):
-
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|0|                    timestamp_ms (41 bits)                    |
-+-+                                         +-+-+-+-+-+-+-+-+-+-+
-|                                           |dc_id| machine_id  |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|  machine_id   |         sequence (12 bits)                    |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```mermaid
+packet-beta
+    0: "sign (1 bit)"
+    1-41: "timestamp_ms (41 bits)"
+    42-46: "datacenter_id (5 bits)"
+    47-51: "machine_id (5 bits)"
+    52-63: "sequence (12 bits)"
 ```
 
 **Why timestamp as the most significant bits?** IDs generated later have larger timestamps, making them numerically larger. This means IDs are roughly time-ordered, which is critical for database performance: B-tree indexes perform best with monotonically increasing keys (no random page splits). This is why Snowflake IDs are superior to UUIDs for primary keys in write-heavy databases.
@@ -99,93 +94,40 @@ Bit layout (64 bits total):
 
 ## ER Diagram
 
-```
-┌────────────────────────────┐
-│      generator_nodes        │
-│       (PostgreSQL)          │
-│────────────────────────────│
-│ node_id (PK)                │
-│ datacenter_id               │
-│ machine_id                  │
-│ hostname                    │
-│ ip_address                  │
-│ registered_at               │
-│ last_heartbeat              │
-│ status                      │
-│ lease_expires_at            │
-└────────────────────────────┘
-          │
-          │ 1───1 (each node holds one lease)
-          │
-          ▼
-┌────────────────────────────┐
-│   coordination_leases       │
-│   (ZooKeeper / etcd)        │
-│────────────────────────────│
-│ path (PK)                   │   path = /id-gen/workers/{dc}/{machine}
-│ hostname                    │
-│ ip                          │
-│ lease_expiry                │
-└────────────────────────────┘
-          │
-          │ uses (dc_id, machine_id) from lease
-          │
-          ▼
-┌────────────────────────────┐
-│        id_format            │
-│     (in-memory constant)    │
-│────────────────────────────│
-│ 1 bit:  sign (always 0)    │
-│ 41 bits: timestamp_ms      │──► time-ordered IDs
-│ 5 bits:  datacenter_id     │──► from lease
-│ 5 bits:  machine_id        │──► from lease
-│ 12 bits: sequence          │──► local counter
-│────────────────────────────│
-│ Total: 64 bits              │
-└────────────────────────────┘
+```mermaid
+erDiagram
+    generator_nodes ||--|| coordination_leases : "one node holds one lease"
 
-Relationships:
-  generator_nodes 1───1 coordination_leases  (one node holds one lease)
-  coordination_leases ───► id_format         (lease provides dc_id + machine_id bits)
+    generator_nodes {
+        BIGINT node_id PK
+        SMALLINT datacenter_id
+        SMALLINT machine_id
+        VARCHAR hostname
+        VARCHAR ip_address
+        TIMESTAMP registered_at
+        TIMESTAMP last_heartbeat
+        ENUM status
+        TIMESTAMP lease_expires_at
+    }
+    id_format {
+        BITS_1 sign
+        BITS_41 timestamp_ms
+        BITS_5 datacenter_id
+        BITS_5 machine_id
+        BITS_12 sequence
+    }
+    coordination_leases {
+        STRING path PK
+        STRING hostname
+        STRING ip
+        TIMESTAMP lease_expiry
+    }
 ```
+
 
 ## Data Flow
 
 ### Node Startup (Registration)
-
-```
-1. ID generator service starts on a host
-         │
-         ▼
-2. Read datacenter_id from environment config
-   (determined by deployment region)
-         │
-         ▼
-3. Attempt to acquire a coordination_lease:
-   Try creating ephemeral node at
-   /id-gen/workers/{datacenter_id}/{machine_id}
-   for machine_id = 0, 1, 2, ... until one succeeds
-         │
-    ┌────┴──────────────┐
-    │Lease acquired?    │
-    ├─Yes───────────────┤──► Store (datacenter_id, machine_id) in memory
-    │ No (all 32 taken) │
-    └────┬──────────────┘
-         ▼
-   FATAL: Cannot start. Alert ops to add capacity
-   or investigate dead nodes holding leases
-         │
-         ▼
-4. INSERT into generator_nodes for audit trail
-         │
-         ▼
-5. Start heartbeat loop:
-   - Every 10 seconds: renew coordination_lease
-   - Update generator_nodes.last_heartbeat
-         │
-         ▼
-6. Node is ready to generate IDs
-```
 
 ```mermaid
 flowchart TD
@@ -200,49 +142,6 @@ flowchart TD
 ```
 
 ### ID Generation (Hot Path)
-
-```
-1. Client requests a new unique ID
-         │
-         ▼
-2. Read current system clock → timestamp_ms
-   (milliseconds since custom epoch)
-         │
-         ▼
-3. Compare timestamp_ms with last_timestamp_ms
-         │
-    ┌────┴──────────────────────┐
-    │Same millisecond as last?  │
-    ├─Yes───────────────────────┤
-    │                           ▼
-    │              Increment sequence counter
-    │                     │
-    │                ┌────┴──────────┐
-    │                │sequence > 4095?│
-    │                ├─Yes───────────┤──► Wait until next millisecond
-    │                │ No            │    (busy-wait or sleep 1ms)
-    │                └────┬──────────┘
-    │                     │
-    ├─No (new millisecond)─┤
-    │                      ▼
-    │         Reset sequence = 0
-    │         Update last_timestamp_ms
-    └──────────┬───────────┘
-               ▼
-4. Check for clock regression:
-   if timestamp_ms < last_timestamp_ms → REJECT
-   (clock went backwards, IDs would not be unique)
-         │
-         ▼
-5. Compose 64-bit ID:
-   id = (timestamp_ms << 22)
-      | (datacenter_id << 17)
-      | (machine_id << 12)
-      | sequence
-         │
-         ▼
-6. Return ID to client
-```
 
 ```mermaid
 flowchart TD
@@ -261,22 +160,6 @@ flowchart TD
 ```
 
 ### Node Shutdown / Failure
-
-```
-7. Graceful shutdown:
-   - Set status = 'draining'
-   - Stop accepting new ID requests
-   - Release coordination_lease (delete ZooKeeper node)
-   - Update generator_nodes: status = 'dead'
-
-8. Crash / network partition:
-   - ZooKeeper session timeout (e.g., 30 seconds)
-   - Ephemeral node auto-deleted
-   - machine_id becomes available for a replacement node
-   - generator_nodes.last_heartbeat goes stale
-   - Health checker detects stale heartbeat
-     → updates status = 'dead'
-```
 
 ```mermaid
 flowchart TD

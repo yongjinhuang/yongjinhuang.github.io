@@ -232,141 +232,134 @@ graph TD
 
 ## ER Diagram
 
-```
-+------------------+
-|   instructors    |
-|------------------|
-| instructor_id(PK)|
-| user_id (FK)     |
-| display_name     |
-| bio              |
-| expertise        |
-| is_verified      |
-| payout_account_id|
-| total_students   |
-| avg_rating       |
-+------------------+
-        |
-        | 1
-        |
-        +───* courses
-        |
-+------------------+
-|     courses      |
-|------------------|
-| course_id (PK)   |
-| instructor_id(FK)|
-| title            |
-| description      |
-| category_id (FK) |
-| level            |
-| price_cents      |
-| currency         |
-| duration_hours   |
-| total_lessons    |
-| total_enrolled   |
-| avg_rating       |
-| status           |
-+------------------+
-   |             |
-   | 1           | 1
-   |             |
-   +──* sections +───────────────* enrollments
-   |                              |
-+--+-------------+    +-----------+----------+
-|    sections    |    |     enrollments      |
-|----------------|    |----------------------|
-| section_id(PK) |    | enrollment_id (PK)   |
-| course_id (FK) |    | course_id (FK)       |
-| title          |    | user_id (FK)         |
-| position       |    | status               |
-| lesson_count   |    | payment_id           |
-+----------------+    | progress_percent     |
-        |             | enrolled_at          |
-        | 1           | completed_at         |
-        |             | access_expires_at    |
-        +──* lessons  +----------------------+
-        |                |             |
-+-------+--------+      | 1           | 1
-|     lessons    |      |             |
-|----------------|      +──* lesson_  +──* quiz_attempts
-| lesson_id (PK) |      |   progress  |
-| section_id(FK) |      |             |    +------------------+
-| title          |  +---+----------+  |    |  quiz_attempts   |
-| lesson_type    |  |lesson_progress|  |    |------------------|
-| position       |  |--------------|  |    | attempt_id (PK)  |
-| duration_sec   |  |enrollment_id |  |    | quiz_id (FK)     |
-| is_preview     |  | (FK, PK)     |  |    | enrollment_id(FK)|
-+----------------+  |lesson_id     |  |    | answers_json     |
-   |         |      | (FK, PK)     |  |    | score            |
-   |         |      |status        |  |    | passed           |
-   | 1       | 1    |video_position|  |    | time_spent_sec   |
-   |         |      | _sec         |  |    | submitted_at     |
-   |         |      |time_spent_sec|  |    +------------------+
-   |         |      |playback_speed|  |
-   |         |      |completed_at  |  |    +------------------+
-   |         |      +--------------+  |    |   certificates   |
-   |         |                        |    |------------------|
-   |    +----+----------+            |    | certificate_id   |
-   |    |  video_assets |            |    |  (PK)            |
-   |    |---------------|            └────| enrollment_id(FK)|
-   |    | video_id (PK) |                 | course_id (FK)   |
-   |    | lesson_id(FK) |                 | user_id (FK)     |
-   |    | storage_key   |                 | verification_code|
-   |    | manifest_url  |                 | issued_at        |
-   |    | renditions_   |                 | certificate_url  |
-   |    |  json         |                 +------------------+
-   |    | drm_key_id    |
-   |    | subtitles_json|
-   |    | duration_sec  |
-   |    | thumbnail_url |
-   |    +---------------+
-   |
-   +──1 quizzes
-   |
-+--+-------------+
-|    quizzes     |
-|----------------|
-| quiz_id (PK)   |
-| lesson_id (FK) |
-| quiz_type      |
-| passing_score  |
-| max_attempts   |
-| time_limit_min |
-+----------------+
-        |
-        | 1
-        |
-        +──* quiz_questions
-        |
-+------------------+
-| quiz_questions   |
-|------------------|
-| question_id (PK) |
-| quiz_id (FK)     |
-| question_text    |
-| question_type    |
-| options_json     |
-| correct_answer   |
-| test_cases_json  |
-| explanation      |
-| position         |
-+------------------+
+```mermaid
+erDiagram
+    instructors ||--o{ courses : "relates"
+    courses ||--o{ sections : "relates"
+    courses ||--o{ enrollments : "relates"
+    sections ||--o{ lessons : "relates"
+    lessons ||--|| video_assets : "one video per video lesson"
+    lessons ||--|| quizzes : "one quiz per quiz lesson"
+    quizzes ||--o{ quiz_questions : "relates"
+    enrollments ||--o{ lesson_progress : "one per lesson in the course"
+    enrollments ||--o{ quiz_attempts : "relates"
+    enrollments ||--|| certificates : "one certificate per completion"
 
-Relationships:
-  instructors 1───* courses
-  courses 1───* sections
-  courses 1───* enrollments
-  sections 1───* lessons
-  lessons 1───1 video_assets     (one video per video lesson)
-  lessons 1───1 quizzes          (one quiz per quiz lesson)
-  quizzes 1───* quiz_questions
-  enrollments 1───* lesson_progress  (one per lesson in the course)
-  enrollments 1───* quiz_attempts
-  enrollments 1───1 certificates     (one certificate per completion)
+    instructors {
+        UUID instructor_id PK
+        USERS user_id FK
+        VARCHAR display_name
+        TEXT bio
+        ARRAY expertise
+        BOOLEAN is_verified
+        PAYOUT_ACCOUNTS payout_account_id FK
+        INT total_students
+        DECIMAL avg_rating
+    }
+    courses {
+        UUID course_id PK
+        INSTRUCTORS instructor_id FK
+        VARCHAR title
+        TEXT description
+        CATEGORIES category_id FK
+        ENUM level
+        INT price_cents
+        VARCHAR currency
+        DECIMAL duration_hours
+        INT total_lessons
+        INT total_enrolled
+        DECIMAL avg_rating
+        ENUM status
+    }
+    sections {
+        UUID section_id PK
+        COURSES course_id FK
+        VARCHAR title
+        INT position
+        INT lesson_count
+    }
+    lessons {
+        UUID lesson_id PK
+        SECTIONS section_id FK
+        VARCHAR title
+        ENUM lesson_type
+        INT position
+        INT duration_sec
+        BOOLEAN is_preview
+    }
+    video_assets {
+        UUID video_id PK
+        LESSONS lesson_id FK
+        VARCHAR storage_key
+        VARCHAR manifest_url
+        JSONB renditions_json
+        VARCHAR drm_key_id
+        JSONB subtitles_json
+        INT duration_sec
+        VARCHAR thumbnail_url
+    }
+    enrollments {
+        UUID enrollment_id PK
+        COURSES course_id FK
+        USERS user_id FK
+        ENUM status
+        PAYMENTS payment_id FK
+        DECIMAL progress_percent
+        TIMESTAMP enrolled_at
+        TIMESTAMP completed_at
+        TIMESTAMP access_expires_at
+    }
+    lesson_progress {
+        COMPOSITE enrollment_id PK, FK
+        COMPOSITE lesson_id PK, FK
+        ENUM status
+        INT video_position_sec
+        INT time_spent_sec
+        DECIMAL playback_speed
+        TIMESTAMP completed_at
+    }
+    quizzes {
+        UUID quiz_id PK
+        LESSONS lesson_id FK
+        ENUM quiz_type
+        INT passing_score
+        INT max_attempts
+        INT time_limit_min
+    }
+    quiz_questions {
+        UUID question_id PK
+        QUIZZES quiz_id FK
+        TEXT question_text
+        ENUM question_type
+        JSONB options_json
+        TEXT correct_answer
+        JSONB test_cases_json
+        TEXT explanation
+        INT position
+    }
+    quiz_attempts {
+        UUID attempt_id PK
+        QUIZZES quiz_id FK
+        ENROLLMENTS enrollment_id FK
+        JSONB answers_json
+        INT score
+        BOOLEAN passed
+        INT time_spent_sec
+        TIMESTAMP submitted_at
+    }
+    certificates {
+        UUID certificate_id PK
+        ENROLLMENTS enrollment_id FK
+        COURSES course_id FK
+        USERS user_id FK
+        VARCHAR verification_code UK
+        TIMESTAMP issued_at
+        VARCHAR certificate_url
+    }
 ```
 
 ---
+
 
 ## Data Flow
 

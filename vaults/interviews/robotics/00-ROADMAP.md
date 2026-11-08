@@ -8,39 +8,16 @@ Robotics sits at the intersection of mechanical engineering, electrical engineer
 
 ## The Robotics Landscape
 
-```
-+------------------------------------------------------------------------+
-|                   ROBOTICS & CONTROL SYSTEMS ECOSYSTEM                  |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  INDUSTRIAL / MANUFACTURING        AUTONOMOUS VEHICLES                 |
-|  +-------------------------+       +---------------------------+       |
-|  | Robot arms (6-DOF)       |       | Self-driving cars          |       |
-|  | Pick-and-place            |       | Drones / UAVs              |       |
-|  | Welding / painting        |       | Autonomous boats            |       |
-|  | Quality inspection        |       | Last-mile delivery          |       |
-|  | Collaborative robots      |       | ADAS / lane keeping         |       |
-|  +-------------------------+       +---------------------------+       |
-|                                                                        |
-|  HUMANOID / SERVICE ROBOTS         MEDICAL / SURGICAL                  |
-|  +-------------------------+       +---------------------------+       |
-|  | Bipedal locomotion        |       | Surgical robots (da Vinci) |       |
-|  | Manipulation              |       | Rehabilitation exoskeletons|       |
-|  | Human-robot interaction   |       | Prosthetics                |       |
-|  | Social robots              |       | Micro/nano robots          |       |
-|  | Warehouse automation      |       | Drug delivery systems       |       |
-|  +-------------------------+       +---------------------------+       |
-|                                                                        |
-|  SPACE / EXPLORATION               AGRICULTURE / ENVIRONMENT          |
-|  +-------------------------+       +---------------------------+       |
-|  | Mars rovers               |       | Precision agriculture      |       |
-|  | Satellite servicing        |       | Crop monitoring drones     |       |
-|  | Space station arms         |       | Underwater exploration     |       |
-|  | Orbital assembly           |       | Environmental monitoring    |       |
-|  | Lunar construction         |       | Forest fire detection       |       |
-|  +-------------------------+       +---------------------------+       |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Eco["ROBOTICS &amp; CONTROL SYSTEMS ECOSYSTEM"]
+        Ind["INDUSTRIAL / MANUFACTURING<br/>6-DOF Robot arms, Pick-and-place, Welding/painting, Quality inspection, Cobots"]
+        AV["AUTONOMOUS VEHICLES<br/>Self-driving cars, Drones / UAVs, Autonomous boats, Last-mile delivery, ADAS"]
+        Hum["HUMANOID / SERVICE ROBOTS<br/>Bipedal locomotion, Manipulation, HRI, Social robots, Warehouse AMRs"]
+        Med["MEDICAL / SURGICAL<br/>Surgical robots (da Vinci), Rehab exoskeletons, Prosthetics, Micro/nano robots"]
+        Space["SPACE / EXPLORATION<br/>Mars rovers, Satellite servicing, Space station manipulators, Orbital assembly"]
+        Agri["AGRICULTURE / ENVIRONMENT<br/>Precision agriculture, Crop drones, AUVs/ROVs, Environmental monitoring"]
+    end
 ```
 
 ---
@@ -51,16 +28,11 @@ Robotics sits at the intersection of mechanical engineering, electrical engineer
 
 **Goal**: Understand the mathematical and physical foundations that underpin all robotic systems.
 
-```
-01-FOUNDATIONS                       02-KINEMATICS
-+---------------------------+        +---------------------------+
-| Coordinate frames          |        | Forward kinematics         |
-| Rotation matrices          |        | Inverse kinematics         |
-| Homogeneous transforms     |        | DH parameters              |
-| Quaternions                |        | Jacobians                  |
-| Rigid body mechanics       |        | Singularities              |
-| Degrees of freedom         |        | Workspace analysis         |
-+---------------------------+        +---------------------------+
+```mermaid
+flowchart LR
+    M1["01-FOUNDATIONS<br/>- Coordinate frames &amp; SO(3)/SE(3)<br/>- Rotation matrices &amp; Quaternions<br/>- Rigid body mechanics &amp; DOF"]
+    M2["02-KINEMATICS<br/>- Forward &amp; Inverse kinematics<br/>- Denavit-Hartenberg (DH) parameters<br/>- Jacobians, Singularities, Workspace"]
+    M1 --> M2
 ```
 
 You cannot build a robot without understanding:
@@ -74,16 +46,11 @@ You cannot build a robot without understanding:
 
 **Goal**: Learn to make robots move precisely where you want them, when you want them.
 
-```
-03-CONTROL-THEORY                    04-ADVANCED-CONTROL
-+---------------------------+        +---------------------------+
-| Open vs closed loop         |        | State-space methods        |
-| PID control                 |        | Optimal control (LQR)      |
-| Stability analysis          |        | Model predictive control   |
-| Transfer functions          |        | Adaptive control           |
-| Frequency response          |        | Robust control (H-inf)     |
-| Root locus & Bode plots     |        | Nonlinear control          |
-+---------------------------+        +---------------------------+
+```mermaid
+flowchart LR
+    M3["03-CONTROL-THEORY<br/>- Open vs Closed-loop control<br/>- PID control &amp; Anti-windup<br/>- Stability, Transfer functions, Bode/Nyquist"]
+    M4["04-ADVANCED-CONTROL<br/>- State-space &amp; Observers<br/>- Optimal control (LQR) &amp; MPC<br/>- Adaptive, Robust (H-inf), Nonlinear"]
+    M3 --> M4
 ```
 
 Control theory is the beating heart of robotics:
@@ -97,64 +64,38 @@ Control theory is the beating heart of robotics:
 
 **Goal**: Give robots the ability to perceive the world and plan actions.
 
-```
-05-SENSORS-AND-PERCEPTION            06-MOTION-PLANNING
-+---------------------------+        +---------------------------+
-| IMU / accelerometer / gyro  |        | Configuration space        |
-| LiDAR point clouds          |        | Sampling-based (RRT, PRM)  |
-| Camera / stereo vision      |        | Optimization-based         |
-| Sensor fusion (Kalman)       |        | Trajectory optimization    |
-| SLAM (localization + map)   |        | Collision avoidance         |
-| Depth estimation             |        | Dynamic replanning         |
-+---------------------------+        +---------------------------+
+```mermaid
+flowchart LR
+    M5["05-SENSORS-AND-PERCEPTION<br/>- IMU, LiDAR point clouds, Stereo/Depth vision<br/>- Sensor fusion (EKF / UKF)<br/>- SLAM (Pose graph, Loop closure)"]
+    M6["06-MOTION-PLANNING<br/>- Configuration space (C-space)<br/>- Sampling-based (RRT, RRT*, PRM) &amp; A*<br/>- Trajectory optimization (CHOMP, TOPP-RA) &amp; DWA"]
+    M5 --> M6
 ```
 
 ### Phase 4: Software & Middleware (Chapter 07)
 
 **Goal**: Master the software frameworks that tie robotic systems together.
 
-```
-07-ROS-AND-MIDDLEWARE
-+---------------------------+
-| ROS 2 architecture          |
-| Nodes, topics, services     |
-| Actions & lifecycle          |
-| URDF / robot description    |
-| Gazebo simulation            |
-| MoveIt motion planning       |
-+---------------------------+
+```mermaid
+flowchart LR
+    M7["07-ROS-AND-MIDDLEWARE<br/>- ROS 2 + DDS architecture<br/>- Nodes, Topics, Services, Actions, Lifecycle<br/>- URDF, tf2, Gazebo, MoveIt 2, Nav2, ros2_control"]
 ```
 
 ### Phase 5: Intelligence & Learning (Chapter 08)
 
 **Goal**: Apply machine learning to make robots smarter and more adaptive.
 
-```
-08-LEARNING-FOR-ROBOTICS
-+---------------------------+
-| Imitation learning           |
-| Reinforcement learning       |
-| Sim-to-real transfer         |
-| Foundation models for robots |
-| Visuomotor policies          |
-| Safety in learned systems    |
-+---------------------------+
+```mermaid
+flowchart LR
+    M8["08-LEARNING-FOR-ROBOTICS<br/>- Imitation Learning (BC, DAgger, ACT, Diffusion Policy)<br/>- Reinforcement Learning &amp; Sim-to-Real<br/>- VLA Foundation Models &amp; Visuomotor Policies"]
 ```
 
 ### Phase 6: System Integration (Chapter 09)
 
 **Goal**: Put it all together to build complete robotic systems.
 
-```
-09-SYSTEM-INTEGRATION
-+---------------------------+
-| Hardware-software co-design |
-| Real-time systems            |
-| Safety & fault tolerance     |
-| Testing & validation         |
-| Deployment & operations      |
-| Ethics & regulation          |
-+---------------------------+
+```mermaid
+flowchart LR
+    M9["09-SYSTEM-INTEGRATION<br/>- HW/SW Co-design &amp; Tiered Compute<br/>- Real-time systems (PREEMPT_RT, EtherCAT, CAN)<br/>- Safety (E-Stop, SIL/ASIL), HIL testing, Fleet ops"]
 ```
 
 ---

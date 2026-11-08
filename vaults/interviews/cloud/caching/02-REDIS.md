@@ -165,22 +165,10 @@ Adding a node:
 
 High availability for non-clustered Redis (single master + replicas).
 
-```
-+----------+     +----------+     +----------+
-| Sentinel |     | Sentinel |     | Sentinel |
-+----------+     +----------+     +----------+
-     |                |                |
-     v                v                v
-+----------+     +----------+     +----------+
-| Master   | --> | Replica  | --> | Replica  |
-| (R/W)    |     | (R/O)    |     | (R/O)    |
-+----------+     +----------+     +----------+
-
-Master fails:
-  1. Sentinels detect failure (quorum agrees)
-  2. Sentinel promotes a replica to master
-  3. Other replicas reconfigure to new master
-  4. Clients notified of new master address
+```mermaid
+flowchart TD
+    S1["Sentinel 1"] & S2["Sentinel 2"] & S3["Sentinel 3"] -.->|"Monitor &amp; Quorum Failover"| M["Redis Master (R/W)"] & R1["Replica 1 (R/O)"] & R2["Replica 2 (R/O)"]
+    M -->|"Async Replication"| R1 & R2
 ```
 
 ### Sentinel vs Cluster

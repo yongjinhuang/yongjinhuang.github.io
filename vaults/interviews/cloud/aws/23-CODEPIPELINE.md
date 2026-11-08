@@ -6,16 +6,11 @@ AWS provides a fully managed CI/CD toolchain: CodePipeline orchestrates the pipe
 
 ## 1. The AWS CI/CD Ecosystem
 
-```
-Source          Build           Test            Deploy
-+----------+   +-----------+   +-----------+   +-------------+
-| GitHub   |-->| CodeBuild |-->| CodeBuild |-->| CodeDeploy  |
-| S3       |   | (compile, |   | (unit,    |   | (EC2, ECS,  |
-| ECR      |   |  package) |   |  integ)   |   |  Lambda)    |
-+----------+   +-----------+   +-----------+   +-------------+
-        \______________|_____________|________________/
-                       |
-                  CodePipeline (orchestrator)
+```mermaid
+flowchart LR
+    subgraph CP["AWS CodePipeline (Orchestrator)"]
+        Src["1. Source<br/>(GitHub / S3 / ECR)"] --> Bld["2. Build<br/>CodeBuild (Compile &amp; Package)"] --> Tst["3. Test<br/>CodeBuild (Unit &amp; Integration)"] --> Dep["4. Deploy<br/>CodeDeploy (EC2 / ECS / Lambda)"]
+    end
 ```
 
 ---

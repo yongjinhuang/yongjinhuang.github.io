@@ -615,7 +615,7 @@ CH Query: Bidirectional Search on Hierarchical Graph
                         Geography
 
   Forward search (from S, going UP):
-    S → local ��� arterial → highway interchange
+    S → local → arterial → highway interchange
 
   Backward search (from T, going UP):
     T → local → arterial → highway interchange

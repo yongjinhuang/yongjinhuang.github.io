@@ -10,42 +10,15 @@ This guide covers the new generation of databases that interviewers expect you t
 
 ## Database Landscape Overview
 
-```
-+------------------------------------------------------------------+
-|              MODERN DATABASE TAXONOMY (2026)                      |
-+------------------------------------------------------------------+
-|                                                                  |
-|  RELATIONAL                                                      |
-|  +------------+  +------------+  +------------+  +------------+  |
-|  | PostgreSQL |  | Neon       |  | Supabase   |  | PlanetScale|  |
-|  | (traditional)| (serverless)|  | (Pg + BaaS)|  | (Vitess)   |  |
-|  +------------+  +------------+  +------------+  +------------+  |
-|                                                                  |
-|  NEWSQL (Distributed SQL)                                        |
-|  +------------+  +------------+  +------------+                  |
-|  | CockroachDB|  | TiDB       |  | YugabyteDB |                  |
-|  | (Spanner)  |  | (HTAP)     |  | (Postgres) |                  |
-|  +------------+  +------------+  +------------+                  |
-|                                                                  |
-|  EMBEDDED                                                        |
-|  +------------+  +------------+  +------------+                  |
-|  | SQLite     |  | Turso      |  | DuckDB     |                  |
-|  | (local)    |  | (libSQL)   |  | (analytics)|                  |
-|  +------------+  +------------+  +------------+                  |
-|                                                                  |
-|  VECTOR (AI/ML)                                                  |
-|  +------------+  +------------+  +------------+  +------------+  |
-|  | pgvector   |  | Pinecone   |  | Weaviate   |  | Qdrant     |  |
-|  | (Postgres) |  | (managed)  |  | (hybrid)   |  | (Rust)     |  |
-|  +------------+  +------------+  +------------+  +------------+  |
-|                                                                  |
-|  ANALYTICS / TIME-SERIES                                         |
-|  +------------+  +------------+  +------------+                  |
-|  | ClickHouse |  | TimescaleDB|  | DuckDB     |                  |
-|  | (OLAP)     |  | (time-ser.)|  | (embedded) |                  |
-|  +------------+  +------------+  +------------+                  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Tax["MODERN DATABASE TAXONOMY (2026)"]
+        Rel["RELATIONAL<br/>PostgreSQL (traditional) / Neon (serverless) / Supabase (Pg + BaaS) / PlanetScale (Vitess)"]
+        NewSQL["NEWSQL (Distributed SQL)<br/>CockroachDB (Spanner) / TiDB (HTAP) / YugabyteDB (Postgres)"]
+        Emb["EMBEDDED<br/>SQLite (local) / Turso (libSQL) / DuckDB (analytics)"]
+        Vec["VECTOR (AI/ML)<br/>pgvector (Postgres) / Pinecone (managed) / Weaviate (hybrid) / Qdrant (Rust)"]
+        Analytic["ANALYTICS / TIME-SERIES<br/>ClickHouse (OLAP) / TimescaleDB (time-series) / DuckDB (embedded)"]
+    end
 ```
 
 ---
@@ -56,45 +29,23 @@ This guide covers the new generation of databases that interviewers expect you t
 
 CockroachDB implements the Spanner model: globally distributed SQL with serializable isolation and automatic sharding. Understanding its architecture reveals why distributed SQL is fundamentally different from traditional Postgres replication.
 
-```
-+------------------------------------------------------------------+
-|              COCKROACHDB ARCHITECTURE                             |
-+------------------------------------------------------------------+
-|                                                                  |
-|  SQL Layer                                                       |
-|  +-----------------------------------------------------------+  |
-|  | SQL Parser --> Optimizer --> Distributed Execution Engine   |  |
-|  +-----------------------------------------------------------+  |
-|                          |                                       |
-|  Transaction Layer       |                                       |
-|  +-----------------------------------------------------------+  |
-|  | MVCC (Multi-Version Concurrency Control)                   |  |
-|  | Serializable Isolation (not snapshot!)                      |  |
-|  | Hybrid Logical Clocks (HLC) for ordering                   |  |
-|  +-----------------------------------------------------------+  |
-|                          |                                       |
-|  Distribution Layer      |                                       |
-|  +-----------------------------------------------------------+  |
-|  | Range-based sharding (64MB ranges by default)              |  |
-|  | Automatic range splitting and merging                      |  |
-|  | Raft consensus for each range (3 or 5 replicas)            |  |
-|  +-----------------------------------------------------------+  |
-|                          |                                       |
-|  Storage Layer           |                                       |
-|  +-----------------------------------------------------------+  |
-|  | Pebble (LSM-tree key-value store, inspired by RocksDB)     |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  DATA DISTRIBUTION:                                              |
-|  +--------+     +--------+     +--------+                        |
-|  | Node 1 |     | Node 2 |     | Node 3 |                        |
-|  |Range A |     |Range A |     |Range A |  (3 replicas, Raft)    |
-|  |Range B*|     |Range C |     |Range B |  (* = Raft leader)    |
-|  |Range D |     |Range D*|     |Range C*|                        |
-|  +--------+     +--------+     +--------+                        |
-|  US-East        EU-West        AP-South                          |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph CRDB["COCKROACHDB ARCHITECTURE"]
+        SQL["SQL Layer<br/>SQL Parser -&gt; Optimizer -&gt; Distributed Execution Engine"]
+        Txn["Transaction Layer<br/>MVCC + Serializable Isolation + Hybrid Logical Clocks (HLC)"]
+        Dist["Distribution Layer<br/>Range-based sharding (64MB default), auto split/merge, Raft consensus (3 or 5 replicas)"]
+        Store["Storage Layer<br/>Pebble (LSM-tree key-value store)"]
+
+        SQL --> Txn --> Dist --> Store
+
+        subgraph Nodes["Multi-Region Raft Data Distribution (* = Raft Leader)"]
+            N1[("Node 1 (US-East)<br/>Range A, Range B*, Range D")]
+            N2[("Node 2 (EU-West)<br/>Range A, Range C, Range D*")]
+            N3[("Node 3 (AP-South)<br/>Range A, Range B, Range C*")]
+        end
+        Store --> N1 & N2 & N3
+    end
 ```
 
 **Key Interview Points:**
@@ -130,30 +81,17 @@ CREATE TABLE feature_flags (
 
 TiDB combines OLTP and OLAP in a single system. The key architectural innovation is separating row storage (TiKV) from columnar storage (TiFlash).
 
-```
-+------------------------------------------------------------------+
-|              TiDB HTAP ARCHITECTURE                              |
-+------------------------------------------------------------------+
-|                                                                  |
-|               +----------+                                       |
-|               |  TiDB    |  (SQL layer, stateless)               |
-|               |  Server  |                                       |
-|               +----+-----+                                       |
-|                    |                                             |
-|         +----------+----------+                                  |
-|         |                     |                                  |
-|    +----v-----+         +----v-----+                             |
-|    |   TiKV   |         | TiFlash  |                             |
-|    | (Row     |  Raft   | (Column  |                             |
-|    |  Store)  | ------> |  Store)  |                             |
-|    | OLTP     |  async  | OLAP     |                             |
-|    +----------+  replic +----------+                             |
-|                                                                  |
-|  OLTP queries --> TiKV (row-based, B-tree, fast point lookups)   |
-|  OLAP queries --> TiFlash (columnar, fast aggregations, scans)   |
-|  Hybrid queries --> Optimizer chooses automatically              |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph TiDB["TiDB HTAP ARCHITECTURE"]
+        Srv["TiDB Server<br/>(Stateless SQL Layer &amp; Cost-Based Optimizer)"]
+        TiKV[("TiKV (Row Store — OLTP)<br/>Fast point lookups &amp; transactions")]
+        TiFlash[("TiFlash (Column Store — OLAP)<br/>Fast aggregations &amp; scans")]
+
+        Srv -->|"OLTP queries"| TiKV
+        Srv -->|"OLAP queries"| TiFlash
+        TiKV -->|"Raft learner async replication"| TiFlash
+    end
 ```
 
 ---
@@ -164,46 +102,22 @@ TiDB combines OLTP and OLAP in a single system. The key architectural innovation
 
 Neon's core innovation is separating compute (Postgres processes) from storage (a distributed page server). This enables true scale-to-zero -- when no queries are running, compute costs nothing.
 
-```
-+------------------------------------------------------------------+
-|              NEON ARCHITECTURE                                   |
-+------------------------------------------------------------------+
-|                                                                  |
-|  COMPUTE LAYER (scales to zero)                                  |
-|  +-------------------+   +-------------------+                   |
-|  | Postgres Process  |   | Postgres Process  |                   |
-|  | (Compute endpoint)|   | (Read replica)    |                   |
-|  | - No local data   |   | - No local data   |                   |
-|  | - Pages fetched   |   | - Pages fetched   |                   |
-|  |   from pageserver |   |   from pageserver |                   |
-|  +--------+----------+   +--------+----------+                   |
-|           |                        |                             |
-|           v                        v                             |
-|  STORAGE LAYER (always on)                                       |
-|  +----------------------------------------------------+         |
-|  | Pageserver                                          |         |
-|  | - Serves pages to compute on demand                 |         |
-|  | - Materializes pages from WAL records               |         |
-|  | - Caches hot pages in memory                        |         |
-|  +----------------------------------------------------+         |
-|           |                                                      |
-|           v                                                      |
-|  +----------------------------------------------------+         |
-|  | Safekeeper Cluster (WAL durability)                 |         |
-|  | - Receives WAL from compute                         |         |
-|  | - Quorum-based durability (3 nodes)                 |         |
-|  | - Forwards WAL to pageserver                        |         |
-|  +----------------------------------------------------+         |
-|           |                                                      |
-|           v                                                      |
-|  +----------------------------------------------------+         |
-|  | Cloud Object Storage (S3)                           |         |
-|  | - Long-term WAL archival                            |         |
-|  | - Enables point-in-time recovery                    |         |
-|  | - Enables instant branching                         |         |
-|  +----------------------------------------------------+         |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph NeonArch["NEON ARCHITECTURE"]
+        subgraph Compute["COMPUTE LAYER (Scales to Zero)"]
+            C1["Postgres Process (Primary Compute)<br/>No local data, fetches pages from Pageserver"]
+            C2["Postgres Process (Read Replica)<br/>No local data, fetches pages from Pageserver"]
+        end
+        subgraph Storage["STORAGE LAYER (Always On)"]
+            SK["Safekeeper Cluster (WAL Durability)<br/>Receives WAL from compute, 3-node Paxos quorum"]
+            PS["Pageserver<br/>Materializes pages from WAL, caches hot pages, serves on demand"]
+            S3[("Cloud Object Storage (S3)<br/>Long-term archival, PITR, instant copy-on-write branching")]
+        end
+        C1 -->|"Stream WAL"| SK --> PS
+        C1 & C2 <-->|"GetPage@LSN"| PS
+        PS <--> S3
+    end
 ```
 
 **Why This Architecture Matters:**
@@ -260,41 +174,21 @@ execSync(`DATABASE_URL="${connectionString}" npm test`);
 
 Supabase wraps PostgreSQL with a comprehensive backend-as-a-service layer.
 
-```
-+------------------------------------------------------------------+
-|              SUPABASE ARCHITECTURE                               |
-+------------------------------------------------------------------+
-|                                                                  |
-|  CLIENT                                                          |
-|  +-----------------------------------------------------------+  |
-|  | supabase-js SDK                                            |  |
-|  | - Auto-generated REST client (from DB schema)              |  |
-|  | - Realtime subscriptions (WebSocket)                       |  |
-|  | - Auth (JWT-based)                                         |  |
-|  | - Storage (S3-compatible)                                  |  |
-|  +-----------------------------------------------------------+  |
-|                          |                                       |
-|  API LAYER               |                                       |
-|  +-----------------------------------------------------------+  |
-|  | PostgREST     | Auth (GoTrue) | Realtime  | Storage       |  |
-|  | (auto REST    | (JWT, OAuth,  | (Postgres | (S3-compat,   |  |
-|  |  from schema) |  magic link)  |  LISTEN/  |  CDN)         |  |
-|  |               |               |  NOTIFY)  |               |  |
-|  +-----------------------------------------------------------+  |
-|                          |                                       |
-|  DATABASE LAYER          |                                       |
-|  +-----------------------------------------------------------+  |
-|  | PostgreSQL 15+                                             |  |
-|  | +--------+ +--------+ +--------+ +---------+ +----------+ |  |
-|  | |  RLS   | | pg_net | |pg_graph| |pg_vector| | pg_cron  | |  |
-|  | | (Row   | | (HTTP  | |ql     | |(Vector  | | (Sched.) | |  |
-|  | |  Level | |  from  | |(GQL   | | search) | |          | |  |
-|  | |  Sec.) | |  SQL)  | | from  | |         | |          | |  |
-|  | |        | |        | |  SQL) | |         | |          | |  |
-|  | +--------+ +--------+ +--------+ +---------+ +----------+ |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Supa["SUPABASE ARCHITECTURE"]
+        SDK["CLIENT: supabase-js SDK<br/>Auto-generated REST client, Realtime WebSocket, JWT Auth, S3 Storage"]
+        subgraph API["API LAYER (Behind Kong / Gateway)"]
+            REST["PostgREST<br/>(Auto REST from schema)"]
+            Auth["Auth (GoTrue)<br/>(JWT, OAuth, Magic Link)"]
+            RT["Realtime<br/>(Postgres WAL / Broadcast)"]
+            Stor["Storage<br/>(S3-compatible + CDN)"]
+        end
+        subgraph DB["DATABASE LAYER: PostgreSQL 15+"]
+            Ext["Extensions:<br/>RLS (Row-Level Security) / pg_net (HTTP) / pg_graphql / pgvector / pg_cron"]
+        end
+        SDK --> REST & Auth & RT & Stor --> DB
+    end
 ```
 
 ### Row Level Security (RLS)
@@ -397,36 +291,18 @@ CREATE POLICY "delete_posts" ON posts
 
 Turso extends SQLite with replication, making it suitable for distributed applications.
 
-```
-+------------------------------------------------------------------+
-|              TURSO / LIBSQL ARCHITECTURE                         |
-+------------------------------------------------------------------+
-|                                                                  |
-|  APPLICATION SERVER                                              |
-|  +-------------------------------------------+                   |
-|  | Embedded Replica (local SQLite file)       |                   |
-|  | - All reads are LOCAL (~0ms latency)       |                   |
-|  | - Syncs from primary periodically          |                   |
-|  | - Writes forwarded to primary              |                   |
-|  +-------------------------------------------+                   |
-|                     |                                            |
-|                     | sync (WAL frames)                          |
-|                     v                                            |
-|  +-------------------------------------------+                   |
-|  | Turso Primary (single writer)              |                   |
-|  | - Handles all writes                       |                   |
-|  | - Replicates to all edge replicas          |                   |
-|  | - Global location (closest to write load)  |                   |
-|  +-------------------------------------------+                   |
-|          |              |              |                          |
-|          v              v              v                          |
-|  +----------+    +----------+    +----------+                    |
-|  |Edge      |    |Edge      |    |Edge      |                    |
-|  |Replica   |    |Replica   |    |Replica   |                    |
-|  |(Tokyo)   |    |(London)  |    |(Sao Paulo|                    |
-|  +----------+    +----------+    +----------+                    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Turso["TURSO / LIBSQL ARCHITECTURE"]
+        App["Application Server: Embedded Replica (Local SQLite file)<br/>- All reads are LOCAL (~0ms latency)<br/>- Writes forwarded to Primary"]
+        Primary[("Turso Primary (Single Writer)<br/>Handles all writes &amp; replicates WAL frames")]
+        R1[("Edge Replica<br/>(Tokyo)")]
+        R2[("Edge Replica<br/>(London)")]
+        R3[("Edge Replica<br/>(Sao Paulo)")]
+
+        App <-->|"sync (WAL frames) &amp; write forwarding"| Primary
+        Primary --> R1 & R2 & R3
+    end
 ```
 
 ```typescript
@@ -514,31 +390,19 @@ await db.run(`
 
 Drizzle's philosophy: "If you know SQL, you know Drizzle." It maps SQL concepts directly to TypeScript, with zero abstraction leakage.
 
-```
-+------------------------------------------------------------------+
-|              DRIZZLE ORM ARCHITECTURE                            |
-+------------------------------------------------------------------+
-|                                                                  |
-|  SCHEMA DEFINITION (TypeScript)                                  |
-|       |                                                          |
-|       v                                                          |
-|  TYPE INFERENCE (No codegen -- pure TS inference)                |
-|       |                                                          |
-|       +--> Query Builder (SQL-like API)                          |
-|       |         |                                                |
-|       |         v                                                |
-|       |    SQL Generation (parameterized queries)                |
-|       |         |                                                |
-|       |         v                                                |
-|       |    Database Driver (pg, mysql2, better-sqlite3, libsql)  |
-|       |                                                          |
-|       +--> Drizzle Kit (CLI)                                     |
-|                 |                                                |
-|                 +--> generate (create SQL migration files)        |
-|                 +--> push (apply schema directly -- dev only)     |
-|                 +--> studio (visual database browser)             |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Drizzle["DRIZZLE ORM ARCHITECTURE"]
+        Schema["SCHEMA DEFINITION (TypeScript)"] --> Infer["TYPE INFERENCE<br/>(No codegen — pure TS inference)"]
+        Infer --> QB["Query Builder (SQL-like API)"]
+        QB --> SQL["SQL Generation (Parameterized queries)"]
+        SQL --> Driver["Database Driver<br/>(pg, mysql2, better-sqlite3, libsql)"]
+
+        Infer --> Kit["Drizzle Kit (CLI)"]
+        Kit --> Gen["generate (create SQL migration files)"]
+        Kit --> Push["push (apply schema directly — dev only)"]
+        Kit --> Studio["studio (visual database browser)"]
+    end
 ```
 
 ```typescript
@@ -833,34 +697,18 @@ async function searchUsers(query: string) {
 
 ### pgvector (Postgres Extension)
 
-```
-+------------------------------------------------------------------+
-|              VECTOR SEARCH ARCHITECTURE (RAG)                    |
-+------------------------------------------------------------------+
-|                                                                  |
-|  RAG (Retrieval Augmented Generation) Pipeline:                  |
-|                                                                  |
-|  1. INDEXING (offline)                                           |
-|  Document --> Chunk --> Embed (OpenAI) --> Store (pgvector)      |
-|                                                                  |
-|  2. QUERYING (online)                                            |
-|  User Query --> Embed --> Similarity Search --> Top-K chunks      |
-|            --> Inject into LLM prompt --> Generate answer         |
-|                                                                  |
-|  SIMILARITY MEASURES:                                            |
-|  +-------------------+------------------------------------------+|
-|  | L2 (Euclidean)    | <-> operator  | Good for dense vectors   ||
-|  | Cosine            | <=> operator  | Good for text embeddings ||
-|  | Inner Product     | <#> operator  | Good for normalized vecs ||
-|  +-------------------+------------------------------------------+|
-|                                                                  |
-|  INDEX TYPES:                                                    |
-|  +-------------------+------------------------------------------+|
-|  | IVFFlat           | Inverted file | Faster build, approx.    ||
-|  | HNSW              | Graph-based   | Better recall, more RAM  ||
-|  +-------------------+------------------------------------------+|
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph RAG["VECTOR SEARCH ARCHITECTURE (RAG)"]
+        subgraph Idx["1. INDEXING (Offline)"]
+            Doc["Document"] --> Chunk["Chunk"] --> Emb1["Embed (OpenAI)"] --> Store[("Store (pgvector)<br/>Indexes: HNSW (Graph) / IVFFlat")]
+        end
+        subgraph Qry["2. QUERYING (Online)"]
+            UQ["User Query"] --> Emb2["Embed"] --> Sim["Similarity Search<br/>(&lt;-&gt; L2 / &lt;=&gt; Cosine / &lt;#&gt; Inner Product)"]
+            Sim --> TopK["Top-K Chunks"] --> Prompt["Inject into LLM Prompt"] --> Ans["Generate Answer"]
+        end
+        Store -.-> Sim
+    end
 ```
 
 ```sql
@@ -984,46 +832,30 @@ async function generateEmbedding(text: string): Promise<number[]> {
 
 ## Database Selection Decision Tree
 
-```
-+------------------------------------------------------------------+
-|              DATABASE SELECTION GUIDE                             |
-+------------------------------------------------------------------+
-|                                                                  |
-|  START HERE: What is your primary workload?                      |
-|                                                                  |
-|  TRANSACTIONAL (OLTP)                                            |
-|  |                                                               |
-|  +-> Single region?                                              |
-|  |   +-> YES: Neon / Supabase / standard Postgres               |
-|  |   +-> NO:  CockroachDB / YugabyteDB                          |
-|  |                                                               |
-|  +-> Need scale-to-zero?                                         |
-|  |   +-> YES: Neon (Postgres) / Turso (SQLite)                   |
-|  |   +-> NO:  Standard Postgres (RDS, self-hosted)               |
-|  |                                                               |
-|  +-> Edge-first (sub-10ms reads)?                                |
-|      +-> YES: Turso (embedded replicas) / D1 (CF)                |
-|      +-> NO:  Neon / Supabase / PlanetScale                      |
-|                                                                  |
-|  ANALYTICAL (OLAP)                                               |
-|  |                                                               |
-|  +-> Real-time dashboards? --> ClickHouse / TimescaleDB          |
-|  +-> Ad-hoc analysis?      --> DuckDB (embedded)                 |
-|  +-> Mixed OLTP+OLAP?      --> TiDB (HTAP)                      |
-|                                                                  |
-|  AI/VECTOR                                                       |
-|  |                                                               |
-|  +-> Already using Postgres? --> pgvector                        |
-|  +-> >10M vectors?           --> Pinecone / Qdrant               |
-|  +-> Multi-modal search?     --> Weaviate                        |
-|                                                                  |
-|  SIMPLE / EMBEDDED                                               |
-|  |                                                               |
-|  +-> Single server app?     --> SQLite (with Litestream backup)  |
-|  +-> Edge function?         --> D1 / Turso                       |
-|  +-> Local analytics?       --> DuckDB                           |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Start{"Primary Workload?"}
+    Start --> OLTP["TRANSACTIONAL (OLTP)"]
+    Start --> OLAP["ANALYTICAL (OLAP)"]
+    Start --> Vec["AI / VECTOR"]
+    Start --> Emb["SIMPLE / EMBEDDED"]
+
+    OLTP -->|"Single region"| O1["Neon / Supabase / Standard Postgres"]
+    OLTP -->|"Multi-region active-active"| O2["CockroachDB / YugabyteDB"]
+    OLTP -->|"Scale-to-zero"| O3["Neon (Postgres) / Turso (SQLite)"]
+    OLTP -->|"Edge-first (&lt;10ms reads)"| O4["Turso (embedded replicas) / CF D1"]
+
+    OLAP -->|"Real-time dashboards"| A1["ClickHouse / TimescaleDB"]
+    OLAP -->|"Ad-hoc analysis"| A2["DuckDB"]
+    OLAP -->|"Mixed OLTP + OLAP"| A3["TiDB (HTAP)"]
+
+    Vec -->|"Already on Postgres"| V1["pgvector"]
+    Vec -->|"&gt;10M vectors"| V2["Pinecone / Qdrant"]
+    Vec -->|"Multi-modal search"| V3["Weaviate"]
+
+    Emb -->|"Single server app"| E1["SQLite (+ Litestream backup)"]
+    Emb -->|"Edge function"| E2["CF D1 / Turso"]
+    Emb -->|"Local analytics"| E3["DuckDB"]
 ```
 
 ---
@@ -1079,41 +911,15 @@ async function generateEmbedding(text: string): Promise<number[]> {
 
 ## Migration Strategies
 
-```
-+------------------------------------------------------------------+
-|              ZERO-DOWNTIME MIGRATION PATTERNS                    |
-+------------------------------------------------------------------+
-|                                                                  |
-|  EXPAND-CONTRACT PATTERN:                                        |
-|                                                                  |
-|  Step 1: EXPAND (add new column, keep old)                       |
-|  ALTER TABLE users ADD COLUMN full_name TEXT;                     |
-|  -- App writes to BOTH name and full_name                        |
-|                                                                  |
-|  Step 2: MIGRATE (backfill data)                                 |
-|  UPDATE users SET full_name = name WHERE full_name IS NULL;      |
-|  -- Batched: UPDATE ... WHERE id IN (SELECT id ... LIMIT 1000)   |
-|                                                                  |
-|  Step 3: SWITCH (app reads from new column)                      |
-|  -- Deploy app version that reads full_name                      |
-|                                                                  |
-|  Step 4: CONTRACT (remove old column)                            |
-|  ALTER TABLE users DROP COLUMN name;                             |
-|  -- Only after all app versions are updated                      |
-|                                                                  |
-|  TIMELINE:                                                       |
-|  v1 (reads: name)     --> Deploy v2 (reads: full_name)           |
-|  v1 (writes: both)    --> v2 (writes: full_name only)            |
-|  Drop old column      --> Done                                   |
-|                                                                  |
-|  TOOLS:                                                          |
-|  - gh-ost (GitHub): Online schema migrations for MySQL           |
-|  - pgroll: Zero-downtime migrations for Postgres                 |
-|  - Neon branching: Test migrations on a branch first             |
-|  - Drizzle Kit: drizzle-kit generate + drizzle-kit migrate       |
-|  - Prisma Migrate: prisma migrate dev + prisma migrate deploy    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph ExpandContract["ZERO-DOWNTIME MIGRATION: EXPAND-CONTRACT PATTERN"]
+        S1["Step 1: EXPAND<br/>ALTER TABLE users ADD COLUMN full_name TEXT<br/>(App v1 writes to BOTH name &amp; full_name)"]
+        S2["Step 2: MIGRATE (Backfill)<br/>Batched UPDATE users SET full_name = name<br/>WHERE full_name IS NULL (LIMIT 1000)"]
+        S3["Step 3: SWITCH<br/>Deploy App v2 that reads &amp; writes full_name"]
+        S4["Step 4: CONTRACT<br/>ALTER TABLE users DROP COLUMN name<br/>(Tools: pgroll, gh-ost, Neon branching, Drizzle/Prisma)"]
+        S1 --> S2 --> S3 --> S4
+    end
 ```
 
 ---

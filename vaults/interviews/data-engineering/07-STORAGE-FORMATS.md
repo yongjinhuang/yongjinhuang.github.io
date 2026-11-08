@@ -24,21 +24,14 @@ and partitioning strategies -- essential knowledge for data engineering intervie
 
 ## 1. Storage Paradigms
 
-```
-EVOLUTION OF DATA STORAGE
-
- Data Warehouse          Data Lake             Data Lakehouse
- (2000s)                 (2010s)               (2020s)
- ┌──────────┐           ┌──────────┐          ┌──────────────┐
- │Structured│           │ Raw data │          │ Open formats │
- │Schema on │           │Schema on │          │ ACID txns    │
- │ write    │           │  read    │          │ Schema enforce│
- │ SQL only │           │ Any format│         │ SQL + ML + BI│
- │ $$$      │           │ Cheap $  │          │ Governance   │
- └──────────┘           └──────────┘          └──────────────┘
-  Snowflake              S3 + Spark            Delta Lake
-  BigQuery               HDFS + Hive           Iceberg
-  Redshift               GCS                   Hudi
+```mermaid
+flowchart LR
+    subgraph Evo["EVOLUTION OF DATA STORAGE"]
+        DW["Data Warehouse (2000s)<br/>- Structured, schema-on-write<br/>- SQL only, $$<br/>(Snowflake, BigQuery, Redshift)"]
+        DL["Data Lake (2010s)<br/>- Raw data, schema-on-read<br/>- Any format, cheap $<br/>(S3 + Spark, HDFS + Hive, GCS)"]
+        LH["Data Lakehouse (2020s)<br/>- Open formats + ACID txns<br/>- Schema enforcement + Governance<br/>- SQL + ML + BI<br/>(Delta Lake, Iceberg, Hudi)"]
+        DW --> DL --> LH
+    end
 ```
 
 | Aspect | Warehouse | Lake | Lakehouse |
@@ -58,22 +51,16 @@ EVOLUTION OF DATA STORAGE
 
 ### Snowflake
 
-```
-┌──────────────────────────────────────┐
-│          CLOUD SERVICES              │
-│  (Authentication, metadata, optimizer)│
-├──────────────────────────────────────┤
-│       VIRTUAL WAREHOUSES             │
-│  ┌────────┐ ┌────────┐ ┌────────┐   │
-│  │  XS    │ │  M     │ │  XL    │   │
-│  │compute │ │compute │ │compute │   │
-│  └────────┘ └────────┘ └────────┘   │
-│  (independent, auto-scale)           │
-├──────────────────────────────────────┤
-│       CENTRALIZED STORAGE            │
-│  (S3/Azure Blob/GCS, micro-partitions│
-│   columnar, compressed, encrypted)   │
-└──────────────────────────────────────┘
+```mermaid
+flowchart TD
+    CS["CLOUD SERVICES LAYER<br/>(Authentication, metadata, query optimizer)"]
+    subgraph VW["VIRTUAL WAREHOUSES (Independent, auto-scaling compute)"]
+        XS["XS Compute"]
+        M["M Compute"]
+        XL["XL Compute"]
+    end
+    Store[("CENTRALIZED STORAGE<br/>(S3 / Azure Blob / GCS, micro-partitions, columnar, compressed, encrypted)")]
+    CS --> VW --> Store
 ```
 
 Key: **Compute-storage separation**. Scale independently. Pay for compute only when running.
@@ -108,27 +95,18 @@ Key: **Compute-storage separation**. Scale independently. Pay for compute only w
 
 ### Apache Parquet
 
-```
-PARQUET FILE STRUCTURE
-┌────────────────────────┐
-│     Row Group 1        │
-│  ┌──────┬──────┬────┐  │
-│  │Col A │Col B │ColC│  │
-│  │chunk │chunk │chnk│  │
-│  │┌────┐│┌────┐│┌──┐│  │
-│  ││Page│││Page│││Pg││  │
-│  │├────┤│├────┤│├──┤│  │
-│  ││Page│││Page│││Pg││  │
-│  │└────┘│└────┘│└──┘│  │
-│  └──────┴──────┴────┘  │
-├────────────────────────┤
-│     Row Group 2        │
-│  (same structure)      │
-├────────────────────────┤
-│     FOOTER             │
-│  (schema, statistics,  │
-│   row group metadata)  │
-└────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Parquet["PARQUET FILE STRUCTURE"]
+        subgraph RG1["Row Group 1"]
+            CA["Col A Chunk<br/>[Page 1] [Page 2]"]
+            CB["Col B Chunk<br/>[Page 1] [Page 2]"]
+            CC["Col C Chunk<br/>[Page 1] [Page 2]"]
+        end
+        RG2["Row Group 2<br/>(Col A Chunk, Col B Chunk, Col C Chunk)"]
+        Footer["FOOTER<br/>(File schema, min/max statistics, row group metadata)"]
+        RG1 --> RG2 --> Footer
+    end
 ```
 
 **Key features:**
@@ -155,20 +133,10 @@ PARQUET FILE STRUCTURE
 
 ## 4. Columnar vs Row-Based
 
-```
-ROW-BASED (Avro, CSV, JSON)         COLUMNAR (Parquet, ORC)
-┌──────┬──────┬──────┐              ┌──────┬──────┬──────┐
-│ id=1 │name=A│age=25│              │ id=1 │ id=2 │ id=3 │ ← Col 1
-├──────┼──────┼──────┤              ├──────┼──────┼──────┤
-│ id=2 │name=B│age=30│              │name=A│name=B│name=C│ ← Col 2
-├──────┼──────┼──────┤              ├──────┼──────┼──────┤
-│ id=3 │name=C│age=35│              │age=25│age=30│age=35│ ← Col 3
-└──────┴──────┴──────┘              └──────┴──────┴──────┘
-
-Best for OLTP:                      Best for OLAP:
-- INSERT/UPDATE/DELETE              - SELECT specific columns
-- Full row reads                   - Aggregations (SUM, AVG)
-- Transaction processing           - Analytics, reporting
+```mermaid
+flowchart LR
+    Row["ROW-BASED (Avro, CSV, JSON)<br/>Row 1: [id=1, name=A, age=25]<br/>Row 2: [id=2, name=B, age=30]<br/>Row 3: [id=3, name=C, age=35]<br/><br/>Best for OLTP:<br/>- INSERT / UPDATE / DELETE<br/>- Full row reads &amp; transactions"]
+    Col["COLUMNAR (Parquet, ORC)<br/>Col 1 (id): [1, 2, 3]<br/>Col 2 (name): [A, B, C]<br/>Col 3 (age): [25, 30, 35]<br/><br/>Best for OLAP:<br/>- SELECT specific columns<br/>- Aggregations (SUM, AVG) &amp; analytics"]
 ```
 
 | Aspect | Row-Based | Columnar |
@@ -230,24 +198,14 @@ Developed by Netflix, donated to Apache. High-performance format for large analy
 
 ### Metadata Architecture
 
-```
-┌─────────────────────────────────┐
-│           CATALOG               │  (Hive Metastore, AWS Glue,
-│   (table location pointer)      │   Nessie, REST catalog)
-├─────────────────────────────────┤
-│       METADATA FILE             │  (schema, partition spec,
-│   (current snapshot pointer)    │   snapshot history)
-├─────────────────────────────────┤
-│       MANIFEST LIST             │  (list of manifest files
-│   (snapshot → manifests)        │   for this snapshot)
-├─────────────────────────────────┤
-│       MANIFEST FILES            │  (list of data files with
-│   (data file locations +        │   column-level stats:
-│    partition values +           │   min, max, null count)
-│    column statistics)           │
-├─────────────────────────────────┤
-│       DATA FILES                │  (Parquet / ORC / Avro)
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    Cat["CATALOG (Table location pointer)<br/>(Hive Metastore, AWS Glue, Nessie, REST catalog)"]
+    Meta["METADATA FILE (Current snapshot pointer)<br/>(Schema, partition spec, snapshot history)"]
+    MList["MANIFEST LIST (Snapshot -&gt; manifests)<br/>(List of manifest files for this snapshot)"]
+    MFiles["MANIFEST FILES<br/>(Data file locations + partition values + column stats: min, max, null count)"]
+    DFiles[("DATA FILES<br/>(Parquet / ORC / Avro)")]
+    Cat --> Meta --> MList --> MFiles --> DFiles
 ```
 
 ### Key Features

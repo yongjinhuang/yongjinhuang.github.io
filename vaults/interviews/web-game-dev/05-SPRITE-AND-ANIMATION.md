@@ -580,22 +580,14 @@ animator.setSpeed(normalizedSpeed);
 
 Instead of drawing pre-rendered frames, skeletal animation uses a hierarchy of bones to deform a mesh or position sprite parts. The animation defines how bones move over time; the visual is computed in real-time.
 
-```
-Root Bone
-├── Torso
-│   ├── Head
-│   ├── Left Arm
-│   │   ├── Left Forearm
-│   │   └── Left Hand
-│   ├── Right Arm
-│   │   ├── Right Forearm
-│   │   └── Right Hand
-│   ├── Left Leg
-│   │   ├── Left Shin
-│   │   └── Left Foot
-│   └── Right Leg
-│       ├── Right Shin
-│       └── Right Foot
+```mermaid
+flowchart LR
+    Root["Root Bone"] --> Torso["Torso"]
+    Torso --> Head["Head"]
+    Torso --> LA["Left Arm"] --> LF["Left Forearm"] --> LH["Left Hand"]
+    Torso --> RA["Right Arm"] --> RF["Right Forearm"] --> RH["Right Hand"]
+    Torso --> LL["Left Leg"] --> LS["Left Shin"] --> LFoot["Left Foot"]
+    Torso --> RL["Right Leg"] --> RS["Right Shin"] --> RFoot["Right Foot"]
 ```
 
 ### Spine Runtime

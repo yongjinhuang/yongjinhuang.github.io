@@ -8,42 +8,18 @@ through every major format -- plain text, Markdown, HTML, XML, JSON, YAML, TOML 
 and closes with Jinja2 templating so you can _generate_ documents as fluently as
 you parse them.
 
-```
- ============================================================================
- |                    TEXT & MARKUP LANDSCAPE                                |
- ============================================================================
- |                                                                          |
- |   UNSTRUCTURED            SEMI-STRUCTURED          STRUCTURED            |
- |  +--------------+       +-----------------+      +----------------+      |
- |  | Plain Text   |       | Markdown        |      | JSON  / JSONL  |      |
- |  | (.txt, .log) |       | (.md)           |      | (.json/.jsonl) |      |
- |  +--------------+       +-----------------+      +----------------+      |
- |         |                       |                        |               |
- |         v                       v                        v               |
- |  +-------------+        +-------------+          +--------------+        |
- |  | regex       |        | mistune     |          | json / orjson|        |
- |  | chardet     |        | markdown-it |          | jsonschema   |        |
- |  | unicodedata |        | commonmark  |          +--------------+        |
- |  +-------------+        +-------------+                                  |
- |                                                                          |
- |   MARKUP (TAGS)           MARKUP (TAGS)          CONFIG FORMATS          |
- |  +--------------+       +-----------------+      +----------------+      |
- |  | HTML         |       | XML / XSLT      |      | YAML (.yaml)  |      |
- |  | (.html)      |       | (.xml, .xsd)    |      | TOML (.toml)  |      |
- |  +--------------+       +-----------------+      +----------------+      |
- |         |                       |                        |               |
- |         v                       v                        v               |
- |  +-------------+        +-------------+          +--------------+        |
- |  | bs4         |        | ElementTree |          | PyYAML       |        |
- |  | lxml.html   |        | lxml.etree  |          | tomli/tomllib|        |
- |  | bleach       |       | xmltodict   |          | ruamel.yaml  |        |
- |  +-------------+        +-------------+          +--------------+        |
- |                                                                          |
- |   TEMPLATING                                                             |
- |  +--------------+                                                        |
- |  | Jinja2       |  <---  Generates any of the above formats              |
- |  +--------------+                                                        |
- ============================================================================
+```mermaid
+flowchart TD
+    subgraph Landscape["TEXT &amp; MARKUP LANDSCAPE"]
+        F1["Unstructured: Plain Text (.txt, .log)<br/>Libraries: re, chardet, unicodedata"]
+        F2["Semi-Structured: Markdown (.md)<br/>Libraries: mistune, markdown-it-py, commonmark"]
+        F3["Structured: JSON / JSONL (.json, .jsonl)<br/>Libraries: json, orjson, jsonschema"]
+        F4["Markup: HTML (.html)<br/>Libraries: BeautifulSoup4, lxml.html, bleach/nh3"]
+        F5["Markup: XML / XSLT (.xml, .xsd)<br/>Libraries: ElementTree, lxml.etree, defusedxml"]
+        F6["Config Formats: YAML &amp; TOML (.yaml, .toml)<br/>Libraries: PyYAML, ruamel.yaml, tomllib/tomli"]
+        Tpl["Templating: Jinja2<br/>(Generates any of the above formats)"]
+        Tpl --> F1 & F2 & F3 & F4 & F5 & F6
+    end
 ```
 
 ---

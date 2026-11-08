@@ -329,20 +329,12 @@ cudaMemcpyPeerAsync(d_dst, 1, d_src, 0,
 
 Writing efficient multi-GPU communication by hand is hard. NCCL (pronounced "Nickel") provides optimized collective operations that automatically exploit NVLink, NVSwitch, PCIe, and InfiniBand. It is the backbone of distributed training in PyTorch, TensorFlow, and JAX.
 
-```
-NCCL in the Software Stack:
-
-+-----------------------------------+
-| Application (PyTorch / TensorFlow)|
-+-----------------------------------+
-| torch.distributed / tf.distribute |
-+-----------------------------------+
-| NCCL                              |  <--- This section
-+-----------------------------------+
-| NVLink | PCIe | InfiniBand | RoCE |
-+-----------------------------------+
-| GPU 0  | GPU 1 | GPU 2 | GPU 3   |
-+-----------------------------------+
+```mermaid
+flowchart TD
+    App["Application (PyTorch / TensorFlow / JAX)"] --> Dist["torch.distributed (DDP / FSDP / Megatron)"]
+    Dist --> NCCL["NCCL (NVIDIA Collective Communications Library)<br/>Ring / Tree AllReduce, AllGather, ReduceScatter, Broadcast"]
+    NCCL --> Fabric["Hardware Interconnect<br/>NVLink / NVSwitch | PCIe | InfiniBand / RoCEv2 (GPUDirect RDMA)"]
+    Fabric --> GPUs["GPU 0 | GPU 1 | GPU 2 | ... | GPU N"]
 ```
 
 ### 2.2 NCCL Initialization
@@ -692,24 +684,13 @@ NVIDIA GPU-Direct is a family of technologies that reduce data movement overhead
 
 ### 4.1 GPU-Direct Overview
 
-```
-GPU-Direct Technology Family:
-
-+----------------------------------------------------------+
-|                     GPU-Direct                            |
-+----------------------------------------------------------+
-|                                                          |
-|  GPU-Direct Storage    GPU-Direct RDMA    GPU-Direct P2P |
-|  (GDS)                 (GDR)              (P2P)          |
-|                                                          |
-|  NVMe/NVMe-oF         InfiniBand/RoCE    PCIe/NVLink    |
-|  -> GPU                NIC <-> GPU        GPU <-> GPU    |
-|                                                          |
-+----------------------------------------------------------+
-
-Goal: Eliminate unnecessary copies through host memory.
-Traditional:  Device -> Host -> Destination
-GPU-Direct:   Device -> Destination (bypass host)
+```mermaid
+flowchart TD
+    subgraph GD["NVIDIA GPUDIRECT FAMILY (Bypasses CPU Host RAM Bounce Buffers)"]
+        GDS["GPUDirect Storage (GDS / cuFile)<br/>NVMe / NVMe-oF SSD &lt;-&gt; GPU HBM Direct DMA"]
+        GDR["GPUDirect RDMA (GDR)<br/>InfiniBand / RoCE NIC &lt;-&gt; GPU HBM Direct DMA"]
+        P2P["GPUDirect Peer-to-Peer (P2P)<br/>GPU &lt;-&gt; GPU Direct via NVLink / PCIe Switch"]
+    end
 ```
 
 ### 4.2 GPU-Direct P2P (Peer-to-Peer)
@@ -961,24 +942,10 @@ nvidia-smi nvlink -g 0  # Show NVLink counters for GPU 0
 
 SLURM (Simple Linux Utility for Resource Management) is the dominant job scheduler for HPC clusters. It manages compute resources, schedules jobs, and handles multi-node GPU workloads.
 
-```
-SLURM Architecture:
-
-+-------------------+
-|   slurmctld       |  Central controller (head node)
-| (control daemon)  |  Manages jobs, schedules resources
-+--------+----------+
-         |
-    +----+----+----+----+
-    |    |    |    |    |
-+---v--+ +--v---+ +--v---+ +--v---+
-|slurmd| |slurmd| |slurmd| |slurmd|   Compute nodes
-|Node 0| |Node 1| |Node 2| |Node 3|   (each runs slurmd)
-|4xGPU | |4xGPU | |4xGPU | |4xGPU |
-+------+ +------+ +------+ +------+
-
-Users submit jobs via: sbatch, srun, salloc
-SLURM assigns nodes, GPUs, CPUs to jobs.
+```mermaid
+flowchart TD
+    User["User CLI (sbatch / srun / salloc)"] --> Ctrl["slurmctld (Head Node Controller)<br/>Job queue, resource allocation, topology-aware scheduling"]
+    Ctrl --> N0["slurmd — Node 0<br/>(8x H100 GPUs)"] & N1["slurmd — Node 1<br/>(8x H100 GPUs)"] & N2["slurmd — Node 2<br/>(8x H100 GPUs)"] & N3["slurmd — Node 3<br/>(8x H100 GPUs)"]
 ```
 
 ### 6.2 Requesting GPU Resources

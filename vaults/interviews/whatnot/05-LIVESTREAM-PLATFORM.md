@@ -37,32 +37,20 @@ Design a livestream platform that supports sellers broadcasting live video while
 
 ## Step 2: High-Level Design
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                         Seller (Mobile App)                      │
-└──────────────────────────────┬───────────────────────────────────┘
-                               │ WebRTC / RTMP
-                               ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                      Ingest Layer                                │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │   WebRTC    │  │  Amazon     │  │   Agora     │              │
-│  │  (Default)  │  │  IVS        │  │  (Massive)  │              │
-│  └─────────────┘  └─────────────┘  └─────────────┘              │
-└──────────────────────────────┬───────────────────────────────────┘
-                               │
-                    ┌──────────┼──────────┐
-                    ▼          ▼          ▼
-             ┌───────────┐ ┌────────┐ ┌───────────┐
-             │ Transcode │ │  Edge  │ │   Chat    │
-             │  Service  │ │  CDN   │ │  Service  │
-             └─────┬─────┘ └───┬────┘ │ (Elixir)  │
-                   │           │      └─────┬─────┘
-                   ▼           ▼            ▼
-             ┌───────────────────────────────────┐
-             │          Viewer (Mobile App)       │
-             │  Video + Chat + Auction Overlay    │
-             └───────────────────────────────────┘
+```mermaid
+flowchart TD
+    Seller["Seller (Mobile App)"] -->|"WebRTC / RTMP"| Ingest
+    subgraph Ingest["Ingest Layer"]
+        WebRTC["WebRTC (Default)"]
+        IVS["Amazon IVS"]
+        Agora["Agora (Massive)"]
+    end
+    Ingest --> Transcode["Transcode Service"]
+    Ingest --> CDN["Edge CDN"]
+    Ingest --> Chat["Chat Service (Elixir)"]
+    Transcode --> Viewer["Viewer (Mobile App)<br/>Video + Chat + Auction Overlay"]
+    CDN --> Viewer
+    Chat --> Viewer
 ```
 
 ---
@@ -73,25 +61,15 @@ Design a livestream platform that supports sellers broadcasting live video while
 
 Whatnot's key insight: **no single streaming provider handles all scenarios well.**
 
-```
-┌──────────────────────────────────────────────────┐
-│              Stream Router Service                │
-│                                                  │
-│  Input: stream_id, viewer_count, region          │
-│                                                  │
-│  Rules:                                          │
-│  ┌──────────────────────────────────────────┐    │
-│  │ viewers < 1,000    → WebRTC (direct)     │    │
-│  │ 1,000 - 50,000     → Amazon IVS          │    │
-│  │ 50,000+            → Agora + IVS fallback│    │
-│  │ IVS degraded       → Agora takeover      │    │
-│  └──────────────────────────────────────────┘    │
-│                                                  │
-│  Health monitoring:                              │
-│  - Per-provider error rates                      │
-│  - Latency measurements                         │
-│  - Viewer quality metrics                        │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Router["Stream Router Service"]
+        Input["Input: stream_id, viewer_count, region"]
+        Rules["Routing Rules:<br/>- viewers &lt; 1,000 -&gt; WebRTC (direct)<br/>- 1,000 - 50,000 -&gt; Amazon IVS<br/>- 50,000+ -&gt; Agora + IVS fallback<br/>- IVS degraded -&gt; Agora takeover"]
+        Health["Health Monitoring:<br/>- Per-provider error rates<br/>- Latency measurements<br/>- Viewer quality metrics"]
+        Input --> Rules
+        Health -.-> Rules
+    end
 ```
 
 ### Streaming Protocol Comparison
@@ -122,32 +100,15 @@ Time 2:00   - Viewers drop to 20K → Scale back to IVS only
 
 The critical challenge: **chat messages compete with auction events for bandwidth.**
 
-```
-┌─────────────────────────────────────────────────────┐
-│                 Chat Architecture                    │
-│                                                     │
-│  ┌─────────────┐     ┌──────────────┐              │
-│  │   Client    │────→│  Phoenix     │              │
-│  │  (App)      │     │  Channel     │              │
-│  │             │←────│  (WebSocket) │              │
-│  └─────────────┘     └──────┬───────┘              │
-│                             │                       │
-│                      ┌──────┴───────┐              │
-│                      │  Priority    │              │
-│                      │  Router      │              │
-│                      └──────┬───────┘              │
-│                             │                       │
-│              ┌──────────────┼──────────────┐       │
-│              ▼              ▼              ▼        │
-│        ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│        │ CRITICAL │  │   HIGH   │  │   LOW    │   │
-│        │          │  │          │  │          │   │
-│        │ - Bids   │  │ - Chat   │  │ - Emoji  │   │
-│        │ - Price  │  │   msgs   │  │ - Typing │   │
-│        │ - Timer  │  │ - System │  │ - Join/  │   │
-│        │ - Winner │  │   alerts │  │   Leave  │   │
-│        └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph ChatArch["Chat Architecture"]
+        Client["Client (App)"] <--> Phoenix["Phoenix Channel<br/>(WebSocket)"]
+        Phoenix --> Router["Priority Router"]
+        Router --> Critical["CRITICAL<br/>- Bids<br/>- Price<br/>- Timer<br/>- Winner"]
+        Router --> High["HIGH<br/>- Chat msgs<br/>- System alerts"]
+        Router --> Low["LOW<br/>- Emoji<br/>- Typing<br/>- Join/Leave"]
+    end
 ```
 
 ### Chat Scaling Problem
@@ -213,19 +174,11 @@ def should_deliver_message(
 
 For massive events, the Client Admission Service (Go) gates entry:
 
-```
-┌──────────┐     ┌──────────────┐     ┌──────────────┐
-│  Client  │────→│  Admission   │────→│  Stream      │
-│          │     │  Service     │     │  Service     │
-│          │←────│              │     │              │
-└──────────┘     └──────────────┘     └──────────────┘
-                       │
-                 Policies:
-                 1. Global cap: 600K max
-                 2. Rate limit: 1000 joins/sec
-                 3. Identity-based shedding:
-                    hash(user_id) % 100 < threshold
-                 4. Queue overflow: "stream is full" UI
+```mermaid
+flowchart LR
+    Client["Client"] <--> Admission["Admission Service"]
+    Admission --> Stream["Stream Service"]
+    Admission --- Policies["Policies:<br/>1. Global cap: 600K max<br/>2. Rate limit: 1000 joins/sec<br/>3. Identity-based shedding: hash(user_id) % 100 &lt; threshold<br/>4. Queue overflow: 'stream is full' UI"]
 ```
 
 ---

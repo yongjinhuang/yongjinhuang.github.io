@@ -50,45 +50,70 @@ infrastructure roles.
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   TaskStatus      |       |   TaskPriority      |
-|   (Enum)          |       |   (Enum)            |
-|-------------------|       |---------------------|
-| PENDING           |       | LOW = 0             |
-| SCHEDULED         |       | MEDIUM = 1          |
-| RUNNING           |       | HIGH = 2            |
-| COMPLETED         |       | CRITICAL = 3        |
-| FAILED            |       +---------------------+
-| CANCELLED         |
-| DEAD_LETTERED     |       +---------------------+
-+-------------------+       |   RetryPolicy       |
-                            |---------------------|
-+-------------------+       | max_retries         |
-|   Task            |       | backoff_base        |
-|-------------------|       | backoff_max         |
-| id                |       +---------------------+
-| name              |
-| callable          |       +---------------------+
-| priority          |       |   CronSchedule      |
-| status            |       |---------------------|
-| scheduled_at      |       | expression          |
-| retry_policy      |       | next_run_time()     |
-| dependencies      |       +---------------------+
-| result            |
-| error             |       +---------------------+
-+-------------------+       |   TaskScheduler     |
-                            |---------------------|
-+-------------------+       | task_queue (heap)   |
-|   DAGExecutor     |       | workers (pool)      |
-|-------------------|       | dead_letter_queue   |
-| graph             |       |---------------------|
-| in_degree         |       | submit(task)        |
-|-------------------|       | schedule(task, cron)|
-| add_dependency()  |       | cancel(task_id)     |
-| execute()         |       | start()             |
-| topological_sort()|       | shutdown()          |
-+-------------------+       +---------------------+
+```mermaid
+classDiagram
+    class TaskStatus {
+        <<enumeration>>
+        PENDING
+        SCHEDULED
+        RUNNING
+        COMPLETED
+        FAILED
+        CANCELLED
+        DEAD_LETTERED
+    }
+    class TaskPriority {
+        <<enumeration>>
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+    }
+    class RetryPolicy {
+        +int max_retries
+        +float backoff_base
+        +float backoff_max
+    }
+    class CronSchedule {
+        +str expression
+        +next_run_time() datetime
+    }
+    class Task {
+        +str id
+        +str name
+        +Callable callable
+        +TaskPriority priority
+        +TaskStatus status
+        +datetime scheduled_at
+        +RetryPolicy retry_policy
+        +List~str~ dependencies
+        +Any result
+        +str error
+    }
+    class DAGExecutor {
+        +Dict graph
+        +Dict in_degree
+        +add_dependency(task, dep)
+        +topological_sort() List~Task~
+        +execute()
+    }
+    class TaskScheduler {
+        +List task_queue
+        +ThreadPoolExecutor workers
+        +List~Task~ dead_letter_queue
+        +submit(task)
+        +schedule(task, cron)
+        +cancel(task_id)
+        +start()
+        +shutdown()
+    }
+
+    Task --> TaskStatus
+    Task --> TaskPriority
+    Task *-- RetryPolicy
+    TaskScheduler *-- Task
+    TaskScheduler --> CronSchedule
+    DAGExecutor --> Task
 ```
 
 ---
@@ -294,15 +319,9 @@ class DAGExecutor:
 
 ### DAG Visualization
 
-```
-Task A (no deps)      Task B (no deps)
-   \                    /
-    \                  /
-     v                v
-      Task C (depends on A, B)
-           |
-           v
-      Task D (depends on C)
+```mermaid
+flowchart TD
+    A["Task A<br/>(no deps)"] & B["Task B<br/>(no deps)"] --> C["Task C<br/>(depends on A, B)"] --> D["Task D<br/>(depends on C)"]
 ```
 
 ```python

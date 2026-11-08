@@ -12,44 +12,25 @@ This guide goes deep on the patterns, platforms, and pitfalls. We cover not just
 
 Before diving into tools, understand the four fundamental patterns:
 
-```
-+------------------------------------------------------------------+
-|           EVENT-DRIVEN PATTERNS SPECTRUM                          |
-+------------------------------------------------------------------+
-|                                                                  |
-|  SIMPLE                                            COMPLEX       |
-|  <------------------------------------------------------->      |
-|                                                                  |
-|  1. Event         2. Event-Carried    3. Event        4. CQRS   |
-|     Notification     State Transfer      Sourcing                |
-|                                                                  |
-|  "Something        "Here is what      "Record every   "Separate |
-|   happened"         changed"           state change"   read and  |
-|                                                        write"    |
-|                                                                  |
-|  Low coupling      Medium coupling    High complexity  Highest   |
-|  Receiver must     Receiver is        Full audit trail complexity|
-|  query back        self-sufficient    Temporal queries Optimized |
-|                                                        reads     |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Spectrum["EVENT-DRIVEN PATTERNS SPECTRUM (Simple -> Complex)"]
+        P1["1. Event Notification<br/>'Something happened'<br/>- Low coupling<br/>- Receiver must query back"]
+        P2["2. Event-Carried State Transfer<br/>'Here is what changed'<br/>- Medium coupling<br/>- Receiver is self-sufficient"]
+        P3["3. Event Sourcing<br/>'Record every state change'<br/>- High complexity<br/>- Full audit trail &amp; temporal queries"]
+        P4["4. CQRS<br/>'Separate read and write'<br/>- Highest complexity<br/>- Independently optimized reads &amp; writes"]
+        P1 --> P2 --> P3 --> P4
+    end
 ```
 
 ### Pattern 1: Event Notification
 
 The simplest pattern. A service emits a lightweight notification that something happened. Consumers must call back to the source for details.
 
-```
-+----------+    { "type": "order.created",    +----------+
-|  Orders  | -->   "orderId": "abc-123" }  --> | Shipping |
-|  Service |                                   | Service  |
-+----------+                                   +----+-----+
-                                                    |
-                                          GET /orders/abc-123
-                                                    |
-                                               +----v-----+
-                                               |  Orders  |
-                                               |   API    |
-                                               +----------+
+```mermaid
+flowchart LR
+    Orders["Orders Service"] -->|"{ type: 'order.created', orderId: 'abc-123' }"| Shipping["Shipping Service"]
+    Shipping -->|"GET /orders/abc-123"| API["Orders API"]
 ```
 
 **Pros**: Minimal coupling, small message size, source is authority.
@@ -92,64 +73,32 @@ interface OrderCreatedEvent {
 
 Instead of storing current state, store the sequence of events that led to the current state. The event log IS the source of truth.
 
-```
-+------------------------------------------------------------------+
-|              EVENT SOURCING MODEL                                 |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Traditional (State):                                            |
-|  +------------------+                                            |
-|  | Account #12345   |  <-- Only current state                   |
-|  | Balance: $500    |                                            |
-|  | Status: Active   |                                            |
-|  +------------------+                                            |
-|                                                                  |
-|  Event Sourced:                                                  |
-|  +------------------+------------------+------------------+      |
-|  | AccountCreated   | MoneyDeposited   | MoneyWithdrawn   |      |
-|  | id: 12345        | amount: $1000    | amount: $500     |      |
-|  | owner: "Alice"   | balance: $1000   | balance: $500    |      |
-|  | time: T1         | time: T2         | time: T3         |      |
-|  +------------------+------------------+------------------+      |
-|                                                                  |
-|  Current state = fold(events) = $500                             |
-|  State at T2   = fold(events[0..1]) = $1000                     |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Trad["Traditional (Current State Only)"]
+        State["Account #12345<br/>Balance: $500<br/>Status: Active"]
+    end
+    subgraph ES["Event Sourced (Immutable Log: Current State = fold(events) = $500)"]
+        E1["T1: AccountCreated<br/>id: 12345, owner: 'Alice'"] --> E2["T2: MoneyDeposited<br/>amount: $1000, balance: $1000"] --> E3["T3: MoneyWithdrawn<br/>amount: $500, balance: $500"]
+    end
 ```
 
 ### Pattern 4: CQRS (Command Query Responsibility Segregation)
 
 Separate the write model (commands) from the read model (queries). Often combined with event sourcing.
 
-```
-+------------------------------------------------------------------+
-|                    CQRS ARCHITECTURE                              |
-+------------------------------------------------------------------+
-|                                                                  |
-|  WRITE SIDE                        READ SIDE                     |
-|  +-------------+                   +-------------+               |
-|  | Command API |                   | Query API   |               |
-|  +------+------+                   +------+------+               |
-|         |                                 |                      |
-|  +------v------+                   +------v------+               |
-|  | Command     |                   | Read Model  |               |
-|  | Handler     |                   | (Denormalized|              |
-|  +------+------+                   |  Projections)|              |
-|         |                          +------^------+               |
-|  +------v------+                          |                      |
-|  | Domain      |    Events         +------+------+               |
-|  | Model       +---publish-------->| Projection  |               |
-|  +------+------+                   | Builder     |               |
-|         |                          +-------------+               |
-|  +------v------+                                                 |
-|  | Event Store |                                                 |
-|  +-------------+                                                 |
-|                                                                  |
-|  Optimized for     Eventual         Optimized for                |
-|  consistency       consistency       query performance            |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph WriteSide["WRITE SIDE (Optimized for Consistency)"]
+        CmdAPI["Command API"] --> CmdH["Command Handler"] --> Dom["Domain Model"] --> ES[("Event Store")]
+    end
+
+    subgraph ReadSide["READ SIDE (Optimized for Query Performance)"]
+        QryAPI["Query API"] --> ReadModel[("Read Model<br/>(Denormalized Projections)")]
+        Proj["Projection Builder"] --> ReadModel
+    end
+
+    Dom -->|"publish events (Eventual Consistency)"| Proj
 ```
 
 **When to use CQRS:**
@@ -172,46 +121,28 @@ Separate the write model (commands) from the read model (queries). Often combine
 
 Kafka is the backbone of most production event-driven systems. Understanding its internals is essential.
 
-```
-+------------------------------------------------------------------+
-|                    KAFKA ARCHITECTURE                              |
-+------------------------------------------------------------------+
-|                                                                  |
-|  PRODUCERS                    KAFKA CLUSTER                      |
-|  +--------+                   +----------------------------+     |
-|  |Producer|--+                | BROKER 1       BROKER 2    |     |
-|  +--------+  |                | +---------+  +---------+   |     |
-|  +--------+  |   Produce      | |Topic A  |  |Topic A  |   |     |
-|  |Producer|--+--------------->| |Part 0*  |  |Part 1*  |   |     |
-|  +--------+  |                | |Part 1(r)|  |Part 0(r)|   |     |
-|  +--------+  |                | +---------+  +---------+   |     |
-|  |Producer|--+                |                            |     |
-|  +--------+                   | BROKER 3                   |     |
-|                               | +---------+                |     |
-|                               | |Topic A  |                |     |
-|                               | |Part 0(r)|                |     |
-|                               | |Part 1(r)|                |     |
-|                               | +---------+                |     |
-|                               +----------------------------+     |
-|                                         |                        |
-|  CONSUMERS                              |                        |
-|  +------------------+                   |                        |
-|  | Consumer Group 1 |<-- Consume -------+                        |
-|  | +------+ +------+|                                            |
-|  | |C1    | |C2    ||  C1 reads Part 0                           |
-|  | |Part 0| |Part 1||  C2 reads Part 1                           |
-|  | +------+ +------+|                                            |
-|  +------------------+                                            |
-|  +------------------+                                            |
-|  | Consumer Group 2 |<-- Independent consumption                 |
-|  | +------+         |                                            |
-|  | |C1    |         |  Single consumer reads all partitions      |
-|  | |P0+P1 |         |                                            |
-|  | +------+         |                                            |
-|  +------------------+                                            |
-|                                                                  |
-|  * = Partition Leader    (r) = Replica (follower)                |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraphProducers["PRODUCERS"]
+    P1["Producer 1"] & P2["Producer 2"] & P3["Producer 3"]
+
+    subgraph Cluster["KAFKA CLUSTER (* = Partition Leader, (r) = Follower Replica)"]
+        B1["BROKER 1<br/>Topic A: Part 0*, Part 1(r)"]
+        B2["BROKER 2<br/>Topic A: Part 1*, Part 0(r)"]
+        B3["BROKER 3<br/>Topic A: Part 0(r), Part 1(r)"]
+    end
+
+    subgraph CG1["Consumer Group 1"]
+        G1C1["Consumer C1 (reads Part 0)"]
+        G1C2["Consumer C2 (reads Part 1)"]
+    end
+
+    subgraph CG2["Consumer Group 2 (Independent)"]
+        G2C1["Consumer C1 (reads Part 0 + Part 1)"]
+    end
+
+    P1 & P2 & P3 -->|"Produce"| Cluster
+    Cluster -->|"Consume"| CG1 & CG2
 ```
 
 **Key concepts:**
@@ -223,35 +154,16 @@ Kafka is the backbone of most production event-driven systems. Understanding its
 
 ### ZooKeeper vs KRaft
 
-```
-+------------------------------------------------------------------+
-|              KAFKA METADATA MANAGEMENT                            |
-+------------------------------------------------------------------+
-|                                                                  |
-|  LEGACY (ZooKeeper):                 MODERN (KRaft, 2023+):     |
-|  +----------+   +----------+         +----------+                |
-|  | ZooKeeper|   | ZooKeeper|         | Broker 1 |                |
-|  | Node 1   |   | Node 2   |         | (Controller|              |
-|  +----+-----+   +----+-----+         |  + Broker) |              |
-|       |              |                +----------+                |
-|       +------+-------+               +----------+                |
-|              |                        | Broker 2 |                |
-|  +---+---+---+---+---+---+           | (Controller|              |
-|  | B1  | | B2  | | B3  |             |  + Broker) |              |
-|  +-----+ +-----+ +-----+             +----------+                |
-|                                       +----------+                |
-|  Problems:                            | Broker 3 |                |
-|  - Separate system to manage          | (Broker   |              |
-|  - Scaling limits (~200K partitions)  |  only)    |              |
-|  - Slow controller failover           +----------+                |
-|  - Complex operations                                            |
-|                                       Benefits:                  |
-|                                       - Single system            |
-|                                       - Millions of partitions   |
-|                                       - Fast failover (seconds)  |
-|                                       - Raft-based consensus     |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Legacy["LEGACY (ZooKeeper): Separate system, ~200K partition limit, slow failover"]
+        ZK1["ZooKeeper Node 1"] & ZK2["ZooKeeper Node 2"] --> LB1["Broker 1"] & LB2["Broker 2"] & LB3["Broker 3"]
+    end
+
+    subgraph KRaft["MODERN (KRaft, 2023+): Single system, millions of partitions, Raft consensus, fast failover"]
+        KB1["Broker 1 (Controller + Broker)"] <--> KB2["Broker 2 (Controller + Broker)"]
+        KB1 & KB2 --> KB3["Broker 3 (Broker only)"]
+    end
 ```
 
 KRaft (Kafka Raft) replaced ZooKeeper starting in Kafka 3.3+ and is the only supported mode as of Kafka 4.0 (2024). In KRaft, a subset of brokers act as **controllers** that manage cluster metadata using the Raft consensus protocol. This eliminates the operational burden of ZooKeeper and removes the partition count ceiling.
@@ -260,37 +172,28 @@ KRaft (Kafka Raft) replaced ZooKeeper starting in Kafka 3.3+ and is the only sup
 
 This is a common interview deep-dive. Kafka achieves exactly-once through two mechanisms:
 
-```
-+------------------------------------------------------------------+
-|              EXACTLY-ONCE SEMANTICS                               |
-+------------------------------------------------------------------+
-|                                                                  |
-|  1. IDEMPOTENT PRODUCER (within a single partition)              |
-|                                                                  |
-|  Producer assigns sequence numbers to each message.              |
-|  Broker deduplicates by (ProducerID, PartitionID, SeqNum).       |
-|                                                                  |
-|  Producer                    Broker                              |
-|  | -- msg(seq=1) -----------> | Accepted                        |
-|  | -- msg(seq=2) -----------> | Accepted                        |
-|  | -- msg(seq=2) -----------> | Duplicate, ignored               |
-|  | -- msg(seq=4) -----------> | OutOfOrderSequence error         |
-|                                                                  |
-|  2. TRANSACTIONS (across partitions and topics)                  |
-|                                                                  |
-|  Producer       Transaction       Broker                         |
-|  |              Coordinator       |                              |
-|  |-- beginTx -------->|          |                               |
-|  |-- produce(topicA) ----------->|  Msg written but not visible  |
-|  |-- produce(topicB) ----------->|  Msg written but not visible  |
-|  |-- commitTx -------->|         |                               |
-|  |              |-- commit ------>|  All msgs now visible         |
-|  |              |                 |  (read_committed consumers)   |
-|                                                                  |
-|  Consumer setting: isolation.level = "read_committed"            |
-|  Only sees messages from committed transactions.                 |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+sequenceDiagram
+    participant P as "Producer"
+    participant TC as "Transaction Coordinator"
+    participant B as "Broker"
+
+    rect rgb(35, 45, 65)
+    Note over P,B: 1. Idempotent Producer (Deduplicated by ProducerID, PartitionID, SeqNum)
+    P->>B: msg(seq=1) -> Accepted
+    P->>B: msg(seq=2) -> Accepted
+    P->>B: msg(seq=2) -> Duplicate, ignored
+    P->>B: msg(seq=4) -> OutOfOrderSequence error
+    end
+
+    rect rgb(35, 60, 45)
+    Note over P,B: 2. Transactions Across Partitions/Topics (isolation.level = read_committed)
+    P->>TC: beginTx
+    P->>B: produce(topicA) (written, not yet visible)
+    P->>B: produce(topicB) (written, not yet visible)
+    P->>TC: commitTx
+    TC->>B: commit marker (all msgs now visible to read_committed consumers)
+    end
 ```
 
 ### Compacted Topics
@@ -315,38 +218,11 @@ AFTER COMPACTION:
 
 ### Schema Registry and Schema Evolution
 
-```
-+------------------------------------------------------------------+
-|              SCHEMA REGISTRY ARCHITECTURE                         |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Producer                Schema Registry           Consumer      |
-|  +--------+              +-------------+           +--------+    |
-|  |Serialize|-- register ->| Schema Store|<- lookup -|Deserialize|
-|  |with     |  schema     | (Avro/Proto/ |  schema  |with     |  |
-|  |schema ID|             |  JSON Schema)|          |schema ID|  |
-|  +----+----+              +-------------+           +----+----+  |
-|       |                                                  |       |
-|  [schemaId|payload] -----> Kafka Topic ----> [schemaId|payload]  |
-|                                                                  |
-|  COMPATIBILITY MODES:                                            |
-|  +------------------+------------------------------------------+ |
-|  | BACKWARD         | New schema can read old data             | |
-|  | FORWARD          | Old schema can read new data             | |
-|  | FULL             | Both backward and forward                | |
-|  | BACKWARD_TRANS.  | Backward across all versions             | |
-|  | FORWARD_TRANS.   | Forward across all versions              | |
-|  | FULL_TRANSITIVE  | Full across all versions                 | |
-|  | NONE             | No compatibility checking                | |
-|  +------------------+------------------------------------------+ |
-|                                                                  |
-|  SAFE SCHEMA CHANGES:                                            |
-|  - Add optional field (backward compatible)                      |
-|  - Add field with default (backward compatible)                  |
-|  - Remove optional field (forward compatible)                    |
-|  - NEVER rename or change field types                            |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Prod["Producer<br/>Serialize with schema ID"] -->|"register schema"| SR["Schema Registry<br/>(Avro / Protobuf / JSON Schema)<br/>Modes: BACKWARD, FORWARD, FULL, TRANSITIVE"]
+    Cons["Consumer<br/>Deserialize with schema ID"] -->|"lookup schema"| SR
+    Prod -->|"[schemaId / payload]"| Topic["Kafka Topic"] -->|"[schemaId / payload]"| Cons
 ```
 
 ### Kafka Producer/Consumer in TypeScript
@@ -613,35 +489,12 @@ CloudEvents provides interoperability across event systems -- the same event for
 
 ### Dead Letter Queues and Retry
 
-```
-+------------------------------------------------------------------+
-|              RETRY WITH DEAD LETTER QUEUE                         |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Main Queue          Retry Logic            Dead Letter Queue    |
-|  +---------+         +------------+          +---------+         |
-|  | Message |-------->| Attempt 1  |          |         |         |
-|  +---------+    fail | Wait 1s    |          |         |         |
-|                      | Attempt 2  |          |         |         |
-|                 fail | Wait 4s    |          |         |         |
-|                      | Attempt 3  |          |         |         |
-|                 fail | Wait 16s   |          |         |         |
-|                      | Attempt 4  |          |         |         |
-|                 fail | Wait 64s   |          |         |         |
-|                      | Attempt 5  |  fail    |         |         |
-|                      +-----+------+--------->| Message |         |
-|                            |                 | + error |         |
-|                        success               | + meta  |         |
-|                            |                 +---------+         |
-|                            v                      |              |
-|                       Processing                  v              |
-|                       Complete              Manual review         |
-|                                             or alerting          |
-|                                                                  |
-|  Backoff: delay = baseDelay * 2^(attempt-1) * (1 + jitter)      |
-|  Jitter prevents thundering herd when many messages fail         |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    MQ["Main Queue<br/>(Message)"] --> Retry["Retry Logic (Exponential Backoff + Jitter)<br/>delay = baseDelay * 2^(attempt-1) * (1 + jitter)<br/>Attempt 1 -&gt; Wait 1s -&gt; Attempt 2 -&gt; Wait 4s -&gt;<br/>Attempt 3 -&gt; Wait 16s -&gt; Attempt 4 -&gt; Wait 64s -&gt; Attempt 5"]
+    Retry -->|"Success"| Done["Processing Complete"]
+    Retry -->|"Fail after 5 attempts"| DLQ["Dead Letter Queue (DLQ)<br/>(Message + error + metadata)"]
+    DLQ --> Review["Manual review or alerting"]
 ```
 
 ```typescript
@@ -682,35 +535,18 @@ async function processWithRetry<T>(
 
 The outbox pattern solves the dual-write problem: how do you atomically update a database AND publish an event? You cannot -- unless you make the event part of the database transaction.
 
-```
-+------------------------------------------------------------------+
-|              OUTBOX PATTERN                                        |
-+------------------------------------------------------------------+
-|                                                                  |
-|  THE PROBLEM (Dual Write):                                       |
-|                                                                  |
-|  Service                                                         |
-|  | 1. INSERT INTO orders (...) -- succeeds                       |
-|  | 2. kafka.produce("order.created") -- FAILS!                   |
-|  |    Database has order, but no event published.                |
-|  |    System is now inconsistent.                                |
-|                                                                  |
-|  THE SOLUTION (Outbox):                                          |
-|                                                                  |
-|  Service              Database              Message Relay         |
-|  |                    +----------+          +----------+          |
-|  | BEGIN TX           |          |          |          |          |
-|  | INSERT orders ---->| orders   |          |          |          |
-|  | INSERT outbox ---->| outbox   |          |          |          |
-|  | COMMIT TX          |          |          |          |          |
-|  |                    +-----+----+          |          |          |
-|  |                          |               |          |          |
-|  |                    Poll/CDC (Debezium)    |          |          |
-|  |                          +-------------->| Publish  |          |
-|  |                                          | to Kafka |          |
-|  |                                          +----------+          |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Problem["THE PROBLEM (Dual Write Inconsistency)"]
+        Svc1["Service"] -->|"1. INSERT INTO orders (Succeeds)"| DB1[("Database")]
+        Svc1 -.->|"2. kafka.produce('order.created') (FAILS!)"| K1["Kafka"]
+    end
+
+    subgraph Solution["THE SOLUTION (Transactional Outbox)"]
+        Svc2["Service<br/>(BEGIN TX ... COMMIT TX)"] -->|"1. Atomic INSERT into<br/>orders + outbox"| DB2[("Database<br/>(orders + outbox tables)")]
+        DB2 -->|"2. Poll / CDC (Debezium)"| Relay["Message Relay"]
+        Relay -->|"3. Publish event"| K2["Kafka"]
+    end
 ```
 
 ```sql
@@ -1067,85 +903,34 @@ class EventStore {
 
 ### Projections (Building Read Models)
 
-```
-+------------------------------------------------------------------+
-|              PROJECTION PIPELINE                                  |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Event Store -----> Projection Engine -----> Read Database        |
-|                                                                  |
-|  events:                                     account_summary:    |
-|  | AccountCreated |                          | id | balance |    |
-|  | MoneyDeposited |  Apply each event        | owner | status|   |
-|  | MoneyWithdrawn |  to build read model     +------+--------+   |
-|  | MoneyDeposited |                                              |
-|                                              daily_transactions: |
-|                                              | date | count |    |
-|                                              | total_volume |    |
-|                                                                  |
-|  SYNC PROJECTION: Updated in same TX as event write              |
-|  + Strong consistency  - Slower writes  - Coupling               |
-|                                                                  |
-|  ASYNC PROJECTION: Updated via event subscription                |
-|  + Fast writes  + Decoupled  - Eventually consistent             |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    ES[("Event Store<br/>- AccountCreated<br/>- MoneyDeposited<br/>- MoneyWithdrawn<br/>- MoneyDeposited")] -->|"Apply each event<br/>(Sync TX or Async Subscription)"| Engine["Projection Engine"]
+    Engine --> P1[("Read DB: account_summary<br/>(id, balance, owner, status)")]
+    Engine --> P2[("Read DB: daily_transactions<br/>(date, count, total_volume)")]
 ```
 
 ---
 
 ## Saga Pattern: Orchestration vs Choreography
 
-```
-+------------------------------------------------------------------+
-|              SAGA PATTERNS                                        |
-+------------------------------------------------------------------+
-|                                                                  |
-|  CHOREOGRAPHY (Event-driven, no central coordinator)             |
-|                                                                  |
-|  Order Svc       Payment Svc      Inventory Svc    Shipping Svc |
-|  |                |                |                |            |
-|  |--OrderCreated->|                |                |            |
-|  |                |--PaymentOK---->|                |            |
-|  |                |                |--Reserved----->|            |
-|  |                |                |                |--Shipped-->|
-|  |                                                               |
-|  If Payment fails:                                               |
-|  |                |--PaymentFail-->|                |            |
-|  |<-OrderCancelled|                |                |            |
-|  (Each service knows its compensating action)                    |
-|                                                                  |
-|  ORCHESTRATION (Central saga coordinator)                        |
-|                                                                  |
-|            +-------------+                                       |
-|            | Saga        |                                       |
-|            | Orchestrator|                                       |
-|            +------+------+                                       |
-|                   |                                              |
-|   1. Create Order | 2. Charge    3. Reserve     4. Ship         |
-|   +--------+     | +--------+   +--------+     +--------+      |
-|   | Order  |<----+ |Payment |   |Inventory|    |Shipping|      |
-|   | Svc    |     +>| Svc    |   | Svc    |     | Svc    |      |
-|   +--------+       +--------+   +--------+     +--------+      |
-|                                                                  |
-|  If step 3 fails, orchestrator calls:                           |
-|  - Refund payment (compensate step 2)                           |
-|  - Cancel order (compensate step 1)                             |
-|                                                                  |
-|  COMPARISON:                                                     |
-|  +-------------------+------------------+---------------------+  |
-|  |                   | Choreography     | Orchestration       |  |
-|  +-------------------+------------------+---------------------+  |
-|  | Coupling          | Loose            | Tighter (to orch.)  |  |
-|  | Visibility        | Hard to trace    | Central dashboard   |  |
-|  | Complexity        | Grows with steps | Linear growth       |  |
-|  | Single point of   | No               | Yes (orchestrator)  |  |
-|  | failure           |                  |                     |  |
-|  | Best for          | Simple sagas     | Complex business    |  |
-|  |                   | (2-3 steps)      | workflows           |  |
-|  +-------------------+------------------+---------------------+  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Choreo["CHOREOGRAPHY (Event-driven, no central coordinator)"]
+        CO["Order Svc"] -->|"OrderCreated"| CP["Payment Svc"]
+        CP -->|"PaymentOK"| CI["Inventory Svc"]
+        CI -->|"Reserved"| CS["Shipping Svc"]
+        CP -.->|"PaymentFail -> OrderCancelled"| CO
+    end
+
+    subgraph Orch["ORCHESTRATION (Central Saga Coordinator)"]
+        Coord["Saga Orchestrator<br/>(If Step 3 fails: Refund payment -&gt; Cancel order)"]
+        OO["1. Order Svc<br/>(Create Order)"]
+        OP["2. Payment Svc<br/>(Charge)"]
+        OI["3. Inventory Svc<br/>(Reserve)"]
+        OS["4. Shipping Svc<br/>(Ship)"]
+        Coord --> OO & OP & OI & OS
+    end
 ```
 
 ---

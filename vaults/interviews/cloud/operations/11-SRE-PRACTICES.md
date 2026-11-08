@@ -62,30 +62,12 @@ SRE is a **role and methodology**. DevOps is a **philosophy**. Platform Engineer
 
 ## 2. Service Level Hierarchy
 
-```
-                    SLA (Legal/Business)
-                   ┌─────────────────────┐
-                   │  Contractual         │
-                   │  Customer-facing     │
-                   │  Consequences: $$$   │
-                   │  e.g., 99.9% uptime  │
-                   └──────────┬──────────┘
-                              │ tighter than
-                    SLO (Engineering)
-                   ┌─────────────────────┐
-                   │  Internal target     │
-                   │  Team-owned          │
-                   │  Consequences: EB    │
-                   │  e.g., 99.95% avail  │
-                   └──────────┬──────────┘
-                              │ measured by
-                    SLI (Measurement)
-                   ┌─────────────────────┐
-                   │  Metric              │
-                   │  What we measure     │
-                   │  e.g., HTTP 5xx rate │
-                   │  Prometheus query    │
-                   └─────────────────────┘
+```mermaid
+flowchart TD
+    SLA["SLA (Service Level Agreement — Legal/Business)<br/>Contractual customer commitment with financial penalties (e.g., 99.9% uptime)"]
+    SLO["SLO (Service Level Objective — Engineering)<br/>Tighter internal reliability target &amp; error budget (e.g., 99.95% availability)"]
+    SLI["SLI (Service Level Indicator — Measurement)<br/>Quantitative telemetry ratio (e.g., good HTTP requests / total requests)"]
+    SLA -->|"Tighter internal buffer"| SLO -->|"Measured by"| SLI
 ```
 
 ### Ownership Matrix
@@ -619,29 +601,14 @@ PROGRESSIVE LAUNCH MODEL:
 
 ### Circuit Breaker
 
-```
-CIRCUIT BREAKER STATE MACHINE:
-
-  ┌─────────┐   failure threshold   ┌──────────┐
-  │  CLOSED  ├──────────────────────►   OPEN    │
-  │ (normal) │                       │(reject all│
-  └────┬─────┘                       │ requests) │
-       │                             └─────┬─────┘
-       │                                   │ timeout
-       │                                   ▼
-       │                          ┌─────────────────┐
-       └──────────────────────────┤  HALF-OPEN       │
-          success threshold       │  (probe with     │
-                                  │  limited traffic) │
-                                  └─────────────────-┘
-
-Configuration example (Go/resilience4j):
-  failureRateThreshold: 50%     # open when 50% fail
-  slowCallRateThreshold: 80%    # or 80% are slow
-  slowCallDurationThreshold: 2s # "slow" defined as > 2s
-  waitDurationInOpenState: 30s  # probe after 30s
-  permittedCallsInHalfOpenState: 5
-```
+```mermaid
+stateDiagram-v2
+    [*] --> CLOSED
+    CLOSED --> OPEN : Failure / slow-call rate >= threshold (50%)
+    OPEN --> HALF_OPEN : Wait duration elapsed (30s)
+    HALF_OPEN --> CLOSED : Probe requests succeed
+    HALF_OPEN --> OPEN : Any probe request fails
+````
 
 ### Retry with Exponential Backoff and Jitter
 

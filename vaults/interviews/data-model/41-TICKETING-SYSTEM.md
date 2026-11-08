@@ -178,108 +178,101 @@ graph TD
 
 ## ER Diagram
 
-```
-+--------------------+
-|   organizations    |
-|--------------------|
-| org_id (PK)        |
-| name               |
-| timezone           |
-| business_hours_json|
-| plan_tier          |
-+--------------------+
-  |     |     |     |     |     |
-  |     |     |     |     |     +───* custom_fields
-  |     |     |     |     |
-  |     |     |     |     +─────────* automation_rules
-  |     |     |     |
-  |     |     |     +───────────────* sla_policies
-  |     |     |
-  |     |     +─────────────────────* teams
-  |     |
-  |     +───────────────────────────* agents
-  |
-  +─────────────────────────────────* tickets
+```mermaid
+erDiagram
+    organizations ||--o{ agents : "relates"
+    organizations ||--o{ teams : "relates"
+    organizations ||--o{ tickets : "relates"
+    organizations ||--o{ sla_policies : "relates"
+    organizations ||--o{ automation_rules : "relates"
+    organizations ||--o{ custom_fields : "relates"
+    tickets }o--|| agents : "assigned to one agent"
+    tickets }o--|| teams : "assigned to one team"
+    tickets }o--|| sla_policies : "one SLA policy per ticket"
+    tickets ||--o{ comments : "conversation thread"
 
-+----------------+         +----------------+
-|    agents      |         |     teams      |
-|----------------|         |----------------|
-| agent_id (PK)  |<──┐     | team_id (PK)   |<──┐
-| org_id (FK)    |   |     | org_id (FK)    |   |
-| name           |   |     | name           |   |
-| email          |   |     | assignment_mode|   |
-| skills         |   |     +----------------+   |
-| max_capacity   |   |                          |
-| current_load   |   |                          |
-| status         |   |                          |
-+----------------+   |                          |
-                     |                          |
-              +------+--------------------------+-------+
-              |              tickets                    |
-              |-----------------------------------------|
-              | ticket_id (PK)                          |
-              | org_id (FK)                             |
-              | subject                                 |
-              | description                             |
-              | status                                  |
-              | priority                                |
-              | category                                |
-              | assigned_agent_id (FK)──────────────────-|───┘ (agents)
-              | assigned_team_id (FK)───────────────────-|───┘ (teams)
-              | requester_id                            |
-              | requester_email                         |
-              | channel                                 |
-              | sla_policy_id (FK)──────────────────────|───┐
-              | first_response_due                      |   |
-              | resolution_due                          |   |
-              | first_responded_at                      |   |
-              | resolved_at                             |   |
-              | tags                                    |   |
-              +-----------------------------------------+   |
-                       |                                    |
-                       | 1                                  |
-                       |                          +---------+------+
-                       +───* comments             |  sla_policies  |
-                       |                          |----------------|
-              +--------+-------+                  | sla_id (PK)    |
-              |    comments    |                  | org_id (FK)    |
-              |----------------|                  | name           |
-              | comment_id(PK) |                  | conditions_json|
-              | ticket_id (FK) |                  | targets_json   |
-              | author_id      |                  +----------------+
-              | author_type    |
-              | body           |   +--------------------+
-              | is_internal    |   |  automation_rules  |
-              | attachments_   |   |--------------------|
-              |  json          |   | rule_id (PK)       |
-              | created_at     |   | org_id (FK)        |
-              +----------------+   | name               |
-                                   | trigger            |
-              +----------------+   | conditions_json    |
-              |  custom_fields |   | actions_json       |
-              |----------------|   | is_active          |
-              | field_id (PK)  |   | execution_order    |
-              | org_id (FK)    |   +--------------------+
-              | name           |
-              | field_type     |
-              | options_json   |
-              | required       |
-              +----------------+
-
-Relationships:
-  organizations 1───* agents
-  organizations 1───* teams
-  organizations 1───* tickets
-  organizations 1───* sla_policies
-  organizations 1───* automation_rules
-  organizations 1───* custom_fields
-  tickets *───1 agents          (assigned to one agent)
-  tickets *───1 teams           (assigned to one team)
-  tickets *───1 sla_policies    (one SLA policy per ticket)
-  tickets 1───* comments        (conversation thread)
+    organizations {
+        UUID org_id PK
+        VARCHAR name
+        VARCHAR timezone
+        JSONB business_hours_json
+        ENUM plan_tier
+    }
+    agents {
+        UUID agent_id PK
+        ORGANIZATIONS org_id FK
+        VARCHAR name
+        VARCHAR email
+        ARRAY skills
+        INT max_capacity
+        INT current_load
+        ENUM status
+    }
+    teams {
+        UUID team_id PK
+        ORGANIZATIONS org_id FK
+        VARCHAR name
+        ENUM assignment_mode
+    }
+    tickets {
+        UUID ticket_id PK
+        ORGANIZATIONS org_id FK
+        VARCHAR subject
+        TEXT description
+        ENUM status
+        ENUM priority
+        VARCHAR category
+        AGENTS assigned_agent_id FK
+        TEAMS assigned_team_id FK
+        USERS requester_id FK
+        VARCHAR requester_email
+        ENUM channel
+        SLA_POLICIES sla_policy_id FK
+        TIMESTAMP first_response_due
+        TIMESTAMP resolution_due
+        TIMESTAMP first_responded_at
+        TIMESTAMP resolved_at
+        ARRAY tags
+    }
+    comments {
+        UUID comment_id PK
+        TICKETS ticket_id FK
+        USERS author_id FK
+        ENUM author_type
+        TEXT body
+        BOOLEAN is_internal
+        JSONB attachments_json
+        TIMESTAMP created_at
+    }
+    sla_policies {
+        UUID sla_id PK
+        ORGANIZATIONS org_id FK
+        VARCHAR name
+        JSONB conditions_json
+        JSONB targets_json
+    }
+    automation_rules {
+        UUID rule_id PK
+        ORGANIZATIONS org_id FK
+        VARCHAR name
+        ENUM trigger
+        JSONB conditions_json
+        JSONB actions_json
+        BOOLEAN is_active
+        INT execution_order
+    }
+    custom_fields {
+        UUID field_id PK
+        ORGANIZATIONS org_id FK
+        VARCHAR name
+        ENUM field_type
+        JSONB options_json
+        BOOLEAN required
+    }
 ```
 
 ---
+
 
 ## Data Flow
 

@@ -132,121 +132,75 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────┐
-│     users         │
-│──────────────────│
-│ id (PK)           │
-│ email             │
-│ phone             │
-│ locale            │
-│ timezone          │
-└──────────────────┘
-    │ 1         │ 1         │ 1
-    │           │           │
-    │      *    │      *    │
-    │   ┌──────┴──┐  ┌─────┴──────────┐
-    │   │ user_    │  │ device_tokens   │
-    │   │ prefs    │  │────────────────│
-    │   │─────────│  │ id (PK)         │
-    │   │ user_id  │  │ user_id (FK)    │
-    │   │ channel  │  │ platform        │
-    │   │ enabled  │  │ token           │
-    │   │ quiet_*  │  │ is_active       │
-    │   │ freq_cap │  │ last_used_at    │
-    │   └─────────┘  └────────────────┘
-    │
-    │      *
-┌───┴──────────────┐       ┌──────────────────┐
-│  notifications    │       │    templates      │
-│──────────────────│       │──────────────────│
-│ id (PK)           │  *   1│ id (PK)           │
-│ user_id (FK)      │───────│ name              │
-│ template_id (FK)  │       │ channel           │
-│ channel           │       │ subject           │
-│ priority          │       │ body              │
-│ status            │       │ variables         │
-│ idempotency_key   │       │ locale            │
-│ payload           │       └──────────────────┘
-│ scheduled_at      │
-│ sent_at           │
-└──────────────────┘
-         │ 1
-         │
-         │      *
-┌────────┴─────────┐
-│   delivery_log    │
-│──────────────────│
-│ id (PK)           │
-│ notification_id   │
-│ channel           │
-│ status            │
-│ provider          │
-│ provider_msg_id   │
-│ attempt_number    │
-│ error_message     │
-│ created_at        │
-└──────────────────┘
+```mermaid
+erDiagram
+    users ||--o{ user_preferences : "one user has prefs per channel"
+    users ||--o{ device_tokens : "one user has many devices"
+    users ||--o{ notifications : "one user receives many notifications"
+    templates ||--o{ notifications : "one template used by many notifications"
+    notifications ||--o{ delivery_log : "one notification has many delivery attempts"
 
-Relationships:
-  users 1───* user_preferences  (one user has prefs per channel)
-  users 1───* device_tokens     (one user has many devices)
-  users 1───* notifications     (one user receives many notifications)
-  templates 1───* notifications (one template used by many notifications)
-  notifications 1───* delivery_log (one notification has many delivery attempts)
+    users {
+        BIGINT id PK
+        VARCHAR email
+        VARCHAR phone
+        VARCHAR locale
+        VARCHAR timezone
+    }
+    user_preferences {
+        BIGINT user_id FK
+        ENUM channel
+        BOOLEAN enabled
+        TIME quiet_start
+        TIME quiet_end
+        INT frequency_cap
+    }
+    device_tokens {
+        BIGINT id PK
+        BIGINT user_id FK
+        ENUM platform
+        VARCHAR token UK
+        BOOLEAN is_active
+        TIMESTAMP last_used_at
+    }
+    notifications {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT template_id FK
+        ENUM channel
+        ENUM priority
+        ENUM status
+        VARCHAR idempotency_key UK
+        JSONB payload
+        TIMESTAMP scheduled_at
+        TIMESTAMP sent_at
+    }
+    delivery_log {
+        BIGINT id PK
+        BIGINT notification_id FK
+        ENUM channel
+        ENUM status
+        VARCHAR provider
+        VARCHAR provider_msg_id
+        INT attempt_number
+        TEXT error_message
+        TIMESTAMP created_at
+    }
+    templates {
+        BIGINT id PK
+        VARCHAR name
+        ENUM channel
+        VARCHAR subject
+        TEXT body
+        JSONB variables
+        VARCHAR locale
+    }
 ```
+
 
 ## Data Flow
 
 ### Sending a Notification
-
-```
-1. Event occurs (e.g., "User B liked User A's post")
-         │
-         ▼
-2. Notification Service receives event
-         │
-         ▼
-3. Deduplicate: check idempotency_key in notifications table
-   ├─ Already exists? → Skip (exactly-once guarantee)
-   └─ New? → Continue
-         │
-         ▼
-4. Determine channels: Query user_preferences for user A
-   ├─ Filter to enabled channels
-   ├─ Check quiet hours (convert scheduled time to user's timezone)
-   │   └─ If in quiet hours AND priority != P0 → defer or skip
-   └─ Check frequency_cap → skip if exceeded
-         │
-         ▼
-5. For each eligible channel:
-   ├─ INSERT into notifications (status = 'pending')
-   ├─ Resolve template (by name + channel + user locale)
-   ├─ Render template with payload variables
-   └─ Enqueue to Kafka topic by priority:
-       P0/P1 → high-priority topic (dedicated consumers)
-       P2/P3 → normal-priority topic
-         │
-         ▼
-6. Channel Worker picks up from Kafka:
-   ├─ Push: lookup device_tokens → send via APNs/FCM
-   ├─ SMS: send via Twilio
-   ├─ Email: send via SendGrid
-   └─ In-app: write to user's in-app notification feed
-         │
-         ▼
-7. On provider response:
-   ├─ INSERT into delivery_log (status, provider_msg_id, etc.)
-   ├─ UPDATE notifications.status
-   ├─ On failure: retry with exponential backoff (up to 3 attempts)
-   └─ On permanent failure: try fallback channel if configured
-         │
-         ▼
-8. Async webhooks from providers:
-   ├─ Email opened → UPDATE delivery_log (status = 'opened')
-   ├─ Link clicked → UPDATE delivery_log (status = 'clicked')
-   └─ Bounce/complaint → UPDATE device_tokens (is_active = false)
-```
 
 ```mermaid
 flowchart TD

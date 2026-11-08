@@ -6,28 +6,12 @@ Statistical arbitrage (stat arb) is the systematic exploitation of pricing ineff
 
 This chapter covers the full lifecycle of quantitative strategy development, from alpha research to live trading, with rigorous mathematical treatment of the core concepts.
 
-```
-+------------------------------------------------------------------------+
-|              QUANTITATIVE STRATEGY DEVELOPMENT PIPELINE                  |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  ALPHA RESEARCH           PORTFOLIO CONSTRUCTION    EXECUTION          |
-|  +-------------------+   +---------------------+   +---------------+  |
-|  | Universe Selection |   | Optimization         |   | Order Routing  |  |
-|  | Feature Engineering|-->| Risk Budgeting       |-->| Smart Routing  |  |
-|  | Signal Generation  |   | Position Sizing      |   | Slippage Ctrl  |  |
-|  | Backtesting        |   | Rebalancing Rules    |   | Fill Analysis  |  |
-|  +-------------------+   +---------------------+   +---------------+  |
-|           |                        |                        |          |
-|           v                        v                        v          |
-|  +-------------------+   +---------------------+   +---------------+  |
-|  | RISK MANAGEMENT   |   | PERFORMANCE ANALYSIS |   | MONITORING    |  |
-|  | VaR / CVaR         |   | Sharpe / Sortino     |   | PnL Attrib    |  |
-|  | Drawdown Limits   |   | Factor Decomposition |   | Drift Detect   |  |
-|  | Tail Risk Hedging  |   | Turnover Analysis    |   | Kill Switches  |  |
-|  +-------------------+   +---------------------+   +---------------+  |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    AR["1. Alpha Research<br/>Universe Selection, Feature Engineering,<br/>Signal Generation, Backtesting"] --> PC["2. Portfolio Construction<br/>MVO / Factor Neutralization,<br/>Risk Budgeting, Position Sizing"] --> EX["3. Execution<br/>TWAP/VWAP/IS Slicing,<br/>Smart Order Routing, TCA"]
+    AR --> RM["Risk Management<br/>VaR / CVaR, Drawdown Limits,<br/>Tail Risk Hedging"]
+    PC --> PA["Performance Analysis<br/>Sharpe / Sortino, Factor Attribution,<br/>Turnover Analysis"]
+    EX --> MON["Real-Time Monitoring<br/>PnL Attribution, Drift Detection,<br/>Kill Switches"]
 ```
 
 ---
@@ -458,25 +442,11 @@ Risk model output:
 
 ### 4.1 The Systematic Process
 
-```
-+----------+     +----------+     +----------+     +----------+
-| Universe |     | Feature  |     | Signal   |     | Back-    |
-| Selection| --> | Engineer | --> | Gener-   | --> | testing  |
-|          |     |          |     | ation    |     |          |
-+----------+     +----------+     +----------+     +----------+
-     |                |                |                |
-     v                v                v                v
-  - Liquidity     - Price-based    - Z-scores       - Walk-forward
-  - Market cap    - Fundamental    - Rank signals   - Transaction
-  - Sector        - Alternative    - Composite        costs
-  - ADV filter      data             alphas         - Slippage
-                  - Microstructure                  - Capacity
-                                        |
-                                        v
-                                  +----------+     +----------+
-                                  | Paper    |     | Live     |
-                                  | Trading  | --> | Trading  |
-                                  +----------+     +----------+
+```mermaid
+flowchart LR
+    S1["1. Universe Selection<br/>Liquidity, Market Cap,<br/>Sector, ADV Filter"] --> S2["2. Feature Engineering<br/>Price/Vol, Fundamentals,<br/>Alt Data, Microstructure"]
+    S2 --> S3["3. Signal Generation<br/>Cross-sectional Z-scores,<br/>Rank Signals, Composite Alphas"] --> S4["4. Backtesting<br/>Walk-Forward, Transaction Costs,<br/>Slippage, Capacity"]
+    S4 --> S5["5. Paper Trading"] --> S6["6. Live Trading"]
 ```
 
 ### 4.2 Feature Engineering for Quant Strategies

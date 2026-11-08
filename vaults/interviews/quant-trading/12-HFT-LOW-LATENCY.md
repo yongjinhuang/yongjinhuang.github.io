@@ -420,25 +420,12 @@ STRATEGIES FOR QUEUE MANAGEMENT:
 
 Tick-to-trade measures the total time from receiving a market data update to having an order acknowledged by the exchange:
 
-```
-TICK-TO-TRADE LATENCY BREAKDOWN
-
-Market Data        Feed          Strategy       Order          Exchange
-  Tick       -->  Handler  -->   Logic    -->  Gateway   -->  Matching
-(exchange)       (parse)       (decide)      (send)         Engine
-    |               |              |              |              |
-    +--- t1 --------+--- t2 ------+--- t3 -------+--- t4 ------+
-    |  NIC/Wire     | Parse &     | Signal &     | Serialize & |
-    |  receive      | normalize   | risk check   | transmit    |
-    |               |             |              |              |
-    | ~0.5-2us      | ~0.3-1us   | ~0.2-1us    | ~0.5-2us    |
-    |               |             |              |              |
-    +===============+==============================+=============+
-    Total tick-to-trade: ~1.5 - 10 microseconds (competitive)
-
-    Median HFT firm: ~5-20 microseconds
-    Top HFT firm:    ~1-5 microseconds
-    FPGA-based:      < 1 microsecond (feed handler to order out)
+```mermaid
+flowchart LR
+    T0["Exchange Market Data Tick"] -->|"t1: Wire + NIC DMA<br/>(~0.5-2 us)"| FH["Feed Handler<br/>(Parse &amp; Book Update)"]
+    FH -->|"t2: ~0.3-1 us"| SL["Strategy Logic<br/>(Signal + Inline Risk)"]
+    SL -->|"t3: ~0.2-1 us"| OG["Order Gateway<br/>(Serialize OUCH/BOE)"]
+    OG -->|"t4: NIC Transmit<br/>(~0.5-2 us)"| ME["Exchange Matching Engine<br/>(Total: ~1.5-10 us SW, &lt;1 us FPGA)"]
 ```
 
 ### The Full Latency Stack

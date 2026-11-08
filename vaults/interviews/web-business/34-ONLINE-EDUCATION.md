@@ -184,6 +184,40 @@ Instructor-led, time-bound programs with live sessions, group projects, and peer
 - **Accessibility compliance**: Video content needs captions, interactive elements need keyboard navigation, and screen readers need proper ARIA labels. Many jurisdictions legally require this (ADA, WCAG 2.1 AA). Retrofitting accessibility is expensive — build it in from the start.
 - **Instructor payout complexity**: On marketplace models, you're handling payouts to potentially thousands of instructors across countries. Tax reporting (1099s in the US), currency conversion, minimum payout thresholds, and payment methods all add complexity. Use a platform like Stripe Connect.
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Accurate Video Watch-Time Metering: Range-Bitmask Heartbeats vs. "Seek-to-End" Cheating
+
+In corporate compliance training, continuing education (CEU/CME), and accredited university courses, certificates are legally valid only if the student actually watched $\ge 90\%$ of the video.
+- **How Naive Progress Tracking Breaks**:
+  1. Checking `video.onended` or `currentTime >= duration * 0.9` lets a student drag the scrub bar straight to `59:50` of a 60-minute lecture and get instant 100% completion.
+  2. Simply incrementing `watched_seconds += 10` on a 10-second heartbeat breaks when the student opens the video in 3 tabs, re-watches the first 5 minutes 12 times (`12 × 5m = 60m`), or sets `playbackRate = 16.0` in DevTools!
+- **Battle-Tested Interval Bitmask Architecture**:
+  - Partition a 60-minute (`3600s`) video into `360` discrete 10-second buckets (a 360-bit bitmask or run-length encoded interval set `[[0, 120], [300, 450]]`).
+  - Every heartbeat submits `{bucket_index, playback_rate, tab_focused}` signed with the session token. The backend validates that `elapsed_wall_clock_time * max_allowed_speed >= newly_claimed_buckets * 10s` before flipping those bits to `1`.
+  - **Completion** is simply `popcount(bitmask) / total_buckets >= 0.90`, while `resume_position` is stored separately as the last seek position.
+
+```mermaid
+flowchart LR
+    HB["Player Heartbeat (Every 10s)<br/>{bucket: 14, speed: 1.5x}"] --> Guard{"Wall-Clock Delta >=<br/>10s / max_speed (2.0x)?"}
+    Guard -->|Rejected (Scrubbed / 16x Speed)| Drop["Update resume_pos only<br/>(Do not mark bucket watched)"]
+    Guard -->|Valid| Bit["Set Bit 14 = 1 in User Video Bitmask"]
+    Bit --> Calc["popcount(bitmask) / 360 >= 90%?<br/>-> Unlock Quiz / Certificate"]
+```
+
+### 2. Server-Authoritative Timed Exams: Surviving Browser Crashes Without Allowing Clock Manipulation
+
+If a student has a 60-minute timed certification exam and the countdown timer runs purely in React state (`setInterval`), refreshing the page resets the timer—or the student simply changes their laptop's system clock back 2 hours! Conversely, if a student's Wi-Fi drops at minute 58, losing all 50 answers they typed causes massive support escalations.
+- **Production Exam State Machine**:
+  - **Server-Authoritative Deadline**: Clicking "Start Exam" writes `started_at = server_now()` and `expires_at = server_now() + 60m` in the backend DB. Every question fetch and answer submission checks `server_now() <= expires_at + 30s_network_grace_buffer`.
+  - **Debounced Auto-Save Drafts + Auto-Submit Sweeper**: Every radio selection or keystroke debounces an idempotent `PATCH /attempts/{id}/draft` (with monotonic `client_revision`). If the student's browser crashes at minute 55 and they never reconnect, a background scheduled job at `expires_at + 30s` automatically grades their last saved draft state rather than recording a `0` for an unsubmitted attempt.
+  - **Randomized Question & Option Permutations**: Seed a deterministic PRNG with `hash(attempt_id, question_id)` on the server to shuffle both question order and multiple-choice option order (`A/B/C/D`), sending only display indices to the client—and **never** include `is_correct` or `explanation` in the client JSON payload until the attempt state transitions to `SUBMITTED`.
+
+### 3. Certificate Revocation, Immutable Curriculum Snapshots & SCORM/xAPI Enterprise LMS Quirks
+
+- **Curriculum Versioning vs. Historical Completions**: If an instructor adds 3 new lessons to a course in November, a student who already earned their certificate in August must **not** suddenly drop from `100% Complete` to `82% Complete` or have their certificate invalidated! Bind issued certificates to an immutable `course_snapshot_version`, and track "New Optional Updates Available" separately from core completion status.
+- **Refund-After-Certificate Abuse**: In self-paced paid courses with a 30-day refund policy, serial abusers binge-download all PDFs, pass the final quiz, download the verifiable PDF/LinkedIn certificate in 48 hours, and immediately request a full refund. Production platforms gate refunds on `< 25%` video bitmask consumption *and* automatically flip the public certificate verification URL (`/verify/cert_98a7f`) to `REVOKED (Refunded)` if a chargeback or refund is processed.
+
 ## Quick Reference
 
 ```

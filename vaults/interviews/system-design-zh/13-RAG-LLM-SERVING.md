@@ -1040,7 +1040,7 @@ def generate_with_citations(query: str, chunks: list[Chunk]) -> dict:
   Req B: [=====================]   (21 tokens)
   Req C: [========]                (8 tokens)
 
-  Req C 在 token 8 时完��，但 GPU 等待 Req B（21 tokens）
+  Req C 在 token 8 时完成，但 GPU 等待 Req B（21 tokens）
   GPU 利用率: ~65%
 
 Continuous Batching:

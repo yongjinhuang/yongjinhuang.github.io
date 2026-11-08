@@ -25,33 +25,15 @@
 
 每一场系统设计面试，无论题目是什么，都可以用这个四步框架来应对。面试总时长通常为 45-60 分钟。
 
-```
-+-------------------------------------------------------------+
-|                    SYSTEM DESIGN INTERVIEW                   |
-|                        (45-60 minutes)                       |
-+-------------------------------------------------------------+
-|                                                              |
-|  STEP 1: Understand the Problem    [3-5 min]    ~8%         |
-|  +---------------------------------------------------------+ |
-|  | Ask clarifying questions, define scope, identify users   | |
-|  +---------------------------------------------------------+ |
-|                                                              |
-|  STEP 2: High-Level Design         [10-15 min]  ~30%        |
-|  +---------------------------------------------------------+ |
-|  | API design, data model, architecture diagram             | |
-|  +---------------------------------------------------------+ |
-|                                                              |
-|  STEP 3: Design Deep Dive          [10-15 min]  ~45%        |
-|  +---------------------------------------------------------+ |
-|  | Scale bottlenecks, detailed component design             | |
-|  +---------------------------------------------------------+ |
-|                                                              |
-|  STEP 4: Wrap Up                   [3-5 min]    ~17%        |
-|  +---------------------------------------------------------+ |
-|  | Error handling, monitoring, future improvements          | |
-|  +---------------------------------------------------------+ |
-|                                                              |
-+-------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Interview["SYSTEM DESIGN INTERVIEW (45-60 minutes)"]
+        S1["STEP 1: Understand the Problem [3-5 min, ~8%]<br/>Ask clarifying questions, define scope, identify users"]
+        S2["STEP 2: High-Level Design [10-15 min, ~30%]<br/>API design, data model, architecture diagram"]
+        S3["STEP 3: Design Deep Dive [10-15 min, ~45%]<br/>Scale bottlenecks, detailed component design"]
+        S4["STEP 4: Wrap Up [3-5 min, ~17%]<br/>Error handling, monitoring, future improvements"]
+        S1 --> S2 --> S3 --> S4
+    end
 ```
 
 **黄金法则：**
@@ -230,104 +212,55 @@ DELETE /api/v1/urls/{short_code}
 
 定义你的核心实体及其关系：
 
-```
-DATA MODEL (URL Shortener)
-==========================
-
-urls
-+----------------+---------------+-----------------------------------+
-| Column         | Type          | Notes                             |
-+----------------+---------------+-----------------------------------+
-| id             | BIGINT        | Primary key, auto-increment       |
-| short_code     | VARCHAR(7)    | Unique index, the short URL code  |
-| long_url       | VARCHAR(2048) | The original URL                  |
-| user_id        | BIGINT        | FK to users table (nullable)      |
-| created_at     | TIMESTAMP     | Creation time                     |
-| expires_at     | TIMESTAMP     | Expiration time                   |
-| click_count    | BIGINT        | Denormalized counter              |
-+----------------+---------------+-----------------------------------+
-
-click_events (for analytics)
-+----------------+---------------+-----------------------------------+
-| Column         | Type          | Notes                             |
-+----------------+---------------+-----------------------------------+
-| id             | BIGINT        | Primary key                       |
-| short_code     | VARCHAR(7)    | FK to urls.short_code             |
-| timestamp      | TIMESTAMP     | When the click happened           |
-| ip_address     | VARCHAR(45)   | For geo lookups                   |
-| user_agent     | VARCHAR(512)  | Browser/device info               |
-| referrer       | VARCHAR(2048) | Where the click came from         |
-+----------------+---------------+-----------------------------------+
+```mermaid
+erDiagram
+    URLS ||--o{ CLICK_EVENTS : "tracks clicks via short_code"
+    URLS {
+        BIGINT id PK "Auto-increment"
+        VARCHAR_7 short_code UK "Unique index, short URL code"
+        VARCHAR_2048 long_url "Original URL"
+        BIGINT user_id FK "FK to users table (nullable)"
+        TIMESTAMP created_at "Creation time"
+        TIMESTAMP expires_at "Expiration time"
+        BIGINT click_count "Denormalized counter"
+    }
+    CLICK_EVENTS {
+        BIGINT id PK "Primary key"
+        VARCHAR_7 short_code FK "FK to urls.short_code"
+        TIMESTAMP timestamp "When the click happened"
+        VARCHAR_45 ip_address "For geo lookups"
+        VARCHAR_512 user_agent "Browser/device info"
+        VARCHAR_2048 referrer "Where the click came from"
+    }
 ```
 
 ### 高层架构图
 
 将架构画成方框和箭头。从简单开始：
 
-```
-                         HIGH-LEVEL ARCHITECTURE
-                         ======================
-
-    +--------+       +----------------+       +------------------+
-    |        |       |                |       |                  |
-    | Client +------>| Load Balancer  +------>| Application      |
-    |        |       |                |       | Servers          |
-    +--------+       +----------------+       | (Stateless)      |
-                                              +--------+---------+
-                                                       |
-                                              +--------+---------+
-                                              |                  |
-                                         +----+----+      +-----+-----+
-                                         |         |      |           |
-                                         | Cache   |      | Database  |
-                                         | (Redis) |      | (MySQL)   |
-                                         |         |      |           |
-                                         +---------+      +-----------+
+```mermaid
+flowchart LR
+    Client["Client"] --> LB["Load Balancer"]
+    LB --> App["Application Servers<br/>(Stateless)"]
+    App --> Cache["Cache<br/>(Redis)"]
+    App --> DB["Database<br/>(MySQL)"]
 ```
 
 然后迭代添加更多细节：
 
-```
-                    DETAILED ARCHITECTURE (URL Shortener)
-                    ====================================
-
-                            +-----------+
-                            |   CDN     |
-                            +-----+-----+
-                                  |
-    +--------+              +-----+------+
-    |        |   HTTPS      |            |
-    | Client +------------->|    Load    |
-    |        |              |  Balancer  |
-    +--------+              +-----+------+
-                                  |
-                    +-------------+-------------+
-                    |                           |
-              +-----+------+            +------+-----+
-              | Write      |            | Read       |
-              | Service    |            | Service    |
-              +-----+------+            +------+-----+
-                    |                          |
-              +-----+------+            +------+-----+
-              |            |            |            |
-              | ID Gen     |            | Cache      |
-              | Service    |            | (Redis)    |
-              | (Snowflake)|            |            |
-              +-----+------+            +------+-----+
-                    |                          |
-                    +-------------+------------+
-                                  |
-                         +--------+--------+
-                         |                 |
-                    +----+----+    +-------+-------+
-                    |  MySQL  |    | Analytics DB  |
-                    | Primary |    | (Cassandra)   |
-                    +----+----+    +---------------+
-                         |
-                    +----+----+
-                    | MySQL   |
-                    | Replicas|
-                    +---------+
+```mermaid
+flowchart TD
+    CDN["CDN"] --> LB["Load Balancer"]
+    Client["Client"] -->|"HTTPS"| LB
+    LB --> WriteSvc["Write Service"]
+    LB --> ReadSvc["Read Service"]
+    WriteSvc --> IDGen["ID Gen Service<br/>(Snowflake)"]
+    ReadSvc --> Cache["Cache<br/>(Redis)"]
+    IDGen --> Primary["MySQL Primary"]
+    IDGen --> Analytics["Analytics DB<br/>(Cassandra)"]
+    Cache --> Primary
+    Cache --> Analytics
+    Primary --> Replicas["MySQL Replicas"]
 ```
 
 ### 走查用例
@@ -382,113 +315,58 @@ click_events (for analytics)
 1. **识别瓶颈**——高层设计中的瓶颈在哪里。
 2. **深入 2-3 个组件**，进行详细设计。
 3. **明确讨论权衡取舍**——每个决策都要。
-4. **处理故障场景**和边��情况。
+4. **处理故障场景**和边界情况。
 5. **展示扩展策略**——针对已识别的瓶颈。
 
 ### 常见深入探讨主题
 
 #### 数据库扩展
 
-```
-DATABASE SCALING PROGRESSION
-============================
-
-Stage 1: Single Server
-+----------+
-| DB       |
-| (Single) |
-+----------+
-
-Stage 2: Primary-Replica (Read Scaling)
-+----------+     +----------+     +----------+
-| Primary  +---->| Replica  |     | Replica  |
-| (Write)  |     | (Read)   |     | (Read)   |
-+----------+     +----------+     +----------+
-
-Stage 3: Sharding (Write Scaling)
-+----------+     +----------+     +----------+
-| Shard 0  |     | Shard 1  |     | Shard 2  |
-| (A-H)    |     | (I-P)    |     | (Q-Z)    |
-+----------+     +----------+     +----------+
-     |                |                |
-  +--+--+          +--+--+         +--+--+
-  |Rep 1|          |Rep 1|         |Rep 1|
-  +-----+          +-----+         +-----+
+```mermaid
+flowchart TD
+    subgraph S1["Stage 1: Single Server"]
+        DB["DB (Single)"]
+    end
+    subgraph S2["Stage 2: Primary-Replica (Read Scaling)"]
+        Pri["Primary (Write)"] --> RepA["Replica 1 (Read)"]
+        Pri --> RepB["Replica 2 (Read)"]
+    end
+    subgraph S3["Stage 3: Sharding (Write Scaling)"]
+        Sh0["Shard 0 (A-H)"] --> Sh0R["Replica 1"]
+        Sh1["Shard 1 (I-P)"] --> Sh1R["Replica 1"]
+        Sh2["Shard 2 (Q-Z)"] --> Sh2R["Replica 1"]
+    end
 ```
 
 #### 缓存策略
 
-```
-CACHE-ASIDE PATTERN (Most Common)
-=================================
-
-    +--------+                  +---------+
-    | App    |---1. Check------>| Cache   |
-    | Server |<--2. Miss--------|         |
-    |        |                  +---------+
-    |        |---3. Query------>+---------+
-    |        |<--4. Return------| Database|
-    |        |                  +---------+
-    |        |---5. Populate--->+---------+
-    |        |                  | Cache   |
-    +--------+                  +---------+
-
-WRITE-THROUGH PATTERN
-=====================
-
-    +--------+                  +---------+
-    | App    |---1. Write------>| Cache   |
-    | Server |                  |         |
-    |        |                  +----+----+
-    |        |                       |
-    |        |                  2. Write
-    |        |                       |
-    |        |                  +----+----+
-    |        |                  | Database|
-    +--------+                  +---------+
-
-WRITE-BEHIND (WRITE-BACK) PATTERN
-==================================
-
-    +--------+                  +---------+
-    | App    |---1. Write------>| Cache   |
-    | Server |<--2. ACK---------|         |
-    |        |                  +----+----+
-    +--------+                       |
-                               3. Async
-                               batch write
-                                     |
-                                +----+----+
-                                | Database|
-                                +---------+
+```mermaid
+flowchart LR
+    subgraph CA["Cache-Aside Pattern (Most Common)"]
+        App1["App Server"] -->|"1. Check / 5. Populate"| Cache1["Cache"]
+        Cache1 -->|"2. Miss"| App1
+        App1 -->|"3. Query"| DB1["Database"]
+        DB1 -->|"4. Return"| App1
+    end
+    subgraph WT["Write-Through Pattern"]
+        App2["App Server"] -->|"1. Write"| Cache2["Cache"]
+        Cache2 -->|"2. Sync Write"| DB2["Database"]
+    end
+    subgraph WB["Write-Behind (Write-Back) Pattern"]
+        App3["App Server"] -->|"1. Write"| Cache3["Cache"]
+        Cache3 -->|"2. Immediate ACK"| App3
+        Cache3 -.->|"3. Async batch write"| DB3["Database"]
+    end
 ```
 
 #### Rate Limiting
 
-```
-TOKEN BUCKET ALGORITHM
-======================
-
-    Bucket Capacity: 10 tokens
-    Refill Rate: 2 tokens/second
-
-    [Request arrives]
-         |
-         v
-    +----+-----+
-    | Tokens    |    YES: Allow request, remove 1 token
-    | Available?+-------->
-    +----+-----+
-         |
-         | NO
-         v
-    [Reject: 429 Too Many Requests]
-
-    Token State Over Time:
-    t=0s  [**********]  10/10 tokens
-    t=0s  [*********_]   9/10 (1 request served)
-    t=0s  [********__]   8/10 (2nd request)
-    t=1s  [**********]  10/10 (refilled 2 tokens, capped at 10)
+```mermaid
+flowchart TD
+    Req["Request Arrives<br/>(Bucket Capacity: 10, Refill Rate: 2 tokens/s)"] --> Check{"Tokens Available?"}
+    Check -->|"YES"| Allow["Allow Request &amp; Remove 1 Token"]
+    Check -->|"NO"| Reject["Reject: 429 Too Many Requests"]
+    State["Token State Over Time:<br/>t=0s: 10/10 tokens<br/>t=0s: 9/10 (1st request served)<br/>t=0s: 8/10 (2nd request served)<br/>t=1s: 10/10 (refilled 2 tokens, capped at 10)"]
 ```
 
 #### 唯一 ID 生成
@@ -501,22 +379,12 @@ TOKEN BUCKET ALGORITHM
 | **TSID**           | 类似 Snowflake 但更简单 | 同样的时钟依赖           | Snowflake 的现代替代方案 |
 | **Zookeeper/etcd** | 强一致性                | 额外基础设施，速度较慢   | 需要强排序保证时         |
 
-```
-SNOWFLAKE ID STRUCTURE (64 bits)
-=================================
-
-+--+-------------------+----------+--------------+
-|0 |   41 bits         | 10 bits  |  12 bits     |
-|  |   Timestamp       | Machine  |  Sequence    |
-|  |   (milliseconds)  | ID       |  Number      |
-+--+-------------------+----------+--------------+
- |         |                |            |
- |         |                |            +-- 4096 IDs per ms per machine
- |         |                +-- 1024 machines
- |         +-- ~69 years from epoch
- +-- Sign bit (always 0)
-
-Total: ~4 million unique IDs per second per machine
+```mermaid
+flowchart LR
+    subgraph Snowflake["SNOWFLAKE ID STRUCTURE (64 bits) - ~4M unique IDs/sec/machine"]
+        direction LR
+        B0["1 bit: Sign Bit<br/>(Always 0)"] --- B1["41 bits: Timestamp (ms)<br/>(~69 years from epoch)"] --- B2["10 bits: Machine ID<br/>(1,024 machines)"] --- B3["12 bits: Sequence Number<br/>(4,096 IDs/ms/machine)"]
+    end
 ```
 
 #### Consistent Hashing
@@ -1460,35 +1328,24 @@ Eventual Consistency:
 
 ### 决策框架
 
-```
-DATABASE SELECTION FLOWCHART
-=============================
-
-START: What are your data requirements?
-  |
-  +---> Structured data with relationships?
-  |     |
-  |     +---> YES: Need ACID transactions?
-  |     |     |
-  |     |     +---> YES: Need horizontal scale?
-  |     |     |     |
-  |     |     |     +---> YES: CockroachDB, Google Spanner, TiDB
-  |     |     |     +---> NO:  PostgreSQL, MySQL
-  |     |     |
-  |     |     +---> NO: Read-heavy?
-  |     |           |
-  |     |           +---> YES: PostgreSQL + read replicas
-  |     |           +---> NO:  MySQL, PostgreSQL
-  |     |
-  |     +---> NO: What type of data?
-  |           |
-  |           +---> Key-Value?      --> Redis, DynamoDB, Memcached
-  |           +---> Document?       --> MongoDB, Couchbase
-  |           +---> Wide-Column?    --> Cassandra, HBase, ScyllaDB
-  |           +---> Graph?          --> Neo4j, Amazon Neptune
-  |           +---> Time-Series?    --> InfluxDB, TimescaleDB
-  |           +---> Search/Text?    --> Elasticsearch, OpenSearch
-  |           +---> Blob/Object?    --> S3, GCS, Azure Blob
+```mermaid
+flowchart TD
+    Start["START: What are your data requirements?"] --> Rel{"Structured data<br/>with relationships?"}
+    Rel -->|"YES"| ACID{"Need ACID<br/>transactions?"}
+    ACID -->|"YES"| HScale{"Need horizontal<br/>scale?"}
+    HScale -->|"YES"| NewSQL["CockroachDB, Google Spanner, TiDB"]
+    HScale -->|"NO"| RDBMS["PostgreSQL, MySQL"]
+    ACID -->|"NO"| ReadHeavy{"Read-heavy?"}
+    ReadHeavy -->|"YES"| PGRead["PostgreSQL + Read Replicas"]
+    ReadHeavy -->|"NO"| RDBMS2["MySQL, PostgreSQL"]
+    Rel -->|"NO"| Type{"What type of data?"}
+    Type -->|"Key-Value"| KV["Redis, DynamoDB, Memcached"]
+    Type -->|"Document"| Doc["MongoDB, Couchbase"]
+    Type -->|"Wide-Column"| WC["Cassandra, HBase, ScyllaDB"]
+    Type -->|"Graph"| Graph["Neo4j, Amazon Neptune"]
+    Type -->|"Time-Series"| TS["InfluxDB, TimescaleDB"]
+    Type -->|"Search/Text"| Search["Elasticsearch, OpenSearch"]
+    Type -->|"Blob/Object"| Blob["S3, GCS, Azure Blob"]
 ```
 
 ### SQL 与 NoSQL 对比
@@ -1540,42 +1397,18 @@ START: What are your data requirements?
 
 ### 你应该知道的数据库内部原理
 
-```
-B-TREE vs LSM TREE
-===================
-
-B-Tree (PostgreSQL, MySQL InnoDB):
-  - Balanced tree structure
-  - Optimized for reads
-  - In-place updates
-  - Good for read-heavy workloads
-  - Write amplification on updates
-
-  Read:  O(log n)
-  Write: O(log n) + random I/O
-
-LSM Tree (Cassandra, RocksDB, LevelDB):
-  - Log-Structured Merge Tree
-  - Optimized for writes
-  - Append-only writes to memory (memtable)
-  - Background compaction merges sorted files
-  - Good for write-heavy workloads
-
-  Read:  O(log n) + potential multi-file lookup
-  Write: O(1) amortized (sequential I/O)
-
-  Write Path:
-  +----------+     +-----------+     +--------+     +--------+
-  | Write    | --> | MemTable  | --> | SSTable | --> | SSTable |
-  | (append) |     | (in-mem)  |     | Level 0|     | Level 1|
-  +----------+     +-----------+     +--------+     +--------+
-                        |                     \       /
-                        | flush               compaction
-                        v                       |
-                   +-----------+          +--------+
-                   | WAL       |          | SSTable |
-                   | (durability)         | Level 2 |
-                   +-----------+          +--------+
+```mermaid
+flowchart LR
+    subgraph BTree["B-Tree (PostgreSQL, MySQL InnoDB)"]
+        BTInfo["Balanced tree, in-place updates<br/>Read: O(log n) | Write: O(log n) + random I/O<br/>Best for read-heavy workloads"]
+    end
+    subgraph LSM["LSM Tree Write Path (Cassandra, RocksDB, LevelDB)"]
+        W["Write (append)<br/>O(1) amortized"] --> Mem["MemTable (in-memory)"]
+        Mem -->|"flush"| WAL["WAL (durability)"]
+        Mem --> L0["SSTable Level 0"]
+        L0 --> L1["SSTable Level 1"]
+        L0 & L1 -->|"compaction"| L2["SSTable Level 2"]
+    end
 ```
 
 ---
@@ -1661,66 +1494,20 @@ Long Polling (legacy approach):
 
 ### 协议深入探讨
 
-```
-WEBSOCKET CONNECTION LIFECYCLE
-===============================
-
-    Client                              Server
-    |                                   |
-    |  --- HTTP Upgrade Request ----->  |
-    |  GET / HTTP/1.1                   |
-    |  Upgrade: websocket               |
-    |  Connection: Upgrade              |
-    |                                   |
-    |  <-- 101 Switching Protocols ---  |
-    |                                   |
-    |  ====== WebSocket Frames ======>  |
-    |  <===== WebSocket Frames =======  |
-    |  ====== WebSocket Frames ======>  |
-    |                                   |
-    |  --- Close Frame ------------->   |
-    |  <-- Close Frame Ack ----------   |
-    |                                   |
-
-
-SCALING WEBSOCKET CONNECTIONS:
-
-  Problem: WebSocket connections are persistent and stateful.
-  A load balancer cannot simply route each message independently.
-
-  Solution 1: Sticky Sessions
-    Load balancer routes all traffic from a client to the same server.
-    - Simple but limits scaling flexibility
-    - Server failure disconnects all its clients
-
-  Solution 2: Pub/Sub Backend (Redis, Kafka)
-    +--------+     +---------+     +--------+
-    | WS Srv |<--->|  Redis  |<--->| WS Srv |
-    |   1    |     | Pub/Sub |     |   2    |
-    +---+----+     +---------+     +---+----+
-        |                              |
-    Clients                        Clients
-    A, B, C                        D, E, F
-
-    When User A sends a message to User D:
-    1. WS Server 1 receives message from A
-    2. WS Server 1 publishes to Redis channel
-    3. Redis delivers to WS Server 2
-    4. WS Server 2 sends to User D
-
-
-SSE vs WEBSOCKET DECISION:
-==============================
-
-  Need bidirectional? ---YES---> WebSocket
-         |
-         NO
-         |
-  Need server push only? ---YES---> SSE
-         |
-         NO
-         |
-  Standard request-response? ---YES---> HTTP/REST
+```mermaid
+flowchart TD
+    subgraph Scaling["Scaling WebSocket Connections via Pub/Sub Backend"]
+        CA["Clients A, B, C"] <--> WS1["WS Server 1"]
+        WS1 <-->|"Publish / Subscribe"| Redis["Redis Pub/Sub / Kafka"]
+        Redis <-->|"Publish / Subscribe"| WS2["WS Server 2"]
+        WS2 <--> CD["Clients D, E, F"]
+    end
+    subgraph Decision["Protocol Decision Flow"]
+        Q1{"Need bidirectional?"} -->|"YES"| UseWS["WebSocket"]
+        Q1 -->|"NO"| Q2{"Need server push only?"}
+        Q2 -->|"YES"| UseSSE["Server-Sent Events (SSE)"]
+        Q2 -->|"NO"| UseHTTP["Standard HTTP/REST"]
+    end
 ```
 
 ---
@@ -2032,131 +1819,31 @@ BANDWIDTH QUICK MATH:
 
 这些是常见架构的可复用模板。练习在面试中快速画出它们。
 
-```
-TEMPLATE 1: BASIC WEB APPLICATION
-===================================
-
-    +--------+     +-------+     +----------+     +---------+
-    | Client | --> |  CDN  | --> |   Load   | --> |   App   |
-    +--------+     +-------+     | Balancer |     | Servers |
-                                 +----------+     +----+----+
-                                                       |
-                                               +-------+-------+
-                                               |               |
-                                          +----+----+    +-----+-----+
-                                          |  Cache  |    | Database  |
-                                          | (Redis) |    | (Primary) |
-                                          +---------+    +-----+-----+
-                                                               |
-                                                         +-----+-----+
-                                                         | Replicas  |
-                                                         +-----------+
-
-
-TEMPLATE 2: MICROSERVICES WITH MESSAGE QUEUE
-=============================================
-
-    +--------+     +----------+     +------------+
-    | Client | --> |   API    | --> | Service A  |
-    +--------+     | Gateway  |     +------+-----+
-                   +----------+            |
-                        |            +-----+------+
-                        |            | Message    |
-                        |            | Queue      |
-                        |            +-----+------+
-                        |                  |
-                   +----+-----+      +-----+------+
-                   | Service B|      | Service C  |
-                   +----+-----+      +-----+------+
-                        |                  |
-                   +----+-----+      +-----+------+
-                   | DB (SQL) |      | DB (NoSQL) |
-                   +----------+      +------------+
-
-
-TEMPLATE 3: READ-HEAVY SYSTEM WITH CACHING LAYERS
-===================================================
-
-    +--------+
-    | Client |
-    +---+----+
-        |
-    +---+----+
-    |  CDN   |  <-- Static assets, cached responses
-    +---+----+
-        |
-    +---+-------+
-    |    Load   |
-    |  Balancer |
-    +---+-------+
-        |
-    +---+----+
-    | App    |
-    | Server |
-    +---+----+
-        |
-    +---+-------+
-    | L1 Cache  |  <-- Local/in-process cache (e.g., Caffeine)
-    | (App Mem) |
-    +---+-------+
-        |
-    +---+-------+
-    | L2 Cache  |  <-- Distributed cache (e.g., Redis)
-    | (Redis)   |
-    +---+-------+
-        |
-    +---+-------+
-    | Database  |  <-- Only reached on double cache miss
-    | (with     |
-    |  replicas)|
-    +-----------+
-
-
-TEMPLATE 4: EVENT-DRIVEN ARCHITECTURE
-=======================================
-
-    +----------+     +---------+     +----------+
-    | Producer | --> |  Event  | --> | Consumer |
-    | Service  |     |  Store  |     | Group A  |
-    +----------+     | (Kafka) |     +----------+
-                     |         |
-    +----------+     |         |     +----------+
-    | Producer | --> |         | --> | Consumer |
-    | Service  |     |         |     | Group B  |
-    +----------+     +---------+     +----------+
-                                          |
-                                     +----+-----+
-                                     | Analytics|
-                                     | DB       |
-                                     +----------+
-
-
-TEMPLATE 5: GLOBAL MULTI-REGION DEPLOYMENT
-============================================
-
-                  +-------------------+
-                  |   Global DNS /    |
-                  |   GeoDNS / GSLB   |
-                  +--------+----------+
-                           |
-            +--------------+---------------+
-            |                              |
-    +-------+-------+            +--------+--------+
-    | US Region     |            | EU Region       |
-    |               |            |                 |
-    | +---+  +---+  |            | +---+  +---+   |
-    | |App|  |App|  |            | |App|  |App|   |
-    | +---+  +---+  |            | +---+  +---+   |
-    |               |            |                 |
-    | +---+  +---+  |  async     | +---+  +---+   |
-    | |DB |->|DB |--+--repl.---->| |DB |->|DB |   |
-    | |Pri|  |Rep|  |            | |Pri|  |Rep|   |
-    | +---+  +---+  |            | +---+  +---+   |
-    |               |            |                 |
-    | +--------+    |            | +--------+      |
-    | | Cache  |    |            | | Cache  |      |
-    | +--------+    |            | +--------+      |
-    +---------------+            +-----------------+
+```mermaid
+flowchart TD
+    subgraph T1["Template 1: Basic Web Application"]
+        C1["Client"] --> CDN1["CDN"] --> LB1["Load Balancer"] --> App1["App Servers"]
+        App1 --> Redis1["Cache (Redis)"]
+        App1 --> DB1["Database (Primary)"] --> Rep1["Replicas"]
+    end
+    subgraph T2["Template 2: Microservices with Message Queue"]
+        C2["Client"] --> GW["API Gateway"]
+        GW --> SvcA["Service A"] --> MQ["Message Queue"] --> SvcC["Service C"] --> DBNoSQL["DB (NoSQL)"]
+        GW --> SvcB["Service B"] --> DBSQL["DB (SQL)"]
+    end
+    subgraph T3["Template 3: Read-Heavy System with Caching Layers"]
+        C3["Client"] --> CDN3["CDN (Static/Cached)"] --> LB3["Load Balancer"] --> App3["App Server"] --> L1["L1 Cache (In-Process Caffeine)"] --> L2["L2 Cache (Redis)"] --> DB3["Database + Replicas"]
+    end
+    subgraph T4["Template 4: Event-Driven Architecture"]
+        P1["Producer Service 1"] & P2["Producer Service 2"] --> Kafka["Event Store (Kafka)"]
+        Kafka --> CGA["Consumer Group A"]
+        Kafka --> CGB["Consumer Group B"] --> ADB["Analytics DB"]
+    end
+    subgraph T5["Template 5: Global Multi-Region Deployment"]
+        DNS["Global DNS / GeoDNS / GSLB"] --> US["US Region (App + Cache + DB Primary/Replica)"]
+        DNS --> EU["EU Region (App + Cache + DB Primary/Replica)"]
+        US -.->|"Async Replication"| EU
+    end
 ```
 
 ---
@@ -2228,86 +1915,34 @@ Problem: Global scale
 
 ### Saga 模式
 
-```
-SAGA PATTERN (Distributed Transactions)
-=========================================
-
-When a business transaction spans multiple services and you cannot
-use a traditional distributed transaction (2PC):
-
-CHOREOGRAPHY SAGA (event-driven):
-
-  Order         Payment        Inventory       Shipping
-  Service       Service        Service         Service
-    |               |              |               |
-    |--OrderCreated-->             |               |
-    |               |--PaymentOK-->|               |
-    |               |              |--Reserved---->|
-    |               |              |               |--Shipped-->
-    |               |              |               |
-    | If failure at any step, compensating events are published:
-    |               |              |               |
-    |               |<--ReserveFail-|              |
-    |               |--PaymentRefund-->            |
-    |<--OrderCancelled|            |               |
-
-
-ORCHESTRATION SAGA (central coordinator):
-
-                 +-------------+
-                 | Saga        |
-                 | Orchestrator|
-                 +------+------+
-                        |
-          +-------------+-------------+
-          |             |             |
-    +-----+---+   +----+----+  +-----+----+
-    | Order   |   | Payment |  | Inventory|
-    | Service |   | Service |  | Service  |
-    +---------+   +---------+  +----------+
-
-    Orchestrator controls the sequence:
-    1. Create order
-    2. Process payment
-    3. Reserve inventory
-    4. If any step fails, run compensating actions in reverse
+```mermaid
+flowchart TD
+    subgraph Choreography["Choreography Saga (Event-Driven)"]
+        OS1["Order Service"] -->|"OrderCreated"| PS1["Payment Service"]
+        PS1 -->|"PaymentOK"| IS1["Inventory Service"]
+        IS1 -->|"Reserved"| SS1["Shipping Service"]
+        IS1 -.->|"ReserveFail (Compensate)"| PS1
+        PS1 -.->|"PaymentRefund / OrderCancelled"| OS1
+    end
+    subgraph Orchestration["Orchestration Saga (Central Coordinator)"]
+        Orch["Saga Orchestrator"] -->|"1. Create Order"| OS2["Order Service"]
+        Orch -->|"2. Process Payment"| PS2["Payment Service"]
+        Orch -->|"3. Reserve Inventory"| IS2["Inventory Service"]
+    end
 ```
 
 ### CQRS 模式
 
-```
-CQRS (Command Query Responsibility Segregation)
-=================================================
-
-Separate the read model from the write model.
-
-Traditional:
-    +--------+     +----------+     +---------+
-    | Client | --> | Service  | --> | Single  |
-    |        | <-- |          | <-- | Database|
-    +--------+     +----------+     +---------+
-
-CQRS:
-    +--------+     +----------+     +---------+
-    | Client | --> | Command  | --> | Write   |
-    | (Write)|     | Service  |     | Database|
-    +--------+     +----------+     +---------+
-                                         |
-                                    Event / CDC
-                                         |
-                                         v
-    +--------+     +----------+     +---------+
-    | Client | --> | Query    | --> | Read    |
-    | (Read) |     | Service  |     | Database|
-    +--------+     +----------+     +---------+
-
-    Write DB: Optimized for writes (normalized, ACID)
-    Read DB:  Optimized for reads (denormalized, materialized views)
-
-    Use when:
-    - Read and write patterns are very different
-    - Need to scale reads and writes independently
-    - Complex queries that do not fit the write model
+```mermaid
+flowchart LR
+    subgraph Trad["Traditional CRUD"]
+        C0["Client"] <--> Svc0["Service"] <--> DB0["Single Database"]
+    end
+    subgraph CQRS["CQRS (Command Query Responsibility Segregation)"]
+        CW["Client (Write)"] --> Cmd["Command Service"] --> WDB["Write Database<br/>(Normalized, ACID)"]
+        WDB -->|"Event / CDC"| RDB["Read Database<br/>(Denormalized / Materialized Views)"]
+        CR["Client (Read)"] --> Qry["Query Service"] --> RDB
+    end
 ```
 
 ---
@@ -2439,38 +2074,15 @@ Deep Dive Areas:
 
 ### 题目 4：设计通知系统
 
-```
-Key Questions:
-  - What channels (push, email, SMS, in-app)?
-  - Real-time or can be delayed?
-  - Can users set preferences (opt-out, quiet hours)?
-  - How many notifications per day?
-
-Key Concepts:
-  - Message queue for decoupling and reliability
-  - Template system for notification content
-  - Rate limiting (do not spam users)
-  - Preference service
-
-Deep Dive Areas:
-  - Exactly-once delivery guarantee
-  - Priority queue (urgent vs non-urgent)
-  - Analytics (delivery rate, open rate, click rate)
-  - Third-party integration (APNs, FCM, Twilio, SendGrid)
-
-Architecture:
-  +----------+     +---------+     +-----------+     +--------+
-  | Event    | --> | Notif   | --> | Priority  | --> | Worker |
-  | Source   |     | Service |     | Queue     |     | Pool   |
-  +----------+     +---------+     +-----------+     +---+----+
-                        |                                |
-                   +----+-----+              +-----------+-----------+
-                   | User     |              |           |           |
-                   | Prefs DB |          +---+---+  +---+---+  +---+---+
-                   +----------+          | Push  |  | Email |  | SMS   |
-                                         | (APNs |  |(Send- |  |(Twil- |
-                                         |  FCM) |  | Grid) |  |  io)  |
-                                         +-------+  +-------+  +-------+
+```mermaid
+flowchart LR
+    ES["Event Source"] --> NS["Notification Service"]
+    NS --> Prefs["User Prefs DB"]
+    NS --> PQ["Priority Queue"]
+    PQ --> WP["Worker Pool"]
+    WP --> Push["Push<br/>(APNs / FCM)"]
+    WP --> Email["Email<br/>(SendGrid)"]
+    WP --> SMS["SMS<br/>(Twilio)"]
 ```
 
 ---

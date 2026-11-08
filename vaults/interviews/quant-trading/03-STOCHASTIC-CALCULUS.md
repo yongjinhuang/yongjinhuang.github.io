@@ -360,14 +360,9 @@ V(t) = e^(-r(T-t)) * E^Q[h(S(T)) | F_t]
 
 **This is the fundamental theorem of asset pricing**: no arbitrage implies the existence of a risk-neutral measure under which discounted asset prices are martingales.
 
-```
-Pricing Workflow:
-+---------------------+         +---------------------+
-| Real World (P)      |         | Risk-Neutral (Q)    |
-| dS = μS dt + σS dW  | -----→ | dS = rS dt + σS dW  |
-|                     |Girsanov |                     |
-| Hard to price       |         | Price = e^(-rT) E^Q |
-+---------------------+         +---------------------+
+```mermaid
+flowchart LR
+    P["Real-World Measure (P)<br/>dS = mu*S*dt + sigma*S*dW^P<br/>(Requires estimating drift mu)"] -->|"Girsanov Theorem<br/>(Change of Measure)"| Q["Risk-Neutral Measure (Q)<br/>dS = r*S*dt + sigma*S*dW^Q<br/>Price = exp(-rT) * E^Q[Payoff(S_T)]"]
 ```
 
 ### Why It Works

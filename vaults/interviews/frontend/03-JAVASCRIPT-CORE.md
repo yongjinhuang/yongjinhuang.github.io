@@ -365,31 +365,16 @@ class ButtonFixed2 {
 
 JavaScript is single-threaded. The event loop is the mechanism that allows asynchronous operations by coordinating the call stack, the task queues, and the microtask queue.
 
-```
-+---------------------------------------------------+
-|                    Call Stack                       |
-|  (Executes synchronous code, one frame at a time)  |
-+---------------------------------------------------+
-            |                        ^
-            v                        |
-+---------------------------------------------------+
-|                    Event Loop                      |
-|  1. Execute all code on the call stack             |
-|  2. Drain the entire microtask queue               |
-|  3. Render (if needed)                             |
-|  4. Pick ONE task from the macrotask queue         |
-|  5. Go to step 1                                   |
-+---------------------------------------------------+
-            |                        ^
-            v                        |
-+----------------------+   +----------------------+
-|   Microtask Queue    |   |   Macrotask Queue    |
-| - Promise.then/catch |   | - setTimeout         |
-| - queueMicrotask()   |   | - setInterval        |
-| - MutationObserver   |   | - I/O callbacks      |
-| - process.nextTick() |   | - requestAnimationFrame* |
-+----------------------+   | - UI rendering events|
-                           +----------------------+
+```mermaid
+flowchart TD
+    Stack["Call Stack<br/>(Executes synchronous code, one frame at a time)"]
+    Loop["Event Loop<br/>1. Execute all code on Call Stack<br/>2. Drain ENTIRE Microtask Queue<br/>3. Render UI (if needed)<br/>4. Pick ONE task from Macrotask Queue<br/>5. Repeat"]
+    Micro["Microtask Queue<br/>- Promise.then / catch / finally<br/>- queueMicrotask()<br/>- MutationObserver<br/>- process.nextTick()"]
+    Macro["Macrotask (Task) Queue<br/>- setTimeout / setInterval<br/>- I/O callbacks<br/>- UI rendering events"]
+
+    Stack <--> Loop
+    Micro -->|"Drained completely after each stack"| Loop
+    Macro -->|"One task per tick"| Loop
 ```
 
 _Note: `requestAnimationFrame` runs before the next repaint, which is between macrotask cycles._

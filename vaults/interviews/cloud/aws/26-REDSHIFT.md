@@ -8,17 +8,10 @@ Redshift is a fully managed, petabyte-scale columnar data warehouse built for on
 
 Redshift uses a leader-compute node architecture:
 
-```
-Client (SQL / JDBC / ODBC)
-        |
-   Leader Node          -- Parses SQL, builds query plan, coordinates execution
-        |
-  +-----------+-----------+
-  |           |           |
-Compute     Compute     Compute    -- Execute query fragments in parallel
-Node 0      Node 1      Node 2
-  |           |           |
-Slices      Slices      Slices     -- Each node has 2-16 slices (sub-units of parallelism)
+```mermaid
+flowchart TD
+    Client["Client (SQL / JDBC / ODBC)"] --> Leader["Leader Node<br/>(Parses SQL, builds MPP query plan, aggregates results)"]
+    Leader --> CN0["Compute Node 0<br/>(2-16 Slices)"] & CN1["Compute Node 1<br/>(2-16 Slices)"] & CN2["Compute Node 2<br/>(2-16 Slices)"]
 ```
 
 - **Leader node**: Receives client connections, parses SQL, generates optimized query plans, distributes work to compute nodes, and aggregates results. Does not store user data.

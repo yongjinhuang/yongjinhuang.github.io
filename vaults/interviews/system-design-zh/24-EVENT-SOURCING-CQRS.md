@@ -659,7 +659,7 @@ CQRS（Command Query Responsibility Segregation，命令查询职责分离）将
                                     +----------------------+
 ```
 
-**Command Model��为一致性而规范化）**
+**Command Model（为一致性而规范化）**
 
 ```
   Aggregate root 执行所有不变量。

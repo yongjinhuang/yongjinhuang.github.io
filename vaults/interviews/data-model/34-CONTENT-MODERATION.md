@@ -165,71 +165,87 @@ graph TD
 
 ## ER Diagram
 
-```
-+----------------+       +-------------------+       +----------------+
-|    content     |       | moderation_jobs   |       | review_queue   |
-|----------------|       |-------------------|       |----------------|
-| content_id (PK)|<──┐   | job_id (PK)       |<──┐   | queue_id (PK)  |
-| author_id (FK) |   |   | content_id (FK)───|───┘   | content_id(FK)─|───┐
-| content_type   |   |   | priority          |   ┌───| job_id (FK)    |   |
-| body_text      |   |   | decision          |   |   | priority_score |   |
-| media_url      |   |   | confidence_score  |   |   | assigned_      |   |
-| status         |   |   | model_version     |   |   |  reviewer_id   |   |
-| geo_country    |   |   | processing_time_ms|   |   | sla_deadline   |   |
-| device_        |   |   | reviewer_id       |   |   | language       |   |
-|  fingerprint   |   |   | reviewed_at       |   |   | region         |   |
-| created_at     |   |   +-------------------+   |   | status         |   |
-+----------------+   |          1                 |   +----------------+   |
-        |            |          |                 |          1             |
-        |            |          |                 |          |             |
-        | 1          └──────────|─────────────────|──────────┘             |
-        |                       |                 |                        |
-        |───* moderation_jobs   |                 |                        |
-        |                       └─────────────────┘                        |
-        |───* review_queue  <──────────────────────────────────────────────┘
-        |
-        |───* reports              +----------------+
-        |                          | content_hashes |
-        |───* appeals              |----------------|
-        |                          | hash_id (PK)   |
-        |                          | hash_type      |
-+-------+--------+                | hash_value     |
-|    reports      |                | content_       |
-|-----------------|                |  category      |
-| report_id (PK)  |                | source         |
-| content_id (FK) |                | created_at     |
-| reporter_id     |                +----------------+
-| reason          |                (standalone lookup table)
-| evidence_text   |
-| quality_score   |    +----------------+
-| status          |    |   policies     |
-+-----------------+    |----------------|
-                       | policy_id (PK) |
-+----------------+     | name           |
-|    appeals     |     | version        |
-|----------------|     | conditions_json|
-| appeal_id (PK) |     | action         |
-| content_id(FK) |     | severity       |
-| appellant_id   |     | effective_from |
-| tier           |     +----------------+
-| status         |     (standalone rule engine)
-| original_      |
-|  decision      |
-| appeal_decision|
-| reviewer_id    |
-| resolved_at    |
-+----------------+
+```mermaid
+erDiagram
+    content ||--o{ moderation_jobs : "one content, many moderation attempts"
+    content ||--o{ reports : "one content, many user reports"
+    content ||--o{ appeals : "one content, many appeal tiers"
+    moderation_jobs ||--|| review_queue : "one job creates at most one queue entry"
 
-Relationships:
-  content 1───* moderation_jobs   (one content, many moderation attempts)
-  content 1───* reports           (one content, many user reports)
-  content 1───* appeals           (one content, many appeal tiers)
-  moderation_jobs 1───1 review_queue (one job creates at most one queue entry)
-  content_hashes: standalone       (lookup table, joined by hash_value not FK)
-  policies: standalone             (evaluated at decision time, not FK-linked)
+    content {
+        UUID content_id PK
+        USERS author_id FK
+        ENUM content_type
+        TEXT body_text
+        VARCHAR media_url
+        ENUM status
+        VARCHAR geo_country
+        VARCHAR device_fingerprint
+        TIMESTAMP created_at
+    }
+    moderation_jobs {
+        UUID job_id PK
+        CONTENT content_id FK
+        INT priority
+        ENUM decision
+        FLOAT confidence_score
+        VARCHAR model_version
+        INT processing_time_ms
+        AGENTS reviewer_id FK
+        TIMESTAMP reviewed_at
+    }
+    review_queue {
+        UUID queue_id PK
+        CONTENT content_id FK
+        MODERATION_JOBS job_id FK
+        FLOAT priority_score
+        AGENTS assigned_reviewer_id FK
+        TIMESTAMP sla_deadline
+        VARCHAR language
+        VARCHAR region
+        ENUM status
+    }
+    content_hashes {
+        UUID hash_id PK
+        ENUM hash_type
+        VARCHAR hash_value
+        ENUM content_category
+        VARCHAR source
+        TIMESTAMP created_at
+    }
+    reports {
+        UUID report_id PK
+        CONTENT content_id FK
+        USERS reporter_id FK
+        VARCHAR reason
+        TEXT evidence_text
+        FLOAT quality_score
+        ENUM status
+    }
+    appeals {
+        UUID appeal_id PK
+        CONTENT content_id FK
+        USERS appellant_id FK
+        ENUM tier
+        ENUM status
+        VARCHAR original_decision
+        VARCHAR appeal_decision
+        AGENTS reviewer_id FK
+        TIMESTAMP resolved_at
+    }
+    policies {
+        UUID policy_id PK
+        VARCHAR name
+        INT version
+        JSONB conditions_json
+        VARCHAR action
+        ENUM severity
+        TIMESTAMP effective_from
+    }
 ```
 
 ---
+
 
 ## Data Flow
 

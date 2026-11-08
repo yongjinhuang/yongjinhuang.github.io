@@ -56,61 +56,86 @@ problem. It combines Strategy, Observer, and graph algorithms in a practical dom
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   SplitType       |       |   Currency          |
-|   (Enum)          |       |   (Enum)            |
-|-------------------|       |---------------------|
-| EQUAL             |       | USD                 |
-| EXACT             |       | EUR                 |
-| PERCENTAGE        |       | GBP                 |
-| SHARES            |       +---------------------+
-+-------------------+
-                            +---------------------+
-+-------------------+       |   User              |
-| SplitStrategy     |       |---------------------|
-|   (ABC)           |       | user_id             |
-|-------------------|       | name                |
-| validate(amount,  |       | email               |
-|   splits)         |       +---------------------+
-| calculate(amount, |
-|   splits)         |       +---------------------+
-+-------------------+       |   Group             |
-  ^    ^    ^    ^          |---------------------|
-  |    |    |    |          | group_id            |
-Equal Exact Pct Share       | name                |
-                            | members             |
-+-------------------+       | expenses            |
-|   Expense         |       |---------------------|
-|-------------------|       | add_member()        |
-| expense_id        |       | add_expense()       |
-| description       |       | get_balances()      |
-| amount            |       | simplify_debts()    |
-| currency          |       +---------------------+
-| paid_by           |
-| splits            |       +---------------------+
-| timestamp         |       | BalanceSheet        |
-+-------------------+       |---------------------|
-                            | balances            |
-+-------------------+       |---------------------|
-| Settlement        |       | record_expense()    |
-|-------------------|       | record_settlement() |
-| from_user         |       | get_balance()       |
-| to_user           |       | get_net_balances()  |
-| amount            |       | simplify()          |
-| timestamp         |       +---------------------+
-+-------------------+
-                            +---------------------+
-+-------------------+       | ExpenseService      |
-| BalanceObserver   |       |---------------------|
-|   (ABC)           |       | groups              |
-|-------------------|       | users               |
-| on_balance_change |       |---------------------|
-+-------------------+       | create_group()      |
-  ^           ^             | add_expense()       |
-  |           |             | settle()            |
-Email      PushNotify       | get_balances()      |
-                            +---------------------+
+```mermaid
+classDiagram
+    class SplitType {
+        <<enumeration>>
+        EQUAL
+        EXACT
+        PERCENTAGE
+        SHARES
+    }
+    class User {
+        +str user_id
+        +str name
+        +str email
+    }
+    class SplitStrategy {
+        <<abstract>>
+        +validate(amount, splits)* bool
+        +calculate(amount, splits)* Dict~str, int~
+    }
+    class EqualSplit
+    class ExactSplit
+    class PercentageSplit
+    class SharesSplit
+    SplitStrategy <|-- EqualSplit
+    SplitStrategy <|-- ExactSplit
+    SplitStrategy <|-- PercentageSplit
+    SplitStrategy <|-- SharesSplit
+
+    class Expense {
+        +str expense_id
+        +str description
+        +int amount_cents
+        +Currency currency
+        +User paid_by
+        +List splits
+        +datetime timestamp
+    }
+    class Settlement {
+        +User from_user
+        +User to_user
+        +int amount_cents
+        +datetime timestamp
+    }
+    class BalanceSheet {
+        +Dict balances
+        +record_expense(expense)
+        +record_settlement(settlement)
+        +get_balance(u1, u2) int
+        +get_net_balances() Dict
+        +simplify() List~Settlement~
+    }
+    class Group {
+        +str group_id
+        +str name
+        +Set~User~ members
+        +List~Expense~ expenses
+        +BalanceSheet balance_sheet
+        +add_member(user)
+        +add_expense(expense)
+        +simplify_debts() List~Settlement~
+    }
+    class BalanceObserver {
+        <<abstract>>
+        +on_balance_change(event)*
+    }
+    class ExpenseService {
+        +Dict~str, Group~ groups
+        +Dict~str, User~ users
+        +List~BalanceObserver~ observers
+        +create_group(name, members) Group
+        +add_expense(...) Expense
+        +settle(from_user, to_user, amount)
+    }
+
+    ExpenseService *-- Group
+    ExpenseService o-- User
+    ExpenseService --> BalanceObserver
+    Group *-- BalanceSheet
+    Group *-- Expense
+    Expense --> SplitStrategy
 ```
 
 ---

@@ -28,22 +28,16 @@ Each peer must encode and upload its media stream once per remote peer. A partic
 
 ### Mesh Topology Diagram
 
-```
-        Mesh (4 Participants)
-
-     A ───────────── B
-     │ ╲           ╱ │
-     │   ╲       ╱   │
-     │     ╲   ╱     │
-     │       ╳       │
-     │     ╱   ╲     │
-     │   ╱       ╲   │
-     │ ╱           ╲ │
-     C ───────────── D
-
-  Connections: 4*(4-1)/2 = 6
-  Each peer sends 3 streams
-  Each peer receives 3 streams
+```mermaid
+flowchart TD
+    subgraph Mesh4["Full Mesh Topology (4 Peers — N*(N-1)/2 = 6 Bidirectional Connections)"]
+        A["Peer A"] <--> B["Peer B"]
+        A <--> C["Peer C"]
+        A <--> D["Peer D"]
+        B <--> C
+        B <--> D
+        C <--> D
+    end
 ```
 
 ### Why Mesh Fails at Scale
@@ -95,24 +89,10 @@ Each peer must encode and upload its media stream once per remote peer. A partic
 
 An SFU sits between all participants. Each peer uploads a single media stream (or multiple simulcast layers) to the SFU. The SFU then forwards those packets to all other participants without decoding or re-encoding them.
 
-```
-  SFU Architecture
-
-  ┌───────┐   upload    ┌─────────────────────┐   forward   ┌───────┐
-  │ Peer A│ ──────────▶ │                     │ ──────────▶ │ Peer B│
-  └───────┘             │                     │             └───────┘
-                        │                     │
-  ┌───────┐   upload    │        SFU          │   forward   ┌───────┐
-  │ Peer B│ ──────────▶ │                     │ ──────────▶ │ Peer A│
-  └───────┘             │   (No transcode)    │             └───────┘
-                        │   (Packet routing)  │
-  ┌───────┐   upload    │   (Layer selection) │   forward   ┌───────┐
-  │ Peer C│ ──────────▶ │                     │ ──────────▶ │ Peer A│
-  └───────┘             │                     │  ─────────▶ │ Peer B│
-                        └─────────────────────┘             └───────┘
-
-  Each peer uploads 1 stream (or 2-3 simulcast layers).
-  SFU selects which layer to forward to each receiver.
+```mermaid
+flowchart LR
+    PA["Peer A"] & PB["Peer B"] & PC["Peer C"] -->|"Upload 1 stream<br/>(2-3 simulcast layers)"| SFU["SFU Server<br/>- No transcoding<br/>- Selective RTP packet routing<br/>- Simulcast/SVC layer selection"]
+    SFU -->|"Forward selected layers"| RA["Peer A (Receives B, C)"] & RB["Peer B (Receives A, C)"] & RC["Peer C (Receives A, B)"]
 ```
 
 ### How the SFU Routes Media
@@ -167,24 +147,13 @@ The SFU participates in bandwidth estimation:
 
 An MCU receives media from all participants, decodes every stream, composites them into a single mixed stream (video layout + audio mix), re-encodes, and sends one stream back to each participant.
 
-```
-  MCU Architecture
-
-  ┌───────┐            ┌──────────────────────────┐            ┌───────┐
-  │ Peer A│ ─────────▶ │  Decode A, B, C          │            │ Peer A│
-  └───────┘            │         │                 │  composite │       │
-                       │         ▼                 │ ─────────▶ │(sees  │
-  ┌───────┐            │  ┌─────────────┐          │            │B + C) │
-  │ Peer B│ ─────────▶ │  │ Video Mixer │          │            └───────┘
-  └───────┘            │  │ Audio Mixer │          │
-                       │  └─────────────┘          │            ┌───────┐
-  ┌───────┐            │         │                 │ ─────────▶ │ Peer B│
-  │ Peer C│ ─────────▶ │         ▼                 │            │(sees  │
-  └───────┘            │  Encode composite         │            │A + C) │
-                       │  per recipient            │            └───────┘
-                       └──────────────────────────┘
-                              MCU Server
-                        (Decode + Mix + Encode)
+```mermaid
+flowchart LR
+    PA["Peer A"] & PB["Peer B"] & PC["Peer C"] --> Dec["Decode All Streams"]
+    subgraph MCU["MCU Server (Decode + Mix + Re-Encode)"]
+        Dec --> Mix["Video Compositor &amp; Audio Mixer"] --> Enc["Encode Composite Stream per Recipient"]
+    end
+    Enc --> OutA["Peer A (Composite of B + C)"] & OutB["Peer B (Composite of A + C)"] & OutC["Peer C (Composite of A + B)"]
 ```
 
 ### Server-Side Mixing
@@ -297,34 +266,15 @@ const transceiver = pc.addTransceiver(videoTrack, {
 
 ### How the SFU Selects Layers
 
-```
-  SFU Layer Selection Decision Flow
-
-  ┌─────────────────────┐
-  │ Subscriber requests  │
-  │ participant's video  │
-  └──────────┬──────────┘
-             │
-             ▼
-  ┌─────────────────────┐     ┌──────────────────┐
-  │ Check subscriber's  │ ──▶ │ Bandwidth < 200k │ ──▶ Forward Layer 0
-  │ estimated bandwidth │     └──────────────────┘
-  └──────────┬──────────┘
-             │ bandwidth OK
-             ▼
-  ┌─────────────────────┐     ┌──────────────────┐
-  │ Check viewport size │ ──▶ │ Tile < 200x150   │ ──▶ Forward Layer 0
-  │ requested by client │     └──────────────────┘
-  └──────────┬──────────┘
-             │ viewport large
-             ▼
-  ┌─────────────────────┐     ┌──────────────────┐
-  │ Is this the active  │ ──▶ │ No               │ ──▶ Forward Layer 1
-  │ speaker?            │     └──────────────────┘
-  └──────────┬──────────┘
-             │ Yes
-             ▼
-       Forward Layer 2
+```mermaid
+flowchart TD
+    Req["Subscriber Requests Participant's Video"] --> Q1{"Estimated Bandwidth &lt; 200 kbps?"}
+    Q1 -->|"Yes"| L0a["Forward Layer 0 (Low: 180p)"]
+    Q1 -->|"No (Bandwidth OK)"| Q2{"Client Viewport Tile &lt; 200x150?"}
+    Q2 -->|"Yes"| L0b["Forward Layer 0 (Low: 180p)"]
+    Q2 -->|"No (Large Tile)"| Q3{"Is this the Active Speaker?"}
+    Q3 -->|"No"| L1["Forward Layer 1 (Medium: 360p)"]
+    Q3 -->|"Yes"| L2["Forward Layer 2 (High: 720p)"]
 ```
 
 The SFU may also use temporal layer switching: within a single spatial layer, it can drop higher temporal layers (reducing frame rate) to further reduce bandwidth without switching spatial layers.
@@ -781,20 +731,14 @@ The Encoded Transform API (formerly called Insertable Streams) allows JavaScript
 - **Watermarking** -- Inject forensic watermarks into encoded frames.
 - **Custom processing** -- ML-based background blur on encoded data, metadata injection.
 
-```
-  Encoded Transform Pipeline
-
-  Sender Side:
-  ┌──────┐   ┌─────────┐   ┌──────────────────┐   ┌────────────┐   ┌──────┐
-  │Camera│──▶│ Encoder │──▶│ Transform (JS)   │──▶│ Packetizer │──▶│ SRTP │
-  └──────┘   └─────────┘   │ (encrypt/modify) │   └────────────┘   └──────┘
-                            └──────────────────┘
-
-  Receiver Side:
-  ┌──────┐   ┌──────────────┐   ┌──────────────────┐   ┌─────────┐   ┌───────┐
-  │ SRTP │──▶│ Depacketizer│──▶│ Transform (JS)   │──▶│ Decoder │──▶│Display│
-  └──────┘   └──────────────┘   │ (decrypt/modify) │   └─────────┘   └───────┘
-                                └──────────────────┘
+```mermaid
+flowchart LR
+    subgraph Sender["Sender Side (Insertable Streams / Encoded Transform)"]
+        Cam["Camera"] --> Enc["Encoder"] --> TSend["JS Transform<br/>(E2EE AES-GCM Encrypt)"] --> Pkt["RTP Packetizer"] --> SRTP1["SRTP"]
+    end
+    subgraph Receiver["Receiver Side"]
+        SRTP2["SRTP"] --> Depkt["Depacketizer"] --> TRecv["JS Transform<br/>(E2EE AES-GCM Decrypt)"] --> Dec["Decoder"] --> Disp["Display"]
+    end
 ```
 
 ### Implementing E2EE with Encoded Transform
@@ -931,26 +875,14 @@ WebRTC must continuously adapt to available bandwidth. Too much data causes cong
 
 GCC is the default congestion control algorithm in WebRTC. It combines two estimators:
 
-```
-  GCC Architecture
-
-  ┌──────────────────────────────────────────────────┐
-  │              Sender                              │
-  │                                                  │
-  │  ┌─────────────────┐   ┌──────────────────────┐ │
-  │  │ Loss-based      │   │ Delay-based          │ │
-  │  │ estimator       │   │ estimator            │ │
-  │  │                 │   │                      │ │
-  │  │ Uses RTCP RR    │   │ Uses TWCC feedback   │ │
-  │  │ packet loss %   │   │ inter-arrival delay  │ │
-  │  └────────┬────────┘   └──────────┬───────────┘ │
-  │           │                       │              │
-  │           ▼                       ▼              │
-  │  ┌─────────────────────────────────────────────┐ │
-  │  │        min(loss_estimate, delay_estimate)    │ │
-  │  │        = target_bitrate                      │ │
-  │  └─────────────────────────────────────────────┘ │
-  └──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph GCC["Google Congestion Control (GCC) — Sender"]
+        Loss["Loss-Based Estimator<br/>(Uses RTCP RR packet loss %)"]
+        Delay["Delay-Based Estimator<br/>(Uses TWCC inter-arrival delay gradient)"]
+        Target["target_bitrate = min(loss_estimate, delay_estimate)"]
+        Loss & Delay --> Target
+    end
 ```
 
 **Loss-based estimator**:
@@ -1801,46 +1733,14 @@ A: Three approaches in order of increasing complexity: (1) **Headless browser** 
 
 ## Summary Cheat Sheet
 
-```
-  WebRTC Advanced Topic Map
-
-  ┌─────────────────────────────────────────────────┐
-  │              SCALING                             │
-  │  Mesh ──▶ SFU ──▶ MCU ──▶ Hybrid               │
-  │  (P2P)   (forward) (mix)  (SFU + MCU)          │
-  └──────────────────────┬──────────────────────────┘
-                         │
-  ┌──────────────────────┼──────────────────────────┐
-  │         QUALITY ADAPTATION                       │
-  │                      │                           │
-  │  Simulcast      SVC        BWE (GCC/TWCC)       │
-  │  (N layers)  (embedded)  (congestion control)    │
-  │  rid-based   VP9/AV1    delay + loss estimator   │
-  └──────────────────────┬──────────────────────────┘
-                         │
-  ┌──────────────────────┼──────────────────────────┐
-  │              FEATURES                            │
-  │                      │                           │
-  │  Data Channels   Screen Share   Recording        │
-  │  SCTP/DTLS      getDisplayMedia MediaRecorder    │
-  │  ordered/unrel  tab/window/scrn server-side      │
-  └──────────────────────┬──────────────────────────┘
-                         │
-  ┌──────────────────────┼──────────────────────────┐
-  │           ADVANCED                               │
-  │                      │                           │
-  │  E2EE (Encoded     Perfect        getStats()    │
-  │   Transform)       Negotiation    monitoring     │
-  │  AES-GCM frames   polite/impolite RTCStatsReport│
-  └──────────────────────┬──────────────────────────┘
-                         │
-  ┌──────────────────────┼──────────────────────────┐
-  │        NATIVE IMPLEMENTATIONS                    │
-  │                      │                           │
-  │  libwebrtc  Pion   webrtc-rs   aiortc           │
-  │  (C++)     (Go)    (Rust)      (Python)         │
-  │  Browser   SFU     High-perf   Testing/ML       │
-  └─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["1. SCALING TOPOLOGIES<br/>Mesh (P2P) -&gt; SFU (Forward) -&gt; MCU (Mix) -&gt; Hybrid (SFU + MCU)"]
+    L2["2. QUALITY ADAPTATION<br/>Simulcast (rid-based layers) | SVC (VP9/AV1 embedded layers) | BWE (GCC / TWCC)"]
+    L3["3. FEATURES<br/>Data Channels (SCTP/DTLS) | Screen Share (getDisplayMedia) | Recording (MediaRecorder / Egress)"]
+    L4["4. ADVANCED PATTERNS<br/>E2EE (Encoded Transform AES-GCM) | Perfect Negotiation (Polite/Impolite) | getStats() Telemetry"]
+    L5["5. NATIVE IMPLEMENTATIONS<br/>libwebrtc (C++) | Pion (Go) | webrtc-rs (Rust) | aiortc (Python)"]
+    L1 --> L2 --> L3 --> L4 --> L5
 ```
 
 ---

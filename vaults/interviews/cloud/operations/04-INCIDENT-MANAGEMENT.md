@@ -8,21 +8,9 @@
 
 Every incident follows a predictable lifecycle. Understanding each phase separates reactive firefighting from disciplined operations.
 
-```
-INCIDENT LIFECYCLE
-==================
-
-  [DETECTION]────────[TRIAGE]────────[MITIGATION]────────[RESOLUTION]────────[POSTMORTEM]
-       │                 │                 │                    │                   │
-  Alert fires        Confirm scope    Reduce blast          Service              Write
-  User report        SEV assignment   radius               restored              document
-  Anomaly            IC assigned      Rollback /            Root cause           Action items
-  detection          War room open    scale-up /            confirmed            Share & learn
-                                      flag disable
-       │                 │                 │                    │                   │
-  MTTD tracked     <15 min (SEV1)    MTTR clock          MTTR recorded        Follow-up
-                                      running             Monitoring           ticket created
-                                                          normalized
+```mermaid
+flowchart LR
+    S1["1. Detection (MTTD)<br/>Alert fires / anomaly /<br/>customer report"] --> S2["2. Triage (&lt;15m SEV1)<br/>Confirm scope, assign SEV,<br/>IC + War Room open"] --> S3["3. Mitigation (MTTR)<br/>Stop the bleeding: rollback,<br/>failover, feature flag off"] --> S4["4. Resolution<br/>Service restored &amp;<br/>SLIs normalized"] --> S5["5. Blameless Postmortem<br/>Root cause, 5-Whys,<br/>tracked action items"]
 ```
 
 ### Phase Breakdown

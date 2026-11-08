@@ -34,35 +34,13 @@ differently. Latency between capture and display is a critical metric.
 
 ### Delivery Models
 
-```
-+------------------------------------------------------------------+
-|                    Streaming Delivery Models                      |
-+------------------------------------------------------------------+
-|                                                                   |
-|  Progressive Download                                             |
-|  +---------------------------------------------------------+     |
-|  | Single file, downloaded sequentially from byte 0        |     |
-|  | Playback starts before download completes               |     |
-|  | No adaptive quality, no live support                    |     |
-|  | Example: MP4 over HTTP with moov atom at start          |     |
-|  +---------------------------------------------------------+     |
-|                                                                   |
-|  Adaptive Bitrate Streaming (ABR)                                 |
-|  +---------------------------------------------------------+     |
-|  | Media split into small segments (2-10 seconds)          |     |
-|  | Multiple quality levels (representations / variants)    |     |
-|  | Client selects quality based on bandwidth + buffer      |     |
-|  | Protocols: HLS, DASH                                    |     |
-|  +---------------------------------------------------------+     |
-|                                                                   |
-|  Real-Time Streaming                                              |
-|  +---------------------------------------------------------+     |
-|  | Sub-second latency, often peer-to-peer                  |     |
-|  | Used for video conferencing, interactive broadcast       |     |
-|  | Protocols: WebRTC, RTSP/RTP, SRT                        |     |
-|  +---------------------------------------------------------+     |
-|                                                                   |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Models["STREAMING DELIVERY MODELS"]
+        M1["1. Progressive Download<br/>Single MP4 over HTTP (moov at start)<br/>No adaptive quality, no live support"]
+        M2["2. Adaptive Bitrate Streaming (ABR)<br/>Media split into 2-10s segments across multiple bitrates<br/>Client switches quality dynamically (HLS, DASH)"]
+        M3["3. Real-Time Streaming<br/>Sub-second packet-based transport<br/>Interactive conferencing &amp; ultra-low-latency broadcast (WebRTC, SRT, RTP)"]
+    end
 ```
 
 ### The Latency Spectrum
@@ -101,16 +79,10 @@ Latency Spectrum (capture to display)
 
 ### Glass-to-Glass Latency Breakdown
 
-```
-Camera -> Encoder -> Packager -> CDN Origin -> CDN Edge -> Player -> Display
-  |         |          |           |              |          |         |
-  5ms      50-200ms   10-50ms    50-200ms       10-50ms   100-500ms  5ms
-           (codec     (segment   (network       (network  (buffer +
-            + GOP)     creation)  transfer)      transfer)  decode)
-
-Total (standard HLS): 6-30 seconds
-Total (LL-HLS):       1-3 seconds
-Total (WebRTC):       100-500 milliseconds
+```mermaid
+flowchart LR
+    Cam["Camera<br/>(~5 ms)"] --> Enc["Encoder<br/>(50-200 ms)"] --> Pkg["Packager<br/>(10-50 ms + segment)"]
+    Pkg --> Orig["CDN Origin<br/>(50-200 ms)"] --> Edge["CDN Edge<br/>(10-50 ms)"] --> Pl["Player Buffer + Decode<br/>(100-500 ms+)"] --> Disp["Display<br/>(~5 ms)"]
 ```
 
 ---
@@ -130,35 +102,24 @@ still accept RTMP ingest from OBS, Wirecast, and hardware encoders.
 
 RTMP operates over TCP (default port 1935). The connection follows a multi-step process:
 
-```
-Encoder (Client)                           Media Server
-      |                                         |
-      |--- TCP SYN --------------------------->|
-      |<-- TCP SYN-ACK ------------------------|
-      |--- TCP ACK --------------------------->|
-      |                                         |
-      |         RTMP Handshake (C0/S0, C1/S1, C2/S2)
-      |--- C0 + C1 (1537 bytes) -------------->|
-      |<-- S0 + S1 + S2 (3073 bytes) ---------|
-      |--- C2 (1536 bytes) ------------------->|
-      |                                         |
-      |         RTMP Connect                    |
-      |--- connect('app_name') --------------->|
-      |<-- Window Ack Size --------------------|
-      |<-- Set Peer Bandwidth -----------------|
-      |<-- _result (connect success) ----------|
-      |                                         |
-      |         Create Stream                   |
-      |--- createStream() -------------------->|
-      |<-- _result (stream_id) ----------------|
-      |                                         |
-      |         Publish                         |
-      |--- publish('stream_key', 'live') ----->|
-      |<-- onStatus('NetStream.Publish.Start')-|
-      |                                         |
-      |--- Audio/Video Data ------------------->|
-      |--- Audio/Video Data ------------------->|
-      |            ...                          |
+```mermaid
+sequenceDiagram
+    participant E as "Encoder (Client)"
+    participant S as "Media Server"
+
+    E->>S: TCP 3-Way Handshake (SYN / SYN-ACK / ACK)
+    Note over E,S: RTMP Handshake
+    E->>S: C0 + C1 (1537 bytes)
+    S-->>E: S0 + S1 + S2 (3073 bytes)
+    E->>S: C2 (1536 bytes)
+    Note over E,S: RTMP Connect and Publish
+    E->>S: connect('app_name')
+    S-->>E: Window Ack Size + Set Peer Bandwidth + _result(success)
+    E->>S: createStream()
+    S-->>E: _result(stream_id)
+    E->>S: publish('stream_key', 'live')
+    S-->>E: onStatus('NetStream.Publish.Start')
+    E->>S: Audio / Video Media Chunks
 ```
 
 ### Handshake Details
@@ -289,30 +250,9 @@ RFC 8216 (and RFC 8216bis for HLS version 2).
 
 ### Architecture
 
-```
-                         HLS Architecture
-+----------+     +-----------+     +-------+     +--------+
-|  Encoder |---->| Segmenter |---->| Origin|---->|  CDN   |
-| (FFmpeg, |     | (creates  |     | Server|     | (edge  |
-|  OBS)    |     |  .ts/.m4s |     |       |     |  cache)|
-+----------+     |  + .m3u8) |     +-------+     +--------+
-                 +-----------+                        |
-                                                      |
-                      +-------------------------------+
-                      |
-                 +---------+
-                 |  Player  |
-                 | (Safari, |
-                 |  hls.js, |
-                 |  ExoPlayer|
-                 +---------+
-
-Flow:
-1. Player fetches master playlist (.m3u8)
-2. Player selects variant based on bandwidth
-3. Player fetches media playlist for chosen variant
-4. Player downloads segments (.ts or .m4s)
-5. Player periodically re-fetches live media playlist
+```mermaid
+flowchart LR
+    Enc["Encoder<br/>(FFmpeg / OBS)"] --> Seg["HLS Segmenter<br/>(.ts / .m4s + .m3u8)"] --> Orig["Origin Server"] --> CDN["CDN Edge Cache"] --> Pl["HLS Player<br/>(Safari, hls.js, ExoPlayer)"]
 ```
 
 ### Master Playlist (Multivariant Playlist)
@@ -553,24 +493,9 @@ YouTube, Netflix, and most Android streaming platforms.
 DASH uses an MPD (Media Presentation Description) manifest in XML format that describes
 available content, quality levels, and segment locations.
 
-```
-DASH Architecture:
-
-+----------+     +----------+     +-------+     +--------+
-|  Encoder |---->| Packager |---->| Origin|---->|  CDN   |
-|          |     | (creates |     | Server|     |        |
-|          |     |  .mpd +  |     |       |     |        |
-|          |     |  .m4s)   |     +-------+     +--------+
-+----------+     +----------+                        |
-                                                     |
-                     +-------------------------------+
-                     |
-                +---------+
-                |  Player  |
-                | (dash.js,|
-                | ExoPlayer|
-                | Shaka)   |
-                +---------+
+```mermaid
+flowchart LR
+    Enc["Encoder"] --> Pkg["DASH Packager<br/>(Creates .mpd + .m4s)"] --> Orig["Origin Server"] --> CDN["CDN"] --> Pl["DASH Player<br/>(dash.js, Shaka, ExoPlayer)"]
 ```
 
 ### MPD Structure
@@ -790,37 +715,22 @@ media sessions but does not carry media data itself.
 
 **Example RTSP Session:**
 
-```
-Client                                        Server
-  |                                              |
-  |--- OPTIONS rtsp://server/stream RTSP/2.0 -->|
-  |<-- RTSP/2.0 200 OK (Public: DESCRIBE...) ---|
-  |                                              |
-  |--- DESCRIBE rtsp://server/stream ---------->|
-  |<-- RTSP/2.0 200 OK                          |
-  |    Content-Type: application/sdp             |
-  |    (SDP body with media descriptions)        |
-  |                                              |
-  |--- SETUP rtsp://server/stream/trackID=1 --->|
-  |    Transport: RTP/AVP;unicast;               |
-  |    client_port=50000-50001                   |
-  |<-- RTSP/2.0 200 OK                          |
-  |    Transport: RTP/AVP;unicast;               |
-  |    client_port=50000-50001;                  |
-  |    server_port=60000-60001                   |
-  |    Session: 12345678                         |
-  |                                              |
-  |--- PLAY rtsp://server/stream -------------->|
-  |    Session: 12345678                         |
-  |    Range: npt=0.000-                         |
-  |<-- RTSP/2.0 200 OK                          |
-  |                                              |
-  |<========== RTP media data (UDP) ============|
-  |<========== RTCP feedback (UDP) =============|
-  |                                              |
-  |--- TEARDOWN rtsp://server/stream ---------->|
-  |    Session: 12345678                         |
-  |<-- RTSP/2.0 200 OK                          |
+```mermaid
+sequenceDiagram
+    participant C as "RTSP Client"
+    participant S as "RTSP Server"
+
+    C->>S: OPTIONS rtsp://server/stream
+    S-->>C: 200 OK (Public: DESCRIBE, SETUP, PLAY, TEARDOWN)
+    C->>S: DESCRIBE rtsp://server/stream
+    S-->>C: 200 OK (application/sdp media description)
+    C->>S: SETUP rtsp://server/stream/trackID=1 (client_port=50000-50001)
+    S-->>C: 200 OK (server_port=60000-60001, Session: 12345678)
+    C->>S: PLAY rtsp://server/stream (Session: 12345678)
+    S-->>C: 200 OK
+    S->>C: RTP Media Stream (UDP) + RTCP Control (UDP)
+    C->>S: TEARDOWN rtsp://server/stream
+    S-->>C: 200 OK
 ```
 
 ### SDP (Session Description Protocol)
@@ -1122,31 +1032,18 @@ ingest and egress using simple HTTP signaling.
 WHIP (IETF RFC 9725) defines a simple HTTP-based protocol for pushing media
 into a server using WebRTC.
 
-```
-WHIP Ingest Flow:
+```mermaid
+sequenceDiagram
+    participant E as "Encoder / Browser"
+    participant W as "WHIP Endpoint"
 
-Encoder/Browser                          WHIP Endpoint
-      |                                       |
-      |--- POST /whip/stream_key ----------->|
-      |    Content-Type: application/sdp      |
-      |    Body: SDP offer                    |
-      |                                       |
-      |<-- 201 Created ----------------------|
-      |    Content-Type: application/sdp      |
-      |    Location: /whip/resource/abc123    |
-      |    Body: SDP answer                   |
-      |                                       |
-      |<========= ICE connectivity check ====|
-      |========= ICE connectivity check ====>|
-      |                                       |
-      |========= DTLS handshake ============>|
-      |<======== DTLS handshake =============|
-      |                                       |
-      |========= SRTP media data ==========>|
-      |                                       |
-      |  (to end session)                     |
-      |--- DELETE /whip/resource/abc123 ---->|
-      |<-- 200 OK ---------------------------|
+    E->>W: POST /whip/stream_key (application/sdp Offer)
+    W-->>E: 201 Created (Location: /whip/resource/abc123 + SDP Answer)
+    E<<->>W: ICE Connectivity Checks (STUN/TURN)
+    E<<->>W: DTLS Handshake
+    E->>W: SRTP Encrypted Media Stream
+    E->>W: DELETE /whip/resource/abc123
+    W-->>E: 200 OK
 ```
 
 **Key WHIP Features:**
@@ -1163,27 +1060,17 @@ Encoder/Browser                          WHIP Endpoint
 WHEP is the playback counterpart to WHIP. A viewer sends an SDP offer to the WHEP
 endpoint and receives an SDP answer to establish a WebRTC session for receiving media.
 
-```
-WHEP Playback Flow:
+```mermaid
+sequenceDiagram
+    participant P as "Player / Browser"
+    participant W as "WHEP Endpoint"
 
-Player/Browser                           WHEP Endpoint
-      |                                       |
-      |--- POST /whep/channel_id ----------->|
-      |    Content-Type: application/sdp      |
-      |    Body: SDP offer                    |
-      |                                       |
-      |<-- 201 Created ----------------------|
-      |    Content-Type: application/sdp      |
-      |    Location: /whep/session/xyz789     |
-      |    Body: SDP answer                   |
-      |                                       |
-      |<========= ICE + DTLS handshake ======|
-      |                                       |
-      |<========= SRTP media data ===========|
-      |         (server sends media to player)|
-      |                                       |
-      |--- DELETE /whep/session/xyz789 ----->|
-      |<-- 200 OK ---------------------------|
+    P->>W: POST /whep/channel_id (application/sdp Offer)
+    W-->>P: 201 Created (Location: /whep/session/xyz789 + SDP Answer)
+    P<<->>W: ICE + DTLS Handshake
+    W->>P: SRTP Encrypted Media Stream (Server to Player)
+    P->>W: DELETE /whep/session/xyz789
+    W-->>P: 200 OK
 ```
 
 ### WHIP/WHEP Replacing RTMP
@@ -1328,18 +1215,10 @@ on network conditions and player state. The content is pre-encoded at multiple
 quality levels (an encoding ladder), and the player selects which quality to
 download for each segment.
 
-```
-ABR Decision Flow:
-
-  +-----------+     +------------+     +-------------+
-  | Measure   |---->| ABR        |---->| Request     |
-  | bandwidth |     | Algorithm  |     | next segment|
-  | + buffer  |     | (decision) |     | at chosen   |
-  | level     |     |            |     | quality     |
-  +-----------+     +------------+     +-------------+
-       ^                                      |
-       |                                      v
-       +----------- feedback loop <-----------+
+```mermaid
+flowchart LR
+    M["Measure Throughput<br/>&amp; Buffer Level"] --> ABR["ABR Controller<br/>(BOLA / Throughput / Hybrid)"] --> Req["Request Next Segment<br/>at Selected Rendition"]
+    Req -->|"Download timing &amp; buffer fill"| M
 ```
 
 ### The Encoding Ladder
@@ -1503,28 +1382,18 @@ Typical weights (example):
 DRM systems protect content from unauthorized copying and redistribution. Three
 major DRM systems dominate the streaming industry:
 
-```
-DRM Ecosystem:
-
-+------------------------------------------------------------------+
-|                       Browser / App                               |
-|  +-----------+     +--------+     +----------+     +-----------+ |
-|  |  Player   |---->|  EME   |---->|   CDM    |---->| Decrypted | |
-|  | (dash.js, |     |  API   |     | (Content |     | frames    | |
-|  |  hls.js)  |     |        |     | Decrypt  |     | (rendered)| |
-|  +-----------+     +--------+     | Module)  |     +-----------+ |
-|                                   +----------+                    |
-+------------------------------------------------------------------+
-        |                                 ^
-        |  1. License request             |  2. License response
-        v                                 |
-+------------------------------------------------------------------+
-|                    License Server                                 |
-|  +------------------+  +------------------+  +-----------------+ |
-|  |    Widevine      |  |    FairPlay      |  |   PlayReady     | |
-|  |  (Google)        |  |    (Apple)       |  |   (Microsoft)   | |
-|  +------------------+  +------------------+  +-----------------+ |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Client["Browser / Native App"]
+        Pl["Video Player<br/>(dash.js / hls.js)"] --> EME["EME API<br/>(Encrypted Media Extensions)"] --> CDM["CDM<br/>(Content Decryption Module)"] --> Dec["Decrypted Frames<br/>(Secure Hardware Render)"]
+    end
+    subgraph Server["DRM License Server"]
+        WV["Google Widevine"]
+        FP["Apple FairPlay"]
+        PR["Microsoft PlayReady"]
+    end
+    Pl -->|"1. Encrypted License Challenge"| Server
+    Server -->|"2. License Response (Keys + Policy)"| CDM
 ```
 
 ### Widevine

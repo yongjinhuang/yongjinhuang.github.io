@@ -8,42 +8,15 @@ spectrum: low-level cell manipulation with openpyxl and xlsxwriter, high-speed
 analytics with pandas and polars, and the ever-present CSV format that bridges
 every system.
 
-```
-+------------------------------------------------------------------+
-|                  SPREADSHEET ECOSYSTEM IN PYTHON                 |
-+------------------------------------------------------------------+
-|                                                                  |
-|   FILE FORMATS                                                   |
-|   +-----------+  +------------+  +-----------+  +----------+     |
-|   | .xlsx     |  | .xls       |  | .csv      |  | .ods     |    |
-|   | (OOXML)   |  | (BIFF/     |  | (Plain    |  | (Open    |    |
-|   | ZIP+XML   |  |  Legacy)   |  |  Text)    |  |  Doc)    |    |
-|   +-----------+  +------------+  +-----------+  +----------+     |
-|        |              |               |              |            |
-|        v              v               v              v            |
-|   READING LIBRARIES                                              |
-|   +----------------------------------------------------------+   |
-|   | openpyxl     | .xlsx read/write, formatting, charts      |   |
-|   | xlrd         | .xls read (legacy only)                   |   |
-|   | xlsxwriter   | .xlsx write-only, rich formatting         |   |
-|   | csv (stdlib) | .csv read/write, dialects, streaming      |   |
-|   | pandas       | All formats via engines, DataFrames       |   |
-|   | polars       | .csv/.xlsx, LazyFrames, zero-copy         |   |
-|   +----------------------------------------------------------+   |
-|        |                                                         |
-|        v                                                         |
-|   PROCESSING PIPELINE                                            |
-|   +----------+    +----------+    +----------+    +----------+   |
-|   | Extract  |--->| Validate |--->|Transform |--->|  Load    |   |
-|   | (read)   |    | (schema) |    | (clean)  |    | (write)  |   |
-|   +----------+    +----------+    +----------+    +----------+   |
-|        |                                               |         |
-|        v                                               v         |
-|   DATA CONSUMERS                                                 |
-|   +----------------------------------------------------------+   |
-|   | Databases | APIs | Reports | Dashboards | ML Pipelines   |   |
-|   +----------------------------------------------------------+   |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Sheets["SPREADSHEET ECOSYSTEM IN PYTHON"]
+        Fmt["FILE FORMATS<br/>.xlsx (OOXML ZIP+XML) / .xls (Legacy BIFF) / .csv (Plain Text) / .ods (OpenDoc)"]
+        Libs["LIBRARIES<br/>- openpyxl: .xlsx read/write, formatting, charts<br/>- xlrd: .xls legacy read<br/>- xlsxwriter: .xlsx write-only, rich formatting<br/>- csv (stdlib): streaming CSV<br/>- pandas &amp; polars: DataFrames / LazyFrames"]
+        Pipe["PROCESSING PIPELINE<br/>Extract (read) -&gt; Validate (schema) -&gt; Transform (clean) -&gt; Load (write)"]
+        Cons["DATA CONSUMERS<br/>Databases / APIs / Reports / Dashboards / ML Pipelines"]
+        Fmt --> Libs --> Pipe --> Cons
+    end
 ```
 
 ---

@@ -12,30 +12,17 @@ Staff+ interview loops are structurally different from IC loops. Instead of 4-5 
 
 ## Staff+ Interview Round Types
 
-```
-+------------------------------------------------------------------+
-|              TYPICAL STAFF+ INTERVIEW LOOP                        |
-+------------------------------------------------------------------+
-|                                                                    |
-|  ROUND 1: Architecture Review (60 min)                            |
-|  Present a system you designed. Deep-dive on trade-offs.          |
-|                                                                    |
-|  ROUND 2: System Design (45-60 min)                               |
-|  Design a new system. Higher expectations than L5 design round.   |
-|                                                                    |
-|  ROUND 3: Cross-Functional Collaboration (45 min)                 |
-|  Behavioral round focused on influence and stakeholder mgmt.      |
-|                                                                    |
-|  ROUND 4: Leadership & Mentoring (45 min)                         |
-|  Behavioral round focused on people development and culture.      |
-|                                                                    |
-|  ROUND 5: Domain Deep-Dive (45-60 min)                            |
-|  Technical depth in your area of expertise.                       |
-|                                                                    |
-|  ROUND 6: Bar Raiser / Hiring Manager (45-60 min)                 |
-|  Holistic assessment. Fills gaps from other rounds.               |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Loop["TYPICAL STAFF+ INTERVIEW LOOP"]
+        R1["ROUND 1: Architecture Review (60 min)<br/>Present a system you designed. Deep-dive on trade-offs."]
+        R2["ROUND 2: System Design (45-60 min)<br/>Design a new system at Staff+ scope."]
+        R3["ROUND 3: Cross-Functional Collaboration (45 min)<br/>Behavioral round focused on influence and stakeholder mgmt."]
+        R4["ROUND 4: Leadership &amp; Mentoring (45 min)<br/>Behavioral round focused on people development and culture."]
+        R5["ROUND 5: Domain Deep-Dive (45-60 min)<br/>Technical depth in your area of expertise."]
+        R6["ROUND 6: Bar Raiser / Hiring Manager (45-60 min)<br/>Holistic assessment. Fills gaps from other rounds."]
+        R1 --> R2 --> R3 --> R4 --> R5 --> R6
+    end
 ```
 
 Not every company uses all six rounds. The exact structure varies:
@@ -68,30 +55,15 @@ You present a system you designed and built in a previous role. The interviewer 
 
 **Step 2: Prepare a 15-minute presentation.** Structure it as:
 
-```
-ARCHITECTURE REVIEW PRESENTATION STRUCTURE
-============================================
-
-1. CONTEXT (3 min)
-   - What business problem did this solve?
-   - What were the constraints (timeline, team, scale)?
-   - Why was a new system needed?
-
-2. HIGH-LEVEL ARCHITECTURE (4 min)
-   - Draw the system on a whiteboard (practice this)
-   - Major components and their responsibilities
-   - Data flow through the system
-   - Key external dependencies
-
-3. KEY DECISIONS (5 min)
-   - 2-3 critical design decisions you made
-   - For each: options considered, why you chose this one
-   - Trade-offs you accepted
-
-4. RESULTS AND LEARNINGS (3 min)
-   - How did it perform? Metrics.
-   - What would you do differently?
-   - What did you learn?
+```mermaid
+flowchart LR
+    subgraph ArchReview["ARCHITECTURE REVIEW PRESENTATION STRUCTURE (15 min)"]
+        S1["1. CONTEXT (3 min)<br/>- What business problem did this solve?<br/>- Constraints (timeline, team, scale)<br/>- Why was a new system needed?"]
+        S2["2. HIGH-LEVEL ARCHITECTURE (4 min)<br/>- Draw the system on a whiteboard<br/>- Major components &amp; responsibilities<br/>- Data flow &amp; external dependencies"]
+        S3["3. KEY DECISIONS (5 min)<br/>- 2-3 critical design decisions<br/>- Options considered &amp; rationale<br/>- Trade-offs accepted"]
+        S4["4. RESULTS AND LEARNINGS (3 min)<br/>- Performance &amp; metrics<br/>- What you would do differently<br/>- Key learnings"]
+        S1 --> S2 --> S3 --> S4
+    end
 ```
 
 **Step 3: Prepare for deep-dive questions.** The interviewer will spend 30-45 minutes probing your design. Be ready for:
@@ -134,34 +106,16 @@ At L5, the interviewer wants to see you design a working system. At L6+, they wa
 
 ### Staff+ System Design Framework
 
-```
-1. REQUIREMENTS & SCOPE (5 min)
-   Same as L5, but also:
-   - "How many teams would build this?"
-   - "What is the expected growth over 3 years?"
-   - "What existing systems can we leverage?"
-
-2. HIGH-LEVEL ARCHITECTURE (10 min)
-   Same as L5, but also:
-   - Identify which components to build vs buy
-   - Show team ownership boundaries
-   - Name the critical path and risks
-
-3. DETAILED DESIGN (15 min)
-   Same as L5, but also:
-   - Explain how this evolves over time
-   - Show the migration path from current state
-   - Discuss operational concerns (SLOs, monitoring)
-
-4. ORGANIZATIONAL DESIGN (5 min) -- NEW at Staff+
-   - How would you split this across teams?
-   - What are the interfaces between teams?
-   - What is the rollout strategy?
-
-5. WRAP-UP (5 min)
-   - Key risks and mitigations
-   - What you would monitor
-   - Future improvements
+```mermaid
+flowchart TD
+    subgraph StaffSD["STAFF+ SYSTEM DESIGN FRAMEWORK (40 min)"]
+        Step1["1. REQUIREMENTS &amp; SCOPE (5 min)<br/>Same as L5, plus:<br/>- 'How many teams would build this?'<br/>- 'Expected growth over 3 years?'<br/>- 'What existing systems can we leverage?'"]
+        Step2["2. HIGH-LEVEL ARCHITECTURE (10 min)<br/>Same as L5, plus:<br/>- Components to build vs buy<br/>- Team ownership boundaries<br/>- Critical path and risks"]
+        Step3["3. DETAILED DESIGN (15 min)<br/>Same as L5, plus:<br/>- Evolution over time<br/>- Migration path from current state<br/>- Operational concerns (SLOs, monitoring)"]
+        Step4["4. ORGANIZATIONAL DESIGN (5 min) — NEW at Staff+<br/>- Split across teams<br/>- Interfaces between teams<br/>- Rollout strategy"]
+        Step5["5. WRAP-UP (5 min)<br/>- Key risks and mitigations<br/>- Monitoring &amp; future improvements"]
+        Step1 --> Step2 --> Step3 --> Step4 --> Step5
+    end
 ```
 
 ---
@@ -220,33 +174,13 @@ A behavioral round focused on how you develop people, build culture, and demonst
 
 ### What Interviewers Are Looking For
 
-```
-+------------------------------------------------------------------+
-|           LEADERSHIP ROUND SCORING SIGNALS                        |
-+------------------------------------------------------------------+
-|                                                                    |
-|  STRONG HIRE:                                                      |
-|  + Specific examples of people they developed                     |
-|  + Systematic approach (not just ad-hoc mentoring)                |
-|  + Understands different needs at different career stages         |
-|  + Has given difficult feedback and it changed behavior           |
-|  + Creates structural improvements (processes, rituals)           |
-|  + Shows genuine care for individuals, not just output            |
-|  + Demonstrates sponsorship, not just mentorship                  |
-|                                                                    |
-|  LEAN HIRE:                                                        |
-|  + Good examples but limited to 1:1 mentoring                    |
-|  + Feedback approach works but is not structured                  |
-|  + Cares about people but has not built systems                   |
-|                                                                    |
-|  NO HIRE:                                                          |
-|  - No concrete examples of developing others                      |
-|  - Feedback is vague or avoided                                    |
-|  - Leadership means "telling people what to do"                   |
-|  - Cannot articulate a mentoring philosophy                       |
-|  - Only talks about technical leadership, not people              |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Signals["LEADERSHIP ROUND SCORING SIGNALS"]
+        SH["STRONG HIRE<br/>+ Specific examples of developing people<br/>+ Systematic approach across career stages<br/>+ Delivered difficult feedback that changed behavior<br/>+ Structural improvements (processes, rituals)<br/>+ Genuine care &amp; demonstrates sponsorship"]
+        LH["LEAN HIRE<br/>+ Good examples but limited to 1:1 mentoring<br/>+ Feedback works but is unstructured<br/>+ Cares about people but has not built systems"]
+        NH["NO HIRE<br/>- No concrete examples of developing others<br/>- Feedback vague/avoided or 'telling people what to do'<br/>- Cannot articulate mentoring philosophy<br/>- Only talks about technical leadership, not people"]
+    end
 ```
 
 ---
@@ -311,29 +245,15 @@ Some companies present their actual system or a described system and ask you to 
 
 ### How to Structure Your Response
 
-```
-SYSTEM CRITIQUE FRAMEWORK
-===========================
-
-1. UNDERSTAND THE SYSTEM (10 min)
-   - Ask clarifying questions about the current state
-   - Understand the constraints and business context
-   - Identify what is working well (do not only criticize)
-
-2. IDENTIFY PROBLEMS (10 min)
-   - Categorize issues by severity and type
-   - Prioritize by impact on users and business
-   - Distinguish between symptoms and root causes
-
-3. PROPOSE IMPROVEMENTS (15 min)
-   - Start with the highest-impact, lowest-effort changes
-   - For each improvement: what, why, trade-offs, effort
-   - Show a phased approach (quick wins then structural changes)
-
-4. IMPLEMENTATION PLAN (10 min)
-   - How would you sequence the changes?
-   - What risks does the migration create?
-   - How would you measure success?
+```mermaid
+flowchart LR
+    subgraph Critique["SYSTEM CRITIQUE FRAMEWORK (45 min)"]
+        C1["1. UNDERSTAND THE SYSTEM (10 min)<br/>- Clarify current state<br/>- Understand constraints &amp; business context<br/>- Identify what works well"]
+        C2["2. IDENTIFY PROBLEMS (10 min)<br/>- Categorize by severity and type<br/>- Prioritize by user &amp; business impact<br/>- Distinguish symptoms vs root causes"]
+        C3["3. PROPOSE IMPROVEMENTS (15 min)<br/>- Highest-impact, lowest-effort first<br/>- What, why, trade-offs, effort<br/>- Phased approach (quick wins -&gt; structural)"]
+        C4["4. IMPLEMENTATION PLAN (10 min)<br/>- Sequence of changes<br/>- Migration risks<br/>- Success metrics"]
+        C1 --> C2 --> C3 --> C4
+    end
 ```
 
 ### Common Pitfalls

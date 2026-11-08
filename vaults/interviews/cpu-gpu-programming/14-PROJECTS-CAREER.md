@@ -151,33 +151,10 @@ Kernel 3: Sobel Edge Detection
 
 **Goal**: Render a scene with spheres, planes, and reflections using CUDA.
 
-```
-Architecture:
-+--------------------------------------------------+
-|  Scene Description (host)                         |
-|  - Array of spheres (center, radius, color, mat)  |
-|  - Array of planes                                |
-|  - Point lights                                   |
-|  - Camera (position, direction, FOV)              |
-+--------------------------------------------------+
-         | cudaMemcpy
-         v
-+--------------------------------------------------+
-|  GPU Kernel: one thread per pixel                 |
-|  For each pixel:                                  |
-|    1. Generate primary ray from camera             |
-|    2. Intersect ray with all objects              |
-|    3. Find closest intersection                   |
-|    4. Compute lighting (Phong shading)            |
-|    5. If reflective: generate reflected ray       |
-|    6. Recurse (up to max_bounces)                 |
-|    7. Write pixel color to framebuffer            |
-+--------------------------------------------------+
-         | cudaMemcpy
-         v
-+--------------------------------------------------+
-|  Write framebuffer to PNG (host)                  |
-+--------------------------------------------------+
+```mermaid
+flowchart TD
+    HostIn["Scene Description (Host)<br/>Spheres, planes, materials, point lights, camera"] -->|"cudaMemcpy H2D"| Kernel["GPU Ray Tracing Kernel (1 Thread per Pixel)<br/>1. Generate camera ray<br/>2. Ray-object intersection &amp; closest hit<br/>3. Phong/PBR shading + shadow rays<br/>4. Iterative bounce reflection<br/>5. Write RGB to device framebuffer"]
+    Kernel -->|"cudaMemcpy D2H"| HostOut["Write Framebuffer to Image / Display (Host)"]
 ```
 
 **Data structures**:

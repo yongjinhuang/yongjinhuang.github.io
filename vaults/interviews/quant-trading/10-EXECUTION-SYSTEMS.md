@@ -100,34 +100,13 @@ This is not hypothetical. Many quantitative strategies fail in production precis
 
 An Order Management System is the central nervous system of any trading operation. It tracks every order from creation to completion.
 
-```
-+------------------------------------------------------------------+
-|                    ORDER MANAGEMENT SYSTEM                        |
-+------------------------------------------------------------------+
-|                                                                  |
-|  +-------------+     +----------------+     +-----------------+ |
-|  |  Strategy   |     |   Order        |     |   Execution     | |
-|  |  Engine     |---->|   Manager      |---->|   Management    | |
-|  |             |     |                |     |   System (EMS)  | |
-|  +-------------+     +----------------+     +-----------------+ |
-|        |                    |                       |           |
-|        |              +----------+            +----------+     |
-|        |              | Order DB |            |  Smart   |     |
-|        |              | (State)  |            |  Order   |     |
-|        |              +----------+            |  Router  |     |
-|        |                    |                 +----------+     |
-|        v                    v                       |           |
-|  +-------------+     +----------------+             |           |
-|  | Risk        |     |  Compliance    |             v           |
-|  | Manager     |     |  Engine        |     +-----------------+ |
-|  +-------------+     +----------------+     |  Venues         | |
-|                                             |  NYSE, NASDAQ   | |
-|        +-------------------+                |  Dark Pools     | |
-|        | Post-Trade        |                |  ECNs           | |
-|        | Analytics / TCA   |                +-----------------+ |
-|        +-------------------+                                    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    SE["Strategy Engine"] --> OM["Order Manager (OMS)"] --> EMS["Execution Management System (EMS)"]
+    SE --> RM["Risk Manager"]
+    OM <--> ODB["Order State DB"]
+    ODB --> Comp["Compliance Engine"] & TCA["Post-Trade TCA Analytics"]
+    EMS --> SOR["Smart Order Router (SOR)"] --> Venues["Trading Venues<br/>(NYSE, NASDAQ, BATS, Dark Pools)"]
 ```
 
 ### Order Lifecycle
@@ -1412,35 +1391,16 @@ Decoded:
 
 ### Complete Order Lifecycle in FIX
 
-```
-CLIENT                                              EXCHANGE
-  |                                                    |
-  |  1. NewOrderSingle (35=D)                          |
-  |  11=ORD-001|55=AAPL|54=1|38=5000|40=2|44=150.25   |
-  |--------------------------------------------------->|
-  |                                                    |
-  |  2. ExecutionReport (35=8) - Acknowledgment        |
-  |  37=EX-001|17=EXEC-001|150=0|39=0|                 |
-  |  (OrdStatus=New, ExecType=New)                     |
-  |<---------------------------------------------------|
-  |                                                    |
-  |  3. ExecutionReport (35=8) - Partial Fill           |
-  |  37=EX-001|17=EXEC-002|150=1|39=1|                 |
-  |  31=150.22|32=2000|14=2000|151=3000|               |
-  |  (OrdStatus=PartiallyFilled, LastPx=150.22,        |
-  |   LastQty=2000, CumQty=2000, LeavesQty=3000)      |
-  |<---------------------------------------------------|
-  |                                                    |
-  |  4. OrderCancelRequest (35=F)                       |
-  |  41=ORD-001|11=ORD-002|                             |
-  |--------------------------------------------------->|
-  |                                                    |
-  |  5. ExecutionReport (35=8) - Cancelled              |
-  |  37=EX-001|17=EXEC-003|150=4|39=4|                 |
-  |  14=2000|151=0|                                     |
-  |  (OrdStatus=Cancelled, CumQty=2000, LeavesQty=0)  |
-  |<---------------------------------------------------|
-  |                                                    |
+```mermaid
+sequenceDiagram
+    participant C as "FIX Client"
+    participant E as "Exchange Matching Engine"
+
+    C->>E: 1. NewOrderSingle (35=D) ClOrdID=ORD-001, Buy 5000 AAPL @ 150.25
+    E-->>C: 2. ExecutionReport (35=8) ExecType=New (150=0), OrdStatus=New (39=0)
+    E-->>C: 3. ExecutionReport (35=8) PartialFill (39=1) LastQty=2000 @ 150.22, LeavesQty=3000
+    C->>E: 4. OrderCancelRequest (35=F) OrigClOrdID=ORD-001, ClOrdID=ORD-002
+    E-->>C: 5. ExecutionReport (35=8) Cancelled (39=4) CumQty=2000, LeavesQty=0
 ```
 
 ### Key FIX Message Types

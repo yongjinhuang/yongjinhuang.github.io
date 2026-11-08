@@ -320,12 +320,11 @@ function PageTransition({ children }: { children: React.ReactNode }) {
 **GPU-accelerated (cheap):** `transform`, `opacity`
 **CPU-bound (expensive):** `width`, `height`, `top`, `left`, `margin`, `padding`
 
-```
-Rendering Pipeline:
-JavaScript -> Style -> Layout -> Paint -> Composite
-
-transform/opacity:  Skip to ─────────────> Composite  (fast)
-width/height:       Layout -> Paint -> Composite       (slow)
+```mermaid
+flowchart LR
+    JS["JavaScript"] --> Style["Style Calculation"]
+    Style -->|"width / height / top / left (Slow)"| Layout["Layout (Reflow)"] --> Paint["Paint (Repaint)"] --> Comp["Composite (GPU)"]
+    Style -->|"transform / opacity (Fast 60fps — skips Layout &amp; Paint)"| Comp
 ```
 
 **Best practices:**

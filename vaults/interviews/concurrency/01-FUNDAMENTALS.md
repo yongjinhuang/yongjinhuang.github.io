@@ -31,16 +31,15 @@ clearly and precisely.
 A process is an **independent execution unit** with its own memory space, file descriptors,
 and OS-level resources. Processes are isolated from each other by the operating system.
 
-```
-Process A                          Process B
-+---------------------------+      +---------------------------+
-| Code  | Data  | Heap      |      | Code  | Data  | Heap      |
-|       |       |           |      |       |       |           |
-| Stack | Files | Signals   |      | Stack | Files | Signals   |
-+---------------------------+      +---------------------------+
-| Virtual Memory Space      |      | Virtual Memory Space      |
-| (completely separate)     |      | (completely separate)     |
-+---------------------------+      +---------------------------+
+```mermaid
+flowchart LR
+    subgraph PA["Process A (Isolated Virtual Memory Space)"]
+        A1["Code / Data / Heap<br/>Stack / Files / Signals"]
+    end
+    subgraph PB["Process B (Isolated Virtual Memory Space)"]
+        B1["Code / Data / Heap<br/>Stack / Files / Signals"]
+    end
+    PA <-.->|"IPC Only (Pipes, Sockets, Shared Memory)"| PB
 ```
 
 **Key properties:**
@@ -56,18 +55,15 @@ Process A                          Process B
 A thread is a **lightweight execution unit** within a process. All threads in a process
 share the same memory space but have their own stack and program counter.
 
-```
-Process
-+--------------------------------------------------+
-| Shared: Code | Data | Heap | Files               |
-+--------------------------------------------------+
-| Thread 1       | Thread 2       | Thread 3       |
-| +------------+ | +------------+ | +------------+ |
-| | Stack      | | | Stack      | | | Stack      | |
-| | PC         | | | PC         | | | PC         | |
-| | Registers  | | | Registers  | | | Registers  | |
-| +------------+ | +------------+ | +------------+ |
-+--------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Proc["Process Address Space"]
+        Shared["Shared Across All Threads:<br/>Code / Global Data / Heap / Open Files"]
+        T1["Thread 1<br/>- Private Stack<br/>- Program Counter (PC)<br/>- CPU Registers"]
+        T2["Thread 2<br/>- Private Stack<br/>- Program Counter (PC)<br/>- CPU Registers"]
+        T3["Thread 3<br/>- Private Stack<br/>- Program Counter (PC)<br/>- CPU Registers"]
+        Shared --- T1 & T2 & T3
+    end
 ```
 
 **Key properties:**
@@ -83,19 +79,13 @@ Process
 A coroutine is a **user-space cooperative multitasking** unit. It is not managed by the OS
 but by a runtime (event loop in Python, scheduler in Go).
 
-```
-Single OS Thread
-+--------------------------------------------------+
-| Event Loop / Scheduler                           |
-|                                                  |
-| Coroutine A    Coroutine B    Coroutine C        |
-| [running]      [suspended]    [suspended]        |
-|                                                  |
-| A yields at await point...                       |
-|                                                  |
-| Coroutine A    Coroutine B    Coroutine C        |
-| [suspended]    [running]      [suspended]        |
-+--------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Thread["Single OS Thread (Cooperative Event Loop / Scheduler)"]
+        S1["State 1:<br/>Coroutine A [running]<br/>Coroutine B [suspended]<br/>Coroutine C [suspended]"]
+        S2["State 2:<br/>Coroutine A [suspended]<br/>Coroutine B [running]<br/>Coroutine C [suspended]"]
+        S1 -->|"A yields at await point"| S2
+    end
 ```
 
 **Key properties:**
@@ -440,59 +430,14 @@ Apply Amdahl's Law:
 Every thread transitions through a well-defined set of states. Interviewers often ask you
 to draw or describe this state machine.
 
-```
-                    +-------------------+
-                    |      NEW          |
-                    | (Thread created,  |
-                    |  not yet started) |
-                    +--------+----------+
-                             |
-                        start()
-                             |
-                             v
-               +-------------+-------------+
-               |         RUNNABLE          |
-               | (Ready to run, waiting    |
-               |  for CPU to schedule it)  |
-               +---+-------------------+---+
-                   |                   |
-             OS schedules         OS preempts or
-              this thread          yield()/sleep()
-                   |                   |
-                   v                   |
-          +--------+--------+          |
-          |     RUNNING     |----------+
-          | (Actively        |
-          |  executing on    |
-          |  a CPU core)     |
-          +---+----+----+---+
-              |    |    |
-              |    |    +-- I/O request or lock.acquire()
-              |    |                    |
-              |    |                    v
-              |    |        +-----------+-----------+
-              |    |        |       BLOCKED /       |
-              |    |        |       WAITING         |
-              |    |        | (Waiting for I/O,     |
-              |    |        |  lock, condition,     |
-              |    |        |  sleep, join)         |
-              |    |        +-----------+-----------+
-              |    |                    |
-              |    |              I/O complete or
-              |    |              lock acquired or
-              |    |              notify() received
-              |    |                    |
-              |    |                    v
-              |    |            Back to RUNNABLE
-              |    |
-              |    +-- run() completes
-              |                |
-              v                v
-          +--------------------+
-          |     TERMINATED     |
-          | (Thread finished,  |
-          |  cannot restart)   |
-          +--------------------+
+```mermaid
+flowchart TD
+    New["NEW<br/>(Thread created, not yet started)"] -->|"start()"| Runnable["RUNNABLE<br/>(Ready to run, waiting for CPU)"]
+    Runnable -->|"OS schedules thread"| Running["RUNNING<br/>(Actively executing on CPU core)"]
+    Running -->|"OS preempts / yield()"| Runnable
+    Running -->|"I/O request / lock.acquire() / wait() / sleep()"| Blocked["BLOCKED / WAITING<br/>(Waiting for I/O, lock, condition, sleep, join)"]
+    Blocked -->|"I/O complete / lock acquired / notify()"| Runnable
+    Running -->|"run() completes"| Term["TERMINATED<br/>(Thread finished, cannot restart)"]
 ```
 
 ### Python Thread States
@@ -531,23 +476,11 @@ another. Understanding the cost is critical for performance reasoning.
 
 ### What Gets Saved/Restored
 
-```
-Thread Context (saved on switch):
-+----------------------------------+
-| Program Counter (PC)             |  Where was I in the code?
-| Stack Pointer (SP)               |  Where is my stack?
-| CPU Registers (general purpose)  |  What values was I working with?
-| Floating-point registers         |  FP computation state
-| Status flags (EFLAGS)            |  Comparison results, etc.
-| Thread-local storage pointer     |  Per-thread data
-+----------------------------------+
-
-What also gets disrupted:
-+----------------------------------+
-| CPU cache (L1, L2, L3)          |  Cache lines likely evicted
-| TLB (Translation Lookaside Buf) |  Virtual memory mappings flushed
-| Branch predictor state           |  Prediction history lost
-+----------------------------------+
+```mermaid
+flowchart LR
+    Saved["Saved Thread Context (Direct Cost)<br/>- Program Counter (PC)<br/>- Stack Pointer (SP)<br/>- General-purpose &amp; FP CPU Registers<br/>- Status Flags (EFLAGS)<br/>- Thread-Local Storage (TLS) pointer"]
+    Indirect["Microarchitectural Disruption (Indirect Cost)<br/>- CPU Cache (L1, L2, L3) lines evicted<br/>- TLB (Translation Lookaside Buffer) flushed<br/>- Branch predictor history lost"]
+    Saved --> Indirect
 ```
 
 ### Cost Breakdown
@@ -679,17 +612,15 @@ CPU Cores:   [Core 0]  [Core 1]  [Core 2]
 Green threads are threads managed entirely in user space, not by the OS. The term comes
 from the original Java green thread implementation.
 
-```
-+--------------------------------------------+
-| Runtime / Virtual Machine                  |
-|                                            |
-| Green     Green     Green     Green        |
-| Thread 1  Thread 2  Thread 3  Thread 4     |
-|   |          |          |          |       |
-|   +-----+----+----+-----+----+----+       |
-|         |         |         |              |
-|    OS Thread A  OS Thread B  (if M:N)     |
-+--------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph VM["Runtime / Virtual Machine (M:N Multiplexing)"]
+        G1["Green Thread 1"] & G2["Green Thread 2"] & G3["Green Thread 3"] & G4["Green Thread 4"]
+        OSA["OS Thread A"]
+        OSB["OS Thread B"]
+        G1 & G2 --> OSA
+        G3 & G4 --> OSB
+    end
 ```
 
 ### Coroutines vs Green Threads
@@ -776,22 +707,11 @@ The two fundamental approaches to concurrent communication.
 Threads communicate by reading and writing to shared variables. Requires synchronization
 (locks, atomics) to prevent data races.
 
-```
-Shared Memory Model:
-+------------------+
-| Shared State     |
-| (heap memory)    |
-|                  |
-| counter = 42     |
-| data = [...]     |
-+--------+---------+
-   |     |     |
-   v     v     v
-Thread  Thread Thread
-  A       B      C
-
-All threads can read/write the shared state.
-Must use locks to prevent corruption.
+```mermaid
+flowchart TD
+    Shared[("Shared State (Heap Memory)<br/>counter = 42, data = [...]")]
+    TA["Thread A"] & TB["Thread B"] & TC["Thread C"]
+    TA & TB & TC <-->|"Read / Write (Requires Locks / Atomics)"| Shared
 ```
 
 ```python
@@ -834,16 +754,9 @@ def shared_memory_example():
 Threads (or processes) communicate by sending messages through channels or queues. No shared
 state. Each thread owns its data exclusively.
 
-```
-Message Passing Model:
-Thread A           Channel/Queue          Thread B
-+--------+        +------------+         +--------+
-| owns   |--send->|  message   |--recv-->| owns   |
-| data_a |        |  queue     |         | data_b |
-+--------+        +------------+         +--------+
-
-No shared state. Data is TRANSFERRED, not shared.
-"Don't communicate by sharing memory; share memory by communicating." - Go proverb
+```mermaid
+flowchart LR
+    TA["Thread A<br/>(owns data_a)"] -->|"send"| Chan["Channel / Queue<br/>(Message Buffer)"] -->|"recv"| TB["Thread B<br/>(owns data_b)"]
 ```
 
 ```python
@@ -902,27 +815,13 @@ def message_passing_example():
 The OS scheduler decides which thread runs on which core and for how long. Modern operating
 systems use **preemptive, priority-based scheduling**.
 
-```
-OS Scheduler Overview:
-
-Ready Queue (priority ordered):
-+---------+---------+---------+---------+---------+
-| Thread  | Thread  | Thread  | Thread  | Thread  |
-| P=high  | P=high  | P=med   | P=med   | P=low   |
-+---------+---------+---------+---------+---------+
-     |
-     v
-+----------+    +----------+    +----------+
-| Core 0   |    | Core 1   |    | Core 2   |
-| [running |    | [running |    | [idle]   |
-|  T_high] |    |  T_high] |    |          |
-+----------+    +----------+    +----------+
-
-The scheduler:
-1. Picks highest-priority runnable thread
-2. Assigns it to an available core
-3. Sets a time quantum (time slice)
-4. When quantum expires, preempts and picks next thread
+```mermaid
+flowchart TD
+    RQ["Ready Queue (Priority Ordered)<br/>[Thread P=high] [Thread P=high] [Thread P=med] [Thread P=med] [Thread P=low]"]
+    C0["Core 0<br/>[running T_high]"]
+    C1["Core 1<br/>[running T_high]"]
+    C2["Core 2<br/>[idle]"]
+    RQ -->|"Schedule with time quantum"| C0 & C1 & C2
 ```
 
 ### Time Slicing (Round Robin)
@@ -963,32 +862,13 @@ Threads "rotate" through the cores.
 
 ### Go's GMP Scheduler Model
 
-```
-Go's M:N Scheduler (GMP Model):
-
-G = Goroutine (user-level task)
-M = Machine (OS thread)
-P = Processor (logical CPU, holds run queue)
-
-+------+  +------+  +------+
-| P0   |  | P1   |  | P2   |
-| +--+ |  | +--+ |  | +--+ |
-| |G1| |  | |G4| |  | |G7| |
-| |G2| |  | |G5| |  | |G8| |
-| |G3| |  | |G6| |  |      |
-| +--+ |  | +--+ |  | +--+ |
-+--+---+  +--+---+  +--+---+
-   |         |         |
-+--+---+  +--+---+  +--+---+
-| M0   |  | M1   |  | M2   |
-| (OS  |  | (OS  |  | (OS  |
-| thrd)|  | thrd)|  | thrd)|
-+------+  +------+  +------+
-
-- Each P has a local run queue of goroutines
-- Each M is bound to a P and executes goroutines from P's queue
-- When P's queue is empty, M steals goroutines from another P (work stealing)
-- When a goroutine blocks (syscall), M releases P so another M can use it
+```mermaid
+flowchart TD
+    subgraph GMP["Go M:N Scheduler (GMP Model — Work Stealing)"]
+        P0["Processor P0<br/>Local Run Queue: [G1, G2, G3]"] --> M0["Machine M0<br/>(OS Thread)"]
+        P1["Processor P1<br/>Local Run Queue: [G4, G5, G6]"] --> M1["Machine M1<br/>(OS Thread)"]
+        P2["Processor P2<br/>Local Run Queue: [G7, G8]"] --> M2["Machine M2<br/>(OS Thread)"]
+    end
 ```
 
 ---

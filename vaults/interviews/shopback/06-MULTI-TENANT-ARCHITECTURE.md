@@ -6,18 +6,20 @@
 
 ### Before: Per-Market Stacks
 
-```
-┌──────────┐  ┌──────────┐  ┌──────────┐     ┌──────────┐
-│ SG Stack │  │ MY Stack │  │ ID Stack │ ... │ US Stack │
-│          │  │          │  │          │     │          │
-│ ┌──────┐ │  │ ┌──────┐ │  │ ┌──────┐ │     │ ┌──────┐ │
-│ │ API  │ │  │ │ API  │ │  │ │ API  │ │     │ │ API  │ │
-│ │ DB   │ │  │ │ DB   │ │  │ │ DB   │ │     │ │ DB   │ │
-│ │ Cache│ │  │ │ Cache│ │  │ │ Cache│ │     │ │ Cache│ │
-│ │ Queue│ │  │ │ Queue│ │  │ │ Queue│ │     │ │ Queue│ │
-│ └──────┘ │  │ └──────┘ │  │ └──────┘ │     │ └──────┘ │
-└──────────┘  └──────────┘  └──────────┘     └──────────┘
- AWS ap-se-1   AWS ap-se-1   AWS ap-se-3      AWS us-east-1
+```mermaid
+flowchart LR
+    subgraph SG["SG Stack (AWS ap-se-1)"]
+        SG_Nodes["API / DB / Cache / Queue"]
+    end
+    subgraph MY["MY Stack (AWS ap-se-1)"]
+        MY_Nodes["API / DB / Cache / Queue"]
+    end
+    subgraph ID["ID Stack (AWS ap-se-3)"]
+        ID_Nodes["API / DB / Cache / Queue"]
+    end
+    subgraph US["US Stack (AWS us-east-1)"]
+        US_Nodes["API / DB / Cache / Queue"]
+    end
 ```
 
 **Problems:**
@@ -32,22 +34,15 @@
 
 ### After: Multi-Tenant Architecture
 
-```
-                    ┌─────────────────────────────┐
-                    │     Global Control Plane     │
-                    │  (Config, Feature Flags,     │
-                    │   Tenant Management)         │
-                    └──────────────┬───────────────┘
-                                   │
-              ┌────────────────────┼────────────────────┐
-              ▼                    ▼                    ▼
-     ┌────────────────┐  ┌────────────────┐  ┌────────────────┐
-     │  APAC Region   │  │  APAC Region   │  │   US Region    │
-     │  (ap-se-1)     │  │  (ap-se-3)     │  │  (us-east-1)   │
-     │                │  │                │  │                │
-     │ SG, MY, PH, TH│  │    ID, VN      │  │      US        │
-     │ TW, AU, KR     │  │                │  │                │
-     └────────────────┘  └────────────────┘  └────────────────┘
+```mermaid
+flowchart TD
+    GCP["Global Control Plane<br/>(Config, Feature Flags, Tenant Management)"]
+    R1["APAC Region (ap-se-1)<br/>SG, MY, PH, TH, TW, AU, KR"]
+    R2["APAC Region (ap-se-3)<br/>ID, VN"]
+    R3["US Region (us-east-1)<br/>US"]
+    GCP --> R1
+    GCP --> R2
+    GCP --> R3
 ```
 
 ---
@@ -83,22 +78,15 @@
 
 ### ShopBack's Hybrid Approach
 
-```
-┌─────────────────────────────────────────────────┐
-│                Shared Services                   │
-│  (Authentication, Merchant Catalog, Analytics)   │
-└──────────────────────┬──────────────────────────┘
-                       │
-        ┌──────────────┼──────────────┐
-        ▼              ▼              ▼
-  ┌──────────┐  ┌──────────┐  ┌──────────┐
-  │ Shared   │  │ Regional │  │ Isolated │
-  │ Schema   │  │ Schema   │  │ Database │
-  │          │  │          │  │          │
-  │ SG,MY,PH │  │ ID (data │  │ KR (data│
-  │ TH,TW,AU │  │ residency│  │ residency│
-  │          │  │ required)│  │ required)│
-  └──────────┘  └──────────┘  └──────────┘
+```mermaid
+flowchart TD
+    Shared["Shared Services<br/>(Authentication, Merchant Catalog, Analytics)"]
+    S1[("Shared Schema<br/>SG, MY, PH, TH, TW, AU")]
+    S2[("Regional Schema<br/>ID (data residency required)")]
+    S3[("Isolated Database<br/>KR (data residency required)")]
+    Shared --> S1
+    Shared --> S2
+    Shared --> S3
 ```
 
 ---
@@ -107,18 +95,12 @@
 
 ### 4.1 Tenant-Aware Request Flow
 
-```
-┌──────┐    ┌──────────┐    ┌────────────┐    ┌──────────┐
-│User  │───→│API       │───→│ Tenant     │───→│ Service  │
-│sg.app│    │Gateway   │    │ Resolver   │    │ Layer    │
-└──────┘    └──────────┘    └────────────┘    └─────┬────┘
-                                                     │
-                                                     ▼
-                                              ┌────────────┐
-                                              │ Tenant-    │
-                                              │ Aware DB   │
-                                              │ Router     │
-                                              └────────────┘
+```mermaid
+flowchart LR
+    User["User<br/>(sg.app)"] --> GW["API Gateway"]
+    GW --> Resolver["Tenant Resolver"]
+    Resolver --> Svc["Service Layer"]
+    Svc --> Router["Tenant-Aware<br/>DB Router"]
 ```
 
 **Tenant Resolution:**
@@ -220,20 +202,17 @@ tenants:
 
 ### 4.4 Feature Flags
 
-```
-┌────────────────────────────────────────────┐
-│          Feature Flag Evaluation           │
-│                                            │
-│  Input: (feature_name, tenant, user)       │
-│                                            │
-│  Checks:                                   │
-│  1. Is feature enabled globally?           │
-│  2. Is feature enabled for this market?    │
-│  3. Is user in rollout percentage?         │
-│  4. Does user match targeting rules?       │
-│                                            │
-│  Output: enabled/disabled                  │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Eval["Feature Flag Evaluation"]
+        In["Input: (feature_name, tenant, user)"]
+        C1["1. Is feature enabled globally?"]
+        C2["2. Is feature enabled for this market?"]
+        C3["3. Is user in rollout percentage?"]
+        C4["4. Does user match targeting rules?"]
+        Out["Output: enabled / disabled"]
+        In --> C1 --> C2 --> C3 --> C4 --> Out
+    end
 ```
 
 **Rollout Strategy:**
@@ -257,16 +236,15 @@ Singapore's 11.11 traffic spike shouldn't slow down Malaysia's normal operations
 
 ### Solutions
 
-```
-┌─────────────────────────────────────────────┐
-│            Resource Isolation                │
-│                                             │
-│  Level 1: Rate limiting per tenant          │
-│  Level 2: Separate thread pools per tenant  │
-│  Level 3: Resource quotas (CPU, memory)     │
-│  Level 4: Separate compute for high-traffic │
-│           tenants during events             │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Isolation["Resource Isolation Levels"]
+        L1["Level 1: Rate limiting per tenant"]
+        L2["Level 2: Separate thread pools per tenant"]
+        L3["Level 3: Resource quotas (CPU, memory)"]
+        L4["Level 4: Separate compute for high-traffic tenants during events"]
+        L1 --> L2 --> L3 --> L4
+    end
 ```
 
 **Rate Limiting:**

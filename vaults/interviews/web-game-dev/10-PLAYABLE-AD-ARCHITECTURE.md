@@ -771,18 +771,12 @@ const SPINE_DATA = {
 
 ### Overview
 
-```
-Source Files                    Build Steps                        Output
-─────────────                  ───────────                        ──────
-src/
-├── game.ts          ──→  1. TypeScript compile        ──→
-├── engine.ts        ──→  2. Bundle (webpack/rollup)   ──→  index.html
-├── ui.ts            ──→  3. Inline assets (base64)    ──→  (single file,
-assets/              ──→  4. Inline CSS                ──→   < 5MB)
-├── sprites/*.png    ──→  5. Minify + tree-shake       ──→
-├── audio/*.mp3      ──→  6. Compress (terser)         ──→
-├── spine/*.json     ──→  7. Validate size             ──→
-index.html (template)──→  8. Generate per-network      ──→
+```mermaid
+flowchart LR
+    Src["Source Files<br/>- src/game.ts, engine.ts, ui.ts<br/>- assets/sprites/*.png, audio/*.mp3, spine/*.json<br/>- index.html (template)"]
+    Build["Build Steps<br/>1. TypeScript compile -&gt; 2. Bundle (esbuild/webpack)<br/>-&gt; 3. Inline assets (base64) -&gt; 4. Inline CSS<br/>-&gt; 5. Minify + tree-shake (terser) -&gt; 6. Validate size<br/>-&gt; 7. Generate per-network wrappers"]
+    Out["Output<br/>index.html<br/>(Single self-contained file &lt; 2-5MB)"]
+    Src --> Build --> Out
 ```
 
 ### Webpack Configuration for Playable Ads
@@ -1030,26 +1024,14 @@ playable-ad/
 
 ### Complete Lifecycle Flow
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      PLAYABLE AD LIFECYCLE                       │
-├──────────┬──────────┬──────────────┬──────────┬─────────────────┤
-│ SDK Load │ Preload  │  Tutorial    │ Gameplay │    End Card     │
-│  0-1s    │  0-2s    │   0-3s       │ 3-25s    │    25-30s       │
-│          │          │              │          │                 │
-│ mraid.js │ Decode   │ Animated     │ Core     │ CTA button      │
-│ injected │ base64   │ hand shows   │ game     │ App screenshots │
-│          │ images   │ how to play  │ loop     │ "Install Now"   │
-│ Wait for │          │              │          │                 │
-│ 'ready'  │ Init     │ Auto-skip    │ Timer    │ mraid.open()   │
-│ event    │ audio    │ after 3s     │ or lives │ on tap          │
-│          │ context  │ or on tap    │          │                 │
-│ Check    │          │              │ Ramp     │ Show on:        │
-│ viewable │ Build    │ No text      │ difficulty│ - Timer end    │
-│          │ audio    │ (universal)  │          │ - Lives gone   │
-│          │ graph    │              │ Juicy    │ - Level done   │
-│          │          │              │ feedback │                 │
-└──────────┴──────────┴──────────────┴──────────┴─────────────────┘
+```mermaid
+flowchart LR
+    S1["1. SDK Load (0-1s)<br/>- mraid.js injected<br/>- Wait for 'ready' event<br/>- Check isViewable()"]
+    S2["2. Preload (0-2s)<br/>- Decode base64 images<br/>- Init Web Audio context<br/>- Build audio graph"]
+    S3["3. Tutorial (0-3s)<br/>- Animated hand prompt<br/>- Auto-skip after 3s or tap<br/>- Universal (no text)"]
+    S4["4. Gameplay (3-25s)<br/>- Core game loop<br/>- Timer or lives<br/>- Ramp difficulty + juicy feedback"]
+    S5["5. End Card (25-30s)<br/>- Primary CTA ('Install Now')<br/>- mraid.open() on tap<br/>- Triggered on timer/lives/level end"]
+    S1 --> S2 --> S3 --> S4 --> S5
 ```
 
 ### Implementation

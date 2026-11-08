@@ -10,46 +10,18 @@ This guide takes you from understanding file formats at the binary level to buil
 
 ## The Document Processing Landscape
 
-```
-+------------------------------------------------------------------------+
-|                  DOCUMENT PROCESSING ECOSYSTEM                          |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  OFFICE DOCUMENTS              PDF                                     |
-|  +------------------------+   +---------------------------+            |
-|  | Word (.docx, .doc)      |   | Reading (PyMuPDF, pdfplumber)|         |
-|  | Excel (.xlsx, .xls, .csv)|  | Writing (ReportLab, FPDF2) |           |
-|  | PowerPoint (.pptx)      |   | Manipulation (pikepdf)    |            |
-|  | python-docx, openpyxl   |   | Form filling              |            |
-|  | pandas, polars           |   | Digital signatures        |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-|  TEXT & MARKUP                  IMAGES & OCR                           |
-|  +------------------------+   +---------------------------+            |
-|  | Plain text (TXT, LOG)   |   | JPEG, PNG, TIFF, BMP      |            |
-|  | Markdown, reStructuredText| | Tesseract OCR             |            |
-|  | HTML (BeautifulSoup)    |   | EasyOCR, PaddleOCR        |            |
-|  | XML (lxml, ElementTree) |   | AWS Textract              |            |
-|  | JSON, YAML, TOML        |   | Azure AI Document Intel.  |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-|  EMAIL & ARCHIVES              AI & LLM INTEGRATION                   |
-|  +------------------------+   +---------------------------+            |
-|  | EML, MSG, MBOX           |   | LLM-powered extraction    |            |
-|  | ZIP, TAR, GZIP, 7z      |   | RAG (Retrieval-Augmented) |            |
-|  | Attachments              |   | Document embeddings       |            |
-|  | MIME parsing              |   | Vector stores (pgvector)  |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-|  CONVERSION & PIPELINES       CLOUD SERVICES                          |
-|  +------------------------+   +---------------------------+            |
-|  | Pandoc (universal)       |   | Google Document AI        |            |
-|  | LibreOffice (headless)   |   | AWS Textract              |            |
-|  | ImageMagick               |   | Azure AI Document Intel.  |            |
-|  | Celery / Airflow          |   | Anthropic Claude (vision) |            |
-|  +------------------------+   +---------------------------+            |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Eco["DOCUMENT PROCESSING ECOSYSTEM"]
+        Office["OFFICE DOCUMENTS<br/>- Word (.docx, .doc), Excel (.xlsx, .xls, .csv), PowerPoint (.pptx)<br/>- python-docx, openpyxl, pandas, polars"]
+        PDF["PDF<br/>- Reading (PyMuPDF, pdfplumber)<br/>- Writing (ReportLab, FPDF2)<br/>- Manipulation (pikepdf), Form filling, Digital signatures"]
+        Text["TEXT &amp; MARKUP<br/>- Plain text (TXT, LOG), Markdown, reStructuredText<br/>- HTML (BeautifulSoup), XML (lxml, ElementTree)<br/>- JSON, YAML, TOML"]
+        OCR["IMAGES &amp; OCR<br/>- JPEG, PNG, TIFF, BMP<br/>- Tesseract OCR, EasyOCR, PaddleOCR<br/>- AWS Textract, Azure AI Document Intelligence"]
+        Email["EMAIL &amp; ARCHIVES<br/>- EML, MSG, MBOX, MIME parsing, Attachments<br/>- ZIP, TAR, GZIP, 7z"]
+        AI["AI &amp; LLM INTEGRATION<br/>- LLM-powered extraction &amp; RAG<br/>- Document embeddings &amp; Vector stores (pgvector)"]
+        Conv["CONVERSION &amp; PIPELINES<br/>- Pandoc, LibreOffice (headless), ImageMagick<br/>- Celery / Airflow"]
+        Cloud["CLOUD SERVICES<br/>- Google Document AI, AWS Textract<br/>- Azure AI Document Intelligence, Claude Vision"]
+    end
 ```
 
 ---
@@ -60,16 +32,11 @@ This guide takes you from understanding file formats at the binary level to buil
 
 **Goal**: Understand how document file formats work at the binary level, and master the most important format in business: PDF.
 
-```
-01-DOCUMENT-FORMATS                02-PDF-PROCESSING
-+---------------------------+     +---------------------------+
-| Binary vs text formats     |     | PDF structure internals   |
-| Character encoding (UTF-8) |     | Reading with PyMuPDF      |
-| MIME types                  |     | Table extraction          |
-| Compression (ZIP internals)|     | Writing with ReportLab    |
-| File signatures (magic)    |     | Merging, splitting, forms |
-| Open vs proprietary        |     | Metadata and security     |
-+---------------------------+     +---------------------------+
+```mermaid
+flowchart LR
+    M1["01-DOCUMENT-FORMATS<br/>- Binary vs text formats<br/>- Character encoding (UTF-8)<br/>- MIME types &amp; ZIP internals<br/>- File signatures (magic)<br/>- Open vs proprietary"]
+    M2["02-PDF-PROCESSING<br/>- PDF structure internals<br/>- Reading with PyMuPDF<br/>- Table extraction<br/>- Writing with ReportLab<br/>- Merging, splitting, forms, security"]
+    M1 --> M2
 ```
 
 You cannot process documents reliably without understanding:
@@ -83,127 +50,69 @@ You cannot process documents reliably without understanding:
 
 **Goal**: Master the Microsoft Office formats that dominate business workflows.
 
-```
-03-WORD-DOCUMENTS                  04-SPREADSHEETS
-+---------------------------+     +---------------------------+
-| DOCX internals (OOXML/ZIP) |     | Excel (openpyxl, xlsxwriter)|
-| python-docx read/write     |     | CSV (csv, pandas, polars)  |
-| Template engines (Jinja2)  |     | Pandas DataFrame pipelines|
-| Styles, tables, images     |     | Large file handling       |
-| Mail merge automation      |     | Data validation & types   |
-| Legacy .doc conversion     |     | Formatting and charts     |
-+---------------------------+     +---------------------------+
+```mermaid
+flowchart LR
+    M3["03-WORD-DOCUMENTS<br/>- DOCX internals (OOXML/ZIP)<br/>- python-docx read/write<br/>- Template engines (Jinja2)<br/>- Styles, tables, images<br/>- Mail merge &amp; legacy .doc"]
+    M4["04-SPREADSHEETS<br/>- Excel (openpyxl, xlsxwriter)<br/>- CSV (csv, pandas, polars)<br/>- DataFrame pipelines<br/>- Large file handling<br/>- Validation, formatting, charts"]
+    M3 --> M4
 ```
 
 ### Phase 3: Text, Markup & Media (Chapters 05-06)
 
 **Goal**: Handle the full spectrum of text-based formats and extract text from images.
 
-```
-05-PLAIN-TEXT-AND-MARKUP           06-IMAGES-AND-OCR
-+---------------------------+     +---------------------------+
-| Text encoding detection    |     | Image formats & metadata  |
-| Markdown processing        |     | Tesseract OCR engine      |
-| HTML parsing (BS4, lxml)   |     | EasyOCR / PaddleOCR       |
-| XML / JSON / YAML / TOML  |     | Pre-processing for OCR    |
-| Regex for extraction       |     | Table detection in images |
-| Templating (Jinja2)        |     | Handwriting recognition   |
-+---------------------------+     +---------------------------+
+```mermaid
+flowchart LR
+    M5["05-PLAIN-TEXT-AND-MARKUP<br/>- Text encoding detection<br/>- Markdown &amp; HTML parsing (BS4, lxml)<br/>- XML / JSON / YAML / TOML<br/>- Regex for extraction<br/>- Templating (Jinja2)"]
+    M6["06-IMAGES-AND-OCR<br/>- Image formats &amp; metadata<br/>- Tesseract / EasyOCR / PaddleOCR<br/>- Pre-processing for OCR<br/>- Table detection in images<br/>- Handwriting recognition"]
+    M5 --> M6
 ```
 
 ### Phase 4: Specialized Formats & Conversion (Chapters 07-09)
 
 **Goal**: Handle email, archives, and convert between any document formats.
 
-```
-07-EMAIL-AND-ARCHIVES              08-DATA-EXTRACTION
-+---------------------------+     +---------------------------+
-| EML / MSG / MBOX parsing   |     | Regex patterns            |
-| MIME structure              |     | Table extraction          |
-| Attachment extraction       |     | Named entity recognition  |
-| ZIP / TAR / GZIP / 7z     |     | Key-value extraction      |
-| Recursive archive handling |     | Invoice/receipt parsing   |
-| Encoding issues            |     | Date/address/phone parsing|
-+---------------------------+     +---------------------------+
-
-09-DOCUMENT-CONVERSION
-+---------------------------+
-| Pandoc (universal convert) |
-| LibreOffice headless       |
-| PDF to Word / Word to PDF  |
-| HTML to PDF (weasyprint)   |
-| Image to PDF               |
-| Batch conversion pipelines |
-+---------------------------+
+```mermaid
+flowchart LR
+    M7["07-EMAIL-AND-ARCHIVES<br/>- EML / MSG / MBOX parsing<br/>- MIME structure &amp; attachments<br/>- ZIP / TAR / GZIP / 7z<br/>- Recursive archives &amp; encoding"]
+    M8["08-DATA-EXTRACTION<br/>- Regex &amp; Table extraction<br/>- Named entity recognition<br/>- Key-value &amp; Invoice/receipt parsing<br/>- Date / address / phone parsing"]
+    M9["09-DOCUMENT-CONVERSION<br/>- Pandoc &amp; LibreOffice headless<br/>- PDF &lt;-&gt; Word / HTML -&gt; PDF (WeasyPrint)<br/>- Image -&gt; PDF &amp; Batch pipelines"]
+    M7 --> M8 --> M9
 ```
 
 ### Phase 5: Cloud AI & LLM Integration (Chapters 10-11)
 
 **Goal**: Leverage cloud services and LLMs for intelligent document understanding.
 
-```
-10-CLOUD-DOCUMENT-APIS            11-RAG-AND-EMBEDDINGS
-+---------------------------+     +---------------------------+
-| AWS Textract               |     | Document chunking         |
-| Azure AI Document Intel.   |     | Text embeddings           |
-| Google Document AI         |     | Vector stores (pgvector)  |
-| Anthropic Claude (vision)  |     | Retrieval pipelines       |
-| Comparison and pricing     |     | LLM-powered Q&A          |
-| Hybrid approaches          |     | Citation and grounding    |
-+---------------------------+     +---------------------------+
+```mermaid
+flowchart LR
+    M10["10-CLOUD-DOCUMENT-APIS<br/>- AWS Textract<br/>- Azure AI Document Intelligence<br/>- Google Document AI<br/>- Anthropic Claude (vision)<br/>- Comparison, pricing, hybrid"]
+    M11["11-RAG-AND-EMBEDDINGS<br/>- Document chunking &amp; Embeddings<br/>- Vector stores (pgvector)<br/>- Retrieval pipelines<br/>- LLM-powered Q&amp;A<br/>- Citation and grounding"]
+    M10 --> M11
 ```
 
 ### Phase 6: Production Pipelines (Chapter 12)
 
 **Goal**: Build production-grade document processing systems.
 
-```
-12-PIPELINES-AND-PRODUCTION
-+---------------------------+
-| Architecture patterns      |
-| Celery task queues         |
-| Error handling & retries   |
-| Monitoring and logging     |
-| Storage (S3, GCS)          |
-| Portfolio projects         |
-+---------------------------+
+```mermaid
+flowchart LR
+    M12["12-PIPELINES-AND-PRODUCTION<br/>- Architecture patterns &amp; Celery task queues<br/>- Error handling &amp; retries<br/>- Monitoring, logging, Storage (S3, GCS)<br/>- Portfolio projects"]
 ```
 
 ---
 
 ## How the Roles Break Down
 
-```
-+------------------------------------------------------------------------+
-|                  DOCUMENT PROCESSING ROLES                              |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  BACKEND DEVELOPER (Document Features)                                 |
-|  Focus: Adding document import/export to web applications              |
-|  Skills: Python, PDF/Excel/Word libraries, REST APIs                   |
-|  Day: Build upload endpoints -> parse documents -> store structured data|
-|                                                                        |
-|  DATA ENGINEER                                                         |
-|  Focus: Building ETL pipelines that process documents at scale         |
-|  Skills: Python, pandas, Airflow/Celery, cloud storage, SQL            |
-|  Day: Ingest files -> extract data -> transform -> load to warehouse   |
-|                                                                        |
-|  ML / AI ENGINEER (Document AI)                                        |
-|  Focus: Training or deploying models for document understanding        |
-|  Skills: OCR, NLP, vision models, LLMs, vector stores                  |
-|  Day: Fine-tune extraction models -> build RAG pipelines -> evaluate   |
-|                                                                        |
-|  AUTOMATION ENGINEER                                                   |
-|  Focus: Automating repetitive document workflows                       |
-|  Skills: Python, RPA tools, email parsing, report generation           |
-|  Day: Automate invoice processing -> generate reports -> send emails   |
-|                                                                        |
-|  FULL-STACK DEVELOPER                                                  |
-|  Focus: End-to-end document processing applications                    |
-|  Skills: React/Next.js + Python backend + cloud services               |
-|  Day: Build upload UI -> process server-side -> display results        |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Roles["DOCUMENT PROCESSING ROLES"]
+        R1["BACKEND DEVELOPER<br/>Build upload endpoints -&gt; parse PDF/Excel/Word -&gt; store structured data"]
+        R2["DATA ENGINEER<br/>Ingest files at scale -&gt; extract data -&gt; transform -&gt; load to warehouse (Airflow/Celery)"]
+        R3["ML / AI ENGINEER (Document AI)<br/>OCR, vision models, LLMs -&gt; build RAG &amp; extraction pipelines -&gt; evaluate"]
+        R4["AUTOMATION ENGINEER<br/>Automate invoice/email parsing -&gt; generate reports -&gt; trigger workflows"]
+        R5["FULL-STACK DEVELOPER<br/>Build upload UI (React/Next.js) -&gt; process server-side -&gt; display results"]
+    end
 ```
 
 ---
@@ -236,33 +145,16 @@ You cannot process documents reliably without understanding:
 
 ## Essential Tools & Platforms
 
-```
-PDF                                OFFICE
-+--------------------------+       +---------------------------+
-| PyMuPDF (fitz)            |       | python-docx (Word)        |
-| pdfplumber (tables)       |       | openpyxl (Excel .xlsx)    |
-| PyPDF (merge/split)       |       | xlsxwriter (Excel write)  |
-| ReportLab (PDF generation)|       | python-pptx (PowerPoint)  |
-| pikepdf (low-level)       |       | pandas / polars (data)    |
-+--------------------------+       +---------------------------+
-
-TEXT & MARKUP                      OCR & IMAGES
-+--------------------------+       +---------------------------+
-| BeautifulSoup4 (HTML)     |       | Tesseract (open-source)   |
-| lxml (XML/HTML, fast)     |       | EasyOCR (deep learning)   |
-| markdown-it-py (Markdown) |       | PaddleOCR (multilingual)  |
-| PyYAML / tomli (config)   |       | Pillow (image processing) |
-| Jinja2 (templating)       |       | OpenCV (pre-processing)   |
-+--------------------------+       +---------------------------+
-
-CONVERSION                         CLOUD AI
-+--------------------------+       +---------------------------+
-| Pandoc (universal)        |       | AWS Textract              |
-| LibreOffice (headless)    |       | Azure AI Document Intel.  |
-| weasyprint (HTML->PDF)    |       | Google Document AI        |
-| ImageMagick (images)      |       | Anthropic Claude (vision) |
-| ffmpeg (audio/video)      |       | OpenAI GPT-4o (vision)    |
-+--------------------------+       +---------------------------+
+```mermaid
+flowchart TD
+    subgraph Libs["CORE PYTHON &amp; CLOUD TOOLKIT"]
+        L1["PDF<br/>PyMuPDF (fitz) / pdfplumber / PyPDF / ReportLab / pikepdf"]
+        L2["OFFICE<br/>python-docx / openpyxl / xlsxwriter / python-pptx / pandas / polars"]
+        L3["TEXT &amp; MARKUP<br/>BeautifulSoup4 / lxml / markdown-it-py / PyYAML / tomli / Jinja2"]
+        L4["OCR &amp; IMAGES<br/>Tesseract / EasyOCR / PaddleOCR / Pillow / OpenCV"]
+        L5["CONVERSION<br/>Pandoc / LibreOffice (headless) / WeasyPrint / ImageMagick / ffmpeg"]
+        L6["CLOUD AI<br/>AWS Textract / Azure AI Document Intel. / Google Document AI / Claude &amp; GPT-4o Vision"]
+    end
 ```
 
 ---

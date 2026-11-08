@@ -15,39 +15,13 @@ for embedded engineers.
 
 ### 1.1 What Happens Before main()
 
-```
-  Power On
-     |
-     v
-  +---------------------------+
-  | Power-On Reset (POR)      |  Hardware holds CPU in reset until VDD stable
-  +---------------------------+
-     |
-     v
-  +---------------------------+
-  | Load MSP from 0x00000000  |  CPU loads initial stack pointer
-  +---------------------------+
-     |
-     v
-  +---------------------------+
-  | Load PC from 0x00000004   |  CPU loads Reset_Handler address
-  +---------------------------+
-     |
-     v
-  +---------------------------+
-  | Reset_Handler()           |  Your startup code begins
-  |   1. Copy .data to SRAM   |  (initialized globals)
-  |   2. Zero-fill .bss       |  (uninitialized globals)
-  |   3. Call SystemInit()     |  (clock configuration)
-  |   4. Call __libc_init()    |  (C runtime, constructors)
-  |   5. Call main()           |
-  +---------------------------+
-     |
-     v
-  +---------------------------+
-  | main() executes           |  Your application code
-  | (should never return)     |
-  +---------------------------+
+```mermaid
+flowchart TD
+    P["Power On"] --> POR["Power-On Reset (POR)<br/>(Hardware holds CPU in reset until VDD stable)"]
+    POR --> MSP["Load MSP from 0x00000000<br/>(Initial Stack Pointer)"]
+    MSP --> PC["Load PC from 0x00000004<br/>(Reset_Handler address)"]
+    PC --> RH["Reset_Handler()<br/>1. Copy .data from Flash to SRAM<br/>2. Zero-fill .bss in SRAM<br/>3. Call SystemInit()<br/>4. Call __libc_init_array()<br/>5. Call main()"]
+    RH --> Main["main() executes<br/>(Superloop / RTOS scheduler — never returns)"]
 ```
 
 ### 1.2 Reset Handler in Assembly (Cortex-M)
@@ -591,52 +565,14 @@ They are essential for responsive, low-power firmware.
 
 ### 7.1 Interrupt Flow (Cortex-M)
 
-```
-  Interrupt Processing (Cortex-M)
-  ================================
-
-  Main code executing
-         |
-  [Hardware event: e.g., UART byte received]
-         |
-         v
-  +-------------------------------+
-  | 1. NVIC detects pending IRQ   |
-  | 2. Check priority vs current  |
-  +-------------------------------+
-         |  (priority high enough)
-         v
-  +-------------------------------+
-  | 3. Hardware stacks context:   |
-  |    R0-R3, R12, LR, PC, xPSR  |
-  |    (pushed to current stack)  |
-  +-------------------------------+
-         |
-         v
-  +-------------------------------+
-  | 4. Load ISR address from      |
-  |    vector table               |
-  +-------------------------------+
-         |
-         v
-  +-------------------------------+
-  | 5. Execute ISR                |
-  |    - Clear interrupt flag     |
-  |    - Handle event             |
-  |    - Set flag / write buffer  |
-  +-------------------------------+
-         |
-         v
-  +-------------------------------+
-  | 6. ISR returns (BX LR with   |
-  |    EXC_RETURN magic value)    |
-  +-------------------------------+
-         |
-         v
-  +-------------------------------+
-  | 7. Hardware unstacks context  |
-  |    Resumes main code          |
-  +-------------------------------+
+```mermaid
+flowchart TD
+    Main["Main code executing"] -->|"Hardware event (e.g., UART RX)"| S1["1-2. NVIC detects pending IRQ &amp;<br/>compares priority vs current execution"]
+    S1 -->|"Priority sufficient"| S3["3. Hardware auto-stacks 8 registers:<br/>R0-R3, R12, LR, PC, xPSR (12 cycles)"]
+    S3 --> S4["4. Fetch ISR vector address in parallel"]
+    S4 --> S5["5. Execute ISR:<br/>- Clear peripheral interrupt flag<br/>- Copy byte to ring buffer / signal task"]
+    S5 --> S6["6. ISR returns via BX LR (EXC_RETURN)"]
+    S6 --> S7["7. Hardware unstacks context &amp;<br/>resumes interrupted code"]
 ```
 
 ### 7.2 NVIC Priority System
@@ -735,26 +671,11 @@ SPI communication).
 
 ### 8.1 DMA Data Flow
 
-```
-  DMA Transfer: ADC -> Memory (No CPU Involvement)
-  ==================================================
-
-  +-------+                           +---------+
-  |  ADC  |---[data]----> DMA Ch. --> |  SRAM   |
-  |       |              Controller   | Buffer  |
-  +-------+              +--------+   +---------+
-                          | Ch. 0  |
-  +-------+              | Ch. 1  |   +---------+
-  | UART  |<--[data]---- | Ch. 2  |<--| SRAM    |
-  |  TX   |              | ...    |   | TX Buf  |
-  +-------+              | Ch. 7  |   +---------+
-                          +--------+
-                              |
-                          [Transfer Complete IRQ]
-                              |
-                              v
-                          CPU notified
-                          (process data)
+```mermaid
+flowchart LR
+    ADC["ADC Peripheral"] -->|"Peripheral-to-Memory"| DMA["DMA Controller<br/>(Ch 0 .. Ch 7)"] --> RxBuf[("SRAM ADC Buffer")]
+    TxBuf[("SRAM TX Buffer")] -->|"Memory-to-Peripheral"| DMA --> UART["UART TX Peripheral"]
+    DMA -->|"Transfer Complete IRQ"| CPU["CPU Notified<br/>(Zero CPU cycles spent copying bytes)"]
 ```
 
 ### 8.2 DMA Modes

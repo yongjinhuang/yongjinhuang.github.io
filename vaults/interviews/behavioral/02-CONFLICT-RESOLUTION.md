@@ -298,20 +298,14 @@ I set up a joint demo with both teams where the mobile lead tested the optimized
 
 Use this framework to show appropriate escalation in your stories:
 
-```
-Level 1: Direct conversation (always start here)
-  |
-  v
-Level 2: Structured comparison with data/prototypes
-  |
-  v
-Level 3: Involve a neutral third party (another engineer, architect)
-  |
-  v
-Level 4: Escalate to your manager (explain what you tried first)
-  |
-  v
-Level 5: Disagree and commit (support the decision fully)
+```mermaid
+flowchart TD
+    L1["Level 1: Direct conversation (always start here)"]
+    L2["Level 2: Structured comparison with data / prototypes"]
+    L3["Level 3: Involve a neutral third party (senior engineer / architect)"]
+    L4["Level 4: Escalate to manager (explain what you tried first)"]
+    L5["Level 5: Disagree and commit (support the decision fully)"]
+    L1 --> L2 --> L3 --> L4 --> L5
 ```
 
 ---

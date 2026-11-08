@@ -138,105 +138,77 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐
-│ workflow_definitions  │
-│──────────────────────│
-│ id (PK)               │
-│ namespace_id          │
-│ workflow_type         │
-│ version               │
-│ definition_json       │
-│ is_active             │
-└──────────────────────┘
-     │              │
-     │ 1            │ referenced by
-     │              │
-     │ *            │
-┌──────────────────────┐       ┌──────────────────────┐
-│ workflow_executions   │       │     schedules         │
-│──────────────────────│       │──────────────────────│
-│ id (PK)               │       │ id (PK)               │
-│ namespace_id          │       │ namespace_id          │
-│ workflow_id (FK)      │       │ name                  │
-│ run_id                │  ◄────│ workflow_type         │
-│ status                │       │ cron_expression       │
-│ input_json            │       │ timezone              │
-│ result_json           │       │ workflow_input_json   │
-│ error                 │       │ overlap_policy        │
-│ started_at            │       │ is_paused             │
-│ closed_at             │       │ last_triggered_at     │
-│ parent_workflow_id────│──┐    │ next_trigger_at       │
-└──────────────────────┘  │    └──────────────────────┘
-     │              │      │
-     │ 1            │ 1    │ self-ref (parent/child)
-     │              │      │
-     │ *            │ *    │
-┌──────────────┐  ┌──────────────────────┐
-│    tasks      │  │  workflow_events      │
-│──────────────│  │  (append-only)        │
-│ id (PK)       │  │──────────────────────│
-│ workflow_run  │  │ id (PK)               │
-│   _id (FK)    │  │ workflow_run_id (FK)  │
-│ task_type     │  │ sequence_number       │
-│ task_queue    │  │ event_type            │
-│ sequence      │  │ attributes_json       │
-│ status        │  │ timestamp             │
-│ priority      │  └──────────────────────┘
-│ input_json    │
-│ output_json   │
-│ attempt       │
-│ max_attempts  │
-│ retry_policy  │
-│ worker_id     │
-│ timeout_sec   │
-└──────────────┘
+```mermaid
+erDiagram
+    workflow_definitions ||--o{ workflow_executions : "one definition, many runs"
+    workflow_executions ||--o{ tasks : "one run has many tasks"
+    workflow_executions ||--o{ workflow_events : "one run has many events"
+    workflow_executions ||--o{ workflow_executions : "self-ref: parent/child"
 
-Relationships:
-  workflow_definitions 1───* workflow_executions  (one definition, many runs)
-  workflow_executions  1───* tasks                (one run has many tasks)
-  workflow_executions  1───* workflow_events       (one run has many events)
-  workflow_executions  1───* workflow_executions   (self-ref: parent/child)
-  schedules            ───► workflow_executions    (triggers create executions)
+    workflow_definitions {
+        UUID id PK
+        BIGINT namespace_id
+        VARCHAR workflow_type
+        INT version
+        JSONB definition_json
+        BOOLEAN is_active
+    }
+    workflow_executions {
+        UUID id PK
+        BIGINT namespace_id
+        UUID workflow_id FK
+        VARCHAR run_id UK
+        ENUM status
+        JSONB input_json
+        JSONB result_json
+        TEXT error
+        TIMESTAMP started_at
+        TIMESTAMP closed_at
+        UUID parent_workflow_id FK
+    }
+    tasks {
+        UUID id PK
+        UUID workflow_run_id FK
+        VARCHAR task_type
+        VARCHAR task_queue
+        INT sequence
+        ENUM status
+        INT priority
+        JSONB input_json
+        JSONB output_json
+        INT attempt
+        INT max_attempts
+        JSONB retry_policy_json
+        VARCHAR worker_id
+        INT timeout_sec
+    }
+    workflow_events {
+        BIGINT id PK
+        UUID workflow_run_id FK
+        BIGINT sequence_number
+        VARCHAR event_type
+        JSONB attributes_json
+        TIMESTAMP timestamp
+    }
+    schedules {
+        UUID id PK
+        BIGINT namespace_id
+        VARCHAR name
+        VARCHAR workflow_type
+        VARCHAR cron_expression
+        VARCHAR timezone
+        JSONB workflow_input_json
+        ENUM overlap_policy
+        BOOLEAN is_paused
+        TIMESTAMP last_triggered_at
+        TIMESTAMP next_trigger_at
+    }
 ```
+
 
 ## Data Flow
 
 ### Submitting a Workflow (Write Path)
-
-```
-1. Client submits workflow: (workflow_type, namespace_id, input_json, run_id)
-         │
-         ▼
-2. Look up workflow_definitions by (namespace, type, latest version)
-         │
-         ▼
-3. Check run_id for idempotency:
-         │
-    ┌────┴──────────┐
-    │run_id exists? │
-    ├─Yes───────────┤──► Return existing execution (idempotent)
-    │ No            │
-    └────┬──────────┘
-         ▼
-4. INSERT workflow_executions (status = 'running')
-         │
-         ▼
-5. Log WorkflowStarted event in workflow_events
-         │
-         ▼
-6. Parse definition_json DAG → identify initial tasks
-   (tasks with no dependencies)
-         │
-         ▼
-7. For each initial task:
-   INSERT into tasks (status = 'scheduled')
-   Enqueue onto task_queue
-   Log TaskScheduled event
-         │
-         ▼
-8. Return execution ID to client
-```
 
 ```mermaid
 flowchart TD
@@ -251,55 +223,6 @@ flowchart TD
 ```
 
 ### Task Execution (Worker Loop)
-
-```
-9. Worker polls task_queue for tasks matching its task_type
-         │
-         ▼
-10. Dequeue highest-priority task
-    Update task: status = 'running', worker_id = self
-    Log TaskStarted event
-         │
-         ▼
-11. Execute task logic with input_json
-         │
-    ┌────┴─────────┐
-    │Success?      │
-    ├─Yes──────────┤
-    │              ▼
-    │    Update task: status = 'success', output_json = result
-    │    Log TaskCompleted event
-    │              │
-    │              ▼
-    │    Determine next tasks from DAG:
-    │    For each downstream task whose dependencies are ALL complete:
-    │       INSERT task (status = 'scheduled'), enqueue
-    │       Log TaskScheduled event
-    │              │
-    │              ▼
-    │    If no more tasks pending → workflow complete
-    │       Update execution: status = 'completed', result_json
-    │       Log WorkflowCompleted event
-    │
-    ├─No (failure)─┤
-    │              ▼
-    │    Check retry policy: attempt < max_attempts?
-    │         │
-    │    ┌────┴──────┐
-    │    │Can retry? │
-    │    ├─Yes───────┤──► Increment attempt, compute backoff delay
-    │    │           │    Re-enqueue task after delay
-    │    │           │    Log TaskRetried event
-    │    ├─No────────┤
-    │    │           ▼
-    │    │    Task permanently failed
-    │    │    Update task: status = 'failed'
-    │    │    Log TaskFailed event
-    │    │    Update execution: status = 'failed', error
-    │    │    Log WorkflowFailed event
-    │    │    Cancel any running sibling tasks
-    └────┴───────────┘
-```
 
 ```mermaid
 flowchart TD
@@ -319,31 +242,6 @@ flowchart TD
 ```
 
 ### Cron Schedule Trigger
-
-```
-12. Timer fires every second (or scheduler polls next_trigger_at index)
-          │
-          ▼
-13. Find schedules where next_trigger_at <= now() AND is_paused = false
-          │
-          ▼
-14. For each due schedule:
-    │
-    ├──► Check overlap_policy:
-    │    - skip: is previous execution still running? → skip this trigger
-    │    - allow: always start new execution
-    │    - buffer: queue trigger for after current execution finishes
-    │    - cancel_other: cancel running execution, start new
-    │
-    ├──► Generate run_id from (schedule_id + trigger_time) for idempotency
-    │
-    ├──► Create workflow_executions with workflow_input_json
-    │
-    ├──► Update schedule: last_triggered_at = now()
-    │    Compute next_trigger_at from cron_expression + timezone
-    │
-    └──► (follows steps 5-8 from "Submitting a Workflow")
-```
 
 ```mermaid
 flowchart TD

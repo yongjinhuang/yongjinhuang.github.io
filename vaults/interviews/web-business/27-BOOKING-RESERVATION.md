@@ -141,10 +141,11 @@ Users want to change dates, times, or party size after booking. This is essentia
 
 A well-designed booking system tracks clear status transitions:
 
-```
-pending → held → confirmed → checked_in → completed
-                     ↓              ↓
-                 cancelled      no_show
+```mermaid
+flowchart LR
+    Pending["pending"] --> Held["held"] --> Confirmed["confirmed"] --> CheckedIn["checked_in"] --> Completed["completed"]
+    Confirmed --> Cancelled["cancelled"]
+    CheckedIn --> NoShow["no_show"]
 ```
 
 Each status transition triggers side effects: `confirmed` sends a confirmation email, `cancelled` triggers a refund and waitlist promotion, `no_show` applies a penalty and flags the user. Model these as a state machine with explicit transition rules rather than ad-hoc status updates scattered across the codebase.
@@ -161,6 +162,34 @@ Each status transition triggers side effects: `confirmed` sends a confirmation e
 - **Under-communicating**: Not sending enough reminders leads to no-shows. Not sending clear cancellation confirmations leads to disputes. Over-communicate booking status changes.
 - **Not handling edge cases around midnight and DST**: A booking from 11 PM to 1 AM crosses a date boundary. A weekly recurring booking at 2 AM might not exist during spring-forward. Test these edge cases explicitly.
 - **Forgetting about walk-ins**: If the system assumes all capacity is reservable, walk-in customers get turned away even when there's physical space. Many businesses hold back a percentage of capacity for walk-ins.
+
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Date-Range Inventory Modeling: Night-by-Night Ledger Rows vs. Interval Overlap Locks
+
+Beginners model hotel or car-rental availability as a list of `bookings(resource_id, start_date, end_date)` and run `SELECT COUNT(*) FROM bookings WHERE resource_id = ? AND start_date < :end AND end_date > :start`. Under PostgreSQL `READ COMMITTED` isolation, two concurrent transactions booking overlapping dates (`June 1–4` and `June 3–6`) both see `count = 0` and both commit—double-booking the room!
+- **Two Battle-Tested Solutions**:
+  1. **Night-by-Night Inventory Cells (The Hospitality Standard)**: Pre-populate one row per `(room_type_id, stay_date)` with `available_count`. Booking a 3-night stay (`June 1` check-in, `June 4` check-out) executes an atomic `UPDATE room_night_inventory SET available_count = available_count - 1 WHERE room_type_id = $1 AND stay_date IN ('2026-06-01', '2026-06-02', '2026-06-03') AND available_count > 0` sorted in ascending date order (to prevent deadlocks) and checks that `rows_affected == 3`.
+  2. **PostgreSQL `EXCLUDE USING gist` Constraint (For Exact-Unit / Appointment Slots)**: When booking a specific physical room, doctor, or tennis court by timestamp range, enforce a database-level exclusion constraint (`EXCLUDE USING gist (resource_id WITH =, tstzrange(start_at, end_at, '[)') WITH &&)`) so the storage engine mathematically guarantees zero overlapping intervals.
+
+```mermaid
+flowchart LR
+    Req["Book June 1 Check-In -> June 4 Check-Out<br/>(3 Stay Nights)"] --> Sort["Lock Nights in Chronological Order<br/>2026-06-01, 2026-06-02, 2026-06-03"]
+    Sort --> Check{"All 3 rows decremented<br/>with available_count >= 0?"}
+    Check -->|Yes (3 rows)| Hold["Create 10-min Checkout Hold"]
+    Check -->|No (< 3 rows)| Rollback["Rollback Transaction & Return Sold Out"]
+```
+
+### 2. Category-Level Selling vs. Physical Room Assignment ("Run of House" Yield Optimization)
+
+If a hotel has 50 King rooms and lets guests pick a specific room number (`Room 304`) 3 months in advance, the calendar quickly turns into "Swiss cheese": Room 304 is booked Mon–Tue, Room 305 is booked Tue–Thu, Room 306 is booked Thu–Fri—and when a guest tries to book a 4-night stay (Mon–Fri), the system says **"Sold Out"** even though rooms are sitting empty every single night!
+- **How Airlines, Hotels, and Rental Cars Actually Work**: Sell **fungible category capacity** (`Standard King Room`) at booking time, and defer binding to a specific physical asset (`Room 304`) until 24 hours before check-in via a nightly **Tetris/Bin-Packing Defragmentation Solver** that packs reservations tightly to maximize contiguous multi-night availability.
+
+### 3. Storing Wall-Clock Local Time + IANA Timezone ID (Why Pure UTC Breaks Future Bookings)
+
+Every backend engineer is taught "Always store timestamps in UTC." **For future physical-world appointments, storing only UTC is a classic production bug.**
+- **The Failure Scenario**: In January, a patient in Phoenix or London books a recurring therapy session for `April 15 at 9:00 AM local time`. Your server converts `9:00 AM` to UTC and stores `2026-04-15T09:00:00Z`. In March, Daylight Saving Time (DST) kicks in—or a government passes a law abolishing/shifting DST with 3 weeks' notice. Suddenly `09:00:00Z` renders as `10:00 AM` local time on the user's calendar!
+- **Golden Rule for Future Events**: Always store the user's intended **wall-clock local datetime** (`2026-04-15T09:00:00`) alongside the **IANA timezone identifier** (`America/New_York` or `Europe/London`), and compute the UTC instant dynamically using the latest `tzdata` rules.
 
 ## Quick Reference
 

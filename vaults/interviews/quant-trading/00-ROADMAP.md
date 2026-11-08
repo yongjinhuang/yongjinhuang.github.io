@@ -8,36 +8,16 @@ Quantitative trading sits at the intersection of finance, mathematics, statistic
 
 ## The Quant Trading Landscape
 
-```
-+------------------------------------------------------------------------+
-|                    QUANTITATIVE TRADING ECOSYSTEM                       |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  SELL SIDE (Banks)              BUY SIDE (Funds)                       |
-|  +---------------------+       +---------------------------+           |
-|  | Market Making        |       | Hedge Funds               |           |
-|  | Proprietary Trading  |       |   - Citadel, Two Sigma    |           |
-|  | Electronic Trading   |       |   - DE Shaw, Renaissance  |           |
-|  | Risk Management      |       |   - Jane Street, AQR      |           |
-|  +---------------------+       +---------------------------+           |
-|                                                                        |
-|  PROP SHOPS                     ASSET MANAGERS                         |
-|  +---------------------+       +---------------------------+           |
-|  | Jump Trading         |       | BlackRock (Aladdin)       |           |
-|  | Virtu Financial      |       | Vanguard (quant index)    |           |
-|  | Tower Research        |       | Dimensional Fund Advisors |           |
-|  | Hudson River Trading  |       | Man Group / AHL           |           |
-|  +---------------------+       +---------------------------+           |
-|                                                                        |
-|  INFRASTRUCTURE                 RETAIL / INDEPENDENT                   |
-|  +---------------------+       +---------------------------+           |
-|  | Exchanges (NYSE, CME)|       | Algorithmic retail traders |           |
-|  | Data vendors (BBG)   |       | Crypto quant funds         |           |
-|  | Cloud (AWS, GCP)     |       | Quantopian/QuantConnect    |           |
-|  | Co-location services |       | Independent researchers    |           |
-|  +---------------------+       +---------------------------+           |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Eco["QUANTITATIVE TRADING ECOSYSTEM"]
+        Sell["SELL SIDE (Banks)<br/>Market Making, Electronic Execution, Risk Management"]
+        Buy["BUY SIDE (Hedge Funds)<br/>Citadel, Two Sigma, DE Shaw, Renaissance, AQR"]
+        Prop["PROPRIETARY TRADING SHOPS<br/>Jane Street, Jump Trading, HRT, Virtu, Tower, Optiver"]
+        AM["ASSET MANAGERS<br/>BlackRock (Aladdin), Vanguard, Dimensional, Man AHL"]
+        Infra["INFRASTRUCTURE<br/>Exchanges (NYSE, CME), Data Vendors (Bloomberg), Co-Location (Equinix)"]
+        Ind["INDEPENDENT / CRYPTO QUANT<br/>Crypto quant funds, QuantConnect, Independent researchers"]
+    end
 ```
 
 ---

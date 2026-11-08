@@ -29,29 +29,20 @@ approaches solve your problem.
 
 ### Decision Tree
 
-```
-Start: What do you need?
-  |
-  +--> Change output FORMAT/STYLE?
-  |      +--> Try prompt engineering first
-  |      +--> If inconsistent -> few-shot examples
-  |      +--> If still failing -> fine-tune for style
-  |
-  +--> Add NEW KNOWLEDGE?
-  |      +--> Use RAG (retrieval-augmented generation)
-  |      +--> If RAG latency too high -> fine-tune + RAG
-  |
-  +--> Change model BEHAVIOR?
-  |      +--> Specific persona/tone -> fine-tune (SFT)
-  |      +--> Safety/alignment -> fine-tune (RLHF/DPO)
-  |
-  +--> Improve TASK PERFORMANCE?
-  |      +--> Try CoT prompting first
-  |      +--> If not enough -> fine-tune on task-specific data
-  |
-  +--> Reduce COST/LATENCY?
-         +--> Fine-tune smaller model to match larger model
-         +--> Distillation: train 8B to mimic 70B behavior
+```mermaid
+flowchart LR
+    Start{"What do you need?"}
+    Start --> C1["Change Output FORMAT / STYLE"]
+    Start --> C2["Add NEW KNOWLEDGE"]
+    Start --> C3["Change Model BEHAVIOR"]
+    Start --> C4["Improve TASK PERFORMANCE"]
+    Start --> C5["Reduce COST / LATENCY"]
+
+    C1 --> A1["1. Prompt engineering -&gt; 2. Few-shot -&gt; 3. Fine-tune for style"]
+    C2 --> A2["1. Use RAG -&gt; 2. If latency too high: Fine-tune + RAG"]
+    C3 --> A3["Persona/tone -&gt; SFT<br/>Safety/alignment -&gt; RLHF / DPO"]
+    C4 --> A4["1. Try CoT prompting -&gt; 2. Fine-tune on task-specific data"]
+    C5 --> A5["Distillation: Fine-tune smaller model (8B) to mimic larger model (70B)"]
 ```
 
 ### Approach Comparison
@@ -100,44 +91,14 @@ Start: What do you need?
 
 ### Overview of Methods
 
-```
-+------------------------------------------------------------------+
-|                FINE-TUNING METHODS                                 |
-+------------------------------------------------------------------+
-|                                                                    |
-|  FULL FINE-TUNING                                                 |
-|  +------------------------------------------------------------+   |
-|  | Update ALL model parameters                                 |   |
-|  | Requires: massive GPU memory (2-4x model size)             |   |
-|  | Quality: highest potential quality                          |   |
-|  | Cost: $$$$ (8x A100 for 70B model)                         |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-|  LoRA (Low-Rank Adaptation)                                       |
-|  +------------------------------------------------------------+   |
-|  | Freeze base model, train small adapter matrices             |   |
-|  | Requires: ~10% of full fine-tuning memory                  |   |
-|  | Quality: 90-95% of full fine-tuning                        |   |
-|  | Cost: $$ (1-2x A100 for 70B model with QLoRA)              |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-|  QLoRA (Quantized LoRA)                                           |
-|  +------------------------------------------------------------+   |
-|  | LoRA + 4-bit quantization of base model                    |   |
-|  | Requires: ~5% of full fine-tuning memory                   |   |
-|  | Quality: 85-95% of full fine-tuning                        |   |
-|  | Cost: $ (single GPU for 7B-13B models)                     |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-|  ADAPTER TUNING (Prefix/Prompt Tuning)                            |
-|  +------------------------------------------------------------+   |
-|  | Learn soft prompts or adapter layers                        |   |
-|  | Requires: minimal additional memory                        |   |
-|  | Quality: lower than LoRA for most tasks                    |   |
-|  | Cost: $ (least expensive)                                   |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Methods["FINE-TUNING METHODS COMPARISON"]
+        Full["FULL FINE-TUNING<br/>- Update ALL model parameters<br/>- Memory: 2-4x model size (8x A100 for 70B)<br/>- Quality: Highest potential / Cost: $$"]
+        LoRA["LoRA (Low-Rank Adaptation)<br/>- Freeze base model, train low-rank adapter matrices (A, B)<br/>- Memory: ~10% of full FT<br/>- Quality: 90-95% of full FT / Cost: $"]
+        QLoRA["QLoRA (Quantized LoRA)<br/>- LoRA + 4-bit NormalFloat quantization of frozen base model<br/>- Memory: ~5% of full FT (1x GPU for 7B-13B)<br/>- Quality: 85-95% of full FT / Cost: $"]
+        Adapter["ADAPTER / PREFIX / PROMPT TUNING<br/>- Learn soft prompts or small adapter layers<br/>- Memory: Minimal / Cost: $ (Least expensive)"]
+    end
 ```
 
 ---
@@ -264,27 +225,18 @@ LoRA:
   During inference: output = W*x + A*B*x (adds minimal overhead)
 ```
 
-```
-+------------------------------------------------------------------+
-|                    LoRA ARCHITECTURE                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Input x                                                          |
-|    |                                                              |
-|    +--------+--------+                                            |
-|    |                 |                                             |
-|    v                 v                                             |
-|  +------+     +------+------+                                     |
-|  |  W   |     |  A   |  B   |   A: down-project (d -> r)         |
-|  | (frozen)   | (trainable) |   B: up-project (r -> d)           |
-|  +------+     +------+------+   r << d (rank, e.g., 16)          |
-|    |                 |                                             |
-|    +--------+--------+                                            |
-|             |                                                     |
-|             v                                                     |
-|         W*x + A*B*x                                               |
-|         (merged output)                                           |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph LoRA["LoRA ARCHITECTURE (r << d, e.g., rank r = 16)"]
+        X["Input x (dim d)"]
+        W["Pretrained Weights W (d x d)<br/>(Frozen)"]
+        A["Adapter A (d -&gt; r)<br/>(Trainable down-projection)"]
+        B["Adapter B (r -&gt; d)<br/>(Trainable up-projection)"]
+        Out["Merged Output: h = W*x + (alpha/r)*B*A*x"]
+
+        X --> W --> Out
+        X --> A --> B --> Out
+    end
 ```
 
 ### QLoRA: Quantized LoRA
@@ -320,34 +272,14 @@ As a SWE, you need to understand the concept, not implement it from scratch.
 
 ### RLHF Pipeline
 
-```
-+------------------------------------------------------------------+
-|                    RLHF PIPELINE                                   |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Step 1: SUPERVISED FINE-TUNING (SFT)                             |
-|  +------------------------------------------------------------+   |
-|  | Train on curated (instruction, good_response) pairs         |   |
-|  | Result: model that follows instructions                     |   |
-|  +------------------------------------------------------------+   |
-|                            |                                       |
-|                            v                                       |
-|  Step 2: REWARD MODEL TRAINING                                    |
-|  +------------------------------------------------------------+   |
-|  | Collect: model generates 2+ responses per prompt            |   |
-|  | Humans rank: response A > response B                        |   |
-|  | Train reward model to predict human preferences             |   |
-|  +------------------------------------------------------------+   |
-|                            |                                       |
-|                            v                                       |
-|  Step 3: PPO / DPO OPTIMIZATION                                  |
-|  +------------------------------------------------------------+   |
-|  | PPO: Use reward model as signal to optimize policy          |   |
-|  | DPO: Direct Preference Optimization (simpler, no reward     |   |
-|  |      model needed -- train directly on preference pairs)    |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph RLHF["RLHF / DPO ALIGNMENT PIPELINE"]
+        S1["Step 1: SUPERVISED FINE-TUNING (SFT)<br/>Train on curated (instruction, good_response) pairs<br/>Result: SFT model that follows instructions"]
+        S2["Step 2: REWARD MODEL / PREFERENCE COLLECTION<br/>Model generates 2+ responses per prompt; humans rank A &gt; B<br/>Train Reward Model to predict human preference score"]
+        S3["Step 3: POLICY OPTIMIZATION (PPO or DPO)<br/>- PPO: Optimize policy using Reward Model + KL penalty<br/>- DPO: Direct Preference Optimization directly on (chosen, rejected) pairs"]
+        S1 --> S2 --> S3
+    end
 ```
 
 ### DPO (Direct Preference Optimization)

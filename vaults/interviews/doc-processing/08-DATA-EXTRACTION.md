@@ -4,29 +4,14 @@
 
 Extracting structured data from unstructured documents is the core challenge of document processing. A PDF invoice contains an invoice number, date, line items, and total — but they exist as positioned text, not as labeled fields. This chapter covers the techniques for pulling structured data out of messy documents: regex patterns, table extraction, named entity recognition, and key-value pair extraction.
 
-```
-+------------------------------------------------------------------------+
-|                    DATA EXTRACTION TECHNIQUES                           |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  PATTERN-BASED                   POSITION-BASED                        |
-|  +------------------------+     +---------------------------+          |
-|  | Regular expressions     |     | PDF coordinate extraction  |          |
-|  |   Dates, emails, phones|     | Bounding box analysis      |          |
-|  |   Invoice numbers      |     | Zone-based extraction      |          |
-|  |   Currency amounts     |     | Template matching          |          |
-|  | Rule-based parsers     |     | Table grid detection       |          |
-|  +------------------------+     +---------------------------+          |
-|                                                                        |
-|  NLP-BASED                       AI-BASED                              |
-|  +------------------------+     +---------------------------+          |
-|  | Named Entity Recognition|     | LLM extraction (GPT/Claude)|          |
-|  |   spaCy, NLTK          |     | Document AI services       |          |
-|  | Keyword proximity      |     | Fine-tuned models          |          |
-|  | Sentence segmentation  |     | Vision models on images    |          |
-|  +------------------------+     +---------------------------+          |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Tech["DATA EXTRACTION TECHNIQUES"]
+        T1["PATTERN-BASED<br/>- Regular expressions (dates, emails, phones, invoices, currency)<br/>- Rule-based parsers"]
+        T2["POSITION-BASED<br/>- PDF coordinate &amp; bounding box extraction<br/>- Zone-based templates &amp; table grid detection"]
+        T3["NLP-BASED<br/>- Named Entity Recognition (spaCy, NLTK)<br/>- Keyword proximity &amp; sentence segmentation"]
+        T4["AI-BASED<br/>- LLM structured extraction (Claude / GPT)<br/>- Cloud Document AI &amp; Vision models"]
+    end
 ```
 
 ---

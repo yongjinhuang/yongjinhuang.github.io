@@ -98,25 +98,18 @@ POST /api/annotations
 
 ## 3. LGTM Stack
 
-```
-┌────────────────────────────────────────────────────┐
-│                GRAFANA LGTM STACK                   │
-│                                                     │
-│  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐   │
-│  │  Loki  │  │Grafana │  │ Tempo  │  │ Mimir  │   │
-│  │ (Logs) │  │ (Viz)  │  │(Traces)│  │(Metrics│   │
-│  └───┬────┘  └───┬────┘  └───┬────┘  └───┬────┘   │
-│      │           │           │           │          │
-│      └───────────┼───────────┼───────────┘          │
-│                  │                                   │
-│            Unified Querying                           │
-│         Trace → Logs → Metrics                       │
-│                                                     │
-│  ┌──────────────────────────────────────────────┐   │
-│  │          OpenTelemetry Collector              │   │
-│  │    (receives traces, metrics, logs via OTLP)  │   │
-│  └──────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph LGTM["GRAFANA LGTM STACK"]
+        OTel["OpenTelemetry Collector<br/>(receives traces, metrics, logs via OTLP)"]
+        Loki[("Loki<br/>(Logs)")]
+        Tempo[("Tempo<br/>(Traces)")]
+        Mimir[("Mimir<br/>(Metrics)")]
+        Grafana["Grafana (Visualization)<br/>Unified Querying: Trace &lt;-&gt; Logs &lt;-&gt; Metrics"]
+
+        OTel --> Loki & Tempo & Mimir
+        Loki & Tempo & Mimir --> Grafana
+    end
 ```
 
 | Component | Purpose | Query Language |
@@ -183,34 +176,21 @@ RUM, Synthetics, and security in a single product.
 
 ### Architecture
 
-```
-┌────────────────────────────────────────────────────┐
-│               DATADOG PLATFORM                      │
-│                                                     │
-│  ┌──────────┐                                       │
-│  │ Datadog  │  Installed on every host/container    │
-│  │ Agent    │  Collects metrics, traces, logs        │
-│  │ (host)   │  Forwards to Datadog backend           │
-│  └────┬─────┘                                       │
-│       │                                              │
-│       ▼                                              │
-│  ┌──────────────────────────────────────────────┐   │
-│  │           DATADOG BACKEND (SaaS)              │   │
-│  │                                                │   │
-│  │  ┌─────────┐ ┌────────┐ ┌─────────┐          │   │
-│  │  │ Metrics │ │  APM   │ │  Logs   │          │   │
-│  │  │Infra Mon│ │Tracing │ │Pipeline │          │   │
-│  │  └─────────┘ └────────┘ └─────────┘          │   │
-│  │  ┌─────────┐ ┌────────┐ ┌─────────┐          │   │
-│  │  │   RUM   │ │Syntheti│ │Security │          │   │
-│  │  │Browser  │ │cs Tests│ │Scanning │          │   │
-│  │  └─────────┘ └────────┘ └─────────┘          │   │
-│  │                                                │   │
-│  │  ┌──────────────────────────────────────┐     │   │
-│  │  │  Watchdog (AI anomaly detection)     │     │   │
-│  │  └──────────────────────────────────────┘     │   │
-│  └──────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph DD["DATADOG PLATFORM"]
+        Agent["Datadog Agent (host / container)<br/>Collects metrics, traces, logs &amp; forwards to backend"]
+        subgraph Backend["DATADOG BACKEND (SaaS)"]
+            M["Metrics &amp; Infra Monitoring"]
+            APM["APM &amp; Distributed Tracing"]
+            Logs["Logs Pipeline"]
+            RUM["RUM (Browser / Mobile)"]
+            Syn["Synthetics Tests"]
+            Sec["Security Scanning"]
+            Watchdog["Watchdog (AI Anomaly Detection)"]
+        end
+        Agent --> Backend
+    end
 ```
 
 ---
@@ -228,25 +208,13 @@ RUM, Synthetics, and security in a single product.
 
 ### Service Map
 
-```
-         ┌─────────┐     ┌─────────┐
-         │  Web    │────>│  API    │
-         │ Frontend│     │ Gateway │
-         └─────────┘     └────┬────┘
-                              │
-                    ┌─────────┼─────────┐
-                    ▼         ▼         ▼
-              ┌─────────┐ ┌─────┐ ┌─────────┐
-              │ Auth    │ │Order│ │ Payment │
-              │ Service │ │ Svc │ │ Service │
-              └─────────┘ └──┬──┘ └─────────┘
-                             │
-                        ┌────┴────┐
-                        │PostgreSQL│
-                        └─────────┘
-
-Auto-generated from trace data. Shows: request rates,
-error rates, latency between services.
+```mermaid
+flowchart TD
+    Web["Web Frontend"] --> GW["API Gateway"]
+    GW --> Auth["Auth Service"]
+    GW --> Order["Order Svc"]
+    GW --> Pay["Payment Service"]
+    Order --> PG[("PostgreSQL")]
 ```
 
 ---
@@ -263,19 +231,10 @@ error rates, latency between services.
 
 ### Log Management
 
-```
-┌──────────┐    ┌──────────────┐    ┌──────────┐
-│ Log      │───>│ Log Pipeline │───>│ Indexes  │
-│ Sources  │    │              │    │          │
-│ (agents, │    │ ┌──────────┐│    │ Hot/Warm │
-│  APIs,   │    │ │ Parsing  ││    │ Cold     │
-│  Lambda) │    │ │ rules    ││    │ Archive  │
-│          │    │ ├──────────┤│    │          │
-│          │    │ │ Enrichment│    │          │
-│          │    │ ├──────────┤│    │          │
-│          │    │ │ Filtering││    │          │
-│          │    │ └──────────┘│    │          │
-└──────────┘    └──────────────┘    └──────────┘
+```mermaid
+flowchart LR
+    Src["Log Sources<br/>(agents, APIs, Lambda)"] --> Pipe["Log Pipeline<br/>1. Parsing rules<br/>2. Enrichment<br/>3. Filtering"]
+    Pipe --> Idx[("Indexes<br/>Hot / Warm / Cold / Archive")]
 ```
 
 ### Log Pipeline

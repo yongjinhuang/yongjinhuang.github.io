@@ -7,24 +7,27 @@ state of systems through their external outputs. Modern observability goes beyon
 traditional monitoring to enable engineers to ask arbitrary questions about system
 behavior without deploying new instrumentation.
 
-```
-                    OBSERVABILITY
-                         |
-         +---------------+---------------+
-         |               |               |
-       LOGS           METRICS         TRACES
-         |               |               |
-    +----+----+    +-----+-----+   +-----+-----+
-    |    |    |    |     |     |   |     |     |
-   Loki  ELK    Prom  Datadog   OTel  Tempo
-   Fluentd       Mimir  Custom  Jaeger  Zipkin
-         |               |               |
-         +-------+-------+-------+-------+
-                 |                |
-           ALERTING          DASHBOARDS
-                 |                |
-           PagerDuty          Grafana
-           OpsGenie           Datadog
+```mermaid
+flowchart TD
+    Root["OBSERVABILITY"]
+    Logs["LOGS"]
+    Metrics["METRICS"]
+    Traces["TRACES"]
+
+    Root --> Logs & Metrics & Traces
+
+    L1["Loki / ELK / Fluentd"]
+    M1["Prometheus / Datadog / Mimir / Custom"]
+    T1["OpenTelemetry / Tempo / Jaeger / Zipkin"]
+
+    Logs --> L1
+    Metrics --> M1
+    Traces --> T1
+
+    Alert["ALERTING<br/>PagerDuty / OpsGenie"]
+    Dash["DASHBOARDS<br/>Grafana / Datadog"]
+
+    L1 & M1 & T1 --> Alert & Dash
 ```
 
 ## Table of Contents

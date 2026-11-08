@@ -126,102 +126,68 @@ graph TD
 
 ## ER Diagram
 
-```
-PostgreSQL Tables:
-┌──────────────────────┐       ┌──────────────────────────┐
-│       users           │       │    conversations          │
-│──────────────────────│       │──────────────────────────│
-│ user_id (PK)          │       │ conversation_id (PK)      │
-│ username              │       │ type                      │
-│ display_name          │       │ name                      │
-│ email                 │       │ avatar_url                │
-│ phone                 │       │ creator_id (FK)           │
-│ avatar_url            │       └──────────────────────────┘
-│ public_key            │                │
-│ status_message        │                │ 1
-└──────────────────────┘                │
-         │                               │
-         │ 1                             │
-         │          ┌────────────────────┘
-         │          │
-         │     *    ▼    *
-         └───┬──────────────────────────┐
-             │  conversation_members     │
-             │──────────────────────────│
-             │ conversation_id (PK,FK)   │
-             │ user_id (PK,FK)           │
-             │ role                      │
-             │ nickname                  │
-             │ joined_at                 │
-             │ muted_until              │
-             └──────────────────────────┘
+```mermaid
+erDiagram
+    users ||--o{ conversation_members : "relates"
+    conversations ||--o{ messages : "conversation, user"
+    users ||--o{ user_conversations : "relates"
 
-Cassandra Tables:
-┌───────────────────────┐    ┌───────────────────────┐
-│      messages          │    │   message_status       │
-│───────────────────────│    │───────────────────────│
-│ conversation_id (PK)   │    │ conversation_id (PK)   │
-│ message_id (CK DESC)  │    │ user_id (PK)           │
-│ sender_id              │    │ message_id (CK)        │
-│ message_type           │    │ status                 │
-│ content                │    │ updated_at             │
-│ metadata               │    └───────────────────────┘
-│ reply_to_id            │
-│ is_deleted             │    ┌───────────────────────┐
-│ created_at             │    │  user_conversations    │
-└───────────────────────┘    │───────────────────────│
-                              │ user_id (PK)           │
-                              │ last_message_at (CK)   │
-                              │ conversation_id        │
-                              │ last_message_preview   │
-                              │ unread_count           │
-                              └───────────────────────┘
-
-Relationships (logical, not enforced in Cassandra):
-  users 1───* conversation_members *───1 conversations
-  conversations 1───* messages
-  (conversation, user) 1───* message_status
-  users 1───* user_conversations
+    users {
+        BIGINT user_id PK
+        VARCHAR username UK
+        VARCHAR display_name
+        VARCHAR email
+        VARCHAR phone UK
+        VARCHAR avatar_url
+        TEXT public_key
+        VARCHAR status_message
+    }
+    conversations {
+        BIGINT conversation_id PK
+        ENUM type
+        VARCHAR name
+        VARCHAR avatar_url
+        BIGINT creator_id FK
+    }
+    conversation_members {
+        BIGINT conversation_id PK
+        BIGINT user_id PK
+        ENUM role
+        VARCHAR nickname
+        TIMESTAMP joined_at
+        TIMESTAMP muted_until
+    }
+    messages {
+        BIGINT conversation_id
+        BIGINT message_id
+        BIGINT sender_id
+        ENUM message_type
+        TEXT content
+        MAP metadata
+        BIGINT reply_to_id
+        BOOLEAN is_deleted
+        TIMESTAMP created_at
+    }
+    message_status {
+        BIGINT conversation_id
+        BIGINT user_id
+        BIGINT message_id
+        ENUM status
+        TIMESTAMP updated_at
+    }
+    user_conversations {
+        BIGINT user_id
+        TIMESTAMP last_message_at
+        BIGINT conversation_id
+        TEXT last_message_preview
+        INT unread_count
+    }
 ```
+
 
 ## Data Flow
 
 ### Sending a Message
-
-```
-1. User A types message, client encrypts with User B's public key
-         │
-         ▼
-2. Client sends via WebSocket to connected Chat Server
-         │
-         ▼
-3. Chat Server generates Snowflake message_id
-         │
-         ▼
-4. Write to Cassandra (parallel):
-   ├─ INSERT into messages (conversation_id, message_id, content...)
-   ├─ UPDATE user_conversations for ALL members:
-   │    set last_message_at = now, last_message_preview, unread_count++
-   └─ INSERT message_status (sender → 'sent')
-         │
-         ▼
-5. Publish event to Kafka topic: chat.messages.{conversation_id}
-         │
-         ▼
-6. Fan-out Service reads Kafka, looks up conversation_members
-         │
-         ▼
-7. For each member:
-   ├─ If online: Route to their WebSocket server → deliver via WS
-   │    └─ On receipt: update message_status → 'delivered'
-   └─ If offline: Send push notification (APNs/FCM)
-         │
-         ▼
-8. User B opens conversation:
-   ├─ Client sends 'read' receipt via WebSocket
-   ├─ Update message_status → 'read'
-   └─ Reset unread_count in user_conversations
-```
 
 ```mermaid
 flowchart TD
@@ -244,28 +210,6 @@ flowchart TD
 ```
 
 ### Loading the Inbox
-
-```
-1. User opens app
-         │
-         ▼
-2. Query user_conversations WHERE user_id = X
-   (single partition scan, sorted by last_message_at DESC)
-         │
-         ▼
-3. Return conversation list with previews and unread counts
-   (no joins needed — everything is denormalized)
-         │
-         ▼
-4. User taps a conversation
-         │
-         ▼
-5. Query messages WHERE conversation_id = Y
-   LIMIT 50 (first page, most recent due to DESC clustering)
-         │
-         ▼
-6. Scroll up → query next page with message_id < last_seen_id
-```
 
 ```mermaid
 flowchart TD

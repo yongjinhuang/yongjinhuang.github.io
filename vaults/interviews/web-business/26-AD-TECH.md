@@ -23,11 +23,11 @@ There are four main players:
 
 Manual ad buying (call a sales rep, negotiate a rate, send a creative) still exists, but most digital ads are now bought programmatically — through software, in real time.
 
-```
-Advertiser → DSP → Ad Exchange ← SSP ← Publisher
-                      ↑
-                     DMP
-               (audience data)
+```mermaid
+flowchart LR
+    Adv["Advertiser"] --> DSP["DSP<br/>(Demand-Side Platform)"] --> AdEx["Ad Exchange"]
+    Pub["Publisher"] --> SSP["SSP<br/>(Supply-Side Platform)"] --> AdEx
+    DMP["DMP<br/>(Audience Data)"] --> AdEx
 ```
 
 - **DSP (Demand-Side Platform)**: Advertisers use DSPs to buy ad impressions across many exchanges. Examples: Google DV360, The Trade Desk. The DSP decides which impressions to bid on and how much to bid.
@@ -157,6 +157,33 @@ With cookie deprecation (Chrome phasing out third-party cookies), IDFA changes (
 - **Cookie deprecation denial**: If your targeting or measurement strategy depends entirely on third-party cookies, it's already broken for Safari and Firefox users (roughly 30-40% of web traffic). Build with first-party data and server-side tracking now.
 - **Latency from ad scripts**: Ad tags and header bidding can add 500ms+ to page load. Lazy-load ads below the fold, set auction timeouts, and monitor Core Web Vitals impact.
 - **Invalid traffic (IVT)**: Not all fraud is malicious. Bots from search crawlers, internal testing, or data center traffic can inflate metrics. Filter known IVT sources from your reporting.
+
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Campaign Budget Pacing: Why 1,000 Ad Servers Can Overspend a $500 Daily Budget in 8 Seconds
+
+If an advertiser sets a `$500/day` budget on a popular campaign and 200 geographically distributed RTB auction nodes check `if (spent < $500)` against a central database or eventually consistent cache at 12:00:01 AM, all 200 nodes will simultaneously bid on millions of impressions—spending `$18,000` in 8 seconds (**Over-Delivery**), where the ad platform must legally eat the `$17,500` excess cost out of pocket.
+- **How Real Ad Servers Solve Distributed Pacing**:
+  1. **Probabilistic Throttling (PID Controller)**: Instead of a binary on/off budget gate, a central pacing controller computes an ideal spend curve across the 24-hour traffic forecast and broadcasts a **participation probability** $p \in [0, 1]$ (or bid-shading multiplier) every 5–10 seconds to edge auction nodes.
+  2. **Pre-Allocated Micro-Quotas (Token Leasing)**: For small budgets (`<$100/day`), edge nodes must lease a `$5` budget slice from a strongly consistent shard before bidding; once exhausted, they request another lease.
+
+```mermaid
+flowchart LR
+    Curve["24h Traffic & Spend Curve"] --> PID["PID Pacing Controller<br/>(Every 5s: compare actual vs target spend)"]
+    PID -->|"Broadcast throttle p = 0.18"| Edge1["Auction Node US-East"]
+    PID -->|"Broadcast throttle p = 0.18"| Edge2["Auction Node EU-West"]
+    Edge1 -->|"Sample rand() < 0.18"| Bid["Enter Second/First-Price Auction"]
+```
+
+### 2. Render-Beacon vs. Auction-Win Billing & the MRC Viewability Gap
+
+Winning an auction on the backend does **not** mean the user ever saw the ad—the user might scroll past before the image loads, or a mobile app might pre-fetch 10 feed items below the fold that are never reached.
+- **Unspoken Industry Rule**: Never charge the advertiser when the backend wins the auction. Charge only when the client SDK fires a **Billable Impression Beacon** (`1px` pixel or `navigator.sendBeacon`) after satisfying the **MRC Viewability Standard** ($\ge 50\%$ of ad pixels in the active viewport for $\ge 1$ continuous second for display, or $\ge 2$ seconds for video), deduplicated by a single-use cryptographic `impression_id` with a 30-minute replay window.
+
+### 3. Post-ATT / ITP Attribution: Server-to-Server CAPI & Incrementality Holdouts
+
+After Apple's App Tracking Transparency (ATT) removed IDFA for ~80% of iOS users and Safari ITP capped client cookies to 7 days, client-side pixel attribution routinely under-reports conversions by 30–50%, while ad networks eagerly claim credit for organic buyers via 1-day view-through windows (**View-Through Cannibalization**).
+- **Production Best Practice**: Pair **Server-to-Server Conversion APIs (Meta CAPI / Google Enhanced Conversions)** using hashed first-party identifiers + click IDs (`fbclid`/`gclid`) with **Always-On Geo/Ghost-Ad Incrementality Holdouts** (withholding ads from a randomized 5% control group or serving a PSA placeholder) to measure *true incremental lift* (`iROAS`) rather than self-reported platform ROAS.
 
 ## Quick Reference
 

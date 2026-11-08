@@ -20,33 +20,11 @@ Sending every sensor reading to the cloud works for prototypes, but production I
 
 ### 1.2 Edge vs. Fog vs. Cloud
 
-```
-+------------------------------------------------------------------+
-|                        ARCHITECTURE TIERS                         |
-+------------------------------------------------------------------+
-|                                                                    |
-|  CLOUD         +---------------------+                             |
-|  (Data Center) | GPU Clusters        |  Full models, training,    |
-|                | Unlimited Storage   |  dashboards, analytics     |
-|                +---------------------+                             |
-|                         ^                                          |
-|                         | Aggregated / filtered data               |
-|                         |                                          |
-|  FOG           +---------------------+                             |
-|  (Gateway)     | Raspberry Pi / Jetson|  Medium models, local      |
-|                | 1-8 GB RAM          |  aggregation, caching      |
-|                +---------------------+                             |
-|                         ^                                          |
-|                         | Pre-processed features                   |
-|                         |                                          |
-|  EDGE          +---------------------+                             |
-|  (MCU/Sensor)  | ESP32 / STM32      |  TinyML inference,         |
-|                | 256KB Flash/64KB RAM|  wake-word, anomaly det.   |
-|                +---------------------+                             |
-|                         ^                                          |
-|                         | Raw sensor signals                       |
-|                     [Microphone / Accelerometer / Camera]           |
-+------------------------------------------------------------------+
+```mermaid
+flowchart BT
+    Sens["Sensors<br/>(Microphone / Accelerometer / Camera)"] -->|"Raw sensor signals"| Edge["EDGE TIER (MCU / Sensor Node)<br/>ESP32 / STM32 (256KB Flash, 64KB RAM)<br/>TinyML inference, wake-word, anomaly detection"]
+    Edge -->|"Pre-processed features / events"| Fog["FOG TIER (Gateway)<br/>Raspberry Pi / NVIDIA Jetson (1-8 GB RAM)<br/>Medium models, local aggregation, caching"]
+    Fog -->|"Aggregated / filtered telemetry"| Cloud["CLOUD TIER (Data Center)<br/>GPU Clusters + Unlimited Storage<br/>Full model training, fleet analytics, dashboards"]
 ```
 
 ### 1.3 When to Use Each Tier
@@ -75,26 +53,10 @@ Key constraints:
 
 ### 2.2 The TinyML Workflow
 
-```
-+---------------------------------------------------------------+
-|                     TinyML PIPELINE                            |
-+---------------------------------------------------------------+
-|                                                                 |
-|  1. COLLECT       2. TRAIN          3. CONVERT                  |
-|  +----------+    +----------+    +----------------+             |
-|  | Sensor   |--->| TF/PyTorch|--->| TFLite Micro  |             |
-|  | Data     |    | Model    |    | Converter +    |             |
-|  +----------+    +----------+    | Quantization   |             |
-|                                  +----------------+             |
-|                                         |                       |
-|                                         v                       |
-|  5. DEPLOY        4. VALIDATE    +----------------+             |
-|  +----------+    +----------+    | INT8 .tflite   |             |
-|  | Flash to |<---| Test on  |<---| model (e.g.    |             |
-|  | MCU      |    | Dev Board|    | 48 KB)         |             |
-|  +----------+    +----------+    +----------------+             |
-|                                                                 |
-+---------------------------------------------------------------+
+```mermaid
+flowchart LR
+    S1["1. Collect<br/>Sensor Data"] --> S2["2. Train<br/>TF / PyTorch Model"] --> S3["3. Convert &amp; Quantize<br/>TFLite Micro Converter (INT8 .tflite ~48 KB)"]
+    S3 --> S4["4. Validate<br/>Test accuracy &amp; latency on Dev Board"] --> S5["5. Deploy<br/>Compile as C byte array &amp; flash to MCU"]
 ```
 
 ---
@@ -342,23 +304,12 @@ Classify hand gestures using a 6-axis IMU (accelerometer + gyroscope). Common in
 
 ### 5.4 Predictive Maintenance with Vibration Analysis
 
-```
-+--------------------------------------------------+
-|   PREDICTIVE MAINTENANCE PIPELINE                 |
-+--------------------------------------------------+
-|                                                    |
-|  Motor          Accelerometer      MCU             |
-|  +------+       +----------+     +-----------+     |
-|  |      |------>| ADXL345  |---->| STM32L4   |     |
-|  | Pump |       | 3-axis   | I2C | TinyML    |     |
-|  |      |       | 13-bit   |     | Inference |     |
-|  +------+       +----------+     +-----------+     |
-|                                       |             |
-|                          Normal: LED green          |
-|                          Warning: LED yellow        |
-|                          Fault: Alert via LoRa      |
-|                                                    |
-+--------------------------------------------------+
+```mermaid
+flowchart LR
+    Motor["Motor / Pump"] -->|"Vibration"| Accel["ADXL345<br/>(3-axis 13-bit Accelerometer)"] -->|"I2C"| MCU["STM32L4 MCU<br/>(FFT + TinyML Anomaly Inference)"]
+    MCU -->|"Normal"| G["LED Green"]
+    MCU -->|"Warning"| Y["LED Yellow"]
+    MCU -->|"Fault"| Alert["Transmit Alert via LoRa"]
 ```
 
 ---
@@ -376,24 +327,10 @@ Convert floating-point weights (32-bit) to lower precision:
 | INT8      | 1 byte      | ~1% loss          | 2-4x               |
 | INT4      | 0.5 bytes   | ~3-5% loss        | 3-6x               |
 
-```
-+----------------------------------------------------------+
-|              QUANTIZATION PIPELINE                        |
-+----------------------------------------------------------+
-|                                                            |
-|  FP32 Model     Calibration       INT8 Model              |
-|  (400 KB)       Dataset           (100 KB)                |
-|  +--------+    +---------+       +---------+              |
-|  | W: 0.73|    | 500     |       | W: 93   |              |
-|  | W:-0.21|--->| samples |------>| W:-27   |              |
-|  | W: 1.05|    | from    |       | W: 134  |              |
-|  | (float)|    | train   |       | (int8)  |              |
-|  +--------+    +---------+       +---------+              |
-|                                                            |
-|  Scale: (max-min) / 255                                    |
-|  Zero-point: -min / scale                                  |
-|  Quantized = round(float_val / scale) + zero_point         |
-+----------------------------------------------------------+
+```mermaid
+flowchart LR
+    FP32["FP32 Model (400 KB)<br/>Weights: [0.73, -0.21, 1.05]"] --> Cal["Representative Calibration Dataset<br/>(500 training samples to measure activation min/max)"]
+    Cal --> INT8["INT8 Quantized Model (100 KB — 4x smaller)<br/>Weights: [93, -27, 134]<br/>q = round(f / scale) + zero_point"]
 ```
 
 ### 6.2 Pruning
@@ -477,26 +414,9 @@ Dedicated silicon for matrix multiply-accumulate (MAC) operations:
 
 ### 7.2 Google Coral Edge TPU
 
-```
-+--------------------------------------------------+
-|       CORAL EDGE TPU INFERENCE FLOW               |
-+--------------------------------------------------+
-|                                                    |
-|  Host CPU (ARM/x86)        Edge TPU               |
-|  +------------------+    +-----------------+       |
-|  | Python app       |    | INT8 Model      |       |
-|  | - Load model     |--->| - Conv layers   |       |
-|  | - Pre-process    | USB| - Depthwise     |       |
-|  |   input image    | or | - Pooling       |       |
-|  | - Post-process   | PCIe - FC layers    |       |
-|  |   results        |<---| - 4 TOPS INT8   |       |
-|  +------------------+    +-----------------+       |
-|                                                    |
-|  Requirements:                                     |
-|  - Model must be fully INT8 quantized              |
-|  - All ops must be Edge TPU compatible             |
-|  - Compiled with edgetpu_compiler                  |
-+--------------------------------------------------+
+```mermaid
+flowchart LR
+    Host["Host CPU (ARM / x86)<br/>- Load edgetpu-compiled model<br/>- Pre-process input image<br/>- Post-process detections"] <-->|"USB 3.0 / PCIe"| TPU["Coral Edge TPU (4 TOPS INT8)<br/>- Executes INT8 Conv, Depthwise, Pooling, FC layers"]
 ```
 
 ### 7.3 Intel Movidius (OpenVINO)
@@ -533,38 +453,14 @@ The Movidius Myriad X VPU offers a USB-stick form factor for adding neural infer
 
 Instead of centralizing raw data, each device trains locally and shares only model updates (gradients) with a central server.
 
-```
-+----------------------------------------------------------+
-|              FEDERATED LEARNING                           |
-+----------------------------------------------------------+
-|                                                            |
-|              Central Server                                |
-|              +----------+                                  |
-|              | Aggregate|                                  |
-|              | Gradients|                                  |
-|              +----+-----+                                  |
-|                   |                                        |
-|        +----------+----------+                             |
-|        |          |          |                              |
-|   +----v---+ +---v----+ +---v----+                         |
-|   |Device A| |Device B| |Device C|                         |
-|   |Local   | |Local   | |Local   |                         |
-|   |Training| |Training| |Training|                         |
-|   |Data    | |Data    | |Data    |                         |
-|   |stays   | |stays   | |stays   |                         |
-|   |local   | |local   | |local   |                         |
-|   +--------+ +--------+ +--------+                         |
-|                                                            |
-|  Benefits:                                                 |
-|  - Privacy: raw data never leaves device                   |
-|  - Bandwidth: only gradients transmitted                   |
-|  - Personalization: local fine-tuning possible              |
-|                                                            |
-|  Challenges:                                               |
-|  - Non-IID data across devices                             |
-|  - Communication overhead for gradient sync                |
-|  - Constrained compute on edge devices                     |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    Server["Central Aggregation Server<br/>(FedAvg: Aggregates weight updates &amp; broadcasts global model)"]
+    DA["Edge Device A<br/>(Local training — raw data stays on device)"]
+    DB["Edge Device B<br/>(Local training — raw data stays on device)"]
+    DC["Edge Device C<br/>(Local training — raw data stays on device)"]
+
+    Server <-->|"Global weights down /<br/>Local gradients up"| DA & DB & DC
 ```
 
 ### 9.2 Practical Considerations for IoT
@@ -657,32 +553,11 @@ while True:
 
 ### 11.1 Feature Extraction Pipeline
 
-```
-+----------------------------------------------------------+
-|           AUDIO FEATURE EXTRACTION                        |
-+----------------------------------------------------------+
-|                                                            |
-|  PDM Mic    PCM 16kHz    Framing     FFT      MFCC        |
-|  +-----+   +--------+   +------+   +-----+  +--------+   |
-|  |     |-->| 16-bit |-->| 30ms |-->| 512 |->| 40 Mel |   |
-|  | I2S |   | mono   |   | win  |   | pt  |  | coeff  |   |
-|  +-----+   +--------+   | 50%  |   +-----+  +--------+   |
-|                          | overlap          |              |
-|                          +------+           v              |
-|                                     +-------------+        |
-|                                     | 49 x 40     |        |
-|                                     | spectrogram |        |
-|                                     | (1 second)  |        |
-|                                     +-------------+        |
-|                                            |               |
-|                                            v               |
-|                                     +-------------+        |
-|                                     | DS-CNN      |        |
-|                                     | Classifier  |        |
-|                                     +-------------+        |
-|                                            |               |
-|                                     "Hey Device" detected  |
-+----------------------------------------------------------+
+```mermaid
+flowchart LR
+    Mic["PDM / I2S Mic"] --> PCM["PCM Audio<br/>(16 kHz, 16-bit mono)"] --> Frame["Framing<br/>(30ms window, 50% overlap)"]
+    Frame --> FFT["512-pt FFT"] --> MFCC["40 Mel Filterbank / MFCC"] --> Spec["49 x 40 Spectrogram<br/>(1-second window)"]
+    Spec --> CNN["DS-CNN Wake-Word Classifier"] --> Out["'Hey Device' Detected"]
 ```
 
 ### 11.2 Streaming Inference

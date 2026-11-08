@@ -181,19 +181,10 @@ Interactive prototypes add behavior to static wireframes. Users can click, scrol
 
 **Levels of interactivity:**
 
-```
-STATIC            CLICKABLE          FUNCTIONAL
-MOCKUP            PROTOTYPE          PROTOTYPE
-  |                  |                  |
-  v                  v                  v
-  Images only        Linked screens     Real data,
-  No clicking        Click hotspots     real logic,
-  Presentation       Simulated flow     coded behavior
-  only               Fixed paths        Dynamic
-
-  Figma export       Figma prototype    Next.js +
-  PDF                InVision           Tailwind
-  Screenshot         Marvel             Framer Motion
+```mermaid
+flowchart LR
+    S1["1. Static Mockup<br/>- Images only, no clicking<br/>- Presentation only<br/>- Figma export / PDF / Screenshot"] --> S2["2. Clickable Prototype<br/>- Linked screens &amp; click hotspots<br/>- Simulated flow, fixed paths<br/>- Figma Prototype / InVision"]
+    S2 --> S3["3. Functional Prototype<br/>- Real data, real logic, coded behavior<br/>- Dynamic state<br/>- Next.js + Tailwind + Framer Motion"]
 ```
 
 ### Digital Wireframing Tools

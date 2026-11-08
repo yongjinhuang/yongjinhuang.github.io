@@ -678,37 +678,27 @@ kubectl create secret docker-registry coding-registry-cred \
 
 When something is down, use this to understand the blast radius:
 
-```
-suppr-backend (API) depends on:
-  ├── MySQL (user data, orders, points, sessions)
-  ├── Redis (JWT validation, pub/sub, locks, counters)
-  ├── MongoDB (academic articles, link caches)
-  ├── Kafka (sends translation/research tasks)
-  ├── COS (file storage and retrieval)
-  ├── paper-search [External] (document search)
-  ├── translation-service [External] (file translation)
-  ├── deep-research [External] (research reports)
-  └── gotenberg (PDF conversion)
+```mermaid
+flowchart LR
+    Fed["suppr-fed<br/>(Frontend)"] --> Backend["suppr-backend<br/>(API)"] & CDN["Tencent CDN<br/>(Static assets)"]
+    API["suppr-api<br/>(Public API)"] --> Backend & Redis
+    Consumer["suppr-consumer<br/>(Async Workers)"]
+    Pay["wilddata-module-pay<br/>(Payment Service)"]
 
-suppr-consumer depends on:
-  ├── MySQL (session status updates, point operations)
-  ├── Redis (active task counters, stop signals, pub/sub)
-  ├── Kafka (receives translation/research tasks)
-  ├── COS (upload translated files)
-  ├── translation-service [External] (does the actual translation)
-  └── deep-research [External] (does the actual research)
+    MySQL[("MySQL<br/>(Users, orders, points, sessions)")]
+    Redis[("Redis<br/>(JWT, pub/sub, locks, counters)")]
+    Mongo[("MongoDB<br/>(Academic articles, link caches)")]
+    Kafka["Kafka<br/>(Translation / research tasks)"]
+    COS[("Tencent COS<br/>(File storage)")]
 
-suppr-fed (frontend) depends on:
-  ├── suppr-backend (API calls)
-  └── Tencent CDN (static asset delivery)
+    ExtSearch["paper-search [External]<br/>(Document search)"]
+    ExtTrans["translation-service [External]<br/>(File translation)"]
+    ExtRes["deep-research [External]<br/>(Research reports)"]
+    Gotenberg["gotenberg<br/>(PDF conversion)"]
 
-suppr-api (public API) depends on:
-  ├── suppr-backend (proxies requests)
-  └── Redis (rate limiting)
-
-wilddata-module-pay depends on:
-  ├── MySQL (order and payment records)
-  └── Redis (notification locks)
+    Backend --> MySQL & Redis & Mongo & Kafka & COS & ExtSearch & ExtTrans & ExtRes & Gotenberg
+    Consumer --> MySQL & Redis & Kafka & COS & ExtTrans & ExtRes
+    Pay --> MySQL & Redis
 ```
 
 If MySQL is down → everything is down.

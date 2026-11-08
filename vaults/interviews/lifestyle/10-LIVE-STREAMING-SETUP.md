@@ -196,19 +196,10 @@ Scene 5: END SCREEN
 
 ### 4.1 Minimum Streaming Setup
 
-```
-Basic Setup:
-┌───────────────────────────────────────────┐
-│                                           │
-│  Computer ──► OBS ──► Internet ──► Platform│
-│     │                                     │
-│     ├── Webcam (built-in or external)     │
-│     ├── Microphone (USB or headset)       │
-│     └── Internet (upload speed matters)   │
-│                                           │
-│  Total cost: $0 if you have a computer    │
-│  with built-in webcam and a headset       │
-└───────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    Cam["Webcam"] & Mic["Microphone"] & Screen["Screen Capture"] --> PC["Computer running OBS Studio"]
+    PC -->|"RTMP / WHIP Upload"| Net["Internet"] --> Plat["Streaming Platform<br/>(YouTube Live / Twitch)"]
 ```
 
 ### 4.2 Recommended Hardware by Budget
@@ -270,39 +261,12 @@ echoes, clips, or has background noise.
 
 Apply these filters to your microphone source in OBS (in this order):
 
-```
-Microphone Input
-      │
-      ▼
-┌─────────────────┐
-│ 1. Noise Gate   │   Silences mic when you are not talking
-│    Close: -32dB │   (prevents breathing, keyboard noise)
-│    Open: -26dB  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ 2. Noise        │   Removes constant background noise
-│    Suppression  │   (AC hum, fan noise, room tone)
-│    RNNoise      │   Use "RNNoise" method for AI-based removal
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ 3. Compressor   │   Evens out volume (quiet and loud parts)
-│    Ratio: 4:1   │
-│    Threshold:   │
-│    -18 dB       │
-│    Attack: 6ms  │
-│    Release: 60ms│
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ 4. Limiter      │   Prevents clipping on loud sounds
-│    Threshold:   │   (laughing, shouting)
-│    -3 dB        │
-└─────────────────┘
+```mermaid
+flowchart TD
+    Mic["Microphone Input"] --> NG["1. Noise Gate<br/>Close: -32 dB | Open: -26 dB<br/>(Silences mic when not speaking)"]
+    NG --> NS["2. Noise Suppression (RNNoise)<br/>Removes constant fan / AC hum"]
+    NS --> Comp["3. Compressor<br/>Ratio: 4:1 | Threshold: -18 dB<br/>Attack: 6 ms | Release: 60 ms"]
+    Comp --> Lim["4. Limiter<br/>Threshold: -3 dB<br/>(Prevents clipping on loud laughs/shouts)"]
 ```
 
 ### 5.3 Audio Monitoring
@@ -514,31 +478,11 @@ Set up automated chat responses for common questions:
 
 ### 9.2 Stream Structure Template
 
-```
-Pre-stream (5-10 minutes):
-  "Starting Soon" screen with countdown + music
-  Chat builds up, early viewers arrive
-       │
-       ▼
-Introduction (2-5 minutes):
-  Welcome viewers, state today's plan
-  "Hey everyone! Today we're going to..."
-       │
-       ▼
-Main Content (60-180 minutes):
-  The actual stream content
-  Regular chat interaction breaks
-  Every 30 min: recap for new joiners
-       │
-       ▼
-Wind Down (5-10 minutes):
-  Summarize what happened
-  Thank viewers, raid another stream
-       │
-       ▼
-End Screen:
-  "Thanks for watching" screen
-  End stream
+```mermaid
+flowchart TD
+    S1["1. Pre-Stream (5-10 min)<br/>'Starting Soon' countdown + music, early chat builds"] --> S2["2. Introduction (2-5 min)<br/>Welcome viewers, state today's plan"]
+    S2 --> S3["3. Main Content (60-180 min)<br/>Core content + regular chat breaks + 30-min recaps"] --> S4["4. Wind Down (5-10 min)<br/>Summarize session, thank viewers, raid another channel"]
+    S4 --> S5["5. End Screen<br/>'Thanks for Watching' scene -&gt; End stream"]
 ```
 
 ### 9.3 Raiding and Hosting

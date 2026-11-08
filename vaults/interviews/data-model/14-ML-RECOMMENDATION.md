@@ -146,91 +146,61 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────────┐
-│       users           │
-│──────────────────────│
-│ user_id (PK)          │
-│ demographics_json     │
-│ preferences           │
-│ account_age           │
-│ user_embedding        │
-└──────────────────────┘
-     │                │
-     │ 1              │ 1
-     │                │
-     │ *              │ 1
-     │         ┌──────────────────────┐
-     │         │ user_features_online  │
-     │         │ (Redis)              │
-     │         │──────────────────────│
-     │         │ user_id (PK)          │
-     │         │ session_count         │
-     │         │ rolling_ctr           │
-     │         │ recent_items          │
-     │         └──────────────────────┘
-     │
-     │         ┌──────────────────────┐
-     │         │     interactions      │
-     │         │──────────────────────│
-     └────────►│ user_id (FK)          │
-               │ item_id (FK)          │◄────────┐
-               │ event_type            │         │
-               │ timestamp             │         │
-               │ duration_sec          │         │
-               └──────────────────────┘         │
-                                                 │
-┌──────────────────────┐                         │
-│       items           │                         │
-│──────────────────────│                         │
-│ item_id (PK) ─────────│─────────────────────────┘
-│ title                 │
-│ category              │         ┌──────────────────────┐
-│ metadata_json         │         │  item_features_batch  │
-│ item_embedding        │         │──────────────────────│
-│ freshness_score       │────────►│ item_id (PK)          │
-└──────────────────────┘  1───1   │ view_count            │
-                                  │ like_ratio            │
-                                  │ trending_score        │
-┌──────────────────────┐          └──────────────────────┘
-│   model_registry      │
-│──────────────────────│
-│ model_id (PK)         │
-│ model_type            │
-│ version               │   (independent, referenced by
-│ artifact_url          │    serving infrastructure)
-│ metrics_json          │
-│ deployed_at           │
-└──────────────────────┘
+```mermaid
+erDiagram
+    users ||--o{ interactions : "one user has many events"
+    items ||--o{ interactions : "one item has many events"
+    users ||--|| user_features_online : "one user has one online feature set"
+    items ||--|| item_features_batch : "one item has one batch feature set"
 
-Relationships:
-  users 1───* interactions   (one user has many events)
-  items 1───* interactions   (one item has many events)
-  users 1───1 user_features_online  (one user has one online feature set)
-  items 1───1 item_features_batch   (one item has one batch feature set)
+    users {
+        BIGINT user_id PK
+        JSONB demographics_json
+        TEXT preferences
+        INT account_age
+        VECTOR user_embedding
+    }
+    items {
+        BIGINT item_id PK
+        VARCHAR title
+        VARCHAR category
+        JSONB metadata_json
+        VECTOR item_embedding
+        FLOAT freshness_score
+    }
+    interactions {
+        BIGINT user_id FK
+        BIGINT item_id FK
+        VARCHAR event_type
+        TIMESTAMP timestamp
+        INT duration_sec
+    }
+    user_features_online {
+        STRING user_id PK
+        INT session_count
+        FLOAT rolling_ctr
+        LIST recent_items
+    }
+    item_features_batch {
+        BIGINT item_id PK
+        BIGINT view_count
+        FLOAT like_ratio
+        FLOAT trending_score
+    }
+    model_registry {
+        VARCHAR model_id PK
+        VARCHAR model_type
+        VARCHAR version
+        TEXT artifact_url
+        JSONB metrics_json
+        TIMESTAMP deployed_at
+    }
 ```
+
 
 ## Data Flow
 
 ### Real-Time Feature Update
-
-```
-1. User performs an action (click, view, purchase)
-         │
-         ▼
-2. Event published to Kafka topic "user-events"
-         │
-         ▼
-3. Flink stream processor consumes event
-         │
-         ├──► Update user_features_online in Redis:
-         │    - Increment session_count
-         │    - Recalculate rolling_ctr
-         │    - Append to recent_items (trim to last 20)
-         │
-         └──► Append to interactions log (S3 / PostgreSQL)
-              for batch training
-```
 
 ```mermaid
 flowchart TD
@@ -244,36 +214,6 @@ flowchart TD
 ```
 
 ### Batch Training Pipeline
-
-```
-1. Scheduled job (daily) reads interactions from S3/PostgreSQL
-         │
-         ▼
-2. Spark feature engineering:
-   - Compute item_features_batch (view_count, like_ratio, trending_score)
-   - Generate training examples: (user, item, label, features)
-         │
-         ▼
-3. Train two-tower model:
-   - User tower: demographics + interaction history → user_embedding
-   - Item tower: metadata + content features → item_embedding
-         │
-         ▼
-4. Train ranking model (DCN, DeepFM, etc.):
-   - Input: user features + item features + context
-   - Output: predicted engagement probability
-         │
-         ▼
-5. Evaluate on holdout set → write metrics to model_registry
-         │
-         ▼
-6. If metrics improve: deploy model, update artifact_url, set deployed_at
-         │
-         ▼
-7. Write updated user_embeddings to users table
-   Write updated item_embeddings to items table
-   Rebuild ANN index on item_embeddings
-```
 
 ```mermaid
 flowchart TD
@@ -296,38 +236,6 @@ flowchart TD
 ```
 
 ### Serving a Recommendation Request
-
-```
-1. User opens app → recommendation request
-         │
-         ▼
-2. Feature Lookup (parallel):
-   ├──► Fetch user_embedding from users table
-   ├──► Fetch user_features_online from Redis
-   └──► Fetch user's recent_items for filtering
-         │
-         ▼
-3. Candidate Generation:
-   ANN search: user_embedding vs item_embeddings → top 500 candidates
-         │
-         ▼
-4. Feature Enrichment:
-   For each candidate, fetch item_features_batch
-         │
-         ▼
-5. Ranking Model:
-   Score each candidate using all features
-   (user features + item features + cross features)
-         │
-         ▼
-6. Re-Ranking (business rules):
-   - Remove recently seen items (from recent_items)
-   - Enforce diversity (no more than 3 items from same category)
-   - Apply promotion boosts
-         │
-         ▼
-7. Return top 20 recommendations to user
-```
 
 ```mermaid
 flowchart TD

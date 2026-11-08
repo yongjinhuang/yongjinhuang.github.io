@@ -25,41 +25,14 @@ In the early 1990s, 3D graphics were computed entirely on the CPU. Every triangl
 
 The insight that led to the GPU was this: **every pixel on the screen can be computed independently**. If you are shading a 640x480 image, you have 307,200 pixels that need the exact same computation applied with different input data. This is the textbook definition of data parallelism.
 
-```
-THE GRAPHICS PIPELINE (simplified)
-==================================
-
-       Application (CPU)
-             |
-             v
-   +-------------------+
-   | Vertex Processing  |  Transform each vertex by model/view/projection
-   | (per-vertex)       |  matrices. SAME operation on EVERY vertex.
-   +-------------------+
-             |
-             v
-   +-------------------+
-   | Primitive Assembly |  Group vertices into triangles.
-   +-------------------+
-             |
-             v
-   +-------------------+
-   | Rasterization      |  Determine which pixels each triangle covers.
-   +-------------------+  Generate "fragments" for each covered pixel.
-             |
-             v
-   +-------------------+
-   | Fragment Shading   |  Compute color for each fragment. Texture
-   | (per-pixel)        |  lookups, lighting, blending. SAME operation
-   +-------------------+  on EVERY fragment.
-             |
-             v
-   +-------------------+
-   | Output Merger      |  Depth testing, blending, write to framebuffer.
-   +-------------------+
-             |
-             v
-        Framebuffer (screen)
+```mermaid
+flowchart TD
+    App["Application (CPU)"] --> VP["1. Vertex Processing (Per-Vertex)<br/>Transform vertices by Model/View/Projection matrices"]
+    VP --> PA["2. Primitive Assembly<br/>Group vertices into triangles"]
+    PA --> Rast["3. Rasterization<br/>Determine pixel coverage &amp; generate fragments"]
+    Rast --> FS["4. Fragment Shading (Per-Pixel)<br/>Texture lookups, lighting, PBR shading"]
+    FS --> OM["5. Output Merger (ROP)<br/>Z-depth test, alpha blending, write to framebuffer"]
+    OM --> FB["Framebuffer (Display)"]
 ```
 
 Notice the pattern: vertex processing applies the same math to every vertex, and fragment shading applies the same math to every pixel. This is **embarrassingly parallel**. A processor designed specifically for this pattern can be radically simpler than a CPU, because it does not need:
@@ -754,58 +727,14 @@ GRID:    Scalability unit. Spans the entire GPU.
 
 The GPU memory hierarchy is deeper and wider than a CPU's, optimized for throughput rather than latency:
 
-```
-GPU MEMORY HIERARCHY
-=====================
-
-    Thread Private
-    +------------------+
-    | Registers        |  <-- Fastest: 0 cycles latency, ~20 TB/s bandwidth
-    | (up to 255 per   |      Per thread, compiler-managed
-    |  thread)         |      256 KB per SM
-    +------------------+
-            |
-            v
-    +------------------+
-    | Local Memory     |  <-- Spills from registers go here
-    | (per thread)     |      Actually in global memory (SLOW), cached in L1/L2
-    +------------------+      Up to 512 KB per thread
-            |
-            v
-    Block Shared
-    +------------------+
-    | Shared Memory    |  <-- Fast: ~20-30 cycles, ~10-19 TB/s bandwidth
-    | (per block)      |      User-managed scratchpad
-    +------------------+      Up to 228 KB per SM (Hopper)
-            |
-            v
-    SM-Level Cache
-    +------------------+
-    | L1 Cache / SMEM  |  <-- ~30 cycles, configurable split with shared memory
-    | (per SM)         |      128-256 KB per SM
-    +------------------+
-            |
-            v
-    GPU-Wide Cache
-    +------------------+
-    | L2 Cache         |  <-- ~200 cycles, ~4-12 TB/s bandwidth
-    | (shared by all   |      40-60 MB (H100)
-    |  SMs)            |
-    +------------------+
-            |
-            v
-    Device Memory
-    +------------------+
-    | Global Memory    |  <-- Slow: ~400-600 cycles, 1.5-3.35 TB/s (HBM3)
-    | (HBM / GDDR)    |      Up to 80 GB (H100)
-    +------------------+      Accessible by all threads in all blocks
-            |
-            v
-    Host Memory
-    +------------------+
-    | System RAM       |  <-- Very slow from GPU perspective: PCIe limited
-    | (CPU side)       |      ~64 GB/s (PCIe 5.0 x16)
-    +------------------+
+```mermaid
+flowchart TD
+    Reg["1. Registers (Thread-Private)<br/>~0 cycle latency | ~20 TB/s | 256 KB/SM (max 255 regs/thread)"]
+    Smem["2. Shared Memory / L1 Cache (Block / SM Scope)<br/>~20-30 cycles | ~10-19 TB/s | 128-228 KB/SM (user-managed scratchpad + L1)"]
+    L2["3. L2 Cache (GPU-Wide Across All SMs)<br/>~200 cycles | ~4-12 TB/s | 40-60 MB"]
+    HBM["4. Global Memory — HBM3 / GDDR6X (Device Scope)<br/>~400-600 cycles | 1.5-3.35 TB/s | 24-192 GB"]
+    Host["5. Host System RAM (Over PCIe / NVLink-C2C)<br/>~10,000+ cycles | ~64 GB/s (PCIe 5.0 x16)"]
+    Reg --> Smem --> L2 --> HBM --> Host
 ```
 
 ### 3.5.2 Detailed Memory Characteristics
@@ -1642,29 +1571,14 @@ Key takeaways:
 
 Not every workload benefits from GPU acceleration. The key factors are:
 
-```
-GPU SUITABILITY ANALYSIS
-=========================
-
-                     High Parallelism
-                           ^
-                           |
-     GPU IDEAL             |           GPU GOOD
-     (matrix multiply,     |           (graph traversal,
-      image processing,    |            sparse linear algebra,
-      FFT, deep learning)  |            database analytics)
-                           |
-   <-----------------------+----------------------->
-   Low Arithmetic          |         High Arithmetic
-   Intensity               |         Intensity
-                           |
-     CPU BETTER            |           CPU IDEAL
-     (linked list walk,    |           (recursive tree search,
-      OS kernel tasks,     |            complex control flow,
-      serial algorithms)   |            small data sets)
-                           |
-                           v
-                     Low Parallelism
+```mermaid
+flowchart LR
+    subgraph Quad["CPU VS GPU WORKLOAD SUITABILITY"]
+        Q1["High Parallelism + High Arithmetic Intensity<br/>-&gt; GPU IDEAL<br/>(Dense GEMM, Deep Learning, FFT, Ray Tracing)"]
+        Q2["High Parallelism + Low Arithmetic Intensity<br/>-&gt; GPU GOOD (Bandwidth-Bound)<br/>(SpMV, Graph BFS, Vector Add, Analytics)"]
+        Q3["Low Parallelism + Low Arithmetic Intensity<br/>-&gt; CPU BETTER<br/>(Pointer chasing, Linked lists, OS kernel, I/O)"]
+        Q4["Low Parallelism + Complex Control Flow<br/>-&gt; CPU IDEAL<br/>(Recursive tree search, Branch-heavy compilers)"]
+    end
 ```
 
 ### 3.9.2 Decision Matrix

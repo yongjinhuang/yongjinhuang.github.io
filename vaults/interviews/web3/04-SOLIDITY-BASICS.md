@@ -8,42 +8,16 @@ Solidity borrows syntax from C++, JavaScript, and Python, but the execution mode
 
 This chapter covers the full Solidity language from contract structure through storage layout, function mechanics, inheritance, error handling, and the special functions that make contracts interact with Ether. Every concept is tied to its gas implications and security consequences.
 
-```
-+--------------------------------------------------------------------------------+
-|                        SOLIDITY LANGUAGE LANDSCAPE                              |
-+--------------------------------------------------------------------------------+
-|                                                                                |
-|  TYPE SYSTEM                    STORAGE LAYOUT          CONTROL FLOW           |
-|  +------------------------+   +-------------------+   +--------------------+   |
-|  | uint8..uint256          |   | Slot 0, 1, 2...   |   | if / else           |   |
-|  | int8..int256            |   | 32 bytes per slot  |   | for / while / do    |   |
-|  | address / payable       |   | Packing rules      |   | require / revert    |   |
-|  | bool (1 byte in slot)   |   | Dynamic: keccak256 |   | assert / custom err |   |
-|  | bytes1..bytes32         |   | Mappings: no iter  |   | try / catch         |   |
-|  | string / bytes          |   | Arrays: length+data|   | break / continue    |   |
-|  | arrays / mappings       |   | memory vs calldata |   |                     |   |
-|  | structs / enums         |   | vs storage vs stack|   |                     |   |
-|  +------------------------+   +-------------------+   +--------------------+   |
-|                                                                                |
-|  VISIBILITY                     MODIFIERS              SPECIAL FUNCTIONS       |
-|  +------------------------+   +-------------------+   +--------------------+   |
-|  | public    (ABI + int)   |   | onlyOwner           |   | constructor()       |   |
-|  | external  (ABI only)    |   | nonReentrant        |   | receive()           |   |
-|  | internal  (int + child) |   | whenNotPaused       |   | fallback()          |   |
-|  | private   (this only)   |   | Custom validation   |   | selfdestruct()      |   |
-|  +------------------------+   | _; placeholder      |   | (deprecated 0.8.24) |   |
-|                                +-------------------+   +--------------------+   |
-|                                                                                |
-|  INHERITANCE                    EVENTS & LOGS          ERROR HANDLING          |
-|  +------------------------+   +-------------------+   +--------------------+   |
-|  | is keyword              |   | emit Event(...)     |   | Panic(uint256)      |   |
-|  | C3 linearization        |   | indexed (3 max)     |   | Error(string)       |   |
-|  | virtual / override      |   | Topics + data       |   | Custom errors       |   |
-|  | abstract / interface    |   | Cheaper than storage|   | revert CustomErr()  |   |
-|  | super keyword           |   | 375 gas + 375/topic|   | try/catch external  |   |
-|  +------------------------+   +-------------------+   +--------------------+   |
-|                                                                                |
-+--------------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Sol["SOLIDITY LANGUAGE LANDSCAPE"]
+        Types["TYPE SYSTEM<br/>uint8..uint256, int8..int256, address/payable, bool, bytes1..32, string/bytes, arrays, mappings, structs, enums"]
+        Stor["STORAGE LAYOUT<br/>32-byte slots (0, 1, 2...), Tight variable packing, keccak256 dynamic arrays &amp; mappings, storage vs memory vs calldata vs stack"]
+        Ctrl["CONTROL FLOW<br/>if/else, for/while/do, require/revert, assert, Custom errors, try/catch"]
+        Vis["VISIBILITY<br/>public (ABI + internal), external (ABI only), internal (this + derived), private (this only)"]
+        Mod["MODIFIERS &amp; SPECIAL FNS<br/>onlyOwner, nonReentrant, whenNotPaused (_;)<br/>constructor(), receive(), fallback()"]
+        Inh["INHERITANCE, EVENTS &amp; ERRORS<br/>C3 linearization (is, virtual, override, super)<br/>emit Event (up to 3 indexed topics)<br/>Custom errors (revert CustomErr())"]
+    end
 ```
 
 ---
@@ -309,38 +283,14 @@ This is the single most important concept in Solidity that separates beginners f
 
 ### 3.1 Data Location Overview
 
-```
-+--------------------------------------------------------------------------------+
-|                        DATA LOCATIONS IN THE EVM                                |
-+--------------------------------------------------------------------------------+
-|                                                                                |
-|  STORAGE                          MEMORY                                       |
-|  +----------------------------+  +----------------------------+                |
-|  | Persistent (on-chain)       |  | Temporary (per call)       |                |
-|  | 2^256 slots, 32 bytes each |  | Byte-addressable           |                |
-|  | SSTORE: 20,000 gas (cold)  |  | MSTORE: 3 gas + expansion  |                |
-|  | SLOAD:   2,100 gas (cold)  |  | MLOAD:  3 gas              |                |
-|  | Most expensive operations   |  | Expands quadratically      |                |
-|  | State variables live here   |  | Function-local variables   |                |
-|  +----------------------------+  +----------------------------+                |
-|                                                                                |
-|  CALLDATA                         STACK                                        |
-|  +----------------------------+  +----------------------------+                |
-|  | Read-only input data        |  | 1024 depth limit           |                |
-|  | Cannot be modified          |  | Holds local value types    |                |
-|  | Cheapest for external args  |  | Free to use (3 gas/op)     |                |
-|  | Passed by the caller        |  | "Stack too deep" at >16    |                |
-|  | CALLDATALOAD: 3 gas         |  | local variables            |                |
-|  +----------------------------+  +----------------------------+                |
-|                                                                                |
-|  ASSIGNMENT RULES:                                                             |
-|  storage -> storage  =  Reference (same pointer)                               |
-|  storage -> memory   =  Copy (independent)                                     |
-|  memory  -> storage  =  Copy (writes to chain)                                 |
-|  memory  -> memory   =  Reference (same pointer)                               |
-|  calldata -> memory  =  Copy                                                   |
-|  calldata -> storage =  Copy                                                   |
-+--------------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Locs["DATA LOCATIONS IN THE EVM"]
+        Stor["STORAGE (Persistent On-Chain)<br/>- 2^256 slots x 32 bytes<br/>- SSTORE: 20,000 gas (cold) / SLOAD: 2,100 gas (cold)<br/>- State variables live here"]
+        Mem["MEMORY (Temporary Per Call)<br/>- Byte-addressable, expands quadratically<br/>- MSTORE / MLOAD: 3 gas + expansion<br/>- Function-local reference types"]
+        Call["CALLDATA (Read-Only Input)<br/>- Immutable external function arguments<br/>- CALLDATALOAD: 3 gas (cheapest, no copy)"]
+        Stack["STACK (1024 Depth Limit)<br/>- Holds local value types (3 gas/op)<br/>- 'Stack too deep' if &gt;16 local variables"]
+    end
 ```
 
 ### 3.2 Arrays

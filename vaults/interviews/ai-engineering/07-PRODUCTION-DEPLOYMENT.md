@@ -24,53 +24,21 @@ that separate hobby projects from production-grade AI systems.
 
 ## Production Architecture Overview
 
-```
-+-------------------------------------------------------------------------+
-|                  PRODUCTION LLM ARCHITECTURE                             |
-+-------------------------------------------------------------------------+
-|                                                                          |
-|  Client                                                                  |
-|    |                                                                     |
-|    v                                                                     |
-|  +-------------------+                                                   |
-|  | API Gateway       | Auth, rate limiting, request validation           |
-|  +--------+----------+                                                   |
-|           |                                                              |
-|           v                                                              |
-|  +-------------------+                                                   |
-|  | Input Guardrails  | PII detection, prompt injection filter,           |
-|  |                   | content moderation, input validation              |
-|  +--------+----------+                                                   |
-|           |                                                              |
-|           v                                                              |
-|  +-------------------+                                                   |
-|  | Cache Layer       | Exact match + semantic cache                      |
-|  | (hit? return)     |                                                   |
-|  +--------+----------+                                                   |
-|           |                                                              |
-|           v                                                              |
-|  +-------------------+    +-------------------+                          |
-|  | Model Router      |--->| LLM Provider A    | (primary: OpenAI)       |
-|  | (select model,    |    +-------------------+                          |
-|  |  fallback logic)  |--->| LLM Provider B    | (fallback: Anthropic)   |
-|  +--------+----------+    +-------------------+                          |
-|           |               | Self-hosted LLM   | (cost optimization)     |
-|           |               +-------------------+                          |
-|           v                                                              |
-|  +-------------------+                                                   |
-|  | Output Guardrails | Hallucination check, format validation,           |
-|  |                   | content filtering, PII scrubbing                  |
-|  +--------+----------+                                                   |
-|           |                                                              |
-|           v                                                              |
-|  +-------------------+                                                   |
-|  | Observability     | Log prompt/completion, trace chains,              |
-|  |                   | metrics (latency, cost, quality)                  |
-|  +--------+----------+                                                   |
-|           |                                                              |
-|           v                                                              |
-|  Client Response (streamed or batched)                                   |
-+-------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Arch["PRODUCTION LLM ARCHITECTURE"]
+        Client["Client"] --> GW["API Gateway<br/>(Auth, rate limiting, request validation)"]
+        GW --> InGuard["Input Guardrails<br/>(PII detection, prompt injection filter, moderation)"]
+        InGuard --> Cache{"Cache Layer<br/>(Exact match + Semantic cache)"}
+        Cache -->|"Cache Miss"| Router["Model Router<br/>(Select model, fallback logic)"]
+        Router --> PA["LLM Provider A<br/>(Primary: OpenAI)"]
+        Router --> PB["LLM Provider B<br/>(Fallback: Anthropic)"]
+        Router --> PC["Self-Hosted LLM<br/>(Cost optimization)"]
+        PA & PB & PC --> OutGuard["Output Guardrails<br/>(Hallucination check, format validation, PII scrubbing)"]
+        Cache -->|"Cache Hit"| Obs
+        OutGuard --> Obs["Observability<br/>(Log prompt/completion, traces, latency/cost/quality metrics)"]
+        Obs --> Resp["Client Response<br/>(Streamed or batched)"]
+    end
 ```
 
 ---
@@ -287,27 +255,14 @@ async def consume_stream(url: str, messages: list[dict]):
 
 ### Streaming Metrics
 
-```
-+------------------------------------------------------------------+
-| STREAMING PERFORMANCE METRICS                                     |
-+------------------------------------------------------------------+
-|                                                                    |
-|  TTFT (Time to First Token)                                       |
-|  - Most important UX metric                                      |
-|  - Target: < 500ms for interactive applications                  |
-|  - Includes: network + model loading + first inference step      |
-|                                                                    |
-|  TPS (Tokens Per Second)                                          |
-|  - Speed of token generation after first token                   |
-|  - Target: > 30 TPS for readable streaming                      |
-|  - Typical: 40-100 TPS (API), 20-50 TPS (self-hosted)          |
-|                                                                    |
-|  Total Time                                                       |
-|  - TTFT + (output_tokens / TPS)                                  |
-|  - For 500 token response at 50 TPS: 0.5s + 10s = 10.5s         |
-|  - Without streaming user waits 10.5s; with streaming, 0.5s      |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Metrics["STREAMING PERFORMANCE METRICS"]
+        TTFT["TTFT (Time to First Token)<br/>- Most important UX metric (Target: &lt; 500ms)<br/>- Network + prompt prefill + first decode step"]
+        TPS["TPS (Tokens Per Second)<br/>- Decode speed after first token (Target: &gt; 30 TPS)<br/>- Typical: 40-100 TPS (API), 20-50 TPS (self-hosted)"]
+        Total["Total Generation Time = TTFT + (output_tokens / TPS)<br/>- 500 tokens @ 50 TPS: 0.5s + 10s = 10.5s<br/>- Perceived wait with streaming: 0.5s vs 10.5s without"]
+        TTFT --> TPS --> Total
+    end
 ```
 
 ---
@@ -585,37 +540,16 @@ def compress_prompt(
 
 ### Cost Optimization Summary
 
-```
-+------------------------------------------------------------------+
-| COST OPTIMIZATION TECHNIQUES                                      |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. MODEL ROUTING (60-80% savings)                                |
-|     Route simple queries to GPT-4o-mini ($0.15/1M)               |
-|     Reserve GPT-4o ($2.50/1M) for complex queries                |
-|                                                                    |
-|  2. CACHING (30-70% savings)                                      |
-|     Exact match: temp=0 deterministic queries                     |
-|     Semantic: similar queries within threshold                    |
-|                                                                    |
-|  3. PROMPT COMPRESSION (20-40% savings)                           |
-|     Shorten system prompts                                        |
-|     Truncate/summarize context                                    |
-|     Remove redundant instructions                                 |
-|                                                                    |
-|  4. BATCH API (50% savings)                                       |
-|     OpenAI Batch API: 50% discount                                |
-|     For non-urgent processing (analytics, evaluation)             |
-|                                                                    |
-|  5. TOKEN BUDGETING                                               |
-|     Set max_tokens per request type                               |
-|     Monitor and alert on budget overruns                          |
-|                                                                    |
-|  6. SELF-HOSTING (at scale)                                       |
-|     Break-even: ~10M+ tokens/day                                 |
-|     Use quantized models (GPTQ, AWQ)                              |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph CostOpt["PRODUCTION LLM COST OPTIMIZATION"]
+        C1["1. Model Routing (60-80% savings)<br/>Simple queries -&gt; small model ($0.15/1M); complex -&gt; frontier ($2.50/1M)"]
+        C2["2. Caching (30-70% savings)<br/>Exact match (temp=0) + Semantic similarity cache"]
+        C3["3. Prompt Compression (20-40% savings)<br/>Shorten system prompts &amp; summarize retrieved context"]
+        C4["4. Batch API (50% savings)<br/>Async batch processing for analytics &amp; evals"]
+        C5["5. Token Budgeting<br/>Enforce max_tokens per request type &amp; alert on overruns"]
+        C6["6. Self-Hosting at Scale (~10M+ tokens/day break-even)<br/>Quantized open-weight models (AWQ / GPTQ / FP8)"]
+    end
 ```
 
 ---

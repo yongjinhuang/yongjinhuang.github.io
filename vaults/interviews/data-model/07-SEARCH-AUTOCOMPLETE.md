@@ -95,77 +95,42 @@ graph TD
 
 ## ER Diagram
 
-```
-Data Collection Layer:
-┌──────────────────────┐
-│    search_logs        │
-│    (Kafka)            │
-│──────────────────────│
-│ user_id               │
-│ query_text            │
-│ timestamp             │
-│ result_count          │
-└──────────────────────┘
-         │
-         │ Aggregation job
-         │ (hourly/daily)
-         ▼
-┌──────────────────────┐
-│  query_frequencies    │
-│  (PostgreSQL)         │
-│──────────────────────│
-│ query_text (PK)       │
-│ frequency_count       │
-│ last_updated          │
-└──────────────────────┘
-         │
-         │ Trie build job
-         │ (periodic)
-         ▼
-┌──────────────────────┐       ┌──────────────────────┐
-│   trie_nodes          │       │  trie_snapshots       │
-│   (In-Memory)         │       │  (S3)                 │
-│──────────────────────│       │──────────────────────│
-│ prefix (implicit)     │──────▶│ snapshot_id           │
-│ children: map         │ build │ serialized_trie_blob  │
-│ top_k_suggestions     │       │ built_at              │
-└──────────────────────┘       │ version               │
-         ▲                      └──────────────────────┘
-         │                               │
-         │ load on startup               │
-         └───────────────────────────────┘
+```mermaid
+erDiagram
+    search_logs ||..o{ query_frequencies : "hourly/daily aggregation"
+    query_frequencies ||..o{ trie_nodes : "periodic trie build"
+    trie_nodes ||..o{ trie_snapshots : "serialize snapshot"
 
-Note: These are not relational tables with FKs.
-The arrows represent data pipeline flow, not
-database relationships.
+    search_logs {
+        BIGINT user_id
+        VARCHAR query_text
+        TIMESTAMP timestamp
+        INT result_count
+    }
+    query_frequencies {
+        VARCHAR query_text PK
+        BIGINT frequency_count
+        TIMESTAMP last_updated
+    }
+    trie_nodes {
+        STRING prefix
+        MAP children
+        LIST top_k_suggestions
+    }
+    trie_snapshots {
+        VARCHAR snapshot_id
+        BYTES serialized_trie_blob
+        TIMESTAMP built_at
+        INT version
+    }
 ```
+
+> **Note:** These are not relational tables with FKs. The arrows represent data pipeline flow, not database relationships.
+
 
 ## Data Flow
 
 ### Collection Pipeline (How search data is gathered)
-
-```
-1. User submits a search query (e.g., "facebook login")
-         │
-         ▼
-2. Search Service processes the query and returns results
-         │
-         ▼
-3. Async: publish search event to Kafka topic "search_logs"
-   Event: {user_id, query_text: "facebook login", result_count: 25}
-         │
-         ▼
-4. Aggregation Consumer (runs hourly or daily):
-   ├─ Read batch of search_logs from Kafka
-   ├─ Group by normalized query_text (lowercase, trim)
-   ├─ Filter out queries with result_count = 0
-   ├─ Filter out offensive/spam queries (blocklist)
-   ├─ Apply time-decay weighting (recent = higher weight)
-   └─ UPSERT into query_frequencies:
-       query_text = "facebook login"
-       frequency_count += weighted_count
-       last_updated = now
-```
 
 ```mermaid
 flowchart TD
@@ -181,37 +146,6 @@ flowchart TD
 
 ### Build Pipeline (How the Trie is constructed)
 
-```
-1. Periodic build job triggers (e.g., every 6 hours)
-         │
-         ▼
-2. Read all rows from query_frequencies
-   (sorted by frequency_count DESC for efficiency)
-         │
-         ▼
-3. Build Trie:
-   For each query (e.g., "facebook login", score: 50000):
-     ├─ Walk/create nodes: f → fa → fac → face → faceb → ...
-     └─ At EACH node along the path:
-         Update top_k_suggestions if this query's score
-         is higher than the current K-th suggestion
-         │
-         ▼
-4. Optimization pass:
-   ├─ Prune nodes with no top-K suggestions (dead branches)
-   └─ Compact memory layout for cache-friendly traversal
-         │
-         ▼
-5. Serialize Trie to binary format
-         │
-         ▼
-6. Upload to S3 as trie_snapshot (version = prev + 1)
-         │
-         ▼
-7. Notify Trie Service instances to load new version
-   (via Kafka event, config change, or rolling restart)
-```
-
 ```mermaid
 flowchart TD
     A[Periodic build job triggers] --> B[Read all rows from query_frequencies]
@@ -224,37 +158,6 @@ flowchart TD
 ```
 
 ### Query Pipeline (How suggestions are served)
-
-```
-1. User types "fac" in the search box
-         │
-         ▼
-2. Client debounces input (e.g., 100ms delay)
-   then sends request: GET /autocomplete?q=fac
-         │
-         ▼
-3. Check Redis cache: GET autocomplete:fac
-         │
-    ┌────┴────┐
-    │ Cache   │
-    │ Hit?    │
-    ├─ Yes ───┤──► Return cached suggestions (latency: <5ms)
-    │ No      │
-    └────┬────┘
-         ▼
-4. Trie Service walks the Trie:
-   root → 'f' → 'a' → 'c'  (3 pointer hops, O(L) where L=3)
-         │
-         ▼
-5. Read precomputed top_k_suggestions at node 'c':
-   ["facebook", "facebook login", "face swap", ...]
-         │
-         ▼
-6. Cache in Redis: SET autocomplete:fac → suggestions (TTL: 1 hour)
-         │
-         ▼
-7. Return suggestions to client (latency: <10ms)
-```
 
 ```mermaid
 flowchart TD

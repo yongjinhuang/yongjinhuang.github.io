@@ -6,31 +6,14 @@ Smart contract security is unlike any other domain of software security. Traditi
 
 This chapter covers the most common vulnerabilities, real-world attack case studies, security tools, and the auditing methodology used by professional security firms.
 
-```
-+------------------------------------------------------------------------+
-|                  SMART CONTRACT SECURITY                                |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  COMMON VULNERABILITIES        ATTACK VECTORS                          |
-|  +----------------------+     +---------------------------+            |
-|  | Reentrancy            |     | Flash loan attacks        |            |
-|  | Access control         |     | Price oracle manipulation |            |
-|  | Integer overflow       |     | Sandwich attacks (MEV)    |            |
-|  | Front-running          |     | Governance attacks        |            |
-|  | Denial of service      |     | Rug pulls                 |            |
-|  | Logic errors           |     | Supply chain (dependency) |            |
-|  +----------------------+     +---------------------------+            |
-|                                                                        |
-|  SECURITY TOOLS                AUDIT METHODOLOGY                       |
-|  +----------------------+     +---------------------------+            |
-|  | Slither (static)      |     | Manual code review        |            |
-|  | Mythril (symbolic)    |     | Automated analysis        |            |
-|  | Echidna (fuzzing)     |     | Formal verification       |            |
-|  | Foundry fuzz/invariant|     | Economic modeling         |            |
-|  | Certora (formal)      |     | Bug bounty programs       |            |
-|  +----------------------+     +---------------------------+            |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Sec["SMART CONTRACT SECURITY LANDSCAPE"]
+        Vuln["COMMON VULNERABILITIES<br/>Reentrancy, Access control, Integer overflow, Front-running, DoS, Logic errors"]
+        Vec["ECONOMIC &amp; PROTOCOL ATTACK VECTORS<br/>Flash loan attacks, Price oracle manipulation, Sandwich attacks (MEV), Governance attacks"]
+        Tools["SECURITY TOOLS<br/>Slither (static), Mythril (symbolic), Echidna &amp; Foundry (fuzz/invariant), Certora (formal)"]
+        Audit["AUDIT METHODOLOGY<br/>Manual line-by-line review, Automated analysis, Formal verification, Economic modeling, Bug bounties"]
+    end
 ```
 
 ---
@@ -41,27 +24,18 @@ This chapter covers the most common vulnerabilities, real-world attack case stud
 
 Reentrancy is the most infamous smart contract vulnerability. It occurs when a contract makes an external call before updating its own state, allowing the callee to re-enter the calling function.
 
-```
-REENTRANCY ATTACK FLOW
+```mermaid
+sequenceDiagram
+    participant A as "Attacker Contract"
+    participant V as "Victim Contract"
 
-Victim Contract                    Attacker Contract
-+-----------------+                +-----------------+
-| withdraw() {    |                | receive() {     |
-|   check balance | <--- call ---  |   // re-enter!  |
-|   send ETH -----+--- ETH -----> |   victim.       |
-|   update balance|                |     withdraw()  |
-| }               |                | }               |
-+-----------------+                +-----------------+
-
-Timeline:
-1. Attacker calls withdraw()
-2. Victim checks balance: 1 ETH ✓
-3. Victim sends 1 ETH to attacker
-4. Attacker's receive() re-calls withdraw()
-5. Victim checks balance: STILL 1 ETH (not yet updated!)
-6. Victim sends 1 ETH again
-7. Repeat until contract is drained
-8. Finally, balance is updated (too late)
+    A->>V: 1. withdraw()
+    Note over V: 2. Check balances[attacker] >= 1 ETH (Passes)
+    V->>A: 3. Send 1 ETH (triggers Attacker receive() BEFORE balance update!)
+    A->>V: 4. Re-enter withdraw() inside receive()
+    Note over V: 5. Check balances[attacker] >= 1 ETH (STILL 1 ETH!)
+    V->>A: 6. Send another 1 ETH (Repeat until drained)
+    Note over V: 7. balances[attacker] = 0 executed too late
 ```
 
 ### 1.2 The DAO Hack (2016)

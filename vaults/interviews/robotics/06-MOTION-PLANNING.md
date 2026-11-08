@@ -625,32 +625,11 @@ This is converted to a deterministic constraint by inflating obstacles based on 
 
 A complete planning pipeline for a 6-DOF robot arm in a pick-and-place task:
 
-```
-  ┌────────────────────────────────────────────────┐
-  │              Motion Planning Pipeline           │
-  │                                                │
-  │  1. Perception: detect objects, build scene    │
-  │         │                                      │
-  │         ▼                                      │
-  │  2. Grasp planning: compute grasp pose         │
-  │         │                                      │
-  │         ▼                                      │
-  │  3. IK solver: convert grasp pose to joint     │
-  │     angles (may have multiple solutions)       │
-  │         │                                      │
-  │         ▼                                      │
-  │  4. Motion planner: find collision-free path   │
-  │     from current joints to grasp joints        │
-  │     (RRT-Connect + shortcutting, or BiRRT)     │
-  │         │                                      │
-  │         ▼                                      │
-  │  5. Trajectory optimization: smooth the path,  │
-  │     add time parameterization (TOPP-RA)        │
-  │         │                                      │
-  │         ▼                                      │
-  │  6. Execution: send trajectory to controller   │
-  │     with collision monitoring                  │
-  └────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    S1["1. Perception<br/>Detect objects &amp; build 3D collision scene"] --> S2["2. Grasp Planning<br/>Compute target 6-DOF end-effector grasp pose"]
+    S2 --> S3["3. IK Solver<br/>Convert target pose to joint configuration"] --> S4["4. Motion Planner (RRT-Connect / BiRRT)<br/>Find collision-free path in C-space + shortcutting"]
+    S4 --> S5["5. Trajectory Optimization (TOPP-RA)<br/>Smooth path &amp; apply velocity/acceleration time-parameterization"] --> S6["6. Execution<br/>Stream trajectory to joint controllers with collision monitoring"]
 ```
 
 **MoveIt! (ROS)** implements this pipeline with configurable planners (OMPL for sampling-based, CHOMP/TrajOpt for optimization), collision checking (FCL), and IK solvers (KDL, IKFast, TracIK).

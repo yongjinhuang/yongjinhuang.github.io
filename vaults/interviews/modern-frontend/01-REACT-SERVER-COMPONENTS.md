@@ -16,14 +16,15 @@ In traditional React, every component runs in the browser. Even with SSR, the co
 
 Think of it as two React trees:
 
-```
-Server Tree (runs on server)          Client Tree (runs in browser)
-+---------------------------+         +---------------------------+
-| ServerLayout              |         | ClientNav (interactive)   |
-|   ServerSidebar           |    -->  | ClientSearchBar           |
-|   ServerContent           |         | ClientCommentForm         |
-|     ClientCommentForm     |         +---------------------------+
-+---------------------------+
+```mermaid
+flowchart LR
+    subgraph Server["Server Tree (runs on server)"]
+        SL["ServerLayout<br/>- ServerSidebar<br/>- ServerContent<br/>  - ClientCommentForm"]
+    end
+    subgraph Client["Client Tree (runs in browser)"]
+        CL["ClientNav (interactive)<br/>ClientSearchBar<br/>ClientCommentForm"]
+    end
+    Server -->|"RSC Payload"| Client
 ```
 
 Server components can:
@@ -109,29 +110,22 @@ Server Actions work with native `<form>` elements, enabling progressive enhancem
 
 ### Server vs Client Component Decision Tree
 
-```
-Does the component need...
+```mermaid
+flowchart LR
+    Q["Does the component need..."]
+    C1["useState, useEffect, useReducer?"]
+    C2["onClick, onChange, onSubmit handlers?"]
+    C3["Browser APIs (window, document, localStorage)?"]
+    C4["Third-party client libraries (date pickers, maps, rich text editors)?"]
+    S1["Direct database / API access?"]
+    S2["Heavy dependencies that don't need to be in the bundle?"]
+    S3["Only renders static or async-fetched content?"]
 
-  useState, useEffect, useReducer?
-  --> YES --> "use client"
+    UseClient["'use client'<br/>(Client Component)"]
+    ServerComp["Server Component<br/>(default)"]
 
-  onClick, onChange, onSubmit handlers?
-  --> YES --> "use client"
-
-  Browser APIs (window, document, localStorage)?
-  --> YES --> "use client"
-
-  Third-party client libraries (date pickers, maps, rich text editors)?
-  --> YES --> "use client"
-
-  Direct database/API access?
-  --> YES --> Server Component (default)
-
-  Heavy dependencies that don't need to be in the bundle?
-  --> YES --> Server Component (default)
-
-  Only renders static or async-fetched content?
-  --> YES --> Server Component (default)
+    Q --> C1 & C2 & C3 & C4 -->|"YES"| UseClient
+    Q --> S1 & S2 & S3 -->|"YES"| ServerComp
 ```
 
 **The principle:** Start with server components by default. Only add `"use client"` when the component needs interactivity or browser APIs. Push the client boundary as far down the tree as possible.

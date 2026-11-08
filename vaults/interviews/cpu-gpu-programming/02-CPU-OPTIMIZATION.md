@@ -2339,26 +2339,12 @@ vtune-gui result_dir/
 
 VTune classifies bottlenecks into:
 
-```
-Top-Down Microarchitecture Analysis:
-
-  Pipeline Slots
-       |
-  +----+----+
-  |         |
-Retiring  Not Retiring
-(good!)        |
-          +----+----+
-          |         |
-     Front-End   Back-End
-     Bound       Bound
-     (decode)    (execution)
-          |         |
-     +----+----+  +----+----+
-     |         |  |         |
-  Latency  Bandwidth  Core    Memory
-  (cache   (fetch     Bound   Bound
-  misses)  width)
+```mermaid
+flowchart TD
+    Slots["Total Pipeline Slots"] --> Ret["Retiring<br/>(Useful work completed!)"] & NotRet["Not Retiring<br/>(Lost pipeline slots)"]
+    NotRet --> BadSpec["Bad Speculation<br/>(Branch mispredicts / flushes)"] & FE["Front-End Bound<br/>(Instruction fetch/decode)"] & BE["Back-End Bound<br/>(Execution / memory stalls)"]
+    FE --> FELat["FE Latency<br/>(I-cache / ITLB misses)"] & FEBW["FE Bandwidth<br/>(Decode width)"]
+    BE --> Core["Core Bound<br/>(ALU / FPU port saturation)"] & Mem["Memory Bound<br/>(L1 / L2 / L3 / DRAM stalls)"]
 ```
 
 ### 9.5 Quick Diagnostic Checklist

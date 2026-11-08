@@ -60,95 +60,95 @@ this problem a favorite for testing pattern knowledge in practice.
 
 ## 2. Class Diagram
 
-```
-+-------------------+       +---------------------+
-|   ATMState        |       |   TransactionType   |
-|   (Enum)          |       |   (Enum)            |
-|-------------------|       |---------------------|
-| IDLE              |       | WITHDRAWAL          |
-| CARD_INSERTED     |       | DEPOSIT             |
-| PIN_VALIDATED     |       | BALANCE_INQUIRY     |
-| TRANSACTION_SEL   |       | TRANSFER            |
-+-------------------+       +---------------------+
+```mermaid
+classDiagram
+    class ATMState {
+        <<enumeration>>
+        IDLE
+        CARD_INSERTED
+        PIN_VALIDATED
+        TRANSACTION_SELECTED
+    }
+    class TransactionType {
+        <<enumeration>>
+        WITHDRAWAL
+        DEPOSIT
+        BALANCE_INQUIRY
+        TRANSFER
+    }
+    class Card {
+        +str card_number
+        +str account_id
+        +bool is_locked
+    }
+    class BankService {
+        <<abstract>>
+        +validate_card(card_no)* bool
+        +verify_pin(card_no, pin)* bool
+        +get_balance(account_id)* int
+        +debit(account_id, amount)* bool
+        +credit(account_id, amount)* bool
+    }
+    class CashDispenser {
+        +Dict~int, int~ inventory
+        +dispense(amount) Dict~int, int~
+        +add_cash(denom, count)
+        +get_total() int
+    }
+    class Transaction {
+        <<abstract>>
+        +execute(context)*
+        +rollback(context)*
+    }
+    class WithdrawalTxn
+    class DepositTxn
+    class BalanceInquiryTxn
+    class TransferTxn
+    Transaction <|-- WithdrawalTxn
+    Transaction <|-- DepositTxn
+    Transaction <|-- BalanceInquiryTxn
+    Transaction <|-- TransferTxn
 
-+-------------------+       +---------------------+
-|   State (ABC)     |       |   Card              |
-|-------------------|       |---------------------|
-| insert_card()     |       | card_number         |
-| enter_pin()       |       | account_id          |
-| select_txn()      |       | is_locked           |
-| execute_txn()     |       +---------------------+
-| cancel()          |
-+-------------------+       +---------------------+
-  ^   ^   ^   ^             |   BankService       |
-  |   |   |   |             |   (ABC)             |
-Idle Card PIN  TxnSel       |---------------------|
-                            | validate_card()     |
-+-------------------+       | verify_pin()        |
-| Transaction       |       | get_balance()       |
-|   (ABC/Command)   |       | debit()             |
-|-------------------|       | credit()            |
-| execute(context)  |       +---------------------+
-| rollback(context) |
-+-------------------+       +---------------------+
-  ^   ^   ^   ^             |   CashDispenser     |
-  |   |   |   |             |---------------------|
-With Dep Bal Xfer           | inventory           |
-                            |---------------------|
-+-------------------+       | dispense(amount)    |
-| TransactionHandler|       | add_cash()          |
-|   (ABC / CoR)     |       | get_total()         |
-|-------------------|       +---------------------+
-| next_handler      |
-| handle(context)   |       +---------------------+
-+-------------------+       |   ATM               |
-  ^   ^   ^   ^             |---------------------|
-  |   |   |   |             | state               |
-Valid Auth Exec Log         | cash_dispenser      |
-                            | bank_service        |
-+-------------------+       |---------------------|
-| AuditLogger       |       | insert_card()       |
-|-------------------|       | enter_pin()         |
-| log(entry)        |       | select_transaction()|
-| get_logs()        |       | execute()           |
-+-------------------+       | cancel()            |
-                            +---------------------+
+    class TransactionHandler {
+        <<abstract>>
+        +TransactionHandler next_handler
+        +handle(context)*
+    }
+    class ATM {
+        +ATMState state
+        +CashDispenser cash_dispenser
+        +BankService bank_service
+        +AuditLogger audit_logger
+        +insert_card(card)
+        +enter_pin(pin)
+        +select_transaction(txn_type)
+        +execute(params)
+        +cancel()
+    }
+
+    ATM *-- CashDispenser
+    ATM --> BankService
+    ATM --> Transaction
+    ATM --> TransactionHandler
+    ATM --> Card
 ```
 
 ---
 
 ## 3. State Machine
 
-```
-              +------------------+
-   +-------->|      IDLE        |<-----------+
-   |         +------------------+            |
-   |                |                        |
-   |          insert_card()                  |
-   |                |                        |
-   |                v                        |
-   |         +------------------+            |
-   |  cancel | CARD_INSERTED    |---(3 fails)---> CARD_LOCKED -> IDLE
-   |         +------------------+            |
-   |                |                        |
-   |           enter_pin()                   |
-   |                |                        |
-   |                v                        |
-   |         +------------------+            |
-   |  cancel | PIN_VALIDATED    |            |
-   |         +------------------+            |
-   |                |                        |
-   |         select_transaction()            |
-   |                |                        |
-   |                v                        |
-   |         +------------------+            |
-   +---------| TXN_SELECTED     |------------+
-     cancel  +------------------+   complete
-                    |
-              execute_transaction()
-                    |
-              (dispense / display / etc.)
-```
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> CARD_INSERTED : insert_card()
+    CARD_INSERTED --> IDLE : cancel()
+    CARD_INSERTED --> CARD_LOCKED : 3 PIN failures
+    CARD_LOCKED --> IDLE : eject card
+    CARD_INSERTED --> PIN_VALIDATED : enter_pin() (valid)
+    PIN_VALIDATED --> IDLE : cancel()
+    PIN_VALIDATED --> TXN_SELECTED : select_transaction()
+    TXN_SELECTED --> IDLE : cancel() / execute_transaction() complete
+````
 
 **Transitions:**
 

@@ -36,23 +36,18 @@ Codex is OpenAI's coding agent for software development. It runs locally on your
 (CLI / IDE) or in the cloud (web / app), operating as an autonomous agent that reads, edits,
 tests, and deploys code across entire repositories.
 
-```
-+------------------------------------------------------------------+
-|                       CODEX ARCHITECTURE                          |
-+------------------------------------------------------------------+
-|                                                                    |
-|  User Prompt  ──>  Agentic Loop  ──>  Tool Execution  ──>  Result |
-|                         |                    |                     |
-|                    GPT Model            +----+----+                |
-|                    (Reasoning)          |    |    |                |
-|                                       Read Edit Shell              |
-|                                       Search Web Browse            |
-|                                       MCP  Agent                   |
-|                                                                    |
-|  Context:  AGENTS.md + Config + Conversation + File Contents      |
-|                                                                    |
-|  Security:  Sandbox Layer  +  Approval Policy  +  Permissions     |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Arch["CODEX ARCHITECTURE"]
+        Prompt["User Prompt"] --> Loop["Agentic Loop"]
+        Loop --> Exec["Tool Execution"]
+        Exec --> Result["Result"]
+
+        Loop --- Model["GPT Model<br/>(Reasoning)"]
+        Exec --- Tools["Tools:<br/>Read / Edit / Shell<br/>Search / Web Browse<br/>MCP / Agent"]
+        Context["Context:<br/>AGENTS.md + Config + Conversation + File Contents"] -.-> Loop
+        Security["Security:<br/>Sandbox Layer + Approval Policy + Permissions"] -.-> Exec
+    end
 ```
 
 ### Key Capabilities
@@ -141,22 +136,17 @@ codex              # Launches interactive TUI
 
 Codex reads settings from multiple layers with clear precedence:
 
-```
-Precedence (highest to lowest):
-┌────────────────────────────────────┐
-│  CLI flags and --config overrides  │
-├────────────────────────────────────┤
-│  Profile values (--profile <name>) │
-├────────────────────────────────────┤
-│  Project config (.codex/config.toml│
-│  closest to CWD wins)             │
-├────────────────────────────────────┤
-│  User config (~/.codex/config.toml)│
-├────────────────────────────────────┤
-│  System config (/etc/codex/...)    │
-├────────────────────────────────────┤
-│  Built-in defaults                 │
-└────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Precedence["Configuration Precedence (Highest to Lowest)"]
+        P1["1. CLI flags and --config overrides"]
+        P2["2. Profile values (--profile &lt;name&gt;)"]
+        P3["3. Project config (.codex/config.toml, closest to CWD wins)"]
+        P4["4. User config (~/.codex/config.toml)"]
+        P5["5. System config (/etc/codex/...)"]
+        P6["6. Built-in defaults"]
+        P1 --> P2 --> P3 --> P4 --> P5 --> P6
+    end
 ```
 
 ### config.toml Format
@@ -376,20 +366,11 @@ Similar to CLAUDE.md, focus on:
 
 Codex security is built on two independent layers:
 
-```
-┌─────────────────────────────────────────────┐
-│  Layer 1: SANDBOX (Technical Boundaries)    │
-│  What Codex CAN do technically              │
-│  - Filesystem access (read/write scope)     │
-│  - Network access (allowed/blocked)         │
-│  - Command execution scope                  │
-├─────────────────────────────────────────────┤
-│  Layer 2: APPROVAL POLICY (Human Control)   │
-│  When Codex MUST ask before acting          │
-│  - File edits                               │
-│  - Shell commands                           │
-│  - External operations                      │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["Layer 1: SANDBOX (Technical Boundaries)<br/>What Codex CAN do technically:<br/>- Filesystem access (read/write scope)<br/>- Network access (allowed/blocked)<br/>- Command execution scope"]
+    L2["Layer 2: APPROVAL POLICY (Human Control)<br/>When Codex MUST ask before acting:<br/>- File edits<br/>- Shell commands<br/>- External operations"]
+    L1 --> L2
 ```
 
 ### Approval Policies
@@ -451,28 +432,15 @@ Bypasses ALL approvals and sandboxing. Only use inside isolated runners (CI cont
 
 ### How It Works -- Defense in Depth
 
-```
-┌──────────────────────────────────────────────────┐
-│           THREE-LAYER SECURITY MODEL             │
-│                                                  │
-│  Layer 1: APPROVAL POLICIES                      │
-│  When user consent is required                   │
-│                                                  │
-│  Layer 2: COMMAND SAFETY ANALYSIS                │
-│  Classifies commands as safe/unsafe based on     │
-│  mutation potential                              │
-│                                                  │
-│  Layer 3: OS-LEVEL SANDBOXING                    │
-│  Platform-native kernel enforcement:             │
-│  - macOS: Seatbelt (sandbox-exec, dynamic SBPL)  │
-│  - Linux: Bubblewrap (bwrap) + Seccomp syscalls  │
-│           Legacy Landlock fallback               │
-│  - WSL: Linux sandbox within WSL                 │
-│  - Windows: Restricted Tokens (native) or WSL    │
-│                                                  │
-│  All child processes (git, npm, make, etc.)      │
-│  inherit the same sandbox boundaries             │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph SecurityModel["THREE-LAYER SECURITY MODEL"]
+        S1["Layer 1: APPROVAL POLICIES<br/>When user consent is required"]
+        S2["Layer 2: COMMAND SAFETY ANALYSIS<br/>Classifies commands as safe/unsafe based on mutation potential"]
+        S3["Layer 3: OS-LEVEL SANDBOXING<br/>Platform-native kernel enforcement:<br/>- macOS: Seatbelt (sandbox-exec, dynamic SBPL)<br/>- Linux: Bubblewrap (bwrap) + Seccomp syscalls (Legacy Landlock fallback)<br/>- WSL: Linux sandbox within WSL<br/>- Windows: Restricted Tokens (native) or WSL"]
+        S4["Child Process Inheritance:<br/>All child processes (git, npm, make, etc.) inherit the same sandbox boundaries"]
+        S1 --> S2 --> S3 --> S4
+    end
 ```
 
 ### Dynamic Permission Escalation
@@ -1058,26 +1026,13 @@ jobs:
 
 Expose the CLI as an MCP server and orchestrate with the OpenAI Agents SDK:
 
-```
-┌──────────────────────────────────┐
-│         AGENTS SDK               │
-│                                  │
-│  Orchestrator Agent              │
-│       │                          │
-│  ┌────┴────┐                     │
-│  │ Codex   │ ← MCP Server       │
-│  │ CLI     │                     │
-│  │         │                     │
-│  │ Read    │                     │
-│  │ Edit    │                     │
-│  │ Shell   │                     │
-│  └─────────┘                     │
-│                                  │
-│  Deterministic, reviewable       │
-│  workflows that scale from       │
-│  single agent to complete        │
-│  software delivery pipeline      │
-└──────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph SDK["AGENTS SDK (Deterministic, Reviewable Workflows)"]
+        Orch["Orchestrator Agent"]
+        Codex["Codex CLI (MCP Server)<br/>Tools: Read / Edit / Shell"]
+        Orch -->|"MCP Protocol"| Codex
+    end
 ```
 
 **Use cases:**

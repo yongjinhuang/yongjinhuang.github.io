@@ -734,35 +734,12 @@ Amplitude
 
 Most lossy audio codecs follow this general pipeline:
 
-```
-Input PCM
-    │
-    ▼
-┌───────────────┐
-│ Time→Frequency│  (MDCT or filterbank)
-│   Transform   │
-└───────┬───────┘
-        │
-        ▼
-┌───────────────┐
-│ Psychoacoustic│  Analyze masking thresholds
-│    Model      │
-└───────┬───────┘
-        │
-        ▼
-┌───────────────┐
-│  Quantization │  Reduce precision based on masking model
-│  & Scaling    │
-└───────┬───────┘
-        │
-        ▼
-┌───────────────┐
-│   Entropy     │  Huffman or arithmetic coding
-│   Coding      │
-└───────┬───────┘
-        │
-        ▼
-   Bitstream
+```mermaid
+flowchart TD
+    PCM["Input PCM Audio"] --> MDCT["Time-to-Frequency Transform<br/>(MDCT / Filterbank)"]
+    PCM --> Psycho["Psychoacoustic Model<br/>(Analyze frequency &amp; temporal masking thresholds)"]
+    MDCT & Psycho --> Quant["Quantization &amp; Bit Allocation<br/>(Shape quantization noise below masking threshold)"]
+    Quant --> Ent["Entropy Coding<br/>(Huffman / Arithmetic Coding)"] --> Bit["Compressed Audio Bitstream"]
 ```
 
 ### Key Audio Parameters
@@ -966,23 +943,14 @@ voice, and many other communication platforms.
 
 Opus is unique in combining two codecs into one:
 
-```
-                        Opus Codec
-     ┌──────────────────────────────────────┐
-     │                                      │
-     │   ┌──────────┐    ┌──────────┐       │
-     │   │   SILK   │    │   CELT   │       │
-     │   │  (Voice) │    │  (Music) │       │
-     │   └────┬─────┘    └────┬─────┘       │
-     │        │               │             │
-     │        └───────┬───────┘             │
-     │                │                     │
-     │         ┌──────┴──────┐              │
-     │         │   Hybrid    │              │
-     │         │    Mode     │              │
-     │         └─────────────┘              │
-     │                                      │
-     └──────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Opus["OPUS HYBRID AUDIO CODEC (RFC 6716)"]
+        SILK["SILK Core<br/>(Linear Predictive Coding — Optimized for Speech &lt; 8 kHz)"]
+        CELT["CELT Core<br/>(MDCT Transform — Optimized for Music &amp; High Frequencies up to 20 kHz)"]
+        Hyb["Hybrid Mode<br/>(Combines SILK for low frequencies + CELT for high frequencies)"]
+        SILK & CELT --> Hyb
+    end
 ```
 
 **SILK** (originally from Skype):

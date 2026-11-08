@@ -39,17 +39,9 @@ By the end of this chapter you will be able to:
 
 CUDA divides the world into two sides:
 
-```
-+---------------------------+         +---------------------------+
-|         HOST (CPU)        |         |       DEVICE (GPU)        |
-|                           |         |                           |
-|  - Runs main()            | PCIe /  |  - Runs kernel functions  |
-|  - Sequential C/C++       | NVLink  |  - Thousands of threads   |
-|  - Manages GPU memory     |<------->|  - Own memory (VRAM)      |
-|  - Launches kernels       |         |  - SIMT execution         |
-|  - Controls program flow  |         |  - Massive parallelism    |
-|                           |         |                           |
-+---------------------------+         +---------------------------+
+```mermaid
+flowchart LR
+    Host["HOST (CPU)<br/>- Runs main() &amp; sequential C/C++<br/>- Allocates &amp; copies GPU memory<br/>- Launches kernels &amp; controls flow"] <-->|"PCIe / NVLink"| Dev["DEVICE (GPU)<br/>- Executes __global__ kernel functions<br/>- Runs thousands of SIMT threads<br/>- High-bandwidth device memory (VRAM/HBM)"]
 ```
 
 The CPU (host) orchestrates: it allocates GPU memory, copies data to the GPU, launches parallel functions called **kernels**, and copies results back. The GPU (device) executes the kernel across thousands of threads simultaneously.
@@ -1380,20 +1372,12 @@ TILED (TILE_SIZE = T):
 
 `nvcc` is the NVIDIA CUDA Compiler. It separates host code and device code, compiles device code to PTX (intermediate representation) or SASS (machine code), and uses the host compiler (gcc, clang, MSVC) for host code.
 
-```
-Source (.cu)
-     |
-     v
-+----------+
-|   nvcc   |
-+----------+
-     |
-     +--------> Host code (.cpp) -----> Host compiler (gcc) --+
-     |                                                         |
-     +--------> Device code -----> PTX -----> SASS -----------+
-                                                               |
-                                                               v
-                                                        Executable
+```mermaid
+flowchart LR
+    Src["CUDA Source (.cu)"] --> NVCC["nvcc Compiler Driver"]
+    NVCC -->|"Host Code"| Host["Host C++ Compiler<br/>(gcc / clang / MSVC)"]
+    NVCC -->|"Device Code"| PTX["PTX Virtual ISA<br/>(Forward-compatible)"] --> SASS["ptxas Assembler<br/>-&gt; SASS Native Machine Code"]
+    Host & SASS --> Bin["Fatbinary Executable"]
 ```
 
 ### 8.2 Essential Compiler Flags
@@ -1674,18 +1658,11 @@ int main() {
 
 The block size (threads per block) is the most important launch parameter. Guidelines:
 
-```
-BLOCK SIZE DECISION TREE:
-
-                   Is problem 1D?
-                    /           \
-                  Yes            No (2D or 3D)
-                   |              |
-              Use 128 or 256    Use 16x16 or 32x32
-                   |              (must be <= 1024 total)
-                   |              |
-          Always a multiple      Always a multiple
-          of 32 (warp size)      of 32 total threads
+```mermaid
+flowchart TD
+    Q1{"Is the problem 1D?"}
+    Q1 -->|"Yes"| B1["Use 128 or 256 threads per block<br/>(Always a multiple of 32 warp size)"]
+    Q1 -->|"No (2D or 3D)"| B2["Use 16x16 (256) or 32x32 (1024)<br/>(Total threads &lt;= 1024, multiple of 32)"]
 ```
 
 Rules of thumb:

@@ -14,35 +14,20 @@ This guide covers the architecture patterns, infrastructure decisions, and produ
 
 LLM responses take 2-30 seconds to generate completely. Users expect to see tokens appear in real-time. Server-Sent Events (SSE) is the dominant pattern for this.
 
-```
-+------------------------------------------------------------------+
-|              LLM STREAMING ARCHITECTURE                            |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Client           Backend            LLM Provider                |
-|  (Browser)        (Node.js)          (OpenAI/Anthropic)          |
-|  |                |                  |                           |
-|  |-- POST /chat ->|                  |                           |
-|  |                |-- Stream req --->|                           |
-|  |                |                  |                           |
-|  |<-- SSE: token -|<-- chunk --------|  "The"                   |
-|  |<-- SSE: token -|<-- chunk --------|  " weather"              |
-|  |<-- SSE: token -|<-- chunk --------|  " today"                |
-|  |<-- SSE: token -|<-- chunk --------|  " is"                   |
-|  |<-- SSE: token -|<-- chunk --------|  " sunny"                |
-|  |<-- SSE: [DONE]-|<-- done ---------|                          |
-|  |                |                  |                           |
-|  |  Total time: 3s                                               |
-|  |  Time to first token: 200ms                                   |
-|  |  User perceives instant response                              |
-|                                                                  |
-|  SSE FORMAT:                                                     |
-|  data: {"type":"token","content":"The"}                          |
-|  data: {"type":"token","content":" weather"}                     |
-|  data: {"type":"usage","input_tokens":50,"output_tokens":12}     |
-|  data: [DONE]                                                    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+sequenceDiagram
+    participant C as "Client (Browser)"
+    participant B as "Backend (Node.js)"
+    participant L as "LLM Provider (OpenAI / Anthropic)"
+
+    C->>B: POST /chat
+    B->>L: Stream request
+    L-->>B: chunk: "The"
+    B-->>C: SSE: data: {"type":"token","content":"The"} (TTFT ~200ms)
+    L-->>B: chunk: " weather" / " today" / " is" / " sunny"
+    B-->>C: SSE: token chunks
+    L-->>B: done (usage: input=50, output=12)
+    B-->>C: SSE: data: [DONE] (Total time ~3s)
 ```
 
 ```typescript
@@ -122,30 +107,21 @@ async function handleChatStream(req: Request, res: Response): Promise<void> {
 
 Function calling allows the LLM to invoke structured functions in your backend. This is the foundation of all agent architectures.
 
-```
-+------------------------------------------------------------------+
-|              FUNCTION CALLING FLOW                                 |
-+------------------------------------------------------------------+
-|                                                                  |
-|  User: "What is the weather in Tokyo?"                           |
-|                                                                  |
-|  1. Client --> Backend --> LLM                                   |
-|     (with tool definitions)                                      |
-|                                                                  |
-|  2. LLM responds:                                                |
-|     "I need to call get_weather(location='Tokyo')"               |
-|     (tool_use block, NOT text)                                   |
-|                                                                  |
-|  3. Backend executes get_weather("Tokyo")                        |
-|     Returns: { temp: 22, condition: "cloudy" }                   |
-|                                                                  |
-|  4. Backend --> LLM (with tool result)                           |
-|                                                                  |
-|  5. LLM responds:                                                |
-|     "The weather in Tokyo is 22C and cloudy."                    |
-|     (text block)                                                 |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant B as "Backend"
+    participant L as "LLM"
+    participant T as "Tool (get_weather)"
+
+    C->>B: "What is the weather in Tokyo?"
+    B->>L: 1. Prompt + Tool Definitions
+    L-->>B: 2. tool_use: get_weather(location="Tokyo")
+    B->>T: 3. Execute get_weather("Tokyo")
+    T-->>B: { temp: 22, condition: "cloudy" }
+    B->>L: 4. Tool Result
+    L-->>B: 5. "The weather in Tokyo is 22C and cloudy."
+    B-->>C: Final response
 ```
 
 ```typescript
@@ -347,42 +323,23 @@ Review: "${reviewText}"`,
 
 Retrieval-Augmented Generation (RAG) grounds LLM responses in your own data. A production RAG system is far more complex than "embed, store, retrieve."
 
-```
-+------------------------------------------------------------------+
-|              RAG PIPELINE ARCHITECTURE                             |
-+------------------------------------------------------------------+
-|                                                                  |
-|  INGESTION PIPELINE (offline/batch)                              |
-|  +-----------------------------------------------------------+  |
-|  |                                                           |  |
-|  | Documents --> Chunking --> Embedding --> Vector Store      |  |
-|  |                                                           |  |
-|  | +--------+  +----------+  +---------+  +-------------+   |  |
-|  | | PDF    |  | Fixed    |  | OpenAI  |  | pgvector    |   |  |
-|  | | HTML   |  | Recursive|  | text-   |  | Pinecone    |   |  |
-|  | | Markdown|  | Semantic |  | embedding| | Qdrant      |   |  |
-|  | | Notion |  | Agentic  |  | -3-large|  | Weaviate    |   |  |
-|  | +--------+  +----------+  +---------+  +-------------+   |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  QUERY PIPELINE (online, per-request)                            |
-|  +-----------------------------------------------------------+  |
-|  |                                                           |  |
-|  | User    Query       Retrieve    Re-rank    Generate       |  |
-|  | Query -> Embed -> -> Top K -> -> Top N -> -> LLM -----> Answer
-|  |          |          |           |          |              |  |
-|  |  Optional:          |    Optional:    Context window      |  |
-|  |  Query              |    Cohere      management           |  |
-|  |  rewriting          |    reranker    (fit within          |  |
-|  |  HyDE               |    Cross-      token limit)         |  |
-|  |  (hypothetical      |    encoder                          |  |
-|  |   doc embedding)    |                                     |  |
-|  |                     |                                     |  |
-|  |              Hybrid search:                               |  |
-|  |              Vector similarity + BM25 keyword              |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Ingest["INGESTION PIPELINE (Offline / Batch)"]
+        Docs["Documents<br/>(PDF, HTML, Markdown, Notion)"] --> Chunk["Chunking<br/>(Fixed, Recursive, Semantic, Agentic)"]
+        Chunk --> Emb1["Embedding<br/>(OpenAI text-embedding-3-large)"]
+        Emb1 --> VS[("Vector Store<br/>(pgvector, Pinecone, Qdrant, Weaviate)")]
+    end
+
+    subgraph Query["QUERY PIPELINE (Online, Per-Request)"]
+        UQ["User Query"] --> QEmb["Query Embed<br/>(Optional: Query Rewriting / HyDE)"]
+        QEmb --> Ret["Retrieve Top-K<br/>(Hybrid: Vector Similarity + BM25 Keyword)"]
+        Ret --> Rerank["Re-rank to Top-N<br/>(Cohere Reranker / Cross-Encoder)"]
+        Rerank --> Gen["Generate via LLM<br/>(Context window management)"]
+        Gen --> Ans["Answer"]
+    end
+
+    VS -.-> Ret
 ```
 
 ### Chunking Strategies
@@ -593,45 +550,20 @@ If the context does not contain enough information, say so. Always cite your sou
 
 An AI gateway sits between your application and LLM providers, handling cross-cutting concerns.
 
-```
-+------------------------------------------------------------------+
-|              AI GATEWAY ARCHITECTURE                               |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Application                                                     |
-|  |                                                               |
-|  v                                                               |
-|  +-----------------------------------------------------------+  |
-|  |  AI GATEWAY                                                |  |
-|  |                                                           |  |
-|  |  +-------------+  +-------------+  +-------------+        |  |
-|  |  | Rate        |  | Cost        |  | Response    |        |  |
-|  |  | Limiting    |  | Tracking    |  | Caching     |        |  |
-|  |  | (per-user,  |  | (per-user,  |  | (semantic   |        |  |
-|  |  |  per-org)   |  |  per-model) |  |  dedup)     |        |  |
-|  |  +-------------+  +-------------+  +-------------+        |  |
-|  |                                                           |  |
-|  |  +-------------+  +-------------+  +-------------+        |  |
-|  |  | Model       |  | Prompt      |  | Safety      |        |  |
-|  |  | Routing     |  | Caching     |  | Filters     |        |  |
-|  |  | (fallback,  |  | (Anthropic  |  | (PII, toxic |        |  |
-|  |  |  A/B test)  |  |  cache)     |  |  content)   |        |  |
-|  |  +-------------+  +-------------+  +-------------+        |  |
-|  |                                                           |  |
-|  |  +-------------+  +-------------+                         |  |
-|  |  | Token       |  | Logging &   |                         |  |
-|  |  | Counting    |  | Observ-     |                         |  |
-|  |  | (pre-call   |  | ability     |                         |  |
-|  |  |  estimate)  |  |             |                         |  |
-|  |  +-------------+  +-------------+                         |  |
-|  +---+---+---+---+---+---+---+---+---+----+---------+-------+  |
-|      |       |       |       |            |                     |
-|      v       v       v       v            v                     |
-|  +------+ +------+ +------+ +------+ +--------+                |
-|  |Claude| |GPT-4 | |Gemini| |Llama | |Mistral |                |
-|  +------+ +------+ +------+ +------+ +--------+                |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    App["Application"] --> GW
+    subgraph GW["AI GATEWAY"]
+        RL["Rate Limiting<br/>(per-user, per-org)"]
+        Cost["Cost Tracking<br/>(per-user, per-model)"]
+        Cache["Response Caching<br/>(semantic dedup)"]
+        Route["Model Routing<br/>(fallback, A/B test)"]
+        PCache["Prompt Caching<br/>(Anthropic prefix cache)"]
+        Safety["Safety Filters<br/>(PII, toxic content)"]
+        Token["Token Counting<br/>(pre-call estimate)"]
+        Obs["Logging &amp; Observability"]
+    end
+    GW --> M1["Claude"] & M2["GPT-4"] & M3["Gemini"] & M4["Llama"] & M5["Mistral"]
 ```
 
 ### Cost Tracking Implementation
@@ -808,84 +740,28 @@ async function routeRequest(request: AiRequest): Promise<AiResponse> {
 
 ### ReAct Pattern
 
-```
-+------------------------------------------------------------------+
-|              ReAct AGENT LOOP                                      |
-+------------------------------------------------------------------+
-|                                                                  |
-|  User Query: "Find the cheapest flight from NYC to London        |
-|               next Friday and book it"                           |
-|                                                                  |
-|  THOUGHT 1: I need to search for flights from NYC to London      |
-|             departing next Friday.                                |
-|  ACTION 1:  search_flights(from="NYC", to="LHR",                |
-|             date="2026-03-13")                                   |
-|  OBSERVATION 1: [BA 117: $450, VS 3: $420, AA 100: $480]        |
-|                                                                  |
-|  THOUGHT 2: The cheapest is VS 3 at $420. I should confirm      |
-|             the details before booking.                          |
-|  ACTION 2:  get_flight_details(flight="VS3", date="2026-03-13") |
-|  OBSERVATION 2: { depart: "18:30", arrive: "06:30+1",           |
-|                   class: "economy", baggage: "1x23kg" }          |
-|                                                                  |
-|  THOUGHT 3: I have the details. I need user confirmation         |
-|             before booking (HITL).                               |
-|  ACTION 3:  request_user_confirmation(                           |
-|               message: "Book VS3 NYC->LHR Mar 13,               |
-|               $420, depart 18:30?")                              |
-|  OBSERVATION 3: { confirmed: true }                              |
-|                                                                  |
-|  THOUGHT 4: User confirmed. Proceeding to book.                 |
-|  ACTION 4:  book_flight(flight="VS3", date="2026-03-13",        |
-|             passenger="user-profile")                            |
-|  OBSERVATION 4: { booking_ref: "ABC123", status: "confirmed" }   |
-|                                                                  |
-|  FINAL ANSWER: Booked VS3 NYC->LHR on March 13 for $420.        |
-|  Booking reference: ABC123. Departs 18:30, arrives 06:30+1.     |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Q["User Query:<br/>'Find the cheapest flight from NYC to London next Friday and book it'"]
+    S1["Iteration 1<br/>- THOUGHT 1: Search flights NYC -&gt; LHR next Friday<br/>- ACTION 1: search_flights(from='NYC', to='LHR', date='2026-03-13')<br/>- OBSERVATION 1: [BA 117: $450, VS 3: $420, AA 100: $480]"]
+    S2["Iteration 2<br/>- THOUGHT 2: Cheapest is VS 3 ($420); fetch flight details<br/>- ACTION 2: get_flight_details(flight='VS3', date='2026-03-13')<br/>- OBSERVATION 2: { depart: '18:30', arrive: '06:30+1', class: 'economy', baggage: '1x23kg' }"]
+    S3["Iteration 3 (Human-in-the-Loop)<br/>- THOUGHT 3: Request user confirmation before booking<br/>- ACTION 3: request_user_confirmation('Book VS3 NYC-&gt;LHR Mar 13, $420?')<br/>- OBSERVATION 3: { confirmed: true }"]
+    S4["Iteration 4<br/>- THOUGHT 4: User confirmed; proceed to book<br/>- ACTION 4: book_flight(flight='VS3', date='2026-03-13', passenger='user-profile')<br/>- OBSERVATION 4: { booking_ref: 'ABC123', status: 'confirmed' }"]
+    Ans["FINAL ANSWER:<br/>Booked VS3 NYC-&gt;LHR on March 13 for $420 (Ref: ABC123, Departs 18:30)"]
+
+    Q --> S1 --> S2 --> S3 --> S4 --> Ans
 ```
 
 ### Memory Systems
 
-```
-+------------------------------------------------------------------+
-|              AGENT MEMORY ARCHITECTURE                             |
-+------------------------------------------------------------------+
-|                                                                  |
-|  SHORT-TERM MEMORY (conversation context)                        |
-|  +-----------------------------------------------------------+  |
-|  | - Current conversation messages                            |  |
-|  | - Managed by sliding window or summarization               |  |
-|  | - Fits within model context window                         |  |
-|  | - Lost when conversation ends                              |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  LONG-TERM MEMORY (persistent knowledge)                         |
-|  +-----------------------------------------------------------+  |
-|  | - User preferences and history (stored in DB)              |  |
-|  | - Past interactions summarized and embedded                |  |
-|  | - Retrieved via semantic search on each new query          |  |
-|  | - "You previously said you prefer window seats"            |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  EPISODIC MEMORY (task-specific experience)                      |
-|  +-----------------------------------------------------------+  |
-|  | - Records of past similar tasks and outcomes               |  |
-|  | - "Last time you booked a flight, you needed a visa"       |  |
-|  | - Enables learning from past interactions                  |  |
-|  | - Stored as (query, actions, outcome, feedback) tuples     |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  WORKING MEMORY (scratchpad)                                     |
-|  +-----------------------------------------------------------+  |
-|  | - Intermediate computation results                         |  |
-|  | - Tool call results being accumulated                      |  |
-|  | - Current plan and progress                                |  |
-|  | - Stored as structured JSON, passed as context             |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Mem["AGENT MEMORY ARCHITECTURE"]
+        STM["SHORT-TERM MEMORY (Conversation Context)<br/>- Current conversation messages (sliding window / summarization)<br/>- Fits within model context window; lost when session ends"]
+        LTM["LONG-TERM MEMORY (Persistent Knowledge)<br/>- User preferences and history in DB + vector embeddings<br/>- Retrieved via semantic search ('You prefer window seats')"]
+        Epi["EPISODIC MEMORY (Task-Specific Experience)<br/>- Past task trajectories stored as (query, actions, outcome, feedback)<br/>- Enables few-shot learning from prior runs"]
+        Work["WORKING MEMORY (Scratchpad)<br/>- Intermediate computation &amp; accumulated tool call results<br/>- Current plan and progress passed as structured JSON"]
+    end
 ```
 
 ---
@@ -934,35 +810,20 @@ async function routeRequest(request: AiRequest): Promise<AiResponse> {
 
 ### Evaluation Pipelines
 
-```
-+------------------------------------------------------------------+
-|              AI EVALUATION PIPELINE                                |
-+------------------------------------------------------------------+
-|                                                                  |
-|  OFFLINE EVALUATION (before deployment)                          |
-|  +-----------------------------------------------------------+  |
-|  | 1. Golden dataset: curated (query, expected_answer) pairs  |  |
-|  | 2. Run pipeline against dataset                            |  |
-|  | 3. Score with automated metrics:                           |  |
-|  |    - Faithfulness: does answer follow from context?        |  |
-|  |    - Relevance: does retrieved context answer the query?   |  |
-|  |    - Correctness: does answer match expected answer?       |  |
-|  |    - Harmfulness: does answer contain unsafe content?      |  |
-|  | 4. Compare against baseline (previous version)             |  |
-|  | 5. Gate deployment on metric thresholds                    |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  ONLINE EVALUATION (after deployment)                            |
-|  +-----------------------------------------------------------+  |
-|  | 1. User feedback: thumbs up/down, regenerate requests      |  |
-|  | 2. Implicit signals: copy events, follow-up questions      |  |
-|  | 3. LLM-as-judge: sample responses graded by a stronger LLM|  |
-|  | 4. A/B testing: compare prompt/model variants on live      |  |
-|  |    traffic with statistical significance testing            |  |
-|  | 5. Drift detection: monitor retrieval quality over time     |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Offline["OFFLINE EVALUATION (Pre-Deployment CI Gate)"]
+        O1["1. Golden Dataset<br/>Curated (query, expected_answer) pairs"] --> O2["2. Run Pipeline"]
+        O2 --> O3["3. Automated Metrics<br/>Faithfulness, Relevance, Correctness, Harmfulness"]
+        O3 --> O4["4. Compare vs Baseline"] --> O5["5. Gate Deployment"]
+    end
+    subgraph Online["ONLINE EVALUATION (Post-Deployment Production)"]
+        L1["1. Explicit User Feedback (thumbs up/down, regenerate)"]
+        L2["2. Implicit Signals (copy events, follow-ups)"]
+        L3["3. LLM-as-Judge (sampled live grading)"]
+        L4["4. A/B Testing &amp; Drift Detection"]
+    end
+    Offline --> Online
 ```
 
 ---

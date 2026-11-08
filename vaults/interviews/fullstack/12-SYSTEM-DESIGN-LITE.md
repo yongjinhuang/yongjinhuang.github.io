@@ -194,40 +194,16 @@ GET    /api/users/:username/posts    -- Posts by user
 
 **Architecture:**
 
-```
-                    ┌──────────┐
-                    │   CDN    │ (images, static assets)
-                    └────┬─────┘
-                         │
-    ┌────────────────────┼────────────────────┐
-    │                    │                    │
-┌───┴───┐          ┌─────┴─────┐         ┌───┴───┐
-│Browser│          │ Mobile App│         │  RSS  │
-└───┬───┘          └─────┬─────┘         └───┬───┘
-    │                    │                    │
-    └────────┬───────────┘                    │
-             │                                │
-      ┌──────┴──────┐                         │
-      │Load Balancer│ ◄───────────────────────┘
-      └──────┬──────┘
-             │
-      ┌──────┴──────┐
-      │  API Server │ (Node.js / Go)
-      │  (x2-3)     │
-      └──┬───┬───┬──┘
-         │   │   │
-    ┌────┘   │   └────┐
-    │        │        │
-┌───┴───┐ ┌──┴──┐ ┌───┴────────┐
-│Postgres│ │Redis│ │Elasticsearch│
-│  (DB)  │ │Cache│ │  (Search)  │
-└────────┘ └─────┘ └────────────┘
-                        ▲
-                        │ (async sync via queue)
-                   ┌────┴────┐
-                   │  Queue  │
-                   │(RabbitMQ)│
-                   └─────────┘
+```mermaid
+flowchart TD
+    CDN["CDN<br/>(images, static assets)"] --> Browser["Browser"] & Mobile["Mobile App"] & RSS["RSS"]
+    Browser & Mobile & RSS --> LB["Load Balancer"]
+    LB --> API["API Server (x2-3)<br/>(Node.js / Go)"]
+    API --> PG[("Postgres (DB)")]
+    API --> Redis[("Redis Cache")]
+    API --> ES[("Elasticsearch (Search)")]
+    API --> Q["Queue (RabbitMQ)"]
+    Q -->|"async index sync"| ES
 ```
 
 **Key decisions and trade-offs:**
@@ -395,12 +371,12 @@ async function moveTask(taskId: string, body: MoveTaskInput) {
 
 **Real-Time Architecture:**
 
-```
-Browser ──WebSocket──► WS Server ──pub/sub──► Redis
-                                                │
-Browser ──WebSocket──► WS Server ───────────────┘
-                                                │
-Browser ──WebSocket──► WS Server ───────────────┘
+```mermaid
+flowchart LR
+    B1["Browser 1"] <-->|"WebSocket"| WS1["WS Server 1"]
+    B2["Browser 2"] <-->|"WebSocket"| WS2["WS Server 2"]
+    B3["Browser 3"] <-->|"WebSocket"| WS3["WS Server 3"]
+    WS1 & WS2 & WS3 <-->|"Pub/Sub"| Redis[("Redis")]
 ```
 
 Each WebSocket server subscribes to a Redis Pub/Sub channel per project. When a task is updated (via any server), the update is published to Redis, which fans it out to all connected servers, which push it to connected clients.
@@ -546,22 +522,10 @@ WS     /ws/chat
 
 **Architecture:**
 
-```
-┌────────┐     ┌────────────┐     ┌──────────────┐
-│ Client │────►│   Nginx    │────►│  API Server  │──► Postgres
-│        │     │   (LB)     │     │  (REST)      │
-└───┬────┘     └────────────┘     └──────────────┘
-    │
-    │          ┌────────────┐     ┌──────────────┐
-    └─────────►│   Nginx    │────►│  WS Server   │──► Redis (Pub/Sub)
-               │   (LB)     │     │  (x3-5)      │
-               └────────────┘     └──────┬───────┘
-                                         │
-                                    ┌────┴────┐
-                                    │  Redis  │
-                                    │(Presence│
-                                    │+ PubSub)│
-                                    └─────────┘
+```mermaid
+flowchart LR
+    Client["Client"] -->|"HTTP REST"| LB1["Nginx (LB)"] --> API["API Server (REST)"] --> PG[("Postgres")]
+    Client <-->|"WebSocket"| LB2["Nginx (LB)"] <--> WS["WS Server (x3-5)"] <--> Redis[("Redis<br/>(Presence + Pub/Sub)")]
 ```
 
 **Presence System:**

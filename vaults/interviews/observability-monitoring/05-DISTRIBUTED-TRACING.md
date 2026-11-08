@@ -26,13 +26,11 @@ backends (Jaeger, Tempo), and correlation with logs and metrics.
 In microservices, a single user request may traverse 10+ services. When something goes
 wrong, you need to know: **which service**, **how long**, and **what failed**.
 
-```
-User Request → API Gateway → Auth Service → Order Service → Payment Service → DB
-                                    ↓
-                              Inventory Service → Warehouse API
-
-Without tracing: "Something is slow. Somewhere."
-With tracing:    "Payment Service P99 is 2.3s due to DB connection pool exhaustion."
+```mermaid
+flowchart LR
+    Req["User Request"] --> GW["API Gateway"] --> Auth["Auth Service"] --> Order["Order Service"]
+    Order --> Pay["Payment Service"] --> DB[("DB (Bottleneck: Pool Exhaustion)")]
+    Order --> Inv["Inventory Service"] --> WH["Warehouse API"]
 ```
 
 ---
@@ -41,29 +39,14 @@ With tracing:    "Payment Service P99 is 2.3s due to DB connection pool exhausti
 
 ### Trace Structure
 
-```
-Trace ID: abc-123-def-456
-│
-├── Span A: API Gateway (0ms - 250ms)
-│   │
-│   ├── Span B: Auth Service (10ms - 50ms)
-│   │
-│   └── Span C: Order Service (55ms - 240ms)
-│       │
-│       ├── Span D: Inventory Check (60ms - 100ms)
-│       │
-│       └── Span E: Payment Service (105ms - 230ms)
-│           │
-│           └── Span F: Database Query (110ms - 225ms)  ← Bottleneck!
-│
-Timeline:
-0ms────50ms────100ms────150ms────200ms────250ms
-|--A-----------------------------------------|
-  |B--|
-       |--------C-----------------------------|
-       |-D----|
-              |----------E--------------------|
-               |-----------F-----------------|
+```mermaid
+flowchart TD
+    Root["Trace ID: abc-123-def-456"] --> A["Span A: API Gateway (0ms - 250ms)"]
+    A --> B["Span B: Auth Service (10ms - 50ms)"]
+    A --> C["Span C: Order Service (55ms - 240ms)"]
+    C --> D["Span D: Inventory Check (60ms - 100ms)"]
+    C --> E["Span E: Payment Service (105ms - 230ms)"]
+    E --> F["Span F: Database Query (110ms - 225ms) — Bottleneck!"]
 ```
 
 ### Span Components
@@ -137,18 +120,19 @@ Decision made at the **end** of a trace (after all data is collected):
 | **Latency-Based** | Keep slow traces (P99+) | Find performance issues | Requires buffering |
 | **Composite** | Combine multiple strategies | Best coverage | Most complex |
 
-```
-HEAD-BASED                      TAIL-BASED
-┌──────────┐                   ┌──────────────────────┐
-│ Request   │                   │ Collect full trace    │
-│ arrives   │                   │ in buffer             │
-│     │     │                   │        │              │
-│     ▼     │                   │        ▼              │
-│ Sample?   │                   │ Error? Slow? Interest?│
-│ Yes → Keep│                   │ Yes → Keep            │
-│ No → Drop │                   │ No → Drop             │
-└──────────┘                   └──────────────────────┘
-Simple, cheap                   Complete, expensive
+```mermaid
+flowchart TD
+    subgraph Head["HEAD-BASED SAMPLING (Simple, cheap)"]
+        H1["Request arrives"] --> H2{"Sample?"}
+        H2 -->|"Yes"| HK["Keep trace"]
+        H2 -->|"No"| HD["Drop trace"]
+    end
+
+    subgraph Tail["TAIL-BASED SAMPLING (Complete, expensive)"]
+        T1["Collect full trace in buffer"] --> T2{"Error? Slow? Interesting?"}
+        T2 -->|"Yes"| TK["Keep trace"]
+        T2 -->|"No"| TD["Drop trace"]
+    end
 ```
 
 ### OpenTelemetry Collector Tail Sampling
@@ -175,19 +159,13 @@ processors:
 
 ### Jaeger
 
-```
-┌──────────────────────────────────────┐
-│              JAEGER                    │
-│                                       │
-│  App ──> Agent ──> Collector ──> DB   │
-│  (SDK)   (UDP)    (process)   (Cassandra│
-│                               Elasticsearch│
-│                               Kafka)   │
-│                    ┌──────────────┐    │
-│                    │ Query Service│    │
-│                    │ (Jaeger UI)  │    │
-│                    └──────────────┘    │
-└──────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Jaeger["JAEGER ARCHITECTURE"]
+        App["App (SDK)"] -->|"UDP"| Agent["Agent"] --> Coll["Collector<br/>(process)"]
+        Coll --> DB[("Storage DB<br/>(Cassandra / Elasticsearch / Kafka)")]
+        DB --> Query["Query Service<br/>(Jaeger UI)"]
+    end
 ```
 
 ### Grafana Tempo
@@ -213,15 +191,10 @@ processors:
 
 ### The Three Pillars Connected
 
-```
-         METRICS                 TRACES                LOGS
-     ┌────────────┐         ┌────────────┐       ┌────────────┐
-     │ Error rate │         │ Span with  │       │ Log entry  │
-     │ spike at   │────────>│ trace_id   │<──────│ with same  │
-     │ 10:23 AM   │exemplar │ shows slow │trace_id│ trace_id  │
-     │            │         │ DB query   │       │ has stack  │
-     └────────────┘         └────────────┘       │ trace      │
-                                                  └────────────┘
+```mermaid
+flowchart LR
+    M["METRICS<br/>Error rate spike at 10:23 AM"] -->|"exemplar (trace_id)"| T["TRACES<br/>Span with trace_id shows slow DB query"]
+    L["LOGS<br/>Log entry with same trace_id has stack trace"] -->|"trace_id"| T
 ```
 
 ### Exemplars

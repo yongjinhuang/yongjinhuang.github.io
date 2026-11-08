@@ -6,25 +6,15 @@ The defining shift in backend API design since 2023 has been the move toward **e
 
 This guide covers four API paradigms through the lens of type safety: tRPC (full-stack TypeScript), GraphQL (schema-driven), gRPC (protocol-buffer-driven), and REST with OpenAPI 3.1 (contract-first). Each has a distinct philosophy about where types live and how they flow.
 
-```
-+------------------------------------------------------------------+
-|               TYPE SAFETY SPECTRUM (2026)                        |
-+------------------------------------------------------------------+
-|                                                                  |
-|  MORE TYPE SAFE                              LESS TYPE SAFE      |
-|  <------------------------------------------------------->      |
-|                                                                  |
-|  tRPC          gRPC          GraphQL         REST                |
-|  (zero schema) (protobuf)    (SDL/codegen)   (OpenAPI/manual)    |
-|                                                                  |
-|  Types flow    Types from    Types from      Types from          |
-|  directly via  .proto files  schema +        OpenAPI spec +      |
-|  TS inference  + codegen     codegen         codegen             |
-|                                                                  |
-|  Monorepo      Cross-lang    Cross-lang      Universal           |
-|  TS only       polyglot      polyglot        any lang            |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Spectrum["TYPE SAFETY SPECTRUM (2026): More Type Safe -> Less Type Safe"]
+        T1["tRPC (zero schema)<br/>- Types flow directly via TS inference<br/>- Monorepo TS only"]
+        T2["gRPC (protobuf)<br/>- Types from .proto files + codegen<br/>- Cross-language polyglot"]
+        T3["GraphQL (SDL / codegen)<br/>- Types from schema + codegen<br/>- Cross-language polyglot"]
+        T4["REST (OpenAPI / manual)<br/>- Types from OpenAPI spec + codegen<br/>- Universal, any language"]
+        T1 --> T2 --> T3 --> T4
+    end
 ```
 
 ---
@@ -35,34 +25,17 @@ This guide covers four API paradigms through the lens of type safety: tRPC (full
 
 tRPC achieves type safety without code generation by leveraging TypeScript's type inference across the client-server boundary. The key insight: if both client and server live in the same TypeScript project (or share types via a monorepo), the TypeScript compiler can infer the types end-to-end.
 
-```
-+------------------------------------------------------------------+
-|                    tRPC ARCHITECTURE                              |
-+------------------------------------------------------------------+
-|                                                                  |
-|  SERVER                          CLIENT                          |
-|  +------------------------+     +-------------------------+     |
-|  | Router                 |     | tRPC Client             |     |
-|  | +--------------------+ |     | +---------------------+ |     |
-|  | | Procedure          | |     | | Proxy Object        | |     |
-|  | | - input (Zod)      | |     | | - Infers types from | |     |
-|  | | - output (inferred)| |     | |   router definition | |     |
-|  | | - middleware chain  | |     | | - Auto-complete     | |     |
-|  | | - resolver fn      | |     | | - Type errors       | |     |
-|  | +--------------------+ |     | +---------------------+ |     |
-|  +------------------------+     +-------------------------+     |
-|           |                              |                       |
-|           v                              v                       |
-|  +---------------------------------------------------+          |
-|  |            HTTP / WebSocket Transport              |          |
-|  |  (Batching: multiple calls in single request)      |          |
-|  +---------------------------------------------------+          |
-|                                                                  |
-|  TYPE FLOW:                                                      |
-|  Router Type ---> AppRouter type export ---> Client infers       |
-|  (No codegen, no schema files, no build step)                    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph tRPC["tRPC ARCHITECTURE"]
+        Server["SERVER: Router &amp; Procedure<br/>- input (Zod)<br/>- output (inferred)<br/>- middleware chain<br/>- resolver fn"]
+        Client["CLIENT: tRPC Client Proxy Object<br/>- Infers types from router definition<br/>- Auto-complete &amp; compile-time type errors"]
+        Transport["HTTP / WebSocket Transport<br/>(Batching: multiple calls in single request)"]
+
+        Server -->|"export type AppRouter (No codegen / build step)"| Client
+        Server <--> Transport
+        Client <--> Transport
+    end
 ```
 
 ### tRPC Server Implementation
@@ -263,25 +236,16 @@ function UserList() {
 
 ### tRPC Batching
 
-```
-+------------------------------------------------------------------+
-|                    tRPC REQUEST BATCHING                          |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Without batching (3 HTTP requests):                             |
-|  Client --> GET /trpc/user.getById?id=1    --> Server            |
-|  Client --> GET /trpc/post.list            --> Server            |
-|  Client --> GET /trpc/user.getById?id=2    --> Server            |
-|                                                                  |
-|  With batching (1 HTTP request):                                 |
-|  Client --> GET /trpc/user.getById,post.list,user.getById        |
-|             ?batch=1                                             |
-|             &input={"0":{"id":"1"},"1":{},"2":{"id":"2"}}        |
-|         --> Server                                               |
-|                                                                  |
-|  Server processes all 3 in parallel, returns array of results    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph NoBatch["Without Batching (3 HTTP requests)"]
+        C1["Client"] -->|"1. GET /trpc/user.getById?id=1"| S1["Server"]
+        C1 -->|"2. GET /trpc/post.list"| S1
+        C1 -->|"3. GET /trpc/user.getById?id=2"| S1
+    end
+    subgraph WithBatch["With Batching (1 HTTP request, parallel execution)"]
+        C2["Client"] -->|"GET /trpc/user.getById,post.list,user.getById?batch=1"| S2["Server<br/>(Processes all 3 in parallel,<br/>returns array of results)"]
+    end
 ```
 
 ---
@@ -520,29 +484,14 @@ server.listen(4000);
 
 ### Persisted Queries
 
-```
-+------------------------------------------------------------------+
-|               PERSISTED QUERIES FLOW                             |
-+------------------------------------------------------------------+
-|                                                                  |
-|  BUILD TIME:                                                     |
-|  1. Extract all GraphQL queries from client code                 |
-|  2. Hash each query (SHA-256)                                    |
-|  3. Store mapping: hash -> query text                            |
-|  4. Client only sends hash at runtime                            |
-|                                                                  |
-|  RUNTIME:                                                        |
-|  Client --> { "extensions": { "hash": "abc123" },               |
-|               "variables": { "id": "1" } }                      |
-|         --> Server looks up hash --> executes stored query        |
-|                                                                  |
-|  BENEFITS:                                                       |
-|  - Prevents arbitrary query injection                            |
-|  - Smaller payload (hash vs full query text)                     |
-|  - Can allowlist queries in production                           |
-|  - CDN caching with GET requests                                 |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph PQ["GRAPHQL PERSISTED QUERIES FLOW"]
+        Build["BUILD TIME:<br/>1. Extract all GraphQL queries from client code<br/>2. Hash each query (SHA-256)<br/>3. Store mapping: hash -&gt; query text"]
+        Runtime["RUNTIME:<br/>Client sends { extensions: { hash: 'abc123' }, variables: { id: '1' } }<br/>-&gt; Server looks up hash &amp; executes stored query"]
+        Benefits["BENEFITS:<br/>- Prevents arbitrary query injection (allowlist in prod)<br/>- Smaller payload (hash vs full query text)<br/>- Enables CDN caching with GET requests"]
+        Build --> Runtime --> Benefits
+    end
 ```
 
 ---
@@ -551,34 +500,23 @@ server.listen(4000);
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                    gRPC ARCHITECTURE                             |
-+------------------------------------------------------------------+
-|                                                                  |
-|  +----------+                           +----------+             |
-|  |  Client  |  -- HTTP/2 + Protobuf --> |  Server  |             |
-|  |  (Stub)  |  <-- HTTP/2 + Protobuf -- |  (Impl)  |             |
-|  +----------+                           +----------+             |
-|       |                                      |                   |
-|       v                                      v                   |
-|  Generated code                        Generated code            |
-|  from .proto                           from .proto               |
-|       |                                      |                   |
-|       v                                      v                   |
-|  +--------------------------------------------------+           |
-|  |              .proto Definition File               |           |
-|  |  (Single source of truth for both sides)          |           |
-|  +--------------------------------------------------+           |
-|                                                                  |
-|  STREAMING MODES:                                                |
-|  +----------+    +----------+    +----------+    +----------+    |
-|  |  Unary   |    | Server   |    | Client   |    |  Bidi    |    |
-|  |  Req/Res |    | Stream   |    | Stream   |    | Stream   |    |
-|  |  1:1     |    | 1:N      |    | N:1      |    | N:N      |    |
-|  +----------+    +----------+    +----------+    +----------+    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph gRPC["gRPC ARCHITECTURE"]
+        Proto[".proto Definition File<br/>(Single source of truth)"]
+        Client["Client (Generated Stub)"]
+        Server["Server (Generated Interface + Impl)"]
+
+        Proto -->|"codegen"| Client & Server
+        Client <-->|"HTTP/2 + Protobuf"| Server
+
+        subgraph Modes["4 Streaming Modes"]
+            M1["Unary Req/Res (1:1)"]
+            M2["Server Stream (1:N)"]
+            M3["Client Stream (N:1)"]
+            M4["Bidirectional Stream (N:N)"]
+        end
+    end
 ```
 
 ### Protocol Buffer Definitions
@@ -774,28 +712,14 @@ buf push
 
 ### gRPC-Web for Browser Clients
 
-```
-+------------------------------------------------------------------+
-|              gRPC-WEB ARCHITECTURE                               |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Browser (no HTTP/2 framing)                                     |
-|  +--------+                                                      |
-|  | gRPC-  |  -- HTTP/1.1 + gRPC-Web encoding -->  +--------+    |
-|  | Web    |                                        | Envoy  |    |
-|  | Client |  gRPC-Web uses:                        | Proxy  |    |
-|  +--------+  - application/grpc-web+proto          +--------+    |
-|              - Base64 or binary encoding               |         |
-|              - Unary + Server streaming only           v         |
-|                                                   +--------+    |
-|                                                   | gRPC   |    |
-|                                                   | Server |    |
-|                                                   +--------+    |
-|                                                                  |
-|  Alternative: Connect protocol (no proxy needed)                 |
-|  Browser --> connect-web --> HTTP/1.1 JSON or binary --> Server   |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph gRPCWeb["gRPC-Web (via Envoy Proxy)"]
+        B1["Browser: gRPC-Web Client<br/>(no raw HTTP/2 framing)"] -->|"HTTP/1.1 + application/grpc-web+proto<br/>(Unary + Server streaming)"| Envoy["Envoy Proxy"] -->|"HTTP/2 gRPC"| S1["gRPC Server"]
+    end
+    subgraph Connect["Alternative: Connect Protocol (No proxy needed)"]
+        B2["Browser: connect-web"] -->|"HTTP/1.1 JSON or binary"| S2["Connect / gRPC Server"]
+    end
 ```
 
 ---
@@ -1082,38 +1006,15 @@ function handleNotFound(userId: string): Response {
 
 ## End-to-End Type Safety Pattern
 
-```
-+------------------------------------------------------------------+
-|            END-TO-END TYPE SAFETY (THE HOLY GRAIL)               |
-+------------------------------------------------------------------+
-|                                                                  |
-|  DATABASE SCHEMA                                                 |
-|  (Drizzle/Prisma)                                                |
-|       |                                                          |
-|       | Generates types                                          |
-|       v                                                          |
-|  SERVER TYPES                                                    |
-|  (TypeScript interfaces)                                         |
-|       |                                                          |
-|       | Inferred by tRPC / generated by codegen                  |
-|       v                                                          |
-|  API CONTRACT                                                    |
-|  (Router type / Schema)                                          |
-|       |                                                          |
-|       | Imported as type / generated client                      |
-|       v                                                          |
-|  CLIENT TYPES                                                    |
-|  (Auto-complete + compile errors)                                |
-|       |                                                          |
-|       | React Query / SWR integration                            |
-|       v                                                          |
-|  UI COMPONENTS                                                   |
-|  (Type-safe rendering)                                           |
-|                                                                  |
-|  CHANGE A COLUMN IN DB --> TS ERROR IN UI COMPONENT              |
-|  (Zero manual type updates needed)                               |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph E2E["END-TO-END TYPE SAFETY (Zero manual type updates)"]
+        DB[("DATABASE SCHEMA<br/>(Drizzle / Prisma)")] -->|"Generates types"| ST["SERVER TYPES<br/>(TypeScript interfaces)"]
+        ST -->|"Inferred by tRPC / codegen"| API["API CONTRACT<br/>(Router type / Schema)"]
+        API -->|"Imported as type / generated client"| CT["CLIENT TYPES<br/>(Auto-complete + compile errors)"]
+        CT -->|"React Query / SWR integration"| UI["UI COMPONENTS<br/>(Type-safe rendering)"]
+        DB -.->|"Change a column in DB -> Immediate TS error in UI"| UI
+    end
 ```
 
 ---

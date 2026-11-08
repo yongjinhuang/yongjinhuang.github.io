@@ -48,51 +48,51 @@ section covers a text editor with undo/redo using the Command pattern.
 
 ## 2. Class Diagram
 
-```
-+-----------------------------+
-|   FileSystemNode (ABC)      |
-|-----------------------------|
-| name                        |
-| parent                      |
-| created_at                  |
-| modified_at                 |
-| permissions                 |
-|-----------------------------|
-| get_path()                  |
-| get_size() [abstract]       |
-| display(indent) [abstract]  |
-+-----------------------------+
-           ^
-           |
-     +-----+------+
-     |             |
-+----------+  +------------+
-|   File   |  | Directory  |
-|----------|  |------------|
-| _content |  | _children  |
-| _size    |  |------------|
-|----------|  | add_child()|
-| read()   |  | remove()   |
-| write()  |  | get_child()|
-| get_size |  | list()     |
-+----------+  | get_size() |
-              +------------+
+```mermaid
+classDiagram
+    class FileSystemNode {
+        <<abstract>>
+        +str name
+        +Directory parent
+        +datetime created_at
+        +datetime modified_at
+        +str permissions
+        +get_path() str
+        +get_size()* int
+        +display(indent)* str
+    }
+    class File {
+        -str _content
+        -int _size
+        +read() str
+        +write(content)
+        +get_size() int
+    }
+    class Directory {
+        -Dict~str, FileSystemNode~ _children
+        +add_child(node)
+        +remove(name)
+        +get_child(name) FileSystemNode
+        +list() List~str~
+        +get_size() int
+    }
+    class FileSystem {
+        +Directory root
+        +create_file(path, content)
+        +create_dir(path)
+        +read_file(path) str
+        +write_file(path, content)
+        +delete(path)
+        +list_dir(path) List~str~
+        +move(src, dst)
+        +search(criteria) List~FileSystemNode~
+        +resolve_path(path) FileSystemNode
+    }
 
-+-----------------------------+
-|   FileSystem                |
-|-----------------------------|
-| root (Directory)            |
-|-----------------------------|
-| create_file(path, content)  |
-| create_dir(path)            |
-| read_file(path)             |
-| write_file(path, content)   |
-| delete(path)                |
-| list_dir(path)              |
-| move(src, dst)              |
-| search(criteria)            |
-| resolve_path(path)          |
-+-----------------------------+
+    FileSystemNode <|-- File
+    FileSystemNode <|-- Directory
+    Directory o-- FileSystemNode
+    FileSystem *-- Directory
 ```
 
 ---

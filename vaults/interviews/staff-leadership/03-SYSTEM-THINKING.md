@@ -32,41 +32,16 @@ Interviewers assess whether you can:
 
 Before you can improve a system, you need to see it. Most engineers think about their team's systems. Staff+ engineers think about the organization as a system.
 
-```
-+------------------------------------------------------------------+
-|                  ORGANIZATIONAL SYSTEMS MAP                       |
-+------------------------------------------------------------------+
-|                                                                    |
-|  EXTERNAL FORCES                                                   |
-|  +------------------------------------------------------------+   |
-|  | Customer demand | Competitor moves | Regulatory changes     |   |
-|  +------------------------------------------------------------+   |
-|         |                    |                   |                  |
-|         v                    v                   v                  |
-|  BUSINESS LAYER                                                    |
-|  +------------------------------------------------------------+   |
-|  | Revenue targets | Product roadmap | Hiring plan              |   |
-|  +------------------------------------------------------------+   |
-|         |                    |                   |                  |
-|         v                    v                   v                  |
-|  ENGINEERING LAYER                                                 |
-|  +------------------------------------------------------------+   |
-|  | Team structure | Tech stack | Processes | Culture            |   |
-|  +------------------------------------------------------------+   |
-|         |                    |                   |                  |
-|         v                    v                   v                  |
-|  INFRASTRUCTURE LAYER                                              |
-|  +------------------------------------------------------------+   |
-|  | Compute | Storage | Networking | Observability               |   |
-|  +------------------------------------------------------------+   |
-|         |                    |                   |                  |
-|         v                    v                   v                  |
-|  OUTPUT                                                            |
-|  +------------------------------------------------------------+   |
-|  | Shipping velocity | Reliability | Developer experience       |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph OrgMap["ORGANIZATIONAL SYSTEMS MAP"]
+        L1["EXTERNAL FORCES<br/>Customer demand / Competitor moves / Regulatory changes"]
+        L2["BUSINESS LAYER<br/>Revenue targets / Product roadmap / Hiring plan"]
+        L3["ENGINEERING LAYER<br/>Team structure / Tech stack / Processes / Culture"]
+        L4["INFRASTRUCTURE LAYER<br/>Compute / Storage / Networking / Observability"]
+        L5["OUTPUT<br/>Shipping velocity / Reliability / Developer experience"]
+        L1 --> L2 --> L3 --> L4 --> L5
+    end
 ```
 
 **Key insight:** Problems at the output layer (slow shipping, low reliability) are almost always caused by constraints at higher layers (team structure, process, hiring). Fixing the symptom without addressing the cause is the most common mistake.
@@ -79,28 +54,16 @@ Before you can improve a system, you need to see it. Most engineers think about 
 
 Every engineering organization has one (or a few) constraints that limit overall throughput. Improving anything other than the constraint is waste.
 
-```
-+------------------------------------------------------------------+
-|          THEORY OF CONSTRAINTS: FIVE FOCUSING STEPS               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. IDENTIFY the constraint                                        |
-|     "What is the one thing slowing the entire organization?"       |
-|                                                                    |
-|  2. EXPLOIT the constraint                                         |
-|     "How can we maximize throughput of the bottleneck              |
-|      without adding resources?"                                    |
-|                                                                    |
-|  3. SUBORDINATE everything else                                    |
-|     "Align other teams to feed the bottleneck efficiently."        |
-|                                                                    |
-|  4. ELEVATE the constraint                                         |
-|     "Invest to increase the capacity of the bottleneck."           |
-|                                                                    |
-|  5. REPEAT                                                         |
-|     "Once this constraint is broken, find the next one."           |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph TOC["THEORY OF CONSTRAINTS: FIVE FOCUSING STEPS"]
+        S1["1. IDENTIFY the constraint<br/>'What is the one thing slowing the entire organization?'"]
+        S2["2. EXPLOIT the constraint<br/>'How can we maximize throughput of the bottleneck without adding resources?'"]
+        S3["3. SUBORDINATE everything else<br/>'Align other teams to feed the bottleneck efficiently.'"]
+        S4["4. ELEVATE the constraint<br/>'Invest to increase the capacity of the bottleneck.'"]
+        S5["5. REPEAT<br/>'Once this constraint is broken, find the next one.'"]
+        S1 --> S2 --> S3 --> S4 --> S5 --> S1
+    end
 ```
 
 ### Common Engineering Bottleneck Patterns
@@ -132,24 +95,18 @@ One of the most important and recurring decisions for Staff+ engineers: how much
 
 ### The Platform Investment Framework
 
-```
-+------------------------------------------------------------------+
-|              PLATFORM INVESTMENT DECISION MATRIX                  |
-+------------------------------------------------------------------+
-|                                                                    |
-|  High   |  INVEST IN PLATFORM    |  CRITICAL PLATFORM            |
-|  Reuse  |  (3+ teams will use)   |  (Everyone depends on it)     |
-|  Across |  ROI is clear.         |  Must be reliable, scalable.  |
-|  Teams  |  Build for reuse.      |  Dedicated team.              |
-|         |------------------------|-------------------------------|
-|  Low    |  LEAVE IN PRODUCT      |  EXTRACT LATER                |
-|  Reuse  |  (Only 1 team uses)    |  (1 team now, growing)        |
-|  Across |  Build in product team.|  Build in product, design     |
-|  Teams  |  Do not over-engineer. |  for extraction when needed.  |
-|         |------------------------|-------------------------------|
-|         |  Low Complexity         |  High Complexity              |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Matrix["PLATFORM INVESTMENT DECISION MATRIX"]
+        subgraph HighReuse["High Reuse Across Teams"]
+            HR_LC["Low Complexity: INVEST IN PLATFORM<br/>(3+ teams will use)<br/>ROI is clear. Build for reuse."]
+            HR_HC["High Complexity: CRITICAL PLATFORM<br/>(Everyone depends on it)<br/>Must be reliable, scalable. Dedicated team."]
+        end
+        subgraph LowReuse["Low Reuse Across Teams"]
+            LR_LC["Low Complexity: LEAVE IN PRODUCT<br/>(Only 1 team uses)<br/>Build in product team. Do not over-engineer."]
+            LR_HC["High Complexity: EXTRACT LATER<br/>(1 team now, growing)<br/>Build in product, design for extraction when needed."]
+        end
+    end
 ```
 
 ### When to Invest in Platform
@@ -193,27 +150,25 @@ Evaluate tech debt by the cost of NOT addressing it, measured over time.
 
 For debt items where the cost is probabilistic (security vulnerabilities, scalability limits), use a risk matrix.
 
-```
-+------------------------------------------------------------------+
-|                     TECH DEBT RISK MATRIX                         |
-+------------------------------------------------------------------+
-|                                                                    |
-|  High     |  MONITOR        |  ACT NOW         |  ACT NOW        |
-|  Impact   |  Schedule fix   |  This quarter     |  This sprint    |
-|           |  next quarter   |                   |                  |
-|           |-----------------|-------------------|-----------------|
-|  Medium   |  ACCEPT         |  MONITOR          |  ACT NOW        |
-|  Impact   |  Track but      |  Schedule fix     |  This quarter   |
-|           |  do not fix yet |  next quarter     |                  |
-|           |-----------------|-------------------|-----------------|
-|  Low      |  ACCEPT         |  ACCEPT           |  MONITOR        |
-|  Impact   |  Ignore unless  |  Track but        |  Schedule if    |
-|           |  it worsens     |  do not fix yet   |  easy win       |
-|           |-----------------|-------------------|-----------------|
-|           |  Low             Medium              High              |
-|           |              Probability                               |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Matrix["TECH DEBT RISK MATRIX (Impact vs Probability)"]
+        subgraph HI["High Impact"]
+            HI_LP["Low Probability: MONITOR<br/>Schedule fix next quarter"]
+            HI_MP["Medium Probability: ACT NOW<br/>This quarter"]
+            HI_HP["High Probability: ACT NOW<br/>This sprint"]
+        end
+        subgraph MI["Medium Impact"]
+            MI_LP["Low Probability: ACCEPT<br/>Track but do not fix yet"]
+            MI_MP["Medium Probability: MONITOR<br/>Schedule fix next quarter"]
+            MI_HP["High Probability: ACT NOW<br/>This quarter"]
+        end
+        subgraph LI["Low Impact"]
+            LI_LP["Low Probability: ACCEPT<br/>Ignore unless it worsens"]
+            LI_MP["Medium Probability: ACCEPT<br/>Track but do not fix yet"]
+            LI_HP["High Probability: MONITOR<br/>Schedule if easy win"]
+        end
+    end
 ```
 
 ### Framework 3: The Four Types of Tech Debt
@@ -235,37 +190,16 @@ Capacity planning is the practice of ensuring your systems can handle expected l
 
 ### Capacity Planning Process
 
-```
-+------------------------------------------------------------------+
-|                   CAPACITY PLANNING CYCLE                         |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. MEASURE current utilization                                    |
-|     - CPU, memory, storage, network for each service              |
-|     - Request rates, queue depths, connection counts              |
-|     - Database query volume and storage growth                     |
-|                                                                    |
-|  2. MODEL growth trajectory                                        |
-|     - Historical growth rates (3-6 month trend)                   |
-|     - Planned business events (launches, marketing pushes)        |
-|     - Organic growth projections from product/business            |
-|                                                                    |
-|  3. IDENTIFY constraints                                           |
-|     - Which resource hits its limit first?                        |
-|     - At what date does current capacity run out?                 |
-|     - What is the lead time to add capacity?                      |
-|                                                                    |
-|  4. PLAN additions                                                 |
-|     - Scale ahead of demand (minimum 3-month buffer)              |
-|     - Factor in procurement/provisioning lead times               |
-|     - Budget for burst capacity (1.5-2x steady state)            |
-|                                                                    |
-|  5. VALIDATE                                                       |
-|     - Load test at projected capacity                             |
-|     - Identify new bottlenecks that emerge at higher scale        |
-|     - Update models with actual data                              |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Cycle["CAPACITY PLANNING CYCLE"]
+        C1["1. MEASURE current utilization<br/>- CPU, memory, storage, network per service<br/>- Request rates, queue depths, connection counts<br/>- Database query volume and storage growth"]
+        C2["2. MODEL growth trajectory<br/>- Historical growth rates (3-6 month trend)<br/>- Planned business events (launches, marketing)<br/>- Organic growth projections"]
+        C3["3. IDENTIFY constraints<br/>- Which resource hits its limit first?<br/>- At what date does current capacity run out?<br/>- Lead time to add capacity"]
+        C4["4. PLAN additions<br/>- Scale ahead of demand (min 3-month buffer)<br/>- Factor in procurement/provisioning lead times<br/>- Budget for burst capacity (1.5-2x steady state)"]
+        C5["5. VALIDATE<br/>- Load test at projected capacity<br/>- Identify new bottlenecks at higher scale<br/>- Update models with actual data"]
+        C1 --> C2 --> C3 --> C4 --> C5 --> C1
+    end
 ```
 
 ### Capacity Planning Table
@@ -376,32 +310,15 @@ Defining reliability targets is how Staff+ engineers balance the tension between
 
 ### Choosing SLOs
 
-```
-+------------------------------------------------------------------+
-|                   SLO SELECTION PROCESS                            |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. Identify what users care about                                 |
-|     - Availability (can they use the service?)                    |
-|     - Latency (is it fast enough?)                                |
-|     - Correctness (does it return the right answer?)              |
-|     - Freshness (is the data up to date?)                         |
-|                                                                    |
-|  2. Measure current performance                                    |
-|     - What is the actual SLI today?                               |
-|     - What do users complain about?                               |
-|                                                                    |
-|  3. Set targets just above current performance                    |
-|     - Do NOT set aspirational targets                              |
-|     - Set targets you can actually meet                           |
-|     - Tighten over time as reliability improves                   |
-|                                                                    |
-|  4. Define error budget policy                                     |
-|     - What happens when the budget is exhausted?                  |
-|     - Who decides to spend error budget on velocity?              |
-|     - How is the budget tracked and communicated?                 |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph SLO["SLO SELECTION PROCESS"]
+        S1["1. Identify what users care about<br/>- Availability, Latency, Correctness, Freshness"]
+        S2["2. Measure current performance<br/>- What is the actual SLI today?<br/>- What do users complain about?"]
+        S3["3. Set targets just above current performance<br/>- Do NOT set aspirational targets<br/>- Set achievable targets and tighten over time"]
+        S4["4. Define error budget policy<br/>- Actions when budget is exhausted<br/>- Governance for spending budget on velocity<br/>- Tracking and communication"]
+        S1 --> S2 --> S3 --> S4
+    end
 ```
 
 ### Error Budget Policy Example

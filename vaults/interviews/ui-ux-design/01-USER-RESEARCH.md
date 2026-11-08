@@ -91,49 +91,25 @@ A persona is a fictional but research-based representation of a user segment. It
 
 An empathy map captures what a user **says**, **thinks**, **does**, and **feels** during a specific experience. It forces you to step outside your own perspective.
 
-```
-+---------------------------+---------------------------+
-|          SAYS             |          THINKS           |
-|                           |                           |
-| "I just want to find     | "Is this person actually  |
-|  their best projects      |  good, or just good at    |
-|  quickly."                |  making websites?"        |
-|                           |                           |
-+---------------------------+---------------------------+
-|          DOES             |          FEELS            |
-|                           |                           |
-| - Scrolls quickly         | - Impatient               |
-| - Opens project links     | - Skeptical initially     |
-| - Checks GitHub profile   | - Impressed by polish     |
-| - Looks at tech stack     | - Annoyed by slow loads   |
-|                           |                           |
-+---------------------------+---------------------------+
+```mermaid
+flowchart LR
+    subgraph Empathy["EMPATHY MAP QUADRANTS"]
+        Says["SAYS<br/>'I just want to find their best projects quickly.'"]
+        Thinks["THINKS<br/>'Is this person actually good, or just good at making websites?'"]
+        Does["DOES<br/>- Scrolls quickly<br/>- Opens project links<br/>- Checks GitHub profile<br/>- Looks at tech stack"]
+        Feels["FEELS<br/>- Impatient<br/>- Skeptical initially<br/>- Impressed by polish<br/>- Annoyed by slow loads"]
+    end
 ```
 
 ### User Journey Maps
 
 A journey map visualizes the end-to-end experience a user has with your product, including their emotional state at each stage.
 
-```
-STAGE:    Discover  -->  Land  -->  Browse  -->  Evaluate  -->  Contact
-          ~~~~~~~~      ~~~~~      ~~~~~~       ~~~~~~~~      ~~~~~~~
-
-ACTION:   Google/       Read       Scan         Read case     Fill out
-          LinkedIn      hero       sections     studies       form
-
-THINKING: "Who is       "Does      "What have   "This is      "How do I
-           this?"       this look   they done?"  impressive"   reach them?"
-                        legit?"
-
-EMOTION:   Neutral       Curious    Scanning     Engaged       Motivated
-             |             |          |             |             |
-             o             o          o             O             O
-           __|_____________|__________|_____________|_____________|__
-                                                                    --> Time
-
-PAIN       No context    Slow       Too much     No live       No email,
-POINTS:    from search   load       text, hard   demos or      only a
-                         time       to scan      screenshots   form
+```mermaid
+flowchart LR
+    S1["1. Discover<br/>Action: Google / LinkedIn<br/>Thinking: 'Who is this?'<br/>Emotion: Neutral<br/>Pain: No search context"] --> S2["2. Land<br/>Action: Read hero<br/>Thinking: 'Does this look legit?'<br/>Emotion: Curious<br/>Pain: Slow load time"]
+    S2 --> S3["3. Browse<br/>Action: Scan sections<br/>Thinking: 'What have they done?'<br/>Emotion: Scanning<br/>Pain: Too much text"] --> S4["4. Evaluate<br/>Action: Read case studies<br/>Thinking: 'This is impressive'<br/>Emotion: Engaged<br/>Pain: No live demos"]
+    S4 --> S5["5. Contact<br/>Action: Reach out<br/>Thinking: 'How do I reach them?'<br/>Emotion: Motivated<br/>Pain: Form only, no email"]
 ```
 
 ### Jobs-to-be-Done (JTBD) Framework

@@ -24,26 +24,13 @@ WebGL is a JavaScript API that exposes the GPU's rendering capabilities through 
 
 ### Pipeline Stages
 
-```
-Vertex Data (CPU)
-    │
-    ▼
-Vertex Shader (GPU, programmable)
-    │
-    ▼
-Primitive Assembly
-    │
-    ▼
-Rasterization
-    │
-    ▼
-Fragment Shader (GPU, programmable)
-    │
-    ▼
-Per-Fragment Operations (depth test, stencil test, blending)
-    │
-    ▼
-Framebuffer (screen or render texture)
+```mermaid
+flowchart TD
+    VD["Vertex Data (CPU)"] --> VS["Vertex Shader<br/>(GPU, programmable)"]
+    VS --> PA["Primitive Assembly"] --> Rast["Rasterization"]
+    Rast --> FS["Fragment Shader<br/>(GPU, programmable)"]
+    FS --> Ops["Per-Fragment Operations<br/>(Depth test, Stencil test, Blending)"]
+    Ops --> FB["Framebuffer<br/>(Screen or Render Texture)"]
 ```
 
 ### Stage 1: Vertex Data (CPU Side)

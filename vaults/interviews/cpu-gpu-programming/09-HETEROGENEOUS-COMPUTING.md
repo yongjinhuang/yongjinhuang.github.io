@@ -884,38 +884,12 @@ SYCL (pronounced "sickle") is a Khronos standard for heterogeneous computing tha
 
 ### SYCL Architecture
 
-```
-SYCL ARCHITECTURE
-
-+------------------------------------------------------+
-|  APPLICATION CODE (Standard C++)                      |
-|                                                        |
-|  sycl::queue q;                                       |
-|  q.submit([&](sycl::handler& h) {                    |
-|      h.parallel_for(range, [=](sycl::id<1> i) {      |
-|          // This lambda runs on the device             |
-|          C[i] = A[i] + B[i];                          |
-|      });                                               |
-|  });                                                   |
-+------------------------------------------------------+
-         |
-    +----+----+----+----+
-    |         |         |
-+--------+ +--------+ +--------+
-|NVIDIA  | | AMD    | | Intel  |
-|Backend | | Backend| | Backend|
-|(CUDA)  | | (HIP)  | | (L0)  |
-+--------+ +--------+ +--------+
-    |         |         |
-+--------+ +--------+ +--------+
-|GeForce | | Radeon | | Arc    |
-|Tesla   | | MI300  | | Xe     |
-+--------+ +--------+ +--------+
-
-Compilers:
-  Intel DPC++  (icpx) - Intel's SYCL implementation
-  AdaptiveCpp  (formerly hipSYCL) - Open source, multi-backend
-  ComputeCpp   (Codeplay) - Commercial implementation
+```mermaid
+flowchart TD
+    App["Single-Source Standard C++ SYCL Application<br/>sycl::queue::submit / parallel_for"] --> B1["NVIDIA Backend<br/>(CUDA / PTX)"] & B2["AMD Backend<br/>(ROCm / HIP)"] & B3["Intel Backend<br/>(Level Zero / OpenCL)"]
+    B1 --> H1["NVIDIA GeForce / Hopper / Blackwell"]
+    B2 --> H2["AMD Radeon / Instinct MI300X"]
+    B3 --> H3["Intel Arc / Xe-HPC"]
 ```
 
 ### SYCL Memory Models
@@ -1452,40 +1426,10 @@ WebGPU is the next-generation GPU API for the web, replacing WebGL. It exposes m
 
 ### WebGPU Architecture
 
-```
-WEBGPU ARCHITECTURE
-
-Browser Environment:
-+-----------------------------------------------------+
-|  JavaScript / TypeScript Application                 |
-|                                                       |
-|  navigator.gpu.requestAdapter()                      |
-|       |                                               |
-|  adapter.requestDevice()                              |
-|       |                                               |
-|  GPUDevice                                            |
-|    |-- createBuffer()          -> GPUBuffer           |
-|    |-- createShaderModule()    -> GPUShaderModule     |
-|    |-- createBindGroupLayout() -> GPUBindGroupLayout  |
-|    |-- createComputePipeline() -> GPUComputePipeline  |
-|    |-- createCommandEncoder()  -> GPUCommandEncoder   |
-|    |-- queue.submit()          (execute commands)     |
-+-----------------------------------------------------+
-         |
-  +------+------+------+
-  |             |       |
-+------+  +------+  +------+
-|Vulkan|  | D3D12|  | Metal|
-|      |  |      |  |      |
-+------+  +------+  +------+
-  Linux    Windows    macOS
-  Android            iOS
-
-WGSL (WebGPU Shading Language):
-  - Designed specifically for WebGPU
-  - Rust-like syntax with explicit types
-  - Replaces GLSL/HLSL in the browser
-  - Validated at compile time for safety
+```mermaid
+flowchart TD
+    JS["JavaScript / TypeScript / Wasm Application<br/>navigator.gpu.requestAdapter() -&gt; requestDevice()"] --> Dev["WebGPU API (GPUDevice + WGSL Shaders)<br/>GPUBuffer | GPUComputePipeline | GPUCommandEncoder | queue.submit()"]
+    Dev --> VK["Vulkan<br/>(Linux / Android)"] & D3D["Direct3D 12<br/>(Windows)"] & MTL["Metal<br/>(macOS / iOS)"]
 ```
 
 ### Complete WebGPU Compute Example

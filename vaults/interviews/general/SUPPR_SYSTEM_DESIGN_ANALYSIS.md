@@ -6,36 +6,24 @@ Suppr is an **AI-powered academic research platform** built on Spring Boot 3.5.3
 
 ### 1.1 Deployment Topology
 
-```
-                    ┌──────────────┐
-                    │   Clients    │
-                    │ (Web/WeChat) │
-                    └──────┬───────┘
-                           │
-              ┌────────────┴────────────┐
-              │      K8s Ingress        │
-              └────────────┬────────────┘
-                           │
-         ┌─────────────────┼─────────────────┐
-         ▼                                   ▼
-  ┌──────────────┐                   ┌──────────────┐
-  │  API Profile │ (Undertow, 64    │   Consumer   │ (Kafka listeners,
-  │  (REST + SSE)│  worker threads)  │   Profile    │  3 concurrency/node)
-  └──────┬───────┘                   └──────┬───────┘
-         │                                  │
-         │    ┌─────────────────────────┐   │
-         ├───▶│         Kafka           │◀──┤
-         │    │ (3 topics, manual ACK)  │   │
-         │    └─────────────────────────┘   │
-         │                                  │
-    ┌────┴──────────────────────────────────┴────┐
-    │              Shared Data Layer              │
-    ├────────────┬───────────┬──────────┬────────┤
-    │   MySQL    │  MongoDB  │  Redis   │ MinIO  │
-    │ (HikariCP │ (articles,│ (JWT,    │ (S3    │
-    │  pool=2)  │  caches)  │  pub/sub │  files)│
-    │           │           │  locks)  │        │
-    └───────────┴───────────┴──────────┴────────┘
+```mermaid
+flowchart TD
+    Clients["Clients<br/>(Web / WeChat)"] --> Ingress["K8s Ingress"]
+    Ingress --> API["API Profile (REST + SSE)<br/>(Undertow, 64 worker threads)"]
+    Ingress --> Consumer["Consumer Profile<br/>(Kafka listeners, 3 concurrency/node)"]
+
+    Kafka["Kafka<br/>(3 topics, manual ACK)"]
+    API --> Kafka
+    Kafka --> Consumer
+
+    subgraph Data["Shared Data Layer"]
+        MySQL[("MySQL<br/>(HikariCP pool=2)")]
+        Mongo[("MongoDB<br/>(articles, caches)")]
+        Redis[("Redis<br/>(JWT, pub/sub, locks)")]
+        MinIO[("MinIO / COS<br/>(S3 files)")]
+    end
+
+    API & Consumer --> Data
 ```
 
 ### 1.2 External Service Dependencies
@@ -66,43 +54,43 @@ Suppr is an **AI-powered academic research platform** built on Spring Boot 3.5.3
 
 ### 2.1 File Translation Flow
 
-```
-User Upload → Pre-translate (extract metadata, calculate cost)
-           → Freeze Points
-           → DB Commit + Kafka Send (TransactionSynchronization)
-           → Consumer picks up message
-           → Concurrency check (3 for members, 1 for free users via Redis)
-           → Health check on Translation Service
-           → Stream translation via external service
-           → Upload result to MinIO
-           → Update session status → ACK Kafka
-           → On failure: rollback points, set ERROR status, no ACK (Kafka retries)
+```mermaid
+flowchart TD
+    U["User Upload"] --> Pre["Pre-translate<br/>(extract metadata, calculate cost)"]
+    Pre --> Freeze["Freeze Points"]
+    Freeze --> Commit["DB Commit + Kafka Send<br/>(TransactionSynchronization)"]
+    Commit --> Cons["Consumer picks up message"]
+    Cons --> Conc["Concurrency Check via Redis<br/>(3 for members, 1 for free users)"]
+    Conc --> HC["Health Check on Translation Service"]
+    HC --> Stream["Stream translation via external service"]
+    Stream --> Upload["Upload result to MinIO / COS"]
+    Upload --> Done["Update session status -&gt; ACK Kafka"]
+    Stream -.->|"On failure"| Fail["Rollback points, set ERROR status, no ACK (Kafka retries)"]
 ```
 
 ### 2.2 Deep Research Flow
 
-```
-User Query → Create session → Freeze estimated points (~1000)
-          → Send to Kafka DEEP_RESEARCH_TOPIC
-          → Consumer calls external Deep Research Service
-          → Events streamed via Redis pub/sub channel
-          → API pod relays events to client via SSE
-          → On completion: generate markdown/docx, save to MinIO
-          → Consume actual points, unfreeze remainder
+```mermaid
+flowchart LR
+    Q["User Query"] --> S1["Create session &amp;<br/>Freeze ~1000 points"]
+    S1 --> S2["Send to Kafka<br/>DEEP_RESEARCH_TOPIC"]
+    S2 --> S3["Consumer calls external<br/>Deep Research Service"]
+    S3 --> S4["Events streamed via<br/>Redis Pub/Sub"]
+    S4 --> S5["API Pod relays events<br/>to client via SSE"]
+    S5 --> S6["Generate Markdown/DOCX,<br/>save to MinIO"]
+    S6 --> S7["Consume actual points &amp;<br/>unfreeze remainder"]
 ```
 
 ### 2.3 Payment Flow
 
-```
-Create Order (OrderTab, status=WAITING)
-  → Call Wilddata Pay to create payment
-  → Return payment URL to client
-  → User pays via WeChat/Alipay
-  → Payment gateway sends callback
-  → Idempotency check (skip if already SUCCESS)
-  → Conditional update: WAITING → SUCCESS
-  → Allocate benefits (points / membership / API credits)
-  → On refund: reverse callback → withdraw benefits (FIFO)
+```mermaid
+flowchart TD
+    O1["Create Order (OrderTab, status=WAITING)"] --> O2["Call Wilddata Pay &amp; return payment URL"]
+    O2 --> O3["User pays via WeChat / Alipay"]
+    O3 --> O4["Payment gateway sends callback"]
+    O4 --> O5["Idempotency check &amp; Conditional update: WAITING -&gt; SUCCESS"]
+    O5 --> O6["Allocate benefits (points / membership / API credits)"]
+    O6 -.->|"On refund callback"| O7["Withdraw benefits (FIFO)"]
 ```
 
 ### 2.4 Points Lifecycle

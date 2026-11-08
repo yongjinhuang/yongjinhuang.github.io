@@ -42,29 +42,15 @@ batch as a special case of streaming (bounded streams), providing a single engin
 
 ## 2. Architecture
 
-```
-┌──────────────────────────────────────────────────────┐
-│                    FLINK CLUSTER                      │
-│                                                       │
-│  ┌─────────────────┐                                  │
-│  │   JOB MANAGER   │  Coordinates execution           │
-│  │  ┌────────────┐ │  Schedules tasks                 │
-│  │  │ Dispatcher │ │  Manages checkpoints              │
-│  │  │ ResourceMgr│ │  Handles failure recovery         │
-│  │  │ JobMaster  │ │                                   │
-│  │  └────────────┘ │                                   │
-│  └────────┬────────┘                                  │
-│           │                                            │
-│   ┌───────┴───────┬───────────────┐                    │
-│   ▼               ▼               ▼                    │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐               │
-│  │TASK MGR │  │TASK MGR │  │TASK MGR │               │
-│  │┌──┬──┐  │  │┌──┬──┐  │  │┌──┬──┐  │               │
-│  ││S1│S2│  │  ││S3│S4│  │  ││S5│S6│  │               │
-│  │└──┴──┘  │  │└──┴──┘  │  │└──┴──┘  │               │
-│  │  Slots  │  │  Slots  │  │  Slots  │               │
-│  └─────────┘  └─────────┘  └─────────┘               │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Cluster["FLINK CLUSTER"]
+        JM["JOB MANAGER<br/>(Dispatcher, ResourceManager, JobMaster)<br/>- Coordinates execution &amp; schedules tasks<br/>- Manages checkpoints &amp; failure recovery"]
+        TM1["TASK MANAGER 1<br/>Task Slots: [S1] [S2]"]
+        TM2["TASK MANAGER 2<br/>Task Slots: [S3] [S4]"]
+        TM3["TASK MANAGER 3<br/>Task Slots: [S5] [S6]"]
+        JM --> TM1 & TM2 & TM3
+    end
 ```
 
 **JobManager**: Central coordinator -- dispatches jobs, manages resources, coordinates checkpoints.
@@ -257,16 +243,14 @@ remote object storage, with local caching. Achieves 75-120% throughput of local 
 
 Flink uses a variant of the Chandy-Lamport algorithm for consistent distributed snapshots.
 
-```
-Source 1 ──[barrier]──> Op A ──[barrier]──> Sink 1
-Source 2 ──[barrier]──> Op B ──[barrier]──> Sink 2
-
-1. JobManager injects checkpoint barriers at sources
-2. Barriers flow downstream with data
-3. When operator receives barriers from ALL inputs:
-   a. Snapshot operator state
-   b. Forward barrier downstream
-4. When all sinks acknowledge → checkpoint complete
+```mermaid
+flowchart LR
+    JM["JobManager"] -.->|"1. Injects barriers"| S1["Source 1"] & S2["Source 2"]
+    S1 -->|"2. [barrier]"| OpA["Op A<br/>(3. Snapshot state on barrier alignment)"]
+    S2 -->|"2. [barrier]"| OpB["Op B<br/>(3. Snapshot state on barrier alignment)"]
+    OpA -->|"[barrier]"| Sink1["Sink 1"]
+    OpB -->|"[barrier]"| Sink2["Sink 2"]
+    Sink1 & Sink2 -.->|"4. Acknowledge checkpoint"| JM
 ```
 
 ### Barrier Alignment

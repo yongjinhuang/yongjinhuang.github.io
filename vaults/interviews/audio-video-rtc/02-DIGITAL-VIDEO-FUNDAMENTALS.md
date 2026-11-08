@@ -296,15 +296,11 @@ values: Red, Green, Blue. Simple, intuitive, but not efficient for video.
 | Cb        | Blue-difference | Blue chrominance                   |
 | Cr        | Red-difference  | Red chrominance                    |
 
-```
-RGB Image          Y (Luma)            Cb (Blue diff)      Cr (Red diff)
-+----------+       +----------+        +----------+        +----------+
-|  Full    |       | Grayscale|        | Blue     |        | Red      |
-|  Color   |  -->  | Detail   |   +    | Color    |   +    | Color    |
-|  Image   |       | Image    |        | Info     |        | Info     |
-+----------+       +----------+        +----------+        +----------+
-                   High detail          Low detail          Low detail
-                   (keep full res)      (can subsample)     (can subsample)
+```mermaid
+flowchart LR
+    RGB["RGB Image<br/>(Full Color)"] --> Y["Y (Luma)<br/>Grayscale Detail<br/>(Keep Full Resolution)"]
+    RGB --> Cb["Cb (Blue-Difference Chroma)<br/>Low Spatial Detail<br/>(Can Subsample 4:2:2 / 4:2:0)"]
+    RGB --> Cr["Cr (Red-Difference Chroma)<br/>Low Spatial Detail<br/>(Can Subsample 4:2:2 / 4:2:0)"]
 ```
 
 **The key insight**: Human vision has much higher spatial resolution for
@@ -753,10 +749,9 @@ very similar. A blue sky might have millions of pixels that are nearly identical
 
 Compression exploits this redundancy in four steps:
 
-```
-Original     Color     Block    DCT        Quantize    Entropy
-Image    --> Convert -> Split -> Transform -> (Lossy) -> Encode
-             (YCbCr)   (8x8)   (Frequency)             (Lossless)
+```mermaid
+flowchart LR
+    Img["Original Image"] --> CC["Color Convert<br/>(YCbCr)"] --> Split["Block Split<br/>(8x8)"] --> DCT["DCT Transform<br/>(Frequency Domain)"] --> Q["Quantize<br/>(Lossy)"] --> Ent["Entropy Encode<br/>(Lossless)"]
 ```
 
 ### 7.2 The DCT (Discrete Cosine Transform)
@@ -833,34 +828,16 @@ losslessly using techniques like:
 
 ### 7.5 JPEG Compression Pipeline Summary
 
-```
-                        JPEG Encoder Pipeline
-
-Input RGB Image
-      |
-      v
-  Color Convert (RGB -> YCbCr)
-      |
-      v
-  Chroma Subsample (4:2:0)     <-- 50% reduction
-      |
-      v
-  Split into 8x8 blocks
-      |
-      v
-  DCT Transform (spatial -> frequency)
-      |
-      v
-  Quantization (lossy)          <-- Main compression
-      |
-      v
-  Zigzag Scan + RLE
-      |
-      v
-  Huffman/Arithmetic Coding     <-- Lossless
-      |
-      v
-  JPEG Bitstream
+```mermaid
+flowchart TD
+    In["Input RGB Image"] --> CC["Color Convert (RGB -&gt; YCbCr)"]
+    CC --> Sub["Chroma Subsample (4:2:0 — 50% data reduction)"]
+    Sub --> Blk["Split into 8x8 Pixel Blocks"]
+    Blk --> DCT["2D DCT Transform (Spatial -&gt; Frequency)"]
+    DCT --> Quant["Quantization (Lossy — Primary Compression)"]
+    Quant --> Zig["Zigzag Scan + Run-Length Encoding (RLE)"]
+    Zig --> Huff["Huffman / Arithmetic Entropy Coding (Lossless)"]
+    Huff --> Out["JPEG Bitstream"]
 ```
 
 Typical JPEG compression ratio: **10:1 to 20:1** with acceptable quality.
@@ -997,47 +974,22 @@ Modern codecs (H.264+) use:
 All modern video codecs (H.264, H.265/HEVC, VP9, AV1) follow the same basic
 architecture:
 
-```
-                    Video Encoder Block Diagram
+```mermaid
+flowchart TD
+    In["Input Video Frame"] --> Mode{"Intra or Inter?"}
+    Mode -->|"Intra (I-frame/block)"| Intra["Intra Prediction<br/>(Spatial neighbors)"]
+    Mode -->|"Inter (P/B-frame)"| ME["Motion Estimation &amp; Compensation<br/>(Temporal search in DPB)"]
+    Intra & ME --> Pred["Form Prediction"]
+    Pred --> Res["Residual = Original - Prediction"]
+    Res --> Trans["Transform (DCT / DST)"]
+    Trans --> Quant["Quantization (QP)"]
+    Quant --> Ent["Entropy Coding (CABAC / CAVLC)"] --> Out["Compressed Bitstream Output"]
 
-Input Frame
-      |
-      v
-+--[Intra or Inter?]--+
-|                      |
-v                      v
-Intra Prediction    Motion Estimation
-(spatial)           (temporal)
-|                      |
-v                      v
-Form Prediction <------+
-      |
-      v
-Residual = Original - Prediction
-      |
-      v
-Transform (DCT/DST)
-      |
-      v
-Quantization (QP)
-      |
-      v
-Entropy Coding (CABAC/CAVLC)
-      |
-      v
-Bitstream Output
-
-      |
-      +----> Inverse Quantize + Inverse Transform
-                    |
-                    v
-              Reconstruct = Prediction + Residual
-                    |
-                    v
-              In-Loop Filters (Deblock, SAO, ALF)
-                    |
-                    v
-              Reference Frame Buffer (DPB)
+    Quant --> IQ["Inverse Quantize + Inverse Transform<br/>(Local Decoder Loop)"]
+    IQ --> Rec["Reconstruct = Prediction + Decoded Residual"]
+    Rec --> Loop["In-Loop Filters (Deblocking, SAO, ALF)"]
+    Loop --> DPB["Decoded Picture Buffer (DPB)<br/>Reference Frames"]
+    DPB -.-> ME
 ```
 
 ### 8.6 Rate Control

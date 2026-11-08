@@ -32,33 +32,14 @@ Interviewers assess whether you can:
 
 Every technical strategy decision exists at one of three levels. Staff+ engineers need fluency at all three.
 
-```
-+------------------------------------------------------------------+
-|                   TECHNICAL STRATEGY PYRAMID                      |
-+------------------------------------------------------------------+
-|                                                                    |
-|                        /\                                         |
-|                       /  \                                        |
-|                      / L7 \    VISION                             |
-|                     / Where \   "Where is the industry going?     |
-|                    / are we  \   What should our architecture     |
-|                   / going in  \  look like in 3 years?"           |
-|                  / 3 years?    \                                  |
-|                 /________________\                                |
-|                /                  \                                |
-|               /       L6          \   STRATEGY                    |
-|              / What capabilities   \  "What capabilities do       |
-|             / do we need to build?  \ we need? In what order?     |
-|            / In what order?          \ What are the trade-offs?"  |
-|           /____________________________\                          |
-|          /                              \                         |
-|         /           L5                   \   EXECUTION            |
-|        / How do we build this specific    \  "How do we build     |
-|       / system? What are the trade-offs    \ this? What tech      |
-|      / for this component?                  \ do we use?"         |
-|     /________________________________________\                    |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Pyramid["TECHNICAL STRATEGY PYRAMID"]
+        L7["L7 — VISION<br/>'Where is the industry going?<br/>What should our architecture look like in 3 years?'"]
+        L6["L6 — STRATEGY<br/>'What capabilities do we need to build?<br/>In what order? What are the trade-offs?'"]
+        L5["L5 — EXECUTION<br/>'How do we build this specific system?<br/>What are the trade-offs and tech choices for this component?'"]
+        L7 --> L6 --> L5
+    end
 ```
 
 ---
@@ -277,35 +258,21 @@ One of the most common and highest-impact decisions Staff+ engineers make. The w
 
 ### Decision Framework
 
-```
-+------------------------------------------------------------------+
-|                    BUILD vs BUY DECISION TREE                     |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Is this a core differentiator for our business?                  |
-|  |                                                                 |
-|  +-- YES --> Is the build cost < 3x the buy cost over 3 years?   |
-|  |           |                                                     |
-|  |           +-- YES --> BUILD (invest in your differentiator)    |
-|  |           |                                                     |
-|  |           +-- NO --> BUILD with limited scope (MVP first,      |
-|  |                      revisit in 6 months)                      |
-|  |                                                                 |
-|  +-- NO --> Does a mature off-the-shelf solution exist?           |
-|             |                                                      |
-|             +-- YES --> Does it meet 80%+ of requirements?        |
-|             |           |                                          |
-|             |           +-- YES --> BUY                            |
-|             |           |                                          |
-|             |           +-- NO --> Can we extend it? --> BUY+EXT  |
-|             |                                                      |
-|             +-- NO --> Is the build effort < 1 quarter?           |
-|                        |                                           |
-|                        +-- YES --> BUILD (simple enough)           |
-|                        |                                           |
-|                        +-- NO --> PARTNER or delay                 |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Q1{"Is this a core differentiator<br/>for our business?"}
+    Q1 -->|"YES"| Q2{"Is build cost &lt; 3x buy cost<br/>over 3 years?"}
+    Q2 -->|"YES"| BuildCore["BUILD<br/>(invest in your differentiator)"]
+    Q2 -->|"NO"| BuildMVP["BUILD with limited scope<br/>(MVP first, revisit in 6 months)"]
+
+    Q1 -->|"NO"| Q3{"Does a mature off-the-shelf<br/>solution exist?"}
+    Q3 -->|"YES"| Q4{"Does it meet 80%+ of<br/>requirements?"}
+    Q4 -->|"YES"| Buy["BUY"]
+    Q4 -->|"NO"| BuyExt["Can we extend it? -&gt; BUY + EXTEND"]
+
+    Q3 -->|"NO"| Q5{"Is the build effort<br/>&lt; 1 quarter?"}
+    Q5 -->|"YES"| BuildSimple["BUILD<br/>(simple enough)"]
+    Q5 -->|"NO"| Partner["PARTNER or delay"]
 ```
 
 ### Build vs Buy Evaluation Table
@@ -333,30 +300,22 @@ Migration is where most technical strategies succeed or fail. The ability to get
 
 Gradually replace the old system by building new capabilities alongside it and routing traffic incrementally.
 
-```
-Phase 1: New system handles 0% of traffic
-+------------------+     +------------------+
-|   Old System     |<----|    All Traffic    |
-|   (100%)         |     |                  |
-+------------------+     +------------------+
+```mermaid
+flowchart TD
+    subgraph P1["Phase 1: New system handles 0% of traffic"]
+        T1["All Traffic"] --> Old1["Old System (100%)"]
+    end
 
-Phase 2: New system handles some traffic via router
-+------------------+     +------------------+     +------------------+
-|   Old System     |<----|    Router /       |<----|    All Traffic    |
-|   (70%)          |     |    Feature Flag   |     |                  |
-+------------------+     +------------------+     +------------------+
-         ^                       |
-         |                       v
-         |               +------------------+
-         +---------------|   New System     |
-                         |   (30%)          |
-                         +------------------+
+    subgraph P2["Phase 2: New system handles some traffic via router"]
+        T2["All Traffic"] --> Router["Router / Feature Flag"]
+        Router -->|"70%"| Old2["Old System (70%)"]
+        Router -->|"30%"| New2["New System (30%)"]
+        New2 -->|"fallback"| Old2
+    end
 
-Phase 3: Old system decommissioned
-+------------------+     +------------------+
-|   New System     |<----|    All Traffic    |
-|   (100%)         |     |                  |
-+------------------+     +------------------+
+    subgraph P3["Phase 3: Old system decommissioned"]
+        T3["All Traffic"] --> New3["New System (100%)"]
+    end
 ```
 
 **When to use:** Large monolith-to-microservice migrations, API versioning, database migrations.
@@ -367,34 +326,15 @@ Phase 3: Old system decommissioned
 
 Run both old and new systems simultaneously, comparing outputs to validate correctness before switching.
 
-```
-+------------------+
-|    All Traffic    |----+
-+------------------+    |
-                        |
-                   +----v----+
-                   | Splitter |
-                   +----+----+
-                        |
-              +---------+---------+
-              |                   |
-        +-----v------+    +------v-----+
-        | Old System |    | New System |
-        | (Primary)  |    | (Shadow)   |
-        +-----+------+    +------+-----+
-              |                   |
-              v                   v
-        +-----+------+    +------+-----+
-        |  Response  |    |  Response  |
-        |  (Served)  |    |  (Logged)  |
-        +-----+------+    +------+-----+
-              |                   |
-              +--------+----------+
-                       |
-                 +-----v------+
-                 | Comparator |
-                 | (Diff Log) |
-                 +------------+
+```mermaid
+flowchart TD
+    Traffic["All Traffic"] --> Splitter["Splitter"]
+    Splitter --> Old["Old System<br/>(Primary)"]
+    Splitter --> New["New System<br/>(Shadow)"]
+    Old --> RespServed["Response<br/>(Served)"]
+    New --> RespLogged["Response<br/>(Logged)"]
+    RespServed --> Comp["Comparator<br/>(Diff Log)"]
+    RespLogged --> Comp
 ```
 
 **When to use:** Financial systems, systems where correctness is critical, data pipeline migrations.
@@ -405,13 +345,14 @@ Run both old and new systems simultaneously, comparing outputs to validate corre
 
 Use feature flags to gradually roll out the new system to users, starting with internal users, then a small percentage, then everyone.
 
-```
-Rollout Timeline:
-Day 1:   [Internal only     ] ████░░░░░░░░░░░░░░░░  5%
-Week 1:  [Internal + beta   ] ████████░░░░░░░░░░░░  10%
-Week 2:  [Expand to 25%     ] ████████████░░░░░░░░  25%
-Week 3:  [Expand to 50%     ] ████████████████░░░░  50%
-Week 4:  [Expand to 100%    ] ████████████████████  100%
+```mermaid
+flowchart LR
+    subgraph Rollout["Progressive Rollout Timeline"]
+        D1["Day 1: Internal only (5%)"] --> W1["Week 1: Internal + beta (10%)"]
+        W1 --> W2["Week 2: Expand to 25%"]
+        W2 --> W3["Week 3: Expand to 50%"]
+        W3 --> W4["Week 4: Expand to 100%"]
+    end
 ```
 
 **When to use:** User-facing features, gradual rollouts, A/B testing migration quality.
@@ -437,24 +378,13 @@ A technical roadmap communicates what you are building, why, and in what order. 
 
 ### Roadmap Structure
 
-```
-+------------------------------------------------------------------+
-|                     TECHNICAL ROADMAP                              |
-+------------------------------------------------------------------+
-|                                                                    |
-|  NOW (This Quarter)           NEXT (Next Quarter)                 |
-|  ----------------------       ----------------------               |
-|  - Migrate auth to OAuth2     - Unified API gateway               |
-|  - Add structured logging     - Self-service onboarding           |
-|  - Fix top 3 perf issues      - Event-driven architecture v1     |
-|                                                                    |
-|  LATER (Next Half)            FUTURE (Aspirational)               |
-|  ----------------------       ----------------------               |
-|  - Multi-region deployment    - Real-time ML feature store        |
-|  - GraphQL federation         - Zero-trust networking             |
-|  - Automated canary deploys   - Fully serverless compute          |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Now["NOW (This Quarter)<br/>- Migrate auth to OAuth2<br/>- Add structured logging<br/>- Fix top 3 perf issues"]
+    Next["NEXT (Next Quarter)<br/>- Unified API gateway<br/>- Self-service onboarding<br/>- Event-driven architecture v1"]
+    Later["LATER (Next Half)<br/>- Multi-region deployment<br/>- GraphQL federation<br/>- Automated canary deploys"]
+    Future["FUTURE (Aspirational)<br/>- Real-time ML feature store<br/>- Zero-trust networking<br/>- Fully serverless compute"]
+    Now --> Next --> Later --> Future
 ```
 
 ### Roadmap Principles

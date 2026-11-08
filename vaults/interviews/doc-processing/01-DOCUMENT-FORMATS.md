@@ -4,30 +4,14 @@
 
 Before you can process a document, you need to understand what a document _is_ at the byte level. A `.pdf` file is not "just text" — it is a complex binary format with objects, cross-reference tables, and content streams. A `.docx` file is actually a ZIP archive containing XML files. Understanding these internals is what allows you to choose the right library, debug extraction failures, and handle edge cases that trip up naive approaches.
 
-```
-+------------------------------------------------------------------------+
-|                 DOCUMENT FORMAT LANDSCAPE                               |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  BINARY FORMATS               TEXT-BASED FORMATS                       |
-|  +----------------------+    +---------------------------+             |
-|  | PDF (.pdf)            |    | Plain text (.txt, .log)    |             |
-|  | Legacy Word (.doc)    |    | CSV (.csv, .tsv)           |             |
-|  | Legacy Excel (.xls)   |    | JSON (.json)               |             |
-|  | Images (JPEG, PNG)    |    | XML (.xml)                 |             |
-|  | Compiled archives     |    | YAML (.yaml, .yml)         |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-|  ZIP-BASED (COMPOUND)          STRUCTURED TEXT                         |
-|  +----------------------+    +---------------------------+             |
-|  | DOCX (.docx = ZIP)    |    | HTML (.html)               |             |
-|  | XLSX (.xlsx = ZIP)    |    | Markdown (.md)             |             |
-|  | PPTX (.pptx = ZIP)   |    | reStructuredText (.rst)    |             |
-|  | EPUB (.epub = ZIP)   |    | LaTeX (.tex)               |             |
-|  | ODF (.odt, .ods)      |    | TOML (.toml)               |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Formats["DOCUMENT FORMAT LANDSCAPE"]
+        Bin["BINARY FORMATS<br/>- PDF (.pdf)<br/>- Legacy Word (.doc) &amp; Excel (.xls)<br/>- Images (JPEG, PNG)<br/>- Compiled archives"]
+        Txt["TEXT-BASED FORMATS<br/>- Plain text (.txt, .log)<br/>- CSV (.csv, .tsv)<br/>- JSON (.json), XML (.xml), YAML (.yaml)"]
+        Zip["ZIP-BASED (COMPOUND XML)<br/>- DOCX (.docx = ZIP)<br/>- XLSX (.xlsx = ZIP)<br/>- PPTX (.pptx = ZIP)<br/>- EPUB (.epub) &amp; ODF (.odt, .ods)"]
+        Struct["STRUCTURED TEXT / MARKUP<br/>- HTML (.html)<br/>- Markdown (.md) &amp; reStructuredText (.rst)<br/>- LaTeX (.tex) &amp; TOML (.toml)"]
+    end
 ```
 
 ---

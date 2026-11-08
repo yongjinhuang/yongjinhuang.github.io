@@ -1897,21 +1897,13 @@ Example: Reducing atomic pressure with warp pre-reduction
 
 Thrust is a C++ parallel algorithms library bundled with the CUDA Toolkit. It provides high-level abstractions similar to the C++ Standard Template Library (STL) but executing on the GPU. Think of it as `std::sort` and `std::reduce` for GPUs.
 
-```
-Thrust layer diagram:
-+--------------------------------------------------+
-|                  Your Application                  |
-+--------------------------------------------------+
-|               Thrust C++ Algorithms                |
-|   sort, reduce, transform, scan, merge, ...       |
-+--------------------------------------------------+
-|         Execution Policies                         |
-|   thrust::device  |  thrust::host  |  thrust::seq |
-+--------------------------------------------------+
-|     CUDA Runtime   |    OpenMP     |   Sequential  |
-+--------------------------------------------------+
-|     GPU            |    CPU        |   CPU         |
-+--------------------------------------------------+
+```mermaid
+flowchart TD
+    App["Your C++ Application"] --> Alg["Thrust Parallel Algorithms<br/>(sort, reduce, inclusive_scan, transform, copy_if)"]
+    Alg --> Pol["Thrust Execution Policies"]
+    Pol -->|"thrust::device"| Dev["CUB / CUDA Runtime -&gt; GPU"]
+    Pol -->|"thrust::host"| OMP["OpenMP / TBB -&gt; Multi-Core CPU"]
+    Pol -->|"thrust::seq"| Seq["Sequential -&gt; Single CPU Thread"]
 ```
 
 ### 9.2 Device Vectors
@@ -2321,19 +2313,16 @@ int main() {
 }
 ```
 
-```
-Graph structure (explicit API example):
-
-  [H2D Copy] --> [Scale Kernel] --> [Add Kernel] --> [D2H Copy]
-
-More complex graphs can have branches and joins:
-
-  [H2D Copy A] --> [Kernel A] --\
-                                 +--> [Combine Kernel] --> [D2H Copy]
-  [H2D Copy B] --> [Kernel B] --/
-
-CUDA Graphs encode the ENTIRE dependency structure, allowing
-the driver to optimize scheduling, memory, and launch overhead.
+```mermaid
+flowchart LR
+    subgraph Linear["Linear CUDA Graph"]
+        H2D["H2D Copy"] --> Scale["Scale Kernel"] --> Add["Add Kernel"] --> D2H["D2H Copy"]
+    end
+    subgraph DAG["Fork-Join CUDA Graph"]
+        HA["H2D Copy A"] --> KA["Kernel A"]
+        HB["H2D Copy B"] --> KB["Kernel B"]
+        KA & KB --> Comb["Combine Kernel"] --> Out["D2H Copy"]
+    end
 ```
 
 ### 10.4 Updating Graph Parameters

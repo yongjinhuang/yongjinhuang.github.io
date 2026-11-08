@@ -4,24 +4,31 @@
 
 This directory contains a comprehensive guide to **data engineering** -- the discipline of designing, building, and maintaining systems that collect, store, transform, and serve data at scale. These guides cover the full modern data stack: streaming platforms, batch processing engines, transformation tools, orchestration frameworks, and storage formats.
 
-```
-                     DATA ENGINEERING
-                           |
-         +-----------------+-----------------+
-         |                 |                 |
-    INGESTION         PROCESSING         STORAGE
-         |                 |                 |
-    +----+----+      +----+----+      +-----+-----+
-    |    |    |      |    |    |      |     |     |
-  Kafka Flink     Spark  dbt       Warehouse Lake
-  Kinesis CDC     Beam  Airflow    Lakehouse  Iceberg
-         |                 |                 |
-         +--------+--------+--------+-------+
-                  |                  |
-            ORCHESTRATION       QUALITY
-                  |                  |
-            Airflow/Dagster    Great Expectations
-            Prefect            dbt Tests
+```mermaid
+flowchart TD
+    Root["DATA ENGINEERING"]
+    Ingest["INGESTION"]
+    Proc["PROCESSING"]
+    Store["STORAGE"]
+
+    Root --> Ingest & Proc & Store
+
+    I1["Kafka / Kinesis"]
+    I2["Flink / CDC"]
+    Ingest --> I1 & I2
+
+    P1["Spark / Beam"]
+    P2["dbt / Airflow"]
+    Proc --> P1 & P2
+
+    S1["Data Warehouse / Lake"]
+    S2["Lakehouse / Iceberg"]
+    Store --> S1 & S2
+
+    Orch["ORCHESTRATION<br/>Airflow / Dagster / Prefect"]
+    Qual["QUALITY<br/>Great Expectations / dbt Tests"]
+
+    I1 & I2 & P1 & P2 & S1 & S2 --> Orch & Qual
 ```
 
 ## Who This Is For

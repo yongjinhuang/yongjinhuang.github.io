@@ -14,17 +14,13 @@ This guide covers DOM traversal and manipulation, event handling patterns, moder
 
 The browser parses HTML into a tree of nodes. Each node is an object with properties, methods, and event handlers.
 
-```
-document
-  └── html
-       ├── head
-       │    ├── title
-       │    └── meta
-       └── body
-            ├── div#app
-            │    ├── h1
-            │    └── p
-            └── script
+```mermaid
+flowchart TD
+    Doc["document"] --> HTML["html"]
+    HTML --> Head["head"] & Body["body"]
+    Head --> Title["title"] & Meta["meta"]
+    Body --> App["div#app"] & Script["script"]
+    App --> H1["h1"] & P["p"]
 ```
 
 **Node types:**

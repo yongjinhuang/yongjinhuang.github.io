@@ -43,20 +43,19 @@ determines the architecture, cost, and complexity of the system.
 
 ### Choosing the Right Tier
 
-```
-Decision Tree:
-
-Is two-way interaction required?
-├── YES → Is it 1:1 or small group?
-│         ├── YES → WebRTC (< 500ms)
-│         └── NO  → Is audience > 10,000?
-│                   ├── YES → LL-HLS/LL-DASH with backchannel
-│                   └── NO  → WebRTC with SFU
-└── NO  → Is real-time reaction important?
-          ├── YES → Does audience need ABR?
-          │         ├── YES → LL-HLS/LL-DASH (2-5s)
-          │         └── NO  → SRT/RIST (< 1s)
-          └── NO  → Standard HLS/DASH (10-30s)
+```mermaid
+flowchart TD
+    Q1{"Two-way interaction required?"}
+    Q1 -->|"Yes"| Q2{"1:1 or small group (&lt;= 6)?"}
+    Q2 -->|"Yes"| P2P["WebRTC P2P (&lt; 500ms)"]
+    Q2 -->|"No"| Q3{"Audience &gt; 10,000?"}
+    Q3 -->|"Yes"| Hybrid["LL-HLS / LL-DASH + WebSocket Backchannel"]
+    Q3 -->|"No"| SFU["WebRTC with Cascaded SFU"]
+    Q1 -->|"No"| Q4{"Real-time reaction important?"}
+    Q4 -->|"Yes"| Q5{"Audience needs CDN ABR?"}
+    Q5 -->|"Yes"| LL["LL-HLS / LL-DASH (2-5s)"]
+    Q5 -->|"No"| SRT["SRT / RIST / WHEP (&lt; 1s)"]
+    Q4 -->|"No"| Std["Standard HLS / DASH (10-30s)"]
 ```
 
 ---
@@ -68,31 +67,10 @@ end-to-end path is essential for systematic optimization.
 
 ### End-to-End Pipeline
 
-```
-┌────────┐   ┌────────┐   ┌─────────┐   ┌────────┐   ┌─────────┐
-│ Camera │──►│Encoder │──►│ Origin  │──►│  CDN/  │──►│ Player  │
-│Capture │   │        │   │ Server  │   │  SFU   │   │         │
-└────────┘   └────────┘   └─────────┘   └────────┘   └─────────┘
-   T1            T2            T3            T4           T5
-
-T1: Capture Latency     (~1-33ms)
-T2: Encoding Latency    (~10-500ms)
-T3: Server Processing   (~1-50ms)
-T4: Network Transport   (~5-200ms)
-T5: Decode + Render     (~10-50ms)
-
-Total Glass-to-Glass = T1 + T2 + T3 + T4 + T5
-
-Typical breakdown for a 200ms target:
-  Capture:    16ms (one frame at 60fps)
-  Encoding:   30ms (hardware encoder, no B-frames)
-  Server:     10ms (SFU forwarding)
-  Network:    100ms (50ms one-way RTT)
-  Buffering:  20ms (minimal jitter buffer)
-  Decoding:   16ms (hardware decoder)
-  Rendering:  8ms (vsync)
-  ─────────────────
-  Total:      ~200ms
+```mermaid
+flowchart LR
+    T1["T1: Camera Capture<br/>16 ms (60fps)"] --> T2["T2: Hardware Encode<br/>30 ms (0 B-frames)"] --> T3["T3: SFU Server<br/>10 ms (Forwarding)"]
+    T3 --> T4["T4: Network + Jitter Buf<br/>100 ms + 20 ms"] --> T5["T5: HW Decode + Render<br/>16 ms + 8 ms = ~200 ms Total"]
 ```
 
 ### 2.1 Capture Latency
@@ -455,7 +433,7 @@ File structure (fMP4):
   [ftyp] [moov] [moof1][mdat1] [moof2][mdat2] [moof3][mdat3] ...
           │       └──chunk 1──┘  └──chunk 2──┘  └──chunk 3──┘
           │
-          └�� Initialization segment (sent once)
+          └─ Initialization segment (sent once)
 ```
 
 ### 4.2 Chunked Transfer Encoding
@@ -1227,39 +1205,13 @@ Recommendation:
 
 ### 10.1 Cascaded SFU Architecture
 
-```
-Single SFU Limits:
-  - CPU: ~500-2000 viewers per server (depends on resolution)
-  - Bandwidth: 10-40 Gbps per server
-  - Memory: connection state for each viewer
-
-Cascaded SFU Solution:
-
-                    ┌───────────┐
-                    │  Origin   │
-  Publisher ──────► │   SFU     │
-                    │ (Region A)│
-                    └─────┬─────┘
-                          │
-              ┌───────────┼───────────┐
-              │           │           │
-        ┌─────▼─────┐ ┌──▼────────┐ ┌▼──────────┐
-        │  Edge SFU │ │ Edge SFU  │ │ Edge SFU  │
-        │ (Region A)│ │ (Region B)│ │ (Region C)│
-        └─────┬─────┘ └─────┬─────┘ └─────┬─────┘
-              │              │              │
-         ┌────┼────┐    ┌───┼───┐     ┌────┼────┐
-         │    │    │    │   │   │     │    │    │
-        V1   V2  V3   V4  V5  V6   V7   V8   V9
-
-  Fanout: 1 origin → N edge SFUs → M viewers per edge
-  Total capacity: N * M viewers
-
-  Inter-SFU communication:
-    - Forward RTP packets (no re-encoding)
-    - Replicate RTCP feedback to origin
-    - Use internal backbone (low-latency, high-bandwidth)
-    - Protocol: plain RTP over UDP or QUIC
+```mermaid
+flowchart TD
+    Pub["Publisher"] --> Orig["Origin SFU (Region A)"]
+    Orig --> EA["Edge SFU (Region A)"] & EB["Edge SFU (Region B)"] & EC["Edge SFU (Region C)"]
+    EA --> VA["Viewers V1, V2, V3"]
+    EB --> VB["Viewers V4, V5, V6"]
+    EC --> VC["Viewers V7, V8, V9"]
 ```
 
 ### 10.2 Geographic Distribution
@@ -2045,17 +1997,11 @@ A comprehensive latency monitoring system needs to capture metrics at every stag
 
 **Architecture:**
 
-```
-Publishers → Ingest → SFU → CDN → Players
-    │           │       │      │       │
-    └───────────┴───────┴──────┴───────┘
-                        │
-                   Metrics Pipeline
-                   (Kafka → Flink → ClickHouse)
-                        │
-                   Grafana Dashboard
-                        │
-                   PagerDuty Alerts
+```mermaid
+flowchart TD
+    Pub["Publishers"] --> Ing["Ingest"] --> SFU["SFU Cluster"] --> CDN["CDN"] --> Pl["Players"]
+    Pub & Ing & SFU & CDN & Pl -->|"Telemetry Events"| Pipe["Metrics Pipeline<br/>(Kafka -&gt; Flink -&gt; ClickHouse)"]
+    Pipe --> Graf["Grafana Dashboard"] --> PD["PagerDuty Alerts"]
 ```
 
 **Key dashboards:**

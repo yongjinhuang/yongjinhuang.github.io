@@ -6,39 +6,11 @@ The best alpha signal in the world is worthless if your data is stale, your syst
 
 This chapter covers everything from high-level architecture to the nuts and bolts of building reliable, scalable trading systems. Whether you are building a personal trading stack or designing production infrastructure at a fund, these principles apply.
 
-```
-+------------------------------------------------------------------------+
-|              TRADING INFRASTRUCTURE - THE FULL PICTURE                   |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  EXTERNAL DATA                                                         |
-|  +----------------+  +----------------+  +----------------+            |
-|  | Exchange Feeds  |  | Alt Data       |  | News / Filings |            |
-|  | (tick, L2, L3)  |  | (satellite,    |  | (SEC, earnings)|            |
-|  |                 |  |  web scraping)  |  |                |            |
-|  +-------+--------+  +-------+--------+  +-------+--------+            |
-|          |                    |                    |                     |
-|          v                    v                    v                     |
-|  +------------------------------------------------------+              |
-|  |              DATA INGESTION LAYER                      |              |
-|  |   Feed Handlers | API Clients | Scrapers | Parsers     |              |
-|  +------------------------------------------------------+              |
-|                              |                                          |
-|                              v                                          |
-|  +------------------------------------------------------+              |
-|  |              DATA STORAGE & PROCESSING                 |              |
-|  |   Time-Series DB | Object Store | Stream Processing    |              |
-|  +------------------------------------------------------+              |
-|                              |                                          |
-|          +-------------------+-------------------+                      |
-|          v                   v                   v                      |
-|  +---------------+  +---------------+  +---------------+               |
-|  | RESEARCH      |  | LIVE TRADING  |  | RISK & MONITOR|               |
-|  | (backtest,    |  | (signal gen,  |  | (P&L, limits, |               |
-|  |  ML training) |  |  execution)   |  |  alerting)    |               |
-|  +---------------+  +---------------+  +---------------+               |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Exch["Exchange Feeds<br/>(Tick, L2, L3)"] & Alt["Alternative Data<br/>(Satellite, Card, Web)"] & News["News &amp; Filings<br/>(SEC EDGAR, Earnings)"] --> Ingest["Data Ingestion Layer<br/>(Feed Handlers, API Clients, Parsers)"]
+    Ingest --> Store["Data Storage &amp; Stream Processing<br/>(kdb+ / TimescaleDB, Parquet Object Store, Kafka)"]
+    Store --> Res["Research Environment<br/>(Backtesting &amp; GPU ML Training)"] & Live["Live Trading Engine<br/>(Real-Time Signals &amp; Execution)"] & Risk["Risk &amp; Monitoring<br/>(Real-Time P&amp;L, Limits, Alerts)"]
 ```
 
 ---

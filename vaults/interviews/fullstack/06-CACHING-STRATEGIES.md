@@ -14,8 +14,9 @@ In interviews, caching questions test your ability to reason about trade-offs, p
 
 Caching happens at multiple layers of the stack. Each layer has different characteristics:
 
-```
-User -> Browser Cache -> CDN -> Load Balancer -> App Cache -> Database Cache -> Database
+```mermaid
+flowchart LR
+    User["User"] --> BCache["Browser Cache"] --> CDN["CDN"] --> LB["Load Balancer"] --> AppCache["App Cache (Redis)"] --> DBCache["Database Buffer Pool"] --> DB[("Database (Disk)")]
 ```
 
 **Browser cache:**

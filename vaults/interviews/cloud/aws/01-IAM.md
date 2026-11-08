@@ -234,19 +234,15 @@ AWS Security Token Service (STS) issues **temporary credentials** when a princip
 
 ### 6.1 AssumeRole Flow
 
-```
-Account A (caller)          Account B (target)
-     |                           |
-     |--- sts:AssumeRole ------->|
-     |    "I want to assume      |
-     |     role X in account B"  |
-     |                           |--- Trust policy checks:
-     |                           |    Is account A allowed?
-     |<-- Temporary credentials -|
-     |    (access key, secret,   |
-     |     session token, expiry)|
-     |                           |
-     |--- s3:GetObject --------->|  (using temp creds)
+```mermaid
+sequenceDiagram
+    participant A as "Account A (Caller)"
+    participant B as "Account B (Target STS and Resource)"
+
+    A->>B: sts:AssumeRole (Role ARN in Account B)
+    Note right of B: Trust policy checks:<br/>Is Account A allowed?
+    B-->>A: Temporary STS Credentials (AccessKeyId, SecretAccessKey, SessionToken, Expiration)
+    A->>B: s3:GetObject (Signed with Temporary Credentials)
 ```
 
 ### 6.2 CLI Commands

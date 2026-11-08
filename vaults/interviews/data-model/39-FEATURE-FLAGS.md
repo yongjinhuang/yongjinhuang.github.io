@@ -160,106 +160,89 @@ graph TD
 
 ## ER Diagram
 
-```
-+------------------+
-|  organizations   |
-|------------------|
-| org_id (PK)      |
-| name             |
-| plan_tier        |
-+------------------+
-        |
-        | 1
-        |
-        +───* projects
-        |
-+------------------+
-|    projects      |
-|------------------|
-| project_id (PK)  |
-| org_id (FK)      |
-| name             |
-+------------------+
-   |         |         |
-   | 1       | 1       | 1
-   |         |         |
-   +──* environments   +───* segments
-   |         |
-   |  +------+----------+
-   |  |  environments   |
-   |  |-----------------|
-   |  | env_id (PK)     |
-   |  | project_id (FK) |
-   |  | name            |
-   |  +-----------------+
-   |         |
-   | 1       | (via flag_environments)
-   |         |
-   +───* flags
-   |
-+------------------+
-|      flags       |
-|------------------|
-| flag_id (PK)     |
-| project_id (FK)  |
-| key              |
-| name             |
-| description      |
-| flag_type        |
-| default_value    |
-| is_archived      |
-+------------------+
-        |                     +--------------------+
-        | 1                   | flag_environments  |
-        |                     |--------------------|
-        +───* flag_           | flag_id (FK, PK)   |
-        |    environments     | env_id (FK, PK)    |
-        |                     | enabled            |
-        | 1                   | targeting_rules_   |
-        |                     |  json              |
-        +───* experiments     | fallthrough_       |
-                              |  variation         |
-+------------------+          | off_variation      |
-|   experiments    |          +--------------------+
-|------------------|
-| experiment_id(PK)|   +------------------+
-| flag_id (FK)     |   |    segments      |
-| env_id (FK)      |   |------------------|
-| metric_name      |   | segment_id (PK)  |
-| variants_json    |   | project_id (FK)  |
-| status           |   | name             |
-| start_date       |   | rules_json       |
-| end_date         |   | included_users   |
-| results_json     |   | excluded_users   |
-+------------------+   +------------------+
+```mermaid
+erDiagram
+    organizations ||--o{ projects : "relates"
+    projects ||--o{ environments : "relates"
+    projects ||--o{ flags : "relates"
+    projects ||--o{ segments : "relates"
+    flags }o--o{ environments : "via flag_environments, composite PK"
+    flags ||--o{ experiments : "relates"
+    experiments }o--|| environments : "relates"
 
-+------------------+   +-------------------+
-|   audit_log      |   | sdk_connections   |
-|------------------|   |    (Redis)        |
-| id (PK)          |   |-------------------|
-| org_id (FK)      |   | connection_id(KEY)|
-| user_id          |   | env_id            |
-| action           |   | last_heartbeat    |
-| resource_type    |   | sdk_version       |
-| resource_id      |   +-------------------+
-| old_value_json   |
-| new_value_json   |
-| created_at       |
-+------------------+
-
-Relationships:
-  organizations 1───* projects
-  projects 1───* environments
-  projects 1───* flags
-  projects 1───* segments
-  flags *───* environments   (via flag_environments, composite PK)
-  flags 1───* experiments
-  experiments *───1 environments
-  segments: referenced by key in targeting_rules_json (not FK)
-  sdk_connections: keyed by env_id (Redis, not relational)
+    organizations {
+        UUID org_id PK
+        VARCHAR name
+        ENUM plan_tier
+    }
+    projects {
+        UUID project_id PK
+        ORGANIZATIONS org_id FK
+        VARCHAR name
+    }
+    environments {
+        UUID env_id PK
+        PROJECTS project_id FK
+        VARCHAR name
+    }
+    flags {
+        UUID flag_id PK
+        PROJECTS project_id FK
+        VARCHAR key UK
+        VARCHAR name
+        TEXT description
+        ENUM flag_type
+        JSONB default_value
+        BOOLEAN is_archived
+    }
+    flag_environments {
+        COMPOSITE flag_id PK, FK
+        COMPOSITE env_id PK, FK
+        BOOLEAN enabled
+        JSONB targeting_rules_json
+        JSONB fallthrough_variation
+        JSONB off_variation
+    }
+    segments {
+        UUID segment_id PK
+        PROJECTS project_id FK
+        VARCHAR name
+        JSONB rules_json
+        ARRAY included_users
+        ARRAY excluded_users
+    }
+    experiments {
+        UUID experiment_id PK
+        FLAGS flag_id FK
+        ENVIRONMENTS env_id FK
+        VARCHAR metric_name
+        JSONB variants_json
+        ENUM status
+        TIMESTAMP start_date
+        TIMESTAMP end_date
+        JSONB results_json
+    }
+    audit_log {
+        UUID id PK
+        ORGANIZATIONS org_id FK
+        UUID user_id
+        VARCHAR action
+        VARCHAR resource_type
+        UUID resource_id
+        JSONB old_value_json
+        JSONB new_value_json
+        TIMESTAMP created_at
+    }
+    sdk_connections {
+        KEY connection_id
+        VARCHAR env_id
+        TIMESTAMP last_heartbeat
+        VARCHAR sdk_version
+    }
 ```
 
 ---
+
 
 ## Data Flow
 

@@ -44,62 +44,38 @@ OpenTelemetry provides a single set of APIs, SDKs, and tools to instrument, gene
 
 ## 2. History: OpenTracing + OpenCensus
 
-```
-2016-2019                          2019                    2019+
-+-----------------+     +--------------------+     +------------------+
-| OpenTracing     |     |                    |     |                  |
-| (CNCF)          |---->|      Merger        |---->| OpenTelemetry    |
-| - Tracing API   |     |                    |     | - Traces         |
-| - Vendor neutral|     +--------------------+     | - Metrics        |
-+-----------------+            ^                   | - Logs           |
-                               |                   | - CNCF Incubating|
-+-----------------+            |                   +------------------+
-| OpenCensus      |------------+
-| (Google)        |
-| - Traces +      |
-|   Metrics       |
-| - Auto-collect  |
-+-----------------+
+```mermaid
+flowchart LR
+    OT["OpenTracing (2016-2019, CNCF)<br/>- Tracing API only<br/>- Vendor neutral"]
+    OC["OpenCensus (2016-2019, Google)<br/>- Traces + Metrics<br/>- Full collection/export pipeline"]
+    Merger["2019 Merger"]
+    OTel["OpenTelemetry (2019+, CNCF)<br/>- Traces, Metrics, Logs, Profiles<br/>- Best of both worlds"]
 
-OpenTracing: API-only, no collection/export
-OpenCensus:  Full pipeline but Google-centric
-OpenTelemetry: Best of both worlds
+    OT & OC --> Merger --> OTel
 ```
 
 ---
 
 ## 3. Architecture Overview
 
-```
-+------------------------------------------------------------------+
-|                        Application                                |
-|                                                                   |
-|  +------------------+  +------------------+  +------------------+ |
-|  |  OTel API        |  |  OTel SDK        |  | Auto-instrument  | |
-|  |  (Interface)     |  |  (Implementation)|  | (Libraries)      | |
-|  +------------------+  +------------------+  +------------------+ |
-|           |                     |                     |            |
-|           +---------------------+---------------------+            |
-|                                 |                                  |
-|                          OTLP Export                               |
-+------------------------------------------------------------------+
-                                  |
-                                  v
-+------------------------------------------------------------------+
-|                    OTel Collector (optional)                       |
-|  +------------+    +-------------+    +-------------+             |
-|  | Receivers  |--->| Processors  |--->| Exporters   |             |
-|  +------------+    +-------------+    +-------------+             |
-+------------------------------------------------------------------+
-                                  |
-                    +-------------+-------------+
-                    |             |             |
-                    v             v             v
-              +---------+  +---------+  +-----------+
-              | Jaeger  |  |Prometheus|  | Datadog   |
-              | Tempo   |  |  Mimir  |  | New Relic |
-              | Zipkin  |  |         |  | Splunk    |
-              +---------+  +---------+  +-----------+
+```mermaid
+flowchart TD
+    subgraph App["Application"]
+        API["OTel API<br/>(Interface)"]
+        SDK["OTel SDK<br/>(Implementation)"]
+        Auto["Auto-Instrumentation<br/>(Libraries)"]
+        OTLP["OTLP Export"]
+        API & SDK & Auto --> OTLP
+    end
+
+    subgraph Coll["OTel Collector (optional)"]
+        Rec["Receivers"] --> Proc["Processors"] --> Exp["Exporters"]
+    end
+
+    OTLP --> Rec
+    Exp --> B1["Tracing Backends<br/>Jaeger / Tempo / Zipkin"]
+    Exp --> B2["Metrics Backends<br/>Prometheus / Mimir"]
+    Exp --> B3["Observability SaaS<br/>Datadog / New Relic / Splunk"]
 ```
 
 ---
@@ -135,63 +111,47 @@ The SDK is the implementation of the API. It handles configuration, processing, 
 
 ### TracerProvider
 
-```
-TracerProvider
-  |
-  +-- Resource (service.name, service.version, etc.)
-  |
-  +-- Sampler (TraceIDRatioBased, ParentBased, AlwaysOn, etc.)
-  |
-  +-- SpanProcessor(s)
-       |
-       +-- SimpleSpanProcessor (sync, for testing)
-       |
-       +-- BatchSpanProcessor (async, for production)
-            |
-            +-- SpanExporter
-                 |
-                 +-- OTLPSpanExporter (gRPC or HTTP)
-                 +-- ConsoleSpanExporter
-                 +-- JaegerExporter
+```mermaid
+flowchart LR
+    TP["TracerProvider"]
+    TP --> Res["Resource<br/>(service.name, service.version, etc.)"]
+    TP --> Samp["Sampler<br/>(TraceIDRatioBased, ParentBased, AlwaysOn)"]
+    TP --> SP["SpanProcessor(s)"]
+    SP --> Simple["SimpleSpanProcessor<br/>(sync, for testing)"]
+    SP --> Batch["BatchSpanProcessor<br/>(async, for production)"]
+    Batch --> SE["SpanExporter"]
+    SE --> E1["OTLPSpanExporter (gRPC or HTTP)"]
+    SE --> E2["ConsoleSpanExporter"]
+    SE --> E3["JaegerExporter"]
 ```
 
 ### MeterProvider
 
-```
-MeterProvider
-  |
-  +-- Resource
-  |
-  +-- MetricReader(s)
-       |
-       +-- PeriodicExportingMetricReader
-       |    |
-       |    +-- MetricExporter
-       |         |
-       |         +-- OTLPMetricExporter
-       |         +-- PrometheusExporter
-       |         +-- ConsoleMetricExporter
-       |
-       +-- PrometheusMetricReader (pull-based)
+```mermaid
+flowchart LR
+    MP["MeterProvider"]
+    MP --> Res["Resource"]
+    MP --> MR["MetricReader(s)"]
+    MR --> Periodic["PeriodicExportingMetricReader"]
+    MR --> PromPull["PrometheusMetricReader<br/>(pull-based)"]
+    Periodic --> ME["MetricExporter"]
+    ME --> E1["OTLPMetricExporter"]
+    ME --> E2["PrometheusExporter"]
+    ME --> E3["ConsoleMetricExporter"]
 ```
 
 ### LoggerProvider
 
-```
-LoggerProvider
-  |
-  +-- Resource
-  |
-  +-- LogRecordProcessor(s)
-       |
-       +-- SimpleLogRecordProcessor
-       |
-       +-- BatchLogRecordProcessor
-            |
-            +-- LogRecordExporter
-                 |
-                 +-- OTLPLogExporter
-                 +-- ConsoleLogExporter
+```mermaid
+flowchart LR
+    LP["LoggerProvider"]
+    LP --> Res["Resource"]
+    LP --> LRP["LogRecordProcessor(s)"]
+    LRP --> Simple["SimpleLogRecordProcessor"]
+    LRP --> Batch["BatchLogRecordProcessor"]
+    Batch --> LRE["LogRecordExporter"]
+    LRE --> E1["OTLPLogExporter"]
+    LRE --> E2["ConsoleLogExporter"]
 ```
 
 ---
@@ -202,16 +162,11 @@ LoggerProvider
 
 Automatically captures telemetry from popular frameworks and libraries without code changes.
 
-```
-+---------------------------------------------------+
-|  Application Code (unchanged)                      |
-+---------------------------------------------------+
-|  Auto-instrumentation Agent/Library                |
-|  - HTTP client/server (Express, Flask, Spring)     |
-|  - Database drivers (pg, mysql, MongoDB)           |
-|  - Message queues (Kafka, RabbitMQ)                |
-|  - gRPC, GraphQL, Redis, etc.                      |
-+---------------------------------------------------+
+```mermaid
+flowchart TD
+    App["Application Code (unchanged)"]
+    Auto["Auto-Instrumentation Agent / Library<br/>- HTTP client/server (Express, Flask, Spring)<br/>- Database drivers (pg, mysql, MongoDB)<br/>- Message queues (Kafka, RabbitMQ)<br/>- gRPC, GraphQL, Redis, etc."]
+    App --> Auto
 ```
 
 | Language | Mechanism |
@@ -254,23 +209,14 @@ with tracer.start_as_current_span("process-payment") as span:
 
 A span represents a single operation within a trace. It has a start time, duration, attributes, events, links, and status.
 
-```
-Span Structure:
-+-----------------------------------------------+
-| Span                                          |
-|  - Name: "HTTP GET /api/users"                |
-|  - Trace ID: abc123...                        |
-|  - Span ID: def456...                         |
-|  - Parent Span ID: ghi789...                  |
-|  - Start Time: 2025-03-15T10:00:00.000Z       |
-|  - End Time:   2025-03-15T10:00:00.045Z       |
-|  - Status: OK | ERROR | UNSET                |
-|  - Kind: CLIENT | SERVER | PRODUCER |          |
-|          CONSUMER | INTERNAL                  |
-|  - Attributes: {key: value, ...}              |
-|  - Events: [{name, timestamp, attrs}, ...]    |
-|  - Links: [{SpanContext, attrs}, ...]         |
-+-----------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Span["OpenTelemetry Span Structure"]
+        ID["Identity:<br/>- Name: 'HTTP GET /api/users'<br/>- Trace ID: abc123...<br/>- Span ID: def456...<br/>- Parent Span ID: ghi789..."]
+        Timing["Timing &amp; Metadata:<br/>- Start Time: 2025-03-15T10:00:00.000Z<br/>- End Time: 2025-03-15T10:00:00.045Z<br/>- Status: OK / ERROR / UNSET<br/>- Kind: CLIENT / SERVER / PRODUCER / CONSUMER / INTERNAL"]
+        Payload["Context &amp; Telemetry:<br/>- Attributes: {key: value, ...}<br/>- Events: [{name, timestamp, attrs}, ...]<br/>- Links: [{SpanContext, attrs}, ...]"]
+        ID --> Timing --> Payload
+    end
 ```
 
 ### Span Kinds
@@ -518,32 +464,18 @@ The Collector is a vendor-agnostic proxy that receives, processes, and exports t
 
 ### Architecture
 
-```
-                    +------------------------------------------+
-                    |         OTel Collector                    |
-                    |                                          |
-Telemetry  ------->|  +-----------+    +-------------+         |
-Sources            |  | Receivers |    | Processors  |         |
-                   |  |           |--->|             |---+      |
-  - OTel SDK       |  | - otlp    |    | - batch     |   |     |
-  - Jaeger         |  | - jaeger  |    | - memory    |   |     |
-  - Prometheus     |  | - prom    |    |   limiter   |   |     |
-  - Zipkin         |  | - zipkin  |    | - filter    |   |     |
-  - Fluent         |  | - filelog |    | - transform |   |     |
-                   |  +-----------+    | - tail      |   |     |
-                   |                   |   sampling  |   |     |
-                   |                   +-------------+   |     |
-                   |                                     |     |
-                   |                   +-------------+   |     |
-                   |                   | Exporters   |<--+     |
-                   |                   |             |         |
-                   |                   | - otlp      |-------->|  Backends
-                   |                   | - prometheus|         |
-                   |                   | - jaeger    |         |
-                   |                   | - loki      |         |
-                   |                   | - datadog   |         |
-                   |                   +-------------+         |
-                   +------------------------------------------+
+```mermaid
+flowchart LR
+    Src["Telemetry Sources<br/>- OTel SDK<br/>- Jaeger<br/>- Prometheus<br/>- Zipkin<br/>- Fluent"]
+    subgraph Coll["OTel Collector"]
+        Rec["Receivers<br/>- otlp<br/>- jaeger<br/>- prometheus<br/>- zipkin<br/>- filelog"]
+        Proc["Processors<br/>- batch<br/>- memory_limiter<br/>- filter<br/>- transform<br/>- tail_sampling"]
+        Exp["Exporters<br/>- otlp<br/>- prometheus<br/>- jaeger<br/>- loki<br/>- datadog"]
+        Rec --> Proc --> Exp
+    end
+    Back["Backends"]
+    Src --> Rec
+    Exp --> Back
 ```
 
 ### Pipeline Configuration
@@ -611,31 +543,19 @@ service:
 
 ### Deployment Patterns
 
-```
-Pattern 1: Agent mode (sidecar/daemonset)
-+-------------+     +-----------+     +---------+
-| Application |---->| Collector |---->| Backend |
-|             |     | (Agent)   |     |         |
-+-------------+     +-----------+     +---------+
-  Each pod/host has its own collector instance.
+```mermaid
+flowchart LR
+    subgraph P1["Pattern 1: Agent Mode (Sidecar / DaemonSet)"]
+        A1["Application"] --> C1["Collector (Agent)"] --> B1["Backend"]
+    end
 
-Pattern 2: Gateway mode (centralized)
-+-------------+
-| App 1       |---+
-+-------------+   |   +----------------+     +---------+
-+-------------+   +-->| Collector      |---->| Backend |
-| App 2       |------>| (Gateway)      |     |         |
-+-------------+   +-->|                |     +---------+
-+-------------+   |   +----------------+
-| App 3       |---+
-+-------------+
+    subgraph P2["Pattern 2: Gateway Mode (Centralized)"]
+        App1["App 1"] & App2["App 2"] & App3["App 3"] --> GW2["Collector (Gateway)"] --> B2["Backend"]
+    end
 
-Pattern 3: Agent + Gateway (recommended for production)
-+-------------+     +-----------+     +------------+     +---------+
-| Application |---->| Collector |---->| Collector  |---->| Backend |
-|             |     | (Agent)   |     | (Gateway)  |     |         |
-+-------------+     +-----------+     +------------+     +---------+
-  Agent handles local buffering; Gateway handles routing/processing.
+    subgraph P3["Pattern 3: Agent + Gateway (Recommended for Production)"]
+        A3["Application"] --> Ag3["Collector (Agent)<br/>Local buffering"] --> GW3["Collector (Gateway)<br/>Routing &amp; tail sampling"] --> B3["Backend"]
+    end
 ```
 
 ---
@@ -728,18 +648,17 @@ Baggage is sent in every request header, so keep it small. Do not put sensitive 
 
 Context propagation is the mechanism that ties together distributed operations by passing trace context (and baggage) across process boundaries.
 
-```
-Service A                    Service B                    Service C
-+-----------+                +-----------+                +-----------+
-| Create    |  HTTP/gRPC     | Extract   |  HTTP/gRPC     | Extract   |
-| Span A    |  traceparent   | Context   |  traceparent   | Context   |
-|           |--------------->| Create    |--------------->| Create    |
-| Inject    |                | Span B    |                | Span C    |
-| Context   |                | (child of |                | (child of |
-+-----------+                |  Span A)  |                |  Span B)  |
-                             | Inject    |                |           |
-                             | Context   |                |           |
-                             +-----------+                +-----------+
+```mermaid
+sequenceDiagram
+    participant A as "Service A"
+    participant B as "Service B"
+    participant C as "Service C"
+
+    Note over A: Create Span A & Inject Context
+    A->>B: HTTP/gRPC (traceparent header)
+    Note over B: Extract Context, Create Span B (child of Span A) & Inject Context
+    B->>C: HTTP/gRPC (traceparent header)
+    Note over C: Extract Context & Create Span C (child of Span B)
 ```
 
 ### Propagation Formats
@@ -786,18 +705,10 @@ provider = TracerProvider(
 
 Sampling decision made after the trace is complete, based on observed characteristics.
 
-```
-+--------+     +------------------+     +---------+
-| Spans  |---->| Collector with   |---->| Backend |
-| (all)  |     | tail-based       |     | (only   |
-|        |     | sampling         |     |  sampled)|
-+--------+     +------------------+     +---------+
-
-Decision policies:
-  - Always sample errors (status_code >= 400)
-  - Always sample slow requests (duration > 5s)
-  - Sample 5% of successful requests
-  - Always sample specific user IDs
+```mermaid
+flowchart LR
+    Spans["Spans (100%)"] --> Coll["Collector with Tail-Based Sampling<br/>Decision Policies:<br/>- Always sample errors (status_code &gt;= 400)<br/>- Always sample slow requests (duration &gt; 5s)<br/>- Sample 5% of successful requests<br/>- Always sample specific user IDs"]
+    Coll --> Back["Backend<br/>(Only sampled traces)"]
 ```
 
 ```yaml

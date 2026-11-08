@@ -183,42 +183,10 @@ A heuristic evaluation is a structured inspection where evaluators examine an in
 
 **How to Conduct One:**
 
-```
-Step 1: Define Scope
-+----------------------------------+
-|  What are you evaluating?        |
-|  - Full app or specific flow?    |
-|  - Which user persona?           |
-|  - What tasks?                   |
-+----------------------------------+
-         |
-         v
-Step 2: Individual Evaluation (3-5 evaluators)
-+----------------------------------+
-|  Each evaluator independently:   |
-|  - Walks through the interface   |
-|  - Notes issues per heuristic    |
-|  - Rates severity (0-4 scale)   |
-+----------------------------------+
-         |
-         v
-Step 3: Consolidate Findings
-+----------------------------------+
-|  Merge all evaluator findings    |
-|  Remove duplicates               |
-|  Discuss disagreements           |
-|  Prioritize by severity          |
-+----------------------------------+
-         |
-         v
-Step 4: Report and Recommend
-+----------------------------------+
-|  For each issue:                 |
-|  - Heuristic violated            |
-|  - Severity rating               |
-|  - Location in interface         |
-|  - Recommendation to fix         |
-+----------------------------------+
+```mermaid
+flowchart TD
+    S1["Step 1: Define Scope<br/>Target flow, user persona, and core tasks"] --> S2["Step 2: Independent Evaluation (3-5 Evaluators)<br/>Walk through UI, log heuristic violations, rate severity (0-4)"]
+    S2 --> S3["Step 3: Consolidate Findings<br/>Deduplicate, resolve disagreements, rank by severity"] --> S4["Step 4: Report &amp; Recommend<br/>Document heuristic violated, severity, location, and fix"]
 ```
 
 **Severity Scale:**

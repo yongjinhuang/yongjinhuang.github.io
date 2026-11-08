@@ -8,36 +8,20 @@ A Kubernetes cluster is a distributed system with a clear separation between the
 
 Think of Kubernetes as a **database-backed control loop system**:
 
-```
-                         ┌─────────────────────────────────┐
-                         │        CONTROL PLANE             │
-                         │                                  │
-  kubectl ──────────────>│  kube-apiserver                  │
-  (HTTP REST)            │       │                          │
-                         │       ├── authn ── authz ── admission
-                         │       │                          │
-                         │       v                          │
-                         │     etcd (source of truth)       │
-                         │       ^                          │
-                         │       │                          │
-                         │  kube-controller-manager          │
-                         │  (watch etcd → reconcile)        │
-                         │                                  │
-                         │  kube-scheduler                  │
-                         │  (watch unscheduled pods → bind) │
-                         │                                  │
-                         │  cloud-controller-manager         │
-                         │  (cloud-specific reconciliation) │
-                         └────────────┬─────────────────────┘
-                                      │
-                              ┌───────┴───────┐
-                              │   DATA PLANE   │
-                         ┌────┴────┐     ┌────┴────┐
-                         │  Node 1  │     │  Node 2  │
-                         │ kubelet  │     │ kubelet  │
-                         │kube-proxy│     │kube-proxy│
-                         │ runtime  │     │ runtime  │
-                         └──────────┘     └──────────┘
+```mermaid
+flowchart TD
+    Kubectl["kubectl (HTTPS REST)"] --> API
+    subgraph CP["KUBERNETES CONTROL PLANE"]
+        API["kube-apiserver<br/>(AuthN -&gt; AuthZ -&gt; Admission)"] <--> Etcd["etcd<br/>(Raft Key-Value Store)"]
+        KCM["kube-controller-manager<br/>(Reconciliation Loops)"] <--> API
+        Sched["kube-scheduler<br/>(Filter &amp; Score Nodes)"] <--> API
+        CCM["cloud-controller-manager<br/>(Cloud LB / Node / Route APIs)"] <--> API
+    end
+    subgraph DP["DATA PLANE (Worker Nodes)"]
+        N1["Worker Node 1<br/>kubelet + kube-proxy + containerd"]
+        N2["Worker Node 2<br/>kubelet + kube-proxy + containerd"]
+    end
+    API <--> N1 & N2
 ```
 
 **Key insight:** The kube-apiserver is the ONLY component that talks to etcd. Every other component (scheduler, controllers, kubelet) communicates exclusively through the API server. This is a deliberate design decision — it enforces a single point of authentication, authorization, and audit logging.
@@ -190,43 +174,11 @@ The scheduler watches for newly created pods that have no node assigned (spec.no
 
 **Scheduling pipeline:**
 
-```
-Unscheduled Pod
-      │
-      v
-┌─────────────────────────────────────────────────────┐
-│ 1. FILTERING (Predicates)                           │
-│    Remove nodes that cannot run the pod:            │
-│    - NodeSelector / Node Affinity                   │
-│    - Taints and tolerations                         │
-│    - Resource requests (CPU, memory, GPU)           │
-│    - PodAffinity / PodAntiAffinity                  │
-│    - Volume topology constraints                    │
-│    - Max pods per node                              │
-│    Result: list of feasible nodes                   │
-└────────────────────┬────────────────────────────────┘
-                     │
-                     v
-┌─────────────────────────────────────────────────────┐
-│ 2. SCORING (Priorities)                             │
-│    Rank feasible nodes 0-100 on each priority:      │
-│    - LeastRequestedPriority (spread load)           │
-│    - MostRequestedPriority (bin-packing)            │
-│    - BalancedResourceAllocation (CPU/mem ratio)     │
-│    - NodeAffinityPriority                           │
-│    - PodTopologySpreadPriority                      │
-│    - ImageLocalityPriority (image already cached)   │
-│    Result: nodes ranked by total weighted score     │
-└────────────────────┬────────────────────────────────┘
-                     │
-                     v
-┌─────────────────────────────────────────────────────┐
-│ 3. BINDING                                          │
-│    - Select highest-scoring node                    │
-│    - Create Binding object (pod → node)             │
-│    - API server updates pod.spec.nodeName           │
-│    - kubelet on that node picks it up               │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Pod["Unscheduled Pod (spec.nodeName = empty)"] --> S1["1. Filtering (Predicates)<br/>Eliminate nodes failing resource requests, taints/tolerations,<br/>nodeSelector/affinity, volume topology"]
+    S1 --> S2["2. Scoring (Priorities)<br/>Score feasible nodes (0-100) on topology spread,<br/>bin-packing vs spread, image locality, affinity"]
+    S2 --> S3["3. Binding<br/>Select highest-scoring node, set pod.spec.nodeName via API server,<br/>target node's kubelet starts container sandbox"]
 ```
 
 **Scheduling Profiles (1.18+):** You can configure multiple profiles in a single scheduler, each with different plugins for different use cases (e.g., one profile for batch jobs that prefers bin-packing, another for services that prefers spreading).

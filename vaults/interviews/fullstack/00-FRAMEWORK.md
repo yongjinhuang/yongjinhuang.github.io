@@ -46,21 +46,19 @@ The distinguishing factor is **end-to-end thinking**. You need to demonstrate th
 
 The ideal full-stack candidate has a **T-shaped** skill profile:
 
-```
-Breadth (wide bar of the T):
-├── Frontend: HTML, CSS, JS frameworks, accessibility, performance
-├── Backend: APIs, server architecture, middleware, caching
-├── Database: Modeling, queries, indexing, migrations
-├── Infrastructure: Deployment, CI/CD, monitoring, containers
-└── Security: Auth, encryption, OWASP basics
-
-Depth (vertical bar of the T):
-└── One or two areas where you have deep expertise
-    Examples:
-    - React performance optimization and architecture
-    - Database design and query optimization
-    - Distributed systems and scaling patterns
-    - DevOps and infrastructure automation
+```mermaid
+flowchart TD
+    subgraph TShaped["T-SHAPED FULL-STACK ENGINEER"]
+        subgraph Breadth["Breadth (Wide Bar of the T)"]
+            B1["Frontend: HTML, CSS, JS frameworks, a11y, perf"]
+            B2["Backend: APIs, server architecture, middleware, caching"]
+            B3["Database: Modeling, queries, indexing, migrations"]
+            B4["Infrastructure: Deployment, CI/CD, monitoring, containers"]
+            B5["Security: Auth, encryption, OWASP basics"]
+        end
+        Depth["Depth (Vertical Bar of the T — 1-2 Areas of Deep Expertise)<br/>- React performance &amp; architecture<br/>- Database design &amp; query optimization<br/>- Distributed systems &amp; scaling patterns<br/>- DevOps &amp; infrastructure automation"]
+        Breadth --> Depth
+    end
 ```
 
 Interviewers are looking for this shape. They want to see that you can hold a conversation about any part of the stack, and that you can go deep when the problem demands it.
@@ -959,29 +957,12 @@ D - Discussion: Discuss trade-offs, alternatives, and improvements
 
 ### Technology Comparison Cheat Sheet
 
-```
-Rendering:
-├── CSR (Create React App) → Dashboards, internal tools
-├── SSR (Next.js) → SEO-critical, dynamic content
-├── SSG (Astro, Next.js) → Blogs, marketing sites
-└── ISR (Next.js) → Best of SSR + SSG for semi-static content
-
-Databases:
-├── PostgreSQL → Complex queries, ACID, JSON support
-├── MySQL → Simpler needs, read-heavy workloads
-├── MongoDB → Flexible schema, rapid prototyping
-├── Redis → Caching, sessions, rate limiting
-└── DynamoDB → Serverless, auto-scaling, key-value access
-
-API Styles:
-├── REST → Standard CRUD, wide adoption
-├── GraphQL → Complex data requirements, mobile clients
-├── gRPC → Internal services, high performance
-└── WebSocket → Real-time, bidirectional communication
-
-Authentication:
-├── JWT → Stateless, distributed systems
-├── Sessions → Simple apps, server-rendered pages
-├── OAuth 2.0 → Third-party login, delegated access
-└── API Keys → Service-to-service, public APIs
+```mermaid
+flowchart LR
+    subgraph Cheat["FULL-STACK TECHNOLOGY SELECTION CHEAT SHEET"]
+        Rend["Rendering<br/>- CSR -&gt; Dashboards, internal tools<br/>- SSR (Next.js) -&gt; SEO + dynamic<br/>- SSG (Astro/Next.js) -&gt; Blogs, marketing<br/>- ISR -&gt; Semi-static content"]
+        DB["Databases<br/>- PostgreSQL -&gt; Complex queries, ACID, JSONB<br/>- MySQL -&gt; Read-heavy workloads<br/>- MongoDB -&gt; Flexible schema<br/>- Redis -&gt; Caching, sessions, rate limits<br/>- DynamoDB -&gt; Serverless key-value"]
+        API["API Styles<br/>- REST -&gt; Standard CRUD<br/>- GraphQL -&gt; Complex mobile/client views<br/>- gRPC -&gt; Internal microservices<br/>- WebSocket -&gt; Real-time bidirectional"]
+        Auth["Authentication<br/>- JWT -&gt; Stateless distributed systems<br/>- Sessions -&gt; Server-rendered apps<br/>- OAuth 2.0 / OIDC -&gt; Third-party login<br/>- API Keys -&gt; Service-to-service"]
+    end
 ```

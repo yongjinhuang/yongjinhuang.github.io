@@ -44,22 +44,15 @@ are made -- is foundational knowledge for any media engineer.
 
 ### Architecture
 
-```
-                    ┌─────────────────────────────────┐
-                    │         Custom Video Player       │
-                    │                                   │
-┌──────────┐       │  ┌───────────┐   ┌─────────────┐ │
-│  Origin   │◄─────┼──│  Fetcher  │──►│ Source Buffer│ │
-│  Server   │ HTTP │  └───────────┘   └──────┬──────┘ │
-│ (segments │      │  ┌───────────┐          │        │
-│  + MPD)   │      │  │    ABR    │──────────┘        │
-└──────────┘       │  │  Manager  │                   │
-                    │  └───────────┘                   │
-                    │  ┌───────────┐   ┌────────────┐ │
-                    │  │  Buffer   │   │   Player   │ │
-                    │  │  Monitor  │   │     UI     │ │
-                    │  └───────────┘   └────────────┘ │
-                    └─────────────────────────────────┘
+```mermaid
+flowchart LR
+    Orig["Origin Server<br/>(fMP4 Segments + Manifest)"] <-->|"HTTP Fetch"| Fetch
+    subgraph Player["Custom MSE Video Player"]
+        Fetch["Segment Fetcher"] --> SB["MediaSource SourceBuffer"]
+        ABR["ABR Manager<br/>(EWMA Bandwidth + Buffer)"] --> Fetch
+        Buf["Buffer Monitor"] --> ABR
+        UI["Custom Player UI<br/>(Scrubber, Quality Selector, Stats)"]
+    end
 ```
 
 ### Prerequisites
@@ -654,23 +647,17 @@ with any WebRTC-based platform.
 
 ### Architecture
 
-```
-┌──────────────┐                              ┌──────────────┐
-│   Browser A  │                              │   Browser B  │
-│              │                              │              │
-│ getUserMedia │         Signaling            │ getUserMedia │
-│      │       │    ┌────Server────┐          │      │       │
-│      ▼       │    │  (WebSocket) │          │      ▼       │
-│ PeerConn  ◄──┼────┤  SDP relay   ├─────────►  PeerConn    │
-│   │  │  │    │    │  ICE relay   │          │   │  │  │    │
-│   │  │  │    │    └──────────────┘          │   │  │  │    │
-│   │  │  └────┼──── Data Channel ────────────┼───┘  │  │    │
-│   │  └───────┼──── Audio (SRTP) ────────────┼──────┘  │    │
-│   └──────────┼──── Video (SRTP) ────────────┼─────────┘    │
-│              │                              │              │
-│     STUN/TURN negotiation                   │              │
-│     via ICE candidates                      │              │
-└──────────────┘                              └──────────────┘
+```mermaid
+flowchart LR
+    subgraph BA["Browser A"]
+        GMA["getUserMedia()"] --> PCA["RTCPeerConnection"]
+    end
+    Sig["Signaling Server<br/>(WebSocket SDP &amp; ICE Relay)"]
+    subgraph BB["Browser B"]
+        GMB["getUserMedia()"] --> PCB["RTCPeerConnection"]
+    end
+    PCA <-->|"SDP Offer/Answer + Trickle ICE"| Sig <-->|"SDP Offer/Answer + Trickle ICE"| PCB
+    PCA <-->|"Audio (SRTP) + Video (SRTP) + DataChannel (SCTP)"| PCB
 ```
 
 ### Step 1: Signaling Server
@@ -1545,30 +1532,16 @@ these same primitives.
 
 ### Architecture
 
-```
-                    ┌─────────────────────────────────────┐
-                    │         Live Streaming Server         │
-                    │                                       │
-┌──────┐  RTMP     │  ┌──────────┐   ┌────────────────┐  │    ┌─────────┐
-│ OBS  │──────────►│  │  RTMP    │──►│   Transcoder   │  │    │  Web    │
-│      │           │  │  Ingest  │   │   (FFmpeg)     │  │    │ Player  │
-└──────┘           │  └──────────┘   └───────┬────────┘  │    │(hls.js) │
-                    │                         │           │    └────┬────┘
-                    │                    ┌────▼────┐      │         │
-                    │                    │   HLS   │      │    HTTP │
-                    │                    │Packager │      │◄────────┘
-                    │                    └────┬────┘      │
-                    │                         │           │
-                    │  ┌──────────┐    ┌─────▼──────┐   │
-                    │  │ Recorder │    │   HTTP     │   │
-                    │  │(optional)│    │   Server   │   │
-                    │  └──────────┘    └────────────┘   │
-                    │                                    │
-                    │  ┌──────────────────────────┐     │
-                    │  │    Status Dashboard       │     │
-                    │  │  (active streams, health) │     │
-                    │  └──────────────────────────┘     │
-                    └─────────────────────────────────────┘
+```mermaid
+flowchart LR
+    OBS["OBS Studio"] -->|"RTMP"| Ingest
+    subgraph Server["Live Streaming Server"]
+        Ingest["RTMP Ingest"] --> Trans["Multi-Bitrate Transcoder<br/>(FFmpeg)"]
+        Trans --> Pkg["HLS Packager<br/>(.m3u8 + .ts/.m4s)"] --> HTTP["HTTP Origin Server"]
+        Trans --> Rec["VOD Recorder"]
+        Dash["Status Dashboard<br/>(Active Streams &amp; Health)"]
+    end
+    HTTP <-->|"HTTP"| Web["Web Player (hls.js)"]
 ```
 
 ### Step 1: RTMP Ingest with Node-Media-Server
@@ -2040,32 +2013,11 @@ essential for anyone building or operating media delivery systems.
 
 ### Architecture
 
-```
-                          ┌───────────────┐
-                          │   Router /    │
-       Viewer ──────────► │ Load Balancer │
-                          └───────┬───────┘
-                                  │
-                    ┌─────────────┼─────────────┐
-                    │             │             │
-              ┌─────▼─────┐ ┌────▼──────┐ ┌────▼──────┐
-              │  Edge 1   │ │  Edge 2   │ │  Edge 3   │
-              │ (cache)   │ │ (cache)   │ │ (cache)   │
-              └─────┬─────┘ └─────┬─────┘ └─────┬─────┘
-                    │             │             │
-                    └─────────────┼─────────────┘
-                                  │
-                          ┌───────▼───────┐
-                          │    Shield     │
-                          │   (mid-tier   │
-                          │    cache)     │
-                          └───────┬───────┘
-                                  │
-                          ┌───────▼───────┐
-                          │    Origin     │
-                          │   (HLS +     │
-                          │  segments)   │
-                          └───────────────┘
+```mermaid
+flowchart TD
+    Viewer["Viewer"] --> LB["Router / Load Balancer"]
+    LB --> E1["Edge PoP 1 (Cache)"] & E2["Edge PoP 2 (Cache)"] & E3["Edge PoP 3 (Cache)"]
+    E1 & E2 & E3 --> Shield["Origin Shield (Mid-Tier Cache)"] --> Orig["Origin Server (HLS Manifests + Segments)"]
 ```
 
 ### Step 1: Origin Server
@@ -2508,31 +2460,11 @@ interact via WebRTC data channels (Project 2 technology applied to chat).
 
 ### Architecture
 
-```
-┌───────┐  RTMP   ┌───────────┐  HLS    ┌────────┐
-│  OBS  │────────►│ Streaming │───────►  │ Origin │
-└───────┘         │  Server   │ segments │ Server │
-                  │(Project 3)│          │(Proj 4)│
-                  └───────────┘          └───┬────┘
-                                             │
-                              ┌──────────────┼──────────────┐
-                              │              │              │
-                        ┌─────▼────┐  ┌─────▼────┐  ┌─────▼────┐
-                        │  Edge 1  │  │  Edge 2  │  │  Edge 3  │
-                        └─────┬────┘  └─────┬────┘  └─────┬────┘
-                              │              │              │
-                              └──────────────┼──────────────┘
-                                             │
-                                     ┌───────▼───────┐
-                                     │    Router     │
-                                     └───────┬───────┘
-                                             │
-                                     ┌───────▼───────┐
-                                     │ Custom Player │
-                                     │  (Project 1)  │
-                                     │ + WebSocket   │
-                                     │   Chat (P2)   │
-                                     └───────────────┘
+```mermaid
+flowchart TD
+    OBS["OBS"] -->|"RTMP"| SS["Streaming Server (Project 3)"] -->|"HLS Segments"| Orig["Origin Server (Project 4)"]
+    Orig --> E1["Edge 1"] & E2["Edge 2"] & E3["Edge 3"]
+    E1 & E2 & E3 --> Router["CDN Router"] --> Player["Custom MSE Player (Project 1)<br/>+ WebSocket/WebRTC Chat (Project 2)"]
 ```
 
 ### Implementation Outline

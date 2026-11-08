@@ -146,29 +146,23 @@ Zephyr provides a more "Linux-like" development experience with Kconfig, Devicet
 
 A FreeRTOS task is always in one of four states:
 
-```
-  Task State Machine
-  ==================
+```mermaid
+stateDiagram-v2
+    READY : READY (Able to run, waiting for CPU)
+    RUNNING : RUNNING (Executing on CPU — 1 per core)
+    BLOCKED : BLOCKED (Waiting for queue/semaphore/delay)
+    SUSPENDED : SUSPENDED (Explicitly paused)
 
-                 vTaskSuspend()
-  +----------+ <--------------------- +----------+
-  | SUSPENDED |                        |          |
-  +----------+ ---------------------> |          |
-                 vTaskResume()         |          |
-                                       |  READY   |
-  +----------+   Event / Timeout       |          |
-  | BLOCKED  | ---------------------> |          |
-  +----------+ <---------+            +----+-----+
-       ^                 |                 |
-       |    Wait for     |    Scheduler    |
-       |    event/delay  |    selects      |
-       |                 |    (highest     |
-       |            +----+-----+  priority)|
-       +----------- | RUNNING  | <---------+
-                     +----------+
-                    (Only 1 task can
-                     be RUNNING at a time)
-```
+    [*] --> READY : xTaskCreate()
+    READY --> RUNNING : Scheduler selects highest-priority ready task
+    RUNNING --> READY : Preempted by higher-priority task / time slice
+    RUNNING --> BLOCKED : vTaskDelay() / xQueueReceive() / xSemaphoreTake()
+    BLOCKED --> READY : Event occurs / timeout expires
+    READY --> SUSPENDED : vTaskSuspend()
+    RUNNING --> SUSPENDED : vTaskSuspend()
+    BLOCKED --> SUSPENDED : vTaskSuspend()
+    SUSPENDED --> READY : vTaskResume()
+````
 
 **Ready**: The task can run but a higher-priority task is currently running.
 **Running**: The task is executing on the CPU. Only one task can be in this state per core.

@@ -73,23 +73,11 @@ Requirements to earn ad revenue on YouTube:
 
 ### 2.1 How Ad Revenue Works
 
-```
-Viewer watches your video
-       │
-       ▼
-YouTube places ads (pre-roll, mid-roll, banner)
-       │
-       ▼
-Advertiser pays YouTube per impression/click
-       │
-       ▼
-YouTube takes 45%, you get 55%
-       │
-       ▼
-Revenue appears in YouTube Studio analytics
-       │
-       ▼
-Paid monthly via Google AdSense (min $100 payout)
+```mermaid
+flowchart TD
+    S1["Viewer Watches Your Video"] --> S2["YouTube Serves Ads<br/>(Pre-roll, mid-roll, display)"]
+    S2 --> S3["Advertiser Pays YouTube<br/>(CPM / CPC)"] --> S4["Revenue Split<br/>YouTube: 45% | Creator: 55% (Long-form)"]
+    S4 --> S5["Tracked in YouTube Studio Analytics"] --> S6["Paid Monthly via Google AdSense<br/>($100 minimum threshold)"]
 ```
 
 ### 2.2 CPM by Niche
@@ -225,20 +213,10 @@ Adjustments:
 
 ### 4.1 How It Works
 
-```
-You recommend a product in your video
-       │
-       ▼
-Include a special tracking link in the description
-       │
-       ▼
-Viewer clicks the link and makes a purchase
-       │
-       ▼
-You earn a commission (3-50% of the sale)
-       │
-       ▼
-Commission tracked automatically, paid monthly
+```mermaid
+flowchart TD
+    S1["Recommend Product in Video"] --> S2["Place Affiliate Tracking Link in Description"]
+    S2 --> S3["Viewer Clicks Link &amp; Purchases"] --> S4["Earn 3% - 50% Commission"] --> S5["Tracked Automatically &amp; Paid Monthly"]
 ```
 
 ### 4.2 Major Affiliate Programs
@@ -296,38 +274,11 @@ No inventory, no shipping, no per-unit cost.
 
 ### 5.3 Course Creation Basics
 
-```
-Course creation pipeline:
-
-1. Validate the idea
-   Ask your audience: "Would you pay for a course on X?"
-   Check if similar courses exist and sell well (validation)
-        │
-        ▼
-2. Outline the curriculum
-   Module 1: Fundamentals (6 lessons)
-   Module 2: Intermediate (8 lessons)
-   Module 3: Advanced (6 lessons)
-   Module 4: Real-world projects (4 lessons)
-        │
-        ▼
-3. Record the content
-   Screen recordings, talking head, slides
-   Aim for 3-6 hours total content
-        │
-        ▼
-4. Choose a platform
-   Teachable, Gumroad, Podia, or self-hosted
-        │
-        ▼
-5. Launch to your audience
-   Email list, YouTube community tab, social media
-   Launch discount (limited time)
-        │
-        ▼
-6. Ongoing sales
-   Mention in relevant YouTube videos
-   Evergreen funnel: video → free resource → email → course
+```mermaid
+flowchart TD
+    S1["1. Validate the Idea<br/>Survey audience &amp; verify market demand"] --> S2["2. Outline Curriculum<br/>Modules: Fundamentals -&gt; Intermediate -&gt; Advanced -&gt; Projects"]
+    S2 --> S3["3. Record Content<br/>3-6 hours concise, actionable video lessons"] --> S4["4. Choose Platform<br/>Teachable, Gumroad, Podia, or self-hosted"]
+    S4 --> S5["5. Launch to Audience<br/>Email list, YouTube videos, launch discount"] --> S6["6. Evergreen Sales Funnel<br/>YouTube Video -&gt; Free Lead Magnet -&gt; Email Sequence -&gt; Course"]
 ```
 
 ### 5.4 Selling Platforms
@@ -412,27 +363,11 @@ Your content creation skills are valuable services:
 
 ### 7.2 The Freelance Funnel
 
-```
-Your YouTube channel acts as a portfolio and lead generator:
-
-Viewer watches your content
-       │
-       ▼
-Viewer thinks "this person is skilled"
-       │
-       ▼
-Viewer (or their company) needs video work done
-       │
-       ▼
-They contact you: "Can you edit my videos?"
-       │
-       ▼
-You quote a rate and deliver the work
-       │
-       ▼
-Happy client refers you to others
-
-Your channel IS your portfolio. Every video is a demo reel.
+```mermaid
+flowchart TD
+    S1["Viewer Watches Your Channel<br/>(Every video acts as a public demo reel)"] --> S2["Viewer Recognizes Your Expertise"]
+    S2 --> S3["Viewer / Company Needs Video or Consulting Work"] --> S4["Inbound Lead Contacts You"]
+    S4 --> S5["Quote Rate &amp; Deliver Work"] --> S6["Happy Client Refers New Clients"]
 ```
 
 ### 7.3 Where to Find Freelance Clients
@@ -506,33 +441,12 @@ No single source > 40% of total income = financial resilience
 
 Build revenue streams in this order:
 
-```
-Step 1: Affiliate links (passive, minimal effort)
-  Put Amazon links in every gear-related video
-       │
-       ▼
-Step 2: YouTube Partner Program (passive, automatic)
-  Reach 1K subs + 4K watch hours → enable ads
-       │
-       ▼
-Step 3: Sponsorships (active, highest ROI)
-  Reach out to brands or accept inbound offers
-       │
-       ▼
-Step 4: Digital products (semi-passive)
-  Create once, sell forever (presets, templates, guides)
-       │
-       ▼
-Step 5: Services (active, high-value)
-  Freelance editing, consulting, corporate work
-       │
-       ▼
-Step 6: Memberships (recurring)
-  Launch when community is strong enough
-       │
-       ▼
-Step 7: Courses (semi-passive, high-value)
-  Create a comprehensive course when you are an authority
+```mermaid
+flowchart TD
+    S1["Step 1: Affiliate Links (Day 1)<br/>Passive commission on gear/tools"] --> S2["Step 2: YouTube Partner Program (1K subs + 4K hrs)<br/>Passive AdSense revenue"]
+    S2 --> S3["Step 3: Brand Sponsorships<br/>Active integrations, high ROI"] --> S4["Step 4: Digital Products<br/>Sell LUTs, templates, guides (build once, sell forever)"]
+    S4 --> S5["Step 5: High-Value Services<br/>Freelance editing, consulting"] --> S6["Step 6: Channel Memberships / Patreon<br/>Recurring community revenue"]
+    S6 --> S7["Step 7: Flagship Online Course<br/>High-ticket authority product"]
 ```
 
 ## 10. Going Full-Time: The Decision Framework
@@ -564,24 +478,10 @@ Insurance:         Health insurance plan (if applicable)
 
 ### 10.3 The Hybrid Path
 
-```
-Full-time job                    Part-time / freelance              Full-time creator
-     │                                   │                                │
-     │  ← Most people start here         │                                │
-     │                                   │                                │
-     │  Creator income:                  │  Creator income:               │  Creator income:
-     │  < 30% of salary                  │  50-100% of salary             │  > 100% of expenses
-     │                                   │                                │
-     │  Time available:                  │  Time available:               │  Time available:
-     │  Evenings + weekends              │  3-4 days/week for content     │  Full time content
-     │                                   │                                │
-     └──────────────────────────────────►└────────────────────────────────►│
-              Transition gradually (2-3 years is normal)
-
-The hybrid path is the safest:
-1. Start creating while employed (test, learn, grow)
-2. Go part-time or freelance when creator income replaces 50%+ of salary
-3. Go full-time when creator income exceeds expenses by 1.5x
+```mermaid
+flowchart LR
+    Stage1["Stage 1: Full-Time Job<br/>- Creator income: &lt; 30% of salary<br/>- Time: Evenings &amp; weekends"] -->|"Transition gradually"| Stage2["Stage 2: Part-Time / Freelance<br/>- Creator income: 50-100% of salary<br/>- Time: 3-4 days/week for content"]
+    Stage2 -->|"6+ months expenses saved"| Stage3["Stage 3: Full-Time Creator<br/>- Creator income: &gt; 1.5x expenses<br/>- Time: 100% content &amp; business"]
 ```
 
 ### 10.4 Tax and Business Basics

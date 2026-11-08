@@ -14,14 +14,14 @@ In 2025-2026, the edge is no longer experimental. Vercel Edge Functions, Cloudfl
 
 Edge computing moves computation from centralized data centers to distributed locations closer to end users. For frontend applications, this means:
 
-```
-Traditional Server:
-  User (Tokyo) ---> Origin Server (US-East) ---> Response
-  Round trip: ~200ms
-
-Edge:
-  User (Tokyo) ---> Edge Node (Tokyo) ---> Response
-  Round trip: ~20ms
+```mermaid
+flowchart LR
+    subgraph Trad["Traditional Server (Round trip: ~200ms)"]
+        U1["User (Tokyo)"] --> O1["Origin Server (US-East)"] --> R1["Response"]
+    end
+    subgraph Edge["Edge Rendering (Round trip: ~20ms)"]
+        U2["User (Tokyo)"] --> E2["Edge Node (Tokyo)"] --> R2["Response"]
+    end
 ```
 
 Edge nodes are typically small, lightweight runtimes that execute your code at CDN points of presence (PoPs). They have constraints (limited CPU time, no persistent filesystem, restricted APIs) but offer dramatically lower latency for dynamic content.
@@ -108,38 +108,19 @@ function handler(event) {
 
 ### Edge vs Serverless vs Traditional Server
 
-```
-+-------------------------------------------------------------------+
-|                    DEPLOYMENT ARCHITECTURES                        |
-+-------------------------------------------------------------------+
-
-Traditional Server (Origin)
-+------------------+
-| Single server    |  - Full Node.js runtime
-| or server fleet  |  - Persistent connections (WebSockets, DB pools)
-| in one region    |  - Full filesystem access
-|                  |  - No cold start (always running)
-+------------------+  - High latency for distant users
-        |
-        v
-    Response: 50-300ms (depends on user distance)
-
-Serverless (Regional Functions)
-+--------+ +--------+ +--------+
-| us-east| | eu-west| | ap-east|    - Full Node.js runtime
-|  fn()  | |  fn()  | |  fn()  |    - Cold starts (100-500ms)
-+--------+ +--------+ +--------+    - Scales to zero
-        |                           - Pay per invocation
-        v                           - 1-3 regions typical
-    Response: 50-150ms + cold start
-
-Edge (Global V8 Isolates)
-+--+ +--+ +--+ +--+ +--+ +--+
-|NY| |SF| |LN| |TK| |SY| |SP|     - V8 isolate (not full Node.js)
-+--+ +--+ +--+ +--+ +--+ +--+     - Near-zero cold start (<5ms)
- |    |    |    |    |    |        - 100-300+ locations
- v    v    v    v    v    v        - Limited CPU/memory
-    Response: 5-50ms               - Restricted APIs
+```mermaid
+flowchart TD
+    subgraph Arch["DEPLOYMENT ARCHITECTURES"]
+        subgraph Origin["Traditional Server (Origin)"]
+            O_Node["Single server or fleet in one region<br/>- Full Node.js runtime &amp; filesystem<br/>- Persistent connections (WebSockets, DB pools)<br/>- No cold start (always running)<br/>- High latency for distant users"] --> O_Resp["Response: 50-300ms (depends on user distance)"]
+        end
+        subgraph Serverless["Serverless (Regional Functions: us-east, eu-west, ap-east)"]
+            S_Node["Regional fn() (1-3 regions typical)<br/>- Full Node.js runtime<br/>- Cold starts (100-500ms)<br/>- Scales to zero, pay per invocation"] --> S_Resp["Response: 50-150ms + cold start"]
+        end
+        subgraph Edge["Edge (Global V8 Isolates: NY, SF, LN, TK, SY, SP)"]
+            E_Node["100-300+ global locations<br/>- V8 isolate (not full Node.js)<br/>- Near-zero cold start (&lt;5ms)<br/>- Limited CPU/memory &amp; restricted APIs"] --> E_Resp["Response: 5-50ms"]
+        end
+    end
 ```
 
 ### Key Constraints of Edge Runtimes
@@ -158,35 +139,25 @@ Edge (Global V8 Isolates)
 
 ### What Works at the Edge
 
-```
-GOOD for Edge:                       BAD for Edge:
-+---------------------------+        +---------------------------+
-| Authentication/JWT verify |        | Heavy image processing    |
-| Geolocation routing       |        | PDF generation           |
-| A/B testing               |        | Machine learning inference|
-| Personalization           |        | Long-running computations|
-| Request/response transform|        | WebSocket servers        |
-| Feature flags             |        | Database migrations      |
-| Bot detection             |        | Full ORM queries         |
-| Redirects & rewrites      |        | Native module deps       |
-| HTML streaming            |        | Large file operations    |
-| Cache orchestration       |        | Complex data pipelines   |
-+---------------------------+        +---------------------------+
+```mermaid
+flowchart LR
+    Good["GOOD for Edge<br/>- Authentication / JWT verify<br/>- Geolocation routing<br/>- A/B testing &amp; Personalization<br/>- Request/response transform<br/>- Feature flags &amp; Bot detection<br/>- Redirects &amp; rewrites<br/>- HTML streaming &amp; Cache orchestration"]
+    Bad["BAD for Edge<br/>- Heavy image processing &amp; PDF generation<br/>- Machine learning inference<br/>- Long-running computations<br/>- WebSocket servers<br/>- Database migrations &amp; Full ORM queries<br/>- Native module deps<br/>- Large file ops &amp; Complex data pipelines"]
 ```
 
 ### Partial Prerendering (PPR) in Next.js
 
 PPR is the most significant architectural innovation for edge rendering. It combines static and dynamic content in a single response:
 
-```
-Traditional SSR:
-  Request --> Render ENTIRE page --> Send HTML
-  (Page is as slow as the slowest data fetch)
-
-PPR:
-  Request --> Send static shell INSTANTLY from CDN
-          --> Stream dynamic parts as they resolve
-  (Static parts are instant, dynamic parts stream in)
+```mermaid
+flowchart LR
+    subgraph SSR["Traditional SSR (Slow as slowest fetch)"]
+        R1["Request"] --> RenderAll["Render ENTIRE page"] --> SendHTML["Send HTML"]
+    end
+    subgraph PPR["Partial Prerendering (PPR)"]
+        R2["Request"] --> Shell["Send static shell INSTANTLY from CDN"]
+        R2 --> Stream["Stream dynamic parts as they resolve"]
+    end
 ```
 
 ```tsx
@@ -303,19 +274,11 @@ The edge node starts streaming HTML immediately. As each async component resolve
 
 **Pattern 1: Edge Gateway with Origin Fallback**
 
-```
-                    +-------------+
-  User Request ---> | Edge Node   |
-                    |             |
-                    | 1. Check    |     +--------+
-                    |    cache    |---->| Origin |
-                    | 2. Auth     |     | Server |
-                    | 3. A/B test |     +--------+
-                    | 4. Transform|
-                    +-------------+
-                         |
-                    Personalized
-                    Response
+```mermaid
+flowchart LR
+    Req["User Request"] --> Edge["Edge Node<br/>1. Check cache<br/>2. Auth<br/>3. A/B test<br/>4. Transform"]
+    Edge -->|"Cache miss"| Origin["Origin Server"]
+    Edge --> Resp["Personalized Response"]
 ```
 
 ```typescript
@@ -353,18 +316,9 @@ export const config = {
 
 **Pattern 2: Edge Data with Global Stores**
 
-```
-+------+     +------+     +------+
-| Edge |     | Edge |     | Edge |
-| Node |     | Node |     | Node |
-+--+---+     +--+---+     +--+---+
-   |            |            |
-   v            v            v
-+-------------------------------+
-|    Globally Distributed DB    |
-|  (Cloudflare KV, Turso,      |
-|   PlanetScale, Neon)          |
-+-------------------------------+
+```mermaid
+flowchart TD
+    E1["Edge Node"] & E2["Edge Node"] & E3["Edge Node"] --> DB[("Globally Distributed DB<br/>(Cloudflare KV, Turso, PlanetScale, Neon)")]
 ```
 
 ```typescript

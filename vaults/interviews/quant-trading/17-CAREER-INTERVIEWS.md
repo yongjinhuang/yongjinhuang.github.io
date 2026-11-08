@@ -616,49 +616,13 @@ SENIOR LEVEL (5+ years):
 
 ### The Typical Pipeline
 
-```
-+------------------------------------------------------------------------+
-|                    QUANT INTERVIEW PIPELINE                             |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  STAGE 1: APPLICATION                                                  |
-|  +-------------------+                                                 |
-|  | Resume Screen     |  1-2 weeks                                      |
-|  | Recruiter Call     |  15-30 min, logistics and motivation           |
-|  +--------+----------+                                                 |
-|           |                                                            |
-|  STAGE 2: INITIAL ASSESSMENT                                           |
-|  +--------v----------+                                                 |
-|  | Online Assessment  |  1-3 hours, math/coding/probability            |
-|  | OR Phone Screen   |  45-60 min, technical questions                 |
-|  +--------+----------+                                                 |
-|           |                                                            |
-|  STAGE 3: DEEP TECHNICAL                                               |
-|  +--------v----------+                                                 |
-|  | Technical Phone    |  1-2 rounds, 45-60 min each                   |
-|  | Screens            |  Math, coding, strategy questions              |
-|  +--------+----------+                                                 |
-|           |                                                            |
-|  STAGE 4: SUPER DAY (On-site or Virtual)                               |
-|  +--------v----------+                                                 |
-|  | 4-6 back-to-back   |  Full day (4-8 hours)                         |
-|  | interviews          |  Mixed: math, coding, market, behavioral     |
-|  +--------+----------+                                                 |
-|           |                                                            |
-|  STAGE 5 (sometimes): TAKE-HOME PROJECT                                |
-|  +--------v----------+                                                 |
-|  | Research project   |  2-7 days, alpha research or system design     |
-|  | or coding challenge|  Followed by presentation/defense              |
-|  +--------+----------+                                                 |
-|           |                                                            |
-|  STAGE 6: OFFER                                                        |
-|  +--------v----------+                                                 |
-|  | Team match / offer |  1-2 weeks for decision                        |
-|  | Negotiation        |  Base, bonus, sign-on, start date              |
-|  +-------------------+                                                 |
-|                                                                        |
-|  TOTAL TIMELINE: 2-8 weeks (can be faster for experienced hires)       |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    S1["Stage 1: Application &amp; Recruiter Screen (1-2 weeks)"] --> S2["Stage 2: Online Assessment (OA) / Mental Math / Coding (1-3 hours)"]
+    S2 --> S3["Stage 3: Technical Phone Screens (1-2 rounds, 45-60 min)<br/>Probability, brain teasers, algorithms, stats"]
+    S3 --> S4["Stage 4: Super Day / Onsite (4-6 back-to-back rounds)<br/>Math, live coding, mock trading games, system design"]
+    S4 --> S5["Stage 5 (Optional): Take-Home Research / C++ Project (2-7 days)"]
+    S5 --> S6["Stage 6: Team Match &amp; Offer Negotiation (Base + Guaranteed Bonus + Sign-On)"]
 ```
 
 ### What Each Stage Tests

@@ -78,75 +78,37 @@ graph TD
 
 ## ER Diagram
 
-```
-┌────────────────────────────┐
-│     rate_limit_rules        │
-│     (PostgreSQL)            │
-│────────────────────────────│
-│ rule_id (PK)                │
-│ endpoint                    │
-│ tier                        │
-│ max_requests                │
-│ window_seconds              │
-│ algorithm                   │
-└────────────────────────────┘
-         │
-         │ Loaded at startup,
-         │ cached in memory
-         ▼
-┌────────────────────────────┐     ┌────────────────────────────┐
-│   rate_limit_counters       │     │   token_bucket_state        │
-│   (Redis)                   │     │   (Redis)                   │
-│────────────────────────────│     │────────────────────────────│
-│ rate:{uid}:{ep}:{window}    │     │ bucket:{uid}:{ep}           │
-│ value: counter              │     │ tokens: float               │
-│ TTL: window_seconds         │     │ last_refill_time: timestamp │
-└────────────────────────────┘     └────────────────────────────┘
+```mermaid
+erDiagram
+    rate_limit_rules ||..o{ rate_limit_counters : "endpoint + tier matching"
+    rate_limit_rules ||..o{ token_bucket_state : "endpoint + tier matching"
 
-Note: Redis structures are not relational tables. They are
-key-value pairs with no FK relationships. The connection to
-rate_limit_rules is logical (via endpoint + tier matching),
-not enforced by constraints.
+    rate_limit_rules {
+        BIGINT rule_id PK
+        VARCHAR endpoint
+        ENUM tier
+        INT max_requests
+        INT window_seconds
+        ENUM algorithm
+    }
+    rate_limit_counters {
+        STRING key
+        INT value
+        INT TTL
+    }
+    token_bucket_state {
+        STRING key
+        FLOAT tokens
+        FLOAT last_refill_time
+    }
 ```
+
+> **Note:** Redis structures are not relational tables. They are key-value pairs with no FK relationships. The connection to rate_limit_rules is logical (via endpoint + tier matching), not enforced by constraints.
+
 
 ## Data Flow
 
 ### Fixed Window Algorithm
-
-```
-1. Request arrives at API gateway
-         │
-         ▼
-2. Extract user_id (from auth token) and endpoint
-         │
-         ▼
-3. Lookup matching rule (from in-memory cache)
-   Key: (endpoint, user.tier) → rule
-         │
-         ▼
-4. Compute Redis key:
-   rate:{user_id}:{endpoint}:{floor(now / window_seconds)}
-         │
-         ▼
-5. Redis INCR on key
-   ├─ If key is new: set TTL = window_seconds
-   │
-         ▼
-6. Compare counter to rule.max_requests
-         │
-    ┌────┴─────────┐
-    │ counter <=   │
-    │ max_requests?│
-    ├─ Yes ────────┤──► Allow request, set response headers:
-    │              │    X-RateLimit-Limit: max_requests
-    │              │    X-RateLimit-Remaining: max - counter
-    │              │    X-RateLimit-Reset: window_end_epoch
-    │ No           │
-    └──────┬───────┘
-           ▼
-    Return HTTP 429 Too Many Requests
-    Headers: Retry-After: seconds_until_reset
-```
 
 ```mermaid
 flowchart TD
@@ -163,35 +125,6 @@ flowchart TD
 ```
 
 ### Token Bucket Algorithm
-
-```
-1. Request arrives → Extract user_id + endpoint
-         │
-         ▼
-2. Lookup rule → Get max_requests, window_seconds
-   Compute: refill_rate = max_requests / window_seconds
-         │
-         ▼
-3. Redis: GET bucket:{user_id}:{endpoint}
-   Returns: {tokens, last_refill_time}
-         │
-         ▼
-4. Calculate tokens to add:
-   elapsed = now - last_refill_time
-   new_tokens = min(max_requests, tokens + elapsed * refill_rate)
-         │
-         ▼
-5. Check: new_tokens >= 1.0 ?
-         │
-    ┌────┴─────┐
-    │ Yes      │──► Deduct 1 token, update last_refill_time
-    │          │    Redis SET bucket:{uid}:{ep} → {tokens-1, now}
-    │          │    Allow request
-    │ No       │
-    └────┬─────┘
-         ▼
-    Return 429, Retry-After: (1 - new_tokens) / refill_rate
-```
 
 ```mermaid
 flowchart TD

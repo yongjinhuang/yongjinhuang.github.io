@@ -38,15 +38,14 @@ Data engineering sits at the intersection of software engineering and data scien
 
 ### The Data Lifecycle
 
-```
-┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│  Source   │───>│  Ingest  │───>│  Store   │───>│Transform │───>│  Serve   │
-│  Systems  │    │          │    │          │    │          │    │          │
-└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
-  Databases       APIs            Data Lake       dbt/Spark      Dashboards
-  SaaS Apps       Kafka           Warehouse       SQL             ML Models
-  IoT Devices     Fivetran        Lakehouse       Python          APIs
-  Log Files       Airbyte         Object Store    Flink           Reports
+```mermaid
+flowchart LR
+    Src["Source Systems<br/>- Databases<br/>- SaaS Apps<br/>- IoT Devices<br/>- Log Files"]
+    Ing["Ingest<br/>- APIs<br/>- Kafka<br/>- Fivetran<br/>- Airbyte"]
+    Sto["Store<br/>- Data Lake<br/>- Warehouse<br/>- Lakehouse<br/>- Object Store"]
+    Trf["Transform<br/>- dbt / Spark<br/>- SQL<br/>- Python<br/>- Flink"]
+    Srv["Serve<br/>- Dashboards<br/>- ML Models<br/>- APIs<br/>- Reports"]
+    Src --> Ing --> Sto --> Trf --> Srv
 ```
 
 ---
@@ -64,12 +63,13 @@ Data engineering sits at the intersection of software engineering and data scien
 
 ### Career Progression
 
-```
-Junior DE ──> Mid-Level DE ──> Senior DE ──> Staff DE ──> Principal DE
-                                    │
-                                    ├──> Engineering Manager
-                                    ├──> Data Architect
-                                    └──> Platform Engineer
+```mermaid
+flowchart LR
+    Jr["Junior DE"] --> Mid["Mid-Level DE"] --> Sr["Senior DE"]
+    Sr --> Staff["Staff DE"] --> Principal["Principal DE"]
+    Sr --> EM["Engineering Manager"]
+    Sr --> Arch["Data Architect"]
+    Sr --> Plat["Platform Engineer"]
 ```
 
 ### Key Skills
@@ -91,17 +91,12 @@ Junior DE ──> Mid-Level DE ──> Senior DE ──> Staff DE ──> Princi
 
 Traditional approach where data is transformed before loading into the target system.
 
-```
-┌──────────┐    ┌─────────────────────┐    ┌──────────────┐
-│  Source   │───>│   Transform Layer   │───>│  Data        │
-│  Systems  │    │  (ETL Server)       │    │  Warehouse   │
-│           │    │                     │    │              │
-│ - CRM     │    │ - Clean             │    │ Structured,  │
-│ - ERP     │    │ - Validate          │    │ ready to     │
-│ - Files   │    │ - Aggregate         │    │ query        │
-│ - APIs    │    │ - Join              │    │              │
-└──────────┘    └─────────────────────┘    └──────────────┘
-   EXTRACT           TRANSFORM                  LOAD
+```mermaid
+flowchart LR
+    E["EXTRACT: Source Systems<br/>- CRM<br/>- ERP<br/>- Files<br/>- APIs"]
+    T["TRANSFORM: Transform Layer (ETL Server)<br/>- Clean<br/>- Validate<br/>- Aggregate<br/>- Join"]
+    L[("LOAD: Data Warehouse<br/>Structured, ready to query")]
+    E --> T --> L
 ```
 
 **When to use ETL:**
@@ -114,17 +109,12 @@ Traditional approach where data is transformed before loading into the target sy
 
 Modern approach where raw data is loaded first, then transformed using the target system's compute power.
 
-```
-┌──────────┐    ┌──────────────┐    ┌─────────────────────┐
-│  Source   │───>│  Data Lake / │───>│   Transform in      │
-│  Systems  │    │  Warehouse   │    │   Warehouse         │
-│           │    │              │    │                     │
-│ - CRM     │    │ Raw data     │    │ - dbt models        │
-│ - ERP     │    │ lands here   │    │ - Spark jobs        │
-│ - Files   │    │ first        │    │ - SQL transforms    │
-│ - APIs    │    │              │    │                     │
-└──────────┘    └──────────────┘    └─────────────────────┘
-   EXTRACT           LOAD               TRANSFORM
+```mermaid
+flowchart LR
+    E["EXTRACT: Source Systems<br/>- CRM<br/>- ERP<br/>- Files<br/>- APIs"]
+    L[("LOAD: Data Lake / Warehouse<br/>Raw data lands here first")]
+    T["TRANSFORM: Transform in Warehouse<br/>- dbt models<br/>- Spark jobs<br/>- SQL transforms"]
+    E --> L --> T
 ```
 
 **When to use ELT:**
@@ -209,27 +199,15 @@ Event ─> Process ─> Output
 
 The Lambda Architecture combines batch and streaming processing to balance latency, throughput, and fault tolerance.
 
-```
-                    ┌─────────────────────────────┐
-                    │        Batch Layer           │
-                    │  (Spark, Hive, MapReduce)    │
-               ┌───>│                              │───┐
-               │    │  - Master dataset (immutable)│   │
-               │    │  - Batch views               │   │
-               │    │  - Recomputes periodically   │   │
-               │    └─────────────────────────────┘   │
-               │                                       │    ┌──────────────┐
-┌──────────┐   │                                       ├───>│ Serving      │
-│  Data    │───┤                                       │    │ Layer        │
-│  Source  │   │                                       │    │              │
-└──────────┘   │    ┌─────────────────────────────┐   │    │ Merge batch  │
-               │    │        Speed Layer           │   │    │ + real-time  │
-               └───>│  (Storm, Kafka Streams)      │───┘    │ views        │
-                    │                              │        └──────────────┘
-                    │  - Real-time views            │
-                    │  - Approximate, fast          │
-                    │  - Compensates for batch lag  │
-                    └─────────────────────────────┘
+```mermaid
+flowchart LR
+    Src["Data Source"]
+    Batch["Batch Layer (Spark, Hive, MapReduce)<br/>- Master dataset (immutable)<br/>- Batch views<br/>- Recomputes periodically"]
+    Speed["Speed Layer (Storm, Kafka Streams)<br/>- Real-time views<br/>- Approximate, fast<br/>- Compensates for batch lag"]
+    Serve["Serving Layer<br/>Merge batch + real-time views"]
+
+    Src --> Batch --> Serve
+    Src --> Speed --> Serve
 ```
 
 ### Three Layers
@@ -253,18 +231,12 @@ The Lambda Architecture combines batch and streaming processing to balance laten
 
 The Kappa Architecture simplifies Lambda by using a single streaming layer for all processing.
 
-```
-┌──────────┐    ┌──────────────────────┐    ┌──────────────┐    ┌──────────┐
-│  Data    │───>│  Streaming Platform  │───>│  Stream      │───>│  Serving │
-│  Source  │    │  (e.g., Kafka)       │    │  Processor   │    │  Layer   │
-└──────────┘    │                      │    │  (Flink,     │    │          │
-                │  Immutable log of    │    │   Kafka      │    │  Query   │
-                │  all events          │    │   Streams)   │    │  results │
-                └──────────────────────┘    └──────────────┘    └──────────┘
-                         │
-                         │ Reprocess by replaying
-                         │ from an earlier offset
-                         └─────────────────────────────>
+```mermaid
+flowchart LR
+    Src["Data Source"] --> Stream["Streaming Platform (e.g., Kafka)<br/>Immutable log of all events"]
+    Stream --> Proc["Stream Processor<br/>(Flink, Kafka Streams)"]
+    Stream -.->|"Reprocess by replaying<br/>from earlier offset"| Proc
+    Proc --> Serve["Serving Layer<br/>(Query results)"]
 ```
 
 ### Key Principles
@@ -293,52 +265,25 @@ Data Mesh is a sociotechnical approach to data architecture that decentralizes d
 
 ### Four Principles
 
-```
-┌───────────────────────────────────────────────────────┐
-│                    DATA MESH                          │
-│                                                       │
-│  ┌─────────────────┐    ┌─────────────────┐          │
-│  │ 1. Domain       │    │ 2. Data as a    │          │
-│  │    Ownership    │    │    Product      │          │
-│  │                 │    │                 │          │
-│  │ Each domain     │    │ Domains publish │          │
-│  │ owns its data   │    │ data products   │          │
-│  │ end-to-end      │    │ with SLAs       │          │
-│  └─────────────────┘    └─────────────────┘          │
-│                                                       │
-│  ┌─────────────────┐    ┌─────────────────┐          │
-│  │ 3. Self-serve   │    │ 4. Federated    │          │
-│  │    Platform     │    │    Governance   │          │
-│  │                 │    │                 │          │
-│  │ Central infra   │    │ Global standards│          │
-│  │ that domains    │    │ with domain     │          │
-│  │ build upon      │    │ autonomy        │          │
-│  └─────────────────┘    └─────────────────┘          │
-└───────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Mesh["DATA MESH PRINCIPLES"]
+        P1["1. Domain Ownership<br/>Each domain owns its data end-to-end"]
+        P2["2. Data as a Product<br/>Domains publish data products with SLAs"]
+        P3["3. Self-serve Platform<br/>Central infra that domains build upon"]
+        P4["4. Federated Governance<br/>Global standards with domain autonomy"]
+    end
 ```
 
 ### Domain-Oriented Ownership
 
-```
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│  Orders     │  │  Customers  │  │  Payments   │
-│  Domain     │  │  Domain     │  │  Domain     │
-│             │  │             │  │             │
-│ - Ingestion │  │ - Ingestion │  │ - Ingestion │
-│ - Transform │  │ - Transform │  │ - Transform │
-│ - Serving   │  │ - Serving   │  │ - Serving   │
-│ - Quality   │  │ - Quality   │  │ - Quality   │
-│ - SLAs      │  │ - SLAs      │  │ - SLAs      │
-└──────┬──────┘  └──────┬──────┘  └──────┬──────┘
-       │                │                │
-       └────────────────┼────────────────┘
-                        │
-              ┌─────────┴─────────┐
-              │  Self-Serve Data  │
-              │  Platform         │
-              │  (Infra, Tools,   │
-              │   Governance)     │
-              └───────────────────┘
+```mermaid
+flowchart TD
+    D1["Orders Domain<br/>- Ingestion<br/>- Transform<br/>- Serving<br/>- Quality &amp; SLAs"]
+    D2["Customers Domain<br/>- Ingestion<br/>- Transform<br/>- Serving<br/>- Quality &amp; SLAs"]
+    D3["Payments Domain<br/>- Ingestion<br/>- Transform<br/>- Serving<br/>- Quality &amp; SLAs"]
+    Plat["Self-Serve Data Platform<br/>(Infra, Tools, Governance)"]
+    D1 & D2 & D3 --> Plat
 ```
 
 ### When Data Mesh Makes Sense
@@ -361,27 +306,14 @@ Data Mesh is a sociotechnical approach to data architecture that decentralizes d
 
 The Medallion Architecture (popularized by Databricks) organizes data into three layers of increasing quality.
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                    MEDALLION ARCHITECTURE                        │
-│                                                                  │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
-│  │   BRONZE     │    │   SILVER     │    │    GOLD      │       │
-│  │   (Raw)      │───>│  (Cleaned)   │───>│  (Business)  │       │
-│  │              │    │              │    │              │       │
-│  │ - Raw ingest │    │ - Deduplicated│   │ - Aggregated │       │
-│  │ - Append-only│    │ - Validated  │    │ - Joined     │       │
-│  │ - No schema  │    │ - Typed      │    │ - Modeled    │       │
-│  │   enforcement│    │ - Filtered   │    │ - Conformed  │       │
-│  │ - All source │    │ - Standardized│   │ - KPIs       │       │
-│  │   data       │    │              │    │ - Star schema│       │
-│  └──────────────┘    └──────────────┘    └──────────────┘       │
-│                                                                  │
-│  Purpose:            Purpose:            Purpose:                │
-│  Auditability        Clean foundation    Business consumption    │
-│  Reprocessing        Single source of    Dashboards, ML, APIs   │
-│  Data lineage        truth per entity    Ready-to-use datasets  │
-└──────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Medallion["MEDALLION ARCHITECTURE"]
+        Bronze["BRONZE (Raw)<br/>- Raw ingest, append-only<br/>- No schema enforcement<br/>- All source data<br/><br/>Purpose: Auditability, reprocessing, data lineage"]
+        Silver["SILVER (Cleaned)<br/>- Deduplicated &amp; validated<br/>- Typed, filtered, standardized<br/><br/>Purpose: Clean foundation, single source of truth"]
+        Gold["GOLD (Business)<br/>- Aggregated, joined, modeled<br/>- Conformed KPIs &amp; Star schema<br/><br/>Purpose: Dashboards, ML, APIs, ready-to-use datasets"]
+        Bronze --> Silver --> Gold
+    end
 ```
 
 ### Layer Details
@@ -451,38 +383,51 @@ GROUP BY order_date;
 
 The star schema consists of a central fact table surrounded by dimension tables.
 
-```
-                    ┌──────────────┐
-                    │ dim_date     │
-                    │──────────────│
-                    │ date_key (PK)│
-                    │ date         │
-                    │ month        │
-                    │ quarter      │
-                    │ year         │
-                    │ day_of_week  │
-                    └──────┬───────┘
-                           │
-┌──────────────┐    ┌──────┴───────┐    ┌──────────────┐
-│ dim_product  │    │ fact_sales   │    │ dim_customer │
-│──────────────│    │──────────────│    │──────────────│
-│ product_key  │◄───│ date_key (FK)│───>│ customer_key │
-│ product_name │    │ product_key  │    │ customer_name│
-│ category     │    │ customer_key │    │ email        │
-│ brand        │    │ store_key    │    │ segment      │
-│ price        │    │ quantity     │    │ city         │
-└──────────────┘    │ revenue      │    │ country      │
-                    │ discount     │    └──────────────┘
-                    └──────┬───────┘
-                           │
-                    ┌──────┴───────┐
-                    │ dim_store    │
-                    │──────────────│
-                    │ store_key    │
-                    │ store_name   │
-                    │ city         │
-                    │ region       │
-                    └──────────────┘
+```mermaid
+erDiagram
+    dim_date ||--o{ fact_sales : "date_key"
+    dim_product ||--o{ fact_sales : "product_key"
+    dim_customer ||--o{ fact_sales : "customer_key"
+    dim_store ||--o{ fact_sales : "store_key"
+
+    dim_date {
+        INT date_key PK
+        DATE date
+        INT month
+        INT quarter
+        INT year
+        VARCHAR day_of_week
+    }
+    dim_product {
+        INT product_key PK
+        VARCHAR product_name
+        VARCHAR category
+        VARCHAR brand
+        DECIMAL price
+    }
+    dim_customer {
+        INT customer_key PK
+        VARCHAR customer_name
+        VARCHAR email
+        VARCHAR segment
+        VARCHAR city
+        VARCHAR country
+    }
+    dim_store {
+        INT store_key PK
+        VARCHAR store_name
+        VARCHAR city
+        VARCHAR region
+    }
+    fact_sales {
+        INT date_key FK
+        INT product_key FK
+        INT customer_key FK
+        INT store_key FK
+        INT quantity
+        DECIMAL revenue
+        DECIMAL discount
+    }
 ```
 
 **Pros:** Simple queries, fast aggregations, easy to understand
@@ -492,29 +437,44 @@ The star schema consists of a central fact table surrounded by dimension tables.
 
 Normalized version of star schema where dimensions are further broken into sub-dimensions.
 
-```
-┌──────────────┐
-│ dim_category │
-│──────────────│
-│ category_key │
-│ category_name│
-└──────┬───────┘
-       │
-┌──────┴───────┐    ┌──────────────┐    ┌──────────────┐
-│ dim_product  │    │ fact_sales   │    │ dim_city     │
-│──────────────│    │──────────────│    │──────────────│
-│ product_key  │◄───│ product_key  │    │ city_key     │
-│ product_name │    │ customer_key │───>│ city_name    │
-│ category_key │    │ date_key     │    │ region_key   │──> dim_region
-│ brand_key    │    │ quantity     │    └──────────────┘
-└──────────────┘    │ revenue      │
-       │            └──────────────┘
-┌──────┴───────┐
-│ dim_brand    │
-│──────────────│
-│ brand_key    │
-│ brand_name   │
-└──────────────┘
+```mermaid
+erDiagram
+    dim_category ||--o{ dim_product : "category_key"
+    dim_brand ||--o{ dim_product : "brand_key"
+    dim_product ||--o{ fact_sales : "product_key"
+    dim_region ||--o{ dim_city : "region_key"
+    dim_city ||--o{ fact_sales : "customer_key / city_key"
+
+    dim_category {
+        INT category_key PK
+        VARCHAR category_name
+    }
+    dim_brand {
+        INT brand_key PK
+        VARCHAR brand_name
+    }
+    dim_product {
+        INT product_key PK
+        VARCHAR product_name
+        INT category_key FK
+        INT brand_key FK
+    }
+    fact_sales {
+        INT product_key FK
+        INT customer_key FK
+        INT date_key FK
+        INT quantity
+        DECIMAL revenue
+    }
+    dim_city {
+        INT city_key PK
+        VARCHAR city_name
+        INT region_key FK
+    }
+    dim_region {
+        INT region_key PK
+        VARCHAR region_name
+    }
 ```
 
 **Pros:** Less storage, normalized (no redundancy), easier to maintain
@@ -524,37 +484,38 @@ Normalized version of star schema where dimensions are further broken into sub-d
 
 Enterprise-scale modeling methodology designed for agility and auditability.
 
-```
-┌───────────────┐         ┌───────────────┐
-│   HUB_Order   │         │ HUB_Customer  │
-│───────────────│         │───────────────│
-│ order_hash_key│◄──┐ ┌──>│ cust_hash_key │
-│ order_id (BK) │   │ │   │ customer_id   │
-│ load_date     │   │ │   │ load_date     │
-│ record_source │   │ │   │ record_source │
-└───────────────┘   │ │   └───────────────┘
-                    │ │          │
-              ┌─────┴─┴────┐    │
-              │ LINK_Order  │    │
-              │ _Customer   │    │
-              │─────────────│    │
-              │ link_hash   │    │
-              │ order_hash  │    │
-              │ cust_hash   │    │
-              │ load_date   │    │
-              └─────────────┘    │
-                                 │
-                    ┌────────────┴──┐
-                    │ SAT_Customer  │
-                    │ _Details      │
-                    │───────────────│
-                    │ cust_hash_key │
-                    │ load_date     │
-                    │ name          │
-                    │ email         │
-                    │ phone         │
-                    │ hash_diff     │
-                    └───────────────┘
+```mermaid
+erDiagram
+    HUB_Order ||--o{ LINK_Order_Customer : "order_hash"
+    HUB_Customer ||--o{ LINK_Order_Customer : "cust_hash"
+    HUB_Customer ||--o{ SAT_Customer_Details : "cust_hash_key"
+
+    HUB_Order {
+        CHAR order_hash_key PK
+        VARCHAR order_id
+        TIMESTAMP load_date
+        VARCHAR record_source
+    }
+    HUB_Customer {
+        CHAR cust_hash_key PK
+        VARCHAR customer_id
+        TIMESTAMP load_date
+        VARCHAR record_source
+    }
+    LINK_Order_Customer {
+        CHAR link_hash PK
+        CHAR order_hash FK
+        CHAR cust_hash FK
+        TIMESTAMP load_date
+    }
+    SAT_Customer_Details {
+        CHAR cust_hash_key FK
+        TIMESTAMP load_date
+        VARCHAR name
+        VARCHAR email
+        VARCHAR phone
+        CHAR hash_diff
+    }
 ```
 
 **Three building blocks:**
@@ -583,26 +544,16 @@ Enterprise-scale modeling methodology designed for agility and auditability.
 
 ### Six Dimensions of Data Quality
 
-```
-┌────────────────────────────────────────────────────────┐
-│                  DATA QUALITY                          │
-│                                                        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
-│  │Completeness │  │  Accuracy   │  │ Consistency │   │
-│  │             │  │             │  │             │   │
-│  │ No missing  │  │ Values are  │  │ Same data   │   │
-│  │ values or   │  │ correct and │  │ across all  │   │
-│  │ records     │  │ precise     │  │ systems     │   │
-│  └─────────────┘  └─────────────┘  └─────────────┘   │
-│                                                        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
-│  │ Timeliness  │  │  Validity   │  │ Uniqueness  │   │
-│  │             │  │             │  │             │   │
-│  │ Data arrives│  │ Conforms to │  │ No duplicate│   │
-│  │ when needed │  │ rules and   │  │ records     │   │
-│  │             │  │ constraints │  │             │   │
-│  └─────────────┘  └─────────────┘  └─────────────┘   │
-└────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph DQ["SIX DIMENSIONS OF DATA QUALITY"]
+        D1["Completeness<br/>No missing values or records"]
+        D2["Accuracy<br/>Values are correct and precise"]
+        D3["Consistency<br/>Same data across all systems"]
+        D4["Timeliness<br/>Data arrives when needed"]
+        D5["Validity<br/>Conforms to rules and constraints"]
+        D6["Uniqueness<br/>No duplicate records"]
+    end
 ```
 
 ### Data Quality Checks Example
@@ -660,17 +611,11 @@ FROM orders;
 
 Data lineage tracks the flow of data from source to destination, showing how data is transformed at each step.
 
-```
-┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│ Postgres │───>│ Bronze   │───>│ Silver   │───>│ Gold     │
-│ orders   │    │ .orders  │    │ .orders  │    │ .daily   │
-│ table    │    │          │    │          │    │ _revenue │
-└──────────┘    └──────────┘    └──────────┘    └──────────┘
-                     │               │               │
-                     │               │               │
-                Column-level lineage:                │
-                order_id ──> order_id ──> (aggregated)
-                amount   ──> amount   ──> revenue (SUM)
+```mermaid
+flowchart LR
+    PG[("Postgres<br/>orders table")] --> B["Bronze.orders<br/>(order_id, amount)"]
+    B --> S["Silver.orders<br/>(order_id, amount)"]
+    S --> G["Gold.daily_revenue<br/>(order_id aggregated, SUM(amount) -&gt; revenue)"]
 ```
 
 **Why lineage matters:**
@@ -704,25 +649,17 @@ A data catalog is a centralized inventory of data assets with metadata.
 
 The Modern Data Stack (MDS) is a collection of cloud-native tools that work together to handle the full data lifecycle.
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                     MODERN DATA STACK                        │
-│                                                              │
-│  INGESTION        STORAGE          TRANSFORM      SERVE     │
-│  ┌──────────┐    ┌──────────┐    ┌──────────┐  ┌────────┐  │
-│  │ Fivetran │    │Snowflake │    │   dbt    │  │ Looker │  │
-│  │ Airbyte  │───>│ BigQuery │───>│          │─>│Tableau │  │
-│  │ Stitch   │    │ Redshift │    │          │  │  Metabase│ │
-│  │ Meltano  │    │ Databricks│   │          │  │ Preset │  │
-│  └──────────┘    └──────────┘    └──────────┘  └────────┘  │
-│                                                              │
-│  ORCHESTRATION    QUALITY         CATALOG       GOVERNANCE  │
-│  ┌──────────┐    ┌──────────┐    ┌──────────┐  ┌────────┐  │
-│  │ Airflow  │    │ Great    │    │ DataHub  │  │ Privacera│ │
-│  │ Dagster  │    │  Expect. │    │ Atlan    │  │ Immuta │  │
-│  │ Prefect  │    │ Soda     │    │ Amundsen │  │ Collibra│ │
-│  └──────────┘    └──────────┘    └──────────┘  └────────┘  │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph MDS["MODERN DATA STACK"]
+        Ing["INGESTION<br/>Fivetran / Airbyte<br/>Stitch / Meltano"] --> Sto["STORAGE<br/>Snowflake / BigQuery<br/>Redshift / Databricks"]
+        Sto --> Trf["TRANSFORM<br/>dbt"] --> Srv["SERVE<br/>Looker / Tableau<br/>Metabase / Preset"]
+
+        Orch["ORCHESTRATION<br/>Airflow / Dagster / Prefect"]
+        Qual["QUALITY<br/>Great Expectations / Soda"]
+        Cat["CATALOG<br/>DataHub / Atlan / Amundsen"]
+        Gov["GOVERNANCE<br/>Privacera / Immuta / Collibra"]
+    end
 ```
 
 ### Key Characteristics
@@ -787,20 +724,21 @@ A: Techniques include:
 
 ### Architecture Decision Guide
 
-```
-Need real-time only?
-├── Yes ──> Kappa Architecture
-└── No
-    ├── Need both batch + real-time? ──> Lambda Architecture
-    └── Batch only? ──> Simple batch pipeline
+```mermaid
+flowchart TD
+    Q1{"Need real-time only?"}
+    Q1 -->|"Yes"| Kappa["Kappa Architecture"]
+    Q1 -->|"No"| Q1b{"Need both batch + real-time?"}
+    Q1b -->|"Yes"| Lambda["Lambda Architecture"]
+    Q1b -->|"Batch only"| Batch["Simple batch pipeline"]
 
-Organization size?
-├── Large (100+ engineers) ──> Consider Data Mesh
-└── Small/Medium ──> Centralized team
+    Q2{"Organization size?"}
+    Q2 -->|"Large (100+ engineers)"| Mesh["Consider Data Mesh"]
+    Q2 -->|"Small / Medium"| Central["Centralized team"]
 
-Data quality layers needed?
-├── Yes ──> Medallion Architecture
-└── Simple needs ──> Source ──> Staging ──> Mart
+    Q3{"Data quality layers needed?"}
+    Q3 -->|"Yes"| Medallion["Medallion Architecture"]
+    Q3 -->|"Simple needs"| Simple["Source -&gt; Staging -&gt; Mart"]
 ```
 
 ### Key Metrics to Track

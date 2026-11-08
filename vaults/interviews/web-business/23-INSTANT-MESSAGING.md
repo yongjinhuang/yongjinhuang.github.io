@@ -20,10 +20,10 @@ The build vs buy decision is also significant. Managed chat SDKs (Stream, Sendbi
 
 ### The Message Lifecycle
 
-```
-Sender types → Typing indicator broadcast → Message sent
-    → Server receives → Store in database → Deliver to recipient(s)
-        → Delivery confirmation → Recipient reads → Read receipt sent back
+```mermaid
+flowchart LR
+    S1["Sender types"] --> S2["Typing indicator broadcast"] --> S3["Message sent"] --> S4["Server receives"]
+    S4 --> S5[("Store in database")] --> S6["Deliver to recipient(s)"] --> S7["Delivery confirmation"] --> S8["Recipient reads"] --> S9["Read receipt sent back"]
 ```
 
 ### Step 1: Connection Establishment
@@ -148,6 +148,40 @@ Every chat app needs unread counts -- both per-conversation and a global total. 
 11. **Not designing for reconnection gracefully.** Mobile users constantly lose and regain connectivity. Your client needs robust reconnection logic: exponential backoff on reconnect attempts, a sync mechanism to catch up on missed messages, and UI that clearly indicates connection status without alarming the user.
 
 12. **Unread counts drifting out of sync.** If your unread badge says 3 but the user sees no new messages, trust is broken. Unread counters must be updated atomically with message delivery and reset atomically when the user reads the conversation. Use Redis counters, not database queries, for this.
+
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Per-Conversation Monotonic `seq_id` Gap Detection (Why Timestamps Can Never Order Chat)
+
+Beginners order chat messages by `created_at` timestamp and rely on the WebSocket connection to push every message. In production, mobile clients switch between Wi-Fi and cellular constantly, server clocks drift across nodes (NTP skew), and messages sent 10ms apart arrive out of order.
+- **How WeChat, Slack, and Discord Actually Do It**: Every conversation (or user inbox) maintains a strictly monotonic integer sequence counter (`seq_id = 1041, 1042, 1043...`).
+- **Deterministic Gap Healing**: The client persists `last_ack_seq_id = 1041` in local SQLite/IndexedDB. If the next WebSocket frame carries `seq_id = 1044`, the client immediately detects the missing range `[1042, 1043]` and fires an HTTP pull `GET /conversations/{id}/messages?after_seq=1041&limit=50` before rendering—guaranteeing zero silently dropped messages even across flaky mobile tunnels.
+
+```mermaid
+sequenceDiagram
+    participant C as Client (Local max_seq = 1041)
+    participant WS as WebSocket Gateway
+    participant Sync as Sync HTTP API
+    WS-->>C: Push msg (seq_id = 1044)
+    Note over C: Gap detected! Missing [1042, 1043]
+    C->>Sync: GET /sync?after_seq=1041
+    Sync-->>C: Return msgs [1042, 1043, 1044]
+    Note over C: Advance local max_seq = 1044 & render in order
+```
+
+### 2. The "Large Group Read-Receipt & Presence Amplification" Storm
+
+In a 1-on-1 chat, sending a `"read"` receipt or `"online"` presence event notifies 1 peer. In a 10,000-member Discord server or enterprise Slack channel, if 3,000 people view a newly posted announcement at the same second and you broadcast each person's read receipt to all 10,000 members, a single message triggers $3,000 	imes 10,000 = 30,000,000$ WebSocket frames—instantly melting your gateway cluster.
+- **Battle-Tested Threshold Rules**:
+  - **Read Receipts**: Above a strict group size threshold (typically 50–100 members), switch from pushing per-user read events to **lazy pull aggregation** (only track a single `unread_watermark_seq_id` per user, and compute the "Read by N people" list only when the sender explicitly opens the message info drawer).
+  - **Presence Subscriptions**: Never push full guild/workspace presence on connect. Use **Viewport-Scoped Presence Subscriptions**—the client only subscribes to real-time status changes for the ~30 user avatars currently visible inside the scroll viewport.
+
+### 3. Link-Preview Crawler SSRF & The "10,000-Client Stampede"
+
+When a user pastes `https://example.com/article` into a 5,000-person channel, whose machine fetches the OpenGraph title and thumbnail?
+- **Trap 1 (Client-Side Fetch)**: If every recipient's client fetches the URL to render the preview card, pasting a link in a large channel turns your users into a 5,000-node DDoS botnet against the target website (and leaks every recipient's IP address to an attacker-controlled server!).
+- **Trap 2 (Naive Server-Side Fetch)**: If your backend fetches the URL directly from your production VPC without network isolation, an attacker will paste `http://169.254.169.254/latest/meta-data/iam/security-credentials/` or a domain that DNS-rebinds to `10.0.1.25:6379` (Server-Side Request Forgery / SSRF).
+- **Production Standard**: Unfurl links asynchronously once on the backend inside an **egress-isolated, zero-privilege proxy VPC** with strict DNS-resolution IP blacklisting, response byte caps (e.g., max 2MB), and image re-hosting through your own media CDN.
 
 ## Quick Reference
 

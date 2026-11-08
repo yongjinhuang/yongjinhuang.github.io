@@ -6,27 +6,10 @@ Game theory pervades quantitative finance. Markets are not physics experiments w
 
 Jane Street is famous for its game theory and trading game interviews. Citadel, HRT, and Jump also test strategic thinking extensively. This chapter covers the mathematical foundations and their direct applications to trading.
 
-```
-+------------------------------------------------------------------------+
-|              GAME THEORY IN TRADING - CONCEPT MAP                       |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  FOUNDATIONS               AUCTIONS              TRADING GAMES         |
-|  +------------------+    +------------------+   +------------------+   |
-|  | Nash Equilibrium  |    | First-Price      |   | Market Making    |   |
-|  | Dominant Strategy |    | Second-Price     |   | Price Discovery  |   |
-|  | Mixed Strategies  |--->| Common Value     |-->| Information      |   |
-|  | Minimax           |    | Winner's Curse   |   | Poker Math       |   |
-|  | Repeated Games    |    | Revenue Equiv.   |   | Bluffing Theory  |   |
-|  +------------------+    +------------------+   +------------------+   |
-|           |                       |                      |             |
-|           v                       v                      v             |
-|  +--------------------------------------------------------------+     |
-|  |  MARKET MICROSTRUCTURE AS GAME THEORY                         |     |
-|  |  Adverse selection | Glosten-Milgrom | Kyle's model           |     |
-|  +--------------------------------------------------------------+     |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    F["1. Game Theory Foundations<br/>Nash Equilibrium, Dominant Strategies,<br/>Mixed Strategies, Minimax, Repeated Games"] --> A["2. Auction Theory<br/>First-Price vs Second-Price (Vickrey),<br/>Common Value &amp; Winner's Curse"] --> T["3. Trading &amp; Betting Games<br/>Market Making Games, Poker Pot Odds,<br/>Optimal Bluffing &amp; Kelly Sizing"]
+    F & A & T --> M["4. Market Microstructure as a Game<br/>Adverse Selection, Glosten-Milgrom Spread, Kyle's Lambda"]
 ```
 
 ---

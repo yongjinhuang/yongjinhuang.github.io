@@ -6,29 +6,16 @@ You cannot write secure smart contracts without understanding the system they ru
 
 This chapter builds your mental model from the ground up: what blocks contain, how they link together, why consensus is hard, and how different blockchain architectures make different tradeoffs.
 
-```
-+------------------------------------------------------------------------+
-|                    BLOCKCHAIN ARCHITECTURE                              |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  DATA STRUCTURES             CONSENSUS              NETWORKING         |
-|  +----------------------+   +--------------------+  +--------------+   |
-|  | Hash-linked blocks    |   | Proof of Work (PoW)|  | P2P gossip   |   |
-|  | Merkle trees          |   | Proof of Stake (PoS)|  | Mempool      |   |
-|  | Patricia tries (ETH)  |   | BFT variants       |  | Block prop.  |   |
-|  | Transaction format    |   | Nakamoto consensus |  | Node types   |   |
-|  | Block headers         |   | Finality models    |  | Discovery    |   |
-|  +----------------------+   +--------------------+  +--------------+   |
-|                                                                        |
-|  STATE MODELS                ECONOMICS               GOVERNANCE        |
-|  +----------------------+   +--------------------+  +--------------+   |
-|  | UTXO (Bitcoin)        |   | Block rewards      |  | Soft forks   |   |
-|  | Account (Ethereum)    |   | Transaction fees   |  | Hard forks   |   |
-|  | Nonces & balances     |   | Inflation schedule |  | EIPs / BIPs  |   |
-|  | Contract storage      |   | MEV                |  | Governance   |   |
-|  +----------------------+   +--------------------+  +--------------+   |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Arch["BLOCKCHAIN ARCHITECTURE PILLARS"]
+        DS["DATA STRUCTURES<br/>Hash-linked blocks, Merkle trees, Patricia tries, Tx format, Block headers"]
+        Cons["CONSENSUS<br/>Proof of Work (PoW), Proof of Stake (PoS), BFT, Nakamoto consensus, Finality"]
+        Net["NETWORKING<br/>P2P gossip, Mempool, Block propagation, Node types, Peer discovery"]
+        State["STATE MODELS<br/>UTXO (Bitcoin), Account (Ethereum), Nonces &amp; balances, Contract storage"]
+        Econ["ECONOMICS<br/>Block rewards, Transaction fees (EIP-1559), Issuance/inflation, MEV"]
+        Gov["GOVERNANCE<br/>Soft forks, Hard forks, EIPs / BIPs, On-chain &amp; off-chain governance"]
+    end
 ```
 
 ---
@@ -49,18 +36,13 @@ In digital systems, data can be copied. If Alice has 10 digital coins, what prev
 
 In traditional finance, a central bank maintains the authoritative ledger. Bitcoin's breakthrough was solving double-spend without a central authority by using proof-of-work consensus to establish a single canonical ordering of transactions.
 
-```
-Double-Spend Attack:
-
-Alice has 10 BTC
-    |
-    +---> Sends 10 BTC to Bob (Transaction A)
-    |
-    +---> Sends 10 BTC to Charlie (Transaction B)
-
-Without consensus: Both transactions look valid individually
-With consensus:    Only one transaction can be included in the chain
-                   The other is rejected as invalid (insufficient balance)
+```mermaid
+flowchart LR
+    Alice["Alice has 10 BTC"] -->|"Broadcasts simultaneously"| TxA["Transaction A:<br/>Sends 10 BTC to Bob"]
+    Alice -->|"Broadcasts simultaneously"| TxB["Transaction B:<br/>Sends 10 BTC to Charlie"]
+    TxA & TxB --> Cons{"Consensus Protocol"}
+    Cons -->|"Included in canonical block"| Valid["One Tx Confirmed"]
+    Cons -->|"Rejected (insufficient balance)"| Invalid["Other Tx Rejected"]
 ```
 
 ---
@@ -71,41 +53,22 @@ With consensus:    Only one transaction can be included in the chain
 
 Every block has two parts: a **header** and a **body** (list of transactions).
 
-```
-+------------------------------------------+
-|              BLOCK HEADER                 |
-+------------------------------------------+
-| Version          | Protocol version       |
-| Previous Hash    | Hash of block N-1      |
-| Merkle Root      | Root hash of tx tree   |
-| Timestamp        | When block was created |
-| Difficulty/Target| PoW difficulty target  |
-| Nonce            | PoW solution value     |
-+------------------------------------------+
-|              BLOCK BODY                   |
-+------------------------------------------+
-| Transaction 0 (coinbase / reward)        |
-| Transaction 1                            |
-| Transaction 2                            |
-| ...                                      |
-| Transaction N                            |
-+------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Block["BLOCK STRUCTURE"]
+        Header["BLOCK HEADER<br/>- Version: Protocol version<br/>- Previous Hash: Hash of block N-1<br/>- Merkle Root: Root hash of tx tree<br/>- Timestamp: Block creation time<br/>- Difficulty / Target: PoW target<br/>- Nonce: PoW solution value"]
+        Body["BLOCK BODY<br/>- Transaction 0 (Coinbase / block reward)<br/>- Transaction 1<br/>- Transaction 2 ... Transaction N"]
+        Header --> Body
+    end
 ```
 
 The **previous hash** field is what creates the "chain" — each block commits to the entire history before it. Changing any historical transaction would change that block's hash, which would break every subsequent block's previous hash reference.
 
 ### 2.2 Hash-Linked Chain
 
-```
-Block 0 (Genesis)       Block 1              Block 2
-+------------------+    +------------------+  +------------------+
-| prevHash: 0x0000 |    | prevHash: 0xa3f2 |  | prevHash: 0x7b1c |
-| merkleRoot: 0x.. |    | merkleRoot: 0x.. |  | merkleRoot: 0x.. |
-| nonce: 42917      |    | nonce: 83721      |  | nonce: 12089      |
-| hash: 0xa3f2...  |--->| hash: 0x7b1c...  |--->| hash: 0x9e4d...  |
-+------------------+    +------------------+  +------------------+
-| [Tx0]             |    | [Tx1, Tx2, Tx3]  |  | [Tx4, Tx5]       |
-+------------------+    +------------------+  +------------------+
+```mermaid
+flowchart LR
+    B0["Block 0 (Genesis)<br/>prevHash: 0x0000<br/>merkleRoot: 0x...<br/>nonce: 42917<br/>hash: 0xa3f2...<br/>Body: [Tx0]"] --> B1["Block 1<br/>prevHash: 0xa3f2...<br/>merkleRoot: 0x...<br/>nonce: 83721<br/>hash: 0x7b1c...<br/>Body: [Tx1, Tx2, Tx3]"] --> B2["Block 2<br/>prevHash: 0x7b1c...<br/>merkleRoot: 0x...<br/>nonce: 12089<br/>hash: 0x9e4d...<br/>Body: [Tx4, Tx5]"]
 ```
 
 **Tamper resistance**: If an attacker changes Transaction 2 in Block 1:
@@ -122,12 +85,19 @@ To tamper with history, the attacker must re-mine every block from the tampered 
 
 A Merkle tree is a binary tree of hashes that lets you efficiently prove a transaction is included in a block without downloading all transactions.
 
-```
-                    Merkle Root = H(H12 + H34)
-                   /                           \
-           H12 = H(H1 + H2)             H34 = H(H3 + H4)
-           /            \                /            \
-     H1 = H(Tx1)  H2 = H(Tx2)    H3 = H(Tx3)  H4 = H(Tx4)
+```mermaid
+flowchart TD
+    Root["Merkle Root = H(H12 + H34)"]
+    H12["H12 = H(H1 + H2)"]
+    H34["H34 = H(H3 + H4)"]
+    H1["H1 = H(Tx1)"]
+    H2["H2 = H(Tx2)"]
+    H3["H3 = H(Tx3)"]
+    H4["H4 = H(Tx4)"]
+
+    Root --> H12 & H34
+    H12 --> H1 & H2
+    H34 --> H3 & H4
 ```
 
 **Merkle proof for Tx3**: To prove Tx3 is in the block, you only need:
@@ -188,21 +158,16 @@ In a distributed system with no central coordinator, nodes must answer three que
 
 Different consensus mechanisms make different tradeoffs across the "blockchain trilemma":
 
-```
-                    Decentralization
-                         /\
-                        /  \
-                       /    \
-                      /      \
-                     / Choose  \
-                    /   any 2   \
-                   /              \
-                  /________________\
-           Security          Scalability
-
-Bitcoin:    Decentralized + Secure    (slow: ~7 TPS)
-Solana:     Secure + Scalable         (fewer validators)
-Ethereum:   Trying to achieve all 3   (via L2 scaling)
+```mermaid
+flowchart TD
+    subgraph Trilemma["THE BLOCKCHAIN TRILEMMA (Pick Any 2 on L1)"]
+        D["Decentralization"]
+        S["Security"]
+        Sc["Scalability"]
+        D <-->|"Bitcoin: Decentralized + Secure (~7 TPS)"| S
+        S <-->|"Solana: Secure + Scalable (~65K TPS, fewer validators)"| Sc
+        D <-->|"Ethereum: L1 Decentralization + Security, L2 Rollups for Scalability"| Sc
+    end
 ```
 
 ### 3.2 Proof of Work (PoW)
@@ -311,27 +276,12 @@ Slashing Conditions:
 
 Bitcoin does not track "balances." Instead, it tracks **Unspent Transaction Outputs (UTXOs)** — discrete chunks of Bitcoin that can be spent.
 
-```
-UTXO Model:
-
-Alice receives 5 BTC (UTXO_1) and 3 BTC (UTXO_2)
-
-Alice's "balance" = sum of her UTXOs = 8 BTC
-
-Alice sends 6 BTC to Bob:
-  INPUT:  UTXO_1 (5 BTC) + UTXO_2 (3 BTC) = 8 BTC consumed
-  OUTPUT: UTXO_3 (6 BTC to Bob) + UTXO_4 (2 BTC change to Alice)
-
-  UTXO_1 and UTXO_2 are now "spent" (deleted from UTXO set)
-  UTXO_3 and UTXO_4 are now "unspent" (added to UTXO set)
-
-+----------+          +----------+
-| UTXO_1   |--INPUT-->|          |
-| 5 BTC    |          | Tx       |--OUTPUT--> UTXO_3 (6 BTC, Bob)
-+----------+          |          |
-| UTXO_2   |--INPUT-->|          |--OUTPUT--> UTXO_4 (2 BTC, Alice)
-| 3 BTC    |          +----------+
-+----------+
+```mermaid
+flowchart LR
+    U1["UTXO_1: 5 BTC<br/>(Alice — Spent)"] -->|"INPUT"| Tx["Transaction<br/>(Consumes 8 BTC)"]
+    U2["UTXO_2: 3 BTC<br/>(Alice — Spent)"] -->|"INPUT"| Tx
+    Tx -->|"OUTPUT"| U3["UTXO_3: 6 BTC<br/>(Bob — Unspent)"]
+    Tx -->|"OUTPUT (Change)"| U4["UTXO_4: 2 BTC<br/>(Alice — Unspent)"]
 ```
 
 **Advantages**: Natural parallelism (UTXOs are independent), privacy (new addresses per transaction), no global state to track.
@@ -342,33 +292,13 @@ Alice sends 6 BTC to Bob:
 
 Ethereum uses an **account-based** model similar to a traditional bank. The world state is a mapping of addresses to account objects.
 
-```
-Account Model:
-
-Two types of accounts:
-
-EOA (Externally Owned Account):
-+----------------------------------+
-| Address:  0xAbCd...1234          |
-| Balance:  5.2 ETH                |
-| Nonce:    7 (transaction count)  |
-+----------------------------------+
-
-Contract Account:
-+----------------------------------+
-| Address:  0x7890...eFgH          |
-| Balance:  100.0 ETH             |
-| Nonce:    1 (contracts created)  |
-| Code Hash: keccak256(bytecode)  |
-| Storage Root: root of storage    |
-|   trie (key-value store)        |
-+----------------------------------+
-
-Transaction:
-  Alice (nonce: 7) sends 2 ETH to Bob
-  -> Alice.balance -= 2 ETH, Alice.nonce = 8
-  -> Bob.balance += 2 ETH
-  -> Simple state transition, no UTXOs
+```mermaid
+flowchart LR
+    subgraph Accounts["ETHEREUM ACCOUNT MODEL"]
+        EOA["EOA (Externally Owned Account)<br/>- Address: 0xAbCd...1234<br/>- Balance: 5.2 ETH<br/>- Nonce: 7 (tx count)"]
+        CA["Contract Account<br/>- Address: 0x7890...eFgH<br/>- Balance: 100.0 ETH<br/>- Nonce: 1 (contracts created)<br/>- Code Hash: keccak256(bytecode)<br/>- Storage Root: Merkle Patricia Trie root"]
+        EOA -->|"Tx: Alice sends 2 ETH<br/>(Alice.balance -= 2, nonce = 8)"| CA
+    end
 ```
 
 **Comparison**:
@@ -393,16 +323,10 @@ A fork occurs when the blockchain diverges into two or more paths. This can happ
 - **Naturally**: Two miners find a block at nearly the same time (resolved in 1-2 blocks)
 - **Intentionally**: Protocol upgrade that changes consensus rules
 
-```
-Natural Fork (resolved quickly):
-
-     Block N
-        |
-   +----+----+
-   |         |
-Block N+1a  Block N+1b    (two miners found blocks simultaneously)
-   |
-Block N+2               (one chain gets extended first, the other is orphaned)
+```mermaid
+flowchart TD
+    BN["Block N"] --> B1a["Block N+1a<br/>(Canonical Chain)"] & B1b["Block N+1b<br/>(Orphaned / Uncle)"]
+    B1a --> B2["Block N+2<br/>(Extended first)"]
 ```
 
 ### 5.2 Soft Fork
@@ -417,21 +341,11 @@ A **hard fork** loosens or changes the rules. Old nodes reject new blocks (not b
 
 **Example**: Ethereum's "The DAO" hard fork in 2016. After a $60M hack, the community voted to roll back the theft. Nodes that disagreed continued the original chain as "Ethereum Classic" (ETC).
 
-```
-Hard Fork:
-
-                Block N (pre-fork)
-                    |
-            +-------+-------+
-            |               |
-    Block N+1 (new rules)  Block N+1 (old rules)
-            |               |
-    Block N+2 (ETH)        Block N+2 (ETC)
-            |               |
-        ... (Ethereum)     ... (Ethereum Classic)
-
-Both chains continue independently, each with their own community,
-token, and development roadmap.
+```mermaid
+flowchart TD
+    BN["Block N (Pre-Fork)"]
+    BN --> New1["Block N+1 (New Rules)"] --> New2["Block N+2 (Ethereum — ETH)"]
+    BN --> Old1["Block N+1 (Old Rules)"] --> Old2["Block N+2 (Ethereum Classic — ETC)"]
 ```
 
 ---
@@ -479,94 +393,44 @@ Time: ~12.8 minutes from block creation to finality
 
 ### 7.1 Node Types
 
-```
-+------------------------------------------------------------------------+
-|                        NODE TYPES                                       |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  FULL NODE                                                             |
-|  - Stores complete blockchain state                                    |
-|  - Validates every transaction and block                               |
-|  - Can serve data to other nodes                                       |
-|  - Ethereum: ~1 TB storage, 16 GB RAM                                  |
-|                                                                        |
-|  ARCHIVE NODE                                                          |
-|  - Full node + every historical state                                  |
-|  - Can answer "what was this account's balance at block 5,000,000?"   |
-|  - Ethereum: ~15+ TB storage                                          |
-|  - Used by block explorers and analytics platforms                     |
-|                                                                        |
-|  LIGHT NODE                                                            |
-|  - Stores only block headers                                           |
-|  - Requests specific data from full nodes on demand                    |
-|  - Uses Merkle proofs to verify data                                   |
-|  - Low resource requirements (works on phones)                        |
-|                                                                        |
-|  VALIDATOR NODE (PoS)                                                  |
-|  - Full node + staking capability                                      |
-|  - Proposes and attests to blocks                                      |
-|  - Must maintain high uptime (>95%)                                    |
-|  - Runs both execution client + consensus client                      |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Nodes["BLOCKCHAIN NODE TYPES"]
+        Full["FULL NODE (~1 TB storage, 16 GB RAM)<br/>Stores current state &amp; validates every transaction and block"]
+        Archive["ARCHIVE NODE (~15+ TB storage)<br/>Full node + every historical state at every block (for explorers/analytics)"]
+        Light["LIGHT NODE (Minimal resources, mobile-friendly)<br/>Stores block headers only; verifies state on demand via Merkle proofs"]
+        Val["VALIDATOR NODE (PoS)<br/>Full node (Execution + Consensus client) + staked ETH; proposes &amp; attests blocks"]
+    end
 ```
 
 ### 7.2 P2P Networking
 
 Blockchain nodes communicate over a peer-to-peer network without a central server:
 
-```
-P2P Network Topology:
-
-     Node A ---- Node B ---- Node C
-      |    \      |           |
-     Node D  Node E ---- Node F
-      |              \        |
-     Node G          Node H --+
-
-When Alice submits a transaction:
-1. Her wallet sends it to her connected node
-2. That node validates and adds it to its MEMPOOL
-3. Node gossips the tx to all its peers
-4. Peers validate and re-gossip
-5. Within ~1-3 seconds, most of the network has seen it
-6. A miner/validator includes it in the next block
+```mermaid
+flowchart LR
+    subgraph P2P["P2P Gossip Network Topology (~1-3s Global Propagation via Mempool)"]
+        NA["Node A"] --- NB["Node B"] --- NC["Node C"]
+        NA --- ND["Node D"] & NE["Node E"]
+        NB --- NE
+        NC --- NF["Node F"]
+        NE --- NF & NH["Node H"]
+        NF --- NH
+        ND --- NG["Node G"]
+    end
 ```
 
 ---
 
 ## 8. Blockchain Generations
 
-```
-+------------------------------------------------------------------------+
-|                    BLOCKCHAIN EVOLUTION                                  |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  Gen 1: BITCOIN (2009)                                                 |
-|  - Programmable money                                                  |
-|  - Limited scripting (Bitcoin Script, not Turing-complete)             |
-|  - UTXO model, PoW consensus                                          |
-|  - ~7 TPS                                                              |
-|                                                                        |
-|  Gen 2: ETHEREUM (2015)                                                |
-|  - Programmable contracts (Turing-complete EVM)                        |
-|  - Account model, PoW -> PoS (2022 Merge)                             |
-|  - Smart contracts enable DeFi, NFTs, DAOs                             |
-|  - ~15 TPS on L1 (scaling via L2s)                                     |
-|                                                                        |
-|  Gen 3: SCALABILITY FOCUS (2020+)                                      |
-|  - Solana: ~65K TPS, Proof of History                                  |
-|  - Avalanche: Subnet architecture, sub-second finality                 |
-|  - Cosmos: App-specific chains connected via IBC                       |
-|  - Polkadot: Parachains with shared security                           |
-|                                                                        |
-|  Gen 4: MODULAR BLOCKCHAINS (2023+)                                    |
-|  - Separation: Execution / Consensus / Data Availability              |
-|  - Celestia: Data availability layer                                   |
-|  - Ethereum L2s: Execution on rollups, settlement on L1               |
-|  - EigenLayer: Restaking for shared security                           |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    G1["Gen 1: BITCOIN (2009)<br/>- Programmable money<br/>- Bitcoin Script (non-Turing-complete)<br/>- UTXO + PoW (~7 TPS)"]
+    G2["Gen 2: ETHEREUM (2015)<br/>- Turing-complete EVM smart contracts<br/>- Account model + PoS<br/>- DeFi, NFTs, DAOs (~15 TPS L1)"]
+    G3["Gen 3: HIGH-THROUGHPUT L1s (2020+)<br/>- Solana (PoH + SVM)<br/>- Avalanche Subnets<br/>- Cosmos IBC &amp; Polkadot Parachains"]
+    G4["Gen 4: MODULAR BLOCKCHAINS (2023+)<br/>- Decoupled Execution / Consensus / DA<br/>- Ethereum L2 Rollups + Celestia DA + EigenLayer"]
+    G1 --> G2 --> G3 --> G4
 ```
 
 ---
@@ -600,15 +464,15 @@ If all checks pass, the block is valid.
 
 **Question**: A block contains 8 transactions. You want to prove Tx5 is included. What hashes do you need?
 
-```
-                          Root
-                        /      \
-                   H1234        H5678
-                  /    \       /    \
-              H12      H34  H56    H78
-             / \      / \   / \   / \
-           H1 H2   H3 H4 H5 H6 H7 H8
-           Tx1 Tx2 Tx3 Tx4 Tx5 Tx6 Tx7 Tx8
+```mermaid
+flowchart TD
+    Root["Root"] --> H1234["H1234"] & H5678["H5678"]
+    H1234 --> H12["H12"] & H34["H34"]
+    H5678 --> H56["H56"] & H78["H78"]
+    H12 --> H1["H1 (Tx1)"] & H2["H2 (Tx2)"]
+    H34 --> H3["H3 (Tx3)"] & H4["H4 (Tx4)"]
+    H56 --> H5["H5 (Tx5)"] & H6["H6 (Tx6)"]
+    H78 --> H7["H7 (Tx7)"] & H8["H8 (Tx8)"]
 ```
 
 **Solution**: To prove Tx5, you need:

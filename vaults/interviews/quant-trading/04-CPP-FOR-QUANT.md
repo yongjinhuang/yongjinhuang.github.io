@@ -47,29 +47,11 @@ HFT Target: < 1-10 us total tick-to-trade
 
 ### Where C++ Is Used
 
-```
-+-----------------------------------------------------------------------+
-|                 TRADING SYSTEM ARCHITECTURE                            |
-+-----------------------------------------------------------------------+
-|                                                                       |
-|  MARKET DATA PATH (C++)           TRADING DECISION (C++ or Python)    |
-|  +-------------------------+      +-----------------------------+     |
-|  | Feed Handlers           |----->| Signal Generation           |     |
-|  | Protocol Decoders       |      | Alpha Model                 |     |
-|  | Book Builders           |      | Risk Checks                 |     |
-|  | Normalizers             |      | Portfolio Optimization       |     |
-|  +-------------------------+      +-----------------------------+     |
-|           |                                    |                      |
-|           v                                    v                      |
-|  ORDER EXECUTION (C++)            RISK & MONITORING                   |
-|  +-------------------------+      +-----------------------------+     |
-|  | Order Management        |      | Real-time P&L (C++)         |     |
-|  | Smart Order Router      |      | Position Tracking (C++)     |     |
-|  | FIX/Binary Protocol     |      | Dashboards (Python/Web)     |     |
-|  | Exchange Connectivity   |      | Analytics (Python)          |     |
-|  +-------------------------+      +-----------------------------+     |
-|                                                                       |
-+-----------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    MD["MARKET DATA PATH (C++)<br/>Feed Handlers, ITCH/SBE Decoders,<br/>L2/L3 Book Builders, Normalizers"] --> TD["TRADING DECISION (C++ / Python)<br/>Signal Generation, Alpha Model,<br/>Pre-Trade Risk Checks, Portfolio Opt"]
+    MD --> OE["ORDER EXECUTION (C++)<br/>Order Management System (OMS),<br/>Smart Order Router (SOR),<br/>OUCH/FIX/BOE Exchange Connectivity"]
+    TD --> OE & RM["RISK &amp; MONITORING<br/>Real-time P&amp;L &amp; Position Tracking (C++),<br/>Dashboards &amp; TCA Analytics (Python/Web)"]
 ```
 
 ### C++ vs Python vs Rust
@@ -755,26 +737,11 @@ private:
 
 ### Threading Fundamentals
 
-```
-TRADING SYSTEM THREAD ARCHITECTURE
-====================================
-
-Core 0 (isolated)     Core 1 (isolated)     Core 2         Core 3
-+-----------------+   +-----------------+   +----------+   +----------+
-| Market Data     |   | Order Entry     |   | Strategy |   | Risk     |
-| Feed Handler    |   | Gateway         |   | Thread   |   | Monitor  |
-|                 |   |                 |   |          |   |          |
-| - Decode feed   |   | - Encode orders |   | - Signal |   | - P&L    |
-| - Build book    |   | - Send to exch  |   | - Alpha  |   | - Limits |
-| - Publish ticks |   | - Handle acks   |   | - Decide |   | - Report |
-+-----------------+   +-----------------+   +----------+   +----------+
-        |                     ^                  |              ^
-        |     SPSC Queue      |    SPSC Queue    |  SPSC Queue  |
-        +--- (lock-free) -----+----- (l-f) ------+--- (l-f) ---+
-
-Key: Each thread pinned to a dedicated CPU core.
-     Communication via lock-free queues only.
-     No mutexes on the hot path.
+```mermaid
+flowchart LR
+    C0["Core 0 (Isolated)<br/>Market Data Feed Handler<br/>- Decode UDP multicast<br/>- Build L3 order book"] -->|"Lock-Free SPSC Queue"| C2["Core 2 (Isolated)<br/>Strategy Thread<br/>- Compute alpha signals<br/>- Generate order intent"]
+    C2 -->|"Lock-Free SPSC Queue"| C1["Core 1 (Isolated)<br/>Order Entry Gateway<br/>- Inline pre-trade risk<br/>- Encode &amp; send OUCH/BOE"]
+    C1 & C2 -->|"Lock-Free SPSC Queue"| C3["Core 3<br/>Risk &amp; Telemetry Monitor<br/>- Real-time P&amp;L &amp; limits<br/>- Off-hot-path logging"]
 ```
 
 ### std::atomic and Memory Ordering
@@ -1774,33 +1741,20 @@ public:
 
 ### State Machine for Order Lifecycle
 
-```
-ORDER STATE MACHINE
-=====================
-
-  +----------+   submit    +-----------+   ack     +----------+
-  |  Created |------------>| Pending   |---------->| Active   |
-  +----------+             +-----------+           +----------+
-       |                        |                   |   |    |
-       | reject                 | reject            |   |    |
-       v                        v                   |   |    |
-  +----------+             +-----------+            |   |    |
-  | Rejected |             | Rejected  |            |   |    |
-  +----------+             +-----------+            |   |    |
-                                              fill  |   |    | cancel
-                                           (partial)|   |    |
-                                                    v   |    v
-                                           +---------+  |  +-----------+
-                                           | PartFill|  |  | Cancelled |
-                                           +---------+  |  +-----------+
-                                                |       |
-                                           fill |  fill |
-                                          (full)|  (full)|
-                                                v       v
-                                              +----------+
-                                              |  Filled  |
-                                              +----------+
-```
+```mermaid
+stateDiagram-v2
+    [*] --> Created
+    Created --> Pending : submit
+    Created --> Rejected : pre-trade reject
+    Pending --> Active : exchange ack
+    Pending --> Rejected : exchange reject
+    Active --> PartFill : partial fill
+    Active --> Filled : full fill
+    Active --> Cancelled : cancel ack
+    PartFill --> PartFill : partial fill
+    PartFill --> Filled : remaining filled
+    PartFill --> Cancelled : cancel remaining
+````
 
 ```cpp
 #include <cstdint>

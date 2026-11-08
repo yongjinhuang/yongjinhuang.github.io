@@ -37,52 +37,22 @@ It has no memory between calls. It does not "think" -- it performs a single forw
 through the network to produce a probability distribution, then samples from that
 distribution to pick the next token. Repeat until done.
 
-```
-+-------------------+      +------------------+      +-------------------+
-| Input Text        | ---> | Tokenizer        | ---> | Token IDs         |
-| "Hello, world"    |      | (BPE/SentencePiece)|    | [15496, 11, 995]  |
-+-------------------+      +------------------+      +-------------------+
-                                                              |
-                                                              v
-+-------------------+      +------------------+      +-------------------+
-| Output Text       | <--- | Detokenizer      | <--- | Transformer       |
-| "Hello, world!"   |      |                  |      | Neural Network    |
-+-------------------+      +------------------+      +-------------------+
+```mermaid
+flowchart LR
+    In["Input Text<br/>'Hello, world'"] --> Tok["Tokenizer<br/>(BPE / SentencePiece)"] --> IDs["Token IDs<br/>[15496, 11, 995]"]
+    IDs --> Net["Transformer<br/>Neural Network"] --> Detok["Detokenizer"] --> Out["Output Text<br/>'Hello, world!'"]
 ```
 
 ### Pre-training vs Post-training
 
-```
-+------------------------------------------------------------------+
-|                    LLM TRAINING PIPELINE                          |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Stage 1: PRE-TRAINING                                            |
-|  +------------------------------------------------------------+   |
-|  | Train on massive text corpus (internet, books, code)        |   |
-|  | Objective: predict next token                               |   |
-|  | Result: "base model" -- good at completion, not instruction |   |
-|  | Cost: $1M - $100M+ in compute                               |   |
-|  +------------------------------------------------------------+   |
-|                            |                                       |
-|                            v                                       |
-|  Stage 2: SUPERVISED FINE-TUNING (SFT)                            |
-|  +------------------------------------------------------------+   |
-|  | Train on (instruction, response) pairs                      |   |
-|  | Human-written high-quality examples                         |   |
-|  | Result: model follows instructions                          |   |
-|  +------------------------------------------------------------+   |
-|                            |                                       |
-|                            v                                       |
-|  Stage 3: RLHF / RLAIF                                           |
-|  +------------------------------------------------------------+   |
-|  | Reinforcement Learning from Human/AI Feedback               |   |
-|  | Train reward model on human preferences                     |   |
-|  | Optimize policy to maximize reward                          |   |
-|  | Result: model is helpful, harmless, honest                  |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Pipeline["LLM TRAINING PIPELINE"]
+        S1["Stage 1: PRE-TRAINING<br/>- Train on massive text corpus (internet, books, code)<br/>- Objective: predict next token<br/>- Result: 'base model' (completion, not instruction)<br/>- Cost: $1M - $100M+ in compute"]
+        S2["Stage 2: SUPERVISED FINE-TUNING (SFT)<br/>- Train on human-written high-quality (instruction, response) pairs<br/>- Result: model follows instructions"]
+        S3["Stage 3: RLHF / RLAIF / DPO<br/>- Reinforcement Learning from Human / AI Feedback<br/>- Train reward model on preferences &amp; optimize policy<br/>- Result: model is helpful, harmless, honest"]
+        S1 --> S2 --> S3
+    end
 ```
 
 ---
@@ -94,74 +64,40 @@ need to implement one, but you need to understand the building blocks.
 
 ### High-Level Architecture
 
-```
-                    THE TRANSFORMER (Decoder-Only, like GPT)
+```mermaid
+flowchart TD
+    subgraph Decoder["THE TRANSFORMER (Decoder-Only, like GPT)"]
+        In["Input: 'The cat sat on the'"]
+        Emb["Token Embedding Layer<br/>(Convert tokens to vectors, e.g., 4096-dim)"]
+        Pos["Positional Encoding<br/>(Add position information — RoPE)"]
+        B1["Transformer Block 1<br/>(Self-Attention + Feed-Forward)"]
+        B2["Transformer Block 2 ... Block N<br/>(Same structure, different weights; Llama 3 70B: 80 blocks)"]
+        Proj["Output Projection<br/>(Project back to vocabulary size)"]
+        Soft["Softmax<br/>(Convert to probability distribution)"]
+        Out["Output Next-Token Probabilities:<br/>'mat': 0.35, 'rug': 0.12, 'floor': 0.08, ..."]
 
-     Input: "The cat sat on the"
-                    |
-                    v
-     +---------------------------+
-     | Token Embedding Layer     |  Convert tokens to vectors (e.g., 4096-dim)
-     +---------------------------+
-                    |
-                    v
-     +---------------------------+
-     | Positional Encoding       |  Add position information (token order matters)
-     +---------------------------+
-                    |
-                    v
-     +---------------------------+
-     | Transformer Block 1       |  Self-attention + Feed-forward
-     +---------------------------+
-                    |
-                    v
-     +---------------------------+
-     | Transformer Block 2       |  Same structure, different learned weights
-     +---------------------------+
-                    |
-                    v
-            ... (N blocks) ...      GPT-4: ~120 blocks, Llama 3 70B: 80 blocks
-                    |
-                    v
-     +---------------------------+
-     | Output Projection         |  Project back to vocabulary size
-     +---------------------------+
-                    |
-                    v
-     +---------------------------+
-     | Softmax                   |  Convert to probability distribution
-     +---------------------------+
-                    |
-                    v
-     Output: probability for each token in vocabulary
-             "mat": 0.35, "rug": 0.12, "floor": 0.08, ...
+        In --> Emb --> Pos --> B1 --> B2 --> Proj --> Soft --> Out
+    end
 ```
 
 ### Inside a Transformer Block
 
 Each transformer block contains two sub-layers:
 
-```
-     +--------------------------------------------------+
-     |              TRANSFORMER BLOCK                     |
-     |                                                    |
-     |   Input                                            |
-     |     |                                              |
-     |     +----> Layer Norm                              |
-     |     |         |                                    |
-     |     |    Multi-Head Self-Attention                  |
-     |     |         |                                    |
-     |     +-----> Add (Residual Connection)              |
-     |     |                                              |
-     |     +----> Layer Norm                              |
-     |     |         |                                    |
-     |     |    Feed-Forward Network (MLP)                |
-     |     |    (expand 4x, activate, project back)       |
-     |     |         |                                    |
-     |     +-----> Add (Residual Connection)              |
-     |                                                    |
-     |   Output                                           |
-     +--------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Block["TRANSFORMER BLOCK (Pre-Norm Architecture)"]
+        In["Input"] --> LN1["Layer Norm"]
+        LN1 --> MHA["Multi-Head Self-Attention"]
+        MHA --> Add1["Add (Residual Connection)"]
+        In -->|"Residual"| Add1
+
+        Add1 --> LN2["Layer Norm"]
+        LN2 --> FFN["Feed-Forward Network (MLP)<br/>(expand 4x, activate, project back)"]
+        FFN --> Add2["Add (Residual Connection)"]
+        Add1 -->|"Residual"| Add2
+        Add2 --> Out["Output"]
+    end
 ```
 
 **Why this matters for SWEs:**
@@ -333,19 +269,20 @@ Process:
 Instead of one attention operation, run multiple in parallel with different learned
 projections. Each "head" can learn to attend to different patterns.
 
-```
-+------------------------------------------------------------------+
-|                    MULTI-HEAD ATTENTION                            |
-|                                                                    |
-|   Head 1: Learns syntactic relationships (subject-verb)           |
-|   Head 2: Learns semantic similarity (synonyms, coreference)     |
-|   Head 3: Learns positional patterns (nearby words)              |
-|   Head 4: Learns long-range dependencies                         |
-|   ...                                                             |
-|   Head N: (each head has its own QKV projections)                |
-|                                                                    |
-|   All heads concatenated -> Linear projection -> Output           |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph MHA["MULTI-HEAD ATTENTION (Each head has independent Q, K, V projections)"]
+        In["Input Embeddings"]
+        H1["Head 1: Syntactic relationships (subject-verb)"]
+        H2["Head 2: Semantic similarity (synonyms, coreference)"]
+        H3["Head 3: Positional patterns (nearby words)"]
+        H4["Head 4..N: Long-range dependencies"]
+        Concat["Concatenate All Heads"]
+        Lin["Linear Projection (W_O)"]
+        Out["Output"]
+
+        In --> H1 & H2 & H3 & H4 --> Concat --> Lin --> Out
+    end
 ```
 
 **Why multi-head matters for SWEs:**
@@ -585,33 +522,13 @@ response = client.chat.completions.create(
 
 ### Major Model Families (2025)
 
-```
-+------------------------------------------------------------------+
-|                    LLM LANDSCAPE (2025)                            |
-+------------------------------------------------------------------+
-|                                                                    |
-|  PROPRIETARY (API-only)                                           |
-|  +------------------------------------------------------------+   |
-|  | OpenAI:   GPT-4o, GPT-4o-mini, o1, o3                      |   |
-|  | Anthropic: Claude 3.5 Sonnet, Claude 3 Opus, Claude 4      |   |
-|  | Google:   Gemini 1.5 Pro, Gemini 2.0 Flash                 |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-|  OPEN-WEIGHT (downloadable, self-hostable)                        |
-|  +------------------------------------------------------------+   |
-|  | Meta:     Llama 3.1 (8B, 70B, 405B), Llama 3.2             |   |
-|  | Mistral:  Mistral 7B, Mixtral 8x7B, Mistral Large          |   |
-|  | Alibaba:  Qwen 2.5 (0.5B - 72B)                            |   |
-|  | DeepSeek: DeepSeek-V3, DeepSeek-R1                          |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-|  SPECIALIZED                                                      |
-|  +------------------------------------------------------------+   |
-|  | Code:     Codestral, StarCoder2, DeepSeek-Coder             |   |
-|  | Embedding: text-embedding-3-large, BGE, E5                  |   |
-|  | Multimodal: GPT-4o, Gemini, Claude 3.5 (vision)            |   |
-|  +------------------------------------------------------------+   |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Landscape["LLM LANDSCAPE"]
+        Prop["PROPRIETARY (API-Only)<br/>- OpenAI: GPT-4o, GPT-4o-mini, o1, o3<br/>- Anthropic: Claude 3.5 Sonnet, Claude 3 Opus, Claude 4<br/>- Google: Gemini 1.5 Pro, Gemini 2.0 Flash"]
+        Open["OPEN-WEIGHT (Downloadable, Self-Hostable)<br/>- Meta: Llama 3.1 (8B, 70B, 405B), Llama 3.2<br/>- Mistral: Mistral 7B, Mixtral 8x7B, Mistral Large<br/>- Alibaba: Qwen 2.5 (0.5B - 72B)<br/>- DeepSeek: DeepSeek-V3, DeepSeek-R1"]
+        Spec["SPECIALIZED MODELS<br/>- Code: Codestral, StarCoder2, DeepSeek-Coder<br/>- Embedding: text-embedding-3-large, BGE, E5<br/>- Multimodal: GPT-4o, Gemini, Claude (vision)"]
+    end
 ```
 
 ### Model Selection Guide for SWEs
@@ -666,32 +583,14 @@ Understanding token costs is essential for production AI engineering.
 
 ### Cost Optimization Strategies
 
-```
-+---------------------------------------------------+
-| COST REDUCTION TECHNIQUES                          |
-+---------------------------------------------------+
-|                                                     |
-|  1. Model Routing                                   |
-|     Easy queries -> GPT-4o-mini ($0.15/1M)         |
-|     Hard queries -> GPT-4o ($2.50/1M)              |
-|     Savings: 60-80%                                |
-|                                                     |
-|  2. Prompt Compression                              |
-|     Remove redundant context                        |
-|     Use shorter system prompts                      |
-|     Savings: 20-40%                                |
-|                                                     |
-|  3. Caching                                         |
-|     Cache identical or similar queries              |
-|     Semantic cache for near-duplicates              |
-|     Savings: 30-70% (depends on hit rate)          |
-|                                                     |
-|  4. Batching                                        |
-|     Batch API (OpenAI: 50% discount)               |
-|     Process non-urgent requests in bulk             |
-|     Savings: 50%                                   |
-|                                                     |
-+---------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Cost["LLM COST REDUCTION TECHNIQUES"]
+        T1["1. Model Routing (60-80% savings)<br/>Easy queries -&gt; small model ($0.15/1M)<br/>Hard queries -&gt; frontier model ($2.50/1M)"]
+        T2["2. Prompt Compression (20-40% savings)<br/>Remove redundant context &amp; shorten system prompts"]
+        T3["3. Caching (30-70% savings)<br/>Exact + semantic cache for near-duplicate queries"]
+        T4["4. Batching (50% savings)<br/>Use async Batch API for non-urgent workloads"]
+    end
 ```
 
 ---

@@ -45,30 +45,15 @@ Key milestones:
 
 FFmpeg is not a single program but a collection of tools and libraries:
 
-```
-+---------------------------------------------------------------------+
-|                        FFmpeg Project                                |
-+---------------------------------------------------------------------+
-|                                                                     |
-|  Command-Line Tools:                                                |
-|  +-------------+  +-----------+  +-----------+                      |
-|  |   ffmpeg    |  |  ffprobe  |  |  ffplay   |                      |
-|  | (transcode) |  | (analyze) |  |  (play)   |                      |
-|  +------+------+  +-----+-----+  +-----+-----+                     |
-|         |               |              |                            |
-|  +------v---------------v--------------v---------+                  |
-|  |              Shared Libraries                  |                  |
-|  |                                                |                  |
-|  |  libavformat   - Container muxing/demuxing     |                  |
-|  |  libavcodec    - Encoding/decoding             |                  |
-|  |  libavfilter   - Filter graph processing       |                  |
-|  |  libswscale    - Image scaling/conversion       |                  |
-|  |  libswresample - Audio resampling              |                  |
-|  |  libavutil     - Shared utilities              |                  |
-|  |  libavdevice   - Device capture/output         |                  |
-|  |  libpostproc   - Post-processing (legacy)      |                  |
-|  +------------------------------------------------+                  |
-+---------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph FFmpeg["FFMPEG ARCHITECTURE"]
+        CLI1["ffmpeg<br/>(Transcode CLI)"]
+        CLI2["ffprobe<br/>(Stream Analyzer)"]
+        CLI3["ffplay<br/>(SDL Media Player)"]
+        Libs["Core Shared C Libraries<br/>- libavformat (Container mux/demux)<br/>- libavcodec (Encoders/Decoders)<br/>- libavfilter (Filter graphs)<br/>- libswscale (Color/Scaling)<br/>- libswresample (Audio resampling)<br/>- libavutil &amp; libavdevice"]
+        CLI1 & CLI2 & CLI3 --> Libs
+    end
 ```
 
 ### Command-Line Tools
@@ -112,26 +97,11 @@ and outputs (webcams, microphones, screen capture, audio output devices).
 
 The fundamental FFmpeg processing pipeline:
 
-```
-Input File(s)           Output File(s)
-    |                       ^
-    v                       |
-+----------+          +----------+
-| Demuxer  |          |  Muxer   |
-| (format) |          | (format) |
-+----+-----+          +----+-----+
-     |                     ^
-     v                     |
-+----------+          +----------+
-| Decoder  |          | Encoder  |
-| (codec)  |          | (codec)  |
-+----+-----+          +----+-----+
-     |                     ^
-     v                     |
-+----------+          +----------+
-| Raw      +--------->| Filtered |
-| Frames   | Filters  | Frames   |
-+----------+          +----------+
+```mermaid
+flowchart LR
+    In["Input File(s)"] --> Demux["Demuxer<br/>(libavformat)"] --> Dec["Decoder<br/>(libavcodec)"] --> Raw["Raw Frames<br/>(AVFrame)"]
+    Raw -->|"Filter Graph (libavfilter)"| Filt["Filtered Frames"] --> Enc["Encoder<br/>(libavcodec)"] --> Mux["Muxer<br/>(libavformat)"] --> Out["Output File(s)"]
+    Demux -.->|"-c copy (Stream Copy / Remux)"| Mux
 ```
 
 When using stream copy mode (`-c copy`), the decoder and encoder are bypassed entirely.
@@ -944,25 +914,13 @@ drastically improving performance.
 
 ### Architecture
 
-```
-+-------------------------------------------------------------------+
-|                  Hardware Acceleration Stack                       |
-+-------------------------------------------------------------------+
-|                                                                   |
-|  +------------------+  +----------------+  +------------------+   |
-|  |   NVIDIA NVENC   |  |   Intel QSV    |  |  Apple VideoTBx  |   |
-|  |   NVIDIA NVDEC   |  |   (QuickSync)  |  |  (VideoToolbox)  |   |
-|  +--------+---------+  +-------+--------+  +--------+---------+   |
-|           |                    |                     |             |
-|  +--------v--------------------v---------------------v---------+  |
-|  |              FFmpeg Hardware Abstraction Layer               |  |
-|  |                                                             |  |
-|  |  hwaccel     - Hardware-accelerated decoding                |  |
-|  |  hwupload    - Upload frames to GPU memory                  |  |
-|  |  hwdownload  - Download frames from GPU memory              |  |
-|  |  hwmap       - Map frames between hardware surfaces         |  |
-|  +-------------------------------------------------------------+  |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    NV["NVIDIA NVENC / NVDEC / CUVID"]
+    QSV["Intel QuickSync Video (QSV) / VAAPI"]
+    VT["Apple VideoToolbox"]
+    HAL["FFmpeg Hardware Abstraction Layer<br/>hwaccel (decode) | hwupload | hwdownload | hwmap"]
+    NV & QSV & VT --> HAL
 ```
 
 ### NVIDIA NVENC/NVDEC

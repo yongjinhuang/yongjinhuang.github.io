@@ -463,29 +463,12 @@ It should contrast with the brand color and is used even more sparingly.
 Color tokens abstract raw color values into semantic names, making themes
 swappable and intent clear.
 
-```
-  RAW VALUES (don't use directly)
-  ──────────────────────────────────
-  blue-500:  hsl(220, 90%, 56%)
-  red-500:   hsl(0, 84%, 55%)
-  green-500: hsl(142, 72%, 40%)
-
-         ↓ abstracted into ↓
-
-  SEMANTIC TOKENS (use these)
-  ──────────────────────────────────
-  --color-primary:    var(--blue-500)
-  --color-error:      var(--red-500)
-  --color-success:    var(--green-500)
-
-         ↓ further abstracted into ↓
-
-  COMPONENT TOKENS (most specific)
-  ──────────────────────────────────
-  --button-bg:        var(--color-primary)
-  --button-text:      var(--color-on-primary)
-  --alert-error-bg:   var(--color-error-light)
-  --alert-error-text: var(--color-error-dark)
+```mermaid
+flowchart TD
+    T1["Tier 1: Raw / Primitive Values (Do not use directly in components)<br/>blue-500: hsl(220, 90%, 56%) | red-500: hsl(0, 84%, 55%) | green-500: hsl(142, 72%, 40%)"]
+    T2["Tier 2: Semantic Tokens (Intent-based)<br/>--color-primary: var(--blue-500)<br/>--color-error: var(--red-500)<br/>--color-success: var(--green-500)"]
+    T3["Tier 3: Component Tokens (Most specific)<br/>--button-bg: var(--color-primary)<br/>--button-text: var(--color-on-primary)<br/>--alert-error-bg: var(--color-error-light)"]
+    T1 -->|"abstracted into"| T2 -->|"further abstracted into"| T3
 ```
 
 This three-tier system (raw -> semantic -> component) enables:

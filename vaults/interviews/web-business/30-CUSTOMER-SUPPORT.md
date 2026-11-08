@@ -28,10 +28,11 @@ The key principle is omnichannel: no matter how the customer reaches out, the ag
 
 A ticket follows a clear state machine:
 
-```
-new → open → pending → on_hold → solved → closed
-               ↓                    ↓
-           escalated            reopened → open
+```mermaid
+flowchart LR
+    New["new"] --> Open["open"] --> Pending["pending"] --> OnHold["on_hold"] --> Solved["solved"] --> Closed["closed"]
+    Pending --> Escalated["escalated"]
+    Solved --> Reopened["reopened"] --> Open
 ```
 
 - **New**: Just created, not yet seen by any agent.
@@ -192,6 +193,49 @@ When a production incident occurs, hundreds of tickets may come in about the sam
 - **Agent burnout from queue pressure**: Optimizing purely for speed (tickets per hour, handle time) burns out agents and degrades quality. Balance efficiency metrics with quality metrics like CSAT and reopened rate.
 - **Stale knowledge base**: Articles written two years ago for a feature that's been redesigned three times. Customers follow outdated instructions, get confused, and submit tickets. Schedule regular content audits.
 - **Missing audit trail**: Who changed the ticket priority? When was it reassigned? Without a full activity log on every ticket, disputes and post-mortems become guesswork.
+
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Resilient Email-to-Ticket Threading (VERP Addressing, RFC 5322 Headers, & Auto-Forking Closed Tickets)
+
+**The War Story:** A B2B SaaS company built an email-to-ticket ingestion pipeline that matched incoming emails to existing tickets by parsing `[Ticket #10492]` from the email `Subject` line. In production, chaos ensued:
+1. Corporate email gateways and non-English mail clients stripped or localized `Re:` prefixes and truncated long subjects, causing every reply to spawn a brand-new orphan ticket.
+2. When an enterprise customer forwarded a ticket thread to their internal legal team (`CC: legal@client.com`) and legal replied after changing the subject line to `"Contract clause review"`, the system opened a separate ticket with zero context.
+3. Conversely, lazy customers searched their inbox for `"support@company.com"`, found a resolved ticket email from 8 months ago about a password reset, hit "Reply", and asked about an urgent billing outage—silently reopening an 8-month-old closed ticket assigned to an agent who had left the company, corrupting historical MTTR metrics.
+
+**Non-Obvious Best Practices:**
+- **4-Signal Waterfall Threading Resolution:** Never rely on subject-line regex alone. Resolve incoming emails to tickets using a strict waterfall of cryptographic and RFC 5322 signals:
+  1. **VERP / Plus-Addressing (`Reply-To: support+t_8f92a1c4@company.com`):** Encode an HMAC-signed ticket token directly in the outbound `Reply-To` envelope address. Even if the subject and headers are mangled, the recipient address uniquely identifies the ticket.
+  2. **RFC 5322 `In-Reply-To` and `References` Headers:** Store every outbound and inbound `Message-ID` (`<msg_99182@support.company.com>`) in a `ticket_email_messages` lookup table. Match incoming `In-Reply-To` or any ID in the `References` header chain against known message IDs.
+  3. **Hidden HTML/Text Token Marker:** Embed a zero-width or footer reference token (`Ref:MSG_8f92a1c4`) in the email body quote.
+  4. **Subject Regex + Sender Heuristic (Last Resort):** Only fall back to `[Ticket #12345]` if the sender email or domain matches the ticket's requester/CC list.
+- **Auto-Forking Replies to Long-Closed Tickets:** Distinguish between `Solved` (soft-closed; customer can reply within 7–14 days to transition back to `Reopened`) and `Closed` (hard-archived terminal state). If an email threads to a `Closed` ticket, **never mutate or reopen the historical ticket**. Automatically create a **new follow-up ticket** (`parent_ticket_id = #10492`), copy the customer's metadata, link the old transcript for agent reference, and route it to an active triage queue with a fresh SLA clock.
+- **Auto-Responder Loop Prevention:** Drop or quarantine emails bearing `Auto-Submitted: auto-replied`, `X-Autoreply`, or empty `Return-Path: <>` headers, and enforce a per-sender rate limiter (e.g., max 5 emails per 10 minutes) so two vacation auto-responders emailing each other cannot generate 50,000 tickets overnight.
+
+### 2. Multi-Timezone, Business-Hours & Holiday-Aware SLA Clocks
+
+**The War Story:** A support engineering team implemented SLA tracking by storing `sla_due_at = created_at + interval '4 hours'` in PostgreSQL. On Friday at 4:50 PM (with support operating 9:00 AM–5:00 PM Mon–Fri), a P2 ticket arrived. At 8:50 PM Friday night, PagerDuty paged the VP of Support for an SLA breach. When the team tried to fix this by adding a cron job that shifted `sla_due_at` over weekends, they discovered a worse bug: whenever an agent moved a ticket to `Pending` (waiting on customer) for 3 days and the customer finally replied, computing how much SLA time remained across pause/resume cycles, regional public holidays, and priority upgrades (`P3` $\rightarrow$ `P1` mid-flight) was completely broken.
+
+**Non-Obvious Best Practices:**
+- **Accumulated Elapsed-Business-Seconds State Machine:** Do not model an SLA as a static timestamp. Model each SLA metric (First Response Time, Next Response Time, Resolution Time) as a **stateful stopwatch** tied to a specific `BusinessSchedule` (timezone + weekly operating intervals + holiday calendar):
+  - Track `target_business_seconds` (e.g., $4\text{ hours} = 14,400\text{s}$), `accumulated_business_seconds`, `clock_state` (`RUNNING` | `PAUSED` | `COMPLETED`), and `last_resumed_at`.
+  - **On Pause (`Open` $\rightarrow$ `Pending`):** Calculate the intersection of `[last_resumed_at, now()]` with the schedule's active business windows, add those seconds to `accumulated_business_seconds`, set `clock_state = PAUSED`, and clear `effective_due_at = NULL`.
+  - **On Resume (`Pending` $\rightarrow$ `Open`):** Calculate `remaining_seconds = target_business_seconds - accumulated_business_seconds`, project forward across the schedule's upcoming business intervals (skipping nights, weekends, and holidays) to compute the new indexed `effective_due_at`, and set `clock_state = RUNNING`.
+- **Priority Escalation Recalculation:** When a ticket is upgraded from `P3` ($24\text{h}$ target) to `P1` ($1\text{h}$ target), do not reset elapsed time to zero; deduct already-consumed `accumulated_business_seconds` from the new `P1` target so a ticket that already waited 2 hours immediately triggers high-priority breach routing.
+
+### 3. Real-Time Agent Collision Detection & Optimistic Draft Locking
+
+**The War Story:** During a payment outage, 40 high-priority tickets hit the billing queue. Because agents pulled from the shared "Unassigned" view, three agents opened Ticket `#8821` at the same time. Agent A spent 10 minutes investigating the Stripe logs, issued a manual $200 goodwill credit, and sent a detailed reply. Thirty seconds later, Agent B—who had the same ticket open in their browser tab—issued *another* $200 credit and sent a contradicting reply, while overwriting the ticket's status and tags back to `Pending` via a blind `PUT /tickets/8821` update.
+
+**Non-Obvious Best Practices:**
+- **Real-Time Presence & Typing Heartbeats (`WebSocket` / `SSE`):** Maintain an ephemeral Redis presence set per ticket (`ticket:8821:viewers`) with a 15-second TTL refreshed by client heartbeats. Broadcast presence states (`VIEWING` vs. `TYPING_PUBLIC_REPLY` vs. `EDITING_FIELDS`) to all connected agents viewing the ticket, displaying live avatar badges and a warning banner (`"Sarah is currently typing a public reply"`).
+- **Optimistic Concurrency Control (`ETag` / `version` Check) on Ticket Mutations:** Every ticket row must carry a monotonically increasing `version` integer (or `last_message_id`). When an agent submits a reply or status change, require `expected_version` in the payload:
+  ```sql
+  UPDATE tickets
+  SET status = $1, assignee_id = $2, version = version + 1
+  WHERE id = $3 AND version = $4;
+  ```
+  If `rows_affected == 0`, reject the blind overwrite, push the newly arrived message into the agent's timeline in real time, preserve the agent's unsent draft in the composer, and require explicit confirmation before sending a second public reply to the customer.
 
 ## Quick Reference
 

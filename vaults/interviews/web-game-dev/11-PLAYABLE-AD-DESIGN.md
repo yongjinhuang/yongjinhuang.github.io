@@ -1830,38 +1830,14 @@ Example: "Swipe to swap adjacent gems and match 3+ in a row"
 
 ### Funnel Visualization
 
-```
-PLAYABLE AD CONVERSION FUNNEL:
-═══════════════════════════════════════════════════════
-
-Impressions:     100,000  (100%)
-    │
-    │  [Engagement Rate: 40%]
-    ▼
-Engaged:          40,000  (40%)
-    │
-    │  [Completion Rate: 60%]
-    ▼
-Completed:        24,000  (24%)
-    │
-    │  [CTR: 8% of completed]
-    ▼
-CTA Clicks:        1,920  (1.92%)
-    │
-    │  [Install Rate: 50% of clicks]
-    ▼
-Installs:            960  (0.96%)
-    │
-    │  [D1 Retention: 35%]
-    ▼
-D1 Active:           336  (0.34%)
-    │
-    │  [D7 Retention: 15%]
-    ▼
-D7 Active:           144  (0.14%)
-
-IPM = (960 / 100,000) * 1000 = 9.6
-Cost per Install (CPI) = Ad Spend / 960
+```mermaid
+flowchart TD
+    Imp["Impressions: 100,000 (100%)"] -->|"Engagement Rate: 40%"| Eng["Engaged: 40,000 (40%)"]
+    Eng -->|"Completion Rate: 60%"| Comp["Completed: 24,000 (24%)"]
+    Comp -->|"CTR: 8% of completed"| Clicks["CTA Clicks: 1,920 (1.92%)"]
+    Clicks -->|"Install Rate: 50% of clicks"| Inst["Installs: 960 (0.96% — IPM = 9.6)"]
+    Inst -->|"D1 Retention: 35%"| D1["D1 Active: 336 (0.34%)"]
+    D1 -->|"D7 Retention: 15%"| D7["D7 Active: 144 (0.14%)"]
 ```
 
 ### Revenue Math

@@ -78,37 +78,16 @@ Grey Cloud (DNS Only):
 
 ## CDN Architecture
 
-```
-+----------------------------------------------------------+
-|                    Cloudflare CDN                          |
-|                                                           |
-|  Edge PoPs (300+ cities)                                  |
-|  +--------+  +--------+  +--------+  +--------+          |
-|  | Tokyo  |  | London |  | NYC    |  | Sydney |          |
-|  | cache  |  | cache  |  | cache  |  | cache  |          |
-|  +--------+  +--------+  +--------+  +--------+          |
-|       |            |           |           |              |
-|       v            v           v           v              |
-|  Tier 1: Edge Cache (L1)                                  |
-|  - Closest to user                                        |
-|  - Highest cache miss rate (many PoPs, split traffic)     |
-|                                                           |
-|       |            |           |           |              |
-|       +-----+------+-----------+-----------+              |
-|             v                                             |
-|  Tier 2: Regional Cache (L2) -- "Tiered Cache"           |
-|  +------------------+  +------------------+               |
-|  | US Regional      |  | EU Regional      |              |
-|  | (aggregates L1)  |  | (aggregates L1)  |              |
-|  +------------------+  +------------------+               |
-|             |                    |                         |
-|             v                    v                         |
-+----------------------------------------------------------+
-              |
-              v
-       +------------------+
-       | Origin Server    |
-       +------------------+
+```mermaid
+flowchart TD
+    subgraph CF["Cloudflare Tiered CDN Architecture"]
+        E1["Tokyo L1 Edge"] & E2["London L1 Edge"] & E3["NYC L1 Edge"] & E4["Sydney L1 Edge"]
+        R1["US Upper-Tier Regional Cache (L2)"]
+        R2["EU Upper-Tier Regional Cache (L2)"]
+        E1 & E3 --> R1
+        E2 & E4 --> R2
+    end
+    R1 & R2 --> Orig["Customer Origin Server"]
 ```
 
 ### Tiered Cache (Argo Tiered Cache)

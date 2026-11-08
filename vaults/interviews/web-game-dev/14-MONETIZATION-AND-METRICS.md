@@ -30,36 +30,12 @@ Example flow:
 
 ### Key Players
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    ADVERTISER                        │
-│  (Game studio that PAYS for user acquisition)        │
-│  Examples: King, Supercell, Zynga, indie studios     │
-│                                                      │
-│  Goal: Acquire high-quality users at low cost        │
-│  Metric they care about: CPI, ROAS, LTV              │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│                   AD NETWORK                         │
-│  (Platform that CONNECTS advertisers and publishers) │
-│  Examples: Unity Ads, ironSource, AppLovin,          │
-│            Facebook, Google Ads, Mintegral            │
-│                                                      │
-│  Revenue model: Takes % cut of ad spend              │
-│  Key role: Targeting, optimization, fraud prevention  │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│                   PUBLISHER                          │
-│  (App that SHOWS ads to earn revenue)                │
-│  Examples: Free-to-play games, news apps, utilities  │
-│                                                      │
-│  Revenue model: Paid per impression or engagement    │
-│  Metric they care about: eCPM, fill rate, UX impact  │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Adv["ADVERTISER (Game Studio Paying for UA)<br/>Examples: King, Supercell, Zynga<br/>Key Metrics: CPI, ROAS, LTV"]
+    Net["AD NETWORK (Connects Advertisers &amp; Publishers)<br/>Examples: Unity Ads, ironSource, AppLovin, Meta, Google, Mintegral<br/>Role: Targeting, ML bidding optimization, fraud prevention"]
+    Pub["PUBLISHER (App Showing Ads to Earn Revenue)<br/>Examples: F2P games, utility apps<br/>Key Metrics: eCPM, Fill Rate, Retention impact"]
+    Adv --> Net --> Pub
 ```
 
 ### Ad Formats
@@ -425,43 +401,15 @@ Higher eCPM = publisher earns more = more willing to show your ads.
 
 ### Metric Relationships Map
 
-```
-                    ┌──────────┐
-                    │ Ad Spend │
-                    └────┬─────┘
-                         │
-              ┌──────────┼──────────┐
-              ▼          ▼          ▼
-         ┌────────┐ ┌────────┐ ┌────────┐
-         │  CPM   │ │  CPC   │ │  CPI   │
-         └───┬────┘ └───┬────┘ └───┬────┘
-             │          │          │
-             ▼          ▼          ▼
-        ┌─────────┐ ┌───────┐ ┌────────┐
-        │Impressions│ │Clicks │ │Installs│
-        └────┬────┘ └───┬───┘ └───┬────┘
-             │          │          │
-             └──────────┼──────────┘
-                        │
-                   ┌────▼────┐
-                   │   CTR   │ = Clicks / Impressions
-                   │   IVR   │ = Installs / Impressions
-                   │   CVR   │ = Installs / Clicks
-                   └────┬────┘
-                        │
-                   ┌────▼────┐
-                   │Retention│ D1/D7/D30
-                   └────┬────┘
-                        │
-                   ┌────▼────┐
-                   │ Revenue │ (IAP + Ads)
-                   └────┬────┘
-                        │
-              ┌─────────┼─────────┐
-              ▼         ▼         ▼
-         ┌────────┐ ┌──────┐ ┌──────┐
-         │  ARPU  │ │ LTV  │ │ ROAS │
-         └────────┘ └──────┘ └──────┘
+```mermaid
+flowchart TD
+    Spend["Ad Spend"] --> CPM["CPM"] & CPC["CPC"] & CPI["CPI"]
+    CPM --> Imp["Impressions"]
+    CPC --> Clicks["Clicks"]
+    CPI --> Inst["Installs"]
+    Imp & Clicks & Inst --> Funnel["Funnel Conversion Rates<br/>- CTR = Clicks / Impressions<br/>- IVR = Installs / Impressions<br/>- CVR = Installs / Clicks"]
+    Funnel --> Ret["Retention<br/>(D1 / D7 / D30)"] --> Rev["Revenue<br/>(IAP + Ad Monetization)"]
+    Rev --> ARPU["ARPU"] & LTV["LTV"] & ROAS["ROAS"]
 ```
 
 ---
@@ -743,55 +691,11 @@ const result = calculateSignificance(controlResult, variantResult);
 
 ### Timeline Overview
 
-```
-Typical playable ad production timeline: 7-12 business days
-
-┌─────────────────────────────────────────────────────────────┐
-│ Day 1         │ CONCEPT & BRIEF                             │
-│               │ - Review game (play for 1-2 hours)          │
-│               │ - Identify core hook mechanic                │
-│               │ - Define target audience                     │
-│               │ - Choose game genre/template                 │
-│               │ - Wireframe key screens                      │
-│               │ - Get stakeholder sign-off                   │
-├───────────────┼─────────────────────────────────────────────┤
-│ Day 2-4       │ PROTOTYPE                                   │
-│               │ - Implement core mechanic                    │
-│               │ - Basic placeholder art                      │
-│               │ - Touch input handling                       │
-│               │ - Game flow: tutorial → game → end card      │
-│               │ - Test on 2-3 devices                        │
-│               │ - Internal review & feedback                 │
-├───────────────┼─────────────────────────────────────────────┤
-│ Day 5-7       │ POLISH                                      │
-│               │ - Final art assets                           │
-│               │ - Animations & juice (particles, shake)      │
-│               │ - Sound effects                              │
-│               │ - End card design & CTA                      │
-│               │ - MRAID integration                          │
-│               │ - Performance optimization                   │
-│               │ - Size optimization                          │
-├───────────────┼─────────────────────────────────────────────┤
-│ Day 8         │ QA & TESTING                                │
-│               │ - Cross-device testing (5-10 devices)        │
-│               │ - Ad network validation tools                │
-│               │ - MRAID compliance check                     │
-│               │ - Performance benchmarks                     │
-│               │ - Size verification                          │
-│               │ - Bug fixes                                  │
-├───────────────┼─────────────────────────────────────────────┤
-│ Day 9-10      │ DEPLOYMENT & REVIEW                         │
-│               │ - Upload to ad networks                      │
-│               │ - Network creative review (1-3 days)         │
-│               │ - Address rejection feedback                 │
-│               │ - Resubmit if needed                         │
-├───────────────┼─────────────────────────────────────────────┤
-│ Day 11-12     │ LIVE & ITERATE                              │
-│               │ - Monitor initial metrics                    │
-│               │ - A/B test variants                          │
-│               │ - Optimize based on data                     │
-│               │ - Plan next creative                         │
-└───────────────┴─────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    D1["Day 1: Concept &amp; Brief<br/>Identify core hook, wireframe, sign-off"] --> D2["Day 2-4: Prototype<br/>Core mechanic, touch input, tutorial-&gt;game-&gt;endcard"]
+    D2 --> D5["Day 5-7: Polish<br/>Final art, juice/particles, SFX, MRAID, size opt"] --> D8["Day 8: QA &amp; Testing<br/>Cross-device lab, MRAID &amp; size validation"]
+    D8 --> D9["Day 9-10: Deployment &amp; Review<br/>Upload to networks &amp; pass creative review"] --> D11["Day 11-12: Live &amp; Iterate<br/>Monitor IPM/CPI/ROAS &amp; A/B test variants"]
 ```
 
 ### Rapid Iteration Workflow

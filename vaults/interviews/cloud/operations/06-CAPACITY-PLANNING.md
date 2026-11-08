@@ -84,22 +84,10 @@ Capacity planning is not about 100% utilization. It is about **headroom manageme
 
 Capacity planning is a continuous loop, not a one-time event:
 
-```
-        ┌─────────────────────────────────────────────────────┐
-        │                CAPACITY PLANNING CYCLE               │
-        └─────────────────────────────────────────────────────┘
-
-    ┌─────────┐    ┌──────────┐    ┌────────┐    ┌───────────┐    ┌──────────┐
-    │ MEASURE │───▶│FORECAST  │───▶│  PLAN  │───▶│ PROVISION │───▶│ VALIDATE │
-    │         │    │          │    │        │    │           │    │          │
-    │Collect  │    │Analyze   │    │Design  │    │Deploy     │    │Load test │
-    │metrics  │    │trends    │    │arch.   │    │infra      │    │Monitor   │
-    │Baselines│    │Model     │    │Estimate│    │Configure  │    │Compare   │
-    │         │    │growth    │    │costs   │    │scaling    │    │to plan   │
-    └─────────┘    └──────────┘    └────────┘    └───────────┘    └──────────┘
-         ▲                                                               │
-         └───────────────────────────────────────────────────────────────┘
-                              Feedback loop
+```mermaid
+flowchart LR
+    M["1. Measure<br/>Collect utilization<br/>&amp; traffic baselines"] --> F["2. Forecast<br/>Model organic growth<br/>&amp; peak events"] --> P["3. Plan<br/>Size instances, quotas,<br/>&amp; cost budget"] --> Pr["4. Provision<br/>Apply Terraform &amp;<br/>autoscaling policies"] --> V["5. Validate<br/>Run load tests &amp;<br/>verify headroom"]
+    V -->|"Feedback Loop"| M
 ```
 
 ### Phase 1: Measure

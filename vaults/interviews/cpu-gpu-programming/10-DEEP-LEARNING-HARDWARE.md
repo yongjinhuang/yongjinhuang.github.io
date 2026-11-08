@@ -270,28 +270,14 @@ Neural network training is surprisingly tolerant of reduced precision because:
 
 The standard approach (introduced by Micikevicius et al., 2018):
 
-```
-Master Weights (FP32)
-       |
-       |  copy to FP16
-       v
-  FP16 Weights -----> Forward Pass (FP16) -----> FP16 Loss
-                                                      |
-                                                      | loss scaling
-                                                      v
-                                              Scaled FP16 Loss
-                                                      |
-                                                      | backward pass (FP16)
-                                                      v
-                                              FP16 Gradients
-                                                      |
-                                                      | unscale gradients
-                                                      v
-                                              FP32 Gradients
-                                                      |
-                                                      | optimizer step
-                                                      v
-                                              Updated FP32 Master Weights
+```mermaid
+flowchart TD
+    MW["FP32 Master Weights"] -->|"Cast to FP16 / BF16"| FW["FP16 Weights"]
+    FW --> Fwd["Forward Pass (FP16 Tensor Cores)"] --> Loss["FP16 Loss"]
+    Loss -->|"Multiply by Loss Scale S"| SLoss["Scaled FP16 Loss"]
+    SLoss --> Bwd["Backward Pass (FP16)"] --> Grad16["Scaled FP16 Gradients"]
+    Grad16 -->|"Unscale (/ S) &amp; Cast to FP32"| Grad32["FP32 Gradients"]
+    Grad32 --> Opt["FP32 Optimizer Step (AdamW)"] --> MW
 ```
 
 ### Loss Scaling: Why and How
@@ -2486,32 +2472,14 @@ Tensor Core Pipeline:
 
 ### The Complete Picture
 
-```
-Python                  model.linear(x)
-  |                          |
-  | (Python -> C++ via pybind11)
-  v                          v
-C++ (ATen)             at::addmm(bias, input, weight.t())
-  |                          |
-  | (dispatcher -> CUDA backend)
-  v                          v
-cuBLAS                 cublasGemmEx(handle, ..., CUDA_R_16F, ...)
-  |                          |
-  | (kernel selection + launch)
-  v                          v
-CUDA Kernel            gemm_128x128x32_stages4_warps4
-  |                          |
-  | (compiled to PTX, then SASS)
-  v                          v
-PTX                    mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32
-  |                          |
-  | (assembled to native GPU instructions)
-  v                          v
-SASS                   HMMA.16816.F32 R4, R0, R2, R4
-  |                          |
-  | (decoded by hardware)
-  v                          v
-Tensor Core            128 FMA ops in 1 cycle on silicon
+```mermaid
+flowchart TD
+    L1["1. Python: model.linear(x)"] -->|"pybind11"| L2["2. PyTorch C++ (ATen): at::addmm(bias, input, weight.t())"]
+    L2 -->|"CUDA Dispatcher"| L3["3. cuBLAS / CUTLASS: cublasGemmEx(..., CUDA_R_16F)"]
+    L3 -->|"Kernel Launch"| L4["4. CUDA Kernel: gemm_128x128x32_stages4_warps4"]
+    L4 -->|"Compiled to PTX"| L5["5. PTX: mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32"]
+    L5 -->|"Assembled to SASS"| L6["6. SASS Native Instruction: HMMA.16816.F32 R4, R0, R2, R4"]
+    L6 -->|"Hardware Execution"| L7["7. Silicon Tensor Core: 128 FMA ops/cycle"]
 ```
 
 ### Autograd Integration

@@ -11,12 +11,14 @@
 
 ### Time Management (60 minutes)
 
-```
-0-5 min   → Read problem, ask clarifying questions
-5-10 min  → Discuss approach with interviewer
-10-40 min → Implement solution
-40-50 min → Test with edge cases
-50-60 min → Optimize if needed, discuss complexity
+```mermaid
+flowchart LR
+    T1["0-5 min<br/>Read problem, ask clarifying questions"]
+    T2["5-10 min<br/>Discuss approach with interviewer"]
+    T3["10-40 min<br/>Implement solution"]
+    T4["40-50 min<br/>Test with edge cases"]
+    T5["50-60 min<br/>Optimize if needed, discuss complexity"]
+    T1 --> T2 --> T3 --> T4 --> T5
 ```
 
 ### Communication Tips

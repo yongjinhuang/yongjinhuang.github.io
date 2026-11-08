@@ -36,22 +36,12 @@ This blocks the browser thread entirely. In web games, we never write a `while` 
 
 ### The Three Phases
 
-```
-┌─────────────────────────────────────��───────────────┐
-│                    GAME LOOP                         │
-│                                                      │
-│   ┌──────────┐    ┌──────────┐    ┌──────────┐      │
-│   │  INPUT   │───>│  UPDATE  │───>│  RENDER  │      │
-│   │          │    │          │    │          │       │
-│   │ Keyboard │    │ Physics  │    │ Draw     │      │
-│   │ Mouse    │    │ AI       │    │ sprites  │      │
-│   │ Touch    │    │ Movement │    │ UI       │      │
-│   │ Gamepad  │    │ Collision│    │ Effects  │      │
-│   └──────────┘    └──────────┘    └──────────┘      │
-│        │                                │            │
-│        └────────────────────────────────┘            │
-│                  Next Frame                          │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Loop["GAME LOOP (requestAnimationFrame)"]
+        In["INPUT<br/>Keyboard / Mouse<br/>Touch / Gamepad"] --> Up["UPDATE<br/>Physics / AI<br/>Movement / Collision"] --> Ren["RENDER<br/>Draw sprites<br/>UI / Effects"]
+        Ren -->|"Next Frame"| In
+    end
 ```
 
 **Input Phase:**
@@ -741,13 +731,11 @@ class FrameAnimation {
 
 At 60fps, each frame has 16.67 milliseconds. Everything — input, update, render, browser overhead — must complete within this window.
 
-```
-16.67ms Total Budget
-├── ~1-2ms   Browser overhead (event handling, layout, compositing)
-├── ~1ms     Input processing
-├── ~3-5ms   Game update (physics, AI, collision)
-├── ~5-8ms   Render (draw calls, GPU commands)
-└── ~2-3ms   Margin for GC, variance
+```mermaid
+flowchart LR
+    subgraph Budget["60 FPS Frame Budget (16.67ms Total)"]
+        B1["Browser Overhead: ~1-2ms<br/>(events, layout, compositing)"] --> B2["Input: ~1ms"] --> B3["Game Update: ~3-5ms<br/>(physics, AI, collision)"] --> B4["Render: ~5-8ms<br/>(draw calls, GPU)"] --> B5["Safety Margin: ~2-3ms<br/>(GC, variance)"]
+    end
 ```
 
 ### Measuring Frame Time

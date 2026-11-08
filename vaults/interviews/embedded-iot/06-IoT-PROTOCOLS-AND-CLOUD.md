@@ -12,20 +12,12 @@ MQTT (Message Queuing Telemetry Transport) is the dominant IoT messaging protoco
 
 ### 1.2 Architecture: Broker and Clients
 
-```
-  MQTT Architecture
-  =================
-
-  +----------+   publish    +----------+   forward    +----------+
-  | Device A | -----------> |          | -----------> | Backend  |
-  | (pub)    |  topic:      |  MQTT    |  topic:      | (sub)    |
-  +----------+  sensor/temp |  BROKER  |  sensor/temp +----------+
-                             |          |
-  +----------+   subscribe  | (Mosquitto,              +----------+
-  | Device B | <----------- |  EMQX,    | -----------> | Dashboard|
-  | (sub)    |  topic:      |  HiveMQ)  |  topic:      | (sub)    |
-  +----------+  cmd/relay   |          |  sensor/#    +----------+
-                             +----------+
+```mermaid
+flowchart LR
+    DA["Device A (Publisher)"] -->|"PUBLISH topic: sensor/temp"| Broker["MQTT Broker<br/>(Mosquitto, EMQX, HiveMQ)"]
+    Broker -->|"Forward sensor/temp"| BE["Backend Service (Subscriber)"]
+    Broker -->|"Forward sensor/#"| Dash["Dashboard (Subscriber)"]
+    Broker -->|"Forward cmd/relay"| DB["Device B (Subscriber)"]
 ```
 
 Key concepts:
@@ -428,25 +420,14 @@ MessagePack is similar to CBOR: binary, self-describing, compact. It has strong 
 
 AWS IoT Core is a managed cloud service that lets IoT devices connect securely and interact with AWS services. It supports MQTT, HTTPS, and MQTT over WebSocket.
 
-```
-  AWS IoT Core Architecture
-  =========================
-
-  +----------+                  +-------------------+
-  | ESP32    |---MQTT (TLS)---> | AWS IoT Core      |
-  | Device   |                  |                   |
-  +----------+                  | +---------------+ |
-                                | | Message Broker| |    +-----------+
-                                | +-------+-------+ |    | DynamoDB  |
-                                |         |         |--->| S3        |
-                                | +-------v-------+ |    | Lambda    |
-                                | | Rules Engine  | |    | Kinesis   |
-                                | +---------------+ |    +-----------+
-                                |                   |
-                                | +---------------+ |
-                                | | Device Shadow | |
-                                | +---------------+ |
-                                +-------------------+
+```mermaid
+flowchart LR
+    ESP["ESP32 Device"] -->|"MQTT over mTLS (X.509)"| Broker
+    subgraph AWS["AWS IoT Core"]
+        Broker["Message Broker"] --> Rules["Rules Engine (SQL)"]
+        Broker <--> Shadow["Device Shadow<br/>(Desired / Reported JSON state)"]
+    end
+    Rules --> Targets["Downstream AWS Services<br/>DynamoDB / S3 / Lambda / Kinesis / Timestream"]
 ```
 
 ### 6.2 Device Shadow
@@ -544,26 +525,16 @@ Devices deployed in the field will have bugs, security vulnerabilities, and feat
 
 ### 9.2 A/B Partitioning
 
-```
-  A/B Partition Layout
-  ====================
-
-  Flash Memory Map:
-  +-------------------+
-  | Bootloader        |  (verifies signature, selects partition)
-  +-------------------+
-  | Partition Table   |  (describes layout)
-  +-------------------+
-  | App Partition A   |  <-- Currently running (v1.2.0)
-  | (OTA_0)           |
-  +-------------------+
-  | App Partition B   |  <-- OTA target (v1.3.0 being written)
-  | (OTA_1)           |
-  +-------------------+
-  | NVS (config)      |
-  +-------------------+
-  | Data partitions   |
-  +-------------------+
+```mermaid
+flowchart TD
+    subgraph Flash["Dual-Bank A/B OTA Flash Memory Map"]
+        Boot["Bootloader<br/>(Verifies cryptographic signature &amp; selects active slot)"]
+        PT["Partition Table + OTA Data Sector"]
+        SlotA["App Partition A (OTA_0)<br/>Currently Running (v1.2.0 — Confirmed Valid)"]
+        SlotB["App Partition B (OTA_1)<br/>OTA Target (v1.3.0 — Being Written &amp; Verified)"]
+        NVS["NVS (Non-Volatile Config) + Data Partitions"]
+        Boot --> PT --> SlotA & SlotB --> NVS
+    end
 ```
 
 The update process:
@@ -586,50 +557,32 @@ Full firmware images can be large (1-4 MB). Delta updates transmit only the diff
 
 ### 9.5 Secure Boot Chain
 
-```
-  Secure Boot Chain
-  =================
-
-  +------------------+
-  | ROM Bootloader   |  (burned into silicon, immutable)
-  | Verifies: -------|---+
-  +------------------+   |
-                          v
-  +------------------+   Signature OK?
-  | 2nd Stage Boot   |   Yes -> continue
-  | Verifies: -------|---+
-  +------------------+   |
-                          v
-  +------------------+   Signature OK?
-  | Application FW   |   Yes -> run
-  +------------------+   No  -> refuse to boot
+```mermaid
+flowchart TD
+    ROM["ROM Bootloader<br/>(Immutable in silicon, Root of Trust public key in eFuse)"] -->|"Verify signature"| Boot2{"2nd Stage Bootloader<br/>Signature Valid?"}
+    Boot2 -->|"No"| Halt1["Refuse to Boot"]
+    Boot2 -->|"Yes"| App{"Application Firmware<br/>Signature Valid?"}
+    App -->|"No"| Halt2["Rollback to Previous Slot / Halt"]
+    App -->|"Yes"| Run["Boot Application Firmware"]
 ```
 
 Each stage verifies the cryptographic signature of the next stage using a public key fused into hardware (eFuse). An attacker cannot flash malicious firmware because it would lack a valid signature.
 
 ### 9.6 OTA Architecture
 
-```
-  OTA Update Architecture
-  =======================
+```mermaid
+sequenceDiagram
+    participant D as "IoT Device"
+    participant O as "OTA Server / Cloud Platform"
+    participant S as "Firmware Storage (S3 / CDN)"
 
-  +----------+     1. Check for update     +------------------+
-  | Device   | --------------------------> | OTA Server /     |
-  |          | <-------------------------- | Cloud Platform   |
-  |          |     2. New version avail    |                  |
-  |          |                              +--------+---------+
-  |          |     3. Download firmware              |
-  |          | <-------------------------------------+
-  |          |        (HTTPS / MQTT / CoAP)          |
-  |          |                                       |
-  |          |     4. Report success/failure         |
-  |          | ------------------------------------->|
-  +----------+                              +------------------+
-       |                                    | Firmware Storage |
-       |  5. Reboot into new FW             | (S3, Blob, etc.) |
-       v                                    +------------------+
-  [New firmware running]
-```
+    D->>O: 1. Check for update (report current version)
+    O-->>D: 2. New version available (signed manifest + URL)
+    D->>S: 3. Download signed firmware image (HTTPS / MQTT / CoAP)
+    S-->>D: Stream firmware chunks into inactive OTA_1 partition
+    Note over D: Verify SHA-256 + ECDSA/RSA signature,<br/>mark OTA_1 pending, reboot & run self-test
+    D->>O: 4. Confirm boot health & report update success
+````
 
 ---
 
@@ -742,46 +695,15 @@ A typical IoT Grafana dashboard shows:
 
 Putting it all together:
 
-```
-  Complete IoT Data Pipeline
-  ==========================
-
-  [Sensors] --> [MCU] --> [WiFi/LoRa/Cell]
-                             |
-                             v
-                 +----------------------+
-                 | MQTT Broker /        |
-                 | Cloud IoT Gateway    |
-                 | (AWS IoT / Azure)    |
-                 +----------+-----------+
-                            |
-              +-------------+-------------+
-              |             |             |
-              v             v             v
-        +---------+   +---------+   +---------+
-        | Rules / |   | Device  |   | OTA     |
-        | Lambda  |   | Shadow  |   | Manager |
-        +---------+   +---------+   +---------+
-              |
-              v
-        +-----------+
-        | Time-     |
-        | Series DB |
-        | (Influx)  |
-        +-----+-----+
-              |
-              v
-        +-----------+
-        | Grafana   |
-        | Dashboard |
-        +-----------+
-              |
-              v
-        +-----------+
-        | Alerts    |
-        | (Email,   |
-        |  Slack)   |
-        +-----------+
+```mermaid
+flowchart TD
+    Sens["Sensors"] --> MCU["MCU"] --> Radio["WiFi / LoRa / Cellular"]
+    Radio --> GW["MQTT Broker / Cloud IoT Gateway<br/>(AWS IoT / Azure IoT Hub)"]
+    GW --> Rules["Rules Engine / Lambda"]
+    GW --> Shadow["Device Shadow"]
+    GW --> OTA["OTA Manager"]
+    Rules --> TSDB[("Time-Series DB<br/>(InfluxDB / Timestream)")]
+    TSDB --> Graf["Grafana Dashboard"] --> Alerts["Alerts<br/>(Email, Slack, PagerDuty)"]
 ```
 
 Design principles:

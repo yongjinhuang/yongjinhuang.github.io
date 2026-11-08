@@ -26,12 +26,12 @@ Every company is building AI features. Customer support bots, internal knowledge
 
 ### The RAG Pipeline
 
-```
-Company Data → Ingestion → Chunking → Embedding → Vector Database
-                                                         ↓
-User Query → Embedding → Similarity Search → Retrieved Context → LLM → Response
-                                                                         ↓
-                                                                   Feedback Loop
+```mermaid
+flowchart LR
+    Data["Company Data"] --> Ing["Ingestion"] --> Chunk["Chunking"] --> Emb1["Embedding"] --> VecDB[("Vector Database")]
+    Query["User Query"] --> Emb2["Embedding"] --> Sim["Similarity Search"] --> Ctx["Retrieved Context"] --> LLM["LLM"] --> Resp["Response"]
+    VecDB --> Sim
+    Resp --> FB["Feedback Loop"]
 ```
 
 ### Step 1: Data Ingestion
@@ -167,6 +167,40 @@ Wrap your LLM with input and output filters. Input guardrails detect prompt inje
 9. **Vendor lock-in without an abstraction layer.** If your entire codebase is tightly coupled to OpenAI's API, switching to Anthropic or a self-hosted model means rewriting everything. Use an abstraction layer (LiteLLM, LangChain, or a simple interface of your own) so you can swap providers.
 
 10. **Not tracking what users actually ask.** Log queries (with appropriate privacy safeguards). Analyze them weekly. You'll discover that 80% of questions fall into a small number of categories, many of which could be answered with better documentation rather than AI.
+
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Permission-Aware RAG: Document ACLs Must Filter *Before* Vector Retrieval, Never After
+
+When building enterprise RAG over Notion, Google Drive, Slack, or Confluence, the most dangerous failure mode is **cross-user data leakage through vector search**. If you retrieve the top-$K$ (`K = 10`) most similar chunks from a vector index and *then* filter out chunks the current user lacks permission to view (Post-Filtering), two disasters happen:
+1. If a CEO's confidential M&A doc dominates the top 10 vector hits, a regular employee asking a general question gets `0` results back after post-filtering—breaking recall.
+2. Worse, when permissions change in the source system (e.g., a user is removed from a Google Drive folder), stale vector embeddings remain searchable unless ACL updates propagate asynchronously into the vector metadata filter.
+
+```mermaid
+flowchart LR
+    Q["User Query + Identity Token"] --> Auth["ACL Resolver<br/>(Fetch User Group/Principal IDs)"]
+    Auth --> Pre["Vector + BM25 Hybrid Search<br/>WHERE allowed_principals CONTAINS user_principals"]
+    Pre --> Rerank["Cross-Encoder Reranker<br/>(Top 50 -> Top 8)"]
+    Rerank --> JIT["Just-In-Time Source Permission Check<br/>(Verify live ACL on Top 8 doc IDs)"]
+    JIT --> LLM["LLM Generation with Cited Chunk IDs"]
+```
+
+- **Non-Obvious Best Practice**: Combine **Pre-Filter Metadata Indexing** (storing principal/group tokens on every chunk for fast HNSW filtered search) with a **Just-In-Time (JIT) Live ACL Verification** on the final 5–8 reranked document IDs against the authoritative permission store before injecting their text into the LLM prompt.
+
+### 2. Two-Phase Credit Reservation (`Freeze -> Settle / Refund`) & Orphan Queue Race Conditions
+
+Asynchonous AI document/agent workflows (e.g., translating a 200-page PDF or running a multi-step research agent) cannot charge users synchronously upfront because exact token/page consumption isn't known until completion, and downstream LLM/OCR APIs frequently fail mid-flight.
+- **The Production Trap**: If an API endpoint starts a database transaction (`@Transactional`), freezes credits in the user wallet, inserts a `PENDING` task row, and publishes a Kafka/RabbitMQ message before the DB commit returns, a fast worker thread will consume the Kafka message **milliseconds before Postgres finishes committing the transaction**—seeing `Task Not Found` or failing to release frozen credits on error.
+- **Battle-Tested Architecture**:
+  1. **Transactional Outbox / `afterCommit` Hook**: Never publish queue messages inside an uncommitted DB transaction.
+  2. **Pre-Flight Downstream Health Probe**: Before a worker begins burning expensive tokens on a 100-page job, execute a lightweight readiness probe against downstream OCR/LLM endpoints; if degraded, requeue with backoff before touching user credits.
+  3. **Client Disconnect `AbortSignal` Propagation**: On streaming chat endpoints, if a user closes their browser tab 2 seconds into a reasoning model response, propagate the HTTP close signal upstream to cancel the provider stream immediately and settle only the tokens generated up to that token boundary.
+
+### 3. Prompt Caching Prefix Discipline & Semantic Cache Poisoning
+
+Anthropic and OpenAI offer 50–90% discounts and dramatic TTFT (Time-to-First-Token) reductions on cached prompt prefixes—but **a single dynamic timestamp or user ID placed at the top of the system prompt invalidates 100% of the prefix cache**.
+- **Prefix Layout Rule**: Structure every prompt strictly in order of stability: `[Static System Instructions & Tool Schemas] -> [Large Shared Document / Repo Context] -> [Conversation History] -> [Dynamic Per-Turn User Metadata & Timestamp]`.
+- **Why Semantic Caching Fails in Multi-Tenant Business Apps**: Libraries often pitch "Semantic Caching" (returning a cached LLM answer if a new query's embedding has cosine similarity `> 0.96` to a previous query). In business apps, `"What is my Q3 revenue?"` and `"What is my Q4 revenue?"` (or two different tenants asking `"Summarize my latest invoice"`) have `> 0.98` cosine similarity! Never use unscoped semantic caches across tenants or parameterized entity queries without keying the cache on `(tenant_id, user_role, normalized_intent_params)`.
 
 ## Quick Reference
 

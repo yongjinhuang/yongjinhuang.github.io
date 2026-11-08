@@ -992,7 +992,7 @@ HAVING SUM(CASE WHEN entry_type = 'debit' THEN amount ELSE 0 END)
 
 ## 9. 欺诈检测
 
-### 多层欺诈检���架构
+### 多层欺诈检测架构
 
 ```
 Payment Request

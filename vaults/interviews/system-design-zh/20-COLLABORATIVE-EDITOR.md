@@ -194,7 +194,7 @@ WS  wss://collab.example.com/v1/documents/{docId}/session
 }
 
 {
-  "type": "presence",    # 文��中的其他用户
+  "type": "presence",    # 文档中的其他用户
   "users": [
     { "userId": "user-789", "name": "Alice", "color": "#FF5733" }
   ]
@@ -1252,7 +1252,7 @@ GET /v1/documents/{docId}/revisions
 1. 限制撤销历史深度（例如每用户 200 次操作）
 2. 如果操作被转换过太多次，标记为"不可撤销"
 3. 使用基于 OT 的选择性撤销库（例如 "any-undo" 论文）
-4. CRDT 方法：逆操作是一等公��，不需要转换
+4. CRDT 方法：逆操作是一等公民，不需要转换
    （Yjs 通过跟踪来源的 undoManager 实现此功能）
 ```
 
@@ -1286,7 +1286,7 @@ GET /v1/documents/{docId}/revisions
   - 直接访问：特定用户或组被授予角色
   - 链接共享：拥有链接的任何人获得角色（查看/评论/编辑）
   - 域名共享：example.com 中的所有用户获得角色
-  - 公开：���联网上的任何人都可以查看
+  - 公开：互联网上的任何人都可以查看
 
 解析顺序（最具体的优先）：
   1. 用户是所有者 -> 所有者

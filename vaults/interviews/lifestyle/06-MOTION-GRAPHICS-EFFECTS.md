@@ -418,26 +418,10 @@ Technique 1: Zoom to code                Technique 2: Highlight box
 
 ### 9.2 Recommended Path
 
-```
-Beginner:
-  Start with CapCut or Canva for basic text and animations
-  Learn DaVinci Resolve's built-in title tools
-       │
-       ▼
-Intermediate:
-  Learn DaVinci Resolve Fusion for custom animations
-  OR learn After Effects basics
-       │
-       ▼
-Advanced:
-  Master After Effects + expressions (JavaScript-like scripting)
-  Create reusable templates (MOGRTs for Premiere, Fusion macros for Resolve)
-       │
-       ▼
-Expert:
-  Build complex composites
-  Create and sell your own template packs
-  Combine 3D elements (Blender) with motion graphics
+```mermaid
+flowchart TD
+    B["Beginner<br/>CapCut / Canva basic animations<br/>DaVinci Resolve built-in titles"] --> I["Intermediate<br/>DaVinci Resolve Fusion OR After Effects basics"]
+    I --> A["Advanced<br/>After Effects + JavaScript expressions<br/>Reusable templates (MOGRTs / Fusion Macros)"] --> E["Expert<br/>Complex VFX composites, template packs,<br/>3D integration (Blender)"]
 ```
 
 ### 9.3 Free Resources for Motion Graphics Templates

@@ -239,22 +239,10 @@ This gives you independent volume control in post.
 
 ### 5.4 Podcast (Desktop)
 
-```
-        ┌──────────────────────────────────────┐
-        │                                      │
-        │   ┌───┐               ┌───┐          │
-        │   │Mic│  👤  ◄────►  👤  │Mic│          │
-        │   │ A │ Host         Guest│ B │          │
-        │   └─┬─┘               └─┬─┘          │
-        │     │                   │            │
-        │     └───────┬───────────┘            │
-        │             │                        │
-        │         Audio Interface              │
-        │         (2+ channels)                │
-        │             │                        │
-        │          Computer                    │
-        │        (DAW recording)               │
-        └──────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Host["Host + Mic A"] & Guest["Guest + Mic B"] --> AI["Audio Interface<br/>(2+ Independent XLR Channels)"]
+    AI --> DAW["Computer (Multi-Track DAW Recording)"]
 ```
 
 **Best approach**: Two dynamic microphones into an audio interface. Record each mic
@@ -268,7 +256,7 @@ on a separate track.
     Level Meter
     ┌───────────────────────────────────────┐
     │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░│  -6 dB peak ✓ Good
-    └─────────────��─────────────────────────┘
+    └───────────────────────────────────────┘
 
     ┌───────────────────────────────────────┐
     │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│  0 dB = CLIPPING ✗
@@ -362,44 +350,14 @@ Direct sound:                    With reflections:
 
 Apply these effects in this order for voice recording:
 
-```
-Raw Recording
-      │
-      ▼
-┌─────────────┐
-│ 1. Noise    │   Remove background hiss, hum, AC noise
-│    Removal  │   Tools: Audacity noise reduction, Adobe Podcast AI
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ 2. EQ       │   Shape the tone of the voice
-│ (Equalizer) │   Cut lows < 80Hz, boost presence 2-5 kHz
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ 3. Compress │   Reduce dynamic range (make quiet parts louder,
-│             │   loud parts quieter). Ratio: 3:1 to 4:1
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ 4. De-ess   │   Tame harsh "S" and "SH" sounds
-│             │   Target 5-8 kHz range
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ 5. Limiter  │   Catch any remaining peaks before they clip
-│             │   Set ceiling to -1 dBFS
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ 6. Normalize│   Bring overall level to target loudness
-│             │   Target: -16 LUFS for YouTube
-└─────────────┘
+```mermaid
+flowchart TD
+    Raw["Raw Audio Recording"] --> S1["1. Noise Removal<br/>Remove background hiss, hum, AC noise<br/>(Audacity / Adobe Podcast AI)"]
+    S1 --> S2["2. EQ (Equalizer)<br/>High-pass cut &lt; 80 Hz, boost presence 2-5 kHz"]
+    S2 --> S3["3. Compressor<br/>Reduce dynamic range (Ratio 3:1 to 4:1)"]
+    S3 --> S4["4. De-Esser<br/>Tame harsh 'S' and 'SH' sibilance (5-8 kHz)"]
+    S4 --> S5["5. Brickwall Limiter<br/>Catch remaining peaks (Ceiling: -1 dBFS)"]
+    S5 --> S6["6. Loudness Normalization<br/>Target: -14 to -16 LUFS for YouTube"]
 ```
 
 ### 8.2 EQ for Voice
@@ -556,11 +514,9 @@ Sound effects add polish and emphasis:
 
 ### Recommended Progression
 
-```
-Start here:          First upgrade:        Full setup:
-Wired earbuds   ──►  Wireless lav    ──►   Wireless lav (field)
-                      (Rode GO II)          + Desktop dynamic (studio)
-                                            + Audio interface
+```mermaid
+flowchart LR
+    S1["1. Start Here<br/>Wired earbuds / Lav"] --> S2["2. First Upgrade<br/>Wireless Lav (Rode GO II / DJI Mic)"] --> S3["3. Full Setup<br/>Wireless Lav (field)<br/>+ Desktop Dynamic Mic (studio)<br/>+ XLR Audio Interface"]
 ```
 
 ---

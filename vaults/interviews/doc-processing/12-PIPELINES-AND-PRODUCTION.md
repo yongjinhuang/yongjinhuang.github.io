@@ -4,31 +4,11 @@
 
 Processing a single document on your laptop is straightforward. Processing 10,000 documents per day with error handling, retries, monitoring, and storage management is an engineering challenge. This chapter covers the architecture patterns, tools, and practices for building production-grade document processing systems — from task queues to monitoring to complete portfolio projects.
 
-```
-+------------------------------------------------------------------------+
-|                    PRODUCTION PIPELINE                                    |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  INGESTION                       PROCESSING                            |
-|  +------------------------+     +---------------------------+          |
-|  | File upload (S3, GCS)   |     | Celery / RQ task queue     |          |
-|  | Email polling            |     | Format detection           |          |
-|  | API webhooks             |     | Text extraction            |          |
-|  | Watch directories        |     | OCR (if needed)            |          |
-|  | Scheduled scraping       |     | Data extraction            |          |
-|  +------------------------+     | Validation                 |          |
-|                                  +---------------------------+          |
-|                                                                        |
-|  STORAGE                         MONITORING                            |
-|  +------------------------+     +---------------------------+          |
-|  | S3 / GCS (raw files)    |     | Logging (structured JSON)  |          |
-|  | PostgreSQL (metadata)   |     | Metrics (Prometheus)       |          |
-|  | Redis (cache, queue)    |     | Alerting (PagerDuty)       |          |
-|  | Elasticsearch (search)  |     | Dashboard (Grafana)        |          |
-|  | Vector DB (embeddings)  |     | Error tracking (Sentry)    |          |
-|  +------------------------+     +---------------------------+          |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Ing["INGESTION<br/>- File upload (S3, GCS)<br/>- Email polling &amp; Webhooks<br/>- Watch dirs &amp; Scraping"] --> Proc["PROCESSING<br/>- Celery / RQ task queue<br/>- Format detection &amp; Text/OCR extraction<br/>- Structured extraction &amp; Validation"]
+    Proc --> Store[("STORAGE<br/>- S3 / GCS (raw files)<br/>- PostgreSQL (metadata)<br/>- Redis (cache, queue)<br/>- Elasticsearch &amp; Vector DB")]
+    Proc --> Mon["MONITORING<br/>- Structured JSON logs<br/>- Prometheus &amp; Grafana<br/>- PagerDuty &amp; Sentry"]
 ```
 
 ---

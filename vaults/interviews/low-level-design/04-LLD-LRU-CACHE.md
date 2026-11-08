@@ -52,30 +52,24 @@ re-insert, which is O(n) in the worst case for maintaining order semantics.
 
 The key insight: combine **two data structures** where each compensates for the other's weakness.
 
-```
-+------------------------------------------------------------------+
-|                     LRU CACHE INTERNALS                          |
-+------------------------------------------------------------------+
-|                                                                  |
-|  HASH MAP: O(1) key lookup                                       |
-|  +----------+----------+----------+----------+                   |
-|  | key: "A" | key: "B" | key: "C" | key: "D" |                  |
-|  | val: --> | val: --> | val: --> | val: --> |                   |
-|  +----+-----+----+-----+----+-----+----+-----+                  |
-|       |          |          |          |                          |
-|       v          v          v          v                          |
-|  DOUBLY LINKED LIST: O(1) add/remove, tracks order               |
-|                                                                  |
-|  HEAD <-> [A] <-> [B] <-> [C] <-> [D] <-> TAIL                  |
-|  (MRU)                                    (LRU)                  |
-|                                                                  |
-|  On get("B"):  move [B] to head                                  |
-|  HEAD <-> [B] <-> [A] <-> [C] <-> [D] <-> TAIL                  |
-|                                                                  |
-|  On put("E") when full: remove [D] from tail, add [E] at head   |
-|  HEAD <-> [E] <-> [B] <-> [A] <-> [C] <-> TAIL                  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph LRU["LRU CACHE INTERNALS (HashMap + Doubly Linked List = O(1) Get &amp; Put)"]
+        subgraph Map["Hash Map: O(1) Key Lookup"]
+            KA["key: 'A'"]
+            KB["key: 'B'"]
+            KC["key: 'C'"]
+            KD["key: 'D'"]
+        end
+        subgraph DLL["Doubly Linked List: O(1) Add/Remove (HEAD = MRU, TAIL = LRU)"]
+            Head["HEAD<br/>(Sentinel)"] <--> NA["[A]"] <--> NB["[B]"] <--> NC["[C]"] <--> ND["[D]"] <--> Tail["TAIL<br/>(Sentinel)"]
+        end
+        KA --> NA
+        KB --> NB
+        KC --> NC
+        KD --> ND
+        Ops["Operations:<br/>- get('B'): detach [B] &amp; move to HEAD.next -&gt; HEAD &lt;-&gt; [B] &lt;-&gt; [A] &lt;-&gt; [C] &lt;-&gt; [D] &lt;-&gt; TAIL<br/>- put('E') when full: evict [D] at TAIL.prev, insert [E] at HEAD.next"]
+    end
 ```
 
 **Hash map** gives O(1) lookup by key.
@@ -198,21 +192,17 @@ cache.get(2)       # Returns -1 (evicted)
 LFU (Least Frequently Used) evicts the item with the lowest access count. On ties, evict
 the least recently used among them.
 
-```
-+------------------------------------------------------------------+
-|                     LFU CACHE INTERNALS                          |
-+------------------------------------------------------------------+
-|                                                                  |
-|  HASH MAP 1: key -> (value, frequency)                           |
-|  HASH MAP 2: frequency -> OrderedDict of keys                   |
-|                                                                  |
-|  freq=1: { "C": val_c }                                         |
-|  freq=2: { "A": val_a, "B": val_b }                             |
-|  freq=5: { "D": val_d }                                         |
-|                                                                  |
-|  min_freq pointer: 1 (evict from here on capacity overflow)      |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph LFU["LFU CACHE INTERNALS (O(1) via Two Hash Maps + min_freq Pointer)"]
+        M1["Hash Map 1: key_to_val_freq<br/>key -&gt; (value, frequency)"]
+        subgraph M2["Hash Map 2: freq_to_keys (frequency -> OrderedDict / DLL for LRU tie-breaking)"]
+            F1["freq = 1 (min_freq = 1 — Evict oldest here)<br/>{ 'C': val_c }"]
+            F2["freq = 2<br/>{ 'A': val_a, 'B': val_b }"]
+            F5["freq = 5<br/>{ 'D': val_d }"]
+        end
+        M1 --> M2
+    end
 ```
 
 ```python

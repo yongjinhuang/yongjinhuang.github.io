@@ -55,10 +55,10 @@ graph TB
 
 ### 1.2 分层架构
 
-```
-Controller → Service → DAO → Database
-     ↓
-  Exception → GlobalExceptionHandler → R<T> 统一响应
+```mermaid
+flowchart LR
+    Ctrl["Controller"] --> Svc["Service"] --> DAO["DAO"] --> DB[("Database")]
+    Ctrl & Svc & DAO -.->|"Throws Exception"| Handler["GlobalExceptionHandler"] --> Resp["R&lt;T&gt; 统一响应"]
 ```
 
 - **Controller 层**：REST 端点定义，参数校验，通过 `@CurrentUid` 注入当前用户 ID
@@ -119,15 +119,15 @@ R.fail(ResultCode.XXX, "自定义消息") // 自定义错误消息
 
 **异常类继承体系**：
 
-```
-BusinessException（基类）
-├── UserException          — 用户管理错误，如 userNotFound()
-├── PaymentException       — 支付错误，如 refundFailed()
-├── FileException          — 文件操作错误
-├── LlmServiceException    — LLM 集成错误
-├── SseException           — 流式传输错误
-│   └── DeepResearchSseException
-└── JwtAuthenticationException — 认证失败
+```mermaid
+flowchart LR
+    Base["BusinessException（基类）"]
+    Base --> E1["UserException<br/>用户管理错误，如 userNotFound()"]
+    Base --> E2["PaymentException<br/>支付错误，如 refundFailed()"]
+    Base --> E3["FileException<br/>文件操作错误"]
+    Base --> E4["LlmServiceException<br/>LLM 集成错误"]
+    Base --> E5["SseException<br/>流式传输错误"] --> E5a["DeepResearchSseException"]
+    Base --> E6["JwtAuthenticationException<br/>认证失败"]
 ```
 
 **全局异常处理器**（`common/exception/handlers/GlobalExceptionHandler.java`）自动：
@@ -761,19 +761,21 @@ graph TD
 
 ### 7.6 SSE 事件类型
 
-```
-PreSearchPlan → PreSearchStart → PreSearchSearch → PreSearchEnd
-→ WritePlan → WriteStart → WriteThinkNextStep → WriteSearch → WriteWrite → WriteEnd
-→ WriteFileReady（文件 URL）→ TokenUsage → AllDone
+```mermaid
+flowchart LR
+    S1["PreSearchPlan"] --> S2["PreSearchStart"] --> S3["PreSearchSearch"] --> S4["PreSearchEnd"]
+    S4 --> S5["WritePlan"] --> S6["WriteStart"] --> S7["WriteThinkNextStep"] --> S8["WriteSearch"] --> S9["WriteWrite"] --> S10["WriteEnd"]
+    S10 --> S11["WriteFileReady（文件 URL）"] --> S12["TokenUsage"] --> S13["AllDone"]
 ```
 
 特殊事件：`CustomError`（错误信息）、`RetryReload`（重试通知）
 
 ### 7.7 会话状态流转
 
-```
-INIT → WRITE → DONE
-         ↘ ERROR
+```mermaid
+flowchart LR
+    Init["INIT"] --> Write["WRITE"] --> Done["DONE"]
+    Write --> Error["ERROR"]
 ```
 
 ### 7.8 超时配置
@@ -895,9 +897,10 @@ sequenceDiagram
 
 ### 8.7 会话状态流转
 
-```
-INIT → ASYNC → WAIT_IN_QUEUE → PROGRESS → DONE
-                                         ↘ ERROR
+```mermaid
+flowchart LR
+    Init["INIT"] --> Async["ASYNC"] --> Wait["WAIT_IN_QUEUE"] --> Prog["PROGRESS"] --> Done["DONE"]
+    Prog --> Error["ERROR"]
 ```
 
 ### 8.8 支持的文件格式
@@ -957,9 +960,10 @@ sequenceDiagram
 
 ### 9.3 订单状态流转
 
-```
-WAITING（待支付）→ SUCCESS（已支付）→ REFUND（已退款）
-           ↘ CLOSED（已关闭/取消）
+```mermaid
+flowchart LR
+    Wait["WAITING（待支付）"] --> Succ["SUCCESS（已支付）"] --> Refund["REFUND（已退款）"]
+    Wait --> Closed["CLOSED（已关闭/取消）"]
 ```
 
 ### 9.4 微信支付集成

@@ -4,27 +4,14 @@
 
 Token standards are the foundation of interoperability in Web3. When every fungible token implements the same interface (ERC-20), wallets, DEXs, lending protocols, and analytics tools can all interact with it without custom integration. Understanding token standards — their interfaces, their quirks, and their security implications — is essential for building anything in the Web3 ecosystem.
 
-```
-+------------------------------------------------------------------------+
-|                    TOKEN STANDARDS ECOSYSTEM                            |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  FUNGIBLE TOKENS              NON-FUNGIBLE TOKENS                      |
-|  +----------------------+    +---------------------------+             |
-|  | ERC-20 (standard)     |    | ERC-721 (NFTs)            |             |
-|  | ERC-2612 (permit)     |    | ERC-721A (gas-efficient)  |             |
-|  | ERC-777 (hooks)       |    | ERC-721Enumerable         |             |
-|  | ERC-4626 (vaults)     |    | ERC-6551 (Token Bound)    |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-|  MULTI-TOKEN                  SPECIAL PURPOSE                          |
-|  +----------------------+    +---------------------------+             |
-|  | ERC-1155 (multi)      |    | Soulbound Tokens (SBTs)   |             |
-|  | Batch transfers       |    | Wrapped tokens (WETH)     |             |
-|  | Fungible + NFT in one |    | Rebasing tokens           |             |
-|  +----------------------+    +---------------------------+             |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Standards["ETHEREUM TOKEN STANDARDS ECOSYSTEM"]
+        FT["FUNGIBLE TOKENS<br/>- ERC-20 (Standard)<br/>- ERC-2612 (Permit gasless approvals)<br/>- ERC-777 (Hooks)<br/>- ERC-4626 (Tokenized yield vaults)"]
+        NFT["NON-FUNGIBLE TOKENS (NFTs)<br/>- ERC-721 (Standard)<br/>- ERC-721A (Azuki batch minting)<br/>- ERC-721Enumerable<br/>- ERC-6551 (Token Bound Accounts)"]
+        Multi["MULTI-TOKEN<br/>- ERC-1155 (Fungible + NFT in single contract, batch transfers)"]
+        Spec["SPECIAL PURPOSE<br/>- Soulbound Tokens (SBTs — non-transferable)<br/>- Wrapped Tokens (WETH)<br/>- Rebasing Tokens"]
+    end
 ```
 
 ---
@@ -387,14 +374,15 @@ contract SoulboundToken is ERC721 {
 
 Gives every NFT its own smart contract wallet. An NFT can own other tokens and NFTs:
 
-```
-Before ERC-6551:            After ERC-6551:
-
-NFT #42 is just an image    NFT #42 has its own wallet (0xTBA...)
-owned by Alice               ├── Owns 500 USDC
-                              ├── Owns NFT #99 (a sword)
-                              ├── Owns 2.5 ETH
-                              └── Can interact with DeFi protocols
+```mermaid
+flowchart LR
+    subgraph Before["Before ERC-6551"]
+        Alice1["Alice"] -->|"owns"| NFT1["NFT #42<br/>(Passive image / metadata)"]
+    end
+    subgraph After["After ERC-6551 (Token Bound Account)"]
+        Alice2["Alice"] -->|"owns"| NFT2["NFT #42"] -->|"controls"| TBA["Smart Contract Wallet (0xTBA...)"]
+        TBA --> A1["Owns 500 USDC"] & A2["Owns NFT #99 (Sword)"] & A3["Owns 2.5 ETH"] & A4["Interacts with DeFi"]
+    end
 ```
 
 ---
@@ -403,29 +391,14 @@ owned by Alice               ├── Owns 500 USDC
 
 ### 7.1 Supply Mechanisms
 
-```
-+------------------------------------------------------------------------+
-|                    TOKEN SUPPLY MODELS                                   |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  FIXED SUPPLY                 INFLATIONARY                             |
-|  +-----------------------+   +---------------------------+             |
-|  | Total supply set at    |   | New tokens minted per     |             |
-|  | deployment, never      |   | block/epoch as rewards    |             |
-|  | changes                |   | (like ETH staking rewards)|             |
-|  | Example: UNI (1B)     |   | Example: ETH (~0.5%/year) |             |
-|  +-----------------------+   +---------------------------+             |
-|                                                                        |
-|  DEFLATIONARY                 ELASTIC / REBASING                       |
-|  +-----------------------+   +---------------------------+             |
-|  | Tokens burned on usage |   | Supply adjusts to target  |             |
-|  | (fees, buyback-burn)   |   | price by changing all     |             |
-|  | Reduces supply over    |   | balances proportionally   |             |
-|  | time                   |   | Example: AMPL, OHM        |             |
-|  | Example: BNB, ETH burn |   |                           |             |
-|  +-----------------------+   +---------------------------+             |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Supply["TOKEN SUPPLY MODELS"]
+        Fixed["FIXED SUPPLY<br/>Total supply minted at deployment, never changes (e.g., UNI 1B)"]
+        Infl["INFLATIONARY<br/>New tokens minted per block/epoch as rewards (e.g., PoS issuance)"]
+        Defl["DEFLATIONARY<br/>Tokens burned on usage / buyback-and-burn (e.g., EIP-1559 ETH burn, BNB)"]
+        Rebase["ELASTIC / REBASING<br/>Supply adjusts algorithmically by scaling all balances proportionally (e.g., AMPL, stETH)"]
+    end
 ```
 
 ### 7.2 Distribution Methods

@@ -29,29 +29,20 @@
 
 ## 2. High-Level Architecture
 
-```
-┌─────────┐     ┌──────────┐     ┌──────────────┐     ┌──────────┐
-│Merchant │────→│  Admin   │────→│   Deal       │────→│  Event   │
-│ Portal  │     │  API     │     │   Service    │     │  Bus     │
-└─────────┘     └──────────┘     └──────┬───────┘     └────┬─────┘
-                                        │                   │
-                                        ▼                   ▼
-                                 ┌────────────┐     ┌────────────┐
-                                 │  Deal DB   │     │ Cache      │
-                                 │ (Postgres) │     │ Invalidator│
-                                 └────────────┘     └─────┬──────┘
-                                                          │
-┌─────────┐     ┌──────────┐     ┌──────────────┐        │
-│  User   │────→│  CDN /   │────→│   Deal       │◄───────┘
-│ App/Web │     │  Gateway │     │   Read API   │
-└─────────┘     └──────────┘     └──────┬───────┘
-                                        │
-                              ┌─────────┼─────────┐
-                              ▼         ▼         ▼
-                        ┌────────┐ ┌────────┐ ┌────────┐
-                        │ Redis  │ │ Search │ │ Reco   │
-                        │ Cache  │ │ (ES)   │ │ Engine │
-                        └────────┘ └────────┘ └────────┘
+```mermaid
+flowchart TD
+    Portal["Merchant Portal"] --> AdminAPI["Admin API"]
+    AdminAPI --> DealSvc["Deal Service"]
+    DealSvc --> DealDB[("Deal DB<br/>(Postgres)")]
+    DealSvc --> EventBus["Event Bus"]
+    EventBus --> Invalidator["Cache Invalidator"]
+
+    User["User<br/>App/Web"] --> CDN["CDN / Gateway"]
+    CDN --> ReadAPI["Deal Read API"]
+    Invalidator --> ReadAPI
+    ReadAPI --> Redis[("Redis Cache")]
+    ReadAPI --> ES[("Search (ES)")]
+    ReadAPI --> Reco["Reco Engine"]
 ```
 
 ---
@@ -140,21 +131,15 @@ Response:
 
 **Caching Strategy (Critical for Performance):**
 
-```
-Request Flow:
-                                    ┌─────────┐
-User ──→ CDN (static assets) ──→   │ API     │
-                                    │ Gateway │
-                                    └────┬────┘
-                                         │
-                                    ┌────┴────┐
-                              Yes   │ Redis   │  No (cache miss)
-                           ◄────── │ Cache?  │ ──────────────→ Database
-                                    └─────────┘
-                                                   │
-                                              Write to Redis
-                                              (TTL: 30s for deal lists)
-                                              (TTL: 5min for deal details)
+```mermaid
+flowchart TD
+    User["User"] --> CDN["CDN (static assets)"]
+    CDN --> GW["API Gateway"]
+    GW --> Cache{"Redis Cache?"}
+    Cache -->|"Yes (cache hit)"| Resp["Return Cached Response"]
+    Cache -->|"No (cache miss)"| DB[("Database")]
+    DB --> WriteCache["Write to Redis<br/>(TTL: 30s for deal lists)<br/>(TTL: 5min for deal details)"]
+    WriteCache --> Resp
 ```
 
 **Cache Keys:**
@@ -171,19 +156,13 @@ merchant:123:deals              → All deals for a merchant
 
 Flash sales require special handling due to limited inventory and traffic spikes.
 
-```
-┌─────────┐   Claim    ┌──────────────┐   Decrement   ┌─────────┐
-│  User   │──────────→│  Flash Sale  │─────────────→│  Redis  │
-│         │           │  Service     │               │ Counter │
-│         │◄──────────│              │◄─────────────│         │
-└─────────┘  Result   └──────┬───────┘   Remaining  └─────────┘
-                              │
-                         Async write
-                              │
-                              ▼
-                       ┌────────────┐
-                       │  Database  │  (source of truth)
-                       └────────────┘
+```mermaid
+flowchart TD
+    User["User"] -->|"Claim"| Flash["Flash Sale Service"]
+    Flash -->|"Result"| User
+    Flash -->|"Decrement"| Redis[("Redis Counter")]
+    Redis -->|"Remaining"| Flash
+    Flash -->|"Async write"| DB[("Database<br/>(source of truth)")]
 ```
 
 **Atomic Counter in Redis:**
@@ -210,13 +189,14 @@ end
 
 ### 3.4 Search & Discovery
 
+```mermaid
+flowchart LR
+    User["User"] -->|"Query"| ES[("Elasticsearch")]
+    ES -->|"Results"| User
 ```
-┌─────────┐   Query    ┌──────────────┐
-│  User   │──────────→│ Elasticsearch│
-│         │◄──────────│              │
-└─────────┘  Results  └──────────────┘
 
-Index: deals
+```json
+// Index: deals
 {
   "title": "text",
   "description": "text",
@@ -245,20 +225,18 @@ Index: deals
 
 ### 11.11 / Black Friday Architecture
 
-```
-Normal:   100K requests/min
-Peak:     1M+ requests/min (10x)
-
-Strategy:
-┌─────────────────────────────────────────────┐
-│  1. Pre-warm caches 1 hour before event     │
-│  2. Auto-scale API pods (HPA in k8s)        │
-│  3. CDN caching for deal listing pages      │
-│  4. Rate limit per user (10 claims/min)     │
-│  5. Queue flash sale claims (no direct DB)  │
-│  6. Read replicas for non-critical queries  │
-│  7. Circuit breaker on recommendation API   │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Strategy["Traffic Spike Strategy (Normal: 100K req/min -> Peak: 1M+ req/min, 10x)"]
+        S1["1. Pre-warm caches 1 hour before event"]
+        S2["2. Auto-scale API pods (HPA in k8s)"]
+        S3["3. CDN caching for deal listing pages"]
+        S4["4. Rate limit per user (10 claims/min)"]
+        S5["5. Queue flash sale claims (no direct DB)"]
+        S6["6. Read replicas for non-critical queries"]
+        S7["7. Circuit breaker on recommendation API"]
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
+    end
 ```
 
 ### Traffic Shaping

@@ -55,28 +55,11 @@ Bad architecture leads to:
 The simplest architectural pattern. Code is organized into horizontal layers where each
 layer only talks to the layer directly below it.
 
-```
-+-------------------------------------------------------+
-|                 PRESENTATION LAYER                     |
-|  (Controllers, API routes, CLI, Views)                 |
-+-------------------------------------------------------+
-                         |
-                         v
-+-------------------------------------------------------+
-|                 BUSINESS / SERVICE LAYER                |
-|  (Use cases, business rules, validation)               |
-+-------------------------------------------------------+
-                         |
-                         v
-+-------------------------------------------------------+
-|                 PERSISTENCE / DATA LAYER               |
-|  (Repositories, ORM, database queries)                 |
-+-------------------------------------------------------+
-                         |
-                         v
-+-------------------------------------------------------+
-|                 DATABASE                               |
-+-------------------------------------------------------+
+```mermaid
+flowchart TD
+    L1["PRESENTATION LAYER<br/>(Controllers, API routes, CLI, Views)"] --> L2["BUSINESS / SERVICE LAYER<br/>(Use cases, business rules, validation)"]
+    L2 --> L3["PERSISTENCE / DATA LAYER<br/>(Repositories, ORM, database queries)"]
+    L3 --> L4[("DATABASE")]
 ```
 
 **Rules:**
@@ -95,32 +78,12 @@ the business layer might need changes too. Hexagonal architecture fixes this.
 The key insight: business logic defines _interfaces_ (ports) and the outside world provides
 _implementations_ (adapters). Dependencies point inward.
 
-```
-          +------------------+
-          | REST Controller  |   <-- Driving Adapter (input)
-          +--------+---------+
-                   |
-                   v (implements)
-          +--------+---------+
-          | OrderService     |   <-- Port (interface)
-          | (interface)      |
-          +--------+---------+
-                   |
-                   v (uses)
-          +--------+---------+
-          | OrderServiceImpl |   <-- Application Core
-          +--------+---------+
-                   |
-                   v (depends on interface)
-          +--------+---------+
-          | OrderRepository  |   <-- Port (interface)
-          | (interface)      |
-          +--------+---------+
-                   ^
-                   | (implements)
-          +--------+---------+
-          | PostgresRepo     |   <-- Driven Adapter (output)
-          +------------------+
+```mermaid
+flowchart TD
+    Ctrl["REST Controller<br/>(Driving Adapter — Input)"] -->|"calls"| InPort["OrderService<br/>(Inbound Port / Interface)"]
+    InPort -->|"implemented by"| Core["OrderServiceImpl<br/>(Application Core)"]
+    Core -->|"depends on"| OutPort["OrderRepository<br/>(Outbound Port / Interface)"]
+    Repo["PostgresRepo<br/>(Driven Adapter — Output)"] -->|"implements"| OutPort
 ```
 
 **Ports** = interfaces defined by the core
@@ -215,29 +178,16 @@ class ConsoleNotifier(NotificationPort):
 Clean Architecture is Robert Martin's formalization of hexagonal architecture. The dependency
 rule is absolute: **source code dependencies must point inward**.
 
-```
-+---------------------------------------------------------------------+
-|                                                                     |
-|  +---------------------------------------------------------------+  |
-|  |                                                               |  |
-|  |  +-----------------------------------------------------------+|  |
-|  |  |                                                           ||  |
-|  |  |  +-----------------------------------------------+       ||  |
-|  |  |  |              ENTITIES                         |       ||  |
-|  |  |  |  (Enterprise business rules, domain objects)  |       ||  |
-|  |  |  +-----------------------------------------------+       ||  |
-|  |  |                                                           ||  |
-|  |  |  USE CASES                                                ||  |
-|  |  |  (Application business rules, orchestration)              ||  |
-|  |  +-----------------------------------------------------------+|  |
-|  |                                                               |  |
-|  |  INTERFACE ADAPTERS                                           |  |
-|  |  (Controllers, Presenters, Gateways, Repositories)           |  |
-|  +---------------------------------------------------------------+  |
-|                                                                     |
-|  FRAMEWORKS & DRIVERS                                               |
-|  (Web framework, database, UI, external services)                   |
-+---------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Outer["4. FRAMEWORKS &amp; DRIVERS (Web framework, DB, UI, external services)"]
+        subgraph Adapters["3. INTERFACE ADAPTERS (Controllers, Presenters, Gateways, Repositories)"]
+            subgraph UseCases["2. USE CASES (Application business rules, orchestration)"]
+                Entities["1. ENTITIES<br/>(Enterprise business rules, core domain objects)"]
+            end
+        end
+    end
+    Outer -->|"Dependencies ALWAYS point inward"| Adapters --> UseCases --> Entities
 ```
 
 **The Four Layers:**

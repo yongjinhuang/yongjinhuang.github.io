@@ -27,24 +27,10 @@ evaluation, LLM-as-judge, A/B testing, and benchmarking frameworks.
 Unlike traditional software (deterministic: same input = same output), LLMs are
 stochastic and produce free-form text. This makes evaluation fundamentally different.
 
-```
-+------------------------------------------------------------------+
-| TRADITIONAL SOFTWARE vs LLM EVALUATION                            |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Traditional:                                                     |
-|  assert add(2, 3) == 5            # Exact match, pass/fail       |
-|  assert response.status == 200     # Binary correctness           |
-|                                                                    |
-|  LLM:                                                             |
-|  assert llm("Summarize X") == ???  # What is "correct"?          |
-|  - Multiple valid summaries exist                                 |
-|  - Quality is subjective                                          |
-|  - Same prompt can give different outputs                         |
-|  - Partial correctness is common                                  |
-|  - Format and content both matter                                 |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Trad["TRADITIONAL SOFTWARE EVALUATION<br/>- Deterministic: assert add(2, 3) == 5<br/>- Exact match, binary pass / fail"]
+    LLM["LLM EVALUATION<br/>- Non-deterministic: assert llm('Summarize X') == ???<br/>- Multiple valid answers, subjective quality<br/>- Partial correctness, both format &amp; semantics matter"]
 ```
 
 ### Evaluation Dimensions
@@ -187,28 +173,13 @@ context or that is factually incorrect.
 
 ### Types of Hallucination
 
-```
-+------------------------------------------------------------------+
-| HALLUCINATION TAXONOMY                                            |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. INTRINSIC HALLUCINATION                                       |
-|     Output contradicts the provided context                       |
-|     Example: Context says "founded in 2010"                       |
-|              Model says "founded in 2008"                         |
-|                                                                    |
-|  2. EXTRINSIC HALLUCINATION                                       |
-|     Output adds information not in context                        |
-|     Example: Context: "Company makes widgets"                     |
-|              Model: "Company makes widgets and was               |
-|                      recently acquired by Google"                 |
-|                      (acquisition not mentioned anywhere)         |
-|                                                                    |
-|  3. FACTUAL HALLUCINATION                                         |
-|     Output contains incorrect factual claims                      |
-|     Example: "The Eiffel Tower is in London"                      |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Hallucination["HALLUCINATION TAXONOMY"]
+        H1["1. INTRINSIC HALLUCINATION<br/>Output directly contradicts provided context<br/>(Context: 'founded in 2010' vs Model: 'founded in 2008')"]
+        H2["2. EXTRINSIC HALLUCINATION<br/>Output fabricates unverified details not in context<br/>(Context: 'makes widgets' vs Model: '...and was acquired by Google')"]
+        H3["3. FACTUAL HALLUCINATION<br/>Output states false world facts<br/>('The Eiffel Tower is in London')"]
+    end
 ```
 
 ### Hallucination Detection Methods
@@ -697,43 +668,13 @@ suite.print_report(results)
 
 ### A/B Test Architecture
 
-```
-+------------------------------------------------------------------+
-|                    LLM A/B TESTING                                 |
-+------------------------------------------------------------------+
-|                                                                    |
-|  User Request                                                     |
-|      |                                                             |
-|      v                                                             |
-|  +----------+                                                     |
-|  | Traffic  |  50% -> Variant A (current prompt / model)          |
-|  | Splitter |  50% -> Variant B (new prompt / model)              |
-|  +----------+                                                     |
-|      |    |                                                        |
-|      v    v                                                        |
-|  +------+ +------+                                                 |
-|  | LLM  | | LLM  |                                                |
-|  | (A)  | | (B)  |                                                |
-|  +------+ +------+                                                 |
-|      |        |                                                    |
-|      v        v                                                    |
-|  +------------------+                                              |
-|  | Metrics Collector |                                             |
-|  | - User feedback   |                                             |
-|  | - Task success    |                                             |
-|  | - Latency         |                                             |
-|  | - Cost            |                                             |
-|  +------------------+                                              |
-|           |                                                        |
-|           v                                                        |
-|  +------------------+                                              |
-|  | Statistical       |                                             |
-|  | Analysis          |                                             |
-|  | (significance     |                                             |
-|  |  testing)         |                                             |
-|  +------------------+                                              |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Req["User Request"] --> Split["Traffic Splitter"]
+    Split -->|"50%"| A["LLM Variant A<br/>(Current prompt / model)"]
+    Split -->|"50%"| B["LLM Variant B<br/>(New prompt / model)"]
+    A & B --> Coll["Metrics Collector<br/>- User feedback<br/>- Task success<br/>- Latency &amp; Cost"]
+    Coll --> Stat["Statistical Analysis<br/>(Significance testing)"]
 ```
 
 ### A/B Test Implementation
@@ -909,28 +850,14 @@ def evaluate_code_generation(
 
 ### Key Metrics to Track
 
-```
-+------------------------------------------------------------------+
-| PRODUCTION LLM MONITORING DASHBOARD                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  LATENCY                         QUALITY                          |
-|  +----------------------------+  +----------------------------+   |
-|  | TTFT (time to first token) |  | User satisfaction score   |   |
-|  | Total response time        |  | Thumbs up/down ratio      |   |
-|  | p50, p95, p99              |  | Hallucination rate        |   |
-|  +----------------------------+  | Task success rate         |   |
-|                                  +----------------------------+   |
-|  COST                                                             |
-|  +----------------------------+  ERRORS                           |
-|  | $/query (avg, p99)        |  +----------------------------+   |
-|  | Total daily/monthly spend |  | API error rate             |   |
-|  | Token usage by model      |  | Timeout rate               |   |
-|  +----------------------------+  | Rate limit hits            |   |
-|                                  | Malformed output rate      |   |
-|                                  +----------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Dash["PRODUCTION LLM MONITORING DASHBOARD"]
+        Lat["LATENCY<br/>- TTFT (Time to First Token)<br/>- Total response time (p50, p95, p99)"]
+        Qual["QUALITY<br/>- User satisfaction score<br/>- Thumbs up/down ratio<br/>- Hallucination &amp; task success rate"]
+        Cost["COST<br/>- $/query (avg, p99)<br/>- Total daily/monthly spend<br/>- Token usage by model"]
+        Err["ERRORS<br/>- API error &amp; timeout rate<br/>- Rate limit hits (429)<br/>- Malformed output rate"]
+    end
 ```
 
 ### Quality Drift Detection
@@ -1046,26 +973,15 @@ and include edge cases in your evaluation set.
 
 ### Evaluation Method Selection Guide
 
-```
-What are you evaluating?
-  |
-  +--> Classification output
-  |      --> Accuracy, F1, precision, recall
-  |
-  +--> Structured extraction (JSON, entities)
-  |      --> Schema validation + field-level accuracy
-  |
-  +--> Free-form generation (summaries, answers)
-  |      --> LLM-as-judge + human eval sample
-  |
-  +--> RAG pipeline
-  |      --> RAGAS (faithfulness, relevancy, context precision/recall)
-  |
-  +--> Code generation
-  |      --> HumanEval / MBPP (pass@k)
-  |
-  +--> Safety / bias
-         --> Red teaming + safety classifiers
+```mermaid
+flowchart LR
+    Q{"What are you evaluating?"}
+    Q -->|"Classification output"| M1["Accuracy, F1, Precision, Recall"]
+    Q -->|"Structured extraction (JSON, entities)"| M2["Schema validation + Field-level accuracy"]
+    Q -->|"Free-form generation (summaries, answers)"| M3["LLM-as-judge + Human eval sample"]
+    Q -->|"RAG pipeline"| M4["RAGAS (Faithfulness, Relevancy, Context Precision/Recall)"]
+    Q -->|"Code generation"| M5["HumanEval / MBPP / SWE-bench (pass@k)"]
+    Q -->|"Safety / bias"| M6["Red teaming + Safety classifiers"]
 ```
 
 ### Metric Targets by Application

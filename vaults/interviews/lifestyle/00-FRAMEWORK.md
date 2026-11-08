@@ -36,38 +36,13 @@ This series covers:
 
 ## 2. The Learning Path
 
-```
-                    ┌─────────────────────────────┐
-                    │     PHASE 1: FOUNDATIONS     │
-                    │                              │
-                    │  Camera Basics (01)          │
-                    │  Audio for Video (02)        │
-                    │  Editing Fundamentals (03)   │
-                    └──────────────┬──────────────┘
-                                   │
-                    ┌──────────────▼──────────────┐
-                    │     PHASE 2: CRAFT          │
-                    │                              │
-                    │  Editing Tools (04)          │
-                    │  Color Grading (05)          │
-                    │  Motion Graphics (06)        │
-                    │  Thumbnails & Branding (07)  │
-                    └──────────────┬──────────────┘
-                                   │
-                    ┌──────────────▼──────────────┐
-                    │     PHASE 3: CREATE         │
-                    │                              │
-                    │  Vlogging Techniques (08)    │
-                    │  YouTube Strategy (09)       │
-                    │  Live Streaming (10)         │
-                    └──────────────┬──────────────┘
-                                   │
-                    ┌──────────────▼──────────────┐
-                    │     PHASE 4: GROW           │
-                    │                              │
-                    │  Storytelling (11)           │
-                    │  Monetization (12)           │
-                    └─────────────────────────────┘
+```mermaid
+flowchart TD
+    P1["PHASE 1: FOUNDATIONS<br/>Camera Basics (01)<br/>Audio for Video (02)<br/>Editing Fundamentals (03)"]
+    P2["PHASE 2: CRAFT<br/>Editing Tools (04)<br/>Color Grading (05)<br/>Motion Graphics (06)<br/>Thumbnails &amp; Branding (07)"]
+    P3["PHASE 3: CREATE<br/>Vlogging Techniques (08)<br/>YouTube Strategy (09)<br/>Live Streaming (10)"]
+    P4["PHASE 4: GROW<br/>Storytelling (11)<br/>Monetization (12)"]
+    P1 --> P2 --> P3 --> P4
 ```
 
 ## 3. Mindset Shift: Engineer to Creator

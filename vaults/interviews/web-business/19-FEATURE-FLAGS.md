@@ -78,6 +78,11 @@ The most basic use of a feature flag — an emergency OFF switch for a feature t
 | **Dark Launch**             | Deploying a feature to production but not showing it to users (backend processing happens, UI is hidden) |
 | **Percentage Rollout**      | Enabling a feature for X% of users, gradually increasing                                                 |
 | **Feature Gate**            | A flag that controls access to a feature (usually tied to a plan or permission)                          |
+| **Local Evaluation SDK**    | Server SDK that caches the full flag ruleset in memory and evaluates flags locally in `< 1 µs`           |
+| **Consistent Hashing**      | Deterministic hash (`MurmurHash3(flag_key + salt + bucketing_id) % 100`) ensuring sticky rollout buckets |
+| **Bucketing Key**           | The identifier hashed for rollouts (`user_id` for B2C vs `organization_id` / `tenant_id` for B2B)        |
+| **Relay Proxy**             | An internal infrastructure daemon that caches flag rulesets in Redis/memory if the external SaaS goes down |
+| **Zombie Flag**             | A stale 100%-rolled-out or abandoned flag left in code, multiplying test combinations and outage risks   |
 
 ## Common Patterns
 
@@ -131,21 +136,69 @@ Flag has multiple variants, not just on/off. Used for experiments.
 - **Flag service outage**: What happens if your feature flag service (LaunchDarkly, Split) goes down? Your app must have sensible defaults. Most SDKs cache flag values locally.
 - **Permissions vs flags**: Don't use feature flags as a permanent authorization system. Flags are temporary. Use proper RBAC for long-term access control.
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Local Flag Evaluation SDKs (Zero-Network-Hop Architecture)
+
+A common misconception is that calling `featureFlags.isEnabled('new-checkout', user)` makes an HTTP request to LaunchDarkly, Unleash, or your database on every API call. If a single request evaluates 15 feature flags and each took a 20ms network hop, your API latency would balloon by 300ms—and if the feature flag vendor suffered an outage, your entire application would go down.
+
+**How Production Server SDKs Actually Work:**
+1. **Streaming Ruleset Sync**: On startup, your backend server SDK downloads the **entire JSON ruleset** of all active flags (e.g., `"enable if user.plan == 'enterprise' OR murmurhash3(user.id) < 25%"`) into in-process memory, and keeps it updated in real time via a persistent **Server-Sent Events (SSE)** stream.
+2. **Sub-Microsecond Local Evaluation**: When a request arrives, `isEnabled('new-checkout', userContext)` runs a pure CPU evaluation against the in-memory ruleset AST in **`< 1 microsecond`** with **zero network I/O**.
+3. **Relay Proxy + Persistent Bootstrap**: For cold-starting serverless functions (AWS Lambda / Edge Workers) or air-gapped resilience, companies deploy an internal **Relay Proxy** backed by Redis. Even if LaunchDarkly's cloud is completely unreachable during a new Kubernetes pod autoscaling event, new pods bootstrap their ruleset from internal Redis and fall back to safe code-defined defaults.
+
+```mermaid
+flowchart LR
+    Dashboard["Flag Control Plane<br/>(LaunchDarkly / Unleash)"] == "1. SSE Stream Ruleset JSON<br/>(Async Background Sync)" ==> Relay["Internal Relay Proxy / Redis"]
+    Relay == "2. Local Ruleset Cache" ==> SDK["App Server In-Memory SDK"]
+    Req["Incoming User Request"] --> SDK
+    SDK -- "3. Pure CPU Eval (<1 µs, 0 Network Hops)<br/>MurmurHash3(flag + salt + id) % 100" --> Handler["Execute Feature Branch"]
+```
+
+*(Note: Client-side browser/mobile SDKs work differently—they send the user context to the flag server once on session start and receive only the pre-evaluated boolean results for that specific user, so secret targeting rules like unreleased customer emails aren't leaked in browser DevTools!)*
+
+### 2. B2B Tenant-Level Consistent Bucketing (`organization_id` vs. `user_id`)
+
+In consumer (B2C) apps, percentage rollouts hash the `user_id`:
+$$\text{bucket} = \text{MurmurHash3}(\text{flag\_key} + \text{salt} + \text{user\_id}) \bmod 10000$$
+
+If you blindly copy this pattern into a **B2B SaaS application** (like Slack, Notion, Jira, or Figma) during a 20% rollout of a new collaborative workflow or billing UI, disaster strikes:
+- Inside the same customer company (`Acme Corp`), **Alice** (`bucket = 1400`, `< 20%`) gets the **New Workflow v2** and creates v2 records.
+- Her teammate **Bob** sitting next to her (`bucket = 8200`, `>= 20%`) gets the **Old Workflow v1**, cannot open Alice's v2 documents, sees a completely different navigation bar on screen-share calls, and corrupts shared workspace state when saving!
+
+**Best Practice:**
+- For any feature that affects shared data models, team workflows, or company-wide UI in a multi-tenant B2B product, always set the **bucketing key (`by` attribute)** to `organization_id` / `tenant_id` / `workspace_id`—**never** `user_id`.
+- Include a per-flag random `salt` in the hash input so that the "lucky 5% of tenants" who get `flag_A` are not the exact same 5% of tenants who get `flag_B` (avoiding sample bias across concurrent experiments).
+
+### 3. Flag Technical Debt, "Zombie Flag" Outages & AST Dead-Branch Cleanup
+
+In 2012, **Knight Capital Group** lost **$460 million in 45 minutes** (and went bankrupt) because a deployment reused an old, forgotten feature flag from 8 years earlier (`Power Peg`), inadvertently waking up dead order-routing code on one server that had never been deleted.
+
+Leaving 100%-rolled-out or abandoned **Zombie Flags** in your codebase creates two severe risks:
+1. **Combinatorial Testing Explosion**: $N$ boolean flags in a module create $2^N$ possible execution paths. Just 10 flags produce $1,024$ states. Unit and E2E tests typically only run with all flags `ON` or all flags `OFF`, leaving mixed-flag interactions completely untested until an on-call engineer flips one flag during an incident and triggers a crash.
+2. **Accidental Reactivation**: If the flag control plane resets, a fallback default is stale (`default = false` for a flag that has been `true` in production for 2 years), or a config is misapplied, your app suddenly reverts to a 2-year-old code path that is incompatible with your current database schema!
+
+**Production Hygiene Rules:**
+- **Categorize Flags by Lifespan**:
+  - **Release / Experiment Flags (Temporary, TTL: 14–30 days)**: Must have an assigned owner and an expiration date at creation time. Once rolled out to 100% for 7 days, CI/Slack bots automatically open a PR or alert the owner to delete the flag.
+  - **Operational Circuit Breakers / Kill Switches (Permanent)**: Explicitly marked as permanent ops toggles; their fallback default in code **must** match normal healthy operation, and both `ON` and `OFF` branches must be covered by automated integration tests on every CI run.
+- **Automated AST Cleanup**: Modern teams use AST refactoring tools (like `ts-morph`, Babel codemods, or Piranha by Uber) to automatically strip `if (flags.isEnabled('rolled-out-flag'))` and keep only the winning branch once a flag hits 100%.
+
 ## Quick Reference
 
-| Use Case                | Flag Type          | Example                                            |
-| ----------------------- | ------------------ | -------------------------------------------------- |
-| Hide incomplete feature | Boolean (OFF)      | `new-dashboard: false`                             |
-| Safe feature launch     | Percentage rollout | `new-search: 5% → 25% → 100%`                      |
-| Beta program            | User segment       | `advanced-analytics: enterprise-plan-only`         |
-| A/B experiment          | Multivariate       | `checkout-layout: [control, variant-a, variant-b]` |
-| Emergency shutoff       | Kill switch        | `payment-processing: true → false in 2 seconds`    |
-| Regional launch         | Targeting rule     | `new-feature: country in [US, CA]`                 |
+| Use Case                      | Flag Type & Bucketing Key                  | Example                                                   |
+| ----------------------------- | ------------------------------------------ | --------------------------------------------------------- |
+| Hide incomplete code on trunk | Temporary Release Flag (Boolean OFF)       | `new-dashboard: false` (TTL: 30 days)                     |
+| B2C gradual feature launch    | Percentage rollout (`by: user_id`)         | `new-player: 5% → 25% → 100%`                             |
+| B2B SaaS workflow launch      | Percentage rollout (`by: organization_id`) | `team-approval-v2: 10% of workspaces`                     |
+| Beta program                  | Segment targeting                          | `ai-copilot: org.plan == 'enterprise' OR org.beta`        |
+| A/B experiment                | Multivariate (`by: user_id` + flag salt)   | `checkout-cta: [control: 50%, var-a: 25%, var-b: 25%]`    |
+| Subsystem circuit breaker     | Permanent Ops Kill Switch                  | `enable-recommendations-widget: true → false` on DB spike |
 
-| Tool                     | Type               | Notes                                       |
-| ------------------------ | ------------------ | ------------------------------------------- |
-| LaunchDarkly             | SaaS               | Most popular. Enterprise-focused. Expensive |
-| Flagsmith                | Open source / SaaS | Good balance of features and cost           |
-| Unleash                  | Open source        | Self-hosted, no vendor lock-in              |
-| PostHog                  | SaaS + self-hosted | Feature flags + analytics + experiments     |
-| Custom (database/config) | DIY                | Simple, no dependencies, limited features   |
+| Tool                     | Type               | Notes                                                          |
+| ------------------------ | ------------------ | -------------------------------------------------------------- |
+| LaunchDarkly             | SaaS               | Industry standard, streaming SSE + Relay Proxy, expensive      |
+| OpenFeature              | CNCF Standard SDK  | Vendor-neutral API spec so you can swap flag providers cleanly |
+| Unleash / Flagsmith      | Open source / SaaS | Self-hostable, supports local evaluation in server SDKs        |
+| PostHog                  | SaaS + self-hosted | Combines feature flags, session replay, and product analytics  |
+| Custom (Redis + SSE)     | DIY                | Great for simple kill switches and tenant gates                |

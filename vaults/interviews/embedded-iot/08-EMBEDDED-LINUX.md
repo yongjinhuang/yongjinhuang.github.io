@@ -36,23 +36,9 @@ Some projects use both: a Cortex-A running Linux for connectivity and UI, paired
 
 Cross-compilation builds binaries on a host machine (x86_64 desktop) that run on a different target architecture (ARM, MIPS, RISC-V).
 
-```
-+----------------------------------------------------------+
-|           CROSS-COMPILATION FLOW                          |
-+----------------------------------------------------------+
-|                                                            |
-|  Host (x86_64 Ubuntu)         Target (ARM Cortex-A7)      |
-|  +-----------------------+    +---------------------+      |
-|  | arm-linux-gnueabihf-  |    | hello_world         |      |
-|  | gcc hello.c           |--->| (ARM ELF binary)    |      |
-|  | -o hello_world        |    |                     |      |
-|  +-----------------------+    +---------------------+      |
-|                                                            |
-|  Toolchain triplet: arm-linux-gnueabihf                    |
-|    arm    = architecture                                   |
-|    linux  = operating system                               |
-|    gnueabihf = ABI (GNU, hard-float)                       |
-+----------------------------------------------------------+
+```mermaid
+flowchart LR
+    Host["Build Host (x86_64 Ubuntu)<br/>arm-linux-gnueabihf-gcc hello.c -o hello_world<br/>(Triplet: arch=arm, os=linux, abi=gnueabihf)"] -->|"Cross-compile &amp; deploy"| Target["Target Board (ARM Cortex-A7)<br/>Executes ARM ELF binary"]
 ```
 
 ### 2.2 Installing a Toolchain
@@ -102,57 +88,14 @@ make -j$(nproc)
 
 ### 3.1 The Four Stages
 
-```
-+----------------------------------------------------------+
-|              EMBEDDED LINUX BOOT SEQUENCE                  |
-+----------------------------------------------------------+
-|                                                            |
-|  Stage 0: ROM Bootloader (in silicon)                      |
-|  +---------------------------------------------------+    |
-|  | - Hardcoded in chip ROM, cannot be modified        |    |
-|  | - Reads boot pins / eFuses to determine boot media |    |
-|  | - Loads SPL/MLO from SD card, eMMC, or NAND        |    |
-|  | - May verify signature (secure boot)               |    |
-|  +---------------------------------------------------+    |
-|                         |                                  |
-|                         v                                  |
-|  Stage 1: SPL / MLO (Secondary Program Loader)            |
-|  +---------------------------------------------------+    |
-|  | - Fits in internal SRAM (32-128 KB)                |    |
-|  | - Initializes external DRAM controller             |    |
-|  | - Loads full U-Boot into DRAM                      |    |
-|  +---------------------------------------------------+    |
-|                         |                                  |
-|                         v                                  |
-|  Stage 2: U-Boot (Universal Bootloader)                    |
-|  +---------------------------------------------------+    |
-|  | - Full bootloader with shell, networking, FS       |    |
-|  | - Loads kernel image (zImage/Image) into RAM       |    |
-|  | - Loads device tree blob (DTB) into RAM            |    |
-|  | - Passes kernel command line and DTB address       |    |
-|  | - Calls bootz / booti to transfer control          |    |
-|  +---------------------------------------------------+    |
-|                         |                                  |
-|                         v                                  |
-|  Stage 3: Linux Kernel                                     |
-|  +---------------------------------------------------+    |
-|  | - Decompresses itself (if zImage)                  |    |
-|  | - Parses device tree for hardware description      |    |
-|  | - Initializes memory, interrupts, drivers          |    |
-|  | - Mounts root filesystem                           |    |
-|  | - Executes /sbin/init (or systemd)                 |    |
-|  +---------------------------------------------------+    |
-|                         |                                  |
-|                         v                                  |
-|  Stage 4: Init System (systemd / BusyBox init)             |
-|  +---------------------------------------------------+    |
-|  | - Starts system services                           |    |
-|  | - Mounts filesystems from /etc/fstab               |    |
-|  | - Launches application daemons                     |    |
-|  | - Spawns login shell / GUI                         |    |
-|  +---------------------------------------------------+    |
-|                                                            |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    S0["Stage 0: ROM Bootloader (In Silicon)<br/>- Reads boot pins / eFuses<br/>- Loads SPL/MLO from eMMC/SD/QSPI into internal SRAM"]
+    S1["Stage 1: SPL / MLO (Secondary Program Loader)<br/>- Runs in internal SRAM (32-128 KB)<br/>- Initializes external DDR RAM controller &amp; loads U-Boot"]
+    S2["Stage 2: U-Boot (Universal Bootloader)<br/>- Loads Linux Kernel (zImage/Image) + Device Tree Blob (.dtb) into DRAM<br/>- Passes bootargs &amp; jumps to kernel"]
+    S3["Stage 3: Linux Kernel<br/>- Parses DTB, initializes MMU, interrupts, and device drivers<br/>- Mounts rootfs &amp; spawns PID 1 (/sbin/init)"]
+    S4["Stage 4: Init System (systemd / BusyBox init)<br/>- Mounts filesystems, starts services &amp; application daemons"]
+    S0 --> S1 --> S2 --> S3 --> S4
 ```
 
 ### 3.2 U-Boot Commands
@@ -644,41 +587,13 @@ The Yocto Project is an open-source collaboration that produces tools and metada
 
 ### 8.3 Layer Architecture
 
-```
-+----------------------------------------------------------+
-|              YOCTO LAYER ARCHITECTURE                      |
-+----------------------------------------------------------+
-|                                                            |
-|  +----------------------------------------------------+   |
-|  |  meta-my-product   (your product layer)             |   |
-|  |  - Custom application recipes                       |   |
-|  |  - Product-specific configuration                   |   |
-|  |  - Custom image recipes                             |   |
-|  +----------------------------------------------------+   |
-|                         |                                  |
-|  +----------------------------------------------------+   |
-|  |  meta-my-bsp   (your BSP layer)                     |   |
-|  |  - Machine configuration                            |   |
-|  |  - Kernel patches                                   |   |
-|  |  - U-Boot customization                             |   |
-|  |  - Device tree files                                |   |
-|  +----------------------------------------------------+   |
-|                         |                                  |
-|  +----------------------------------------------------+   |
-|  |  meta-openembedded   (community recipes)            |   |
-|  |  - meta-oe: general-purpose recipes                 |   |
-|  |  - meta-networking: networking tools                 |   |
-|  |  - meta-python: Python packages                     |   |
-|  +----------------------------------------------------+   |
-|                         |                                  |
-|  +----------------------------------------------------+   |
-|  |  poky   (reference distribution)                    |   |
-|  |  - meta: core recipes (glibc, gcc, coreutils)       |   |
-|  |  - meta-poky: reference distro config               |   |
-|  |  - meta-yocto-bsp: reference BSP                    |   |
-|  +----------------------------------------------------+   |
-|                                                            |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    L4["meta-my-product (Product Layer)<br/>Custom app recipes, product config, image recipes"]
+    L3["meta-my-bsp (BSP Layer)<br/>Machine config, kernel patches, U-Boot, Device Tree"]
+    L2["meta-openembedded (Community Layer)<br/>meta-oe, meta-networking, meta-python"]
+    L1["poky (Base Reference Distribution)<br/>meta (core recipes: glibc, gcc, coreutils), meta-poky, meta-yocto-bsp"]
+    L4 --> L3 --> L2 --> L1
 ```
 
 ### 8.4 Setting Up a Yocto Build
@@ -1161,28 +1076,15 @@ sudo cyclictest -m -p90 -i200 -l10000
 
 ## 14. Summary: Choosing Your Embedded Linux Stack
 
-```
-+----------------------------------------------------------+
-|           DECISION FLOWCHART                               |
-+----------------------------------------------------------+
-|                                                            |
-|  Need Linux? ---------> No ---------> Use RTOS             |
-|       |                                                    |
-|      Yes                                                   |
-|       |                                                    |
-|  Simple product? -----> Yes ---------> Buildroot           |
-|       |                                                    |
-|      No                                                    |
-|       |                                                    |
-|  Long-lived product? -> Yes ---------> Yocto               |
-|  Need OTA updates?                                         |
-|  Large team?                                               |
-|       |                                                    |
-|      No                                                    |
-|       |                                                    |
-|  Prototype / hobby? --> Yes ---------> Raspberry Pi OS     |
-|                                        (Debian-based)      |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    Q1{"Need Linux (MMU, POSIX, networking stack)?"}
+    Q1 -->|"No"| RTOS["Use RTOS (FreeRTOS / Zephyr)"]
+    Q1 -->|"Yes"| Q2{"Simple single-purpose product?"}
+    Q2 -->|"Yes"| BR["Buildroot (Fast, simple kconfig)"]
+    Q2 -->|"No"| Q3{"Long-lived commercial product / OTA / large team?"}
+    Q3 -->|"Yes"| Yocto["Yocto Project (Layered, reproducible, custom distro)"]
+    Q3 -->|"No (Prototype / Hobby)"| Debian["Raspberry Pi OS / Debian"]
 ```
 
 ---

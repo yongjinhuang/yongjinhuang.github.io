@@ -8,61 +8,26 @@ Understanding Ethereum at a deep level is non-negotiable for Web3 engineers. Whe
 
 This chapter dissects Ethereum from the ground up. We start with the account model and transaction types, dive into the EVM's stack-based execution model, examine gas mechanics after EIP-1559, walk through the state trie architecture, cover the post-Merge proof-of-stake consensus, and finish with the ABI encoding and event log systems that form the interface between on-chain and off-chain worlds.
 
-```
-+===========================================================================+
-|                     ETHEREUM ARCHITECTURE OVERVIEW                        |
-+===========================================================================+
-|                                                                           |
-|  +-----------------------------+    +-------------------------------+     |
-|  |     CONSENSUS LAYER         |    |      EXECUTION LAYER          |     |
-|  |  (Beacon Chain / PoS)       |    |  (EVM + State Machine)        |     |
-|  |                             |    |                               |     |
-|  |  +-----------+              |    |  +----------+  +-----------+  |     |
-|  |  | Validators|              |    |  |   EVM    |  |  State    |  |     |
-|  |  | (32 ETH)  |              |    |  | Executor |  |  Storage  |  |     |
-|  |  +-----------+              |    |  +----+-----+  +-----+-----+  |     |
-|  |        |                    |    |       |              |         |     |
-|  |  +-----v-------+           |    |  +----v--------------v------+  |     |
-|  |  | Attestations|           |    |  |   State Transition Fn    |  |     |
-|  |  | & Proposals |           |    |  |   S' = F(S, T)           |  |     |
-|  |  +-------------+           |    |  +--+--------------------+--+  |     |
-|  |        |                   |    |     |                    |      |     |
-|  |  +-----v-------+          |    |  +--v--------+  +-------v---+  |     |
-|  |  | Slots &     |          |    |  | World     |  | Storage   |  |     |
-|  |  | Epochs      |          |    |  | State     |  | Tries     |  |     |
-|  |  +-------------+          |    |  | Trie      |  | (per acct)|  |     |
-|  |        |                  |    |  +-----------+  +-----------+  |     |
-|  |  +-----v-------+         |    |                               |     |
-|  |  | Finality    |         |    |  +---------------------------+  |     |
-|  |  | (Casper FFG)|         |    |  | Transaction Pool (Mempool)|  |     |
-|  |  +-------------+         |    |  +---------------------------+  |     |
-|  |        |                  |    |       |                        |     |
-|  |  +-----v-------+         |    |  +----v----------------------+  |     |
-|  |  | Fork Choice |         |    |  | Transaction Types         |  |     |
-|  |  | (LMD-GHOST) |         |    |  | Legacy / 2930 / 1559      |  |     |
-|  |  +-------------+         |    |  +---------------------------+  |     |
-|  +-----------------------------+    +-------------------------------+     |
-|                                                                           |
-|  +---------------------------------------------------------------------+ |
-|  |                    TRANSACTION LIFECYCLE                              | |
-|  |                                                                      | |
-|  |  Sign --> Broadcast --> Mempool --> Block Inclusion --> Finalization  | |
-|  |   |         |            |              |                  |         | |
-|  |   v         v            v              v                  v         | |
-|  | Private   P2P          Priority       EVM Exec          2 Epochs    | |
-|  | Key       Gossip       Ordering       + State Update    (~12.8min)  | |
-|  +---------------------------------------------------------------------+ |
-|                                                                           |
-|  +---------------------------------------------------------------------+ |
-|  |                       EVM EXECUTION MODEL                            | |
-|  |                                                                      | |
-|  |  +--------+   +--------+   +---------+   +----------+               | |
-|  |  | Stack  |   | Memory |   | Storage |   | Calldata |               | |
-|  |  | 1024   |   | Byte[] |   | 256->256|   | Immutable|               | |
-|  |  | x 256b |   | Volatile|  | Persist |   | Input    |               | |
-|  |  +--------+   +--------+   +---------+   +----------+               | |
-|  +---------------------------------------------------------------------+ |
-+===========================================================================+
+```mermaid
+flowchart TD
+    subgraph CL["CONSENSUS LAYER (Beacon Chain / PoS)"]
+        Val["Validators (32 ETH)"] --> Att["Attestations &amp; Proposals"] --> Slots["Slots (12s) &amp; Epochs (32 slots)"]
+        Slots --> Fin["Finality (Casper FFG)"] --> Fork["Fork Choice (LMD-GHOST)"]
+    end
+
+    subgraph EL["EXECUTION LAYER (EVM + State Machine)"]
+        Mempool["Transaction Pool (Mempool)<br/>Tx Types: Legacy / EIP-2930 / EIP-1559 / EIP-4844"]
+        EVM["EVM Executor<br/>Stack (1024x256b) / Memory (volatile) / Storage (256-&gt;256) / Calldata"]
+        State["State Storage"]
+        STF["State Transition Function: S' = F(S, T)"]
+        WST[("World State Trie")]
+        ST[("Per-Account Storage Tries")]
+
+        Mempool --> EVM
+        EVM & State --> STF --> WST & ST
+    end
+
+    CL <-->|"Engine API"| EL
 ```
 
 ---
@@ -75,28 +40,12 @@ Ethereum has two types of accounts that share a common address format but differ
 
 An EOA is controlled by a private key. It has no code, no storage, and can only initiate transactions. The address is derived from the public key:
 
-```
-+---------------------------------------------------------------+
-|              EOA ADDRESS DERIVATION                            |
-|                                                                |
-|  Private Key (256 bits)                                        |
-|       |                                                        |
-|       v                                                        |
-|  secp256k1 point multiplication                                |
-|       |                                                        |
-|       v                                                        |
-|  Public Key (512 bits = x || y)                                |
-|       |                                                        |
-|       v                                                        |
-|  keccak256(publicKey)                                          |
-|       |                                                        |
-|       v                                                        |
-|  Take last 20 bytes --> 0x + 40 hex chars = address            |
-|                                                                |
-|  Example:                                                      |
-|  privKey: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478...        |
-|  address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266          |
-+---------------------------------------------------------------+
+```mermaid
+flowchart TD
+    PK["Private Key (256 bits)<br/>e.g., 0xac0974bec39a..."] --> Mult["secp256k1 Elliptic Curve Point Multiplication"]
+    Mult --> Pub["Uncompressed Public Key (512 bits = x || y)"]
+    Pub --> Hash["keccak256(publicKey) (32 bytes)"]
+    Hash --> Addr["Take Last 20 Bytes (160 bits) -&gt; 0x + 40 hex chars<br/>e.g., 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]
 ```
 
 ### Contract Accounts
@@ -194,15 +143,11 @@ validatorTip = gasUsed * (effectiveGasPrice - baseFee)
 
 ### Transaction Lifecycle
 
-```
-+--------+     +-----------+     +----------+     +---------+     +----------+
-|  Sign  |---->| Broadcast |---->|  Mempool |---->| Include |---->| Finalize |
-+--------+     +-----------+     +----------+     +---------+     +----------+
-    |               |                 |                |                |
-    v               v                 v                v                v
- ECDSA sig      P2P gossip       Sorted by        Validator        2 epochs
- with           to peers         priority fee     executes tx      (~12.8 min)
- private key                     (and MEV)        in EVM           Casper FFG
+```mermaid
+flowchart LR
+    S1["1. Sign<br/>ECDSA signature with private key"] --> S2["2. Broadcast<br/>P2P gossip to peers"]
+    S2 --> S3["3. Mempool<br/>Sorted by priority fee &amp; MEV"] --> S4["4. Include<br/>Validator executes tx in EVM"]
+    S4 --> S5["5. Finalize<br/>2 epochs (~12.8 min) via Casper FFG"]
 ```
 
 1. **Sign** -- The sender constructs the transaction, RLP-encodes it, and signs with their private key.
@@ -258,34 +203,14 @@ The Ethereum Virtual Machine is a quasi-Turing-complete, stack-based state machi
 
 ### Stack Machine Architecture
 
-```
-+======================================================================+
-|                        EVM EXECUTION CONTEXT                          |
-|                                                                       |
-|  +------------------+    +---------------------+                      |
-|  |     STACK        |    |      MEMORY          |                     |
-|  |  Max 1024 items  |    |  Byte-addressable    |                     |
-|  |  256 bits each   |    |  Volatile per call   |                     |
-|  |                  |    |  Grows dynamically    |                     |
-|  |  [top]    0x...  |    |  Quadratic expansion  |                     |
-|  |  [top-1]  0x...  |    |  cost                 |                     |
-|  |  [top-2]  0x...  |    |                       |                     |
-|  |  ...             |    |  +--+--+--+--+--+--+  |                     |
-|  |  [1023]   0x...  |    |  |00|01|02|03|...|xx|  |                     |
-|  +------------------+    |  +--+--+--+--+--+--+  |                     |
-|                          +---------------------+                      |
-|  +------------------+    +---------------------+                      |
-|  |    STORAGE       |    |     CALLDATA         |                     |
-|  |  Persistent      |    |  Immutable input     |                     |
-|  |  256-bit key     |    |  Read-only bytes     |                     |
-|  |  256-bit value   |    |  Passed by caller    |                     |
-|  |  Per-contract    |    |                       |                     |
-|  |  Merkle trie     |    |  [selector][arg0]    |                     |
-|  |                  |    |  [arg1][arg2]...     |                     |
-|  +------------------+    +---------------------+                      |
-|                                                                       |
-|  Program Counter: 0x0000    Gas Remaining: 29,000,000                 |
-+======================================================================+
+```mermaid
+flowchart TD
+    subgraph EVM["EVM EXECUTION CONTEXT (Program Counter + Gas Remaining)"]
+        Stack["STACK<br/>- Max 1024 items (256 bits each)<br/>- LIFO: [top], [top-1], ..., [1023]"]
+        Mem["MEMORY<br/>- Byte-addressable linear array<br/>- Volatile per message call<br/>- Quadratic gas expansion cost"]
+        Stor[("STORAGE<br/>- Persistent on-chain key-value store<br/>- 256-bit slot -&gt; 256-bit word<br/>- Per-contract Merkle Patricia Trie")]
+        Call["CALLDATA<br/>- Immutable read-only input bytes<br/>- [4-byte selector][arg0][arg1]..."]
+    end
 ```
 
 **Stack**: The EVM operates on a last-in-first-out stack of 256-bit (32-byte) words. Most opcodes pop inputs from the stack and push results back. The maximum depth is 1024. Exceeding this causes a stack overflow error and the transaction reverts.
@@ -552,39 +477,19 @@ Ethereum's state is organized as a collection of Merkle Patricia Tries (MPTs), e
 
 ### State Architecture
 
-```
-+======================================================================+
-|                    ETHEREUM STATE MODEL                                |
-|                                                                       |
-|  Block Header                                                         |
-|  +----------------------------------------------------------------+  |
-|  | parentHash | stateRoot | txRoot | receiptRoot | ... | number   |  |
-|  +------+----------+----------+-----------+-------------------+---+  |
-|         |          |          |           |                          |
-|         |    +-----v------+  |     +-----v-------+                  |
-|         |    | World State|  |     | Receipt Trie |                  |
-|         |    | Trie       |  |     | (per block)  |                  |
-|         |    +-----+------+  |     +--------------+                  |
-|         |          |         |                                       |
-|         |    +-----v----------------------------------+              |
-|         |    | Account State (per address)             |              |
-|         |    | +----------+----------+--------+------+|              |
-|         |    | |  nonce   | balance  |codeHash|stRoot||              |
-|         |    | +----------+----------+--------+--+---+|              |
-|         |    +----------------------------------------+              |
-|         |                                        |                   |
-|         |                                  +-----v-------+           |
-|         |                                  | Storage Trie |          |
-|         |                                  | (per contract)|         |
-|         |                                  | slot -> value |          |
-|         |                                  +--------------+           |
-|         |                                                            |
-|   +-----v---------+                                                  |
-|   | Transaction    |                                                  |
-|   | Trie           |                                                  |
-|   | (per block)    |                                                  |
-|   +----------------+                                                  |
-+======================================================================+
+```mermaid
+flowchart TD
+    Header["Block Header<br/>(parentHash, stateRoot, txRoot, receiptRoot, number)"]
+    WST["World State Trie<br/>(Global across blocks)"]
+    TxT["Transaction Trie<br/>(Per block)"]
+    RecT["Receipt Trie<br/>(Per block)"]
+    Acct["Account State (per 20-byte address)<br/>[nonce, balance, codeHash, storageRoot]"]
+    StorT[("Contract Storage Trie<br/>(slot -&gt; 256-bit value)")]
+
+    Header -->|"stateRoot"| WST
+    Header -->|"txRoot"| TxT
+    Header -->|"receiptRoot"| RecT
+    WST --> Acct -->|"storageRoot"| StorT
 ```
 
 ### The Four Tries
@@ -638,27 +543,12 @@ On September 15, 2022, Ethereum transitioned from Proof of Work to Proof of Stak
 
 ### Validator Lifecycle
 
-```
-+----------------------------------------------------------------------+
-|                    VALIDATOR LIFECYCLE                                 |
-|                                                                       |
-|  Deposit 32 ETH --> Activation Queue --> Active Validator             |
-|                     (variable wait)     |                             |
-|                                         +---> Propose Blocks          |
-|                                         |     (1 per slot if chosen)  |
-|                                         |                             |
-|                                         +---> Attest                  |
-|                                         |     (1 per epoch, required) |
-|                                         |                             |
-|                                         +---> Sync Committee          |
-|                                               (256 validators, 27h)   |
-|                                                                       |
-|  Voluntary Exit --> Exit Queue --> Withdrawable --> Withdrawn          |
-|                     (variable)     (256 epochs)     (sweep)           |
-|                                                                       |
-|  Slashing --> Forced Exit --> Penalty Period --> Withdrawn             |
-|               (immediate)    (36 days)          (reduced balance)     |
-+----------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Dep["Deposit 32 ETH"] --> ActQ["Activation Queue"] --> Active["Active Validator"]
+    Active --> Duties["Validator Duties:<br/>- Propose Blocks (if selected)<br/>- Attest (1 per epoch)<br/>- Sync Committee (256 validators)"]
+    Active -->|"Voluntary Exit"| ExitQ["Exit Queue"] --> Withdrawable["Withdrawable<br/>(256 epochs)"] --> Withdrawn["Withdrawn<br/>(Full balance)"]
+    Active -->|"Slashing (Double/Surround Vote)"| Forced["Forced Exit<br/>(Immediate)"] --> Penalty["Penalty Period<br/>(36 days)"] --> Slashed["Withdrawn<br/>(Reduced balance)"]
 ```
 
 ### Slots and Epochs
@@ -685,20 +575,11 @@ Attestations serve dual purposes: they feed into both the fork choice rule (LMD-
 
 **Latest Message Driven Greediest Heaviest Observed SubTree** (LMD-GHOST) is the fork choice rule. When choosing between competing forks, the protocol counts the most recent attestation from each validator and follows the branch with the greatest accumulated weight.
 
-```
-                    Genesis
-                       |
-                  +----+----+
-                  |         |
-               Block A   Block B
-              (weight 60) (weight 40)
-                  |
-             +----+----+
-             |         |
-          Block C   Block D
-         (weight 35) (weight 25)
-             |
-         Canonical Head
+```mermaid
+flowchart TD
+    Gen["Genesis"] --> BA["Block A<br/>(weight: 60)"] & BB["Block B<br/>(weight: 40)"]
+    BA --> BC["Block C<br/>(weight: 35)"] & BD["Block D<br/>(weight: 25)"]
+    BC --> Head["Canonical Head<br/>(LMD-GHOST heaviest subtree)"]
 ```
 
 ### Casper FFG Finality
@@ -710,13 +591,10 @@ Casper Friendly Finality Gadget provides **economic finality**. A block is:
 
 Once finalized, reverting a block requires slashing at least 1/3 of all staked ETH -- a catastrophic economic penalty.
 
-```
-+-------+         +-------+         +-------+
-|Epoch 0|-------->|Epoch 1|-------->|Epoch 2|
-|       |         |       |         |       |
-|Finalized|<------|Justified|<-----|Current |
-| (2/3)  |  link  | (2/3)  |  link |        |
-+-------+         +-------+         +-------+
+```mermaid
+flowchart LR
+    E0["Epoch 0<br/>FINALIZED (&gt;=2/3 supermajority)"] --> E1["Epoch 1<br/>JUSTIFIED (&gt;=2/3 supermajority)"] --> E2["Epoch 2<br/>CURRENT"]
+    E2 -.->|"supermajority link"| E1 -.->|"supermajority link"| E0
 ```
 
 ### Slashing Conditions

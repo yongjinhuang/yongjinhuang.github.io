@@ -25,25 +25,10 @@ forgettable videos from ones that get shared, saved, and rewatched.
 
 ### 1.1 The Hierarchy of Content Creation Skills
 
-```
-                    △
-                   ╱ ╲
-                  ╱   ╲
-                 ╱Story-╲
-                ╱ telling ╲         ← Multiplier for everything below
-               ╱───────────╲
-              ╱  Strategy &  ╲
-             ╱   Packaging    ╲     ← Thumbnails, titles, hooks
-            ╱─────────────────╲
-           ╱   Editing &       ╲
-          ╱    Post-Production  ╲   ← Pacing, color, sound
-         ╱───────────────────────╲
-        ╱   Shooting & Technical  ╲
-       ╱    Skills                 ╲ ← Camera, audio, lighting
-      ╱─────────────────────────────╲
-
-A great storyteller with a phone will outperform
-a poor storyteller with a $50,000 camera setup.
+```mermaid
+flowchart BT
+    L1["1. Shooting &amp; Technical Skills<br/>(Camera, audio, lighting)"] --> L2["2. Editing &amp; Post-Production<br/>(Pacing, color, sound design)"]
+    L2 --> L3["3. Strategy &amp; Packaging<br/>(Thumbnails, titles, hooks)"] --> L4["4. Storytelling<br/>(Multiplier for everything below)"]
 ```
 
 ### 1.2 What Storytelling Actually Means for YouTube
@@ -278,24 +263,13 @@ When viewers zone out, break the pattern:
 Content pillars are 3-5 core topics that define your channel. Every video should
 fall under one of these pillars.
 
-```
-Example: Tech Content Creator
-
-         ┌──────────────────────────────┐
-         │       YOUR CHANNEL           │
-         │                              │
-    ┌────┴────┐  ┌────────┐  ┌────────┐
-    │ Pillar 1│  │Pillar 2│  │Pillar 3│
-    │ Editing │  │  Gear  │  │ Career │
-    │Tutorials│  │Reviews │  │ Advice │
-    └────┬────┘  └───┬────┘  └───┬────┘
-         │           │           │
-    ┌────┴────┐ ┌────┴────┐ ┌───┴────┐
-    │DaVinci  │ │Camera   │ │Free-   │
-    │Premiere │ │Mic      │ │lancing │
-    │Color    │ │Lights   │ │Getting │
-    │Effects  │ │Software │ │hired   │
-    └─────────┘ └─────────┘ └────────┘
+```mermaid
+flowchart TD
+    Ch["YOUR CHANNEL<br/>(Tech Content Creator)"]
+    Ch --> P1["Pillar 1: Editing Tutorials"] & P2["Pillar 2: Gear Reviews"] & P3["Pillar 3: Career Advice"]
+    P1 --> P1Sub["DaVinci Resolve<br/>Premiere Pro<br/>Color Grading<br/>Effects"]
+    P2 --> P2Sub["Cameras<br/>Microphones<br/>Lighting<br/>Software"]
+    P3 --> P3Sub["Freelancing<br/>Portfolio<br/>Getting Hired"]
 ```
 
 ### 5.2 Defining Your Pillars
@@ -437,42 +411,12 @@ This way you never face "I don't know what to make next."
 
 ### 8.1 The Weekly Pipeline
 
-```
-Monday:    IDEATION & RESEARCH
-           Pick video topic, research, gather references
-           Create detailed outline
-                │
-                ▼
-Tuesday:   PRE-PRODUCTION
-           Write script/outline, plan B-roll shots
-           Prepare any graphics or assets needed
-                │
-                ▼
-Wednesday: SHOOTING
-           Film main content (A-roll)
-           Film B-roll
-           Record any screen captures
-                │
-                ▼
-Thursday:  EDITING
-           Assembly cut → Rough cut → Fine cut
-           Add B-roll, music, SFX
-                │
-                ▼
-Friday:    POST-PRODUCTION
-           Color grade, audio mix
-           Create thumbnail
-           Write title and description
-                │
-                ▼
-Saturday:  PUBLISH & PROMOTE
-           Upload, schedule, share on social media
-           Engage with early comments
-                │
-                ▼
-Sunday:    REST & ANALYZE
-           Check analytics from previous video
-           Add new ideas to the idea bank
+```mermaid
+flowchart TD
+    Mon["Monday: Ideation &amp; Research<br/>Pick topic, research, create detailed outline"] --> Tue["Tuesday: Pre-Production<br/>Write script/outline, shot list, prepare assets"]
+    Tue --> Wed["Wednesday: Shooting<br/>Film A-roll, B-roll, and screen captures"] --> Thu["Thursday: Editing<br/>Assembly -&gt; Rough -&gt; Fine cut + B-roll, music, SFX"]
+    Thu --> Fri["Friday: Post-Production &amp; Packaging<br/>Color grade, audio mix, thumbnail, title/description"] --> Sat["Saturday: Publish &amp; Promote<br/>Upload, share, engage with early comments"]
+    Sat --> Sun["Sunday: Rest &amp; Analyze<br/>Review analytics, add new ideas to idea bank"]
 ```
 
 ### 8.2 Batch Production
@@ -575,29 +519,11 @@ Your voice is the unique combination of:
 
 ### 10.2 Finding Your Voice (The Process)
 
-```
-Step 1: Make 20 videos (any style, any quality)
-        Just get reps. Do not overthink.
-              │
-              ▼
-Step 2: Watch them all back
-        Notice: which ones feel most "you"?
-        Which ones were most fun to make?
-              │
-              ▼
-Step 3: Get feedback from real viewers
-        Ask: "What do you like about my videos?"
-        The answer is your voice, seen from outside.
-              │
-              ▼
-Step 4: Double down on what works
-        More of what felt natural + what viewers loved
-        Less of what felt forced
-              │
-              ▼
-Step 5: Your voice crystallizes
-        Over time, your style becomes distinctive
-        People recognize YOUR videos instantly
+```mermaid
+flowchart TD
+    S1["Step 1: Make 20 Videos<br/>Get reps without overthinking"] --> S2["Step 2: Watch Them Back<br/>Identify what feels authentic and fun"]
+    S2 --> S3["Step 3: Gather Viewer Feedback<br/>'What do you like about my videos?'"] --> S4["Step 4: Double Down on What Works<br/>Amplify natural strengths, drop what feels forced"]
+    S4 --> S5["Step 5: Voice Crystallizes<br/>Distinctive, instantly recognizable style"]
 ```
 
 ### 10.3 The Permission to Evolve

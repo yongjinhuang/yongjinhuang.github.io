@@ -26,14 +26,12 @@ This is the central architectural decision for any feed system.
 
 **Hybrid approach (what most large platforms use).** Fan-out on write for normal users (pre-compute their followers' feeds). Fan-out on read for high-follower accounts (celebrities, brands). This avoids the "celebrity problem" while keeping read latency low for the majority of requests.
 
-```
-User Posts → Validation → Moderation Check → Content Store
-                                                  ↓
-                              Fan-Out Service → Follower Feed Inboxes (push)
-                                    OR
-                              On-Demand Merge at Read Time (pull)
-                                                  ↓
-                              Ranking & Filtering → Personalized Feed
+```mermaid
+flowchart TD
+    Post["User Posts"] --> Val["Validation"] --> Mod["Moderation Check"] --> Store[("Content Store")]
+    Store --> Push["Fan-Out Service -&gt; Follower Feed Inboxes (Push)"]
+    Store --> Pull["On-Demand Merge at Read Time (Pull)"]
+    Push & Pull --> Rank["Ranking &amp; Filtering"] --> Feed["Personalized Feed"]
 ```
 
 ### Content Ranking
@@ -56,16 +54,13 @@ Reaction systems (Facebook's love/haha/angry, Slack's emoji reactions) add nuanc
 
 ### Moderation Pipeline
 
-```
-Content Created → Automated Filters (Layer 1)
-                      ↓
-               AI/ML Classification (Layer 2)
-                      ↓
-              Borderline Queue → Human Review (Layer 3)
-                      ↓
-              Decision: Approve / Remove / Restrict / Escalate
-                      ↓
-              Appeals Process → Secondary Human Review
+```mermaid
+flowchart TD
+    Created["Content Created"] --> L1["Layer 1: Automated Filters"]
+    L1 --> L2["Layer 2: AI/ML Classification"]
+    L2 --> L3["Layer 3: Borderline Queue -&gt; Human Review"]
+    L3 --> Dec["Decision: Approve / Remove / Restrict / Escalate"]
+    Dec --> Appeal["Appeals Process -&gt; Secondary Human Review"]
 ```
 
 **Layer 1 -- Automated filters.** Hash matching against known bad content databases (PhotoDNA for child exploitation imagery, shared industry databases for terrorism content). Keyword filters for obvious spam. URL blocklists. These catch the easy cases instantly.
@@ -164,6 +159,35 @@ New accounts are the highest risk for spam and abuse. Apply stricter moderation 
 9. **Failing to localize moderation.** Hate speech in German looks different than hate speech in Hindi. Slang, cultural references, and coded language vary by region and evolve fast. A single English-trained moderation model will miss most non-English violations. Invest in multilingual models and region-specific review teams.
 
 10. **Not rate-limiting engagement actions.** Without rate limits, bots can mass-like, mass-follow, and mass-comment to inflate metrics or harass users. Implement per-user rate limits on all engagement actions (e.g., max 100 likes per hour, max 50 follows per day) and flag accounts that consistently hit those limits.
+
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Shadowbanning (`Hellbanning`) & Delayed Enforcement to Defeat Spammer Feedback Loops
+
+If a spam bot creates an account, posts a scam link, and immediately receives a `403 Account Banned` response, the bot operator gets an **instant oracle** to reverse-engineer your detection rules: they tweak the text, proxy IP, or user-agent in a tight loop until the `403` stops happening.
+- **How Reddit, X, and TikTok Break the Oracle**:
+  1. **Shadowbanning (Ghosting)**: When a post or account trips spam/abuse heuristics, return `200 OK` and render the post normally **when queried by the author's own session or IP neighborhood**, while excluding it from all public feeds, search indexes, and follower timelines. The bot keeps burning resources posting into a void for days without realizing it was caught.
+  2. **Jittered Batch Ban Waves**: For non-urgent botnet and scraping rings, queue detections and execute bans in randomized delayed waves so attackers cannot correlate which specific action or payload triggered the detection rule.
+
+### 2. Viral Velocity Circuit Breakers ("Reach ≠ Trust")
+
+A standard moderation queue processes flagged posts in FIFO or priority order with a 15-minute human review SLA. However, on an algorithmic recommendation feed (For You Page), a rule-violating post that slips past automated classifiers can accumulate **2 million impressions inside those 15 minutes** simply because outrage and shock drive high engagement signals!
+
+```mermaid
+flowchart LR
+    Post["New Post Published"] --> Auto["Tier-1 Automated Classifiers<br/>(CSAM Hash / NSFW / Text Toxicity)"]
+    Auto -->|Clean| Feed["Initial Distribution<br/>(100 - 1,000 Impressions)"]
+    Feed --> Vel{"Velocity & Report Rate<br/>Threshold Crossed?"}
+    Vel -->|Normal| Scale["Full Algorithmic Distribution"]
+    Vel -->|High Velocity OR Report Spike| Throttle["Distribution Circuit Breaker<br/>(Freeze Algorithmic Reach + Urgent Human Review)"]
+```
+
+- **Production Guardrail (Distribution Throttling / Impression Caps)**: Decouple *publication* from *algorithmic amplification*. Any post whose impression velocity exceeds $N$ views/minute OR whose viewer report-to-impression ratio spikes by $3\sigma$ is automatically placed into **"Distribution Hold"** (still accessible via direct URL and existing followers, but frozen out of algorithmic recommendation engines) until a human moderator clears it.
+
+### 3. Moderator Wellness, Consensus Labeling & Adversarial Unicode Normalization
+
+- **Homoglyph & Zero-Width Evasion**: Users bypass naive keyword filters (`s-c-a-m`) by inserting zero-width spaces (`​`), right-to-left overrides (`‮`), or Cyrillic/Greek homoglyphs (`а` U+0430 instead of Latin `a` U+0061). Every text moderation pipeline must run **Unicode NFKC Normalization + Strip Non-Printing Control Characters + Confusable Skeleton Mapping (UTS #39)** before tokenization or ML classification.
+- **Dual-Blind Moderator Consensus & Psychological Safety**: Human moderators reviewing graphic content suffer severe burnout and inconsistent judgment on borderline policy cases. Production Trust & Safety tooling defaults media to blurred/grayscale with muted audio by default, caps high-severity exposure shifts, and routes 5% of borderline tickets to 3 independent moderators in a blind consensus pool to continuously calibrate precision/recall against policy drift.
 
 ## Quick Reference
 

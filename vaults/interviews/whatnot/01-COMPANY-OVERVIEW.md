@@ -4,17 +4,13 @@
 
 Whatnot is the **largest livestream shopping platform** in North America and Europe, founded in 2019 (Y Combinator W20). It combines eBay-style auctions with Twitch-like live video, creating a social commerce experience where sellers broadcast live and buyers bid in real-time.
 
-```
-┌──────────┐   Watch/Bid   ┌──────────┐   Live Video   ┌──────────┐
-│  Buyer   │──────────────→│ Whatnot  │←──────────────│  Seller  │
-│          │←──────────────│ Platform │───────────────→│          │
-└──────────┘   Won Item    └──────────┘   8% Commission └──────────┘
-                                │
-                         ┌──────┴──────┐
-                         │  Real-time  │
-                         │  Auction    │
-                         │  Engine     │
-                         └─────────────┘
+```mermaid
+flowchart TD
+    Buyer["Buyer"] -->|"Watch / Bid"| Platform["Whatnot Platform"]
+    Platform -->|"Won Item"| Buyer
+    Seller["Seller"] -->|"Live Video"| Platform
+    Platform -->|"Payout (minus 8% Commission)"| Seller
+    Platform --- Engine["Real-time Auction Engine"]
 ```
 
 ## Scale & Numbers

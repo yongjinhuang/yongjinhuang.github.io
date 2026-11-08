@@ -8,29 +8,19 @@ This is not about picking a "winner." It is about understanding the engineering 
 
 ## Architecture Overview
 
-```
-+------------------------------------------------------------------+
-|                    RUNTIME ARCHITECTURE COMPARISON                |
-+------------------------------------------------------------------+
-|                                                                  |
-|  NODE.JS 22+              BUN 1.x              DENO 2.0         |
-|  +-----------+         +-----------+         +-----------+       |
-|  |  Your JS  |         |  Your JS  |         |  Your TS  |       |
-|  +-----------+         +-----------+         +-----------+       |
-|  | V8 Engine |         | JSCore    |         | V8 Engine |       |
-|  +-----------+         +-----------+         +-----------+       |
-|  | libuv     |         | Custom IO |         | Tokio     |       |
-|  | (C/C++)   |         | (Zig)     |         | (Rust)    |       |
-|  +-----------+         +-----------+         +-----------+       |
-|  | OpenSSL   |         | BoringSSL |         | rustls    |       |
-|  +-----------+         +-----------+         +-----------+       |
-|                                                                  |
-|  Event Loop: libuv     Event Loop: custom    Event Loop: Tokio   |
-|  Language: C/C++       Language: Zig/C++     Language: Rust      |
-|  Package: npm          Package: npm+bun      Package: npm+jsr    |
-|  TS: via transpiler    TS: native            TS: native          |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Comp["RUNTIME ARCHITECTURE COMPARISON"]
+        subgraph Node["NODE.JS 22+ (C/C++, npm, TS via transpiler/strip)"]
+            N1["Your JS"] --> N2["V8 Engine"] --> N3["libuv Event Loop (C/C++)"] --> N4["OpenSSL"]
+        end
+        subgraph Bun["BUN 1.x (Zig/C++, npm+bun, native TS)"]
+            B1["Your JS / TS"] --> B2["JavaScriptCore (WebKit)"] --> B3["Custom I/O Event Loop (Zig)"] --> B4["BoringSSL"]
+        end
+        subgraph Deno["DENO 2.0 (Rust, npm+jsr, native TS)"]
+            D1["Your TS"] --> D2["V8 Engine"] --> D3["Tokio Event Loop (Rust)"] --> D4["rustls"]
+        end
+    end
 ```
 
 ---
@@ -54,21 +44,13 @@ node --experimental-permission \
   app.js
 ```
 
-```
-+------------------------------------------+
-|           NODE.JS PERMISSION MODEL       |
-+------------------------------------------+
-|                                          |
-|  --allow-fs-read=<path>     File read    |
-|  --allow-fs-write=<path>    File write   |
-|  --allow-child-process      Spawn procs  |
-|  --allow-worker             Worker thrds |
-|  --allow-wasi               WASI access  |
-|                                          |
-|  Default: ALL DENIED when flag is set    |
-|  Without flag: ALL ALLOWED (legacy)      |
-|                                          |
-+------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph NodePerm["NODE.JS PERMISSION MODEL"]
+        Flags["Permission Flags:<br/>- --allow-fs-read=&lt;path&gt; (File read)<br/>- --allow-fs-write=&lt;path&gt; (File write)<br/>- --allow-child-process (Spawn processes)<br/>- --allow-worker (Worker threads)<br/>- --allow-wasi (WASI access)"]
+        Behavior["Default Behavior:<br/>- When --permission flag is set: ALL DENIED by default<br/>- Without flag: ALL ALLOWED (legacy)"]
+        Flags --> Behavior
+    end
 ```
 
 **Interview insight**: The permission model is opt-in, not opt-out. This was a deliberate decision to avoid breaking the entire npm ecosystem. Deno chose opt-out (deny by default), which caused significant friction with npm packages.
@@ -191,31 +173,22 @@ ws.addEventListener('message', (event) => {
 
 Bun's key architectural decision was choosing JavaScriptCore (JSC) over V8. This single choice cascades into nearly every performance characteristic.
 
-```
-+------------------------------------------------------------------+
-|                    BUN INTERNAL ARCHITECTURE                     |
-+------------------------------------------------------------------+
-|                                                                  |
-|  +-----------------------------------------------------------+  |
-|  |                    JavaScript Code                         |  |
-|  +-----------------------------------------------------------+  |
-|  |              JavaScriptCore (WebKit Engine)                |  |
-|  |  +--------+  +--------+  +--------+  +--------+           |  |
-|  |  |  LLInt |->|Baseline|->|  DFG   |->|  FTL   |           |  |
-|  |  |Interp. |  |  JIT   |  |  JIT   |  |  JIT   |           |  |
-|  |  +--------+  +--------+  +--------+  +--------+           |  |
-|  |  (Interpret)  (Fast     (Optimized)  (LLVM-backed          |  |
-|  |               compile)              max optimize)          |  |
-|  +-----------------------------------------------------------+  |
-|  |                    Bun Native Layer (Zig)                  |  |
-|  |  +----------+  +----------+  +----------+  +----------+   |  |
-|  |  | HTTP     |  | File I/O |  | Bundler  |  | Package  |   |  |
-|  |  | Server   |  | (io_uring|  | (native) |  | Manager  |   |  |
-|  |  | (uSock.) |  |  /kqueue)|  |          |  | (native) |   |  |
-|  |  +----------+  +----------+  +----------+  +----------+   |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph BunArch["BUN INTERNAL ARCHITECTURE"]
+        JS["JavaScript / TypeScript Code"]
+        subgraph JSC["JavaScriptCore (WebKit Engine — 4-Tier Execution)"]
+            LLInt["LLInt Interpreter<br/>(Instant startup)"] --> Base["Baseline JIT<br/>(Fast compile)"]
+            Base --> DFG["DFG JIT<br/>(Optimized)"] --> FTL["FTL JIT<br/>(B3/LLVM max optimize)"]
+        end
+        subgraph Zig["Bun Native Layer (Zig)"]
+            HTTP["HTTP Server<br/>(uSockets)"]
+            IO["File I/O<br/>(io_uring / kqueue)"]
+            Bundler["Native Bundler"]
+            Pkg["Native Package Manager"]
+        end
+        JS --> JSC --> Zig
+    end
 ```
 
 **Why JavaScriptCore?**
@@ -229,25 +202,13 @@ Bun's key architectural decision was choosing JavaScriptCore (JSC) over V8. This
 
 ### Bun as an All-in-One Toolkit
 
-```
-+------------------------------------------------------------------+
-|                    BUN'S INTEGRATED TOOLCHAIN                    |
-+------------------------------------------------------------------+
-|                                                                  |
-|  TRADITIONAL STACK              BUN EQUIVALENT                   |
-|  ----------------              ---------------                   |
-|                                                                  |
-|  node (runtime)        --->    bun (runtime)                     |
-|  npm/yarn/pnpm         --->    bun install                       |
-|  tsc/swc/esbuild       --->    bun (native TS)                   |
-|  webpack/vite          --->    bun build (bundler)                |
-|  jest/vitest           --->    bun test                           |
-|  nodemon               --->    bun --watch                        |
-|  dotenv                --->    built-in .env                      |
-|  better-sqlite3        --->    bun:sqlite                        |
-|  cross-env             --->    bun (cross-platform)               |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Toolchain["BUN'S INTEGRATED TOOLCHAIN"]
+        Trad["TRADITIONAL STACK<br/>- node (runtime)<br/>- npm / yarn / pnpm<br/>- tsc / swc / esbuild<br/>- webpack / vite<br/>- jest / vitest<br/>- nodemon<br/>- dotenv<br/>- better-sqlite3<br/>- cross-env"]
+        BunEq["BUN EQUIVALENT<br/>- bun (runtime)<br/>- bun install<br/>- bun (native TS)<br/>- bun build (bundler)<br/>- bun test<br/>- bun --watch<br/>- built-in .env<br/>- bun:sqlite<br/>- bun (cross-platform)"]
+        Trad -->|"Replaced by single binary"| BunEq
+    end
 ```
 
 ### Bun.serve() HTTP Server
@@ -404,28 +365,20 @@ const stream = file.stream();
 
 Deno 2.0 represents a pragmatic pivot. Deno 1.x was idealistic -- no npm, no package.json, URL imports only. Deno 2.0 embraces the npm ecosystem while retaining its security-first architecture.
 
-```
-+------------------------------------------------------------------+
-|                    DENO 2.0 ARCHITECTURE                         |
-+------------------------------------------------------------------+
-|                                                                  |
-|  +-----------------------------------------------------------+  |
-|  |                    TypeScript Code                         |  |
-|  |                (Native TS, no tsc needed)                  |  |
-|  +-----------------------------------------------------------+  |
-|  |                    V8 JavaScript Engine                    |  |
-|  +-----------------------------------------------------------+  |
-|  |              Deno Core (Rust + Tokio runtime)              |  |
-|  |  +----------+  +----------+  +----------+  +----------+   |  |
-|  |  |Permission |  |  npm     |  |  JSR     |  |  Deno    |   |  |
-|  |  |  System   |  | Compat   |  | Registry |  |  KV      |   |  |
-|  |  +----------+  +----------+  +----------+  +----------+   |  |
-|  +-----------------------------------------------------------+  |
-|  |                Tokio Async Runtime (Rust)                  |  |
-|  |             (Multi-threaded async executor)                |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph DenoArch["DENO 2.0 ARCHITECTURE"]
+        TS["TypeScript Code<br/>(Native TS, no tsc needed)"]
+        V8["V8 JavaScript Engine"]
+        subgraph Core["Deno Core (Rust)"]
+            Perm["Permission System"]
+            NPM["npm Compatibility"]
+            JSR["JSR Registry"]
+            KV["Deno KV"]
+        end
+        Tokio["Tokio Async Runtime (Rust)<br/>(Multi-threaded async executor)"]
+        TS --> V8 --> Core --> Tokio
+    end
 ```
 
 ### Node/npm Compatibility
@@ -477,24 +430,13 @@ deno run \
   server.ts
 ```
 
-```
-+------------------------------------------+
-|       DENO PERMISSION CATEGORIES         |
-+------------------------------------------+
-|                                          |
-|  --allow-read       File system read     |
-|  --allow-write      File system write    |
-|  --allow-net        Network access       |
-|  --allow-env        Env variables        |
-|  --allow-run        Subprocess exec      |
-|  --allow-ffi        Foreign functions    |
-|  --allow-sys        System info          |
-|  --allow-all / -A   Everything (dev)     |
-|                                          |
-|  --deny-*           Explicit deny        |
-|  (deny overrides allow)                  |
-|                                          |
-+------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph DenoPerm["DENO PERMISSION CATEGORIES"]
+        Allow["Allow Flags:<br/>- --allow-read (File system read)<br/>- --allow-write (File system write)<br/>- --allow-net (Network access)<br/>- --allow-env (Env variables)<br/>- --allow-run (Subprocess exec)<br/>- --allow-ffi (Foreign functions)<br/>- --allow-sys (System info)<br/>- --allow-all / -A (Everything, dev)"]
+        Deny["Deny Flags:<br/>- --deny-* (Explicit deny — overrides allow)"]
+        Allow --> Deny
+    end
 ```
 
 **Interview insight**: Deno's permission model is the most mature. Node's is experimental. Bun has no permission model. For security-critical applications (fintech, healthcare), Deno's permissions are a genuine differentiator.

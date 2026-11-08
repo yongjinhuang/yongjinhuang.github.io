@@ -10,31 +10,14 @@ This guide provides rigorous, interview-ready material across the core domains t
 
 ## Types of Quant Roles
 
-```
-+-----------------------------------------------------------------------+
-|                     QUANTITATIVE TRADING ROLES                        |
-+-----------------------------------------------------------------------+
-|                                                                       |
-|  QUANT TRADER                        QUANT RESEARCHER                 |
-|  +-----------------------------+    +-----------------------------+   |
-|  | Manages live risk/PnL       |    | Develops alpha signals      |   |
-|  | Makes markets or takes      |    | Backtests strategies        |   |
-|  |   directional positions     |    | Statistical modeling        |   |
-|  | Fast mental math required   |    | ML / deep learning          |   |
-|  | Game theory / EV thinking   |    | Publishes internal research |   |
-|  | Firms: Jane Street, Optiver |    | Firms: Two Sigma, DE Shaw   |   |
-|  +-----------------------------+    +-----------------------------+   |
-|                                                                       |
-|  QUANT DEVELOPER                     SYSTEMATIC TRADER                |
-|  +-----------------------------+    +-----------------------------+   |
-|  | Builds trading systems      |    | End-to-end strategy owner   |   |
-|  | Ultra-low-latency C++       |    | Signal generation + exec    |   |
-|  | Exchange connectivity       |    | Portfolio construction      |   |
-|  | Market data infrastructure  |    | Risk management             |   |
-|  | Firms: HRT, Jump Trading    |    | Firms: Citadel, AQR, Man   |   |
-|  +-----------------------------+    +-----------------------------+   |
-|                                                                       |
-+-----------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Roles["QUANTITATIVE TRADING ROLES"]
+        QT["QUANT TRADER<br/>- Manages live risk &amp; PnL<br/>- Market making or directional positions<br/>- Fast mental math &amp; game theory / EV<br/>- Firms: Jane Street, Optiver, SIG"]
+        QR["QUANT RESEARCHER<br/>- Develops alpha signals &amp; statistical models<br/>- Backtests strategies &amp; ML/DL<br/>- Publishes internal research<br/>- Firms: Two Sigma, DE Shaw, RenTech"]
+        QD["QUANT DEVELOPER<br/>- Builds ultra-low-latency C++ trading systems<br/>- Exchange connectivity &amp; market data infra<br/>- Firms: HRT, Jump Trading, Citadel Sec"]
+        ST["SYSTEMATIC TRADER / PM<br/>- End-to-end strategy owner<br/>- Signal generation + portfolio construction + risk<br/>- Firms: Citadel, AQR, Man AHL, Millennium"]
+    end
 ```
 
 | Role              | Math Intensity | Coding Intensity | Market Knowledge | Typical Backgrounds       |

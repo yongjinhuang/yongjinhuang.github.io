@@ -154,58 +154,21 @@ Use CAR when:
 
 ### Category Map
 
-```
-Behavioral Questions
-|
-|-- Leadership & Ownership
-|   |-- Taking initiative
-|   |-- Driving projects
-|   |-- Influencing without authority
-|
-|-- Conflict Resolution
-|   |-- Disagreements with peers
-|   |-- Pushback from managers
-|   |-- Cross-team friction
-|
-|-- Technical Decisions
-|   |-- Trade-off analysis
-|   |-- Architecture choices
-|   |-- Stakeholder communication
-|
-|-- Failure & Learning
-|   |-- Mistakes and incidents
-|   |-- Missed deadlines
-|   |-- Process improvement
-|
-|-- Teamwork & Collaboration
-|   |-- Cross-functional work
-|   |-- Mentoring
-|   |-- Team dynamics
-|
-|-- Communication
-|   |-- Explaining complexity
-|   |-- Written communication
-|   |-- Presenting to leadership
-|
-|-- Adaptability & Ambiguity
-|   |-- Changing requirements
-|   |-- Working with unknowns
-|   |-- Pivoting strategies
-|
-|-- Customer Focus
-|   |-- User empathy
-|   |-- Prioritization
-|   |-- Delivering value
-|
-|-- Time Management
-|   |-- Competing priorities
-|   |-- Saying no
-|   |-- Resource allocation
-|
-|-- Growth & Self-Awareness
-|   |-- Career development
-|   |-- Receiving feedback
-|   |-- Strengths/weaknesses
+```mermaid
+flowchart LR
+    Root["Behavioral Questions"]
+    C1["Leadership &amp; Ownership<br/>- Taking initiative<br/>- Driving projects<br/>- Influencing without authority"]
+    C2["Conflict Resolution<br/>- Disagreements with peers<br/>- Pushback from managers<br/>- Cross-team friction"]
+    C3["Technical Decisions<br/>- Trade-off analysis<br/>- Architecture choices<br/>- Stakeholder communication"]
+    C4["Failure &amp; Learning<br/>- Mistakes and incidents<br/>- Missed deadlines<br/>- Process improvement"]
+    C5["Teamwork &amp; Collaboration<br/>- Cross-functional work<br/>- Mentoring &amp; Team dynamics"]
+    C6["Communication<br/>- Explaining complexity<br/>- Written comms &amp; Exec presentations"]
+    C7["Adaptability &amp; Ambiguity<br/>- Changing requirements<br/>- Working with unknowns &amp; Pivoting"]
+    C8["Customer Focus<br/>- User empathy<br/>- Prioritization &amp; Delivering value"]
+    C9["Time Management<br/>- Competing priorities<br/>- Saying no &amp; Resource allocation"]
+    C10["Growth &amp; Self-Awareness<br/>- Career development<br/>- Receiving feedback &amp; Strengths/weaknesses"]
+
+    Root --> C1 & C2 & C3 & C4 & C5 & C6 & C7 & C8 & C9 & C10
 ```
 
 ---

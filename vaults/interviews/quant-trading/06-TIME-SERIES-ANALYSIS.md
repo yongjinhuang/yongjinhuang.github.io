@@ -6,35 +6,15 @@ Every price you see on a trading screen is a point in a time series. The entire 
 
 This chapter builds your toolkit from foundational concepts (stationarity, autocorrelation) through classical models (ARIMA, GARCH) to advanced techniques (cointegration, regime detection, spectral analysis, fractional differencing). Every concept connects directly to a trading application.
 
-```
-+------------------------------------------------------------------------+
-|                TIME SERIES ANALYSIS PIPELINE                           |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  Raw Price Data                                                        |
-|       |                                                                |
-|       v                                                                |
-|  [1. Stationarity Testing] -----> Non-stationary? ---> Transform       |
-|       |                              (ADF, KPSS)        (diff, log)    |
-|       v                                                                |
-|  [2. Autocorrelation Analysis] --> ACF/PACF patterns                   |
-|       |                              (Ljung-Box test)                  |
-|       v                                                                |
-|  [3. Model Selection] ----------> ARIMA for mean dynamics              |
-|       |                           GARCH for volatility                 |
-|       v                                                                |
-|  [4. Multi-Asset Analysis] -----> Cointegration (pairs trading)        |
-|       |                           VAR (cross-asset dynamics)           |
-|       v                                                                |
-|  [5. Regime Detection] ---------> HMM (bull/bear states)               |
-|       |                           Change point detection               |
-|       v                                                                |
-|  [6. Frequency Domain] ---------> Fourier/Wavelet (cycle hunting)      |
-|       |                                                                |
-|       v                                                                |
-|  Trading Signal Generation                                             |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Raw["Raw Price Data"] --> S1["1. Stationarity Testing (ADF / KPSS)<br/>If non-stationary -&gt; Log Return / Fractional Diff"]
+    S1 --> S2["2. Autocorrelation Analysis<br/>ACF / PACF &amp; Ljung-Box Test"]
+    S2 --> S3["3. Univariate Modeling<br/>ARIMA (mean) + GARCH / EGARCH (volatility)"]
+    S3 --> S4["4. Multi-Asset Analysis<br/>Engle-Granger / Johansen Cointegration &amp; VAR"]
+    S4 --> S5["5. Regime Detection<br/>Hidden Markov Models (HMM) &amp; Structural Breaks"]
+    S5 --> S6["6. Frequency Domain<br/>Fourier / Wavelet &amp; Kalman Filtering"]
+    S6 --> Sig["Trading Signal Generation"]
 ```
 
 ---

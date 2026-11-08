@@ -599,7 +599,7 @@ Marketplace 的核心挑战：买家因为供给而来，卖家因为需求而�
 
 ---
 
-## 6. 深入探讨：Listing ���理
+## 6. 深入探讨：Listing 管理
 
 ### Listing 质量分数
 
@@ -1563,7 +1563,7 @@ orders.listing_id  -- 引用 listing（listing 价格可能会变化）
 
 **问：如何设计 promoted listing 的竞价系统？**
 
-答：使���带有质量分数调整的第二价格拍卖（Vickrey auction）：
+答：使用带有质量分数调整的第二价格拍卖（Vickrey auction）：
 
 ```
 有效 CPM 出价 = seller_bid * quality_score

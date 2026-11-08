@@ -142,33 +142,30 @@ These files extend it in the following ways:
 
 ## Quick Reference: Concurrency Decision Tree
 
-```
-What type of work are you doing?
-|
-+-- CPU-bound computation
-|   |
-|   +-- Python? --> multiprocessing (bypass GIL)
-|   +-- Go?     --> goroutines (true parallelism, no GIL)
-|   +-- Need shared state? --> multiprocessing.Value/Array or manager
-|
-+-- I/O-bound (network, disk, database)
-|   |
-|   +-- Many connections (>1000)?  --> asyncio / Go goroutines
-|   +-- Few connections (<100)?    --> threading / goroutines
-|   +-- Mixed async + sync libs?   --> run_in_executor bridge
-|
-+-- Need shared mutable state?
-|   |
-|   +-- Single machine? --> locks, atomic ops, thread-safe structures
-|   +-- Multiple machines? --> distributed locks, CAS, event sourcing
-|
-+-- Need coordination between workers?
-    |
-    +-- Simple signal? --> Event
-    +-- Wait for condition? --> Condition variable
-    +-- Limit concurrency? --> Semaphore
-    +-- Pipeline? --> Queue / Channel
-    +-- Barrier synchronization? --> Barrier
+```mermaid
+flowchart LR
+    Q{"What type of work are you doing?"}
+    Q --> CPU["CPU-Bound Computation"]
+    Q --> IO["I/O-Bound (Network, Disk, DB)"]
+    Q --> State["Shared Mutable State"]
+    Q --> Coord["Worker Coordination"]
+
+    CPU -->|"Python"| C1["multiprocessing (bypass GIL)"]
+    CPU -->|"Go"| C2["goroutines (true parallelism, no GIL)"]
+    CPU -->|"Shared state"| C3["multiprocessing.Value / Array / Manager"]
+
+    IO -->|"Many conns (&gt;1000)"| I1["asyncio / Go goroutines"]
+    IO -->|"Few conns (&lt;100)"| I2["threading / goroutines"]
+    IO -->|"Mixed async + sync"| I3["loop.run_in_executor bridge"]
+
+    State -->|"Single machine"| S1["Locks, atomic ops, thread-safe structures"]
+    State -->|"Multiple machines"| S2["Distributed locks, CAS, event sourcing"]
+
+    Coord -->|"Simple signal"| K1["Event"]
+    Coord -->|"Wait for predicate"| K2["Condition variable"]
+    Coord -->|"Limit concurrency"| K3["Semaphore"]
+    Coord -->|"Pipeline"| K4["Queue / Channel"]
+    Coord -->|"Phase rendezvous"| K5["Barrier"]
 ```
 
 ---

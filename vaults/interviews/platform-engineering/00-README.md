@@ -8,18 +8,28 @@ workflows, and golden paths for software delivery. Platform engineering emerged 
 hottest trend in DevOps (2023-2026), fundamentally changing how organizations scale
 developer productivity.
 
-```
-                   PLATFORM ENGINEERING
-                          |
-          +---------------+---------------+
-          |               |               |
-     DEVELOPER       PLATFORM         INFRA
-     EXPERIENCE      SERVICES         ABSTRACTION
-          |               |               |
-     +----+----+    +-----+-----+   +-----+-----+
-     |    |    |    |     |     |   |     |     |
-   Golden Portal  Catalog  CI/CD  Crossplane IaC
-   Paths  DX     Templates Envs  GitOps    K8s
+```mermaid
+flowchart TD
+    Root["PLATFORM ENGINEERING"]
+    DX["DEVELOPER EXPERIENCE"]
+    PS["PLATFORM SERVICES"]
+    IA["INFRA ABSTRACTION"]
+
+    Root --> DX
+    Root --> PS
+    Root --> IA
+
+    DX --> DX1["Golden Paths"]
+    DX --> DX2["Developer Portal"]
+    DX --> DX3["DX &amp; Self-Service"]
+
+    PS --> PS1["Software Catalog"]
+    PS --> PS2["Templates"]
+    PS --> PS3["CI/CD &amp; Environments"]
+
+    IA --> IA1["Crossplane"]
+    IA --> IA2["GitOps"]
+    IA --> IA3["IaC &amp; K8s"]
 ```
 
 ## Table of Contents

@@ -95,18 +95,12 @@ Given ShopBack's business, prepare these system designs:
 
 ShopBack uses event-driven architecture heavily. Be ready to discuss:
 
-```
-┌─────────┐     ┌──────────────┐     ┌──────────────┐
-│ Click   │────→│ Event Bus    │────→│ Attribution  │
-│ Service │     │ (Kafka/SQS)  │     │ Service      │
-└─────────┘     └──────┬───────┘     └──────────────┘
-                       │
-                ┌──────┴───────┐
-                │              │
-         ┌──────┴──┐    ┌─────┴──────┐
-         │Analytics│    │Notification│
-         │Service  │    │Service     │
-         └─────────┘    └────────────┘
+```mermaid
+flowchart TD
+    Click["Click Service"] --> Bus["Event Bus<br/>(Kafka/SQS)"]
+    Bus --> Attr["Attribution Service"]
+    Bus --> Analytics["Analytics Service"]
+    Bus --> Notify["Notification Service"]
 ```
 
 ### Key Concepts
@@ -123,18 +117,13 @@ ShopBack uses event-driven architecture heavily. Be ready to discuss:
 
 Since this was reported as a question:
 
-```
-┌──────────┐    ┌────────┐    ┌───────────┐    ┌───────────┐
-│ Git Push │───→│ CI/CD  │───→│  Canary   │───→│  Full     │
-│          │    │Pipeline│    │  Deploy   │    │  Rollout  │
-└──────────┘    └────────┘    └───────────┘    └───────────┘
-                    │              │
-                    ▼              ▼
-               ┌────────┐    ┌───────────┐
-               │ Tests  │    │ Metrics   │
-               │ Lint   │    │ Monitoring│
-               │ Build  │    │ Alerts    │
-               └────────┘    └───────────┘
+```mermaid
+flowchart TD
+    Push["Git Push"] --> CICD["CI/CD Pipeline"]
+    CICD --> Canary["Canary Deploy"]
+    Canary --> Rollout["Full Rollout"]
+    CICD --> Checks["Tests<br/>Lint<br/>Build"]
+    Canary --> Obs["Metrics<br/>Monitoring<br/>Alerts"]
 ```
 
 ### ShopBack-Relevant Points

@@ -236,17 +236,11 @@ MSE provides a JavaScript API to feed raw media segments to the browser's media 
 
 ### Architecture Overview
 
-```
-Network (fetch/XHR)
-       |
-       v
-  JavaScript (MSE logic)
-       |
-       v
-  MediaSource --> SourceBuffer(s)
-       |
-       v
-  <video> element (decoding + rendering)
+```mermaid
+flowchart TD
+    Net["Network (fetch / ReadableStream)"] --> JS["JavaScript ABR / Player Logic"]
+    JS -->|"appendBuffer(fMP4 segment)"| SB["MediaSource -&gt; SourceBuffer(s)"]
+    SB --> Vid["&lt;video&gt; Element (Hardware Decode + Render)"]
 ```
 
 ### MediaSource API
@@ -1544,8 +1538,9 @@ pipWindow.addEventListener('pagehide', () => {
 
 Traditional streaming stacks (HLS, DASH over MSE) introduce 3-30 seconds of latency due to segment buffering. For interactive applications (cloud gaming, live auctions, remote surgery), sub-100ms latency is required. The WebTransport + WebCodecs combination enables this.
 
-```
-Camera/Encoder --> WebTransport (QUIC) --> WebCodecs Decoder --> Canvas/WebGPU
+```mermaid
+flowchart LR
+    Cam["Camera / MediaStreamTrackProcessor"] --> Enc["WebCodecs VideoEncoder"] --> WT["WebTransport (QUIC)"] --> Dec["WebCodecs VideoDecoder"] --> Render["Canvas / WebGPU"]
 ```
 
 ### WebTransport Basics

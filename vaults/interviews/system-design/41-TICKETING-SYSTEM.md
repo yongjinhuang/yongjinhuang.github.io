@@ -697,7 +697,7 @@ CREATE TABLE articles (
         │                      │  Customer responds
         │                      │  (SLA timer RESUMES)
         │                      │
-        │         ┌──────��─────v────────────────┐
+        │         ┌────────────v────────────────┐
         │         │         OPEN                │
         │         │  (back to agent)            │◄─────────────────┐
         │         └────────────┬────────────────┘                  │
@@ -1248,7 +1248,7 @@ SLA Compliance Dashboard:
 │  │          │  │          │  │          │  │          │       │
 │  │ SMTP/    │  │ WebSocket│  │ REST     │  │ REST/    │       │
 │  │ IMAP     │  │ Session  │  │ POST     │  │ Webhook  │       │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └─��──┬─────┘       │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘       │
 │       │             │             │             │              │
 │       v             v             v             v              │
 │  ┌──────────────────────────────────────────────────────┐      │
@@ -1643,7 +1643,7 @@ def extract_mentions(body):
 │  │                                                  │    │
 │  │  1. Keyword search (Elasticsearch)               │    │
 │  │  2. Semantic search (vector embeddings)          │    │
-���  │  3. Rank by relevance + view count + helpfulness │    │
+│  │  3. Rank by relevance + view count + helpfulness │    │
 │  │  4. Track deflection (customer did NOT submit    │    │
 │  │     a ticket after viewing article)              │    │
 │  └──────────────────────────────────────────────────┘    │

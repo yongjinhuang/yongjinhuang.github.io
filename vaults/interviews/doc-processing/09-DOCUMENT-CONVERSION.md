@@ -4,34 +4,12 @@
 
 Document conversion — transforming files between formats — is one of the most requested features in document processing systems. Users upload Word documents that need to become PDFs. Scanned images need to become searchable PDFs. Markdown documentation needs to become polished HTML. This chapter covers the tools and techniques for reliable format conversion.
 
-```
-+------------------------------------------------------------------------+
-|                    DOCUMENT CONVERSION                                   |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  UNIVERSAL CONVERTERS            FORMAT-SPECIFIC                       |
-|  +------------------------+     +---------------------------+          |
-|  | Pandoc                  |     | WeasyPrint (HTML -> PDF)   |          |
-|  |   40+ formats           |     | ReportLab (data -> PDF)    |          |
-|  |   CLI + Python wrapper  |     | python-docx (data -> DOCX) |          |
-|  | LibreOffice (headless)  |     | openpyxl (data -> XLSX)    |          |
-|  |   Office format expert  |     | Pillow (image conversion)  |          |
-|  |   PDF, DOCX, XLSX, etc. |     | pdf2image (PDF -> images)  |          |
-|  +------------------------+     +---------------------------+          |
-|                                                                        |
-|  COMMON CONVERSIONS                                                    |
-|  +--------------------------------------------------------------+     |
-|  | DOCX -> PDF    (LibreOffice, Word)                             |     |
-|  | HTML -> PDF    (WeasyPrint, wkhtmltopdf, Chrome headless)      |     |
-|  | PDF -> DOCX    (LibreOffice, limited fidelity)                 |     |
-|  | PDF -> Images  (PyMuPDF, pdf2image + Poppler)                  |     |
-|  | Images -> PDF  (PyMuPDF, Pillow, img2pdf)                      |     |
-|  | Markdown -> HTML/PDF/DOCX (Pandoc)                             |     |
-|  | Excel -> CSV   (openpyxl, pandas)                               |     |
-|  | Scanned PDF -> Searchable PDF (OCRmyPDF)                       |     |
-|  +--------------------------------------------------------------+     |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Conv["DOCUMENT CONVERSION ECOSYSTEM"]
+        Univ["UNIVERSAL CONVERTERS<br/>- Pandoc (40+ markup/doc formats)<br/>- LibreOffice Headless (DOCX/XLSX/PPTX -&gt; PDF)"]
+        Spec["FORMAT-SPECIFIC CONVERTERS<br/>- WeasyPrint / Headless Chrome (HTML -&gt; PDF)<br/>- PyMuPDF / pdf2image (PDF &lt;-&gt; Images)<br/>- OCRmyPDF (Scanned PDF -&gt; Searchable PDF)<br/>- openpyxl / pandas (Excel &lt;-&gt; CSV)"]
+    end
 ```
 
 ---

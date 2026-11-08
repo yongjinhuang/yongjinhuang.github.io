@@ -781,21 +781,11 @@ def fk_poe(
 
 The typical pipeline in a robot controller:
 
-```
-  Task planner          Motion planner          Joint controller
-  +-----------+         +-------------+         +--------------+
-  | Desired   |  IK     | Joint-space |  PID    | Motor        |
-  | Cartesian |-------->| trajectory  |-------->| commands     |
-  | waypoints |         | (q vs time) |         | (torques)    |
-  +-----------+         +-------------+         +--------------+
-                              |
-                              | FK (for monitoring/feedback)
-                              v
-                        +-------------+
-                        | Actual      |
-                        | Cartesian   |
-                        | pose        |
-                        +-------------+
+```mermaid
+flowchart LR
+    Task["Task Planner<br/>(Desired Cartesian Waypoints)"] -->|"Inverse Kinematics (IK)"| Motion["Motion Planner<br/>(Joint-Space Trajectory q(t))"]
+    Motion -->|"PID / Computed Torque"| Ctrl["Joint Controller<br/>(Motor Torques)"]
+    Motion -->|"Forward Kinematics (FK)"| Pose["Actual Cartesian Pose<br/>(Monitoring &amp; Feedback)"]
 ```
 
 1. The task planner generates Cartesian waypoints.

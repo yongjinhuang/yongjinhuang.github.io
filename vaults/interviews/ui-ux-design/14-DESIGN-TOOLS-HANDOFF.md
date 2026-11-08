@@ -188,50 +188,11 @@ When reviewing a design, extract these properties systematically:
 
 A reliable workflow for translating designs to code:
 
-```
-Step 1: Study the Full Design
-+----------------------------------+
-|  Review all pages and states     |
-|  Identify patterns and reuse     |
-|  Note responsive variations      |
-|  List questions for designer     |
-+----------------------------------+
-         |
-         v
-Step 2: Identify the Component Tree
-+----------------------------------+
-|  Map Figma frames to components  |
-|  Identify shared components      |
-|  Define component interfaces     |
-|  Note variant/prop requirements  |
-+----------------------------------+
-         |
-         v
-Step 3: Extract Design Tokens
-+----------------------------------+
-|  Colors, spacing, typography     |
-|  Shadows, border radii           |
-|  Breakpoints, transitions        |
-|  Document in a tokens file       |
-+----------------------------------+
-         |
-         v
-Step 4: Build Bottom-Up
-+----------------------------------+
-|  Primitive components first      |
-|  Compose into larger sections    |
-|  Wire up layout and spacing      |
-|  Add responsive behavior         |
-+----------------------------------+
-         |
-         v
-Step 5: Review with Designer
-+----------------------------------+
-|  Side-by-side comparison         |
-|  Check spacing, alignment        |
-|  Verify responsive behavior      |
-|  Address interaction details     |
-+----------------------------------+
+```mermaid
+flowchart TD
+    S1["Step 1: Study the Full Design<br/>Review all pages/states, identify reuse, list questions"] --> S2["Step 2: Identify the Component Tree<br/>Map Figma frames to components, define props/variants"]
+    S2 --> S3["Step 3: Extract Design Tokens<br/>Colors, spacing, typography, shadows, radii, breakpoints"] --> S4["Step 4: Build Bottom-Up<br/>Primitives first -&gt; compose sections -&gt; responsive behavior"]
+    S4 --> S5["Step 5: Review with Designer<br/>Side-by-side QA of spacing, alignment, states, interactions"]
 ```
 
 ### Design Tokens Export
@@ -272,11 +233,10 @@ A popular Figma plugin that lets designers define tokens in Figma and export the
 **Style Dictionary**
 Amazon's open-source tool that transforms design tokens into platform-specific formats:
 
-```
-tokens.json  -->  Style Dictionary  -->  CSS variables
-                                    -->  Tailwind config
-                                    -->  iOS Swift constants
-                                    -->  Android XML resources
+```mermaid
+flowchart LR
+    Tok["tokens.json"] --> SD["Style Dictionary"]
+    SD --> CSS["CSS Custom Properties"] & TW["Tailwind Config"] & iOS["iOS Swift Constants"] & And["Android XML Resources"]
 ```
 
 ### Communication Between Designers and Developers
@@ -352,13 +312,9 @@ Figma's built-in answer to Zeplin. Becoming the preferred approach because it el
 **Storybook**
 While not a handoff tool per se, Storybook bridges the gap by providing a living component library that designers can reference:
 
-```
-Design System Workflow:
-
-  Figma Components  <-->  Storybook Stories  <-->  Production Code
-       |                       |                        |
-    Source of               Living                  Shipped
-     truth                 reference               product
+```mermaid
+flowchart LR
+    Figma["Figma Components<br/>(Design Source of Truth)"] <--> SB["Storybook Stories<br/>(Living Component Reference)"] <--> Prod["Production Code<br/>(Shipped Product)"]
 ```
 
 ---

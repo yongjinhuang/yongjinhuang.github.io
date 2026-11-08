@@ -78,68 +78,42 @@ graph TD
 
 ## ER Diagram
 
-```
-┌──────────────────┐         ┌──────────────────┐
-│     users         │         │     clicks        │
-│──────────────────│         │──────────────────│
-│ id (PK)           │         │ short_key (FK)    │
-│ email             │         │ clicked_at        │
-│ api_key           │         │ ip_address        │
-│ tier              │         │ user_agent        │
-│ rate_limit        │         │ referrer          │
-└──────────────────┘         │ country           │
-         │                    │ device_type       │
-         │ 1                  └──────────────────┘
-         │                             *
-         │                             │
-         │                             │
-         │         ┌──────────────────┐│
-         │         │     urls          ││
-         │        *│──────────────────││
-         └────────│ short_key (PK)    │┘
-                   │ long_url          │ 1
-                   │ long_url_hash     │────────┘
-                   │ user_id (FK)      │
-                   │ created_at        │
-                   │ expires_at        │
-                   │ is_active         │
-                   └──────────────────┘
+```mermaid
+erDiagram
+    users ||--o{ urls : "one user creates many short URLs"
+    urls ||--o{ clicks : "one short URL receives many clicks"
 
-Relationships:
-  users 1───* urls      (one user creates many short URLs)
-  urls  1───* clicks    (one short URL receives many clicks)
+    urls {
+        VARCHAR short_key PK
+        TEXT long_url
+        VARCHAR long_url_hash
+        BIGINT user_id FK
+        TIMESTAMP created_at
+        TIMESTAMP expires_at
+        BOOLEAN is_active
+    }
+    users {
+        BIGINT id PK
+        VARCHAR email UK
+        VARCHAR api_key UK
+        ENUM tier
+        INT rate_limit
+    }
+    clicks {
+        VARCHAR short_key FK
+        TIMESTAMP clicked_at
+        VARCHAR ip_address
+        TEXT user_agent
+        TEXT referrer
+        VARCHAR country
+        VARCHAR device_type
+    }
 ```
+
 
 ## Data Flow
 
 ### Shortening a URL (Write Path)
-
-```
-1. User submits long URL via API
-         │
-         ▼
-2. Compute SHA-256 hash of long_url
-         │
-         ▼
-3. Check urls table for existing long_url_hash
-         │
-    ┌────┴────┐
-    │ Found?  │
-    ├─Yes─────┤──► Return existing short_key (dedup)
-    │ No      │
-    └────┬────┘
-         ▼
-4. Generate short_key (Base62 counter or random + collision check)
-         │
-         ▼
-5. INSERT into urls table (short_key, long_url, hash, user_id, timestamps)
-         │
-         ▼
-6. SET in Redis cache: short_key → long_url (with TTL matching expires_at)
-         │
-         ▼
-7. Return short URL to user
-```
 
 ```mermaid
 flowchart TD
@@ -153,32 +127,6 @@ flowchart TD
 ```
 
 ### Redirecting (Read Path)
-
-```
-1. User visits short URL (e.g., tiny.url/a9Xk3m)
-         │
-         ▼
-2. Check Redis cache for short_key
-         │
-    ┌────┴────┐
-    │ Cache   │
-    │ Hit?    │
-    ├─Yes─────┤──► Get long_url from cache
-    │ No      │
-    └────┬────┘
-         ▼
-3. Query urls table by short_key (PK lookup, very fast)
-         │
-         ▼
-4. Populate Redis cache for future requests
-         │
-         ▼
-5. Async: INSERT click event into clicks table
-   (fire-and-forget via Kafka to avoid slowing redirect)
-         │
-         ▼
-6. Return HTTP 301/302 redirect to long_url
-```
 
 ```mermaid
 flowchart TD

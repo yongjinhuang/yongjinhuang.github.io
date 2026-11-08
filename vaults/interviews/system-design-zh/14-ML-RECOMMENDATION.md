@@ -1342,7 +1342,7 @@ CREATE TABLE experiment_assignments (
      n = (Z_alpha/2 + Z_beta)^2 * 2 * sigma^2 / delta^2
      n = (1.96 + 0.84)^2 * 2 * 225 / 0.81
      n = 7.84 * 450 / 0.81
-     n = ~4,356 用户/组（���少）
+     n = ~4,356 用户/组（至少）
    - 运行 7+ 天以捕获每周模式
 
 3. 实验设置:

@@ -6,26 +6,9 @@ You have alpha signals. You have risk models. You have execution systems. Now co
 
 Portfolio construction is the bridge between research and reality. A brilliant signal means nothing if you allocate capital poorly, ignore correlations, or let estimation errors dominate your weights. This chapter covers the full spectrum --- from Markowitz's foundational theory to modern hierarchical methods used at the world's largest quant funds.
 
-```
-+------------------------------------------------------------------------+
-|                    PORTFOLIO CONSTRUCTION PIPELINE                       |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  INPUTS                           OPTIMIZATION        OUTPUT           |
-|  +---------------------+         +-----------+       +-----------+    |
-|  | Expected Returns     |-------->|           |       |           |    |
-|  | (alpha signals)      |         |           |       | Portfolio  |    |
-|  +---------------------+         | Portfolio  |------>| Weights    |    |
-|  | Covariance Matrix    |-------->| Optimizer  |       | w1...wN   |    |
-|  | (risk model)         |         |           |       |           |    |
-|  +---------------------+         |           |       +-----------+    |
-|  | Constraints          |-------->|           |                        |
-|  | (regulatory, risk)   |         +-----------+                        |
-|  +---------------------+              |                                |
-|  | Transaction Costs    |--------------+                               |
-|  +---------------------+                                               |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Alpha["Expected Returns (mu)<br/>(Alpha Signals / Black-Litterman)"] & Risk["Covariance Matrix (Sigma)<br/>(Factor Risk Model / Ledoit-Wolf Shrinkage)"] & Cons["Constraints<br/>(Dollar/Beta/Sector Neutral, Box Limits)"] & TC["Transaction Cost Model<br/>(Turnover + Market Impact Penalty)"] --> Opt["Convex Portfolio Optimizer<br/>(MVO / Risk Parity / HRP)"] --> W["Optimal Target Weights<br/>(w_1, w_2, ..., w_N)"]
 ```
 
 ---

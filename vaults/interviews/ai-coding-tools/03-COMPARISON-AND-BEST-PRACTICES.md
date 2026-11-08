@@ -115,16 +115,16 @@ differences, workflow optimization, and common pitfalls across both tools.
 
 Both tools operate on the same fundamental pattern:
 
-```
-┌──────────────────────────────────────────────────┐
-│              SHARED AGENTIC PATTERN              │
-│                                                  │
-│   Prompt → Reason → Select Tool → Execute →      │
-│   Observe Result → Decide: Done or Continue?     │
-│                                                  │
-│   Key difference: HOW tools are managed and      │
-│   HOW permissions are enforced                   │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Pattern["SHARED AGENTIC PATTERN (Key difference: tool management &amp; permission enforcement)"]
+        P["Prompt"] --> R["Reason"]
+        R --> S["Select Tool"]
+        S --> E["Execute"]
+        E --> O["Observe Result"]
+        O --> D{"Decide: Done or Continue?"}
+        D -->|"Continue"| R
+    end
 ```
 
 ### Context Management
@@ -209,41 +209,23 @@ multi_agent = true
 
 ## 4. Security Model Comparison
 
-```
-CLAUDE CODE                           OPENAI CODEX
-┌──────────────────────┐              ┌──────────────────────┐
-│  Permission Modes    │              │  Approval Policies   │
-│  ┌────────────────┐  │              │  ┌────────────────┐  │
-│  │ default        │  │              │  │ untrusted      │  │
-│  │ acceptEdits    │  │              │  │ on-request     │  │
-│  │ plan (readonly)│  │              │  │ never          │  │
-│  │ auto (AI)      │  │              │  └────────────────┘  │
-│  │ dontAsk        │  │              │                      │
-│  │ bypassPerms    │  │              │  Sandbox Modes       │
-│  └────────────────┘  │              │  ┌────────────────┐  │
-│                      │              │  │ read-only      │  │
-│  Sandbox             │              │  │ workspace-write│  │
-│  ┌────────────────┐  │              │  │ danger-full    │  │
-│  │ OS-level       │  │              │  └────────────────┘  │
-│  │ isolation      │  │              │                      │
-│  └────────────────┘  │              │  OS-Level Sandbox    │
-│                      │              │  ┌────────────────┐  │
-│  Hooks               │              │  │ macOS Sandbox  │  │
-│  ┌────────────────┐  │              │  │ Linux Landlock │  │
-│  │ PreToolUse     │  │              │  │ seccomp        │  │
-│  │ (block/allow)  │  │              │  └────────────────┘  │
-│  └────────────────┘  │              │                      │
-│                      │              │  Convenience Flags   │
-│  Permission Rules    │              │  ┌────────────────┐  │
-│  ┌────────────────┐  │              │  │ --full-auto    │  │
-│  │ allow: [...]   │  │              │  │ --yolo         │  │
-│  │ deny: [...]    │  │              │  └────────────────┘  │
-│  └────────────────┘  │              │                      │
-└──────────────────────┘              └──────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CC["CLAUDE CODE (Fine-grained hooks inspecting/modifying each tool call)"]
+        CC_Modes["Permission Modes:<br/>default / acceptEdits / plan (readonly)<br/>auto (AI) / dontAsk / bypassPerms"]
+        CC_Sandbox["Sandbox:<br/>OS-level isolation"]
+        CC_Hooks["Hooks:<br/>PreToolUse (block/allow)"]
+        CC_Rules["Permission Rules:<br/>allow: [...] / deny: [...]"]
+        CC_Modes --> CC_Sandbox --> CC_Hooks --> CC_Rules
+    end
 
-KEY DIFFERENCE:
-Claude Code: Fine-grained hooks that can inspect/modify each tool call
-OpenAI Codex: Sandbox-first with clear mode boundaries
+    subgraph OC["OPENAI CODEX (Sandbox-first with clear mode boundaries)"]
+        OC_Approval["Approval Policies:<br/>untrusted / on-request / never"]
+        OC_Sandbox["Sandbox Modes:<br/>read-only / workspace-write / danger-full"]
+        OC_OS["OS-Level Sandbox:<br/>macOS Sandbox / Linux Landlock / seccomp"]
+        OC_Flags["Convenience Flags:<br/>--full-auto / --yolo"]
+        OC_Approval --> OC_Sandbox --> OC_OS --> OC_Flags
+    end
 ```
 
 ### Security Recommendations
@@ -262,33 +244,25 @@ OpenAI Codex: Sandbox-first with clear mode boundaries
 
 ### Extension Points
 
-```
-CLAUDE CODE                              OPENAI CODEX
-┌─────────────────────────┐              ┌─────────────────────────┐
-│  CLAUDE.md (instructions│              │  AGENTS.md (instructions│
-│  .claude/rules/ (scoped)│              │  AGENTS.override.md     │
-│                         │              │                         │
-│  Skills (SKILL.md)      │              │  Skills (SKILL.md)      │
-│  ├─ !`cmd` injection    │              │  ├─ scripts/            │
-│  ├─ context: fork       │              │  ├─ references/         │
-│  └─ path-scoped         │              │  └─ agents/openai.yaml  │
-│                         │              │                         │
-│  Hooks (8+ event types) │              │  Approval policies      │
-│  ├─ command, http       │              │  └─ 3 policy levels     │
-│  ├─ prompt, agent       │              │                         │
-│  └─ PreToolUse/PostTool │              │  Sandbox modes          │
-│                         │              │  └─ 3 sandbox levels    │
-│  Sub-agents (Markdown)  │              │                         │
-│  ├─ persistent memory   │              │  Subagents (TOML)       │
-│  ├─ scoped MCP          │              │  ├─ CSV batch           │
-│  └─ scoped hooks        │              │  └─ max_threads config  │
-│                         │              │                         │
-│  MCP (.mcp.json)        │              │  MCP (config.toml)      │
-│                         │              │                         │
-│  Plugins (marketplace)  │              │  Agents SDK integration │
-│                         │              │                         │
-│  Agent SDK (headless)   │              │  Automations (app)      │
-└─────────────────────────┘              └─────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CC["CLAUDE CODE EXTENSIBILITY"]
+        CC1["Instructions:<br/>CLAUDE.md &amp; .claude/rules/ (scoped)"]
+        CC2["Skills (SKILL.md):<br/>!cmd injection, context: fork, path-scoped"]
+        CC3["Hooks (8+ event types):<br/>command, http, prompt, agent, PreToolUse/PostToolUse"]
+        CC4["Sub-agents (Markdown):<br/>persistent memory, scoped MCP, scoped hooks"]
+        CC5["Integrations:<br/>MCP (.mcp.json), Plugins (marketplace), Agent SDK (headless)"]
+        CC1 --> CC2 --> CC3 --> CC4 --> CC5
+    end
+
+    subgraph OC["OPENAI CODEX EXTENSIBILITY"]
+        OC1["Instructions:<br/>AGENTS.md &amp; AGENTS.override.md"]
+        OC2["Skills (SKILL.md):<br/>scripts/, references/, agents/openai.yaml"]
+        OC3["Security Policies:<br/>Approval policies (3 levels) &amp; Sandbox modes (3 levels)"]
+        OC4["Subagents (TOML):<br/>CSV batch &amp; max_threads config"]
+        OC5["Integrations:<br/>MCP (config.toml), Agents SDK integration, Automations (app)"]
+        OC1 --> OC2 --> OC3 --> OC4 --> OC5
+    end
 ```
 
 ---
@@ -313,27 +287,13 @@ The single highest-leverage practice:
 
 ### 2. Explore → Plan → Implement → Verify
 
-```
-Phase 1: EXPLORE
-├── Read relevant files
-├── Understand existing patterns
-└── Identify constraints
-
-Phase 2: PLAN
-├── Create implementation plan
-├── Identify files to change
-└── Define success criteria
-
-Phase 3: IMPLEMENT
-├── Write code following plan
-├── Run tests incrementally
-└── Fix failures immediately
-
-Phase 4: VERIFY
-├── Run full test suite
-├── Check linting/types
-├── Review diff
-└── Commit with descriptive message
+```mermaid
+flowchart LR
+    P1["Phase 1: EXPLORE<br/>- Read relevant files<br/>- Understand existing patterns<br/>- Identify constraints"]
+    P2["Phase 2: PLAN<br/>- Create implementation plan<br/>- Identify files to change<br/>- Define success criteria"]
+    P3["Phase 3: IMPLEMENT<br/>- Write code following plan<br/>- Run tests incrementally<br/>- Fix failures immediately"]
+    P4["Phase 4: VERIFY<br/>- Run full test suite<br/>- Check linting/types<br/>- Review diff<br/>- Commit with descriptive message"]
+    P1 --> P2 --> P3 --> P4
 ```
 
 ### 3. Write Effective Project Instructions
@@ -408,15 +368,13 @@ Good skill candidates:
 
 ### Pattern 1: Writer / Reviewer
 
-```
-Session A (Writer)                    Session B (Reviewer)
-─────────────────                    ──────────────────────
-"Implement rate limiter"    ──>
-                                     "Review rate limiter in
-                                      @src/middleware/. Check
-                                      for race conditions."
-                            <──
-"Address review feedback"
+```mermaid
+sequenceDiagram
+    participant A as "Session A (Writer)"
+    participant B as "Session B (Reviewer)"
+    A->>B: Implement rate limiter (@src/middleware/)
+    B->>A: Review rate limiter & check for race conditions
+    A->>A: Address review feedback
 ```
 
 Fresh context in Session B means no bias toward code it wrote.

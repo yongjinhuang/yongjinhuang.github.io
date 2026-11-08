@@ -32,34 +32,16 @@
 
 ## The Operations Mental Model
 
-```
-                        ┌─────────────────────────┐
-                        │   BUSINESS REQUIREMENTS  │
-                        │  "99.99% uptime, <200ms  │
-                        │   latency, $X/month"     │
-                        └────────────┬────────────┘
-                                     │
-              ┌──────────────────────┼──────────────────────┐
-              ▼                      ▼                      ▼
-     ┌────────────────┐    ┌────────────────┐    ┌────────────────┐
-     │   PROVISION     │    │    DEPLOY       │    │    OBSERVE      │
-     │                │    │                │    │                │
-     │ Terraform      │    │ CI/CD Pipeline │    │ Metrics        │
-     │ Auto-scaling   │    │ Canary/B-G     │    │ Logs           │
-     │ Golden images  │    │ Feature flags  │    │ Traces         │
-     │ Config mgmt    │    │ Rollback       │    │ Alerts         │
-     └───────┬────────┘    └───────┬────────┘    └───────┬────────┘
-             │                     │                     │
-             └──────────────────────┼──────────────────────┘
-                                    ▼
-                        ┌─────────────────────────┐
-                        │      FEEDBACK LOOP       │
-                        │                         │
-                        │  Incidents → Postmortems │
-                        │  Metrics  → Capacity     │
-                        │  Costs    → Optimization  │
-                        │  Toil     → Automation    │
-                        └─────────────────────────┘
+```mermaid
+flowchart TD
+    Biz["BUSINESS REQUIREMENTS<br/>'99.99% uptime, &lt;200ms latency, $X/month budget'"]
+    Prov["1. PROVISION<br/>Terraform, Auto-scaling,<br/>Golden AMIs, Config Mgmt"]
+    Dep["2. DEPLOY<br/>CI/CD Pipelines, Canary / Blue-Green,<br/>Feature Flags, Automated Rollback"]
+    Obs["3. OBSERVE<br/>Metrics, Logs, Traces,<br/>SLO Burn-Rate Alerts"]
+    FB["4. CONTINUOUS FEEDBACK LOOP<br/>Incidents -&gt; Postmortems | Metrics -&gt; Capacity<br/>Costs -&gt; FinOps | Toil -&gt; Automation"]
+
+    Biz --> Prov & Dep & Obs
+    Prov & Dep & Obs --> FB
 ```
 
 ---

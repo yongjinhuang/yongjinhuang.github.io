@@ -88,65 +88,43 @@ Redis supports five core data structures, each optimized for different access pa
 
 ## ER Diagram
 
-```
-Cluster Topology:
-┌──────────────────────────┐       ┌──────────────────────────┐
-│     cluster_nodes         │       │     hash_slots            │
-│──────────────────────────│       │──────────────────────────│
-│ node_id (PK)              │1     *│ slot_id (PK, 0-16383)    │
-│ host                      │───────│ assigned_node_id (FK)     │
-│ port                      │       │ replica_node_ids          │
-│ role (master/replica)     │       └──────────────────────────┘
-│ master_id                 │                │
-│ status                    │                │ maps keys to nodes
-└──────────────────────────┘                │
-         │                                   ▼
-         │ replica_of              ┌──────────────────────────┐
-         └─────────────────────────│     cache_entries         │
-           (master 1───* replicas) │──────────────────────────│
-                                   │ key                       │
-                                   │ value (bytes)             │
-                                   │ ttl_seconds               │
-                                   └──────────────────────────┘
+```mermaid
+erDiagram
+    master ||--o{ replicas : "relates"
 
-Key Routing:
-  key "user:123"
-    → CRC16("user:123") % 16384 = slot 5649
-    → hash_slots[5649].assigned_node_id = "node-A"
-    → route request to node-A
+    cache_entries {
+        STRING key
+        BYTES value
+        INT ttl_seconds
+        TIMESTAMP created_at
+        TIMESTAMP last_accessed_at
+    }
+    hash_slots {
+        INT slot_id
+        STRING assigned_node_id
+        STRING replica_node_ids
+    }
+    cluster_nodes {
+        STRING node_id
+        VARCHAR host
+        INT port
+        ENUM role
+        STRING master_id
+        ENUM status
+    }
+    data_structures {
+        KEY String
+        KEY Hash
+        KEY List
+        KEY Set
+        KEY Sorted
+    }
 ```
+
 
 ## Data Flow
 
 ### Cache-Aside (Most Common Pattern)
-
-```
-1. Application needs data (e.g., user profile)
-         │
-         ▼
-2. Check Redis: GET user:123
-         │
-    ┌────┴────┐
-    │ Cache   │
-    │ Hit?    │
-    ├─ Yes ───┤──► Deserialize and return (latency: <1ms)
-    │ No      │
-    └────┬────┘
-         ▼
-3. Query database for user 123
-         │
-         ▼
-4. SET user:123 → serialized_data EX 3600 (1-hour TTL)
-         │
-         ▼
-5. Return data to caller (latency: ~10-50ms)
-
-On data update:
-  ├─ Option A: DELETE user:123 from Redis (invalidate)
-  │   Next read will cache-miss and re-populate
-  └─ Option B: SET user:123 with new data (update)
-      Risk: race condition between concurrent update + read
-```
 
 ```mermaid
 flowchart TD
@@ -166,24 +144,6 @@ flowchart TD
 
 ### Write-Through
 
-```
-1. Application writes data
-         │
-         ▼
-2. Write to Redis cache
-         │
-         ▼
-3. Cache synchronously writes to database
-   (application waits for DB confirmation)
-         │
-         ▼
-4. Return success to application
-
-Pros: Cache and DB always consistent
-Cons: Higher write latency (cache + DB in serial)
-Best for: Data that is read immediately after writing
-```
-
 ```mermaid
 flowchart TD
     A[Application writes data] --> B[Write to Redis cache]
@@ -194,25 +154,6 @@ flowchart TD
 
 ### Write-Behind (Write-Back)
 
-```
-1. Application writes data
-         │
-         ▼
-2. Write to Redis cache (fast, in-memory)
-         │
-         ▼
-3. Return success immediately (low latency)
-         │
-         ▼
-4. Background: cache asynchronously flushes to database
-   ├─ Batch multiple writes together (e.g., every 5 seconds)
-   ├─ Reduces DB write load significantly
-   └─ Risk: data loss if cache node crashes before flush
-
-Best for: High write throughput where brief data loss is tolerable
-         (e.g., view counters, analytics)
-```
-
 ```mermaid
 flowchart TD
     A[Application writes data] --> B[Write to Redis cache]
@@ -222,31 +163,6 @@ flowchart TD
 ```
 
 ### Cluster Key Routing
-
-```
-1. Client sends command: GET user:123
-         │
-         ▼
-2. Client computes: CRC16("user:123") % 16384 = slot 5649
-         │
-         ▼
-3. Client looks up local slot map: slot 5649 → node-A
-         │
-         ▼
-4. Client sends GET directly to node-A
-         │
-    ┌────┴───────────┐
-    │ Correct node?  │
-    ├─ Yes ──────────┤──► Node-A executes GET, returns value
-    │ No (MOVED)     │
-    └────┬───────────┘
-         ▼
-5. Node returns MOVED 5649 10.0.0.2:6379
-         │
-         ▼
-6. Client updates slot map and retries on correct node
-   (MOVED responses happen after rebalancing)
-```
 
 ```mermaid
 flowchart TD

@@ -6,24 +6,13 @@ Observability is your ability to understand the internal state of a system from 
 
 ## Mental Model
 
-```
-                    THE THREE PILLARS
-
- METRICS                LOGS                  TRACES
- (numbers over time)    (event records)        (request flow)
-
- "CPU is at 90%"        "Connection refused    "Request took 2.3s:
-  "5xx rate is 3%"       at 14:32:01"            50ms in API →
-  "Queue depth: 150"     "OOM killed PID 1"      200ms in DB →
-                                                 2s in payment svc"
-      │                      │                       │
-      v                      v                       v
- Prometheus              Fluent Bit/              OpenTelemetry
- Metrics Server          Fluentd → Loki/ELK       → Jaeger/Tempo
-      │                      │                       │
-      v                      v                       v
- Grafana dashboards      Grafana/Kibana           Grafana/Jaeger UI
- AlertManager            search & filter          request waterfall
+```mermaid
+flowchart TD
+    subgraph Pillars["THE THREE PILLARS OF KUBERNETES OBSERVABILITY"]
+        M["METRICS (Numbers Over Time)<br/>Prometheus + kube-state-metrics + cAdvisor<br/>-&gt; Grafana &amp; Alertmanager"]
+        L["LOGS (Timestamped Event Records)<br/>Fluent Bit DaemonSet<br/>-&gt; Grafana Loki / OpenSearch"]
+        T["TRACES (Distributed Request Waterfall)<br/>OpenTelemetry Collector<br/>-&gt; Grafana Tempo / Jaeger"]
+    end
 ```
 
 **Key insight:** Metrics tell you SOMETHING is wrong. Logs tell you WHAT happened. Traces tell you WHERE in the request chain the problem occurred. You need all three.

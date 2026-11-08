@@ -6,39 +6,27 @@ System design interviews at quant firms test your understanding of the full tech
 
 This chapter covers the architecture of real trading systems, from nanosecond-sensitive market data handlers to backtesting frameworks that simulate months of trading in minutes. Firms like HRT, Jump, Citadel Securities, and Tower Research test this material extensively.
 
-```
-+------------------------------------------------------------------------+
-|              TRADING SYSTEM ARCHITECTURE - FULL STACK                    |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  MARKET DATA LAYER                                                     |
-|  +------------------+    +------------------+    +------------------+  |
-|  | Feed Handlers     |    | Ticker Plant      |    | Book Builder     |  |
-|  | (wire protocol)   |--->| (normalization)   |--->| (L2/L3 book)    |  |
-|  +------------------+    +------------------+    +------------------+  |
-|                                     |                                  |
-|                                     v                                  |
-|  STRATEGY LAYER                                                        |
-|  +------------------+    +------------------+    +------------------+  |
-|  | Signal Generator  |    | Alpha Model       |    | Portfolio Opt    |  |
-|  | (features)        |--->| (prediction)      |--->| (construction)  |  |
-|  +------------------+    +------------------+    +------------------+  |
-|                                     |                                  |
-|                                     v                                  |
-|  EXECUTION LAYER                                                       |
-|  +------------------+    +------------------+    +------------------+  |
-|  | Risk Engine       |    | Order Manager     |    | Smart Router     |  |
-|  | (pre-trade)       |--->| (state machine)   |--->| (venue select)  |  |
-|  +------------------+    +------------------+    +------------------+  |
-|                                     |                                  |
-|                                     v                                  |
-|  INFRASTRUCTURE                                                        |
-|  +------------------+    +------------------+    +------------------+  |
-|  | Monitoring        |    | Data Pipeline     |    | Backtesting      |  |
-|  | (PnL, latency)   |    | (tick store)      |    | (simulation)     |  |
-|  +------------------+    +------------------+    +------------------+  |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph L1["1. MARKET DATA LAYER"]
+        direction LR
+        FH["Feed Handlers<br/>(Wire Protocol)"] --> TP["Ticker Plant<br/>(Normalization)"] --> BB["Book Builder<br/>(L2/L3 Order Book)"]
+    end
+    subgraph L2["2. STRATEGY LAYER"]
+        direction LR
+        SG["Signal Generator<br/>(Features)"] --> AM["Alpha Model<br/>(Prediction)"] --> PO["Portfolio Optimizer<br/>(Target Weights)"]
+    end
+    subgraph L3["3. EXECUTION LAYER"]
+        direction LR
+        RE["Pre-Trade Risk<br/>Engine"] --> OM["Order Manager<br/>(State Machine)"] --> SOR["Smart Order Router<br/>(Venue Selection)"]
+    end
+    subgraph L4["4. INFRASTRUCTURE LAYER"]
+        direction LR
+        MON["Real-Time Monitoring<br/>(PnL, Latency, Kill Switch)"]
+        DP["Tick Data Pipeline<br/>(Parquet / kdb+)"]
+        BT["Event-Driven<br/>Backtester"]
+    end
+    L1 --> L2 --> L3 --> L4
 ```
 
 ---

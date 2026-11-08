@@ -2458,34 +2458,13 @@ Use this checklist for every optimization effort:
 
 Performance profiling is not optional. It is the foundation of all effective optimization work. The tools covered in this chapter form a comprehensive toolkit:
 
-```
-+-----------------------------------------------------------------------+
-|  THE PROFILING PYRAMID                                                |
-+-----------------------------------------------------------------------+
-|                                                                       |
-|                        /\                                             |
-|                       /  \        Source-level analysis               |
-|                      / ncu \      (SASS correlation, perf annotate)   |
-|                     /________\                                        |
-|                    /          \    Kernel / function profiling         |
-|                   / Nsight     \   (Nsight Compute, VTune uarch)      |
-|                  / Compute,     \                                     |
-|                 / VTune, perf    \                                    |
-|                /________________  \                                   |
-|               /                    \  System-level profiling          |
-|              / Nsight Systems,      \ (timeline, utilization, I/O)    |
-|             / perf stat, top, htop   \                                |
-|            /__________________________\                               |
-|           /                            \  Correctness checking        |
-|          / compute-sanitizer, Valgrind, \ (memory, races, undefined)  |
-|         / AddressSanitizer, ThreadSan    \                            |
-|        /_________________________________ \                           |
-|                                                                       |
-|  START AT THE BOTTOM. Work your way up only as needed.               |
-|  Most performance problems are visible at the system level.          |
-|  Only dive deeper when you need to understand WHY something is slow. |
-|                                                                       |
-+-----------------------------------------------------------------------+
+```mermaid
+flowchart BT
+    L1["1. Correctness &amp; Sanitizers (Start Here)<br/>compute-sanitizer (memcheck/racecheck), AddressSanitizer, ThreadSanitizer, Valgrind"]
+    L2["2. System-Level Timeline Profiling<br/>Nsight Systems (nsys), perf stat, CPU/GPU overlap, PCIe transfers"]
+    L3["3. Kernel / Function Microarchitecture Profiling<br/>Nsight Compute (ncu), Roofline, Occupancy, Warp Stalls, Intel VTune"]
+    L4["4. Instruction-Level / SASS Analysis<br/>SASS correlation, perf annotate, Godbolt / LLVM-MCA"]
+    L1 --> L2 --> L3 --> L4
 ```
 
 The key principles to carry forward:

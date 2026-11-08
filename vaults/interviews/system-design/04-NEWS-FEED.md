@@ -473,7 +473,7 @@ Use **fan-out on write** for normal users and **fan-out on read** for celebritie
                 │ Post Service  │
                 └───────┬───────┘
                         │
-                        ��
+                        ▼
                ┌─────────────────┐
                │ Is author a     │
                │ celebrity?      │

@@ -102,63 +102,52 @@ graph TD
 
 ## ER Diagram
 
-```
-+-------------------------+
-|     events              |
-|     (append-only)       |
-+-------------------------+
-| event_id (PK)           |
-| aggregate_type          |
-| aggregate_id            |
-| version                 |
-| event_type              |
-| schema_version          |
-| payload_json            |
-| metadata_json           |
-| global_position (UNIQUE)|
-| occurred_at             |
-+-----------+-------------+
-            |
-            | Grouped by (aggregate_type + aggregate_id)
-            |
-+-----------+-------------+         +--------------------------+
-|     snapshots           |         |  projection_checkpoints  |
-+-------------------------+         +--------------------------+
-| snapshot_id (PK)        |         | projection_name (PK)     |
-| aggregate_type          |         | last_processed_position  |
-| aggregate_id            |         | status                   |
-| version                 |         | updated_at               |
-| state_json              |         +-----------+--------------+
-| schema_version          |                     |
-+-------------------------+                     | Tracks position in
-                                                | global_position
-            +-----------------------------------+
-            |
-            v
-+-------------------------+
-|   read_projections      |
-|   (order_summary)       |
-+-------------------------+
-| order_id (PK)           |
-| customer_id             |
-| status                  |
-| item_count              |
-| total_amount            |
-| last_event_version      |
-+-------------------------+
-```
+```mermaid
+erDiagram
+    events ||..o{ snapshots : "snapshots capture aggregate state at a point in time"
+    events ||..o{ read_projections : "projections are built by consuming events"
+    projection_checkpoints ||--|| read_projections : "one checkpoint per projection"
 
-### Relationship Summary
-
-```
-events ────> snapshots           (snapshots capture aggregate state at a point in time)
-events ────> read_projections    (projections are built by consuming events)
-projection_checkpoints 1───1 read_projections  (one checkpoint per projection)
+    events {
+        UUID event_id PK
+        VARCHAR aggregate_type
+        UUID aggregate_id
+        INT version
+        VARCHAR event_type
+        INT schema_version
+        JSONB payload_json
+        JSONB metadata_json
+        BIGINT global_position
+        TIMESTAMP occurred_at
+    }
+    snapshots {
+        UUID snapshot_id PK
+        VARCHAR aggregate_type
+        UUID aggregate_id
+        INT version
+        JSONB state_json
+        INT schema_version
+    }
+    read_projections {
+        UUID order_id PK
+        UUID customer_id
+        VARCHAR status
+        INT item_count
+        DECIMAL total_amount
+        INT last_event_version
+    }
+    projection_checkpoints {
+        VARCHAR projection_name PK
+        BIGINT last_processed_position
+        ENUM status
+        TIMESTAMP updated_at
+    }
 ```
 
 Note: These are not traditional FK relationships. Event sourcing uses aggregate_type + aggregate_id as a logical grouping, and projections consume events via global_position, not foreign keys.
 
 ---
+
 
 ## Data Flow
 

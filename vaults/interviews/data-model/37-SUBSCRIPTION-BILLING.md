@@ -172,89 +172,98 @@ graph TD
 
 ## ER Diagram
 
-```
-+----------------+       +------------------+       +----------------+
-|     plans      |       |   plan_prices    |       |  price_tiers   |
-|----------------|       |------------------|       |----------------|
-| plan_id (PK)   |<──┐   | price_id (PK)    |<──┐   | price_id (FK,  |
-| name           |   |   | plan_id (FK)─────|───┘   |   PK)          |
-| description    |   |   | billing_interval |   ┌───| tier_start(PK) |
-| is_active      |   |   | pricing_model    |   |   | tier_end       |
-+----------------+   |   | unit_amount_cents|   |   | unit_amount    |
-                     |   | currency         |   |   | flat_amount    |
-                     |   | meter_name       |   |   +----------------+
-                     |   +------------------+   |
-                     |          |               |
-                     |          | 1             |
-                     |          |               |
-                     |   +------+-----------+   |
-                     |   |  subscriptions   |   |
-                     |   |------------------|   |
-                     └───| plan_id (FK)     |   |
-                         | price_id (FK)────|───┘
-                         | subscription_id  |
-                         |  (PK)            |
-                         | customer_id (FK) |
-                         | status           |
-                         | quantity          |
-                         | trial_end        |
-                         | current_period_  |
-                         |  start/end       |
-                         | billing_anchor_  |
-                         |  day             |
-                         | coupon_id        |
-                         | cancel_at_       |
-                         |  period_end      |
-                         +------------------+
-                           |             |
-                           | 1           | 1
-                           |             |
-                  +--------+------+   +--+---------------+
-                  |   invoices    |   |  usage_events    |
-                  |---------------|   |------------------|
-                  | invoice_id(PK)|   | event_id (PK)    |
-                  | subscription_ |   | subscription_    |
-                  |  id (FK)      |   |  id (FK)         |
-                  | customer_id   |   | meter_name       |
-                  | status        |   | quantity          |
-                  | subtotal      |   | timestamp         |
-                  | discount      |   | idempotency_key   |
-                  | tax           |   +------------------+
-                  | total         |
-                  | amount_due    |
-                  | amount_paid   |
-                  | due_date      |
-                  | paid_at       |
-                  +---------------+
-                    |           |
-                    | 1         | 1
-                    |           |
-          +---------+----+  +--+--------------+
-          | invoice_     |  |   payments      |
-          | line_items   |  |-----------------|
-          |--------------|  | payment_id (PK) |
-          | line_id (PK) |  | invoice_id (FK) |
-          | invoice_id   |  | amount          |
-          |  (FK)        |  | status          |
-          | type         |  | payment_method_ |
-          | description  |  |  id             |
-          | quantity     |  | idempotency_key |
-          | unit_amount  |  | attempt_number  |
-          | amount       |  | next_retry_at   |
-          +--------------+  +-----------------+
+```mermaid
+erDiagram
+    plans ||--o{ plan_prices : "one plan, multiple price configurations"
+    plan_prices ||--o{ price_tiers : "one price, multiple graduated tiers"
+    plans ||--o{ subscriptions : "one plan, many subscribers"
+    plan_prices ||--o{ subscriptions : "one price, many subscriptions"
+    subscriptions ||--o{ invoices : "one subscription, invoice per billing period"
+    subscriptions ||--o{ usage_events : "one subscription, many usage data points"
+    invoices ||--o{ invoice_line_items : "one invoice, multiple charge components"
+    invoices ||--o{ payments : "one invoice, multiple payment attempts"
 
-Relationships:
-  plans 1───* plan_prices        (one plan, multiple price configurations)
-  plan_prices 1───* price_tiers  (one price, multiple graduated tiers)
-  plans 1───* subscriptions      (one plan, many subscribers)
-  plan_prices 1───* subscriptions (one price, many subscriptions)
-  subscriptions 1───* invoices   (one subscription, invoice per billing period)
-  subscriptions 1───* usage_events (one subscription, many usage data points)
-  invoices 1───* invoice_line_items (one invoice, multiple charge components)
-  invoices 1───* payments        (one invoice, multiple payment attempts)
+    plans {
+        UUID plan_id PK
+        VARCHAR name
+        TEXT description
+        BOOLEAN is_active
+    }
+    plan_prices {
+        UUID price_id PK
+        PLANS plan_id FK
+        ENUM billing_interval
+        ENUM pricing_model
+        INT unit_amount_cents
+        VARCHAR currency
+        VARCHAR meter_name
+    }
+    price_tiers {
+        COMPOSITE price_id PK, FK
+        INT tier_start PK
+        INT tier_end
+        INT unit_amount
+        INT flat_amount
+    }
+    subscriptions {
+        UUID subscription_id PK
+        CUSTOMERS customer_id FK
+        PLANS plan_id FK
+        PLAN_PRICES price_id FK
+        ENUM status
+        INT quantity
+        TIMESTAMP trial_end
+        TIMESTAMP current_period_start
+        TIMESTAMP current_period_end
+        INT billing_anchor_day
+        COUPONS coupon_id FK
+        BOOLEAN cancel_at_period_end
+    }
+    invoices {
+        UUID invoice_id PK
+        SUBSCRIPTIONS subscription_id FK
+        CUSTOMERS customer_id FK
+        ENUM status
+        INT subtotal
+        INT discount
+        INT tax
+        INT total
+        INT amount_due
+        INT amount_paid
+        TIMESTAMP due_date
+        TIMESTAMP paid_at
+    }
+    invoice_line_items {
+        UUID line_id PK
+        INVOICES invoice_id FK
+        ENUM type
+        TEXT description
+        INT quantity
+        INT unit_amount
+        INT amount
+    }
+    payments {
+        UUID payment_id PK
+        INVOICES invoice_id FK
+        INT amount
+        ENUM status
+        PAYMENT_METHODS payment_method_id FK
+        VARCHAR idempotency_key UK
+        INT attempt_number
+        TIMESTAMP next_retry_at
+    }
+    usage_events {
+        UUID event_id PK
+        SUBSCRIPTIONS subscription_id FK
+        VARCHAR meter_name
+        INT quantity
+        TIMESTAMP timestamp
+        VARCHAR idempotency_key UK
+    }
 ```
 
 ---
+
 
 ## Data Flow
 

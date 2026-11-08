@@ -30,29 +30,23 @@ Backstage is an open platform for building developer portals. It unifies all you
 
 ### Core Features
 
-```
-+------------------------------------------------------------------+
-|                       Backstage Portal                            |
-|                                                                  |
-|  +----------------+  +----------------+  +------------------+    |
-|  | Software       |  | Software       |  | TechDocs         |    |
-|  | Catalog        |  | Templates      |  | (Documentation)  |    |
-|  | - Services     |  | - Create new   |  | - Markdown-based |    |
-|  | - APIs         |  |   services     |  | - Auto-generated |    |
-|  | - Libraries    |  | - Scaffolding  |  | - Searchable     |    |
-|  | - Websites     |  | - Golden paths |  |                  |    |
-|  +----------------+  +----------------+  +------------------+    |
-|                                                                  |
-|  +----------------+  +----------------+  +------------------+    |
-|  | Search         |  | Kubernetes     |  | CI/CD            |    |
-|  | Platform       |  | Plugin         |  | Plugin           |    |
-|  +----------------+  +----------------+  +------------------+    |
-|                                                                  |
-|  +----------------+  +----------------+  +------------------+    |
-|  | Cost Insights  |  | Security       |  | Custom Plugins   |    |
-|  | Plugin         |  | Plugin         |  |                  |    |
-|  +----------------+  +----------------+  +------------------+    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Portal["Backstage Portal"]
+        subgraph Core["Core Features"]
+            Cat["Software Catalog<br/>- Services<br/>- APIs<br/>- Libraries<br/>- Websites"]
+            Tpl["Software Templates<br/>- Create new services<br/>- Scaffolding<br/>- Golden paths"]
+            Docs["TechDocs (Documentation)<br/>- Markdown-based<br/>- Auto-generated<br/>- Searchable"]
+        end
+        subgraph Ecosystem["Plugin Ecosystem"]
+            Search["Search Platform"]
+            K8s["Kubernetes Plugin"]
+            CICD["CI/CD Plugin"]
+            Cost["Cost Insights Plugin"]
+            Sec["Security Plugin"]
+            Custom["Custom Plugins"]
+        end
+    end
 ```
 
 ### Key Value Propositions
@@ -97,30 +91,13 @@ Backstage was open-sourced in March 2020 and donated to the CNCF in March 2022, 
 
 ### High-Level Architecture
 
-```
-+-------------------+       +-------------------+
-|                   |       |                   |
-|    Backstage      | HTTP  |    Backstage      |
-|    Frontend       |------>|    Backend         |
-|    (React SPA)    |       |    (Node.js)       |
-|                   |       |                   |
-+-------------------+       +--------+----------+
-                                     |
-                            +--------+----------+
-                            |                   |
-                            |    Database       |
-                            |  (PostgreSQL)     |
-                            |                   |
-                            +--------+----------+
-                                     |
-                    +----------------+----------------+
-                    |                |                |
-              +-----+-----+  +------+------+  +------+------+
-              | GitHub /   |  | Kubernetes  |  | CI/CD       |
-              | GitLab     |  | Clusters    |  | Systems     |
-              | (SCM)      |  |             |  | (Jenkins,   |
-              +------------+  +-------------+  | GH Actions) |
-                                               +-------------+
+```mermaid
+flowchart TD
+    FE["Backstage Frontend<br/>(React SPA)"] -->|"HTTP"| BE["Backstage Backend<br/>(Node.js)"]
+    BE --> DB[("Database<br/>(PostgreSQL)")]
+    BE --> SCM["GitHub / GitLab<br/>(SCM)"]
+    BE --> K8s["Kubernetes Clusters"]
+    BE --> CICD["CI/CD Systems<br/>(Jenkins, GH Actions)"]
 ```
 
 ### Frontend Architecture
@@ -162,26 +139,13 @@ backend.start();
 
 ### Plugin Architecture
 
-```
-+----------------------------------------------------------+
-|                    Backstage App Shell                     |
-|                                                          |
-|  +-----------+  +-----------+  +-----------+             |
-|  | Catalog   |  | Scaffolder|  | TechDocs  |  ...        |
-|  | Plugin    |  | Plugin    |  | Plugin    |             |
-|  +-----------+  +-----------+  +-----------+             |
-|       |              |              |                     |
-|  +-----------+  +-----------+  +-----------+             |
-|  | Catalog   |  | Scaffolder|  | TechDocs  |  ...        |
-|  | Backend   |  | Backend   |  | Backend   |             |
-|  +-----------+  +-----------+  +-----------+             |
-|                                                          |
-+----------------------------------------------------------+
-
-Each plugin consists of:
-  - Frontend: React components + routes
-  - Backend: Express routes + business logic
-  - Common: Shared types and utilities
+```mermaid
+flowchart TD
+    subgraph Shell["Backstage App Shell (Frontend: React + routes / Backend: Express + logic / Common: shared types)"]
+        CP["Catalog Plugin"] --> CB["Catalog Backend"]
+        SP["Scaffolder Plugin"] --> SB["Scaffolder Backend"]
+        TP["TechDocs Plugin"] --> TB["TechDocs Backend"]
+    end
 ```
 
 ---
@@ -206,48 +170,18 @@ The Software Catalog is the heart of Backstage. It tracks all software assets in
 
 ### Entity Relationships
 
-```
-+----------+                    +----------+
-|  Domain  |                    |  Domain  |
-| finance  |                    | shipping |
-+----+-----+                    +----+-----+
-     |                               |
-     | hasPart                       | hasPart
-     v                               v
-+----------+                    +----------+
-|  System  |                    |  System  |
-| payments |                    | logistics|
-+----+-----+                    +----------+
-     |
-     | hasPart
-     v
-+------------+    providesAPI    +----------+
-| Component  | ---------------> |   API    |
-| payment-   |                  | payment- |
-| service    | <--------------- | api      |
-+-----+------+    consumesAPI   +----------+
-      |
-      | dependsOn
-      v
-+------------+
-|  Resource  |
-| payments-  |
-| database   |
-+------------+
+```mermaid
+flowchart TD
+    DomFin["Domain: finance"] -->|"hasPart"| SysPay["System: payments"]
+    DomShip["Domain: shipping"] -->|"hasPart"| SysLog["System: logistics"]
 
-ownedBy
-+------------+     ownedBy      +---------+
-| Component  | ---------------> |  Group  |
-| payment-   |                  | payments|
-| service    |                  | -team   |
-+------------+                  +---------+
-                                    |
-                                    | hasMember
-                                    v
-                                +---------+
-                                |  User   |
-                                | jane.doe|
-                                +---------+
+    SysPay -->|"hasPart"| CompPay["Component: payment-service"]
+    CompPay -->|"providesAPI"| ApiPay["API: payment-api"]
+    ApiPay -->|"consumesAPI"| CompPay
+    CompPay -->|"dependsOn"| ResDB[("Resource: payments-database")]
+
+    CompPay -->|"ownedBy"| GrpPay["Group: payments-team"]
+    GrpPay -->|"hasMember"| UserJane["User: jane.doe"]
 ```
 
 ### Catalog Discovery
@@ -442,31 +376,17 @@ The Scaffolder is Backstage's system for creating new software projects using pr
 
 ### How Templates Work
 
-```
-Developer                  Backstage                    Git Provider
-    |                         |                              |
-    |  1. Select template     |                              |
-    |------------------------>|                              |
-    |                         |                              |
-    |  2. Fill in parameters  |                              |
-    |  (service name, owner,  |                              |
-    |   language, etc.)       |                              |
-    |------------------------>|                              |
-    |                         |                              |
-    |                         |  3. Execute scaffolder       |
-    |                         |     actions:                 |
-    |                         |     - Fetch template         |
-    |                         |     - Apply parameters       |
-    |                         |     - Create repo            |
-    |                         |  --------------------------->|
-    |                         |                              |
-    |                         |     - Set up CI/CD           |
-    |                         |     - Register in catalog    |
-    |                         |     - Create PR              |
-    |                         |  --------------------------->|
-    |                         |                              |
-    |  4. Return repo URL     |                              |
-    |<------------------------|                              |
+```mermaid
+sequenceDiagram
+    participant Dev as "Developer"
+    participant BS as "Backstage"
+    participant Git as "Git Provider"
+
+    Dev->>BS: 1. Select template
+    Dev->>BS: 2. Fill in parameters (service name, owner, language, etc.)
+    BS->>Git: 3a. Execute scaffolder actions (Fetch template, Apply parameters, Create repo)
+    BS->>Git: 3b. Configure repo (Set up CI/CD, Register in catalog, Create PR)
+    BS-->>Dev: 4. Return repo URL
 ```
 
 ### Template Definition
@@ -656,15 +576,10 @@ TechDocs is Backstage's built-in documentation solution that follows the docs-as
 
 ### How TechDocs Works
 
-```
-Repository                     Build Process              Backstage
-+------------------+          +------------------+       +------------------+
-| /docs/           |          |                  |       |                  |
-|   index.md       | -------> | MkDocs builds    | ----> | TechDocs         |
-|   architecture.md|          | HTML from        |       | plugin renders   |
-|   api-guide.md   |          | Markdown         |       | documentation    |
-| mkdocs.yml       |          |                  |       |                  |
-+------------------+          +------------------+       +------------------+
+```mermaid
+flowchart LR
+    Repo["Repository<br/>/docs/index.md<br/>/docs/architecture.md<br/>/docs/api-guide.md<br/>mkdocs.yml"] --> Build["Build Process<br/>MkDocs builds HTML from Markdown"]
+    Build --> Render["Backstage<br/>TechDocs plugin renders documentation"]
 ```
 
 ### Setting Up TechDocs
@@ -698,7 +613,7 @@ metadata:
 
 #### 3. Write Documentation in Markdown
 
-```markdown
+````markdown
 # Payment Service
 
 ## Overview
@@ -707,11 +622,10 @@ The Payment Service handles all payment processing for the platform.
 
 ## Architecture
 
-```
-[Client] --> [API Gateway] --> [Payment Service] --> [Payment Provider]
-                                     |
-                                     v
-                              [Payments DB]
+```mermaid
+flowchart LR
+    Client["Client"] --> GW["API Gateway"] --> Svc["Payment Service"] --> Provider["Payment Provider"]
+    Svc --> DB[("Payments DB")]
 ```
 
 ## Running Locally
@@ -720,7 +634,7 @@ The Payment Service handles all payment processing for the platform.
 npm install
 npm run dev
 ```
-```
+````
 
 ### TechDocs Generation Strategies
 
@@ -856,24 +770,11 @@ Backstage includes a built-in search platform that provides a unified search exp
 
 ### Search Architecture
 
-```
-+------------------+
-|   Search Bar     |
-|   (Frontend)     |
-+--------+---------+
-         |
-+--------v---------+
-|  Search Backend   |
-|  (Collators +     |
-|   Search Engine)  |
-+--------+---------+
-         |
-    +----+----+
-    |         |
-+---v---+ +---v-------+
-|Lunr   | |Elasticsearch|
-|(local)| |(production) |
-+-------+ +-------------+
+```mermaid
+flowchart TD
+    Bar["Search Bar<br/>(Frontend)"] --> Backend["Search Backend<br/>(Collators + Search Engine)"]
+    Backend --> Lunr["Lunr<br/>(local)"]
+    Backend --> ES[("Elasticsearch<br/>(production)")]
 ```
 
 ### Search Collators
@@ -913,18 +814,11 @@ The Backstage permissions framework provides fine-grained access control over ca
 
 ### Permission Model
 
-```
-+------------------+     +------------------+     +------------------+
-|   User Request   | --> | Permission       | --> | Policy Decision  |
-|   (e.g., delete  |     | Evaluation       |     |                  |
-|    a component)  |     |                  |     | ALLOW / DENY /   |
-+------------------+     +--------+---------+     | CONDITIONAL      |
-                                  |               +------------------+
-                         +--------v---------+
-                         | Permission       |
-                         | Policy           |
-                         | (custom logic)   |
-                         +------------------+
+```mermaid
+flowchart LR
+    Req["User Request<br/>(e.g., delete a component)"] --> Eval["Permission Evaluation"]
+    Eval --> Policy["Permission Policy<br/>(custom logic)"]
+    Eval --> Decision["Policy Decision:<br/>ALLOW / DENY / CONDITIONAL"]
 ```
 
 ### Defining a Permission Policy

@@ -6,28 +6,16 @@ Market microstructure is the study of how markets actually work at the lowest le
 
 Understanding microstructure is essential for anyone building trading systems. Every basis point of spread, every microsecond of latency, and every tick of price impact directly affects your P&L.
 
-```
-+------------------------------------------------------------------------+
-|                    MARKET MICROSTRUCTURE OVERVIEW                       |
-+------------------------------------------------------------------------+
-|                                                                        |
-|  PRICE FORMATION          ORDER MATCHING         INFORMATION           |
-|  +------------------+    +------------------+   +------------------+   |
-|  | Order Book        |    | Matching Engines  |   | Informed Trading  |  |
-|  | Bid-Ask Spread    |    | Price-Time FIFO   |   | Kyle's Lambda     |  |
-|  | Depth of Book     |    | Pro-Rata          |   | Glosten-Milgrom   |  |
-|  | Book Imbalance    |    | Auction Mechanisms|   | PIN / VPIN        |  |
-|  +------------------+    +------------------+   +------------------+   |
-|                                                                        |
-|  MARKET MAKING           PRICE IMPACT           FRAGMENTATION          |
-|  +------------------+    +------------------+   +------------------+   |
-|  | Spread Capture    |    | Temporary Impact  |   | Multiple Venues   |  |
-|  | Inventory Risk    |    | Permanent Impact  |   | NBBO / Reg NMS    |  |
-|  | Avellaneda-Stoikov|    | Almgren-Chriss    |   | Dark Pools        |  |
-|  | Adverse Selection |    | Square-Root Law   |   | PFOF              |  |
-|  +------------------+    +------------------+   +------------------+   |
-|                                                                        |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Micro["MARKET MICROSTRUCTURE OVERVIEW"]
+        PF["PRICE FORMATION<br/>Order Book, Bid-Ask Spread,<br/>Depth of Book, Book Imbalance"]
+        OM["ORDER MATCHING<br/>Matching Engines, Price-Time FIFO,<br/>Pro-Rata, Opening/Closing Auctions"]
+        INF["INFORMATION MODELS<br/>Informed Trading, Kyle's Lambda,<br/>Glosten-Milgrom, PIN / VPIN"]
+        MM["MARKET MAKING<br/>Spread Capture, Inventory Skew,<br/>Avellaneda-Stoikov, Adverse Selection"]
+        PI["PRICE IMPACT<br/>Temporary vs Permanent Impact,<br/>Almgren-Chriss, Square-Root Law"]
+        FRAG["FRAGMENTATION<br/>Lit Venues, NBBO / Reg NMS,<br/>Dark Pools, PFOF"]
+    end
 ```
 
 ---

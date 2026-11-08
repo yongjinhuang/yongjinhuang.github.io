@@ -36,23 +36,13 @@ This is one of the fastest-moving and most interview-relevant areas in agentic e
 The evolution of AI-assisted coding has moved through distinct generations, each
 expanding the scope of what the model controls:
 
-```
-GENERATION 0          GENERATION 1         GENERATION 2         GENERATION 3
-(2018-2020)           (2021-2022)          (2023-2024)          (2025+)
-
-Autocomplete          Inline Suggest       Chat + Edit          Autonomous Agent
-+-----------+         +-----------+        +-----------+        +---------------+
-| Complete  |         | Multi-line|        | Explain + |        | Plan          |
-| current   |   -->   | suggest   |  -->   | generate  |  -->   | Search repo   |
-| token     |         | from      |        | from      |        | Edit files    |
-|           |         | context   |        | instruction|        | Run tests     |
-+-----------+         +-----------+        +-----------+        | Debug + fix   |
-                                                                | Create PRs    |
- TabNine, Kite        GitHub Copilot       ChatGPT, Claude      +---------------+
-                      (original)           Cursor Chat
-                                                                 Claude Code
-                                                                 Devin, SWE-agent
-                                                                 Codex, Cursor Agent
+```mermaid
+flowchart LR
+    G0["GENERATION 0 (2018-2020)<br/>Autocomplete<br/>Complete current token<br/>(TabNine, Kite)"]
+    G1["GENERATION 1 (2021-2022)<br/>Inline Suggest<br/>Multi-line suggest from context<br/>(GitHub Copilot)"]
+    G2["GENERATION 2 (2023-2024)<br/>Chat + Edit<br/>Explain + generate from instruction<br/>(ChatGPT, Claude, Cursor Chat)"]
+    G3["GENERATION 3 (2025+)<br/>Autonomous Coding Agent<br/>Plan, Search repo, Edit files,<br/>Run tests, Debug + fix, Create PRs<br/>(Claude Code, Codex, Devin, SWE-agent)"]
+    G0 --> G1 --> G2 --> G3
 ```
 
 ### Key Milestones
@@ -73,35 +63,16 @@ Autocomplete          Inline Suggest       Chat + Edit          Autonomous Agent
 
 ### The Landscape Today
 
-```
-+------------------------------------------------------------------+
-|                   CODING AGENT LANDSCAPE                          |
-+------------------------------------------------------------------+
-|                                                                    |
-|  TERMINAL-NATIVE          IDE-INTEGRATED          CLOUD/ASYNC     |
-|  +-----------------+      +-----------------+     +-------------+ |
-|  | Claude Code     |      | Cursor          |     | Devin       | |
-|  | Aider           |      | Windsurf        |     | Codex       | |
-|  | Mentat          |      | GitHub Copilot  |     | Factory     | |
-|  | gpt-engineer    |      | Cline (VSCode)  |     | Sweep       | |
-|  | SWE-agent       |      | Continue        |     | CodeGen     | |
-|  +-----------------+      +-----------------+     +-------------+ |
-|         |                        |                      |         |
-|    Direct terminal          Editor UI +             Background    |
-|    access, full              inline diff            execution,    |
-|    repo context              + chat panel           PR-based      |
-|                                                                    |
-+------------------------------------------------------------------+
-|                                                                    |
-|  OPEN-SOURCE RESEARCH      PR / CI AGENTS         SPECIALIZED    |
-|  +-----------------+       +-----------------+    +-------------+ |
-|  | SWE-agent       |       | CodeRabbit      |    | Test gen    | |
-|  | OpenHands       |       | Graphite        |    | Migration   | |
-|  | Agentless       |       | Ellipsis        |    | Refactoring | |
-|  | AutoCodeRover   |       | PR-Agent        |    | Security    | |
-|  | Moatless        |       | GitHub Actions  |    | Doc gen     | |
-|  +-----------------+       +-----------------+    +-------------+ |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Landscape["CODING AGENT LANDSCAPE"]
+        Term["TERMINAL-NATIVE (Direct terminal access, full repo context)<br/>Claude Code / Aider / Mentat / gpt-engineer / SWE-agent"]
+        IDE["IDE-INTEGRATED (Editor UI + inline diff + chat panel)<br/>Cursor / Windsurf / GitHub Copilot / Cline / Continue"]
+        Cloud["CLOUD / ASYNC (Background execution, PR-based)<br/>Devin / OpenAI Codex / Factory / Sweep / CodeGen"]
+        OSS["OPEN-SOURCE RESEARCH<br/>SWE-agent / OpenHands / Agentless / AutoCodeRover / Moatless"]
+        PR["PR / CI AGENTS<br/>CodeRabbit / Graphite / Ellipsis / PR-Agent / GitHub Actions"]
+        Spec["SPECIALIZED AGENTS<br/>Test generation / Migration / Refactoring / Security / Doc gen"]
+    end
 ```
 
 ### What Makes Coding Agents Different from General Agents
@@ -125,42 +96,14 @@ SWE-bench is the gold standard for evaluating coding agents. Created by research
 Princeton, it consists of real GitHub issues from popular Python repositories paired with
 their actual pull request solutions.
 
-```
-+------------------------------------------------------------------+
-|                    SWE-BENCH PIPELINE                              |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. CURATE TASK                                                   |
-|  +---------------------------+                                    |
-|  | GitHub Issue (description) |                                   |
-|  | + Repository snapshot      |   From repos like django,         |
-|  | + Failing test(s)          |   scikit-learn, sympy,            |
-|  | + Gold-standard patch      |   matplotlib, flask, etc.         |
-|  +---------------------------+                                    |
-|              |                                                     |
-|              v                                                     |
-|  2. AGENT ATTEMPTS                                                |
-|  +---------------------------+                                    |
-|  | Agent receives:           |                                    |
-|  |   - Issue text            |                                    |
-|  |   - Full repository       |                                    |
-|  |                           |                                    |
-|  | Agent must:               |                                    |
-|  |   - Understand the issue  |                                    |
-|  |   - Find relevant files   |                                    |
-|  |   - Generate a patch      |                                    |
-|  +---------------------------+                                    |
-|              |                                                     |
-|              v                                                     |
-|  3. EVALUATE                                                      |
-|  +---------------------------+                                    |
-|  | Apply agent's patch       |                                    |
-|  | Run test suite            |                                    |
-|  | Pass = resolved           |                                    |
-|  | Fail = unresolved         |                                    |
-|  +---------------------------+                                    |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph SWE["SWE-BENCH PIPELINE"]
+        S1["1. CURATE TASK<br/>- GitHub Issue description<br/>- Repo snapshot (django, scikit-learn, sympy, flask)<br/>- Failing test(s) + Gold patch"]
+        S2["2. AGENT ATTEMPTS<br/>- Receives issue text + full repo<br/>- Understands issue &amp; localizes files<br/>- Generates unified diff patch"]
+        S3["3. EVALUATE<br/>- Apply agent's patch in Docker<br/>- Run FAIL_TO_PASS + PASS_TO_PASS tests<br/>- Pass = Resolved / Fail = Unresolved"]
+        S1 --> S2 --> S3
+    end
 ```
 
 ### SWE-bench Variants
@@ -250,41 +193,15 @@ a codebase well enough to make the _right_ change in the _right_ place.
 
 ### The File Discovery Problem
 
-```
-+------------------------------------------------------------------+
-|               REPO-LEVEL REASONING PIPELINE                       |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. ISSUE UNDERSTANDING                                           |
-|  "Fix: UserSerializer doesn't validate email format"             |
-|          |                                                         |
-|          v                                                         |
-|  2. LOCALIZATION (find relevant files)                            |
-|  +-----------------------------------------------------------+   |
-|  | Strategy A: Keyword search ("UserSerializer", "email")     |   |
-|  | Strategy B: File structure (serializers/, models/, tests/)  |   |
-|  | Strategy C: Dependency graph (what imports what?)           |   |
-|  | Strategy D: Git history (what files changed together?)      |   |
-|  | Strategy E: AST/symbol search (find class UserSerializer)   |   |
-|  +-----------------------------------------------------------+   |
-|          |                                                         |
-|          v                                                         |
-|  3. CONTEXT ASSEMBLY                                              |
-|  +-----------------------------------------------------------+   |
-|  | Read relevant files, extract key sections                   |   |
-|  | Understand types, interfaces, conventions                   |   |
-|  | Identify test patterns to follow                            |   |
-|  +-----------------------------------------------------------+   |
-|          |                                                         |
-|          v                                                         |
-|  4. CHANGE PLANNING                                               |
-|  +-----------------------------------------------------------+   |
-|  | What to change and why                                      |   |
-|  | Which files need edits                                      |   |
-|  | What tests to add/modify                                    |   |
-|  +-----------------------------------------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph RepoReason["REPO-LEVEL REASONING PIPELINE"]
+        S1["1. ISSUE UNDERSTANDING<br/>'Fix: UserSerializer does not validate email format'"]
+        S2["2. LOCALIZATION (Find Relevant Files)<br/>- Strategy A: Keyword search ('UserSerializer', 'email')<br/>- Strategy B: File structure (serializers/, models/, tests/)<br/>- Strategy C: Dependency graph (what imports what?)<br/>- Strategy D: Git history (co-changed files)<br/>- Strategy E: AST / symbol search (class UserSerializer)"]
+        S3["3. CONTEXT ASSEMBLY<br/>- Read relevant files &amp; extract key sections<br/>- Understand types, interfaces, conventions, test patterns"]
+        S4["4. CHANGE PLANNING<br/>- What to change and why<br/>- Which files need edits &amp; which tests to add/modify"]
+        S1 --> S2 --> S3 --> S4
+    end
 ```
 
 ### File Discovery Strategies
@@ -410,25 +327,14 @@ window is finite.
 
 Research from the Agentless paper shows that **localization is the bottleneck**:
 
-```
-+---------------------------------------+
-| TASK: Fix a bug in a 500-file repo    |
-+---------------------------------------+
-|                                        |
-| Step 1: Find the right file(s)        |
-|   - If correct file found: ~60% solve |
-|   - If wrong file: ~5% solve          |
-|   >>> Localization is 10x leverage    |
-|                                        |
-| Step 2: Find the right location       |
-|   - Function, class, or line level    |
-|   - Narrows from ~50K lines to ~50    |
-|                                        |
-| Step 3: Generate the patch            |
-|   - Given correct location, models    |
-|     are surprisingly good at this     |
-|                                        |
-+---------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Funnel["LOCALIZATION FUNNEL (500-File Repo)"]
+        L1["Step 1: Find the Right File(s)<br/>- Correct file found: ~60% solve<br/>- Wrong file: ~5% solve<br/>(10x leverage!)"]
+        L2["Step 2: Find the Right Location<br/>- Function, class, or line level<br/>- Narrows ~50K lines to ~50 lines"]
+        L3["Step 3: Generate the Patch<br/>- High solve rate once localized"]
+        L1 --> L2 --> L3
+    end
 ```
 
 ---
@@ -722,30 +628,12 @@ def find_all_function_calls(source: bytes, parser: Parser) -> list[dict]:
 
 ### Symbol Resolution and Go-to-Definition
 
-```
-+------------------------------------------------------------------+
-|                SYMBOL RESOLUTION PIPELINE                          |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Source: "result = user_service.validate(email)"                  |
-|                                                                    |
-|  Step 1: Parse AST                                                |
-|    -> attribute access: user_service.validate                     |
-|    -> argument: email (Name node)                                  |
-|                                                                    |
-|  Step 2: Resolve user_service                                     |
-|    -> Check local scope -> not found                              |
-|    -> Check imports -> "from services import user_service"        |
-|    -> File: services/user_service.py                              |
-|                                                                    |
-|  Step 3: Resolve .validate method                                 |
-|    -> In services/user_service.py, find "def validate"            |
-|    -> Line 45, takes (self, email: str) -> bool                   |
-|                                                                    |
-|  Step 4: Return definition location                               |
-|    -> services/user_service.py:45                                  |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Src["Source:<br/>result = user_service.validate(email)"] --> S1["Step 1: Parse AST<br/>Attribute: user_service.validate<br/>Arg: email (Name node)"]
+    S1 --> S2["Step 2: Resolve user_service<br/>Check local scope -&gt; Check imports<br/>('from services import user_service')<br/>-&gt; services/user_service.py"]
+    S2 --> S3["Step 3: Resolve .validate<br/>Find 'def validate(self, email: str) -&gt; bool'<br/>at line 45"]
+    S3 --> S4["Step 4: Return Definition<br/>services/user_service.py:45"]
 ```
 
 ### Semantic Code Search
@@ -874,36 +762,31 @@ class TypeInferencer:
 
 All IDE-integrated coding agents follow variations of the same architecture:
 
-```
-+------------------------------------------------------------------+
-|              IDE CODING AGENT ARCHITECTURE                         |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +-------------------+     +-------------------+                  |
-|  |    IDE / Editor    |     |   Agent Backend   |                  |
-|  |                    |     |                    |                  |
-|  |  +-------------+  |     |  +-------------+  |                  |
-|  |  | Chat Panel  |<-|---->|->| LLM API     |  |                  |
-|  |  +-------------+  |     |  +-------------+  |                  |
-|  |  +-------------+  | API |  +-------------+  |                  |
-|  |  | Inline Diff |<-|---->|->| Tool Engine |  |                  |
-|  |  +-------------+  |     |  +-------------+  |                  |
-|  |  +-------------+  |     |  +-------------+  |                  |
-|  |  | File Tree   |<-|---->|->| Context     |  |                  |
-|  |  +-------------+  |     |  | Manager     |  |                  |
-|  |  +-------------+  |     |  +-------------+  |                  |
-|  |  | Terminal    |<-|---->|->| Sandbox     |  |                  |
-|  |  +-------------+  |     |  +-------------+  |                  |
-|  +-------------------+     +-------------------+                  |
-|         |                           |                              |
-|         v                           v                              |
-|  +-------------------+     +-------------------+                  |
-|  | Language Server   |     |  Model Provider   |                  |
-|  | (LSP)            |     |  (Anthropic/       |                  |
-|  |                   |     |   OpenAI/local)    |                  |
-|  +-------------------+     +-------------------+                  |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph IDE["IDE / Editor"]
+        Chat["Chat Panel"]
+        Diff["Inline Diff"]
+        Tree["File Tree"]
+        Term["Terminal"]
+    end
+
+    subgraph Backend["Agent Backend"]
+        LLM["LLM API Client"]
+        Tools["Tool Engine"]
+        Ctx["Context Manager"]
+        Sand["Sandbox"]
+    end
+
+    LSP["Language Server (LSP)"]
+    Prov["Model Provider<br/>(Anthropic / OpenAI / Local)"]
+
+    Chat <--> LLM
+    Diff <--> Tools
+    Tree <--> Ctx
+    Term <--> Sand
+    IDE --> LSP
+    Backend --> Prov
 ```
 
 ### Product Comparison
@@ -937,107 +820,47 @@ All IDE-integrated coding agents follow variations of the same architecture:
 Claude Code is a terminal-native coding agent. Its architecture is particularly
 interview-relevant because it demonstrates key ACI design principles:
 
-```
-+------------------------------------------------------------------+
-|                  CLAUDE CODE ARCHITECTURE                          |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Terminal Input                                                    |
-|      |                                                             |
-|      v                                                             |
-|  +-----------------------------------------------------------+   |
-|  |  Agent Loop (TypeScript)                                    |   |
-|  |                                                             |   |
-|  |  +----------+    +-----------+    +------------------+     |   |
-|  |  | System   |--->| Anthropic |--->| Tool Execution   |     |   |
-|  |  | Prompt   |    | API       |    |                  |     |   |
-|  |  | Builder  |    | (Claude)  |    | - Read file      |     |   |
-|  |  +----------+    +-----------+    | - Edit file      |     |   |
-|  |       ^               |           | - Bash command   |     |   |
-|  |       |               v           | - Glob search    |     |   |
-|  |  +----------+    +-----------+    | - Grep search    |     |   |
-|  |  | Context  |    | Response  |    | - Write file     |     |   |
-|  |  | (CLAUDE  |    | Parser    |    | - Sub-agents     |     |   |
-|  |  |  .md,    |    +-----------+    | - MCP tools      |     |   |
-|  |  |  memory) |                     | - Notebook edit  |     |   |
-|  |  +----------+                     +------------------+     |   |
-|  |                                                             |   |
-|  |  Permission System:                                         |   |
-|  |  - File reads: auto-approved                                |   |
-|  |  - File writes: require approval (unless allowlisted)       |   |
-|  |  - Bash commands: require approval (unless allowlisted)     |   |
-|  |  - Destructive git ops: always require approval             |   |
-|  +-----------------------------------------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    In["Terminal Input"] --> Sys
+    subgraph Loop["CLAUDE CODE AGENT LOOP (TypeScript)"]
+        Ctx["Context Loader<br/>(CLAUDE.md, auto-memory)"] --> Sys["System Prompt Builder"]
+        Sys --> API["Anthropic API<br/>(Claude)"]
+        API --> Parse["Response Parser"]
+        API --> Tools["Tool Execution<br/>- Read / Edit / Write file<br/>- Bash command<br/>- Glob / Grep search<br/>- Sub-agents &amp; MCP tools<br/>- NotebookEdit"]
+        Perm["Permission System:<br/>- Reads: auto-approved<br/>- Writes &amp; Bash: approval / allowlist<br/>- Destructive git ops: always confirm"] -.-> Tools
+        Tools --> API
+    end
 ```
 
 ### Cursor Architecture Pattern
 
-```
-+------------------------------------------------------------------+
-|                   CURSOR ARCHITECTURE                              |
-+------------------------------------------------------------------+
-|                                                                    |
-|  VSCode Fork                                                      |
-|      |                                                             |
-|      +---> Tab Completion (fast, single-line/block)               |
-|      |         Uses: speculative decoding, small model             |
-|      |         Latency target: <300ms                             |
-|      |                                                             |
-|      +---> Cmd+K Inline Edit (targeted edit)                      |
-|      |         Uses: selection + instruction -> diff               |
-|      |         Model: Claude/GPT with edit format                 |
-|      |                                                             |
-|      +---> Chat Panel (conversational)                            |
-|      |         Uses: full conversation context                     |
-|      |         Can reference files with @-mentions                 |
-|      |                                                             |
-|      +---> Agent Mode (autonomous)                                |
-|               Uses: tool calling, file ops, terminal               |
-|               Full agentic loop with approval gates               |
-|                                                                    |
-|  Key Innovation: Context engine                                    |
-|  - Codebase indexing (embeddings for every file)                  |
-|  - Automatic context selection based on cursor position           |
-|  - Recently edited files prioritized                              |
-|  - @-mention system for explicit context                          |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Cursor["CURSOR ARCHITECTURE"]
+        Fork["VSCode Fork"]
+        Tab["Tab Completion (&lt;300ms)<br/>Speculative decoding + custom fast model"]
+        CmdK["Cmd+K Inline Edit<br/>Selection + instruction -&gt; inline diff"]
+        Chat["Chat Panel<br/>Conversational + @-mentions"]
+        Agent["Agent Mode (Autonomous)<br/>Tool calling, file ops, terminal + approval gates"]
+        Ctx["Context Engine<br/>- Codebase vector indexing<br/>- Cursor-position &amp; recent-edit prioritization<br/>- Explicit @-mentions"]
+
+        Fork --> Tab & CmdK & Chat & Agent
+        Ctx -.-> Tab & CmdK & Chat & Agent
+    end
 ```
 
 ### GitHub Copilot Architecture
 
-```
-+------------------------------------------------------------------+
-|               GITHUB COPILOT ARCHITECTURE                         |
-+------------------------------------------------------------------+
-|                                                                    |
-|  IDE Extension (VSCode, JetBrains, Neovim)                       |
-|      |                                                             |
-|      v                                                             |
-|  +-----------------------------------------------------------+   |
-|  |  Context Assembly                                           |   |
-|  |  - Current file (up to cursor)                              |   |
-|  |  - Open tabs (prioritized by relevance)                     |   |
-|  |  - Import graph (referenced files)                          |   |
-|  |  - Language-specific context (type stubs, headers)          |   |
-|  +-----------------------------------------------------------+   |
-|      |                                                             |
-|      v                                                             |
-|  +-----------------------------------------------------------+   |
-|  |  GitHub Cloud                                               |   |
-|  |  - Model inference (Codex / GPT-4 / Claude)                |   |
-|  |  - RAG over repo (Copilot Workspace)                        |   |
-|  |  - Multi-step agent (Copilot Agent)                         |   |
-|  +-----------------------------------------------------------+   |
-|      |                                                             |
-|      v                                                             |
-|  +-----------------------------------------------------------+   |
-|  |  Inline Ghost Text / Chat / Agent Response                  |   |
-|  +-----------------------------------------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Copilot["GITHUB COPILOT ARCHITECTURE"]
+        Ext["IDE Extension<br/>(VSCode, JetBrains, Neovim)"]
+        Ctx["Context Assembly<br/>- Current file (prefix + suffix)<br/>- Open tabs (ranked by Jaccard similarity)<br/>- Import graph &amp; type stubs"]
+        Cloud["GitHub Cloud<br/>- Multi-model inference (GPT-4o / Claude / o3)<br/>- Repo RAG (Copilot Workspace)<br/>- Multi-step Copilot Coding Agent"]
+        Out["Inline Ghost Text / Chat / Agent Response"]
+        Ext --> Ctx --> Cloud --> Out
+    end
 ```
 
 ---
@@ -1048,42 +871,11 @@ interview-relevant because it demonstrates key ACI design principles:
 
 PR agents automate code review, test generation, and PR management:
 
-```
-+------------------------------------------------------------------+
-|               PR AGENT WORKFLOW                                    |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Developer pushes code                                            |
-|      |                                                             |
-|      v                                                             |
-|  GitHub/GitLab Webhook fires                                      |
-|      |                                                             |
-|      +---> PR Agent receives event                                |
-|      |                                                             |
-|      v                                                             |
-|  +-----------------------------------------------------------+   |
-|  |  ANALYSIS PHASE                                             |   |
-|  |  1. Fetch diff (changed files)                              |   |
-|  |  2. Fetch related context (imports, tests, types)           |   |
-|  |  3. Analyze changes with LLM                                |   |
-|  |     - Code quality issues                                   |   |
-|  |     - Security vulnerabilities                              |   |
-|  |     - Performance concerns                                  |   |
-|  |     - Missing tests                                         |   |
-|  |     - Style violations                                      |   |
-|  +-----------------------------------------------------------+   |
-|      |                                                             |
-|      v                                                             |
-|  +-----------------------------------------------------------+   |
-|  |  ACTION PHASE                                               |   |
-|  |  - Post inline review comments                              |   |
-|  |  - Generate PR summary                                      |   |
-|  |  - Suggest fixes (as commits or suggestions)                |   |
-|  |  - Auto-generate missing tests                              |   |
-|  |  - Update documentation                                     |   |
-|  +-----------------------------------------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Push["Developer pushes code"] --> Hook["GitHub / GitLab Webhook fires"] --> Agent["PR Agent receives event"]
+    Agent --> Analysis["ANALYSIS PHASE<br/>1. Fetch diff (changed files)<br/>2. Fetch related context (imports, tests, types)<br/>3. Analyze with LLM: quality, security, perf, missing tests, style"]
+    Analysis --> Action["ACTION PHASE<br/>- Post inline review comments &amp; PR summary<br/>- Suggest committable fixes<br/>- Auto-generate missing tests &amp; update docs"]
 ```
 
 ### Implementing a PR Review Agent
@@ -1237,40 +1029,12 @@ class CITestGenerator:
 
 ### Deployment Agents
 
-```
-+------------------------------------------------------------------+
-|              DEPLOYMENT AGENT PIPELINE                             |
-+------------------------------------------------------------------+
-|                                                                    |
-|  PR Merged to main                                                |
-|      |                                                             |
-|      v                                                             |
-|  +------------------+                                             |
-|  | Pre-deploy Check |  Agent verifies:                            |
-|  | Agent            |  - All tests pass                           |
-|  |                  |  - No security issues                       |
-|  |                  |  - DB migrations safe                       |
-|  |                  |  - Config changes valid                     |
-|  +--------+---------+                                             |
-|           |                                                        |
-|           v                                                        |
-|  +------------------+                                             |
-|  | Canary Deploy    |  Agent monitors:                            |
-|  | Agent            |  - Error rates                              |
-|  |                  |  - Latency percentiles                      |
-|  |                  |  - Resource usage                           |
-|  +--------+---------+                                             |
-|           |                                                        |
-|      +----+----+                                                  |
-|      |         |                                                  |
-|   Healthy   Unhealthy                                             |
-|      |         |                                                  |
-|      v         v                                                  |
-|  Full Roll  Rollback                                              |
-|  Out        + Alert                                               |
-|             + Root Cause Agent                                    |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Merge["PR Merged to main"] --> Pre["Pre-Deploy Check Agent<br/>Verifies: tests pass, security clean, DB migrations safe, config valid"]
+    Pre --> Canary["Canary Deploy Agent<br/>Monitors: error rates, latency percentiles, resource usage"]
+    Canary -->|"Healthy"| Full["Full Rollout"]
+    Canary -->|"Unhealthy"| Rollback["Auto-Rollback + Alert + Root Cause Agent"]
 ```
 
 ---
@@ -1282,44 +1046,12 @@ to execute code and tests to verify its work without risking the host system.
 
 ### Sandbox Architecture
 
-```
-+------------------------------------------------------------------+
-|               SANDBOX ARCHITECTURE                                 |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +-----------------------------------------------------------+   |
-|  |  Agent Process                                              |   |
-|  |                                                             |   |
-|  |  "Run pytest tests/test_serializer.py"                     |   |
-|  +----------------------------+------------------------------+   |
-|                               |                                   |
-|                               v                                   |
-|  +-----------------------------------------------------------+   |
-|  |  Sandbox Manager                                            |   |
-|  |                                                             |   |
-|  |  1. Choose isolation level based on command                 |   |
-|  |  2. Apply resource limits (CPU, memory, time, disk)        |   |
-|  |  3. Mount repo as volume (read-write or read-only)         |   |
-|  |  4. Execute command                                         |   |
-|  |  5. Capture stdout, stderr, exit code                       |   |
-|  |  6. Enforce timeout                                         |   |
-|  |  7. Return results to agent                                 |   |
-|  +-----------------------------------------------------------+   |
-|                               |                                   |
-|              +----------------+----------------+                  |
-|              |                |                |                   |
-|              v                v                v                   |
-|  +----------------+  +---------------+  +----------------+        |
-|  | Docker/OCI     |  | gVisor/Firecracker | Nsjail/Bubblewrap |  |
-|  | Container      |  | MicroVM       |  | Process Sandbox|        |
-|  |                |  |               |  |                |        |
-|  | - Full OS      |  | - Kernel-level|  | - Lightweight  |        |
-|  |   isolation    |  |   isolation   |  | - Namespace    |        |
-|  | - Slow startup |  | - Fast start  |  |   isolation    |        |
-|  | - Heavy        |  | - Secure      |  | - Fast         |        |
-|  +----------------+  +---------------+  +----------------+        |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Agent["Agent Process<br/>'Run pytest tests/test_serializer.py'"] --> Mgr["Sandbox Manager<br/>1. Choose isolation level<br/>2. Apply CPU / memory / time / disk limits<br/>3. Mount repo volume (RW or RO)<br/>4. Execute &amp; capture stdout, stderr, exit code"]
+    Mgr --> S1["Docker / OCI Container<br/>Full OS isolation, heavier"]
+    Mgr --> S2["gVisor / Firecracker MicroVM<br/>Kernel-level isolation, fast start, secure"]
+    Mgr --> S3["Nsjail / Bubblewrap<br/>Lightweight process/namespace sandbox"]
 ```
 
 ### Implementing a Sandbox Manager
@@ -1423,33 +1155,20 @@ class SandboxExecutor:
 
 OpenHands (formerly OpenDevin) uses a particularly well-designed sandbox:
 
-```
-+------------------------------------------------------------------+
-|              OPENHANDS SANDBOX ARCHITECTURE                        |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +-------------------+         +-------------------------+        |
-|  |  Agent Runtime    |         |  Sandbox Container      |        |
-|  |  (Host)           |         |  (Docker)               |        |
-|  |                   |   gRPC  |                         |        |
-|  |  Agent Loop  -----+-------->|  Action Executor        |        |
-|  |                   |         |  - File operations      |        |
-|  |  Observation <----+---------+  - Shell commands       |        |
-|  |  Handler          |         |  - Browser (Playwright) |        |
-|  |                   |         |  - Code interpreter     |        |
-|  +-------------------+         |                         |        |
-|                                |  Persistent workspace:  |        |
-|                                |  /workspace/repo/       |        |
-|                                +-------------------------+        |
-|                                                                    |
-|  Key design choices:                                              |
-|  - Agent and sandbox in separate processes                        |
-|  - gRPC for structured communication                              |
-|  - Sandbox state persists across actions                          |
-|  - Agent can observe file changes, terminal output                |
-|  - Browser available for web-related tasks                        |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Host["Agent Runtime (Host Process)"]
+        Loop["Agent Loop"]
+        Obs["Observation Handler"]
+    end
+
+    subgraph Sandbox["Sandbox Container (Docker — Persistent /workspace/repo/)"]
+        Exec["Action Executor<br/>- File operations<br/>- Shell commands<br/>- Browser (Playwright)<br/>- IPython Code Interpreter"]
+    end
+
+    Loop -->|"gRPC Action"| Exec
+    Exec -->|"gRPC Observation"| Obs
+    Obs --> Loop
 ```
 
 ### Security Considerations
@@ -1474,39 +1193,16 @@ across multiple files while maintaining consistency.
 
 ### The Multi-File Challenge
 
-```
-+------------------------------------------------------------------+
-|          MULTI-FILE EDIT COORDINATION                              |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Task: "Add email validation to the User model"                  |
-|                                                                    |
-|  Files that need changes:                                         |
-|                                                                    |
-|  models/user.py          +-- Add email field validation           |
-|       |                                                            |
-|       +--- serializers/user_serializer.py                         |
-|       |         +-- Update serializer to use validation           |
-|       |                                                            |
-|       +--- tests/test_user.py                                     |
-|       |         +-- Add test for email validation                 |
-|       |                                                            |
-|       +--- tests/test_serializer.py                               |
-|       |         +-- Add serializer validation test                |
-|       |                                                            |
-|       +--- migrations/0042_add_email_validation.py                |
-|       |         +-- Database migration                            |
-|       |                                                            |
-|       +--- api/views.py                                           |
-|                 +-- Update error handling for new validation      |
-|                                                                    |
-|  Constraints:                                                     |
-|  - All files must be consistent with each other                   |
-|  - Types must match across boundaries                             |
-|  - Tests must import the right symbols                            |
-|  - Migration must match model changes                             |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Model["models/user.py<br/>Add email field validation"]
+    Ser["serializers/user_serializer.py<br/>Update serializer validation"]
+    TUser["tests/test_user.py<br/>Add model validation test"]
+    TSer["tests/test_serializer.py<br/>Add serializer validation test"]
+    Mig["migrations/0042_add_email_validation.py<br/>Database schema migration"]
+    Views["api/views.py<br/>Update error handling"]
+
+    Model --> Ser & TUser & TSer & Mig & Views
 ```
 
 ### Multi-File Edit Strategies
@@ -1680,58 +1376,17 @@ class ConsistencyChecker:
 
 ### Automated Review Architecture
 
-```
-+------------------------------------------------------------------+
-|              CODE REVIEW AGENT ARCHITECTURE                        |
-+------------------------------------------------------------------+
-|                                                                    |
-|  PR Diff Input                                                    |
-|      |                                                             |
-|      v                                                             |
-|  +-----------------------------------------------------------+   |
-|  |  REVIEW PIPELINE                                            |   |
-|  |                                                             |   |
-|  |  Stage 1: Static Analysis (fast, deterministic)             |   |
-|  |  +-----------------------------------------------------+   |   |
-|  |  | - Lint (ESLint, Ruff, pylint)                        |   |   |
-|  |  | - Type check (mypy, tsc)                             |   |   |
-|  |  | - Format check (prettier, black)                     |   |   |
-|  |  | - Security scan (Semgrep, Bandit)                    |   |   |
-|  |  +-----------------------------------------------------+   |   |
-|  |                    |                                        |   |
-|  |                    v                                        |   |
-|  |  Stage 2: LLM Review (slower, nuanced)                     |   |
-|  |  +-----------------------------------------------------+   |   |
-|  |  | - Logic correctness                                  |   |   |
-|  |  | - Edge case analysis                                 |   |   |
-|  |  | - Performance implications                           |   |   |
-|  |  | - API design review                                  |   |   |
-|  |  | - Test adequacy                                      |   |   |
-|  |  +-----------------------------------------------------+   |   |
-|  |                    |                                        |   |
-|  |                    v                                        |   |
-|  |  Stage 3: Contextual Review (requires repo understanding)   |   |
-|  |  +-----------------------------------------------------+   |   |
-|  |  | - Architectural consistency                          |   |   |
-|  |  | - Pattern adherence (does this match existing code?) |   |   |
-|  |  | - Impact analysis (what might break?)                |   |   |
-|  |  | - Migration safety                                   |   |   |
-|  |  +-----------------------------------------------------+   |   |
-|  |                    |                                        |   |
-|  |                    v                                        |   |
-|  |  Stage 4: Aggregate & Prioritize                            |   |
-|  |  +-----------------------------------------------------+   |   |
-|  |  | - Deduplicate findings                               |   |   |
-|  |  | - Assign severity (critical > high > medium > low)   |   |   |
-|  |  | - Group by file                                      |   |   |
-|  |  | - Generate summary                                   |   |   |
-|  |  +-----------------------------------------------------+   |   |
-|  +-----------------------------------------------------------+   |
-|      |                                                             |
-|      v                                                             |
-|  PR Comments (inline + summary)                                   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Diff["PR Diff Input"] --> S1
+    subgraph Pipe["CODE REVIEW PIPELINE"]
+        S1["Stage 1: Static Analysis (Fast, Deterministic)<br/>Lint (ESLint/Ruff), Type check (mypy/tsc), Format, Security (Semgrep/Bandit)"]
+        S2["Stage 2: LLM Review (Nuanced)<br/>Logic correctness, edge cases, performance, API design, test adequacy"]
+        S3["Stage 3: Contextual Review (Repo-Wide)<br/>Architectural consistency, pattern adherence, downstream impact, migration safety"]
+        S4["Stage 4: Aggregate &amp; Prioritize<br/>Deduplicate findings, rank severity (critical &gt; high &gt; med &gt; low), group by file"]
+        S1 --> S2 --> S3 --> S4
+    end
+    S4 --> Out["PR Comments (Inline + Summary)"]
 ```
 
 ### Review Categories and Severity
@@ -2073,34 +1728,15 @@ and least understood aspects of building coding agents.
 The term ACI was coined by the SWE-agent team, drawing an analogy to HCI (Human-Computer
 Interface):
 
-```
-+------------------------------------------------------------------+
-|              HCI vs ACI                                            |
-+------------------------------------------------------------------+
-|                                                                    |
-|  HCI (Human-Computer Interface)                                   |
-|  +-------------------+         +-------------------+              |
-|  |  Human            |  GUI/   |  Computer          |              |
-|  |  - Visual         |  CLI    |  - File system     |              |
-|  |  - Spatial        |-------->|  - Processes       |              |
-|  |  - Sequential     |         |  - Network         |              |
-|  |  - Error-tolerant |  <------|  - Memory          |              |
-|  +-------------------+         +-------------------+              |
-|                                                                    |
-|  ACI (Agent-Computer Interface)                                   |
-|  +-------------------+         +-------------------+              |
-|  |  LLM Agent        |  Tools  |  Computer          |              |
-|  |  - Text-based     |  (API)  |  - File system     |              |
-|  |  - Token-limited  |-------->|  - Processes       |              |
-|  |  - No visual      |         |  - Network         |              |
-|  |  - Fragile to     |  <------|  - Memory          |              |
-|  |    ambiguity      |         |                    |              |
-|  +-------------------+         +-------------------+              |
-|                                                                    |
-|  Key difference: agents cannot "see" a screen or "scroll"         |
-|  through a file. Every interaction must be explicit text I/O.     |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph HCI["HCI (Human-Computer Interface)"]
+        Human["Human<br/>- Visual &amp; spatial<br/>- Sequential<br/>- Error-tolerant"] <-->|"GUI / Interactive CLI"| Comp1["Computer<br/>(FS, Processes, Network, Memory)"]
+    end
+
+    subgraph ACI["ACI (Agent-Computer Interface)"]
+        Agent["LLM Agent<br/>- Text-based &amp; token-limited<br/>- No visual scroll<br/>- Sensitive to ambiguity"] <-->|"Structured Tool APIs<br/>(Explicit text I/O)"| Comp2["Computer<br/>(FS, Processes, Network, Memory)"]
+    end
 ```
 
 ### Core ACI Design Principles
@@ -2207,37 +1843,10 @@ def list_directory(path: str = ".") -> str:
 
 ### SWE-agent ACI vs Claude Code ACI
 
-```
-+------------------------------------------------------------------+
-|           ACI COMPARISON: SWE-agent vs Claude Code                |
-+------------------------------------------------------------------+
-|                                                                    |
-| SWE-agent ACI                    Claude Code ACI                  |
-| +--------------------------+     +--------------------------+     |
-| | Tools:                   |     | Tools:                   |     |
-| | - open (file viewer)     |     | - Read                   |     |
-| | - goto (line number)     |     | - Edit (search/replace)  |     |
-| | - scroll_up/down         |     | - Write                  |     |
-| | - search_file            |     | - Glob (file search)     |     |
-| | - search_dir             |     | - Grep (content search)  |     |
-| | - find_file              |     | - Bash (terminal)        |     |
-| | - edit (line range)      |     | - Sub-agents (Task)      |     |
-| | - create                 |     | - MCP tools              |     |
-| | - submit                 |     | - NotebookEdit           |     |
-| +--------------------------+     +--------------------------+     |
-| | Window: 100 lines visible|     | Window: full file or      |     |
-| | Must scroll to see more  |     |   paginated with offset   |     |
-| |                          |     |                           |     |
-| | Edit: by line number     |     | Edit: by exact text match |     |
-| |   "edit 15:20"           |     |   "replace X with Y"     |     |
-| |                          |     |                           |     |
-| | Metaphor: text editor    |     | Metaphor: developer CLI  |     |
-| +--------------------------+     +--------------------------+     |
-|                                                                    |
-| Key insight: Claude Code's search/replace avoids the              |
-| line-number accuracy problem that plagues diff-based approaches.  |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    SWE["SWE-agent ACI (Metaphor: Windowed Text Editor)<br/>- Tools: open, goto, scroll_up/down, search_file, search_dir, find_file, edit, create, submit<br/>- View: 100-line sliding window<br/>- Edit: By line range ('edit 15:20')"]
+    CC["Claude Code ACI (Metaphor: Developer CLI)<br/>- Tools: Read, Edit (search/replace), Write, Glob, Grep, Bash, Sub-agents, MCP, NotebookEdit<br/>- View: Full file or paginated offset/limit<br/>- Edit: Exact string search/replace (avoids line-number drift)"]
 ```
 
 ### Designing Tools for Coding Agents
@@ -2349,43 +1958,18 @@ Research from the SWE-agent paper shows ACI design has massive impact:
 
 The system needs four major components: localization, planning, editing, and validation.
 
-```
-+------------------------------------------------------------------+
-|  GITHUB ISSUE RESOLUTION AGENT                                    |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Input: Issue text + Repository snapshot                          |
-|                                                                    |
-|  Phase 1: LOCALIZE                                                |
-|  - Parse issue for keywords, symbols, file paths, error messages  |
-|  - Multi-strategy search: grep, semantic, AST symbol search       |
-|  - Rank candidate files by relevance                              |
-|  - Read top candidates to confirm relevance                       |
-|                                                                    |
-|  Phase 2: PLAN                                                    |
-|  - Analyze the issue root cause from relevant code                |
-|  - Determine which files need changes                             |
-|  - Plan the change sequence (types -> impl -> tests)              |
-|  - Identify test files to run                                     |
-|                                                                    |
-|  Phase 3: EDIT                                                    |
-|  - Apply search/replace edits to each file                        |
-|  - Use dependency order (edit interfaces before implementations)  |
-|  - Keep edits minimal and focused                                 |
-|                                                                    |
-|  Phase 4: VALIDATE                                                |
-|  - Run the failing test(s) mentioned in the issue                 |
-|  - Run the broader test suite to check for regressions            |
-|  - If tests fail: analyze error, revise plan, re-edit (loop)      |
-|  - If tests pass: generate PR with summary                        |
-|                                                                    |
-|  Key design decisions:                                            |
-|  - Max 5 edit-test-debug iterations (cost control)                |
-|  - Sandbox execution for all test runs                            |
-|  - Context budget: reserve 30% for reasoning/output               |
-|  - Fallback: if stuck, return best partial fix + explanation      |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    In["Input: Issue Text + Repository Snapshot"]
+    P1["Phase 1: LOCALIZE<br/>- Extract keywords, symbols, stack traces<br/>- Multi-strategy search (grep, semantic, AST)<br/>- Rank &amp; read top candidate files"]
+    P2["Phase 2: PLAN<br/>- Identify root cause<br/>- Sequence edits (types -&gt; impl -&gt; tests)<br/>- Select target test suite"]
+    P3["Phase 3: EDIT<br/>- Apply minimal search/replace edits in dependency order"]
+    P4{"Phase 4: VALIDATE (Sandboxed)<br/>Run reproduction test + regression suite"}
+    PR["Generate PR with Summary"]
+
+    In --> P1 --> P2 --> P3 --> P4
+    P4 -->|"Tests Pass"| PR
+    P4 -->|"Tests Fail (Max 5 iterations)"| P2
 ```
 
 ---
@@ -2588,46 +2172,16 @@ Step 7: CREATE PR
 
 ### Coding Agent Architecture Template
 
-```
-+------------------------------------------------------------------+
-|              CODING AGENT REFERENCE ARCHITECTURE                  |
-+------------------------------------------------------------------+
-|                                                                    |
-|  INPUT: Task description (issue, feature request, bug report)     |
-|                                                                    |
-|  +-----------------------------------------------------------+   |
-|  |                    AGENT LOOP                               |   |
-|  |                                                             |   |
-|  |  +--------+    +--------+    +--------+    +--------+      |   |
-|  |  |LOCALIZE|--->| PLAN   |--->| EDIT   |--->|VALIDATE|      |   |
-|  |  |        |    |        |    |        |    |        |      |   |
-|  |  |Search  |    |Analyze |    |Apply   |    |Run     |      |   |
-|  |  |Read    |    |Decide  |    |changes |    |tests   |      |   |
-|  |  |Explore |    |Order   |    |        |    |Check   |      |   |
-|  |  +--------+    +--------+    +--------+    +---+----+      |   |
-|  |                                                |            |   |
-|  |                              +-------+---------+            |   |
-|  |                              |                 |            |   |
-|  |                           PASS              FAIL            |   |
-|  |                              |                 |            |   |
-|  |                              v                 v            |   |
-|  |                          SUBMIT          DIAGNOSE           |   |
-|  |                                          + loop back        |   |
-|  +-----------------------------------------------------------+   |
-|                                                                    |
-|  TOOLS:                                                           |
-|  - File search (glob, grep, semantic)                             |
-|  - File read (paginated, with line numbers)                       |
-|  - File edit (search-and-replace)                                 |
-|  - File write (new files)                                         |
-|  - Bash (terminal commands, test execution)                       |
-|  - (Optional) LSP, AST parser, git operations                    |
-|                                                                    |
-|  SANDBOX: Container isolation for code execution                  |
-|  CONTEXT MANAGEMENT: Paginate, summarize, prune                   |
-|  GUARD RAILS: Permission gates, cost limits, timeout              |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    In["INPUT: Task Description (Issue, Feature Request, Bug Report)"] --> Loc
+    subgraph Loop["CODING AGENT LOOP (Tools: Search, Read, Edit, Write, Bash, LSP/AST)"]
+        Loc["1. LOCALIZE<br/>Search, Read, Explore"] --> Plan["2. PLAN<br/>Analyze, Decide, Order"]
+        Plan --> Edit["3. EDIT<br/>Apply search/replace changes"]
+        Edit --> Val{"4. VALIDATE<br/>Run tests &amp; typecheck in Sandbox"}
+        Val -->|"FAIL"| Diag["DIAGNOSE<br/>Analyze error &amp; loop back"] --> Plan
+    end
+    Val -->|"PASS"| Sub["SUBMIT PR / PATCH"]
 ```
 
 ### Key Metrics Comparison

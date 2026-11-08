@@ -31,24 +31,12 @@ environment, reasons about what to do, acts, and then feeds the result back
 in as the next observation. The loop continues until a stopping condition is
 met (task complete, max iterations, error).
 
-```
-+----------------------------------------------------------+
-|                     THE AGENT LOOP                       |
-|                                                          |
-|   +----------+     +---------+     +--------+            |
-|   |          |     |         |     |        |            |
-|   | OBSERVE  +---->| THINK   +---->|  ACT   |            |
-|   |          |     | (LLM)   |     |        |            |
-|   +----^-----+     +---------+     +---+----+            |
-|        |                               |                 |
-|        |        +------------+         |                 |
-|        +--------+ FEEDBACK   |<--------+                 |
-|                 | (tool result,        |                 |
-|                 |  env change)         |                 |
-|                 +------------+         |                 |
-|                                                          |
-|   Stop condition: task_complete OR max_steps reached     |
-+----------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Loop["THE AGENT LOOP (Stop condition: task_complete OR max_steps reached)"]
+        Obs["OBSERVE"] --> Think["THINK<br/>(LLM)"] --> Act["ACT"]
+        Act --> FB["FEEDBACK<br/>(tool result, env change)"] --> Obs
+    end
 ```
 
 ### Why a Loop?
@@ -144,67 +132,28 @@ action execution. At each step the LLM explicitly produces a **Thought**
 **Observation** (tool result). This structure makes the agent's reasoning
 transparent and debuggable.
 
-```
-+----------------------------------------------------------------+
-|                       ReAct PATTERN                            |
-|                                                                |
-|  Step 1:                                                       |
-|    Thought: "I need to find the population of France."         |
-|    Action:  search("population of France 2024")                |
-|    Observation: "67.75 million (2024 estimate)"                |
-|                                                                |
-|  Step 2:                                                       |
-|    Thought: "Now I need the population of Germany."            |
-|    Action:  search("population of Germany 2024")               |
-|    Observation: "84.48 million (2024 estimate)"                |
-|                                                                |
-|  Step 3:                                                       |
-|    Thought: "I have both numbers. Germany > France by ~16.7M." |
-|    Action:  finish("Germany has more people: 84.48M vs 67.75M")|
-|    Observation: [DONE]                                         |
-+----------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph ReAct["ReAct PATTERN TRACE"]
+        S1["Step 1<br/>- Thought: 'I need to find the population of France.'<br/>- Action: search('population of France 2024')<br/>- Observation: '67.75 million (2024 estimate)'"]
+        S2["Step 2<br/>- Thought: 'Now I need the population of Germany.'<br/>- Action: search('population of Germany 2024')<br/>- Observation: '84.48 million (2024 estimate)'"]
+        S3["Step 3<br/>- Thought: 'I have both numbers. Germany &gt; France by ~16.7M.'<br/>- Action: finish('Germany has more people: 84.48M vs 67.75M')<br/>- Observation: [DONE]"]
+        S1 --> S2 --> S3
+    end
 ```
 
 ### Detailed Flow
 
-```
-     User Question
-          |
-          v
-  +-------+--------+
-  | Format prompt   |
-  | with ReAct      |
-  | instructions    |
-  +-------+--------+
-          |
-          v
-  +-------+--------+     +------------------+
-  | LLM generates   |     |                  |
-  | Thought + Action +---->| Parse action     |
-  |                  |     | from LLM output  |
-  +------------------+     +--------+---------+
-                                    |
-                           +--------v---------+
-                           | Execute tool      |
-                           | (search, calc,    |
-                           |  code, etc.)      |
-                           +--------+----------+
-                                    |
-                           +--------v---------+
-                           | Append            |
-                           | Observation to    |
-                           | conversation      |
-                           +--------+----------+
-                                    |
-                            +-------v-------+
-                            | Is action     |
-                            | "finish"?     |
-                            +---+-------+---+
-                                |       |
-                               YES      NO
-                                |       |
-                                v       +---> (loop back to LLM)
-                           Return answer
+```mermaid
+flowchart TD
+    Q["User Question"] --> Fmt["Format prompt with<br/>ReAct instructions"]
+    Fmt --> LLM["LLM generates<br/>Thought + Action"]
+    LLM --> Parse["Parse action<br/>from LLM output"]
+    Parse --> Exec["Execute tool<br/>(search, calc, code, etc.)"]
+    Exec --> Append["Append Observation<br/>to conversation"]
+    Append --> Check{"Is action 'finish'?"}
+    Check -->|"NO"| LLM
+    Check -->|"YES"| Ans["Return answer"]
 ```
 
 ### Python Implementation
@@ -342,62 +291,27 @@ Instead of interleaving reasoning and action step-by-step (like ReAct),
 This is analogous to how a project manager (planner) delegates work items to
 an engineer (executor).
 
-```
-+-------------------------------------------------------------------+
-|                    PLAN-AND-EXECUTE                                |
-|                                                                   |
-|  +-----------+     +------------------+     +---------------+     |
-|  |           |     |                  |     |               |     |
-|  |  PLANNER  +---->|  STEP EXECUTOR   +---->|  REPLANNER    |     |
-|  |  (LLM)    |     |  (Agent/Tool)    |     |  (LLM)        |     |
-|  |           |     |                  |     |               |     |
-|  +-----+-----+     +--------+---------+     +-------+-------+     |
-|        |                    |                       |             |
-|        v                    v                       v             |
-|   Plan:                Result:                 Updated Plan:      |
-|   1. Search X          "X = 42"               1. [DONE] Search X |
-|   2. Search Y                                 2. Search Y        |
-|   3. Compare                                  3. Compare         |
-|   4. Summarize                                4. Summarize       |
-|                                                                   |
-|   Repeat: Execute step 2, then replan, execute step 3, ...       |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph PE["PLAN-AND-EXECUTE"]
+        Planner["PLANNER (LLM)<br/>Plan:<br/>1. Search X<br/>2. Search Y<br/>3. Compare<br/>4. Summarize"]
+        Exec["STEP EXECUTOR (Agent / Tool)<br/>Result: 'X = 42'"]
+        Replan["REPLANNER (LLM)<br/>Updated Plan:<br/>1. [DONE] Search X<br/>2. Search Y<br/>3. Compare<br/>4. Summarize"]
+        Planner --> Exec --> Replan
+        Replan -->|"Next step"| Exec
+    end
 ```
 
 ### Detailed Architecture
 
-```
-          User Task
-              |
-              v
-      +-------+--------+
-      |   PLANNER LLM   |
-      |  "Break this     |
-      |   into steps"    |
-      +-------+----------+
-              |
-              v
-      Plan = [step1, step2, step3, ...]
-              |
-              v
-      +-------+----------+    For each step:
-      |   EXECUTOR        |<---+
-      |   (may be a full  |    |
-      |    ReAct agent)   |    |
-      +-------+-----------+    |
-              |                |
-              v                |
-      +-------+-----------+   |
-      |   REPLANNER LLM   |   |
-      |   "Given results   |   |
-      |    so far, update  |   |
-      |    remaining plan" |   |
-      +-------+-----------+   |
-              |                |
-              +--- more steps -+
-              |
-              v
-         Final Answer
+```mermaid
+flowchart TD
+    Task["User Task"] --> Planner["PLANNER LLM<br/>'Break this into steps'"]
+    Planner --> Plan["Plan = [step1, step2, step3, ...]"]
+    Plan --> Exec["EXECUTOR<br/>(may be a full ReAct agent)"]
+    Exec --> Replan["REPLANNER LLM<br/>'Given results so far, update remaining plan'"]
+    Replan -->|"More steps"| Exec
+    Replan -->|"All steps complete"| Ans["Final Answer"]
 ```
 
 ### Python Implementation
@@ -589,50 +503,26 @@ The agent (or a separate critic LLM) reviews its own work, identifies flaws,
 and iterates until quality thresholds are met. The **Reflexion** pattern
 specifically stores reflections in memory for future episodes.
 
-```
-+-------------------------------------------------------------------+
-|                   REFLECTION / SELF-CRITIQUE                      |
-|                                                                   |
-|   +---------+     +-----------+     +------------+                |
-|   |         |     |           |     |            |                |
-|   | GENERATE+---->| EVALUATE  +---->| GOOD       |----> Output    |
-|   | (Actor) |     | (Critic)  |     | ENOUGH?    |                |
-|   |         |     |           |     |            |                |
-|   +----^----+     +-----------+     +-----+------+                |
-|        |                                  |                       |
-|        |              NO                  |                       |
-|        +----------------------------------+                       |
-|        |                                                          |
-|        |  Feedback: "The code has a bug on line 3.                |
-|        |  The variable `total` is never initialized."             |
-|        |                                                          |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Refl["REFLECTION / SELF-CRITIQUE"]
+        Gen["GENERATE<br/>(Actor)"] --> Eval["EVALUATE<br/>(Critic)"] --> Check{"GOOD ENOUGH?"}
+        Check -->|"YES"| Out["Output"]
+        Check -->|"NO — Feedback: 'The code has a bug on line 3;<br/>variable total is never initialized.'"| Gen
+    end
 ```
 
 ### Reflexion Pattern (with Memory)
 
-```
-  Episode 1                    Episode 2
-  +----------+                 +----------+
-  | Attempt  |                 | Attempt  |
-  | task     |                 | task     |
-  +----+-----+                 +----+-----+
-       |                            |
-       v                            v
-  +----+-----+                 +----+-----+
-  | Evaluate |                 | Evaluate |
-  | (fail)   |                 | (pass!)  |
-  +----+-----+                 +----------+
-       |
-       v
-  +----+------+
-  | Reflect   |    "I failed because I didn't
-  | & store   +--> handle edge case X. Next time
-  | in memory |    I should check for empty input."
-  +-----------+
-       |
-       +-------> Stored in long-term memory
-                 Retrieved in Episode 2
+```mermaid
+flowchart TD
+    subgraph Ep1["Episode 1"]
+        A1["Attempt task"] --> E1["Evaluate (fail)"] --> R1["Reflect &amp; store in memory:<br/>'I failed because I didn't handle edge case X.<br/>Next time check for empty input.'"]
+    end
+    subgraph Ep2["Episode 2"]
+        A2["Attempt task"] --> E2["Evaluate (pass!)"]
+    end
+    R1 -->|"Stored in long-term memory &amp;<br/>retrieved in Episode 2"| A2
 ```
 
 ### Python Implementation
@@ -828,38 +718,15 @@ structured tool call objects instead of free text. The tool-use loop is the
 standard pattern for handling these structured calls, including **parallel
 tool calls** where the LLM requests multiple tools in a single turn.
 
-```
-+-------------------------------------------------------------------+
-|                      TOOL-USE LOOP                                |
-|                                                                   |
-|   User Message                                                    |
-|        |                                                          |
-|        v                                                          |
-|   +----+-----+                                                    |
-|   |   LLM    |  (with tool definitions in system prompt)          |
-|   +----+-----+                                                    |
-|        |                                                          |
-|        +----> Text response? ----> Return to user                 |
-|        |                                                          |
-|        +----> Tool call(s)?                                       |
-|               |                                                   |
-|        +------+------+------+   (parallel tool calls)             |
-|        |      |      |      |                                     |
-|        v      v      v      v                                     |
-|     Tool A  Tool B  Tool C  Tool D                                |
-|        |      |      |      |                                     |
-|        +------+------+------+                                     |
-|               |                                                   |
-|               v                                                   |
-|        Tool results appended to messages                          |
-|               |                                                   |
-|               v                                                   |
-|        +------+-----+                                             |
-|        |   LLM      |  (sees results, may call more tools)       |
-|        +------+-----+                                             |
-|               |                                                   |
-|               +----> ... (loop continues)                         |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph ToolLoop["TOOL-USE LOOP"]
+        Msg["User Message"] --> LLM["LLM<br/>(with tool definitions)"]
+        LLM -->|"Text response"| Ret["Return to user"]
+        LLM -->|"Parallel tool call(s)"| TA["Tool A"] & TB["Tool B"] & TC["Tool C"] & TD["Tool D"]
+        TA & TB & TC & TD --> App["Tool results appended to messages"]
+        App --> LLM
+    end
 ```
 
 ### Parallel vs. Sequential Tool Calls
@@ -1056,60 +923,25 @@ request to a specialized sub-agent or handler. This avoids loading a single
 agent with all possible tools and instructions, keeping each sub-agent
 focused and efficient.
 
-```
-+-------------------------------------------------------------------+
-|                    ROUTER / DISPATCHER                            |
-|                                                                   |
-|                    User Message                                   |
-|                         |                                         |
-|                         v                                         |
-|                  +------+------+                                  |
-|                  |   ROUTER    |                                  |
-|                  |   (LLM or   |                                  |
-|                  |  classifier)|                                  |
-|                  +--+---+---+--+                                  |
-|                     |   |   |                                     |
-|            +--------+   |   +--------+                            |
-|            |            |            |                             |
-|            v            v            v                             |
-|     +------+--+  +------+--+  +------+--+                        |
-|     | CODE    |  | SEARCH  |  | MATH    |                        |
-|     | AGENT   |  | AGENT   |  | AGENT   |                        |
-|     |         |  |         |  |         |                        |
-|     | Tools:  |  | Tools:  |  | Tools:  |                        |
-|     | - exec  |  | - web   |  | - calc  |                        |
-|     | - file  |  | - wiki  |  | - plot  |                        |
-|     | - git   |  | - arxiv |  | - sympy |                        |
-|     +---------+  +---------+  +---------+                        |
-|                                                                   |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Disp["ROUTER / DISPATCHER"]
+        Msg["User Message"] --> Router["ROUTER<br/>(LLM or classifier)"]
+        Router --> Code["CODE AGENT<br/>Tools: exec, file, git"]
+        Router --> Search["SEARCH AGENT<br/>Tools: web, wiki, arxiv"]
+        Router --> Math["MATH AGENT<br/>Tools: calc, plot, sympy"]
+    end
 ```
 
 ### Multi-Level Routing
 
-```
-                    User Message
-                         |
-                         v
-                  +------+------+
-                  | L1 ROUTER   |  "Is this code, data, or general?"
-                  +--+------+---+
-                     |      |
-              +------+      +------+
-              |                    |
-              v                    v
-       +------+------+     +------+------+
-       | L2 ROUTER   |     | GENERAL     |
-       | (Code)      |     | AGENT       |
-       +--+-----+----+     +-------------+
-          |     |
-     +----+     +----+
-     |               |
-     v               v
-  +--+-----+   +-----+----+
-  | PYTHON |   | FRONTEND |
-  | AGENT  |   | AGENT    |
-  +--------+   +----------+
+```mermaid
+flowchart TD
+    Msg["User Message"] --> L1["L1 ROUTER<br/>'Is this code, data, or general?'"]
+    L1 --> L2["L2 ROUTER<br/>(Code)"]
+    L1 --> Gen["GENERAL AGENT"]
+    L2 --> Py["PYTHON AGENT"]
+    L2 --> FE["FRONTEND AGENT"]
 ```
 
 ### Python Implementation
@@ -1290,69 +1122,27 @@ similar frameworks. It supports:
 - **Cycles** (loops for retry/refinement -- technically a cyclic graph)
 - **State management** (typed state passed between nodes)
 
-```
-+-------------------------------------------------------------------+
-|                   DAG-BASED ORCHESTRATION                         |
-|                                                                   |
-|                      START                                        |
-|                        |                                          |
-|                        v                                          |
-|                 +------+------+                                   |
-|                 |   CLASSIFY  |                                   |
-|                 +--+------+---+                                   |
-|                    |      |                                       |
-|           "simple" |      | "complex"                             |
-|                    v      v                                       |
-|             +------+-+ +--+-------+                               |
-|             | DIRECT | | RESEARCH |                               |
-|             | ANSWER | |          |                               |
-|             +------+-+ +--+-------+                               |
-|                    |      |                                       |
-|                    |      v                                       |
-|                    |  +---+-------+                                |
-|                    |  | SYNTHESIZE|                                |
-|                    |  +---+-------+                                |
-|                    |      |                                       |
-|                    v      v                                       |
-|                 +--+------+---+                                   |
-|                 |   REVIEW    |                                   |
-|                 +--+------+---+                                   |
-|                    |      |                                       |
-|              "pass" |     | "fail"                                |
-|                    v      |                                       |
-|                  +--+--+  |                                       |
-|                  | END |  +---> (loop back to RESEARCH)            |
-|                  +-----+                                          |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph DAG["DAG-BASED ORCHESTRATION"]
+        Start(["START"]) --> Classify{"CLASSIFY"}
+        Classify -->|"simple"| Direct["DIRECT ANSWER"]
+        Classify -->|"complex"| Research["RESEARCH"]
+        Research --> Synth["SYNTHESIZE"]
+        Direct & Synth --> Review{"REVIEW"}
+        Review -->|"pass"| End(["END"])
+        Review -->|"fail"| Research
+    end
 ```
 
 ### Fan-Out / Fan-In Pattern
 
-```
-                    Input
-                      |
-                      v
-               +------+------+
-               |   SPLIT     |  (fan-out)
-               +--+--+--+----+
-                  |  |  |
-         +--------+  |  +--------+
-         |           |           |
-         v           v           v
-    +----+---+  +----+---+  +----+---+
-    | AGENT  |  | AGENT  |  | AGENT  |
-    |   A    |  |   B    |  |   C    |
-    +----+---+  +----+---+  +----+---+
-         |           |           |
-         +--------+  |  +--------+
-                  |  |  |
-                  v  v  v
-               +--+--+--+----+
-               |   MERGE     |  (fan-in)
-               +------+------+
-                      |
-                      v
-                   Output
+```mermaid
+flowchart TD
+    In["Input"] --> Split["SPLIT<br/>(fan-out)"]
+    Split --> A["AGENT A"] & B["AGENT B"] & C["AGENT C"]
+    A & B & C --> Merge["MERGE<br/>(fan-in)"]
+    Merge --> Out["Output"]
 ```
 
 ### Python Implementation
@@ -1624,53 +1414,32 @@ Not all agent decisions should be autonomous. **Human-in-the-loop (HITL)**
 architectures insert approval gates, escalation points, and review steps
 where a human can inspect, modify, or override the agent's actions.
 
-```
-+-------------------------------------------------------------------+
-|              HUMAN-IN-THE-LOOP PATTERNS                          |
-|                                                                   |
-|  Pattern 1: APPROVAL GATE                                        |
-|                                                                   |
-|    Agent ----> [PROPOSED ACTION] ----> Human ----> Approve? ---+  |
-|                                                       |        |  |
-|                                              YES      |   NO   |  |
-|                                               |       |        |  |
-|                                               v       v        |  |
-|                                           Execute   Reject/    |  |
-|                                                     Modify     |  |
-|                                                                   |
-|  Pattern 2: ESCALATION                                           |
-|                                                                   |
-|    Agent ----> Confidence < threshold? ----> YES ----> Human     |
-|                        |                                         |
-|                        NO                                        |
-|                        |                                         |
-|                        v                                         |
-|                   Auto-execute                                   |
-|                                                                   |
-|  Pattern 3: REVIEW-AND-EDIT                                      |
-|                                                                   |
-|    Agent ----> [DRAFT OUTPUT] ----> Human edits ----> Final      |
-|                                                                   |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph P1["Pattern 1: APPROVAL GATE"]
+        A1["Agent"] --> Prop["Proposed Action"] --> H1{"Human Approve?"}
+        H1 -->|"YES"| Ex1["Execute"]
+        H1 -->|"NO"| Rej1["Reject / Modify"]
+    end
+
+    subgraph P2["Pattern 2: ESCALATION"]
+        A2["Agent"] --> Conf{"Confidence &lt; threshold?"}
+        Conf -->|"YES"| H2["Escalate to Human"]
+        Conf -->|"NO"| Auto2["Auto-execute"]
+    end
+
+    subgraph P3["Pattern 3: REVIEW-AND-EDIT"]
+        A3["Agent"] --> Draft["Draft Output"] --> Edit["Human Edits"] --> Final["Final Output"]
+    end
 ```
 
 ### Approval Gate Architecture
 
-```
-    +--------+      +-----------+      +----------+
-    | Agent  |      | Approval  |      | Executor |
-    | (Plan) +----->| Queue     +----->| (Act)    |
-    +--------+      +-----+-----+      +----------+
-                          |
-                          v
-                    +-----+-----+
-                    | Human     |
-                    | Dashboard |
-                    |           |
-                    | [Approve] |
-                    | [Reject]  |
-                    | [Modify]  |
-                    +-----------+
+```mermaid
+flowchart LR
+    Agent["Agent (Plan)"] --> Queue["Approval Queue"]
+    Queue <--> Dash["Human Dashboard<br/>[Approve] / [Reject] / [Modify]"]
+    Queue -->|"Approved"| Exec["Executor (Act)"]
 ```
 
 ### Python Implementation
@@ -1957,49 +1726,32 @@ def estimate_confidence(response) -> float:
 
 Real-world agents combine multiple patterns:
 
-```
-+-------------------------------------------------------------------+
-|               COMPOSED ARCHITECTURE EXAMPLE                       |
-|                                                                   |
-|   +---------+     +-----------+     +------------------+          |
-|   |         |     |           |     |                  |          |
-|   | ROUTER  +---->| PLAN-AND- +---->| EXECUTOR         |          |
-|   |         |     | EXECUTE   |     | (ReAct agent     |          |
-|   +---------+     |           |     |  per step)       |          |
-|                   +-----------+     +--------+---------+          |
-|                                              |                    |
-|                                              v                    |
-|                                     +--------+---------+          |
-|                                     | REFLECTION       |          |
-|                                     | (self-critique   |          |
-|                                     |  on final answer)|          |
-|                                     +--------+---------+          |
-|                                              |                    |
-|                                              v                    |
-|                                     +--------+---------+          |
-|                                     | HITL GATE        |          |
-|                                     | (if risk > med)  |          |
-|                                     +------------------+          |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Composed["COMPOSED ARCHITECTURE EXAMPLE"]
+        Router["ROUTER"] --> PE["PLAN-AND-EXECUTE"] --> Exec["EXECUTOR<br/>(ReAct agent per step)"]
+        Exec --> Refl["REFLECTION<br/>(Self-critique on final answer)"] --> HITL["HITL GATE<br/>(If risk &gt; medium)"]
+    end
 ```
 
 ### Cost-Latency-Quality Trade-off
 
-```
-                     HIGH QUALITY
-                         ^
-                         |
-           Reflection    |    DAG + Reflection
-           + ReAct       |    + HITL
-                         |
-                         |
-              ReAct      |    Plan-and-Execute
-                         |
-                         |
-         Simple Chat     |    Router + Specialized
-                         |
-                         +-------------------------> LOW LATENCY
-                   HIGH COST                    LOW COST
+```mermaid
+flowchart TD
+    subgraph Tradeoffs["QUALITY vs LATENCY / COST TRADE-OFF MATRIX"]
+        subgraph HighQ["High Quality Tier"]
+            HQ1["Reflection + ReAct<br/>(High Quality, Higher Cost/Latency)"]
+            HQ2["DAG + Reflection + HITL<br/>(Highest Quality, Parallelized)"]
+        end
+        subgraph MidQ["Balanced Tier"]
+            MQ1["ReAct<br/>(Flexible Exploration, Medium Cost)"]
+            MQ2["Plan-and-Execute<br/>(Structured Multi-Step, Lower Cost)"]
+        end
+        subgraph FastQ["Low Latency / Low Cost Tier"]
+            FQ1["Simple Chat<br/>(1-Shot Q&amp;A)"]
+            FQ2["Router + Specialized Sub-Agents<br/>(Fast Triage, Low Cost)"]
+        end
+    end
 ```
 
 ### Rules of Thumb
@@ -2158,28 +1910,13 @@ reducer functions for handling concurrent state updates.
 **Model Answer:**
 I would use a **Router + Specialized Agents + HITL** composition:
 
-```
-Customer Message
-      |
-      v
-  +---+--------+
-  | ROUTER     |   (classifies: billing, technical, complaint, general)
-  +--+-+-+-+---+
-     | | | |
-     v v v v
-  Billing  Technical  Complaint  General
-  Agent    Agent      Agent      Agent
-     |        |          |          |
-     v        v          v          v
-  +--+--------+----------+----------+--+
-  |        REVIEW GATE                 |
-  |  Check: Does response meet        |
-  |  quality bar? Is action safe?      |
-  +--+-----------+---------------------+
-     |           |
-     v           v
-  Auto-send   Escalate to
-  response    human agent
+```mermaid
+flowchart TD
+    Msg["Customer Message"] --> Router["ROUTER<br/>(Classifies: billing, technical, complaint, general)"]
+    Router --> BA["Billing Agent"] & TA["Technical Agent"] & CA["Complaint Agent"] & GA["General Agent"]
+    BA & TA & CA & GA --> Gate{"REVIEW GATE<br/>Meets quality bar &amp; action is safe?"}
+    Gate -->|"Pass"| Auto["Auto-send response"]
+    Gate -->|"Fail / High risk"| Esc["Escalate to human agent"]
 ```
 
 Key design decisions:
@@ -2281,16 +2018,18 @@ tool permissions, runtime monitoring, and human oversight.
 
 ### Pattern Selection Cheat Sheet
 
-```
-Task is simple, one-shot          --> Simple Chat
-Task needs one tool               --> Tool-Use Loop
-Task needs exploration            --> ReAct
-Task has known steps              --> Plan-and-Execute
-Output quality must be high       --> Add Reflection
-Multiple task categories          --> Add Router
-Steps can run in parallel         --> DAG Orchestration
-Actions are risky/irreversible    --> Add HITL
-Need all of the above             --> Compose patterns
+```mermaid
+flowchart LR
+    Q{"Architecture Decision Guide"}
+    Q -->|"Simple, one-shot"| A1["Simple Chat"]
+    Q -->|"Needs one tool"| A2["Tool-Use Loop"]
+    Q -->|"Needs open-ended exploration"| A3["ReAct"]
+    Q -->|"Has known multi-step plan"| A4["Plan-and-Execute"]
+    Q -->|"Output quality must be high"| A5["Add Reflection"]
+    Q -->|"Multiple task categories"| A6["Add Router"]
+    Q -->|"Steps can run in parallel"| A7["DAG Orchestration"]
+    Q -->|"Actions are risky / irreversible"| A8["Add HITL"]
+    Q -->|"Need all of the above"| A9["Compose Patterns"]
 ```
 
 ### Key Formulas
