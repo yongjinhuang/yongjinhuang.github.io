@@ -1674,57 +1674,14 @@ async function runAutomatedQA(
 
 ### Build to Deployment Flow
 
-```
-Build → Validate → Upload → Review → Live
-
-Detailed flow:
-┌─────────────────────────────────────────────────────────────┐
-│ STEP 1: BUILD                                               │
-│                                                             │
-│ npm run build                                               │
-│   ├── TypeScript → JavaScript (esbuild)                     │
-│   ├── Inline all assets (images → base64)                   │
-│   ├── Inline CSS into HTML                                  │
-│   ├── Minify JavaScript (terser)                            │
-│   ├── Generate single index.html file                       │
-│   └── Output: dist/index.html                               │
-├─────────────────────────────────────────────────────────────┤
-│ STEP 2: VALIDATE                                            │
-│                                                             │
-│ npm run validate                                            │
-│   ├── Check file size (< target limit)                      │
-│   ├── Verify no external requests                           │
-│   ├── Check MRAID references                                │
-│   ├── Run unit tests                                        │
-│   ├── Run automated QA checks                               │
-│   └── Generate validation report                            │
-├─────────────────────────────────────────────────────────────┤
-│ STEP 3: UPLOAD TO NETWORKS                                  │
-│                                                             │
-│ Network-specific upload processes:                           │
-│   ├── Facebook: Ads Manager → Create Ad → Playable          │
-│   ├── Unity: Dashboard → Creatives → Upload HTML             │
-│   ├── ironSource: Platform → Creatives → Upload              │
-│   ├── AppLovin: Dashboard → Creatives → Upload               │
-│   ├── Google: Campaign → Assets → Upload HTML5               │
-│   └── Mintegral: Dashboard → Creative → Upload               │
-├─────────────────────────────────────────────────────────────┤
-│ STEP 4: CREATIVE REVIEW (1-3 days)                          │
-│                                                             │
-│ Network reviews for:                                        │
-│   ├── Policy compliance (no misleading content)             │
-│   ├── Technical requirements (size, MRAID, etc.)            │
-│   ├── User experience quality                               │
-│   ├── Performance on reference devices                       │
-│   └── Content appropriateness                                │
-├─────────────────────────────────────────────────────────────┤
-│ STEP 5: LIVE                                                │
-│                                                             │
-│   ├── Creative approved → starts serving                     │
-│   ├── Monitor initial metrics (first 24-48 hours)            │
-│   ├── Check for anomalies                                    │
-│   └── Scale if metrics are good                              │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    S1["STEP 1: BUILD (npm run build)<br/>TypeScript -&gt; esbuild -&gt; Inline base64 assets &amp; CSS -&gt; Terser minify -&gt; dist/index.html"]
+    S2["STEP 2: VALIDATE (npm run validate)<br/>Verify size limit, zero external requests, MRAID hooks, unit &amp; automated QA checks"]
+    S3["STEP 3: UPLOAD TO NETWORKS<br/>Facebook, Unity Ads, ironSource, AppLovin, Google Ads, Mintegral"]
+    S4["STEP 4: CREATIVE REVIEW (1-3 Days)<br/>Policy compliance, technical spec, device performance"]
+    S5["STEP 5: LIVE<br/>Monitor first 24-48h metrics &amp; scale winning variants"]
+    S1 --> S2 --> S3 --> S4 --> S5
 ```
 
 ### Common Rejection Reasons

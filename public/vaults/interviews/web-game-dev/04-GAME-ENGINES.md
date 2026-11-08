@@ -27,21 +27,12 @@ Phaser 3 is the most popular open-source HTML5 game framework. It's a complete 2
 
 Phaser follows a **Scene-based architecture**. Each scene is an independent game state (menu, gameplay, game over) with its own lifecycle.
 
-```
-Phaser.Game
-├── Scene Manager
-│   ├── BootScene
-│   ├── PreloadScene
-│   ├── MenuScene
-│   ├── GameScene
-│   └── GameOverScene
-├── Renderer (WebGL / Canvas)
-├── Input Manager
-├── Sound Manager
-├── Physics (Arcade / Matter.js)
-├── Tween Manager
-├── Timer Manager
-└── Cache (textures, audio, data)
+```mermaid
+flowchart LR
+    Game["Phaser.Game"]
+    SM["Scene Manager<br/>- BootScene<br/>- PreloadScene<br/>- MenuScene<br/>- GameScene<br/>- GameOverScene"]
+    Sub["Core Subsystems<br/>- Renderer (WebGL / Canvas)<br/>- Input &amp; Sound Manager<br/>- Physics (Arcade / Matter.js)<br/>- Tween &amp; Timer Manager<br/>- Cache (textures, audio, data)"]
+    Game --> SM & Sub
 ```
 
 ### Scene System
@@ -254,22 +245,17 @@ PixiJS is a 2D WebGL rendering engine — not a game engine. It provides extreme
 
 ### Architecture
 
-```
-PIXI.Application
-├── Stage (root Container)
-│   ├── Container (game world)
-│   │   ├── Sprite (player)
-│   │   ├── AnimatedSprite (enemy)
-│   │   ├── Graphics (shapes)
-│   │   └── Container (UI layer)
-│   └── Container (HUD)
-├── Renderer (WebGL / WebGPU)
-│   ├── BatchRenderer
-│   ├── Filter System
-│   └── Render Texture System
-├── Ticker (game loop)
-├── Assets (loader)
-└── Events (interaction)
+```mermaid
+flowchart LR
+    App["PIXI.Application"]
+    Stage["Stage (Root Container)"]
+    World["Container (Game World)<br/>- Sprite (player)<br/>- AnimatedSprite (enemy)<br/>- Graphics (shapes)<br/>- Container (UI layer)"]
+    HUD["Container (HUD)"]
+    Rend["Renderer (WebGL / WebGPU)<br/>- BatchRenderer<br/>- Filter System<br/>- Render Texture System"]
+    Sys["Ticker (Game Loop) / Assets (Loader) / Events"]
+
+    App --> Stage & Rend & Sys
+    Stage --> World & HUD
 ```
 
 ### Display Tree
@@ -1473,14 +1459,15 @@ Most ad networks require the entire ad (code + assets) under 2-5MB. Some require
 
 ### Decision Framework
 
-```
-Is it 3D?
-├── Yes → Is size critical (< 2MB)?
-│         ├── Yes → PlayCanvas (stripped) or Custom WebGL
-│         └── No  → PlayCanvas or Babylon.js
-└── No (2D) → Is size critical (< 2MB)?
-              ├── Yes → Custom engine or PixiJS (tree-shaken)
-              └── No  → PixiJS or Phaser (if under 5MB)
+```mermaid
+flowchart TD
+    Q1{"Is the game 3D?"}
+    Q1 -->|"Yes"| Q2{"Is size critical (&lt; 2MB)?"}
+    Q2 -->|"Yes"| A1["PlayCanvas (stripped) or Custom WebGL / Three.js"]
+    Q2 -->|"No"| A2["PlayCanvas or Babylon.js"]
+    Q1 -->|"No (2D)"| Q3{"Is size critical (&lt; 2MB)?"}
+    Q3 -->|"Yes"| A3["Custom Canvas2D/WebGL engine or PixiJS (tree-shaken)"]
+    Q3 -->|"No"| A4["PixiJS or Phaser (if &lt; 5MB)"]
 ```
 
 ### Playable Ad Engine Recommendations

@@ -20,28 +20,16 @@
 
 Web game development encompasses creating interactive games that run in web browsers using HTML5, JavaScript, WebGL, and related technologies. The field spans several distinct sub-domains:
 
-```
-Web Game Development
-├── Playable Ads
-│   ├── Interactive end cards
-│   ├── Rewarded playables
-│   └── Interstitial playables
-├── Hyper-Casual Games
-│   ├── Instant games (Facebook, Snapchat)
-│   ├── Progressive Web App (PWA) games
-│   └── HTML5 portal games
-├── Mid-Core Browser Games
-│   ├── Multiplayer browser games
-│   ├── Strategy/RPG games
-│   └── Social casino games
-├── Advergames & Branded Content
-│   ├── Marketing campaign games
-│   ├── Product launch interactives
-│   └── Gamified landing pages
-└── Educational Games
-    ├── EdTech platforms
-    ├── Training simulations
-    └── Interactive learning modules
+```mermaid
+flowchart LR
+    Root["Web Game Development"]
+    C1["Playable Ads<br/>- Interactive end cards<br/>- Rewarded playables<br/>- Interstitial playables"]
+    C2["Hyper-Casual Games<br/>- Instant games (FB, Snapchat)<br/>- PWA games<br/>- HTML5 portal games"]
+    C3["Mid-Core Browser Games<br/>- Multiplayer browser games<br/>- Strategy / RPG games<br/>- Social casino games"]
+    C4["Advergames &amp; Branded Content<br/>- Marketing campaign games<br/>- Product launch interactives<br/>- Gamified landing pages"]
+    C5["Educational Games<br/>- EdTech platforms<br/>- Training simulations<br/>- Interactive learning modules"]
+
+    Root --> C1 & C2 & C3 & C4 & C5
 ```
 
 ### Playable Ads: The Fastest-Growing Segment
@@ -554,41 +542,15 @@ class FallingItemsGame {
 - "Design the architecture for a real-time multiplayer HTML5 game"
 - "How would you build an A/B testing pipeline for playable ad creatives?"
 
-```
-Example System Design: Playable Ad Creation Platform
-
-┌─────────────────────────────────────────────────────────┐
-│                    Creator Dashboard                     │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
-│  │ Template  │  │  Asset   │  │ Preview  │              │
-│  │ Library   │  │ Manager  │  │ & Test   │              │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘              │
-│       │              │              │                    │
-│       └──────────────┼──────────────┘                    │
-│                      │                                   │
-│              ┌───────▼───────┐                           │
-│              │  Build Engine │                           │
-│              │  - Bundle     │                           │
-│              │  - Minify     │                           │
-│              │  - Inline     │                           │
-│              │  - Optimize   │                           │
-│              └───────┬───────┘                           │
-│                      │                                   │
-│              ┌───────▼───────┐                           │
-│              │  Export Engine │                           │
-│              │  - MRAID wrap │                           │
-│              │  - Size check │                           │
-│              │  - QA tests   │                           │
-│              └───────┬───────┘                           │
-│                      │                                   │
-└──────────────────────┼──────────────────────────────────┘
-                       │
-         ┌─────────────┼─────────────┐
-         │             │             │
-    ┌────▼───┐   ┌────▼───┐   ┌────▼───┐
-    │ Unity  │   │ Meta   │   │ Google │
-    │ Ads    │   │ Ads    │   │ Ads    │
-    └────────┘   └────────┘   └────────┘
+```mermaid
+flowchart TD
+    subgraph Dash["Playable Ad Creator Dashboard"]
+        Tpl["Template Library"] & Asset["Asset Manager"] & Prev["Preview &amp; Test"]
+        Build["Build Engine<br/>- Bundle<br/>- Minify<br/>- Inline<br/>- Optimize"]
+        Export["Export Engine<br/>- MRAID wrap<br/>- Size check<br/>- QA tests"]
+        Tpl & Asset & Prev --> Build --> Export
+    end
+    Export --> Unity["Unity Ads"] & Meta["Meta Ads"] & Google["Google Ads"]
 ```
 
 ### Format 4: Technical Deep Dive / Whiteboard
@@ -950,40 +912,13 @@ Community:
 
 ### Relationship Between Key Metrics
 
-```
-                    Impressions
-                         │
-                    ┌────▼────┐
-                    │   CTR   │ = Clicks / Impressions
-                    └────┬────┘
-                         │
-                      Clicks
-                         │
-                    ┌────▼────┐
-                    │   CVR   │ = Installs / Clicks
-                    └────┬────┘
-                         │
-                      Installs
-                    ┌────▼────┐
-                    │   CPI   │ = Ad Spend / Installs
-                    └────┬────┘
-                         │
-                 Active Users (DAU)
-                    ┌────▼────┐
-                    │  ARPU   │ = Revenue / Users
-                    └────┬────┘
-                         │
-                 Lifetime Revenue
-                    ┌────▼────┐
-                    │   LTV   │ = Total Revenue from User
-                    └────┬────┘
-                         │
-                    ┌────▼────┐
-                    │  ROAS   │ = LTV / CPI
-                    └─────────┘
-
-Profitable when: LTV > CPI
-IPM = CTR × CVR × 1000
+```mermaid
+flowchart TD
+    Imp["Impressions"] --> CTR["CTR = Clicks / Impressions"] --> Clicks["Clicks"]
+    Clicks --> CVR["CVR = Installs / Clicks<br/>(IPM = CTR x CVR x 1000)"] --> Inst["Installs"]
+    Inst --> CPI["CPI = Ad Spend / Installs"] --> DAU["Active Users (DAU)"]
+    DAU --> ARPU["ARPU = Revenue / Users"] --> LTV["LTV = Total Lifetime Revenue per User"]
+    LTV --> ROAS["ROAS = LTV / CPI<br/>(Profitable when LTV &gt; CPI)"]
 ```
 
 ---

@@ -20,10 +20,10 @@ The build vs buy decision is also significant. Managed chat SDKs (Stream, Sendbi
 
 ### The Message Lifecycle
 
-```
-Sender types → Typing indicator broadcast → Message sent
-    → Server receives → Store in database → Deliver to recipient(s)
-        → Delivery confirmation → Recipient reads → Read receipt sent back
+```mermaid
+flowchart LR
+    S1["Sender types"] --> S2["Typing indicator broadcast"] --> S3["Message sent"] --> S4["Server receives"]
+    S4 --> S5[("Store in database")] --> S6["Deliver to recipient(s)"] --> S7["Delivery confirmation"] --> S8["Recipient reads"] --> S9["Read receipt sent back"]
 ```
 
 ### Step 1: Connection Establishment

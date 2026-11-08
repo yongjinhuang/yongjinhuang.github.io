@@ -39,10 +39,11 @@
 
 这是一个状态机——电商中最重要的概念之一：
 
-```
-已创建 → 已支付 → 处理中 → 已发货 → 已签收
-                                  ↘ 退货中 → 已退款
-          ↘ 支付失败 → 已取消
+```mermaid
+flowchart LR
+    Created["已创建"] --> Paid["已支付"] --> Processing["处理中"] --> Shipped["已发货"] --> Delivered["已签收"]
+    Shipped --> Returned["退货中"] --> Refunded["已退款"]
+    Created --> Failed["支付失败"] --> Cancelled["已取消"]
 ```
 
 - **已创建**：订单下了，等待支付

@@ -12,8 +12,9 @@ Caching can turn a 500ms database query into a 1ms cache hit. It can turn an exp
 
 ### The Caching Layers
 
-```
-User's Browser ← CDN ← Application Server ← Cache (Redis/Memcached) ← Database
+```mermaid
+flowchart RL
+    DB[("Database")] --> Cache["Cache<br/>(Redis / Memcached)"] --> App["Application Server"] --> CDN["CDN"] --> Browser["User's Browser"]
 ```
 
 Each layer is faster and closer to the user. Data flows backward (from database to user), and caching happens at every step.

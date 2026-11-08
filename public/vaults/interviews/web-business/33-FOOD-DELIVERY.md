@@ -79,15 +79,14 @@ When demand exceeds driver supply, prices go up:
 
 A food delivery order moves through a well-defined state machine:
 
-```
-placed → accepted → preparing → ready_for_pickup → driver_assigned →
-  driver_at_restaurant → picked_up → in_transit → arrived → delivered
+```mermaid
+flowchart LR
+    Placed["placed"] --> Accepted["accepted"] --> Prep["preparing"] --> Ready["ready_for_pickup"]
+    Ready --> Assigned["driver_assigned"] --> AtRest["driver_at_restaurant"] --> Picked["picked_up"]
+    Picked --> Transit["in_transit"] --> Arrived["arrived"] --> Delivered["delivered"]
 
-Alternate paths:
-  placed → rejected (restaurant declines)
-  placed → cancelled (customer cancels before acceptance)
-  accepted → cancelled (customer cancels, may incur fee)
-  any state → support_escalation (issue reported)
+    Placed --> Rejected["rejected<br/>(restaurant declines)"]
+    Placed & Accepted --> Cancelled["cancelled<br/>(customer cancels)"]
 ```
 
 Each state transition triggers side effects: `accepted` starts the preparation timer, `driver_assigned` sends the driver details to the customer, `picked_up` starts the delivery ETA countdown, `delivered` triggers payment capture and prompts for ratings.

@@ -75,8 +75,9 @@ When your app and a third-party service need to stay in sync:
 
 Your server calls the third-party API directly when needed.
 
-```
-User Action → Your Server → Third-Party API → Response → Your Server → User
+```mermaid
+flowchart LR
+    U1["User Action"] --> S1["Your Server"] --> API["Third-Party API"] --> Resp["Response"] --> S2["Your Server"] --> U2["User"]
 ```
 
 **When it's used:** Simple integrations, synchronous operations (verify a payment, send an email).
@@ -87,10 +88,10 @@ User Action → Your Server → Third-Party API → Response → Your Server →
 
 Decouple the API call from the user's request using a message queue.
 
-```
-User Action → Your Server → Queue → Worker → Third-Party API
-                    ↓
-              Immediate Response to User
+```mermaid
+flowchart LR
+    Act["User Action"] --> Svc["Your Server"] --> Q["Queue"] --> W["Worker"] --> API["Third-Party API"]
+    Svc --> Imm["Immediate Response to User"]
 ```
 
 **When it's used:** Non-urgent operations (send email, sync CRM, generate report). Anything where the user doesn't need an immediate result.
@@ -101,8 +102,9 @@ User Action → Your Server → Queue → Worker → Third-Party API
 
 The third party pushes data to you instead of you pulling it.
 
-```
-Third-Party Event → Webhook POST → Your Server → Process Event → Update Database
+```mermaid
+flowchart LR
+    Ev["Third-Party Event"] --> Hook["Webhook POST"] --> Svc["Your Server"] --> Proc["Process Event"] --> DB[("Update Database")]
 ```
 
 **When it's used:** Payment events, email delivery status, subscription changes, CI/CD notifications.

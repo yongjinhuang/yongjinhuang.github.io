@@ -18,10 +18,12 @@ Understanding supply chain concepts also makes you a better engineer in cross-fu
 
 This is the core state machine for a physical delivery:
 
-```
-Order Placed → Warehouse Assigned → Pick & Pack → Carrier Handoff → In Transit → Out for Delivery → Delivered
-                                                                                        ↘ Failed Delivery → Rescheduled / Returned to Sender
-                                         ↘ Cancelled                                    ↘ Customer Returns → Reverse Pickup → Warehouse Receiving → Refund
+```mermaid
+flowchart LR
+    Placed["Order Placed"] --> WH["Warehouse Assigned"] --> Pick["Pick &amp; Pack"] --> Carrier["Carrier Handoff"] --> Transit["In Transit"] --> Out["Out for Delivery"] --> Delivered["Delivered"]
+    Pick --> Cancelled["Cancelled"]
+    Out --> Failed["Failed Delivery"] --> Resched["Rescheduled / Returned to Sender"]
+    Delivered --> Ret["Customer Returns"] --> Rev["Reverse Pickup"] --> Recv["Warehouse Receiving"] --> Refund["Refund"]
 ```
 
 1. **Order Placed**: The e-commerce system creates an order and sends it to the Order Management System (OMS)

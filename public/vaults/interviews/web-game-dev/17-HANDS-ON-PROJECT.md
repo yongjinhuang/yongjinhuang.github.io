@@ -2218,22 +2218,18 @@ Total: ~1,520 lines of TypeScript
 
 ### Module Dependency Graph
 
-```
-main.ts
-  └── Game.ts
-        ├── Grid.ts          (no dependencies)
-        ├── Renderer.ts      (no dependencies)
-        ├── Input.ts         (no dependencies)
-        ├── Tween.ts         (no dependencies)
-        ├── Particles.ts     (uses ObjectPool)
-        │     └── ObjectPool.ts
-        ├── Audio.ts         (no dependencies)
-        ├── SceneManager.ts  (uses Grid, Tween, Particles, Audio)
-        └── MraidBridge.ts   (no dependencies)
-
-Key principle: All modules depend on Game.ts,
-but don't depend on each other (low coupling).
-Grid.ts is pure logic with zero rendering code.
+```mermaid
+flowchart LR
+    Main["main.ts"] --> Game["Game.ts"]
+    Game --> Grid["Grid.ts<br/>(Pure logic, 0 deps)"]
+    Game --> Rend["Renderer.ts"]
+    Game --> Inp["Input.ts"]
+    Game --> Tween["Tween.ts"]
+    Game --> Part["Particles.ts"] --> Pool["ObjectPool.ts"]
+    Game --> Aud["Audio.ts"]
+    Game --> SM["SceneManager.ts"]
+    Game --> Mraid["MraidBridge.ts"]
+    SM -.-> Grid & Tween & Part & Aud
 ```
 
 ---

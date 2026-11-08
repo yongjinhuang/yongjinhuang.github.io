@@ -39,10 +39,11 @@ E-commerce is one of the most common types of web applications you'll build. Eve
 
 This is a state machine — one of the most important concepts in e-commerce:
 
-```
-Created → Paid → Processing → Shipped → Delivered
-                                    ↘ Returned → Refunded
-           ↘ Payment Failed → Cancelled
+```mermaid
+flowchart LR
+    Created["Created"] --> Paid["Paid"] --> Processing["Processing"] --> Shipped["Shipped"] --> Delivered["Delivered"]
+    Shipped --> Returned["Returned"] --> Refunded["Refunded"]
+    Created --> Failed["Payment Failed"] --> Cancelled["Cancelled"]
 ```
 
 - **Created**: Order placed, awaiting payment

@@ -32,23 +32,13 @@ Playable ads operate under strict size constraints that vary by ad network:
 
 ### Why These Limits Exist
 
-```
-User taps ad slot
-    |
-    v
-Ad SDK requests creative from CDN
-    |
-    v
-Creative downloads over mobile network (often 3G/4G)
-    |
-    v
-WebView loads and renders creative
-    |
-    v
-User interacts (15-30 seconds)
-    |
-    v
-CTA → App Store
+```mermaid
+flowchart TD
+    S1["User taps / triggers ad slot"] --> S2["Ad SDK requests creative from CDN"]
+    S2 --> S3["Creative downloads over mobile network (3G / 4G / 5G)"]
+    S3 --> S4["WebView loads and renders creative"]
+    S4 --> S5["User interacts (15-30 seconds)"]
+    S5 --> S6["CTA -&gt; App Store"]
 ```
 
 Key reasons for size limits:
@@ -106,17 +96,15 @@ GPU-compressed texture formats allow the GPU to decompress textures on the fly, 
 
 #### When to Use Each
 
-```
-Decision Tree for Texture Compression:
-
-Is this a playable ad (single HTML file)?
-├── YES → Use PNG/WebP/AVIF (base64 encoded)
-│         GPU formats can't be easily base64'd for single-file delivery
-└── NO → Is this for a specific platform?
-    ├── iOS only → ASTC (preferred) or PVRTC (legacy)
-    ├── Android only → ASTC (preferred) or ETC2 (fallback)
-    ├── Desktop only → S3TC/DXT
-    └── Cross-platform → Basis Universal (transcodes to native format)
+```mermaid
+flowchart TD
+    Q1{"Is this a playable ad<br/>(single HTML file)?"}
+    Q1 -->|"YES"| A1["Use PNG (pngquant) / WebP / AVIF (base64 encoded)"]
+    Q1 -->|"NO"| Q2{"Target platform?"}
+    Q2 -->|"iOS only"| A2["ASTC (preferred) or PVRTC (legacy)"]
+    Q2 -->|"Android only"| A3["ASTC (preferred) or ETC2 (fallback)"]
+    Q2 -->|"Desktop only"| A4["S3TC / DXT / BC7"]
+    Q2 -->|"Cross-platform"| A5["Basis Universal / KTX2 (transcodes to native GPU format)"]
 ```
 
 #### Basis Universal Example
@@ -1172,24 +1160,19 @@ echo "Optimized PNG base64: $(cat /tmp/encoded.txt | wc -c) bytes"
 
 ### Overview
 
-```
-                    ASSET PIPELINE
-                    ──────────────
-Source Assets       Optimized Assets       Encoded Assets
-─────────────       ────────────────       ──────────────
-sprites/*.png  →  pngquant/optipng    →  base64 data URIs
-audio/*.wav    →  ffmpeg (mp3/ogg)    →  base64 data URIs
-icons/*.svg    →  svgo                →  inline SVG or base64
-fonts/*.woff2  →  (already optimized) →  base64 data URIs
-
-                    CODE PIPELINE
-                    ─────────────
-Source Code         Bundle              Final Output
-───────────         ──────              ────────────
-src/*.ts       →  esbuild/webpack  →  Single minified JS string
-styles/*.css   →  cssnano          →  Inline <style> tag
-index.html     →  html-minifier    →  Final single HTML file
-                                        (< 2-5MB)
+```mermaid
+flowchart LR
+    subgraph Assets["ASSET PIPELINE"]
+        A1["sprites/*.png"] --> O1["pngquant / optipng"] --> E1["base64 data URIs"]
+        A2["audio/*.wav"] --> O2["ffmpeg (mp3/ogg)"] --> E1
+        A3["icons/*.svg"] --> O3["svgo"] --> E1
+        A4["fonts/*.woff2"] --> E1
+    end
+    subgraph Code["CODE PIPELINE"]
+        C1["src/*.ts"] --> B1["esbuild / webpack + terser"]
+        C2["styles/*.css"] --> B2["cssnano (&lt;style&gt;)"]
+        E1 & B1 & B2 --> Final["html-minifier -&gt; Single index.html (&lt; 2-5MB)"]
+    end
 ```
 
 ### Step-by-Step Build Pipeline
@@ -1735,45 +1718,13 @@ They solve different problems:
 
 **Answer:**
 
-```
-Source Control (Git)
-  |
-  v
-Shared Asset Library (optimized master sprites, audio)
-  |
-  v
-Project Template (cookiecutter/yeoman generator)
-  ├── src/
-  │   ├── main.ts
-  │   ├── scenes/
-  │   └── assets/ (references shared library)
-  ├── build.config.ts
-  └── package.json
-  |
-  v
-CI/CD (GitHub Actions)
-  ├── npm run build
-  │   ├── Step 1: Lint + type check
-  │   ├── Step 2: Optimize assets (pngquant, ffmpeg)
-  │   ├── Step 3: Bundle (esbuild)
-  │   ├── Step 4: Inline to single HTML
-  │   └── Step 5: Minify
-  ├── Size check (fail if over limit)
-  ├── Run unit tests
-  ├── Screenshot test (headless Chrome)
-  └── Deploy to staging CDN
-  |
-  v
-QA Dashboard
-  ├── Preview on real devices (BrowserStack)
-  ├── MRAID compliance check
-  ├── Performance metrics (FPS, load time)
-  └── Manual QA checklist
-  |
-  v
-Ad Network Upload (automated via API where available)
-  ├── Facebook, Google, Unity, IronSource, etc.
-  └── Each with network-specific validation
+```mermaid
+flowchart TD
+    Git["Source Control (Git)"] --> Lib["Shared Asset Library<br/>(Optimized master sprites &amp; audio)"]
+    Lib --> Tpl["Project Template<br/>(src/main.ts, scenes/, assets/, build.config.ts)"]
+    Tpl --> CICD["CI/CD (GitHub Actions)<br/>1. Lint + typecheck<br/>2. Optimize assets (pngquant, ffmpeg)<br/>3. Bundle (esbuild) &amp; Inline to single HTML<br/>4. Size gate + Unit &amp; Screenshot tests"]
+    CICD --> QA["QA Dashboard<br/>- Real-device preview (BrowserStack)<br/>- MRAID compliance &amp; FPS/load benchmarks"]
+    QA --> Upload["Ad Network Upload<br/>(Facebook, Google, Unity, ironSource, AppLovin)"]
 ```
 
 Key features:

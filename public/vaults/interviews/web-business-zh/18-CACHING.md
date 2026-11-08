@@ -12,8 +12,9 @@
 
 ### 缓存层级
 
-```
-用户浏览器 ← CDN ← 应用服务器 ← 缓存（Redis/Memcached） ← 数据库
+```mermaid
+flowchart RL
+    DB[("数据库")] --> Cache["缓存<br/>（Redis / Memcached）"] --> App["应用服务器"] --> CDN["CDN"] --> Browser["用户浏览器"]
 ```
 
 每一层都更快、离用户更近。数据从后往前流（从数据库到用户），缓存在每一步都会发生。

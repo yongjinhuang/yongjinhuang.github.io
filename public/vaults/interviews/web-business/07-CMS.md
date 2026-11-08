@@ -14,10 +14,10 @@ Almost every website beyond a personal project needs content management. Marketi
 
 Every piece of content follows a lifecycle:
 
-```
-Draft → In Review → Approved → Scheduled → Published → Archived
-                ↓
-            Rejected → Draft (revised)
+```mermaid
+flowchart LR
+    Draft["Draft"] --> Review["In Review"] --> Approved["Approved"] --> Scheduled["Scheduled"] --> Published["Published"] --> Archived["Archived"]
+    Review --> Rejected["Rejected"] -->|"revised"| Draft
 ```
 
 1. **Draft**: Author writes content. Saves as they go. Not visible to the public

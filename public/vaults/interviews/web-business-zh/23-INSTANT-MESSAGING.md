@@ -22,10 +22,10 @@ IM 的核心技术挑战是"实时性"——消息必须在毫秒级别送达。
 
 ### 单聊消息流转
 
-```
-发送方 → WebSocket → 服务器（存储+路由） → WebSocket → 接收方
-                                          ↓（离线）
-                                    推送通知（APNs/FCM）
+```mermaid
+flowchart LR
+    Sender["发送方"] -->|"WebSocket"| Srv["服务器<br/>（存储 + 路由）"] -->|"WebSocket（在线）"| Recv["接收方"]
+    Srv -->|"离线"| Push["推送通知<br/>（APNs / FCM）"]
 ```
 
 1. 发送方通过 WebSocket 将消息发送到服务器

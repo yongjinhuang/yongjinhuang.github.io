@@ -14,10 +14,10 @@
 
 每段内容都有生命周期：
 
-```
-草稿 → 审核中 → 已通过 → 已排期 → 已发布 → 已归档
-              ↓
-          被驳回 → 草稿（修改后）
+```mermaid
+flowchart LR
+    Draft["草稿"] --> Review["审核中"] --> Approved["已通过"] --> Scheduled["已排期"] --> Published["已发布"] --> Archived["已归档"]
+    Review --> Rejected["被驳回"] -->|"修改后"| Draft
 ```
 
 1. **草稿**：作者写内容。随时保存。不对外公开

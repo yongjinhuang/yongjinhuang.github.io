@@ -80,8 +80,9 @@
 
 在微服务架构中，一个用户请求可能经过 5+ 个服务。链路追踪跟随请求穿过每个服务：
 
-```
-用户请求 → API 网关 → 认证服务 → 订单服务 → 支付服务 → 邮件服务
+```mermaid
+flowchart LR
+    Req["用户请求"] --> GW["API 网关"] --> Auth["认证服务"] --> Order["订单服务"] --> Pay["支付服务"] --> Email["邮件服务"]
 ```
 
 每个服务把自己的 Span 加到链路中。你可以看到完整的请求旅程，包括时间花在哪里、错误在哪里发生。
@@ -114,8 +115,9 @@
 
 所有服务把日志发到一个中央系统，可以在那里搜索和分析。
 
-```
-应用服务器 → 日志收集器（Fluentd/Filebeat） → Elasticsearch → Kibana（仪表盘 + 搜索）
+```mermaid
+flowchart LR
+    App["应用服务器"] --> Coll["日志收集器<br/>（Fluentd / Filebeat）"] --> ES[("Elasticsearch")] --> Kib["Kibana<br/>（仪表盘 + 搜索）"]
 ```
 
 **适用场景：** 超过单台服务器的任何应用。分布式系统必备。
@@ -126,8 +128,9 @@
 
 应用暴露指标。监控系统抓取。仪表盘可视化。告警在阈值时触发。
 
-```
-应用暴露 /metrics → Prometheus 抓取 → Grafana 可视化 → AlertManager 发告警
+```mermaid
+flowchart LR
+    App["应用暴露 /metrics"] --> Prom["Prometheus 抓取"] --> Graf["Grafana 可视化"] --> AM["AlertManager 发告警"]
 ```
 
 **适用场景：** 每个生产系统都应该有。

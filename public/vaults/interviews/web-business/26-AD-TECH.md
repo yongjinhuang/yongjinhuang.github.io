@@ -23,11 +23,11 @@ There are four main players:
 
 Manual ad buying (call a sales rep, negotiate a rate, send a creative) still exists, but most digital ads are now bought programmatically — through software, in real time.
 
-```
-Advertiser → DSP → Ad Exchange ← SSP ← Publisher
-                      ↑
-                     DMP
-               (audience data)
+```mermaid
+flowchart LR
+    Adv["Advertiser"] --> DSP["DSP<br/>(Demand-Side Platform)"] --> AdEx["Ad Exchange"]
+    Pub["Publisher"] --> SSP["SSP<br/>(Supply-Side Platform)"] --> AdEx
+    DMP["DMP<br/>(Audience Data)"] --> AdEx
 ```
 
 - **DSP (Demand-Side Platform)**: Advertisers use DSPs to buy ad impressions across many exchanges. Examples: Google DV360, The Trade Desk. The DSP decides which impressions to bid on and how much to bid.

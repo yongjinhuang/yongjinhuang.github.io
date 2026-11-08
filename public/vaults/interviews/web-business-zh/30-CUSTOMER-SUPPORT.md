@@ -26,11 +26,12 @@
 
 这是工单系统的核心状态机：
 
-```
-新建(New) → 已分配(Open) → 处理中(Pending) → 已解决(Resolved) → 已关闭(Closed)
-                                    ↘ 等待用户回复(On Hold)
-                                    ↘ 升级(Escalated)
-                          ↘ 重新打开(Reopened)
+```mermaid
+flowchart LR
+    New["新建 (New)"] --> Open["已分配 (Open)"] --> Pending["处理中 (Pending)"] --> Resolved["已解决 (Resolved)"] --> Closed["已关闭 (Closed)"]
+    Pending --> OnHold["等待用户回复 (On Hold)"]
+    Pending --> Escalated["升级 (Escalated)"]
+    Resolved --> Reopened["重新打开 (Reopened)"] --> Open
 ```
 
 1. **新建 (New)**：工单刚创建，尚未分配给任何客服

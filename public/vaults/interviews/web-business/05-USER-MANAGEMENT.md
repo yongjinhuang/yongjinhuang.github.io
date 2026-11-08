@@ -30,10 +30,10 @@ Every web app has users. Whether you're building a social network, a SaaS tool, 
 
 A user account is a state machine:
 
-```
-Unverified → Active → Suspended → Deactivated → Deleted
-                ↑                       ↓
-                └───── Reactivated ─────┘
+```mermaid
+flowchart LR
+    Unverified["Unverified"] --> Active["Active"] --> Suspended["Suspended"] --> Deactivated["Deactivated"] --> Deleted["Deleted"]
+    Deactivated -->|"Reactivated"| Active
 ```
 
 - **Unverified**: Signed up but hasn't confirmed email

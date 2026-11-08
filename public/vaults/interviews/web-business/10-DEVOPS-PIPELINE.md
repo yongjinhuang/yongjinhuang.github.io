@@ -12,8 +12,9 @@ Every professional development team uses some form of CI/CD pipeline. Whether yo
 
 ### The Full Pipeline
 
-```
-Code → Push → CI Checks → Code Review → Merge → Build → Deploy to Staging → QA → Deploy to Production → Monitor
+```mermaid
+flowchart LR
+    S1["Code"] --> S2["Push"] --> S3["CI Checks"] --> S4["Code Review"] --> S5["Merge"] --> S6["Build"] --> S7["Deploy to Staging"] --> S8["QA"] --> S9["Deploy to Production"] --> S10["Monitor"]
 ```
 
 ### 1. Code & Commit

@@ -26,12 +26,12 @@ Every company is building AI features. Customer support bots, internal knowledge
 
 ### The RAG Pipeline
 
-```
-Company Data → Ingestion → Chunking → Embedding → Vector Database
-                                                         ↓
-User Query → Embedding → Similarity Search → Retrieved Context → LLM → Response
-                                                                         ↓
-                                                                   Feedback Loop
+```mermaid
+flowchart LR
+    Data["Company Data"] --> Ing["Ingestion"] --> Chunk["Chunking"] --> Emb1["Embedding"] --> VecDB[("Vector Database")]
+    Query["User Query"] --> Emb2["Embedding"] --> Sim["Similarity Search"] --> Ctx["Retrieved Context"] --> LLM["LLM"] --> Resp["Response"]
+    VecDB --> Sim
+    Resp --> FB["Feedback Loop"]
 ```
 
 ### Step 1: Data Ingestion

@@ -18,10 +18,11 @@ Everything starts with a request. A user fills out a form — a purchase requisi
 
 Every request lives in exactly one state at any given time. The set of valid states and the transitions between them form a state machine. A typical approval workflow might look like:
 
-```
-draft → submitted → under_review → approved → executed
-                        ↓              ↓
-                    returned       rejected
+```mermaid
+flowchart LR
+    Draft["draft"] --> Submitted["submitted"] --> Review["under_review"] --> Approved["approved"] --> Executed["executed"]
+    Review --> Returned["returned"]
+    Review --> Rejected["rejected"]
 ```
 
 Each transition has a guard — a condition that must be true before the transition fires. "Can only move from `under_review` to `approved` if the approver has the `finance_manager` role and the amount is under their approval limit." Model this explicitly. A state machine library or a transitions table in your database beats scattered if-else blocks across your codebase.

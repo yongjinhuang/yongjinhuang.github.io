@@ -26,14 +26,12 @@ This is the central architectural decision for any feed system.
 
 **Hybrid approach (what most large platforms use).** Fan-out on write for normal users (pre-compute their followers' feeds). Fan-out on read for high-follower accounts (celebrities, brands). This avoids the "celebrity problem" while keeping read latency low for the majority of requests.
 
-```
-User Posts → Validation → Moderation Check → Content Store
-                                                  ↓
-                              Fan-Out Service → Follower Feed Inboxes (push)
-                                    OR
-                              On-Demand Merge at Read Time (pull)
-                                                  ↓
-                              Ranking & Filtering → Personalized Feed
+```mermaid
+flowchart TD
+    Post["User Posts"] --> Val["Validation"] --> Mod["Moderation Check"] --> Store[("Content Store")]
+    Store --> Push["Fan-Out Service -&gt; Follower Feed Inboxes (Push)"]
+    Store --> Pull["On-Demand Merge at Read Time (Pull)"]
+    Push & Pull --> Rank["Ranking &amp; Filtering"] --> Feed["Personalized Feed"]
 ```
 
 ### Content Ranking
@@ -56,16 +54,13 @@ Reaction systems (Facebook's love/haha/angry, Slack's emoji reactions) add nuanc
 
 ### Moderation Pipeline
 
-```
-Content Created → Automated Filters (Layer 1)
-                      ↓
-               AI/ML Classification (Layer 2)
-                      ↓
-              Borderline Queue → Human Review (Layer 3)
-                      ↓
-              Decision: Approve / Remove / Restrict / Escalate
-                      ↓
-              Appeals Process → Secondary Human Review
+```mermaid
+flowchart TD
+    Created["Content Created"] --> L1["Layer 1: Automated Filters"]
+    L1 --> L2["Layer 2: AI/ML Classification"]
+    L2 --> L3["Layer 3: Borderline Queue -&gt; Human Review"]
+    L3 --> Dec["Decision: Approve / Remove / Restrict / Escalate"]
+    Dec --> Appeal["Appeals Process -&gt; Secondary Human Review"]
 ```
 
 **Layer 1 -- Automated filters.** Hash matching against known bad content databases (PhotoDNA for child exploitation imagery, shared industry databases for terrorism content). Keyword filters for obvious spam. URL blocklists. These catch the easy cases instantly.

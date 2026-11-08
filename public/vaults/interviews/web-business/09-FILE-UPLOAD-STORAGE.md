@@ -72,8 +72,9 @@ For large files, you don't want to route through your server:
 
 File goes through your server to storage. Simple, works for small files.
 
-```
-Client → Your Server → Object Storage (S3)
+```mermaid
+flowchart LR
+    Client["Client"] --> Server["Your Server"] --> S3[("Object Storage (S3)")]
 ```
 
 **When it's used:** Small files (avatars, thumbnails), when you need to process files before storing.
@@ -84,8 +85,9 @@ Client → Your Server → Object Storage (S3)
 
 Client uploads directly to storage. Your server only generates the upload URL.
 
-```
-Client → Your Server (get presigned URL) → Client → S3 (upload) → Your Server (confirm)
+```mermaid
+flowchart LR
+    C1["Client"] --> S1["Your Server<br/>(get presigned URL)"] --> C2["Client"] --> S3[("S3<br/>(direct upload)")] --> S2["Your Server<br/>(confirm)"]
 ```
 
 **When it's used:** Large files, video uploads, any high-traffic app.
@@ -96,8 +98,9 @@ Client → Your Server (get presigned URL) → Client → S3 (upload) → Your S
 
 Upload triggers a processing pipeline that generates variants.
 
-```
-Upload → S3 → Lambda/Worker → Generate thumbnails → Store variants → Update database
+```mermaid
+flowchart LR
+    Up["Upload"] --> S3[("S3")] --> Worker["Lambda / Worker"] --> Thumb["Generate thumbnails"] --> Store["Store variants"] --> DB[("Update database")]
 ```
 
 **When it's used:** Apps with lots of images (social media, e-commerce, real estate listings).

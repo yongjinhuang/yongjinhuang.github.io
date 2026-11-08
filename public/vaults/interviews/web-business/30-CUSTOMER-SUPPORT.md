@@ -28,10 +28,11 @@ The key principle is omnichannel: no matter how the customer reaches out, the ag
 
 A ticket follows a clear state machine:
 
-```
-new → open → pending → on_hold → solved → closed
-               ↓                    ↓
-           escalated            reopened → open
+```mermaid
+flowchart LR
+    New["new"] --> Open["open"] --> Pending["pending"] --> OnHold["on_hold"] --> Solved["solved"] --> Closed["closed"]
+    Pending --> Escalated["escalated"]
+    Solved --> Reopened["reopened"] --> Open
 ```
 
 - **New**: Just created, not yet seen by any agent.

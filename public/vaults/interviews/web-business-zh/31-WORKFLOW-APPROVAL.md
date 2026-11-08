@@ -21,11 +21,12 @@
 
 审批单据的核心状态流转：
 
-```
-草稿(Draft) → 审批中(Pending) → 已通过(Approved)
-                    ↘ 已驳回(Rejected) → 重新提交 → 审批中
-                    ↘ 已撤回(Withdrawn)
-                    ↘ 已超时(Expired)
+```mermaid
+flowchart LR
+    Draft["草稿 (Draft)"] --> Pending["审批中 (Pending)"] --> Approved["已通过 (Approved)"]
+    Pending --> Rejected["已驳回 (Rejected)"] -->|"重新提交"| Pending
+    Pending --> Withdrawn["已撤回 (Withdrawn)"]
+    Pending --> Expired["已超时 (Expired)"]
 ```
 
 每次状态变更都必须记录：操作人、时间戳、变更前状态、变更后状态、操作备注。状态机的转换规则必须严格定义——不能从"已通过"跳到"草稿"，不能从"已撤回"跳到"已通过"。

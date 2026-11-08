@@ -30,10 +30,10 @@
 
 用户账号是一个状态机：
 
-```
-未验证 → 活跃 → 封禁 → 停用 → 删除
-           ↑              ↓
-           └── 重新激活 ──┘
+```mermaid
+flowchart LR
+    Unverified["未验证"] --> Active["活跃"] --> Suspended["封禁"] --> Deactivated["停用"] --> Deleted["删除"]
+    Deactivated -->|"重新激活"| Active
 ```
 
 - **未验证**：注册了但没确认邮箱

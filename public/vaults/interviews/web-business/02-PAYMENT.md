@@ -23,8 +23,9 @@ Money is the most sensitive thing in your application. Bugs in payment code mean
 
 ### How Money Actually Flows
 
-```
-Customer → Issuing Bank → Card Network (Visa/MC) → Acquiring Bank → Payment Processor → Your Merchant Account
+```mermaid
+flowchart LR
+    C["Customer"] --> IB["Issuing Bank"] --> Net["Card Network<br/>(Visa / MC)"] --> AB["Acquiring Bank"] --> PP["Payment Processor"] --> MA["Your Merchant Account"]
 ```
 
 At each hop, someone takes a small fee. That's why payment processing costs 2-3% of each transaction.

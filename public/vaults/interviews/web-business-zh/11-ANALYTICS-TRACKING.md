@@ -42,9 +42,9 @@ Properties:
 
 漏斗追踪用户经过多步流程的情况：
 
-```
-着陆页 → 注册页 → 填写表单 → 提交 → 验证邮箱 → 活跃用户
- 1000     400      300       250      200        180
+```mermaid
+flowchart LR
+    S1["着陆页<br/>(1000)"] --> S2["注册页<br/>(400)"] --> S3["填写表单<br/>(300)"] --> S4["提交<br/>(250)"] --> S5["验证邮箱<br/>(200)"] --> S6["活跃用户<br/>(180)"]
 ```
 
 每一步有一个转化率。掉得最多的地方就是你应该重点优化的地方。
@@ -103,11 +103,13 @@ Properties:
 
 事件发到一个中央数据管道（Segment、Rudderstack），再分发到多个目的地。
 
-```
-应用 → Segment → Mixpanel（产品分析）
-              → Google Analytics（网站分析）
-              → Salesforce（CRM）
-              → BigQuery（数据仓库）
+```mermaid
+flowchart LR
+    App["应用"] --> Seg["Segment (CDP)"]
+    Seg --> Mix["Mixpanel<br/>（产品分析）"]
+    Seg --> GA["Google Analytics<br/>（网站分析）"]
+    Seg --> SF["Salesforce<br/>（CRM）"]
+    Seg --> BQ[("BigQuery<br/>（数据仓库）")]
 ```
 
 **适用场景：** 使用多个分析工具并想要单一数据源的公司。

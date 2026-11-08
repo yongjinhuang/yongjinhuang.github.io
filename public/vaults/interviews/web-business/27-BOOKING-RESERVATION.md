@@ -141,10 +141,11 @@ Users want to change dates, times, or party size after booking. This is essentia
 
 A well-designed booking system tracks clear status transitions:
 
-```
-pending → held → confirmed → checked_in → completed
-                     ↓              ↓
-                 cancelled      no_show
+```mermaid
+flowchart LR
+    Pending["pending"] --> Held["held"] --> Confirmed["confirmed"] --> CheckedIn["checked_in"] --> Completed["completed"]
+    Confirmed --> Cancelled["cancelled"]
+    CheckedIn --> NoShow["no_show"]
 ```
 
 Each status transition triggers side effects: `confirmed` sends a confirmation email, `cancelled` triggers a refund and waitlist promotion, `no_show` applies a penalty and flags the user. Model these as a state machine with explicit transition rules rather than ad-hoc status updates scattered across the codebase.

@@ -42,9 +42,9 @@ A tracking plan prevents chaos. Without it, you'll end up with duplicate events,
 
 A funnel tracks users through a multi-step process:
 
-```
-Landing Page → Sign Up Page → Fill Form → Submit → Verify Email → Active User
-   1000            400           300        250        200           180
+```mermaid
+flowchart LR
+    S1["Landing Page<br/>(1000)"] --> S2["Sign Up Page<br/>(400)"] --> S3["Fill Form<br/>(300)"] --> S4["Submit<br/>(250)"] --> S5["Verify Email<br/>(200)"] --> S6["Active User<br/>(180)"]
 ```
 
 Each step has a conversion rate. The biggest drops show where to focus improvement efforts.
@@ -106,11 +106,13 @@ Your server sends events to the analytics platform. Triggered by API calls, data
 
 Events are sent to a central data pipeline (Segment, Rudderstack) that fans out to multiple destinations (analytics, CRM, data warehouse, marketing tools).
 
-```
-App → Segment → Mixpanel (product analytics)
-              → Google Analytics (web analytics)
-              → Salesforce (CRM)
-              → BigQuery (data warehouse)
+```mermaid
+flowchart LR
+    App["App"] --> Seg["Segment (CDP)"]
+    Seg --> Mix["Mixpanel<br/>(product analytics)"]
+    Seg --> GA["Google Analytics<br/>(web analytics)"]
+    Seg --> SF["Salesforce<br/>(CRM)"]
+    Seg --> BQ[("BigQuery<br/>(data warehouse)")]
 ```
 
 **When it's used:** Companies that use multiple analytics tools and want a single source of truth.

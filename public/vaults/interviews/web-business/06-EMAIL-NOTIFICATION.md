@@ -81,8 +81,9 @@ These are initiated by the business, not by user actions:
 
 Application events are published to a queue. A notification service consumes events and decides what to send, to whom, and on which channel.
 
-```
-User Action → Event → Notification Service → Channel (email / push / SMS / in-app)
+```mermaid
+flowchart LR
+    Act["User Action"] --> Ev["Event"] --> Svc["Notification Service"] --> Ch["Channel<br/>(email / push / SMS / in-app)"]
 ```
 
 **When it's used:** Most production applications. Decouples notification logic from business logic.

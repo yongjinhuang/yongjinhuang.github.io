@@ -14,11 +14,12 @@
 
 这是预订系统的核心状态机：
 
-```
-搜索 → 选择 → 锁定(Hold) → 确认(Confirm) → 提醒(Remind) → 完成(Complete)
-                                    ↘ 过期释放                    ↘ 爽约(No-show)
-                              ↘ 取消(Cancel)
-                                    ↘ 候补(Waitlist)
+```mermaid
+flowchart LR
+    Search["搜索"] --> Select["选择"] --> Hold["锁定 (Hold)"] --> Confirm["确认 (Confirm)"] --> Remind["提醒 (Remind)"] --> Complete["完成 (Complete)"]
+    Hold --> Expire["过期释放"]
+    Confirm --> Cancel["取消 (Cancel)"] --> Waitlist["候补 (Waitlist)"]
+    Remind --> NoShow["爽约 (No-show)"]
 ```
 
 1. **搜索**：用户输入日期、时间、人数、地点等条件，系统返回可用选项

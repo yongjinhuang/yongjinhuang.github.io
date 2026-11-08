@@ -80,8 +80,9 @@ Monitoring without alerting is just looking at dashboards and hoping someone not
 
 In a microservices architecture, a single user request might touch 5+ services. Tracing follows the request through every service:
 
-```
-User Request → API Gateway → Auth Service → Order Service → Payment Service → Email Service
+```mermaid
+flowchart LR
+    Req["User Request"] --> GW["API Gateway"] --> Auth["Auth Service"] --> Order["Order Service"] --> Pay["Payment Service"] --> Email["Email Service"]
 ```
 
 Each service adds its span to the trace. You can see the complete request journey, including where time was spent and where errors occurred.
@@ -114,8 +115,9 @@ Each service adds its span to the trace. You can see the complete request journe
 
 All services send logs to a central system where they can be searched and analyzed.
 
-```
-App Servers → Log Collector (Fluentd/Filebeat) → Elasticsearch → Kibana (dashboards + search)
+```mermaid
+flowchart LR
+    App["App Servers"] --> Coll["Log Collector<br/>(Fluentd / Filebeat)"] --> ES[("Elasticsearch")] --> Kib["Kibana<br/>(dashboards + search)"]
 ```
 
 **When it's used:** Any app beyond a single server. Essential for distributed systems.
@@ -126,8 +128,9 @@ App Servers → Log Collector (Fluentd/Filebeat) → Elasticsearch → Kibana (d
 
 Application exposes metrics. Monitoring system scrapes them. Dashboards visualize. Alerts fire on thresholds.
 
-```
-App exposes /metrics → Prometheus scrapes → Grafana visualizes → AlertManager sends alerts
+```mermaid
+flowchart LR
+    App["App exposes /metrics"] --> Prom["Prometheus scrapes"] --> Graf["Grafana visualizes"] --> AM["AlertManager sends alerts"]
 ```
 
 **When it's used:** Every production system should have this.

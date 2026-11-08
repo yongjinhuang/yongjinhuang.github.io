@@ -140,16 +140,20 @@ const source2 = playSound(ctx, buffer); // create new source to replay
 
 The Web Audio API uses a modular routing architecture. Audio nodes are connected in a directed graph from sources through processing nodes to the destination.
 
-```
-Source Nodes          Processing Nodes         Destination
-+-----------+       +------------+           +-----------+
-| Buffer    |------>| Gain       |---------->|           |
-| Source    |       +------------+           |           |
-+-----------+                                | context.  |
-                    +------------+           | destination|
-+-----------+       | Biquad     |---------->|           |
-| Oscillator|------>| Filter     |           |           |
-+-----------+       +------------+           +-----------+
+```mermaid
+flowchart LR
+    subgraph Sources["Source Nodes"]
+        Buf["AudioBufferSourceNode"]
+        Osc["OscillatorNode"]
+    end
+    subgraph Proc["Processing Nodes"]
+        Gain["GainNode"]
+        Filt["BiquadFilterNode"]
+    end
+    Dest["AudioContext.destination<br/>(Speakers)"]
+
+    Buf --> Gain --> Dest
+    Osc --> Filt --> Dest
 ```
 
 ### Building a Complete Audio Graph for Games
