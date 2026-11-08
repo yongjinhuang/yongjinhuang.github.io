@@ -172,6 +172,51 @@ Instead of storing just the current state (balance = $150), store every event th
 - **Ignoring timezone and cutoff issues**: Daily transaction limits reset at midnight — but midnight in which timezone? Settlement batches cut off at specific times. Getting this wrong means users see incorrect available balances or hit limits at unexpected times.
 - **Not planning for disputes**: Users will claim they didn't authorize a transaction, or that they paid a merchant who didn't deliver. You need a dispute resolution process with investigation workflows, temporary credits, and communication templates. Regulators often mandate specific timelines for resolving disputes.
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Two-Layer Balance Modeling: Shadow/Available Ledger vs. Posted/Settled Ledger
+
+**The War Story:** A digital wallet team implemented a textbook double-entry ledger with a single `balance_cents` projection per account. Soon they hit three production crises:
+1. A user initiated a $100 bank withdrawal (which takes 2 days via ACH). Before the bank webhook returned, the user spent the same $100 on a virtual card because the ledger hadn't posted the final settlement yet.
+2. When they switched to debiting the ledger immediately on hold/authorization, virtual card pre-authorizations at gas stations ($150 hold) and hotels ($300 incidental hold) polluted the immutable accounting ledger with thousands of temporary entries that had to be mutated or reversed days later when the final capture was $42.10—making financial audits a nightmare.
+3. Users topped up $500 via credit card, immediately transferred it P2P to a burner account, withdrew to a bank, and filed a credit card chargeback 5 days later.
+
+**Non-Obvious Best Practices:**
+- **Four-Bucket Balance Architecture (Layered Ledger):** Never represent a wallet with a single balance number. Every wallet account must segregate funds into distinct, double-entry sub-accounts (or state layers):
+  1. **`Posted_Settled_Balance` (The Accounting Book of Record):** Only immutable, finalized financial postings (`CAPTURED`, `SETTLED`).
+  2. **`Outbound_Hold_Balance` (Pending Debits):** Funds locked for in-flight withdrawals, virtual card pre-authorizations (`AUTH_HOLD`), or P2P escrow.
+  3. **`Inbound_Unsettled_Balance` (Restricted Credits):** Card-funded top-ups or unsettled ACH pulls that can be spent on platform merchants (reversible goods) but **cannot be withdrawn to a bank or sent via P2P** until the T+3 risk window clears.
+  4. **Derived `Available_to_Spend` vs. `Available_to_Withdraw`:**
+     $$\text{Available to Spend} = \text{Posted\_Settled} + \text{Inbound\_Unsettled} - \text{Outbound\_Hold}$$
+     $$\text{Available to Withdraw / P2P} = \text{Posted\_Settled} - \text{Outbound\_Hold}$$
+- **Two-Phase Ledger Lifecycle (`PENDING` $\rightarrow$ `POSTED` / `VOIDED`):** Model holds as first-class double-entry transfers from `User:Available` to `User:Pending_Hold` with an automatic `expires_at` TTL (e.g., 7 days for card auths). On final capture of $42.10 against a $150.00 hold, atomically release $150.00 from `User:Pending_Hold` back to `User:Available` and post the exact $42.10 debit to `Merchant:Payable`.
+
+### 2. Hot-Account Contention Sharding on Platform Fee & Float Omnibus Accounts
+
+**The War Story:** During a Lunar New Year red-envelope (P2P hongbao) and flash-sale campaign, transaction throughput hit 4,000 TPS. Suddenly, the database CPU spiked, P99 latency jumped from 15ms to 12 seconds, and transactions started failing with `deadlock detected` and `lock wait timeout exceeded`. Individual user wallets had zero contention, **but every single transaction in the system was simultaneously locking the exact same central house accounts**: `Platform_Float_Omnibus_Account` (for top-ups/withdrawals) and `Platform_Fee_Revenue_Account` (for commission credits) to update their materialized balances and enforce `SELECT ... FOR UPDATE` serialization!
+
+**Non-Obvious Best Practices:**
+- **Striped Sub-Accounts (Sharded Hot Accounts):** Split every high-throughput system/omnibus account (`Platform_Fee_Revenue`, `Escrow_Float`, `Promo_Subsidy_Pool`) into $N$ physical sub-accounts (e.g., `Platform_Fee_Revenue#00` through `Platform_Fee_Revenue#63`, where $N = 64$ or $256$). Route each transaction to a shard deterministically via `hash(transaction_id) % N` (or random thread-local assignment). This multiplies row-lock concurrency by $N\times$ while preserving strict ACID double-entry invariants on every transaction. An EOD (End-of-Day) sweep job or SQL view (`SUM(balance) WHERE parent_account_id = 'Platform_Fee_Revenue'`) aggregates the shards for financial reporting.
+- **Canonical Lock Ordering to Eliminate Deadlocks:** Whenever a transaction touches multiple accounts (e.g., `User_A`, `User_B`, and `Platform_Fee#12`), sort the account IDs lexicographically **before** acquiring row locks (`SELECT id, balance FROM accounts WHERE id IN (...) ORDER BY id ASC FOR UPDATE`). Strict global lock ordering makes circular wait conditions—and therefore database deadlocks—mathematically impossible.
+- **Credit-Only Accounts Don't Need Blocking Balance Locks:** Accounts that only receive funds during normal operations (like `Platform_Fee_Revenue`) cannot go negative. Skip `SELECT ... FOR UPDATE` balance validation on pure-credit house accounts; append the immutable ledger entry and update materialized balances asynchronously or via conflict-free atomic increments (`balance = balance + delta`).
+
+### 3. Automated 3-Way Reconciliation (Internal Ledger vs. PSP Settlement File vs. Bank Statement)
+
+**The War Story:** A wallet team ran a daily reconciliation script that compared their internal database `transactions` table against Stripe/Adyen webhook logs. Everything matched 100%, so finance signed off. Six months later, an external audit revealed a $92,000 cash shortfall in the safeguarding trust bank account. Why?
+1. Several webhooks had been lost during a gateway outage, and refunds triggered manually by support inside the PSP dashboard never fired back to the internal ledger.
+2. The PSP deducted blended interchange fees, FX conversion spreads, and chargeback dispute penalties directly from the daily net payout wire before depositing into the bank.
+3. Comparing your database against your own webhook logs is **not reconciliation**—it is just checking if your ingestion code worked.
+
+**Non-Obvious Best Practices:**
+- **True 3-Way Triangle Reconciliation:** Every day at T+1 cutoff, an automated reconciliation engine must cross-verify three independent sources of truth:
+  1. **Source A — Internal Double-Entry Ledger:** All ledger postings cut off at the settlement window timezone.
+  2. **Source B — PSP Settlement Batch Report:** The raw transaction-level settlement file pulled via SFTP/API from the payment processor (e.g., Adyen Payment Accounting Report / Stripe Balance Transaction CSV), which itemizes gross amount, network interchange fees, scheme fees, and net settlement batch ID.
+  3. **Source C — Safeguarding Bank Statement (MT940 / ISO 20022 `camt.053`):** The actual Nostro/Trust bank account statement confirming that batch wire `BATCH_20261108_01` for exact net amount $\$482,910.45$ physically landed in the bank.
+- **Suspense Accounts & Self-Healing Exception Classification:** Never silently force-update ledger balances when a mismatch occurs. Classify breaks into deterministic buckets:
+  - **Timing Difference (In-Transit):** Present in Internal Ledger on Nov 8 at 23:59, settled in PSP Batch on Nov 9. Move to `Reconciliation_In_Transit_Suspense` and auto-clear if matched within 48 hours.
+  - **State Drift (Missing Webhook):** Settled in PSP report, still `PENDING` internally $\rightarrow$ emit an idempotent synthetic settlement event to roll the internal state machine forward.
+  - **Unaccounted Fee / FX Slippage / Orphan Mutation:** Someone issued a manual refund in the PSP portal or bank charged an unexpected wire fee $\rightarrow$ page Finance Ops immediately and quarantine the exact delta in `Unreconciled_Break_Suspense`.
+
 ## Quick Reference
 
 | Scenario              | Recommended Approach                                                                    |

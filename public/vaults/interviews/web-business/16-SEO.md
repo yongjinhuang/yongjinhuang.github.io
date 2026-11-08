@@ -97,6 +97,11 @@ This enables rich results in Google — star ratings, price info, FAQ dropdowns,
 | **Core Web Vitals**  | Google's page experience metrics (LCP, INP, CLS)                                                  |
 | **Sitemap**          | An XML file listing all URLs on your site, submitted to search engines                            |
 | **robots.txt**       | A file telling crawlers which URLs to crawl or skip                                               |
+| **Faceted Navigation** | Multi-select category filters (color, size, price, sort) that can generate millions of URL permutations |
+| **Soft 404**         | A missing or empty page that returns HTTP `200 OK` instead of `404 Not Found`, polluting search indexes |
+| **hreflang**         | HTML `<link>` or HTTP header attribute telling search engines which language/region a URL targets |
+| **x-default**        | Fallback `hreflang` value pointing to the language-selector or default global version of a page   |
+| **noindex**          | Meta robots directive (`<meta name="robots" content="noindex">`) instructing crawlers not to index a page |
 
 ## Common Patterns
 
@@ -136,19 +141,86 @@ Content is managed in a CMS, pages are statically generated at build time.
 - **Localized content**: For multi-language sites, use `hreflang` tags to tell Google which language version to show to which users.
 - **Soft 404s**: Returning a 200 status code for a page that says "Not Found." Google gets confused. Return proper 404 status codes.
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Faceted Navigation Crawl-Budget Traps
+
+In e-commerce, real estate, or job board sites, **faceted navigation** (sidebar filters for color, brand, size, price range, rating, and sort order) is the #1 silent killer of organic search traffic.
+
+Suppose a single category page (`/shoes`) has 15 filter checkboxes and 4 sort options. If every filter click generates a crawlable `<a href="/shoes?color=black&size=10&sort=price_asc">` link:
+- Just 15 binary filters create $2^{15} = 32,768$ URL combinations—and if parameters can appear in arbitrary order (`?a=1&b=2` vs `?b=2&a=1`), permutations explode into the **millions** per category.
+- Googlebot spends 99% of your site's **crawl budget** spidering useless empty filter combinations (`/shoes?color=purple&size=14&brand=acme`) while newly launched high-margin product pages sit undiscovered for weeks.
+
+```mermaid
+flowchart TD
+    Cat["Category Page: /shoes"] --> Check{"Filter Depth & Search Demand"}
+    Check -- "High-Search Single Attribute<br/>(e.g., /shoes/mens-running)" --> Indexable["Indexable Clean Path<br/>SSR + Self-Canonical + In Sitemap"]
+    Check -- "2+ Filters, Price Sliders, or Sort Order<br/>(e.g., ?color=red&size=9&sort=asc)" --> Trap["Crawl Budget Trap<br/>(Millions of Permutations)"]
+    Trap --> Fix["1. Canonical to Base '/shoes'<br/>2. Meta robots 'noindex, follow'<br/>3. Trigger via JS button / Disallow in robots.txt"]
+```
+
+**Production Defense Strategy:**
+1. **Promote high-intent single facets to clean paths**: Allow indexation only for curated 1-level facets with real search volume (e.g., `/shoes/running` or `/shoes/nike`).
+2. **Block multi-facet and sort combinations**: Whenever 2+ filters, price ranges, or `sort=` parameters are active:
+   - Point `<link rel="canonical" href="https://example.com/shoes">` back to the clean parent category.
+   - Add `<meta name="robots" content="noindex, follow">` or block non-SEO query parameters (`*?sort=*`, `*?price_min=*`) in `robots.txt` so crawlers never fetch them in the first place.
+   - Enforce deterministic alphabetical parameter ordering in URL builders so `?b=2&a=1` is never generated.
+   - Render purely interactive filter controls (like sort dropdowns or multi-select checkboxes) as `<button>` elements updating URL state via `history.pushState` rather than `<a href>` tags that bots blindly follow.
+
+### 2. Soft-404s in SPAs & Streaming SSR Status Codes
+
+A **Soft 404** occurs when a URL does not exist (deleted product, expired job listing, typo URL), the page displays a human-friendly *"Sorry, product not found"* message, **but the server responds with HTTP `200 OK`**.
+
+Why does this happen constantly in modern web stacks?
+1. **Client-Side SPAs (`index.html` catch-all)**: S3/CloudFront or Nginx is configured to rewrite all unknown routes (`/* -> /index.html` with status `200`) so React Router can handle routing in the browser. When Googlebot requests `/products/deleted-item-999`, it receives `HTTP 200 OK`, executes JS, sees thin "Not Found" text, flags a Soft-404 in Google Search Console, and wastes crawl budget re-crawling dead URLs.
+2. **React 18/19 Streaming SSR (`renderToPipeableStream`)**: In streaming SSR, the server flushes the HTTP response headers (`HTTP 200 OK`) and `<head>` shell **immediately** while `<Suspense>` boundaries await database queries. If a nested async server component later discovers the product doesn't exist and throws `notFound()`, **the `200 OK` HTTP status code has already been sent over the TCP socket and cannot be changed to `404`!**
+
+**Best Practice:**
+- **Await primary entity existence before streaming**: In Next.js App Router (`generateMetadata` or top of the page Server Component before `<Suspense>`), verify the primary resource exists and call `notFound()` **before** the shell flushes so the server sends a real HTTP `404 Not Found` (or `410 Gone` for permanently removed items).
+- **Dynamic `<meta name="robots" content="noindex">`**: If an error occurs inside a streamed boundary after headers are sent, inject `<meta name="robots" content="noindex">` into the DOM stream so Googlebot knows not to index the broken page.
+- **Zero-result search pages**: Internal search result pages with 0 matches (`/search?q=asdfghjkl`) are also treated as Soft-404s by Google—always add `noindex` when `results.length === 0`.
+
+### 3. International `hreflang` Reciprocity & Geo-IP Redirect Mistakes
+
+Expanding a site into multiple languages or countries (`example.com/en/`, `example.com/de/`, `example.com/fr/`) often leads to two devastating SEO mistakes that de-index international pages overnight:
+
+#### Mistake A: Automatic Geo-IP Redirects Block Googlebot
+
+Product managers frequently ask developers: *"If a user visits from a US IP address, automatically `302` redirect them to `/en/`."*
+- **Why this destroys SEO:** Googlebot crawls the web primarily from **US IP addresses** (Mountain View / US data centers). If your middleware auto-redirects all US IPs to `/en/`, then every time Googlebot tries to crawl `/de/pricing` or `/fr/pricing`, your server forces it back to `/en/pricing`! Googlebot can never see your German, French, or Japanese pages, and de-indexes all of them.
+- **Fix:** **Never force auto-redirects based on IP or `Accept-Language` on indexable public URLs.** Instead, serve the exact URL requested (`/de/pricing`), and display a non-intrusive dismissible banner (*"It looks like you're in the United States. Switch to English?"*).
+
+#### Mistake B: Missing `hreflang` Reciprocity (Return Tags)
+
+`hreflang` annotations tell Google which regional or language URL corresponds to the current page so US searchers see `/en-us/` (in USD) while UK searchers see `/en-gb/` (in GBP) without duplicate-content penalties. However, Google enforces a strict **bidirectional reciprocity rule**:
+- If Page A (`/en/`) links to Page B (`/de/`) via `hreflang="de"`, then Page B (`/de/`) **must** link back to Page A (`/en/`) via `hreflang="en"`. If Page B omits the return link, **Google silently ignores the `hreflang` tag entirely.**
+- Every page must also include a **self-referencing `hreflang`** tag and an **`x-default`** tag for unmatched locales:
+
+```html
+<!-- Inside <head> of https://example.com/de/pricing -->
+<link rel="canonical" href="https://example.com/de/pricing" />
+<link rel="alternate" hreflang="en" href="https://example.com/en/pricing" />
+<link rel="alternate" hreflang="de" href="https://example.com/de/pricing" />
+<link rel="alternate" hreflang="zh-Hans" href="https://example.com/zh/pricing" />
+<link rel="alternate" hreflang="x-default" href="https://example.com/en/pricing" />
+```
+
+Notice that `canonical` on the German page points to **itself** (`/de/pricing`), **never** to `/en/pricing`—pointing `/de/pricing`'s canonical to `/en/pricing` tells Google that the German page is a duplicate that should be de-indexed!
+
 ## Quick Reference
 
-| SEO Factor       | Developer Action                                                     |
-| ---------------- | -------------------------------------------------------------------- |
-| Page title       | Unique `<title>` per page, 50-60 chars, includes target keyword      |
-| Meta description | Unique `<meta description>` per page, 150-160 chars                  |
-| Headings         | One `<h1>` per page, logical hierarchy                               |
-| URLs             | Clean, descriptive, lowercase (`/blog/seo-guide` not `/page?id=123`) |
-| Images           | Compressed, lazy-loaded, with descriptive `alt` text                 |
-| Performance      | LCP < 2.5s, INP < 200ms, CLS < 0.1                                   |
-| Mobile           | Responsive design, readable text, tappable buttons                   |
-| Rendering        | SSR/SSG for content pages, not client-only rendering                 |
-| Sitemap          | Auto-generated XML sitemap, submitted to Search Console              |
-| Redirects        | 301 for permanent URL changes, never break old URLs                  |
-| Structured data  | JSON-LD schema markup for products, articles, FAQs                   |
-| Canonical        | `<link rel="canonical">` on every page                               |
+| SEO Factor          | Developer Action                                                                 |
+| ------------------- | -------------------------------------------------------------------------------- |
+| Page title          | Unique `<title>` per page, 50-60 chars, includes target keyword                  |
+| Meta description    | Unique `<meta description>` per page, 150-160 chars                              |
+| Headings            | One `<h1>` per page, logical hierarchy                                           |
+| URLs                | Clean, descriptive, lowercase (`/blog/seo-guide` not `/page?id=123`)             |
+| Faceted filters     | Canonical to base category + `noindex` on 2+ filters or sort query params        |
+| Images              | Compressed, lazy-loaded (except LCP hero image), with descriptive `alt` text     |
+| Performance         | LCP < 2.5s, INP < 200ms, CLS < 0.1                                               |
+| Mobile              | Responsive design, readable text, tappable buttons                               |
+| Rendering & 404s    | SSR/SSG; verify resource existence before streaming headers to return real `404` |
+| Sitemap             | Auto-generated XML sitemap (only `200 OK` canonical URLs), submitted to GSC      |
+| Redirects           | 301 for permanent URL changes; never Geo-IP auto-redirect crawlers               |
+| Structured data     | JSON-LD schema markup for products, articles, FAQs                               |
+| Canonical & i18n    | Self-referencing `<link rel="canonical">` + reciprocal `hreflang` + `x-default`  |

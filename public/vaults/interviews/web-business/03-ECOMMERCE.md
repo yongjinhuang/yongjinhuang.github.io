@@ -89,6 +89,12 @@ flowchart LR
 | **Cross-sell**          | "Customers also bought..." — suggesting related products                                    |
 | **Upsell**              | "Upgrade to the Pro version" — suggesting a higher-priced alternative                       |
 | **Backorder**           | Customer buys an out-of-stock item with the promise it will ship when restocked             |
+| **ATP (Available to Promise)** | The exact unit count a storefront can safely sell right now: `On-Hand - Reserved - Safety Stock` |
+| **Safety Stock (Buffer)** | Inventory intentionally held back from online checkout to absorb warehouse shrinkage or walk-in retail sales |
+| **Inventory Hoarding Attack** | Competitors or scalper bots adding all available stock into guest carts with TTL locks so real buyers see "Out of Stock" |
+| **Discount Proration**  | Distributing an order-level coupon (e.g., "$20 off $100") proportionally across individual line items so partial returns refund the exact net amount paid |
+| **Penny-Rounding Remainder** | The 1–2 cent discrepancy left over when dividing an order discount or tax across items (`$100 / 3 = $33.33 × 3 = $99.99`), allocated to the last line item |
+| **Split Shipment**      | Fulfilling a single customer order across multiple packages/warehouses that ship and capture payment on different days |
 
 ## Common Patterns
 
@@ -127,15 +133,85 @@ Multiple sellers list products on one platform (Amazon, Etsy, eBay). The platfor
 - **Fraud detection**: Watch for unusual patterns — bulk orders to new addresses, many failed payment attempts, mismatched billing/shipping addresses.
 - **Soft deletes**: Never hard-delete products that have been ordered. Orders reference products — deleting breaks the reference. Archive instead.
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Multi-Bucket Inventory Ledgers & Preventing Flash-Sale Cart-Hold Denial of Service
+
+A naive `products.stock_count` integer column fails in production for two reasons: you can't distinguish physical warehouse stock from in-flight checkout holds, and **reserving stock on "Add to Cart"** lets a competitor or scalper bot run a script that adds all 1,000 units of your flash-sale sneaker into anonymous guest carts — locking out real buyers for 15 minutes without spending a dime (**Inventory Denial-of-Service / Hoarding Attack**).
+
+Production commerce engines maintain a **5-Bucket Inventory State Ledger** per SKU per fulfillment node:
+
+| Bucket | Definition | Formula / Transition |
+| ------ | ---------- | -------------------- |
+| **On-Hand (`on_hand`)** | Physical units sitting on warehouse shelves right now | Decremented only when carrier scans package at **Shipped** |
+| **Safety Stock (`safety_stock`)** | Buffer hidden from online buyers to cover physical damage, miscounts, or in-store POS | Configurable per SKU (e.g., 5 units) |
+| **Checkout Hold (`reserved_checkout`)** | Ephemeral TTL lease (5–10 min) created **only when user enters payment step** (not on Add-to-Cart!) | Auto-expires via Redis TTL / cron if payment isn't completed |
+| **Committed Order (`reserved_order`)** | Units bound to paid orders awaiting warehouse pick/pack | Moved from `reserved_checkout` on `payment.authorized`; deducted from `on_hand` on `order.shipped` |
+| **ATP (`available_to_promise`)** | What the storefront actually allows customers to buy | $\text{ATP} = \text{on\_hand} - \text{safety\_stock} - \text{reserved\_checkout} - \text{reserved\_order}$ |
+
+```mermaid
+flowchart LR
+    Cart["Add to Cart<br/>(NO stock lock)"] -->|"Click 'Pay Now'<br/>(Auth + Rate-Limited)"| Hold["reserved_checkout<br/>(8-min TTL Lease)"]
+    Hold -->|"Payment Succeeded"| Ord["reserved_order<br/>(Committed)"]
+    Hold -.->|"TTL Expired / Payment Failed"| Release["Released back to ATP"]
+    Ord -->|"Warehouse Shipped"| Deduct["Decrement on_hand &<br/>reserved_order"]
+```
+
+### 2. Line-Item Discount Proration & Penny-Rounding Remainder Allocation
+
+Suppose a customer buys three items and applies an order-level coupon **`SAVE20` ($20 off orders over $100)**:
+- **Item A (Jacket)**: $50.00
+- **Item B (Shirt)**: $30.00
+- **Item C (Hat)**: $20.00
+- **Order Subtotal**: $100.00 → **Discount**: -$20.00 → **Net Paid**: $80.00
+
+Two weeks later, the customer returns **Item A (Jacket)** and keeps the Shirt and Hat. How much do you refund?
+- **Bug #1**: Refunding the full $50.00 sticker price means the customer got the $20 coupon on an order that is now only $50 (violating the $100 minimum) — or worse, returning all items one by one refunds $100 when they only paid $80!
+- **Bug #2**: Revoking the entire $20 coupon on the first return and refunding only $30 ($50 - $20) enrages legitimate customers who bought the right size shirt and wrong size jacket.
+
+**The Production Standard — Checkout-Time Line-Item Proration + Penny Remainder Allocation:**
+At the moment the order is created, every order-level discount and tax amount must be **prorated down to the individual `order_line_items` rows in integer cents**, and stored immutably:
+
+1. **Proportional Formula**: For each item $i$, $\text{Discount}_i = \text{round}\left(\text{TotalDiscount} \times \frac{\text{ItemPrice}_i}{\text{Subtotal}}\right)$.
+   - Here: Jacket gets $\$20 \times \frac{50}{100} = \$10.00$ (`net_refundable_cents = 4000`); Shirt gets $\$6.00$ (`2400`); Hat gets $\$4.00$ (`1600`).
+2. **The Penny-Rounding Problem**: What if 3 identical $33.33 items share a $10.00 discount?
+   - Each item gets $\text{round}(1000 \times \frac{1}{3}) = 333\text{ cents}$ ($3.33).
+   - $333 \times 3 = 999\text{ cents}$ ($9.99) — **1 cent is missing!** If the customer returns all 3 items, refunding each item's prorated net amount would leave their refund 1 cent short of what they paid (breaking accounting reconciliation and triggering PSP dispute errors).
+   - **Fix (Largest-Remainder / Last-Item Allocation)**: Allocate $\lfloor \text{share} \rfloor$ to items $1 \dots n-1$, and assign the exact remainder $\text{TotalDiscount} - \sum_{i=1}^{n-1} \text{Discount}_i$ to the highest-value (or last) line item (`333¢`, `333¢`, `334¢`).
+
+### 3. Split-Shipment & Partial-Fulfillment Payment Accounting
+
+In real-world retail, a single customer order (`ORD-500`) for 3 items often fulfills from two different warehouses — Warehouse East ships Item 1 today, Warehouse West ships Item 2 four days later, and Item 3 is cancelled because the warehouse picker found the last unit damaged on the shelf.
+
+If you tie payment status directly to a single `orders.status` column, your accounting will implode:
+
+1. **Separate `Order`, `FulfillmentOrder`, and `PaymentTransaction` Entities**:
+   - An `Order` is the customer-facing commercial contract.
+   - It splits into $N$ `FulfillmentOrders` (one per warehouse/shipment), each with its own state machine (`Allocated -> Picking -> Packed -> Shipped`).
+2. **Capture-on-Shipment (Multi-Capture)**:
+   - Because consumer protection laws and card network rules generally forbid capturing funds before goods ship, checkout places a single **$100 Authorization** (`capture_method: manual`).
+   - When Shipment 1 ships ($40), execute a **Partial Capture** for $40 (with `final_capture: false` / multicapture enabled).
+   - When Shipment 2 ships ($35), execute a second **Partial Capture** for $35.
+   - When Item 3 ($25) is cancelled as damaged-in-warehouse, issue an **Authorization Reversal** for the remaining $25 (NOT a refund! You never captured that $25, so calling the Refund API will deduct $25 from your settled cash balance while the $25 auth hold is still floating).
+
+| Event | Payment State Action | API Operation |
+| ----- | -------------------- | ------------- |
+| Checkout completed ($100) | $100 Authorized (`captured = $0`) | `PaymentIntent.authorize(10000)` |
+| Shipment 1 ships ($40) | $40 Captured (`auth_remaining = $60`) | `PaymentIntent.capture(4000, final=false)` |
+| Item 3 cancelled before ship ($25) | $25 Auth Released (`auth_remaining = $35`) | `PaymentIntent.increment_or_reverse(-2500)` |
+| Shipment 2 ships ($35) | $35 Captured (`auth_remaining = $0`) | `PaymentIntent.capture(3500, final=true)` |
+| Customer returns Shipment 1 ($40) | $40 Refunded from captured funds | `Refund.create(4000)` |
+
 ## Quick Reference
 
-| Component        | Key Consideration                              |
-| ---------------- | ---------------------------------------------- |
-| Product catalog  | Variants, pricing tiers, visibility states     |
-| Shopping cart    | Persistence, recalculation, guest vs logged-in |
-| Checkout         | Tax, shipping, promo codes, payment            |
-| Order management | State machine with clear transitions           |
-| Inventory        | Atomic updates, reservations, low-stock alerts |
-| Returns          | RMA flow, refund types, restocking             |
-| Search           | Full-text, faceted filters, relevance ranking  |
-| Admin panel      | Product CRUD, order management, analytics      |
+| Component             | Key Consideration                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------- |
+| Product catalog       | Variants, pricing tiers, visibility states, archive (soft-delete) ordered SKUs                     |
+| Shopping cart         | Persistence, recalculation, guest-to-user merge, **no stock reservation on Add-to-Cart**           |
+| Checkout & Discounts  | Tax, shipping, prorate order-level coupons to line items in cents with penny-remainder allocation  |
+| Order & Fulfillment   | Decouple customer `Order` from per-warehouse `FulfillmentOrder` state machines                     |
+| Inventory ledger      | 5-bucket ledger (`on_hand`, `safety_stock`, `reserved_checkout`, `reserved_order`, `ATP`)          |
+| Split-shipment pay    | Authorize at checkout -> Partial Capture per shipment -> Auth Reversal (not refund) if unshipped   |
+| Returns               | RMA flow, refund exact prorated line-item net cents, inspect before restocking `on_hand`           |
+| Search & Admin        | Full-text faceted search, product CRUD, order/fulfillment reconciliation, analytics                |
+

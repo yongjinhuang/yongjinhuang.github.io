@@ -66,8 +66,13 @@ When your app and a third-party service need to stay in sync:
 | **Idempotency**         | Ensuring the same operation can be safely retried without duplicate effects                       |
 | **Circuit Breaker**     | A pattern that stops calling a failing service to prevent cascading failures                      |
 | **Retry with Backoff**  | Retrying failed requests with increasing delays (1s, 2s, 4s, 8s)                                  |
-| **API Versioning**      | Services release new versions (`v1`, `v2`). Old versions are eventually deprecated                |
-| **Deprecation**         | When a service announces that an API endpoint or version will be removed                          |
+| **API Versioning**              | Services release new versions (`v1`, `v2`). Old versions are eventually deprecated                                          |
+| **Deprecation**                 | When a service announces that an API endpoint or version will be removed                                                    |
+| **Thin-Event Pull Pattern**     | Treating a webhook solely as an invalidation ping (`{ id, object_id }`) and fetching the latest canonical state via GET API |
+| **Event Watermarking**          | Storing `last_event_timestamp` on a record and rejecting stale out-of-order webhook payloads with older timestamps          |
+| **SSRF (Server-Side Request Forgery)** | Attack where a user registers an internal IP (`http://169.254.169.254`) as a webhook URL to trick your server into leaking cloud metadata |
+| **DNS Rebinding**               | Attack where a domain resolves to a public IP during validation, then flips to `127.0.0.1` with `TTL=0` during HTTP fetch   |
+| **Bulkhead Pattern**            | Isolating outbound worker pools and concurrency per tenant so one slow customer endpoint cannot starve others               |
 
 ## Common Patterns
 
@@ -144,6 +149,91 @@ class PostmarkProvider implements EmailProvider { ... }
 - **API deprecation**: Subscribe to the service's changelog/blog. When they announce a deprecation, you typically have 6-12 months to migrate. Don't ignore it.
 - **Cost monitoring**: Third-party API calls cost money. A bug that sends a million emails or makes a million API calls can generate a huge bill. Set up billing alerts.
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Out-of-Order Webhook Watermarking & The "Thin-Event Pull" Pattern
+
+Webhook providers (Stripe, GitHub, Shopify, Adyen) explicitly state in their documentation that **they do not guarantee delivery order**.
+**Two Classic Out-of-Order Disasters:**
+1. **`updated` Arrives Before `created`**: When a customer checks out on Stripe, Stripe fires `customer.subscription.created` and `customer.subscription.updated` within 40 milliseconds of each other. Due to network jitter or worker scheduling, `customer.subscription.updated` hits your server 100ms *before* `customer.subscription.created`. Your `updated` handler runs `UPDATE subscriptions SET status = 'active' WHERE stripe_id = 'sub_99'` — which matches `0 rows` and silently returns `200 OK`! Or worse, it throws a `404` and waits 1 hour for Stripe's retry backoff while the customer is locked out of their paid account.
+2. **Stale Retry Overwrites Newer State**: At 12:00:01, a user upgrades to `pro` (`evt_1`, delayed by a transient network blip). At 12:00:05, the user upgrades to `enterprise` (`evt_2`, processed immediately). At 12:02:00, Stripe retries `evt_1` (`pro`). If your handler blindly applies the webhook payload (`SET plan = payload.plan`), **the delayed retry downgrades the Enterprise customer back to Pro!**
+
+**Production Best Practice: Thin-Event State Fetch + Timestamp Watermarking**
+
+```mermaid
+sequenceDiagram
+    participant Stripe as Stripe / Third-Party Provider
+    participant Svc as Your Webhook Worker
+    participant DB as Primary DB
+    Stripe->>Svc: Webhook: customer.subscription.updated (id: sub_99, created: 1731100001) [Stale Retry!]
+    Note over Svc: Option A (Thin-Event Pull): Ignore payload body;<br/>Fetch canonical truth directly from Stripe API!
+    Svc->>Stripe: GET /v1/subscriptions/sub_99
+    Stripe-->>Svc: Returns latest state (plan: "enterprise", updated: 1731100005)
+    Svc->>DB: UPSERT subscriptions ... WHERE last_synced_at <= 1731100005
+```
+
+1. **The Thin-Event Pull Pattern (Fetch Current Truth)**: Instead of trusting the snapshot embedded inside the webhook body, treat the webhook merely as a "dirty cache notification" (`sub_99` changed). In your background worker, call `stripe.subscriptions.retrieve('sub_99')` and `UPSERT` the returned canonical object. Whether `updated` arrives before `created` or 3 retries arrive out of order, `GET /v1/subscriptions/sub_99` always returns the latest authoritative state, and `UPSERT` creates the row if `created` hasn't arrived yet!
+2. **Optimistic Watermarking (`WHERE provider_updated_at < $incoming_ts`)**: If an API doesn't support fast retrieval and you must consume webhook payloads directly, always use `INSERT ... ON CONFLICT (external_id) DO UPDATE` (`UPSERT` instead of separate `INSERT`/`UPDATE`) guarded by a monotonic watermark:
+   ```sql
+   INSERT INTO subscriptions (stripe_id, plan, status, provider_event_ts)
+   VALUES ($1, $2, $3, $4)
+   ON CONFLICT (stripe_id) DO UPDATE
+     SET plan = EXCLUDED.plan,
+         status = EXCLUDED.status,
+         provider_event_ts = EXCLUDED.provider_event_ts
+   WHERE subscriptions.provider_event_ts < EXCLUDED.provider_event_ts;
+   ```
+
+### 2. Building an Outbound Webhook Engine (Bulkheads & Dead-Endpoint Circuit Breakers)
+
+As your SaaS matures, you stop just *consuming* webhooks and have to **send outbound webhooks** to your own customers' servers (`https://hooks.customer-domain.com/events`).
+
+**What Kills Naive Outbound Webhook Senders:**
+Customer A's endpoint goes down (or starts taking 29 seconds before timing out with `504 Gateway Timeout`). Meanwhile, Customer A triggers 50,000 events. Each event blocks a worker thread for 29 seconds, then schedules 5 retries. Within 3 minutes, **100% of your worker pool is tied up waiting on Customer A's dead server**, and Customer B's critical webhooks are delayed by 6 hours.
+
+**Production Best Practice: Per-Endpoint Circuit Breakers + Tiered Retry Queues**
+
+```mermaid
+flowchart LR
+    Ev["Outbound Event"] --> Router["Endpoint Health Router"]
+    Router -->|"Circuit CLOSED (Healthy)"| FastQ["Fast Lane Queue<br/>(Timeout: 5s, Per-Tenant Cap: 10)"]
+    Router -->|"1st Failure / Slow (>3s)"| SlowQ["Slow / Retry Queue<br/>(Exponential Backoff + Jitter)"]
+    Router -->|"Circuit OPEN (>50 fails in 15m)"| Dis["Auto-Disable Endpoint<br/>+ Email Tenant Admin"]
+```
+
+1. **Aggressive Timeouts & Separate Fast/Slow Lanes**: Enforce a strict `5-second` total HTTP timeout on the primary **Fast Lane Queue**. Any endpoint whose p95 latency exceeds 2 seconds or fails on first delivery is immediately demoted to an isolated **Slow / Retry Queue** with its own worker pool so healthy customers never wait behind failing endpoints.
+2. **Per-Tenant Concurrency Bulkhead**: Acquire a Redis/token-bucket semaphore (`max_in_flight = 10` per webhook endpoint) before dispatching an HTTP call. If Customer A has 10 requests in flight, their 11th event stays queued in their tenant partition while workers move on to Customer B.
+3. **Dead-Endpoint Circuit Breaker & Auto-Disable**: Track rolling failure counts per customer endpoint. If an endpoint fails consecutively for 72 hours (or 100 consecutive attempts after exponential backoff with full jitter: `15s → 2m → 15m → 2h → 6h`), trip the circuit breaker to `DISABLED`, stop wasting worker connections, and send an automated alert email to the tenant admin with a "Replay Missed Events" button in the dashboard.
+
+### 3. SSRF Protection on Customer-Supplied Webhook URLs (Blocking `169.254.169.254` & DNS Rebinding)
+
+Whenever your app lets a user type in a URL that your backend server will fetch — such as a **Webhook URL**, an **Import Image from URL** field, a **Slack-style Link Preview** scraper, or an **OIDC Discovery URL** — you have created a prime **Server-Side Request Forgery (SSRF)** attack surface.
+
+**How Attackers Exploit Naive URL Validation:**
+1. **Cloud Metadata Theft**: An attacker registers `http://169.254.169.254/latest/meta-data/iam/security-credentials/` (AWS/GCP/Alibaba Cloud instance metadata IP) or `http://localhost:6379/` as their webhook URL, clicks "Send Test Webhook", and reads the HTTP response body logged in your "Webhook Delivery Inspector" UI — instantly stealing your production AWS IAM role credentials!
+2. **DNS Rebinding Bypass (`TTL = 0`)**: You add a pre-check: `dns.lookup(hostname)` → verify it's not a private IP → `fetch(url)`. The attacker sets up `hook.attacker.com` with `TTL = 0`:
+   - **Lookup #1 (Your Validator)**: Resolves to `93.184.216.34` (a harmless public IP). Validation passes!
+   - **Lookup #2 (5ms later inside `fetch(url)`)**: The HTTP client performs its own DNS lookup, which now resolves `hook.attacker.com` to `169.254.169.254` or `10.0.1.25` (internal admin service)!
+
+```mermaid
+flowchart TB
+    subgraph Vulnerable["Anti-Pattern: Validate-Then-Fetch (Vulnerable to DNS Rebinding)"]
+        U1["User URL: https://rebind.evil.com"] --> V1["1. Validator DNS Lookup -> 93.184.216.34 (Pass!)"]
+        V1 --> F1["2. HTTP Client DNS Lookup (TTL=0) -> 169.254.169.254"]
+        F1 --> Meta["Steals AWS IAM Credentials!"]
+    end
+    subgraph Secure["Best Practice: Custom Dialer Pinning + Egress Proxy"]
+        U2["User URL"] --> Dial["Single Custom TCP Dialer (Smokescreen / SafeHttpAgent)"]
+        Dial --> Res["Resolve DNS Once -> Check Denylist (RFC1918, 169.254/16, ::1)"]
+        Res -->|"Public IP Only"| Pin["Connect TCP Socket Directly to Verified IP<br/>(Never re-resolves hostname; blocks 3xx redirects)"]
+    end
+```
+
+**Production Best Practice: Three-Layer SSRF Defense**
+1. **Validate Inside the Custom Socket Dialer (Resolve Once, Connect by IP)**: Never validate DNS in a separate function before calling `fetch()`. Use a hardened HTTP agent/dialer (such as Stripe's open-source `smokescreen` egress proxy or a custom `net.Socket` connect hook) that resolves the hostname **once**, checks the resolved IP against all non-routable CIDR blocks (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `100.64.0.0/10`, `::1`, `fc00::/7`), and connects the TCP socket directly to that exact verified IP address.
+2. **Disable HTTP Redirects (`redirect: "error"`)**: If you allow `301`/`302` redirects, an attacker can point you to `https://public-site.com/redirect` which returns `Location: http://169.254.169.254/`. Either disable redirects entirely on webhook deliveries or re-run the socket-level IP check on every hop.
+3. **Dedicated Egress Proxy & IMDSv2**: Route all outbound user-triggered HTTP traffic through an isolated egress proxy sitting in a DMZ subnet with zero network routes to your VPC private subnets, and enforce **AWS IMDSv2** (which requires a session-oriented `PUT` request with an `X-aws-ec2-metadata-token-ttl-seconds` header and `IP TTL = 1`).
+
 ## Quick Reference
 
 | Integration Type | Pattern         | Example                                                       |
@@ -155,3 +245,10 @@ class PostmarkProvider implements EmailProvider { ... }
 | Communication    | Webhook         | Slack: receive webhook on message → process → respond         |
 | Analytics        | Event streaming | Segment: send events → fan out to destinations                |
 | CRM sync         | Batch + webhook | Salesforce: webhook on changes + nightly batch reconciliation |
+
+| Integration Failure / Threat                     | Root Cause                                                   | Architectural Fix                                                             |
+| ------------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `subscription.updated` fails or overwrites newer | Webhooks arrive out of order (`updated` before `created`)    | Thin-Event Pull (`GET` canonical state) + `UPSERT` with timestamp watermark   |
+| One dead customer webhook stalls all deliveries  | Shared worker pool blocked by 30s timeouts and retries       | Fast/Slow lane queues + per-tenant concurrency cap + 72h circuit breaker      |
+| Attacker steals cloud IAM keys via webhook URL   | SSRF to `169.254.169.254` or DNS rebinding (`TTL=0` flip)    | Custom socket dialer pinning verified IP + block redirects + egress DMZ proxy |
+

@@ -56,6 +56,12 @@
 | **Refresh Token**         | 长期有效的令牌，用于获取新的 Access Token，不需要重新登录                     |
 | **SAML**                  | 一种较老的 SSO 协议，企业环境中仍然广泛使用                                   |
 | **API Key**               | 一个简单的字符串，标识客户端应用（不是用户），用于服务端之间通信              |
+| **预注册账户劫持 (Pre-ATO)** | 攻击者在真实用户使用 OAuth/SSO 登录前，先用受害者邮箱抢注未验证的密码账号，待受害者关联社交登录时利用残留密码控制账号 |
+| **企业域名认领 (Domain Capture)** | 企业通过 DNS TXT 记录证明对邮箱域名（如 `@acme.com`）的所有权，从而将该域名下所有账号纳入企业 SSO 管控 |
+| **Refresh Token 轮换 (RTR)** | 每次用 Refresh Token 换取新 Access Token 时同时签发新的 Refresh Token，并将旧令牌立即标记为已使用 |
+| **令牌族 (Token Family)** | 从同一次初始登录衍生出的所有 Refresh Token 链条；一旦链条中任一历史令牌被重放，整族令牌全部吊销 |
+| **阶梯式二次认证 (Step-Up Auth)** | 已登录用户在执行高危操作（如提现、生成生产密钥）前，要求在短时间窗口内重新验证密码或 MFA |
+| **`amr` / `acr` 声明**    | OIDC 令牌中记录认证方式（如 `pwd`、`mfa`、`hwk`）与认证安全等级的标准字段 |
 
 ## 常见模式
 
@@ -101,14 +107,86 @@
 - **只保护了前端**：你给前端加了认证，但 API 接口是裸奔的。永远在服务端做认证检查。
 - **硬编码密钥**：绝对不要把 API Key 或密钥放在前端代码里。打开 DevTools 就能看到。
 
+## 行业实战经验与非显而易见的最佳实践
+
+### 1. 预注册账户劫持（Pre-Account Takeover / 未验证邮箱抢注漏洞）
+
+当系统支持"邮箱密码登录"与"第三方 OAuth/SSO 登录（如用 Google 登录）"并按邮箱地址自动合并账号时，极易踩中经典的 **Pre-ATO（Pre-Account Takeover）** 漏洞：
+
+1. **抢注埋雷**：攻击者得知 `victim@company.com` 即将使用你的 SaaS 产品，先用 `victim@company.com` 和攻击者自己设定的密码注册一个账号。由于攻击者进不去受害者邮箱，该账号处于 `email_verified = false` 状态。
+2. **受害者触发**：两周后，真正的受害者访问你的应用，点击**"通过 Google 继续"**。Google 返回的 OIDC 令牌包含 `email: "victim@company.com"` 且 `email_verified: true`。
+3. **致命的自动合并**：你的后端发现数据库里已经有一条 `victim@company.com` 的记录，于是直接把 Google 身份绑定到这条记录上，顺手把 `email_verified` 改成了 `true`。
+4. **静默劫持**：合并之后，攻击者当初设定的密码（或抢注时留下的活跃 Session）**依然有效**！受害者后续创建的所有工作空间、API 密钥和敏感数据，攻击者都能直接用密码登录查看。
+
+| 存量账号状态 | 传入的 OAuth/SSO 声明 | 安全的生产级处理策略 |
+| ------------ | --------------------- | -------------------- |
+| `email_verified: true` | `email_verified: true` | 仅在身份提供商（IdP）权威可信时自动关联，或提示用户输入一次原密码确认关联 |
+| `email_verified: false` | `email_verified: true` | **覆写隔离（Overwrite）**：清空未验证账号原先的密码哈希、吊销所有历史 Session，让已验证的 OAuth 身份干净地接管该邮箱 |
+| 任意状态 | `email_verified: false` | **严禁自动关联**：直接拒绝，或强制走完一次邮箱验证邮件闭环后再允许绑定 |
+
+### 2. 企业 SSO"域名认领（Domain Capture）"与存量影子 IT 账号的冲突
+
+在 B2B SaaS 中，几乎所有企业客户在 IT 部门正式采购企业版并开启 SAML/OIDC SSO 之前，公司员工早就自己用 `@acme.com` 邮箱注册过零散的个人账号（即"影子 IT / Shadow IT"）。
+
+当 Acme 公司的 IT 管理员通过 DNS `TXT` 记录验证了 `acme.com` 的域名所有权，并开启**"强制 `@acme.com` 全员走 SAML SSO"**时，考虑不周的系统会引发三大生产事故：
+
+- **个人隐私泄露给雇主**：某员工在域名被公司认领前，用 `alice@acme.com` 创建了存放私人副业文档的工作空间。如果你直接把账号所有权静默划归给企业管理员，公司 IT 就能直接看到她的私人数据。
+- **孤儿账单与重复扣费**：40 名员工之前用个人信用卡绑了 ¥150/月的 Pro 订阅。强制转入企业 SSO 时如果不自动取消或按比例退还这些 Stripe 个人订阅，会引发大量重复扣费投诉与拒付。
+- **IdP 故障导致全员锁死**：如果公司的 Okta 宕机或 SAML 签名证书过期，IT 管理员自己也无法通过 SSO 登录你的后台去上传新证书。
+
+**生产级最佳实践：**
+1. **账号认领迁移向导**：域名被企业认领后，存量 `@acme.com` 用户下次登录时弹出向导，让用户二选一：*(a) 将账号并入 Acme 企业组织*，或 *(b) 将账号绑定邮箱修改为个人邮箱（如 `@gmail.com`）以保留私人工作空间*。
+2. **应急破窗（Break-Glass）管理员通道**：为组织所有者保留一个受硬件密钥（WebAuthn MFA）和一次性恢复码保护的独立应急登录入口，确保在客户 IdP 崩溃或 SAML 证书过期时仍能进后台修复配置。
+
+### 3. Refresh Token 轮换（RTR）、重放检测与令牌族（Token Family）级联吊销
+
+由于无状态 JWT Access Token 在过期前难以主动吊销，现代 SPA 和移动端通常将 Access Token 有效期设得很短（5～15 分钟），配合长期有效的 Refresh Token 换取新令牌。但如果攻击者通过 XSS 或木马窃取了 Refresh Token，就能无限期续命。
+
+**解决方案——Refresh Token 轮换与令牌族追踪（RFC 6819 / OAuth 2.1）：**
+每次用户完成初始登录时创建一个 `token_family_id`。每当客户端用 `RT_1` 刷新令牌时，服务端将 `RT_1` 标记为 `status = used`（切记不要直接从数据库物理删除！），并在同一令牌族下签发 `RT_2`。
+
+```mermaid
+sequenceDiagram
+    participant Legit as 合法客户端
+    participant Attacker as 攻击者（窃取了 RT_1）
+    participant Auth as 认证中心（Token 存储）
+
+    Note over Legit,Auth: 初始登录创建令牌族 F_99，签发 RT_1
+    Legit->>Auth: POST /oauth/token（使用 RT_1 刷新）
+    Auth-->>Legit: 将 RT_1 标记为 USED，签发 AT_2 + RT_2（同属 F_99）
+    Attacker->>Auth: POST /oauth/token（重放窃取的 RT_1！）
+    Note over Auth: 触发警报：RT_1 已是 USED 状态！<br/>检测到令牌族 F_99 发生泄露
+    Auth->>Auth: 立即级联吊销 F_99 族下的所有令牌（含最新的 RT_2）
+    Auth-->>Attacker: 401 Invalid Grant
+    Legit->>Auth: POST /oauth/token（携带 RT_2 请求）
+    Auth-->>Legit: 401 Session Revoked（强制合法用户重新安全登录）
+```
+
+- **为什么不能用完即删？** 如果刷新时直接 `DELETE` 掉 `RT_1`，当攻击者拿着偷来的 `RT_1` 来请求时，你只能查到"令牌不存在"，无法区分这是普通的过期请求还是正在发生的盗用，也就无法顺藤摸瓜吊销攻击者可能已经拿到的衍生令牌 `RT_2`。保留 `used` 状态正是为了充当"绊发雷"。
+- **弱网重试宽限窗口**：移动端在电梯或地铁等弱网环境下，可能因为未收到响应而对同一个 `RT_n` 发起并发重试。生产环境中通常会给相同 IP / TLS 指纹的同一枚 `RT_n` 留出 5～10 秒的幂等宽限窗口，避免因网络抖动误杀正常用户会话。
+
+### 4. 高危写操作的阶梯式二次认证（Step-Up Authentication）
+
+一个合法的 Session Cookie 或 JWT 只能证明用户在**过去某个时刻**（比如 14 天前勾选了"记住我"）通过了认证，既不能证明此刻坐在未锁屏电脑前的是号主本人，也不能证明会话在 10 分钟前没有被劫持。
+
+对于高危变更操作——**生成生产环境 API Key、批量导出客户 PII 数据、修改收款银行卡、关闭 MFA、转让组织所有权**——必须强制执行**阶梯式二次认证（Step-Up Auth）**：
+
+1. **在会话/JWT 中记录认证上下文**：写入 `auth_time`（最近一次交互式验证身份的 Unix 时间戳）和 `amr`（Authentication Methods Reference，如 `["pwd", "mfa", "hwk"]`）。
+2. **网关/中间件策略拦截**：当调用 `POST /api/v1/payout-bank` 时，权限中间件不仅检查角色，还要校验：
+   - `amr` 中是否包含 `"mfa"` 或硬件密钥 `"hwk"`？
+   - 是否满足 `now() - auth_time < 300`（即 5 分钟内刚完成过核身）？
+3. **平滑挑战升级（Challenge-Response）**：若不满足，接口**不会**把用户踢下线，而是返回 `403 Forbidden` 及结构化载荷 `{ "error": "step_up_required", "required_acr": "aal2", "max_age": 300 }`。前端捕获后原地弹出 Passkey 指纹或 TOTP 验证码弹窗，验证通过后换取带有最新 `auth_time` 的高权限令牌并自动重放刚才的请求。
+
 ## 速查表
 
-| 场景             | 推荐方案                            |
-| ---------------- | ----------------------------------- |
-| 传统 Web 应用    | 基于 Session 的认证 + Cookie        |
-| SPA / 移动端     | JWT + Refresh Token                 |
-| "用 Google 登录" | OAuth 2.0 + OpenID Connect          |
-| 企业 B2B         | 通过 SAML 或 OIDC 做 SSO            |
-| API 对 API       | API Key 或 Client Credentials Grant |
-| 需要更高安全性   | 加 MFA（TOTP、WebAuthn）            |
-| 微服务           | JWT 在服务间传递，网关验证          |
+| 场景                   | 推荐方案                                                       |
+| ---------------------- | -------------------------------------------------------------- |
+| 传统 Web 应用          | 基于 Session 的认证 + Cookie                                   |
+| SPA / 移动端           | 短效 JWT（5–15 分钟）+ Refresh Token 轮换与令牌族重放检测      |
+| "用 Google 登录"       | OAuth 2.0 + OpenID Connect（已验证邮箱匹配时覆写未验证密码态） |
+| 企业 B2B               | SAML/OIDC SSO + DNS 域名认领迁移向导 + 管理员破窗应急登录      |
+| API 对 API             | API Key 或 OAuth 2.0 Client Credentials Grant / mTLS           |
+| 需要更高安全性         | 加 MFA（TOTP、WebAuthn 通行密钥）                              |
+| 高危操作（改收款/密钥）| 阶梯式二次认证（校验 `amr` 含 MFA 且 `now - auth_time < 300s`）|
+| 微服务                 | JWT 在服务间传递，网关验证                                     |
+

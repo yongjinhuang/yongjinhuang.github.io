@@ -214,6 +214,40 @@ Segment restaurants into tiers based on order volume, quality ratings, and relia
 - **Cold food complaints**: The biggest quality issue. Long delivery times, poor insulation, and batched orders all contribute. Track food quality ratings by delivery duration and penalize excessively long deliveries in the dispatch algorithm
 - **Tip baiting**: Customers set a high pre-delivery tip to attract a driver quickly, then reduce it to zero after delivery. Some platforms lock tips after a short window to prevent this
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. POS Middleware Fragmentation (Olo/Otter/Chowly) & Menu Tax/Modifier Out-of-Stock Drift
+
+**The War Story:** A food delivery platform integrated with major restaurant chains through a three-hop middleware chain: `Delivery Platform` $\rightarrow$ `Aggregator Middleware (Otter / Chowly / Deliverect / Olo)` $\rightarrow$ `On-Premise Restaurant POS (Toast / Micros / NCR Aloha)`. During Friday dinner peak, two subtle failure modes caused an 11% order failure rate at enterprise chains:
+1. **86'd (Out-of-Stock) Modifier Drift:** A restaurant ran out of avocado and marked "Add Guacamole (`PLU_409`)" as 86'd (sold out) on their local Toast POS terminal. Because the middleware synced full menu catalogs via a polling job every 4 hours, customers on the delivery app kept ordering burritos with guacamole. Every single order passed checkout on the delivery app, hit the on-premise POS via webhook, and hard-failed with `POS_REJECT_INVALID_PLU_OR_86D`—canceling the entire customer order 3 minutes *after* payment authorization.
+2. **Penny-Rounding Tax & Price-Delta Rejections:** The delivery platform computed item prices + nested modifier deltas + local prepared-food tax and sent an order total of `$24.18`. The restaurant's legacy NCR Aloha POS recalculated tax per line-item using its own internal tax table, arrived at `$24.19`, and rejected the entire order payload with `TENDER_TOTAL_MISMATCH ($0.01)`—leaving the customer charged, the kitchen unaware, and a courier already en route to pick up food that wasn't being cooked.
+
+**Non-Obvious Best Practices:**
+- **Asynchronous Order Injection State (`POS_INJECTING`) & Auto-86 Circuit Breakers:** Never transition an integrated restaurant order directly to `accepted` upon customer checkout. Hold it in `pos_injecting` until the on-premise POS returns a synchronous kitchen-ticket print ACK (`POS_KDS_CONFIRMED`). If a specific item or modifier PLU triggers $\ge 2$ consecutive `POS_86D / ITEM_UNAVAILABLE` rejections within 10 minutes, automatically circuit-break (auto-snooze) that PLU on the storefront immediately without waiting for the middleware's slow catalog sync.
+- **Tax/Price-Delta Balancing Dummy PLU:** Because legacy restaurant POS systems validate that `sum(POS_Line_Items) + POS_Calculated_Tax == Tender_Amount_Cents`, inject a dedicated zero-tax adjustment line item (`PLU_PLATFORM_ROUNDING_ADJ: -$0.01` or `+$0.01`) or inject orders as **Tax-Exempt Marketplace Facilitator Tenders** where the POS records the exact net food subtotal and the platform assumes full statutory tax liability.
+
+### 2. Inferring Hidden Restaurant Kitchen Load from Courier Geofence Dwell-Time Telemetry
+
+**The War Story:** The dispatch algorithm needed each restaurant's **Prep Time** to time driver arrival (`dispatch_at = order_placed_at + predicted_prep_time - driver_travel_time`). Initially, the ML team trained their prep-time model using the timestamps when restaurant staff tapped the `"Order Ready for Pickup"` button on the kitchen tablet. In reality, that training data was pure garbage:
+1. Counter staff systematically tapped `"Order Ready"` immediately upon accepting the order just to silence the tablet's annoying audible chime—or forgot to tap it until 20 minutes after the driver had already left.
+2. Worse, the delivery platform only saw **its own** order volume (say, 3 active orders at a burger joint), completely blind to the fact that a tour bus of 60 dine-in customers plus 15 competing Uber Eats / DoorDash orders had just slammed the physical kitchen! Drivers arrived in 8 minutes and stood waiting unpaid in a crowded lobby for 35 minutes.
+
+**Non-Obvious Best Practices:**
+- **Ground-Truth Prep Time Reconstruction via Courier Telemetry (Wi-Fi/BLE/GPS Dwell):** Never trust manual tablet button taps as ground truth. Reconstruct true kitchen completion time using passive multi-sensor courier telemetry:
+  - Detect exact **Restaurant Entry (`T_enter`)** and **Restaurant Exit (`T_exit`)** using high-frequency GPS fused with smartphone accelerometer steps (walking $\rightarrow$ stationary standing $\rightarrow$ walking to vehicle) and **in-store Wi-Fi BSSID / Bluetooth beacon fingerprints** (which defeat urban canyon GPS drift).
+  - If a courier arrives at `T_enter` and stands stationary inside the store's Wi-Fi BSSID footprint for 14 minutes before tapping `Picked Up` and walking out at `T_exit`, the true food ready time was `T_exit`, and `Courier_Wait_Time = 14 min`.
+- **Real-Time "Hidden Kitchen Load" Kalman Filter:** Treat every courier currently dwelling at a restaurant across *any* active order as a live probe of that kitchen's hidden congestion (including dine-in and competitor apps). When live courier dwell time at Store $S$ spikes above the historical baseline (e.g., 2 couriers currently waiting $> 8$ minutes past predicted ready time), immediately update Store $S$'s real-time **Kitchen Congestion Multiplier** in Redis—delaying driver dispatch for newly placed orders at Store $S$ by $+12$ minutes and dynamically padding the customer-facing EDT before checkout.
+
+### 3. Incremental Card Over-Authorization Holds for Weight-Adjusted Grocery & Item Substitutions
+
+**The War Story:** When a food delivery platform expanded into on-demand grocery, butcher, and convenience delivery, customers ordered items sold by weight (e.g., `1.5 lbs of Ribeye Steak @ $16.00/lb = $24.00`) or requested in-flight item substitutions (swapping an out-of-stock $5.00 organic milk for a $7.50 brand). At checkout, the payment service placed a standard card authorization hold for the exact cart total (`$50.00`). When the in-store picker weighed a `1.72 lb` package of steak (`$27.52`) and substituted the milk, the final receipt was `$56.02`. When the platform tried to capture `$56.02` against the `$50.00` auth hold, card networks rejected the over-capture (`CAPTURE_EXCEEDS_AUTH`), and attempting a separate second charge for the `$6.02` difference failed 18% of the time due to bank fraud blocks, insufficient debit balances, or expired Apple Pay single-use cryptograms!
+
+**Non-Obvious Best Practices:**
+- **Upfront Over-Authorization Buffer (Adaptive Pre-Auth Margin) vs. Incremental Auth:**
+  1. **Weighted / Substitutable Carts:** At checkout, calculate a deterministic **Over-Authorization Buffer** (typically $+15\%$ to $+20\%$ on variable-weight or substitution-eligible items, clearly disclosed in checkout UI as *"Temporary hold of $58.00 for weight/substitution adjustments; you will only be charged the final receipt total"*).
+  2. **Card Network Incremental Authorization (`ISO 8583 Incremental Auth`):** For payment rails and MCCs (Merchant Category Codes) that support it, issue an **Incremental Authorization** linked to the original `network_transaction_id` the moment the customer approves a higher-priced substitution in the app—extending the original hold ceiling before the picker checks out at the register.
+- **Hard Picker Ceiling Enforced at the Barcode Scanner:** Sync the order's `max_authorized_capture_cents` directly to the picker's Shopper App. If a weight adjustment or customer-requested substitution would push the order total above `max_authorized_capture_cents` (and an online incremental auth fails or is unsupported by the debit rail), the Shopper App hard-blocks the scan at the shelf, preventing uncollectible bad debt before the courier leaves the store.
+
 ## Quick Reference
 
 ```

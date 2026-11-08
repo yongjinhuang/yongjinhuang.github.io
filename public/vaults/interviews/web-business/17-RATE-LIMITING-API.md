@@ -82,6 +82,11 @@ If your API is a product, developers need:
 | **API Versioning**        | Maintaining multiple API versions simultaneously                                                      |
 | **Deprecation**           | Announcing that an API version will be removed, giving clients time to migrate                        |
 | **SLA**                   | Service Level Agreement — guaranteed uptime and performance (e.g., 99.9% uptime)                      |
+| **Cost-Based Rate Limit** | Deducting points proportional to query/compute complexity (e.g., GraphQL query cost, LLM tokens)      |
+| **Concurrency Limiter**   | Capping how many requests a client can have *in-flight simultaneously* rather than per minute         |
+| **Load Shedding**         | Proactively dropping low-priority traffic with `503` when server CPU/latency crosses critical limits  |
+| **GCRA**                  | Generic Cell Rate Algorithm — a memory-efficient leaky/token bucket calculation using a single timestamp |
+| **Secret Rotation**       | Replacing an old API key with a new one using a dual-active overlap window for zero downtime          |
 
 ## Common Patterns
 
@@ -134,20 +139,86 @@ Enterprise: 10,000 requests/hour
 - **Distributed rate limiting**: If your API runs on multiple servers, rate limits need to be shared (usually via Redis). Per-server limits are inaccurate.
 - **Documentation is part of the product**: If developers can't understand your API from the docs, they won't use it. Invest in clear examples, error explanations, and quick-start guides.
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Compute-Cost / Token-Budget Rate Limiting vs. Naive Request Counting (Plus Corporate NAT Traps)
+
+Counting every HTTP request as `cost = 1` ("100 requests per minute") fails in real production APIs for two reasons:
+
+1. **Asymmetric Request Cost**: `GET /api/v1/users/123` is a 0.5ms primary-key lookup (`cost = 1`), whereas `POST /api/v1/reports/export` scans 2 million rows (`cost = 500`), a deeply nested GraphQL query triggers 80 resolvers, and an LLM `/v1/chat/completions` call with a 100k-token prompt consumes seconds of GPU compute. Under a naive 100 req/min limit, an attacker or buggy script can send 100 heavy export requests per minute and melt your database while technically staying "under the rate limit."
+2. **Corporate NAT / University / Carrier-Grade NAT (CGNAT) IP Sharing**: If you enforce strict IP-based rate limits (e.g., 60 req/min per IP) on authenticated or public routes, an entire enterprise customer headquarters (2,000 employees sharing one corporate egress IP) or a conference hotel Wi-Fi will get locked out with `429 Too Many Requests` within seconds.
+
+**Best Practice:**
+- **Cost-Based / Weighted Token Bucket**: Give each client a budget of **compute points** per window (e.g., 1,000 points/min). Assign static weights per endpoint (`GET /item` = 1 pt, `GET /search` = 10 pts, `POST /export` = 250 pts), or calculate cost dynamically (GraphQL AST complexity analysis before execution, or LLM `RPM` + `TPM`—Requests Per Minute and Tokens Per Minute). You can even refund unused estimated points after execution completes.
+- **Composite Rate-Limit Keys**: Never rely solely on IP address for authenticated endpoints. Rate-limit authenticated requests by `tenant_id` or `api_key_id`. For unauthenticated endpoints (like `/login`), combine **two tiers**: a tight limit per `(ip, username)` tuple (e.g., 5 failed attempts/10 min) and a much higher ceiling per raw `ip` (e.g., 500 attempts/10 min) so one employee mistyping their password doesn't lock out their whole company office.
+
+### 2. Concurrent In-Flight Request Limiters & Load Shedding
+
+Time-window rate limiters (e.g., 100 req/min) **do not protect your database during a latency degradation**.
+
+Imagine your database slows down from 10ms per query to 8,000ms per query due to a lock contention or slow disk. A client sending a steady, legal 10 requests/second (well below their 1,000 req/min limit) now accumulates **80 concurrent in-flight requests** holding open 80 database connections! Within seconds, one tenant exhausts the entire Postgres connection pool (`max_connections = 100`), causing a cascading outage for every other customer.
+
+```mermaid
+flowchart LR
+    Req["Incoming API Request"] --> L1{"Layer 1: Rate Limiter<br/>(Token Bucket: 1000 pts/min)"}
+    L1 -- "Over Quota" --> R429["429 Too Many Requests<br/>+ Retry-After (with jitter)"]
+    L1 -- "Pass" --> L2{"Layer 2: Concurrency Limiter<br/>(Max 15 In-Flight per Tenant)"}
+    L2 -- "Pool Full" --> R429_2["429 Too Many Concurrent Requests"]
+    L2 -- "Acquire Slot" --> L3{"Layer 3: Global Load Shedder<br/>(Queue Wait / P99 Latency Check)"}
+    L3 -- "System Overloaded" --> R503["503 Service Unavailable<br/>(Drop Low-Priority Traffic First)"]
+    L3 -- "Healthy" --> App["Execute Handler & Release Slot"]
+```
+
+**Production Defense (Stripe / AWS Architecture):**
+1. **Per-Tenant Concurrency Limiter**: Track currently executing (`in_flight`) requests per API key using an atomic Redis counter or lease with a short safety TTL (e.g., max 20 concurrent requests per tenant). Increment on request start, decrement in `finally`. If a tenant's queries hang, they can only tie up at most 20 worker threads/connections, isolating the blast radius ("bulkhead pattern").
+2. **Priority-Aware Load Shedding**: When overall server CPU, event-loop lag, or DB connection pool utilization exceeds 85% (measured via adaptive algorithms like Little's Law / Netflix `concurrency-limits`), proactively shed lower-priority traffic (analytics pings, background syncs, free-tier batch jobs) immediately at the gateway with `503 Service Unavailable`, preserving capacity for critical paths (`POST /checkout`, `POST /payments`).
+
+### 3. Zero-Downtime Dual-Key API Secret Rotation & Scoped Fine-Grained Tokens
+
+How you generate, store, and rotate API keys determines whether a leaked credential causes a minor alert or a company-ending breach.
+
+#### Never Store Plaintext API Keys in Your Database
+
+Treat API secret keys like passwords. If an attacker dumps your `api_keys` table via SQL injection or a backup leak, plaintext keys let them impersonate every customer immediately.
+- **Prefix + Hash Pattern (GitHub / Stripe / Slack style)**: Format keys with a human-readable prefix, a key ID, a random secret, and a checksum: e.g., `sk_live_7f9a2b_98xK2mP4qR7vL1nZ...`.
+  - The prefix (`sk_live_`, `sk_test_`) lets GitHub Secret Scanning and pre-commit hooks detect accidentally committed keys via regex.
+  - Store only `key_prefix` (`sk_live_7f9a2b`) and `SHA-256(full_key)` (or HMAC-SHA256) in your database. Show the full key to the developer **only once** upon creation.
+
+#### Zero-Downtime Rolling Key Rotation
+
+In production, if a customer needs to rotate a compromised or expiring API key, revoking the old key immediately breaks their running production servers before their new deployment finishes propagating.
+
+```
+Timeline of Zero-Downtime Key Rotation:
+1. Key A is active.
+2. Customer clicks "Roll Key" (with 24h grace period):
+   - Server generates Key B (immediately active).
+   - Server sets Key A `expires_at = NOW() + 24 hours` (both Key A and Key B work!).
+3. Customer deploys Key B across their fleet and verifies traffic on Key A drops to 0.
+4. Customer clicks "Expire Key A Now" (or 24h timer auto-revokes Key A).
+```
+
+#### Scoped Fine-Grained Tokens
+
+Never issue a single "god-mode" API key per account. Let customers create multiple independent keys with:
+- **Resource & Action Scopes**: `orders:read`, `payments:write`, `webhooks:manage` (so a key embedded in a reporting script cannot initiate refunds).
+- **Environment Isolation**: Strict separation between `sk_test_...` (sandbox) and `sk_live_...` (production).
+- **Optional IP Allowlisting**: Enterprise keys can restrict usage to specific CIDR blocks (`203.0.113.0/24`).
+
 ## Quick Reference
 
-| Scenario         | Rate Limiting Strategy                                 |
-| ---------------- | ------------------------------------------------------ |
-| Public API       | Token bucket per API key, tiered by plan               |
-| Login endpoint   | Strict limit per IP (prevent brute force)              |
-| Webhook receiver | Queue-based buffer with processing rate limit          |
-| Internal service | Token bucket per service, generous limits              |
-| Free tier        | Low limits with clear upgrade path                     |
-| DDoS protection  | WAF + CDN-level rate limiting (Cloudflare, AWS Shield) |
+| Scenario                   | Rate Limiting & Protection Strategy                                         |
+| -------------------------- | --------------------------------------------------------------------------- |
+| Public / Partner API       | Weighted token bucket (compute cost) + per-tenant concurrency limit         |
+| LLM / AI API               | Dual bucket: `RPM` (Requests/Min) + `TPM` (Tokens/Min) + max concurrent     |
+| Login / Auth endpoint      | Two-tier: strict per `(IP, username)` + higher ceiling per IP (NAT-safe)    |
+| Webhook receiver           | Fast `202 Accepted` → durable queue (SQS/Kafka) → rate-limited workers      |
+| Database slowdown          | Per-tenant in-flight concurrency cap + priority-aware load shedding (`503`) |
+| API key storage & rotation | Prefix (`sk_live_`) + SHA-256 hash in DB + dual-active grace window on roll |
 
-| Algorithm      | Best For                          |
-| -------------- | --------------------------------- |
-| Fixed window   | Simple APIs, low traffic          |
-| Sliding window | Consistent enforcement            |
-| Token bucket   | Bursty traffic with average limit |
-| Leaky bucket   | Smooth, constant output rate      |
+| Algorithm / Limiter  | Best For                                                            |
+| -------------------- | ------------------------------------------------------------------- |
+| Fixed window         | Simple internal counters, coarse hourly/daily quotas                |
+| Sliding window       | Smooth enforcement without boundary double-bursts                   |
+| Token bucket / GCRA  | Bursty traffic with sustained average rate and weighted point costs |
+| Concurrency limiter  | Protecting DB connection pools and worker threads from slow queries |

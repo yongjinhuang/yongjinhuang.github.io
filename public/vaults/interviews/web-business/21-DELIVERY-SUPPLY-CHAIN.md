@@ -173,6 +173,43 @@ In COD markets, the carrier collects payment from the customer and remits it to 
 
 8. **No fallback for carrier outages.** If your only carrier's API goes down, you can't ship anything. Have a backup carrier integration and automatic failover logic.
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Carrier DWS (Dimensioning, Weighing, Scanning) Laser Re-Rating & Automated Freight Bill Auditing
+
+**The War Story:** A fast-growing e-commerce brand calculated checkout shipping fees and selected carriers using SKU master-catalog weights and dimensions. Three months later, finance discovered a $180,000 variance between estimated shipping costs in the TMS and the actual monthly EDI 210 / CSV invoices billed by FedEx, UPS, and J&T. Warehouse packers were putting small items into oversized boxes with heavy dunnage (air pillows), and every parcel passed through the carrier's automated sorting hub **DWS (Dimensioning, Weighing, Scanning)** laser tunnels. Whenever the laser-measured **DIM weight** ($\frac{L \times W \times H}{\text{DIM Divisor}}$, e.g., $139\text{ in}^3/\text{lb}$ or $5000\text{ cm}^3/\text{kg}$) exceeded the declared weight, the carrier silently re-rated the shipment into a higher weight tier and tacked on an "Additional Handling / Dimension Discrepancy" penalty fee.
+
+**Non-Obvious Best Practices:**
+- **Cartonization Engine at Pack Time:** Never calculate carrier labels from raw item dimensions alone. Run a 3D bin-packing (cartonization) algorithm in the WMS that recommends the smallest viable box code (`BOX-S2`), and record the **selected carton's outer dimensions** plus scale weight at the pack station before calling the carrier label API.
+- **Automated Freight Bill Audit & Reconciliation Pipeline:** Ingest carrier billing files (EDI 210 or SFTP CSVs) into an automated audit table keyed by `awb_number`. Compare `manifested_weight`, `manifested_dims`, and `estimated_cost_cents` against `billed_weight`, `laser_dims`, and `billed_cost_cents`:
+  - **Auto-Approve:** Variance within tolerance (e.g., $\le \$0.50$ or $\le 2\%$).
+  - **Catalog Feedback Loop:** If the same single-item SKU triggers DWS re-rates across $>5$ shipments, automatically flag the SKU in the WMS for physical cubiscan re-measurement—the supplier likely changed packaging.
+  - **Dispute Queue:** If a carrier bills a residential surcharge, late-delivery guaranteed service, or extreme DIM spike outside physical box bounds, auto-generate a carrier claim packet with pack-station scale logs and CCTV timestamps before the 15-day carrier dispute window closes.
+
+### 2. Split-Shipment Margin Destruction vs. Zone-Skipping Consolidation
+
+**The War Story:** To maximize conversion, an OMS was configured with a greedy rule: "Always route items to the warehouse that can ship fastest." When a customer ordered a $35 basket containing 3 items ($12, $13, $10) with a "Free Shipping over $30" promotion, none of the regional warehouses held all 3 SKUs. The OMS split the order into 3 separate parcels from 3 different fulfillment centers across the country. Each parcel incurred a $6.50 base carrier minimum fee ($19.50 total shipping cost), wiping out the entire gross margin and losing $9 on the order.
+
+**Non-Obvious Best Practices:**
+- **Margin-Aware Order Routing (Multi-Objective Optimization):** Never treat order routing as a pure shortest-distance problem. The OMS allocation solver must evaluate candidate fulfillment plans against a cost function:
+  $$\text{Total Cost} = \sum_{\text{shipments}} \text{CarrierRate}(\text{Origin}, \text{Dest}, \text{Weight}) + \text{PickPackCost} + \text{SLA Breach Penalty}$$
+  If holding the order for 12 hours to fulfill all 3 items from a single hub (or waiting for an inter-warehouse replenishment transfer) still meets the customer's promised delivery date, consolidate into 1 shipment. If splitting destroys net margin below a configurable floor (e.g., $-\$5$), prefer a single slower warehouse over 3 split shipments.
+- **Zone Skipping for High-Density Lanes:** Instead of paying a national parcel carrier to haul individual boxes across 6 shipping zones from a central warehouse, aggregate all parcels destined for a distant metro region onto a single pallet/truckload (FTL/LTL) and line-haul them directly to the carrier's local destination sortation facility (Zone 2 entry). The WMS prints local-zone labels upfront, and tracking stays in a "Linehaul in Transit to Local Hub" status until the carrier's destination induction scan—cutting per-parcel freight costs by 30–45%.
+
+### 3. Reverse Logistics Grading & Instant-Refund-on-First-Carrier-Scan Trust Scoring
+
+**The War Story:** Waiting 7–14 days for a returned parcel to travel back, get unloaded at the return dock, and pass manual QC inspection caused massive customer support ticket volume ("Where is my refund?") and low repeat purchase rates. The team turned on "Instant Refund on Drop-Off" (issuing the refund the moment the carrier emitted the `FIRST_SCAN` webhook at the drop-off counter). Within two weeks, organized fraud rings bought $800 electronics, dropped off return boxes filled with bags of rice or rocks matched to the exact SKU weight, got instant refunds on the first carrier scan, and cashed out before the box ever reached the warehouse.
+
+**Non-Obvious Best Practices:**
+- **Risk-Gated Refund Timing Engine:** Decouple the return logistics flow from the financial refund trigger using a real-time **Return Trust Score**:
+  - **Tier 1 (High Trust + Low Risk SKU):** Account age $> 180$ days, lifetime return rate $< 8\%$, item value $< \$150$, non-serialized apparel/home goods $\rightarrow$ Trigger refund immediately on carrier `IN_TRANSIT / FIRST_SCAN` webhook.
+  - **Tier 2 (Medium Risk):** Hold refund until warehouse dock receiving scan (`RETURN_RECEIVED`), before detailed grading.
+  - **Tier 3 (High Risk / Serialized Goods):** New account, high-value electronics, or anomaly detected $\rightarrow$ Require full **RMA Grading & Serial Verification** at the return bench before releasing funds.
+- **Explicit Inventory Disposition Sub-Ledgers:** Returned items must never increment `available_to_sell` inventory upon receipt. Route them into a quarantined `returned_pending_grading` state bucket. After bench inspection, transition each unit into a discrete disposition grade:
+  - **Grade A (New/Unopened):** Sanitize, repackage, move to `available_to_sell`.
+  - **Grade B (Open-Box / Minor Wear):** Generate a secondary SKU suffix (e.g., `SKU-123-OPENBOX`) for outlet/refurbished channels.
+  - **Grade C/D (Defective / Fraud / Brick-in-Box):** Move to `vendor_rtv` (Return to Vendor), `liquidation`, or `fraud_evidence_hold` (triggering automated payment chargeback/account ban workflows with pack-bench unbox video).
+
 ## Quick Reference
 
 | Stage           | System            | Key Data                                          |

@@ -198,6 +198,42 @@ Points have a fixed, transparent monetary value (100 points = $1, always) and ca
 - **Not separating qualifying and bonus points**: If promotional bonus points count toward tier qualification, users can game their way to top-tier status through promotions alone, without the sustained spending that tiers are meant to reward.
 - **Ignoring timezone in promotions**: A "double points Saturday" promotion needs clear timezone rules. A user in Tokyo and a user in New York see different Saturdays. Define promotion windows in UTC and convert for display.
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Partial-Return Tender Proration (Preventing "Points-to-Cash Laundering")
+
+**The War Story:** An e-commerce retailer allowed customers to split payment at checkout using Loyalty Points plus a Credit Card. A customer added Item A ($60 jacket) and Item B ($40 shoes) for a $100 order total, redeemed 4,000 points ($40 value), and paid the remaining $60 on their Visa card. When the customer returned the $60 jacket (Item A), the naive refund service looked up the order's payment methods, saw a $60 Visa charge, and refunded $60 in cash back to the Visa card! Fraudsters quickly automated this loophole: they bought multi-item baskets using untransferable loyalty points + card, returned the cash-equivalent portion, and effectively **laundered non-cash loyalty points into real bank cash** while keeping the remaining item for free.
+
+**Non-Obvious Best Practices:**
+- **Line-Item Tender Proration at Checkout Capture:** Never store points redemption or coupon discounts only as a flat order-header deduction. At checkout finalization, deterministically prorate every tender type (`cash_cents`, `points_redeemed`, `promo_discount_cents`) across every individual order line item $i$ proportional to its share of the eligible subtotal (with largest-remainder penny rounding on the final item):
+  $$\text{Item}_i.\text{CashPaid} = \text{Order.CashPaid} \times \frac{\text{Item}_i.\text{NetPrice}}{\sum_j \text{Item}_j.\text{NetPrice}}, \quad \text{Item}_i.\text{PointsPaid} = \text{Order.PointsPaid} \times \frac{\text{Item}_i.\text{NetPrice}}{\sum_j \text{Item}_j.\text{NetPrice}}$$
+  In the $60 + $40 example above, Item A ($60) is persisted as `{cash_paid: $36.00, points_paid: 2400 pts}` and Item B ($40) as `{cash_paid: $24.00, points_paid: 1600 pts}`.
+- **Strict Per-Line-Item Refund Invariant:** If Item A is returned, the refund engine **only** refunds `$36.00` to the Visa card and restores `2,400 points` to the loyalty ledger (preserving the original expiration date of those point lots). Under no circumstance can cumulative cash refunded across partial returns exceed the prorated cash allocated to the returned line items.
+
+### 2. Negative Point Balances on Post-Redemption Refunds & Chargebacks
+
+**The War Story:** A loyalty system credited points immediately upon purchase so users got instant gratification, and enforced an `UNSIGNED INT` (`CHECK (balance >= 0)`) database constraint on the user's points balance. Bad actors bought a $2,000 laptop during a `10x Points` promo (earning 20,000 points worth $200), immediately redeemed the 20,000 points for digital gift cards (dropping their balance to `0`), and then returned the unopened laptop for a full $2,000 refund. When the return webhook tried to claw back the 20,000 points, the `CHECK (balance >= 0)` constraint threw a database error—causing the return webhook to either fail in an infinite retry loop or cap the clawback at `0`, letting the user walk away with $200 in free gift cards.
+
+**Non-Obvious Best Practices:**
+- **Two-Stage Point Vesting (`PENDING` $\rightarrow$ `VESTED`) Plus Signed Ledger Balances:**
+  1. Credit newly earned points into `pending_points_balance` upon checkout, and transition them to `vested_available_points` only after the shipment's return window closes (or upon final non-refundable service consumption).
+  2. Even with pending buffers, credit card chargebacks can arrive 90 days later after points are already spent. **Always use signed 64-bit integers (`BIGINT`) for point balances and allow negative balances (`points_balance < 0`)** on post-redemption clawbacks.
+- **Debt Recovery & Cash-Refund Offset:** When a user's `vested_available_points` is driven negative (e.g., `-15,000 pts`) by a post-redemption return or chargeback:
+  - Future points earned automatically go toward paying down the negative point balance before becoming spendable.
+  - If the return is initiated directly on your platform and the user has already spent the points earned from that specific order, either **deduct the monetary redemption value of the unrecovered points from the cash refund** (disclosed clearly in Terms of Service and the return preview screen) or block account closure until the deficit is settled.
+
+### 3. FIFO Point-Lot Expiration Ledgers & Breakage Accounting (ASC 606 / IFRS 15)
+
+**The War Story:** A developer built a loyalty ledger with a single `points_transactions` log and a `current_balance` column on the `users` table. One year later, points had a 12-month rolling expiration policy, and the CFO asked two questions for the annual audit: *"How many points earned in March last year are still unredeemed today so we can expire them tonight?"* and *"What is the exact deferred revenue dollar value of our unredeemed point pool under ASC 606?"* Because redemptions only recorded `-500 points` against the aggregate balance without tracking *which* earned batch of points was spent, and because base points (funded by the platform at $0.01/pt) were mixed with co-branded partner points (funded by partners at $0.015/pt), it was impossible to compute accurate expirations or deferred revenue without replaying every user's entire history.
+
+**Non-Obvious Best Practices:**
+- **Point-Lot (Bucket) Sub-Ledger Architecture for O(1) FIFO Consumption:** Alongside the immutable transaction log, maintain a `point_lots` table where every earn event creates a distinct lot row:
+  `{lot_id, user_id, original_points, remaining_points, unit_liability_cost_micros, funding_source_id, earned_at, expires_at, status}`.
+  - **On Redemption (FIFO by `expires_at`):** Query active lots where `remaining_points > 0` ordered by `expires_at ASC, earned_at ASC`, decrement `remaining_points` across one or more lots, and write join rows in `redemption_lot_allocations (redemption_id, lot_id, points_consumed)`.
+  - **On Refund of a Redemption:** Re-credit the exact `lot_id`s recorded in `redemption_lot_allocations` (extending `expires_at` by a 14-day grace window if the original lot expired while the order was in transit).
+- **ASC 606 / IFRS 15 Deferred Revenue & Breakage Recognition:** Under accounting standards, issuing points on a $100 sale is not a "marketing expense"—a portion of the transaction price must be deferred as a balance-sheet **Contract Liability (Deferred Revenue)** based on the standalone selling price of the points adjusted for expected **Breakage** (the historical probability $\hat{b}$ that points will expire unused). Tracking `unit_liability_cost_micros` per lot allows Finance to recognize deferred revenue proportionally as each specific lot is redeemed or expired:
+  $$\text{Recognized Revenue in Period} = \text{Deferred Pool} \times \frac{\text{Points Redeemed in Period}}{\text{Total Points Expected to Be Redeemed } (1 - \hat{b})}$$
+
 ## Quick Reference
 
 | Scenario              | Recommended Approach                                                                            |

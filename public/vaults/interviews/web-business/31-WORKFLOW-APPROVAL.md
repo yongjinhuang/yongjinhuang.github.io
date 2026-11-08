@@ -190,6 +190,39 @@ Track cycle time (submission to completion), bottleneck steps (where requests qu
 - **Not handling organizational changes**: When a department is reorganized or a role is renamed, in-flight workflows that reference the old structure break. Design role resolution to be dynamic (resolved at action time, not at submission time) so org changes don't strand requests.
 - **Treating rejection as terminal**: In many workflows, rejection should allow the requester to revise and resubmit without starting from scratch. Model "returned for revision" as a distinct state from "rejected."
 
+## Industry War Stories & Non-Obvious Best Practices
+
+### 1. Cryptographic Payload-Hash Binding (Preventing Mid-Workflow Bait-and-Switch Edits)
+
+**The War Story:** In a procurement approval system, a purchase requisition required sequential approvals: `Department Manager` $\rightarrow$ `Security Review` $\rightarrow$ `VP of Finance`. A requester submitted a $4,500 software order with a standard vendor bank account. After the Department Manager and Security Reviewer approved Step 1 and Step 2, the requester noticed a typo in the description and used the "Edit Request" button while the ticket was sitting in the VP of Finance's queue. The API updated the `purchase_requests` row in place—allowing an insider to quietly change the total amount from $4,500 to $45,000 and swap the vendor IBAN to a personal shell account right before Step 3. Even worse, in another incident, the VP of Finance had loaded the page at 9:00 AM (seeing $4,500), the requester edited it at 9:02 AM (to $45,000), and the VP clicked "Approve" at 9:03 AM without refreshing. The audit log recorded that all three approvers signed off on the $45,000 payout.
+
+**Non-Obvious Best Practices:**
+- **Canonical Payload Snapshot & SHA-256 Digest Binding:** Never bind an approval signature to a mutable `request_id` alone. Every time a request is submitted or revised, serialize its canonical business payload (sorted JSON keys of line items, amounts, currency, payee bank details, and SHA-256 hashes of all attached PDF contracts) into an immutable `request_revisions` snapshot row with a `payload_sha256` digest.
+- **Compare-and-Swap Approval Verification:** When an approver clicks "Approve", the client must submit `(request_id, revision_number, payload_sha256)`. The backend verifies that `request.current_revision == submitted_revision`. If the requester modified the request while the approver had the tab open, the approval call fails with `409 Conflict: Request payload changed since loaded`.
+- **Material-Change Reset vs. Non-Material Edit Rules:** Lock the business payload against in-place edits once `state != 'draft'`. If a requester must amend an in-flight request, create `revision_number + 1` and evaluate a field-level diff policy:
+  - If **material fields** changed (`amount_cents` increased, `vendor_bank_account`, `contract_attachment_hash`, `cost_center`), automatically **invalidate all prior approvals**, log `APPROVAL_REVOKED_BY_AMENDMENT`, and reset the state machine to Step 1.
+
+### 2. Org-Chart Mutation & Terminated/OOO Approver Re-Routing Without Deadlocking In-Flight Instances
+
+**The War Story:** At workflow submission time, an approval engine resolved the requester's management chain (`manager_id = user_402`, `director_id = user_109`) and persisted those concrete user IDs into the `workflow_step_assignees` table. Two weeks later, the company underwent a department reorganization and `user_402` left the company (their account was deactivated in Okta/HRIS). Over 180 in-flight expense reports, vendor contracts, and access requests permanently deadlocked in `under_review` because `user_402` could no longer log in, nobody else had permission to click "Approve" on their steps, and a separate contractor who got promoted into a manager role ended up assigned as the approver for *their own* previously submitted expense report!
+
+**Non-Obvious Best Practices:**
+- **Late-Binding Role Expressions (Resolve at Step Activation, Not Submission):** Store step assignees in the workflow definition as declarative role-resolution expressions (`REL:REQUESTER_MANAGER_LVL(1)`, `ROLE:COST_CENTER_OWNER(req.cost_center_id)`, `GROUP:LEGAL_COUNSEL`) rather than static `user_id`s. Only resolve the expression to concrete human actors when the state machine actually transitions *into* that step.
+- **HRIS / IdP Event-Driven Re-Evaluation:** Subscribe the workflow engine to HRIS/Identity Provider lifecycle events (`USER_DEACTIVATED`, `MANAGER_CHANGED`, `OOO_DELEGATION_ENABLED`):
+  - When an active step's assigned approver is terminated or deactivated, automatically traverse up the org hierarchy (`manager_of(terminated_user)`) or fall back to the role group's designated owner, reassign the pending step, reset the step notification trigger, and record `SYSTEM_AUTO_REASSIGNED (Reason: Approver Deactivated)` in the audit log.
+- **Dynamic Conflict-of-Interest & Self-Approval Guards:** Whenever an org-chart change, delegation chain, or escalation rule re-routes a step to a new target user $U$, evaluate the **Maker-Checker / Four-Eyes Invariant** at runtime:
+  $$U \neq \text{request.requester\_id} \quad \land \quad U \neq \text{request.beneficiary\_id} \quad \land \quad U \notin \text{prior\_step\_approvers}$$
+  If delegating or escalating to $U$ would cause a user to approve their own request (or sign off twice on two different stages of a Four-Eyes workflow), automatically skip $U$ and escalate one level higher in the reporting tree.
+
+### 3. Workflow Definition Versioning (Pinning In-Flight Long-Running Workflows to v1 While New Requests Start on v2)
+
+**The War Story:** A company's `Contract Approval` workflow initially had 3 steps (`Step 1: Manager` $\rightarrow$ `Step 2: Legal` $\rightarrow$ `Step 3: CFO`). An admin used the workflow builder to insert a new `Security Architecture Review` step at Step 2 and deleted an obsolete condition branch, saving the changes directly over the `workflow_templates` and `workflow_steps` rows in the database. Instantly, 300 in-flight contract requests that had been running for weeks corrupted: requests sitting at old `Step 2 (Legal)` suddenly thought they were in `Security Review`, foreign keys on completed step logs broke, and state transitions threw `InvalidStepTransitionException` because the engine tried to evaluate the new v2 DAG against v1 execution history.
+
+**Non-Obvious Best Practices:**
+- **Immutable Versioned DAG Snapshots (`template_id` + `version`):** Treat published workflow definitions like compiled immutable artifacts. Editing a workflow template must **never** mutate rows in place; publishing creates `version = N + 1` with its own immutable DAG definition JSON/rows.
+- **Instance Pinning at Creation Time:** When a request is initiated, stamp `workflow_template_version = N` (or copy the resolved DAG specification directly into the workflow instance record). All in-flight instances continue executing against version $N$ until they reach a terminal state (`executed`, `rejected`, `withdrawn`), while newly submitted requests instantiate version $N + 1$.
+- **Safe In-Flight Migration Protocol (For Regulatory Emergencies):** If a new compliance rule mandates that *even in-flight* requests must pass through a new step, never hot-patch the template row. Build an explicit `MigrateInstance(instance_id, target_version, step_mapping_policy)` administrative operation that replays completed audit steps against the new DAG, preserves valid cryptographic approvals where the payload and role match, pauses at the first newly required gate, and writes a formal `WORKFLOW_VERSION_MIGRATED (v1 -> v2)` audit entry.
+
 ## Quick Reference
 
 ```
