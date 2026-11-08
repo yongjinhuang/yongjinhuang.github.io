@@ -10,35 +10,18 @@ This guide covers the three pillars of observability, the OpenTelemetry standard
 
 ## The Three Pillars of Observability
 
-```
-+------------------------------------------------------------------+
-|              THREE PILLARS OF OBSERVABILITY                        |
-+------------------------------------------------------------------+
-|                                                                  |
-|  LOGS                    METRICS                  TRACES         |
-|  +-------------+        +-------------+        +-------------+  |
-|  | Discrete    |        | Aggregated  |        | Causally    |  |
-|  | events with |        | numeric     |        | linked spans|  |
-|  | context     |        | measurements|        | across      |  |
-|  |             |        | over time   |        | services    |  |
-|  +------+------+        +------+------+        +------+------+  |
-|         |                      |                      |          |
-|  "What happened"        "How much/many"        "Where did time  |
-|                                                 get spent"       |
-|                                                                  |
-|  CORRELATION:                                                    |
-|  +---------------------------------------------------------+    |
-|  | All three are connected via trace_id and span_id        |    |
-|  | Logs contain trace context -> click from log to trace   |    |
-|  | Traces generate metrics -> request duration histogram    |    |
-|  | Metrics anomaly -> drill into traces -> find root cause |    |
-|  +---------------------------------------------------------+    |
-|                                                                  |
-|  INVESTIGATION FLOW:                                             |
-|  Alert (metric) -> Dashboard (metrics) -> Trace (spans) ->      |
-|  Logs (details) -> Root Cause                                    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Pillars["THREE PILLARS OF OBSERVABILITY"]
+        Logs["LOGS ('What happened')<br/>Discrete events with context"]
+        Metrics["METRICS ('How much / many')<br/>Aggregated numeric measurements over time"]
+        Traces["TRACES ('Where did time get spent')<br/>Causally linked spans across services"]
+        Corr["CORRELATION (Connected via trace_id &amp; span_id)<br/>- Logs contain trace context -&gt; click from log to trace<br/>- Traces generate metrics -&gt; request duration histogram<br/>- Metrics anomaly -&gt; drill into traces -&gt; find root cause"]
+        Logs & Metrics & Traces --> Corr
+    end
+    subgraph Flow["INVESTIGATION FLOW"]
+        A["Alert (Metric)"] --> D["Dashboard (Metrics)"] --> T["Trace (Spans)"] --> L["Logs (Details)"] --> RC["Root Cause"]
+    end
 ```
 
 ### Structured Logging
@@ -123,77 +106,31 @@ function handleOrder(req: Request, log: pino.Logger): void {
 
 ### Metrics: RED and USE Methods
 
-```
-+------------------------------------------------------------------+
-|              METRICS METHODOLOGIES                                 |
-+------------------------------------------------------------------+
-|                                                                  |
-|  RED METHOD (for request-driven services):                       |
-|  +----------------------------------------------------------+   |
-|  | R - Rate:     Requests per second                         |   |
-|  | E - Errors:   Failed requests per second                  |   |
-|  | D - Duration: Distribution of request latencies           |   |
-|  +----------------------------------------------------------+   |
-|  Best for: APIs, web servers, microservices                      |
-|                                                                  |
-|  USE METHOD (for resources):                                     |
-|  +----------------------------------------------------------+   |
-|  | U - Utilization: % of resource being used (CPU, memory)   |   |
-|  | S - Saturation:  Queue depth, degree resource is over-    |   |
-|  |                  loaded (tasks waiting)                    |   |
-|  | E - Errors:      Count of error events                    |   |
-|  +----------------------------------------------------------+   |
-|  Best for: Databases, caches, queues, infrastructure             |
-|                                                                  |
-|  PROMETHEUS METRIC TYPES:                                        |
-|  +----------------------------------------------------------+   |
-|  | Counter:   Monotonically increasing (total requests)      |   |
-|  | Gauge:     Value that goes up and down (current memory)   |   |
-|  | Histogram: Distribution of values (request durations)     |   |
-|  |            Buckets: [5ms, 10ms, 25ms, 50ms, 100ms, ...]   |   |
-|  | Summary:   Similar to histogram, but calculates quantiles |   |
-|  |            client-side (less useful for aggregation)       |   |
-|  +----------------------------------------------------------+   |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Methods["METRICS METHODOLOGIES &amp; TYPES"]
+        RED["RED METHOD (Request-driven: APIs, Web, Microservices)<br/>- Rate: Requests per second<br/>- Errors: Failed requests per second<br/>- Duration: Distribution of request latencies"]
+        USE["USE METHOD (Resources: DBs, Caches, Queues, Infra)<br/>- Utilization: % of resource used (CPU, memory)<br/>- Saturation: Queue depth / tasks waiting<br/>- Errors: Count of error events"]
+        Prom["PROMETHEUS METRIC TYPES<br/>- Counter: Monotonically increasing (total requests)<br/>- Gauge: Goes up and down (current memory)<br/>- Histogram: Server-aggregatable buckets [5ms, 10ms, ...]<br/>- Summary: Client-side quantiles"]
+    end
 ```
 
 ### Distributed Tracing
 
-```
-+------------------------------------------------------------------+
-|              DISTRIBUTED TRACE ANATOMY                             |
-+------------------------------------------------------------------+
-|                                                                  |
-|  TraceID: abc-123                                                |
-|  |                                                               |
-|  |  Span A: API Gateway (200ms total)                           |
-|  |  |-----------------------------------------------+           |
-|  |  |                                               |           |
-|  |  |  Span B: Auth Service (30ms)                  |           |
-|  |  |  |---------|                                  |           |
-|  |  |                                               |           |
-|  |  |  Span C: Order Service (150ms)                |           |
-|  |  |  |-------------------------------------|      |           |
-|  |  |  |                                     |      |           |
-|  |  |  |  Span D: DB Query (20ms)            |      |           |
-|  |  |  |  |------|                           |      |           |
-|  |  |  |                                     |      |           |
-|  |  |  |  Span E: Payment Service (80ms)     |      |           |
-|  |  |  |  |------------------------|         |      |           |
-|  |  |  |  |                        |         |      |           |
-|  |  |  |  |  Span F: Stripe API    |         |      |           |
-|  |  |  |  |  (60ms)               |         |      |           |
-|  |  |  |  |  |----------------|   |         |      |           |
-|  |                                               |           |
-|  +-----------------------------------------------+           |
-|                                                                  |
-|  CONTEXT PROPAGATION:                                            |
-|  Request headers carry trace context between services:           |
-|  traceparent: 00-abc123-span456-01                               |
-|  (version-traceId-parentSpanId-flags)                            |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Trace["DISTRIBUTED TRACE ANATOMY (TraceID: abc-123, W3C traceparent: 00-abc123-span456-01)"]
+        A["Span A: API Gateway (200ms total)"]
+        B["Span B: Auth Service (30ms)"]
+        C["Span C: Order Service (150ms)"]
+        D["Span D: DB Query (20ms)"]
+        E["Span E: Payment Service (80ms)"]
+        F["Span F: Stripe API (60ms)"]
+
+        A --> B & C
+        C --> D & E
+        E --> F
+    end
 ```
 
 ---
@@ -202,43 +139,21 @@ function handleOrder(req: Request, log: pino.Logger): void {
 
 OpenTelemetry is the CNCF standard for instrumentation. It provides a vendor-neutral API for generating telemetry data (traces, metrics, logs). Understanding OTel is essential -- it is the de facto standard in 2026.
 
-```
-+------------------------------------------------------------------+
-|              OPENTELEMETRY ARCHITECTURE                            |
-+------------------------------------------------------------------+
-|                                                                  |
-|  YOUR APPLICATION                                                |
-|  +-----------------------------------------------------------+  |
-|  |  OTel SDK                                                  |  |
-|  |  +----------+  +----------+  +----------+                 |  |
-|  |  | Tracer   |  | Meter    |  | Logger   |                 |  |
-|  |  | Provider |  | Provider |  | Provider |                 |  |
-|  |  +----+-----+  +----+-----+  +----+-----+                 |  |
-|  |       |              |              |                      |  |
-|  |  Auto-instrumentation (HTTP, DB, gRPC, etc.)               |  |
-|  |  Custom instrumentation (business-specific spans/metrics)  |  |
-|  +---+-------------------+-------------------+----------------+  |
-|      |                   |                   |                   |
-|      v                   v                   v                   |
-|  +-----------------------------------------------------------+  |
-|  |  OTel Collector                                            |  |
-|  |  +-------------+  +-------------+  +-------------+        |  |
-|  |  | Receivers   |  | Processors  |  | Exporters   |        |  |
-|  |  | - OTLP      |  | - Batch     |  | - Jaeger    |        |  |
-|  |  | - Prometheus|  | - Filter    |  | - Prometheus|        |  |
-|  |  | - Zipkin    |  | - Transform |  | - Loki      |        |  |
-|  |  | - Kafka     |  | - Sampling  |  | - Tempo     |        |  |
-|  |  | - filelog   |  | - Tail-     |  | - Datadog   |        |  |
-|  |  |             |  |   sampling  |  | - OTLP      |        |  |
-|  |  +-------------+  +-------------+  +-------------+        |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  DEPLOYMENT PATTERNS:                                            |
-|  1. Agent: Collector as sidecar/DaemonSet per node               |
-|  2. Gateway: Centralized Collector cluster                       |
-|  3. Agent + Gateway: Local agents forward to gateway             |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph App["YOUR APPLICATION (OTel SDK)"]
+        TP["TracerProvider"]
+        MP["MeterProvider"]
+        LP["LoggerProvider"]
+        Inst["Auto-Instrumentation (HTTP, DB, gRPC)<br/>+ Custom Instrumentation (business spans/metrics)"]
+        TP & MP & LP --- Inst
+    end
+
+    subgraph Coll["OTel Collector (Deployment: 1. Agent Sidecar/DaemonSet, 2. Gateway, 3. Agent + Gateway)"]
+        Rec["Receivers<br/>OTLP / Prometheus / Zipkin / Kafka / filelog"] --> Proc["Processors<br/>Batch / Filter / Transform / Tail-Sampling"] --> Exp["Exporters<br/>Jaeger / Prometheus / Loki / Tempo / Datadog / OTLP"]
+    end
+
+    Inst -->|"OTLP"| Rec
 ```
 
 ### OpenTelemetry Setup in Node.js
@@ -407,39 +322,15 @@ async function processOrder(order: Order): Promise<OrderResult> {
 
 ## Observability Backends: The Grafana Stack
 
-```
-+------------------------------------------------------------------+
-|              GRAFANA LGTM STACK                                    |
-+------------------------------------------------------------------+
-|                                                                  |
-|                    +-------------+                                |
-|                    |  Grafana    |  Unified dashboards,           |
-|                    |  (Query &   |  alerting, and                 |
-|                    |   Visualize)|  exploration                   |
-|                    +------+------+                                |
-|                           |                                      |
-|              +------------+-------------+                        |
-|              |            |             |                         |
-|  +-----------v-+  +------v------+  +---v----------+             |
-|  |   Loki      |  |  Tempo      |  |  Mimir       |             |
-|  |   (Logs)    |  |  (Traces)   |  |  (Metrics)   |             |
-|  |             |  |             |  |              |              |
-|  | Label-based |  | Trace-      |  | Prometheus-  |              |
-|  | indexing    |  | aware       |  | compatible   |              |
-|  | LogQL query |  | sampling    |  | long-term    |              |
-|  | Cost: LOW   |  | TraceQL     |  | storage      |              |
-|  +-------------+  +-------------+  +--------------+              |
-|                                                                  |
-|  ALTERNATIVES:                                                   |
-|  +-------------------+------------------------------------------+|
-|  | Datadog           | All-in-one SaaS. Expensive but easy.     ||
-|  | Honeycomb         | Event-based, excellent for exploration.  ||
-|  | Axiom             | Serverless, pay-per-ingest. Rising star. ||
-|  | New Relic         | Full-stack observability SaaS.           ||
-|  | Elastic (ELK)     | Powerful but operationally heavy.        ||
-|  +-------------------+------------------------------------------+|
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph LGTM["GRAFANA LGTM STACK"]
+        Grafana["Grafana<br/>(Unified Dashboards, Alerting, Exploration)"]
+        Loki[("Loki (Logs)<br/>Label-based indexing, LogQL, low cost")]
+        Tempo[("Tempo (Traces)<br/>Trace-aware sampling, TraceQL")]
+        Mimir[("Mimir (Metrics)<br/>Prometheus-compatible long-term storage")]
+        Grafana --> Loki & Tempo & Mimir
+    end
 ```
 
 ---
@@ -505,33 +396,12 @@ async function processOrder(order: Order): Promise<OrderResult> {
 
 ### Circuit Breaker
 
-```
-+------------------------------------------------------------------+
-|              CIRCUIT BREAKER STATE MACHINE                         |
-+------------------------------------------------------------------+
-|                                                                  |
-|              Success                                             |
-|  +--------+  (reset)   +----------+                              |
-|  | CLOSED |<-----------| HALF-OPEN|                              |
-|  |        |            |          |                              |
-|  | Normal |            | Test with|                              |
-|  | traffic|            | limited  |                              |
-|  +---+----+            | requests |                              |
-|      |                 +-----+----+                              |
-|      | Failure                |                                  |
-|      | threshold              | Failure                          |
-|      | exceeded               |                                  |
-|      v                        v                                  |
-|  +---+----+            +----------+                              |
-|  |  OPEN  |----------->|  OPEN    |                              |
-|  |        | timeout    |          |                              |
-|  | Fail   | expires    | Reject   |                              |
-|  | fast   +----------->| all      |                              |
-|  |        |            | requests |                              |
-|  +--------+  (to       +----------+                              |
-|              HALF-OPEN)                                          |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Closed["CLOSED<br/>(Normal traffic)"] -->|"Failure threshold exceeded"| Open["OPEN<br/>(Fail fast: reject all requests)"]
+    Open -->|"Reset timeout expires"| HalfOpen["HALF-OPEN<br/>(Test with limited requests)"]
+    HalfOpen -->|"Success (reset)"| Closed
+    HalfOpen -->|"Failure"| Open
 ```
 
 ```typescript
@@ -646,34 +516,14 @@ async function chargePayment(amount: number): Promise<PaymentResult> {
 
 ### Health Check Endpoints
 
-```
-+------------------------------------------------------------------+
-|              KUBERNETES HEALTH PROBES                              |
-+------------------------------------------------------------------+
-|                                                                  |
-|  STARTUP PROBE                                                   |
-|  "Has the app finished initializing?"                            |
-|  - Runs only during startup                                      |
-|  - Until it passes, liveness/readiness are not checked           |
-|  - Use for slow-starting apps (loading models, migrations)       |
-|                                                                  |
-|  LIVENESS PROBE                                                  |
-|  "Is the process still alive and not deadlocked?"                |
-|  - If fails: Kubernetes restarts the pod                         |
-|  - Should be CHEAP: no external dependency checks                |
-|  - Just verify the process is responsive                         |
-|                                                                  |
-|  READINESS PROBE                                                 |
-|  "Can this instance handle traffic right now?"                   |
-|  - If fails: Pod removed from Service endpoints (no traffic)     |
-|  - CHECK external dependencies here (DB, cache, etc.)            |
-|  - Pod stays running but receives no traffic                     |
-|                                                                  |
-|  COMMON MISTAKE: Checking database in liveness probe             |
-|  If DB goes down, all pods restart -> cascading failure           |
-|  DB should only be checked in readiness probe                    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Probes["KUBERNETES HEALTH PROBES"]
+        S["1. STARTUP PROBE ('Has the app finished initializing?')<br/>- Runs only during startup (blocks liveness/readiness until passed)<br/>- Use for slow-starting apps (loading ML models, migrations)"]
+        L["2. LIVENESS PROBE ('Is the process alive and not deadlocked?')<br/>- If fails: Kubernetes restarts the pod<br/>- Must be CHEAP: NEVER check external DB/dependencies here"]
+        R["3. READINESS PROBE ('Can this instance handle traffic right now?')<br/>- If fails: Pod removed from Service endpoints (no traffic, stays running)<br/>- Check external dependencies (DB, cache) here"]
+        S --> L & R
+    end
 ```
 
 ```typescript
@@ -822,46 +672,16 @@ function healthRouter(dependencies: {
 
 ## Chaos Engineering
 
-```
-+------------------------------------------------------------------+
-|              CHAOS ENGINEERING PROCESS                             |
-+------------------------------------------------------------------+
-|                                                                  |
-|  1. DEFINE STEADY STATE                                          |
-|     "Normal" behavior in measurable terms:                       |
-|     - p99 latency < 200ms                                        |
-|     - Error rate < 0.1%                                          |
-|     - Orders processed within 5 minutes                          |
-|                                                                  |
-|  2. FORM HYPOTHESIS                                              |
-|     "If [injection], the system will [expected behavior]"         |
-|     "If we kill 1 of 3 Kafka brokers, consumer lag will          |
-|      increase temporarily but recover within 2 minutes"          |
-|                                                                  |
-|  3. INJECT FAILURE                                               |
-|     - Network: latency injection, packet loss, partition          |
-|     - Process: kill pods, CPU stress, memory pressure             |
-|     - Dependencies: database unavailable, third-party timeout     |
-|     - Application: inject errors in specific code paths           |
-|                                                                  |
-|  4. OBSERVE AND LEARN                                            |
-|     Did the system behave as expected?                           |
-|     Were alerts triggered? Were runbooks followed?               |
-|     What was the blast radius?                                   |
-|                                                                  |
-|  5. FIX AND AUTOMATE                                             |
-|     Address weaknesses found. Add chaos tests to CI/CD.          |
-|                                                                  |
-|  TOOLS:                                                          |
-|  +------------------+---------------------------------------+    |
-|  | Litmus Chaos     | Kubernetes-native, ChaosHub catalog   |    |
-|  | Chaos Monkey     | Netflix, random instance termination  |    |
-|  | Gremlin          | SaaS platform, enterprise features    |    |
-|  | Toxiproxy        | TCP proxy for network fault injection  |    |
-|  | chaos-mesh       | K8s chaos with dashboard              |    |
-|  +------------------+---------------------------------------+    |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Chaos["CHAOS ENGINEERING PROCESS (Litmus, Chaos Monkey, Gremlin, Toxiproxy, Chaos Mesh)"]
+        C1["1. DEFINE STEADY STATE<br/>Measurable normal behavior (p99 &lt; 200ms, error rate &lt; 0.1%)"]
+        C2["2. FORM HYPOTHESIS<br/>'If we kill 1 of 3 Kafka brokers, lag recovers within 2 min'"]
+        C3["3. INJECT FAILURE<br/>Network latency/loss, kill pods/CPU stress, dependency timeout"]
+        C4["4. OBSERVE AND LEARN<br/>Verify behavior, alerts, runbooks, and blast radius"]
+        C5["5. FIX AND AUTOMATE<br/>Address weaknesses &amp; add chaos tests to CI/CD"]
+        C1 --> C2 --> C3 --> C4 --> C5 --> C1
+    end
 ```
 
 ---

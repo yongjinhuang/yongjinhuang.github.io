@@ -33,24 +33,16 @@ Observability originates from control theory: a system is *observable* if you ca
 - **Explorability**: ad-hoc querying without predefined dashboards
 - **Correlation**: connecting signals across logs, metrics, and traces
 
-```
-+----------------------------------------------------+
-|               Observable System                     |
-|                                                     |
-|  +-----------+  +-----------+  +-----------+        |
-|  |  Metrics  |  |   Logs    |  |  Traces   |        |
-|  +-----------+  +-----------+  +-----------+        |
-|        |              |              |               |
-|        v              v              v               |
-|  +---------------------------------------------+   |
-|  |        Correlation & Context Layer           |   |
-|  +---------------------------------------------+   |
-|        |                                             |
-|        v                                             |
-|  +---------------------------------------------+   |
-|  |       Ad-hoc Querying & Exploration          |   |
-|  +---------------------------------------------+   |
-+----------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Sys["Observable System"]
+        M["Metrics"]
+        L["Logs"]
+        T["Traces"]
+        Corr["Correlation &amp; Context Layer"]
+        Query["Ad-hoc Querying &amp; Exploration"]
+        M & L & T --> Corr --> Query
+    end
 ```
 
 ### The Shift from "Known Unknowns" to "Unknown Unknowns"
@@ -75,17 +67,13 @@ Traditional monitoring handles **known unknowns** -- things you expect might fai
 
 Monitoring is not replaced by observability; it is subsumed by it. A mature observability practice includes monitoring (dashboards, alerts) but extends beyond it with rich telemetry that enables root cause analysis.
 
-```
-+------------------------------------------+
-|            Observability                  |
-|                                          |
-|  +------------------+                    |
-|  |   Monitoring     |   + Exploration    |
-|  |  (Dashboards,    |   + Correlation    |
-|  |   Alerts,        |   + High-cardinality|
-|  |   Thresholds)    |   + Ad-hoc queries |
-|  +------------------+                    |
-+------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Obs["Observability (Superset)"]
+        Mon["Monitoring<br/>- Dashboards<br/>- Alerts<br/>- Thresholds"]
+        Plus["+ Exploration<br/>+ Correlation<br/>+ High-cardinality<br/>+ Ad-hoc queries"]
+        Mon --- Plus
+    end
 ```
 
 ---
@@ -133,20 +121,14 @@ http_request_duration_seconds_bucket{le="1.0"} 34001
 
 Traces follow a request as it traverses multiple services, capturing the timing and relationships between operations.
 
-```
-Trace ID: abc123def456
-|
-+-- [Span] API Gateway (12ms)
-    |
-    +-- [Span] Auth Service (3ms)
-    |
-    +-- [Span] Payment Service (45ms)
-    |   |
-    |   +-- [Span] Database Query (8ms)
-    |   |
-    |   +-- [Span] External Payment API (32ms)
-    |
-    +-- [Span] Notification Service (5ms)
+```mermaid
+flowchart LR
+    Root["Trace ID: abc123def456"] --> GW["[Span] API Gateway (12ms)"]
+    GW --> Auth["[Span] Auth Service (3ms)"]
+    GW --> Pay["[Span] Payment Service (45ms)"]
+    Pay --> DB["[Span] Database Query (8ms)"]
+    Pay --> Ext["[Span] External Payment API (32ms)"]
+    GW --> Notify["[Span] Notification Service (5ms)"]
 ```
 
 **Strengths**: End-to-end visibility, shows causality, identifies bottlenecks.
@@ -165,18 +147,18 @@ Modern observability extends beyond logs, metrics, and traces:
 | **Synthetic Monitoring** | Simulated user transactions to detect issues proactively |
 | **Session Replay** | Recorded user sessions for debugging UX issues |
 
-```
-+-----------------------------------------------------------+
-|                  Modern Observability                      |
-|                                                           |
-|  +-------+  +-------+  +-------+  +----------+           |
-|  | Logs  |  |Metrics|  |Traces |  | Profiles |           |
-|  +-------+  +-------+  +-------+  +----------+           |
-|                                                           |
-|  +-------+  +-------+  +----------+  +---------+         |
-|  |Events |  |Errors |  |  RUM     |  |Synthetic|         |
-|  +-------+  +-------+  +----------+  +---------+         |
-+-----------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Modern["Modern Observability Signals"]
+        S1["Logs"]
+        S2["Metrics"]
+        S3["Traces"]
+        S4["Profiles (Continuous Profiling)"]
+        S5["Events (Deploys, Config Changes)"]
+        S6["Errors (Exception Tracking)"]
+        S7["RUM (Real User Monitoring)"]
+        S8["Synthetic Monitoring"]
+    end
 ```
 
 ---
@@ -245,12 +227,9 @@ Example:
 3. **Separate SLIs by criticality** -- payment endpoints need different SLIs than health checks
 4. **Use request-based, not time-based windows** -- more statistically meaningful
 
-```
-+-------------------+        +-----------+        +---------+
-|  Load Balancer    | -----> |  SLI      | -----> |  SLO    |
-|  (measurement     |        |  (ratio   |        | (target)|
-|   point)          |        |   0-100%) |        |         |
-+-------------------+        +-----------+        +---------+
+```mermaid
+flowchart LR
+    LB["Load Balancer<br/>(measurement point)"] --> SLI["SLI<br/>(ratio 0-100%)"] --> SLO["SLO<br/>(target)"]
 ```
 
 ---
@@ -406,23 +385,14 @@ This gives you a buffer before contractual penalties apply.
 
 ## 7. SLI / SLO / SLA Relationship
 
-```
-                    Stricter
-                       |
-   SLI (measurement)   |   "We measure 99.97% availability"
-        |               |
-        v               |
-   SLO (target)        |   "We target 99.95% availability"
-        |               |
-        v               |
-   SLA (contract)       |   "We promise 99.9% availability"
-                       |
-                    Looser
-
-   SLI >= SLO >= SLA  (ideally)
-
-   If SLI drops below SLO -> engineering action (freeze releases)
-   If SLI drops below SLA -> contractual penalties (credits)
+```mermaid
+flowchart TD
+    subgraph Hierarchy["SLI >= SLO >= SLA (Stricter to Looser)"]
+        SLI["SLI (Measurement — Stricter)<br/>'We measure 99.97% availability'"]
+        SLO["SLO (Internal Target)<br/>'We target 99.95% availability'<br/>If SLI &lt; SLO -&gt; Engineering action (freeze releases)"]
+        SLA["SLA (External Contract — Looser)<br/>'We promise 99.9% availability'<br/>If SLI &lt; SLA -&gt; Contractual penalties (credits)"]
+        SLI --> SLO --> SLA
+    end
 ```
 
 ---
@@ -470,18 +440,12 @@ This gives you a buffer before contractual penalties apply.
 - Blameless postmortem culture
 - Business metrics connected to technical signals
 
-```
-Level 4  +-----------------------------------------+
-         |  Observability-Driven Culture           |
-Level 3  +-----------------------------------------+
-         |  Advanced Observability                 |
-Level 2  +-----------------------------------------+
-         |  Proactive Observability                |
-Level 1  +-----------------------------------------+
-         |  Basic Monitoring                       |
-Level 0  +-----------------------------------------+
-         |  Reactive / Ad-hoc                      |
-         +-----------------------------------------+
+```mermaid
+flowchart BT
+    L0["Level 0: Reactive / Ad-hoc"] --> L1["Level 1: Basic Monitoring"]
+    L1 --> L2["Level 2: Proactive Observability"]
+    L2 --> L3["Level 3: Advanced Observability"]
+    L3 --> L4["Level 4: Observability-Driven Culture"]
 ```
 
 ---
@@ -559,23 +523,11 @@ Observability-Driven Development (ODD) integrates observability into the softwar
 
 ### Development Workflow
 
-```
-+----------+     +-----------+     +-------------+
-|  Write   |---->|  Add      |---->|  Define     |
-|  Code    |     | Telemetry |     |  SLOs       |
-+----------+     +-----------+     +-------------+
-                                         |
-                                         v
-+----------+     +-----------+     +-------------+
-|  Ship    |<----|  Verify   |<----|  Write      |
-|  Feature |     | in Staging|     |  Dashboards |
-+----------+     +-----------+     +-------------+
-      |
-      v
-+----------+     +-----------+
-|  Monitor |---->|  Iterate  |
-|  in Prod |     |           |
-+----------+     +-----------+
+```mermaid
+flowchart LR
+    S1["1. Write Code"] --> S2["2. Add Telemetry"] --> S3["3. Define SLOs"]
+    S3 --> S4["4. Write Dashboards"] --> S5["5. Verify in Staging"] --> S6["6. Ship Feature"]
+    S6 --> S7["7. Monitor in Prod"] --> S8["8. Iterate"]
 ```
 
 ### Observability in CI/CD

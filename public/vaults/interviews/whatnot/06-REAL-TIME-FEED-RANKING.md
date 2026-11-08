@@ -37,37 +37,16 @@ Design a feed ranking system that surfaces the most relevant live streams to use
 
 ## Step 2: High-Level Design
 
-```
-┌──────────────────────────────────────────────────────┐
-│                    Client (App)                       │
-└──────────────────────────┬───────────────────────────┘
-                           │ GET /feed
-                           ▼
-┌──────────────────────────────────────────────────────┐
-│                   Feed Service                        │
-│                                                      │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐     │
-│  │ Retrieval  │→ │  Ranking   │→ │ Re-ranking │     │
-│  │  Stage     │  │  Stage     │  │  Stage     │     │
-│  └────────────┘  └────────────┘  └────────────┘     │
-└──────────────┬────────────┬──────────────────────────┘
-               │            │
-    ┌──────────┴──┐    ┌────┴─────────┐
-    │  Candidate  │    │   ML Model   │
-    │  Sources    │    │  (SageMaker) │
-    │             │    │              │
-    │ - Live idx  │    │ - Features   │
-    │ - Following │    │ - Embeddings │
-    │ - Category  │    │ - Scores     │
-    │ - Trending  │    └──────────────┘
-    └─────────────┘
-          │
-    ┌─────┴──────┐
-    │   Feature  │
-    │   Store    │
-    │  (Redis +  │
-    │  Rockset)  │
-    └────────────┘
+```mermaid
+flowchart TD
+    Client["Client (App)"] -->|"GET /feed"| FeedSvc
+    subgraph FeedSvc["Feed Service"]
+        Retrieval["Retrieval Stage"] --> Ranking["Ranking Stage"] --> Reranking["Re-ranking Stage"]
+    end
+    Retrieval --> Candidates["Candidate Sources<br/>- Live idx<br/>- Following<br/>- Category<br/>- Trending"]
+    Ranking --> ML["ML Model (SageMaker)<br/>- Features<br/>- Embeddings<br/>- Scores"]
+    Candidates --> FS[("Feature Store<br/>(Redis + Rockset)")]
+    ML --> FS
 ```
 
 ---
@@ -76,85 +55,36 @@ Design a feed ranking system that surfaces the most relevant live streams to use
 
 ### Three-Stage Ranking Pipeline
 
-```
-Stage 1: RETRIEVAL          Stage 2: RANKING           Stage 3: RE-RANKING
-(Cheap, broad)              (ML model)                 (Business rules)
-
-Fetch ~1000 candidates  →   Score & rank top ~100  →   Apply rules, return ~50
-
-Sources:                    Features:                   Rules:
-- Live stream index         - User-stream affinity      - Diversity (no 5 sports
-- Followed sellers          - Category preference         card streams in a row)
-- Trending streams          - Seller quality score      - Seller boost (new sellers)
-- Category affinity         - Stream engagement         - Geographic relevance
-- Collaborative filter      - Price range match         - Dedup (same seller)
-                            - User embeddings           - Business promotions
-                            - Stream embeddings
+```mermaid
+flowchart LR
+    S1["Stage 1: RETRIEVAL (Cheap, broad)<br/>Fetch ~1000 candidates<br/><br/>Sources:<br/>- Live stream index<br/>- Followed sellers<br/>- Trending streams<br/>- Category affinity<br/>- Collaborative filter"]
+    S2["Stage 2: RANKING (ML model)<br/>Score &amp; rank top ~100<br/><br/>Features:<br/>- User-stream affinity<br/>- Category preference<br/>- Seller quality score<br/>- Stream engagement<br/>- Price range match<br/>- User &amp; stream embeddings"]
+    S3["Stage 3: RE-RANKING (Business rules)<br/>Apply rules, return ~50<br/><br/>Rules:<br/>- Diversity (no 5 sports card streams in a row)<br/>- Seller boost (new sellers)<br/>- Geographic relevance<br/>- Dedup (same seller)<br/>- Business promotions"]
+    S1 --> S2 --> S3
 ```
 
 ### Retrieval Sources
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Retrieval Sources                       │
-│                                                         │
-│  1. FOLLOWING (highest recall for engaged users)        │
-│     SELECT * FROM live_streams                          │
-│     WHERE seller_id IN (user's following list)          │
-│     → ~50-200 candidates                                │
-│                                                         │
-│  2. CATEGORY AFFINITY                                   │
-│     SELECT * FROM live_streams                          │
-│     WHERE category IN (user's top 5 categories)         │
-│     ORDER BY engagement_score DESC                      │
-│     → ~200-500 candidates                               │
-│                                                         │
-│  3. COLLABORATIVE FILTERING                             │
-│     Users who watched X also watched Y                  │
-│     → ~100-300 candidates                               │
-│                                                         │
-│  4. TRENDING (global popularity)                        │
-│     SELECT * FROM live_streams                          │
-│     ORDER BY current_viewers DESC                       │
-│     → ~100 candidates                                   │
-│                                                         │
-│  5. EXPLORATION (new/undiscovered streams)              │
-│     Random sample of streams with few viewers           │
-│     → ~50 candidates (cold-start for sellers)           │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Sources["Retrieval Sources (~1000 Total Candidates)"]
+        R1["1. FOLLOWING (~50-200 candidates)<br/>Highest recall for engaged users:<br/>SELECT * FROM live_streams WHERE seller_id IN (user's following list)"]
+        R2["2. CATEGORY AFFINITY (~200-500 candidates)<br/>SELECT * FROM live_streams WHERE category IN (user's top 5 categories)<br/>ORDER BY engagement_score DESC"]
+        R3["3. COLLABORATIVE FILTERING (~100-300 candidates)<br/>Users who watched X also watched Y"]
+        R4["4. TRENDING (~100 candidates)<br/>Global popularity: SELECT * FROM live_streams ORDER BY current_viewers DESC"]
+        R5["5. EXPLORATION (~50 candidates)<br/>Random sample of streams with few viewers (cold-start for sellers)"]
+    end
 ```
 
 ### Feature Store Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Feature Store                         │
-│                                                         │
-│  REAL-TIME FEATURES (Redis, < 100ms)                    │
-│  ┌─────────────────────────────────────────────┐        │
-│  │ stream:{id}:viewers      → 12,345           │        │
-│  │ stream:{id}:bid_count    → 47               │        │
-│  │ stream:{id}:chat_rate    → 15.2 msg/s       │        │
-│  │ stream:{id}:started_at   → 1710000000       │        │
-│  │ user:{id}:last_categories → [cards, shoes]  │        │
-│  │ user:{id}:last_watched   → [stream1, ...]   │        │
-│  └─────────────────────────────────────────────┘        │
-│                                                         │
-│  NEAR-REAL-TIME FEATURES (Rockset, < 1s)                │
-│  ┌─────────────────────────────────────────────┐        │
-│  │ seller_quality_score     → computed hourly   │        │
-│  │ category_conversion_rate → computed hourly   │        │
-│  │ user_spend_percentile    → computed daily    │        │
-│  └─────────────────────────────────────────────┘        │
-│                                                         │
-│  BATCH FEATURES (Snowflake → Redis, daily)              │
-│  ┌─────────────────────────────────────────────┐        │
-│  │ user_embedding           → 128-dim vector   │        │
-│  │ seller_embedding         → 128-dim vector   │        │
-│  │ user_category_affinity   → {cards: 0.8, ..} │        │
-│  │ user_price_preference    → {min: 5, max: 50}│        │
-│  └─────────────────────────────────────────────┘        │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph FS["Feature Store Architecture"]
+        RT["REAL-TIME FEATURES (Redis, &lt; 100ms)<br/>- stream:{id}:viewers -&gt; 12,345<br/>- stream:{id}:bid_count -&gt; 47<br/>- stream:{id}:chat_rate -&gt; 15.2 msg/s<br/>- stream:{id}:started_at -&gt; 1710000000<br/>- user:{id}:last_categories -&gt; [cards, shoes]<br/>- user:{id}:last_watched -&gt; [stream1, ...]"]
+        NRT["NEAR-REAL-TIME FEATURES (Rockset, &lt; 1s)<br/>- seller_quality_score (computed hourly)<br/>- category_conversion_rate (computed hourly)<br/>- user_spend_percentile (computed daily)"]
+        Batch["BATCH FEATURES (Snowflake -&gt; Redis, daily)<br/>- user_embedding (128-dim vector)<br/>- seller_embedding (128-dim vector)<br/>- user_category_affinity ({cards: 0.8, ...})<br/>- user_price_preference ({min: 5, max: 50})"]
+    end
 ```
 
 ### Online vs Batch Inference
@@ -192,43 +122,37 @@ Cost:
 
 ### Cold-Start Strategy
 
-```
-NEW USER (no history):
-├── Use device/location signals for initial category guess
-├── Show trending streams (high engagement = broadly appealing)
-├── Apply exploration boost (surface diverse categories)
-├── After 1st stream watched → immediate re-ranking
-├── After 3 streams → collaborative filtering kicks in
-└── After 10 streams → full personalization
+```mermaid
+flowchart TD
+    subgraph NewUser["NEW USER (No History)"]
+        U1["Initial:<br/>- Use device/location signals for initial category guess<br/>- Show trending streams (high engagement)<br/>- Apply exploration boost (surface diverse categories)"]
+        U2["After 1st stream watched: Immediate re-ranking"]
+        U3["After 3 streams: Collaborative filtering kicks in"]
+        U4["After 10 streams: Full personalization"]
+        U1 --> U2 --> U3 --> U4
+    end
 
-NEW SELLER (no viewers):
-├── Boost in "exploration" retrieval source
-├── Category-based matching to interested users
-├── Show in "New Sellers" carousel
-├── After 5 streams → quality score established
-└── After 20 streams → full organic ranking
+    subgraph NewSeller["NEW SELLER (No Viewers)"]
+        S1["Initial:<br/>- Boost in 'exploration' retrieval source<br/>- Category-based matching to interested users<br/>- Show in 'New Sellers' carousel"]
+        S2["After 5 streams: Quality score established"]
+        S3["After 20 streams: Full organic ranking"]
+        S1 --> S2 --> S3
+    end
 ```
 
 ### Data Flow
 
-```
-┌─────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
-│  User   │────→│  Kafka   │────→│  Feature │────→│  Redis   │
-│ Events  │     │  Topics  │     │ Pipeline │     │ Feature  │
-│         │     │          │     │ (Flink)  │     │  Store   │
-└─────────┘     └──────────┘     └──────────┘     └──────────┘
-                                                        │
-┌─────────┐     ┌──────────┐     ┌──────────┐          │
-│  Stream │────→│  Kafka   │────→│ Snowflake│          │
-│ Events  │     │  Topics  │     │  (Batch) │          │
-└─────────┘     └──────────┘     └──────────┘          │
-                                      │                 │
-                                      ▼                 ▼
-                                ┌──────────┐     ┌──────────┐
-                                │ ML Model │────→│  Feed    │
-                                │ Training │     │ Service  │
-                                │ (Daily)  │     │          │
-                                └──────────┘     └──────────┘
+```mermaid
+flowchart LR
+    UE["User Events"] --> K1["Kafka Topics"]
+    K1 --> Flink["Feature Pipeline<br/>(Flink)"]
+    Flink --> Redis[("Redis Feature Store")]
+
+    SE["Stream Events"] --> K2["Kafka Topics"]
+    K2 --> Snow[("Snowflake<br/>(Batch)")]
+    Snow --> Train["ML Model Training<br/>(Daily)"]
+    Train --> Feed["Feed Service"]
+    Redis --> Feed
 ```
 
 ---

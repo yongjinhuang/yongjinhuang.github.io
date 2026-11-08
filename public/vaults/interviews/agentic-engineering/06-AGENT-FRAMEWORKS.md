@@ -28,54 +28,45 @@
 
 ### Categories of Agent Frameworks
 
-```
-+---------------------------------------------------------------------+
-|                    AGENT FRAMEWORK TAXONOMY                         |
-+---------------------------------------------------------------------+
-|                                                                     |
-|  ORCHESTRATION         MULTI-AGENT          OPTIMIZATION            |
-|  (Control Flow)        (Collaboration)      (Prompt/Weight)         |
-|  +--------------+      +--------------+     +--------------+        |
-|  | LangGraph    |      | CrewAI       |     | DSPy         |        |
-|  | Mastra       |      | AutoGen/AG2  |     |              |        |
-|  +--------------+      | OpenAI SDK   |     +--------------+        |
-|                        +--------------+                             |
-|  TYPE-SAFE             PROVIDER SDKs        FULL-STACK              |
-|  (Validation)          (Native Tools)       (End-to-End)            |
-|  +--------------+      +--------------+     +--------------+        |
-|  | Pydantic AI  |      | Claude SDK   |     | Mastra       |        |
-|  |              |      | OpenAI SDK   |     | CrewAI       |        |
-|  +--------------+      +--------------+     +--------------+        |
-+---------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Tax["AGENT FRAMEWORK TAXONOMY"]
+        Orch["ORCHESTRATION (Control Flow)<br/>LangGraph / Mastra"]
+        Multi["MULTI-AGENT (Collaboration)<br/>CrewAI / AutoGen (AG2) / OpenAI SDK"]
+        Opt["OPTIMIZATION (Prompt / Weight)<br/>DSPy"]
+        Type["TYPE-SAFE (Validation)<br/>Pydantic AI"]
+        SDK["PROVIDER SDKs (Native Tools)<br/>Claude Agent SDK / OpenAI Agents SDK"]
+        Full["FULL-STACK (End-to-End)<br/>Mastra / CrewAI"]
+    end
 ```
 
 ### When to Use a Framework vs. Build from Scratch
 
-```
-USE A FRAMEWORK WHEN:                 BUILD FROM SCRATCH WHEN:
-+-----------------------------------+ +-----------------------------------+
-| - Rapid prototyping needed        | | - Extreme performance needs       |
-| - Standard agentic patterns       | | - Unique control flow logic       |
-| - Team needs shared conventions   | | - Minimal dependencies required   |
-| - Observability out of the box    | | - Full understanding of internals |
-| - Multi-agent coordination        | | - Custom memory/state management  |
-| - Human-in-the-loop workflows     | | - Tight model-provider coupling   |
-| - Production monitoring/tracing   | | - Regulatory/audit constraints    |
-+-----------------------------------+ +-----------------------------------+
+```mermaid
+flowchart LR
+    UseFW["USE A FRAMEWORK WHEN:<br/>- Rapid prototyping needed<br/>- Standard agentic patterns<br/>- Team needs shared conventions<br/>- Observability out of the box<br/>- Multi-agent coordination<br/>- Human-in-the-loop workflows<br/>- Production monitoring / tracing"]
+    Scratch["BUILD FROM SCRATCH WHEN:<br/>- Extreme performance (&lt;10ms overhead)<br/>- Unique control flow logic<br/>- Minimal dependencies required<br/>- Full understanding of internals<br/>- Custom memory / state management<br/>- Tight model-provider coupling<br/>- Regulatory / audit constraints"]
 ```
 
 ### Framework Maturity Spectrum (as of early 2026)
 
-```
-EXPERIMENTAL        MATURING             PRODUCTION-READY
-     |                  |                       |
-     +--DSPy(agents)----+--Mastra---------+-----+
-                        |--Pydantic AI----+-----+
-                        |--AutoGen/AG2----+
-                        +--OpenAI SDK-----------+
-                        +--Claude SDK-----------+
-                        +--CrewAI---------------+
-                        +--LangGraph------------+
+```mermaid
+flowchart LR
+    subgraph Exp["EXPERIMENTAL"]
+        E1["DSPy (Agentic Loops)"]
+    end
+    subgraph Mat["MATURING"]
+        M1["Mastra"]
+        M2["Pydantic AI"]
+        M3["AutoGen / AG2"]
+    end
+    subgraph Prod["PRODUCTION-READY"]
+        P1["LangGraph"]
+        P2["Claude Agent SDK"]
+        P3["OpenAI Agents SDK"]
+        P4["CrewAI"]
+    end
+    Exp --> Mat --> Prod
 ```
 
 ---
@@ -93,20 +84,12 @@ giving you explicit control over branching, loops, and parallelism.
 
 ### Core Concepts
 
-```
-+------------------+     +------------------+     +------------------+
-|   StateGraph     |---->|     Nodes        |---->|     Edges        |
-| (TypedDict-based |     | (Python funcs    |     | (Conditional or  |
-|  state schema)   |     |  that transform  |     |  fixed routing)  |
-|                  |     |  state)          |     |                  |
-+------------------+     +------------------+     +------------------+
-         |                                               |
-         v                                               v
-+------------------+     +------------------+     +------------------+
-|  Checkpointers   |     |  Human-in-Loop   |     |  Subgraphs       |
-| (MemorySaver,    |     | (interrupt_before|     | (Nested graphs   |
-|  PostgresSaver)  |     |  interrupt_after)|     |  with own state) |
-+------------------+     +------------------+     +------------------+
+```mermaid
+flowchart LR
+    SG["StateGraph<br/>(TypedDict-based state schema)"] --> Nodes["Nodes<br/>(Python functions that transform state)"] --> Edges["Edges<br/>(Conditional or fixed routing)"]
+    SG --> CP["Checkpointers<br/>(MemorySaver, PostgresSaver)"]
+    Nodes --> HITL["Human-in-the-Loop<br/>(interrupt_before, interrupt_after)"]
+    Edges --> Sub["Subgraphs<br/>(Nested graphs with own state)"]
 ```
 
 ### Checkpointing and Persistence
@@ -218,12 +201,11 @@ exposes the _battle-tested agent loop_ behind Claude Code as a programmable tool
 
 ### The Agentic Loop
 
-```
-+---> Gather Context ---> Take Action ---> Verify Work ---+
-|                                                         |
-+----------------------- Repeat --------------------------+
-                           |
-                    (until task complete)
+```mermaid
+flowchart LR
+    Gather["Gather Context"] --> Act["Take Action"] --> Verify["Verify Work"]
+    Verify -->|"Repeat"| Gather
+    Verify -->|"Task complete"| Done(["Done"])
 ```
 
 ### Model Context Protocol (MCP)
@@ -231,14 +213,9 @@ exposes the _battle-tested agent loop_ behind Claude Code as a programmable tool
 MCP is an open standard (backed by Anthropic) for connecting agents to external
 services. It handles authentication and API calls automatically.
 
-```
-+------------------+       +------------------+       +------------------+
-|   Agent          |<----->|   MCP Server     |<----->|  External        |
-|   (Claude SDK)   |       |   (Middleware)   |       |  Service         |
-|                  |       |   - Auth/OAuth   |       |  - Slack         |
-|  "search_slack"  |       |   - Rate limits  |       |  - GitHub        |
-|  "get_tasks"     |       |   - Schema       |       |  - Google Drive  |
-+------------------+       +------------------+       +------------------+
+```mermaid
+flowchart LR
+    Agent["Agent (Claude SDK)<br/>'search_slack', 'get_tasks'"] <--> MCP["MCP Server (Middleware)<br/>- Auth / OAuth<br/>- Rate limits<br/>- Schema validation"] <--> Ext["External Service<br/>- Slack<br/>- GitHub<br/>- Google Drive"]
 ```
 
 ### Code Example: Research Agent
@@ -329,35 +306,28 @@ routing.
 
 ### Core Primitives
 
-```
-+------------------+     +------------------+     +------------------+
-|    AGENTS        |     |    HANDOFFS      |     |   GUARDRAILS     |
-| - Model config   |     | - Agent-to-agent |     | - Input checks   |
-| - Instructions   |     |   delegation     |     | - Output checks  |
-| - Tools          |     | - Context carry  |     | - Tool checks    |
-| - Output type    |     | - Clean routing  |     | - Fast/cheap LM  |
-+------------------+     +------------------+     +------------------+
+```mermaid
+flowchart LR
+    subgraph OpenAISDK["OPENAI AGENTS SDK CORE PRIMITIVES"]
+        A["AGENTS<br/>- Model config<br/>- Instructions<br/>- Tools<br/>- Output type"]
+        H["HANDOFFS<br/>- Agent-to-agent delegation<br/>- Context carry<br/>- Clean routing"]
+        G["GUARDRAILS<br/>- Input / Output / Tool checks<br/>- Parallel fast/cheap LM validation"]
+        A --> H --> G
+    end
 ```
 
 ### Guardrails Architecture
 
-```
-User Input
-    |
-    v
-[Input Guardrail] -----> BLOCK (if malicious)
-    |
-    v (passes)
-[Agent Execution]
-    |
-    v
-[Tool Guardrail] -------> BLOCK (per-tool validation)
-    |
-    v
-[Output Guardrail] -----> BLOCK (if invalid/unsafe)
-    |
-    v
-Final Response
+```mermaid
+flowchart TD
+    In["User Input"] --> IG{"Input Guardrail"}
+    IG -->|"Malicious"| B1["BLOCK"]
+    IG -->|"Passes"| Exec["Agent Execution"]
+    Exec --> TG{"Tool Guardrail"}
+    TG -->|"Invalid tool call"| B2["BLOCK"]
+    TG -->|"Passes"| OG{"Output Guardrail"}
+    OG -->|"Invalid / Unsafe"| B3["BLOCK"]
+    OG -->|"Passes"| Out["Final Response"]
 ```
 
 ### Code Example: Research Agent with Handoffs
@@ -445,26 +415,13 @@ you'd staff a real project, with managers, workers, and researchers.
 
 ### Architecture
 
-```
-+---------------------------------------------------------------+
-|                         CREW                                  |
-|  +-------------------+  +-------------------+                 |
-|  |   AGENT           |  |   AGENT           |                 |
-|  |   Role: Researcher|  |   Role: Writer    |                 |
-|  |   Goal: Find data |  |   Goal: Summarize |                 |
-|  |   Backstory: ...  |  |   Backstory: ...  |                 |
-|  |   Tools: [search] |  |   Tools: [write]  |                 |
-|  +-------------------+  +-------------------+                 |
-|                                                               |
-|  +-------------------+  +-------------------+                 |
-|  |   TASK 1          |  |   TASK 2          |                 |
-|  |   Description     |  |   Description     |                 |
-|  |   Agent: Research  |  |   Agent: Writer   |                 |
-|  |   Expected Output |  |   Expected Output |                 |
-|  +-------------------+  +-------------------+                 |
-|                                                               |
-|  PROCESS: Sequential | Hierarchical | Consensus               |
-+---------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Crew["CREWAI ARCHITECTURE (Process: Sequential / Hierarchical / Consensus)"]
+        A1["AGENT: Researcher<br/>Goal: Find data<br/>Backstory: ...<br/>Tools: [search]"] --> T1["TASK 1<br/>Description &amp; Expected Output<br/>Assigned: Researcher"]
+        A2["AGENT: Writer<br/>Goal: Summarize<br/>Backstory: ...<br/>Tools: [write]"] --> T2["TASK 2<br/>Description &amp; Expected Output<br/>Assigned: Writer"]
+        T1 --> T2
+    end
 ```
 
 ### Process Types
@@ -566,21 +523,20 @@ abstraction is message passing between agents, not graph nodes or task queues.
 
 ### Conversation Patterns
 
-```
-TWO-AGENT CHAT           SEQUENTIAL CHAT          GROUP CHAT
-+------+  +------+       A->B->C->D              +----------+
-|Agent1|<>|Agent2|       (carryover summary)      |GroupChat |
-+------+  +------+                                | Manager  |
-                                                  +----+-----+
-                                                  /    |    \
-                                             Agent1 Agent2 Agent3
-
-NESTED CHATS              SWARMS
-+--Agent(outer)--+        Multiple agents with
-| +--Agent(in)--+|        built-in orchestration
-| | sub-workflow ||        patterns
-| +-------------+|
-+-----------------+
+```mermaid
+flowchart TD
+    subgraph Two["Two-Agent Chat"]
+        TA1["Agent 1"] <--> TA2["Agent 2"]
+    end
+    subgraph Seq["Sequential Chat (Carryover Summary)"]
+        SA["A"] --> SB["B"] --> SC["C"] --> SD["D"]
+    end
+    subgraph Group["Group Chat"]
+        GCM["GroupChat Manager"] --> GA1["Agent 1"] & GA2["Agent 2"] & GA3["Agent 3"]
+    end
+    subgraph Nested["Nested Chats &amp; Swarms"]
+        Outer["Outer Agent"] --> Inner["Inner Agent Sub-Workflow"]
+    end
 ```
 
 ### Code Example: Research Conversation
@@ -675,28 +631,23 @@ few-shot examples, and even fine-tuning strategies.
 
 ### Core Abstraction: Signatures
 
-```
-TRADITIONAL PROMPTING              DSPy SIGNATURES
-+--------------------------+       +--------------------------+
-| "You are a helpful       |       | class Summarize(dspy.    |
-|  assistant. Given the    |       |     Signature):          |
-|  following document,     |       |   document: str = dspy.  |
-|  please provide a        |       |     InputField()         |
-|  concise summary that    |       |   summary: str = dspy.   |
-|  captures the key..."    |       |     OutputField()        |
-| (500 words of prompt)    |       |                          |
-+--------------------------+       +--------------------------+
-     Fragile, manual                   Declarative, optimizable
+```mermaid
+flowchart LR
+    Trad["TRADITIONAL PROMPTING (Fragile, Manual)<br/>'You are a helpful assistant. Given the following document,<br/>please provide a concise summary...' (500 words)"]
+    DSPy["DSPy SIGNATURES (Declarative, Compiler-Optimizable)<br/>class Summarize(dspy.Signature):<br/>  document: str = dspy.InputField()<br/>  summary: str = dspy.OutputField()"]
+    Trad -->|"Replace hand-tuned strings"| DSPy
 ```
 
 ### Optimizer Hierarchy
 
-```
-Few examples (10)?     --> BootstrapFewShot
-More data (50+)?       --> BootstrapFewShotWithRandomSearch
-Best quality?          --> MIPROv2 (instruction + demo generation)
-Cutting edge (2025+)?  --> GEPA (genetic Pareto optimization)
-Prompt + fine-tune?    --> BetterTogether (meta-optimizer)
+```mermaid
+flowchart LR
+    Q{"DSPy Optimizer Selection"}
+    Q -->|"Few examples (~10)"| O1["BootstrapFewShot"]
+    Q -->|"More data (50+)"| O2["BootstrapFewShotWithRandomSearch"]
+    Q -->|"Best quality"| O3["MIPROv2 (instruction + demo generation)"]
+    Q -->|"Cutting edge (2025+)"| O4["GEPA (genetic Pareto optimization)"]
+    Q -->|"Prompt + fine-tune"| O5["BetterTogether (meta-optimizer)"]
 ```
 
 ### Code Example: Research Pipeline
@@ -790,28 +741,11 @@ model. No chains, no runnables, no special syntax -- just typed Python.
 
 ### Dependency Injection Pattern
 
-```
-+------------------+
-|  Dependencies    |  (injected at runtime)
-|  - DB connection |
-|  - API clients   |
-|  - User context  |
-+--------+---------+
-         |
-         v
-+------------------+     +------------------+
-|     Agent        |---->|     Tools        |
-|  - model         |     |  (receive deps   |
-|  - system_prompt |     |   via RunContext) |
-|  - result_type   |     +------------------+
-+------------------+
-         |
-         v
-+------------------+
-|  Structured      |
-|  Output          |
-|  (Pydantic model)|
-+------------------+
+```mermaid
+flowchart TD
+    Deps["Dependencies (Injected at runtime)<br/>- DB connection<br/>- API clients<br/>- User context"] --> Agent["Pydantic AI Agent<br/>- model<br/>- system_prompt<br/>- result_type"]
+    Agent --> Tools["Tools<br/>(Receive deps via RunContext[Deps])"]
+    Agent --> Out["Structured Output<br/>(Validated Pydantic Model)"]
 ```
 
 ### Code Example: Research Agent
@@ -908,19 +842,14 @@ level of agent tooling that Python developers get from LangGraph or CrewAI.
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                         MASTRA                                   |
-|                                                                  |
-|  +------------+  +-------------+  +------------+  +----------+  |
-|  |   Agents   |  |  Workflows  |  |    RAG     |  |   Evals  |  |
-|  | - LLM call |  | - Graph-    |  | - Ingest   |  | - Auto   |  |
-|  | - Tools    |  |   based     |  | - Chunk    |  | - Custom |  |
-|  | - Memory   |  | - .then()   |  | - Embed    |  | - CI/CD  |  |
-|  | - MCP      |  | - .branch() |  | - Retrieve |  |          |  |
-|  +------------+  | - .parallel()|  +------------+  +----------+  |
-|                  +-------------+                                 |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Mastra["MASTRA (Full-Stack TypeScript AI Framework)"]
+        A["Agents<br/>- LLM call &amp; Tools<br/>- Memory &amp; MCP"]
+        W["Workflows<br/>- Graph-based<br/>- .then() / .branch() / .parallel()"]
+        R["RAG<br/>- Ingest &amp; Chunk<br/>- Embed &amp; Retrieve"]
+        E["Evals<br/>- Automated &amp; Custom<br/>- CI/CD integration"]
+    end
 ```
 
 ### Code Example: Research Agent
@@ -1090,21 +1019,13 @@ def agent_loop(
 
 ### Adding Production Features Incrementally
 
-```
-BASIC LOOP                    + PERSISTENCE              + OBSERVABILITY
-+-----------+                 +-----------+              +-----------+
-| LLM call  |    --------->  | + State   |  --------->  | + Logging |
-| Tool exec |                |   store   |              | + Tracing |
-| Loop      |                | + Resume  |              | + Metrics |
-+-----------+                +-----------+              +-----------+
-
-+ GUARDRAILS                  + MULTI-AGENT              = FRAMEWORK
-+-----------+                 +-----------+              +-----------+
-| + Input   |    --------->  | + Routing |  --------->  | You just  |
-|   checks  |                | + Handoff |              | built one |
-| + Output  |                | + Shared  |              |           |
-|   checks  |                |   state   |              |           |
-+-----------+                +-----------+              +-----------+
+```mermaid
+flowchart LR
+    S1["1. Basic Loop<br/>(LLM call + Tool exec + Loop)"] --> S2["2. + Persistence<br/>(State store + Resume)"]
+    S2 --> S3["3. + Observability<br/>(Logging + Tracing + Metrics)"]
+    S3 --> S4["4. + Guardrails<br/>(Input + Output checks)"]
+    S4 --> S5["5. + Multi-Agent<br/>(Routing + Handoffs + Shared state)"]
+    S5 --> S6["= You Just Built a Framework"]
 ```
 
 ### Key Components to Implement
@@ -1224,20 +1145,13 @@ BASIC LOOP                    + PERSISTENCE              + OBSERVABILITY
 
 ### Common Migration Paths
 
-```
-LangChain Agents -----> LangGraph
-                         (same ecosystem, graph-based upgrade)
-
-Swarm (experimental) -> OpenAI Agents SDK
-                         (direct successor, production-ready)
-
-AutoGen v0.2 ---------> AG2 (community fork, backward compat)
-                    or-> Microsoft Agent Framework (enterprise)
-
-Custom agent loop ----> Pydantic AI (minimal abstraction)
-                    or-> LangGraph (maximum control)
-
-JavaScript agents ----> Mastra (TypeScript-native)
+```mermaid
+flowchart LR
+    LC["LangChain Agents"] --> LG["LangGraph (Graph-based upgrade)"]
+    Swarm["OpenAI Swarm (Experimental)"] --> OAI["OpenAI Agents SDK (Production successor)"]
+    AG["AutoGen v0.2"] --> AG2["AG2 (Backward-compatible community fork)"] & MAF["Microsoft Agent Framework (Enterprise)"]
+    Custom["Custom Agent Loop"] --> PAI["Pydantic AI (Minimal abstraction)"] & LG
+    JS["JavaScript Agents"] --> Mastra["Mastra (TypeScript-native)"]
 ```
 
 ### Abstraction Layer Strategy
@@ -1523,35 +1437,29 @@ graph-level orchestration and output-level type safety."
 
 ### Decision Tree for Framework Selection
 
-```
-START: What kind of agent system?
-|
-+-- Single agent with tools?
-|   |
-|   +-- Python? --> Pydantic AI (type-safe, simple)
-|   +-- TypeScript? --> Mastra (full-stack)
-|   +-- Minimal deps? --> Build from scratch
-|   +-- Need Claude specifically? --> Claude Agent SDK
-|
-+-- Multi-agent with delegation?
-|   |
-|   +-- Clean handoffs? --> OpenAI Agents SDK
-|   +-- Role-based teams? --> CrewAI
-|   +-- Debate/negotiation? --> AutoGen/AG2
-|
-+-- Complex stateful workflow?
-|   |
-|   +-- Branching + cycles + checkpoints? --> LangGraph
-|   +-- TypeScript + serverless? --> Mastra
-|
-+-- Prompt optimization?
-|   |
-|   +-- Systematic, metric-driven? --> DSPy
-|
-+-- Not sure?
-    |
-    +-- Prototype with Pydantic AI or CrewAI (fastest to start)
-    +-- Move to LangGraph if you need more control
+```mermaid
+flowchart LR
+    Start{"What kind of agent system?"}
+    Start --> Single["Single Agent with Tools"]
+    Start --> Multi["Multi-Agent with Delegation"]
+    Start --> Stateful["Complex Stateful Workflow"]
+    Start --> Opt["Prompt Optimization"]
+    Start --> Unsure["Not Sure Yet"]
+
+    Single -->|"Python"| PAI["Pydantic AI"]
+    Single -->|"TypeScript"| Mas1["Mastra"]
+    Single -->|"Minimal deps"| Scratch["Build from scratch"]
+    Single -->|"Claude-native"| CSDK["Claude Agent SDK"]
+
+    Multi -->|"Clean handoffs"| OSDK["OpenAI Agents SDK"]
+    Multi -->|"Role-based teams"| Crew["CrewAI"]
+    Multi -->|"Debate / negotiation"| AG2["AutoGen / AG2"]
+
+    Stateful -->|"Branching + cycles + checkpoints"| LG["LangGraph"]
+    Stateful -->|"TypeScript + serverless"| Mas2["Mastra"]
+
+    Opt -->|"Metric-driven"| DSPy["DSPy"]
+    Unsure --> Proto["Prototype with Pydantic AI / CrewAI -&gt; Move to LangGraph if needed"]
 ```
 
 ### Framework Cheat Sheet

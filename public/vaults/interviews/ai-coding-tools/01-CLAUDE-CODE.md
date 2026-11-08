@@ -36,21 +36,17 @@ and best practices for software engineers.
 Claude Code is an agentic coding tool powered by Claude (Anthropic's LLM). Unlike traditional
 code assistants that auto-complete lines, Claude Code operates as a fully autonomous agent:
 
-```
-+------------------------------------------------------------------+
-|                      CLAUDE CODE ARCHITECTURE                     |
-+------------------------------------------------------------------+
-|                                                                    |
-|  User Prompt  ──>  Agentic Loop  ──>  Tool Execution  ──>  Result |
-|                         |                    |                     |
-|                    Claude LLM           +----+----+                |
-|                    (Reasoning)          |    |    |                |
-|                                       Read Edit Bash              |
-|                                       Grep Write Glob             |
-|                                       MCP  Agent WebFetch         |
-|                                                                    |
-|  Context:  CLAUDE.md + Auto Memory + Conversation + File Contents |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Arch["CLAUDE CODE ARCHITECTURE"]
+        Prompt["User Prompt"] --> Loop["Agentic Loop"]
+        Loop --> Exec["Tool Execution"]
+        Exec --> Result["Result"]
+
+        Loop --- LLM["Claude LLM<br/>(Reasoning)"]
+        Exec --- Tools["Built-in &amp; External Tools:<br/>Read / Edit / Bash<br/>Grep / Write / Glob<br/>MCP / Agent / WebFetch"]
+        Context["Context:<br/>CLAUDE.md + Auto Memory + Conversation + File Contents"] -.-> Loop
+    end
 ```
 
 **Key capabilities:**
@@ -131,26 +127,17 @@ claude          # Launches interactive mode
 Claude Code operates in an agentic loop: it reasons about your request, selects tools,
 executes them, observes results, and repeats until the task is complete.
 
-```
-User Prompt
-    │
-    ▼
-┌─────────────────────────────────┐
-│         AGENTIC LOOP            │
-│                                 │
-│  1. Reason about the task       │
-│  2. Select appropriate tool     │
-│  3. Execute tool (with perms)   │
-│  4. Observe result              │
-│  5. Decide: done or continue?   │
-│         │                       │
-│         ▼                       │
-│    If not done → go to step 1   │
-│    If done → return response    │
-└─────────────────────────────────┘
-    │
-    ▼
-Response to User
+```mermaid
+flowchart TD
+    Prompt["User Prompt"] --> S1
+    subgraph Loop["AGENTIC LOOP"]
+        S1["1. Reason about the task"] --> S2["2. Select appropriate tool"]
+        S2 --> S3["3. Execute tool (with permissions)"]
+        S3 --> S4["4. Observe result"]
+        S4 --> S5{"5. Decide: done or continue?"}
+        S5 -->|"Not done"| S1
+    end
+    S5 -->|"Done"| Resp["Response to User"]
 ```
 
 ### Available Tools
@@ -199,27 +186,16 @@ at the start of every session and carry knowledge across conversations.
 
 ### File Hierarchy
 
-```
-Precedence (highest to lowest):
-┌────────────────────────────────────────────────────────┐
-│  Managed Policy                                        │
-│  /Library/Application Support/ClaudeCode/CLAUDE.md     │
-│  (macOS) -- Organization-wide, cannot be excluded      │
-├────────────────────────────────────────────────────────┤
-│  Project Instructions                                  │
-│  ./CLAUDE.md  or  ./.claude/CLAUDE.md                  │
-│  (Shared with team via version control)                │
-├────────────────────────────────────────────────────────┤
-│  User Instructions                                     │
-│  ~/.claude/CLAUDE.md                                   │
-│  (Personal preferences, all projects)                  │
-├────────────────────────────────────────────────────────┤
-│  Parent / Ancestor Directories                         │
-│  (Walked up from CWD, loaded at launch)                │
-├────────────────────────────────────────────────────────┤
-│  Child / Subdirectories                                │
-│  (Loaded on demand when Claude reads files there)      │
-└────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Precedence["CLAUDE.md Precedence (Highest to Lowest)"]
+        P1["1. Managed Policy<br/>/Library/Application Support/ClaudeCode/CLAUDE.md (macOS)<br/>Organization-wide, cannot be excluded"]
+        P2["2. Project Instructions<br/>./CLAUDE.md or ./.claude/CLAUDE.md<br/>(Shared with team via version control)"]
+        P3["3. User Instructions<br/>~/.claude/CLAUDE.md<br/>(Personal preferences, all projects)"]
+        P4["4. Parent / Ancestor Directories<br/>(Walked up from CWD, loaded at launch)"]
+        P5["5. Child / Subdirectories<br/>(Loaded on demand when Claude reads files there)"]
+        P1 --> P2 --> P3 --> P4 --> P5
+    end
 ```
 
 ### Writing Effective Instructions
@@ -1007,19 +983,17 @@ claude -p "task" --output-format stream-json | your-orchestrator
 
 For tasks requiring multiple agents working in parallel:
 
-```
-┌─────────────────────────────────┐
-│          AGENT TEAM             │
-│                                 │
-│  Team Lead ──> Worker 1         │
-│           ──> Worker 2          │
-│           ──> Worker 3          │
-│                                 │
-│  Each worker has own context,   │
-│  tools, and permissions         │
-│                                 │
-│  Lead coordinates and merges    │
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Team["AGENT TEAM"]
+        Lead["Team Lead<br/>(Coordinates and merges)"]
+        W1["Worker 1<br/>(Own context, tools, permissions)"]
+        W2["Worker 2<br/>(Own context, tools, permissions)"]
+        W3["Worker 3<br/>(Own context, tools, permissions)"]
+        Lead --> W1
+        Lead --> W2
+        Lead --> W3
+    end
 ```
 
 ---

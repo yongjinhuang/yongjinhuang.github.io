@@ -54,20 +54,11 @@ Start thin, grow based on demand. Do not over-build.
 
 ### Product Mindset
 
-```
-TRADITIONAL IT                    PLATFORM AS PRODUCT
-┌────────────────────┐           ┌────────────────────┐
-│ Build what we think│           │ Build what devs    │
-│ teams need         │           │ actually need      │
-│                    │           │                    │
-│ Measure: uptime,   │           │ Measure: adoption, │
-│ tickets closed     │           │ satisfaction, speed │
-│                    │           │                    │
-│ Force adoption     │           │ Earn adoption      │
-│                    │           │                    │
-│ Roadmap: infra-    │           │ Roadmap: user-     │
-│ driven             │           │ driven             │
-└────────────────────┘           └────────────────────┘
+```mermaid
+flowchart LR
+    Trad["TRADITIONAL IT<br/>- Build what we think teams need<br/>- Measure: uptime, tickets closed<br/>- Force adoption<br/>- Roadmap: infra-driven"]
+    Prod["PLATFORM AS PRODUCT<br/>- Build what devs actually need<br/>- Measure: adoption, satisfaction, speed<br/>- Earn adoption<br/>- Roadmap: user-driven"]
+    Trad -->|"Shift Mindset"| Prod
 ```
 
 ### Product Management Practices
@@ -98,17 +89,19 @@ TRADITIONAL IT                    PLATFORM AS PRODUCT
 
 The strongest signal: **resource allocation shift** from infrastructure toil to product work.
 
-```
-BEFORE PLATFORM          AFTER PLATFORM
-┌──────────────┐        ┌──────────────┐
-│   Product    │ 40%    │   Product    │ 70%    ← More time on features
-│   Roadmap    │        │   Roadmap    │
-├──────────────┤        ├──────────────┤
-│   Infra/     │ 35%    │   Infra/     │ 15%    ← Less toil
-│   Support    │        │   Support    │
-├──────────────┤        ├──────────────┤
-│   Other      │ 25%    │   Other      │ 15%
-└──────────────┘        └──────────────┘
+```mermaid
+flowchart LR
+    subgraph Before["BEFORE PLATFORM"]
+        B1["Product Roadmap: 40%"]
+        B2["Infra / Support: 35%"]
+        B3["Other: 25%"]
+    end
+    subgraph After["AFTER PLATFORM"]
+        A1["Product Roadmap: 70% (More time on features)"]
+        A2["Infra / Support: 15% (Less toil)"]
+        A3["Other: 15%"]
+    end
+    Before --> After
 ```
 
 ### Anti-Metrics
@@ -185,22 +178,13 @@ CLI flags, inconsistent naming, no error messages).
 
 ### Four-Phase Framework
 
-```
-Phase 1 (Weeks 1-4)        Phase 2 (Months 2-3)
-┌──────────────────┐       ┌──────────────────┐
-│ Identify pain    │       │ Build first      │
-│ Interview devs   │       │ golden path      │
-│ Choose first     │──────>│ Deploy to early  │
-│ golden path      │       │ adopters         │
-└──────────────────┘       └──────────────────┘
-                                    │
-Phase 4 (Months 6+)        Phase 3 (Months 3-6)
-┌──────────────────┐       ┌──────────────────┐
-│ Scale to org     │       │ Iterate based    │
-│ Add golden paths │<──────│ on feedback      │
-│ Build portal     │       │ Measure metrics  │
-│ Mature platform  │       │ Add 2nd path     │
-└──────────────────┘       └──────────────────┘
+```mermaid
+flowchart LR
+    P1["Phase 1 (Weeks 1-4)<br/>- Identify pain<br/>- Interview devs<br/>- Choose first golden path"]
+    P2["Phase 2 (Months 2-3)<br/>- Build first golden path<br/>- Deploy to early adopters"]
+    P3["Phase 3 (Months 3-6)<br/>- Iterate based on feedback<br/>- Measure metrics<br/>- Add 2nd path"]
+    P4["Phase 4 (Months 6+)<br/>- Scale to org<br/>- Add golden paths<br/>- Build portal &amp; mature platform"]
+    P1 --> P2 --> P3 --> P4
 ```
 
 ### Strangler Fig Pattern

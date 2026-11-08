@@ -25,24 +25,14 @@ infrastructure, and strategies for reducing cognitive load on engineering teams.
 A **golden path** is a preconfigured, opinionated workflow that guides developers through
 common tasks via an Internal Developer Platform. The term was coined by Spotify.
 
-```
-┌──────────────────────────────────────────────────────┐
-│                GOLDEN PATH SPECTRUM                   │
-│                                                       │
-│  Guardrails       Paved Roads       Golden Paths      │
-│  ┌──────────┐    ┌──────────┐     ┌──────────────┐   │
-│  │ "Don't   │    │ "Here's  │     │ "Follow this │   │
-│  │  do this"│    │ a good   │     │ and you'll   │   │
-│  │          │    │ path"    │     │ be done in   │   │
-│  │ Prevent  │    │ Suggest  │     │ 5 minutes"   │   │
-│  │ bad      │    │ good     │     │              │   │
-│  │ outcomes │    │ patterns │     │ Optimized    │   │
-│  └──────────┘    └──────────┘     │ end-to-end   │   │
-│                                   └──────────────┘   │
-│  Policy-as-code   Templates        Self-service +    │
-│  Admission ctrl   Documentation    automation +      │
-│  OPA/Kyverno      Best practices   guardrails        │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Spectrum["GOLDEN PATH SPECTRUM"]
+        G["Guardrails: 'Don't do this'<br/>Prevent bad outcomes<br/>- Policy-as-code<br/>- Admission control<br/>- OPA / Kyverno"]
+        P["Paved Roads: 'Here's a good path'<br/>Suggest good patterns<br/>- Templates<br/>- Documentation<br/>- Best practices"]
+        GP["Golden Paths: 'Follow this and finish in 5 min'<br/>Optimized end-to-end<br/>- Self-service<br/>- Automation<br/>- Guardrails"]
+        G --> P --> GP
+    end
 ```
 
 ### Key Principle: Not Mandates
@@ -77,26 +67,14 @@ go off-path, but the golden path is so convenient that most choose not to.
 
 ### Architecture
 
-```
-┌──────────────────────────────────────────────────────┐
-│              GOLDEN PATH: New Service                  │
-│                                                       │
-│  Developer clicks "Create Service" in portal          │
-│                    │                                   │
-│                    ▼                                   │
-│  ┌─────────────────────────────────┐                  │
-│  │ 1. GitHub repo from template    │                  │
-│  │ 2. CI/CD pipeline configured    │                  │
-│  │ 3. K8s namespace + RBAC         │                  │
-│  │ 4. Monitoring dashboards        │                  │
-│  │ 5. Log aggregation enabled      │                  │
-│  │ 6. Service registered in catalog│                  │
-│  │ 7. Documentation scaffold       │                  │
-│  └─────────────────────────────────┘                  │
-│                    │                                   │
-│                    ▼                                   │
-│  Developer has production-ready service in minutes     │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph GP["GOLDEN PATH: New Service"]
+        Click["Developer clicks 'Create Service' in portal"]
+        Steps["Automated Provisioning:<br/>1. GitHub repo from template<br/>2. CI/CD pipeline configured<br/>3. K8s namespace + RBAC<br/>4. Monitoring dashboards<br/>5. Log aggregation enabled<br/>6. Service registered in catalog<br/>7. Documentation scaffold"]
+        Done["Developer has production-ready service in minutes"]
+        Click --> Steps --> Done
+    end
 ```
 
 ---
@@ -208,22 +186,11 @@ DevOps made developers responsible for: code + CI/CD + cloud + security + monito
 
 ### The Solution
 
-```
-WITHOUT PLATFORM                  WITH PLATFORM
-┌─────────────────┐              ┌─────────────────┐
-│  Developer must  │              │  Developer       │
-│  know:           │              │  focuses on:     │
-│  - Kubernetes    │              │  - Business logic│
-│  - Terraform     │              │  - Tests         │
-│  - Helm          │              │  - Code review   │
-│  - ArgoCD        │              │                  │
-│  - Prometheus    │              │  Platform handles:│
-│  - Grafana       │              │  - Infra          │
-│  - OPA           │              │  - CI/CD          │
-│  - Vault         │              │  - Monitoring     │
-│  - Networking    │              │  - Security       │
-│  15+ tools       │              │  - Compliance     │
-└─────────────────┘              └─────────────────┘
+```mermaid
+flowchart LR
+    Without["WITHOUT PLATFORM<br/>Developer must know 15+ tools:<br/>- Kubernetes<br/>- Terraform<br/>- Helm<br/>- ArgoCD<br/>- Prometheus &amp; Grafana<br/>- OPA &amp; Vault<br/>- Networking"]
+    WithP["WITH PLATFORM<br/>Developer focuses on:<br/>- Business logic, Tests, Code review<br/><br/>Platform handles:<br/>- Infra, CI/CD, Monitoring<br/>- Security, Compliance"]
+    Without -->|"Platform Abstraction"| WithP
 ```
 
 ### Strategies

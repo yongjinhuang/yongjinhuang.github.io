@@ -59,36 +59,21 @@ memorized during training, RAG grounds answers in specific, up-to-date sources.
 
 ## End-to-End RAG Architecture
 
-```
-                    INGESTION PIPELINE (Offline / Async)
-  +------------------------------------------------------------------------+
-  |                                                                        |
-  |  +----------+    +-----------+    +-----------+    +---------------+   |
-  |  | Documents |--->| Parser &  |--->| Chunking  |--->| Embedding     |   |
-  |  | (PDF,HTML |    | Cleaner   |    | Engine    |    | Model         |   |
-  |  |  MD,DOCX) |    +-----------+    +-----------+    +------+--------+   |
-  |  +----------+                                              |            |
-  |                                                            v            |
-  |                                      +------------+  +---------------+  |
-  |                                      | Metadata   |  | Vector DB     |  |
-  |                                      | Store      |  | (embeddings)  |  |
-  |                                      +------------+  +---------------+  |
-  +------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Ingest["INGESTION PIPELINE (Offline / Async)"]
+        Docs["Documents<br/>(PDF, HTML, MD, DOCX)"] --> Parse["Parser &amp; Cleaner"] --> Chunk["Chunking Engine"] --> Emb1["Embedding Model"]
+        Chunk --> Meta[("Metadata Store")]
+        Emb1 --> VecDB[("Vector DB<br/>(embeddings)")]
+    end
 
-                    QUERY PIPELINE (Online / Sync)
-  +------------------------------------------------------------------------+
-  |                                                                        |
-  |  +-------+    +----------+    +----------+    +-----------+            |
-  |  | User  |--->| Query    |--->| Embedding|--->| Vector    |            |
-  |  | Query |    | Rewriter |    | Model    |    | Search    |            |
-  |  +-------+    +----------+    +----------+    +-----+-----+            |
-  |                                                     |                  |
-  |                                                     v                  |
-  |  +----------+    +-----------+    +-----------+   +----------+         |
-  |  | Response |<---| LLM       |<---| Context   |<--| Reranker |         |
-  |  | + Cites  |    | Generator |    | Assembler |   |          |         |
-  |  +----------+    +-----------+    +-----------+   +----------+         |
-  +------------------------------------------------------------------------+
+    subgraph Query["QUERY PIPELINE (Online / Sync)"]
+        UQ["User Query"] --> Rewrite["Query Rewriter"] --> Emb2["Embedding Model"] --> VSearch["Vector Search"]
+        VSearch --> Rerank["Reranker"] --> Ctx["Context Assembler"] --> LLM["LLM Generator"] --> Resp["Response + Citations"]
+    end
+
+    VecDB -.-> VSearch
+    Meta -.-> VSearch
 ```
 
 ---
@@ -804,26 +789,18 @@ def hyde_query(client, query: str) -> str:
 
 ### Retrieval Strategy Decision Guide
 
-```
-Start: What is your retrieval quality like?
-  |
-  +--> Low recall (missing relevant docs)
-  |      +--> Try hybrid search (dense + sparse)
-  |      +--> Try query expansion / HyDE
-  |      +--> Increase top_k
-  |
-  +--> Low precision (too many irrelevant docs)
-  |      +--> Add reranking (cross-encoder)
-  |      +--> Add metadata filters
-  |      +--> Decrease chunk size
-  |
-  +--> Redundant results
-  |      +--> Use MMR (lambda=0.5-0.7)
-  |
-  +--> Good retrieval but bad generation
-         +--> Improve prompt (add "only use provided context")
-         +--> Add citation requirement
-         +--> Use more capable LLM
+```mermaid
+flowchart LR
+    Start{"What is your retrieval quality issue?"}
+    Start --> R1["Low Recall (Missing relevant docs)"]
+    Start --> R2["Low Precision (Too many irrelevant docs)"]
+    Start --> R3["Redundant Results"]
+    Start --> R4["Good Retrieval, Bad Generation"]
+
+    R1 --> F1["- Hybrid search (dense + sparse BM25)<br/>- Query expansion / HyDE<br/>- Increase top_k"]
+    R2 --> F2["- Add cross-encoder reranking<br/>- Add metadata filters<br/>- Decrease chunk size"]
+    R3 --> F3["- Use MMR (lambda = 0.5 - 0.7)"]
+    R4 --> F4["- Ground prompt ('only use provided context')<br/>- Require inline citations<br/>- Upgrade generator LLM"]
 ```
 
 ---

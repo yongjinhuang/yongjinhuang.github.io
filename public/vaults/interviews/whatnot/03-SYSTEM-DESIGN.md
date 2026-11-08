@@ -78,23 +78,13 @@ Given Whatnot's business, prepare these system designs:
 
 Whatnot uses Kafka as its event backbone with three key producers:
 
-```
-┌───────────┐     ┌──────────────┐     ┌──────────────┐
-│   Main    │────→│              │────→│  Ranking     │
-│  Backend  │     │    Kafka     │     │  Service     │
-│ (Python)  │     │  Event Bus   │     │              │
-└───────────┘     │              │     └──────────────┘
-                  │              │
-┌───────────┐     │              │     ┌──────────────┐
-│   Live    │────→│              │────→│  Analytics   │
-│  Service  │     │              │     │  Pipeline    │
-│ (Elixir)  │     │              │     │  (Snowflake) │
-└───────────┘     └──────┬───────┘     └──────────────┘
-                         │
-                  ┌──────┴───────┐
-                  │ Notification │
-                  │   Service    │
-                  └──────────────┘
+```mermaid
+flowchart LR
+    Main["Main Backend<br/>(Python)"] --> Kafka["Kafka Event Bus"]
+    Live["Live Service<br/>(Elixir)"] --> Kafka
+    Kafka --> Ranking["Ranking Service"]
+    Kafka --> Analytics["Analytics Pipeline<br/>(Snowflake)"]
+    Kafka --> Notify["Notification Service"]
 ```
 
 ### Key Concepts for Whatnot
@@ -118,19 +108,13 @@ Relevant to Whatnot because users need alerts for:
 - Livestream starting from favorite sellers
 - Giveaway results
 
-```
-┌───────────┐     ┌──────────┐     ┌───────────────┐
-│  Event    │────→│  Fanout  │────→│  Push (APNs/  │
-│  Source   │     │  Service │     │  FCM)         │
-│ (Kafka)   │     │          │────→│  In-App       │
-└───────────┘     │          │────→│  Email        │
-                  └──────────┘     └───────────────┘
-                       │
-                  ┌────┴─────┐
-                  │ Priority │
-                  │  Queue   │
-                  │ (Redis)  │
-                  └──────────┘
+```mermaid
+flowchart LR
+    Source["Event Source<br/>(Kafka)"] --> Fanout["Fanout Service"]
+    Fanout --- PQ[("Priority Queue<br/>(Redis)")]
+    Fanout --> Push["Push (APNs / FCM)"]
+    Fanout --> InApp["In-App"]
+    Fanout --> Email["Email"]
 ```
 
 ### Design Considerations
@@ -145,16 +129,13 @@ Relevant to Whatnot because users need alerts for:
 
 ## Quick Reference: Payment & Checkout
 
-```
-┌─────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
-│ Auction │────→│ Checkout │────→│ Payment  │────→│ Shipping │
-│  Won    │     │ Service  │     │ Gateway  │     │ Service  │
-└─────────┘     └──────────┘     └──────────┘     └──────────┘
-                     │                │
-                ┌────┴────┐     ┌────┴────┐
-                │ Escrow  │     │  Fraud  │
-                │ Account │     │  Check  │
-                └─────────┘     └─────────┘
+```mermaid
+flowchart LR
+    Won["Auction Won"] --> Checkout["Checkout Service"]
+    Checkout --> Payment["Payment Gateway"]
+    Payment --> Shipping["Shipping Service"]
+    Checkout --- Escrow["Escrow Account"]
+    Payment --- Fraud["Fraud Check"]
 ```
 
 ### Key Challenges
@@ -171,25 +152,11 @@ Relevant to Whatnot because users need alerts for:
 
 Whatnot built a dedicated service in Go for the MrBeast event:
 
-```
-┌──────────┐     ┌──────────────┐     ┌──────────────┐
-│  Client  │────→│  Admission   │────→│  Live        │
-│  (App)   │     │  Service     │     │  Service     │
-│          │←────│  (Go)        │     │  (Elixir)    │
-└──────────┘     └──────────────┘     └──────────────┘
-                       │
-                 ┌─────┴──────┐
-                 │ Policies:  │
-                 │ - Global   │
-                 │   session  │
-                 │   cap      │
-                 │ - Rate     │
-                 │   limit    │
-                 │   joins    │
-                 │ - Identity │
-                 │   based    │
-                 │   shedding │
-                 └────────────┘
+```mermaid
+flowchart LR
+    Client["Client (App)"] <--> Admission["Admission Service<br/>(Go)"]
+    Admission --> Live["Live Service<br/>(Elixir)"]
+    Admission --- Policies["Policies:<br/>- Global session cap<br/>- Rate limit joins<br/>- Identity-based shedding"]
 ```
 
 ### Key Patterns

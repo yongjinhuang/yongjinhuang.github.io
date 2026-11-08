@@ -38,16 +38,10 @@ error budgets, and chaos engineering.
 
 ### Symptom-Based vs Cause-Based
 
-```
-SYMPTOM-BASED (Preferred)           CAUSE-BASED (Avoid)
-┌───────────────────────┐          ┌───────────────────────┐
-│ "Error rate > 5%"     │          │ "CPU > 90%"           │
-│ "P99 latency > 2s"   │          │ "Memory > 85%"        │
-│ "Success rate < 99.9%"│          │ "Disk > 80%"          │
-└───────────────────────┘          └───────────────────────┘
- Tells you users are affected       CPU can be 95% and fine
- Direct link to SLO violation        Memory at 90% may be normal
- Always actionable                   Often not actionable
+```mermaid
+flowchart LR
+    Sym["SYMPTOM-BASED ALERTS (Preferred)<br/>- 'Error rate &gt; 5%'<br/>- 'P99 latency &gt; 2s'<br/>- 'Success rate &lt; 99.9%'<br/><br/>Why: Users are affected, direct SLO link, always actionable"]
+    Cause["CAUSE-BASED ALERTS (Avoid for paging)<br/>- 'CPU &gt; 90%'<br/>- 'Memory &gt; 85%'<br/>- 'Disk &gt; 80%'<br/><br/>Why: High utilization may be normal, often not actionable"]
 ```
 
 **Best practice**: Alert on symptoms (user-facing impact), investigate causes (infrastructure metrics) during response.
@@ -84,26 +78,13 @@ When responders receive so many alerts that they start ignoring them. Like the b
 
 ## 3. Alert Routing & Escalation
 
-```
-Alert Fires
-    │
-    ▼
-┌──────────────────┐
-│ Severity Check    │
-├──────────────────┤
-│ SEV1 (Critical)  │──> Page on-call immediately
-│                  │    Escalate to team lead in 15 min
-│                  │    Escalate to engineering manager in 30 min
-├──────────────────┤
-│ SEV2 (Major)     │──> Page on-call
-│                  │    Escalate to team lead in 30 min
-├──────────────────┤
-│ SEV3 (Minor)     │──> Slack notification
-│                  │    On-call addresses during business hours
-├──────────────────┤
-│ SEV4 (Low)       │──> Ticket created
-│                  │    Addressed in next sprint
-└──────────────────┘
+```mermaid
+flowchart TD
+    Alert["Alert Fires"] --> Check{"Severity Check"}
+    Check -->|"SEV1 (Critical)"| S1["Page on-call immediately<br/>Escalate to team lead in 15 min<br/>Escalate to EM in 30 min"]
+    Check -->|"SEV2 (Major)"| S2["Page on-call<br/>Escalate to team lead in 30 min"]
+    Check -->|"SEV3 (Minor)"| S3["Slack notification<br/>On-call addresses during business hours"]
+    Check -->|"SEV4 (Low)"| S4["Ticket created<br/>Addressed in next sprint"]
 ```
 
 ### Severity Definitions
@@ -157,16 +138,14 @@ Alert Fires
 
 ## 5. Incident Response Lifecycle
 
-```
-┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│ DETECT   │──>│ TRIAGE   │──>│ MITIGATE │──>│ RESOLVE  │──>│FOLLOW-UP │
-│          │   │          │   │          │   │          │   │          │
-│ Alert    │   │ Severity │   │ Stop the │   │ Fix root │   │Postmortem│
-│ fires    │   │ assign   │   │ bleeding │   │ cause    │   │ Action   │
-│ or user  │   │ IC named │   │ Rollback?│   │          │   │ items    │
-│ reports  │   │ Comms    │   │ Scale?   │   │          │   │          │
-└──────────┘   │ started  │   │ Block?   │   │          │   │          │
-               └──────────┘   └──────────┘   └──────────┘   └──────────┘
+```mermaid
+flowchart LR
+    D["1. DETECT<br/>Alert fires or user reports"]
+    T["2. TRIAGE<br/>Assign severity, name IC, start comms"]
+    M["3. MITIGATE<br/>Stop the bleeding (Rollback / Scale / Block)"]
+    R["4. RESOLVE<br/>Fix root cause"]
+    F["5. FOLLOW-UP<br/>Postmortem &amp; action items"]
+    D --> T --> M --> R --> F
 ```
 
 ### Incident Commander (IC) Role

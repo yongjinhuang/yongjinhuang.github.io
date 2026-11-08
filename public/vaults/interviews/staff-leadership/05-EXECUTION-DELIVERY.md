@@ -33,50 +33,16 @@ Interviewers assess whether you can:
 
 Staff+ engineers are valued for their ability to take something vague and make it concrete. This pipeline describes the stages of turning ambiguity into delivery.
 
-```
-+------------------------------------------------------------------+
-|              AMBIGUITY-TO-EXECUTION PIPELINE                      |
-+------------------------------------------------------------------+
-|                                                                    |
-|  STAGE 1: PROBLEM FRAMING                                         |
-|  "What problem are we actually solving?"                          |
-|  - Stakeholder interviews                                         |
-|  - Constraint identification                                       |
-|  - Success criteria definition                                     |
-|  - Scope boundaries (what is NOT in scope)                        |
-|  Output: Problem statement + success metrics                       |
-|                                                                    |
-|  STAGE 2: SOLUTION EXPLORATION                                     |
-|  "What are the possible approaches?"                              |
-|  - 2-3 solution options with trade-offs                           |
-|  - Proof-of-concept for highest-risk elements                     |
-|  - Technology evaluation (if applicable)                           |
-|  Output: RFC or design doc with recommended approach               |
-|                                                                    |
-|  STAGE 3: EXECUTION PLANNING                                      |
-|  "How do we get from here to there?"                              |
-|  - Work breakdown into independent streams                        |
-|  - Dependency mapping                                              |
-|  - Risk identification and mitigation                              |
-|  - Milestone definition (what is shippable at each stage)         |
-|  Output: Execution plan with milestones                            |
-|                                                                    |
-|  STAGE 4: COORDINATED EXECUTION                                   |
-|  "Are we on track? What is blocked?"                              |
-|  - Regular check-ins with workstream leads                        |
-|  - Blocker identification and resolution                           |
-|  - Scope adjustment based on learnings                             |
-|  - Stakeholder communication                                       |
-|  Output: Shipped, working software                                 |
-|                                                                    |
-|  STAGE 5: RETROSPECTIVE                                            |
-|  "What did we learn?"                                             |
-|  - Process improvements                                            |
-|  - Technical learnings                                             |
-|  - Execution patterns to replicate or avoid                       |
-|  Output: Documented learnings + process changes                    |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Pipeline["AMBIGUITY-TO-EXECUTION PIPELINE"]
+        S1["STAGE 1: PROBLEM FRAMING ('What problem are we solving?')<br/>- Stakeholder interviews &amp; Constraint identification<br/>- Success criteria &amp; Scope boundaries<br/>Output: Problem statement + success metrics"]
+        S2["STAGE 2: SOLUTION EXPLORATION ('What are the possible approaches?')<br/>- 2-3 options with trade-offs<br/>- PoC for highest-risk elements &amp; Tech evaluation<br/>Output: RFC / design doc with recommendation"]
+        S3["STAGE 3: EXECUTION PLANNING ('How do we get there?')<br/>- Independent workstreams &amp; Dependency mapping<br/>- Risk mitigation &amp; Shippable milestones<br/>Output: Execution plan with milestones"]
+        S4["STAGE 4: COORDINATED EXECUTION ('Are we on track?')<br/>- Workstream check-ins &amp; Blocker resolution<br/>- Scope adjustment &amp; Stakeholder comms<br/>Output: Shipped, working software"]
+        S5["STAGE 5: RETROSPECTIVE ('What did we learn?')<br/>- Process improvements &amp; Technical learnings<br/>- Patterns to replicate or avoid<br/>Output: Documented learnings + process changes"]
+        S1 --> S2 --> S3 --> S4 --> S5
+    end
 ```
 
 **Key insight:** Most execution failures happen in Stages 1-3, not Stage 4. Poor scoping, unclear success criteria, and missing risk identification cause more project failures than poor implementation.
@@ -89,32 +55,17 @@ The signature skill of a Staff+ engineer. When the problem is "our systems are n
 
 ### The Decomposition Framework
 
-```
-+------------------------------------------------------------------+
-|               PROBLEM DECOMPOSITION STEPS                         |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. WHAT IS THE OBSERVABLE SYMPTOM?                               |
-|     "Deploys fail 20% of the time"                                |
-|                                                                    |
-|  2. WHO IS AFFECTED AND HOW MUCH?                                 |
-|     "All 8 backend teams. Each failed deploy costs 2 hours."      |
-|                                                                    |
-|  3. WHAT ARE THE ROOT CAUSES? (usually 2-3)                       |
-|     "Flaky tests (40%), environment drift (35%),                  |
-|      race conditions in deploy scripts (25%)"                     |
-|                                                                    |
-|  4. WHICH ROOT CAUSE HAS THE BEST ROI?                            |
-|     "Fixing flaky tests: 3 weeks effort, 40% improvement"        |
-|                                                                    |
-|  5. WHAT IS THE SMALLEST THING WE CAN SHIP?                      |
-|     "Quarantine the 20 flakiest tests this week"                  |
-|                                                                    |
-|  6. WHAT IS THE FULL SOLUTION?                                    |
-|     "Flaky test detection, environment parity,                    |
-|      deploy script rewrite -- phased over 2 quarters"             |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Decomp["PROBLEM DECOMPOSITION STEPS"]
+        D1["1. OBSERVABLE SYMPTOM<br/>'Deploys fail 20% of the time'"]
+        D2["2. WHO IS AFFECTED AND HOW MUCH?<br/>'All 8 backend teams. Each failed deploy costs 2 hours.'"]
+        D3["3. ROOT CAUSES (usually 2-3)<br/>'Flaky tests (40%), environment drift (35%), deploy script races (25%)'"]
+        D4["4. BEST ROI ROOT CAUSE<br/>'Fixing flaky tests: 3 weeks effort, 40% improvement'"]
+        D5["5. SMALLEST SHIPPABLE INCREMENT<br/>'Quarantine the 20 flakiest tests this week'"]
+        D6["6. FULL PHASED SOLUTION<br/>'Flaky test detection, env parity, deploy script rewrite over 2 quarters'"]
+        D1 --> D2 --> D3 --> D4 --> D5 --> D6
+    end
 ```
 
 ### Ambiguity Reduction Techniques
@@ -135,36 +86,15 @@ Big-bang releases fail. The Staff+ skill is structuring work so that every incre
 
 ### The Scoping Hierarchy
 
-```
-+------------------------------------------------------------------+
-|                    SCOPING HIERARCHY                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  LEVEL 1: WALKING SKELETON                                        |
-|  The thinnest possible end-to-end implementation.                 |
-|  "User can log in, see one page, and log out."                   |
-|  Purpose: Validate architecture and integration points.            |
-|  Timeline: 1-2 weeks                                               |
-|                                                                    |
-|  LEVEL 2: MINIMUM VIABLE FEATURE                                  |
-|  The smallest version a real user would find useful.              |
-|  "User can create, read, update, and delete items."              |
-|  Purpose: Get user feedback. Validate product hypothesis.          |
-|  Timeline: 2-4 weeks                                               |
-|                                                                    |
-|  LEVEL 3: COMPLETE FEATURE                                        |
-|  Full feature with edge cases, error handling, polish.            |
-|  "Pagination, search, filters, permissions, error states."       |
-|  Purpose: Production-ready feature for all users.                  |
-|  Timeline: 4-8 weeks                                               |
-|                                                                    |
-|  LEVEL 4: ENHANCED FEATURE                                        |
-|  Optimizations, analytics, advanced capabilities.                 |
-|  "Recommendations, A/B testing, performance optimization."        |
-|  Purpose: Competitive advantage. Delight.                          |
-|  Timeline: Ongoing                                                  |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Scoping["SCOPING HIERARCHY"]
+        L1["LEVEL 1: WALKING SKELETON (1-2 weeks)<br/>Thinnest end-to-end implementation ('Log in, see one page, log out')<br/>Purpose: Validate architecture and integration points"]
+        L2["LEVEL 2: MINIMUM VIABLE FEATURE (2-4 weeks)<br/>Smallest version useful to a real user ('CRUD items')<br/>Purpose: Get user feedback &amp; validate hypothesis"]
+        L3["LEVEL 3: COMPLETE FEATURE (4-8 weeks)<br/>Full feature with edge cases, error handling, polish<br/>Purpose: Production-ready for all users"]
+        L4["LEVEL 4: ENHANCED FEATURE (Ongoing)<br/>Recommendations, A/B testing, performance optimization<br/>Purpose: Competitive advantage &amp; delight"]
+        L1 --> L2 --> L3 --> L4
+    end
 ```
 
 **Rule:** Always know which level you are targeting. If the timeline is under pressure, cut from Level 4 toward Level 2. Never cut below the Walking Skeleton -- if you cannot ship end-to-end, you have not de-risked the architecture.
@@ -198,23 +128,18 @@ Risk management at Staff+ level is not about avoiding risk -- it is about identi
 
 ### Risk Mitigation Strategies
 
-```
-+------------------------------------------------------------------+
-|                  RISK MITIGATION MATRIX                            |
-+------------------------------------------------------------------+
-|                                                                    |
-|  High     |  MITIGATE ACTIVELY    |  AVOID OR TRANSFER           |
-|  Impact   |  Spike the risk early.|  Find a different approach.   |
-|           |  Build prototypes.    |  Use managed services.       |
-|           |  Have a plan B.       |  Insure against it.          |
-|           |----------------------|------------------------------|
-|  Low      |  ACCEPT               |  MITIGATE IF EASY            |
-|  Impact   |  Monitor it.          |  Quick fix if available.     |
-|           |  Do not invest effort.|  Otherwise accept.           |
-|           |----------------------|------------------------------|
-|           |  Low Probability       High Probability               |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph RiskMatrix["RISK MITIGATION MATRIX"]
+        subgraph HighImpact["High Impact"]
+            HI_LP["Low Probability: MITIGATE ACTIVELY<br/>Spike the risk early. Build prototypes. Have a plan B."]
+            HI_HP["High Probability: AVOID OR TRANSFER<br/>Find a different approach. Use managed services. Insure against it."]
+        end
+        subgraph LowImpact["Low Impact"]
+            LI_LP["Low Probability: ACCEPT<br/>Monitor it. Do not invest effort."]
+            LI_HP["High Probability: MITIGATE IF EASY<br/>Quick fix if available. Otherwise accept."]
+        end
+    end
 ```
 
 ### The Risk Register
@@ -270,24 +195,15 @@ At Staff+ level, one of your most valuable activities is removing obstacles that
 
 ### The Unblocking Mindset
 
-```
-+------------------------------------------------------------------+
-|              THE UNBLOCKING PRIORITY HIERARCHY                    |
-+------------------------------------------------------------------+
-|                                                                    |
-|  HIGHEST PRIORITY: Unblock others                                  |
-|  "What is preventing the team from making progress?"              |
-|                                                                    |
-|  HIGH PRIORITY: Make decisions                                     |
-|  "What decisions are pending that I can make or facilitate?"      |
-|                                                                    |
-|  MEDIUM PRIORITY: Reduce risk                                      |
-|  "What is the highest-risk item I can de-risk today?"             |
-|                                                                    |
-|  LOWER PRIORITY: Build things myself                               |
-|  "What should I personally implement?"                             |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Unblock["THE UNBLOCKING PRIORITY HIERARCHY"]
+        P1["1. HIGHEST PRIORITY: Unblock others<br/>'What is preventing the team from making progress?'"]
+        P2["2. HIGH PRIORITY: Make decisions<br/>'What decisions are pending that I can make or facilitate?'"]
+        P3["3. MEDIUM PRIORITY: Reduce risk<br/>'What is the highest-risk item I can de-risk today?'"]
+        P4["4. LOWER PRIORITY: Build things myself<br/>'What should I personally implement?'"]
+        P1 --> P2 --> P3 --> P4
+    end
 ```
 
 **Key insight:** If you, as a Staff+ engineer, are heads-down coding all day, you are probably not operating at the right level. Your time is better spent ensuring 5 other engineers are productive than adding one more person to the building effort.
@@ -324,25 +240,12 @@ Cutting scope is not failure -- it is judgment. The best Staff+ engineers are de
 
 Staff+ engineers need to operate differently depending on the organizational context.
 
-```
-+------------------------------------------------------------------+
-|           WAR-TIME vs PEACE-TIME LEADERSHIP                       |
-+------------------------------------------------------------------+
-|                                                                    |
-|  PEACE-TIME                        WAR-TIME                       |
-|  (Stable, growing,                 (Crisis, existential threat,   |
-|   executing on strategy)            burning platform)              |
-|  --------------------------------  --------------------------------|
-|  Invest in platform                Ship the feature now            |
-|  Build for the long term           Solve the immediate problem    |
-|  Consensus-driven decisions        Decisive, top-down decisions   |
-|  Broad experimentation             Focused execution              |
-|  Technical excellence              Good enough to survive         |
-|  Grow engineers slowly             Everyone stretches              |
-|  Process and documentation         Results over process            |
-|  70% capacity utilization          100% on the critical path      |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Mode["WAR-TIME vs PEACE-TIME LEADERSHIP"]
+        Peace["PEACE-TIME (Stable, growing, executing strategy)<br/>- Invest in platform &amp; build for long term<br/>- Consensus-driven decisions<br/>- Broad experimentation &amp; technical excellence<br/>- Grow engineers steadily, process &amp; docs<br/>- 70% capacity utilization"]
+        War["WAR-TIME (Crisis, existential threat, burning platform)<br/>- Ship now &amp; solve immediate problem<br/>- Decisive, top-down decisions<br/>- Focused execution &amp; good enough to survive<br/>- Everyone stretches, results over process<br/>- 100% on the critical path"]
+    end
 ```
 
 ### Recognizing War-Time

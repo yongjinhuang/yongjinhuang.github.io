@@ -25,34 +25,17 @@ Agent infrastructure is where the rubber meets the road. You can design the most
 
 This guide covers the systems engineering behind production agent deployments. The mental model is straightforward: agents are long-running, stateful, unpredictable workloads that make external API calls. This makes them fundamentally different from traditional web services and requires infrastructure patterns adapted to their unique characteristics.
 
-```
-TRADITIONAL WEB SERVICE vs AGENT WORKLOAD
+```mermaid
+flowchart LR
+    subgraph Web["Traditional Web Service (Stateless, CPU/Mem Bound, Short-lived)"]
+        WR["Request (50ms)"] --> WP["Process"] --> WResp["Response"]
+    end
 
-Web Service:                    Agent Workload:
-+---------+                     +---------+
-| Request |---> Process ---->   | Request |---> Loop ------+
-| (50ms)  |     Response        | (5-60s) |     |          |
-+---------+                     +---------+     v          |
-                                            LLM Call       |
-  - Stateless                               (1-10s)        |
-  - Predictable latency                        |           |
-  - CPU/memory bound                           v           |
-  - Short-lived                             Tool Call      |
-                                            (0.1-30s)      |
-                                               |           |
-                                               v           |
-                                            Evaluate       |
-                                               |           |
-                                               +----back---+
-                                               |
-                                               v
-                                            Response
-                                            (5-60s total)
-
-                                  - Stateful across steps
-                                  - Unpredictable latency
-                                  - I/O bound (API calls)
-                                  - Long-lived (minutes)
+    subgraph Agent["Agent Workload (Stateful Across Steps, I/O Bound, Long-lived 5-60s+)"]
+        AR["Request"] --> LLM["LLM Call (1-10s)"] --> Tool["Tool Call (0.1-30s)"] --> Eval{"Evaluate"}
+        Eval -->|"Loop"| LLM
+        Eval -->|"Done"| AResp["Response (5-60s total)"]
+    end
 ```
 
 Key differences that drive infrastructure decisions:
@@ -73,27 +56,15 @@ Key differences that drive infrastructure decisions:
 
 ### The Spectrum of Runtime Options
 
-```
-SHORT-LIVED                                              LONG-LIVED
-    |                                                        |
-    v                                                        v
-+----------+    +-----------+    +----------+    +----------+
-| Serverless|    | Container |    | Long-    |    | Dedicated|
-| Functions |    | Tasks     |    | Running  |    | VMs /    |
-| (Lambda)  |    | (ECS/     |    | Services |    | Bare     |
-|           |    |  Cloud Run)|    | (K8s)   |    | Metal    |
-+-----------+    +-----------+    +----------+    +----------+
-
-Best for:        Best for:        Best for:        Best for:
-- Simple agents  - Batch agents   - Streaming      - GPU inference
-- Low traffic    - Variable load  - WebSocket      - Custom models
-- <15min tasks   - Isolation      - High traffic   - Full control
-
-Cold start:      Startup:         Always warm:     Always warm:
-1-10s            5-30s            0ms              0ms
-
-Cost model:      Cost model:      Cost model:      Cost model:
-Per invocation   Per second       Per hour         Per month
+```mermaid
+flowchart LR
+    subgraph Compute["AGENT COMPUTE SPECTRUM (Short-Lived -> Long-Lived)"]
+        C1["Serverless Functions (Lambda)<br/>- Simple agents, &lt;15min tasks<br/>- Cold start: 1-10s<br/>- Cost: Per invocation"]
+        C2["Container Tasks (ECS / Cloud Run)<br/>- Batch agents, variable load<br/>- Startup: 5-30s<br/>- Cost: Per second"]
+        C3["Long-Running Services (K8s)<br/>- Streaming, WebSockets, high traffic<br/>- Always warm (0ms)<br/>- Cost: Per hour"]
+        C4["Dedicated VMs / Bare Metal<br/>- Self-hosted GPU inference, full control<br/>- Always warm (0ms)<br/>- Cost: Per month"]
+        C1 --> C2 --> C3 --> C4
+    end
 ```
 
 ### Serverless Agents (AWS Lambda, Vercel Functions, Cloudflare Workers)
@@ -285,27 +256,11 @@ spec:
 
 Edge deployment places agents closer to users geographically. Useful for latency-sensitive applications, but limited by edge runtime constraints.
 
-```
-USER (Tokyo)                    USER (NYC)
-     |                               |
-     v                               v
-+----------+                    +----------+
-| Edge PoP |                    | Edge PoP |
-| Tokyo    |                    | NYC      |
-| - Router |                    | - Router |
-| - Cache  |                    | - Cache  |
-| - Simple |                    | - Simple |
-|   agent  |                    |   agent  |
-+----+-----+                    +----+-----+
-     |                               |
-     +----------- Origin ------------+
-               (us-east-1)
-          +------------------+
-          | Full Agent       |
-          | - Complex logic  |
-          | - Tool execution |
-          | - State store    |
-          +------------------+
+```mermaid
+flowchart TD
+    UT["User (Tokyo)"] --> ET["Edge PoP (Tokyo)<br/>- Router &amp; Cache<br/>- Simple fast agent"]
+    UN["User (NYC)"] --> EN["Edge PoP (NYC)<br/>- Router &amp; Cache<br/>- Simple fast agent"]
+    ET & EN -->|"Complex tasks"| Origin["Origin Region (us-east-1)<br/>Full Agent Runtime<br/>- Complex reasoning<br/>- Tool execution &amp; State store"]
 ```
 
 **Hybrid edge pattern:** Route simple queries at the edge, complex ones to origin.
@@ -387,77 +342,49 @@ Container/VM      Does agent need streaming/WebSocket?
 
 Traditional web services are CPU-bound: you scale by adding more compute. Agents are I/O-bound: they spend most of their time waiting for LLM API responses. This means a single server can handle many concurrent agents, but you must manage API rate limits, connection pools, and state carefully.
 
-```
-TRADITIONAL WEB SERVICE SCALING:
+```mermaid
+flowchart LR
+    subgraph WebScale["Traditional Web Service Scaling (Bottleneck: CPU)"]
+        WR["Request"] --> CPU["CPU Work (50ms)"] --> WResp["Response"]
+    end
 
-Request --> [CPU Work 50ms] --> Response
-Bottleneck: CPU
-
-AGENT SCALING:
-
-Request --> [LLM Call 3s] --> [Tool 0.5s] --> [LLM Call 2s] --> Response
-               |                                    |
-            WAITING                              WAITING
-            (95% of time)                        (95% of time)
-
-Bottleneck: LLM API rate limits, connection count, state management
+    subgraph AgentScale["Agent Scaling (Bottleneck: LLM Rate Limits, Open Connections, State)"]
+        AR["Request"] --> L1["LLM Call (3s)<br/>95% I/O Waiting"] --> T1["Tool Call (0.5s)"] --> L2["LLM Call (2s)<br/>95% I/O Waiting"] --> AResp["Response"]
+    end
 ```
 
 ### Horizontal Scaling Architecture
 
-```
-                    +-------------------+
-                    |   Load Balancer   |
-                    | (sticky sessions  |
-                    |  for WebSocket)   |
-                    +--------+----------+
-                             |
-              +--------------+--------------+
-              |              |              |
-        +-----+----+  +-----+----+  +-----+----+
-        | Agent    |  | Agent    |  | Agent    |
-        | Worker 1 |  | Worker 2 |  | Worker 3 |
-        |          |  |          |  |          |
-        | 50 conc. |  | 50 conc. |  | 50 conc. |
-        | agents   |  | agents   |  | agents   |
-        +-----+----+  +-----+----+  +-----+----+
-              |              |              |
-              +--------------+--------------+
-                             |
-              +--------------+--------------+
-              |              |              |
-        +-----+----+  +-----+----+  +-----+----+
-        |  Redis   |  | Postgres |  |  S3/GCS  |
-        |  (state, |  | (history,|  | (artifacts|
-        |   locks) |  |  users)  |  |   logs)  |
-        +----------+  +----------+  +----------+
+```mermaid
+flowchart TD
+    LB["Load Balancer<br/>(Sticky sessions for WebSocket)"]
+    W1["Agent Worker 1<br/>(50 concurrent agents)"]
+    W2["Agent Worker 2<br/>(50 concurrent agents)"]
+    W3["Agent Worker 3<br/>(50 concurrent agents)"]
+
+    Redis[("Redis<br/>(state, locks)")]
+    PG[("PostgreSQL<br/>(history, users)")]
+    S3[("S3 / GCS<br/>(artifacts, logs)")]
+
+    LB --> W1 & W2 & W3
+    W1 & W2 & W3 --> Redis & PG & S3
 ```
 
 ### Queue-Based Processing
 
 For agents that do not need real-time responses (batch processing, background tasks, email agents), a queue-based architecture decouples request ingestion from processing.
 
-```
-                                        +------------------+
-  API Request                           |  Agent Worker 1  |
-      |                                 |  (polling queue)  |
-      v                                 +--------+---------+
-+------------+     +---------------+             |
-| API Server |---->| Message Queue |<---+--------+
-| (fast,     |     | (SQS/Redis/  |    |
-|  stateless)|     |  RabbitMQ)   |<---+--------+
-+------------+     +------+-------+             |
-      |                   |            +--------+---------+
-      v                   |            |  Agent Worker 2  |
-+------------+            |            |  (polling queue)  |
-| Status DB  |<-----------+            +--------+---------+
-| (poll for  |            |                      |
-|  results)  |            +------------>---------+
-+------------+                         |
-                               +-------+----------+
-                               |  Agent Worker N   |
-                               |  (polling queue)   |
-                               +------------------+
+```mermaid
+flowchart LR
+    Req["API Request"] --> API["API Server<br/>(fast, stateless)"]
+    API --> MQ["Message Queue<br/>(SQS / Redis / RabbitMQ)"]
+    API --> DB[("Status DB<br/>(poll for results)")]
+
+    MQ --> W1["Agent Worker 1<br/>(polling queue)"]
+    MQ --> W2["Agent Worker 2<br/>(polling queue)"]
+    MQ --> WN["Agent Worker N<br/>(polling queue)"]
+
+    W1 & W2 & WN -->|"Write status &amp; results"| DB
 ```
 
 ```python
@@ -707,30 +634,13 @@ For a typical agent conversation:
 
 The single most impactful cost optimization: use the right model for the right task.
 
-```
-USER REQUEST
-     |
-     v
-+----+--------+
-| Request     |
-| Classifier  |  <-- Small model or heuristic
-+----+--------+
-     |
-     +----------+----------+
-     |          |          |
-     v          v          v
-  SIMPLE     MEDIUM     COMPLEX
-     |          |          |
-     v          v          v
-  Haiku     Sonnet      Opus
-  $0.25/M   $3/M        $15/M
-  input     input       input
-
-  ~60%       ~30%        ~10%
-  of         of          of
-  requests   requests    requests
-
-  BLENDED COST: ~60% cheaper than using Opus for everything
+```mermaid
+flowchart TD
+    Req["User Request"] --> Class["Request Classifier<br/>(Small model or heuristic)"]
+    Class -->|"SIMPLE (~60% of requests)"| Haiku["Haiku ($0.25/M input)"]
+    Class -->|"MEDIUM (~30% of requests)"| Sonnet["Sonnet ($3/M input)"]
+    Class -->|"COMPLEX (~10% of requests)"| Opus["Opus ($15/M input)"]
+    Haiku & Sonnet & Opus --> Blended["Blended Cost: ~60% cheaper than routing 100% to Opus"]
 ```
 
 ```python
@@ -982,23 +892,14 @@ class ContextOptimizer:
 
 ### Where Time Goes in an Agent Request
 
-```
-TOTAL LATENCY: 5-30 seconds typical
-
-+--------+  +--------+  +--------+  +--------+  +--------+
-|  TTFB  |  | LLM #1 |  | Tool   |  | LLM #2 |  | Post   |
-| 50ms   |  | 1-5s   |  | 0.1-5s |  | 1-5s   |  | 50ms   |
-+--------+  +--------+  +--------+  +--------+  +--------+
-
-TTFB: Time to first byte (network, auth, routing)
-LLM:  Model inference (dominated by output token generation)
-Tool: External API calls, database queries, code execution
-Post: Response formatting, logging, cleanup
-
-OPTIMIZATION LEVERAGE:
-  LLM calls: HIGH    (streaming, model selection, prompt length)
-  Tool calls: MEDIUM (parallel execution, caching, timeouts)
-  Network:    LOW    (CDN, edge routing, connection pooling)
+```mermaid
+flowchart LR
+    subgraph Latency["AGENT LATENCY BREAKDOWN (5-30s Typical)"]
+        S1["TTFB (50ms)<br/>Network, auth, routing<br/>(Low leverage)"] --> S2["LLM Call #1 (1-5s)<br/>Model inference<br/>(HIGH leverage)"]
+        S2 --> S3["Tool Execution (0.1-5s)<br/>External APIs, DB, sandbox<br/>(MEDIUM leverage)"]
+        S3 --> S4["LLM Call #2 (1-5s)<br/>Synthesis inference<br/>(HIGH leverage)"]
+        S4 --> S5["Post-Processing (50ms)<br/>Formatting, logging"]
+    end
 ```
 
 ### Streaming
@@ -1480,39 +1381,17 @@ class SessionManager:
 
 ### Gateway Architecture
 
-```
-CLIENTS (Web, Mobile, CLI, API)
-         |
-         v
-+--------+---------+
-|   API Gateway    |
-|                  |
-| +-- Auth ------+ |
-| | JWT / API Key| |
-| +--------------+ |
-|                  |
-| +-- Rate Limit-+ |
-| | Per user,    | |
-| | per model    | |
-| +--------------+ |
-|                  |
-| +-- Router ----+ |
-| | /chat -> ws  | |
-| | /agent -> q  | |
-| | /batch -> q  | |
-| +--------------+ |
-|                  |
-| +-- Logging ---+ |
-| | Structured   | |
-| | traces       | |
-| +--------------+ |
-+--------+---------+
-         |
-    +----+----+----+
-    |         |    |
-    v         v    v
- WebSocket  Queue  Batch
- Handler    Worker Processor
+```mermaid
+flowchart TD
+    Clients["Clients (Web, Mobile, CLI, API)"] --> GW
+    subgraph GW["API Gateway"]
+        Auth["Auth: JWT / API Key"] --> RL["Rate Limit: Per user, per model"]
+        RL --> Router["Router: /chat -&gt; WS, /agent -&gt; Queue, /batch -&gt; Batch"]
+        Router --> Log["Logging: Structured traces"]
+    end
+    Log --> WS["WebSocket Handler"]
+    Log --> QW["Queue Worker"]
+    Log --> BP["Batch Processor"]
 ```
 
 ### Rate Limiting for Agents
@@ -1630,32 +1509,15 @@ class AgentRateLimiter:
 
 ### Load Balancing Strategy
 
-```
-AGENT-AWARE LOAD BALANCING:
+```mermaid
+flowchart TD
+    LB["Agent-Aware Load Balancer<br/>score = active_agents * w_agents + cpu * w_cpu + mem * w_mem"]
+    WA["Worker A<br/>Active: 45 / CPU: 20% / Mem: 60%"]
+    WB["Worker B (Selected — Lowest Score)<br/>Active: 12 / CPU: 5% / Mem: 20%"]
+    WC["Worker C<br/>Active: 38 / CPU: 15% / Mem: 50%"]
 
-Traditional:  Round-robin or least-connections
-Problem:      Agent requests vary 100x in duration
-
-Better approach: Weighted load balancing by active agent count
-
-                    Load Balancer
-                    (agent-aware)
-                         |
-          +--------------+--------------+
-          |              |              |
-     Worker A        Worker B       Worker C
-     Active: 45      Active: 12     Active: 38
-     CPU: 20%        CPU: 5%        CPU: 15%
-     Memory: 60%     Memory: 20%    Memory: 50%
-          |              |              |
-     Next request   <--- routes here (least active agents)
-
-Algorithm:
-  score = active_agents * weight_agents +
-          cpu_usage * weight_cpu +
-          memory_usage * weight_memory
-
-  Route to worker with lowest score.
+    LB -.-> WA & WC
+    LB ==>|"Routes next request here"| WB
 ```
 
 ### Request Routing
@@ -1928,39 +1790,19 @@ class DockerSandbox:
 
 Firecracker (used by AWS Lambda and Fly.io under the hood) provides the strongest isolation with VM-level security and near-instant startup.
 
-```
-FIRECRACKER ARCHITECTURE:
-
-Host OS
-+--------------------------------------------------+
-|                                                  |
-|  +-------------+  +-------------+  +----------+ |
-|  | microVM 1   |  | microVM 2   |  | microVM N| |
-|  | Agent A     |  | Agent B     |  | Agent N  | |
-|  |             |  |             |  |          | |
-|  | Guest kernel|  | Guest kernel|  | Guest    | |
-|  | (stripped)  |  | (stripped)  |  | kernel   | |
-|  +------+------+  +------+------+  +----+-----+ |
-|         |                |               |       |
-|  +------+------+  +------+------+  +----+-----+ |
-|  | Firecracker |  | Firecracker |  |Firecracker| |
-|  | VMM process |  | VMM process |  |VMM process| |
-|  +------+------+  +------+------+  +----+-----+ |
-|         |                |               |       |
-|  +------+------+  +------+------+  +----+-----+ |
-|  |  jailer     |  |  jailer     |  | jailer   | |
-|  | (seccomp +  |  | (seccomp +  |  |(seccomp +| |
-|  |  cgroups)   |  |  cgroups)   |  | cgroups) | |
-|  +-------------+  +-------------+  +----------+ |
-|                                                  |
-+--------------------------------------------------+
-
-Properties:
-  - Boot time: ~125ms
-  - Memory overhead: ~5MB per VM
-  - Full Linux kernel per VM
-  - Hardware-level isolation (KVM)
-  - No shared kernel with host (unlike containers)
+```mermaid
+flowchart TD
+    subgraph Host["Host OS (KVM Hardware Virtualization — ~125ms boot, ~5MB overhead/VM)"]
+        subgraph VM1["Tenant A Stack"]
+            M1["microVM 1: Agent A<br/>(Stripped Guest Kernel)"] --> VMM1["Firecracker VMM Process"] --> J1["jailer (seccomp + cgroups)"]
+        end
+        subgraph VM2["Tenant B Stack"]
+            M2["microVM 2: Agent B<br/>(Stripped Guest Kernel)"] --> VMM2["Firecracker VMM Process"] --> J2["jailer (seccomp + cgroups)"]
+        end
+        subgraph VMN["Tenant N Stack"]
+            MN["microVM N: Agent N<br/>(Stripped Guest Kernel)"] --> VMMN["Firecracker VMM Process"] --> JN["jailer (seccomp + cgroups)"]
+        end
+    end
 ```
 
 ### Sandbox Selection Guide
@@ -2013,38 +1855,18 @@ Spike of 1000 requests            Spike of 1000 requests
 
 ### Event-Driven Agent Architecture
 
-```
-+------------+
-| User Event |  (HTTP request, webhook, schedule)
-+-----+------+
-      |
-      v
-+-----+--------+
-| Event Router |
-+-----+--------+
-      |
-      +------------+-------------+
-      |            |             |
-      v            v             v
-+---------+  +----------+  +---------+
-| Queue:  |  | Queue:   |  | Queue:  |
-| chat    |  | batch    |  | webhook |
-| (high   |  | (low     |  | (medium |
-| priority)|  | priority)|  | priority)|
-+---------+  +----------+  +---------+
-      |            |             |
-      v            v             v
-+-----+---+  +----+----+  +----+-----+
-| Chat    |  | Batch   |  | Webhook  |
-| Agent   |  | Agent   |  | Agent    |
-| Workers |  | Workers |  | Workers  |
-+---------+  +---------+  +----------+
-      |            |             |
-      v            v             v
-+-----+------------+-------------+-----+
-|           Result Store               |
-| (Redis for status, S3 for artifacts)|
-+--------------------------------------+
+```mermaid
+flowchart TD
+    Ev["User Event<br/>(HTTP request, webhook, schedule)"] --> Router["Event Router"]
+    Router --> Q1["Queue: chat<br/>(High priority)"]
+    Router --> Q2["Queue: webhook<br/>(Medium priority)"]
+    Router --> Q3["Queue: batch<br/>(Low priority)"]
+
+    Q1 --> W1["Chat Agent Workers"]
+    Q2 --> W2["Webhook Agent Workers"]
+    Q3 --> W3["Batch Agent Workers"]
+
+    W1 & W2 & W3 --> Store[("Result Store<br/>(Redis for status, S3 for artifacts)")]
 ```
 
 ```python
@@ -2194,32 +2016,13 @@ class PriorityAgentQueue:
 
 ### Cache Layers for Agent Systems
 
-```
-REQUEST
-   |
-   v
-+--+------------------+
-| L1: Exact Match     |  Hit rate: 5-15%
-| (hash of input)     |  Latency: <1ms
-+--+------------------+
-   | MISS
-   v
-+--+------------------+
-| L2: Semantic Cache  |  Hit rate: 15-30%
-| (embedding sim.)    |  Latency: 5-20ms
-+--+------------------+
-   | MISS
-   v
-+--+------------------+
-| L3: Tool Result     |  Hit rate: 20-50%
-| Cache (per-tool)    |  Latency: 1-10ms
-+--+------------------+
-   | MISS
-   v
-+--+------------------+
-| L4: LLM Response    |  (no cache, full inference)
-| (model inference)   |  Latency: 1-10s
-+--+------------------+
+```mermaid
+flowchart TD
+    Req["Request"] --> L1{"L1: Exact Match Cache<br/>(Hash of input — Hit: 5-15%, &lt;1ms)"}
+    L1 -->|"MISS"| L2{"L2: Semantic Cache<br/>(Embedding similarity — Hit: 15-30%, 5-20ms)"}
+    L2 -->|"MISS"| L3{"L3: Tool Result Cache<br/>(Per-tool deterministic cache — Hit: 20-50%, 1-10ms)"}
+    L3 -->|"MISS"| L4["L4: Full LLM Inference<br/>(Latency: 1-10s)"]
+    L1 & L2 & L3 -->|"HIT"| Resp["Return Cached Result"]
 ```
 
 ### Semantic Caching
@@ -2488,42 +2291,17 @@ Blue/green deployments are particularly important for agents because:
 - Prompt or model changes can silently degrade quality
 - Rollback must be instant because bad agent behavior compounds
 
-```
-BLUE/GREEN DEPLOYMENT:
+```mermaid
+flowchart TD
+    subgraph Before["Before Cutover (Staging Eval Running on Green)"]
+        LB1["Load Balancer"] -->|"100% traffic"| B1["BLUE (Current)<br/>v2.3.1 / Sonnet / prompt-v7"]
+        LB1 -.->|"0% traffic (evals)"| G1["GREEN (New)<br/>v2.4.0 / Sonnet / prompt-v8"]
+    end
 
-              Load Balancer
-                   |
-          +--------+--------+
-          |                 |
-    +-----+-----+    +-----+-----+
-    |   BLUE    |    |   GREEN   |
-    | (current) |    | (new ver) |
-    |           |    |           |
-    | v2.3.1    |    | v2.4.0    |
-    | Sonnet    |    | Sonnet    |
-    | prompt-v7 |    | prompt-v8 |
-    +-----------+    +-----------+
-         |                |
-    100% traffic     0% traffic
-                     (staging tests
-                      running)
-
-AFTER VALIDATION:
-
-              Load Balancer
-                   |
-          +--------+--------+
-          |                 |
-    +-----+-----+    +-----+-----+
-    |   BLUE    |    |   GREEN   |
-    | (standby) |    | (current) |
-    |           |    |           |
-    | v2.3.1    |    | v2.4.0    |
-    +-----------+    +-----------+
-         |                |
-    0% traffic       100% traffic
-
-ROLLBACK: Flip back to Blue in <1 second
+    subgraph After["After Validation (Instant <1s Rollback to Blue if Needed)"]
+        LB2["Load Balancer"] -.->|"0% traffic (standby)"| B2["BLUE (Standby)<br/>v2.3.1"]
+        LB2 -->|"100% traffic"| G2["GREEN (Active)<br/>v2.4.0"]
+    end
 ```
 
 ### Canary Releases
@@ -2699,34 +2477,13 @@ class FeatureFlagService:
 
 ### Deployment Pipeline
 
-```
-CODE CHANGE
-     |
-     v
-+---------+     +---------+     +---------+     +---------+
-|  Build  |---->|  Test   |---->| Staging |---->| Canary  |
-|  & Lint |     |  Suite  |     | Deploy  |     | (5%)    |
-+---------+     +---------+     +---------+     +----+----+
-                                                     |
-                                              Monitor 1-4h
-                                                     |
-                                          +-----------+-----------+
-                                          |                       |
-                                     Metrics OK              Metrics BAD
-                                          |                       |
-                                          v                       v
-                                   +------+------+         +-----+------+
-                                   | Ramp to 25% |         | Auto       |
-                                   | then 50%    |         | Rollback   |
-                                   | then 100%   |         +------------+
-                                   +-------------+
-
-AGENT-SPECIFIC TESTS IN PIPELINE:
-  1. Unit tests (tool functions, routing logic)
-  2. Integration tests (LLM calls with mocked responses)
-  3. Agent eval suite (golden set of queries with expected outcomes)
-  4. Cost regression test (new version shouldn't cost >10% more)
-  5. Latency regression test (P95 latency shouldn't increase >20%)
+```mermaid
+flowchart LR
+    Change["Code / Prompt Change"] --> Build["Build &amp; Lint"]
+    Build --> Test["Agent Test Suite<br/>1. Unit tests<br/>2. Mocked LLM integration<br/>3. Golden eval suite<br/>4. Cost (&lt;+10%) &amp; Latency (&lt;+20%) gates"]
+    Test --> Stg["Staging Deploy"] --> Canary["Canary Deploy (5%)<br/>Monitor 1-4h"]
+    Canary -->|"Metrics OK"| Ramp["Ramp: 25% -&gt; 50% -&gt; 100%"]
+    Canary -->|"Metrics BAD"| Rollback["Auto-Rollback"]
 ```
 
 ---
@@ -3109,68 +2866,14 @@ services:
 
 **Model Answer:**
 
-```
-ARCHITECTURE:
-
-Users (10K concurrent)
-       |
-       v
-+------+-------+
-| CloudFront / |  (CDN for static, WebSocket pass-through)
-| ALB          |
-+------+-------+
-       |
-  +----+----+----+
-  |         |    |
-  v         v    v
-+----+  +----+  +----+
-| WS |  | WS |  | WS |    WebSocket servers (20 pods)
-| Srv|  | Srv|  | Srv|    Each handles ~500 connections
-+----+  +----+  +----+
-  |         |    |
-  v         v    v
-+------------------+
-|  Redis Cluster   |      Active session state
-|  (3 nodes)       |      Rate limiting
-+--------+---------+
-         |
-+--------+---------+
-|   SQS / RabbitMQ |      Agent job queue with priority
-+--------+---------+
-         |
-  +------+------+------+
-  |             |      |
-  v             v      v
-+------+   +------+  +------+
-|Worker|   |Worker|  |Worker|    Agent workers (30-50 pods)
-|  1   |   |  2   |  |  N   |    Each runs 20 concurrent agents
-+------+   +------+  +------+
-  |             |      |
-  v             v      v
-+------------------+  +---------+
-|   PostgreSQL     |  |   S3    |
-|   (conversations)|  |(artifacts)|
-+------------------+  +---------+
-
-KEY DESIGN DECISIONS:
-1. WebSocket for streaming (users expect real-time responses)
-2. Queue between WS servers and workers (backpressure, priority)
-3. Model routing: 60% Haiku (greetings, FAQ), 30% Sonnet, 10% Opus
-4. Semantic caching: ~25% hit rate on common support questions
-5. Auto-scaling workers based on queue depth
-6. Redis for session state (sub-ms access, TTL-based cleanup)
-
-CAPACITY PLANNING:
-- 10K concurrent users x avg 2 messages/min = 20K msg/min
-- ~40% need agent processing = 8K agent invocations/min
-- Avg agent: 3 LLM calls x 2s = 6s
-- Workers needed: 8000/60 * 6 = 800 concurrent agents
-- At 20 agents/worker: 40 workers
-
-COST ESTIMATE (monthly):
-- LLM API: ~$50K (with model routing + caching)
-- Infrastructure: ~$8K (ECS, Redis, RDS, S3)
-- Total: ~$58K for 10K concurrent users
+```mermaid
+flowchart TD
+    Users["Users (10K Concurrent)"] --> ALB["CloudFront / ALB<br/>(CDN for static, WebSocket pass-through)"]
+    ALB --> WS1["WS Server 1"] & WS2["WS Server 2"] & WSN["WS Server 20<br/>(~500 conns/pod)"]
+    WS1 & WS2 & WSN --> Redis[("Redis Cluster (3 nodes)<br/>Active session state, rate limiting, semantic cache")]
+    Redis --> Queue["SQS / RabbitMQ<br/>(Priority Agent Job Queue)"]
+    Queue --> AW1["Agent Worker 1"] & AW2["Agent Worker 2"] & AWN["Agent Worker 40<br/>(20 concurrent agents/pod = 800 total)"]
+    AW1 & AW2 & AWN --> PG[("PostgreSQL<br/>(Conversations)")] & S3[("S3<br/>(Artifacts)")]
 ```
 
 ### Q2: "How would you reduce agent costs by 50% without degrading quality?"
@@ -3349,44 +3052,14 @@ RECOMMENDATION:
 
 **Model Answer:**
 
-```
-MULTI-REGION ARCHITECTURE:
+```mermaid
+flowchart TD
+    U_US["US Users"] --> E_US["Edge (us-east)"] --> W_US["Agent Workers (us-east)"]
+    U_EU["EU Users (GDPR Residency)"] --> E_EU["Edge (eu-west)"] --> W_EU["Agent Workers (eu-west)"]
+    U_AP["APAC Users"] --> E_AP["Edge (ap-se)"] --> W_AP["Agent Workers (ap-se)"]
 
-US Users          EU Users          APAC Users
-    |                 |                 |
-    v                 v                 v
-+--------+      +--------+       +--------+
-| Edge   |      | Edge   |       | Edge   |
-| us-east|      | eu-west|       | ap-se  |
-+---+----+      +---+----+       +---+----+
-    |                |                |
-    v                v                v
-+--------+      +--------+       +--------+
-| Agent  |      | Agent  |       | Agent  |
-| Workers|      | Workers|       | Workers|
-| us-east|      | eu-west|       | ap-se  |
-+---+----+      +---+----+       +---+----+
-    |                |                |
-    +------+---------+--------+------+
-           |                  |
-      +----+----+       +----+----+
-      | Primary |       | Read    |
-      | DB      |<----->| Replicas|
-      | us-east |  sync | (global)|
-      +---------+       +---------+
-
-KEY DECISIONS:
-1. LLM API calls go to nearest provider endpoint
-2. State is replicated globally (CockroachDB or DynamoDB Global Tables)
-3. Agent workers run in each region
-4. Failover: if one region is down, route to nearest healthy region
-5. Data residency: EU user data stays in EU (GDPR)
-
-CHALLENGES:
-- LLM providers may not have endpoints in all regions
-- Cross-region state consistency (eventual vs strong)
-- Cost multiplier (3x infrastructure)
-- Different compliance requirements per region
+    W_US & W_EU & W_AP --> Primary[("Primary DB (us-east)")] & Replicas[("Global Read Replicas<br/>(CockroachDB / DynamoDB Global Tables)")]
+    Primary <-->|"sync"| Replicas
 ```
 
 ---

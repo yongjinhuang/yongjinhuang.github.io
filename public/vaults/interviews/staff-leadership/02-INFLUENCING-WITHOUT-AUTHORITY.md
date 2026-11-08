@@ -32,32 +32,16 @@ Interviewers assess whether you can:
 
 Influence is not a single skill -- it is a stack of capabilities that build on each other.
 
-```
-+------------------------------------------------------------------+
-|                      THE INFLUENCE STACK                           |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Level 5: ORGANIZATIONAL ALIGNMENT                                |
-|  Aligning teams toward a shared technical direction               |
-|  "We need all backend teams to adopt this API standard"           |
-|                                                                    |
-|  Level 4: STAKEHOLDER MANAGEMENT                                  |
-|  Working across functions (PM, Design, Ops, Leadership)           |
-|  "I need Product to prioritize tech debt this quarter"            |
-|                                                                    |
-|  Level 3: CONSENSUS BUILDING                                      |
-|  Getting agreement among peers with competing views               |
-|  "Three tech leads disagree on the migration approach"            |
-|                                                                    |
-|  Level 2: PERSUASION                                              |
-|  Making a compelling case for your technical position              |
-|  "I believe we should use Kafka instead of SQS"                   |
-|                                                                    |
-|  Level 1: TECHNICAL CREDIBILITY                                   |
-|  Being respected for your engineering judgment                     |
-|  "Others trust my technical opinions"                              |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart BT
+    subgraph Stack["THE INFLUENCE STACK"]
+        L1["Level 1: TECHNICAL CREDIBILITY<br/>Being respected for your engineering judgment<br/>'Others trust my technical opinions'"]
+        L2["Level 2: PERSUASION<br/>Making a compelling case for your technical position<br/>'I believe we should use Kafka instead of SQS'"]
+        L3["Level 3: CONSENSUS BUILDING<br/>Getting agreement among peers with competing views<br/>'Three tech leads disagree on the migration approach'"]
+        L4["Level 4: STAKEHOLDER MANAGEMENT<br/>Working across functions (PM, Design, Ops, Leadership)<br/>'I need Product to prioritize tech debt this quarter'"]
+        L5["Level 5: ORGANIZATIONAL ALIGNMENT<br/>Aligning teams toward a shared technical direction<br/>'We need all backend teams to adopt this API standard'"]
+        L1 --> L2 --> L3 --> L4 --> L5
+    end
 ```
 
 You must have each level before you can operate at the next. You cannot build consensus (Level 3) without persuasion skills (Level 2), and you cannot persuade without credibility (Level 1).
@@ -148,31 +132,20 @@ One of the most important influence concepts for Staff+ engineers. It means advo
 
 ### When to Apply It
 
-```
-+------------------------------------------------------------------+
-|              DISAGREE AND COMMIT DECISION TREE                    |
-+------------------------------------------------------------------+
-|                                                                    |
-|  A decision has been made that you disagree with.                 |
-|  |                                                                 |
-|  +-- Is this a one-way door (irreversible)?                       |
-|  |   |                                                             |
-|  |   +-- YES --> Escalate one more time with new data.            |
-|  |   |          If still overruled, document your concerns         |
-|  |   |          and commit fully.                                  |
-|  |   |                                                             |
-|  |   +-- NO --> Commit immediately.                                |
-|  |             It can be reversed if it does not work out.         |
-|  |                                                                 |
-|  +-- Does it violate safety, security, or ethical principles?     |
-|      |                                                             |
-|      +-- YES --> Do NOT commit. Escalate formally.                 |
-|      |          This is a hard stop, not a disagree-and-commit.   |
-|      |                                                             |
-|      +-- NO --> Commit fully. Support the decision publicly.      |
-|                 Do not undermine it through passive resistance.    |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Start["A decision has been made that you disagree with"]
+    Q1{"Does it violate safety, security,<br/>or ethical principles?"}
+    HardStop["Do NOT commit. Escalate formally.<br/>(Hard stop, not disagree-and-commit)"]
+    Q2{"Is this a one-way door<br/>(irreversible)?"}
+    Escalate["Escalate one more time with new data.<br/>If still overruled, document concerns (ADR) and commit fully."]
+    Commit["Commit immediately &amp; support publicly.<br/>(Reversible if it does not work out; no passive resistance)"]
+
+    Start --> Q1
+    Q1 -->|"YES"| HardStop
+    Q1 -->|"NO"| Q2
+    Q2 -->|"YES"| Escalate
+    Q2 -->|"NO"| Commit
 ```
 
 ### What "Commit" Actually Means
@@ -224,30 +197,15 @@ Staff+ engineers are embedded in cross-functional decision-making. Your relation
 
 ### The Product-Engineering Partnership Model
 
-```
-+------------------------------------------------------------------+
-|           PRODUCT-ENGINEERING DECISION MATRIX                     |
-+------------------------------------------------------------------+
-|                                                                    |
-|             Product Decides    |    Engineering Decides            |
-|  (WHAT and WHEN)               |    (HOW and architecture)         |
-|  +-----------------------------|-------------------------------+   |
-|  | Feature prioritization      | Technology choices            |   |
-|  | User-facing requirements    | System architecture           |   |
-|  | Business metrics/OKRs       | Technical debt prioritization |   |
-|  | Go-to-market timing         | Code quality standards        |   |
-|  | Customer segmentation       | Infrastructure decisions      |   |
-|  +-----------------------------|-------------------------------+   |
-|                                                                    |
-|             Shared Decisions                                       |
-|  +---------------------------------------------------------+      |
-|  | Scope trade-offs (feature richness vs delivery speed)    |      |
-|  | Technical investment allocation (features vs platform)   |      |
-|  | Risk tolerance (move fast vs reliability)                |      |
-|  | Staffing and team structure                              |      |
-|  +---------------------------------------------------------+      |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Matrix["PRODUCT-ENGINEERING DECISION MATRIX"]
+        Prod["Product Decides (WHAT and WHEN)<br/>- Feature prioritization<br/>- User-facing requirements<br/>- Business metrics / OKRs<br/>- Go-to-market timing<br/>- Customer segmentation"]
+        Eng["Engineering Decides (HOW and Architecture)<br/>- Technology choices<br/>- System architecture<br/>- Technical debt prioritization<br/>- Code quality standards<br/>- Infrastructure decisions"]
+        Shared["Shared Decisions<br/>- Scope trade-offs (feature richness vs delivery speed)<br/>- Technical investment allocation (features vs platform)<br/>- Risk tolerance (move fast vs reliability)<br/>- Staffing and team structure"]
+        Prod --> Shared
+        Eng --> Shared
+    end
 ```
 
 ### How to Influence Product Priorities

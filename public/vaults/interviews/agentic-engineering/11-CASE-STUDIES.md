@@ -25,42 +25,19 @@ Claude Code is a CLI-based agentic coding assistant that operates directly in yo
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                         CLAUDE CODE CLI                           |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +-----------+     +-------------+     +------------------------+ |
-|  |  User     |---->|  Main Agent |---->|  Tool Dispatcher       | |
-|  |  Prompt   |     |  (Claude)   |     |  (Router)              | |
-|  +-----------+     +------+------+     +----------+-------------+ |
-|                           |                       |                |
-|                           v                       v                |
-|                    +------+------+    +-----------+-----------+   |
-|                    | Conversation |    |    Tool Implementations | |
-|                    | History      |    |                         | |
-|                    | + Context    |    |  +---+ +---+ +------+  | |
-|                    | Manager      |    |  |Bash| |Read| |Edit |  | |
-|                    +--------------+    |  +---+ +---+ +------+  | |
-|                                        |  +---+ +----+ +-----+ | |
-|                                        |  |Glob| |Grep| |Write| | |
-|                                        |  +---+ +----+ +-----+ | |
-|                                        |  +-------+ +--------+ | |
-|                                        |  |WebFetch| |TodoWrite|| |
-|                                        |  +-------+ +--------+ | |
-|                                        +----------+------------+ |
-|                                                   |               |
-|  +-------------------+     +----------------------+              |
-|  | Sub-Agent (Task)  |     | MCP Server Registry  |              |
-|  | - Own context      |     | - Context7 docs      |              |
-|  | - Own tool access  |     | - GitHub API         |              |
-|  | - Reports back     |     | - Custom servers     |              |
-|  +-------------------+     +----------------------+              |
-|                                                                    |
-+------------------------------------------------------------------+
-|                     Operating System Layer                         |
-|  [Filesystem]  [Shell/Bash]  [Git]  [Network]  [Sandbox]         |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph CLI["CLAUDE CODE CLI"]
+        Prompt["User Prompt"] --> Main["Main Agent<br/>(Claude)"]
+        Main <--> Ctx["Conversation History +<br/>Context Manager"]
+        Main --> Disp["Tool Dispatcher<br/>(Router)"]
+        Disp --> Tools["Tool Implementations<br/>Bash / Read / Edit<br/>Glob / Grep / Write<br/>WebFetch / TodoWrite"]
+        Disp --> Sub["Sub-Agent (Task)<br/>- Own isolated context<br/>- Own tool access<br/>- Reports summary back"]
+        Disp --> MCP["MCP Server Registry<br/>- Context7 docs<br/>- GitHub API<br/>- Custom servers"]
+    end
+
+    OS["Operating System Layer<br/>[Filesystem] [Shell/Bash] [Git] [Network] [Sandbox]"]
+    Tools & Sub & MCP --> OS
 ```
 
 ### The Tool Loop
@@ -117,19 +94,14 @@ The `Bash` tool is the escape hatch -- it can do anything the OS can do. But it 
 
 Context window management is the single hardest engineering problem in Claude Code:
 
-```
-+------------------------------------------------------------------+
-|                    CONTEXT WINDOW (200K tokens)                    |
-|                                                                    |
-|  [System Prompt]  ~2-5K tokens (fixed)                           |
-|  [CLAUDE.md]      ~1-3K tokens (fixed)                           |
-|  [User Rules]     ~1-2K tokens (fixed)                           |
-|  [Conversation]   Variable -- grows with each turn               |
-|  [Tool Results]   Variable -- file contents, command output       |
-|  [Git Status]     Snapshot at session start                       |
-|                                                                    |
-|  DANGER ZONE: Last 20% -- degraded attention ─────────────────>  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Window["CONTEXT WINDOW (200K Tokens)"]
+        Fixed["Fixed Prefix:<br/>- [System Prompt] ~2-5K tokens<br/>- [CLAUDE.md] ~1-3K tokens<br/>- [User Rules] ~1-2K tokens<br/>- [Git Status] Snapshot at session start"]
+        Dynamic["Dynamic Growth:<br/>- [Conversation] Grows with each turn<br/>- [Tool Results] File contents, command output"]
+        Danger["DANGER ZONE (Last 20%):<br/>Degraded attention -&gt; Trigger Auto-Compaction"]
+        Fixed --> Dynamic --> Danger
+    end
 ```
 
 Strategies used:
@@ -167,10 +139,11 @@ This is a **supervisor-worker** pattern where the main agent decides when delega
 
 The Model Context Protocol (MCP) extends Claude Code's capabilities through external servers:
 
-```
-Claude Code <--JSON-RPC--> MCP Server: Context7 (documentation lookup)
-Claude Code <--JSON-RPC--> MCP Server: GitHub (authenticated API access)
-Claude Code <--JSON-RPC--> MCP Server: Custom (company-specific tools)
+```mermaid
+flowchart LR
+    CC["Claude Code"] <-->|"JSON-RPC"| M1["MCP Server: Context7<br/>(Documentation lookup)"]
+    CC <-->|"JSON-RPC"| M2["MCP Server: GitHub<br/>(Authenticated API access)"]
+    CC <-->|"JSON-RPC"| M3["MCP Server: Custom<br/>(Company-specific tools)"]
 ```
 
 MCP matters because it separates **tool implementation** from **tool invocation**. The agent sees a tool schema and calls it. The MCP server handles authentication, rate limiting, caching, and the actual API calls. This is the same separation-of-concerns pattern as microservices.
@@ -215,47 +188,20 @@ Devin is a fully autonomous software engineering agent. Unlike IDE-integrated to
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                         DEVIN AGENT                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +--------------------+                                           |
-|  |  Planner / Manager |                                           |
-|  |  (High-Level LLM)  |                                           |
-|  +--------+-----------+                                           |
-|           |                                                        |
-|           v                                                        |
-|  +--------+-----------+                                           |
-|  |  Task Decomposer   |                                           |
-|  |  - Break into steps |                                           |
-|  |  - Track progress   |                                           |
-|  |  - Re-plan on fail  |                                           |
-|  +--------+-----------+                                           |
-|           |                                                        |
-|           v                                                        |
-|  +--------+------------------------------------------------+     |
-|  |              Execution Environment (Sandboxed VM)        |     |
-|  |                                                          |     |
-|  |  +----------+  +-----------+  +----------+  +---------+ |     |
-|  |  | Terminal  |  | Code      |  | Browser  |  | Planner | |     |
-|  |  | (shell)   |  | Editor    |  | (Chrome) |  | (UI)    | |     |
-|  |  |           |  |           |  |           |  |         | |     |
-|  |  | - git     |  | - open    |  | - search |  | - tasks | |     |
-|  |  | - npm     |  | - edit    |  | - read   |  | - deps  | |     |
-|  |  | - python  |  | - navigate|  | - docs   |  | - notes | |     |
-|  |  | - curl    |  | - diff    |  | - debug  |  | - plan  | |     |
-|  |  +----------+  +-----------+  +----------+  +---------+ |     |
-|  |                                                          |     |
-|  +----------------------------------------------------------+     |
-|                                                                    |
-|  +--------------------+    +--------------------+                 |
-|  | Snapshot & Rollback |    | Human Interaction  |                 |
-|  | - VM state saves    |    | - Chat interface   |                 |
-|  | - Git checkpoints   |    | - Approve/reject   |                 |
-|  | - Retry from save   |    | - Redirect tasks   |                 |
-|  +--------------------+    +--------------------+                 |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Devin["DEVIN AGENT ARCHITECTURE"]
+        Plan["Planner / Manager<br/>(High-Level LLM)"] --> Decomp["Task Decomposer<br/>- Break into steps<br/>- Track progress<br/>- Re-plan on failure"]
+        subgraph VM["Execution Environment (Sandboxed VM)"]
+            Term["Terminal (shell)<br/>git, npm, python, curl"]
+            Edit["Code Editor<br/>open, edit, navigate, diff"]
+            Brow["Browser (Chrome)<br/>search, read docs, debug"]
+            PUI["Planner UI<br/>tasks, deps, notes, plan"]
+        end
+        Decomp --> Term & Edit & Brow & PUI
+        Snap["Snapshot &amp; Rollback<br/>- VM state saves<br/>- Git checkpoints<br/>- Retry from save"] <--> VM
+        Human["Human Interaction<br/>- Chat interface<br/>- Approve/reject<br/>- Redirect tasks"] <--> Decomp
+    end
 ```
 
 ### Key Design Decisions
@@ -334,55 +280,15 @@ Deep Research is OpenAI's research agent built on top of GPT-4-class models. Giv
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                     DEEP RESEARCH AGENT                           |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +-----------+                                                    |
-|  | User Query|                                                    |
-|  +-----+-----+                                                    |
-|        |                                                           |
-|        v                                                           |
-|  +-----+------------------+                                       |
-|  | Research Planner        |                                       |
-|  | - Decompose question    |                                       |
-|  | - Identify sub-queries  |                                       |
-|  | - Prioritize sources    |                                       |
-|  +-----+------------------+                                       |
-|        |                                                           |
-|        v                                                           |
-|  +-----+------------------+     +-----------------------------+   |
-|  | Search & Browse Loop    |<--->| Web Browser Tool            |   |
-|  |                         |     | - Search (Bing/Google)      |   |
-|  | for each sub-query:     |     | - Navigate to URL           |   |
-|  |   1. Search             |     | - Read page content         |   |
-|  |   2. Open top results   |     | - Extract relevant sections |   |
-|  |   3. Extract facts      |     | - Follow links              |   |
-|  |   4. Assess credibility |     +-----------------------------+   |
-|  |   5. Note citations     |                                       |
-|  |   6. Identify gaps      |                                       |
-|  |   7. Search again       |                                       |
-|  +-----+------------------+                                       |
-|        |                                                           |
-|        v                                                           |
-|  +-----+------------------+                                       |
-|  | Synthesis Engine        |                                       |
-|  | - Cross-reference facts |                                       |
-|  | - Resolve conflicts     |                                       |
-|  | - Organize by theme     |                                       |
-|  | - Generate report       |                                       |
-|  | - Attach citations      |                                       |
-|  +-----+------------------+                                       |
-|        |                                                           |
-|        v                                                           |
-|  +-----+------------------+                                       |
-|  | Final Report            |                                       |
-|  | - Structured markdown   |                                       |
-|  | - Inline citations [1]  |                                       |
-|  | - Source list            |                                       |
-|  +------------------------+                                       |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph DeepResearch["DEEP RESEARCH AGENT"]
+        UQ["User Query"] --> Planner["Research Planner<br/>- Decompose question<br/>- Identify sub-queries<br/>- Prioritize sources"]
+        Planner --> Loop["Search &amp; Browse Loop (per sub-query)<br/>1. Search -&gt; 2. Open top results -&gt; 3. Extract facts<br/>-&gt; 4. Assess credibility -&gt; 5. Note citations<br/>-&gt; 6. Identify gaps -&gt; 7. Search again"]
+        Loop <--> Web["Web Browser Tool<br/>- Search (Bing / Google)<br/>- Navigate &amp; read page content<br/>- Extract sections &amp; follow links"]
+        Loop --> Synth["Synthesis Engine<br/>- Cross-reference facts &amp; resolve conflicts<br/>- Organize by theme &amp; attach citations"]
+        Synth --> Report["Final Report<br/>- Structured Markdown<br/>- Inline citations [1] + Source list"]
+    end
 ```
 
 ### The Research Loop
@@ -456,55 +362,16 @@ GitHub Copilot Workspace is an agent-powered development environment integrated 
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                   COPILOT WORKSPACE                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +-------------------+                                            |
-|  | Issue / Task       |                                            |
-|  | Description        |                                            |
-|  +---------+---------+                                            |
-|            |                                                       |
-|            v                                                       |
-|  +---------+---------+    +-----------------+                     |
-|  | 1. SPECIFICATION   |<-->| Repository      |                     |
-|  | - What to change   |    | Context Engine  |                     |
-|  | - Acceptance crit.  |    | - File index    |                     |
-|  | - Scope boundaries  |    | - Dep graph     |                     |
-|  +---------+---------+    | - Symbol table  |                     |
-|            |               | - Test mapping  |                     |
-|            v  [User Edit]  +-----------------+                     |
-|  +---------+---------+                                            |
-|  | 2. PLAN             |                                            |
-|  | - Files to modify   |                                            |
-|  | - Changes per file  |                                            |
-|  | - Ordered steps     |                                            |
-|  +---------+---------+                                            |
-|            |                                                       |
-|            v  [User Edit]                                          |
-|  +---------+---------+                                            |
-|  | 3. IMPLEMENTATION   |                                            |
-|  | - Generate diffs    |                                            |
-|  | - Multi-file edits  |                                            |
-|  | - Apply changes     |                                            |
-|  +---------+---------+                                            |
-|            |                                                       |
-|            v  [User Edit]                                          |
-|  +---------+---------+                                            |
-|  | 4. VALIDATION       |                                            |
-|  | - Run tests         |                                            |
-|  | - Check types       |                                            |
-|  | - Lint              |                                            |
-|  +---------+---------+                                            |
-|            |                                                       |
-|            v                                                       |
-|  +---------+---------+                                            |
-|  | 5. PULL REQUEST     |                                            |
-|  | - Generate PR       |                                            |
-|  | - Summary + diff    |                                            |
-|  +-------------------+                                            |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph CW["COPILOT WORKSPACE"]
+        Issue["Issue / Task Description"] --> S1["1. SPECIFICATION<br/>- What to change<br/>- Acceptance criteria<br/>- Scope boundaries"]
+        S1 <--> Repo["Repository Context Engine<br/>- File index &amp; Dep graph<br/>- Symbol table &amp; Test mapping"]
+        S1 -->|"User Edit"| S2["2. PLAN<br/>- Files to modify<br/>- Changes per file &amp; ordered steps"]
+        S2 -->|"User Edit"| S3["3. IMPLEMENTATION<br/>- Generate diffs<br/>- Multi-file edits"]
+        S3 -->|"User Edit"| S4["4. VALIDATION<br/>- Run tests, check types, lint"]
+        S4 --> S5["5. PULL REQUEST<br/>- Generate PR with summary + diff"]
+    end
 ```
 
 ### The Spec-Plan-Code-Test Pipeline
@@ -565,39 +432,22 @@ Cursor and Windsurf are IDE-native AI coding agents. Unlike CLI tools (Claude Co
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                     IDE AGENT (Cursor/Windsurf)                   |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +---------------------+     +-------------------------------+    |
-|  | VS Code Fork / Ext. |     | AI Backend Service            |    |
-|  |                      |     |                               |    |
-|  | +------------------+ |     | +---------------------------+ |    |
-|  | | Editor Surface   | |     | | Model Router              | |    |
-|  | | - Cursor position| |     | | - Tab: fast model (small) | |    |
-|  | | - Selection      | |     | | - Edit: mid model         | |    |
-|  | | - Visible code   | |     | | - Chat: large model       | |    |
-|  | +--------+---------+ |     | | - Agent: large + tools    | |    |
-|  |          |           |     | +---------------------------+ |    |
-|  | +--------+---------+ |     |                               |    |
-|  | | Context Engine   | |     | +---------------------------+ |    |
-|  | | - Open files     | |     | | Codebase Index            | |    |
-|  | | - Recent edits   | |     | | - Embeddings (all files)  | |    |
-|  | | - Cursor context | |     | | - Symbol graph            | |    |
-|  | | - Git diff       | |     | | - Semantic search         | |    |
-|  | | - Terminal output | |     | +---------------------------+ |    |
-|  | +------------------+ |     |                               |    |
-|  |                      |     | +---------------------------+ |    |
-|  | +------------------+ |     | | Prompt Builder            | |    |
-|  | | Interaction Modes| |     | | - System prompt           | |    |
-|  | | - Tab complete   | |     | | - Context injection       | |    |
-|  | | - Inline edit    | |     | | - Few-shot examples       | |    |
-|  | | - Chat panel     | |     | | - Instruction following   | |    |
-|  | | - Agent mode     | |     | +---------------------------+ |    |
-|  | +------------------+ |     +-------------------------------+    |
-|  +---------------------+                                          |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Client["VS Code Fork / Extension"]
+        Surf["Editor Surface<br/>- Cursor position<br/>- Selection<br/>- Visible code"]
+        Ctx["Context Engine<br/>- Open files &amp; Recent edits<br/>- Cursor context &amp; Git diff<br/>- Terminal output"]
+        Modes["Interaction Modes<br/>- Tab complete<br/>- Inline edit<br/>- Chat panel<br/>- Agent mode"]
+        Surf --> Ctx --> Modes
+    end
+
+    subgraph Backend["AI Backend Service"]
+        Router["Model Router<br/>- Tab: fast small model<br/>- Edit: mid model<br/>- Chat: large model<br/>- Agent: large + tools"]
+        Idx["Codebase Index<br/>- Embeddings (all files)<br/>- Symbol graph &amp; Semantic search"]
+        Prompt["Prompt Builder<br/>- System prompt &amp; Context injection<br/>- Few-shot examples"]
+    end
+
+    Client <--> Backend
 ```
 
 ### Interaction Modes
@@ -640,30 +490,11 @@ IDE agents typically offer multiple interaction modes, each with different laten
 
 The differentiating technology in IDE agents is the **codebase index**:
 
-```
-Repository Files
-      |
-      v
-+------------------+
-| Chunking Engine  |
-| - Split by func  |
-| - Overlap chunks |
-| - Preserve scope |
-+--------+---------+
-         |
-         v
-+--------+---------+
-| Embedding Model  |
-| - Code-specific  |
-| - Fast inference |
-+--------+---------+
-         |
-         v
-+--------+---------+
-| Vector Index     |   <--- Semantic search at query time
-| - HNSW / IVF    |
-| - Updated on save|
-+------------------+
+```mermaid
+flowchart TD
+    Files["Repository Files"] --> Chunk["Chunking Engine<br/>- Split by function/class AST<br/>- Overlap chunks &amp; preserve scope"]
+    Chunk --> Emb["Embedding Model<br/>- Code-specific embeddings<br/>- Fast inference"]
+    Emb --> Vec[("Vector Index (HNSW / IVF)<br/>- Incremental update on save<br/>- Semantic search at query time")]
 ```
 
 When the user asks a question or the agent needs context, the system:
@@ -728,62 +559,17 @@ Production customer support agents handle real customer conversations at scale. 
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                  CUSTOMER SUPPORT AGENT SYSTEM                    |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Customer Message                                                 |
-|       |                                                            |
-|       v                                                            |
-|  +----+------------------+                                        |
-|  | Input Classification   |                                        |
-|  | - Intent detection     |                                        |
-|  | - Sentiment analysis   |                                        |
-|  | - Language detection    |                                        |
-|  | - Priority scoring     |                                        |
-|  | - PII detection        |                                        |
-|  +----+------------------+                                        |
-|       |                                                            |
-|       v                                                            |
-|  +----+------------------+     +-----------------------------+    |
-|  | Router                 |     | Routing Rules               |    |
-|  | - AI-resolvable?       |---->| - Simple: AI handles        |    |
-|  | - Needs human?         |     | - Complex: Human + AI copilot|   |
-|  | - Escalation trigger?  |     | - Angry: Immediate human    |    |
-|  +----+------------------+     | - Legal: Human only         |    |
-|       |                        +-----------------------------+    |
-|       v                                                            |
-|  +----+------------------+     +-----------------------------+    |
-|  | AI Agent               |     | Knowledge Base               |    |
-|  | - Retrieve context     |<--->| - Product docs               |    |
-|  | - Generate response    |     | - Policy documents           |    |
-|  | - Execute actions      |     | - FAQ database               |    |
-|  | - Check guardrails     |     | - Past ticket resolutions    |    |
-|  +----+------------------+     +-----------------------------+    |
-|       |                                                            |
-|       v                                                            |
-|  +----+------------------+     +-----------------------------+    |
-|  | Action Engine          |     | Backend Systems              |    |
-|  | - Order lookup         |<--->| - CRM (Salesforce)           |    |
-|  | - Refund processing    |     | - Order management           |    |
-|  | - Account updates      |     | - Billing system             |    |
-|  | - Ticket creation      |     | - Inventory                  |    |
-|  +----+------------------+     +-----------------------------+    |
-|       |                                                            |
-|       v                                                            |
-|  +----+------------------+                                        |
-|  | Output Guardrails      |                                        |
-|  | - Brand voice check    |                                        |
-|  | - Hallucination detect |                                        |
-|  | - Policy compliance    |                                        |
-|  | - PII redaction        |                                        |
-|  | - Confidence threshold |                                        |
-|  +----+------------------+                                        |
-|       |                                                            |
-|       v                                                            |
-|  Response to Customer                                              |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Msg["Customer Message"] --> Class["Input Classification<br/>- Intent &amp; Sentiment<br/>- Language &amp; Priority<br/>- PII detection"]
+    Class --> Router["Router<br/>- AI-resolvable?<br/>- Needs human?<br/>- Escalation trigger?"]
+    Router --> Rules["Routing Rules<br/>- Simple: AI handles<br/>- Complex: Human + AI copilot<br/>- Angry / Legal: Immediate human"]
+    Router --> Agent["AI Agent<br/>- Retrieve context<br/>- Generate response<br/>- Execute actions"]
+    Agent <--> KB[("Knowledge Base<br/>- Product &amp; policy docs<br/>- FAQ &amp; past tickets")]
+    Agent --> Act["Action Engine<br/>- Order lookup<br/>- Refund processing<br/>- Account updates &amp; tickets"]
+    Act <--> Back["Backend Systems<br/>- CRM (Salesforce)<br/>- Order, Billing, Inventory"]
+    Act --> Guard["Output Guardrails<br/>- Brand voice &amp; Policy compliance<br/>- Hallucination &amp; PII check<br/>- Confidence threshold"]
+    Guard --> Resp["Response to Customer"]
 ```
 
 ### The Escalation Decision
@@ -866,61 +652,16 @@ Data analysis agents (exemplified by ChatGPT's Code Interpreter / Advanced Data 
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                    DATA ANALYSIS AGENT                            |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +------------+    +-------------------------------------------+ |
-|  | User Query  |    | Data Sources                              | |
-|  | + Uploaded   |    | - CSV/Excel uploads                      | |
-|  |   Files      |    | - Database connections                    | |
-|  +------+------+    | - API endpoints                           | |
-|         |           | - Cloud storage (S3, GCS)                 | |
-|         v           +-------------------------------------------+ |
-|  +------+------+                                                  |
-|  | Query        |                                                  |
-|  | Understanding|                                                  |
-|  | - What data? |                                                  |
-|  | - What       |                                                  |
-|  |   analysis?  |                                                  |
-|  | - What       |                                                  |
-|  |   output?    |                                                  |
-|  +------+------+                                                  |
-|         |                                                          |
-|         v                                                          |
-|  +------+------+    +-------------------+                         |
-|  | Code         |    | Sandbox           |                         |
-|  | Generation   |--->| (Jupyter kernel)  |                         |
-|  | - pandas     |    |                   |                         |
-|  | - SQL        |    | - Execute code    |                         |
-|  | - matplotlib |    | - Capture output  |                         |
-|  | - seaborn    |    | - Capture errors  |                         |
-|  | - sklearn    |    | - Capture plots   |                         |
-|  +------+------+    +--------+----------+                         |
-|         |                    |                                     |
-|         v                    v                                     |
-|  +------+--------------------+------+                             |
-|  | Result Inspection                 |                             |
-|  | - Did code run successfully?      |                             |
-|  | - Does output answer the question?|                             |
-|  | - Are there anomalies in data?    |                             |
-|  | - Should I dig deeper?            |                             |
-|  +------+---------------------------+                             |
-|         |                                                          |
-|    +----+----+                                                    |
-|    | Iterate? |--- YES ---> back to Code Generation               |
-|    +----+----+                                                    |
-|         | NO                                                       |
-|         v                                                          |
-|  +------+------+                                                  |
-|  | Present      |                                                  |
-|  | Results      |                                                  |
-|  | - Charts     |                                                  |
-|  | - Tables     |                                                  |
-|  | - Narrative  |                                                  |
-|  +-------------+                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    UQ["User Query + Uploaded Files"] --> QU["Query Understanding<br/>- What data?<br/>- What analysis?<br/>- What output?"]
+    Src[("Data Sources<br/>- CSV / Excel uploads<br/>- Database connections<br/>- API endpoints &amp; S3/GCS")] --> QU
+    QU --> Code["Code Generation<br/>(pandas, SQL, matplotlib, seaborn, sklearn)"]
+    Code --> Sand["Sandbox (Jupyter Kernel)<br/>Execute code &amp; capture output, errors, plots"]
+    Code & Sand --> Insp["Result Inspection<br/>- Did code run successfully?<br/>- Does output answer the question?<br/>- Any anomalies?"]
+    Insp --> Iter{"Iterate?"}
+    Iter -->|"YES"| Code
+    Iter -->|"NO"| Pres["Present Results<br/>(Charts, Tables, Narrative)"]
 ```
 
 ### The Iterative Analysis Loop
@@ -1022,52 +763,15 @@ Workflow automation agents (Zapier AI, n8n AI nodes, Make.com AI) add LLM-powere
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|               WORKFLOW AUTOMATION AGENT SYSTEM                    |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Trigger                                                          |
-|  (email, webhook, schedule, form submission)                      |
-|       |                                                            |
-|       v                                                            |
-|  +----+---+    +----+---+    +----+---+    +----+---+            |
-|  | Step 1  |--->| Step 2  |--->| Step 3  |--->| Step 4  |         |
-|  | Extract |    | AI      |    | Route   |    | Action  |         |
-|  | Data    |    | Process |    | Decision|    | Execute |         |
-|  +---------+    +---------+    +---------+    +---------+         |
-|                                                                    |
-|  Example Workflow: Customer Email Triage                          |
-|                                                                    |
-|  +----------+   +---------+   +-----------+   +----------+       |
-|  | Gmail:   |   | AI:     |   | Router:   |   | Actions: |       |
-|  | New email|-->| Classify|-->| Priority  |-->| High: Slack|     |
-|  | received |   | intent, |   | & route   |   | Med: Ticket|     |
-|  |          |   | extract |   |           |   | Low: Auto  |     |
-|  |          |   | entities|   |           |   |   reply    |     |
-|  +----------+   +---------+   +-----------+   +----------+       |
-|                                                                    |
-|  +-------------------------------------------------------------+ |
-|  | AI Node Capabilities                                         | |
-|  |                                                               | |
-|  | +------------------+  +------------------+  +--------------+ | |
-|  | | Classification   |  | Content          |  | Extraction   | | |
-|  | | - Intent detect  |  | Generation       |  | - Parse PDFs | | |
-|  | | - Sentiment      |  | - Draft replies  |  | - Read imgs  | | |
-|  | | - Priority       |  | - Summarize      |  | - Structure  | | |
-|  | | - Category       |  | - Translate      |  |   data       | | |
-|  | +------------------+  +------------------+  +--------------+ | |
-|  +-------------------------------------------------------------+ |
-|                                                                    |
-|  +-------------------------------------------------------------+ |
-|  | Orchestration Layer                                          | |
-|  | - Retry with backoff on failures                             | |
-|  | - Dead letter queue for unprocessable items                  | |
-|  | - Rate limiting per API endpoint                             | |
-|  | - Audit log of all AI decisions                              | |
-|  | - Cost tracking per workflow run                             | |
-|  +-------------------------------------------------------------+ |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph WF["WORKFLOW AUTOMATION AGENT SYSTEM"]
+        Trig["Trigger<br/>(email, webhook, schedule, form)"] --> S1["Step 1: Extract Data<br/>(e.g., Gmail new email)"]
+        S1 --> S2["Step 2: AI Process<br/>- Classification (intent, sentiment, priority)<br/>- Content Gen (draft replies, summarize)<br/>- Extraction (parse PDFs, images, structured JSON)"]
+        S2 --> S3["Step 3: Route Decision<br/>(Priority &amp; routing rules)"]
+        S3 --> S4["Step 4: Action Execute<br/>- High: Slack alert<br/>- Med: Create Ticket<br/>- Low: Auto-reply"]
+        Orch["Orchestration Layer:<br/>Retry with backoff, DLQ, rate limiting, audit log, cost tracking"] -.-> S1 & S2 & S3 & S4
+    end
 ```
 
 ### AI Node Patterns
@@ -1151,62 +855,15 @@ Browser automation agents use LLMs to control a web browser -- navigating pages,
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|                  BROWSER AUTOMATION AGENT                         |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +------------+                                                   |
-|  | User Goal   |  "Book a flight from SFO to JFK on March 25"   |
-|  +------+-----+                                                   |
-|         |                                                          |
-|         v                                                          |
-|  +------+-----+                                                   |
-|  | Planner     |                                                   |
-|  | 1. Go to airline site                                          |
-|  | 2. Enter departure: SFO                                        |
-|  | 3. Enter arrival: JFK                                          |
-|  | 4. Select date: March 25                                       |
-|  | 5. Search flights                                              |
-|  | 6. Select cheapest option                                      |
-|  +------+-----+                                                   |
-|         |                                                          |
-|         v                                                          |
-|  +------+-------------------------------------------------+      |
-|  | Execution Loop                                          |      |
-|  |                                                         |      |
-|  |  +------------------+    +------------------------+    |      |
-|  |  | Page Observer     |    | Browser Controller     |    |      |
-|  |  |                   |    | (Playwright/Puppeteer) |    |      |
-|  |  | - Screenshot      |    |                        |    |      |
-|  |  | - DOM snapshot    |    | - navigate(url)        |    |      |
-|  |  | - Accessibility   |    | - click(selector)      |    |      |
-|  |  |   tree            |    | - type(selector, text) |    |      |
-|  |  | - Visible text    |    | - select(selector,val) |    |      |
-|  |  +--------+---------+    | - scroll(direction)    |    |      |
-|  |           |               | - wait(condition)      |    |      |
-|  |           v               | - screenshot()         |    |      |
-|  |  +--------+---------+    +----------+-------------+    |      |
-|  |  | Action Decider    |               ^                  |      |
-|  |  | (LLM)             |               |                  |      |
-|  |  | Given:            |               |                  |      |
-|  |  |  - Current page   +---------------+                  |      |
-|  |  |  - Goal           |  action to execute               |      |
-|  |  |  - History        |                                  |      |
-|  |  | Output:           |                                  |      |
-|  |  |  - Next action    |                                  |      |
-|  |  +------------------+                                  |      |
-|  +--------------------------------------------------------+      |
-|                                                                    |
-|  +------------------------------+                                 |
-|  | Page Representation Options   |                                 |
-|  |                               |                                 |
-|  | 1. Screenshot (vision model)  | -- Most general, most tokens   |
-|  | 2. Accessibility tree         | -- Structured, medium tokens   |
-|  | 3. Simplified DOM             | -- Detailed, many tokens       |
-|  | 4. Visible text only          | -- Cheapest, least context     |
-|  +------------------------------+                                 |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Goal["User Goal:<br/>'Book a flight from SFO to JFK on March 25'"] --> Plan["Planner<br/>1. Go to airline site -&gt; 2. Enter SFO -&gt; 3. Enter JFK<br/>-&gt; 4. Select March 25 -&gt; 5. Search -&gt; 6. Select cheapest"]
+    subgraph Loop["Browser Execution Loop"]
+        Obs["Page Observer<br/>1. Screenshot (vision)<br/>2. Accessibility tree (structured)<br/>3. Simplified DOM<br/>4. Visible text"] --> Decider["Action Decider (LLM)<br/>Given: Current page + Goal + History<br/>Output: Next action"]
+        Decider -->|"action to execute"| Ctrl["Browser Controller (Playwright / Puppeteer)<br/>navigate, click, type, select, scroll, wait, screenshot"]
+        Ctrl --> Obs
+    end
+    Plan --> Obs
 ```
 
 ### Page Representation Strategy
@@ -1302,10 +959,10 @@ Each action returns the new page state, forming the observation for the next LLM
 
 Every successful agent follows the same fundamental pattern, regardless of domain:
 
-```
-Observe  -->  Reason  -->  Act  -->  Observe Result  -->  Reflect
-   ^                                                         |
-   +---------------------------------------------------------+
+```mermaid
+flowchart LR
+    Obs["Observe"] --> Reason["Reason"] --> Act["Act"] --> Res["Observe Result"] --> Refl["Reflect"]
+    Refl --> Obs
 ```
 
 Claude Code observes file contents, reasons about what to change, edits, and checks if the edit was correct. Deep Research observes search results, reasons about gaps, searches again, and assesses completeness. Customer support agents observe the customer message, reason about intent, take an action, and check if the issue was resolved.
@@ -1463,35 +1120,13 @@ Step 7: SCALE & COST
 
 **Step 2: Architecture**
 
-```
-PR Opened (webhook)
-     |
-     v
-+----+----+    +------------------+
-| Diff     |    | Repository Index |
-| Parser   |    | - File tree      |
-+-+--------+    | - Style guide    |
-  |             | - Test patterns  |
-  v             | - Past reviews   |
-+-+----------+  +--------+---------+
-| File-Level  |           |
-| Analyzer    |<----------+
-| (per file   |
-|  in diff)   |
-+------+------+
-       |
-       v
-+------+------+
-| Comment      |
-| Aggregator   |
-| - Deduplicate|
-| - Prioritize |
-| - Format     |
-+------+------+
-       |
-       v
-  Post Comments
-  via GitHub API
+```mermaid
+flowchart TD
+    PR["PR Opened (Webhook)"] --> Diff["Diff Parser"]
+    Diff --> Analyzer["File-Level Analyzer<br/>(per file in diff)"]
+    Idx[("Repository Index<br/>- File tree &amp; Style guide<br/>- Test patterns &amp; Past reviews")] --> Analyzer
+    Analyzer --> Agg["Comment Aggregator<br/>- Deduplicate<br/>- Prioritize<br/>- Format"]
+    Agg --> Post["Post Comments via GitHub API"]
 ```
 
 **Step 3: Tools**
@@ -1537,50 +1172,13 @@ PR Opened (webhook)
 
 **Step 2: Architecture**
 
-```
-User Preferences
-      |
-      v
-+-----+-------+
-| Preference    |
-| Parser        |
-| - Dates       |
-| - Budget tier |
-| - Interests   |
-| - Constraints |
-+-----+--------+
-      |
-      v
-+-----+--------+    +-------------------+
-| Research       |    | Knowledge Sources  |
-| Agent          |<-->| - Travel APIs      |
-| - Destinations |    | - Review sites     |
-| - Activities   |    | - Weather data     |
-| - Restaurants  |    | - Event calendars  |
-| - Logistics    |    | - Price databases  |
-+-----+---------+    +-------------------+
-      |
-      v
-+-----+---------+
-| Itinerary      |
-| Planner        |
-| - Time slots   |
-| - Geography    |
-|   (minimize    |
-|    travel)     |
-| - Pacing       |
-| - Alternatives |
-+-----+---------+
-      |
-      v
-+-----+---------+
-| Output         |
-| Formatter      |
-| - Day-by-day   |
-| - Maps links   |
-| - Cost estimate |
-| - Booking links |
-+---------------+
+```mermaid
+flowchart TD
+    Pref["User Preferences"] --> Parse["Preference Parser<br/>- Dates &amp; Budget tier<br/>- Interests &amp; Constraints"]
+    Parse --> Res["Research Agent<br/>- Destinations &amp; Activities<br/>- Restaurants &amp; Logistics"]
+    Res <--> KS[("Knowledge Sources<br/>- Travel APIs &amp; Review sites<br/>- Weather, Events, Price DBs")]
+    Res --> Plan["Itinerary Planner<br/>- Time slots &amp; Geography (minimize travel)<br/>- Pacing &amp; Alternatives"]
+    Plan --> Out["Output Formatter<br/>- Day-by-day schedule<br/>- Maps, Cost estimate, Booking links"]
 ```
 
 **Step 3: Tools**
@@ -1656,33 +1254,26 @@ For each, identify: the action space, the observation space, the context require
 
 ### Decision Framework: Choosing an Agent Architecture
 
-```
-Is the task a single-turn generation?
-  YES --> Not an agent. Use a simple LLM call.
-  NO  --> Continue.
+```mermaid
+flowchart TD
+    Q1{"Single-turn generation?"}
+    Q1 -->|"YES"| A1["Not an agent: Use simple LLM call"]
+    Q1 -->|"NO"| Q2{"Requires taking actions in the world?"}
+    Q2 -->|"NO"| A2["RAG + Generate (Research / Q&amp;A)"]
+    Q2 -->|"YES"| Q3{"Requires multiple tools in sequence?"}
+    Q3 -->|"NO"| A3["Single tool-use loop"]
+    Q3 -->|"YES"| Q3b{"Does order matter?"}
+    Q3b -->|"YES"| A3b["Plan-then-Execute (Copilot Workspace pattern)"]
+    Q3b -->|"NO"| A3c["Parallel tool calls (Claude Code pattern)"]
 
-Does the task require taking actions in the world?
-  YES --> Tool-use loop or plan-then-execute
-  NO  --> RAG + generate (research/Q&A)
+    A3 & A3b & A3c --> Q4{"Long-horizon coherence (&gt;20 steps)?"}
+    Q4 -->|"YES"| A4["Explicit planner + checkpoints (Devin pattern)"]
+    Q4 -->|"NO"| A4b["Simple tool-use loop with conversation history"]
 
-Does the task require multiple tools in sequence?
-  YES --> Does order matter?
-    YES --> Plan-then-execute (Copilot Workspace pattern)
-    NO  --> Parallel tool calls (Claude Code pattern)
-  NO  --> Single tool-use loop
-
-Does the task require long-horizon coherence (>20 steps)?
-  YES --> Explicit planner + checkpoints (Devin pattern)
-  NO  --> Simple tool-use loop with conversation history
-
-Does the task involve untrusted input?
-  YES --> Input validation + output guardrails + escalation
-  NO  --> Standard error handling
-
-What is the latency budget?
-  < 1 second  --> Small model, pre-computed, cached
-  1-10 seconds --> Standard tool-use loop
-  > 10 seconds --> Async execution, progress updates
+    A4 & A4b --> Q5{"Latency Budget &amp; Untrusted Input"}
+    Q5 -->|"&lt;1s"| L1["Small model, pre-computed, cached"]
+    Q5 -->|"1-10s"| L2["Standard tool-use loop (+ Guardrails if untrusted)"]
+    Q5 -->|"&gt;10s"| L3["Async execution + progress updates (+ Guardrails if untrusted)"]
 ```
 
 ### Key Metrics by Agent Type

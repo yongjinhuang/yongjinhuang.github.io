@@ -141,28 +141,19 @@ Q: What monitoring and alerting do you set up for edge functions?
 
 ## Architecture Overview
 
-```
-+-------------------------------------------------------------------+
-|                    MODERN BACKEND 2026 STACK                       |
-+-------------------------------------------------------------------+
-|                                                                   |
-|  CLIENTS        API LAYER           COMPUTE           DATA        |
-|  -------        ---------           -------           ----        |
-|                                                                   |
-|  Browser  -->   tRPC       -->   Edge Functions  -->  Neon        |
-|  Mobile   -->   GraphQL    -->   Serverless      -->  Turso       |
-|  CLI      -->   gRPC       -->   Containers      -->  Supabase    |
-|  IoT      -->   REST/OAS   -->   Long-running    -->  Redis       |
-|                                                                   |
-|  RUNTIMES       FRAMEWORKS        OBSERVABILITY                   |
-|  --------       ----------        -------------                   |
-|                                                                   |
-|  Node 22+       Next.js 15        OpenTelemetry                   |
-|  Bun 1.x        Hono              Grafana/Loki                    |
-|  Deno 2.0       Fastify           Sentry                          |
-|                 Elysia            Axiom                            |
-|                                                                   |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Stack["MODERN BACKEND 2026 STACK"]
+        Clients["CLIENTS<br/>- Browser<br/>- Mobile<br/>- CLI<br/>- IoT"]
+        API["API LAYER<br/>- tRPC<br/>- GraphQL<br/>- gRPC<br/>- REST / OpenAPI"]
+        Compute["COMPUTE<br/>- Edge Functions<br/>- Serverless<br/>- Containers<br/>- Long-running"]
+        Data[("DATA<br/>- Neon<br/>- Turso<br/>- Supabase<br/>- Redis")]
+        Clients --> API --> Compute --> Data
+
+        Runtimes["RUNTIMES<br/>Node 22+ / Bun 1.x / Deno 2.0"]
+        Frameworks["FRAMEWORKS<br/>Next.js 15 / Hono / Fastify / Elysia"]
+        Obs["OBSERVABILITY<br/>OpenTelemetry / Grafana+Loki / Sentry / Axiom"]
+    end
 ```
 
 ## Prerequisites

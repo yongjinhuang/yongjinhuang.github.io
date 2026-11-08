@@ -28,58 +28,29 @@ An AI agent is a system that uses an LLM as its "brain" to autonomously decide w
 actions to take, execute those actions using tools, observe the results, and iterate
 until a task is complete.
 
-```
-+------------------------------------------------------------------+
-| CHATBOT vs AGENT                                                  |
-+------------------------------------------------------------------+
-|                                                                    |
-|  CHATBOT (Reactive)           AGENT (Autonomous)                  |
-|  +------------------------+   +------------------------------+    |
-|  | User asks question     |   | User gives goal              |    |
-|  | Model answers          |   | Agent plans steps            |    |
-|  | User asks follow-up    |   | Agent calls tools            |    |
-|  | Model answers again    |   | Agent observes results        |    |
-|  | ...                    |   | Agent decides next action     |    |
-|  | (no action, no tools)  |   | Agent iterates until done     |    |
-|  +------------------------+   +------------------------------+    |
-|                                                                    |
-|  Key difference: agents have TOOLS and can take ACTIONS           |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Chat["CHATBOT (Reactive — No Tools / Actions)"]
+        C1["User asks question"] --> C2["Model answers"] --> C3["User asks follow-up"] --> C4["Model answers again"]
+    end
+    subgraph Agent["AGENT (Autonomous — Has Tools &amp; Takes Actions)"]
+        A1["User gives goal"] --> A2["Agent plans steps"] --> A3["Agent calls tools"] --> A4["Agent observes results"] --> A5{"Done?"}
+        A5 -->|"Next action"| A2
+    end
 ```
 
 ### Agent Loop
 
 Every agent follows the same fundamental loop:
 
-```
-                    +-------------------+
-                    |   User Goal       |
-                    +--------+----------+
-                             |
-                             v
-                    +-------------------+
-              +---->|   Think/Plan      |<----+
-              |     | (LLM reasoning)   |     |
-              |     +--------+----------+     |
-              |              |                |
-              |              v                |
-              |     +-------------------+     |
-              |     |   Act             |     |
-              |     | (call tool/API)   |     |
-              |     +--------+----------+     |
-              |              |                |
-              |              v                |
-              |     +-------------------+     |
-              |     |   Observe         |     |
-              +-----| (check result)    |-----+
-                    +--------+----------+
-                             |
-                     (task complete?)
-                             |
-                             v
-                    +-------------------+
-                    |   Return Result   |
-                    +-------------------+
+```mermaid
+flowchart TD
+    Goal["User Goal"] --> Think["Think / Plan<br/>(LLM reasoning)"]
+    Think --> Act["Act<br/>(Call tool / API)"]
+    Act --> Obs["Observe<br/>(Check result)"]
+    Obs --> Done{"Task complete?"}
+    Done -->|"No"| Think
+    Done -->|"Yes"| Res["Return Result"]
 ```
 
 ---
@@ -167,24 +138,12 @@ Task: {task}
 
 A dispatcher that routes queries to specialized sub-agents based on intent.
 
-```
-+------------------------------------------------------------------+
-|                    ROUTER AGENT                                    |
-+------------------------------------------------------------------+
-|                                                                    |
-|  User Query --> [Router LLM] --> Which specialist?                |
-|                      |                                             |
-|        +-------------+---------------+                             |
-|        |             |               |                             |
-|        v             v               v                             |
-|  +----------+  +----------+   +----------+                         |
-|  | Code     |  | Research |   | Data     |                         |
-|  | Agent    |  | Agent    |   | Agent    |                         |
-|  | (writes, |  | (search, |   | (SQL,    |                         |
-|  |  runs    |  |  browse, |   |  charts, |                         |
-|  |  code)   |  |  summarize)|  |  analyze)|                        |
-|  +----------+  +----------+   +----------+                         |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    UQ["User Query"] --> Router["Router LLM<br/>(Which specialist?)"]
+    Router --> Code["Code Agent<br/>(writes, runs code)"]
+    Router --> Research["Research Agent<br/>(search, browse, summarize)"]
+    Router --> Data["Data Agent<br/>(SQL, charts, analyze)"]
 ```
 
 ### Architecture Comparison
@@ -337,20 +296,16 @@ for block in response.content:
 
 ### Tool Design Best Practices
 
-```
-+------------------------------------------------------------------+
-| TOOL DESIGN CHECKLIST                                             |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. CLEAR NAMES: Use verb_noun format (get_weather, search_docs) |
-|  2. GOOD DESCRIPTIONS: Help the LLM know WHEN to use the tool   |
-|  3. TYPED PARAMETERS: Use JSON Schema with descriptions          |
-|  4. BOUNDED OUTPUT: Return concise results, not entire databases |
-|  5. ERROR MESSAGES: Return helpful errors the LLM can act on     |
-|  6. IDEMPOTENT: Same input = same output (when possible)         |
-|  7. SAFE BY DEFAULT: Read-only tools first, write tools gated    |
-|  8. TIMEOUT: Set timeouts on all external calls                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Checklist["AGENT TOOL DESIGN CHECKLIST"]
+        T1["1. CLEAR NAMES: verb_noun format (get_weather, search_docs)"]
+        T2["2. GOOD DESCRIPTIONS: Explain WHEN and WHY to use the tool"]
+        T3["3. TYPED PARAMETERS: Strict JSON Schema with field descriptions"]
+        T4["4. BOUNDED OUTPUT: Return concise results, never dump full tables"]
+        T5["5. ACTIONABLE ERRORS: Return error messages the LLM can self-correct on"]
+        T6["6. IDEMPOTENT &amp; SAFE: Read-only by default, gate mutating tools + set timeouts"]
+    end
 ```
 
 ---
@@ -362,36 +317,13 @@ experiences.
 
 ### Memory Types
 
-```
-+------------------------------------------------------------------+
-|                    AGENT MEMORY SYSTEMS                            |
-+------------------------------------------------------------------+
-|                                                                    |
-|  SHORT-TERM MEMORY (Working Memory)                               |
-|  +------------------------------------------------------------+   |
-|  | Current conversation context                                |   |
-|  | Tool call results from current session                      |   |
-|  | Implementation: conversation message history                |   |
-|  | Lifetime: single session/conversation                       |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-|  LONG-TERM MEMORY (Persistent)                                    |
-|  +------------------------------------------------------------+   |
-|  | Facts learned across sessions                               |   |
-|  | User preferences and history                                |   |
-|  | Implementation: vector DB + key-value store                 |   |
-|  | Lifetime: indefinite                                        |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-|  EPISODIC MEMORY (Experience)                                     |
-|  +------------------------------------------------------------+   |
-|  | Summaries of past task executions                           |   |
-|  | What worked, what failed, lessons learned                   |   |
-|  | Implementation: structured logs + embeddings                |   |
-|  | Lifetime: indefinite, pruned by relevance                   |   |
-|  +------------------------------------------------------------+   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Memory["AGENT MEMORY SYSTEMS"]
+        STM["SHORT-TERM MEMORY (Working Memory)<br/>- Current conversation context &amp; session tool results<br/>- Implementation: message history (single session)"]
+        LTM["LONG-TERM MEMORY (Persistent)<br/>- Facts, user preferences, cross-session knowledge<br/>- Implementation: Vector DB + Key-Value Store (indefinite)"]
+        Epi["EPISODIC MEMORY (Experience)<br/>- Summaries of past task executions (what worked/failed)<br/>- Implementation: structured logs + embeddings (pruned by relevance)"]
+    end
 ```
 
 ### Memory Implementation
@@ -501,40 +433,20 @@ Complex tasks benefit from multiple specialized agents working together.
 
 ### Orchestration Patterns
 
-```
-Pattern 1: SEQUENTIAL PIPELINE
-+--------+    +--------+    +--------+    +--------+
-| Agent1 |--->| Agent2 |--->| Agent3 |--->| Agent4 |
-| Research|    | Analyze|    | Write  |    | Review |
-+--------+    +--------+    +--------+    +--------+
+```mermaid
+flowchart TD
+    subgraph P1["Pattern 1: SEQUENTIAL PIPELINE"]
+        S1["Agent 1<br/>Research"] --> S2["Agent 2<br/>Analyze"] --> S3["Agent 3<br/>Write"] --> S4["Agent 4<br/>Review"]
+    end
 
-Pattern 2: PARALLEL FAN-OUT / FAN-IN
-                +--------+
-          +---->| Agent1 |----+
-          |     | Security|    |
-+-------+ |    +--------+     |    +--------+
-| Router|-+                    +--->| Merger |
-|       |-+    +--------+     |    |        |
-+-------+ |    | Agent2 |    |    +--------+
-          +--->| Perf   |----+
-          |    +--------+     |
-          |    +--------+     |
-          +--->| Agent3 |----+
-               | Quality|
-               +--------+
+    subgraph P2["Pattern 2: PARALLEL FAN-OUT / FAN-IN"]
+        R["Router"] --> PA1["Agent 1<br/>Security"] & PA2["Agent 2<br/>Perf"] & PA3["Agent 3<br/>Quality"]
+        PA1 & PA2 & PA3 --> M["Merger"]
+    end
 
-Pattern 3: SUPERVISOR
-              +------------+
-              | Supervisor  |
-              | Agent       |
-              +------+------+
-                     |
-         +-----------+-----------+
-         |           |           |
-    +----v---+  +----v---+  +----v---+
-    | Worker |  | Worker |  | Worker |
-    | Agent1 |  | Agent2 |  | Agent3 |
-    +--------+  +--------+  +--------+
+    subgraph P3["Pattern 3: SUPERVISOR"]
+        Sup["Supervisor Agent"] --> W1["Worker Agent 1"] & W2["Worker Agent 2"] & W3["Worker Agent 3"]
+    end
 ```
 
 ### Multi-Agent Implementation
@@ -875,36 +787,16 @@ print(result)
 
 ### Common Agent Failure Modes
 
-```
-+------------------------------------------------------------------+
-| AGENT FAILURE MODES AND MITIGATIONS                               |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. INFINITE LOOPS                                                |
-|     Agent keeps calling the same tool with same arguments         |
-|     Fix: max_iterations, loop detection, dedup tool calls         |
-|                                                                    |
-|  2. HALLUCINATED TOOL CALLS                                       |
-|     Agent invents tools that do not exist                         |
-|     Fix: strict tool validation, clear tool descriptions          |
-|                                                                    |
-|  3. WRONG TOOL SELECTION                                          |
-|     Agent picks the wrong tool for the task                       |
-|     Fix: better descriptions, few-shot examples, tool routing     |
-|                                                                    |
-|  4. MALFORMED ARGUMENTS                                           |
-|     Agent passes invalid JSON or wrong parameter types            |
-|     Fix: JSON schema validation, retry with error message         |
-|                                                                    |
-|  5. TOOL EXECUTION FAILURES                                       |
-|     External API timeout, rate limit, error                       |
-|     Fix: retry with backoff, fallback tools, error reporting      |
-|                                                                    |
-|  6. CONTEXT OVERFLOW                                              |
-|     Too many tool results fill the context window                 |
-|     Fix: summarize results, limit result size, sliding window     |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Failures["AGENT FAILURE MODES &amp; MITIGATIONS"]
+        F1["1. Infinite Loops<br/>Fix: max_iterations, loop detection, dedup tool calls"]
+        F2["2. Hallucinated Tool Calls<br/>Fix: strict tool registry validation, clear descriptions"]
+        F3["3. Wrong Tool Selection<br/>Fix: better descriptions, few-shot examples, semantic routing"]
+        F4["4. Malformed Arguments<br/>Fix: JSON Schema validation + self-correction retry"]
+        F5["5. Tool Execution Failures<br/>Fix: exponential backoff retry, fallback tools, circuit breaker"]
+        F6["6. Context Overflow<br/>Fix: truncate/summarize tool outputs, sliding window"]
+    end
 ```
 
 ### Retry Logic
@@ -1075,17 +967,12 @@ measurable quality improvement from specialization.
 
 ### Agent Architecture Decision Tree
 
-```
-How complex is your task?
-  |
-  +--> Simple (1-3 tools, linear flow)
-  |      --> Build from scratch, no framework needed
-  |
-  +--> Medium (3-10 tools, some branching)
-  |      --> ReAct pattern with LangGraph or custom
-  |
-  +--> Complex (10+ tools, parallel work, human-in-loop)
-         --> Multi-agent with LangGraph or supervisor pattern
+```mermaid
+flowchart LR
+    Q{"How complex is your task?"}
+    Q -->|"Simple (1-3 tools, linear flow)"| A1["Build from scratch<br/>(Direct SDK tool loop, no framework)"]
+    Q -->|"Medium (3-10 tools, branching)"| A2["ReAct pattern<br/>(LangGraph state machine or custom)"]
+    Q -->|"Complex (10+ tools, parallel, HITL)"| A3["Multi-agent architecture<br/>(LangGraph / Supervisor pattern)"]
 ```
 
 ### Tool Calling Checklist

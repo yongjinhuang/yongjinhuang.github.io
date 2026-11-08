@@ -28,19 +28,10 @@ A comprehensive interview-prep guide for agentic engineers covering evaluation m
 
 Traditional software testing relies on deterministic inputs producing deterministic outputs. Agents break every assumption that conventional testing is built on.
 
-```
-Traditional Software             Agentic Systems
-+------------------+             +------------------+
-| Input  -> Output |             | Input            |
-| Deterministic    |             |   -> Plan        |
-| Single step      |             |   -> Tool call 1 |
-| Binary pass/fail |             |   -> Observe     |
-|                  |             |   -> Tool call 2 |
-|                  |             |   -> Re-plan     |
-|                  |             |   -> Tool call 3 |
-|                  |             |   -> Output      |
-| Easy to test     |             | Hard to test     |
-+------------------+             +------------------+
+```mermaid
+flowchart LR
+    Trad["Traditional Software (Easy to Test)<br/>Input -&gt; Output<br/>- Deterministic<br/>- Single step<br/>- Binary pass/fail"]
+    Agent["Agentic Systems (Hard to Test)<br/>Input -&gt; Plan -&gt; Tool Call 1 -&gt; Observe<br/>-&gt; Tool Call 2 -&gt; Re-plan -&gt; Tool Call 3 -&gt; Output<br/>- Non-deterministic trajectories"]
 ```
 
 ### Non-Determinism
@@ -126,25 +117,15 @@ Evaluating agents often requires the same capabilities as the agent itself. If y
 
 A complete agent evaluation framework measures across multiple dimensions simultaneously.
 
-```
-                    Evaluation Dimensions
-    +-----------------------------------------------+
-    |                                               |
-    |   Task Completion    Efficiency    Safety      |
-    |   +-------------+  +---------+  +---------+  |
-    |   | Did it work?|  | How fast?|  | Any harm?|  |
-    |   | Correct?    |  | # steps  |  | Data leak?|  |
-    |   | Complete?   |  | # tokens |  | Unsafe op?|  |
-    |   +-------------+  +---------+  +---------+  |
-    |                                               |
-    |   Cost              User Satisfaction          |
-    |   +-------------+  +---------------------+   |
-    |   | $/task       |  | Would user accept?  |   |
-    |   | $/success    |  | Quality rating?     |   |
-    |   | ROI vs human |  | Trust calibration?  |   |
-    |   +-------------+  +---------------------+   |
-    |                                               |
-    +-----------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Dims["AGENT EVALUATION DIMENSIONS"]
+        D1["Task Completion<br/>- Did it work?<br/>- Correct &amp; complete?"]
+        D2["Efficiency<br/>- How fast?<br/>- # steps &amp; # tokens"]
+        D3["Safety<br/>- Any harm or data leak?<br/>- Any unsafe operation?"]
+        D4["Cost<br/>- $/task &amp; $/success<br/>- ROI vs human"]
+        D5["User Satisfaction<br/>- Would user accept?<br/>- Quality &amp; trust calibration"]
+    end
 ```
 
 ### Dimension 1: Task Completion
@@ -265,28 +246,14 @@ Ultimately measured through:
 
 ### Overview of Major Agent Benchmarks
 
-```
-+-----------------------------------------------------------+
-|                    Agent Benchmarks Landscape              |
-+-----------------------------------------------------------+
-|                                                           |
-| Code Generation          Reasoning & QA                   |
-| +--------------+        +--------------+                  |
-| | HumanEval    |        | GAIA         |                  |
-| | MBPP         |        | MMLU         |                  |
-| | SWE-bench    |        | ARC          |                  |
-| | CodeContests |        | GSM8K        |                  |
-| +--------------+        +--------------+                  |
-|                                                           |
-| Web & Computer Use       Multi-Tool                       |
-| +--------------+        +--------------+                  |
-| | WebArena     |        | AgentBench   |                  |
-| | VisualWebAr. |        | ToolBench    |                  |
-| | OSWorld      |        | API-Bank     |                  |
-| | Mind2Web     |        | Gorilla      |                  |
-| +--------------+        +--------------+                  |
-|                                                           |
-+-----------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Bench["AGENT BENCHMARKS LANDSCAPE"]
+        Code["Code Generation<br/>- HumanEval<br/>- MBPP<br/>- SWE-bench<br/>- CodeContests"]
+        Reason["Reasoning &amp; QA<br/>- GAIA<br/>- MMLU<br/>- ARC<br/>- GSM8K"]
+        Web["Web &amp; Computer Use<br/>- WebArena<br/>- VisualWebArena<br/>- OSWorld<br/>- Mind2Web"]
+        Tool["Multi-Tool Calling<br/>- AgentBench<br/>- ToolBench<br/>- API-Bank<br/>- Gorilla"]
+    end
 ```
 
 ### SWE-bench
@@ -886,28 +853,14 @@ Evaluating only the final output misses critical information about how the agent
 
 ### Why Trajectory Matters
 
-```
-Task: "Find and fix the bug in auth.py"
-
-Trajectory A (Good):                Trajectory B (Bad):
-+---------------------------+      +---------------------------+
-| 1. Read error logs        |      | 1. Read README            |
-| 2. Search auth.py for     |      | 2. Read package.json      |
-|    relevant function      |      | 3. List all files         |
-| 3. Identify off-by-one    |      | 4. Read auth.py           |
-|    in token expiry check  |      | 5. Read config.py         |
-| 4. Apply fix              |      | 6. Read requirements.txt  |
-| 5. Run tests - pass       |      | 7. Read auth.py again     |
-+---------------------------+      | 8. Try random fix         |
-                                   | 9. Run tests - fail       |
-5 steps, focused, efficient        | 10. Try another fix       |
-                                   | 11. Run tests - fail      |
-                                   | 12. Revert                |
-                                   | 13. Read stack trace      |
-                                   | 14. Apply correct fix     |
-                                   | 15. Run tests - pass      |
-                                   +---------------------------+
-                                   15 steps, unfocused, costly
+```mermaid
+flowchart LR
+    subgraph Good["Trajectory A (Good: 5 steps, focused, efficient)"]
+        G1["1. Read error logs"] --> G2["2. Search auth.py for function"] --> G3["3. Identify off-by-one in token expiry"] --> G4["4. Apply fix"] --> G5["5. Run tests — PASS"]
+    end
+    subgraph Bad["Trajectory B (Bad: 15 steps, unfocused, costly)"]
+        B1["1-3. Read README, package.json, list all files"] --> B2["4-7. Read auth.py, config.py, requirements.txt, auth.py"] --> B3["8-12. Try random fixes, fail tests twice, revert"] --> B4["13-15. Finally read stack trace, apply fix, pass tests"]
+    end
 ```
 
 Both produce the same final result, but Trajectory A demonstrates better reasoning.
@@ -1072,32 +1025,14 @@ def compare_to_ideal(
 
 ### Online Evaluation Design
 
-```
-                    A/B Test Architecture
-+--------------------------------------------------+
-|                  Traffic Router                    |
-|  +----------------------------------------------+|
-|  |  User Request                                 ||
-|  |       |                                       ||
-|  |       v                                       ||
-|  |  +----------+                                 ||
-|  |  | Splitter | ---> hash(user_id) % 100        ||
-|  |  +----------+                                 ||
-|  |    /      \                                   ||
-|  |   v        v                                  ||
-|  | Group A   Group B                             ||
-|  | (50%)     (50%)                               ||
-|  |   |         |                                 ||
-|  |   v         v                                 ||
-|  | Agent v1  Agent v2                            ||
-|  |   |         |                                 ||
-|  |   v         v                                 ||
-|  | Log metrics + outcomes                        ||
-|  |       |                                       ||
-|  |       v                                       ||
-|  | Statistical Analysis                          ||
-|  +----------------------------------------------+|
-+--------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph AB["AGENT A/B TEST ARCHITECTURE"]
+        Req["User Request"] --> Split["Splitter<br/>hash(user_id) % 100"]
+        Split -->|"Group A (50%)"| V1["Agent v1"]
+        Split -->|"Group B (50%)"| V2["Agent v2"]
+        V1 & V2 --> Log["Log Metrics + Outcomes"] --> Stat["Statistical Analysis"]
+    end
 ```
 
 ### Implementation
@@ -1247,42 +1182,27 @@ n = required_sample_size(0.70, 0.05)
 
 ### The Observability Stack for Agents
 
-```
-+----------------------------------------------------------+
-|                Agent Observability Stack                   |
-+----------------------------------------------------------+
-|                                                          |
-|  Application Layer                                       |
-|  +----------------------------------------------------+ |
-|  |  Agent Code                                        | |
-|  |  +----------+  +----------+  +----------+         | |
-|  |  | LLM Call |  | Tool Use |  | Planning |         | |
-|  |  +----+-----+  +----+-----+  +----+-----+         | |
-|  |       |              |              |               | |
-|  +-------|--------------|--------------|---------------+ |
-|          v              v              v                 |
-|  Instrumentation Layer                                   |
-|  +----------------------------------------------------+ |
-|  | OpenTelemetry SDK                                  | |
-|  | +--------+ +--------+ +--------+ +--------+       | |
-|  | | Traces | | Spans  | | Metrics| | Logs   |       | |
-|  | +--------+ +--------+ +--------+ +--------+       | |
-|  +----------------------------------------------------+ |
-|          |              |              |                 |
-|          v              v              v                 |
-|  Collection Layer                                        |
-|  +----------------------------------------------------+ |
-|  | OTLP Exporter -> Collector                         | |
-|  +----------------------------------------------------+ |
-|          |              |              |                 |
-|          v              v              v                 |
-|  Backend Layer                                           |
-|  +------------+ +-------------+ +--------------+        |
-|  | LangSmith  | | Arize       | | Braintrust   |        |
-|  |            | | Phoenix     | |              |        |
-|  +------------+ +-------------+ +--------------+        |
-|                                                          |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Stack["AGENT OBSERVABILITY STACK"]
+        subgraph App["Application Layer (Agent Code)"]
+            A1["LLM Call"]
+            A2["Tool Use"]
+            A3["Planning"]
+        end
+        subgraph Inst["Instrumentation Layer (OpenTelemetry SDK)"]
+            I1["Traces &amp; Spans"]
+            I2["Metrics"]
+            I3["Logs"]
+        end
+        Coll["Collection Layer<br/>(OTLP Exporter -&gt; Collector)"]
+        subgraph Back["Backend Layer"]
+            B1["LangSmith"]
+            B2["Arize Phoenix"]
+            B3["Braintrust"]
+        end
+        A1 & A2 & A3 --> I1 & I2 & I3 --> Coll --> B1 & B2 & B3
+    end
 ```
 
 ### OpenTelemetry for Agents
@@ -1718,29 +1638,14 @@ class CostTracker:
 
 ### Failure Taxonomy
 
-```
-Agent Failure Types
-+----------------------------------------------------+
-|                                                    |
-|  Planning Failures        Execution Failures       |
-|  +------------------+    +------------------+     |
-|  | Wrong approach   |    | Tool call error  |     |
-|  | Missing context  |    | API timeout      |     |
-|  | Hallucinated     |    | Rate limit       |     |
-|  |   capabilities   |    | Auth failure     |     |
-|  | Infinite loop    |    | Parse error      |     |
-|  +------------------+    +------------------+     |
-|                                                    |
-|  Reasoning Failures       Output Failures          |
-|  +------------------+    +------------------+     |
-|  | Wrong conclusion |    | Format mismatch  |     |
-|  | Ignored evidence |    | Incomplete answer|     |
-|  | Circular logic   |    | Safety refusal   |     |
-|  | Lost context     |    | Hallucinated     |     |
-|  |                  |    |   content        |     |
-|  +------------------+    +------------------+     |
-|                                                    |
-+----------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Types["AGENT FAILURE TAXONOMY"]
+        P["Planning Failures<br/>- Wrong approach<br/>- Missing context<br/>- Hallucinated capabilities<br/>- Infinite loop"]
+        E["Execution Failures<br/>- Tool call error<br/>- API timeout / rate limit<br/>- Auth failure<br/>- Parse error"]
+        R["Reasoning Failures<br/>- Wrong conclusion<br/>- Ignored evidence<br/>- Circular logic<br/>- Lost context"]
+        O["Output Failures<br/>- Format mismatch<br/>- Incomplete answer<br/>- False safety refusal<br/>- Hallucinated content"]
+    end
 ```
 
 ### Replay Debugging
@@ -1890,38 +1795,15 @@ class TraceDebugger:
 
 When an agent fails, systematically diagnose the cause:
 
-```
-Root Cause Analysis Decision Tree
-+------------------------------------------+
-| Agent failed. Start here:                |
-+------------------------------------------+
-         |
-         v
-+------------------+     Yes    +------------------+
-| Did it produce   | ---------> | OUTPUT FAILURE    |
-| any output?      |            | Check: formatting,|
-+------------------+            | completeness,     |
-         | No                   | hallucination     |
-         v                     +------------------+
-+------------------+     Yes    +------------------+
-| Did it make any  | ---------> | EXECUTION FAILURE |
-| tool calls?      |            | Check: API errors,|
-+------------------+            | timeouts, auth,   |
-         | No                   | rate limits       |
-         v                     +------------------+
-+------------------+     Yes    +------------------+
-| Did it produce   | ---------> | PLANNING FAILURE  |
-| a plan?          |            | Check: wrong      |
-+------------------+            | approach, missing |
-         | No                   | capabilities      |
-         v                     +------------------+
-+------------------+
-| PROMPT FAILURE   |
-| Check: unclear   |
-| instructions,    |
-| missing context, |
-| ambiguous task   |
-+------------------+
+```mermaid
+flowchart TD
+    Start["Agent Failed — Start Here"] --> Q1{"Did it produce<br/>any output?"}
+    Q1 -->|"Yes"| OutFail["OUTPUT FAILURE<br/>Check: formatting, completeness, hallucination"]
+    Q1 -->|"No"| Q2{"Did it make any<br/>tool calls?"}
+    Q2 -->|"Yes"| ExecFail["EXECUTION FAILURE<br/>Check: API errors, timeouts, auth, rate limits"]
+    Q2 -->|"No"| Q3{"Did it produce<br/>a plan?"}
+    Q3 -->|"Yes"| PlanFail["PLANNING FAILURE<br/>Check: wrong approach, missing capabilities"]
+    Q3 -->|"No"| PromptFail["PROMPT FAILURE<br/>Check: unclear instructions, missing context, ambiguous task"]
 ```
 
 ### Common Failure Patterns and Fixes
@@ -1950,46 +1832,11 @@ Agent systems are particularly susceptible to regressions:
 
 ### Eval-Driven Development
 
-```
-Eval-Driven Development Cycle
-+-------------------------------------------+
-|                                           |
-|  1. Define eval cases for new feature     |
-|     +---+                                 |
-|     | E |                                 |
-|     +---+                                 |
-|       |                                   |
-|       v                                   |
-|  2. Run evals -- expect failure           |
-|     +--------+                            |
-|     | RED    |                            |
-|     +--------+                            |
-|       |                                   |
-|       v                                   |
-|  3. Implement feature (prompt, tools)     |
-|     +--------+                            |
-|     | CODE   |                            |
-|     +--------+                            |
-|       |                                   |
-|       v                                   |
-|  4. Run evals -- expect pass              |
-|     +--------+                            |
-|     | GREEN  |                            |
-|     +--------+                            |
-|       |                                   |
-|       v                                   |
-|  5. Run FULL eval suite (regression)      |
-|     +--------+                            |
-|     | CHECK  |                            |
-|     +--------+                            |
-|       |                                   |
-|       v                                   |
-|  6. Commit only if no regressions         |
-|     +--------+                            |
-|     | SHIP   |                            |
-|     +--------+                            |
-|                                           |
-+-------------------------------------------+
+```mermaid
+flowchart LR
+    S1["1. EVAL<br/>Define eval cases for new feature"] --> S2["2. RED<br/>Run evals — expect failure"]
+    S2 --> S3["3. CODE<br/>Implement feature (prompt, tools)"] --> S4["4. GREEN<br/>Run evals — expect pass"]
+    S4 --> S5["5. CHECK<br/>Run FULL eval suite (regression)"] --> S6["6. SHIP<br/>Commit only if no regressions"]
 ```
 
 ### CI/CD Pipeline for Agents

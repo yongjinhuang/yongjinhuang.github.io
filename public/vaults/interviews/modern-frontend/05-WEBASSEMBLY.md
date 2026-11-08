@@ -16,20 +16,12 @@ Senior frontend interviews test whether you understand what WASM is, when it mak
 
 WebAssembly is a low-level, binary format designed as a compilation target for high-level languages. It runs in a sandboxed virtual machine inside the browser (or server, via WASI).
 
-```
-Source Code (Rust, C, C++, Go, etc.)
-        |
-        v
-    Compiler (e.g., rustc, emscripten)
-        |
-        v
-    .wasm binary (compact, fast to decode)
-        |
-        v
-    Browser WASM engine (V8, SpiderMonkey, JavaScriptCore)
-        |
-        v
-    Near-native execution speed
+```mermaid
+flowchart TD
+    Src["Source Code (Rust, C, C++, Go, etc.)"] --> Comp["Compiler (e.g., rustc, emscripten)"]
+    Comp --> Bin[".wasm binary (compact, fast to decode)"]
+    Bin --> Eng["Browser WASM engine (V8, SpiderMonkey, JavaScriptCore)"]
+    Eng --> Speed["Near-native execution speed"]
 ```
 
 **Key properties:**
@@ -244,21 +236,11 @@ wasmBuffer.set(data);
 wasmModule.process(ptr, data.length);
 ```
 
-```
-+-----------------------------------+
-|          Browser Process          |
-|                                   |
-|  JavaScript          WebAssembly  |
-|  +----------+       +----------+  |
-|  |          |       |          |  |
-|  | JS Heap  |       | Linear   |  |
-|  | (GC'd)   |  <->  | Memory   |  |
-|  |          |       | (manual) |  |
-|  +----------+       +----------+  |
-|       |                  |        |
-|       +------ shared ----+        |
-|              memory               |
-+-----------------------------------+
+```mermaid
+flowchart LR
+    subgraph Browser["Browser Process"]
+        JS["JavaScript<br/>JS Heap (GC'd)"] <-->|"shared memory (ArrayBuffer)"| WASM["WebAssembly<br/>Linear Memory (manual)"]
+    end
 ```
 
 ### Performance: WASM vs JavaScript

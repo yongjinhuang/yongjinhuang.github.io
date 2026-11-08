@@ -88,26 +88,19 @@ Multi-agent systems mirror how effective human teams work:
 
 > Give each agent one job, the minimal context it needs, and the fewest tools required for that job.
 
-```
-                    Single Agent (Overloaded)
-                    =========================
-                    System Prompt: "You are a full-stack engineer,
-                    QA tester, security reviewer, technical writer,
-                    and project manager..."
-                    Tools: [50 tools]
-                    Context: [everything]
+```mermaid
+flowchart TD
+    subgraph Single["Single Agent (Overloaded)"]
+        SA["System Prompt: 'You are a full-stack engineer, QA tester,<br/>security reviewer, technical writer, and project manager...'<br/>Tools: [50 tools] / Context: [everything]"]
+    end
 
-                              vs.
-
-         Multi-Agent (Specialized)
-         =========================
-
-  +----------+   +---------+   +----------+   +--------+
-  | Planner  |   | Coder   |   | Reviewer |   | Tester |
-  | 1 job    |   | 1 job   |   | 1 job    |   | 1 job  |
-  | 3 tools  |   | 5 tools |   | 2 tools  |   | 4 tools|
-  | Focused  |   | Focused |   | Focused  |   | Focused|
-  +----------+   +---------+   +----------+   +--------+
+    subgraph Multi["Multi-Agent (Specialized — Single Responsibility Principle)"]
+        P["Planner<br/>1 job / 3 tools<br/>Focused context"]
+        C["Coder<br/>1 job / 5 tools<br/>Focused context"]
+        R["Reviewer<br/>1 job / 2 tools<br/>Focused context"]
+        T["Tester<br/>1 job / 4 tools<br/>Focused context"]
+        P --> C --> R --> T
+    end
 ```
 
 ---
@@ -118,45 +111,15 @@ The most common multi-agent architecture. A central supervisor agent receives ta
 
 ### Architecture
 
-```
-                        +------------------+
-                        |   User Request   |
-                        +--------+---------+
-                                 |
-                                 v
-                     +-----------+-----------+
-                     |      SUPERVISOR       |
-                     |  - Decomposes tasks   |
-                     |  - Selects workers    |
-                     |  - Synthesizes output |
-                     |  - Handles failures   |
-                     +-----------+-----------+
-                          |      |      |
-                +---------+      |      +---------+
-                |                |                |
-                v                v                v
-          +----------+    +----------+    +----------+
-          | Worker A |    | Worker B |    | Worker C |
-          | Research |    |  Coder   |    | Reviewer |
-          +----------+    +----------+    +----------+
-                |                |                |
-                v                v                v
-          +----------+    +----------+    +----------+
-          |  Result  |    |  Result  |    |  Result  |
-          +----------+    +----------+    +----------+
-                |                |                |
-                +--------+-------+--------+-------+
-                         |
-                         v
-                  +------+------+
-                  | Supervisor  |
-                  | Synthesizes |
-                  +------+------+
-                         |
-                         v
-                  +------+------+
-                  | Final Answer|
-                  +-------------+
+```mermaid
+flowchart TD
+    Req["User Request"] --> Sup["SUPERVISOR<br/>- Decomposes tasks<br/>- Selects workers<br/>- Synthesizes output<br/>- Handles failures"]
+    Sup --> WA["Worker A<br/>Research"] & WB["Worker B<br/>Coder"] & WC["Worker C<br/>Reviewer"]
+    WA --> RA["Result A"]
+    WB --> RB["Result B"]
+    WC --> RC["Result C"]
+    RA & RB & RC --> Synth["Supervisor Synthesizes"]
+    Synth --> Final["Final Answer"]
 ```
 
 ### LangGraph Implementation
@@ -323,25 +286,23 @@ Extends the supervisor/worker pattern to multiple levels. Useful for complex org
 
 ### Architecture
 
-```
-                          +------------------+
-                          |  Executive Agent |
-                          |  (Top-Level)     |
-                          +--------+---------+
-                                   |
-                    +--------------+--------------+
-                    |                             |
-           +--------+--------+          +--------+--------+
-           | Engineering Lead|          | QA Lead         |
-           | (Mid-Level)     |          | (Mid-Level)     |
-           +--------+--------+          +--------+--------+
-                    |                             |
-           +--------+--------+           +--------+--------+
-           |        |        |           |        |        |
-        +--+--+  +--+--+  +-+---+    +--+--+  +--+--+  +-+---+
-        |Front|  |Back |  |Infra|    |Unit |  | E2E |  |Perf |
-        | end |  | end |  |     |    |Test |  |Test |  |Test |
-        +-----+  +-----+  +-----+    +-----+  +-----+  +-----+
+```mermaid
+flowchart TD
+    Exec["Executive Agent<br/>(Top-Level)"]
+    Eng["Engineering Lead<br/>(Mid-Level)"]
+    QA["QA Lead<br/>(Mid-Level)"]
+
+    FE["Frontend Agent"]
+    BE["Backend Agent"]
+    Infra["Infra Agent"]
+
+    Unit["Unit Test Agent"]
+    E2E["E2E Test Agent"]
+    Perf["Perf Test Agent"]
+
+    Exec --> Eng & QA
+    Eng --> FE & BE & Infra
+    QA --> Unit & E2E & Perf
 ```
 
 ### LangGraph Hierarchical Implementation
@@ -455,23 +416,16 @@ No central coordinator. Agents communicate directly with each other and self-org
 
 ### Architecture
 
-```
-         +----------+          +----------+
-         | Agent A  |<-------->| Agent B  |
-         | Planner  |          | Coder    |
-         +----+-----+          +-----+----+
-              |  \                /   |
-              |   \              /    |
-              |    \            /     |
-              |     \          /      |
-              |      v        v       |
-         +----+-----+          +-----+----+
-         | Agent D  |<-------->| Agent C  |
-         | Deployer |          | Tester   |
-         +----------+          +----------+
-
-    Each agent can message any other agent directly.
-    No central supervisor. Agents negotiate who does what.
+```mermaid
+flowchart TD
+    subgraph Swarm["Peer-to-Peer / Swarm (Each agent can message any other agent directly; no central supervisor)"]
+        A["Agent A<br/>Planner"] <--> B["Agent B<br/>Coder"]
+        A <--> C["Agent C<br/>Tester"]
+        A <--> D["Agent D<br/>Deployer"]
+        B <--> C
+        B <--> D
+        D <--> C
+    end
 ```
 
 ### OpenAI Swarm-Style Implementation
@@ -653,31 +607,14 @@ The mechanism by which one agent transfers control and context to another. This 
 
 ### Handoff Protocol Design
 
-```
-Handoff Anatomy
-===============
+```mermaid
+sequenceDiagram
+    participant A as "Agent A (Source)"
+    participant B as "Agent B (Target)"
 
-  Agent A (source)                    Agent B (target)
-  ================                    ================
-
-  1. Decides to hand off
-     |
-  2. Packages context:
-     - Task summary
-     - Work completed so far
-     - Remaining work
-     - Key constraints
-     - Relevant artifacts
-     |
-  3. Selects target agent
-     |
-  4. Invokes handoff ------>  5. Receives context
-                              |
-                              6. Validates it can handle task
-                              |
-                              7. Begins execution
-                              |
-                              8. Completes or hands off again
+    Note over A: 1. Decides to hand off<br/>2. Packages context:<br/>- Task summary<br/>- Work completed so far<br/>- Remaining work<br/>- Key constraints & artifacts<br/>3. Selects target agent
+    A->>B: 4. Invokes handoff(packaged_context)
+    Note over B: 5. Receives context<br/>6. Validates it can handle task<br/>7. Begins execution<br/>8. Completes or hands off again
 ```
 
 ### OpenAI Agents SDK Handoff Pattern
@@ -848,24 +785,20 @@ Agents critique each other's outputs to improve quality. Inspired by "society of
 
 ### Architecture
 
-```
-  Debate Pattern                     Consensus Pattern
-  ==============                     =================
+```mermaid
+flowchart TD
+    subgraph Debate["Debate Pattern"]
+        Prop["Proposer"] -->|"Initial / Revised Proposal"| Crit["Critic"]
+        Crit -->|"Critique (revise)"| Prop
+        Crit -->|"Converged / Max rounds"| Judge["Judge / Final Arbiter"]
+    end
 
-  +--------+    +--------+           +--------+ +--------+ +--------+
-  |Proposer|--->|  Critic |          |Agent A | |Agent B | |Agent C |
-  +--------+    +--------+           +---+----+ +---+----+ +---+----+
-       ^             |                   |           |           |
-       |             v                   v           v           v
-       +-----[revised proposal]      +---+----+ +---+----+ +---+----+
-                     |               |Answer A| |Answer B| |Answer C|
-                     v               +---+----+ +---+----+ +---+----+
-              +------+------+                \       |       /
-              | Judge/Final |                 v      v      v
-              | Arbiter     |              +---------+--------+
-              +-------------+              |   Aggregator     |
-                                           |  (vote/merge)    |
-                                           +------------------+
+    subgraph Consensus["Consensus Pattern"]
+        CA["Agent A"] --> AnsA["Answer A"]
+        CB["Agent B"] --> AnsB["Answer B"]
+        CC["Agent C"] --> AnsC["Answer C"]
+        AnsA & AnsB & AnsC --> Agg["Aggregator<br/>(vote / merge)"]
+    end
 ```
 
 ### Debate Implementation
@@ -1038,18 +971,14 @@ Each agent handles one stage of processing. Output of one agent becomes input to
 
 ### Architecture
 
-```
-  Input
-    |
-    v
-  +-------+     +--------+     +--------+     +--------+     +--------+
-  | Stage1|---->| Stage2 |---->| Stage3 |---->| Stage4 |---->| Stage5 |
-  |Analyze|     |  Plan  |     |  Code  |     |  Test  |     | Deploy |
-  +-------+     +--------+     +--------+     +--------+     +--------+
-    |               |               |               |              |
-    v               v               v               v              v
-  Analysis       Plan Doc       Source Code    Test Results    Deployed
-  Report         + Tasks        + Tests        + Coverage      Artifact
+```mermaid
+flowchart LR
+    In["Input"] --> S1["Stage 1<br/>Analyze"] --> S2["Stage 2<br/>Plan"] --> S3["Stage 3<br/>Code"] --> S4["Stage 4<br/>Test"] --> S5["Stage 5<br/>Deploy"]
+    S1 --> O1["Analysis Report"]
+    S2 --> O2["Plan Doc + Tasks"]
+    S3 --> O3["Source Code + Tests"]
+    S4 --> O4["Test Results + Coverage"]
+    S5 --> O5["Deployed Artifact"]
 ```
 
 ### Implementation
@@ -1222,42 +1151,19 @@ Distribute independent sub-tasks across agents running concurrently, then aggreg
 
 ### Architecture
 
-```
-                      +----------+
-                      |  Input   |
-                      +----+-----+
-                           |
-                    +------+------+
-                    | Decomposer  |
-                    +------+------+
-                           |
-              +------------+------------+
-              |            |            |
-         FAN-OUT      FAN-OUT      FAN-OUT
-              |            |            |
-              v            v            v
-        +---------+  +---------+  +---------+
-        | Agent 1 |  | Agent 2 |  | Agent 3 |
-        | (async) |  | (async) |  | (async) |
-        +---------+  +---------+  +---------+
-              |            |            |
-              v            v            v
-        +---------+  +---------+  +---------+
-        |Result 1 |  |Result 2 |  |Result 3 |
-        +---------+  +---------+  +---------+
-              |            |            |
-              +------+-----+-----+-----+
-                     |           |
-                  FAN-IN      FAN-IN
-                     |           |
-               +-----+-----+    |
-               | Aggregator|<---+
-               +-----+-----+
-                     |
-                     v
-               +-----+-----+
-               | Final Out |
-               +-----------+
+```mermaid
+flowchart TD
+    In["Input"] --> Decomp["Decomposer"]
+    Decomp -->|"FAN-OUT"| A1["Agent 1 (async)"]
+    Decomp -->|"FAN-OUT"| A2["Agent 2 (async)"]
+    Decomp -->|"FAN-OUT"| A3["Agent 3 (async)"]
+
+    A1 --> R1["Result 1"]
+    A2 --> R2["Result 2"]
+    A3 --> R3["Result 3"]
+
+    R1 & R2 & R3 -->|"FAN-IN"| Agg["Aggregator"]
+    Agg --> Out["Final Out"]
 ```
 
 ### Implementation with asyncio
@@ -1692,25 +1598,12 @@ Dynamically selecting which agent handles a task based on classification of the 
 
 ### Architecture
 
-```
-                  +----------+
-                  |  Input   |
-                  +----+-----+
-                       |
-                       v
-              +--------+--------+
-              |     Router      |
-              | (Classifier)    |
-              +--+----+----+---+
-                 |    |    |
-    +------------+    |    +------------+
-    |                 |                 |
-    v                 v                 v
-+--------+      +--------+      +--------+
-|Agent A |      |Agent B |      |Agent C |
-|SQL     |      |Code    |      |General |
-|Expert  |      |Expert  |      |Chat    |
-+--------+      +--------+      +--------+
+```mermaid
+flowchart TD
+    In["Input"] --> Router["Router<br/>(Classifier)"]
+    Router --> A["Agent A<br/>SQL Expert"]
+    Router --> B["Agent B<br/>Code Expert"]
+    Router --> C["Agent C<br/>General Chat"]
 ```
 
 ### LLM-Based Router
@@ -2193,45 +2086,24 @@ Context management is the most underrated challenge in multi-agent systems. My s
 
 **Model Answer:**
 
-```
-                     +------------------+
-                     |  PR Webhook      |
-                     +--------+---------+
-                              |
-                              v
-                     +--------+---------+
-                     |  Orchestrator    |
-                     |  (Supervisor)    |
-                     +--+----+----+--+-+
-                        |    |    |  |
-           +------------+    |    |  +------------+
-           |                 |    |               |
-           v                 v    v               v
-     +----------+    +------+--+ +--------+  +--------+
-     |Diff       |   |Style    | |Security|  |Logic   |
-     |Analyzer   |   |Checker  | |Scanner |  |Reviewer|
-     |           |   |         | |        |  |        |
-     |(Haiku)    |   |(Haiku)  | |(Sonnet)| |(Sonnet)|
-     +-----+----+   +----+----+ +---+----+  +---+----+
-           |              |          |           |
-           v              v          v           v
-     [Changed files] [Style       [Security   [Logic
-      + context]      issues]      findings]   issues]
-           |              |          |           |
-           +------+-------+----+-----+-----+----+
-                  |            |           |
-                  v            v           v
-           +------+------+  +-+--------+  |
-           | Comment     |  | Severity |  |
-           | Formatter   |  | Ranker   |  |
-           | (Haiku)     |  | (Haiku)  |  |
-           +------+------+  +----+-----+  |
-                  |              |         |
-                  v              v         v
-           +------+--------------+---------+--+
-           |        PR Comment Poster         |
-           |     (posts to GitHub API)        |
-           +----------------------------------+
+```mermaid
+flowchart TD
+    Hook["PR Webhook"] --> Orch["Orchestrator<br/>(Supervisor)"]
+
+    Orch --> Diff["Diff Analyzer<br/>(Haiku)"]
+    Orch --> Style["Style Checker<br/>(Haiku)"]
+    Orch --> Sec["Security Scanner<br/>(Sonnet)"]
+    Orch --> Logic["Logic Reviewer<br/>(Sonnet)"]
+
+    Diff --> O1["Changed files + context"]
+    Style --> O2["Style issues"]
+    Sec --> O3["Security findings"]
+    Logic --> O4["Logic issues"]
+
+    O1 & O2 & O3 & O4 --> Fmt["Comment Formatter<br/>(Haiku)"]
+    O1 & O2 & O3 & O4 --> Rank["Severity Ranker<br/>(Haiku)"]
+
+    Fmt & Rank --> Poster["PR Comment Poster<br/>(posts to GitHub API)"]
 ```
 
 Key design decisions:

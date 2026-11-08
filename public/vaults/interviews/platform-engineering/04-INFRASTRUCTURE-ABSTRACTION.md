@@ -51,36 +51,18 @@ Kubernetes-native infrastructure-as-code using the Kubernetes API.
 
 ### Architecture
 
-```
-┌──────────────────────────────────────────────────┐
-│              CROSSPLANE ON KUBERNETES             │
-│                                                   │
-│  Developer submits Claim:                         │
-│  ┌──────────────────┐                             │
-│  │ kind: DBClaim     │                             │
-│  │ spec:             │                             │
-│  │   engine: postgres│                             │
-│  │   size: medium    │                             │
-│  └────────┬─────────┘                             │
-│           │                                        │
-│           ▼                                        │
-│  ┌──────────────────┐    ┌──────────────────────┐ │
-│  │   Composition    │    │   XRD (schema)       │ │
-│  │ (how to build)   │    │ (what devs can ask)  │ │
-│  └────────┬─────────┘    └──────────────────────┘ │
-│           │                                        │
-│           ▼                                        │
-│  ┌──────────────────┐                             │
-│  │  Provider-AWS    │  Manages actual cloud        │
-│  │  (or GCP, Azure) │  resources via APIs          │
-│  └──────────────────┘                             │
-│           │                                        │
-│           ▼                                        │
-│  ┌──────────────────┐                             │
-│  │  AWS RDS Instance│  Actual cloud resource       │
-│  │  + VPC + SG      │                             │
-│  └──────────────────┘                             │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph XP["CROSSPLANE ON KUBERNETES"]
+        Claim["Developer submits Claim:<br/>kind: DBClaim<br/>spec: engine=postgres, size=medium"]
+        XRD["XRD (Schema)<br/>(Defines what devs can request)"]
+        Comp["Composition<br/>(Defines how to build)"]
+        Prov["Provider-AWS (or GCP, Azure)<br/>(Manages cloud resources via APIs)"]
+        Cloud["AWS RDS Instance + VPC + Security Group<br/>(Actual cloud resources)"]
+        Claim --> Comp
+        XRD -.->|"validates"| Claim
+        Comp --> Prov --> Cloud
+    end
 ```
 
 ### Key Concepts
@@ -134,46 +116,23 @@ The Composition (written by the platform team) expands this into RDS instance + 
 
 ### ArgoCD Architecture
 
-```
-┌────────────────────────────────────────────┐
-│                ARGOCD                       │
-│                                             │
-│  ┌──────────┐   ┌───────────────────────┐  │
-│  │ Git Repo │──>│ Repo Server           │  │
-│  │ (desired │   │ (fetch + render       │  │
-│  │  state)  │   │  manifests)           │  │
-│  └──────────┘   └───────────┬───────────┘  │
-│                             │               │
-│                             ▼               │
-│                 ┌───────────────────────┐   │
-│                 │ Application Controller│   │
-│                 │ (compare desired vs   │   │
-│                 │  actual, sync)        │   │
-│                 └───────────┬───────────┘   │
-│                             │               │
-│                             ▼               │
-│                 ┌───────────────────────┐   │
-│                 │ Kubernetes Cluster    │   │
-│                 │ (actual state)        │   │
-│                 └───────────────────────┘   │
-│                                             │
-│  ┌──────────┐                               │
-│  │ API/UI   │  Dashboard + CLI               │
-│  └──────────┘                               │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Argo["ARGOCD ARCHITECTURE"]
+        Git["Git Repo<br/>(desired state)"] --> RepoSrv["Repo Server<br/>(fetch + render manifests)"]
+        RepoSrv --> AppCtrl["Application Controller<br/>(compare desired vs actual, sync)"]
+        AppCtrl --> K8s["Kubernetes Cluster<br/>(actual state)"]
+        UI["API / UI<br/>(Dashboard + CLI)"] --> AppCtrl
+    end
 ```
 
 ### Crossplane + ArgoCD Pattern
 
-```
-Git Repo                ArgoCD              Crossplane           Cloud
-┌──────┐     sync      ┌──────┐   apply    ┌──────┐  provision ┌──────┐
-│YAML  │────────────>│ Argo │──────────>│Cross │──────────>│ AWS  │
-│files │              │ CD   │           │plane │           │ RDS  │
-└──────┘              └──────┘           └──────┘           └──────┘
-
-One Git repo defines, deploys, and maintains everything.
-Crossplane resources are K8s manifests -- ArgoCD syncs them natively.
+```mermaid
+flowchart LR
+    Git["Git Repo<br/>(YAML files)"] -->|"sync"| Argo["ArgoCD"]
+    Argo -->|"apply"| XP["Crossplane"]
+    XP -->|"provision"| Cloud["Cloud<br/>(AWS RDS)"]
 ```
 
 ### Flux
@@ -187,16 +146,14 @@ Helm, Kustomize, and Crossplane. Good for teams wanting minimal operator overhea
 
 ### Controller Pattern
 
-```
-┌──────────────────────────────────────┐
-│       RECONCILIATION LOOP            │
-│                                       │
-│  1. Watch: Observe resource changes   │
-│  2. Diff: Compare desired vs actual   │
-│  3. Act: Make changes to converge     │
-│  4. Update: Report status             │
-│  5. Repeat                            │
-└──────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Loop["RECONCILIATION LOOP"]
+        S1["1. Watch:<br/>Observe resource changes"] --> S2["2. Diff:<br/>Compare desired vs actual"]
+        S2 --> S3["3. Act:<br/>Make changes to converge"]
+        S3 --> S4["4. Update:<br/>Report status"]
+        S4 -->|"5. Repeat"| S1
+    end
 ```
 
 Operators extend Kubernetes with **Custom Resource Definitions (CRDs)** and controllers

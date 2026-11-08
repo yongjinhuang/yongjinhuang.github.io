@@ -34,33 +34,14 @@ Interviewers assess whether you can:
 
 Staff+ engineers operate as multipliers. Your goal is to create an environment where every engineer around you grows faster than they would without you.
 
-```
-+------------------------------------------------------------------+
-|                   THE GROWTH MULTIPLIER MODEL                     |
-+------------------------------------------------------------------+
-|                                                                    |
-|  DIRECT IMPACT (1:1)                                              |
-|  +------------------------------------------------------------+   |
-|  | Mentoring | Code review | Pairing | 1:1s | Feedback         |   |
-|  +------------------------------------------------------------+   |
-|  | Impact: Deep, individual growth                              |   |
-|  | Scale: 3-5 people                                            |   |
-|                                                                    |
-|  STRUCTURAL IMPACT (1:Many)                                       |
-|  +------------------------------------------------------------+   |
-|  | Design reviews | Tech talks | Documentation | Standards      |   |
-|  +------------------------------------------------------------+   |
-|  | Impact: Moderate, team-wide learning                         |   |
-|  | Scale: 10-30 people                                          |   |
-|                                                                    |
-|  CULTURAL IMPACT (1:Organization)                                 |
-|  +------------------------------------------------------------+   |
-|  | Hiring bar | Promo criteria | Learning culture | Norms       |   |
-|  +------------------------------------------------------------+   |
-|  | Impact: Broad, lasting culture change                        |   |
-|  | Scale: 50-200+ people                                        |   |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Multiplier["THE GROWTH MULTIPLIER MODEL"]
+        D["DIRECT IMPACT (1:1)<br/>Mentoring / Code review / Pairing / 1:1s / Feedback<br/>Impact: Deep, individual growth (Scale: 3-5 people)"]
+        S["STRUCTURAL IMPACT (1:Many)<br/>Design reviews / Tech talks / Documentation / Standards<br/>Impact: Moderate, team-wide learning (Scale: 10-30 people)"]
+        C["CULTURAL IMPACT (1:Organization)<br/>Hiring bar / Promo criteria / Learning culture / Norms<br/>Impact: Broad, lasting culture change (Scale: 50-200+ people)"]
+        D --> S --> C
+    end
 ```
 
 **Key insight:** L5 operates primarily at the Direct Impact level. L6 adds Structural Impact. L7 adds Cultural Impact. An interview answer about mentoring that only covers 1:1 interactions signals L5, not L6+.
@@ -108,22 +89,12 @@ Code review is the highest-frequency mentoring opportunity most engineers have. 
 
 ### The Teaching Code Review Framework
 
-```
-+------------------------------------------------------------------+
-|              CODE REVIEW AS TEACHING SPECTRUM                     |
-+------------------------------------------------------------------+
-|                                                                    |
-|  BLOCKING                      NON-BLOCKING                       |
-|  (Must fix before merge)       (Suggestions for learning)         |
-|                                                                    |
-|  - Correctness bugs            - Design alternatives              |
-|  - Security vulnerabilities    - Performance considerations       |
-|  - Missing error handling      - Naming suggestions               |
-|  - Breaking API contracts      - Code organization ideas          |
-|  - Missing tests for           - Patterns they might not know     |
-|    critical paths              - Links to relevant resources      |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Spectrum["CODE REVIEW AS TEACHING SPECTRUM"]
+        B["BLOCKING (Must fix before merge)<br/>- Correctness bugs<br/>- Security vulnerabilities<br/>- Missing error handling<br/>- Breaking API contracts<br/>- Missing tests for critical paths"]
+        NB["NON-BLOCKING (Suggestions for learning)<br/>- Design alternatives<br/>- Performance considerations<br/>- Naming suggestions<br/>- Code organization ideas<br/>- Patterns they might not know<br/>- Links to relevant resources"]
+    end
 ```
 
 ### Effective Code Review Comments
@@ -153,40 +124,15 @@ Staff+ engineers do not just mentor individuals -- they create systems that deve
 
 ### The Four Stages of Engineer Growth
 
-```
-+------------------------------------------------------------------+
-|                 ENGINEER GROWTH STAGES                             |
-+------------------------------------------------------------------+
-|                                                                    |
-|  STAGE 1: LEARNING (Junior / L3)                                  |
-|  Focus: Learn the codebase, tools, and team processes             |
-|  Need from mentor: Direction, structure, frequent feedback         |
-|  Growth activities: Pair programming, small bug fixes,            |
-|                     code review learning                           |
-|  Transition signal: Can complete well-defined tasks independently  |
-|                                                                    |
-|  STAGE 2: CONTRIBUTING (Mid / L4)                                  |
-|  Focus: Ship features independently, deepen technical skills      |
-|  Need from mentor: Context, challenging assignments, autonomy     |
-|  Growth activities: Own a feature end-to-end, design docs,        |
-|                     mentoring a junior                             |
-|  Transition signal: Can break down ambiguous problems into tasks   |
-|                                                                    |
-|  STAGE 3: LEADING (Senior / L5)                                   |
-|  Focus: Technical leadership, cross-team impact, mentoring        |
-|  Need from mentor: Exposure, sponsorship, feedback on influence   |
-|  Growth activities: Lead a project, write RFCs, present at        |
-|                     tech talks, own on-call                        |
-|  Transition signal: Can set direction for a team-level initiative  |
-|                                                                    |
-|  STAGE 4: MULTIPLYING (Staff+ / L6+)                              |
-|  Focus: Organizational impact, strategy, growing others           |
-|  Need from mentor: Thought partnership, exec exposure              |
-|  Growth activities: Define architecture across teams,             |
-|                     build platforms, shape culture                  |
-|  Transition signal: Organization works better because of them      |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Stages["ENGINEER GROWTH STAGES"]
+        G1["STAGE 1: LEARNING (Junior / L3)<br/>- Focus: Codebase, tools, team processes<br/>- Need: Direction, structure, frequent feedback<br/>- Activities: Pair programming, small bug fixes, code reviews<br/>- Transition signal: Completes well-defined tasks independently"]
+        G2["STAGE 2: CONTRIBUTING (Mid / L4)<br/>- Focus: Ship features independently, deepen technical skills<br/>- Need: Context, challenging assignments, autonomy<br/>- Activities: Own feature end-to-end, design docs, mentor a junior<br/>- Transition signal: Breaks down ambiguous problems into tasks"]
+        G3["STAGE 3: LEADING (Senior / L5)<br/>- Focus: Technical leadership, cross-team impact, mentoring<br/>- Need: Exposure, sponsorship, feedback on influence<br/>- Activities: Lead project, write RFCs, tech talks, own on-call<br/>- Transition signal: Sets direction for team-level initiative"]
+        G4["STAGE 4: MULTIPLYING (Staff+ / L6+)<br/>- Focus: Organizational impact, strategy, growing others<br/>- Need: Thought partnership, exec exposure<br/>- Activities: Cross-team architecture, build platforms, shape culture<br/>- Transition signal: Organization works better because of them"]
+        G1 --> G2 --> G3 --> G4
+    end
 ```
 
 ### Growth Plan Template
@@ -249,34 +195,12 @@ Staff+ engineers do not just mentor individuals -- they create systems that deve
 
 These are different activities with different impacts. Staff+ engineers need to practice both.
 
-```
-+------------------------------------------------------------------+
-|              MENTORSHIP vs SPONSORSHIP                             |
-+------------------------------------------------------------------+
-|                                                                    |
-|  MENTORSHIP                        SPONSORSHIP                    |
-|  --------------------------------  --------------------------------|
-|  Giving advice                     Giving opportunities           |
-|  "Here is how I would approach     "I want you to lead this      |
-|   this problem"                     initiative"                   |
-|                                                                    |
-|  Sharing experience                Sharing your reputation        |
-|  "When I was in a similar          "I am recommending you for    |
-|   situation..."                     the tech lead role"           |
-|                                                                    |
-|  Happens in private                Happens in public              |
-|  1:1 conversations,               In meetings, promotion         |
-|  code reviews                      discussions, staffing          |
-|                                                                    |
-|  Low risk for you                  High risk for you              |
-|  If the advice is wrong,          If the person fails, your      |
-|  they learn                        judgment is questioned         |
-|                                                                    |
-|  The person must self-advocate     You advocate for the person    |
-|  "I told them how to get           "I put them in the room       |
-|   promoted"                         and vouched for them"         |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Comp["MENTORSHIP vs SPONSORSHIP"]
+        M["MENTORSHIP<br/>- Giving advice ('Here is how I would approach this')<br/>- Sharing experience ('When I was in a similar situation...')<br/>- Happens in private (1:1s, code reviews)<br/>- Low risk for you<br/>- Person must self-advocate"]
+        S["SPONSORSHIP<br/>- Giving opportunities ('I want you to lead this initiative')<br/>- Sharing your reputation ('I recommend you for tech lead')<br/>- Happens in public (meetings, promo discussions, staffing)<br/>- High risk for you<br/>- You advocate for the person ('Put them in the room &amp; vouched')"]
+    end
 ```
 
 ### How to Sponsor Effectively
@@ -330,36 +254,15 @@ This is the hardest part of people development. Avoiding the conversation does n
 
 ### The Performance Conversation Framework
 
-```
-+------------------------------------------------------------------+
-|           HANDLING UNDERPERFORMANCE: STEP BY STEP                 |
-+------------------------------------------------------------------+
-|                                                                    |
-|  STEP 1: DIAGNOSE (before the conversation)                       |
-|  - Is the problem skill, will, or environment?                    |
-|  - Skill: They do not know how to do it                           |
-|  - Will: They can but are not motivated                           |
-|  - Environment: External factors are blocking them                |
-|                                                                    |
-|  STEP 2: DIRECT CONVERSATION (using SBI)                          |
-|  - Be specific about the gap between expected and actual          |
-|  - Use examples (SBI format), not generalizations                 |
-|  - Ask for their perspective: "What is your view?"                |
-|  - Agree on a concrete improvement plan                           |
-|                                                                    |
-|  STEP 3: SUPPORT AND MONITOR                                      |
-|  - Increase 1:1 frequency (weekly minimum)                       |
-|  - Provide specific resources, training, or pairing               |
-|  - Set clear milestones with 30-60-90 day checkpoints            |
-|  - Document the plan and progress                                 |
-|                                                                    |
-|  STEP 4: DECIDE                                                    |
-|  - If improving: Continue support. Acknowledge progress.          |
-|  - If not improving: Escalate to management with documentation.   |
-|  - Be honest: "I have seen some improvement in X, but Y          |
-|    is still a concern. Here is what I need to see by [date]."    |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Underperf["HANDLING UNDERPERFORMANCE: STEP BY STEP"]
+        S1["STEP 1: DIAGNOSE (before conversation)<br/>- Skill (do not know how)<br/>- Will (not motivated)<br/>- Environment (external blockers)"]
+        S2["STEP 2: DIRECT CONVERSATION (using SBI)<br/>- Specify gap between expected and actual with SBI examples<br/>- Ask for their perspective<br/>- Agree on concrete improvement plan"]
+        S3["STEP 3: SUPPORT AND MONITOR<br/>- Weekly 1:1s minimum<br/>- Provide resources, training, or pairing<br/>- Set 30-60-90 day checkpoints &amp; document progress"]
+        S4["STEP 4: DECIDE<br/>- If improving: Continue support &amp; acknowledge progress<br/>- If not improving: Escalate to management with documentation"]
+        S1 --> S2 --> S3 --> S4
+    end
 ```
 
 ### Skill vs Will vs Environment

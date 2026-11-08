@@ -38,39 +38,15 @@ Design a real-time auction system where sellers broadcast live video and buyers 
 
 ## Step 2: High-Level Design
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Clients (iOS/Android/Web)            │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ WebSocket (Phoenix Channels)
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    API Gateway / Load Balancer               │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-     ┌──────────────┐ ┌────────┐ ┌──────────────┐
-     │ Live Service │ │  Main  │ │  Admission   │
-     │  (Elixir)   │ │Backend │ │  Control     │
-     │             │ │(Python)│ │  (Go)        │
-     │ - Auction   │ │        │ └──────────────┘
-     │   Engine    │ │ - User │
-     │ - Chat      │ │ - Pay  │
-     │ - PubSub    │ │ - Inv  │
-     └──────┬──────┘ └───┬────┘
-            │             │
-            ▼             ▼
-     ┌──────────────┐ ┌────────────┐
-     │    Redis     │ │ PostgreSQL │
-     │ (State/Lock) │ │ (Persist)  │
-     └──────────────┘ └────────────┘
-            │
-            ▼
-     ┌──────────────┐
-     │    Kafka     │
-     │ (Event Bus)  │
-     └──────────────┘
+```mermaid
+flowchart TD
+    Clients["Clients (iOS / Android / Web)"] -->|"WebSocket (Phoenix Channels)"| GW["API Gateway / Load Balancer"]
+    GW --> Live["Live Service (Elixir)<br/>- Auction Engine<br/>- Chat<br/>- PubSub"]
+    GW --> Main["Main Backend (Python)<br/>- User<br/>- Pay<br/>- Inv"]
+    GW --> Admission["Admission Control (Go)"]
+    Live --> Redis[("Redis<br/>(State / Lock)")]
+    Main --> PG[("PostgreSQL<br/>(Persist)")]
+    Redis --> Kafka["Kafka<br/>(Event Bus)"]
 ```
 
 ---
@@ -79,58 +55,27 @@ Design a real-time auction system where sellers broadcast live video and buyers 
 
 ### Auction State Machine
 
-```
-                    ┌─────────┐
-                    │ CREATED │
-                    └────┬────┘
-                         │ seller starts item
-                         ▼
-                    ┌─────────┐
-              ┌────→│ ACTIVE  │←────┐
-              │     └────┬────┘     │
-              │          │          │
-        bid extends   first bid  new bid
-         timer          │       (resets timer)
-              │          ▼          │
-              │     ┌─────────┐    │
-              └─────│ BIDDING │────┘
-                    └────┬────┘
-                         │ timer expires
-                         ▼
-                    ┌─────────┐
-                    │ CLOSING │ (final 5s, no extensions)
-                    └────┬────┘
-                         │
-                    ┌────┴────┐
-                    ▼         ▼
-              ┌─────────┐ ┌─────────┐
-              │  SOLD   │ │NO_SALE  │
-              └─────────┘ └─────────┘
+```mermaid
+flowchart TD
+    Created["CREATED"] -->|"seller starts item"| Active["ACTIVE"]
+    Active -->|"first bid"| Bidding["BIDDING"]
+    Bidding -->|"bid extends timer / new bid (resets timer)"| Active
+    Bidding -->|"timer expires"| Closing["CLOSING<br/>(final 5s, no extensions)"]
+    Closing --> Sold["SOLD"]
+    Closing --> NoSale["NO_SALE"]
 ```
 
 ### Auction GenServer (Elixir Process)
 
 Each auction item runs as an isolated Elixir GenServer process:
 
-```
-┌─────────────────────────────────┐
-│       Auction GenServer         │
-│                                 │
-│  State:                         │
-│  - item_id                      │
-│  - current_price                │
-│  - current_winner               │
-│  - max_bids: %{user => amount}  │
-│  - timer_ref                    │
-│  - bid_history: []              │
-│  - status: :active | :closing   │
-│                                 │
-│  Messages:                      │
-│  - {:place_bid, user, amount}   │
-│  - {:place_max_bid, user, max}  │
-│  - :timer_tick                  │
-│  - :close_auction               │
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph GenServer["Auction GenServer"]
+        State["State:<br/>- item_id<br/>- current_price<br/>- current_winner<br/>- max_bids: %{user =&gt; amount}<br/>- timer_ref<br/>- bid_history: []<br/>- status: :active / :closing"]
+        Messages["Messages:<br/>- {:place_bid, user, amount}<br/>- {:place_max_bid, user, max}<br/>- :timer_tick<br/>- :close_auction"]
+        Messages --> State
+    end
 ```
 
 **Why GenServer?**
@@ -142,29 +87,21 @@ Each auction item runs as an isolated Elixir GenServer process:
 
 ### Bid Processing Flow
 
-```
-Client                  GenServer              PubSub              All Clients
-  │                         │                     │                     │
-  │──place_bid($50)────────→│                     │                     │
-  │                         │                     │                     │
-  │                    [Validate bid]              │                     │
-  │                    - bid > current_price?      │                     │
-  │                    - user authenticated?       │                     │
-  │                    - auction still active?     │                     │
-  │                         │                     │                     │
-  │                    [Check max bids]            │                     │
-  │                    - any proxy bid beats $50?  │                     │
-  │                    - if yes, auto-increment    │                     │
-  │                         │                     │                     │
-  │                    [Update state]              │                     │
-  │                    - new_price = $51           │                     │
-  │                    - winner = proxy_bidder     │                     │
-  │                    - reset timer               │                     │
-  │                         │                     │                     │
-  │                         │──broadcast───────→  │──price_update──────→│
-  │                         │                     │──outbid_notice─────→│
-  │                         │                     │                     │
-  │←──bid_result────────────│                     │                     │
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant G as "GenServer"
+    participant P as "PubSub"
+    participant A as "All Clients"
+
+    C->>G: place_bid($50)
+    Note over G: Validate bid:<br/>- bid > current_price?<br/>- user authenticated?<br/>- auction still active?
+    Note over G: Check max bids:<br/>- any proxy bid beats $50?<br/>- if yes, auto-increment
+    Note over G: Update state:<br/>- new_price = $51<br/>- winner = proxy_bidder<br/>- reset timer
+    G->>P: broadcast
+    P->>A: price_update
+    P->>A: outbid_notice
+    G-->>C: bid_result
 ```
 
 ### Secret Max Bid (Proxy Bidding)
@@ -286,19 +223,11 @@ subscription AuctionUpdates($streamId: ID!) {
 - PubSub shards across nodes to distribute fan-out load
 - Consider tiered fan-out: GenServer → PubSub nodes → edge nodes → clients
 
-```
-                    ┌─────────────┐
-                    │   Auction   │
-                    │  GenServer  │
-                    └──────┬──────┘
-                           │ broadcast
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │ PubSub   │ │ PubSub   │ │ PubSub   │
-        │ Node 1   │ │ Node 2   │ │ Node 3   │
-        │ (200K)   │ │ (200K)   │ │ (183K)   │
-        └──────────┘ └──────────┘ └──────────┘
+```mermaid
+flowchart TD
+    Auction["Auction GenServer"] -->|"broadcast"| N1["PubSub Node 1<br/>(200K connections)"]
+    Auction -->|"broadcast"| N2["PubSub Node 2<br/>(200K connections)"]
+    Auction -->|"broadcast"| N3["PubSub Node 3<br/>(183K connections)"]
 ```
 
 ### Failure Handling

@@ -296,25 +296,21 @@ Question: {query}
 
 Tree-of-Thought extends CoT by exploring **multiple reasoning paths** simultaneously, evaluating them, and pruning unpromising branches. Think of it as a search tree over thought sequences.
 
-```
-Chain-of-Thought (linear):
+```mermaid
+flowchart TD
+    subgraph CoT["Chain-of-Thought (Linear)"]
+        CS["Start"] --> C1["Step 1"] --> C2["Step 2"] --> C3["Step 3"] --> CA["Answer"]
+    end
 
-  Start --> Step1 --> Step2 --> Step3 --> Answer
-
-
-Tree-of-Thought (branching):
-
-                         Start
-                        /  |  \
-                      S1a S1b S1c        <-- Generate 3 candidate first steps
-                      /|    |    \
-                   S2a S2b  S2c   X      <-- Prune S1c (score too low)
-                   /    |    |
-                 S3a    X   S3b          <-- Prune S1b path
-                 /           |
-              Answer_A    Answer_B       <-- Evaluate final candidates
-                 |
-              BEST                       <-- Select highest-scoring answer
+    subgraph ToT["Tree-of-Thought (Branching + Pruning)"]
+        TS["Start"] --> S1a["S1a"] & S1b["S1b"] & S1c["S1c"]
+        S1a --> S2a["S2a"] & S2b["S2b"]
+        S1b --> S2c["S2c"]
+        S1c --> X1["Pruned (Score too low)"]
+        S2a --> S3a["S3a"] --> AnsA["Answer_A"] --> Best["BEST<br/>(Highest-scoring answer)"]
+        S2b --> X2["Pruned"]
+        S2c --> S3b["S3b"] --> AnsB["Answer_B"]
+    end
 ```
 
 ### Exploration Strategies
@@ -517,50 +513,35 @@ DFS (Depth-First):
 
 Graph-of-Thought (GoT) extends ToT by allowing **non-linear reasoning**: thoughts can merge, reference earlier thoughts, form cycles, and create parallel branches that later converge.
 
-```
-Tree-of-Thought (no merging):
+```mermaid
+flowchart TD
+    subgraph ToT["Tree-of-Thought (No Merging)"]
+        TA["A"] --> TB["B"] & TC["C"]
+        TB --> TD["D"] & TE["E"]
+        TC --> TF["F"]
+    end
 
-        A
-       / \
-      B   C
-     / \   \
-    D   E   F
-
-
-Graph-of-Thought (merging + parallel):
-
-        A
-       / \
-      B   C
-     / \ / \
-    D   E   F        <-- E merges insights from B and C
-         \ /
-          G           <-- G merges insights from E and F
+    subgraph GoT["Graph-of-Thought (Merging + Parallel)"]
+        GA["A"] --> GB["B"] & GC["C"]
+        GB --> GD["D"] & GE["E (Merges insights from B &amp; C)"]
+        GC --> GE & GF["F"]
+        GE & GF --> GG["G (Merges insights from E &amp; F)"]
+    end
 ```
 
 ### Why Graphs Beat Trees
 
 Real reasoning is not strictly hierarchical. Consider debugging:
 
-```
-Debugging as a Graph of Thought:
-
-  [Bug Report] -----> [Read Stacktrace] -----> [Identify File]
-       |                                            |
-       v                                            v
-  [Check Logs] -----> [Find Error Pattern] ---> [Root Cause Hypothesis]
-       |                                            |
-       +-----> [Reproduce Bug] <-------------------+
-                    |
-                    v
-              [Test Fix] ------> [Verify Fix]
-                    |                  |
-                    v                  v
-              [Edge Cases] ----> [Final Solution]
-
-  Key insight: "Reproduce Bug" draws from BOTH the log analysis
-  AND the root cause hypothesis -- a merge operation impossible
-  in a pure tree.
+```mermaid
+flowchart TD
+    Bug["Bug Report"] --> Stack["Read Stacktrace"] --> File["Identify File"]
+    Bug --> Logs["Check Logs"] --> Pattern["Find Error Pattern"]
+    File & Pattern --> Hyp["Root Cause Hypothesis"]
+    Logs & Hyp --> Repro["Reproduce Bug<br/>(Merges log analysis + hypothesis)"]
+    Repro --> Test["Test Fix"]
+    Test --> Verify["Verify Fix"] & Edge["Edge Cases"]
+    Verify & Edge --> Final["Final Solution"]
 ```
 
 ### Implementation
@@ -909,31 +890,20 @@ Ensure tasks are atomic enough to be done in a single agent step."""
 
 ### Dependency Graph Visualization
 
-```
-Dependency Graph for "Deploy ML model to production":
+```mermaid
+flowchart LR
+    subgraph W1["Wave 1 (Parallel / Independent)"]
+        T1["[1] Train model"]
+        T2["[2] Write unit tests"]
+        T3["[3] Build API"]
+        T4["[4] Write Dockerfile"]
+    end
+    T5["[5] Integration test<br/>(Wave 2)"]
+    T6["[6] Deploy to staging<br/>(Wave 3)"]
+    T7["[7] Run smoke tests<br/>(Wave 4)"]
+    T8["[8] Deploy to production<br/>(Wave 5)"]
 
-  [1] Train model --------+
-                           |
-  [2] Write unit tests -+  |
-                        |  |
-  [3] Build API --------+--+--> [5] Integration test
-                        |              |
-  [4] Write Dockerfile -+              |
-                                       v
-                              [6] Deploy to staging
-                                       |
-                                       v
-                              [7] Run smoke tests
-                                       |
-                                       v
-                              [8] Deploy to production
-
-  Parallelizable:
-    Wave 1: [1], [2], [3], [4]     (all independent)
-    Wave 2: [5]                     (depends on 1, 2, 3, 4)
-    Wave 3: [6]                     (depends on 5)
-    Wave 4: [7]                     (depends on 6)
-    Wave 5: [8]                     (depends on 7)
+    T1 & T2 & T3 & T4 --> T5 --> T6 --> T7 --> T8
 ```
 
 ### Decomposition Anti-Patterns
@@ -954,33 +924,15 @@ Dependency Graph for "Deploy ML model to production":
 
 The Plan-and-Execute pattern separates planning from execution into distinct phases. An LLM first generates a complete plan, then a (potentially different) LLM or agent executes each step, with optional replanning when things go wrong.
 
-```
-Plan-and-Execute Architecture:
-
-  User Query
-      |
-      v
-  +-------------------+
-  |   PLANNER (LLM)   |  <-- "Given this goal, produce a step-by-step plan"
-  +-------------------+
-      |
-      v
-  [Step 1] [Step 2] [Step 3] [Step 4]    <-- Structured plan
-      |
-      v
-  +-------------------+
-  |  EXECUTOR (Agent)  |  <-- Executes steps one by one
-  +-------------------+
-      |         |
-      |    Failure?-----> REPLANNER (LLM)
-      |                       |
-      |                   New/modified steps
-      |                       |
-      v                       v
-  [Result 1] ---------> Continue execution
-      |
-      v
-  Final Result
+```mermaid
+flowchart TD
+    UQ["User Query"] --> Planner["PLANNER (LLM)<br/>'Given this goal, produce a step-by-step plan'"]
+    Planner --> Plan["Structured Plan:<br/>[Step 1] -&gt; [Step 2] -&gt; [Step 3] -&gt; [Step 4]"]
+    Plan --> Exec["EXECUTOR (Agent)<br/>Executes steps one by one"]
+    Exec -->|"Step Succeeds"| Cont["Record Result &amp; Continue Execution"]
+    Exec -->|"Step Fails"| Replan["REPLANNER (LLM)<br/>Generate new / modified steps"]
+    Replan --> Cont
+    Cont --> Final["Final Result"]
 ```
 
 ### Implementation
@@ -1211,20 +1163,11 @@ Hybrid (LangGraph-style):
 
 Self-reflection enables agents to evaluate their own outputs, identify mistakes, and iteratively improve. This creates a feedback loop that catches errors before they reach the user.
 
-```
-Self-Reflection Loop:
-
-  +---------+     +-----------+     +----------+     +---------+
-  |  Task   |---->|  Execute  |---->| Evaluate |---->| Improve |
-  +---------+     +-----------+     +----------+     +---------+
-                       ^                  |               |
-                       |                  | Score < threshold
-                       +------------------+               |
-                       |                                  |
-                       +---- Score >= threshold ----------+
-                                                          |
-                                                          v
-                                                      [Output]
+```mermaid
+flowchart LR
+    Task["Task"] --> Exec["Execute"] --> Eval{"Evaluate"}
+    Eval -->|"Score &gt;= threshold"| Out["Output"]
+    Eval -->|"Score &lt; threshold"| Imp["Improve"] --> Exec
 ```
 
 ### The Reflexion Pattern
@@ -1718,36 +1661,23 @@ Respond with the corrected JSON plan only."""
 
 ### When to Replan
 
-```
-Replanning Decision Tree:
+```mermaid
+flowchart TD
+    Fail{"Step Failed?"}
+    Fail -->|"No"| Next["Continue to next step"]
+    Fail -->|"Yes"| C1{"Retries remaining?"}
+    C1 -->|"Yes"| Retry["Retry same step"]
+    C1 -->|"No"| Crit{"Is step critical?"}
+    Crit -->|"No"| Skip["Skip step, continue"]
+    Crit -->|"Yes"| Full1["Full replan"]
 
-  Step Failed?
-      |
-      +-- No --> Continue to next step
-      |
-      +-- Yes
-           |
-           +-- Retries remaining?
-           |       |
-           |       +-- Yes --> Retry same step
-           |       |
-           |       +-- No --> Is step critical?
-           |                    |
-           |                    +-- No --> Skip step, continue
-           |                    |
-           |                    +-- Yes --> Full replan
-           |
-           +-- Environment changed?
-           |       |
-           |       +-- Yes --> Full replan (assumptions invalidated)
-           |       |
-           |       +-- No --> Partial replan (adjust remaining steps)
-           |
-           +-- New information available?
-                   |
-                   +-- Yes --> Incorporate and partial replan
-                   |
-                   +-- No --> Retry with different approach
+    Fail -->|"Yes"| C2{"Environment changed?"}
+    C2 -->|"Yes"| Full2["Full replan (assumptions invalidated)"]
+    C2 -->|"No"| Part1["Partial replan (adjust remaining steps)"]
+
+    Fail -->|"Yes"| C3{"New information available?"}
+    C3 -->|"Yes"| Part2["Incorporate &amp; partial replan"]
+    C3 -->|"No"| Diff["Retry with different approach"]
 ```
 
 ### Replanning Strategies
@@ -1962,25 +1892,15 @@ def should_replan_given_budget(
 
 Agents must make decisions with incomplete information, unreliable tool outputs, and ambiguous user intent. Good agents quantify their uncertainty and act accordingly.
 
-```
-Uncertainty Sources in Agent Systems:
+```mermaid
+flowchart TD
+    U1["User Intent<br/>- Ambiguous query<br/>- Missing context<br/>- Implicit goals"]
+    U2["Tool Reliability<br/>- API failures<br/>- Partial results<br/>- Wrong formats"]
+    U3["World State<br/>- Stale data<br/>- Race conditions<br/>- Changing env"]
 
-  +------------------+    +-------------------+    +------------------+
-  | User Intent      |    | Tool Reliability  |    | World State      |
-  | - Ambiguous query|    | - API failures    |    | - Stale data     |
-  | - Missing context|    | - Partial results |    | - Race conditions|
-  | - Implicit goals |    | - Wrong formats   |    | - Changing env   |
-  +------------------+    +-------------------+    +------------------+
-          |                       |                        |
-          v                       v                        v
-  +---------------------------------------------------------------+
-  |              Agent Reasoning Under Uncertainty                 |
-  |                                                                |
-  |  Strategy: Estimate confidence -> Act accordingly              |
-  |  High confidence: Execute directly                             |
-  |  Medium confidence: Execute with verification                  |
-  |  Low confidence: Ask for clarification or use fallback         |
-  +---------------------------------------------------------------+
+    Reason["Agent Reasoning Under Uncertainty<br/>(Estimate confidence -&gt; Act accordingly)<br/>- High confidence: Execute directly<br/>- Medium confidence: Execute with verification<br/>- Low confidence: Ask for clarification or use fallback"]
+
+    U1 & U2 & U3 --> Reason
 ```
 
 ### Confidence Estimation
@@ -2658,32 +2578,17 @@ Calibrating confidence is hard -- LLMs tend to be overconfident. I would use emp
 
 ### Decision Flowchart
 
-```
-How to Choose a Planning Strategy:
-
-  Is the task a single step?
-      |
-      +-- Yes --> Direct execution (no planning)
-      |
-      +-- No
-           |
-           Does it require exploration of alternatives?
-               |
-               +-- Yes --> Tree-of-Thought or Graph-of-Thought
-               |
-               +-- No
-                    |
-                    Are there dependencies between steps?
-                        |
-                        +-- Yes --> Plan-and-Execute with dependency graph
-                        |
-                        +-- No
-                             |
-                             Is the environment unpredictable?
-                                 |
-                                 +-- Yes --> ReAct (adaptive step-by-step)
-                                 |
-                                 +-- No --> Plan-and-Execute (upfront plan)
+```mermaid
+flowchart TD
+    Q1{"Is the task a single step?"}
+    Q1 -->|"Yes"| Direct["Direct execution (no planning)"]
+    Q1 -->|"No"| Q2{"Requires exploration of alternatives?"}
+    Q2 -->|"Yes"| ToT["Tree-of-Thought or Graph-of-Thought"]
+    Q2 -->|"No"| Q3{"Dependencies between steps?"}
+    Q3 -->|"Yes"| DAG["Plan-and-Execute with dependency graph"]
+    Q3 -->|"No"| Q4{"Is the environment unpredictable?"}
+    Q4 -->|"Yes"| ReAct["ReAct (adaptive step-by-step)"]
+    Q4 -->|"No"| PE["Plan-and-Execute (upfront plan)"]
 ```
 
 ### Key Formulas and Heuristics

@@ -30,16 +30,11 @@ dbt (data build tool) transforms raw data in your warehouse into trusted, well-t
 datasets using SQL. It operates in the **ELT paradigm** -- data is loaded raw, then
 dbt handles the **T** (Transform) step.
 
-```
-              ELT PIPELINE
-┌──────────┐  ┌──────────┐  ┌──────────────────────┐
-│ EXTRACT  │─>│   LOAD   │─>│    TRANSFORM (dbt)   │
-│          │  │          │  │                        │
-│ Fivetran │  │ Raw      │  │ SQL models            │
-│ Airbyte  │  │ tables   │  │ Tests                 │
-│ Stitch   │  │ in       │  │ Documentation         │
-│ Custom   │  │ warehouse│  │ Lineage               │
-└──────────┘  └──────────┘  └──────────────────────┘
+```mermaid
+flowchart LR
+    subgraph ELT["ELT PIPELINE"]
+        E["EXTRACT<br/>- Fivetran<br/>- Airbyte<br/>- Stitch<br/>- Custom"] --> L[("LOAD<br/>Raw tables in warehouse")] --> T["TRANSFORM (dbt)<br/>- SQL models<br/>- Tests<br/>- Documentation<br/>- Lineage"]
+    end
 ```
 
 **What dbt does:**
@@ -152,23 +147,29 @@ Run `dbt source freshness` to check data freshness.
 
 ## 4. Layered Modeling
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  MEDALLION / LAYERED MODEL           │
-│                                                      │
-│  SOURCES        STAGING         INTERMEDIATE  MARTS  │
-│  ┌──────┐      ┌──────┐       ┌──────┐     ┌──────┐│
-│  │raw_  │─────>│stg_  │──────>│int_  │────>│fct_  ││
-│  │orders│      │orders│       │orders│     │orders││
-│  └──────┘      └──────┘       │_enri-│     └──────┘│
-│  ┌──────┐      ┌──────┐       │ched  │     ┌──────┐│
-│  │raw_  │─────>│stg_  │──────>│      │────>│dim_  ││
-│  │users │      │users │       └──────┘     │custo-││
-│  └──────┘      └──────┘                    │mers  ││
-│                                             └──────┘│
-│  1:1 mapping   Rename, cast   Join, filter  Business│
-│  source()      Clean, type    Enrich        metrics │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Layered["dbt MEDALLION / LAYERED MODEL"]
+        subgraph Src["SOURCES (1:1 mapping, source())"]
+            RO[("raw_orders")]
+            RU[("raw_users")]
+        end
+        subgraph Stg["STAGING (Rename, cast, clean, type)"]
+            SO["stg_orders"]
+            SU["stg_users"]
+        end
+        subgraph Int["INTERMEDIATE (Join, filter, enrich)"]
+            IO["int_orders_enriched"]
+        end
+        subgraph Marts["MARTS (Business metrics)"]
+            FO["fct_orders"]
+            DC["dim_customers"]
+        end
+        RO --> SO --> IO
+        RU --> SU --> IO
+        IO --> FO
+        SU --> DC
+    end
 ```
 
 | Layer | Prefix | Materialization | Purpose |

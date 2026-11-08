@@ -6,22 +6,41 @@ This directory contains in-depth guides to the most powerful AI coding tools ava
 
 Unlike traditional code assistants that offer line-level suggestions, these tools operate as full coding agents with access to your filesystem, terminal, version control, and external services. Understanding their architecture, configuration, and best practices is essential for modern software engineers.
 
-```
-                    AI CODING TOOLS
-                          |
-          +---------------+---------------+
-          |                               |
-    CLAUDE CODE                     OPENAI CODEX
-    (Anthropic)                     (OpenAI)
-          |                               |
-    +-----+-----+                  +------+------+
-    |     |     |                  |      |      |
-   CLI   IDE   Web               CLI    IDE    Web/App
-          |                               |
-    +-----+-----+                  +------+------+
-    |     |     |                  |      |      |
-  Memory Skills Hooks           AGENTS.md Skills Config
-  MCP  Agents  Hooks            MCP   Agents  Sandbox
+```mermaid
+flowchart TD
+    Root["AI CODING TOOLS"]
+    CC["CLAUDE CODE<br/>(Anthropic)"]
+    OC["OPENAI CODEX<br/>(OpenAI)"]
+
+    Root --> CC
+    Root --> OC
+
+    subgraph CC_Surfaces["Claude Code Surfaces"]
+        CC_CLI["CLI"]
+        CC_IDE["IDE"]
+        CC_Web["Web"]
+    end
+
+    subgraph CC_Features["Claude Code Capabilities"]
+        CC_F1["Memory &amp; CLAUDE.md"]
+        CC_F2["Skills &amp; Sub-Agents"]
+        CC_F3["Hooks &amp; MCP"]
+    end
+
+    subgraph OC_Surfaces["OpenAI Codex Surfaces"]
+        OC_CLI["CLI"]
+        OC_IDE["IDE"]
+        OC_Web["Web / App"]
+    end
+
+    subgraph OC_Features["OpenAI Codex Capabilities"]
+        OC_F1["AGENTS.md &amp; Config"]
+        OC_F2["Skills &amp; Agents"]
+        OC_F3["MCP &amp; OS Sandbox"]
+    end
+
+    CC --> CC_Surfaces --> CC_Features
+    OC --> OC_Surfaces --> OC_Features
 ```
 
 ## Who This Is For

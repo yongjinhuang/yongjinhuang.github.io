@@ -25,21 +25,21 @@ operational best practices for reliable data pipelines.
 **Orchestration** coordinates the execution of data pipeline tasks, ensuring they run in
 the right order, handle failures gracefully, and complete within SLAs.
 
-```
-         ORCHESTRATOR (Airflow / Dagster / Prefect)
-                         │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
-  ┌──────────┐    ┌──────────┐    ┌──────────┐
-  │ Extract  │───>│Transform │───>│   Load   │
-  │ (API)    │    │ (Spark)  │    │ (DW)     │
-  └──────────┘    └──────────┘    └──────────┘
-        │                │                │
-        ▼                ▼                ▼
-  ┌──────────┐    ┌──────────┐    ┌──────────┐
-  │  Test    │    │  Test    │    │  Test    │
-  │  Data    │    │  Quality │    │  Schema  │
-  └──────────┘    └──────────┘    └──────────┘
+```mermaid
+flowchart TD
+    Orch["ORCHESTRATOR<br/>(Airflow / Dagster / Prefect)"]
+    E["Extract (API)"]
+    T["Transform (Spark)"]
+    L["Load (DW)"]
+    TE["Test Data"]
+    TT["Test Quality"]
+    TL["Test Schema"]
+
+    Orch --> E & T & L
+    E --> T --> L
+    E --> TE
+    T --> TT
+    L --> TL
 ```
 
 **Core concept: DAG** (Directed Acyclic Graph) -- tasks with dependencies, no cycles.
@@ -52,31 +52,18 @@ The de facto standard for data pipeline orchestration, created at Airbnb in 2014
 
 ### Architecture
 
-```
-┌──────────────────────────────────────────────────┐
-│                  AIRFLOW                          │
-│                                                   │
-│  ┌────────────┐   ┌────────────┐                  │
-│  │ Web Server │   │ Scheduler  │                  │
-│  │ (Flask UI) │   │ (triggers  │                  │
-│  │            │   │  DAG runs) │                  │
-│  └─────┬──────┘   └─────┬──────┘                  │
-│        │                │                          │
-│        └───────┬────────┘                          │
-│                ▼                                   │
-│  ┌──────────────────────┐                          │
-│  │   Metadata Database  │  (PostgreSQL/MySQL)      │
-│  │   (DAG state, task   │                          │
-│  │    history, configs) │                          │
-│  └──────────────────────┘                          │
-│                │                                   │
-│        ┌───────┴───────┐                           │
-│        ▼               ▼                           │
-│  ┌──────────┐   ┌──────────┐                       │
-│  │ Executor │   │ Executor │  (Celery/K8s/Local)   │
-│  │ Worker 1 │   │ Worker 2 │                       │
-│  └──────────┘   └──────────┘                       │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Airflow["APACHE AIRFLOW ARCHITECTURE"]
+        Web["Web Server<br/>(Flask UI)"]
+        Sched["Scheduler<br/>(triggers DAG runs)"]
+        DB[("Metadata Database (PostgreSQL / MySQL)<br/>(DAG state, task history, configs)")]
+        W1["Executor Worker 1<br/>(Celery / K8s / Local)"]
+        W2["Executor Worker 2<br/>(Celery / K8s / Local)"]
+
+        Web & Sched --> DB
+        DB --> W1 & W2
+    end
 ```
 
 ### DAG Definition

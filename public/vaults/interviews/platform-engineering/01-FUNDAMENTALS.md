@@ -34,22 +34,21 @@ Platform engineering is the practice of building and maintaining an integrated p
 
 ### Why Platform Engineering Matters
 
-```
-Without Platform Engineering:
-+----------+    ticket    +----------+    ticket    +----------+
-|Developer | ----------> |   Ops    | ----------> |  Infra   |
-|  Team    | <---------- |  Team    | <---------- |  Team    |
-+----------+   wait 3d   +----------+   wait 5d   +----------+
+```mermaid
+flowchart TD
+    subgraph Without["Without Platform Engineering"]
+        D1["Developer Team"] -->|"ticket"| O1["Ops Team"]
+        O1 -->|"wait 3d"| D1
+        O1 -->|"ticket"| I1["Infra Team"]
+        I1 -->|"wait 5d"| O1
+    end
 
-With Platform Engineering:
-+----------+  self-serve  +-------------------+
-|Developer | ----------> | Internal Developer |
-|  Team    | <---------- |    Platform (IDP)  |
-+----------+   minutes   +-------------------+
-                              |       |
-                         +----+       +----+
-                         | K8s |     | CI/CD|
-                         +-----+     +------+
+    subgraph WithPE["With Platform Engineering"]
+        D2["Developer Team"] -->|"self-serve"| IDP["Internal Developer Platform (IDP)"]
+        IDP -->|"minutes"| D2
+        IDP --> K8s["K8s"]
+        IDP --> CICD["CI/CD"]
+    end
 ```
 
 ### Key Outcomes
@@ -68,17 +67,13 @@ With Platform Engineering:
 
 ### The Journey from Ops to Platform Engineering
 
-```
-Timeline of Evolution:
-
-2000s          2010s            2015s           2020s+
-+--------+    +-----------+    +----------+    +------------------+
-| Manual |    |  DevOps   |    |   SRE    |    |    Platform      |
-|  Ops   | -> | Movement  | -> | Practice | -> |   Engineering    |
-+--------+    +-----------+    +----------+    +------------------+
-  Silos       "You build it,   Reliability     Self-service +
-  Tickets      you run it"     Engineering     Product thinking
-  Waterfall   CI/CD adoption   SLOs/SLIs       Developer portals
+```mermaid
+flowchart LR
+    E1["2000s: Manual Ops<br/>- Silos<br/>- Tickets<br/>- Waterfall"]
+    E2["2010s: DevOps Movement<br/>- 'You build it, you run it'<br/>- CI/CD adoption"]
+    E3["2015s: SRE Practice<br/>- Reliability Engineering<br/>- SLOs / SLIs"]
+    E4["2020s+: Platform Engineering<br/>- Self-service + Product thinking<br/>- Developer portals"]
+    E1 --> E2 --> E3 --> E4
 ```
 
 ### Phase 1: Traditional Operations (Pre-2009)
@@ -127,26 +122,15 @@ An Internal Developer Platform (IDP) is the sum of all the technology and tools 
 
 ### IDP Reference Architecture
 
-```
-+------------------------------------------------------------------+
-|                    Developer Portal (UI Layer)                     |
-|  (Backstage, Port, Cortex, OpsLevel)                             |
-+------------------------------------------------------------------+
-|                    Integration & Delivery                         |
-|  CI/CD Pipelines | GitOps | Image Registry | Artifact Store      |
-+------------------------------------------------------------------+
-|                    Security & Compliance                          |
-|  Policy Engine | Secret Management | RBAC | Scanning             |
-+------------------------------------------------------------------+
-|                    Observability                                  |
-|  Metrics | Logs | Traces | Dashboards | Alerting                 |
-+------------------------------------------------------------------+
-|                    Infrastructure Orchestration                   |
-|  Kubernetes | Crossplane | Terraform | Cloud APIs                |
-+------------------------------------------------------------------+
-|                    Infrastructure                                 |
-|  AWS / GCP / Azure / On-Prem                                     |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    L1["Developer Portal (UI Layer)<br/>(Backstage, Port, Cortex, OpsLevel)"]
+    L2["Integration &amp; Delivery<br/>CI/CD Pipelines / GitOps / Image Registry / Artifact Store"]
+    L3["Security &amp; Compliance<br/>Policy Engine / Secret Management / RBAC / Scanning"]
+    L4["Observability<br/>Metrics / Logs / Traces / Dashboards / Alerting"]
+    L5["Infrastructure Orchestration<br/>Kubernetes / Crossplane / Terraform / Cloud APIs"]
+    L6["Infrastructure<br/>AWS / GCP / Azure / On-Prem"]
+    L1 --> L2 --> L3 --> L4 --> L5 --> L6
 ```
 
 ### Five Core Components of an IDP
@@ -224,20 +208,18 @@ Treating the platform as a product rather than a project is the defining charact
 
 ### The Platform Product Canvas
 
-```
-+-------------------+-------------------+-------------------+
-|   USER SEGMENTS   |  VALUE PROPOSITION |    CHANNELS      |
-| - Backend devs    | - Faster deploys  | - Developer      |
-| - Frontend devs   | - Less ops burden |   portal         |
-| - Data engineers  | - Built-in        | - CLI tool       |
-| - ML engineers    |   compliance      | - Slack bot      |
-+-------------------+-------------------+-------------------+
-|               KEY METRICS             |    COST STRUCTURE  |
-| - Adoption rate                       | - Platform team   |
-| - Time to first deploy               |   headcount       |
-| - Developer NPS                       | - Infrastructure  |
-| - Support ticket volume               |   costs           |
-+-------------------+-------------------+-------------------+
+```mermaid
+flowchart TD
+    subgraph Canvas["Platform Product Canvas"]
+        Seg["USER SEGMENTS<br/>- Backend devs<br/>- Frontend devs<br/>- Data engineers<br/>- ML engineers"]
+        Val["VALUE PROPOSITION<br/>- Faster deploys<br/>- Less ops burden<br/>- Built-in compliance"]
+        Chan["CHANNELS<br/>- Developer portal<br/>- CLI tool<br/>- Slack bot"]
+        Met["KEY METRICS<br/>- Adoption rate<br/>- Time to first deploy<br/>- Developer NPS<br/>- Support ticket volume"]
+        Cost["COST STRUCTURE<br/>- Platform team headcount<br/>- Infrastructure costs"]
+        Seg --> Val --> Chan
+        Val --> Met
+        Val --> Cost
+    end
 ```
 
 ### Product Management Practices for Platforms
@@ -264,32 +246,16 @@ Team Topologies, introduced by Matthew Skelton and Manuel Pais, provides a frame
 
 ### Four Fundamental Team Types
 
-```
-+------------------------------------------------------+
-|                                                      |
-|  Stream-Aligned Team                                 |
-|  (aligned to a single flow of work)                  |
-|                                                      |
-|    +----+  +----+  +----+  +----+                    |
-|    |Dev1|  |Dev2|  |QA  |  |UX  |                    |
-|    +----+  +----+  +----+  +----+                    |
-|                                                      |
-+------------------------------------------------------+
-        |                    |
-        | X-as-a-Service     | Facilitating
-        |                    |
-+----------------+    +-----------------+
-| Platform Team  |    | Enabling Team   |
-| (provides      |    | (helps stream   |
-|  self-service  |    |  teams adopt    |
-|  capabilities) |    |  new practices) |
-+----------------+    +-----------------+
-        |
-+------------------------------------------------------+
-| Complicated-Subsystem Team                            |
-| (manages complex domain requiring specialist skills)  |
-| e.g., ML model, video codec, financial engine         |
-+------------------------------------------------------+
+```mermaid
+flowchart TD
+    Stream["Stream-Aligned Team<br/>(Aligned to a single flow of work: Dev1, Dev2, QA, UX)"]
+    Platform["Platform Team<br/>(Provides self-service capabilities)"]
+    Enabling["Enabling Team<br/>(Helps stream teams adopt new practices)"]
+    Subsystem["Complicated-Subsystem Team<br/>(Manages complex domain requiring specialist skills,<br/>e.g., ML model, video codec, financial engine)"]
+
+    Stream <-->|"X-as-a-Service"| Platform
+    Stream <-->|"Facilitating"| Enabling
+    Platform <--> Subsystem
 ```
 
 ### 1. Stream-Aligned Teams
@@ -332,25 +298,16 @@ Team Topologies, introduced by Matthew Skelton and Manuel Pais, provides a frame
 
 ### Applying Team Topologies to Platform Engineering
 
-```
-Stream-Aligned Teams (Product Teams)
-    |
-    | consume self-service capabilities
-    |
-Platform Team
-    |
-    |-- Developer Portal (Backstage)
-    |-- CI/CD Pipelines (standardized)
-    |-- Infrastructure Templates (Crossplane)
-    |-- Observability Stack (Grafana/Prometheus)
-    |-- Security Tooling (policy-as-code)
-    |
-    | facilitated by
-    |
-Enabling Team (Cloud Enablement)
-    |-- Helps teams migrate to K8s
-    |-- Trains on new deployment patterns
-    |-- Shares best practices
+```mermaid
+flowchart TD
+    Stream["Stream-Aligned Teams<br/>(Product Teams)"] -->|"consume self-service capabilities"| Platform["Platform Team"]
+    Platform --> P1["Developer Portal (Backstage)"]
+    Platform --> P2["CI/CD Pipelines (standardized)"]
+    Platform --> P3["Infrastructure Templates (Crossplane)"]
+    Platform --> P4["Observability Stack (Grafana/Prometheus)"]
+    Platform --> P5["Security Tooling (policy-as-code)"]
+
+    Enabling["Enabling Team (Cloud Enablement)<br/>- Helps teams migrate to K8s<br/>- Trains on new deployment patterns<br/>- Shares best practices"] -->|"facilitates"| Stream
 ```
 
 ---
@@ -361,32 +318,13 @@ Cognitive load theory, originally from educational psychology, explains why plat
 
 ### Three Types of Cognitive Load
 
-```
-+--------------------------------------------+
-|          Total Cognitive Capacity           |
-|  +--------------------------------------+  |
-|  |  Intrinsic Load                      |  |
-|  |  (Inherent complexity of the task)   |  |
-|  |  - Business logic                    |  |
-|  |  - Algorithm design                  |  |
-|  |  - Data modeling                     |  |
-|  +--------------------------------------+  |
-|  +--------------------------------------+  |
-|  |  Extraneous Load                     |  |
-|  |  (Unnecessary complexity)            |  |
-|  |  - Infrastructure provisioning       |  |
-|  |  - Build system configuration        |  |
-|  |  - Deployment pipeline setup         |  |
-|  |  - Monitoring setup                  |  |
-|  +--------------------------------------+  |
-|  +--------------------------------------+  |
-|  |  Germane Load                        |  |
-|  |  (Learning and growth)              |  |
-|  |  - New frameworks                    |  |
-|  |  - Domain knowledge                  |  |
-|  |  - Architecture patterns             |  |
-|  +--------------------------------------+  |
-+--------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Cap["Total Cognitive Capacity"]
+        Intrinsic["Intrinsic Load (Inherent complexity of the task)<br/>- Business logic<br/>- Algorithm design<br/>- Data modeling"]
+        Extraneous["Extraneous Load (Unnecessary complexity — Minimize via Platform)<br/>- Infrastructure provisioning<br/>- Build system configuration<br/>- Deployment pipeline setup<br/>- Monitoring setup"]
+        Germane["Germane Load (Learning and growth — Maximize)<br/>- New frameworks<br/>- Domain knowledge<br/>- Architecture patterns"]
+    end
 ```
 
 ### Platform Engineering's Impact on Cognitive Load
@@ -514,26 +452,15 @@ These three disciplines are complementary, not competitive. Understanding their 
 
 ### How They Work Together
 
-```
-+----------------------------------------------------------+
-|                                                          |
-|   DevOps Culture                                         |
-|   (shared responsibility, automation, CI/CD)             |
-|                                                          |
-|   +----------------------+  +-------------------------+  |
-|   |  SRE Practices       |  |  Platform Engineering   |  |
-|   |  - SLOs/SLIs         |  |  - Developer portal     |  |
-|   |  - Error budgets     |  |  - Golden paths         |  |
-|   |  - Incident mgmt     |  |  - Self-service infra   |  |
-|   |  - Reliability       |  |  - Service templates    |  |
-|   |  - Toil reduction    |  |  - Standardization     |  |
-|   +----------------------+  +-------------------------+  |
-|              |                         |                  |
-|              +--- overlap: both -------+                  |
-|                   reduce toil and                        |
-|                   improve reliability                    |
-|                                                          |
-+----------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Culture["DevOps Culture (Shared responsibility, automation, CI/CD)"]
+        SRE["SRE Practices<br/>- SLOs/SLIs<br/>- Error budgets<br/>- Incident mgmt<br/>- Reliability<br/>- Toil reduction"]
+        PE["Platform Engineering<br/>- Developer portal<br/>- Golden paths<br/>- Self-service infra<br/>- Service templates<br/>- Standardization"]
+        Overlap["Shared Goal:<br/>Both reduce toil and improve reliability"]
+        SRE --> Overlap
+        PE --> Overlap
+    end
 ```
 
 ### When to Choose What

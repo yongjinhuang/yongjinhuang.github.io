@@ -32,14 +32,16 @@
 
 Large language models are **stateless functions**. Every call to an LLM is independent -- it has no memory of previous interactions unless you explicitly provide that context. An agent, on the other hand, must behave as though it remembers.
 
-```
-Stateless LLM Call:
-  Input  -->  [ LLM ]  -->  Output
-  (no history, no context, no continuity)
+```mermaid
+flowchart LR
+    subgraph Stateless["Stateless LLM Call (No history, no context, no continuity)"]
+        In1["Input"] --> LLM1["LLM"] --> Out1["Output"]
+    end
 
-Stateful Agent:
-  Input + Memory  -->  [ LLM ]  -->  Output + Memory Update
-  (conversation history, retrieved knowledge, learned patterns)
+    subgraph Stateful["Stateful Agent (Conversation history, retrieved knowledge, learned patterns)"]
+        In2["Input + Memory"] --> LLM2["LLM"] --> Out2["Output + Memory Update"]
+        Out2 -.->|"Persist updates"| In2
+    end
 ```
 
 ### Stateless LLMs vs. Stateful Agents
@@ -64,34 +66,22 @@ Stateful Agent:
 
 Real agent systems use multiple memory types working together, analogous to human cognition:
 
-```
-+------------------------------------------------------------------+
-|                        AGENT MEMORY STACK                        |
-+------------------------------------------------------------------+
-|                                                                  |
-|  +------------------+   +------------------+   +---------------+ |
-|  | Working Memory   |   | Short-Term Memory|   | Episodic      | |
-|  | (scratchpad,     |   | (recent turns,   |   | Memory        | |
-|  |  current plan,   |   |  sliding window) |   | (past tasks,  | |
-|  |  intermediate    |   |                  |   |  outcomes)     | |
-|  |  reasoning)      |   |                  |   |               | |
-|  +--------+---------+   +--------+---------+   +-------+-------+ |
-|           |                      |                      |        |
-|           v                      v                      v        |
-|  +----------------------------------------------------------+   |
-|  |              CONTEXT WINDOW (prompt to LLM)               |   |
-|  +----------------------------------------------------------+   |
-|           |                      |                      |        |
-|           v                      v                      v        |
-|  +------------------+   +------------------+   +---------------+ |
-|  | Semantic Memory  |   | Procedural       |   | Long-Term     | |
-|  | (facts, embeddings|  | Memory           |   | Memory        | |
-|  |  vector store)   |   | (skills, tools,  |   | (vector DB,   | |
-|  |                  |   |  few-shot examples|   |  knowledge    | |
-|  |                  |   |  )               |   |  graph)       | |
-|  +------------------+   +------------------+   +---------------+ |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Stack["AGENT MEMORY STACK"]
+        WM["Working Memory<br/>(scratchpad, current plan, intermediate reasoning)"]
+        STM["Short-Term Memory<br/>(recent turns, sliding window)"]
+        EM["Episodic Memory<br/>(past tasks, outcomes)"]
+
+        CW["CONTEXT WINDOW<br/>(Prompt to LLM)"]
+
+        SM["Semantic Memory<br/>(facts, embeddings, vector store)"]
+        PM["Procedural Memory<br/>(skills, tools, few-shot examples)"]
+        LTM["Long-Term Memory<br/>(vector DB, knowledge graph)"]
+
+        WM & STM & EM --> CW
+        SM & PM & LTM <--> CW
+    end
 ```
 
 ---
@@ -350,24 +340,13 @@ class TokenWindowMemory:
 
 The most common production pattern: summarize old messages, keep recent ones verbatim.
 
-```
-+------------------------------------------------------------+
-|                    SHORT-TERM MEMORY                        |
-+------------------------------------------------------------+
-|                                                             |
-|  [Summary of turns 1-45]                                   |
-|  "User is building a FastAPI service for order processing.  |
-|   We set up the project, defined Order and LineItem models, |
-|   created CRUD endpoints, and added JWT auth..."            |
-|                                                             |
-|  --- summary boundary ---                                   |
-|                                                             |
-|  Turn 46: User: "Now let's add pagination to GET /orders"  |
-|  Turn 47: Assistant: "I'll add offset/limit parameters..."  |
-|  Turn 48: User: "Use cursor-based pagination instead"       |
-|  Turn 49: Assistant: [current response]                     |
-|                                                             |
-+------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph STM["SHORT-TERM MEMORY (Rolling Summary + Sliding Window)"]
+        Sum["[Summary of Turns 1-45]<br/>'User is building a FastAPI service for order processing.<br/>We set up the project, defined Order and LineItem models,<br/>created CRUD endpoints, and added JWT auth...'"]
+        Recent["Recent Turns (Full Fidelity):<br/>- Turn 46: User: 'Now let's add pagination to GET /orders'<br/>- Turn 47: Assistant: 'I'll add offset/limit parameters...'<br/>- Turn 48: User: 'Use cursor-based pagination instead'<br/>- Turn 49: Assistant: [current response]"]
+        Sum -->|"summary boundary"| Recent
+    end
 ```
 
 ```python
@@ -489,24 +468,11 @@ Long-term memory persists **across sessions** and conversations. It stores knowl
 
 The most common pattern: embed text chunks and retrieve by semantic similarity.
 
-```
-Query: "How did we configure the database?"
-   |
-   v
-+------------------+
-| Embed Query      |  -->  [0.12, -0.34, 0.56, ...]
-+------------------+
-   |
-   v
-+------------------+       +-----------------------------+
-| Vector Search    |  -->  | Top-K similar memories:     |
-| (cosine sim)     |       | 1. "Set up PostgreSQL with  |
-+------------------+       |    connection pooling..."    |
-                           | 2. "Database schema uses     |
-                           |    UUID primary keys..."     |
-                           | 3. "Added pgvector extension |
-                           |    for embeddings..."        |
-                           +-----------------------------+
+```mermaid
+flowchart LR
+    Q["Query:<br/>'How did we configure the database?'"] --> Emb["Embed Query<br/>[0.12, -0.34, 0.56, ...]"]
+    Emb --> Search["Vector Search<br/>(cosine similarity)"]
+    Search --> TopK["Top-K Similar Memories:<br/>1. 'Set up PostgreSQL with connection pooling...'<br/>2. 'Database schema uses UUID primary keys...'<br/>3. 'Added pgvector extension for embeddings...'"]
 ```
 
 ```python
@@ -600,22 +566,12 @@ class VectorMemoryStore:
 
 For structured relationships between entities:
 
-```
-+----------+     works_at     +----------+
-|  Alice   | --------------> | Acme Corp |
-+----------+                  +----------+
-     |                             |
-     | knows                       | located_in
-     v                             v
-+----------+                  +----------+
-|   Bob    |                  | New York |
-+----------+                  +----------+
-     |
-     | prefers
-     v
-+----------+
-|  Python  |
-+----------+
+```mermaid
+flowchart LR
+    Alice["Alice"] -->|"works_at"| Acme["Acme Corp"]
+    Alice -->|"knows"| Bob["Bob"]
+    Acme -->|"located_in"| NY["New York"]
+    Bob -->|"prefers"| Py["Python"]
 ```
 
 ```python
@@ -841,31 +797,14 @@ class Scratchpad:
 
 A more structured working memory for multi-step tasks:
 
-```
-+------------------------------------------------------------+
-|                     AGENT WORKSPACE                         |
-+------------------------------------------------------------+
-|                                                             |
-|  Task: "Migrate database from MySQL to PostgreSQL"          |
-|                                                             |
-|  Plan:                                                      |
-|    [x] 1. Analyze current MySQL schema                      |
-|    [x] 2. Generate PostgreSQL equivalent DDL                |
-|    [ ] 3. Write data migration scripts        <-- CURRENT   |
-|    [ ] 4. Update application connection config              |
-|    [ ] 5. Run migration and verify                          |
-|                                                             |
-|  Findings:                                                  |
-|    - 47 tables, 12 views, 8 stored procedures               |
-|    - MySQL-specific: ENUM types, TINYINT booleans           |
-|    - Foreign key naming conflicts in 3 tables               |
-|                                                             |
-|  Intermediate State:                                        |
-|    - schema_analysis.json (saved)                           |
-|    - postgres_ddl.sql (saved)                               |
-|    - Current table being migrated: orders (23 of 47)        |
-|                                                             |
-+------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph WS["AGENT WORKSPACE (Task: 'Migrate database from MySQL to PostgreSQL')"]
+        Plan["Plan:<br/>[x] 1. Analyze current MySQL schema<br/>[x] 2. Generate PostgreSQL equivalent DDL<br/>[ ] 3. Write data migration scripts &lt;-- CURRENT<br/>[ ] 4. Update application connection config<br/>[ ] 5. Run migration and verify"]
+        Find["Findings:<br/>- 47 tables, 12 views, 8 stored procedures<br/>- MySQL-specific: ENUM types, TINYINT booleans<br/>- Foreign key naming conflicts in 3 tables"]
+        State["Intermediate State:<br/>- schema_analysis.json (saved)<br/>- postgres_ddl.sql (saved)<br/>- Current table being migrated: orders (23 of 47)"]
+        Plan --> Find --> State
+    end
 ```
 
 ```python
@@ -1119,28 +1058,12 @@ Semantic memory stores **general knowledge and facts** -- not tied to specific e
 
 ### Embedding-Based Retrieval
 
-```
-User query: "What authentication methods does our API support?"
-                    |
-                    v
-            +---------------+
-            | Embed query   |
-            +-------+-------+
-                    |
-                    v
-    +-------------------------------+
-    | Search semantic memory        |
-    | (vector similarity)           |
-    +-------------------------------+
-                    |
-          +---------+---------+
-          |                   |
-          v                   v
-+-------------------+ +-------------------+
-| "API supports     | | "JWT tokens are   |
-|  JWT, OAuth 2.0,  | |  configured with  |
-|  and API keys"    | |  RS256 algorithm" |
-+-------------------+ +-------------------+
+```mermaid
+flowchart TD
+    Q["User query:<br/>'What authentication methods does our API support?'"] --> Emb["Embed query"]
+    Emb --> Search["Search semantic memory<br/>(vector similarity)"]
+    Search --> M1["'API supports JWT, OAuth 2.0, and API keys'"]
+    Search --> M2["'JWT tokens are configured with RS256 algorithm'"]
 ```
 
 ```python
@@ -1394,38 +1317,24 @@ deploy_procedure = LearnedProcedure(
 
 MemGPT (Memory-GPT) treats the context window like an operating system manages virtual memory, paging information in and out as needed.
 
-```
-+------------------------------------------------------------+
-|                     MemGPT Architecture                     |
-+------------------------------------------------------------+
-|                                                             |
-|  +------------------------------------------------------+  |
-|  |              MAIN CONTEXT (in LLM window)             |  |
-|  |                                                       |  |
-|  |  System Prompt    |  Working Context  |  Recent Msgs  |  |
-|  |  (fixed)          |  (managed)        |  (sliding)    |  |
-|  +------------------------------------------------------+  |
-|           |                    ^                    |        |
-|           |    page in         |    page out        |        |
-|           v                    |                    v        |
-|  +------------------------------------------------------+  |
-|  |              EXTERNAL MEMORY (outside LLM)            |  |
-|  |                                                       |  |
-|  |  +-------------+  +-------------+  +--------------+  |  |
-|  |  | Archival    |  | Recall      |  | Core Memory  |  |  |
-|  |  | Memory      |  | Storage     |  | (editable    |  |  |
-|  |  | (vector DB) |  | (full chat  |  |  persona &   |  |  |
-|  |  |             |  |  history)   |  |  user info)  |  |  |
-|  |  +-------------+  +-------------+  +--------------+  |  |
-|  +------------------------------------------------------+  |
-|                                                             |
-|  The LLM decides WHEN to page memory in/out via            |
-|  special function calls:                                    |
-|    - archival_memory_insert(content)                        |
-|    - archival_memory_search(query)                          |
-|    - core_memory_replace(old, new)                          |
-|    - conversation_search(query)                             |
-+------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph MemGPT["MemGPT Virtual Context Architecture"]
+        subgraph Main["MAIN CONTEXT (Inside LLM Window)"]
+            Sys["System Prompt<br/>(fixed)"]
+            Work["Working Context<br/>(managed)"]
+            Rec["Recent Messages<br/>(sliding)"]
+        end
+
+        subgraph Ext["EXTERNAL MEMORY (Outside LLM Window)"]
+            Arch[("Archival Memory<br/>(Vector DB)")]
+            Recall[("Recall Storage<br/>(Full chat history)")]
+            Core["Core Memory<br/>(Editable persona &amp; user info)"]
+        end
+
+        Main -->|"page out:<br/>archival_memory_insert()<br/>core_memory_replace()"| Ext
+        Ext -->|"page in:<br/>archival_memory_search()<br/>conversation_search()"| Main
+    end
 ```
 
 Key insight: The LLM itself manages memory through tool calls, deciding what to store and retrieve.
@@ -1533,49 +1442,18 @@ class MemGPTStyleMemory:
 
 Combines RAG (Retrieval-Augmented Generation) with memory management:
 
-```
-+------------------------------------------------------------+
-|              Retrieval-Augmented Memory (RAM)                |
-+------------------------------------------------------------+
-|                                                             |
-|  User Query                                                 |
-|      |                                                      |
-|      v                                                      |
-|  +------------------+                                       |
-|  | Query Analyzer   |   Determine what to retrieve:         |
-|  | (classify need)  |   - recent context?                   |
-|  +------------------+   - domain knowledge?                  |
-|      |                  - past experience?                   |
-|      |                  - user preferences?                  |
-|      v                                                      |
-|  +------------------+    +------------------+               |
-|  | Memory Router    |--->| Short-term store |               |
-|  |                  |--->| Long-term store  |               |
-|  |                  |--->| Episodic store   |               |
-|  |                  |--->| Semantic store   |               |
-|  +------------------+    +------------------+               |
-|      |                                                      |
-|      v                                                      |
-|  +------------------+                                       |
-|  | Context Assembler|   Merge, deduplicate, rank, and      |
-|  | (fit to budget)  |   fit retrieved content into the     |
-|  +------------------+   context window budget.             |
-|      |                                                      |
-|      v                                                      |
-|  [  System Prompt + Retrieved Context + Recent Msgs  ]      |
-|                      |                                      |
-|                      v                                      |
-|                   [ LLM ]                                   |
-|                      |                                      |
-|                      v                                      |
-|                   Response                                  |
-|                      |                                      |
-|                      v                                      |
-|  +------------------+                                       |
-|  | Memory Writer    |   Extract and store new memories      |
-|  +------------------+   from the interaction.               |
-|                                                             |
-+------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph RAM["Retrieval-Augmented Memory (RAM)"]
+        UQ["User Query"] --> QA["Query Analyzer (Classify Need)<br/>Recent context / Domain knowledge / Past experience / User prefs"]
+        QA --> Router["Memory Router"]
+        Router --> S1[("Short-Term Store")] & S2[("Long-Term Store")] & S3[("Episodic Store")] & S4[("Semantic Store")]
+        S1 & S2 & S3 & S4 --> Ctx["Context Assembler<br/>(Merge, deduplicate, rank, fit to budget)"]
+        Ctx --> Prompt["System Prompt + Retrieved Context + Recent Msgs"]
+        Prompt --> LLM["LLM"] --> Resp["Response"]
+        Resp --> Writer["Memory Writer<br/>(Extract and store new memories)"]
+        Writer -.-> S1 & S2 & S3 & S4
+    end
 ```
 
 ```python
@@ -1669,34 +1547,24 @@ class RetrievalAugmentedMemory:
 
 Organize memories at multiple levels of abstraction:
 
-```
-+------------------------------------------------------------+
-|                    HIERARCHICAL MEMORY                       |
-+------------------------------------------------------------+
-|                                                             |
-|  Level 3 (most abstract):                                   |
-|  +------------------------------------------------------+  |
-|  | "I have been helping the user build a web app using   |  |
-|  |  Next.js with authentication and a PostgreSQL DB."    |  |
-|  +------------------------------------------------------+  |
-|                          |                                  |
-|  Level 2 (session-level):                                   |
-|  +------------------+  +------------------+  +----------+  |
-|  | Session 1:       |  | Session 2:       |  | Session 3|  |
-|  | Set up project,  |  | Added auth with  |  | Current  |  |
-|  | DB schema,       |  | NextAuth, fixed  |  | session  |  |
-|  | basic CRUD API   |  | CORS issues      |  |          |  |
-|  +------------------+  +------------------+  +----------+  |
-|                          |                                  |
-|  Level 1 (task-level):                                      |
-|  +--------+  +--------+  +--------+  +--------+            |
-|  | Schema |  | CRUD   |  | Auth   |  | CORS   |            |
-|  | design |  | routes |  | setup  |  | fix    |            |
-|  +--------+  +--------+  +--------+  +--------+            |
-|                          |                                  |
-|  Level 0 (raw):                                             |
-|  Full conversation messages, tool calls, outputs            |
-+------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Hier["HIERARCHICAL MEMORY"]
+        L3["Level 3 (Most Abstract)<br/>'Helping the user build a Next.js web app with auth and PostgreSQL DB'"]
+        S1["Level 2 — Session 1:<br/>Set up project, DB schema, basic CRUD API"]
+        S2["Level 2 — Session 2:<br/>Added auth with NextAuth, fixed CORS issues"]
+        S3["Level 2 — Session 3:<br/>Current session"]
+        T1["Level 1: Schema design"]
+        T2["Level 1: CRUD routes"]
+        T3["Level 1: Auth setup"]
+        T4["Level 1: CORS fix"]
+        L0["Level 0 (Raw):<br/>Full conversation messages, tool calls, outputs"]
+
+        L3 --> S1 & S2 & S3
+        S1 --> T1 & T2
+        S2 --> T3 & T4
+        T1 & T2 & T3 & T4 --> L0
+    end
 ```
 
 ```python
@@ -2030,24 +1898,17 @@ Deciding what to keep, summarize, or discard is the core skill of memory managem
 
 ### Decision Framework
 
-```
-For each piece of information, ask:
-
-  1. Is it needed for the CURRENT task?
-     YES --> Keep at full fidelity
-     NO  --> Go to 2
-
-  2. Might it be needed in the NEXT few turns?
-     YES --> Keep, but consider summarizing
-     NO  --> Go to 3
-
-  3. Is it a permanent fact or preference?
-     YES --> Store in long-term memory, remove from context
-     NO  --> Go to 4
-
-  4. Is it a learning or pattern?
-     YES --> Store in episodic/procedural memory, remove from context
-     NO  --> Discard
+```mermaid
+flowchart TD
+    Q1{"1. Needed for CURRENT task?"}
+    Q1 -->|"YES"| A1["Keep in context at full fidelity"]
+    Q1 -->|"NO"| Q2{"2. Needed in NEXT few turns?"}
+    Q2 -->|"YES"| A2["Keep in context, consider summarizing"]
+    Q2 -->|"NO"| Q3{"3. Permanent fact or preference?"}
+    Q3 -->|"YES"| A3["Store in Long-Term Memory &amp; remove from context"]
+    Q3 -->|"NO"| Q4{"4. Reusable learning or pattern?"}
+    Q4 -->|"YES"| A4["Store in Episodic / Procedural Memory &amp; remove from context"]
+    Q4 -->|"NO"| A5["Discard"]
 ```
 
 ### Priority-Based Retention
@@ -2139,27 +2000,14 @@ def optimize_context(
 
 Research shows that LLMs pay more attention to the beginning and end of their context. Place important information strategically:
 
-```
-+------------------------------------------------------------+
-|                  CONTEXT WINDOW LAYOUT                       |
-+------------------------------------------------------------+
-|                                                             |
-|  [HIGH ATTENTION] Beginning of context:                     |
-|    - System prompt                                          |
-|    - Core memory / persona                                  |
-|    - Current task description                               |
-|                                                             |
-|  [LOW ATTENTION] Middle of context:                         |
-|    - Conversation history summary                           |
-|    - Retrieved background knowledge                         |
-|    - Old tool results                                       |
-|                                                             |
-|  [HIGH ATTENTION] End of context:                           |
-|    - Recent messages (last 3-5 turns)                       |
-|    - Current user query                                     |
-|    - Active plan / next step                                |
-|                                                             |
-+------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Layout["CONTEXT WINDOW LAYOUT (Mitigating 'Lost in the Middle')"]
+        Top["[HIGH ATTENTION] Beginning of Context<br/>- System prompt<br/>- Core memory / persona<br/>- Current task description"]
+        Mid["[LOW ATTENTION] Middle of Context<br/>- Conversation history summary<br/>- Retrieved background knowledge<br/>- Older tool results"]
+        End["[HIGH ATTENTION] End of Context<br/>- Recent messages (last 3-5 turns)<br/>- Current user query<br/>- Active plan / next step"]
+        Top --> Mid --> End
+    end
 ```
 
 ```python
@@ -2265,29 +2113,20 @@ I would use both together: RAG for domain knowledge ("What does the API docs say
 
 I would implement a **shared memory bus** with private and public partitions:
 
-```
-+----------+     +----------+     +----------+
-| Agent A  |     | Agent B  |     | Agent C  |
-| (private |     | (private |     | (private |
-|  memory) |     |  memory) |     |  memory) |
-+----+-----+     +----+-----+     +----+-----+
-     |                |                |
-     v                v                v
-+--------------------------------------------+
-|          SHARED MEMORY BUS                  |
-|                                             |
-|  +------------------+  +-----------------+  |
-|  | Shared Workspace |  | Message Board   |  |
-|  | (current task    |  | (agent-to-agent |  |
-|  |  state, plan)    |  |  communications)|  |
-|  +------------------+  +-----------------+  |
-|                                             |
-|  +------------------+  +-----------------+  |
-|  | Shared Knowledge |  | Coordination    |  |
-|  | (facts all agents|  | State (locks,   |  |
-|  |  should know)    |  |  assignments)   |  |
-|  +------------------+  +-----------------+  |
-+--------------------------------------------+
+```mermaid
+flowchart TD
+    A["Agent A<br/>(private memory)"]
+    B["Agent B<br/>(private memory)"]
+    C["Agent C<br/>(private memory)"]
+
+    subgraph Bus["SHARED MEMORY BUS"]
+        SW["Shared Workspace<br/>(current task state, plan)"]
+        MB["Message Board<br/>(agent-to-agent comms)"]
+        SK["Shared Knowledge<br/>(facts all agents need)"]
+        CS["Coordination State<br/>(locks, assignments)"]
+    end
+
+    A & B & C <--> Bus
 ```
 
 Key design principles:
@@ -2423,30 +2262,17 @@ Memory conflicts are inevitable in long-running agents. My approach:
 
 ### Architecture Decision Guide
 
-```
-Need to remember conversation?
-  --> Short-Term Memory (sliding window + summary)
-
-Need domain knowledge?
-  --> Semantic Memory (vector store + RAG)
-
-Need to learn from experience?
-  --> Episodic Memory (success/failure records)
-
-Need to reuse tool patterns?
-  --> Procedural Memory (few-shot examples)
-
-Need to survive restarts?
-  --> State Persistence (checkpointing)
-
-Need LLM-controlled memory?
-  --> MemGPT-style architecture
-
-Need multi-agent shared state?
-  --> Shared memory bus + coordination layer
-
-Need to handle 1000s of users?
-  --> Tiered storage + per-user namespacing
+```mermaid
+flowchart LR
+    Q{"Memory Architecture Decision Guide"}
+    Q -->|"Remember conversation"| M1["Short-Term Memory (sliding window + summary)"]
+    Q -->|"Domain knowledge"| M2["Semantic Memory (vector store + RAG)"]
+    Q -->|"Learn from experience"| M3["Episodic Memory (success/failure records)"]
+    Q -->|"Reuse tool patterns"| M4["Procedural Memory (few-shot examples)"]
+    Q -->|"Survive restarts"| M5["State Persistence (checkpointing)"]
+    Q -->|"LLM-controlled paging"| M6["MemGPT-style virtual context"]
+    Q -->|"Multi-agent shared state"| M7["Shared memory bus + coordination layer"]
+    Q -->|"Handle 1000s of users"| M8["Tiered storage + per-user namespacing"]
 ```
 
 ### Token Estimation Rules of Thumb

@@ -9,11 +9,12 @@ ShopBack is **Asia-Pacific's leading cashback and rewards platform**, founded in
 3. Merchant pays ShopBack a referral commission on purchase
 4. ShopBack keeps a cut and passes the rest as **cashback** to the user
 
-```
-┌──────────┐    Click    ┌──────────┐   Affiliate   ┌──────────┐
-│   User   │───────────→│ ShopBack │──────Link────→│ Merchant │
-│          │←───────────│          │←──────────────│          │
-└──────────┘  Cashback   └──────────┘  Commission   └──────────┘
+```mermaid
+flowchart LR
+    User["User"] -->|"Click"| SB["ShopBack"]
+    SB -->|"Affiliate Link"| Merchant["Merchant"]
+    Merchant -->|"Commission"| SB
+    SB -->|"Cashback"| User
 ```
 
 ## Scale & Numbers

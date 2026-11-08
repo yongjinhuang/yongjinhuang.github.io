@@ -50,33 +50,17 @@ Kafka is a distributed commit log that provides:
 
 ### Cluster Overview
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      KAFKA CLUSTER                          │
-│                                                             │
-│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   │
-│  │ Broker 0│   │ Broker 1│   │ Broker 2│   │ Broker 3│   │
-│  │         │   │         │   │         │   │         │   │
-│  │ Topic-A │   │ Topic-A │   │ Topic-A │   │ Topic-B │   │
-│  │ Part-0  │   │ Part-1  │   │ Part-2  │   │ Part-0  │   │
-│  │ (Leader)│   │ (Leader)│   │ (Leader)│   │ (Leader)│   │
-│  │         │   │         │   │         │   │         │   │
-│  │ Topic-A │   │ Topic-B │   │ Topic-B │   │ Topic-A │   │
-│  │ Part-1  │   │ Part-0  │   │ Part-0  │   │ Part-0  │   │
-│  │(Replica)│   │(Replica)│   │(Replica)│   │(Replica)│   │
-│  └─────────┘   └─────────┘   └─────────┘   └─────────┘   │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │          ZooKeeper / KRaft Controller               │   │
-│  │  - Broker metadata     - Leader election            │   │
-│  │  - Topic config        - Cluster membership         │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-         ▲                                    │
-         │                                    ▼
-   ┌──────────┐                        ┌──────────┐
-   │ Producers│                        │ Consumers│
-   └──────────┘                        └──────────┘
+```mermaid
+flowchart TD
+    Producers["Producers"] --> Cluster
+    subgraph Cluster["KAFKA CLUSTER"]
+        B0["Broker 0<br/>- Topic-A Part-0 (Leader)<br/>- Topic-A Part-1 (Replica)"]
+        B1["Broker 1<br/>- Topic-A Part-1 (Leader)<br/>- Topic-B Part-0 (Replica)"]
+        B2["Broker 2<br/>- Topic-A Part-2 (Leader)<br/>- Topic-B Part-0 (Replica)"]
+        B3["Broker 3<br/>- Topic-B Part-0 (Leader)<br/>- Topic-A Part-0 (Replica)"]
+        KRaft["ZooKeeper / KRaft Controller<br/>- Broker metadata &amp; Leader election<br/>- Topic config &amp; Cluster membership"]
+    end
+    Cluster --> Consumers["Consumers"]
 ```
 
 ### ZooKeeper vs KRaft
@@ -171,30 +155,15 @@ Follower (Broker 2):
 
 ### Producer Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    PRODUCER                          │
-│                                                      │
-│  Application ──> Serializer ──> Partitioner ──>     │
-│                                                      │
-│  ┌──────────────────────────────────────────────┐   │
-│  │           Record Accumulator                  │   │
-│  │                                               │   │
-│  │  Batch for Partition 0: [msg1, msg4, msg7]   │   │
-│  │  Batch for Partition 1: [msg2, msg5]         │   │
-│  │  Batch for Partition 2: [msg3, msg6, msg8]   │   │
-│  └──────────────────────────────────────────────┘   │
-│                      │                               │
-│                      ▼                               │
-│             Sender Thread                            │
-│             (background)                             │
-│                      │                               │
-│                      ▼                               │
-│         Network Client (per broker)                  │
-└─────────────────────────────────────────────────────┘
-                       │
-                       ▼
-              Kafka Brokers
+```mermaid
+flowchart TD
+    subgraph Producer["PRODUCER PIPELINE"]
+        App["Application"] --> Ser["Serializer"] --> Part["Partitioner"]
+        Part --> Acc["Record Accumulator<br/>- Batch for Partition 0: [msg1, msg4, msg7]<br/>- Batch for Partition 1: [msg2, msg5]<br/>- Batch for Partition 2: [msg3, msg6, msg8]"]
+        Acc --> Sender["Sender Thread (background)"]
+        Sender --> Net["Network Client (per broker)"]
+    end
+    Net --> Brokers["Kafka Brokers"]
 ```
 
 ### Producer Acknowledgments (acks)
@@ -209,16 +178,24 @@ Follower (Broker 2):
 
 Prevents duplicate messages caused by producer retries.
 
-```
-Without idempotency:
-  Producer ──send──> Broker (writes msg)
-  Producer ◄──ack lost──
-  Producer ──retry──> Broker (writes DUPLICATE msg)
+```mermaid
+sequenceDiagram
+    participant P as "Producer"
+    participant B as "Broker"
 
-With idempotency (enable.idempotence=true):
-  Producer ──send(PID=1, seq=0)──> Broker (writes msg)
-  Producer ◄──ack lost──
-  Producer ──retry(PID=1, seq=0)──> Broker (detects duplicate, skips)
+    rect rgb(60, 30, 30)
+    Note over P,B: Without Idempotency
+    P->>B: send(msg) — Broker writes msg
+    B--xP: ack lost
+    P->>B: retry(msg) — Broker writes DUPLICATE msg
+    end
+
+    rect rgb(30, 60, 40)
+    Note over P,B: With Idempotency (enable.idempotence=true)
+    P->>B: send(PID=1, seq=0) — Broker writes msg
+    B--xP: ack lost
+    P->>B: retry(PID=1, seq=0) — Broker detects duplicate & skips
+    end
 ```
 
 **Key config:**
@@ -258,30 +235,32 @@ public class GeoPartitioner implements Partitioner {
 
 ### Consumer Group Model
 
-```
-Topic: "orders" (4 partitions)
+```mermaid
+flowchart LR
+    subgraph Topic["Topic: 'orders' (4 partitions)"]
+        P0["Partition 0"]
+        P1["Partition 1"]
+        P2["Partition 2"]
+        P3["Partition 3"]
+    end
 
-Consumer Group "order-processing":
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│ Consumer A  │  │ Consumer B  │  │ Consumer C  │
-│             │  │             │  │             │
-│ Partition 0 │  │ Partition 1 │  │ Partition 2 │
-│ Partition 3 │  │             │  │             │
-└─────────────┘  └─────────────┘  └─────────────┘
+    subgraph CG1["Consumer Group 'order-processing'"]
+        CA["Consumer A<br/>(Partition 0, 3)"]
+        CB["Consumer B<br/>(Partition 1)"]
+        CC["Consumer C<br/>(Partition 2)"]
+    end
 
-Consumer Group "analytics":
-┌─────────────┐  ┌─────────────┐
-│ Consumer X  │  │ Consumer Y  │
-│             │  │             │
-│ Partition 0 │  │ Partition 2 │
-│ Partition 1 │  │ Partition 3 │
-└─────────────┘  └─────────────┘
+    subgraph CG2["Consumer Group 'analytics'"]
+        CX["Consumer X<br/>(Partition 0, 1)"]
+        CY["Consumer Y<br/>(Partition 2, 3)"]
+    end
 
-Key rules:
-- Each partition is consumed by exactly ONE consumer per group
-- A consumer can consume from multiple partitions
-- If consumers > partitions, some consumers sit idle
-- Different consumer groups independently consume all messages
+    P0 & P3 --> CA
+    P1 --> CB
+    P2 --> CC
+
+    P0 & P1 --> CX
+    P2 & P3 --> CY
 ```
 
 ### Offset Management
@@ -360,31 +339,18 @@ Kafka Streams is a client library for building stream processing applications on
 
 ### Architecture
 
-```
-┌──────────────────────────────────────────────┐
-│              Kafka Streams App                │
-│                                              │
-│  ┌─────────────────────────────────────┐     │
-│  │           Topology                   │     │
-│  │                                     │     │
-│  │  Source ──> Process ──> Process ──> Sink  │
-│  │  (Topic)   (filter)   (map)   (Topic)    │
-│  └─────────────────────────────────────┘     │
-│                                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ Stream   │  │ Stream   │  │ Stream   │   │
-│  │ Task 0   │  │ Task 1   │  │ Task 2   │   │
-│  │ (Part-0) │  │ (Part-1) │  │ (Part-2) │   │
-│  │          │  │          │  │          │   │
-│  │ State    │  │ State    │  │ State    │   │
-│  │ Store    │  │ Store    │  │ Store    │   │
-│  └──────────┘  └──────────┘  └──────────┘   │
-│                                              │
-│  State stores backed by:                     │
-│  - RocksDB (default, persistent)             │
-│  - In-memory                                 │
-│  - Changelog topics (for fault tolerance)    │
-└──────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph App["Kafka Streams App"]
+        subgraph Topo["Processor Topology"]
+            Src["Source (Topic)"] --> F["Process (filter)"] --> M["Process (map)"] --> Sink["Sink (Topic)"]
+        end
+        subgraph Tasks["Parallel Stream Tasks (State Stores: RocksDB / In-memory + Changelog topics)"]
+            T0["Stream Task 0 (Part-0)<br/>+ State Store"]
+            T1["Stream Task 1 (Part-1)<br/>+ State Store"]
+            T2["Stream Task 2 (Part-2)<br/>+ State Store"]
+        end
+    end
 ```
 
 ### KStream vs KTable
@@ -474,40 +440,26 @@ Kafka Connect is a framework for streaming data between Kafka and external syste
 
 ### Architecture
 
-```
-┌──────────────────────────────────────────────────┐
-│              KAFKA CONNECT CLUSTER                │
-│                                                   │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
-│  │ Worker 1 │  │ Worker 2 │  │ Worker 3 │       │
-│  │          │  │          │  │          │       │
-│  │ Task 1a  │  │ Task 1b  │  │ Task 2a  │       │
-│  │ Task 2b  │  │ Task 3a  │  │ Task 3b  │       │
-│  └──────────┘  └──────────┘  └──────────┘       │
-│                                                   │
-│  Connectors:                                      │
-│  1. Source: MySQL CDC ──> Kafka                   │
-│  2. Sink: Kafka ──> Elasticsearch                 │
-│  3. Sink: Kafka ──> S3                            │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Connect["KAFKA CONNECT CLUSTER"]
+        W1["Worker 1<br/>- Task 1a<br/>- Task 2b"]
+        W2["Worker 2<br/>- Task 1b<br/>- Task 3a"]
+        W3["Worker 3<br/>- Task 2a<br/>- Task 3b"]
+        Conn["Configured Connectors:<br/>1. Source: MySQL CDC -&gt; Kafka<br/>2. Sink: Kafka -&gt; Elasticsearch<br/>3. Sink: Kafka -&gt; S3"]
+    end
 ```
 
 ### Source vs Sink Connectors
 
-```
-Source Connectors (External ──> Kafka):
-┌──────────┐    ┌───────────┐    ┌─────────┐
-│ Database │───>│  Source    │───>│  Kafka  │
-│ Files    │    │ Connector │    │  Topics │
-│ APIs     │    │           │    │         │
-└──────────┘    └───────────┘    └─────────┘
-
-Sink Connectors (Kafka ──> External):
-┌─────────┐    ┌───────────┐    ┌──────────┐
-│  Kafka  │───>│   Sink    │───>│ Database │
-│  Topics │    │ Connector │    │ S3       │
-│         │    │           │    │ Elastic  │
-└─────────┘    └───────────┘    └──────────┘
+```mermaid
+flowchart LR
+    subgraph SrcFlow["Source Connectors (External -> Kafka)"]
+        ExtIn["Database / Files / APIs"] --> SrcConn["Source Connector"] --> K1["Kafka Topics"]
+    end
+    subgraph SinkFlow["Sink Connectors (Kafka -> External)"]
+        K2["Kafka Topics"] --> SinkConn["Sink Connector"] --> ExtOut["Database / S3 / Elasticsearch"]
+    end
 ```
 
 ### Popular Connectors
@@ -539,17 +491,11 @@ Sink Connectors (Kafka ──> External):
 
 Schema Registry provides a centralized repository for schemas, enabling schema evolution and compatibility checks.
 
-```
-┌──────────┐    ┌─────────────────┐    ┌──────────┐
-│ Producer │───>│ Schema Registry │◄───│ Consumer │
-│          │    │                 │    │          │
-│ Serialize│    │ - Store schemas │    │Deserialize│
-│ with     │    │ - Version mgmt │    │ with      │
-│ schema ID│    │ - Compatibility │    │ schema ID │
-└──────────┘    └─────────────────┘    └──────────┘
-                        │
-                   Schemas stored
-                   in _schemas topic
+```mermaid
+flowchart LR
+    Prod["Producer<br/>Serialize with schema ID"] --> SR["Schema Registry<br/>- Store schemas<br/>- Version mgmt<br/>- Compatibility"]
+    Cons["Consumer<br/>Deserialize with schema ID"] --> SR
+    SR --> Topic[("Schemas stored in<br/>_schemas topic")]
 ```
 
 ### Supported Formats
@@ -623,18 +569,13 @@ try {
 
 ### End-to-End Exactly-Once
 
-```
-Consumer ──read──> Process ──write──> Producer
-    │                                    │
-    └──── Atomic: commit offsets + ──────┘
-          produce output in one
-          transaction
-
-Requires:
-1. Idempotent producer (enable.idempotence=true)
-2. Transactional producer (transactional.id set)
-3. Consumer with isolation.level=read_committed
-4. Kafka Streams: processing.guarantee=exactly_once_v2
+```mermaid
+flowchart LR
+    subgraph EOS["Exactly-Once Read-Process-Write Transaction"]
+        C["Consumer<br/>(isolation.level=read_committed)"] -->|"read"| Proc["Process"]
+        Proc -->|"write"| P["Producer<br/>(enable.idempotence=true,<br/>transactional.id set)"]
+        P -.->|"Atomic: commit offsets + produce output<br/>in one transaction (exactly_once_v2)"| C
+    end
 ```
 
 ---
@@ -835,17 +776,15 @@ TOPIC (production):
 
 ### Kafka Ecosystem at a Glance
 
-```
-┌─────────────────────────────────────────────┐
-│              KAFKA ECOSYSTEM                │
-│                                             │
-│  Core:        Kafka Brokers, KRaft          │
-│  Streaming:   Kafka Streams, ksqlDB         │
-│  Integration: Kafka Connect, MirrorMaker 2  │
-│  Schema:      Schema Registry (Avro/Proto)  │
-│  Monitoring:  Cruise Control, Burrow        │
-│  Security:    SASL, SSL/TLS, ACLs           │
-│  Managed:     Confluent Cloud, AWS MSK,     │
-│               Azure Event Hubs, Aiven       │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Eco["KAFKA ECOSYSTEM"]
+        Core["Core: Kafka Brokers, KRaft"]
+        Stream["Streaming: Kafka Streams, ksqlDB"]
+        Int["Integration: Kafka Connect, MirrorMaker 2"]
+        Schema["Schema: Schema Registry (Avro / Protobuf)"]
+        Mon["Monitoring: Cruise Control, Burrow"]
+        Sec["Security: SASL, SSL/TLS, ACLs"]
+        Managed["Managed: Confluent Cloud, AWS MSK, Azure Event Hubs, Aiven"]
+    end
 ```

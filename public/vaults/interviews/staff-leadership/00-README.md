@@ -22,23 +22,13 @@ A comprehensive guide for Senior (L5), Staff (L6), and Principal (L7) engineerin
 
 Individual contributor interviews at L3-L4 focus on **can you write code and solve problems**. Staff+ interviews shift the focus to **can you multiply the output of an entire organization**.
 
-```
-+------------------------------------------------------------------+
-|               IC vs STAFF+ INTERVIEW FOCUS                        |
-+------------------------------------------------------------------+
-|                                                                    |
-|  L3-L4 (IC)                    L5-L7 (Staff+)                    |
-|  --------------------------    --------------------------------   |
-|  Solve the problem             Define which problems to solve     |
-|  Write correct code            Design systems others build        |
-|  Optimize a function           Optimize an organization           |
-|  Pass test cases               Set quality standards              |
-|  Work within constraints       Identify and remove constraints    |
-|  Ship your feature             Ship capabilities across teams     |
-|  Debug a system                Build a culture of reliability     |
-|  Learn new technologies        Evaluate and adopt technologies    |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Focus["IC vs STAFF+ INTERVIEW FOCUS"]
+        IC["L3-L4 (IC)<br/>- Solve the problem<br/>- Write correct code<br/>- Optimize a function<br/>- Pass test cases<br/>- Work within constraints<br/>- Ship your feature<br/>- Debug a system<br/>- Learn new technologies"]
+        Staff["L5-L7 (Staff+)<br/>- Define which problems to solve<br/>- Design systems others build<br/>- Optimize an organization<br/>- Set quality standards<br/>- Identify and remove constraints<br/>- Ship capabilities across teams<br/>- Build a culture of reliability<br/>- Evaluate and adopt technologies"]
+        IC -->|"Scope &amp; Leverage Shift"| Staff
+    end
 ```
 
 The fundamental shift: **you are no longer evaluated on what you can build. You are evaluated on what you enable others to build.**
@@ -94,27 +84,15 @@ Understanding the precise expectations at each level is critical. Companies use 
 
 Every Staff+ interview, regardless of company or format, evaluates five core pillars.
 
-```
-+------------------------------------------------------------------+
-|              THE FIVE PILLARS OF STAFF+ ASSESSMENT                |
-+------------------------------------------------------------------+
-|                                                                    |
-|  1. TECHNICAL STRATEGY         "Can you set direction?"           |
-|     - Vision, trade-offs, technology choices                      |
-|                                                                    |
-|  2. INFLUENCE & COMMUNICATION  "Can you move people?"             |
-|     - Persuasion, consensus, stakeholder management               |
-|                                                                    |
-|  3. SYSTEM THINKING            "Can you see the big picture?"     |
-|     - Org-level problems, platform thinking, trade-offs           |
-|                                                                    |
-|  4. PEOPLE DEVELOPMENT         "Can you grow others?"             |
-|     - Mentoring, culture, team health                             |
-|                                                                    |
-|  5. EXECUTION & DELIVERY       "Can you ship at scale?"           |
-|     - Scoping, risk, cross-team coordination                      |
-|                                                                    |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Pillars["THE FIVE PILLARS OF STAFF+ ASSESSMENT"]
+        P1["1. TECHNICAL STRATEGY — 'Can you set direction?'<br/>Vision, trade-offs, technology choices"]
+        P2["2. INFLUENCE &amp; COMMUNICATION — 'Can you move people?'<br/>Persuasion, consensus, stakeholder management"]
+        P3["3. SYSTEM THINKING — 'Can you see the big picture?'<br/>Org-level problems, platform thinking, trade-offs"]
+        P4["4. PEOPLE DEVELOPMENT — 'Can you grow others?'<br/>Mentoring, culture, team health"]
+        P5["5. EXECUTION &amp; DELIVERY — 'Can you ship at scale?'<br/>Scoping, risk, cross-team coordination"]
+    end
 ```
 
 ### How Pillars Map to Interview Rounds

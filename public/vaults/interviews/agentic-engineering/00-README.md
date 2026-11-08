@@ -6,22 +6,30 @@ This directory contains a comprehensive interview preparation series for **agent
 
 The series is organized into two tracks that mirror how the industry thinks about agents today:
 
-```
-                    AGENTIC ENGINEERING
-                           |
-            +--------------+--------------+
-            |                             |
-   TRACK A: PRODUCTION            TRACK B: CODING
-   AGENTIC SYSTEMS                AGENTS / SWE AGENTS
-            |                             |
-  +----+----+----+----+         +----+----+----+
-  |    |    |    |    |         |    |    |    |
- 01   02   03   04   05        09   06   07   08
- Arch Tool Mem Plan  Multi     Code Frmw Rely Eval
-           |              |         |
-           +------+-------+    10  Infrastructure
-                  |            11  Case Studies
-            Shared Foundation
+```mermaid
+flowchart TD
+    Root["AGENTIC ENGINEERING"]
+    TrackA["TRACK A: PRODUCTION AGENTIC SYSTEMS"]
+    TrackB["TRACK B: CODING AGENTS / SWE AGENTS"]
+
+    Root --> TrackA & TrackB
+
+    M01["01. Agent Architectures"]
+    M02["02. Tool Design &amp; MCP"]
+    M03["03. Memory &amp; State"]
+    M04["04. Planning &amp; Reasoning"]
+    M05["05. Multi-Agent Orchestration"]
+
+    M06["06. Agent Frameworks"]
+    M07["07. Reliability &amp; Guardrails"]
+    M08["08. Evaluation &amp; Observability"]
+    M09["09. Coding Agents"]
+    M10["10. Agent Infrastructure"]
+    M11["11. Case Studies"]
+
+    TrackA --> M01 & M02 & M03 & M04 & M05
+    TrackB --> M09 & M06 & M07 & M08 & M10 & M11
+    M01 & M02 & M03 & M04 & M05 & M06 & M07 & M08 --> Shared["Shared Foundation"]
 ```
 
 Every topic emphasizes patterns you can whiteboard, code you can write, trade-offs you can articulate, and real-world failure modes you should anticipate.

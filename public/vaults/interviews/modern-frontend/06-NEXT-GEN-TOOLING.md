@@ -12,24 +12,33 @@ This is not just about speed. The new tools bring better defaults, simpler confi
 
 ### The Old Stack vs The New Stack
 
-```
-OLD STACK (2018-2023)                NEW STACK (2024-2026)
-+-----------------+                  +-----------------+
-| Webpack 5       | -- bundler -->   | Vite 6 + Rolldown|
-| (or Parcel)     |                  | (or Turbopack)   |
-+-----------------+                  +-----------------+
-| Babel           | -- compiler -->  | SWC              |
-+-----------------+                  +-----------------+
-| ESLint          | -- linter -->    | oxlint / Biome   |
-+-----------------+                  +-----------------+
-| Prettier        | -- formatter --> | Biome / dprint   |
-+-----------------+                  +-----------------+
-| PostCSS         | -- CSS tools --> | Lightning CSS    |
-+-----------------+                  +-----------------+
-| Jest            | -- test runner ->| Vitest           |
-+-----------------+                  +-----------------+
-| npm / yarn      | -- pkg mgr -->  | pnpm / bun       |
-+-----------------+                  +-----------------+
+```mermaid
+flowchart LR
+    subgraph Old["OLD STACK (2018-2023)"]
+        O1["Webpack 5 (or Parcel)"]
+        O2["Babel"]
+        O3["ESLint"]
+        O4["Prettier"]
+        O5["PostCSS"]
+        O6["Jest"]
+        O7["npm / yarn"]
+    end
+    subgraph New["NEW STACK (2024-2026)"]
+        N1["Vite 6 + Rolldown (or Turbopack)"]
+        N2["SWC"]
+        N3["oxlint / Biome"]
+        N4["Biome / dprint"]
+        N5["Lightning CSS"]
+        N6["Vitest"]
+        N7["pnpm / bun"]
+    end
+    O1 -->|"bundler"| N1
+    O2 -->|"compiler"| N2
+    O3 -->|"linter"| N3
+    O4 -->|"formatter"| N4
+    O5 -->|"CSS tools"| N5
+    O6 -->|"test runner"| N6
+    O7 -->|"pkg mgr"| N7
 ```
 
 ### Why the Shift to Native Tooling?
@@ -109,23 +118,16 @@ export default defineConfig({
 
 **Vite dev server architecture:**
 
-```
-Browser Request                     Vite Dev Server
-    |                                     |
-    |  GET /src/App.tsx                   |
-    |------------------------------------>|
-    |                                     |
-    |  1. Intercept request               |
-    |  2. Transform file (SWC/esbuild)    |
-    |  3. Return native ESM               |
-    |<------------------------------------|
-    |                                     |
-    |  Browser handles ESM imports        |
-    |  (no bundling in dev!)              |
+```mermaid
+sequenceDiagram
+    participant B as "Browser Request"
+    participant V as "Vite Dev Server"
 
-Key insight: Vite serves unbundled ESM in development.
-Each file is a separate HTTP request, transformed on demand.
-This is why dev startup is instant regardless of project size.
+    B->>V: GET /src/App.tsx
+    Note over V: 1. Intercept request<br/>2. Transform file (SWC/esbuild)<br/>3. Return native ESM
+    V-->>B: Native ESM response
+    Note over B: Browser handles ESM imports (no bundling in dev!)
+    Note over B,V: Key insight: Vite serves unbundled ESM in development (transformed on demand).
 ```
 
 ### Turbopack

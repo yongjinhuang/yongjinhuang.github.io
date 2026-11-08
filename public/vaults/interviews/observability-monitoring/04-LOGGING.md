@@ -91,13 +91,11 @@ log.Info().
 
 Pass a unique ID through all services in a request chain:
 
-```
-Service A → Service B → Service C
-   │            │            │
-   └── trace_id: "abc123" ──┘
-
-All logs from this request have trace_id: "abc123"
-→ Search by trace_id to see the full request journey
+```mermaid
+flowchart LR
+    A["Service A<br/>log(trace_id='abc123')"] --> B["Service B<br/>log(trace_id='abc123')"] --> C["Service C<br/>log(trace_id='abc123')"]
+    Corr["Search by trace_id='abc123'<br/>to see the full request journey"]
+    A & B & C -.-> Corr
 ```
 
 ---
@@ -106,44 +104,15 @@ All logs from this request have trace_id: "abc123"
 
 ### Architecture
 
-```
-┌──────────────────────────────────────────────────┐
-│                   ELK STACK                       │
-│                                                   │
-│  ┌──────────┐                                     │
-│  │ Filebeat │  Lightweight log shipper             │
-│  │ (on each │  Tails log files, ships to Logstash  │
-│  │  host)   │                                     │
-│  └────┬─────┘                                     │
-│       │                                            │
-│       ▼                                            │
-│  ┌──────────────────────┐                          │
-│  │      LOGSTASH         │  Processing pipeline    │
-│  │ ┌──────┬──────┬─────┐│                          │
-│  │ │Input │Filter│Output││  Parse, enrich, route   │
-│  │ │(beats│(grok │(ES)  ││                          │
-│  │ │ kafka│ mutate│      ││                          │
-│  │ │ file)│ date)│      ││                          │
-│  │ └──────┴──────┴─────┘│                          │
-│  └──────────┬───────────┘                          │
-│             ▼                                      │
-│  ┌──────────────────────┐                          │
-│  │   ELASTICSEARCH       │  Search & storage       │
-│  │ ┌──────────────────┐ │                          │
-│  │ │ Index: logs-2024 │ │  Shards + replicas       │
-│  │ │ ┌─────┐ ┌─────┐  │ │  Inverted index          │
-│  │ │ │Shard│ │Shard│  │ │                          │
-│  │ │ │  1  │ │  2  │  │ │                          │
-│  │ │ └─────┘ └─────┘  │ │                          │
-│  │ └──────────────────┘ │                          │
-│  └──────────┬───────────┘                          │
-│             ▼                                      │
-│  ┌──────────────────────┐                          │
-│  │      KIBANA           │  Visualization           │
-│  │ Discover | Visualize  │  Dashboards              │
-│  │ Dashboard | Alerting  │  Full-text search        │
-│  └──────────────────────┘                          │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph ELK["ELK STACK"]
+        FB["Filebeat (on each host)<br/>Lightweight log shipper: tails log files"]
+        LS["LOGSTASH (Processing Pipeline)<br/>Input (beats/kafka/file) -&gt; Filter (grok/mutate/date) -&gt; Output (ES)"]
+        ES[("ELASTICSEARCH (Search &amp; Storage)<br/>Index: logs-2024 (Shard 1, Shard 2, Replicas, Inverted Index)")]
+        Kib["KIBANA (Visualization)<br/>Discover / Visualize / Dashboard / Alerting"]
+        FB --> LS --> ES --> Kib
+    end
 ```
 
 ### Elasticsearch Concepts
@@ -189,28 +158,14 @@ output {
 
 ### Architecture
 
-```
-┌──────────────────────────────────────────┐
-│              GRAFANA LOKI                 │
-│                                           │
-│  ┌───────────┐   ┌───────────────────┐   │
-│  │Distributor│──>│    Ingester       │   │
-│  │(receives  │   │(builds chunks,    │   │
-│  │ pushes)   │   │ flushes to store) │   │
-│  └───────────┘   └───────────────────┘   │
-│                           │               │
-│                           ▼               │
-│                  ┌────────────────┐       │
-│                  │ Object Storage │       │
-│                  │ (S3/GCS/Azure) │       │
-│                  └────────────────┘       │
-│                           │               │
-│  ┌───────────┐           │               │
-│  │  Querier  │───────────┘               │
-│  │(executes  │                            │
-│  │ LogQL)    │                            │
-│  └───────────┘                            │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Loki["GRAFANA LOKI ARCHITECTURE"]
+        Dist["Distributor<br/>(receives pushes)"] --> Ing["Ingester<br/>(builds chunks, flushes to store)"]
+        Ing --> Store[("Object Storage<br/>(S3 / GCS / Azure)")]
+        Querier["Querier<br/>(executes LogQL)"] --> Store
+        Querier --> Ing
+    end
 ```
 
 **Key difference from Elasticsearch**: Loki indexes only **labels** (metadata), not log content. This makes it much cheaper to operate but requires labels for efficient querying.
@@ -250,34 +205,22 @@ rate({service="api-gateway"}[5m])
 
 ### Sidecar Pattern (Kubernetes)
 
-```
-┌────────────────────────┐
-│         POD             │
-│ ┌──────────┐ ┌────────┐│
-│ │   App    │ │Sidecar ││
-│ │Container │ │(Fluent ││
-│ │          │→│ Bit)   ││──> Log Backend
-│ │ stdout/  │ │        ││
-│ │ files    │ │        ││
-│ └──────────┘ └────────┘│
-└────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Pod["Kubernetes Pod"]
+        App["App Container<br/>(stdout / files)"] --> Sidecar["Sidecar Container<br/>(Fluent Bit)"]
+    end
+    Sidecar --> Backend[("Log Backend")]
 ```
 
 ### DaemonSet Pattern (Recommended for K8s)
 
-```
-┌──────────── Node ──────────────┐
-│  ┌─────┐ ┌─────┐ ┌─────┐      │
-│  │Pod 1│ │Pod 2│ │Pod 3│      │
-│  │→stdout│→stdout│→stdout      │
-│  └──┬──┘ └──┬──┘ └──┬──┘      │
-│     └────────┼───────┘         │
-│              ▼                  │
-│     ┌──────────────┐           │
-│     │  DaemonSet   │           │──> Log Backend
-│     │ (Fluent Bit) │           │
-│     └──────────────┘           │
-└────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Node["Kubernetes Node"]
+        P1["Pod 1 (stdout)"] & P2["Pod 2 (stdout)"] & P3["Pod 3 (stdout)"] --> DS["DaemonSet<br/>(Fluent Bit)"]
+    end
+    DS --> Backend[("Log Backend")]
 ```
 
 ### Fluentd vs Fluent Bit

@@ -38,27 +38,14 @@ developed at UC Berkeley's AMPLab in 2009, open-sourced in 2010, donated to Apac
 
 ## 2. Architecture
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                     SPARK APPLICATION                         │
-│                                                               │
-│  ┌─────────────┐       ┌──────────────────────────────────┐  │
-│  │   DRIVER    │       │       CLUSTER MANAGER            │  │
-│  │             │──────>│  (YARN / K8s / Mesos / Standalone)│  │
-│  │ SparkContext│       └──────────────────────────────────┘  │
-│  │ DAGScheduler│              │                              │
-│  │ TaskScheduler              │                              │
-│  └─────────────┘              ▼                              │
-│                    ┌──────────┬──────────┐                   │
-│                    │EXECUTOR 1│EXECUTOR 2│  ...               │
-│                    │┌────────┐│┌────────┐│                   │
-│                    ││ Task 1 │││ Task 3 ││                   │
-│                    ││ Task 2 │││ Task 4 ││                   │
-│                    │├────────┤│├────────┤│                   │
-│                    ││ Cache  │││ Cache  ││                   │
-│                    │└────────┘│└────────┘│                   │
-│                    └──────────┴──────────┘                   │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph App["SPARK APPLICATION"]
+        Driver["DRIVER<br/>- SparkContext<br/>- DAGScheduler<br/>- TaskScheduler"] --> CM["CLUSTER MANAGER<br/>(YARN / K8s / Mesos / Standalone)"]
+        CM --> Ex1["EXECUTOR 1<br/>- Task 1, Task 2<br/>- Block Cache"]
+        CM --> Ex2["EXECUTOR 2<br/>- Task 3, Task 4<br/>- Block Cache"]
+        Driver <-->|"Schedule tasks &amp; collect results"| Ex1 & Ex2
+    end
 ```
 
 **Driver**: Runs `main()`, creates SparkContext, builds DAG, schedules tasks.
@@ -97,18 +84,16 @@ developed at UC Berkeley's AMPLab in 2009, open-sourced in 2010, donated to Apac
 
 ### Narrow vs Wide Transformations
 
-```
-NARROW (no shuffle)              WIDE (shuffle required)
-┌──────┐    ┌──────┐            ┌──────┐    ┌──────┐
-│Part 1│───>│Part 1│            │Part 1│──┐ │Part 1│
-└──────┘    └──────┘            └──────┘  ├>└──────┘
-┌──────┐    ┌──────┐            ┌──────┐  │ ┌──────┐
-│Part 2│───>│Part 2│            │Part 2│──┤ │Part 2│
-└──────┘    └──────┘            └──────┘  │ └──────┘
-                                ┌──────┐  │
-map, filter, flatMap            │Part 3│──┘
-                                └──────┘
-                                groupByKey, reduceByKey, join
+```mermaid
+flowchart LR
+    subgraph Narrow["NARROW (No Shuffle: map, filter, flatMap)"]
+        NP1A["Part 1"] --> NP1B["Part 1"]
+        NP2A["Part 2"] --> NP2B["Part 2"]
+    end
+
+    subgraph Wide["WIDE (Shuffle Required: groupByKey, reduceByKey, join)"]
+        WP1A["Part 1"] & WP2A["Part 2"] & WP3A["Part 3"] --> WP1B["Part 1"] & WP2B["Part 2"]
+    end
 ```
 
 - **Narrow**: Each parent partition maps to at most one child partition (no shuffle)
@@ -158,25 +143,15 @@ result.write.mode("overwrite").parquet("s3://bucket/output/")
 
 ### Catalyst Optimization Pipeline
 
-```
-SQL / DataFrame API
-        │
-        ▼
-┌─────────────────┐
-│ 1. ANALYSIS      │  Resolve columns, types against catalog
-├─────────────────┤
-│ 2. LOGICAL OPT   │  Predicate pushdown, column pruning,
-│                   │  constant folding, filter reordering
-├─────────────────┤
-│ 3. PHYSICAL PLAN  │  Generate candidates, cost-based selection
-│                   │  (broadcast join vs sort-merge join)
-├─────────────────┤
-│ 4. CODE GENERATION│  Tungsten whole-stage codegen
-│                   │  Fuses operators into single JVM functions
-└─────────────────┘
-        │
-        ▼
-   Optimized Execution
+```mermaid
+flowchart TD
+    In["SQL / DataFrame API"]
+    S1["1. ANALYSIS<br/>Resolve columns and types against catalog"]
+    S2["2. LOGICAL OPTIMIZATION<br/>Predicate pushdown, column pruning, constant folding, filter reordering"]
+    S3["3. PHYSICAL PLANNING<br/>Generate candidates, cost-based selection (broadcast join vs sort-merge join)"]
+    S4["4. CODE GENERATION<br/>Tungsten whole-stage codegen (fuses operators into single JVM functions)"]
+    Out["Optimized Execution"]
+    In --> S1 --> S2 --> S3 --> S4 --> Out
 ```
 
 ### Key Optimizations
@@ -267,16 +242,15 @@ Data arriving more than 10 minutes late will be dropped.
 
 ### Optimization Strategies
 
-```
-SHUFFLE OPTIMIZATION
-├── Use reduceByKey() instead of groupByKey()
-│   (pre-aggregates on map side, less data transferred)
-├── Use broadcast joins for small tables (<10MB default)
-│   spark.sql.autoBroadcastJoinThreshold = 10MB
-├── Use coalesce() instead of repartition() to reduce partitions
-│   (avoids full shuffle, only merges partitions)
-├── Pre-partition data at write time to match query patterns
-└── Use bucketing for repeated joins on the same column
+```mermaid
+flowchart LR
+    Root["SHUFFLE OPTIMIZATION"]
+    O1["Use reduceByKey() instead of groupByKey()<br/>(pre-aggregates on map side, less data transferred)"]
+    O2["Use broadcast joins for small tables (&lt;10MB default)<br/>spark.sql.autoBroadcastJoinThreshold = 10MB"]
+    O3["Use coalesce() instead of repartition() to reduce partitions<br/>(avoids full shuffle, only merges partitions)"]
+    O4["Pre-partition data at write time to match query patterns"]
+    O5["Use bucketing for repeated joins on the same column"]
+    Root --> O1 & O2 & O3 & O4 & O5
 ```
 
 ### Partition Count Guidelines
@@ -386,24 +360,16 @@ spark.conf.set("spark.sql.execution.arrow.pyspark.enabled", "true")
 
 ### Memory Management
 
-```
-┌──────────────────────────────────────────┐
-│              EXECUTOR MEMORY             │
-│                                          │
-│  ┌──────────────────────────────────┐    │
-│  │    Unified Memory (60%)          │    │
-│  │  ┌──────────┬──────────────┐     │    │
-│  │  │Execution │  Storage     │     │    │
-│  │  │(shuffle, │  (cache,     │     │    │
-│  │  │ sort,    │  broadcast)  │     │    │
-│  │  │ agg)     │              │     │    │
-│  │  └──────────┴──────────────┘     │    │
-│  └──────────────────────────────────┘    │
-│  ┌──────────────┐  ┌────────────────┐    │
-│  │ User Memory  │  │  Reserved      │    │
-│  │ (40%)        │  │  (300MB)       │    │
-│  └──────────────┘  └────────────────┘    │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Mem["EXECUTOR MEMORY LAYOUT"]
+        subgraph Unified["Unified Memory (60%) — Dynamic Boundary"]
+            Exec["Execution Memory<br/>(shuffle, sort, aggregation)"]
+            Stor["Storage Memory<br/>(cache, broadcast variables)"]
+        end
+        User["User Memory (40%)<br/>(UDFs, user data structures)"]
+        Res["Reserved Memory (300MB)<br/>(Spark internal overhead)"]
+    end
 ```
 
 Execution and storage share memory dynamically. When one needs more, it borrows from the other.

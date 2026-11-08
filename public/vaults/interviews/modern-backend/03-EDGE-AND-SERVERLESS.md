@@ -10,27 +10,19 @@ Understanding the internals of V8 isolates, the trade-offs between edge platform
 
 ## The Edge Computing Model
 
-```
-+------------------------------------------------------------------+
-|              TRADITIONAL vs EDGE ARCHITECTURE                    |
-+------------------------------------------------------------------+
-|                                                                  |
-|  TRADITIONAL (Single Region):                                    |
-|                                                                  |
-|  User (Tokyo)  -------- 180ms RTT -------->  US-East Server     |
-|  User (London) -------- 90ms RTT  -------->  US-East Server     |
-|  User (NYC)    -------- 10ms RTT  -------->  US-East Server     |
-|                                                                  |
-|  EDGE (Global):                                                  |
-|                                                                  |
-|  User (Tokyo)  --- 5ms --->  Tokyo Edge    --|                   |
-|  User (London) --- 5ms --->  London Edge   --|--> Origin (if    |
-|  User (NYC)    --- 5ms --->  NYC Edge      --|    cache miss)    |
-|                                                                  |
-|  Edge locations: 200-300+ PoPs worldwide                         |
-|  Origin: Single region for non-cacheable operations              |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Trad["TRADITIONAL (Single Region)"]
+        U1["User (Tokyo)"] -->|"180ms RTT"| Origin1["US-East Server"]
+        U2["User (London)"] -->|"90ms RTT"| Origin1
+        U3["User (NYC)"] -->|"10ms RTT"| Origin1
+    end
+    subgraph Edge["EDGE (Global: 200-300+ PoPs Worldwide)"]
+        U4["User (Tokyo)"] -->|"5ms"| ET["Tokyo Edge"]
+        U5["User (London)"] -->|"5ms"| EL["London Edge"]
+        U6["User (NYC)"] -->|"5ms"| EN["NYC Edge"]
+        ET & EL & EN -.->|"If cache miss"| Origin2["Origin Server<br/>(Single region)"]
+    end
 ```
 
 ---
@@ -39,85 +31,27 @@ Understanding the internals of V8 isolates, the trade-offs between edge platform
 
 This is the most frequently asked architectural question about edge computing. Understanding the internals is critical.
 
-```
-+------------------------------------------------------------------+
-|           V8 ISOLATES vs CONTAINERS vs VMs                       |
-+------------------------------------------------------------------+
-|                                                                  |
-|  VIRTUAL MACHINE                                                 |
-|  +-----------------------------+                                 |
-|  | Guest OS (Linux)            |                                 |
-|  | +-------------------------+ |                                 |
-|  | | Application Runtime     | |                                 |
-|  | | +---------------------+ | |                                 |
-|  | | | Your Application    | | |  Boot: 30-60 seconds           |
-|  | | +---------------------+ | |  Memory: 512MB - GBs           |
-|  | +-------------------------+ |  Isolation: Hardware-level      |
-|  +-----------------------------+                                 |
-|  | Hypervisor (KVM/Xen)       |                                 |
-|  +-----------------------------+                                 |
-|                                                                  |
-|  CONTAINER                                                       |
-|  +-----------------------------+                                 |
-|  | Container Runtime (runc)    |                                 |
-|  | +-------------------------+ |                                 |
-|  | | Application Runtime     | |  Boot: 1-5 seconds             |
-|  | | +---------------------+ | |  Memory: 64MB - GBs            |
-|  | | | Your Application    | | |  Isolation: OS-level           |
-|  | | +---------------------+ | |  (namespaces + cgroups)        |
-|  | +-------------------------+ |                                 |
-|  +-----------------------------+                                 |
-|  | Host OS Kernel (shared)     |                                 |
-|  +-----------------------------+                                 |
-|                                                                  |
-|  V8 ISOLATE                                                      |
-|  +-----------------------------+                                 |
-|  | V8 Engine Process           |                                 |
-|  | +-------+ +-------+        |                                  |
-|  | |Isolate| |Isolate|  ...   |  Boot: <5 milliseconds           |
-|  | | (App) | | (App) |        |  Memory: ~1-5MB per isolate      |
-|  | +-------+ +-------+        |  Isolation: V8 memory sandbox    |
-|  +-----------------------------+  Density: 1000s per process     |
-|  | Host OS                     |                                 |
-|  +-----------------------------+                                 |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Comp["V8 ISOLATES vs CONTAINERS vs VMs"]
+        VM["VIRTUAL MACHINE<br/>Your App -&gt; App Runtime -&gt; Guest OS (Linux) -&gt; Hypervisor (KVM/Xen)<br/>Boot: 30-60s / Memory: 512MB-GBs / Isolation: Hardware-level"]
+        Cont["CONTAINER<br/>Your App -&gt; App Runtime -&gt; Container Runtime (runc) -&gt; Shared Host OS Kernel<br/>Boot: 1-5s / Memory: 64MB-GBs / Isolation: OS-level (namespaces + cgroups)"]
+        Iso["V8 ISOLATE<br/>Multiple Isolates (Apps) inside V8 Engine Process -&gt; Host OS<br/>Boot: &lt;5ms / Memory: ~1-5MB per isolate / Isolation: V8 memory sandbox (1000s/process)"]
+    end
 ```
 
 ### How V8 Isolates Work
 
 A V8 isolate is an independent instance of the V8 JavaScript engine with its own heap memory, garbage collector, and compilation pipeline. Multiple isolates share the same V8 process but cannot access each other's memory.
 
-```
-+------------------------------------------------------------------+
-|              V8 ISOLATE INTERNALS                                |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Single V8 Process                                               |
-|  +-----------------------------------------------------------+  |
-|  |                                                           |  |
-|  |  Isolate A (Tenant 1)    Isolate B (Tenant 2)             |  |
-|  |  +-------------------+  +-------------------+             |  |
-|  |  | Heap (2MB limit)  |  | Heap (2MB limit)  |             |  |
-|  |  | +------+ +------+ |  | +------+ +------+ |             |  |
-|  |  | |Stack | |GC    | |  | |Stack | |GC    | |             |  |
-|  |  | +------+ +------+ |  | +------+ +------+ |             |  |
-|  |  | Compiled bytecode |  | Compiled bytecode |             |  |
-|  |  | Global scope      |  | Global scope      |             |  |
-|  |  +-------------------+  +-------------------+             |  |
-|  |                                                           |  |
-|  |  Shared: V8 builtins, compiled code cache, snapshots      |  |
-|  |  NOT shared: heap memory, global variables, closures      |  |
-|  |                                                           |  |
-|  +-----------------------------------------------------------+  |
-|                                                                  |
-|  Why sub-5ms cold start:                                         |
-|  - No OS boot (shared process)                                   |
-|  - No runtime init (V8 already running)                          |
-|  - Snapshot: pre-compiled bytecode loaded instantly               |
-|  - Shared code cache: common modules compiled once               |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Proc["Single V8 Process (Sub-5ms cold start: no OS boot, V8 running, instant snapshot)"]
+        IsoA["Isolate A (Tenant 1)<br/>- Dedicated Heap (2MB limit)<br/>- Dedicated Stack &amp; GC<br/>- Global scope &amp; closures"]
+        IsoB["Isolate B (Tenant 2)<br/>- Dedicated Heap (2MB limit)<br/>- Dedicated Stack &amp; GC<br/>- Global scope &amp; closures"]
+        Shared["Shared Across Isolates:<br/>V8 builtins, compiled code cache, pre-compiled bytecode snapshots"]
+        Shared --- IsoA & IsoB
+    end
 ```
 
 ### Comparison Table
@@ -147,31 +81,25 @@ A V8 isolate is an independent instance of the V8 JavaScript engine with its own
 
 ### Architecture
 
-```
-+------------------------------------------------------------------+
-|           CLOUDFLARE WORKERS ECOSYSTEM                           |
-+------------------------------------------------------------------+
-|                                                                  |
-|  COMPUTE                        STORAGE                          |
-|  +----------------+            +------------------+              |
-|  | Workers        |            | KV               |              |
-|  | (V8 Isolates)  |            | (Key-Value, edge)|              |
-|  +----------------+            +------------------+              |
-|  | Cron Triggers  |            | R2               |              |
-|  | (Scheduled)    |            | (Object Storage) |              |
-|  +----------------+            +------------------+              |
-|  | Durable Objects|            | D1               |              |
-|  | (Stateful edge)|            | (SQLite @ edge)  |              |
-|  +----------------+            +------------------+              |
-|  | Queues         |            | Hyperdrive       |              |
-|  | (Message queue)|            | (DB connection    |              |
-|  +----------------+            |  pooling)         |              |
-|  | AI Workers     |            +------------------+              |
-|  | (ML inference) |            | Vectorize        |              |
-|  +----------------+            | (Vector search)  |              |
-|                                +------------------+              |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph CF["CLOUDFLARE WORKERS ECOSYSTEM"]
+        subgraph Compute["COMPUTE"]
+            C1["Workers (V8 Isolates)"]
+            C2["Cron Triggers (Scheduled)"]
+            C3["Durable Objects (Stateful edge)"]
+            C4["Queues (Message queue)"]
+            C5["Workers AI (ML inference)"]
+        end
+        subgraph Storage["STORAGE &amp; DATA"]
+            S1[("KV (Key-Value @ edge)")]
+            S2[("R2 (Zero-egress Object Storage)")]
+            S3[("D1 (SQLite @ edge)")]
+            S4["Hyperdrive (DB connection pooling)"]
+            S5[("Vectorize (Vector search)")]
+        end
+        Compute --> Storage
+    end
 ```
 
 ### Worker Code Example
@@ -310,39 +238,17 @@ async function handleAISummarize(
 
 Durable Objects are the most architecturally interesting part of Cloudflare Workers. They provide **single-threaded, strongly consistent state at the edge** -- something that seems impossible in a distributed system.
 
-```
-+------------------------------------------------------------------+
-|              DURABLE OBJECTS ARCHITECTURE                        |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Request from Tokyo  --|                                         |
-|  Request from London --|-->  Durable Object Instance             |
-|  Request from NYC    --|    (single location, single thread)     |
-|                             +---------------------------+        |
-|                             | JavaScript Object         |        |
-|                             | +-----+ +-----+ +------+ |        |
-|                             | |State| |Alarm| |WebSoc| |        |
-|                             | |Store| |     | |kets  | |        |
-|                             | +-----+ +-----+ +------+ |        |
-|                             +---------------------------+        |
-|                                                                  |
-|  KEY PROPERTIES:                                                 |
-|  - Single instance globally (by ID)                              |
-|  - Single-threaded (no concurrency bugs)                         |
-|  - Transactional storage (ACID)                                  |
-|  - Automatic placement near users                                |
-|  - Survives across requests (not ephemeral)                      |
-|  - Built-in WebSocket support                                    |
-|  - Hibernation (save memory when idle)                           |
-|                                                                  |
-|  USE CASES:                                                      |
-|  - Rate limiting (per-user counters)                             |
-|  - Real-time collaboration (document editing)                    |
-|  - Game state (match rooms)                                      |
-|  - Chat rooms (WebSocket + state)                                |
-|  - Distributed locks                                             |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    R1["Request from Tokyo"]
+    R2["Request from London"]
+    R3["Request from NYC"]
+
+    subgraph DO["Durable Object Instance (Single global instance by ID, single-threaded)"]
+        Obj["JavaScript Object<br/>- Transactional State Store (ACID)<br/>- Alarms API<br/>- Hibernatable WebSockets"]
+    end
+
+    R1 & R2 & R3 --> DO
 ```
 
 ```typescript
@@ -399,31 +305,17 @@ export class RateLimiter implements DurableObject {
 
 ### Lambda Architecture
 
-```
-+------------------------------------------------------------------+
-|              AWS LAMBDA EXECUTION MODEL                          |
-+------------------------------------------------------------------+
-|                                                                  |
-|  COLD START (First invocation):                                  |
-|  +--------+  +----------+  +---------+  +----------+            |
-|  |Download|->|Create    |->|Init     |->|Execute   |            |
-|  |code    |  |container |  |runtime  |  |handler   |            |
-|  +--------+  +----------+  +---------+  +----------+            |
-|  ~100ms      ~200ms        ~100-500ms   Your code               |
-|                                                                  |
-|  WARM START (Subsequent invocations):                            |
-|  +----------+                                                    |
-|  |Execute   |   (Container reused, ~1-5ms overhead)              |
-|  |handler   |                                                    |
-|  +----------+                                                    |
-|                                                                  |
-|  SnapStart (Java/Kotlin):                                        |
-|  +--------+  +----------+                                        |
-|  |Restore |->|Execute   |   (Snapshot loaded, ~100ms total)      |
-|  |snapshot|  |handler   |                                        |
-|  +--------+  +----------+                                        |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Cold["COLD START (First invocation)"]
+        C1["Download code<br/>(~100ms)"] --> C2["Create container<br/>(~200ms)"] --> C3["Init runtime<br/>(~100-500ms)"] --> C4["Execute handler<br/>(Your code)"]
+    end
+    subgraph Warm["WARM START (Subsequent invocations)"]
+        W1["Execute handler<br/>(Container reused, ~1-5ms overhead)"]
+    end
+    subgraph Snap["SnapStart (Java / Kotlin)"]
+        S1["Restore Firecracker snapshot"] --> S2["Execute handler<br/>(~100ms total)"]
+    end
 ```
 
 ### Lambda Handler Patterns
@@ -500,40 +392,14 @@ export const handler = streamifyResponse(
 
 ### Lambda URLs (No API Gateway Needed)
 
-```
-+------------------------------------------------------------------+
-|           LAMBDA URL vs API GATEWAY                              |
-+------------------------------------------------------------------+
-|                                                                  |
-|  API GATEWAY:                                                    |
-|  Client --> API Gateway --> Lambda                               |
-|  - Request transformation                                       |
-|  - Usage plans + API keys                                        |
-|  - Custom domain + WAF                                           |
-|  - $3.50 / million requests                                      |
-|  - Adds ~10-30ms latency                                         |
-|                                                                  |
-|  LAMBDA URL:                                                     |
-|  Client --> Lambda (directly)                                    |
-|  - No extra cost                                                 |
-|  - No additional latency                                         |
-|  - Built-in IAM auth or public                                   |
-|  - No request transformation                                    |
-|  - CORS configuration available                                  |
-|                                                                  |
-|  USE LAMBDA URL WHEN:                                            |
-|  - Internal microservice communication                           |
-|  - Simple webhook receivers                                      |
-|  - Cost-sensitive applications                                   |
-|  - Single-function APIs                                          |
-|                                                                  |
-|  USE API GATEWAY WHEN:                                           |
-|  - Multi-route APIs (path-based routing)                         |
-|  - Rate limiting + throttling needed                             |
-|  - Request/response transformation                               |
-|  - API key management                                            |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph APIGW["API GATEWAY ($3.50/M reqs, +10-30ms latency)"]
+        C1["Client"] --> GW["API Gateway<br/>- Path routing &amp; transformation<br/>- Usage plans, API keys, rate limiting<br/>- Custom domain + WAF"] --> L1["Lambda"]
+    end
+    subgraph URL["LAMBDA FUNCTION URL ($0 extra, 0ms extra latency)"]
+        C2["Client"] --> L2["Lambda (Directly)<br/>- Built-in IAM auth or public + CORS<br/>- Best for webhooks, internal RPC, single-fn APIs"]
+    end
 ```
 
 ---
@@ -542,69 +408,38 @@ export const handler = streamifyResponse(
 
 ### Fan-Out/Fan-In
 
-```
-+------------------------------------------------------------------+
-|              FAN-OUT / FAN-IN PATTERN                            |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Use case: Process 1000 images in parallel                       |
-|                                                                  |
-|                   +----------+                                   |
-|                   |Orchestr. |                                   |
-|                   |Function  |                                   |
-|                   +----+-----+                                   |
-|                        |                                         |
-|              +---------+---------+                               |
-|              |         |         |                                |
-|              v         v         v                                |
-|         +--------+ +--------+ +--------+                        |
-|         |Worker 1| |Worker 2| |Worker N|   FAN OUT               |
-|         |Resize  | |Resize  | |Resize  |   (parallel)            |
-|         +---+----+ +---+----+ +---+----+                        |
-|             |           |           |                             |
-|             v           v           v                             |
-|         +--------+ +--------+ +--------+                        |
-|         |  S3/R2 | |  S3/R2 | |  S3/R2 |                        |
-|         +---+----+ +---+----+ +---+----+                        |
-|             |           |           |                             |
-|             +-----+-----+-----+-----+                            |
-|                   |                                              |
-|                   v                                              |
-|              +----------+                                        |
-|              |Aggregator|   FAN IN                                |
-|              |Function  |   (collect results)                    |
-|              +----------+                                        |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Orch["Orchestrator Function"]
+    W1["Worker 1 (Resize)"]
+    W2["Worker 2 (Resize)"]
+    WN["Worker N (Resize)"]
+    S1[("S3 / R2")]
+    S2[("S3 / R2")]
+    SN[("S3 / R2")]
+    Agg["Aggregator Function<br/>(FAN IN: collect results)"]
+
+    Orch -->|"FAN OUT (parallel)"| W1 & W2 & WN
+    W1 --> S1
+    W2 --> S2
+    WN --> SN
+    S1 & S2 & SN --> Agg
 ```
 
 ### Saga Pattern (Distributed Transactions)
 
-```
-+------------------------------------------------------------------+
-|              SAGA PATTERN FOR SERVERLESS                         |
-+------------------------------------------------------------------+
-|                                                                  |
-|  Order Saga (compensating transactions):                         |
-|                                                                  |
-|  Step 1: Reserve Inventory  -----> Compensate: Release Inventory |
-|       |                                                          |
-|       v                                                          |
-|  Step 2: Charge Payment     -----> Compensate: Refund Payment    |
-|       |                                                          |
-|       v                                                          |
-|  Step 3: Create Shipment    -----> Compensate: Cancel Shipment   |
-|       |                                                          |
-|       v                                                          |
-|  Step 4: Send Confirmation                                       |
-|                                                                  |
-|  If Step 3 fails:                                                |
-|  - Compensate Step 2 (refund)                                    |
-|  - Compensate Step 1 (release inventory)                         |
-|                                                                  |
-|  Implementation: AWS Step Functions / Temporal                   |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    S1["Step 1: Reserve Inventory"] --> S2["Step 2: Charge Payment"]
+    S2 --> S3["Step 3: Create Shipment"]
+    S3 --> S4["Step 4: Send Confirmation"]
+
+    C3["Compensate: Cancel Shipment"]
+    C2["Compensate: Refund Payment"]
+    C1["Compensate: Release Inventory"]
+
+    S3 -.->|"If Step 3 fails"| C2 --> C1
+    S2 -.->|"If Step 2 fails"| C1
 ```
 
 ```typescript
@@ -653,40 +488,25 @@ const orderSaga = {
 
 ### Architecture Comparison
 
-```
-+------------------------------------------------------------------+
-|              SERVERLESS DATABASE ARCHITECTURES                   |
-+------------------------------------------------------------------+
-|                                                                  |
-|  NEON (Serverless Postgres):                                     |
-|  +----------+     +----------+     +----------+                  |
-|  | Compute  |     | Compute  |     | Pageserv |                  |
-|  | (Postgres|     | (Postgres|     | er       |                  |
-|  |  process)|     |  process)|     | (shared  |                  |
-|  +----+-----+     +----+-----+     |  storage)|                  |
-|       |                |           +----+-----+                  |
-|       +--------+-------+                |                        |
-|                |                        |                        |
-|           +----v-----+            +-----v----+                   |
-|           | Safekeep | <--------> |   S3     |                   |
-|           | er (WAL) |            | (durable)|                   |
-|           +----------+            +----------+                   |
-|                                                                  |
-|  Key insight: Compute and storage are separated.                 |
-|  Compute scales to zero. Storage is always on.                   |
-|                                                                  |
-|  TURSO (libSQL / SQLite):                                        |
-|  +----------+     +----------+     +----------+                  |
-|  | Primary  |     | Edge     |     | Edge     |                  |
-|  | (writes) | --> | Replica  | --> | Replica  |                  |
-|  |          |     | (reads)  |     | (reads)  |                  |
-|  +----------+     +----------+     +----------+                  |
-|       |           Tokyo             London                       |
-|       |                                                          |
-|  Embedded replica: SQLite file synced to your server             |
-|  Reads: local (~0ms). Writes: forwarded to primary.              |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Neon["NEON (Serverless Postgres: Compute &amp; Storage Separated)"]
+        NC1["Compute Node 1<br/>(Stateless Postgres, scales to zero)"]
+        NC2["Compute Node 2<br/>(Read Replica)"]
+        SK["Safekeeper<br/>(Consensus WAL)"]
+        PS["Pageserver<br/>(Shared Storage Engine)"]
+        S3[("S3<br/>(Durable Cold Storage)")]
+
+        NC1 & NC2 --> SK & PS
+        SK <--> PS
+        PS <--> S3
+    end
+
+    subgraph Turso["TURSO (libSQL / Distributed SQLite)"]
+        TP[("Primary<br/>(Writes)")] --> TR1[("Edge Replica — Tokyo<br/>(Local Reads ~0ms)")]
+        TP --> TR2[("Edge Replica — London<br/>(Local Reads ~0ms)")]
+        TP --> Emb[("Embedded Replica<br/>(SQLite file synced inside app server)")]
+    end
 ```
 
 ### Neon Connection Pooling
@@ -708,31 +528,13 @@ const result = await sql.transaction([
 ]);
 ```
 
-```
-+------------------------------------------------------------------+
-|              NEON CONNECTION STRATEGIES                           |
-+------------------------------------------------------------------+
-|                                                                  |
-|  EDGE FUNCTIONS (Cloudflare Workers, Vercel Edge):               |
-|  Use: @neondatabase/serverless (HTTP driver)                     |
-|  - No TCP connection needed                                      |
-|  - Works in V8 isolates                                          |
-|  - ~5-10ms per query overhead                                    |
-|  - Best for simple queries in edge functions                     |
-|                                                                  |
-|  SERVERLESS FUNCTIONS (Lambda, Vercel Serverless):               |
-|  Use: Neon pooler (connection string with -pooler suffix)        |
-|  - PgBouncer-based connection pooling                            |
-|  - Handles connection churn from Lambda cold starts              |
-|  - Standard pg driver works                                      |
-|                                                                  |
-|  LONG-RUNNING SERVERS (ECS, K8s):                                |
-|  Use: Direct connection (standard Postgres driver)               |
-|  - Persistent TCP connections                                     |
-|  - Lowest latency                                                |
-|  - Application-level connection pool (pg.Pool)                   |
-|                                                                  |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph NeonConn["NEON CONNECTION STRATEGIES"]
+        Edge["EDGE FUNCTIONS (CF Workers, Vercel Edge)<br/>Use: @neondatabase/serverless (HTTP / WebSocket driver)<br/>- No raw TCP needed, works in V8 isolates<br/>- ~5-10ms overhead, best for one-shot edge queries"]
+        Serverless["SERVERLESS FUNCTIONS (Lambda, Vercel Serverless)<br/>Use: Neon Pooler (-pooler connection string)<br/>- PgBouncer connection pooling (up to 10,000 conns)<br/>- Handles Lambda cold-start connection churn"]
+        LongRun["LONG-RUNNING SERVERS (ECS, K8s)<br/>Use: Direct TCP Connection + App Pool (pg.Pool)<br/>- Persistent TCP connections, lowest latency"]
+    end
 ```
 
 ---

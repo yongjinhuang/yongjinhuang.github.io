@@ -48,54 +48,17 @@ reason about model selection, prompt design, evaluation, and AI-specific failure
 
 ## The 6-Step Framework
 
-```
-+-------------------------------------------------------------+
-|                AI SYSTEM DESIGN FRAMEWORK                     |
-|                     (45-60 minutes)                           |
-+-------------------------------------------------------------+
-|                                                               |
-|  STEP 1: Clarify Use Case            [5 min]                |
-|  +-------------------------------------------------------+   |
-|  | Who are the users? What are they trying to do?         |   |
-|  | What does success look like? What are the constraints? |   |
-|  +-------------------------------------------------------+   |
-|                                                               |
-|  STEP 2: Define the AI Pipeline      [10 min]               |
-|  +-------------------------------------------------------+   |
-|  | High-level architecture: what components are needed?   |   |
-|  | Data flow: user query -> ... -> response               |   |
-|  | Identify which parts need AI vs traditional logic      |   |
-|  +-------------------------------------------------------+   |
-|                                                               |
-|  STEP 3: Choose Models & Approach    [10 min]               |
-|  +-------------------------------------------------------+   |
-|  | RAG vs fine-tuning vs prompting?                       |   |
-|  | Which LLM? Which embedding model?                      |   |
-|  | Justify choices with trade-offs                        |   |
-|  +-------------------------------------------------------+   |
-|                                                               |
-|  STEP 4: Design Retrieval & Data     [10 min]               |
-|  +-------------------------------------------------------+   |
-|  | How is data ingested and indexed?                      |   |
-|  | Chunking strategy, embedding, vector storage           |   |
-|  | How does retrieval feed into generation?               |   |
-|  +-------------------------------------------------------+   |
-|                                                               |
-|  STEP 5: Handle Failures & Edge Cases [5 min]               |
-|  +-------------------------------------------------------+   |
-|  | Hallucination prevention                               |   |
-|  | Provider outages / fallbacks                           |   |
-|  | Safety: harmful content, PII, prompt injection         |   |
-|  +-------------------------------------------------------+   |
-|                                                               |
-|  STEP 6: Optimize Cost & Observability [5 min]              |
-|  +-------------------------------------------------------+   |
-|  | Cost estimation and optimization                       |   |
-|  | Monitoring, evaluation, feedback loops                 |   |
-|  | Scaling strategy                                       |   |
-|  +-------------------------------------------------------+   |
-|                                                               |
-+-------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Framework["AI SYSTEM DESIGN FRAMEWORK (45-60 Minutes)"]
+        S1["STEP 1: Clarify Use Case [5 min]<br/>Users, goals, success metrics, latency/cost/privacy constraints"]
+        S2["STEP 2: Define the AI Pipeline [10 min]<br/>End-to-end architecture &amp; data flow; AI vs deterministic logic"]
+        S3["STEP 3: Choose Models &amp; Approach [10 min]<br/>Prompting vs RAG vs Fine-Tuning; LLM &amp; embedding trade-offs"]
+        S4["STEP 4: Design Retrieval &amp; Data [10 min]<br/>Ingestion, chunking, embeddings, Vector DB, hybrid search + reranking"]
+        S5["STEP 5: Handle Failures &amp; Edge Cases [5 min]<br/>Hallucination guardrails, provider fallbacks, PII &amp; injection safety"]
+        S6["STEP 6: Optimize Cost &amp; Observability [5 min]<br/>Token cost estimation, caching, evals, feedback loops, scaling"]
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6
+    end
 ```
 
 ---
@@ -122,63 +85,18 @@ reason about model selection, prompt design, evaluation, and AI-specific failure
 
 ### Step 2: Define the AI Pipeline
 
-```
-+------------------------------------------------------------------------+
-|                 CUSTOMER SUPPORT CHATBOT ARCHITECTURE                   |
-+------------------------------------------------------------------------+
-|                                                                         |
-|  Customer                                                               |
-|    |                                                                    |
-|    v                                                                    |
-|  +------------------+                                                   |
-|  | Chat Interface   | (Web widget, mobile app, WhatsApp)               |
-|  | (WebSocket)      |                                                   |
-|  +--------+---------+                                                   |
-|           |                                                             |
-|           v                                                             |
-|  +------------------+                                                   |
-|  | Input Pipeline   |                                                   |
-|  | - Language detect |                                                   |
-|  | - PII redaction   |                                                   |
-|  | - Intent classify |                                                   |
-|  +--------+---------+                                                   |
-|           |                                                             |
-|           v                                                             |
-|  +------------------+     +------------------+                          |
-|  | Router           |---->| Order Lookup     | (if order-related)       |
-|  | (intent-based)   |     | Service          |                          |
-|  +--------+---------+     +------------------+                          |
-|           |                                                             |
-|           v                                                             |
-|  +------------------+     +------------------+                          |
-|  | RAG Pipeline     |---->| Vector DB        | (help articles,          |
-|  | - Query rewrite  |     | (Pinecone)       |  product catalog)        |
-|  | - Retrieval      |     +------------------+                          |
-|  | - Reranking      |                                                   |
-|  +--------+---------+     +------------------+                          |
-|           |          ---->| Order Database   | (order status, history)  |
-|           v               +------------------+                          |
-|  +------------------+                                                   |
-|  | LLM Generation   |                                                   |
-|  | - Prompt + context|                                                   |
-|  | - Streaming resp  |                                                   |
-|  +--------+---------+                                                   |
-|           |                                                             |
-|           v                                                             |
-|  +------------------+                                                   |
-|  | Output Pipeline  |                                                   |
-|  | - Safety check    |                                                   |
-|  | - Citation attach |                                                   |
-|  | - Escalation check|                                                   |
-|  +--------+---------+                                                   |
-|           |                                                             |
-|    +------+------+                                                      |
-|    |             |                                                       |
-|    v             v                                                       |
-|  Customer     Human Agent                                               |
-|  Response     (if escalated)                                            |
-|                                                                         |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Cust["Customer"] --> Chat["Chat Interface (WebSocket)<br/>(Web widget, mobile app, WhatsApp)"]
+    Chat --> InPipe["Input Pipeline<br/>- Language detection<br/>- PII redaction<br/>- Intent classification"]
+    InPipe --> Router["Intent-Based Router"]
+    Router -->|"Order-related"| OrderSvc["Order Lookup Service"] --> OrderDB[("Order Database<br/>(status, history)")]
+    Router --> RAG["RAG Pipeline<br/>- Query rewrite<br/>- Retrieval<br/>- Reranking"]
+    RAG <--> VecDB[("Vector DB (Pinecone)<br/>(Help articles, product catalog)")]
+    OrderSvc & RAG --> LLM["LLM Generation<br/>- Prompt + retrieved context<br/>- Streaming response"]
+    LLM --> OutPipe["Output Pipeline<br/>- Safety check<br/>- Citation attachment<br/>- Escalation check"]
+    OutPipe --> Resp["Customer Response"]
+    OutPipe -->|"If escalated"| Human["Human Support Agent"]
 ```
 
 ### Step 3: Choose Models & Approach
@@ -286,50 +204,24 @@ Per message:
 
 ### Step 2: Define the AI Pipeline
 
-```
-+------------------------------------------------------------------------+
-|              ENTERPRISE DOCUMENT Q&A ARCHITECTURE                       |
-+------------------------------------------------------------------------+
-|                                                                         |
-|  INGESTION PIPELINE (Async)                                            |
-|  +-------------------------------------------------------------------+ |
-|  |                                                                    | |
-|  |  +----------+   +----------+   +---------+   +--------+           | |
-|  |  | Source    |-->| Document |-->| Chunking|-->| Embed  |           | |
-|  |  | Connectors|   | Parser   |   | Engine  |   | & Store|           | |
-|  |  +----------+   +----------+   +---------+   +--------+           | |
-|  |  |Confluence|   |Unstructured|  |Recursive|   |pgvector|           | |
-|  |  |GDrive    |   |LlamaParse  |  |512 tok  |   |+ meta  |           | |
-|  |  |Slack     |   |            |  |100 ovlp |   |        |           | |
-|  |  |S3 (PDFs) |   |            |  |         |   |        |           | |
-|  |  +----------+   +----------+   +---------+   +--------+           | |
-|  |       ^                                            |               | |
-|  |       |              +----------------+            v               | |
-|  |  +----------+        | ACL Metadata   |     +-----------+          | |
-|  |  | Change   |        | (who can access |     | Vector DB |          | |
-|  |  | Detection|        |  each doc)     |     | (pgvector)|          | |
-|  |  | (webhooks)|       +----------------+     +-----------+          | |
-|  |  +----------+                                                      | |
-|  +-------------------------------------------------------------------+ |
-|                                                                         |
-|  QUERY PIPELINE (Sync)                                                 |
-|  +-------------------------------------------------------------------+ |
-|  |                                                                    | |
-|  |  +------+   +----------+   +--------+   +--------+   +--------+  | |
-|  |  | User |-->| ACL      |-->| Query  |-->| Hybrid |-->| Rerank |  | |
-|  |  | Query|   | Filter   |   | Rewrite|   | Search |   |        |  | |
-|  |  +------+   | (only    |   |        |   |(dense+ |   |        |  | |
-|  |              | user's   |   |        |   | BM25)  |   |        |  | |
-|  |              | docs)    |   |        |   |        |   |        |  | |
-|  |              +----------+   +--------+   +--------+   +--------+  | |
-|  |                                                            |      | |
-|  |                                                            v      | |
-|  |  +----------+   +----------+   +----------+   +----------+       | |
-|  |  | Response |<--| Citation |<--| LLM      |<--| Context  |       | |
-|  |  | + UI     |   | Linker   |   | Generate |   | Assembly |       | |
-|  |  +----------+   +----------+   +----------+   +----------+       | |
-|  +-------------------------------------------------------------------+ |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Ingest["INGESTION PIPELINE (Async)"]
+        CDC["Change Detection<br/>(Webhooks)"] --> Src["Source Connectors<br/>(Confluence, GDrive, Slack, S3 PDFs)"]
+        Src --> Parse["Document Parser<br/>(Unstructured / LlamaParse)"]
+        Parse --> Chunk["Chunking Engine<br/>(Recursive 512 tok, 100 overlap)"]
+        Chunk --> Embed["Embed &amp; Attach ACL Metadata<br/>(Who can access each doc)"]
+        Embed --> VecDB[("Vector DB<br/>(pgvector + ACL metadata)")]
+    end
+
+    subgraph Query["QUERY PIPELINE (Sync)"]
+        UQ["User Query"] --> ACL["ACL Pre-Filter<br/>(Only user's permitted docs)"]
+        ACL --> Rewrite["Query Rewrite"] --> Hybrid["Hybrid Search<br/>(Dense Vector + BM25)"]
+        Hybrid --> Rerank["Cross-Encoder Rerank"] --> Ctx["Context Assembly"]
+        Ctx --> LLM["LLM Generate"] --> Cite["Citation Linker"] --> UI["Response + UI"]
+    end
+
+    VecDB -.-> Hybrid
 ```
 
 ### Step 3: Choose Models & Approach
@@ -415,57 +307,14 @@ Monthly cost:
 
 ### Step 2: Define the AI Pipeline
 
-```
-+------------------------------------------------------------------------+
-|                AI CODE REVIEW ASSISTANT                                  |
-+------------------------------------------------------------------------+
-|                                                                         |
-|  GitHub Webhook (PR created/updated)                                   |
-|    |                                                                    |
-|    v                                                                    |
-|  +------------------+                                                   |
-|  | PR Processor     |                                                   |
-|  | - Fetch diff     |                                                   |
-|  | - Parse files    |                                                   |
-|  | - Classify scope |                                                   |
-|  +--------+---------+                                                   |
-|           |                                                             |
-|           v                                                             |
-|  +------------------+     +------------------+                          |
-|  | Context Builder  |---->| Codebase RAG     |                          |
-|  | - Related files  |     | - Architecture   |                          |
-|  | - Git history    |     | - Style guides   |                          |
-|  | - Type defs      |     | - Past reviews   |                          |
-|  +--------+---------+     +------------------+                          |
-|           |                                                             |
-|    +------+------+------+                                               |
-|    |             |      |                                                |
-|    v             v      v                                                |
-|  +--------+ +--------+ +--------+                                       |
-|  |Security| | Bug    | | Style  |   (parallel review agents)            |
-|  |Reviewer| | Finder | | Check  |                                       |
-|  |Agent   | | Agent  | | Agent  |                                       |
-|  +---+----+ +---+----+ +---+----+                                       |
-|      |          |           |                                           |
-|      +----------+-----------+                                           |
-|                 |                                                        |
-|                 v                                                        |
-|  +------------------+                                                   |
-|  | Dedup & Prioritize|                                                  |
-|  | - Remove overlaps |                                                  |
-|  | - Rank by severity|                                                  |
-|  | - Filter low-conf |                                                  |
-|  +--------+---------+                                                   |
-|           |                                                             |
-|           v                                                             |
-|  +------------------+                                                   |
-|  | GitHub API       |                                                   |
-|  | - Post comments  |                                                   |
-|  | - Inline suggest |                                                   |
-|  | - Summary comment|                                                   |
-|  +------------------+                                                   |
-|                                                                         |
-+------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Hook["GitHub Webhook<br/>(PR created / updated)"] --> Proc["PR Processor<br/>- Fetch diff<br/>- Parse files<br/>- Classify scope"]
+    Proc --> Ctx["Context Builder<br/>- Related files<br/>- Git history<br/>- Type definitions"]
+    Ctx <--> RAG[("Codebase RAG<br/>- Architecture docs<br/>- Style guides<br/>- Past reviews")]
+    Ctx --> A1["Security Reviewer Agent"] & A2["Bug Finder Agent"] & A3["Style Check Agent"]
+    A1 & A2 & A3 --> Dedup["Dedup &amp; Prioritize<br/>- Remove overlaps<br/>- Rank by severity<br/>- Filter low-confidence"]
+    Dedup --> GH["GitHub API<br/>- Post inline suggestions<br/>- Post summary comment"]
 ```
 
 ### Step 3: Choose Models & Approach

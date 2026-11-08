@@ -30,31 +30,17 @@
 
 ## 2. High-Level Architecture
 
-```
-┌──────────┐   Click    ┌──────────────┐   Redirect   ┌──────────┐
-│   User   │──────────→│ Click Tracker │────────────→│ Merchant │
-│ Browser/ │           │   Service     │              │ Website  │
-│   App    │           └──────┬────────┘              └────┬─────┘
-└──────────┘                  │                            │
-                              │ Store Click Event          │ Purchase
-                              ▼                            │ Callback
-                     ┌────────────────┐                    │
-                     │  Event Bus     │                    │
-                     │  (Kafka)       │◄───────────────────┘
-                     └───────┬────────┘         (S2S Postback)
-                             │
-              ┌──────────────┼──────────────┐
-              ▼              ▼              ▼
-     ┌────────────┐  ┌────────────┐  ┌────────────┐
-     │Attribution │  │ Cashback   │  │ Analytics  │
-     │  Engine    │  │ Calculator │  │  Service   │
-     └─────┬──────┘  └─────┬──────┘  └────────────┘
-           │               │
-           ▼               ▼
-     ┌────────────────────────┐
-     │   Cashback Database    │
-     │   (Aurora PostgreSQL)  │
-     └────────────────────────┘
+```mermaid
+flowchart TD
+    User["User<br/>(Browser / App)"] -->|"Click"| Tracker["Click Tracker Service"]
+    Tracker -->|"Redirect"| Merchant["Merchant Website"]
+    Tracker -->|"Store Click Event"| Kafka["Event Bus (Kafka)"]
+    Merchant -->|"Purchase Callback (S2S Postback)"| Kafka
+    Kafka --> Attr["Attribution Engine"]
+    Kafka --> Calc["Cashback Calculator"]
+    Kafka --> Analytics["Analytics Service"]
+    Attr --> DB[("Cashback Database<br/>(Aurora PostgreSQL)")]
+    Calc --> DB
 ```
 
 ---
@@ -140,15 +126,15 @@ POST /api/v1/conversions
 
 Matches purchases to clicks using multiple strategies:
 
-```
-┌─────────────────────────────────────────────────┐
-│              Attribution Priority                │
-│                                                  │
-│  1. Direct Match (click_id in postback)    ◄ Best│
-│  2. User + Merchant + Time Window                │
-│  3. Device Fingerprint + Merchant + Time         │
-│  4. Cookie-based (fallback, declining)     ◄ Worst│
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Priority["Attribution Priority (Best to Worst)"]
+        P1["1. Direct Match (click_id in postback) — Best"]
+        P2["2. User + Merchant + Time Window"]
+        P3["3. Device Fingerprint + Merchant + Time"]
+        P4["4. Cookie-based (fallback, declining) — Worst"]
+        P1 --> P2 --> P3 --> P4
+    end
 ```
 
 ```typescript
@@ -201,21 +187,14 @@ CREATE INDEX idx_cashback_status ON cashback_transactions (status, created_at);
 
 **Cashback Lifecycle:**
 
-```
-Click → Purchase Detected → Pending (shown to user)
-                                │
-                    ┌───────────┴───────────┐
-                    ▼                       ▼
-              Confirmed                 Rejected
-           (merchant validated)     (order cancelled/returned)
-                    │
-                    ▼
-              Redeemable
-           (waiting period passed)
-                    │
-                    ▼
-                  Paid
-           (transferred to user wallet)
+```mermaid
+flowchart TD
+    Click["Click"] --> Detected["Purchase Detected"]
+    Detected --> Pending["Pending<br/>(shown to user)"]
+    Pending --> Confirmed["Confirmed<br/>(merchant validated)"]
+    Pending --> Rejected["Rejected<br/>(order cancelled/returned)"]
+    Confirmed --> Redeemable["Redeemable<br/>(waiting period passed)"]
+    Redeemable --> Paid["Paid<br/>(transferred to user wallet)"]
 ```
 
 **Typical timelines:**
@@ -234,16 +213,13 @@ Click → Purchase Detected → Pending (shown to user)
 - Cashback status: 500K writes/day, millions of reads (users checking status)
 - **Solution**: Write to primary DB, read from replicas. Cache active cashback in Redis.
 
-```
-┌──────────┐   Write   ┌──────────┐   Replicate   ┌──────────┐
-│  Click   │─────────→│ Primary  │──────────────→│ Replica  │◄── Read
-│ Service  │          │   DB     │               │   DB     │
-└──────────┘          └──────────┘               └──────────┘
-                                                       │
-                                                  ┌────┴────┐
-                                                  │  Redis  │◄── Hot data
-                                                  │  Cache  │
-                                                  └─────────┘
+```mermaid
+flowchart LR
+    Click["Click Service"] -->|"Write"| Primary[("Primary DB")]
+    Primary -->|"Replicate"| Replica[("Replica DB")]
+    ReadReq["Read Queries"] --> Replica
+    HotReq["Hot Data Reads"] --> Redis[("Redis Cache")]
+    Replica --- Redis
 ```
 
 ### Multi-Market
