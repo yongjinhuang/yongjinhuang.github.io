@@ -530,99 +530,27 @@ ORDER BY (org_id, rule_id, triggered_at);
 
 ## 4. 高层架构
 
-```
-  +--------------------------------------------------------------------------+
-  |                              应用层                                       |
-  |                                                                           |
-  |  +----------+  +----------+  +----------+  +----------+  +----------+   |
-  |  | 服务 A   |  | 服务 B   |  | 服务 C   |  | 基础设施  |  | 云服务   |   |
-  |  |  (Java)  |  |  (Go)    |  | (Python) |  | (syslog) |  | (Lambda) |   |
-  |  +----+-----+  +----+-----+  +----+-----+  +----+-----+  +----+-----+   |
-  |       |              |              |              |              |        |
-  +-------+--------------+--------------+--------------+--------------+-------+
-          |              |              |              |              |
-          v              v              v              v              v
-  +--------------------------------------------------------------------------+
-  |                           收集层                                          |
-  |                                                                           |
-  |  +---------------+  +---------------+  +---------------+  +------------+ |
-  |  |  OTel Agent   |  |  Fluentd /    |  |  Prometheus   |  |  StatsD /  | |
-  |  |  (sidecar)    |  |  Vector       |  |  Node Export  |  |  DogStatsD | |
-  |  |               |  |  (DaemonSet)  |  |               |  |            | |
-  |  | 日志+追踪     |  |  日志         |  |  指标         |  | 自定义指标 | |
-  |  | +指标         |  |               |  |               |  |            | |
-  |  +-------+-------+  +-------+-------+  +-------+-------+  +------+-----+ |
-  |          |                  |                   |                 |        |
-  +----------+------------------+-------------------+-----------------+-------+
-             |                  |                   |                 |
-             v                  v                   v                 v
-  +--------------------------------------------------------------------------+
-  |                    消息队列 / 缓冲层                                       |
-  |                                                                           |
-  |  +-------------------------------------------------------------------+   |
-  |  |                         Apache Kafka                               |   |
-  |  |                                                                    |   |
-  |  |   Topic: logs          Topic: metrics       Topic: traces          |   |
-  |  |   (100 partitions)     (50 partitions)      (50 partitions)        |   |
-  |  |                                                                    |   |
-  |  |   保留时间: 24h        保留时间: 6h         保留时间: 12h           |   |
-  |  +-------------------------------------------------------------------+   |
-  |                                                                           |
-  +-----------+--------------------+--------------------+---------------------+
-              |                    |                    |
-              v                    v                    v
-  +--------------------------------------------------------------------------+
-  |                   处理 / 富化层                                            |
-  |                                                                           |
-  |  +------------------+  +------------------+  +------------------+        |
-  |  |  日志处理器       |  |  指标聚合器       |  |  追踪组装器       |        |
-  |  |                   |  |                   |  |                  |        |
-  |  |  - 解析 / grok    |  |  - 预聚合         |  |  - Span 关联     |        |
-  |  |  - 富化（地理位置, |  |  - 降采样         |  |  - 服务图谱      |        |
-  |  |    k8s 元数据）    |  |  - 标签标准化     |  |  - 错误标记      |        |
-  |  |  - PII 脱敏       |  |  - 速率/计数器    |  |  - 尾部采样      |        |
-  |  |  - 严重级别映射    |  |    转换           |  |    决策          |        |
-  |  |  - 去重           |  |                   |  |                  |        |
-  |  +--------+----------+  +--------+----------+  +--------+---------+        |
-  |           |                      |                      |                  |
-  +-----------+----------------------+----------------------+------------------+
-              |                      |                      |
-              v                      v                      v
-  +--------------------------------------------------------------------------+
-  |                            存储层                                          |
-  |                                                                           |
-  |  +------------------+  +------------------+  +------------------+        |
-  |  |  Elasticsearch   |  |  ClickHouse /    |  |  ClickHouse /    |        |
-  |  |  （日志存储）     |  |  Mimir / VicMet  |  |  Tempo / Jaeger  |        |
-  |  |                  |  |  （指标 TSDB）    |  |  （追踪存储）     |        |
-  |  |  热: NVMe SSD    |  |                  |  |                  |        |
-  |  |  温: SSD         |  |  原始: 15秒分辨率 |  |  近期: 14 天     |        |
-  |  |  冷: HDD         |  |  1分钟汇总: 90天  |  |  归档: S3        |        |
-  |  |  冻结: S3        |  |  1小时汇总: 1年   |  |                  |        |
-  |  +------------------+  +------------------+  +------------------+        |
-  |                                                                           |
-  |  +-------------------------------------------------------------------+   |
-  |  |                    对象存储（S3 / GCS）                              |   |
-  |  |              长期归档、合规、冻结层                                   |   |
-  |  +-------------------------------------------------------------------+   |
-  |                                                                           |
-  +----------+---------------------+---------------------+-------------------+
-             |                     |                     |
-             v                     v                     v
-  +--------------------------------------------------------------------------+
-  |                    查询与展示层                                            |
-  |                                                                           |
-  |  +--------------+  +--------------+  +--------------+  +--------------+  |
-  |  |  查询 API    |  |  告警        |  |  仪表盘      |  |  CLI / SDK   |  |
-  |  |  网关         |  |  引擎        |  |  (Grafana /  |  |              |  |
-  |  |              |  |              |  |   Kibana)    |  |              |  |
-  |  |  统一        |  |  规则评估    |  |              |  |  日志追踪    |  |
-  |  |  查询语言    |  |  异常检测    |  |  实时         |  |  指标推送    |  |
-  |  |  扇出        |  |  PagerDuty   |  |  图表         |  |  追踪查询   |  |
-  |  |  缓存        |  |  Slack/Email |  |  模板         |  |              |  |
-  |  +--------------+  +--------------+  +--------------+  +--------------+  |
-  |                                                                           |
-  +--------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph App["APPLICATION LAYER"]
+        A1["Service A (Java)"] & A2["Service B (Go)"] & A3["Service C (Python)"] & A4["Infra (syslog)"] & A5["Cloud (Lambda)"]
+    end
+    subgraph Coll["COLLECTION LAYER"]
+        C1["OTel Agent (sidecar)<br/>Logs + Traces + Metrics"]
+        C2["Fluentd / Vector (DaemonSet)<br/>Logs"]
+        C3["Prometheus Node Exporter<br/>Metrics"]
+        C4["StatsD / DogStatsD<br/>Custom Metrics"]
+    end
+    App --> Coll
+    Coll --> Kafka["MESSAGE QUEUE / BUFFER LAYER (Apache Kafka)<br/>Topic: logs (100p, 24h) | Topic: metrics (50p, 6h) | Topic: traces (50p, 12h)"]
+    Kafka --> ProcL["Log Processor<br/>Parse/grok, Enrich, PII redaction, Dedup"]
+    Kafka --> ProcM["Metrics Aggregator<br/>Pre-aggregate, Downsample, Tag normalize"]
+    Kafka --> ProcT["Trace Assembler<br/>Span linking, Service graph, Tail sampling"]
+    ProcL --> StoreES["Elasticsearch (Log Storage)<br/>Hot (NVMe) -> Warm (SSD) -> Cold (HDD) -> Frozen (S3)"]
+    ProcM --> StoreTS["ClickHouse / Mimir / VictoriaMetrics<br/>Raw: 15s | 1m rollup: 90d | 1h rollup: 1yr"]
+    ProcT --> StoreTr["ClickHouse / Tempo / Jaeger<br/>Recent: 14 days | Archive: S3"]
+    StoreES & StoreTS & StoreTr --> S3["Object Storage (S3 / GCS)<br/>Long-term archive, compliance, frozen tier"]
+    StoreES & StoreTS & StoreTr --> Query["QUERY &amp; PRESENTATION LAYER<br/>Query API Gateway | Alerting Engine | Dashboard (Grafana/Kibana) | CLI/SDK"]
 ```
 
 ### 可观测性三大支柱
@@ -1267,38 +1195,11 @@ predict_linear(node_filesystem_avail_bytes{mountpoint="/"}[6h], 24*3600)
 
 ### 9.1 告警规则引擎
 
-```
-  +--------------------------------------------------------------+
-  |                    告警引擎                                    |
-  |                                                               |
-  |  +--------------+    +---------------+    +--------------+    |
-  |  |  规则存储     |    |  评估器        |    |  状态存储     |    |
-  |  |               |    |               |    |              |    |
-  |  |  每个组织     |--->|  每 60 秒：    |--->|  当前告警     |    |
-  |  |  2000 条规则  |    |  - 获取数据   |    |  状态         |    |
-  |  |               |    |  - 评估规则   |    |  （触发中、   |    |
-  |  |  跨评估       |    |  - 与阈值     |    |   待定、      |    |
-  |  |  Worker       |    |    比较       |    |   已解决）    |    |
-  |  |  分区         |    |  - 更新       |    |              |    |
-  |  |               |    |    状态       |    |  Redis +     |    |
-  |  |               |    |               |    |  PostgreSQL  |    |
-  |  +--------------+    +-------+-------+    +--------------+    |
-  |                              |                                 |
-  |                              v                                 |
-  |                    +------------------+                        |
-  |                    |  通知            |                        |
-  |                    |  路由器          |                        |
-  |                    |                  |                        |
-  |                    |  +------------+  |                        |
-  |                    |  | PagerDuty  |  |                        |
-  |                    |  | Slack      |  |                        |
-  |                    |  | Email      |  |                        |
-  |                    |  | Webhook    |  |                        |
-  |                    |  | OpsGenie   |  |                        |
-  |                    |  | MS Teams   |  |                        |
-  |                    |  +------------+  |                        |
-  |                    +------------------+                        |
-  +--------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Rules["Rule Store<br/>2000 rules/org<br/>Partitioned across workers"] --> Eval["Evaluator (Every 60s)<br/>- Fetch data &amp; eval rules<br/>- Compare to thresholds<br/>- Update state"]
+    Eval --> State["State Store (Redis + PostgreSQL)<br/>firing | pending | resolved"]
+    Eval --> Router["Notification Router<br/>PagerDuty | Slack | Email | Webhook | OpsGenie | MS Teams"]
 ```
 
 ### 9.2 告警类型
@@ -1580,79 +1481,22 @@ RETENTION_POLICIES = {
 
 ### 11.1 多区域部署
 
-```
-  +---------------------------------------------------------------------+
-  |                        区域：US-EAST-1                               |
-  |                                                                      |
-  |  +-------------+  +--------------+  +---------------------------+   |
-  |  | 50K 服务器  |  | 收集         |  | Kafka 集群（主集群）       |   |
-  |  | + 容器      |->| Agent        |->| 30 个 Broker              |   |
-  |  |             |  | (Vector)     |  | Topics: logs, metrics,    |   |
-  |  +-------------+  +--------------+  |         traces            |   |
-  |                                     +------------+--------------+   |
-  |                                                  |                   |
-  |                    +-----------------------------+                   |
-  |                    |  处理管道                    |                   |
-  |                    |  （50 个 Worker，k8s）       |                   |
-  |                    +-----------------------------+                   |
-  |                                  |                                    |
-  |                                  v                                    |
-  |  +------------------------------------------------------+           |
-  |  |  存储                                                |           |
-  |  |  +------------+ +------------+ +----------+           |           |
-  |  |  | ES 集群    | | ClickHouse | | S3       |           |           |
-  |  |  | （热+温）  | | （指标+    | | （归档） |           |           |
-  |  |  | 50 个节点  | |  追踪）    | |          |           |           |
-  |  |  |            | | 20 个节点  | |          |           |           |
-  |  |  +------------+ +------------+ +----------+           |           |
-  |  +------------------------------------------------------+           |
-  |                                                                      |
-  |  +------------------------------------------------------+           |
-  |  |  查询 + UI 层                                        |           |
-  |  |  +----------+ +----------+ +----------+              |           |
-  |  |  |查询 API  | |告警      | |Grafana   |              |           |
-  |  |  |(10 pods) | |引擎      | |仪表盘    |              |           |
-  |  |  +----------+ +----------+ +----------+              |           |
-  |  +------------------------------------------------------+           |
-  |                                                                      |
-  +--------------------------------------+-------------------------------+
-                                         |
-                跨区域复制               |  （关键告警 + 配置）
-                (Kafka MirrorMaker 2.0)  |
-                                         |
-  +--------------------------------------v-------------------------------+
-  |                        区域：EU-WEST-1                                |
-  |                                                                       |
-  |  +-------------+  +--------------+  +---------------------------+    |
-  |  | 50K 服务器  |  | 收集         |  | Kafka 集群（主集群）       |    |
-  |  | + 容器      |->| Agent        |->| 30 个 Broker              |    |
-  |  |             |  | (Vector)     |  | （独立集群）              |    |
-  |  +-------------+  +--------------+  +------------+--------------+    |
-  |                                                   |                   |
-  |                    +------------------------------+                   |
-  |                    |  存储 + 处理                  |                   |
-  |                    |  （与 US-EAST-1 架构一致）     |                   |
-  |                    +------------------------------+                   |
-  |                                                                       |
-  |  GDPR 合规：                                                          |
-  |  - 欧盟日志保留在欧盟区域                                              |
-  |  - 跨区域复制前进行 PII 脱敏                                           |
-  |  - 按组织/租户的数据驻留控制                                            |
-  |                                                                       |
-  +-----------------------------------------------------------------------+
-
-  +-----------------------------------------------------------------------+
-  |                    全局控制平面                                         |
-  |                                                                        |
-  |  +---------------+  +---------------+  +---------------+              |
-  |  |  配置存储      |  |  告警规则      |  |  用户/组织     |              |
-  |  |  (etcd/Consul) |  |  (PostgreSQL) |  |  管理          |              |
-  |  |  已复制        |  |  多主         |  |  (PostgreSQL)  |              |
-  |  +---------------+  +---------------+  +---------------+              |
-  |                                                                        |
-  |  基于 DNS 的路由：logs.us.example.com / logs.eu.example.com            |
-  |  全局仪表盘：dashboard.example.com（从两个区域读取）                     |
-  +-----------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph East["REGION: US-EAST-1"]
+        E_Src["50K Servers + Containers"] --> E_Vec["Collection Agents (Vector)"] --> E_Kafka["Kafka Cluster (Primary, 30 brokers)<br/>Topics: logs, metrics, traces"]
+        E_Kafka --> E_Proc["Processing Pipeline (50 workers, K8s)"]
+        E_Proc --> E_Store["Storage: ES Cluster (50 nodes) | ClickHouse (20 nodes) | S3 (Archive)"]
+        E_Store --> E_UI["Query + UI Layer: Query API (10 pods) | Alerting Engine | Grafana"]
+    end
+    subgraph West["REGION: EU-WEST-1 (GDPR Compliant)"]
+        W_Src["50K Servers + Containers"] --> W_Vec["Collection Agents (Vector)"] --> W_Kafka["Kafka Cluster (Primary, 30 brokers)"]
+        W_Kafka --> W_Store["Storage + Processing (mirrors US-EAST-1, EU data residency)"]
+    end
+    E_Kafka <-->|"Kafka MirrorMaker 2.0 (critical alerts + config)"| W_Kafka
+    subgraph Control["GLOBAL CONTROL PLANE"]
+        CP["Config Store (etcd/Consul) | Alert Rules (PostgreSQL Multi-master) | User/Org Mgmt"]
+    end
 ```
 
 ### 11.2 灾难恢复

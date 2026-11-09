@@ -77,67 +77,20 @@ Annual trip storage:        40 * 365 = 14.6 TB/year
 
 ## 2. 高层架构
 
-```
-                        +------------------+
-                        |   Rider Mobile   |
-                        |      App         |
-                        +--------+---------+
-                                 |
-                          HTTPS / WebSocket
-                                 |
-                        +--------v---------+
-                        |   API Gateway    |
-                        |  (Auth, Rate     |
-                        |   Limit, Route)  |
-                        +--------+---------+
-                                 |
-         +-----------+-----------+-----------+-----------+
-         |           |           |           |           |
-+--------v---+ +-----v------+ +-v--------+ +v--------+ +v-----------+
-|   Ride     | |  Location  | | Matching | | Pricing | | Payment    |
-|  Service   | |  Service   | | Service  | | Service | | Service    |
-|            | |            | |          | |         | |            |
-| Trip CRUD  | | Geo Index  | | Driver   | | Surge   | | Pre-auth   |
-| State Mgmt | | Proximity  | | Selection| | Dynamic | | Charge     |
-| History    | | Tracking   | | Batching | | Upfront | | Payouts    |
-+-----+------+ +-----+------+ +----+-----+ +----+----+ +-----+------+
-      |               |             |            |             |
-      |         +-----v------+     |            |             |
-      |         | Geospatial |     |            |             |
-      |         |   Index    |     |            |             |
-      |         | (Redis /   |     |            |             |
-      |         |  In-Memory)|     |            |             |
-      |         +------------+     |            |             |
-      |                            |            |             |
-+-----v----------------------------v------------v-------------v------+
-|                        Apache Kafka                                |
-|            (Event Streaming / Inter-Service Communication)         |
-+----+----------+----------+----------+----------+------------------+
-     |          |          |          |          |
-+----v---+ +---v----+ +---v----+ +---v----+ +---v--------+
-|Trip DB | |Location| |Driver  | |Pricing | |Payment DB  |
-|Postgres| |  DB    | |  DB    | |  DB    | |  Postgres  |
-|        | |TimeSer.| |Postgres| |Redis   | |            |
-+--------+ +--------+ +--------+ +--------+ +------------+
+```mermaid
+flowchart TD
+    Rider["Rider Mobile App"] -->|"HTTPS / WebSocket"| GW["API Gateway<br/>(Auth, Rate Limit, Route)"]
+    Driver["Driver Mobile App"] -->|"WebSocket (continuous)"| LocSvc
 
-                        +------------------+
-                        |  Driver Mobile   |
-                        |      App         |
-                        +--------+---------+
-                                 |
-                     WebSocket (continuous)
-                                 |
-                        +--------v---------+
-                        |  Location Service|
-                        |  (Driver Gateway)|
-                        +------------------+
+    GW --> RideSvc["Ride Service<br/>Trip CRUD, State Mgmt, History"]
+    GW --> LocSvc["Location Service<br/>Geo Index, Proximity, Tracking"]
+    GW --> MatchSvc["Matching Service<br/>Driver Selection, Batching"]
+    GW --> PriceSvc["Pricing Service<br/>Surge, Dynamic, Upfront"]
+    GW --> PaySvc["Payment Service<br/>Pre-auth, Charge, Payouts"]
 
-Supporting Services:
-+----------------+  +------------------+  +------------------+
-| Notification   |  |   ETA Service    |  |  Supply/Demand   |
-| Service        |  |  (Routing +      |  |  Forecasting     |
-| (Push/SMS)     |  |   ML Prediction) |  |  Service         |
-+----------------+  +------------------+  +------------------+
+    LocSvc --> GeoIdx["Geospatial Index<br/>(Redis / In-Memory)"]
+    RideSvc & LocSvc & MatchSvc & PriceSvc & PaySvc --> Kafka["Apache Kafka<br/>(Event Streaming / Inter-Service Communication)"]
+    Kafka --> TripDB["Trip DB (Postgres)"] & LocDB["Location DB (TimeSeries)"] & DrvDB["Driver DB (Postgres)"] & PriceDB["Pricing DB (Redis)"] & PayDB["Payment DB (Postgres)"]
 ```
 
 ### 服务职责
@@ -159,57 +112,21 @@ Supporting Services:
 
 ### 状态机
 
-```
-                                    TIMEOUT / NO_DRIVERS
-                                   +-------------------+
-                                   |                   |
-                                   v                   |
-+----------+     +---------+   +---+------+     +------+------+
-|          | --> |         |-->|          | --> |             |
-| REQUESTED|    | MATCHING |   | DRIVER   |    |DRIVER       |
-|          |    |         |   | ASSIGNED |    |EN_ROUTE     |
-+----+-----+    +----+----+   +----+-----+    +------+------+
-     |               |              |                 |
-     |  CANCEL       |  CANCEL      |  CANCEL         |
-     +---+           +---+          +---+             |
-         |               |              |             |
-         v               v              v             |
-    +---------+    +---------+    +---------+         |
-    |CANCELLED|    |CANCELLED|    |CANCELLED|         |
-    |_BY_RIDER|    |_NO_MATCH|    |_BY_RIDER|         |
-    +---------+    +---------+    |_BY_DRIVR|         |
-                                  +---------+         |
-                                                      |
-                                              +-------v------+
-                                              |              |
-                                              |   ARRIVED    |
-                                              | (at pickup)  |
-                                              +-------+------+
-                                                      |
-                                          RIDER       |  START
-                                          NO_SHOW     |  TRIP
-                                          +---+       |
-                                              |       |
-                                              v       v
-                                        +-----+-+ +--+----------+
-                                        |NO_SHOW| | IN_PROGRESS  |
-                                        +-------+ +------+------+
-                                                         |
-                                                         | ARRIVE
-                                                         | AT DEST
-                                                         v
-                                                  +------+------+
-                                                  |             |
-                                                  |  COMPLETED  |
-                                                  |             |
-                                                  +------+------+
-                                                         |
-                                                         v
-                                                  +------+------+
-                                                  |             |
-                                                  |   RATED     |
-                                                  |             |
-                                                  +-------------+
+```mermaid
+stateDiagram-v2
+    [*] --> REQUESTED
+    REQUESTED --> MATCHING
+    REQUESTED --> CANCELLED_BY_RIDER : Cancel
+    MATCHING --> DRIVER_ASSIGNED
+    MATCHING --> REQUESTED : Timeout / No Drivers
+    MATCHING --> CANCELLED_NO_MATCH : Cancel
+    DRIVER_ASSIGNED --> DRIVER_EN_ROUTE
+    DRIVER_ASSIGNED --> CANCELLED_BY_RIDER_OR_DRIVER : Cancel
+    DRIVER_EN_ROUTE --> ARRIVED : At Pickup
+    ARRIVED --> NO_SHOW : Rider No-Show
+    ARRIVED --> IN_PROGRESS : Start Trip
+    IN_PROGRESS --> COMPLETED : Arrive at Dest
+    COMPLETED --> RATED
 ```
 
 ### 状态转换
@@ -261,29 +178,13 @@ Driver arrived + waiting    Yes ($5-10 fee)    Yes (wait time)
 
 ### 司机位置更新流程
 
-```
-+-------------+                    +------------------+
-| Driver App  | -- WebSocket ----> | Location Gateway |
-| (every 4s)  |                    | (Connection Mgr) |
-+-------------+                    +--------+---------+
-                                            |
-                              +-------------+-------------+
-                              |                           |
-                     +--------v--------+        +---------v--------+
-                     | In-Memory       |        | Kafka Topic      |
-                     | Geospatial      |        | "driver-location"|
-                     | Index           |        +--------+---------+
-                     | (Redis GEOADD)  |                 |
-                     +--------+--------+        +--------v---------+
-                              |                 | Location History  |
-                         Proximity              | (TimescaleDB /    |
-                         Queries                |  InfluxDB)        |
-                              |                 +------------------+
-                     +--------v--------+
-                     | Matching Service|
-                     | "Find nearby    |
-                     |  drivers"       |
-                     +-----------------+
+```mermaid
+flowchart TD
+    Drv["Driver App<br/>(every 4s)"] -->|"WebSocket"| GW["Location Gateway<br/>(Connection Mgr)"]
+    GW --> Geo["In-Memory Geospatial Index<br/>(Redis GEOADD)"]
+    GW --> Kafka["Kafka Topic: driver-location"]
+    Geo -->|"Proximity Queries"| Match["Matching Service<br/>'Find nearby drivers'"]
+    Kafka --> Hist["Location History<br/>(TimescaleDB / InfluxDB)"]
 ```
 
 ### 位置更新载荷
@@ -488,21 +389,12 @@ Result: Both riders served faster overall
 
 ### 批量匹配（生产环境方案）
 
-```
-+-------------------+     +---------------------+     +------------------+
-| Ride Requests     | --> | Batch Collector     | --> | Bipartite        |
-| (incoming stream) |     | (2-5 second window) |     | Matching Engine  |
-+-------------------+     +---------------------+     +--------+---------+
-                                                               |
-+-------------------+     +---------------------+              |
-| Available Drivers | --> | Candidate Generator | -------------+
-| (from geo index)  |     | (find nearby for    |
-+-------------------+     |  each request)      |     +--------v---------+
-                          +---------------------+     | Optimal          |
-                                                      | Assignments      |
-                                                      | (minimize total  |
-                                                      |  wait time)      |
-                                                      +------------------+
+```mermaid
+flowchart LR
+    Req["Ride Requests<br/>(incoming stream)"] --> Batch["Batch Collector<br/>(2-5 second window)"]
+    Drv["Available Drivers<br/>(from geo index)"] --> Cand["Candidate Generator<br/>(find nearby for each request)"]
+    Batch & Cand --> Engine["Bipartite Matching Engine<br/>(Hungarian / Min-Cost Flow)"]
+    Engine --> Opt["Optimal Assignments<br/>(minimize total wait time)"]
 ```
 
 #### 二部图匹配公式
@@ -623,29 +515,14 @@ Example (UberX in San Francisco):
 
 ### Surge Pricing 流水线
 
-```
-+------------------+    +--------------------+    +------------------+
-| Location Updates | -> | Supply Counter     | -> | Supply/Demand    |
-| (driver stream)  |    | per Geohash Cell   |    | Ratio Calculator |
-+------------------+    +--------------------+    +--------+---------+
-                                                           |
-+------------------+    +--------------------+             |
-| Ride Requests    | -> | Demand Counter     | ------------+
-| (rider stream)   |    | per Geohash Cell   |
-+------------------+    +--------------------+    +--------v---------+
-                                                  | Surge Multiplier |
-                                                  | Engine           |
-                                                  +--------+---------+
-                                                           |
-                                                  +--------v---------+
-                                                  | Smoothing &      |
-                                                  | Cap Logic        |
-                                                  +--------+---------+
-                                                           |
-                                                  +--------v---------+
-                                                  | Pricing Service  |
-                                                  | Cache (Redis)    |
-                                                  +------------------+
+```mermaid
+flowchart LR
+    Loc["Location Updates<br/>(driver stream)"] --> Sup["Supply Counter<br/>per Geohash Cell"]
+    Req["Ride Requests<br/>(rider stream)"] --> Dem["Demand Counter<br/>per Geohash Cell"]
+    Sup & Dem --> Ratio["Supply/Demand<br/>Ratio Calculator"]
+    Ratio --> Surge["Surge Multiplier Engine"]
+    Surge --> Smooth["Smoothing &amp; Cap Logic"]
+    Smooth --> Cache["Pricing Service Cache (Redis)"]
 ```
 
 ### Surge 倍率计算
@@ -1087,30 +964,28 @@ CREATE TABLE pricing_configs (
 
 ### 实时事件流
 
-```
-Rider requests ride:
+```mermaid
+sequenceDiagram
+    participant R as "Rider App"
+    participant GW as "API Gateway"
+    participant RS as "Ride Service"
+    participant MS as "Matching Service"
+    participant D as "Driver App"
 
-Rider App         API Gateway       Ride Service       Matching        Driver App
-    |                  |                 |                |                |
-    |-- Request Ride ->|                 |                |                |
-    |                  |-- Create Trip ->|                |                |
-    |                  |                 |-- Find Match ->|                |
-    |                  |                 |                |-- Query Geo -->|
-    |                  |                 |                |   Index        |
-    |                  |                 |                |                |
-    |                  |                 |<-- Best Driver-|                |
-    |<-- WS: Matching -|<-- Status ------|                |                |
-    |                  |                 |                                 |
-    |                  |                 |-- WS: Ride Request ----------->|
-    |                  |                 |                                 |
-    |                  |                 |<-- WS: Accept ------------------|
-    |                  |                 |                                 |
-    |<-- WS: Driver ---|<-- Status ------|                                |
-    |    Assigned      |                 |                                 |
-    |                  |                 |                                 |
-    |<-- WS: Location--|<-- Location ----|<-- WS: Location Update --------|
-    |    (every 3-5s)  |  (forwarded)    |                                |
-    |                  |                 |                                 |
+    R->>GW: Request Ride
+    GW->>RS: Create Trip
+    RS->>MS: Find Match
+    MS->>MS: Query Geo Index
+    MS-->>RS: Best Driver
+    RS-->>GW: Status: Matching
+    GW-->>R: WS: Matching
+    RS->>D: WS: Ride Request
+    D-->>RS: WS: Accept
+    RS-->>GW: Status: Driver Assigned
+    GW-->>R: WS: Driver Assigned
+    D-->>RS: WS: Location Update (every 3-5s)
+    RS-->>GW: Forward Location
+    GW-->>R: WS: Driver Location
 ```
 
 ### 推送通知（降级方案）
@@ -1545,53 +1420,21 @@ Benefits:
 
 ### 多区域部署
 
-```
-                          +------------------+
-                          |   Global DNS     |
-                          |   (Route 53)     |
-                          +--------+---------+
-                                   |
-                    +--------------+--------------+
-                    |                              |
-           +--------v--------+           +--------v--------+
-           |  US-West Region |           |  US-East Region |
-           |  (Primary)      |           |  (Secondary)    |
-           +-----------------+           +-----------------+
-           |                 |           |                 |
-           | +-------------+ |           | +-------------+ |
-           | | K8s Cluster | |           | | K8s Cluster | |
-           | |             | |           | |             | |
-           | | API Gateway | |           | | API Gateway | |
-           | | Ride Svc    | |           | | Ride Svc    | |
-           | | Location Svc| |           | | Location Svc| |
-           | | Match Svc   | |           | | Match Svc   | |
-           | | Pricing Svc | |           | | Pricing Svc | |
-           | | Payment Svc | |           | | Payment Svc | |
-           | +-------------+ |           | +-------------+ |
-           |                 |           |                 |
-           | +-------------+ |           | +-------------+ |
-           | | Data Layer  | |           | | Data Layer  | |
-           | | PostgreSQL  | |  <-sync-> | | PostgreSQL  | |
-           | | Redis       | |           | | Redis       | |
-           | | Kafka       | |           | | Kafka       | |
-           | | TimescaleDB | |           | | TimescaleDB | |
-           | +-------------+ |           | +-------------+ |
-           +-----------------+           +-----------------+
-                    |                              |
-                    +--------------+---------------+
-                                   |
-                          +--------v--------+
-                          |  EU Region      |
-                          |  (GDPR Zone)    |
-                          +-----------------+
-                          | Separate data   |
-                          | sovereignty     |
-                          +-----------------+
+```mermaid
+flowchart TD
+    DNS["Global DNS (Route 53)"] --> West["US-West Region (Primary)"] & East["US-East Region (Secondary)"] & EU["EU Region (GDPR Zone)"]
 
-Routing logic:
-  - US riders: US-West or US-East (latency-based)
-  - EU riders: EU region (data sovereignty)
-  - Failover: US-West -> US-East (automatic)
+    subgraph USW["US-West Region (Primary)"]
+        W_K8s["K8s Cluster: API GW, Ride, Location, Match, Pricing, Payment Svcs"]
+        W_Data["Data Layer: PostgreSQL, Redis, Kafka, TimescaleDB"]
+        W_K8s --> W_Data
+    end
+    subgraph USE["US-East Region (Secondary)"]
+        E_K8s["K8s Cluster: API GW, Ride, Location, Match, Pricing, Payment Svcs"]
+        E_Data["Data Layer: PostgreSQL, Redis, Kafka, TimescaleDB"]
+        E_K8s --> E_Data
+    end
+    W_Data <-->|"Sync / Failover"| E_Data
 ```
 
 ### 城市级服务部署

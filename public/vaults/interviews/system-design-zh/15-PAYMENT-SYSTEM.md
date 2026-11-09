@@ -78,65 +78,43 @@ Authorization          Capture              Settlement
 
 ### 参与方
 
-```
-+----------+     +-----------+     +----------+     +----------+
-| Customer |     | Merchant  |     | Acquiring|     |  Card    |
-| (Payer)  |     | (Payee)   |     |   Bank   |     | Network  |
-+----+-----+     +-----+-----+     +----+-----+     +----+-----+
-     |                 |                 |                 |
-     |   Enters card   |                 |                 |
-     +---------------->|                 |                 |
-     |                 |  Payment Req    |                 |
-     |                 +---------------->|                 |
-     |                 |                 |  Authorization  |
-     |                 |                 +---------------->|
-     |                 |                 |                 |
-     |                 |                 |           +-----+------+
-     |                 |                 |           |  Issuing   |
-     |                 |                 |           |    Bank    |
-     |                 |                 |           +-----+------+
-     |                 |                 |                 |
-     |                 |                 |<-- Approved ----+
-     |                 |<-- Approved ----+                 |
-     |<-- Confirmed ---+                 |                 |
-     |                 |                 |                 |
+```mermaid
+sequenceDiagram
+    participant C as "Customer (Payer)"
+    participant M as "Merchant (Payee)"
+    participant Acq as "Acquiring Bank"
+    participant Net as "Card Network"
+    participant Iss as "Issuing Bank"
+
+    C->>M: Enters card
+    M->>Acq: Payment Request
+    Acq->>Net: Authorization Request
+    Net->>Iss: Authorization Request
+    Iss-->>Net: Approved
+    Net-->>Acq: Approved
+    Acq-->>M: Approved
+    M-->>C: Confirmed
 ```
 
 ### 单次支付流程
 
-```
-Customer         Merchant App       Our System        Payment Processor
-   |                  |                  |                    |
-   | 1. Enter card    |                  |                    |
-   +----------------->|                  |                    |
-   |                  | 2. Create        |                    |
-   |                  |  PaymentIntent   |                    |
-   |                  +----------------->|                    |
-   |                  |                  | 3. Tokenize card   |
-   |                  |                  |    (PCI vault)     |
-   |                  |                  |                    |
-   |                  | 4. Return        |                    |
-   |                  |  client_secret   |                    |
-   |                  |<-----------------+                    |
-   |                  |                  |                    |
-   | 5. Confirm with  |                  |                    |
-   |    client SDK    |                  |                    |
-   +------------------------------------>|                    |
-   |                  |                  | 6. Authorize       |
-   |                  |                  +------------------->|
-   |                  |                  |                    |
-   |                  |                  | 7. Auth response   |
-   |                  |                  |<-------------------+
-   |                  |                  |                    |
-   |                  |                  | 8. Capture         |
-   |                  |                  +------------------->|
-   |                  |                  |                    |
-   |                  | 9. Webhook:      |                    |
-   |                  |  payment.success |                    |
-   |                  |<-----------------+                    |
-   |                  |                  |                    |
-   | 10. Show receipt |                  |                    |
-   |<-----------------+                  |                    |
+```mermaid
+sequenceDiagram
+    participant C as "Customer"
+    participant M as "Merchant App"
+    participant S as "Our System"
+    participant P as "Payment Processor"
+
+    C->>M: 1. Enter card
+    M->>S: 2. Create PaymentIntent
+    S->>S: 3. Tokenize card (PCI vault)
+    S-->>M: 4. Return client_secret
+    C->>S: 5. Confirm with client SDK
+    S->>P: 6. Authorize
+    P-->>S: 7. Auth response
+    S->>P: 8. Capture
+    S-->>M: 9. Webhook: payment.success
+    M-->>C: 10. Show receipt
 ```
 
 ### 订阅 / 周期性支付流程
@@ -156,30 +134,19 @@ Customer         Merchant App       Our System        Payment Processor
 
 ### 退款流程
 
-```
-Merchant             Our System           Payment Processor     Issuing Bank
-   |                     |                       |                   |
-   | 1. POST /refunds    |                       |                   |
-   +-------------------->|                       |                   |
-   |                     | 2. Validate           |                   |
-   |                     |   (amount <= captured) |                   |
-   |                     |                       |                   |
-   |                     | 3. Create refund      |                   |
-   |                     |    record + ledger    |                   |
-   |                     |                       |                   |
-   |                     | 4. Send refund req    |                   |
-   |                     +---------------------->|                   |
-   |                     |                       | 5. Process refund |
-   |                     |                       +------------------>|
-   |                     |                       |                   |
-   |                     | 6. Refund confirmed   |                   |
-   |                     |<----------------------+                   |
-   |                     |                       |                   |
-   | 7. Webhook:         |                       |                   |
-   |  refund.succeeded   |                       |                   |
-   |<--------------------+                       |                   |
-   |                     |                       |                   |
-   |            (Customer sees refund in 5-10 business days)         |
+```mermaid
+sequenceDiagram
+    participant M as "Merchant"
+    participant S as "Our System"
+    participant P as "Payment Processor"
+    participant B as "Issuing Bank"
+
+    M->>S: 1. POST /refunds
+    S->>S: 2. Validate (amount <= captured) & 3. Create refund record + ledger
+    S->>P: 4. Send refund request
+    P->>B: 5. Process refund
+    P-->>S: 6. Refund confirmed
+    S-->>M: 7. Webhook: refund.succeeded (Customer sees refund in 5-10 business days)
 ```
 
 ---
@@ -368,73 +335,26 @@ Key event types:
 
 ## 4. 高层架构
 
-```
-                            +------------------+
-                            |   Client SDKs    |
-                            | (JS, iOS, Android)|
-                            +--------+---------+
-                                     |
-                                     | HTTPS
-                                     v
-                            +------------------+
-                            |   API Gateway    |
-                            | (Rate Limit,Auth,|
-                            |  TLS Termination)|
-                            +--------+---------+
-                                     |
-              +----------------------+----------------------+
-              |                      |                      |
-              v                      v                      v
-     +--------+-------+    +--------+-------+    +---------+------+
-     | Payment Service|    |Subscription Svc|    | Merchant Svc   |
-     | (Core payment  |    |(Billing engine, |    |(Onboarding,    |
-     |  orchestration)|    | invoicing)      |    | config, keys)  |
-     +--------+-------+    +--------+-------+    +----------------+
-              |                      |
-              v                      |
-     +--------+-------+             |
-     | Payment State  |<------------+
-     |   Machine      |
-     +---+----+---+---+
-         |    |   |
-         |    |   +------------------------+
-         |    |                            |
-         v    v                            v
-  +------+--+ +--------+--------+  +------+--------+
-  | Ledger  | | Risk / Fraud    |  | Notification  |
-  | Service | | Detection Svc   |  | Service       |
-  | (Double | | (Rules + ML)    |  | (Webhooks,    |
-  | Entry)  | +-----------------+  |  email, SMS)  |
-  +---------+                      +---------------+
-         |
-         v
-  +------+--------+     +-------------------+
-  | Reconciliation|     | Payment Processor |
-  | Service       |     | Adapter           |
-  | (Daily batch) |     | (Visa, MC, etc.)  |
-  +---------------+     +--------+----------+
-                                 |
-                    +------------+------------+
-                    |            |            |
-                    v            v            v
-               +--------+  +--------+  +---------+
-               |  Visa  |  |  MC    |  |  ACH    |
-               | Network|  | Network|  | Network |
-               +--------+  +--------+  +---------+
+```mermaid
+flowchart TD
+    SDK["Client SDKs<br/>(JS, iOS, Android)"] -->|"HTTPS"| GW["API Gateway<br/>(Rate Limit, Auth, TLS Termination)"]
+    GW --> PaySvc["Payment Service<br/>(Core payment orchestration)"]
+    GW --> SubSvc["Subscription Svc<br/>(Billing engine, invoicing)"]
+    GW --> MerchSvc["Merchant Svc<br/>(Onboarding, config, keys)"]
 
-  Async Infrastructure:
-  +------------------+     +------------------+
-  |   Kafka /        |     | Dead Letter      |
-  |   Message Bus    |---->| Queue (DLQ)      |
-  +------------------+     +------------------+
+    PaySvc & SubSvc --> PSM["Payment State Machine"]
+    PSM --> Ledger["Ledger Service<br/>(Double Entry)"]
+    PSM --> Risk["Risk / Fraud Detection Svc<br/>(Rules + ML)"]
+    PSM --> Notif["Notification Service<br/>(Webhooks, email, SMS)"]
 
-  Data Stores:
-  +------------------+  +------------------+  +------------------+
-  | PostgreSQL       |  | Redis            |  | S3 / Blob        |
-  | (Payments,       |  | (Idempotency,    |  | (Audit logs,     |
-  |  Ledger, etc.)   |  |  Rate limiting,  |  |  Reconciliation  |
-  |                  |  |  Sessions)       |  |  reports)        |
-  +------------------+  +------------------+  +------------------+
+    Ledger --> Recon["Reconciliation Service<br/>(Daily batch)"]
+    PSM --> Adapter["Payment Processor Adapter"]
+    Adapter --> Visa["Visa Network"] & MC["MC Network"] & ACH["ACH Network"]
+
+    subgraph Infra["Async &amp; Data Stores"]
+        Kafka["Kafka / Message Bus --> Dead Letter Queue (DLQ)"]
+        Stores["PostgreSQL (Payments, Ledger) | Redis (Idempotency, Rate Limit) | S3 (Audit, Recon)"]
+    end
 ```
 
 ### 关键设计决策
@@ -651,38 +571,20 @@ CREATE INDEX idx_audit_created ON audit_log(created_at);
 
 ### 状态图
 
-```
-                          +-------------------+
-                          |                   |
-                          v                   |
-    +----------+    +-----------+    +--------+---+
-    |          |    |           |    |            |
-    | created  +--->| processing+--->| authorized |
-    |          |    |           |    |            |
-    +----+-----+    +-----+-----+    +---+---+----+
-         |               |              |   |
-         |               |              |   |  (manual capture)
-         v               v              |   v
-    +----+-----+    +----+-----+     |  +----+-----+
-    |          |    |          |     |  |          |
-    | canceled |    |  failed  |     |  | captured |
-    |          |    |          |     |  |          |
-    +----------+    +----+-----+     |  +----+-----+
-                         |           |       |
-                         |           |       v
-                         |           |  +----+-----+
-                         |           |  |          |
-                         |           +->| settled  |
-                         |              |          |
-                         |              +----+-----+
-                         |                   |
-                         v                   v
-                    +----+-----+    +--------+---+
-                    | requires |    |            |
-                    |  action  |    |  refunded  |
-                    | (3DS)    |    | (full or   |
-                    +----------+    |  partial)  |
-                                    +------------+
+```mermaid
+stateDiagram-v2
+    [*] --> created
+    created --> processing
+    created --> canceled
+    processing --> authorized
+    processing --> failed
+    failed --> processing : Retry
+    failed --> requires_action : 3DS
+    requires_action --> processing
+    authorized --> captured : Manual / Auto Capture
+    authorized --> settled
+    captured --> settled
+    settled --> refunded : Full or Partial Refund
 ```
 
 ### 状态转换
@@ -838,33 +740,17 @@ Producer           Message Queue            Consumer
 
 一笔支付涉及多个服务。Saga 模式通过补偿事务来协调它们：
 
-```
-+-------------------------------------------------------------------+
-|                     Payment Saga Orchestrator                      |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    S1["Step 1: Reserve Funds -> Fraud Check Service"] -->|"PASS"| S2["Step 2: Authorize -> Payment Processor"]
+    S2 -->|"APPROVED"| S3["Step 3: Capture -> Processor"]
+    S3 -->|"OK"| S4["Step 4: Ledger -> Create Double-Entry Records"]
+    S4 --> S5["Step 5: Notify -> Send Webhook"]
 
-Step 1: Reserve Funds
-  +----> Fraud Check Service  -----> PASS ----+
-  |                                           |
-  |      (compensate: release hold)           v
-  |                                  Step 2: Authorize
-  |                           +----> Payment Processor ---> APPROVED --+
-  |                           |                                        |
-  |      (compensate: void auth)                                       v
-  |                                                          Step 3: Capture
-  |                                                   +----> Processor ---> OK --+
-  |                                                   |                          |
-  |      (compensate: refund)                                                    v
-  |                                                                    Step 4: Ledger
-  |                                                             +----> Create Entries --+
-  |                                                             |                       |
-  |      (compensate: reversal entries)                                                 v
-  |                                                                           Step 5: Notify
-  |                                                                    +----> Send Webhook
-  |                                                                    |
-  +--------------------------------------------------------------------+
-         If ANY step fails, execute compensating transactions
-         in REVERSE order from the last successful step
+    S4 -.->|"Compensate: Reversal entries"| S3
+    S3 -.->|"Compensate: Refund"| S2
+    S2 -.->|"Compensate: Void auth"| S1
+    S1 -.->|"Compensate: Release hold"| Fail["Mark Payment FAILED"]
 ```
 
 **Saga 补偿示例（步骤 3 失败）：**
@@ -1067,33 +953,27 @@ Output: Risk score 0-100
 
 ### 3D Secure (3DS) 认证
 
-```
-Customer        Merchant         Our System       Card Network    Issuing Bank
-   |               |                 |                 |               |
-   | Pay           |                 |                 |               |
-   +-------------->|                 |                 |               |
-   |               | Process         |                 |               |
-   |               +---------------->|                 |               |
-   |               |                 | Risk score: 55  |               |
-   |               |                 | -> Trigger 3DS  |               |
-   |               |                 +---------------->|               |
-   |               |                 |                 +-------------->|
-   |               |                 |                 |  Challenge    |
-   |               |                 |                 |<--------------+
-   |               |                 |<----------------+               |
-   |               |<----------------+                 |               |
-   |  3DS modal    |                 |                 |               |
-   |<--------------+                 |                 |               |
-   |               |                 |                 |               |
-   | Enter OTP     |                 |                 |               |
-   +----------------------------------+---------------+-------------->|
-   |               |                 |                 |               |
-   |               |                 |                 |   Verified    |
-   |               |                 |<----------------+<--------------+
-   |               |                 |                 |               |
-   |               |                 | Continue auth   |               |
-   |               |                 | (liability shift|               |
-   |               |                 |  to issuer)     |               |
+```mermaid
+sequenceDiagram
+    participant C as "Customer"
+    participant M as "Merchant"
+    participant S as "Our System"
+    participant Net as "Card Network"
+    participant Iss as "Issuing Bank"
+
+    C->>M: Pay
+    M->>S: Process payment
+    Note over S: Risk score: 55 -> Trigger 3DS
+    S->>Net: Request 3DS Challenge
+    Net->>Iss: Request Challenge
+    Iss-->>Net: Challenge URL/Modal
+    Net-->>S: Challenge
+    S-->>M: Challenge response
+    M-->>C: Show 3DS modal
+    C->>Iss: Enter OTP
+    Iss-->>Net: Verified
+    Net-->>S: Verified
+    Note over S: Continue auth (liability shift to issuer)
 ```
 
 ### 实时与批量欺诈检测
@@ -1601,61 +1481,21 @@ NOT cached (always read from DB):
 
 ### 生产部署
 
-```
-                        +------------------+
-                        |   Global DNS     |
-                        |   (Route 53)     |
-                        +--------+---------+
-                                 |
-                   +-------------+-------------+
-                   |                           |
-          +--------v---------+        +--------v---------+
-          |   Region: US-East|        |   Region: EU-West|
-          |   (Primary)      |        |   (DR / EU data) |
-          +--------+---------+        +--------+---------+
-                   |                           |
-          +--------v---------+        +--------v---------+
-          |    CloudFront    |        |    CloudFront    |
-          |    + WAF         |        |    + WAF         |
-          +--------+---------+        +--------+---------+
-                   |                           |
-          +--------v---------+        +--------v---------+
-          |   ALB (Layer 7)  |        |   ALB (Layer 7)  |
-          +--------+---------+        +--------+---------+
-                   |                           |
-     +-------------+-------------+             |
-     |             |             |             |
-+----v----+  +----v----+  +----v----+   +----v----+
-| Payment |  | Payment |  | Payment |   | Payment |
-| Svc x6  |  | SubsSvc |  | Webhook |   | Svc x4  |
-| (ECS)   |  | x3(ECS) |  | x4(ECS)|   | (ECS)   |
-+---------+  +---------+  +---------+   +---------+
-     |             |             |             |
-+----v-------------v-------------v----+  +----v----+
-|         Kafka Cluster (MSK)        |  | Kafka   |
-|         (3 brokers, RF=3)          |  | (DR)    |
-+----+-------------------------------+  +---------+
-     |
-+----v-------------------------------+
-|     PostgreSQL (RDS Multi-AZ)      |
-|     Primary: us-east-1a            |
-|     Standby: us-east-1b            |
-|     Read Replicas: us-east-1c x2   |
-+------------------------------------+
-     |
-     | Cross-region replication (async)
-     v
-+----+-------------------------------+
-|     PostgreSQL (RDS) - EU-West     |
-|     (Read replica / DR standby)    |
-+------------------------------------+
-
-Supporting Infrastructure:
-+------------------+  +------------------+  +------------------+
-| Redis Cluster    |  | ElasticSearch    |  | S3               |
-| (ElastiCache)    |  | (Audit search)  |  | (Reconciliation  |
-| 6 nodes          |  | 3 nodes         |  |  files, backups) |
-+------------------+  +------------------+  +------------------+
+```mermaid
+flowchart TD
+    DNS["Global DNS (Route 53)"] --> East["Region: US-East (Primary)"] & West["Region: EU-West (DR / EU data)"]
+    subgraph EastRegion["US-East (Primary)"]
+        East --> CF_E["CloudFront + WAF"] --> ALB_E["ALB (Layer 7)"]
+        ALB_E --> Pay_E["Payment Svc x6 (ECS)"] & Sub_E["Subs Svc x3 (ECS)"] & WH_E["Webhook Svc x4 (ECS)"]
+        Pay_E & Sub_E & WH_E --> MSK_E["Kafka Cluster (MSK, 3 brokers, RF=3)"]
+        MSK_E --> RDS_E["PostgreSQL (RDS Multi-AZ)<br/>Primary: us-east-1a | Standby: 1b | Read Replicas: 1c x2"]
+    end
+    subgraph WestRegion["EU-West (DR / EU Data)"]
+        West --> CF_W["CloudFront + WAF"] --> ALB_W["ALB (Layer 7)"]
+        ALB_W --> Pay_W["Payment Svc x4 (ECS)"] --> MSK_W["Kafka (DR)"]
+        MSK_W --> RDS_W["PostgreSQL (RDS) - EU-West<br/>(Read replica / DR standby)"]
+    end
+    RDS_E -->|"Cross-region async replication"| RDS_W
 ```
 
 ### 支付处理的 Active-Passive 模式

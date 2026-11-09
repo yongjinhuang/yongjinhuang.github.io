@@ -224,60 +224,28 @@ Predicted rating: r(u,i) = U[u] . V[i]^T
 
 ## 3. High-Level Architecture
 
-```
-+------------------------------------------------------------------+
-|                        CLIENT LAYER                               |
-|   [Mobile App]    [Web Browser]    [Smart TV]    [API Clients]    |
-+--------|--------------------|-------------|-------------|--------+
-         |                    |             |             |
-         v                    v             v             v
-+------------------------------------------------------------------+
-|                       API GATEWAY / CDN                           |
-|            (Rate Limiting, Auth, Load Balancing)                  |
-+------------------------------------------------------------------+
-         |                                        |
-         v                                        v
-+------------------------+          +----------------------------+
-| ONLINE SERVING PATH    |          | EVENT INGESTION PATH       |
-|                        |          |                            |
-| +--------------------+ |          | +------------------------+ |
-| | Feature Store      | |          | | Kafka / Kinesis        | |
-| | (Redis Cluster)    | |          | | (Event Stream)         | |
-| +--------------------+ |          | +------------------------+ |
-|          |              |          |      |            |        |
-|          v              |          |      v            v        |
-| +--------------------+ |          | +---------+ +-----------+  |
-| | Candidate          | |          | | Flink   | | Spark     |  |
-| | Generation         | |          | | (RT     | | Streaming |  |
-| | (ANN Index)        | |          | | Feature | | (Batch    |  |
-| +--------------------+ |          | | Update) | | Features) |  |
-|          |              |          | +---------+ +-----------+  |
-|          v              |          +----------------------------+
-| +--------------------+ |                     |
-| | Ranking Model      | |                     v
-| | (GPU Serving)      | |          +----------------------------+
-| +--------------------+ |          | OFFLINE TRAINING PATH      |
-|          |              |          |                            |
-|          v              |          | +------------------------+ |
-| +--------------------+ |          | | Data Lake (S3/HDFS)    | |
-| | Re-ranking &       | |          | | - Raw events           | |
-| | Business Logic     | |          | | - Training datasets    | |
-| +--------------------+ |          | | - Feature snapshots    | |
-|          |              |          | +------------------------+ |
-|          v              |          |          |                 |
-| +--------------------+ |          | +------------------------+ |
-| | Response Assembly  | |          | | Training Pipeline      | |
-| +--------------------+ |          | | (GPU Cluster)          | |
-+------------------------+          | | - Feature engineering  | |
-                                    | | - Model training       | |
-                                    | | - Evaluation           | |
-                                    | +------------------------+ |
-                                    |          |                 |
-                                    | +------------------------+ |
-                                    | | Model Registry         | |
-                                    | | (MLflow / SageMaker)   | |
-                                    | +------------------------+ |
-                                    +----------------------------+
+```mermaid
+flowchart TD
+    Clients["CLIENT LAYER<br/>[Mobile App] | [Web Browser] | [Smart TV] | [API Clients]"] --> GW["API GATEWAY / CDN<br/>(Rate Limiting, Auth, Load Balancing)"]
+    GW --> Online & Ingest
+
+    subgraph Online["ONLINE SERVING PATH"]
+        FS["Feature Store (Redis Cluster)"] --> CG["Candidate Generation (ANN Index)"]
+        CG --> RM["Ranking Model (GPU Serving)"]
+        RM --> RR["Re-ranking &amp; Business Logic"]
+        RR --> RA["Response Assembly"]
+    end
+
+    subgraph Ingest["EVENT INGESTION PATH"]
+        Kafka["Kafka / Kinesis (Event Stream)"] --> Flink["Flink (RT Feature Update)"] & Spark["Spark Streaming (Batch Features)"]
+    end
+
+    Ingest --> Offline
+
+    subgraph Offline["OFFLINE TRAINING PATH"]
+        Lake["Data Lake (S3/HDFS)<br/>Raw events, training datasets, feature snapshots"] --> Train["Training Pipeline (GPU Cluster)<br/>Feature eng, model training, evaluation"]
+        Train --> Reg["Model Registry (MLflow / SageMaker)"]
+    end
 ```
 
 ### Three Processing Paths
@@ -301,29 +269,15 @@ Predicted rating: r(u,i) = U[u] . V[i]^T
 
 **Goal**: Narrow from 100M items to 500-1000 candidates in < 10ms.
 
-```
-                    100M Total Items
-                          |
-          +---------------+---------------+
-          |               |               |
-    +-----v-----+  +-----v-----+  +------v------+
-    | ANN-Based |  | CF-Based  |  | Rule-Based  |
-    | Retrieval |  | Retrieval |  | Retrieval   |
-    | (200)     |  | (200)     |  | (200)       |
-    +-----------+  +-----------+  +-------------+
-          |               |               |
-          +-------+-------+-------+-------+
-                  |               |
-           +------v------+ +-----v--------+
-           | Popularity  | | Trending     |
-           | Based (100) | | Based (100)  |
-           +-------------+ +--------------+
-                  |               |
-                  +-------+-------+
-                          |
-                    Merge & Deduplicate
-                          |
-                  ~500-1000 candidates
+```mermaid
+flowchart TD
+    Total["100M Total Items"] --> ANN["ANN-Based Retrieval (200)"]
+    Total --> CF["CF-Based Retrieval (200)"]
+    Total --> Rule["Rule-Based Retrieval (200)"]
+    Total --> Pop["Popularity-Based (100)"]
+    Total --> Trend["Trending-Based (100)"]
+    ANN & CF & Rule & Pop & Trend --> Merge["Merge &amp; Deduplicate"]
+    Merge --> Out["~500-1000 Candidates"]
 ```
 
 #### ANN (Approximate Nearest Neighbor) Retrieval
@@ -366,43 +320,12 @@ All channels execute in **parallel**, results are merged and deduplicated.
 
 **Goal**: Score 500-1000 candidates precisely using a rich feature set. Latency budget: ~50ms.
 
-```
-For each candidate item:
-
-  +------------------+------------------+-------------------+
-  |   User Features  |  Item Features   | Context Features  |
-  +------------------+------------------+-------------------+
-  | - user_id embed  | - item_id embed  | - time_of_day     |
-  | - age, gender    | - category       | - day_of_week     |
-  | - watch history  | - duration       | - device_type     |
-  | - avg watch time | - upload_date    | - location        |
-  | - click rate     | - view_count     | - session_length  |
-  | - genre prefs    | - like_ratio     | - previous_item   |
-  +------------------+------------------+-------------------+
-            |                 |                   |
-            v                 v                   v
-  +----------------------------------------------------------+
-  |              Feature Interaction Layer                     |
-  |  (Cross features: user_genre x item_genre,                |
-  |   user_avg_duration x item_duration, etc.)                 |
-  +----------------------------------------------------------+
-                          |
-                          v
-  +----------------------------------------------------------+
-  |              Deep Neural Network                           |
-  |  Input (concatenated): 1024-dim                            |
-  |  Hidden: 1024 -> 512 -> 256 -> 128                         |
-  |  Activation: ReLU + BatchNorm + Dropout                    |
-  +----------------------------------------------------------+
-                          |
-                          v
-  +----------------------------------------------------------+
-  |              Multi-Task Heads                              |
-  |  P(click)  |  P(watch>50%)  |  P(like)  |  P(share)       |
-  +----------------------------------------------------------+
-                          |
-                          v
-  Combined Score = w1*P(click) + w2*P(watch) + w3*P(like) + w4*P(share)
+```mermaid
+flowchart TD
+    UF["User Features<br/>user_id embed, age, gender,<br/>watch history, avg watch time,<br/>click rate, genre prefs"] & IF["Item Features<br/>item_id embed, category, duration,<br/>upload_date, view_count, like_ratio"] & CF["Context Features<br/>time_of_day, day_of_week,<br/>device_type, location,<br/>session_length, previous_item"] --> Cross["Feature Interaction Layer<br/>(Cross features: user_genre x item_genre, user_avg_duration x item_duration)"]
+    Cross --> DNN["Deep Neural Network<br/>Input: 1024-dim -> Hidden: 1024 -> 512 -> 256 -> 128<br/>(ReLU + BatchNorm + Dropout)"]
+    DNN --> Heads["Multi-Task Heads<br/>P(click) | P(watch&gt;50%) | P(like) | P(share)"]
+    Heads --> Score["Combined Score = w1*P(click) + w2*P(watch) + w3*P(like) + w4*P(share)"]
 ```
 
 #### Feature Engineering Deep Dive
@@ -445,37 +368,14 @@ Feature Categories:
 
 **Goal**: Apply business rules, diversity, and exploration on top of ranked results. Latency: ~10ms.
 
-```
-Ranked candidates (top 100 by score)
-         |
-         v
-+---------------------+
-| Diversity Injection |  -- Ensure no more than 3 items per category
-+---------------------+     in top 20 results
-         |
-         v
-+---------------------+
-| Freshness Boost     |  -- Boost items < 24h old by 1.2x
-+---------------------+     Boost items < 1h old by 1.5x
-         |
-         v
-+---------------------+
-| Business Rules      |  -- Insert promoted content at positions 3, 7
-+---------------------+     Filter age-restricted content
-         |                   Suppress already-watched items
-         v
-+---------------------+
-| Exploration         |  -- Reserve 10% of slots for exploration
-+---------------------+     Use Thompson Sampling for new items
-         |
-         v
-+---------------------+
-| Position Bias       |  -- Calibrate scores for position bias
-| Correction          |     (items at top get more clicks regardless)
-+---------------------+
-         |
-         v
-  Final ordered list (top 50)
+```mermaid
+flowchart TD
+    In["Ranked candidates (top 100 by score)"] --> Div["Diversity Injection<br/>Max 3 items per category in top 20"]
+    Div --> Fresh["Freshness Boost<br/>&lt;24h old: 1.2x | &lt;1h old: 1.5x"]
+    Fresh --> Biz["Business Rules<br/>Promoted at pos 3 &amp; 7, filter age-restricted, suppress watched"]
+    Biz --> Exp["Exploration<br/>Reserve 10% slots via Thompson Sampling"]
+    Exp --> Pos["Position Bias Correction<br/>Calibrate scores for position bias"]
+    Pos --> Out["Final ordered list (top 50)"]
 ```
 
 #### Exploration vs Exploitation Strategies
@@ -507,39 +407,12 @@ Ranked candidates (top 100 by score)
 
 ## 5. Feature Store Design
 
-```
-+-------------------------------------------------------------------+
-|                       FEATURE STORE                                |
-|                                                                    |
-|  +--------------------+          +--------------------+            |
-|  | ONLINE STORE       |          | OFFLINE STORE      |            |
-|  | (Redis Cluster)    |          | (S3 + Hive/Iceberg)|            |
-|  |                    |          |                    |             |
-|  | - User features    |          | - Historical       |            |
-|  |   (1TB, <1ms)      |          |   features         |            |
-|  | - Item features    |          | - Training data    |            |
-|  |   (100GB, <1ms)    |          |   (300TB)          |            |
-|  | - Real-time        |          | - Feature          |            |
-|  |   counters         |          |   snapshots        |            |
-|  +--------^-----------+          +--------^-----------+            |
-|           |                               |                        |
-|  +--------+-----------+          +--------+-----------+            |
-|  | STREAMING PIPELINE |          | BATCH PIPELINE     |            |
-|  | (Flink)            |          | (Spark)            |            |
-|  |                    |          |                    |             |
-|  | - Real-time        |          | - Daily feature    |            |
-|  |   aggregations     |          |   computation      |            |
-|  | - Sliding window   |          | - Historical       |            |
-|  |   features         |          |   aggregations     |            |
-|  | - Session features |          | - Training data    |            |
-|  |                    |          |   generation       |            |
-|  +--------^-----------+          +--------^-----------+            |
-|           |                               |                        |
-|  +--------+-------------------------------+-----------+            |
-|  |               EVENT STREAM (Kafka)                 |            |
-|  |  Topics: clicks, views, watch_time, likes, shares  |            |
-|  +----------------------------------------------------+            |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart BT
+    Kafka["EVENT STREAM (Kafka)<br/>Topics: clicks, views, watch_time, likes, shares"] --> Stream["STREAMING PIPELINE (Flink)<br/>Real-time aggregations, sliding windows, session features"]
+    Kafka --> Batch["BATCH PIPELINE (Spark)<br/>Daily feature computation, historical aggregations, training data"]
+    Stream --> Online["ONLINE STORE (Redis Cluster)<br/>User features (1TB, &lt;1ms), Item features (100GB, &lt;1ms), RT counters"]
+    Batch --> Offline["OFFLINE STORE (S3 + Hive/Iceberg)<br/>Historical features, Training data (300TB), Feature snapshots"]
 ```
 
 ### Feature Computation Pipeline
@@ -618,41 +491,14 @@ Implementation:
 
 ## 6. Training Pipeline
 
-```
-+-------------------------------------------------------------------+
-|                     TRAINING PIPELINE                              |
-|                                                                    |
-|  +------------------+     +------------------+                     |
-|  | Data Collection  |     | Feature          |                     |
-|  | & Sampling       |---->| Engineering      |                     |
-|  | (Spark)          |     | (Spark + Flink)  |                     |
-|  +------------------+     +------------------+                     |
-|                                    |                               |
-|                                    v                               |
-|  +------------------+     +------------------+                     |
-|  | Negative         |     | Training Data    |                     |
-|  | Sampling         |---->| Validation       |                     |
-|  +------------------+     +------------------+                     |
-|                                    |                               |
-|                                    v                               |
-|  +------------------+     +------------------+                     |
-|  | Distributed      |     | Hyperparameter   |                     |
-|  | Training         |<--->| Tuning           |                     |
-|  | (GPU Cluster)    |     | (Optuna/Ray)     |                     |
-|  +------------------+     +------------------+                     |
-|           |                                                        |
-|           v                                                        |
-|  +------------------+     +------------------+                     |
-|  | Offline          |     | Model Registry   |                     |
-|  | Evaluation       |---->| (MLflow)         |                     |
-|  +------------------+     +------------------+                     |
-|                                    |                               |
-|                                    v                               |
-|  +------------------+     +------------------+                     |
-|  | Shadow / Canary  |     | Production       |                     |
-|  | Deployment       |---->| Rollout          |                     |
-|  +------------------+     +------------------+                     |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    DC["Data Collection &amp; Sampling (Spark)"] --> FE["Feature Engineering (Spark + Flink)"]
+    FE --> NS["Negative Sampling"] --> Val["Training Data Validation"]
+    Val --> DT["Distributed Training (GPU Cluster)"]
+    DT <--> HPO["Hyperparameter Tuning (Optuna / Ray)"]
+    DT --> Eval["Offline Evaluation"] --> Reg["Model Registry (MLflow)"]
+    Reg --> Canary["Shadow / Canary Deployment"] --> Prod["Production Rollout"]
 ```
 
 ### Implicit vs Explicit Feedback
@@ -769,53 +615,12 @@ Ranking Metrics:
 
 ### Embedding-Based Serving Architecture
 
-```
-+----------------------------------------------------------------+
-|                    MODEL SERVING LAYER                          |
-|                                                                |
-|  +-------------------+     +-----------------------------+     |
-|  | User Embedding    |     | ANN Index Service           |     |
-|  | Cache (Redis)     |     | (FAISS / ScaNN)             |     |
-|  |                   |     |                             |     |
-|  | user_id -> 256d   |     | 100M item embeddings        |     |
-|  | TTL: 6 hours      |     | HNSW index                  |     |
-|  | Hit rate: ~95%    |     | Sharded across 10 nodes     |     |
-|  +-------------------+     +-----------------------------+     |
-|           |                          |                         |
-|           v                          v                         |
-|  +---------------------------------------------------+        |
-|  | Candidate Generation Service                       |        |
-|  | - Look up user embedding (cache or compute)        |        |
-|  | - Query ANN index for top-200 candidates           |        |
-|  | - Merge with CF, popularity, trending candidates   |        |
-|  | - Output: ~500-1000 candidate item IDs             |        |
-|  +---------------------------------------------------+        |
-|                          |                                     |
-|                          v                                     |
-|  +---------------------------------------------------+        |
-|  | Feature Assembly Service                           |        |
-|  | - Batch lookup user features from Redis            |        |
-|  | - Batch lookup item features for all candidates    |        |
-|  | - Compute cross features                           |        |
-|  | - Assemble feature vectors for ranking model       |        |
-|  +---------------------------------------------------+        |
-|                          |                                     |
-|                          v                                     |
-|  +---------------------------------------------------+        |
-|  | Ranking Model Service (TF Serving / Triton)        |        |
-|  | - GPU-accelerated inference                        |        |
-|  | - Batch scoring: 500 items in single forward pass  |        |
-|  | - Multi-task output: P(click), P(watch), P(like)   |        |
-|  | - Combined score with business weights             |        |
-|  +---------------------------------------------------+        |
-|                          |                                     |
-|                          v                                     |
-|  +---------------------------------------------------+        |
-|  | Re-ranking Service                                 |        |
-|  | - Apply diversity, freshness, business rules       |        |
-|  | - Final ordered list of 50 items                   |        |
-|  +---------------------------------------------------+        |
-+----------------------------------------------------------------+
+```mermaid
+flowchart TD
+    UE["User Embedding Cache (Redis)<br/>user_id -> 256d | TTL: 6h | Hit rate: ~95%"] & ANN["ANN Index Service (FAISS / ScaNN)<br/>100M item embeddings, HNSW index, 10 shards"] --> CG["Candidate Generation Service<br/>Query ANN top-200 + merge CF, popularity, trending -> ~500-1000 IDs"]
+    CG --> FA["Feature Assembly Service<br/>Batch lookup user &amp; item features from Redis + compute cross features"]
+    FA --> RM["Ranking Model Service (TF Serving / Triton)<br/>GPU batch scoring (500 items), Multi-task: P(click), P(watch), P(like)"]
+    RM --> RR["Re-ranking Service<br/>Apply diversity, freshness, business rules -> Final 50 items"]
 ```
 
 ### ANN Search Comparison
@@ -1130,38 +935,14 @@ New Item Lifecycle:
 
 ### Cold Start Architecture
 
-```
-+------------------------------------------------------------------+
-|                    COLD START SYSTEM                              |
-|                                                                  |
-|  User Request                                                    |
-|      |                                                           |
-|      v                                                           |
-|  +------------------+                                            |
-|  | User Profile     |                                            |
-|  | Check            |                                            |
-|  +------------------+                                            |
-|      |           |                                               |
-|  Has history  No history                                         |
-|      |           |                                               |
-|      v           v                                               |
-|  Standard     +------------------+                               |
-|  Pipeline     | Cold Start       |                               |
-|               | Router           |                               |
-|               +------------------+                               |
-|                  |       |       |                                |
-|                  v       v       v                                |
-|            Popularity  Demo-  Onboarding                         |
-|            Based      graphic  Quiz                              |
-|                  |       |       |                                |
-|                  +---+---+---+---+                                |
-|                      |                                           |
-|                      v                                           |
-|              Blend with Exploration                              |
-|                      |                                           |
-|                      v                                           |
-|              Return Recommendations                              |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Req["User Request"] --> Check{"User Profile Check"}
+    Check -->|"Has history"| Std["Standard Pipeline"]
+    Check -->|"No history"| Router["Cold Start Router"]
+    Router --> Pop["Popularity-Based"] & Demo["Demographic-Based"] & Quiz["Onboarding Quiz"]
+    Pop & Demo & Quiz --> Blend["Blend with Exploration"]
+    Std & Blend --> Ret["Return Recommendations"]
 ```
 
 ---
@@ -1170,37 +951,14 @@ New Item Lifecycle:
 
 ### Event Streaming Architecture
 
-```
-+------------------------------------------------------------------+
-|                 REAL-TIME PERSONALIZATION                         |
-|                                                                  |
-|  User Action (click, watch, like)                                |
-|      |                                                           |
-|      v                                                           |
-|  +-----------------+     +------------------+                    |
-|  | Event Collector |---->| Kafka            |                    |
-|  | (API Gateway)   |     | (Partitioned by  |                    |
-|  +-----------------+     |  user_id)         |                    |
-|                          +------------------+                    |
-|                            |        |       |                    |
-|                            v        v       v                    |
-|  +-------------------+  +------+ +------+ +------+              |
-|  | Session Service   |  |Flink | |Flink | |Flink |              |
-|  | (In-memory)       |  |Job 1 | |Job 2 | |Job 3 |              |
-|  |                   |  |RT    | |Online| |User   |              |
-|  | - Current session |  |Agg   | |Feature| |Embed |              |
-|  |   items viewed    |  |      | |Update| |Update|              |
-|  | - Session context |  +------+ +------+ +------+              |
-|  +-------------------+     |        |         |                  |
-|                            v        v         v                  |
-|                   +----------------------------+                 |
-|                   | Redis (Online Feature Store)|                |
-|                   +----------------------------+                 |
-|                              |                                   |
-|                              v                                   |
-|                   Next recommendation request                    |
-|                   uses updated features                          |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Act["User Action (click, watch, like)"] --> EC["Event Collector (API Gateway)"]
+    EC --> Kafka["Kafka (Partitioned by user_id)"]
+    EC --> Sess["Session Service (In-memory)<br/>Current session items viewed &amp; context"]
+    Kafka --> F1["Flink Job 1: RT Agg"] & F2["Flink Job 2: Online Feature Update"] & F3["Flink Job 3: User Embed Update"]
+    Sess & F1 & F2 & F3 --> Redis["Redis (Online Feature Store)"]
+    Redis --> Next["Next recommendation request uses updated features"]
 ```
 
 ### Session-Based Recommendations
@@ -1533,67 +1291,23 @@ Redis Cluster for Online Feature Store:
 
 ## 13. Deployment Architecture
 
-```
-+===================================================================+
-||                    GLOBAL DEPLOYMENT                              ||
-||                                                                  ||
-||   Region: US-East              Region: EU-West                   ||
-||   +-----------------------+   +-----------------------+          ||
-||   |  +-------+ +-------+ |   |  +-------+ +-------+ |          ||
-||   |  | API   | | API   | |   |  | API   | | API   | |          ||
-||   |  | GW 1  | | GW 2  | |   |  | GW 1  | | GW 2  | |          ||
-||   |  +---+---+ +---+---+ |   |  +---+---+ +---+---+ |          ||
-||   |      |         |     |   |      |         |     |           ||
-||   |  +---v---------v---+ |   |  +---v---------v---+ |          ||
-||   |  | Recommendation  | |   |  | Recommendation  | |          ||
-||   |  | Service Cluster | |   |  | Service Cluster | |          ||
-||   |  | (K8s)           | |   |  | (K8s)           | |          ||
-||   |  |                 | |   |  |                 | |          ||
-||   |  | - Candidate Gen | |   |  | - Candidate Gen | |          ||
-||   |  | - Ranking (GPU) | |   |  | - Ranking (GPU) | |          ||
-||   |  | - Re-ranking    | |   |  | - Re-ranking    | |          ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   |                      |   |                      |           ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   |  | Feature Store   | |   |  | Feature Store   | |          ||
-||   |  | (Redis Cluster) | |   |  | (Redis Cluster) | |          ||
-||   |  | 10 shards       | |   |  | 10 shards       | |          ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   |                      |   |                      |           ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   |  | ANN Index       | |   |  | ANN Index       | |          ||
-||   |  | (FAISS/ScaNN)   | |   |  | (FAISS/ScaNN)   | |          ||
-||   |  | 10 shards       | |   |  | 10 shards       | |          ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   +-----------------------+   +-----------------------+          ||
-||                                                                  ||
-||   +----------------------------------------------------------+   ||
-||   |              SHARED INFRASTRUCTURE                        |   ||
-||   |                                                          |   ||
-||   |  +----------------+  +----------------+  +------------+  |   ||
-||   |  | Kafka Cluster  |  | Data Lake      |  | Model      |  |   ||
-||   |  | (Event Stream) |  | (S3/HDFS)      |  | Registry   |  |   ||
-||   |  | Cross-region   |  | Central        |  | (MLflow)   |  |   ||
-||   |  | replication    |  | repository     |  |            |  |   ||
-||   |  +----------------+  +----------------+  +------------+  |   ||
-||   |                                                          |   ||
-||   |  +----------------+  +----------------+  +------------+  |   ||
-||   |  | GPU Training   |  | Spark Cluster  |  | Monitoring |  |   ||
-||   |  | Cluster        |  | (Feature Eng)  |  | (Grafana + |  |   ||
-||   |  | (32x A100)     |  |                |  |  PagerDuty)|  |   ||
-||   |  +----------------+  +----------------+  +------------+  |   ||
-||   +----------------------------------------------------------+   ||
-||                                                                  ||
-||   Model Deployment Flow:                                         ||
-||   Training Cluster -> Model Registry -> Canary (5% traffic)      ||
-||   -> Shadow (compare with production) -> Full Rollout             ||
-||                                                                  ||
-||   Cross-Region Sync:                                             ||
-||   - Model artifacts: replicated via S3 cross-region replication  ||
-||   - Feature store: async replication with < 1 min lag            ||
-||   - ANN index: built centrally, distributed to regions           ||
-||   - Events: Kafka MirrorMaker for cross-region streaming         ||
-+===================================================================+
+```mermaid
+flowchart TD
+    subgraph East["Region: US-East"]
+        E_GW["API GW 1 &amp; GW 2"] --> E_Rec["Recommendation Service Cluster (K8s)<br/>Candidate Gen | Ranking (GPU) | Re-ranking"]
+        E_Rec --> E_FS["Feature Store (Redis, 10 shards)"] & E_ANN["ANN Index (FAISS/ScaNN, 10 shards)"]
+    end
+    subgraph West["Region: EU-West"]
+        W_GW["API GW 1 &amp; GW 2"] --> W_Rec["Recommendation Service Cluster (K8s)<br/>Candidate Gen | Ranking (GPU) | Re-ranking"]
+        W_Rec --> W_FS["Feature Store (Redis, 10 shards)"] & W_ANN["ANN Index (FAISS/ScaNN, 10 shards)"]
+    end
+    subgraph Shared["SHARED INFRASTRUCTURE"]
+        S1["Kafka Cluster (Cross-region MirrorMaker)"]
+        S2["Data Lake (S3/HDFS) &amp; Spark Cluster (Feature Eng)"]
+        S3["GPU Training Cluster (32x A100) -> Model Registry (MLflow)"]
+        S4["Monitoring (Grafana + PagerDuty)"]
+    end
+    Shared --> East & West
 ```
 
 ### Deployment Checklist

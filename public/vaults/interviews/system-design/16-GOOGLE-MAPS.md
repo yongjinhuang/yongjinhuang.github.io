@@ -202,68 +202,22 @@ Modern Google Maps uses **vector tiles** for most views. Satellite imagery uses 
 
 ### 2.4 Tile Caching Strategy
 
-```
-Tile Serving Pipeline:
-
-  Client Request: GET /tiles/15/5245/12661.pbf
-       │
-       ▼
-  ┌──────────────┐   Cache Hit (99%)    ┌─────────────┐
-  │  CDN Edge    │ ◄──────────────────── │  CDN Cache   │
-  │  (Cloudflare/│                       │  (per-POP)   │
-  │   Fastly)    │ ──────────────────►   └─────────────┘
-  └──────┬───────┘   Cache Miss (1%)
-         │
-         ▼
-  ┌──────────────┐   Cache Hit (90%)    ┌─────────────┐
-  │  Tile Cache  │ ◄──────────────────── │  Redis/      │
-  │  (Regional)  │                       │  Memcached   │
-  └──────┬───────┘   Cache Miss (10%)   └─────────────┘
-         │
-         ▼
-  ┌──────────────┐
-  │  Tile Store  │   Pre-rendered tiles in object storage
-  │  (S3/GCS)    │   or on-demand tile generation
-  └──────┬───────┘
-         │  (only if not pre-rendered)
-         ▼
-  ┌──────────────┐
-  │  Tile Render │   Render from raw map data
-  │  Service     │   (only for dynamic/custom tiles)
-  └──────────────┘
-
-Cache TTL Strategy:
-  - Zoom 0-10:   30 days  (continent/country rarely change)
-  - Zoom 11-15:  7 days   (city level, occasional road changes)
-  - Zoom 16-20:  1 day    (street level, more frequent updates)
-  - Traffic tiles: 60 seconds (real-time overlay)
+```mermaid
+flowchart TD
+    Req["Client Request: GET /tiles/15/5245/12661.pbf"] --> Edge["CDN Edge<br/>(Cloudflare / Fastly)"]
+    Edge <-->|"Cache Hit (99%)"| CDNCache["CDN Cache (per-PoP)"]
+    Edge -->|"Cache Miss (1%)"| RegCache["Tile Cache (Regional)"]
+    RegCache <-->|"Cache Hit (90%)"| Redis["Redis / Memcached"]
+    RegCache -->|"Cache Miss (10%)"| Store["Tile Store (S3 / GCS)<br/>Pre-rendered tiles"]
+    Store -->|"If not pre-rendered"| Render["Tile Render Service<br/>(Dynamic / custom tiles)"]
 ```
 
 ### 2.5 Map Data Sources
 
-```
-Data Source Pipeline:
-
-  ┌─────────────────┐
-  │ Satellite        │───┐
-  │ Imagery (aerial) │   │
-  └─────────────────┘   │
-  ┌─────────────────┐   │     ┌──────────────┐     ┌──────────────┐
-  │ Street-Level     │───┼────►│  Map Data     │────►│  Tile        │
-  │ (Street View)    │   │     │  Pipeline     │     │  Rendering   │
-  └─────────────────┘   │     │  (processing, │     │  Engine      │
-  ┌─────────────────┐   │     │   conflation,  │     └──────────────┘
-  │ Government/      │───┤     │   validation)  │
-  │ Public Data      │   │     └──────────────┘
-  └─────────────────┘   │
-  ┌─────────────────┐   │
-  │ User             │───┤
-  │ Contributions    │   │
-  └─────────────────┘   │
-  ┌─────────────────┐   │
-  │ Commercial       │───┘
-  │ Partners         │
-  └─────────────────┘
+```mermaid
+flowchart LR
+    S1["Satellite Imagery (aerial)"] & S2["Street-Level (Street View)"] & S3["Government / Public Data"] & S4["User Contributions"] & S5["Commercial Partners"] --> Pipe["Map Data Pipeline<br/>(processing, conflation, validation)"]
+    Pipe --> Engine["Tile Rendering Engine"]
 ```
 
 ---
@@ -747,57 +701,17 @@ Primary source: GPS traces from phones running Google Maps, Waze,
 
 ### 5.2 Traffic Data Pipeline
 
-```
-Traffic Data Pipeline:
-
-  ┌─────────────┐   GPS updates    ┌─────────────┐
-  │  500M+      │   (lat, lng,     │  Ingestion   │
-  │  Mobile     │──────────────────►│  Gateway     │
-  │  Devices    │   speed, heading │  (load       │
-  └─────────────┘   1 per 3 sec)   │  balancer)   │
-                                    └──────┬──────┘
-                                           │
-                    ┌──────────────────────┐│
-                    │                      ▼│
-              ┌─────┴──────┐      ┌────────┴───────┐
-              │  Kafka     │      │  Kafka         │
-              │  Cluster   │◄─────│  Partitioned   │
-              │  (raw GPS) │      │  by geo-hash   │
-              └─────┬──────┘      └────────────────┘
-                    │
-         ┌──────────┼──────────┐
-         ▼          ▼          ▼
-  ┌────────────┐ ┌────────────┐ ┌────────────┐
-  │  Flink/    │ │  Flink/    │ │  Flink/    │
-  │  Spark     │ │  Spark     │ │  Spark     │
-  │  (Region 1)│ │  (Region 2)│ │  (Region N)│
-  │            │ │            │ │            │
-  │  Map Match │ │  Map Match │ │  Map Match │
-  │  Aggregate │ │  Aggregate │ │  Aggregate │
-  │  Classify  │ │  Classify  │ │  Classify  │
-  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
-        │              │              │
-        └──────────┬───┘──────────────┘
-                   ▼
-         ┌─────────────────┐
-         │  Traffic State   │
-         │  Store           │
-         │  (Redis cluster) │
-         │                  │
-         │  key: segment_id │
-         │  val: speed,     │
-         │       confidence,│
-         │       timestamp  │
-         └────────┬────────┘
-                  │
-        ┌─────────┼─────────┐
-        ▼         ▼         ▼
-  ┌──────────┐ ┌──────────┐ ┌──────────┐
-  │ Routing  │ │ Traffic  │ │ Traffic  │
-  │ Service  │ │ Tile     │ │ History  │
-  │ (weight  │ │ Renderer │ │ Store    │
-  │  update) │ │ (colors) │ │ (HDFS)   │
-  └──────────┘ └──────────┘ └──────────┘
+```mermaid
+flowchart TD
+    Dev["500M+ Mobile Devices<br/>(GPS updates: lat, lng, speed, heading every 3s)"] --> GW["Ingestion Gateway<br/>(Load Balancer)"]
+    GW --> Kafka["Kafka Cluster<br/>(Raw GPS partitioned by geohash)"]
+    Kafka --> F1["Flink / Spark (Region 1)<br/>Map Match, Aggregate, Classify"]
+    Kafka --> F2["Flink / Spark (Region 2)<br/>Map Match, Aggregate, Classify"]
+    Kafka --> FN["Flink / Spark (Region N)<br/>Map Match, Aggregate, Classify"]
+    F1 & F2 & FN --> Store["Traffic State Store (Redis Cluster)<br/>key: segment_id -> speed, confidence, timestamp"]
+    Store --> Route["Routing Service<br/>(weight update)"]
+    Store --> Tile["Traffic Tile Renderer<br/>(colors)"]
+    Store --> Hist["Traffic History Store<br/>(HDFS)"]
 ```
 
 ### 5.3 Map Matching
@@ -902,70 +816,25 @@ Live Traffic + Routing Integration:
 
 ## 6. High-Level Architecture
 
-```
-Google Maps System Architecture:
+```mermaid
+flowchart TD
+    subgraph Clients["CLIENTS"]
+        C1["Mobile App"]
+        C2["Web App"]
+        C3["Embed iFrame"]
+        C4["Maps SDK (3rd party)"]
+    end
+    C1 & C2 & C3 & C4 --> CDN["CDN (Tile Serving - Cloudflare / Fastly / Akamai)<br/>Serves 99%+ of tile requests from edge"]
+    CDN -->|"cache miss"| TileOrigin["Tile Origin Server"]
+    C1 & C2 & C3 & C4 --> APIGW["API Gateway (REST / gRPC)"]
+    C1 & C2 --> WSGW["WebSocket Gateway (navigation)"]
 
-  ┌─────────────────────────────────────────────────────────────────┐
-  │                          CLIENTS                                │
-  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │
-  │  │ Mobile   │  │ Web      │  │ Embed    │  │ Maps SDK     │   │
-  │  │ App      │  │ App      │  │ iFrame   │  │ (3rd party)  │   │
-  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────┬───────┘   │
-  └───────┼──────────────┼────────────┼────────────────┼───────────┘
-          │              │            │                │
-          ▼              ▼            ▼                ▼
-  ┌─────────────────────────────────────────────────────────────────┐
-  │                     CDN (Tile Serving)                          │
-  │              Cloudflare / Fastly / Akamai                       │
-  │         (serves 99%+ of tile requests from edge)                │
-  └────────────────────────────┬────────────────────────────────────┘
-                               │ (cache miss only)
-          ┌────────────────────┼────────────────────┐
-          ▼                    ▼                    ▼
-  ┌──────────────┐    ┌──────────────┐    ┌──────────────────┐
-  │  Tile        │    │  API Gateway │    │  WebSocket       │
-  │  Origin      │    │  (REST/gRPC) │    │  Gateway         │
-  │  Server      │    │              │    │  (navigation)    │
-  └──────────────┘    └──────┬───────┘    └────────┬─────────┘
-                             │                     │
-          ┌──────────────────┼─────────────────────┤
-          │                  │                     │
-          ▼                  ▼                     ▼
-  ┌──────────────┐  ┌──────────────┐      ┌──────────────┐
-  │  Search /    │  │  Routing     │      │  Navigation  │
-  │  Geocoding   │  │  Service     │      │  Service     │
-  │  Service     │  │              │      │              │
-  └──────┬───────┘  └──────┬───────┘      └──────┬───────┘
-         │                 │                     │
-         ▼                 ▼                     ▼
-  ┌──────────────┐  ┌──────────────┐      ┌──────────────┐
-  │  Places DB   │  │  Graph Store │      │  Session     │
-  │  (Elastic-   │  │  (in-memory  │      │  Store       │
-  │   search)    │  │   CH graph)  │      │  (Redis)     │
-  └──────────────┘  └──────┬───────┘      └──────────────┘
-                           │
-                           ▼
-                    ┌──────────────┐
-                    │  Traffic     │
-                    │  Service     │
-                    └──────┬───────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-       ┌───────────┐ ┌───────────┐ ┌───────────┐
-       │  Traffic   │ │  Traffic  │ │  ETA ML   │
-       │  Redis     │ │  Pipeline │ │  Model    │
-       │  (live)    │ │  (Kafka + │ │  Service  │
-       │            │ │   Flink)  │ │           │
-       └───────────┘ └─────┬─────┘ └───────────┘
-                           │
-                           ▼
-                    ┌───────────┐
-                    │  GPS Data │
-                    │  Ingest   │
-                    │  (from    │
-                    │  devices) │
-                    └───────────┘
+    APIGW --> SearchSvc["Search / Geocoding Service"] --> PlacesDB["Places DB (Elasticsearch)"]
+    APIGW --> RouteSvc["Routing Service"] --> GraphStore["Graph Store (in-memory CH graph)"]
+    WSGW --> NavSvc["Navigation Service"] --> SessStore["Session Store (Redis)"]
+    GraphStore --> TrafficSvc["Traffic Service"]
+    TrafficSvc --> TrafficRedis["Traffic Redis (live)"] & TrafficPipe["Traffic Pipeline (Kafka + Flink)"] & ETAML["ETA ML Model Service"]
+    TrafficPipe --> GPSIngest["GPS Data Ingest (from devices)"]
 ```
 
 ### 6.1 Service Responsibilities
@@ -1281,66 +1150,33 @@ CREATE TABLE user_location_pings (
 
 ### 10.1 End-to-End Navigation Sequence
 
-```
-Real-Time Navigation Flow:
+```mermaid
+sequenceDiagram
+    participant C as "Client (Phone)"
+    participant GW as "API / WS Gateway"
+    participant S as "Routing & Navigation Services"
 
-  ┌──────────┐                    ┌──────────────┐         ┌──────────────┐
-  │  Client  │                    │  API Gateway │         │  Services    │
-  │  (Phone) │                    │              │         │              │
-  └────┬─────┘                    └──────┬───────┘         └──────┬───────┘
-       │                                 │                        │
-       │  1. POST /route                 │                        │
-       │    {origin, destination,        │                        │
-       │     mode: "driving"}            │                        │
-       │ ───────────────────────────────►│                        │
-       │                                 │  2. Calculate route    │
-       │                                 │ ──────────────────────►│
-       │                                 │    (Routing Service    │
-       │                                 │     + Traffic Service) │
-       │                                 │                        │
-       │                                 │  3. Route response     │
-       │  4. Route with polyline,        │◄────────────────────── │
-       │     steps, ETA, distance        │                        │
-       │◄─────────────────────────────── │                        │
-       │                                 │                        │
-       │  5. User taps "Start Navigation"│                        │
-       │                                 │                        │
-       │  6. WS connect /navigate        │                        │
-       │    {route_id, session_id}       │                        │
-       │ ═══════════════════════════════►│  7. Create nav session │
-       │    (WebSocket upgrade)          │ ──────────────────────►│
-       │                                 │    (Navigation Svc)    │
-       │                                 │                        │
-       │  ┌────── Navigation Loop ──────┐│                        │
-       │  │                             ││                        │
-       │  │ 8. GPS update (every 1-3s)  ││                        │
-       │  │   {lat, lng, speed, heading}││                        │
-       │  │ ════════════════════════════►│  9. Process position   │
-       │  │                             ││ ──────────────────────►│
-       │  │                             ││    - Map match         │
-       │  │                             ││    - Progress tracking │
-       │  │                             ││    - Off-route check   │
-       │  │                             ││    - Next instruction  │
-       │  │                             ││                        │
-       │  │ 10. Navigation update       ││  (if on route)        │
-       │  │   {next_turn, distance,     ││◄────────────────────── │
-       │  │    updated_eta}             ││                        │
-       │  │◄════════════════════════════ │                        │
-       │  │                             ││                        │
-       │  │ 11. (if off-route or        ││                        │
-       │  │     traffic reroute)        ││  12. Recalculate      │
-       │  │                             ││ ──────────────────────►│
-       │  │ 13. REROUTE push            ││                        │
-       │  │   {new_route, reason}       ││◄────────────────────── │
-       │  │◄════════════════════════════ │                        │
-       │  │                             ││                        │
-       │  └─────────────────────────────┘│                        │
-       │                                 │                        │
-       │  14. Arrive at destination      │                        │
-       │  15. WS close                   │                        │
-       │ ═══════════════════════════════►│  16. End session       │
-       │                                 │ ──────────────────────►│
-       │                                 │                        │
+    C->>GW: 1. POST /route {origin, destination, mode: "driving"}
+    GW->>S: 2. Calculate route (Routing + Traffic Service)
+    S-->>GW: 3. Route response
+    GW-->>C: 4. Route with polyline, steps, ETA, distance
+    Note over C: 5. User taps "Start Navigation"
+    C->>GW: 6. WS connect /navigate {route_id, session_id}
+    GW->>S: 7. Create nav session (Navigation Svc)
+    loop Navigation Loop (every 1-3s)
+        C->>GW: 8. GPS update {lat, lng, speed, heading}
+        GW->>S: 9. Process position (Map match, progress, off-route check)
+        alt On route
+            S-->>GW: Next turn, distance, updated ETA
+            GW-->>C: 10. Navigation update
+        else Off-route or traffic reroute
+            GW->>S: 12. Recalculate route
+            S-->>GW: New route
+            GW-->>C: 13. REROUTE push {new_route, reason}
+        end
+    end
+    C->>GW: 14. Arrive at destination & 15. WS close
+    GW->>S: 16. End session
 ```
 
 ### 10.2 Turn-by-Turn Instruction Generation
@@ -1639,70 +1475,23 @@ Traffic Data Pipeline at Scale:
 
 ## 13. Deployment Architecture
 
-```
-Global Deployment:
-
-  ┌─────────────────────────────────────────────────────────────────┐
-  │                      GLOBAL LAYER                               │
-  │                                                                 │
-  │  ┌───────────────────────────────────────────────────────────┐ │
-  │  │  Global CDN (200+ PoPs)                                   │ │
-  │  │  - Map tiles (vector + raster)                            │ │
-  │  │  - Static assets                                          │ │
-  │  │  - API edge caching (popular routes)                      │ │
-  │  └───────────────────────────────────────────────────────────┘ │
-  │                                                                 │
-  │  ┌───────────────────────────────────────────────────────────┐ │
-  │  │  Global DNS (GeoDNS)                                      │ │
-  │  │  - Route users to nearest regional cluster                │ │
-  │  └───────────────────────────────────────────────────────────┘ │
-  └─────────────────────────────────────────────────────────────────┘
-
-  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-  │  REGION: US-EAST │  │  REGION: EU-WEST │  │  REGION: APAC   │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ API Gateway│ │  │  │ API Gateway│ │  │  │ API Gateway│ │
-  │  └─────┬──────┘ │  │  └─────┬──────┘ │  │  └─────┬──────┘ │
-  │        │        │  │        │        │  │        │        │
-  │  ┌─────┴──────┐ │  │  ┌─────┴──────┐ │  │  ┌─────┴──────┐ │
-  │  │ Routing    │ │  │  │ Routing    │ │  │  │ Routing    │ │
-  │  │ (US graph) │ │  │  │ (EU graph) │ │  │  │ (APAC graph│ │
-  │  │ 30 nodes   │ │  │  │ 25 nodes   │ │  │  │) 35 nodes  │ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ Traffic    │ │  │  │ Traffic    │ │  │  │ Traffic    │ │
-  │  │ Pipeline   │ │  │  │ Pipeline   │ │  │  │ Pipeline   │ │
-  │  │ Kafka+Flink│ │  │  │ Kafka+Flink│ │  │  │ Kafka+Flink│ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ Search     │ │  │  │ Search     │ │  │  │ Search     │ │
-  │  │ (ES cluster│ │  │  │ (ES cluster│ │  │  │ (ES cluster│ │
-  │  │) US places │ │  │  │) EU places │ │  │  │) APAC places│ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ Navigation │ │  │  │ Navigation │ │  │  │ Navigation │ │
-  │  │ (WebSocket)│ │  │  │ (WebSocket)│ │  │  │ (WebSocket)│ │
-  │  │ 50 nodes   │ │  │  │ 40 nodes   │ │  │  │ 60 nodes   │ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ Tile Origin│ │  │  │ Tile Origin│ │  │  │ Tile Origin│ │
-  │  │ (S3 / GCS)│ │  │  │ (S3 / GCS)│ │  │  │ (S3 / GCS)│ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  └─────────────────┘  └─────────────────┘  └─────────────────┘
-
-  Cross-Region Overlay:
-    ┌──────────────────────────────────────────────────┐
-    │  Inter-region routing overlay graph               │
-    │  Handles cross-region routes (e.g., driving       │
-    │  from France to Germany)                          │
-    │  Small graph: ~10K nodes at region boundaries     │
-    │  Replicated to all regions                        │
-    └──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Global["GLOBAL LAYER"]
+        CDN["Global CDN (200+ PoPs)<br/>Map tiles (vector + raster), static assets, popular routes"]
+        DNS["Global DNS (GeoDNS)<br/>Route users to nearest regional cluster"]
+    end
+    DNS --> US & EU & APAC
+    subgraph US["REGION: US-EAST"]
+        US_S["API Gateway -> Routing (US graph, 30 nodes) | Traffic Pipeline (Kafka+Flink)<br/>| Search (ES US places) | Navigation (WS, 50 nodes) | Tile Origin (S3/GCS)"]
+    end
+    subgraph EU["REGION: EU-WEST"]
+        EU_S["API Gateway -> Routing (EU graph, 25 nodes) | Traffic Pipeline (Kafka+Flink)<br/>| Search (ES EU places) | Navigation (WS, 40 nodes) | Tile Origin (S3/GCS)"]
+    end
+    subgraph APAC["REGION: APAC"]
+        AP_S["API Gateway -> Routing (APAC graph, 35 nodes) | Traffic Pipeline (Kafka+Flink)<br/>| Search (ES APAC places) | Navigation (WS, 60 nodes) | Tile Origin (S3/GCS)"]
+    end
+    US & EU & APAC <--> Overlay["Cross-Region Overlay Graph<br/>(~10K boundary nodes replicated to all regions)"]
 ```
 
 ### 13.1 Failure Handling

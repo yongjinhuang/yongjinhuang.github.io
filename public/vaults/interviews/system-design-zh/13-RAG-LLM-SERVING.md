@@ -127,36 +127,20 @@ GPU inference（自托管）:
 
 ### 完整 RAG Pipeline（ASCII 图）
 
-```
-                        INGESTION PIPELINE (Offline/Async)
-  +---------------------------------------------------------------------------+
-  |                                                                           |
-  |   +----------+    +-----------+    +-----------+    +----------------+    |
-  |   | Documents |-->| Parser &  |--->| Chunking  |--->| Embedding      |    |
-  |   | (PDF,HTML |   | Cleaner   |    | Engine    |    | Model          |    |
-  |   |  MD,DOCX) |   +-----------+    +-----------+    +-------+--------+    |
-  |   +----------+         |                |                   |             |
-  |                        v                v                   v             |
-  |                  +----------+    +------------+    +----------------+     |
-  |                  | Metadata |    | Chunk Store|    | Vector DB      |     |
-  |                  | Store    |    | (text+meta)|    | (embeddings)   |     |
-  |                  +----------+    +------------+    +----------------+     |
-  +---------------------------------------------------------------------------+
-
-                         QUERY PIPELINE (Online/Sync)
-  +---------------------------------------------------------------------------+
-  |                                                                           |
-  |   +-------+    +----------+    +----------+    +-----------+              |
-  |   | User  |--->| Query    |--->| Embedding|--->| Vector    |              |
-  |   | Query |    | Rewriter |    | Model    |    | Search    |              |
-  |   +-------+    +----------+    +----------+    +-----+-----+             |
-  |                                                      |                   |
-  |                                                      v                   |
-  |   +----------+    +-----------+    +-----------+    +----------+         |
-  |   | Response |<---| LLM       |<---| Context   |<---| Reranker |         |
-  |   | + Cites  |    | Generator |    | Assembler |    |          |         |
-  |   +----------+    +-----------+    +-----------+    +----------+         |
-  +---------------------------------------------------------------------------+
+```mermaid
+flowchart LR
+    subgraph Ingest["INGESTION PIPELINE (Offline / Async)"]
+        Docs["Documents<br/>(PDF, HTML, MD, DOCX)"] --> Parser["Parser &amp; Cleaner"]
+        Parser --> Meta["Metadata Store"]
+        Parser --> Chunker["Chunking Engine"]
+        Chunker --> ChunkStore["Chunk Store<br/>(text + meta)"]
+        Chunker --> EmbedIn["Embedding Model"]
+        EmbedIn --> VecDB["Vector DB<br/>(embeddings)"]
+    end
+    subgraph Query["QUERY PIPELINE (Online / Sync)"]
+        UQ["User Query"] --> Rewrite["Query Rewriter"] --> EmbedQ["Embedding Model"] --> VSearch["Vector Search"]
+        VSearch --> Rerank["Reranker"] --> Ctx["Context Assembler"] --> LLM["LLM Generator"] --> Resp["Response + Citations"]
+    end
 ```
 
 ---
@@ -400,31 +384,13 @@ def enrich_chunk(chunk: str, document_metadata: dict, chunk_idx: int) -> dict:
 
 ### 摄入 Pipeline 架构
 
-```
-                    Document Ingestion Pipeline
-
-  +--------+     +----------------+     +------------------+
-  | Upload |     | Message Queue  |     | Worker Pool      |
-  | API    |---->| (SQS/Kafka)   |---->| (Auto-scaled)    |
-  +--------+     +----------------+     +--------+---------+
-                                                 |
-                          +----------------------+---------------------+
-                          |                      |                     |
-                          v                      v                     v
-                   +------------+        +-------------+       +------------+
-                   | Parser     |        | Chunker     |       | Embedder   |
-                   | Service    |------->| Service     |------>| Service    |
-                   +------------+        +-------------+       +------+-----+
-                                                                      |
-                                               +----------------------+
-                                               |                      |
-                                               v                      v
-                                        +------------+        +------------+
-                                        | Chunk      |        | Vector     |
-                                        | Store (PG) |        | DB         |
-                                        +------------+        +------------+
-
-  监控: 跟踪摄入速率、错误率、embedding 延迟、队列深度
+```mermaid
+flowchart TD
+    API["Upload API"] --> MQ["Message Queue<br/>(SQS / Kafka)"]
+    MQ --> WP["Worker Pool<br/>(Auto-scaled)"]
+    WP --> Parser["Parser Service"] --> Chunker["Chunker Service"] --> Embedder["Embedder Service"]
+    Embedder --> PG["Chunk Store (PostgreSQL)"]
+    Embedder --> VDB["Vector DB"]
 ```
 
 ---
@@ -783,61 +749,19 @@ def hyde_retrieval(query: str, top_k: int = 5) -> list[Chunk]:
 
 ### 检索 Pipeline（ASCII 图）
 
-```
-+-------+
-| Query |
-+---+---+
-    |
-    v
-+---+----------------+
-| Query Router       |  判断: 简单 vs 复杂 vs 多跳
-+---+---+---+--------+
-    |   |   |
-    v   |   v
-+-------+  +------------------+  +------------------+
-| Direct|  | Query Rewriter   |  | HyDE Generator   |
-| Embed |  | (multi-query)    |  | (hypothetical)   |
-+---+---+  +--------+---------+  +--------+---------+
-    |               |                      |
-    v               v                      v
-+---+---------------+----------------------+---+
-|              Embedding Model                 |
-+---+---------+----------+---------+-----------+
-    |         |          |         |
-    v         v          v         v
-+---+---------+----------+---------+-----------+
-|          Vector Database Search               |
-|  (ANN search with metadata filters)          |
-+---+------------------------------------------+
-    |
-    v
-+---+------------------------------------------+
-|          BM25 Keyword Search                  |
-|  (sparse retrieval for exact matches)        |
-+---+------------------------------------------+
-    |
-    v
-+---+------------------------------------------+
-|          Reciprocal Rank Fusion (RRF)        |
-|  (merge dense + sparse results)              |
-+---+------------------------------------------+
-    |
-    v (Top 50-100 候选)
-+---+------------------------------------------+
-|          Cross-Encoder Reranker              |
-|  (精确的相关性评分)                           |
-+---+------------------------------------------+
-    |
-    v (Top 5-10 结果)
-+---+------------------------------------------+
-|          后处理                                |
-|  - 去重                                       |
-|  - 多样性过滤（避免冗余）                     |
-|  - 元数据过滤（日期、访问级别）               |
-+---+------------------------------------------+
-    |
-    v
-  [检索到的 Chunks 准备进行上下文组装]
+```mermaid
+flowchart TD
+    Q["Query"] --> Router["Query Router<br/>(Simple vs Complex vs Multi-hop)"]
+    Router --> Direct["Direct Embed"]
+    Router --> Rewriter["Query Rewriter<br/>(multi-query)"]
+    Router --> HyDE["HyDE Generator<br/>(hypothetical doc)"]
+    Direct & Rewriter & HyDE --> Embed["Embedding Model"]
+    Embed --> VDB["Vector Database Search<br/>(ANN search with metadata filters)"]
+    Q --> BM25["BM25 Keyword Search<br/>(sparse retrieval for exact matches)"]
+    VDB & BM25 --> RRF["Reciprocal Rank Fusion (RRF)<br/>(merge dense + sparse -> Top 50-100)"]
+    RRF --> Rerank["Cross-Encoder Reranker<br/>(precise scoring -> Top 5-10)"]
+    Rerank --> Post["Post-Processing<br/>- Deduplication<br/>- Diversity &amp; Metadata filter"]
+    Post --> Ready["Retrieved Chunks ready for Context Assembly"]
 ```
 
 ---
@@ -1339,75 +1263,26 @@ CREATE INDEX idx_feedback_rating ON feedback(rating);
 
 ### 完整系统架构
 
-```
-                              CLIENTS
-                    +----------+  +----------+
-                    | Web App  |  | API      |
-                    | (React)  |  | Clients  |
-                    +-----+----+  +----+-----+
-                          |            |
-                          v            v
-                    +-----+------------+-----+
-                    |    API Gateway          |
-                    |  (Auth, Rate Limit,     |
-                    |   Load Balance)         |
-                    +----------+-------------+
-                               |
-               +---------------+---------------+
-               |                               |
-               v                               v
-    +----------+----------+         +----------+----------+
-    |   Chat/Query API    |         | Document Upload API |
-    |   (Sync, Streaming) |         | (Async)             |
-    +----------+----------+         +----------+----------+
-               |                               |
-               v                               v
-    +----------+----------+         +----------+----------+
-    |   Orchestrator      |         |   Message Queue     |
-    |   Service           |         |   (Kafka / SQS)     |
-    +--+-----+-----+-----+         +----------+----------+
-       |     |     |                           |
-       |     |     |                           v
-       |     |     |                +----------+----------+
-       |     |     |                | Ingestion Workers   |
-       |     |     |                | (Auto-scaled)       |
-       |     |     |                +--+-------+-------+--+
-       |     |     |                   |       |       |
-       v     |     v                   v       |       v
-  +----+--+  |  +--+------+     +-----+-+     |  +---+--------+
-  |Embed  |  |  |Reranker |     |Parser  |     |  |Embedding   |
-  |Service|  |  |Service  |     |Service |     |  |Batch Svc   |
-  +---+---+  |  +--+------+     +--------+     |  +---+--------+
-      |      |     |                            |      |
-      v      |     |                            |      v
-  +---+------+-----+---+              +--------+------+--------+
-  |    Vector Database  |              |    Vector Database     |
-  |    (Qdrant/Pinecone)|              |    (write path)        |
-  +---------------------+              +-----------+-----------+
-      |      |                                     |
-      |      v                                     |
-      |  +---+------------------+                  |
-      |  |  LLM Gateway         |                  |
-      |  |  (Router + Fallback) |                  |
-      |  +--+-----------+------+                   |
-      |     |           |                          |
-      |     v           v                          |
-      |  +--+---+  +---+-------+                   |
-      |  |OpenAI|  |Self-hosted|                   |
-      |  |API   |  |vLLM (GPU) |                   |
-      |  +------+  +-----------+                   |
-      |                                            |
-      v                                            v
-  +---+--------------------------------------------+---+
-  |              PostgreSQL                            |
-  |  (documents, conversations, messages, feedback)    |
-  +---+------------------------------------------------+
-      |
-      v
-  +---+--------------------------------------------+
-  |         Monitoring & Evaluation                |
-  |  (Prometheus, Grafana, RAGAS, LangSmith)       |
-  +------------------------------------------------+
+```mermaid
+flowchart TD
+    Web["Web App (React)"] & APIClients["API Clients"] --> GW["API Gateway<br/>(Auth, Rate Limit, Load Balance)"]
+    GW --> ChatAPI["Chat/Query API<br/>(Sync, Streaming)"]
+    GW --> UploadAPI["Document Upload API<br/>(Async)"]
+
+    ChatAPI --> Orch["Orchestrator Service"]
+    Orch --> EmbedSvc["Embed Service"]
+    Orch --> RerankSvc["Reranker Service"]
+    EmbedSvc & RerankSvc --> VDBRead["Vector Database<br/>(Qdrant / Pinecone)"]
+    Orch --> LLMGW["LLM Gateway<br/>(Router + Fallback)"]
+    LLMGW --> OpenAI["OpenAI API"] & vLLM["Self-hosted vLLM (GPU)"]
+
+    UploadAPI --> MQ["Message Queue<br/>(Kafka / SQS)"]
+    MQ --> Workers["Ingestion Workers<br/>(Auto-scaled)"]
+    Workers --> ParserSvc["Parser Service"] & BatchEmbed["Embedding Batch Svc"]
+    BatchEmbed --> VDBWrite["Vector Database (write path)"]
+
+    Orch & VDBWrite --> PG["PostgreSQL<br/>(documents, conversations, messages, feedback)"]
+    PG --> Mon["Monitoring &amp; Evaluation<br/>(Prometheus, Grafana, RAGAS, LangSmith)"]
 ```
 
 ### Orchestrator 服务（核心逻辑）
@@ -2014,59 +1889,25 @@ class CostAwareRouter:
 
 ### 生产部署 (Kubernetes)
 
-```
-                    生产部署架构
+```mermaid
+flowchart TD
+    CDN["CloudFront / CDN"] & DNS["Route 53 / Cloud DNS"] --> ALB["Application Load Balancer"]
+    ALB --> K8sEast & K8sWest
 
-  +------------------------------------------------------------------+
-  |                        云服务商 (AWS/GCP)                         |
-  |                                                                  |
-  |   +-------------------+    +----------------------------------+  |
-  |   | CloudFront/CDN    |    | Route 53 / Cloud DNS             |  |
-  |   +--------+----------+    +---------------+------------------+  |
-  |            |                               |                     |
-  |            v                               v                     |
-  |   +--------+-------------------------------+------------------+  |
-  |   |              Application Load Balancer                    |  |
-  |   |              (ALB / Cloud Load Balancer)                  |  |
-  |   +--------+-------------------------------+------------------+  |
-  |            |                               |                     |
-  |   +--------+------------------+   +--------+------------------+  |
-  |   |  Kubernetes Cluster       |   |  Kubernetes Cluster       |  |
-  |   |  (Region: us-east-1)      |   |  (Region: us-west-2)     |  |
-  |   |                          |   |                            |  |
-  |   | +------+ +------+       |   | +------+ +------+         |  |
-  |   | |API   | |API   |       |   | |API   | |API   |         |  |
-  |   | |Pod x3| |Pod x3|       |   | |Pod x3| |Pod x3|         |  |
-  |   | +------+ +------+       |   | +------+ +------+         |  |
-  |   |                          |   |                            |  |
-  |   | +------+ +------+       |   | +------+ +------+         |  |
-  |   | |Embed | |Rerank|       |   | |Embed | |Rerank|         |  |
-  |   | |Svc x2| |Svc x2|       |   | |Svc x2| |Svc x2|        |  |
-  |   | +------+ +------+       |   | +------+ +------+         |  |
-  |   |                          |   |                            |  |
-  |   | +----------------------+ |   | +----------------------+  |  |
-  |   | | GPU Node Pool        | |   | | GPU Node Pool        |  |  |
-  |   | | vLLM Pods (4x A100)  | |   | | vLLM Pods (4x A100)  | |  |
-  |   | +----------------------+ |   | +----------------------+  |  |
-  |   +--------------------------+   +----------------------------+  |
-  |                                                                  |
-  |   +--------------------------+   +----------------------------+  |
-  |   | Qdrant Cluster           |   | PostgreSQL (RDS)           |  |
-  |   | (3-node, replicated)     |   | (Multi-AZ, read replicas) |  |
-  |   +--------------------------+   +----------------------------+  |
-  |                                                                  |
-  |   +--------------------------+   +----------------------------+  |
-  |   | Redis Cluster            |   | Kafka / SQS               |  |
-  |   | (semantic cache)         |   | (ingestion queue)         |  |
-  |   +--------------------------+   +----------------------------+  |
-  |                                                                  |
-  |   +-----------------------------------------------------------+  |
-  |   | 监控: Prometheus + Grafana + PagerDuty                    |  |
-  |   | 日志: ELK Stack / CloudWatch                              |  |
-  |   | 链路追踪: Jaeger / Datadog APM                            |  |
-  |   | RAG 评估: LangSmith / Arize Phoenix                       |  |
-  |   +-----------------------------------------------------------+  |
-  +------------------------------------------------------------------+
+    subgraph K8sEast["Kubernetes Cluster (us-east-1)"]
+        E_Pods["API Pods (x6) | Embed Svc (x2) | Rerank Svc (x2)"]
+        E_GPU["GPU Node Pool: vLLM Pods (4x A100)"]
+    end
+    subgraph K8sWest["Kubernetes Cluster (us-west-2)"]
+        W_Pods["API Pods (x6) | Embed Svc (x2) | Rerank Svc (x2)"]
+        W_GPU["GPU Node Pool: vLLM Pods (4x A100)"]
+    end
+
+    K8sEast & K8sWest --> Qdrant["Qdrant Cluster (3-node, replicated)"]
+    K8sEast & K8sWest --> RDS["PostgreSQL RDS (Multi-AZ + Read Replicas)"]
+    K8sEast & K8sWest --> Redis["Redis Cluster (Semantic Cache)"]
+    K8sEast & K8sWest --> Queue["Kafka / SQS (Ingestion Queue)"]
+    Qdrant & RDS --> Obs["Observability: Prometheus + Grafana + PagerDuty | ELK | Jaeger | LangSmith"]
 ```
 
 ### Kubernetes 资源定义

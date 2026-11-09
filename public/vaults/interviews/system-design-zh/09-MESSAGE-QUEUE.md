@@ -166,55 +166,25 @@ Producer --> [ Append-Only Log ] --> Consumer A (offset 5)
 
 ### 类 Kafka 架构
 
-```
-                         ┌─────────────────────────────────────────┐
-                         │           Coordination Layer             │
-                         │     (ZooKeeper / KRaft Controller)       │
-                         │                                         │
-                         │  - Broker 成员与健康管理                │
-                         │  - Topic/partition 元数据               │
-                         │  - Leader 选举                          │
-                         │  - ACL 和配额                           │
-                         └────────────┬────────────────────────────┘
-                                      │ metadata
-                                      │
-    ┌──────────┐          ┌───────────┴───────────────────────────────────┐
-    │Producer 1│──────┐   │                 Broker Cluster                 │
-    ├──────────┤      │   │                                               │
-    │Producer 2│──────┤   │  ┌─────────┐  ┌─────────┐  ┌─────────┐      │
-    ├──────────┤      ├──>│  │Broker 1 │  │Broker 2 │  │Broker 3 │      │
-    │Producer 3│──────┤   │  │         │  │         │  │         │      │
-    └──────────┘      │   │  │ TopicA  │  │ TopicA  │  │ TopicA  │      │
-                      │   │  │ P0(L)   │  │ P0(F)   │  │ P0(F)   │      │
-                      │   │  │ P1(F)   │  │ P1(L)   │  │ P1(F)   │      │
-                      │   │  │ P2(F)   │  │ P2(F)   │  │ P2(L)   │      │
-                      │   │  │         │  │         │  │         │      │
-                      │   │  │ TopicB  │  │ TopicB  │  │ TopicB  │      │
-                      │   │  │ P0(F)   │  │ P0(L)   │  │ P0(F)   │      │
-                      │   │  └─────────┘  └─────────┘  └─────────┘      │
-                      │   │                                               │
-                      │   │  (L) = Leader    (F) = Follower              │
-                      │   │  Replication factor = 3                       │
-                      │   └───────────┬───────────────────────────────────┘
-                      │               │
-                      │               │
-                      │   ┌───────────┴────────────────────────────┐
-                      │   │            Consumer Groups              │
-                      │   │                                        │
-                      │   │  Group "analytics"    Group "search"   │
-                      │   │  ┌────────────┐       ┌────────────┐  │
-                      │   │  │Consumer A  │       │Consumer D  │  │
-                      │   │  │ (P0, P1)   │       │ (P0)       │  │
-                      │   │  ├────────────┤       ├────────────┤  │
-                      │   │  │Consumer B  │       │Consumer E  │  │
-                      │   │  │ (P2)       │       │ (P1, P2)   │  │
-                      │   │  └────────────┘       └────────────┘  │
-                      │   └────────────────────────────────────────┘
-                      │
-              ┌───────┴────────┐
-              │  Schema Registry│ (可选)
-              │  (Avro/Protobuf)│
-              └────────────────┘
+```mermaid
+flowchart TD
+    Coord["Coordination Layer (ZooKeeper / KRaft Controller)<br/>- Broker membership &amp; health<br/>- Topic/partition metadata<br/>- Leader election, ACLs &amp; quotas"] -->|"metadata"| Brokers
+
+    P1["Producer 1"] & P2["Producer 2"] & P3["Producer 3"] --> Brokers
+    P1 & P2 & P3 -.-> SR["Schema Registry (Avro / Protobuf)"]
+
+    subgraph Brokers["Broker Cluster (Replication Factor = 3)"]
+        B1["Broker 1<br/>TopicA: P0(L), P1(F), P2(F)<br/>TopicB: P0(F)"]
+        B2["Broker 2<br/>TopicA: P0(F), P1(L), P2(F)<br/>TopicB: P0(L)"]
+        B3["Broker 3<br/>TopicA: P0(F), P1(F), P2(L)<br/>TopicB: P0(F)"]
+    end
+
+    Brokers --> CG_Analytics & CG_Search
+
+    subgraph Consumers["Consumer Groups"]
+        CG_Analytics["Group 'analytics'<br/>Consumer A (P0, P1) | Consumer B (P2)"]
+        CG_Search["Group 'search'<br/>Consumer D (P0) | Consumer E (P1, P2)"]
+    end
 ```
 
 ### 组件职责
@@ -327,35 +297,15 @@ Topic: "user-events" (3 个 partition，replication factor = 3)
 
 #### Producer 架构
 
-```
-                    ┌─────────────────────────────────────────────────┐
-                    │                   Producer                       │
-                    │                                                  │
-  send(record) ──> │  ┌────────────┐   ┌────────────┐                │
-                    │  │ Serializer │──>│Partitioner │                │
-                    │  │ (key+value)│   │            │                │
-                    │  └────────────┘   └─────┬──────┘                │
-                    │                         │                        │
-                    │         ┌────────────────┼────────────────┐      │
-                    │         v                v                v      │
-                    │  ┌──────────┐     ┌──────────┐    ┌──────────┐ │
-                    │  │ Batch P0 │     │ Batch P1 │    │ Batch P2 │ │
-                    │  │ (buffer) │     │ (buffer) │    │ (buffer) │ │
-                    │  └────┬─────┘     └────┬─────┘    └────┬─────┘ │
-                    │       └────────────────┬┘───────────────┘       │
-                    │                        v                         │
-                    │               ┌────────────────┐                │
-                    │               │  Sender Thread  │                │
-                    │               │  (background)   │                │
-                    │               └────────┬───────┘                │
-                    └────────────────────────┼─────────────────────────┘
-                                             │
-                              Network ───────┴──────── Network
-                                │                          │
-                           ┌────┴────┐              ┌──────┴──┐
-                           │Broker 1 │              │Broker 2  │
-                           │(P0 lead)│              │(P1 lead) │
-                           └─────────┘              └──────────┘
+```mermaid
+flowchart TD
+    subgraph Producer["Producer"]
+        Send["send(record)"] --> Ser["Serializer<br/>(key + value)"] --> Part["Partitioner"]
+        Part --> BP0["Batch P0 (buffer)"] & BP1["Batch P1 (buffer)"] & BP2["Batch P2 (buffer)"]
+        BP0 & BP1 & BP2 --> Sender["Sender Thread (background)"]
+    end
+    Sender -->|"Network"| B1["Broker 1 (P0 Leader)"]
+    Sender -->|"Network"| B2["Broker 2 (P1 Leader)"]
 ```
 
 #### 批处理与压缩
@@ -511,42 +461,19 @@ Consumer Group B（2 个 consumer）- 独立于 Group A：
 
 #### Rebalance 协议
 
-```
-Rebalance 触发条件：
-  1. Consumer 加入 group
-  2. Consumer 离开 group（优雅关闭或崩溃）
-  3. Topic partition 数量变化
-  4. Consumer 心跳超时（超过 session.timeout.ms）
+```mermaid
+sequenceDiagram
+    participant C1 as "Consumer 1"
+    participant GL as "Group Leader (Coordinator)"
+    participant C2 as "Consumer 2"
 
-Rebalance 流程（Eager 模式）：
-  ┌──────────┐        ┌──────────────┐        ┌──────────┐
-  │Consumer 1│        │Group Leader  │        │Consumer 2│
-  │          │        │(Coordinator) │        │          │
-  └────┬─────┘        └──────┬───────┘        └────┬─────┘
-       │   JoinGroup         │                      │
-       │────────────────────>│  JoinGroup            │
-       │                     │<─────────────────────│
-       │                     │                      │
-       │  撤销所有           │    撤销所有          │
-       │  partition          │    partition          │
-       │                     │                      │
-       │   SyncGroup         │                      │
-       │────────────────────>│  SyncGroup            │
-       │                     │<─────────────────────│
-       │                     │                      │
-       │  分配结果           │    分配结果          │
-       │<────────────────────│─────────────────────>│
-       │  (P0, P1)           │    (P2, P3)          │
-       │                     │                      │
-
-Rebalance 策略：
-  ┌─────────────────┬────────────────────────────────────────────────┐
-  │ 策略            │ 描述                                            │
-  ├─────────────────┼────────────────────────────────────────────────┤
-  │ Eager           │ 撤销全部，重新分配全部（导致停机）              │
-  │ Cooperative     │ 增量式；只撤销需要移动的 partition              │
-  │ Static          │ 通过 group.instance.id 固定分配                │
-  └─────────────────┴────────────────────────────────────────────────┘
+    C1->>GL: JoinGroup
+    C2->>GL: JoinGroup
+    Note over C1,C2: Revoke ALL partitions
+    C1->>GL: SyncGroup
+    C2->>GL: SyncGroup
+    GL-->>C1: Assignment (P0, P1)
+    GL-->>C2: Assignment (P2, P3)
 ```
 
 #### Offset 管理
@@ -1485,91 +1412,40 @@ Producer 发送：A、B、C、D、E（按顺序）到 Partition 0
 
 ### 生产集群布局
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          生产 Kafka 集群                                    │
-│                                                                             │
-│  ┌──── 可用区 1 ────────────────┐  ┌──── 可用区 2 ────────────────┐       │
-│  │                                │  │                                │     │
-│  │  ┌────────────┐ ┌────────────┐│  │  ┌────────────┐ ┌────────────┐│     │
-│  │  │  Broker 1  │ │  Broker 2  ││  │  │  Broker 3  │ │  Broker 4  ││     │
-│  │  │  32 cores  │ │  32 cores  ││  │  │  32 cores  │ │  32 cores  ││     │
-│  │  │  128GB RAM │ │  128GB RAM ││  │  │  128GB RAM │ │  128GB RAM ││     │
-│  │  │  12x 2TB   │ │  12x 2TB   ││  │  │  12x 2TB   │ │  12x 2TB   ││     │
-│  │  │  SSD JBOD  │ │  SSD JBOD  ││  │  │  SSD JBOD  │ │  SSD JBOD  ││     │
-│  │  │  10Gbps NIC│ │  10Gbps NIC││  │  │  10Gbps NIC│ │  10Gbps NIC││     │
-│  │  └────────────┘ └────────────┘│  │  └────────────┘ └────────────┘│     │
-│  │                                │  │                                │     │
-│  │  ┌────────────┐               │  │  ┌────────────┐               │     │
-│  │  │ KRaft      │               │  │  │ KRaft      │               │     │
-│  │  │ Controller │               │  │  │ Controller │               │     │
-│  │  │ (voter)    │               │  │  │ (voter)    │               │     │
-│  │  └────────────┘               │  │  └────────────┘               │     │
-│  └────────────────────────────────┘  └────────────────────────────────┘     │
-│                                                                             │
-│  ┌──── 可用区 3 ────────────────┐                                         │
-│  │                                │  ┌──────────────────────────────────┐   │
-│  │  ┌────────────┐ ┌────────────┐│  │     监控与管理                   │   │
-│  │  │  Broker 5  │ │  Broker 6  ││  │                                  │   │
-│  │  │  32 cores  │ │  32 cores  ││  │  ┌─────────┐  ┌──────────────┐ │   │
-│  │  │  128GB RAM │ │  128GB RAM ││  │  │Prometheus│  │ Grafana      │ │   │
-│  │  │  12x 2TB   │ │  12x 2TB   ││  │  │ + JMX   │  │ Dashboards   │ │   │
-│  │  │  SSD JBOD  │ │  SSD JBOD  ││  │  │Exporter  │  │              │ │   │
-│  │  │  10Gbps NIC│ │  10Gbps NIC││  │  └─────────┘  └──────────────┘ │   │
-│  │  └────────────┘ └────────────┘│  │                                  │   │
-│  │                                │  │  ┌─────────┐  ┌──────────────┐ │   │
-│  │  ┌────────────┐               │  │  │ Cruise  │  │ Schema       │ │   │
-│  │  │ KRaft      │               │  │  │ Control │  │ Registry     │ │   │
-│  │  │ Controller │               │  │  │ (自动   │  │ (Avro/Proto) │ │   │
-│  │  │ (voter)    │               │  │  │  均衡)  │  │              │ │   │
-│  │  └────────────┘               │  │  └─────────┘  └──────────────┘ │   │
-│  └────────────────────────────────┘  └──────────────────────────────────┘   │
-│                                                                             │
-│  Replication factor：3（每个可用区一个副本）                               │
-│  min.insync.replicas：2                                                    │
-│  KRaft：3 个 controller（每个可用区一个，基于 quorum 的 leader 选举）     │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Cluster["Production Kafka Cluster (RF=3, min.insync.replicas=2)"]
+        subgraph AZ1["Availability Zone 1"]
+            B1["Broker 1 &amp; Broker 2<br/>32 cores, 128GB RAM, 12x 2TB SSD JBOD, 10Gbps NIC"]
+            K1["KRaft Controller (voter)"]
+        end
+        subgraph AZ2["Availability Zone 2"]
+            B3["Broker 3 &amp; Broker 4<br/>32 cores, 128GB RAM, 12x 2TB SSD JBOD, 10Gbps NIC"]
+            K2["KRaft Controller (voter)"]
+        end
+        subgraph AZ3["Availability Zone 3"]
+            B5["Broker 5 &amp; Broker 6<br/>32 cores, 128GB RAM, 12x 2TB SSD JBOD, 10Gbps NIC"]
+            K3["KRaft Controller (voter)"]
+        end
+        subgraph Mon["Monitoring &amp; Management"]
+            M1["Prometheus + JMX Exporter &amp; Grafana Dashboards"]
+            M2["Cruise Control (auto-balance) &amp; Schema Registry (Avro/Proto)"]
+        end
+    end
 ```
 
 ### 多数据中心部署
 
-```
-                    ┌────────────────────────────────────┐
-                    │          全局 DNS / LB              │
-                    │   （将 producer 路由到最近的 DC）   │
-                    └───────────┬────────────┬───────────┘
-                                │            │
-              ┌─────────────────┘            └──────────────────┐
-              │                                                  │
-  ┌───────────┴──────────────┐            ┌──────────────────────┴──┐
-  │    DC-East（主）          │            │    DC-West（Active DR）  │
-  │                           │            │                          │
-  │  Kafka Cluster            │            │  Kafka Cluster           │
-  │  6 Brokers, 3 AZs        │  ◄──MM2──► │  6 Brokers, 3 AZs       │
-  │                           │            │                          │
-  │  Topics：                 │            │  Topics（复制的）：      │
-  │  - orders                 │            │  - dc-east.orders        │
-  │  - payments               │            │  - dc-east.payments      │
-  │  - user-events            │            │  - dc-west.orders        │
-  │                           │            │  - dc-west.payments      │
-  │  Schema Registry          │            │  Schema Registry         │
-  │  （主）                   │            │  （从）                  │
-  └───────────────────────────┘            └──────────────────────────┘
-
-  Active-Active 注意事项：
-    1. Topic 命名：以数据中心名称前缀避免冲突
-    2. 冲突解决：最后写入者获胜或应用层合并
-    3. Offset 转换：MM2 维护集群间的 offset 映射
-    4. Consumer 故障转移：Consumer 从本地集群读取，故障时切换到远程
-
-  延迟预算：
-    数据中心内：< 1ms（同可用区），< 2ms（跨可用区）
-    跨数据中心：~30ms（同区域），~100ms（跨区域）
-    复制：异步（数据中心间最终一致性）
-
-  RPO/RTO 目标：
-    Active-Passive：RPO = 复制延迟（~秒级），RTO = ~分钟级
-    Active-Active：RPO = 0（每个 DC 有自己的数据），RTO = ~秒级
+```mermaid
+flowchart TD
+    DNS["Global DNS / LB<br/>(route producers to nearest DC)"] --> East & West
+    subgraph East["DC-East (Primary)"]
+        E_Cluster["Kafka Cluster (6 Brokers, 3 AZs)<br/>Topics: orders, payments, user-events<br/>Schema Registry (primary)"]
+    end
+    subgraph West["DC-West (Active DR)"]
+        W_Cluster["Kafka Cluster (6 Brokers, 3 AZs)<br/>Topics: dc-east.orders, dc-east.payments, dc-west.orders, dc-west.payments<br/>Schema Registry (follower)"]
+    end
+    East <-->|"MirrorMaker 2 (MM2)"| West
 ```
 
 ### 硬件建议

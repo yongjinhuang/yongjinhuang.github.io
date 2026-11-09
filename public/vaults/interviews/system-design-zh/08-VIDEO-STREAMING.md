@@ -263,142 +263,77 @@ Response 200:
 
 ### 上传流程
 
-```
-                              Upload Flow
- ============================================================================
+```mermaid
+flowchart TD
+    Client["Client (Web/App)"] --> GW["API Gateway / Load Balancer"]
+    GW --> Auth["Auth Service"]
+    GW --> UploadSvc["Upload Service<br/>- Validate<br/>- Generate pre-signed URL"]
+    UploadSvc --> MetaDB["Metadata DB (PostgreSQL)"]
 
- +--------+     +----------------+     +------------------+
- | Client |---->| API Gateway /  |---->| Upload Service   |
- | (Web/  |     | Load Balancer  |     | - Validate       |
- |  App)  |     +----------------+     | - Generate URL   |
- +--------+            |               +------------------+
-     |                 |                        |
-     |                 v                        v
-     |          +-------------+         +---------------+
-     |          | Auth Service|         | Metadata DB   |
-     |          +-------------+         | (PostgreSQL)  |
-     |                                  +---------------+
-     |
-     |  (Direct upload via pre-signed URL)
-     |
-     v
- +-------------------+     +---------------------+     +----------------+
- | Object Storage    |---->| Message Queue       |---->| Transcoding    |
- | (S3 / GCS)       |     | (Kafka / SQS)       |     | Workers        |
- | - Raw video       |     | - upload.completed  |     | - FFmpeg       |
- +-------------------+     | - transcode.request |     | - GPU-accel    |
-                           +---------------------+     +----------------+
-                                                              |
-                                    +-------------------------+
-                                    |           |             |
-                                    v           v             v
-                              +---------+ +---------+ +-------------+
-                              | 360p    | | 720p    | | 1080p / 4K  |
-                              | encode  | | encode  | | encode      |
-                              +---------+ +---------+ +-------------+
-                                    |           |             |
-                                    v           v             v
-                           +------------------------------------------+
-                           |        Object Storage (Transcoded)       |
-                           |  /v_abc123/360p/segment_001.ts           |
-                           |  /v_abc123/720p/segment_001.ts           |
-                           |  /v_abc123/1080p/segment_001.ts          |
-                           |  /v_abc123/manifest.m3u8                 |
-                           +------------------------------------------+
-                                              |
-                                              v
-                                    +------------------+
-                                    | CDN (CloudFront  |
-                                    | / Akamai / own)  |
-                                    +------------------+
+    Client -->|"Direct upload via pre-signed URL"| RawS3["Object Storage (S3 / GCS)<br/>- Raw video"]
+    RawS3 --> MQ["Message Queue (Kafka / SQS)<br/>- upload.completed<br/>- transcode.request"]
+    MQ --> Workers["Transcoding Workers<br/>- FFmpeg / GPU-accel"]
+    Workers --> E360["360p encode"] & E720["720p encode"] & E1080["1080p / 4K encode"]
+    E360 & E720 & E1080 --> OutS3["Object Storage (Transcoded)<br/>/v_abc123/{360p,720p,1080p}/segment_001.ts<br/>/v_abc123/manifest.m3u8"]
+    OutS3 --> CDN["CDN (CloudFront / Akamai / own)"]
 ```
 
 ### 流播放流程
 
-```
-                             Streaming Flow
- ============================================================================
+```mermaid
+sequenceDiagram
+    participant Client as "Client Player"
+    participant Edge as "CDN Edge PoP (closest)"
+    participant Reg as "CDN Regional PoP"
+    participant Origin as "Origin Server + Object Store"
 
- +--------+                                              +-----------------+
- | Client |----(1) GET /manifest.m3u8------------------->| CDN Edge PoP   |
- | Player |                                              | (closest to    |
- |        |<---(2) Return master playlist----------------|  user)         |
- |        |                                              +-----------------+
- |        |                                                  |  Cache Miss?
- |        |                                                  v
- |        |                                              +-----------------+
- |        |                                              | CDN Regional   |
- |        |                                              | PoP            |
- |        |                                              +-----------------+
- |        |                                                  |  Cache Miss?
- |        |                                                  v
- |        |                                              +-----------------+
- |        |                                              | Origin Server  |
- |        |                                              | + Object Store |
- |        |                                              +-----------------+
- |        |
- |        |----(3) GET /720p/playlist.m3u8-------------->| CDN Edge       |
- |        |<---(4) Return resolution playlist------------|                |
- |        |                                              |                |
- |        |----(5) GET /720p/segment_001.ts------------->|                |
- |        |<---(6) Return video segment------------------|                |
- |        |                                              |                |
- |        |----(7) GET /720p/segment_002.ts------------->|                |
- |        |<---(8) Return video segment------------------|                |
- +--------+                                              +----------------+
-
-     ABR：客户端测量带宽并动态切换分辨率
-     例如，如果带宽下降，步骤 9 可能请求 /480p/segment_003.ts
+    Client->>Edge: (1) GET /manifest.m3u8
+    opt Cache Miss at Edge
+        Edge->>Reg: Fetch from Regional PoP
+        opt Cache Miss at Regional
+            Reg->>Origin: Fetch from Origin
+            Origin-->>Reg: Return manifest/segments
+        end
+        Reg-->>Edge: Populate Edge Cache
+    end
+    Edge-->>Client: (2) Return master playlist
+    Client->>Edge: (3) GET /720p/playlist.m3u8
+    Edge-->>Client: (4) Return resolution playlist
+    Client->>Edge: (5) GET /720p/segment_001.ts
+    Edge-->>Client: (6) Return video segment
+    Client->>Edge: (7) GET /720p/segment_002.ts
+    Edge-->>Client: (8) Return video segment
+    Note over Client,Edge: ABR dynamically switches resolution (e.g. /480p/segment_003.ts) on bandwidth changes
 ```
 
 ### 完整系统概览
 
-```
- +-----------------------------------------------------------------------+
- |                          客户端层                                      |
- |  +----------+  +-----------+  +------------+  +------------------+   |
- |  | Web App  |  | iOS App   |  | Android    |  | Smart TV / OTT   |   |
- |  | (React)  |  | (Swift)   |  | (Kotlin)   |  | (Roku, Fire TV)  |   |
- |  +----------+  +-----------+  +------------+  +------------------+   |
- +-----------------------------------------------------------------------+
-              |                    |                       |
-              v                    v                       v
- +-----------------------------------------------------------------------+
- |                      CDN 层（全球）                                    |
- |  200+ PoP 全球分布，边缘缓存，TLS 终止                               |
- +-----------------------------------------------------------------------+
-              |
-              v
- +-----------------------------------------------------------------------+
- |                     API Gateway / Load Balancer                       |
- |  速率限制、认证、路由、请求日志                                       |
- +-----------------------------------------------------------------------+
-              |
-     +--------+--------+--------+--------+--------+
-     v        v        v        v        v        v
- +------+ +------+ +------+ +------+ +------+ +--------+
- |Upload| |Stream| |Search| |Recom-| |User  | |Comment |
- |Svc   | |Svc   | |Svc   | |mend  | |Svc   | |Svc     |
- +------+ +------+ +------+ +------+ +------+ +--------+
-     |        |        |        |        |        |
-     v        v        v        v        v        v
- +-----------------------------------------------------------------------+
- |                        数据层                                         |
- |  +----------+  +----------+  +----------+  +-----+  +----------+    |
- |  |PostgreSQL|  |Cassandra |  |Elastic-  |  |Redis|  |Object    |    |
- |  |(metadata)|  |(views,   |  |search    |  |(cache| |Storage   |    |
- |  |          |  | history) |  |(search)  |  | sess)| |(S3/GCS)  |    |
- |  +----------+  +----------+  +----------+  +-----+  +----------+    |
- +-----------------------------------------------------------------------+
-              |
-              v
- +-----------------------------------------------------------------------+
- |                    异步处理层                                          |
- |  +----------+  +-------------+  +----------+  +------------------+   |
- |  | Kafka    |  | Transcoding |  | ML Pipe- |  | Notification     |   |
- |  | (events) |  | Workers     |  | line     |  | Service          |   |
- |  +----------+  +-------------+  +----------+  +------------------+   |
- +-----------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph ClientLayer["CLIENT LAYER"]
+        C1["Web App (React)"]
+        C2["iOS App (Swift)"]
+        C3["Android (Kotlin)"]
+        C4["Smart TV / OTT (Roku, Fire TV)"]
+    end
+    ClientLayer --> CDN["CDN LAYER (Global)<br/>200+ PoPs worldwide, edge caching, TLS termination"]
+    CDN --> GW["API GATEWAY / LOAD BALANCER<br/>Rate limiting, authentication, routing, request logging"]
+    GW --> Up["Upload Svc"] & St["Stream Svc"] & Sr["Search Svc"] & Rec["Recommend Svc"] & Usr["User Svc"] & Cmt["Comment Svc"]
+    Up & St & Sr & Rec & Usr & Cmt --> DataLayer
+    subgraph DataLayer["DATA LAYER"]
+        D1["PostgreSQL (metadata)"]
+        D2["Cassandra (views, history)"]
+        D3["Elasticsearch (search)"]
+        D4["Redis (cache, sessions)"]
+        D5["Object Storage (S3/GCS)"]
+    end
+    DataLayer --> AsyncLayer
+    subgraph AsyncLayer["ASYNC PROCESSING LAYER"]
+        A1["Kafka (events)"]
+        A2["Transcoding Workers"]
+        A3["ML Pipeline"]
+        A4["Notification Service"]
+    end
 ```
 
 ---
@@ -561,23 +496,15 @@ CREATE INDEX idx_jobs_video ON video_processing_jobs(video_id);
 
 ### 数据模型关系
 
-```
- +----------+       +----------+       +-----------+
- | users    |1----*>| channels |1----*>| videos    |
- +----------+       +----------+       +-----------+
-      |                   ^                  |
-      |                   |                  |
-      |  +----------------+            +-----+-----+
-      |  |                             |           |
-      v  v                             v           v
- +---------------+              +-----------+ +----------+
- | subscriptions |              | comments  | |video_stats|
- +---------------+              +-----------+ +----------+
-                                     |
-                                     v
-                                +-----------+
-                                | (replies) |
-                                +-----------+
+```mermaid
+erDiagram
+    USERS ||--o{ CHANNELS : "owns"
+    CHANNELS ||--o{ VIDEOS : "publishes"
+    USERS ||--o{ SUBSCRIPTIONS : "subscribes"
+    CHANNELS ||--o{ SUBSCRIPTIONS : "has subscribers"
+    VIDEOS ||--o{ COMMENTS : "has"
+    VIDEOS ||--|| VIDEO_STATS : "tracks"
+    COMMENTS ||--o{ COMMENTS : "replies"
 ```
 
 ---
@@ -654,81 +581,19 @@ CREATE INDEX idx_jobs_video ON video_processing_jobs(video_id);
 
 ### Transcoding 管道（DAG）
 
-```
-                      单个视频的 Transcoding DAG
- ============================================================================
-
-                          +------------------+
-                          | 1. Probe Video   |
-                          |    (FFprobe)     |
-                          |    - codec info  |
-                          |    - resolution  |
-                          |    - duration    |
-                          |    - audio info  |
-                          +--------+---------+
-                                   |
-                          +--------v---------+
-                          | 2. Split into    |
-                          |    Segments      |
-                          |    (10 sec each) |
-                          +--------+---------+
-                                   |
-              +--------------------+--------------------+
-              |                    |                    |
-     +--------v-------+  +--------v-------+  +--------v-------+
-     | 3a. Transcode  |  | 3b. Transcode  |  | 3c. Transcode  |
-     |     240p       |  |     360p       |  |     480p       |
-     |     H.264      |  |     H.264      |  |     H.264      |
-     +--------+-------+  +--------+-------+  +--------+-------+
-              |                    |                    |
-              |    +---------------+----+              |
-              |    |               |    |              |
-              |    |  +--------v--+--v-+--v-------+   |
-              |    |  | 3d. Transcode  | 3e.      |   |
-              |    |  |     720p       |  1080p   |   |
-              |    |  |     H.264     |  H.264   |   |
-              |    |  +-------+-------+ +----+---+   |
-              |    |          |              |        |
-              +----+----------+--------------+--------+
-                              |
-                   +----------+----------+
-                   |                     |
-          +--------v-------+   +--------v--------+
-          | 4. 生成        |   | 5. 提取         |
-          |    缩略图      |   |    音轨         |
-          |    - sprite    |   |    - AAC 128k   |
-          |    - poster    |   |    - AAC 256k   |
-          |    - timeline  |   +--------+--------+
-          +--------+-------+            |
-                   |                    |
-                   +----------+---------+
-                              |
-                   +----------v----------+
-                   | 6. 生成             |
-                   |    Manifest 文件    |
-                   |    - master.m3u8    |
-                   |    - 每种分辨率的   |
-                   |      playlist      |
-                   +----------+----------+
-                              |
-                   +----------v----------+
-                   | 7. 上传到 S3        |
-                   |    /videos/v_abc123/|
-                   |      /240p/         |
-                   |      /360p/         |
-                   |      /480p/         |
-                   |      /720p/         |
-                   |      /1080p/        |
-                   |      manifest.m3u8  |
-                   +----------+----------+
-                              |
-                   +----------v----------+
-                   | 8. 发布事件         |
-                   |    - 更新状态       |
-                   |      为 'ready'     |
-                   |    - 通知用户       |
-                   |    - 使 CDN 缓存失效|
-                   +---------------------+
+```mermaid
+flowchart TD
+    S1["1. Probe Video (FFprobe)<br/>codec info, resolution, duration, audio"] --> S2["2. Split into Segments<br/>(10 sec each)"]
+    S2 --> T240["3a. Transcode 240p H.264"]
+    S2 --> T360["3b. Transcode 360p H.264"]
+    S2 --> T480["3c. Transcode 480p H.264"]
+    S2 --> T720["3d. Transcode 720p H.264"]
+    S2 --> T1080["3e. Transcode 1080p H.264"]
+    T240 & T360 & T480 & T720 & T1080 --> S4["4. Generate Thumbnails<br/>sprite, poster, timeline"]
+    T240 & T360 & T480 & T720 & T1080 --> S5["5. Extract Audio Tracks<br/>AAC 128k, AAC 256k"]
+    S4 & S5 --> S6["6. Generate Manifest Files<br/>master.m3u8 + per-resolution playlists"]
+    S6 --> S7["7. Upload to S3<br/>/videos/v_abc123/{240p..1080p}/ + manifest.m3u8"]
+    S7 --> S8["8. Publish Event<br/>Update status to 'ready', notify user, invalidate CDN"]
 ```
 
 ### Transcoding 配置矩阵
@@ -981,51 +846,28 @@ Codec 选择决策树：
 
 ### CDN 拓扑
 
-```
- CDN 层级结构（3 层）
- ============================================================================
-
- 第 1 层：边缘 PoP（全球 200+ 个位置）
- ============================================================================
- +-------+ +-------+ +-------+ +-------+ +-------+ +-------+
- |Tokyo  | |Seoul  | |Mumbai | |London | |NYC    | |SP     |
- |Edge   | |Edge   | |Edge   | |Edge   | |Edge   | |Edge   |
- |       | |       | |       | |       | |       | |       |
- |Cache: | |Cache: | |Cache: | |Cache: | |Cache: | |Cache: |
- |50TB   | |50TB   | |50TB   | |50TB   | |50TB   | |50TB   |
- +---+---+ +---+---+ +---+---+ +---+---+ +---+---+ +---+---+
-     |         |         |         |         |         |
-     +----+----+         |    +----+----+    |         |
-          |              |    |         |    |         |
-          v              v    v         v    v         v
-
- 第 2 层：区域 PoP（20-30 个位置）
- ============================================================================
-     +-----------+    +-----------+    +-----------+
-     | Asia-Pac  |    | Europe    |    | Americas  |
-     | Regional  |    | Regional  |    | Regional  |
-     |           |    |           |    |           |
-     | Cache:    |    | Cache:    |    | Cache:    |
-     | 500TB     |    | 500TB     |    | 500TB     |
-     +-----+-----+    +-----+-----+    +-----+-----+
-           |                |                |
-           +----------------+----------------+
-                            |
-
- 第 3 层：Origin Shield + 对象存储
- ============================================================================
-                   +------------------+
-                   | Origin Shield    |
-                   | (将多个边缘请求  |
-                   |  合并为一个)     |
-                   | Cache: 5PB      |
-                   +--------+---------+
-                            |
-                   +--------v---------+
-                   | Object Storage   |
-                   | (S3 / GCS)       |
-                   | 所有视频数据     |
-                   +------------------+
+```mermaid
+flowchart TD
+    subgraph T1["Tier 1: Edge PoPs (200+ locations worldwide, 50TB cache each)"]
+        E1["Tokyo Edge"]
+        E2["Seoul Edge"]
+        E3["Mumbai Edge"]
+        E4["London Edge"]
+        E5["NYC Edge"]
+        E6["Sao Paulo Edge"]
+    end
+    subgraph T2["Tier 2: Regional PoPs (20-30 locations, 500TB cache each)"]
+        R1["Asia-Pac Regional"]
+        R2["Europe Regional"]
+        R3["Americas Regional"]
+    end
+    subgraph T3["Tier 3: Origin Shield + Object Storage"]
+        Shield["Origin Shield (Cache: 5PB)<br/>Collapses multiple edge requests into one"] --> S3["Object Storage (S3 / GCS)<br/>All video data"]
+    end
+    E1 & E2 & E3 --> R1
+    E4 --> R2
+    E5 & E6 --> R3
+    R1 & R2 & R3 --> Shield
 ```
 
 ### 缓存策略
@@ -1082,31 +924,13 @@ Codec 选择决策树：
 
 ### 架构概览
 
-```
- 推荐管道
- ============================================================================
-
- +------------------+     +------------------+     +------------------+
- | 数据收集         |---->| 特征工程         |---->| 模型训练         |
- |                  |     |                  |     |                  |
- | - 观看历史       |     | - 用户特征       |     | - Collaborative  |
- | - 搜索查询       |     | - 视频特征       |     |   filtering      |
- | - 点赞/踩        |     | - 上下文（时间、 |     | - Content-based  |
- | - 观看时长       |     |   设备、位置）   |     | - Deep learning  |
- | - 订阅           |     | - 交互特征       |     |   (two-tower)    |
- +------------------+     +------------------+     +------------------+
-                                                          |
-                                                          v
-                                                   +------------------+
- +------------------+     +------------------+     | 候选生成         |
- | 最终排序         |<----| 重新排序         |<----| Candidate        |
- |                  |     |                  |     | Generation       |
- | - Top N 视频     |     | - 多样性         |     |                  |
- | - 个性化         |     | - 新鲜度         |     | - 1000 个候选    |
- |   推荐流         |     | - 业务规则       |     |   视频           |
- | - 缓存 5 分钟    |     | - 过滤已看       |     | - 来自多个       |
- +------------------+     +------------------+     |   来源           |
-                                                   +------------------+
+```mermaid
+flowchart LR
+    DC["Data Collection<br/>- Watch history, Search queries<br/>- Likes/dislikes, Watch time<br/>- Subscriptions"] --> FE["Feature Engineering<br/>- User &amp; Video features<br/>- Context (time, device, loc)<br/>- Interactions"]
+    FE --> MT["Model Training<br/>- Collaborative filtering<br/>- Content-based<br/>- Deep learning (two-tower)"]
+    MT --> CG["Candidate Generation<br/>- 1000 candidate videos<br/>- Multiple sources"]
+    CG --> RR["Re-Ranking<br/>- Diversity &amp; Freshness<br/>- Business rules, Filter seen"]
+    RR --> FR["Final Ranking<br/>- Top N personalized feed<br/>- Cached 5 min"]
 ```
 
 ### Collaborative Filtering
@@ -1155,43 +979,15 @@ Codec 选择决策树：
 
 ### Two-Tower 深度学习模型（生产方案）
 
-```
- Two-Tower 架构
- ============================================================================
-
-    用户塔                                   视频塔
- +-----------------+                    +-----------------+
- | User ID (embed) |                    | Video ID (embed)|
- | 观看历史        |                    | 标题 (BERT)     |
- | 人口统计        |                    | 类别            |
- | 设备/上下文     |                    | 标签            |
- +-----------------+                    | 时长            |
-         |                              | 上传日期        |
-    +----v----+                         | 参与度统计      |
-    | Dense   |                         +-----------------+
-    | Layers  |                                  |
-    | (256)   |                             +----v----+
-    | (128)   |                             | Dense   |
-    | (64)    |                             | Layers  |
-    +----+----+                             | (256)   |
-         |                                  | (128)   |
-    +----v----+                             | (64)    |
-    | User    |                             +----+----+
-    | Embed-  |                                  |
-    | ding    |                             +----v----+
-    | (64-dim)|                             | Video   |
-    +----+----+                             | Embed-  |
-         |                                  | ding    |
-         |                                  | (64-dim)|
-         |                                  +----+----+
-         |                                       |
-         +---> dot product / cosine sim <--------+
-                        |
-                   分数 (0-1)
-
- 训练：优化观看时长预测
- 服务：预计算视频 embedding，实时计算用户 embedding
- ANN（近似最近邻）：使用 FAISS/ScaNN 进行快速检索
+```mermaid
+flowchart TD
+    subgraph UT["User Tower"]
+        UIn["User ID (embed), Watch history,<br/>Demographics, Device/context"] --> UDense["Dense Layers<br/>(256 -> 128 -> 64)"] --> UEmb["User Embedding<br/>(64-dim)"]
+    end
+    subgraph VT["Video Tower"]
+        VIn["Video ID (embed), Title (BERT), Category,<br/>Tags, Duration, Upload date, Engagement"] --> VDense["Dense Layers<br/>(256 -> 128 -> 64)"] --> VEmb["Video Embedding<br/>(64-dim)"]
+    end
+    UEmb & VEmb --> Sim["Dot Product / Cosine Similarity<br/>(FAISS / ScaNN ANN Retrieval)"] --> Score["Score (0-1)<br/>Optimized for watch time prediction"]
 ```
 
 ### 特征工程总结
@@ -1213,25 +1009,15 @@ Codec 选择决策树：
 
 ### 搜索架构
 
-```
- 搜索管道
- ============================================================================
-
- +--------+     +-----------+     +----------------+     +-------------+
- | 客户端 |---->| API       |---->| 查询理解       |---->| Elastic-    |
- | 查询   |     | Gateway   |     | - 分词         |     | search      |
- |        |     |           |     | - 拼写检查     |     | 集群        |
- |        |     |           |     | - 同义词       |     |             |
- |        |     |           |     | - 查询扩展     |     | 按 video_id |
- +--------+     +-----------+     +----------------+     | 分片        |
-                                                          +------+------+
-                                                                |
-                                                         +------v------+
- +--------+     +---------------+     +-------------+   | 原始结果    |
- | 最终   |<----| 个性化        |<----| 相关性       |<--| (前 1000)   |
- | 结果   |     | 重新排序      |     | 评分         |   |             |
- | (前20) |     |               |     |             |   +-------------+
- +--------+     +---------------+     +-------------+
+```mermaid
+flowchart LR
+    Client["Client Query"] --> GW["API Gateway"]
+    GW --> QU["Query Understanding<br/>- Tokenize, Spell check<br/>- Synonyms, Expand query"]
+    QU --> ES["Elasticsearch Cluster<br/>(Sharded by video_id)"]
+    ES --> Raw["Raw Results<br/>(top 1000)"]
+    Raw --> Rel["Relevance Scoring"]
+    Rel --> Pers["Personalized Re-ranking"]
+    Pers --> Final["Final Results<br/>(top 20)"]
 ```
 
 ### Elasticsearch 索引映射
@@ -1413,50 +1199,12 @@ Codec 选择决策树：
 
 ### 大规模观看量计数
 
-```
- 观看量计数管道（处理每天 10 亿+ 次观看）
- ============================================================================
-
- 问题：每次观看直接递增数据库 = 数据库崩溃
-
- 解决方案：多层聚合
-
- 第 1 层：客户端去重
- +--------+     客户端对观看事件进行防抖（每个视频每 30 秒 1 次）
- | Client |     过滤类似机器人的行为模式
- +---+----+
-     |
- 第 2 层：边缘聚合
-     v
- +---+----------+     按每台边缘服务器每个视频计数
- | 边缘计数器   |     每 10 秒刷新一次
- | (内存中)     |     本地 HyperLogLog 估算唯一观看者
- +---+----------+
-     |
- 第 3 层：Kafka 流处理
-     v
- +---+----------+     聚合来自所有边缘的观看事件
- | Kafka Streams|     窗口聚合（1 分钟翻转窗口）
- | / Flink      |     使用概率数据结构去重
- +---+----------+
-     |
- 第 4 层：批量更新数据库
-     v
- +---+----------+     每 1 分钟批量 UPDATE
- | Cassandra    |     UPDATE video_stats SET view_count = view_count + delta
- | (counters)   |     近似计数（精度在 2% 以内）
- +---+----------+
-     |
- 第 5 层：读取缓存
-     v
- +---+----------+     在 Redis 中缓存观看量（TTL：60 秒）
- | Redis Cache  |     从缓存提供读取请求
- +---+----------+     仅在缓存未命中时查询 Cassandra
-
- 精度与性能的权衡：
- - 实时显示：近似计数（约 2% 以内），每分钟更新
- - 分析仪表板：来自批处理的精确计数（每小时）
- - 变现：来自审计批处理管道的精确计数（每天）
+```mermaid
+flowchart TD
+    L1["Layer 1: Client-side Deduplication<br/>Debounce view events (1/video/30s), filter bot patterns"] --> L2["Layer 2: Edge Aggregation<br/>In-memory counter per edge server, flush every 10s, HyperLogLog unique viewers"]
+    L2 --> L3["Layer 3: Kafka Stream Processing<br/>Kafka Streams / Flink 1-min tumbling windows, deduplication"]
+    L3 --> L4["Layer 4: Batch Update to Database<br/>Cassandra counter update every 1 min (~2% accuracy)"]
+    L4 --> L5["Layer 5: Cache for Reads<br/>Redis Cache (TTL: 60s), fallback to Cassandra on miss"]
 ```
 
 ---
@@ -1574,58 +1322,21 @@ Codec 选择决策树：
 
 ### 全球基础设施
 
-```
- 全球部署架构
- ============================================================================
+```mermaid
+flowchart TD
+    DNS["Global DNS (Route 53)<br/>GeoDNS / Latency-based"] --> US & EU & APAC
 
-                           +---------------------------+
-                           |    Global DNS (Route 53)  |
-                           |    GeoDNS / 基于延迟路由  |
-                           +-----+-----+-----+--------+
-                                 |     |     |
-                +----------------+     |     +----------------+
-                |                      |                      |
-                v                      v                      v
- +==========================+ +==========================+ +==========================+
- |    US-EAST 区域           | |    EU-WEST 区域           | |    APAC 区域             |
- |                          | |                          | |                          |
- | +----+ +----+ +----+    | | +----+ +----+ +----+    | | +----+ +----+ +----+    |
- | |Edge| |Edge| |Edge|    | | |Edge| |Edge| |Edge|    | | |Edge| |Edge| |Edge|    |
- | |NYC | |ATL | |CHI |    | | |LON | |PAR | |FRA |    | | |TYO | |SIN | |SYD |    |
- | +----+ +----+ +----+    | | +----+ +----+ +----+    | | +----+ +----+ +----+    |
- |          |               | |          |               | |          |               |
- | +--------v----------+   | | +--------v----------+   | | +--------v----------+   |
- | | Regional CDN PoP  |   | | | Regional CDN PoP  |   | | | Regional CDN PoP  |   |
- | +--------+----------+   | | +--------+----------+   | | +--------+----------+   |
- |          |               | |          |               | |          |               |
- | +--------v----------+   | | +--------v----------+   | | +--------v----------+   |
- | | API Gateway + LB  |   | | | API Gateway + LB  |   | | | API Gateway + LB  |   |
- | +----+----+----+----+   | | +----+----+----+----+   | | +----+----+----+----+   |
- |      |    |    |    |    | |      |    |    |    |    | |      |    |    |    |    |
- | +--+ +--+ +--+ +--+    | | +--+ +--+ +--+ +--+    | | +--+ +--+ +--+ +--+    |
- | |Up| |St| |Sr| |Rc|    | | |Up| |St| |Sr| |Rc|    | | |Up| |St| |Sr| |Rc|    |
- | +--+ +--+ +--+ +--+    | | +--+ +--+ +--+ +--+    | | +--+ +--+ +--+ +--+    |
- |                          | |                          | |                          |
- | +--------------------+  | | +--------------------+  | | +--------------------+  |
- | | PostgreSQL Primary |  | | | PostgreSQL Replica  |  | | | PostgreSQL Replica  |  |
- | | + Cassandra        |  | | | + Cassandra         |  | | | + Cassandra         |  |
- | | + Redis Cluster    |  | | | + Redis Cluster     |  | | | + Redis Cluster     |  |
- | | + Elasticsearch    |  | | | + Elasticsearch     |  | | | + Elasticsearch     |  |
- | +--------------------+  | | +--------------------+  | | +--------------------+  |
- |                          | |                          | |                          |
- | +--------------------+  | | +--------------------+  | | +--------------------+  |
- | | S3 (Primary)       |  | | | S3 (Cross-Region   |  | | | S3 (Cross-Region   |  |
- | | + Transcode Fleet  |  | | |    Replication)     |  | | |    Replication)     |  |
- | +--------------------+  | | +--------------------+  | | +--------------------+  |
- +==========================+ +==========================+ +==========================+
-                                         |
-                                         v
-                              +---------------------+
-                              | 跨区域同步           |
-                              | - 数据库复制         |
-                              | - S3 CRR            |
-                              | - 事件总线 (Kafka)   |
-                              +---------------------+
+    subgraph US["US-EAST Region (Primary)"]
+        US_Stack["Edge PoPs (NYC, ATL, CHI) -> Regional CDN PoP -> API GW + LB<br/>-> Services (Upload, Stream, Search, Rec) -> PostgreSQL Primary, Cassandra, Redis, ES<br/>-> S3 Primary + Transcode Fleet"]
+    end
+    subgraph EU["EU-WEST Region"]
+        EU_Stack["Edge PoPs (LON, PAR, FRA) -> Regional CDN PoP -> API GW + LB<br/>-> Services (Upload, Stream, Search, Rec) -> PostgreSQL Replica, Cassandra, Redis, ES<br/>-> S3 Cross-Region Replication"]
+    end
+    subgraph APAC["APAC Region"]
+        AP_Stack["Edge PoPs (TYO, SIN, SYD) -> Regional CDN PoP -> API GW + LB<br/>-> Services (Upload, Stream, Search, Rec) -> PostgreSQL Replica, Cassandra, Redis, ES<br/>-> S3 Cross-Region Replication"]
+    end
+
+    US & EU & APAC <--> Sync["Cross-Region Sync<br/>DB replication, S3 CRR, Event bus (Kafka)"]
 ```
 
 ### 部署策略
@@ -1645,88 +1356,25 @@ Codec 选择决策树：
 
 ### 如何处理直播流？
 
-```
- 直播流架构
- ============================================================================
-
- +----------+     +----------------+     +------------------+
- | 主播     |---->| Ingest 服务器  |---->| Transcoding      |
- | (OBS/    |RTMP | (接收 RTMP/    |     | (实时)           |
- |  移动端) |SRT  |  SRT 流)       |     | - 更低延迟       |
- +----------+     +----------------+     | - 更少画质       |
-                                          |   级别 (3-4)     |
-                                          +--------+---------+
-                                                   |
-                                          +--------v---------+
-                                          | Packager          |
-                                          | - 分割成          |
-                                          |   2-6 秒的分块   |
-                                          | - 生成直播        |
-                                          |   m3u8 manifest  |
-                                          +--------+---------+
-                                                   |
-                                          +--------v---------+
-                                          | CDN (LL-HLS)     |
-                                          | - 低延迟 HLS     |
-                                          | - 2-5 秒延迟     |
-                                          | - 部分片段       |
-                                          |   传输           |
-                                          +--------+---------+
-                                                   |
-                                          +--------v---------+
-                                          | 观众（数百万）   |
-                                          +------------------+
-
- 与 VOD 的关键区别：
- - 实时 transcoding（没有时间优化编码）
- - 滑动窗口 manifest（不是完整播放列表）
- - 更短的片段时长（2-6 秒 vs VOD 的 10 秒）
- - DVR 功能：保留最近 2-4 小时供回看
- - 聊天服务同步运行（基于 WebSocket）
- - 直播结束后：从录制创建 VOD
+```mermaid
+flowchart LR
+    Streamer["Streamer<br/>(OBS / Mobile)"] -->|"RTMP / SRT"| Ingest["Ingest Server<br/>(Accept RTMP/SRT)"]
+    Ingest --> Trans["Real-Time Transcoding<br/>- Lower latency<br/>- 3-4 quality levels"]
+    Trans --> Pkg["Packager<br/>- 2-6s chunks<br/>- Live m3u8 manifest"]
+    Pkg --> CDN["CDN (LL-HLS)<br/>- 2-5s delay<br/>- Partial segment delivery"]
+    CDN --> Viewers["Viewers (millions)"]
 ```
 
 ### 如何实现视频版权检测？
 
-```
- 版权检测管道
- ============================================================================
-
- 1. Content ID 系统（类似 YouTube）：
-    - 版权所有者上传参考文件（音频 + 视频指纹）
-    - 每个上传的视频都会被提取指纹并与参考数据库比对
-
- 2. 检测流程：
-
- +----------+     +------------------+     +------------------+
- | 上传的   |---->| 音频指纹         |---->| 视频指纹         |
- | 视频     |     | 提取             |     | 提取             |
- +----------+     | (Chromaprint/    |     | (感知哈希，      |
-                  |  Dejavu)         |     |  场景检测)       |
-                  +--------+---------+     +--------+---------+
-                           |                        |
-                  +--------v------------------------v---------+
-                  |           匹配引擎                        |
-                  |  与参考数据库比对                          |
-                  |  （数十亿指纹）                           |
-                  |  使用 Locality-Sensitive Hashing 加速     |
-                  +---------------------+---------------------+
-                                        |
-                            +-----------v-----------+
-                            |   是否匹配？           |
-                            +---+---------------+---+
-                                |               |
-                            是  |               | 否
-                                v               v
-                  +------------------+  +------------------+
-                  | 应用策略：       |  | 允许视频         |
-                  | - 阻止上传       |  | （继续正常       |
-                  | - 为版权所有者   |  |  处理）          |
-                  |   变现           |  +------------------+
-                  | - 允许但带广告   |
-                  +------------------+
-
- 3. 持续监控：随着参考数据库增长定期重新扫描
+```mermaid
+flowchart TD
+    Up["Uploaded Video"] --> Audio["Audio Fingerprinting<br/>(Chromaprint / Dejavu)"]
+    Audio --> Video["Video Fingerprinting<br/>(Perceptual hash, scene detection)"]
+    Audio & Video --> Match["Matching Engine<br/>Compare against reference DB (billions of fingerprints via LSH)"]
+    Match --> Found{"Match Found?"}
+    Found -->|"YES"| Policy["Apply Policy:<br/>- Block upload<br/>- Monetize for rights holder<br/>- Allow with ads"]
+    Found -->|"NO"| Allow["Allow video<br/>(continue normal processing)"]
 ```
 
 ### 如何处理病毒式视频（突发流量高峰）？

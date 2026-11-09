@@ -82,29 +82,18 @@ The application is responsible for reading from and writing to the cache.
 4. Write the result back into the cache.
 5. On write, update the database and invalidate/delete the cache entry.
 
-```
-  ┌────────────┐          ┌────────────┐          ┌────────────┐
-  │            │  1. GET   │            │          │            │
-  │   Client   │ -------> │   Cache    │          │  Database  │
-  │            │ <------- │            │          │            │
-  │            │  2. HIT   │            │          │            │
-  └────────────┘          └────────────┘          └────────────┘
-
-          --- Cache Miss Flow ---
-
-  ┌────────────┐          ┌────────────┐          ┌────────────┐
-  │            │  1. GET   │            │          │            │
-  │   Client   │ -------> │   Cache    │          │  Database  │
-  │            │ <------- │  (MISS)    │          │            │
-  │            │          └────────────┘          │            │
-  │            │  3. Query                        │            │
-  │            │ ------------------------------> │            │
-  │            │ <------------------------------ │            │
-  │            │  4. Result                       │            │
-  │            │          ┌────────────┐          │            │
-  │            │  5. SET   │            │          │            │
-  │            │ -------> │   Cache    │          │            │
-  └────────────┘          └────────────┘          └────────────┘
+```mermaid
+flowchart LR
+    subgraph Hit["Cache Hit Flow"]
+        C1["Client"] -->|"1. GET"| Ca1["Cache"]
+        Ca1 -->|"2. HIT"| C1
+    end
+    subgraph Miss["Cache Miss Flow"]
+        C2["Client"] -->|"1. GET / 5. SET"| Ca2["Cache"]
+        Ca2 -->|"2. MISS"| C2
+        C2 -->|"3. Query"| DB2["Database"]
+        DB2 -->|"4. Result"| C2
+    end
 ```
 
 **When to Use:**
@@ -155,14 +144,12 @@ The cache sits between the application and the database. The cache itself handle
 2. On hit, cache returns data.
 3. On miss, the cache loads data from DB, stores it, and returns it to the application.
 
-```
-  ┌────────────┐          ┌────────────────┐          ┌────────────┐
-  │            │  1. GET   │                │  2. Load  │            │
-  │   Client   │ -------> │  Cache Layer   │ -------> │  Database  │
-  │            │          │  (with loader) │ <------- │            │
-  │            │ <------- │                │  3. Data  │            │
-  │            │  4. Data  │   (stores it)  │          │            │
-  └────────────┘          └────────────────┘          └────────────┘
+```mermaid
+flowchart LR
+    Client["Client"] -->|"1. GET"| Cache["Cache Layer<br/>(with loader &amp; stores data)"]
+    Cache -->|"2. Load"| DB["Database"]
+    DB -->|"3. Data"| Cache
+    Cache -->|"4. Data"| Client
 ```
 
 **When to Use:**
@@ -193,14 +180,12 @@ Every write goes to the cache first, and the cache synchronously writes to the d
 2. Cache synchronously writes to the database.
 3. Both are updated before returning success.
 
-```
-  ┌────────────┐          ┌────────────┐          ┌────────────┐
-  │            │  1. SET   │            │  2. Write │            │
-  │   Client   │ -------> │   Cache    │ -------> │  Database  │
-  │            │          │            │ <------- │            │
-  │            │ <------- │            │  3. ACK   │            │
-  │            │  4. ACK   │            │          │            │
-  └────────────┘          └────────────┘          └────────────┘
+```mermaid
+flowchart LR
+    Client["Client"] -->|"1. SET"| Cache["Cache"]
+    Cache -->|"2. Sync Write"| DB["Database"]
+    DB -->|"3. ACK"| Cache
+    Cache -->|"4. ACK"| Client
 ```
 
 **When to Use:**
@@ -230,14 +215,11 @@ The application writes to the cache, and the cache asynchronously flushes to the
 2. Cache immediately acknowledges.
 3. Cache asynchronously writes to the database (batched, delayed).
 
-```
-  ┌────────────┐          ┌────────────┐   async   ┌────────────┐
-  │            │  1. SET   │            │  ......>  │            │
-  │   Client   │ -------> │   Cache    │  3. Batch │  Database  │
-  │            │ <------- │  (buffer)  │  write    │            │
-  │            │  2. ACK   │            │  ......>  │            │
-  │            │ (instant) │            │           │            │
-  └────────────┘          └────────────┘           └────────────┘
+```mermaid
+flowchart LR
+    Client["Client"] -->|"1. SET"| Cache["Cache (buffer)"]
+    Cache -->|"2. Instant ACK"| Client
+    Cache -.->|"3. Async batch write"| DB["Database"]
 ```
 
 **When to Use:**
@@ -270,18 +252,10 @@ The cache proactively refreshes entries before they expire, based on predicted a
 2. Before a key's TTL expires, if it was recently accessed, the cache refreshes it from the DB in the background.
 3. Clients always get fresh data from cache without miss penalty.
 
-```
-  ┌────────────┐          ┌────────────┐          ┌────────────┐
-  │            │   GET     │            │          │            │
-  │   Client   │ -------> │   Cache    │          │  Database  │
-  │            │ <------- │            │          │            │
-  │            │  (fast!)  │            │          │            │
-  └────────────┘          │            │          │            │
-                          │  TTL at    │ refresh  │            │
-                          │  80%?      │ -------> │            │
-                          │  Recently  │ <------- │            │
-                          │  accessed? │          │            │
-                          └────────────┘          └────────────┘
+```mermaid
+flowchart LR
+    Client["Client"] <-->|"GET (fast!)"| Cache["Cache<br/>(TTL at 80%? Recently accessed?)"]
+    Cache <-->|"Proactive refresh"| DB["Database"]
 ```
 
 **When to Use:**
@@ -316,51 +290,23 @@ The cache proactively refreshes entries before they expire, based on predicted a
 
 ## 3. High-Level Architecture
 
-```
-                              ┌─────────────────────────┐
-                              │     Coordination        │
-                              │   Service (etcd /       │
-                              │    ZooKeeper)           │
-                              │                         │
-                              │  - Cluster topology     │
-                              │  - Leader election      │
-                              │  - Config management    │
-                              └────────┬────────────────┘
-                                       │ watches/updates
-        ┌──────────────────────────────┼──────────────────────────────┐
-        │                              │                              │
-  ┌─────▼──────┐               ┌──────▼─────┐               ┌───────▼────┐
-  │   Client   │               │   Client   │               │   Client   │
-  │  Library   │               │  Library   │               │  Library   │
-  │ (Jedis /   │               │ (Jedis /   │               │ (Jedis /   │
-  │  Lettuce)  │               │  Lettuce)  │               │  Lettuce)  │
-  └─────┬──────┘               └──────┬─────┘               └──────┬─────┘
-        │                              │                            │
-        │         Consistent Hashing / Hash Slot Routing            │
-        │                              │                            │
-  ┌─────▼──────────────────────────────▼────────────────────────────▼─────┐
-  │                         Cache Cluster                                 │
-  │                                                                       │
-  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐              │
-  │  │  Shard 0    │    │  Shard 1    │    │  Shard 2    │   ...        │
-  │  │             │    │             │    │             │              │
-  │  │  ┌───────┐  │    │  ┌───────┐  │    │  ┌───────┐  │              │
-  │  │  │Master │  │    │  │Master │  │    │  │Master │  │              │
-  │  │  │ Node  │  │    │  │ Node  │  │    │  │ Node  │  │              │
-  │  │  └───┬───┘  │    │  └───┬───┘  │    │  └───┬───┘  │              │
-  │  │      │      │    │      │      │    │      │      │              │
-  │  │  ┌───▼───┐  │    │  ┌───▼───┐  │    │  ┌───▼───┐  │              │
-  │  │  │Replica│  │    │  │Replica│  │    │  │Replica│  │              │
-  │  │  │  (1)  │  │    │  │  (1)  │  │    │  │  (1)  │  │              │
-  │  │  └───────┘  │    │  └───────┘  │    │  └───────┘  │              │
-  │  │  ┌───────┐  │    │  ┌───────┐  │    │  ┌───────┐  │              │
-  │  │  │Replica│  │    │  │Replica│  │    │  │Replica│  │              │
-  │  │  │  (2)  │  │    │  │  (2)  │  │    │  │  (2)  │  │              │
-  │  │  └───────┘  │    │  └───────┘  │    │  └───────┘  │              │
-  │  └─────────────┘    └─────────────┘    └─────────────┘              │
-  │                                                                       │
-  │  Hash Slots: 0-5460       5461-10922      10923-16383               │
-  └───────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Coord["Coordination Service (etcd / ZooKeeper)<br/>- Cluster topology<br/>- Leader election<br/>- Config management"] -->|"watches / updates"| CL1 & CL2 & CL3
+
+    CL1["Client Library 1<br/>(Jedis / Lettuce)"] & CL2["Client Library 2<br/>(Jedis / Lettuce)"] & CL3["Client Library 3<br/>(Jedis / Lettuce)"] -->|"Consistent Hashing / Hash Slot Routing"| S0 & S1 & S2
+
+    subgraph Cluster["Cache Cluster (Hash Slots 0-16383)"]
+        subgraph S0["Shard 0 (Slots 0-5460)"]
+            M0["Master Node"] --> R0A["Replica (1)"] & R0B["Replica (2)"]
+        end
+        subgraph S1["Shard 1 (Slots 5461-10922)"]
+            M1["Master Node"] --> R1A["Replica (1)"] & R1B["Replica (2)"]
+        end
+        subgraph S2["Shard 2 (Slots 10923-16383)"]
+            M2["Master Node"] --> R2A["Replica (1)"] & R2B["Replica (2)"]
+        end
+    end
 ```
 
 ### Key Architectural Components
@@ -762,41 +708,14 @@ WAIT 1 100
 
 Redis Sentinel provides automatic failover and monitoring.
 
-```
-  ┌──────────┐    ┌──────────┐    ┌──────────┐
-  │Sentinel 1│    │Sentinel 2│    │Sentinel 3│
-  │          │<-->│          │<-->│          │
-  └────┬─────┘    └────┬─────┘    └────┬─────┘
-       │               │               │
-       │  monitors     │  monitors     │  monitors
-       │               │               │
-  ┌────▼─────┐    ┌────▼─────┐    ┌────▼─────┐
-  │  Master  │───>│ Replica 1│    │ Replica 2│
-  │  (6379)  │───>│  (6380)  │    │  (6381)  │
-  └──────────┘    └──────────┘    └──────────┘
-
-  Failover Process:
-  ─────────────────────────────────────────────────────
-
-  1. Sentinel detects master is down (SDOWN - subjective down).
-  2. Multiple Sentinels agree (ODOWN - objective down, quorum reached).
-  3. One Sentinel is elected leader (Raft-like consensus).
-  4. Leader selects best replica:
-     - Highest priority (lowest replica-priority)
-     - Most data replicated (highest replication offset)
-     - Smallest runid (tiebreaker)
-  5. Elected replica is promoted to master (REPLICAOF NO ONE).
-  6. Other replicas are reconfigured to replicate from new master.
-  7. Sentinels update their config. Clients are notified.
-
-  Timeline:
-  [0s] Master fails
-  [5s] Sentinel SDOWN (after down-after-milliseconds)
-  [6s] ODOWN consensus reached
-  [7s] Sentinel leader elected
-  [8s] New master promoted
-  [9s] Clients redirected
-  Total: ~10 seconds typical failover time
+```mermaid
+flowchart TD
+    subgraph Sentinels["Sentinel Quorum (Raft-like Consensus)"]
+        S1["Sentinel 1"] <--> S2["Sentinel 2"] <--> S3["Sentinel 3"]
+    end
+    S1 & S2 & S3 -->|"monitors (SDOWN -> ODOWN -> Failover ~10s)"| Master["Master (6379)"]
+    Master --> Rep1["Replica 1 (6380)"]
+    Master --> Rep2["Replica 2 (6381)"]
 ```
 
 ### 6.4 Redis Cluster Mode Architecture
@@ -1268,18 +1187,12 @@ The fundamental challenge: keeping cache and DB in sync during concurrent operat
 
 **Alternative: Delay + Delete via Message Queue**
 
-```
-  ┌────────┐ 1.Delete ┌───────┐ 2.Update ┌────────┐
-  │ Service│ ───────> │ Cache │          │   DB   │
-  │        │ ──────────────────────────> │        │
-  │        │ 3.Publish delayed delete    │        │
-  │        │ ───────> ┌─────────────┐    │        │
-  └────────┘          │ Message     │    └────────┘
-                      │ Queue       │
-                      │ (500ms      │    ┌───────┐
-                      │  delay)     │──> │ Cache │
-                      └─────────────┘    │DELETE │
-                                         └───────┘
+```mermaid
+flowchart LR
+    Svc["Service"] -->|"1. Delete"| Cache["Cache"]
+    Svc -->|"2. Update"| DB["DB"]
+    Svc -->|"3. Publish delayed delete"| MQ["Message Queue<br/>(500ms delay)"]
+    MQ -->|"4. Cache DELETE"| Cache
 ```
 
 ---
@@ -1437,129 +1350,49 @@ MGET user:1:name user:1:age user:1:city
 
 ### 11.1 Single-Region Production Deployment
 
-```
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │                        Load Balancer / DNS                         │
-  └─────────────────────────┬───────────────────────────────────────────┘
-                            │
-  ┌─────────────────────────▼───────────────────────────────────────────┐
-  │                    Application Tier                                 │
-  │                                                                     │
-  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
-  │  │ App Svc  │  │ App Svc  │  │ App Svc  │  │ App Svc  │           │
-  │  │ + L1     │  │ + L1     │  │ + L1     │  │ + L1     │           │
-  │  │ (local   │  │ (local   │  │ (local   │  │ (local   │           │
-  │  │  cache)  │  │  cache)  │  │  cache)  │  │  cache)  │           │
-  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘           │
-  │       │              │              │              │                │
-  └───────┼──────────────┼──────────────┼──────────────┼────────────────┘
-          │              │              │              │
-  ┌───────▼──────────────▼──────────────▼──────────────▼────────────────┐
-  │                      Redis Cluster (L2 Cache)                       │
-  │                                                                     │
-  │  AZ-1                    AZ-2                    AZ-3               │
-  │  ┌────────────┐          ┌────────────┐          ┌────────────┐    │
-  │  │ Master A   │          │ Master B   │          │ Master C   │    │
-  │  │ Replica B' │          │ Replica C' │          │ Replica A' │    │
-  │  └────────────┘          └────────────┘          └────────────┘    │
-  │                                                                     │
-  │  Cross-AZ replication ensures HA even if one AZ fails.             │
-  │  Masters and their replicas are in DIFFERENT AZs.                  │
-  └─────────────────────────────────────────────────────────────────────┘
-          │
-  ┌───────▼─────────────────────────────────────────────────────────────┐
-  │                      Database Tier (Source of Truth)                 │
-  │  ┌──────────┐  ┌──────────┐  ┌──────────┐                         │
-  │  │ Primary  │  │ Replica  │  │ Replica  │                         │
-  │  │   DB     │  │   DB     │  │   DB     │                         │
-  │  └──────────┘  └──────────┘  └──────────┘                         │
-  └─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    LB["Load Balancer / DNS"] --> AppTier
+    subgraph AppTier["Application Tier"]
+        A1["App Svc 1 + L1 (local cache)"]
+        A2["App Svc 2 + L1 (local cache)"]
+        A3["App Svc 3 + L1 (local cache)"]
+        A4["App Svc 4 + L1 (local cache)"]
+    end
+    AppTier --> RedisTier
+    subgraph RedisTier["Redis Cluster (L2 Cache - Cross-AZ Placement)"]
+        AZ1["AZ-1: Master A + Replica B'"]
+        AZ2["AZ-2: Master B + Replica C'"]
+        AZ3["AZ-3: Master C + Replica A'"]
+    end
+    RedisTier --> DBTier["Database Tier (Source of Truth)<br/>Primary DB + 2 Replica DBs"]
 ```
 
 ### 11.2 Multi-Region Deployment
 
-```
-  ┌────────────────────────────────────────────────────────────────────┐
-  │                      Region: US-East                               │
-  │                                                                    │
-  │  ┌─────────────┐         ┌──────────────────────────┐             │
-  │  │ App Servers │────────>│  Local Redis Cluster     │             │
-  │  │ + L1 Cache  │         │  (Masters + Replicas)    │             │
-  │  └─────────────┘         └────────────┬─────────────┘             │
-  │                                        │                          │
-  └────────────────────────────────────────┼──────────────────────────┘
-                                           │ Cross-region
-                                           │ replication
-                                           │ (async)
-  ┌────────────────────────────────────────┼──────────────────────────┐
-  │                      Region: EU-West   │                          │
-  │                                        │                          │
-  │  ┌─────────────┐         ┌─────────────▼────────────┐             │
-  │  │ App Servers │────────>│  Local Redis Cluster     │             │
-  │  │ + L1 Cache  │         │  (Read replicas of       │             │
-  │  └─────────────┘         │   US-East masters)       │             │
-  │                          └──────────────────────────┘             │
-  └────────────────────────────────────────────────────────────────────┘
-
-                                           │
-  ┌────────────────────────────────────────┼──────────────────────────┐
-  │                      Region: AP-South  │                          │
-  │                                        │                          │
-  │  ┌─────────────┐         ┌─────────────▼────────────┐             │
-  │  │ App Servers │────────>│  Local Redis Cluster     │             │
-  │  │ + L1 Cache  │         │  (Read replicas of       │             │
-  │  └─────────────┘         │   US-East masters)       │             │
-  │                          └──────────────────────────┘             │
-  └────────────────────────────────────────────────────────────────────┘
-
-  Active-Active Alternative:
-  - Each region has independent masters.
-  - CRDT-based conflict resolution (Redis Enterprise Active-Active).
-  - Writes go to local master; synced bidirectionally.
-  - Last-write-wins or custom merge functions for conflicts.
+```mermaid
+flowchart TD
+    subgraph US["Region: US-East (Primary)"]
+        AppUS["App Servers + L1 Cache"] --> RedisUS["Local Redis Cluster<br/>(Masters + Replicas)"]
+    end
+    subgraph EU["Region: EU-West"]
+        AppEU["App Servers + L1 Cache"] --> RedisEU["Local Redis Cluster<br/>(Read replicas of US-East masters)"]
+    end
+    subgraph AP["Region: AP-South"]
+        AppAP["App Servers + L1 Cache"] --> RedisAP["Local Redis Cluster<br/>(Read replicas of US-East masters)"]
+    end
+    RedisUS -->|"Cross-region async replication"| RedisEU
+    RedisUS -->|"Cross-region async replication"| RedisAP
 ```
 
 ### 11.3 Multi-Tier Caching
 
-```
-  Request Flow:
-
-  ┌──────────┐
-  │ Client   │
-  └────┬─────┘
-       │
-  ┌────▼─────────────────────────────┐
-  │  L1: In-Process Cache            │
-  │  (Caffeine / Guava / dict)       │
-  │  - Latency: ~100 nanoseconds    │
-  │  - Size: 100 MB per instance     │
-  │  - TTL: 10-60 seconds           │
-  │  - Hit rate: ~80%               │
-  └────┬─────────────────────────────┘
-       │ L1 Miss
-  ┌────▼─────────────────────────────┐
-  │  L2: Distributed Cache (Redis)   │
-  │  - Latency: ~0.5 milliseconds   │
-  │  - Size: TBs across cluster     │
-  │  - TTL: minutes to hours        │
-  │  - Hit rate: ~95% (after L1)    │
-  └────┬─────────────────────────────┘
-       │ L2 Miss
-  ┌────▼─────────────────────────────┐
-  │  L3: CDN / Edge Cache            │
-  │  (For static/semi-static data)   │
-  │  - Latency: 1-50 ms             │
-  │  - Geographically distributed   │
-  └────┬─────────────────────────────┘
-       │ L3 Miss
-  ┌────▼─────────────────────────────┐
-  │  Database (Source of Truth)       │
-  │  - Latency: 5-50 milliseconds   │
-  │  - Always consistent            │
-  └──────────────────────────────────┘
-
-  Overall cache hit rate: 1 - (1-0.80) * (1-0.95) = 99%
-  Only 1% of requests reach the database.
+```mermaid
+flowchart TD
+    Client["Client"] --> L1["L1: In-Process Cache (Caffeine / Guava)<br/>Latency: ~100ns | Size: 100 MB/inst | TTL: 10-60s | Hit rate: ~80%"]
+    L1 -->|"L1 Miss"| L2["L2: Distributed Cache (Redis)<br/>Latency: ~0.5ms | Size: TBs | TTL: min-hrs | Hit rate: ~95%"]
+    L2 -->|"L2 Miss"| L3["L3: CDN / Edge Cache<br/>Latency: 1-50ms | Geographically distributed"]
+    L3 -->|"L3 Miss (1% of total)"| DB["Database (Source of Truth)<br/>Latency: 5-50ms | Always consistent"]
 ```
 
 ---
@@ -1800,22 +1633,12 @@ def release_lock(lock_name, token):
 
 **Redis Pub/Sub:**
 
-```
-  ┌──────────┐  PUBLISH ch1 "msg"  ┌──────────┐
-  │Publisher │ ──────────────────> │  Redis   │
-  └──────────┘                     │          │
-                                   │  Routes  │
-                                   │  message │
-                                   │  to all  │
-                                   │  subs    │
-                                   └────┬─────┘
-                            ┌───────────┼───────────┐
-                            ▼           ▼           ▼
-                      ┌──────────┐ ┌──────────┐ ┌──────────┐
-                      │ Sub 1   │ │ Sub 2   │ │ Sub 3   │
-                      │SUBSCRIBE│ │SUBSCRIBE│ │SUBSCRIBE│
-                      │ ch1     │ │ ch1     │ │ ch1     │
-                      └──────────┘ └──────────┘ └──────────┘
+```mermaid
+flowchart LR
+    Pub["Publisher"] -->|"PUBLISH ch1 'msg'"| Redis["Redis<br/>(Routes message to all subscribers)"]
+    Redis --> Sub1["Sub 1 (SUBSCRIBE ch1)"]
+    Redis --> Sub2["Sub 2 (SUBSCRIBE ch1)"]
+    Redis --> Sub3["Sub 3 (SUBSCRIBE ch1)"]
 ```
 
 **Commands:**
@@ -1831,30 +1654,12 @@ PSUBSCRIBE user:*:events    # pattern-based subscription
 
 **Redis Streams (persistent, consumer groups):**
 
-```
-  ┌──────────┐  XADD stream  ┌────────────────────────────┐
-  │Producer │ ──────────────> │  Redis Stream              │
-  └──────────┘                │                            │
-                              │  ID: 1678901234567-0       │
-                              │  {"event":"order","id":42} │
-                              │                            │
-                              │  ID: 1678901234568-0       │
-                              │  {"event":"payment","ok":1}│
-                              └───────────┬────────────────┘
-                                          │
-                     ┌────────────────────┼────────────────────┐
-                     ▼                    ▼                    ▼
-              ┌────────────┐       ┌────────────┐       ┌────────────┐
-              │ Consumer   │       │ Consumer   │       │ Consumer   │
-              │ Group A    │       │ Group A    │       │ Group B    │
-              │ Worker 1   │       │ Worker 2   │       │ Worker 1   │
-              └────────────┘       └────────────┘       └────────────┘
-
-  Key Differences from Pub/Sub:
-  - Messages are persisted (survives restarts).
-  - Consumer groups enable work distribution (each msg processed once per group).
-  - Acknowledgment (XACK) ensures at-least-once delivery.
-  - Can replay messages from any point in time.
+```mermaid
+flowchart TD
+    Prod["Producer"] -->|"XADD stream"| Stream["Redis Stream<br/>ID: 1678901234567-0 {event: order, id: 42}<br/>ID: 1678901234568-0 {event: payment, ok: 1}"]
+    Stream --> CGA1["Consumer Group A - Worker 1"]
+    Stream --> CGA2["Consumer Group A - Worker 2"]
+    Stream --> CGB1["Consumer Group B - Worker 1"]
 ```
 
 **Redis Streams Commands:**

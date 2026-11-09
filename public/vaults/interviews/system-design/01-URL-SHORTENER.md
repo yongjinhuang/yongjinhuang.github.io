@@ -318,31 +318,15 @@ CREATE TABLE clicks (
 
 ## 4. High-Level Architecture
 
-```
-                                    +------------------+
-                                    |   Monitoring     |
-                                    |  (Prometheus +   |
-                                    |   Grafana)       |
-                                    +--------+---------+
-                                             |
-                                             v
-+----------+     +-----------+     +-------------------+     +-------------+
-|          |     |           |     |                   |     |             |
-|  Client  +---->+    DNS    +---->+  Load Balancer    +---->+  App Server |
-| (Browser)|     | (Route53) |     |  (Nginx / ALB)    |     |  (Cluster)  |
-|          |     |           |     |                   |     |             |
-+----------+     +-----------+     +-------------------+     +------+------+
-                                                                    |
-                                          +-------------------------+----------+
-                                          |                         |          |
-                                          v                         v          v
-                                   +------+------+          +------+---+ +----+------+
-                                   |             |          |          | |           |
-                                   |    Cache    |          | Database | | Analytics |
-                                   |   (Redis    |          | (Primary | | (Kafka +  |
-                                   |   Cluster)  |          | + Replicas| | ClickHouse|
-                                   |             |          |          | |           |
-                                   +-------------+          +----------+ +-----------+
+```mermaid
+flowchart LR
+    Client["Client<br/>(Browser)"] --> DNS["DNS<br/>(Route53)"]
+    DNS --> LB["Load Balancer<br/>(Nginx / ALB)"]
+    Mon["Monitoring<br/>(Prometheus + Grafana)"] --> LB
+    LB --> App["App Server<br/>(Cluster)"]
+    App --> Cache["Cache<br/>(Redis Cluster)"]
+    App --> DB["Database<br/>(Primary + Replicas)"]
+    App --> Analytics["Analytics<br/>(Kafka + ClickHouse)"]
 ```
 
 ### Component Responsibilities
@@ -475,17 +459,11 @@ DB sequence; hard to distribute across multiple data centers.
 3. When an app server needs a key, it fetches a batch (e.g., 1000 keys) from the pool.
 4. The fetched keys are marked as `used` atomically.
 
-```
-+------------+         +-----------+         +------------+
-|            |  batch  |           |  fetch   |            |
-|    KGS     +-------->+ Key Pool  +--------->+ App Server |
-| (Generator)|  insert | (DB Table)|  1000    | (in-memory |
-|            |         |           |  keys    |   buffer)  |
-+------------+         +-----------+         +------------+
-                                                   |
-                                                   v
-                                            Assign next key
-                                            from local buffer
+```mermaid
+flowchart LR
+    KGS["KGS<br/>(Generator)"] -->|"batch insert"| Pool["Key Pool<br/>(DB Table)"]
+    Pool -->|"fetch 1000 keys"| App["App Server<br/>(in-memory buffer)"]
+    App --> Assign["Assign next key<br/>from local buffer"]
 ```
 
 **Key Pool Schema:**
@@ -532,39 +510,24 @@ same long URL.
 
 ### 6.1 URL Shortening Flow
 
-```
-Client                App Server              Cache           Database          KGS
-  |                       |                     |                |               |
-  |  POST /api/v1/shorten |                     |                |               |
-  |---------------------> |                     |                |               |
-  |                       |                     |                |               |
-  |                       | Validate long_url   |                |               |
-  |                       |--+                  |                |               |
-  |                       |  | (format, length, |                |               |
-  |                       |  |  blocklist check)|                |               |
-  |                       |<-+                  |                |               |
-  |                       |                     |                |               |
-  |                       | Check dedup: lookup by long_url_hash |               |
-  |                       |------------------------------------>|               |
-  |                       |                     |                |               |
-  |                       |  (If exists, return existing short_key)              |
-  |                       |<------------------------------------|               |
-  |                       |                     |                |               |
-  |                       | If new: get next key from local buffer               |
-  |                       |--+                  |                |               |
-  |                       |  | (if buffer empty)|                |               |
-  |                       |  |  fetch batch ----|----------------|------>|       |
-  |                       |  |  <---------------|----------------|-------|       |
-  |                       |<-+                  |                |               |
-  |                       |                     |                |               |
-  |                       | INSERT into urls    |                |               |
-  |                       |------------------------------------>|               |
-  |                       |                     |                |               |
-  |                       | Write to cache      |                |               |
-  |                       |-------------------->|                |               |
-  |                       |                     |                |               |
-  |  201 Created          |                     |                |               |
-  |<--------------------- |                     |                |               |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant App as "App Server"
+    participant Cache
+    participant DB as "Database"
+    participant KGS
+
+    Client->>App: POST /api/v1/shorten
+    App->>App: Validate long_url (format, length, blocklist check)
+    App->>DB: Check dedup: lookup by long_url_hash
+    DB-->>App: Return existing short_key if exists
+    Note over App,KGS: If new: get next key from local buffer (fetch batch from KGS if empty)
+    App->>KGS: Fetch batch (if buffer empty)
+    KGS-->>App: Return key batch
+    App->>DB: INSERT into urls
+    App->>Cache: Write to cache
+    App-->>Client: 201 Created
 ```
 
 **Step-by-step:**
@@ -584,33 +547,21 @@ Client                App Server              Cache           Database          
 
 ### 6.2 URL Redirect Flow
 
-```
-Client                App Server              Cache           Database
-  |                       |                     |                |
-  |  GET /abc1234         |                     |                |
-  |---------------------> |                     |                |
-  |                       |                     |                |
-  |                       | Lookup in cache     |                |
-  |                       |-------------------->|                |
-  |                       |                     |                |
-  |                       |    (cache hit?)     |                |
-  |                       |<--------------------|                |
-  |                       |                     |                |
-  |                       | If miss: query DB   |                |
-  |                       |------------------------------------>|
-  |                       |                     |                |
-  |                       |   long_url          |                |
-  |                       |<------------------------------------|
-  |                       |                     |                |
-  |                       | Populate cache      |                |
-  |                       |-------------------->|                |
-  |                       |                     |                |
-  |                       | Emit click event to Kafka (async)   |
-  |                       |--+                  |                |
-  |                       |  |                  |                |
-  |  302 Found            |<-+                  |                |
-  |  Location: long_url   |                     |                |
-  |<--------------------- |                     |                |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant App as "App Server"
+    participant Cache
+    participant DB as "Database"
+
+    Client->>App: GET /abc1234
+    App->>Cache: Lookup in cache
+    Cache-->>App: Cache hit or miss
+    App->>DB: If miss: query DB
+    DB-->>App: Return long_url
+    App->>Cache: Populate cache
+    App->>App: Emit click event to Kafka (async)
+    App-->>Client: 302 Found (Location: long_url)
 ```
 
 **Step-by-step:**
@@ -744,22 +695,14 @@ Example with 256 shards:
 - Hash-based distributes data uniformly (no hot shards from alphabetical clustering).
 - The short_key is the primary lookup key for redirects, making it the ideal shard key.
 
-```
-                        +-------------------+
-                        |  Shard Router     |
-                        |  (hash % N)      |
-                        +---+---+---+---+---+
-                            |   |   |   |
-              +-------------+   |   |   +-------------+
-              |                 |   |                 |
-         +----+----+      +----+----+           +----+----+
-         | Shard 0 |      | Shard 1 |    ...    | Shard N |
-         | Primary |      | Primary |           | Primary |
-         +----+----+      +----+----+           +----+----+
-              |                 |                     |
-         +----+----+      +----+----+           +----+----+
-         | Replica |      | Replica |           | Replica |
-         +---------+      +---------+           +---------+
+```mermaid
+flowchart TD
+    Router["Shard Router<br/>(hash % N)"] --> S0["Shard 0 Primary"]
+    Router --> S1["Shard 1 Primary"]
+    Router --> SN["Shard N Primary"]
+    S0 --> R0["Replica"]
+    S1 --> R1["Replica"]
+    SN --> RN["Replica"]
 ```
 
 **Shard Count Planning:**
@@ -790,20 +733,13 @@ Read path:   App Server -> Shard Replica (from any replica)
 
 ### 7.3 Cache Layer Scaling
 
-```
-Redis Cluster Topology:
-
-  +----------+  +----------+  +----------+
-  | Master 1 |  | Master 2 |  | Master 3 |
-  | 0-5460   |  | 5461-10922| |10923-16383|  (hash slots)
-  +----+-----+  +----+-----+  +----+-----+
-       |              |              |
-  +----+-----+  +----+-----+  +----+-----+
-  | Replica 1|  | Replica 2|  | Replica 3|
-  +----------+  +----------+  +----------+
-
-Total: 6 nodes, ~70 GB distributed across 3 masters
-Each master: ~23 GB
+```mermaid
+flowchart TD
+    subgraph Redis["Redis Cluster Topology (6 nodes, ~70 GB across 3 masters, ~23 GB/master)"]
+        M1["Master 1<br/>Slots 0-5460"] --> R1["Replica 1"]
+        M2["Master 2<br/>Slots 5461-10922"] --> R2["Replica 2"]
+        M3["Master 3<br/>Slots 10923-16383"] --> R3["Replica 3"]
+    end
 ```
 
 **Redis Cluster** uses 16384 hash slots distributed across master nodes. Adding more masters
@@ -815,19 +751,16 @@ is seamless -- Redis rebalances slots automatically.
 
 Click tracking must not add latency to the redirect path.
 
-```
-App Server                Kafka               Consumer           ClickHouse
-    |                       |                     |                  |
-    | Publish click event   |                     |                  |
-    | (fire-and-forget)     |                     |                  |
-    |---------------------->|                     |                  |
-    |                       |  Consume batch      |                  |
-    |                       |-------------------->|                  |
-    |                       |                     | Batch insert     |
-    |                       |                     |----------------->|
-    |                       |                     |                  |
-    |                       |                     | (every 5 sec or  |
-    |                       |                     |  1000 events)    |
+```mermaid
+sequenceDiagram
+    participant App as "App Server"
+    participant Kafka
+    participant Consumer
+    participant CH as "ClickHouse"
+
+    App->>Kafka: Publish click event (fire-and-forget)
+    Kafka->>Consumer: Consume batch
+    Consumer->>CH: Batch insert (every 5 sec or 1000 events)
 ```
 
 **Pipeline Details:**
@@ -864,53 +797,26 @@ App Server                Kafka               Consumer           ClickHouse
 
 ### 8.1 Multi-Region Deployment
 
-```
-                           +------------------+
-                           |   Global DNS     |
-                           |   (Route53 /     |
-                           |    Cloudflare)   |
-                           +--------+---------+
-                                    |
-                          +---------+---------+
-                          |                   |
-                   +------+------+     +------+------+
-                   |  CDN Edge   |     |  CDN Edge   |
-                   | (US-East)   |     | (EU-West)   |
-                   +------+------+     +------+------+
-                          |                   |
-              +-----------+-----------+       |
-              |                       |       |
-      +-------+--------+   +---------+-------+--------+
-      |  US-East-1     |   |  EU-West-1               |
-      |  Data Center   |   |  Data Center              |
-      |                |   |                           |
-      | +------------+ |   | +------------+            |
-      | | LB (ALB)   | |   | | LB (ALB)   |           |
-      | +-----+------+ |   | +-----+------+           |
-      |       |         |   |       |                  |
-      | +-----+------+ |   | +-----+------+           |
-      | | App Servers | |   | | App Servers |          |
-      | | (ECS/K8s)  | |   | | (ECS/K8s)  |          |
-      | | 10 instances| |   | | 10 instances|          |
-      | +-----+------+ |   | +-----+------+           |
-      |       |         |   |       |                  |
-      | +-----+------+ |   | +-----+------+           |
-      | | Redis      | |   | | Redis      |           |
-      | | Cluster    | |   | | Cluster    |           |
-      | +-----+------+ |   | +-----+------+           |
-      |       |         |   |       |                  |
-      | +-----+------+ |   | +-----+------+           |
-      | | DB Primary | |   | | DB Replica |           |
-      | | + Replicas | |   | | (read-only)|           |
-      | +------------+ |   | +------------+           |
-      +----------------+   +--------------------------+
-              |                        |
-              +----------+-------------+
-                         |
-                  +------+------+
-                  | Cross-Region|
-                  | Replication |
-                  +-------------+
+```mermaid
+flowchart TD
+    DNS["Global DNS<br/>(Route53 / Cloudflare)"] --> CDN_US["CDN Edge (US-East)"]
+    DNS --> CDN_EU["CDN Edge (EU-West)"]
+
+    subgraph US["US-East-1 Data Center"]
+        LB_US["LB (ALB)"] --> App_US["App Servers (ECS/K8s)<br/>10 instances"]
+        App_US --> Redis_US["Redis Cluster"]
+        Redis_US --> DB_US["DB Primary + Replicas"]
+    end
+
+    subgraph EU["EU-West-1 Data Center"]
+        LB_EU["LB (ALB)"] --> App_EU["App Servers (ECS/K8s)<br/>10 instances"]
+        App_EU --> Redis_EU["Redis Cluster"]
+        Redis_EU --> DB_EU["DB Replica (read-only)"]
+    end
+
+    CDN_US --> LB_US
+    CDN_EU --> LB_EU
+    DB_US <-->|"Cross-Region Replication"| DB_EU
 ```
 
 ### 8.2 Deployment Strategy
@@ -1048,19 +954,13 @@ Hot URL mitigation stack:
 
 **Real-time analytics pipeline:**
 
-```
-Click event -> Kafka topic "clicks"
-                    |
-            +-------+-------+
-            |               |
-     Stream processor    Batch processor
-     (Flink / Kafka     (Spark, hourly)
-      Streams)                |
-            |                 v
-            v           Data warehouse
-     Real-time           (aggregated)
-     dashboard
-     (last 5 min)
+```mermaid
+flowchart TD
+    Click["Click Event"] --> Kafka["Kafka topic: clicks"]
+    Kafka --> Stream["Stream Processor<br/>(Flink / Kafka Streams)"]
+    Kafka --> Batch["Batch Processor<br/>(Spark, hourly)"]
+    Stream --> Dash["Real-Time Dashboard<br/>(last 5 min)"]
+    Batch --> DW["Data Warehouse<br/>(aggregated)"]
 ```
 
 **Analytics data model in ClickHouse:**
@@ -1213,38 +1113,24 @@ ORDER BY clicks DESC;
 
 ## Appendix A: Full System Summary
 
-```
-+-------------------------------------------------------------------+
-|                     URL SHORTENER ARCHITECTURE                     |
-+-------------------------------------------------------------------+
-|                                                                   |
-|  WRITE PATH (1,200 req/s)                                        |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     |
-|  Client -> LB -> App Server -> Validate URL                      |
-|                             -> Check dedup (SHA-256 hash)         |
-|                             -> Get key from KGS buffer            |
-|                             -> INSERT into DB (sharded)           |
-|                             -> SET in Redis cache                 |
-|                             <- Return short URL                   |
-|                                                                   |
-|  READ PATH (120,000 req/s)                                       |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     |
-|  Client -> CDN (301 only) -> LB -> App Server                    |
-|                                  -> GET from Redis (80-90% hit)   |
-|                                  -> GET from DB replica (fallback)|
-|                                  -> Publish click to Kafka        |
-|                                  <- 302 Redirect                  |
-|                                                                   |
-|  ANALYTICS PATH (async)                                           |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     |
-|  Kafka -> Consumer -> Batch INSERT into ClickHouse                |
-|                    -> Real-time aggregation (materialized views)   |
-|                                                                   |
-|  CLEANUP (periodic)                                               |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     |
-|  Cron -> DELETE expired URLs -> Return keys to KGS pool           |
-|                                                                   |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Write["WRITE PATH (1,200 req/s)"]
+        W1["Client -> LB -> App Server"] --> W2["Validate URL &amp; Check Dedup (SHA-256)"]
+        W2 --> W3["Get key from KGS buffer"]
+        W3 --> W4["INSERT into Sharded DB &amp; SET in Redis"]
+        W4 --> W5["Return short URL"]
+    end
+    subgraph Read["READ PATH (120,000 req/s)"]
+        R1["Client -> CDN (301 only) -> LB -> App Server"] --> R2["GET from Redis (80-90% hit) or DB Replica fallback"]
+        R2 --> R3["Publish click to Kafka &amp; Return 302 Redirect"]
+    end
+    subgraph Analytics["ANALYTICS PATH (async)"]
+        A1["Kafka -> Consumer"] --> A2["Batch INSERT into ClickHouse &amp; Real-time Materialized Views"]
+    end
+    subgraph Cleanup["CLEANUP (periodic)"]
+        C1["Cron -> DELETE expired URLs -> Return keys to KGS pool"]
+    end
 ```
 
 ## Appendix B: Key Metrics to Monitor

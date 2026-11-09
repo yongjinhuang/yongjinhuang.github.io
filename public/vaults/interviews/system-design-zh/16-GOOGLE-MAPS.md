@@ -197,68 +197,22 @@ URL 模式：
 
 ### 2.4 瓦片缓存策略
 
-```
-瓦片服务管线：
-
-  客户端请求: GET /tiles/15/5245/12661.pbf
-       │
-       ▼
-  ┌──────────────┐   缓存命中 (99%)     ┌─────────────┐
-  │  CDN 边缘    │ ◄──────────────────── │  CDN 缓存    │
-  │  (Cloudflare/│                       │  (每 POP)    │
-  │   Fastly)    │ ──────────────────►   └─────────────┘
-  └──────┬───────┘   缓存未命中 (1%)
-         │
-         ▼
-  ┌──────────────┐   缓存命中 (90%)     ┌─────────────┐
-  │  瓦片缓存    │ ◄──────────────────── │  Redis/      │
-  │  （区域级）  │                       │  Memcached   │
-  └──────┬───────┘   缓存未命中 (10%)   └─────────────┘
-         │
-         ▼
-  ┌──────────────┐
-  │  瓦片存储    │   对象存储中的预渲染瓦片
-  │  (S3/GCS)    │   或按需瓦片生成
-  └──────┬───────┘
-         │  （仅当未预渲染时）
-         ▼
-  ┌──────────────┐
-  │  瓦片渲染    │   从原始地图数据渲染
-  │  服务        │   （仅用于动态/自定义瓦片）
-  └──────────────┘
-
-缓存 TTL 策略：
-  - 缩放 0-10：   30 天  （洲/国家很少变化）
-  - 缩放 11-15：  7 天   （城市级，偶尔道路变化）
-  - 缩放 16-20：  1 天   （街道级，更新更频繁）
-  - 交通瓦片：    60 秒  （实时叠加层）
+```mermaid
+flowchart TD
+    Req["Client Request: GET /tiles/15/5245/12661.pbf"] --> Edge["CDN Edge<br/>(Cloudflare / Fastly)"]
+    Edge <-->|"Cache Hit (99%)"| CDNCache["CDN Cache (per-PoP)"]
+    Edge -->|"Cache Miss (1%)"| RegCache["Tile Cache (Regional)"]
+    RegCache <-->|"Cache Hit (90%)"| Redis["Redis / Memcached"]
+    RegCache -->|"Cache Miss (10%)"| Store["Tile Store (S3 / GCS)<br/>Pre-rendered tiles"]
+    Store -->|"If not pre-rendered"| Render["Tile Render Service<br/>(Dynamic / custom tiles)"]
 ```
 
 ### 2.5 地图数据来源
 
-```
-数据来源管线：
-
-  ┌─────────────────┐
-  │ 卫星             │───┐
-  │ 影像（航拍）     │   │
-  └─────────────────┘   │
-  ┌─────────────────┐   │     ┌──────────────┐     ┌──────────────┐
-  │ 街道级           │───┼────►│  地图数据     │────►│  瓦片        │
-  │ (Street View)    │   │     │  管线         │     │  渲染        │
-  └─────────────────┘   │     │  （处理、     │     │  引擎        │
-  ┌─────────────────┐   │     │   融合、       │     └──────────────┘
-  │ 政府/            │───┤     │   验证）       │
-  │ 公共数据         │   │     └──────────────┘
-  └─────────────────┘   │
-  ┌─────────────────┐   │
-  │ 用户             │───┤
-  │ 贡献             │   │
-  └─────────────────┘   │
-  ┌─────────────────┐   │
-  │ 商业             │───┘
-  │ 合作伙伴         │
-  └─────────────────┘
+```mermaid
+flowchart LR
+    S1["Satellite Imagery (aerial)"] & S2["Street-Level (Street View)"] & S3["Government / Public Data"] & S4["User Contributions"] & S5["Commercial Partners"] --> Pipe["Map Data Pipeline<br/>(processing, conflation, validation)"]
+    Pipe --> Engine["Tile Rendering Engine"]
 ```
 
 ---
@@ -738,57 +692,17 @@ ALT 算法：
 
 ### 5.2 交通数据管线
 
-```
-交通数据管线：
-
-  ┌─────────────┐   GPS 更新       ┌─────────────┐
-  │  5亿+       │   (lat, lng,     │  摄入        │
-  │  移动       │──────────────────►│  网关        │
-  │  设备       │   speed, heading │  (负载       │
-  └─────────────┘   每 3 秒 1 次)  │  均衡器)     │
-                                    └──────┬──────┘
-                                           │
-                    ┌──────────────────────┐│
-                    │                      ▼│
-              ┌─────┴──────┐      ┌────────┴───────┐
-              │  Kafka     │      │  Kafka         │
-              │  集群      │◄─────│  按 geo-hash   │
-              │  (原始 GPS)│      │  分区          │
-              └─────┬──────┘      └────────────────┘
-                    │
-         ┌──────────┼──────────┐
-         ▼          ▼          ▼
-  ┌────────────┐ ┌────────────┐ ┌────────────┐
-  │  Flink/    │ │  Flink/    │ │  Flink/    │
-  │  Spark     │ │  Spark     │ │  Spark     │
-  │  (区域 1)  │ │  (区域 2)  │ │  (区域 N)  │
-  │            │ │            │ │            │
-  │  Map Match │ │  Map Match │ │  Map Match │
-  │  聚合      │ │  聚合      │ │  聚合      │
-  │  分类      │ │  分类      │ │  分类      │
-  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
-        │              │              │
-        └──────────┬───┘──────────────┘
-                   ▼
-         ┌─────────────────┐
-         │  交通状态        │
-         │  存储            │
-         │  (Redis 集群)    │
-         │                  │
-         │  key: segment_id │
-         │  val: speed,     │
-         │       confidence,│
-         │       timestamp  │
-         └────────┬────────┘
-                  │
-        ┌─────────┼─────────┐
-        ▼         ▼         ▼
-  ┌──────────┐ ┌──────────┐ ┌──────────┐
-  │ 路由     │ │ 交通     │ │ 交通     │
-  │ 服务     │ │ 瓦片     │ │ 历史     │
-  │ （权重   │ │ 渲染器   │ │ 存储     │
-  │  更新）  │ │ （颜色） │ │ (HDFS)   │
-  └──────────┘ └──────────┘ └──────────┘
+```mermaid
+flowchart TD
+    Dev["500M+ Mobile Devices<br/>(GPS updates: lat, lng, speed, heading every 3s)"] --> GW["Ingestion Gateway<br/>(Load Balancer)"]
+    GW --> Kafka["Kafka Cluster<br/>(Raw GPS partitioned by geohash)"]
+    Kafka --> F1["Flink / Spark (Region 1)<br/>Map Match, Aggregate, Classify"]
+    Kafka --> F2["Flink / Spark (Region 2)<br/>Map Match, Aggregate, Classify"]
+    Kafka --> FN["Flink / Spark (Region N)<br/>Map Match, Aggregate, Classify"]
+    F1 & F2 & FN --> Store["Traffic State Store (Redis Cluster)<br/>key: segment_id -> speed, confidence, timestamp"]
+    Store --> Route["Routing Service<br/>(weight update)"]
+    Store --> Tile["Traffic Tile Renderer<br/>(colors)"]
+    Store --> Hist["Traffic History Store<br/>(HDFS)"]
 ```
 
 ### 5.3 Map Matching
@@ -893,70 +807,25 @@ Map Matching 问题：
 
 ## 6. 高层架构
 
-```
-Google Maps 系统架构：
+```mermaid
+flowchart TD
+    subgraph Clients["CLIENTS"]
+        C1["Mobile App"]
+        C2["Web App"]
+        C3["Embed iFrame"]
+        C4["Maps SDK (3rd party)"]
+    end
+    C1 & C2 & C3 & C4 --> CDN["CDN (Tile Serving - Cloudflare / Fastly / Akamai)<br/>Serves 99%+ of tile requests from edge"]
+    CDN -->|"cache miss"| TileOrigin["Tile Origin Server"]
+    C1 & C2 & C3 & C4 --> APIGW["API Gateway (REST / gRPC)"]
+    C1 & C2 --> WSGW["WebSocket Gateway (navigation)"]
 
-  ┌─────────────────────────────────────────────────────────────────┐
-  │                          客户端                                 │
-  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │
-  │  │ 移动     │  │ Web      │  │ 嵌入     │  │ Maps SDK     │   │
-  │  │ 应用     │  │ 应用     │  │ iFrame   │  │ （第三方）   │   │
-  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────┬───────┘   │
-  └───────┼──────────────┼────────────┼────────────────┼───────────┘
-          │              │            │                │
-          ▼              ▼            ▼                ▼
-  ┌─────────────────────────────────────────────────────────────────┐
-  │                     CDN（瓦片服务）                              │
-  │              Cloudflare / Fastly / Akamai                       │
-  │         （从边缘服务 99%+ 的瓦片请求）                          │
-  └────────────────────────────┬────────────────────────────────────┘
-                               │ （仅缓存未命中）
-          ┌────────────────────┼────────────────────┐
-          ▼                    ▼                    ▼
-  ┌──────────────┐    ┌──────────────┐    ┌──────────────────┐
-  │  瓦片        │    │  API 网关    │    │  WebSocket       │
-  │  源服务器    │    │  (REST/gRPC) │    │  网关            │
-  │              │    │              │    │  （导航）        │
-  └──────────────┘    └──────┬───────┘    └────────┬─────────┘
-                             │                     │
-          ┌──────────────────┼─────────────────────┤
-          │                  │                     │
-          ▼                  ▼                     ▼
-  ┌──────────────┐  ┌──────────────┐      ┌──────────────┐
-  │  搜索 /      │  │  路由        │      │  导航        │
-  │  Geocoding   │  │  服务        │      │  服务        │
-  │  服务        │  │              │      │              │
-  └──────┬───────┘  └──────┬───────┘      └──────┬───────┘
-         │                 │                     │
-         ▼                 ▼                     ▼
-  ┌──────────────┐  ┌──────────────┐      ┌──────────────┐
-  │  地点 DB     │  │  图存储      │      │  会话        │
-  │  (Elastic-   │  │  （内存中    │      │  存储        │
-  │   search)    │  │   CH 图）    │      │  (Redis)     │
-  └──────────────┘  └──────┬───────┘      └──────────────┘
-                           │
-                           ▼
-                    ┌──────────────┐
-                    │  交通        │
-                    │  服务        │
-                    └──────┬───────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-       ┌───────────┐ ┌───────────┐ ┌───────────┐
-       │  交通     │ │  交通     │ │  ETA ML   │
-       │  Redis    │ │  管线     │ │  模型     │
-       │  （实时） │ │  (Kafka + │ │  服务     │
-       │           │ │   Flink)  │ │           │
-       └───────────┘ └─────┬─────┘ └───────────┘
-                           │
-                           ▼
-                    ┌───────────┐
-                    │  GPS 数据 │
-                    │  摄入     │
-                    │  （来自   │
-                    │  设备）   │
-                    └───────────┘
+    APIGW --> SearchSvc["Search / Geocoding Service"] --> PlacesDB["Places DB (Elasticsearch)"]
+    APIGW --> RouteSvc["Routing Service"] --> GraphStore["Graph Store (in-memory CH graph)"]
+    WSGW --> NavSvc["Navigation Service"] --> SessStore["Session Store (Redis)"]
+    GraphStore --> TrafficSvc["Traffic Service"]
+    TrafficSvc --> TrafficRedis["Traffic Redis (live)"] & TrafficPipe["Traffic Pipeline (Kafka + Flink)"] & ETAML["ETA ML Model Service"]
+    TrafficPipe --> GPSIngest["GPS Data Ingest (from devices)"]
 ```
 
 ### 6.1 服务职责
@@ -1272,66 +1141,33 @@ CREATE TABLE user_location_pings (
 
 ### 10.1 端到端导航序列
 
-```
-实时导航流程：
+```mermaid
+sequenceDiagram
+    participant C as "Client (Phone)"
+    participant GW as "API / WS Gateway"
+    participant S as "Routing & Navigation Services"
 
-  ┌──────────┐                    ┌──────────────┐         ┌──────────────┐
-  │  客户端  │                    │  API 网关    │         │  服务        │
-  │  （手机）│                    │              │         │              │
-  └────┬─────┘                    └──────┬───────┘         └──────┬───────┘
-       │                                 │                        │
-       │  1. POST /route                 │                        │
-       │    {origin, destination,        │                        │
-       │     mode: "driving"}            │                        │
-       │ ───────────────────────────────►│                        │
-       │                                 │  2. 计算路线           │
-       │                                 │ ──────────────────────►│
-       │                                 │    （路由服务          │
-       │                                 │     + 交通服务）       │
-       │                                 │                        │
-       │                                 │  3. 路线响应           │
-       │  4. 带折线、步骤、              │◄────────────────────── │
-       │     ETA、距离的路线             │                        │
-       │◄─────────────────────────────── │                        │
-       │                                 │                        │
-       │  5. 用户点击"开始导航"          │                        │
-       │                                 │                        │
-       │  6. WS 连接 /navigate           │                        │
-       │    {route_id, session_id}       │                        │
-       │ ═══════════════════════════════►│  7. 创建导航会话       │
-       │    (WebSocket 升级)             │ ──────────────────────►│
-       │                                 │    （导航服务）        │
-       │                                 │                        │
-       │  ┌────── 导航循环 ──────┐       │                        │
-       │  │                      │       │                        │
-       │  │ 8. GPS 更新（每 1-3秒）      │                        │
-       │  │   {lat, lng, speed, heading} │                        │
-       │  │ ════════════════════════════►│  9. 处理位置           │
-       │  │                      │       │ ──────────────────────►│
-       │  │                      │       │    - Map match         │
-       │  │                      │       │    - 进度跟踪         │
-       │  │                      │       │    - 偏离路线检查     │
-       │  │                      │       │    - 下一条指令       │
-       │  │                      │       │                        │
-       │  │ 10. 导航更新         │       │  （如果在路线上）     │
-       │  │   {next_turn, distance,      │◄────────────────────── │
-       │  │    updated_eta}      │       │                        │
-       │  │◄════════════════════════════ │                        │
-       │  │                      │       │                        │
-       │  │ 11.（如果偏离路线或  │       │                        │
-       │  │     交通重新路由）   │       │  12. 重新计算         │
-       │  │                      │       │ ──────────────────────►│
-       │  │ 13. 重新路由推送     │       │                        │
-       │  │   {new_route, reason}│       │◄────────────────────── │
-       │  │◄════════════════════════════ │                        │
-       │  │                      │       │                        │
-       │  └──────────────────────┘       │                        │
-       │                                 │                        │
-       │  14. 到达目的地                 │                        │
-       │  15. WS 关闭                    │                        │
-       │ ═══════════════════════════════►│  16. 结束会话         │
-       │                                 │ ──────────────────────►│
-       │                                 │                        │
+    C->>GW: 1. POST /route {origin, destination, mode: "driving"}
+    GW->>S: 2. Calculate route (Routing + Traffic Service)
+    S-->>GW: 3. Route response
+    GW-->>C: 4. Route with polyline, steps, ETA, distance
+    Note over C: 5. User taps "Start Navigation"
+    C->>GW: 6. WS connect /navigate {route_id, session_id}
+    GW->>S: 7. Create nav session (Navigation Svc)
+    loop Navigation Loop (every 1-3s)
+        C->>GW: 8. GPS update {lat, lng, speed, heading}
+        GW->>S: 9. Process position (Map match, progress, off-route check)
+        alt On route
+            S-->>GW: Next turn, distance, updated ETA
+            GW-->>C: 10. Navigation update
+        else Off-route or traffic reroute
+            GW->>S: 12. Recalculate route
+            S-->>GW: New route
+            GW-->>C: 13. REROUTE push {new_route, reason}
+        end
+    end
+    C->>GW: 14. Arrive at destination & 15. WS close
+    GW->>S: 16. End session
 ```
 
 ### 10.2 逐向指令生成
@@ -1630,70 +1466,23 @@ CREATE TABLE user_location_pings (
 
 ## 13. 部署架构
 
-```
-全球部署：
-
-  ┌─────────────────────────────────────────────────────────────────┐
-  │                      全局层                                     │
-  │                                                                 │
-  │  ┌───────────────────────────────────────────────────────────┐ │
-  │  │  全局 CDN（200+ 个 PoP）                                  │ │
-  │  │  - 地图瓦片（矢量 + 光栅）                               │ │
-  │  │  - 静态资源                                               │ │
-  │  │  - API 边缘缓存（热门路线）                               │ │
-  │  └───────────────────────────────────────────────────────────┘ │
-  │                                                                 │
-  │  ┌───────────────────────────────────────────────────────────┐ │
-  │  │  全局 DNS (GeoDNS)                                        │ │
-  │  │  - 将用户路由到最近的区域集群                             │ │
-  │  └───────────────────────────────────────────────────────────┘ │
-  └─────────────────────────────────────────────────────────────────┘
-
-  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-  │  区域：美国东部 │  │  区域：欧洲西部 │  │  区域：亚太     │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ API 网关   │ │  │  │ API 网关   │ │  │  │ API 网关   │ │
-  │  └─────┬──────┘ │  │  └─────┬──────┘ │  │  └─────┬──────┘ │
-  │        │        │  │        │        │  │        │        │
-  │  ┌─────┴──────┐ │  │  ┌─────┴──────┐ │  │  ┌─────┴──────┐ │
-  │  │ 路由       │ │  │  │ 路由       │ │  │  │ 路由       │ │
-  │  │ （美国图） │ │  │  │ （欧洲图） │ │  │  │ （亚太图） │ │
-  │  │ 30 节点    │ │  │  │ 25 节点    │ │  │  │ 35 节点    │ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ 交通       │ │  │  │ 交通       │ │  │  │ 交通       │ │
-  │  │ 管线       │ │  │  │ 管线       │ │  │  │ 管线       │ │
-  │  │ Kafka+Flink│ │  │  │ Kafka+Flink│ │  │  │ Kafka+Flink│ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ 搜索       │ │  │  │ 搜索       │ │  │  │ 搜索       │ │
-  │  │ (ES 集群   │ │  │  │ (ES 集群   │ │  │  │ (ES 集群   │ │
-  │  │) 美国地点  │ │  │  │) 欧洲地点  │ │  │  │) 亚太地点  │ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ 导航       │ │  │  │ 导航       │ │  │  │ 导航       │ │
-  │  │ (WebSocket)│ │  │  │ (WebSocket)│ │  │  │ (WebSocket)│ │
-  │  │ 50 节点    │ │  │  │ 40 节点    │ │  │  │ 60 节点    │ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐ │  │  ┌────────────┐ │  │  ┌────────────┐ │
-  │  │ 瓦片源站  │ │  │  │ 瓦片源站  │ │  │  │ 瓦片源站  │ │
-  │  │ (S3 / GCS)│ │  │  │ (S3 / GCS)│ │  │  │ (S3 / GCS)│ │
-  │  └────────────┘ │  │  └────────────┘ │  │  └────────────┘ │
-  └─────────────────┘  └─────────────────┘  └─────────────────┘
-
-  跨区域覆盖层：
-    ┌──────────────────────────────────────────────────┐
-    │  跨区域路由覆盖图                                 │
-    │  处理跨区域路线（例如，从法国                      │
-    │  开车到德国）                                      │
-    │  小图：区域边界约 ~10K 个节点                      │
-    │  复制到所有区域                                    │
-    └──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Global["GLOBAL LAYER"]
+        CDN["Global CDN (200+ PoPs)<br/>Map tiles (vector + raster), static assets, popular routes"]
+        DNS["Global DNS (GeoDNS)<br/>Route users to nearest regional cluster"]
+    end
+    DNS --> US & EU & APAC
+    subgraph US["REGION: US-EAST"]
+        US_S["API Gateway -> Routing (US graph, 30 nodes) | Traffic Pipeline (Kafka+Flink)<br/>| Search (ES US places) | Navigation (WS, 50 nodes) | Tile Origin (S3/GCS)"]
+    end
+    subgraph EU["REGION: EU-WEST"]
+        EU_S["API Gateway -> Routing (EU graph, 25 nodes) | Traffic Pipeline (Kafka+Flink)<br/>| Search (ES EU places) | Navigation (WS, 40 nodes) | Tile Origin (S3/GCS)"]
+    end
+    subgraph APAC["REGION: APAC"]
+        AP_S["API Gateway -> Routing (APAC graph, 35 nodes) | Traffic Pipeline (Kafka+Flink)<br/>| Search (ES APAC places) | Navigation (WS, 60 nodes) | Tile Origin (S3/GCS)"]
+    end
+    US & EU & APAC <--> Overlay["Cross-Region Overlay Graph<br/>(~10K boundary nodes replicated to all regions)"]
 ```
 
 ### 13.1 故障处理

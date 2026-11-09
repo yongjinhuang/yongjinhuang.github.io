@@ -33,28 +33,17 @@ preventing resource starvation, and managing costs.
 
 ### Where to Place the Rate Limiter
 
-```
-Option A: Client-Side
-+--------+     +-----------+     +--------+
-| Client |---->| Rate Limiter |-->| Server |
-| (SDK)  |     | (in-client)   | | (API)  |
-+--------+     +-----------+     +--------+
-  * Easy to implement, but unreliable (clients can bypass)
-
-Option B: Server-Side
-+--------+     +--------+     +-----------+
-| Client |---->| Server |---->| Rate      |
-|        |     | (API)  |     | Limiter   |
-+--------+     +--------+     +-----------+
-  * Reliable, but adds latency and couples to app code
-
-Option C: Middleware / API Gateway (Recommended)
-+--------+     +-------------+     +--------+
-| Client |---->| API Gateway |---->| Server |
-|        |     | (Rate Limit)|     | (API)  |
-+--------+     +-------------+     +--------+
-  * Decoupled, centralized, easy to manage
-  * Cloud providers: AWS API Gateway, Kong, Nginx, Envoy
+```mermaid
+flowchart TD
+    subgraph OptA["Option A: Client-Side (Easy, unreliable - clients can bypass)"]
+        CA["Client (SDK)"] --> RLA["Rate Limiter (in-client)"] --> SA["Server (API)"]
+    end
+    subgraph OptB["Option B: Server-Side (Reliable, couples to app code)"]
+        CB["Client"] --> SB["Server (API)"] --> RLB["Rate Limiter"]
+    end
+    subgraph OptC["Option C: Middleware / API Gateway (Recommended: AWS API GW, Kong, Nginx, Envoy)"]
+        CC["Client"] --> GWC["API Gateway (Rate Limit)"] --> SC["Server (API)"]
+    end
 ```
 
 **Recommendation**: Use middleware/API gateway for most scenarios. It decouples
@@ -523,48 +512,15 @@ Recommendation by Use Case:
 
 ## 3. High-Level Architecture
 
-```
-                           High-Level Architecture
-+--------+     +---------------------------------------------------+
-|        |     |              API Gateway / LB                      |
-| Client +---->+  +--------------------------------------------+   |
-|  (App) |     |  |           Rate Limiter Middleware           |   |
-|        |     |  |                                            |   |
-+--------+     |  |  1. Extract client ID (user, IP, API key)  |   |
-               |  |  2. Fetch rules from Rules Engine          |   |
-               |  |  3. Check counter in Redis                 |   |
-               |  |  4. Allow or reject (429)                  |   |
-               |  |  5. Set response headers                   |   |
-               |  +-----+------------------+-------------------+   |
-               |        |                  |                       |
-               +--------+------------------+-----------------------+
-                        |                  |
-                 +------v------+    +------v------+
-                 |             |    |             |
-                 |   Redis     |    |   Rules     |
-                 |   Cluster   |    |   Engine    |
-                 |             |    |   (Config)  |
-                 | - Counters  |    | - YAML/JSON |
-                 | - Timestamps|    | - Per-API   |
-                 | - Buckets   |    | - Per-tier  |
-                 +-------------+    +-------------+
-                        |
-               +--------v---------+
-               |                  |
-               |   App Servers    |
-               |   (Backend)      |
-               |                  |
-               +------------------+
-
-Request Flow:
-=============
-  1. Client sends request to API Gateway
-  2. Rate Limiter middleware intercepts
-  3. Extracts identifier (user ID, IP, API key)
-  4. Looks up applicable rules from Rules Engine
-  5. Checks/updates counter in Redis (atomic Lua script)
-  6. If allowed: forward to App Server, set headers
-  7. If rejected: return 429 with Retry-After header
+```mermaid
+flowchart TD
+    Client["Client (App)"] --> RLM
+    subgraph GW["API Gateway / Load Balancer"]
+        RLM["Rate Limiter Middleware<br/>1. Extract client ID (user, IP, API key)<br/>2. Fetch rules from Rules Engine<br/>3. Check counter in Redis (Lua)<br/>4. Allow or reject (429)<br/>5. Set response headers"]
+    end
+    RLM --> Rules["Rules Engine (Config)<br/>- YAML/JSON<br/>- Per-API / Per-tier"]
+    RLM --> Redis["Redis Cluster<br/>- Counters<br/>- Timestamps<br/>- Buckets"]
+    RLM -->|"Allowed"| App["App Servers (Backend)"]
 ```
 
 ### Component Responsibilities
@@ -757,48 +713,16 @@ rules:
 
 ### 5.1 Rate Limiter Middleware Flow
 
-```
-                    Rate Limiter Middleware Flow
-                    ===========================
-
-  Incoming Request
-        |
-        v
-  +-----+------+
-  | Extract ID  |  (User ID from JWT, API Key, or IP address)
-  | & Endpoint  |
-  +-----+------+
-        |
-        v
-  +-----+------+
-  | Lookup      |  Check rules engine for applicable rules
-  | Rules       |  (most specific match wins: endpoint > tier > global)
-  +-----+------+
-        |
-        v
-  +-----+------+       +-------------+
-  | Check Rate  +------>|   Redis     |
-  | Limit       |<------+   Cluster   |
-  | (Lua Script)|       +-------------+
-  +-----+------+
-        |
-        +------+------+
-        |             |
-   [ALLOWED]     [REJECTED]
-        |             |
-        v             v
-  +-----+------+ +----+-------+
-  | Set Headers| | Return 429 |
-  | Forward to | | Set Headers|
-  | App Server | | Retry-After|
-  +-----+------+ +----+-------+
-        |             |
-        v             v
-  +-----+------+ +----+-------+
-  | App Server | | Client     |
-  | Processes  | | Receives   |
-  | Request    | | Error      |
-  +------------+ +------------+
+```mermaid
+flowchart TD
+    Req["Incoming Request"] --> Extract["Extract ID &amp; Endpoint<br/>(User ID from JWT, API Key, or IP address)"]
+    Extract --> Lookup["Lookup Rules<br/>(most specific match wins: endpoint &gt; tier &gt; global)"]
+    Lookup --> Check["Check Rate Limit<br/>(Lua Script)"]
+    Check <--> Redis["Redis Cluster"]
+    Check -->|"ALLOWED"| Allow["Set Headers &amp; Forward to App Server"]
+    Check -->|"REJECTED"| Reject["Return 429, Set Headers &amp; Retry-After"]
+    Allow --> App["App Server Processes Request"]
+    Reject --> Err["Client Receives Error"]
 ```
 
 ### 5.2 HTTP Response Headers
@@ -962,40 +886,26 @@ return { 1, remaining, math.ceil(reset_at - now) }
 
 ### 6.1 The Challenge
 
-```
-The Distributed Rate Limiting Problem
-======================================
-
-  User sends 100 requests. Limit = 100/min.
-  With N rate limiter instances and no coordination:
-
-  +--------+     +------------------+     +---------+
-  | Client |---->| Load Balancer    |---->| RL-1    |  sees 33 reqs
-  |        |     |                  |---->| RL-2    |  sees 33 reqs
-  |        |     |                  |---->| RL-3    |  sees 34 reqs
-  +--------+     +------------------+     +---------+
-
-  Each instance thinks user is under limit!
-  Actual: 100 requests allowed (should be limited after 100)
-  Worst case with local counters: N * limit requests could pass through
+```mermaid
+flowchart LR
+    Client["Client<br/>(100 reqs, Limit = 100/min)"] --> LB["Load Balancer"]
+    LB --> RL1["RL-1 (sees 33 reqs)"]
+    LB --> RL2["RL-2 (sees 33 reqs)"]
+    LB --> RL3["RL-3 (sees 34 reqs)"]
+    RL1 & RL2 & RL3 --> Note["Uncoordinated local counters:<br/>Worst case N * limit requests pass through"]
 ```
 
 ### 6.2 Solution 1: Centralized Data Store (Redis)
 
 **The primary and recommended solution.**
 
-```
-Centralized Redis Solution
-===========================
-
-  +--------+     +------------------+     +---------+
-  | Client |---->| Load Balancer    |---->| RL-1    |---+
-  |        |     |                  |---->| RL-2    |---+---> Redis Cluster
-  |        |     |                  |---->| RL-3    |---+     (single source
-  +--------+     +------------------+     +---------+         of truth)
-
-  All instances atomically read/write the same counter in Redis.
-  Lua scripts ensure no race conditions.
+```mermaid
+flowchart LR
+    Client["Client"] --> LB["Load Balancer"]
+    LB --> RL1["RL-1"]
+    LB --> RL2["RL-2"]
+    LB --> RL3["RL-3"]
+    RL1 & RL2 & RL3 -->|"Atomic Lua script"| Redis["Redis Cluster<br/>(Single Source of Truth)"]
 ```
 
 **Advantages**:
@@ -1012,22 +922,12 @@ Centralized Redis Solution
 
 ### 6.3 Solution 2: Sticky Sessions
 
-```
-Sticky Sessions (Session Affinity)
-====================================
-
-  +--------+     +------------------+     +---------+
-  | User A |---->|                  |---->| RL-1    |  All of User A's
-  |        |     |  Load Balancer   |     |         |  requests go here
-  +--------+     |  (hash by user)  |     +---------+
-                 |                  |
-  +--------+     |                  |     +---------+
-  | User B |---->|                  |---->| RL-2    |  All of User B's
-  |        |     |                  |     |         |  requests go here
-  +--------+     +------------------+     +---------+
-
-  Each rate limiter maintains local counters.
-  Hash(user_id) % N determines which instance handles the user.
+```mermaid
+flowchart LR
+    UA["User A"] --> LB["Load Balancer<br/>(hash(user_id) % N)"]
+    UB["User B"] --> LB
+    LB -->|"All User A requests"| RL1["RL-1 (Local Counters)"]
+    LB -->|"All User B requests"| RL2["RL-2 (Local Counters)"]
 ```
 
 **Advantages**:
@@ -1043,25 +943,10 @@ Sticky Sessions (Session Affinity)
 
 ### 6.4 Solution 3: Eventual Consistency with Synchronization
 
-```
-Eventual Consistency Model
-============================
-
-  +---------+         +---------+         +---------+
-  |  RL-1   |<------->|  RL-2   |<------->|  RL-3   |
-  | local:5 |  sync   | local:3 |  sync   | local:7 |
-  |         |  every  |         |  every  |         |
-  |         |  100ms  |         |  100ms  |         |
-  +---------+         +---------+         +---------+
-
-  Each instance:
-  1. Maintains a local counter
-  2. Periodically broadcasts delta to peers
-  3. Applies received deltas
-  4. Uses local estimate for decisions
-
-  Trade-off: May slightly exceed limits during sync gaps
-             but eliminates external dependency
+```mermaid
+flowchart LR
+    RL1["RL-1<br/>local: 5"] <-->|"sync delta every 100ms"| RL2["RL-2<br/>local: 3"]
+    RL2 <-->|"sync delta every 100ms"| RL3["RL-3<br/>local: 7"]
 ```
 
 **Advantages**:
@@ -1147,66 +1032,25 @@ return { allowed, math.floor(remaining), retry_after }
 
 ### 7.1 Redis Cluster for High Availability
 
-```
-Redis Cluster Setup (3 masters + 3 replicas)
-=============================================
-
-  +------------------+     +------------------+     +------------------+
-  |   Master 1       |     |   Master 2       |     |   Master 3       |
-  |   Slots 0-5460   |     |   Slots 5461-    |     |   Slots 10923-   |
-  |                  |     |   10922          |     |   16383          |
-  +--------+---------+     +--------+---------+     +--------+---------+
-           |                        |                        |
-           v                        v                        v
-  +--------+---------+     +--------+---------+     +--------+---------+
-  |   Replica 1      |     |   Replica 2      |     |   Replica 3      |
-  |   (failover)     |     |   (failover)     |     |   (failover)     |
-  +------------------+     +------------------+     +------------------+
-
-  Key Distribution:
-    rate_limit:user123  -> hash("user123") % 16384 -> slot 7832 -> Master 2
-    rate_limit:user456  -> hash("user456") % 16384 -> slot 2100 -> Master 1
-
-  Failover:
-    If Master 2 fails -> Replica 2 promoted to Master automatically
-    Brief interruption (~1-2 seconds), then service resumes
+```mermaid
+flowchart TD
+    subgraph Cluster["Redis Cluster Setup (3 Masters + 3 Replicas, 16,384 Hash Slots)"]
+        M1["Master 1<br/>Slots 0-5460"] --> R1["Replica 1 (failover)"]
+        M2["Master 2<br/>Slots 5461-10922"] --> R2["Replica 2 (failover)"]
+        M3["Master 3<br/>Slots 10923-16383"] --> R3["Replica 3 (failover)"]
+    end
 ```
 
 ### 7.2 Local Cache + Sync Approach
 
 For ultra-low latency (sub-microsecond), use a local cache with periodic sync:
 
-```
-Local Cache + Redis Sync
-=========================
-
-  Rate Limiter Instance
-  +--------------------------------------------+
-  |                                            |
-  |  +------------------+                     |
-  |  | Local Cache      |  <-- Check first    |
-  |  | (in-memory map)  |      (~1 microsecond)|
-  |  | user123 -> 42    |                     |
-  |  | user456 -> 7     |                     |
-  |  +--------+---------+                     |
-  |           |                                |
-  |           | Sync every 100ms               |
-  |           |                                |
-  |  +--------v---------+                     |
-  |  | Sync Worker      |                     |
-  |  | - Batch flush    |-----> Redis Cluster  |
-  |  | - Pull updates   |<----- (source of truth)
-  |  +------------------+                     |
-  |                                            |
-  +--------------------------------------------+
-
-  Flow:
-  1. Request arrives
-  2. Check local cache (fast path, ~1us)
-  3. If under limit -> allow, increment local counter
-  4. Background: every 100ms, flush local deltas to Redis
-  5. Background: every 100ms, pull global counts from Redis
-  6. If local cache missing -> query Redis (slow path, ~0.5ms)
+```mermaid
+flowchart LR
+    subgraph Instance["Rate Limiter Instance"]
+        LC["Local Cache (in-memory map)<br/>Check first (~1 us)<br/>user123 -> 42, user456 -> 7"] -->|"Sync every 100ms"| SW["Sync Worker<br/>- Batch flush deltas<br/>- Pull global counts"]
+    end
+    SW <-->|"Flush / Pull"| Redis["Redis Cluster<br/>(Source of Truth)"]
 ```
 
 **Trade-offs**:
@@ -1262,57 +1106,20 @@ alerts:
 
 ### 8.1 Multi-Region Setup
 
-```
-Multi-Region Deployment Architecture
-======================================
-
-                    +-------------------+
-                    |   Global DNS      |
-                    |   (Route 53 /     |
-                    |    Cloudflare)    |
-                    +--------+----------+
-                             |
-              +--------------+--------------+
-              |                             |
-    +---------v----------+       +----------v---------+
-    |   Region: US-East  |       |   Region: EU-West  |
-    |                    |       |                     |
-    | +----------------+ |       | +----------------+  |
-    | | Load Balancer  | |       | | Load Balancer  |  |
-    | +-------+--------+ |       | +-------+--------+  |
-    |         |          |       |         |           |
-    | +-------v--------+ |       | +-------v--------+  |
-    | | Rate Limiter   | |       | | Rate Limiter   |  |
-    | | Instances (3)  | |       | | Instances (3)  |  |
-    | +-------+--------+ |       | +-------+--------+  |
-    |         |          |       |         |           |
-    | +-------v--------+ |       | +-------v--------+  |
-    | | Redis Cluster  |<-------->| Redis Cluster  |  |
-    | | (Primary)      | | cross | | (Primary)      |  |
-    | | 3M + 3R        | | region| | 3M + 3R        |  |
-    | +-------+--------+ | sync  | +-------+--------+  |
-    |         |          |       |         |           |
-    | +-------v--------+ |       | +-------v--------+  |
-    | | App Servers    | |       | | App Servers    |  |
-    | | (Auto-scaling) | |       | | (Auto-scaling) |  |
-    | +----------------+ |       | +----------------+  |
-    +--------------------+       +---------------------+
-
-Cross-Region Sync Options:
-  Option A: Independent limits per region (simpler)
-    - Each region enforces its own limits
-    - Total capacity = N * per-region limit
-    - Simple, but user traveling between regions gets full quota per region
-
-  Option B: Global limits via cross-region sync (stricter)
-    - Periodic sync of counters between regions (every 1-5 seconds)
-    - Eventually consistent global view
-    - More complex, but true global rate limiting
-
-  Option C: Single global Redis (strictest)
-    - All regions point to one Redis cluster
-    - Higher latency for non-local regions
-    - Simplest correctness model
+```mermaid
+flowchart TD
+    DNS["Global DNS<br/>(Route 53 / Cloudflare)"] --> LB_US & LB_EU
+    subgraph US["Region: US-East"]
+        LB_US["Load Balancer"] --> RL_US["Rate Limiter Instances (3)"]
+        RL_US --> Redis_US["Redis Cluster (Primary 3M + 3R)"]
+        RL_US --> App_US["App Servers (Auto-scaling)"]
+    end
+    subgraph EU["Region: EU-West"]
+        LB_EU["Load Balancer"] --> RL_EU["Rate Limiter Instances (3)"]
+        RL_EU --> Redis_EU["Redis Cluster (Primary 3M + 3R)"]
+        RL_EU --> App_EU["App Servers (Auto-scaling)"]
+    end
+    Redis_US <-->|"Cross-Region Sync"| Redis_EU
 ```
 
 ### 8.2 Failover Strategy
@@ -1617,46 +1424,11 @@ async def tiered_rate_limit(user_id, user_tier):
 
 **Answer**: Implement multiple fallback layers.
 
-```
-Graceful Degradation Cascade
-==============================
-
-  Level 0: Normal Operation
-  +---------------------------------------------------+
-  |  Redis Cluster healthy                             |
-  |  Full accuracy, all features enabled               |
-  |  Latency: ~0.5ms                                   |
-  +---------------------------------------------------+
-                    |
-                    | Redis latency > 5ms or errors > 1%
-                    v
-  Level 1: Local Cache Mode
-  +---------------------------------------------------+
-  |  Switch to local in-memory counters                |
-  |  Sync to Redis every 500ms (if available)          |
-  |  Accuracy: approximate (may exceed by sync_interval)|
-  |  Latency: ~0.001ms                                 |
-  +---------------------------------------------------+
-                    |
-                    | Redis completely unreachable
-                    v
-  Level 2: Relaxed Limits
-  +---------------------------------------------------+
-  |  Local counters only, no sync                      |
-  |  Apply 2x the normal limits (to account for N nodes)|
-  |  Each node enforces limit/N as its share           |
-  |  Latency: ~0.001ms                                 |
-  +---------------------------------------------------+
-                    |
-                    | Local rate limiter crashes
-                    v
-  Level 3: Fail Open (last resort)
-  +---------------------------------------------------+
-  |  No rate limiting, all requests pass through       |
-  |  Rely on downstream circuit breakers               |
-  |  Alert ops team immediately                        |
-  |  Latency: 0ms                                      |
-  +---------------------------------------------------+
+```mermaid
+flowchart TD
+    L0["Level 0: Normal Operation<br/>Redis Cluster healthy, full accuracy, Latency: ~0.5ms"] -->|"Redis latency &gt; 5ms or errors &gt; 1%"| L1["Level 1: Local Cache Mode<br/>Local in-memory counters, sync every 500ms, Latency: ~0.001ms"]
+    L1 -->|"Redis completely unreachable"| L2["Level 2: Relaxed Limits<br/>Local counters only (no sync), 2x normal limits (limit/N per node)"]
+    L2 -->|"Local rate limiter crashes"| L3["Level 3: Fail Open (Last Resort)<br/>Pass all requests, rely on downstream circuit breakers, alert ops"]
 ```
 
 ```python

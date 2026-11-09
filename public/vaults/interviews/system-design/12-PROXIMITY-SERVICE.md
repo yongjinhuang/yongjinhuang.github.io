@@ -682,46 +682,16 @@ coverage needs.
 
 ## 4. High-Level Architecture
 
-```
-                              +-----------+
-                              |  Clients  |
-                              | (Mobile/  |
-                              |   Web)    |
-                              +-----+-----+
-                                    |
-                                    v
-                             +------+------+
-                             |    CDN /    |
-                             | API Gateway |
-                             |   + Auth    |
-                             +------+------+
-                                    |
-                    +---------------+---------------+
-                    |                               |
-                    v                               v
-        +-----------+----------+       +-----------+-----------+
-        |  Location-Based      |       |   Business Service    |
-        |  Service (LBS)       |       |   (CRUD operations)   |
-        |  (Read-only, high    |       |   (Low QPS, writes)   |
-        |   QPS, stateless)    |       |                       |
-        +-----------+----------+       +-----------+-----------+
-                    |                               |
-          +---------+---------+                     |
-          |                   |                     v
-          v                   v             +-------+-------+
-  +-------+-------+  +-------+------+      |   Business    |
-  | Geospatial    |  | Business     |      |   Database    |
-  | Index         |  | Cache        |      |   (Primary)   |
-  | (Geohash in   |  | (Redis)      |      |  (MySQL /     |
-  |  Redis or     |  |              |      |   PostgreSQL) |
-  |  in-memory)   |  +--------------+      +-------+-------+
-  +---------------+                                |
-                                                   v
-                                           +-------+-------+
-                                           |  Read Replicas|
-                                           |  (for LBS     |
-                                           |   queries)    |
-                                           +---------------+
+```mermaid
+flowchart TD
+    Clients["Clients (Mobile / Web)"] --> GW["CDN / API Gateway + Auth"]
+    GW --> LBS["Location-Based Service (LBS)<br/>(Read-only, high QPS, stateless)"]
+    GW --> BizSvc["Business Service<br/>(CRUD operations, low QPS, writes)"]
+    LBS --> GeoIdx["Geospatial Index<br/>(Geohash in Redis or in-memory)"]
+    LBS --> BizCache["Business Cache<br/>(Redis)"]
+    BizSvc --> PrimaryDB["Business Database (Primary)<br/>(MySQL / PostgreSQL)"]
+    PrimaryDB --> Replicas["Read Replicas<br/>(for LBS queries)"]
+    LBS -.-> Replicas
 ```
 
 ### Architecture Principles
@@ -886,46 +856,29 @@ Flow: SQL DB --(async sync)--> Geospatial Index
 
 ### 6.1 Read Path (Search Flow)
 
-```
- Client                  LBS                  Geo Index           Cache          DB
-   |                      |                      |                  |             |
-   |  GET /search/nearby  |                      |                  |             |
-   |  lat, lng, radius    |                      |                  |             |
-   |--------------------->|                      |                  |             |
-   |                      |                      |                  |             |
-   |                 [1. Convert radius           |                  |             |
-   |                  to geohash precision]       |                  |             |
-   |                      |                      |                  |             |
-   |                 [2. Compute center geohash   |                  |             |
-   |                  + 8 neighbor geohashes]     |                  |             |
-   |                      |                      |                  |             |
-   |                      |  Query geohash cells  |                  |             |
-   |                      |--------------------->|                  |             |
-   |                      |                      |                  |             |
-   |                      |  Business IDs in cells|                  |             |
-   |                      |<---------------------|                  |             |
-   |                      |                      |                  |             |
-   |                 [3. Post-filter:             |                  |             |
-   |                  exact haversine distance]   |                  |             |
-   |                      |                      |                  |             |
-   |                      |  Get business details |                  |             |
-   |                      |------------------------------------>|             |
-   |                      |                      |     Cache HIT    |             |
-   |                      |<------------------------------------|             |
-   |                      |                      |                  |             |
-   |                      |  (Cache MISS)         |  Query DB        |             |
-   |                      |------------------------------------------------------>|
-   |                      |                      |                  |             |
-   |                      |<------------------------------------------------------|
-   |                      |  [Populate cache]     |                  |             |
-   |                      |------------------------------------>|             |
-   |                      |                      |                  |             |
-   |                 [4. Rank results:            |                  |             |
-   |                  distance + rating + etc.]   |                  |             |
-   |                      |                      |                  |             |
-   |                 [5. Paginate and return]      |                  |             |
-   |  JSON Response       |                      |                  |             |
-   |<---------------------|                      |                  |             |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant LBS
+    participant Geo as "Geo Index"
+    participant Cache
+    participant DB
+
+    Client->>LBS: GET /search/nearby (lat, lng, radius)
+    Note over LBS: 1. Convert radius to geohash precision<br/>2. Compute center geohash + 8 neighbor geohashes
+    LBS->>Geo: Query 9 geohash cells
+    Geo-->>LBS: Business IDs in cells
+    Note over LBS: 3. Post-filter by exact Haversine distance
+    LBS->>Cache: Get business details
+    alt Cache HIT
+        Cache-->>LBS: Return cached business details
+    else Cache MISS
+        LBS->>DB: Query DB for missing business IDs
+        DB-->>LBS: Return business details
+        LBS->>Cache: Populate cache
+    end
+    Note over LBS: 4. Rank results (distance + rating)<br/>5. Paginate and return
+    LBS-->>Client: JSON Response
 ```
 
 #### Step-by-Step Breakdown
@@ -1032,33 +985,22 @@ def rank_results(results, sort_by='relevance'):
 
 ### 6.2 Write Path (Business CRUD)
 
-```
- Owner              API Gateway        Business Service      Database        Async Worker
-   |                     |                    |                  |                |
-   |  POST /businesses   |                    |                  |                |
-   |  {name, lat, lng..} |                    |                  |                |
-   |-------------------->|                    |                  |                |
-   |                     |  Auth + validate   |                  |                |
-   |                     |------------------->|                  |                |
-   |                     |                    |                  |                |
-   |                     |               [Compute geohash       |                |
-   |                     |                from lat/lng]          |                |
-   |                     |                    |                  |                |
-   |                     |                    |  INSERT business |                |
-   |                     |                    |----------------->|                |
-   |                     |                    |  Success         |                |
-   |                     |                    |<-----------------|                |
-   |                     |                    |                  |                |
-   |                     |                    |  Publish event   |                |
-   |                     |                    |  to message queue|                |
-   |                     |                    |-------------------------------> |
-   |                     |                    |                  |                |
-   |  201 Created        |                    |                  |    Update      |
-   |<--------------------|                    |                  |    geospatial  |
-   |                     |                    |                  |    index       |
-   |                     |                    |                  |                |
-   |                     |                    |                  |    Invalidate  |
-   |                     |                    |                  |    cache       |
+```mermaid
+sequenceDiagram
+    participant Owner
+    participant GW as "API Gateway"
+    participant BS as "Business Service"
+    participant DB as "Database"
+    participant Worker as "Async Worker (Kafka)"
+
+    Owner->>GW: POST /businesses {name, lat, lng, ...}
+    GW->>BS: Auth + validate
+    BS->>BS: Compute geohash from lat/lng
+    BS->>DB: INSERT business
+    DB-->>BS: Success
+    BS->>Worker: Publish event to message queue
+    GW-->>Owner: 201 Created
+    Worker->>Worker: Update geospatial index & invalidate cache
 ```
 
 #### Index Rebuild Strategy
@@ -1098,61 +1040,15 @@ def rank_results(results, sort_by='relevance'):
 
 #### Multi-Factor Ranking System
 
-```
-                    +------------------+
-                    |  Raw Candidates  |
-                    |  (from geo index)|
-                    +--------+---------+
-                             |
-                             v
-                    +--------+---------+
-                    |  Distance Filter |  <-- Exact haversine
-                    |  (within radius) |
-                    +--------+---------+
-                             |
-                             v
-                    +--------+---------+
-                    |  Scoring Engine  |
-                    +--------+---------+
-                             |
-              +--------------+--------------+
-              |              |              |
-              v              v              v
-        +-----+----+  +-----+----+  +------+-----+
-        | Distance  |  | Quality  |  | Business   |
-        | Score     |  | Score    |  | Boost      |
-        | (35%)     |  | (45%)    |  | (20%)      |
-        +-----------+  +----------+  +------------+
-              |              |              |
-              |    +----+    |    +----+    |    +----+
-              +--->|    |<---+--->|    |<---+--->|    |
-                   +--+-+        +--+-+        +--+-+
-                      |             |             |
-                      v             v             v
-                   +--+-------------+-------------+--+
-                   |       Weighted Final Score       |
-                   +----------------+-----------------+
-                                    |
-                                    v
-                           +--------+--------+
-                           |  Sort & Paginate |
-                           +-----------------+
-
-Distance Score:
-  - Inverse distance decay: 1 / (1 + d/1000)
-  - Closer = higher score
-
-Quality Score:
-  - Rating (normalized):     rating / 5.0         * 0.5
-  - Review count (log):      log(review_count+1)/10 * 0.3
-  - Photo count:             min(photos/10, 1)    * 0.1
-  - Response rate:           response_rate         * 0.1
-
-Business Boost:
-  - Sponsored (paid):        +0.2 boost (labeled "Ad")
-  - Recently updated:        +0.05 boost
-  - Claimed & verified:      +0.05 boost
-  - Category match:          +0.1 if exact category match
+```mermaid
+flowchart TD
+    Raw["Raw Candidates<br/>(from geo index)"] --> Filter["Distance Filter<br/>(Exact Haversine within radius)"]
+    Filter --> Engine["Scoring Engine"]
+    Engine --> Dist["Distance Score (35%)<br/>1 / (1 + d/1000)"]
+    Engine --> Qual["Quality Score (45%)<br/>Rating, Review count, Photos, Response rate"]
+    Engine --> Boost["Business Boost (20%)<br/>Sponsored, Updated, Verified, Category match"]
+    Dist & Qual & Boost --> Final["Weighted Final Score"]
+    Final --> Sort["Sort &amp; Paginate"]
 ```
 
 ---
@@ -1208,25 +1104,12 @@ Geohash cell cache:
 
 ### 7.3 Cache Invalidation
 
-```
-Business updated
-       |
-       v
-+------+-------+
-| Publish event |
-| to Kafka      |
-+------+-------+
-       |
-       +-------------------+-------------------+
-       |                   |                   |
-       v                   v                   v
-+------+-------+  +--------+------+  +--------+------+
-| Invalidate   |  | Update geo    |  | Invalidate    |
-| biz:{id}     |  | index entry   |  | search:*      |
-| cache key    |  | (re-geohash   |  | cache keys    |
-|              |  |  if location  |  | for affected  |
-|              |  |  changed)     |  | geohash cells |
-+--------------+  +---------------+  +---------------+
+```mermaid
+flowchart TD
+    Upd["Business Updated"] --> Pub["Publish event to Kafka"]
+    Pub --> InvBiz["Invalidate biz:{id} cache key"]
+    Pub --> UpdGeo["Update geo index entry<br/>(re-geohash if location changed)"]
+    Pub --> InvSearch["Invalidate search:* cache keys<br/>for affected geohash cells"]
 ```
 
 ### 7.4 Redis Geospatial Commands
@@ -1464,42 +1347,24 @@ Strategy: Shard by geohash prefix (first 2-3 characters)
 
 ### 10.1 Multi-Region Deployment
 
-```
-                          +-------------------+
-                          |    Global DNS     |
-                          | (GeoDNS routing)  |
-                          +--------+----------+
-                                   |
-                 +-----------------+-----------------+
-                 |                 |                 |
-                 v                 v                 v
-        +--------+------+  +------+--------+  +-----+---------+
-        |  US Region    |  |  EU Region    |  | APAC Region   |
-        |  us-east-1    |  |  eu-west-1    |  | ap-northeast-1|
-        +--------+------+  +------+--------+  +-----+---------+
-                 |                 |                 |
-           +-----+-----+    +-----+-----+    +-----+-----+
-           |           |    |           |    |           |
-           v           v    v           v    v           v
-      +----+---+  +---+----+---+  +---+----+---+  +---+----+
-      |  LBS   |  |  Biz   |  |  |  LBS   |  |  |  LBS   |
-      | Cluster|  |Service |  |  | Cluster|  |  | Cluster|
-      +----+---+  +---+----+  |  +---+----+  |  +---+----+
-           |           |      |      |        |      |
-           v           v      |      v        |      v
-      +----+---+  +---+----+  | +---+----+   | +---+----+
-      | Redis  |  |  MySQL  |  | | Redis  |   | | Redis  |
-      | Cluster|  | Primary |  | | Cluster|   | | Cluster|
-      +--------+  +---+----+  | +--------+   | +--------+
-                       |       |              |
-                  Replication  |         Replication
-                       |       |              |
-                       v       v              v
-                  +----+-------+----+   +-----+------+
-                  | MySQL Read      |   | MySQL Read |
-                  | Replicas (EU)   |   | Replicas   |
-                  +-----------------+   | (APAC)     |
-                                        +------------+
+```mermaid
+flowchart TD
+    DNS["Global DNS<br/>(GeoDNS routing)"] --> US["US Region (us-east-1)"] & EU["EU Region (eu-west-1)"] & APAC["APAC Region (ap-northeast-1)"]
+
+    subgraph US_Group["US Region (Primary Writes)"]
+        US --> LBS_US["LBS Cluster"] --> Redis_US["Redis Cluster"]
+        US --> Biz_US["Business Service"] --> MySQL_Pri["MySQL Primary"]
+    end
+    subgraph EU_Group["EU Region"]
+        EU --> LBS_EU["LBS Cluster"] --> Redis_EU["Redis Cluster"]
+        LBS_EU --> MySQL_EU["MySQL Read Replicas (EU)"]
+    end
+    subgraph APAC_Group["APAC Region"]
+        APAC --> LBS_AP["LBS Cluster"] --> Redis_AP["Redis Cluster"]
+        LBS_AP --> MySQL_AP["MySQL Read Replicas (APAC)"]
+    end
+
+    MySQL_Pri -->|"Cross-Region Replication"| MySQL_EU & MySQL_AP
 ```
 
 ### 10.2 Edge Caching for Popular Locations
@@ -1691,41 +1556,12 @@ Pre-computed cluster counts:
 
 ### Q4: How to implement business recommendations?
 
-```
-  Recommendation system architecture:
-
-  +------------------+     +------------------+     +------------------+
-  | User Profile     |     | Collaborative    |     | Content-Based    |
-  | - Past searches  |     | Filtering        |     | Filtering        |
-  | - Past visits    |---->| "Users like you  |     | "Businesses      |
-  | - Ratings given  |     |  also liked..."  |     |  similar to ones |
-  | - Categories     |     +--------+---------+     |  you liked..."   |
-  +------------------+              |               +--------+---------+
-                                    |                        |
-                                    v                        v
-                           +--------+------------------------+---------+
-                           |           Recommendation Mixer            |
-                           |  - Combine collaborative + content scores |
-                           |  - Apply location boost (nearby preferred)|
-                           |  - Apply diversity (avoid all same type)  |
-                           |  - Apply freshness (new businesses boost) |
-                           +-------------------+-----------------------+
-                                               |
-                                               v
-                                    +----------+---------+
-                                    | Personalized       |
-                                    | Ranked Results     |
-                                    +--------------------+
-
-  Feature vector per business:
-  [category, price_level, avg_rating, review_count, distance,
-   cuisine_type, has_outdoor_seating, has_delivery, ...]
-
-  Real-time signals:
-  - Time of day (breakfast vs dinner restaurants)
-  - Day of week (weekday vs weekend activities)
-  - Weather (indoor activities on rainy days)
-  - Current events (stadium restaurants on game day)
+```mermaid
+flowchart TD
+    Prof["User Profile<br/>- Past searches &amp; visits<br/>- Ratings given &amp; Categories"] --> CF["Collaborative Filtering<br/>'Users like you also liked...'"]
+    Prof --> CBF["Content-Based Filtering<br/>'Businesses similar to ones you liked...'"]
+    CF & CBF --> Mixer["Recommendation Mixer<br/>- Combine collaborative + content scores<br/>- Apply location boost (nearby preferred)<br/>- Apply diversity &amp; freshness boost"]
+    Mixer --> Out["Personalized Ranked Results"]
 ```
 
 ### Q5: How to handle location accuracy issues?

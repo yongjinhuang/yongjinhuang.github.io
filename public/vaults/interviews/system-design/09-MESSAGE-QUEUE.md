@@ -167,55 +167,25 @@ Use Event Streaming when:
 
 ### Kafka-like Architecture
 
-```
-                         ┌─────────────────────────────────────────┐
-                         │           Coordination Layer             │
-                         │     (ZooKeeper / KRaft Controller)       │
-                         │                                         │
-                         │  - Broker membership & health           │
-                         │  - Topic/partition metadata             │
-                         │  - Leader election                      │
-                         │  - ACLs and quotas                      │
-                         └────────────┬────────────────────────────┘
-                                      │ metadata
-                                      │
-    ┌──────────┐          ┌───────────┴───────────────────────────────────┐
-    │Producer 1│──────┐   │                 Broker Cluster                 │
-    ├──────────┤      │   │                                               │
-    │Producer 2│──────┤   │  ┌─────────┐  ┌─────────┐  ┌─────────┐      │
-    ├──────────┤      ├──>│  │Broker 1 │  │Broker 2 │  │Broker 3 │      │
-    │Producer 3│──────┤   │  │         │  │         │  │         │      │
-    └──────────┘      │   │  │ TopicA  │  │ TopicA  │  │ TopicA  │      │
-                      │   │  │ P0(L)   │  │ P0(F)   │  │ P0(F)   │      │
-                      │   │  │ P1(F)   │  │ P1(L)   │  │ P1(F)   │      │
-                      │   │  │ P2(F)   │  │ P2(F)   │  │ P2(L)   │      │
-                      │   │  │         │  │         │  │         │      │
-                      │   │  │ TopicB  │  │ TopicB  │  │ TopicB  │      │
-                      │   │  │ P0(F)   │  │ P0(L)   │  │ P0(F)   │      │
-                      │   │  └─────────┘  └─────────┘  └─────────┘      │
-                      │   │                                               │
-                      │   │  (L) = Leader    (F) = Follower              │
-                      │   │  Replication factor = 3                       │
-                      │   └───────────┬───────────────────────────────────┘
-                      │               │
-                      │               │
-                      │   ┌───────────┴────────────────────────────┐
-                      │   │            Consumer Groups              │
-                      │   │                                        │
-                      │   │  Group "analytics"    Group "search"   │
-                      │   │  ┌────────────┐       ┌────────────┐  │
-                      │   │  │Consumer A  │       │Consumer D  │  │
-                      │   │  │ (P0, P1)   │       │ (P0)       │  │
-                      │   │  ├────────────┤       ├────────────┤  │
-                      │   │  │Consumer B  │       │Consumer E  │  │
-                      │   │  │ (P2)       │       │ (P1, P2)   │  │
-                      │   │  └────────────┘       └────────────┘  │
-                      │   └────────────────────────────────────────┘
-                      │
-              ┌───────┴────────┐
-              │  Schema Registry│ (optional)
-              │  (Avro/Protobuf)│
-              └────────────────┘
+```mermaid
+flowchart TD
+    Coord["Coordination Layer (ZooKeeper / KRaft Controller)<br/>- Broker membership &amp; health<br/>- Topic/partition metadata<br/>- Leader election, ACLs &amp; quotas"] -->|"metadata"| Brokers
+
+    P1["Producer 1"] & P2["Producer 2"] & P3["Producer 3"] --> Brokers
+    P1 & P2 & P3 -.-> SR["Schema Registry (Avro / Protobuf)"]
+
+    subgraph Brokers["Broker Cluster (Replication Factor = 3)"]
+        B1["Broker 1<br/>TopicA: P0(L), P1(F), P2(F)<br/>TopicB: P0(F)"]
+        B2["Broker 2<br/>TopicA: P0(F), P1(L), P2(F)<br/>TopicB: P0(L)"]
+        B3["Broker 3<br/>TopicA: P0(F), P1(F), P2(L)<br/>TopicB: P0(F)"]
+    end
+
+    Brokers --> CG_Analytics & CG_Search
+
+    subgraph Consumers["Consumer Groups"]
+        CG_Analytics["Group 'analytics'<br/>Consumer A (P0, P1) | Consumer B (P2)"]
+        CG_Search["Group 'search'<br/>Consumer D (P0) | Consumer E (P1, P2)"]
+    end
 ```
 
 ### Component Responsibilities
@@ -329,35 +299,15 @@ Example:
 
 #### Producer Architecture
 
-```
-                    ┌─────────────────────────────────────────────────┐
-                    │                   Producer                       │
-                    │                                                  │
-  send(record) ──> │  ┌────────────┐   ┌────────────┐                │
-                    │  │ Serializer │──>│Partitioner │                │
-                    │  │ (key+value)│   │            │                │
-                    │  └────────────┘   └─────┬──────┘                │
-                    │                         │                        │
-                    │         ┌────────────────┼────────────────┐      │
-                    │         v                v                v      │
-                    │  ┌──────────┐     ┌──────────┐    ┌──────────┐ │
-                    │  │ Batch P0 │     │ Batch P1 │    │ Batch P2 │ │
-                    │  │ (buffer) │     │ (buffer) │    │ (buffer) │ │
-                    │  └────┬─────┘     └────┬─────┘    └────┬─────┘ │
-                    │       └────────────────┬┘───────────────┘       │
-                    │                        v                         │
-                    │               ┌────────────────┐                │
-                    │               │  Sender Thread  │                │
-                    │               │  (background)   │                │
-                    │               └────────┬───────┘                │
-                    └────────────────────────┼─────────────────────────┘
-                                             │
-                              Network ───────┴──────── Network
-                                │                          │
-                           ┌────┴────┐              ┌──────┴──┐
-                           │Broker 1 │              │Broker 2  │
-                           │(P0 lead)│              │(P1 lead) │
-                           └─────────┘              └──────────┘
+```mermaid
+flowchart TD
+    subgraph Producer["Producer"]
+        Send["send(record)"] --> Ser["Serializer<br/>(key + value)"] --> Part["Partitioner"]
+        Part --> BP0["Batch P0 (buffer)"] & BP1["Batch P1 (buffer)"] & BP2["Batch P2 (buffer)"]
+        BP0 & BP1 & BP2 --> Sender["Sender Thread (background)"]
+    end
+    Sender -->|"Network"| B1["Broker 1 (P0 Leader)"]
+    Sender -->|"Network"| B2["Broker 2 (P1 Leader)"]
 ```
 
 #### Batching and Compression
@@ -513,42 +463,19 @@ RULE: Max useful consumers = number of partitions
 
 #### Rebalancing Protocol
 
-```
-Rebalance triggers:
-  1. Consumer joins group
-  2. Consumer leaves group (graceful shutdown or crash)
-  3. Topic partition count changes
-  4. Consumer heartbeat timeout (session.timeout.ms exceeded)
+```mermaid
+sequenceDiagram
+    participant C1 as "Consumer 1"
+    participant GL as "Group Leader (Coordinator)"
+    participant C2 as "Consumer 2"
 
-Rebalance flow (Eager):
-  ┌──────────┐        ┌──────────────┐        ┌──────────┐
-  │Consumer 1│        │Group Leader  │        │Consumer 2│
-  │          │        │(Coordinator) │        │          │
-  └────┬─────┘        └──────┬───────┘        └────┬─────┘
-       │   JoinGroup         │                      │
-       │────────────────────>│  JoinGroup            │
-       │                     │<─────────────────────│
-       │                     │                      │
-       │  Revoke ALL         │    Revoke ALL        │
-       │  partitions         │    partitions        │
-       │                     │                      │
-       │   SyncGroup         │                      │
-       │────────────────────>│  SyncGroup            │
-       │                     │<─────────────────────│
-       │                     │                      │
-       │  Assignment         │    Assignment        │
-       │<────────────────────│─────────────────────>│
-       │  (P0, P1)           │    (P2, P3)          │
-       │                     │                      │
-
-Rebalance strategies:
-  ┌─────────────────┬────────────────────────────────────────────────┐
-  │ Strategy        │ Description                                     │
-  ├─────────────────┼────────────────────────────────────────────────┤
-  │ Eager           │ Revoke all, reassign all (causes downtime)     │
-  │ Cooperative     │ Incremental; only revoke partitions that move  │
-  │ Static          │ Fixed assignment via group.instance.id         │
-  └─────────────────┴────────────────────────────────────────────────┘
+    C1->>GL: JoinGroup
+    C2->>GL: JoinGroup
+    Note over C1,C2: Revoke ALL partitions
+    C1->>GL: SyncGroup
+    C2->>GL: SyncGroup
+    GL-->>C1: Assignment (P0, P1)
+    GL-->>C2: Assignment (P2, P3)
 ```
 
 #### Offset Management
@@ -1489,91 +1416,40 @@ Cross-datacenter replication:
 
 ### Production Cluster Layout
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          Production Kafka Cluster                           │
-│                                                                             │
-│  ┌──── Availability Zone 1 ──────┐  ┌──── Availability Zone 2 ──────┐     │
-│  │                                │  │                                │     │
-│  │  ┌────────────┐ ┌────────────┐│  │  ┌────────────┐ ┌────────────┐│     │
-│  │  │  Broker 1  │ │  Broker 2  ││  │  │  Broker 3  │ │  Broker 4  ││     │
-│  │  │  32 cores  │ │  32 cores  ││  │  │  32 cores  │ │  32 cores  ││     │
-│  │  │  128GB RAM │ │  128GB RAM ││  │  │  128GB RAM │ │  128GB RAM ││     │
-│  │  │  12x 2TB   │ │  12x 2TB   ││  │  │  12x 2TB   │ │  12x 2TB   ││     │
-│  │  │  SSD JBOD  │ │  SSD JBOD  ││  │  │  SSD JBOD  │ │  SSD JBOD  ││     │
-│  │  │  10Gbps NIC│ │  10Gbps NIC││  │  │  10Gbps NIC│ │  10Gbps NIC││     │
-│  │  └────────────┘ └────────────┘│  │  └────────────┘ └────────────┘│     │
-│  │                                │  │                                │     │
-│  │  ┌────────────┐               │  │  ┌────────────┐               │     │
-│  │  │ KRaft      │               │  │  │ KRaft      │               │     │
-│  │  │ Controller │               │  │  │ Controller │               │     │
-│  │  │ (voter)    │               │  │  │ (voter)    │               │     │
-│  │  └────────────┘               │  │  └────────────┘               │     │
-│  └────────────────────────────────┘  └────────────────────────────────┘     │
-│                                                                             │
-│  ┌──── Availability Zone 3 ──────┐                                         │
-│  │                                │  ┌──────────────────────────────────┐   │
-│  │  ┌────────────┐ ┌────────────┐│  │     Monitoring & Management     │   │
-│  │  │  Broker 5  │ │  Broker 6  ││  │                                  │   │
-│  │  │  32 cores  │ │  32 cores  ││  │  ┌─────────┐  ┌──────────────┐ │   │
-│  │  │  128GB RAM │ │  128GB RAM ││  │  │Prometheus│  │ Grafana      │ │   │
-│  │  │  12x 2TB   │ │  12x 2TB   ││  │  │ + JMX   │  │ Dashboards   │ │   │
-│  │  │  SSD JBOD  │ │  SSD JBOD  ││  │  │Exporter  │  │              │ │   │
-│  │  │  10Gbps NIC│ │  10Gbps NIC││  │  └─────────┘  └──────────────┘ │   │
-│  │  └────────────┘ └────────────┘│  │                                  │   │
-│  │                                │  │  ┌─────────┐  ┌──────────────┐ │   │
-│  │  ┌────────────┐               │  │  │ Cruise  │  │ Schema       │ │   │
-│  │  │ KRaft      │               │  │  │ Control │  │ Registry     │ │   │
-│  │  │ Controller │               │  │  │ (auto-  │  │ (Avro/Proto) │ │   │
-│  │  │ (voter)    │               │  │  │ balance)│  │              │ │   │
-│  │  └────────────┘               │  │  └─────────┘  └──────────────┘ │   │
-│  └────────────────────────────────┘  └──────────────────────────────────┘   │
-│                                                                             │
-│  Replication factor: 3 (one replica per AZ)                                │
-│  min.insync.replicas: 2                                                    │
-│  KRaft: 3 controllers (one per AZ, quorum-based leader election)           │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Cluster["Production Kafka Cluster (RF=3, min.insync.replicas=2)"]
+        subgraph AZ1["Availability Zone 1"]
+            B1["Broker 1 &amp; Broker 2<br/>32 cores, 128GB RAM, 12x 2TB SSD JBOD, 10Gbps NIC"]
+            K1["KRaft Controller (voter)"]
+        end
+        subgraph AZ2["Availability Zone 2"]
+            B3["Broker 3 &amp; Broker 4<br/>32 cores, 128GB RAM, 12x 2TB SSD JBOD, 10Gbps NIC"]
+            K2["KRaft Controller (voter)"]
+        end
+        subgraph AZ3["Availability Zone 3"]
+            B5["Broker 5 &amp; Broker 6<br/>32 cores, 128GB RAM, 12x 2TB SSD JBOD, 10Gbps NIC"]
+            K3["KRaft Controller (voter)"]
+        end
+        subgraph Mon["Monitoring &amp; Management"]
+            M1["Prometheus + JMX Exporter &amp; Grafana Dashboards"]
+            M2["Cruise Control (auto-balance) &amp; Schema Registry (Avro/Proto)"]
+        end
+    end
 ```
 
 ### Multi-Datacenter Setup
 
-```
-                    ┌────────────────────────────────────┐
-                    │          Global DNS / LB            │
-                    │   (route producers to nearest DC)   │
-                    └───────────┬────────────┬───────────┘
-                                │            │
-              ┌─────────────────┘            └──────────────────┐
-              │                                                  │
-  ┌───────────┴──────────────┐            ┌──────────────────────┴──┐
-  │    DC-East (Primary)      │            │    DC-West (Active DR)   │
-  │                           │            │                          │
-  │  Kafka Cluster            │            │  Kafka Cluster           │
-  │  6 Brokers, 3 AZs        │  ◄──MM2──► │  6 Brokers, 3 AZs       │
-  │                           │            │                          │
-  │  Topics:                  │            │  Topics (replicated):    │
-  │  - orders                 │            │  - dc-east.orders        │
-  │  - payments               │            │  - dc-east.payments      │
-  │  - user-events            │            │  - dc-west.orders        │
-  │                           │            │  - dc-west.payments      │
-  │  Schema Registry          │            │  Schema Registry         │
-  │  (primary)                │            │  (follower)              │
-  └───────────────────────────┘            └──────────────────────────┘
-
-  Active-Active considerations:
-    1. Topic naming: prefix with datacenter name to avoid conflicts
-    2. Conflict resolution: last-writer-wins or application-level merge
-    3. Offset translation: MM2 maintains offset mapping between clusters
-    4. Consumer failover: Consumer reads from local cluster, fails over to remote
-
-  Latency budget:
-    Intra-DC:     < 1ms  (same AZ), < 2ms  (cross AZ)
-    Cross-DC:     ~30ms  (same region), ~100ms (cross region)
-    Replication:  Asynchronous (eventual consistency between DCs)
-
-  RPO/RTO targets:
-    Active-Passive: RPO = replication lag (~seconds), RTO = ~minutes
-    Active-Active:  RPO = 0 (each DC has own data), RTO = ~seconds
+```mermaid
+flowchart TD
+    DNS["Global DNS / LB<br/>(route producers to nearest DC)"] --> East & West
+    subgraph East["DC-East (Primary)"]
+        E_Cluster["Kafka Cluster (6 Brokers, 3 AZs)<br/>Topics: orders, payments, user-events<br/>Schema Registry (primary)"]
+    end
+    subgraph West["DC-West (Active DR)"]
+        W_Cluster["Kafka Cluster (6 Brokers, 3 AZs)<br/>Topics: dc-east.orders, dc-east.payments, dc-west.orders, dc-west.payments<br/>Schema Registry (follower)"]
+    end
+    East <-->|"MirrorMaker 2 (MM2)"| West
 ```
 
 ### Hardware Recommendations

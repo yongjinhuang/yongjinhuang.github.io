@@ -405,46 +405,18 @@ ZRANGEBYLEX autocomplete "[how to c" "[how to c\xff" LIMIT 0 10
 1. **查询路径**（在线，延迟敏感）：用户输入前缀 -> 获取建议
 2. **数据收集路径**（离线/近实时）：收集搜索日志 -> 构建 Trie
 
-```
-                         查询路径（在线）
-  ┌──────────┐     ┌──────────────┐     ┌───────────────────┐
-  │  客户端   │────>│  负载均衡器   │────>│   API 服务器       │
-  │ (浏览器)  │<────│  (L7 / CDN)  │<────│  （无状态）        │
-  └──────────┘     └──────────────┘     └─────────┬─────────┘
-                                                   │
-                                          ┌────────▼────────┐
-                                          │  Trie 服务       │
-                                          │  （内存中的       │
-                                          │   Trie 缓存）    │
-                                          └────────┬────────┘
-                                                   │ fallback
-                                          ┌────────▼────────┐
-                                          │  Redis 缓存      │
-                                          │  （L2 缓存）      │
-                                          └─────────────────┘
-
-
-                    数据收集路径（离线 / 近实时）
-  ┌──────────┐     ┌──────────┐     ┌─────────────┐     ┌─────────────┐
-  │  搜索     │────>│  Kafka   │────>│  聚合器      │────>│  频率存储    │
-  │  日志     │     │  队列    │     │  (Flink /   │     │  (数据库)   │
-  │           │     │          │     │   Spark)    │     │             │
-  └──────────┘     └──────────┘     └─────────────┘     └──────┬──────┘
-                                                                │
-                                                       ┌────────▼────────┐
-                                                       │  Trie 构建器    │
-                                                       │  （定期任务）    │
-                                                       └────────┬────────┘
-                                                                │
-                                               ┌────────────────▼────────────────┐
-                                               │      Trie 快照存储              │
-                                               │  (S3 / HDFS 序列化 Trie)       │
-                                               └────────────────┬────────────────┘
-                                                                │ push / pull
-                                               ┌────────────────▼────────────────┐
-                                               │      Trie 服务节点              │
-                                               │  （加载新快照到内存）            │
-                                               └────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Online["QUERY PATH (Online)"]
+        Client["Client (Browser)"] <--> LB["Load Balancer (L7 / CDN)"] <--> API["API Servers (Stateless)"]
+        API --> TrieSvc["Trie Service (In-Memory Trie Cache)"]
+        TrieSvc -->|"fallback"| Redis["Redis Cache (L2 Cache)"]
+    end
+    subgraph Offline["DATA COLLECTION PATH (Offline / Near-Real-Time)"]
+        Logs["Search Logs"] --> Kafka["Kafka Queue"] --> Agg["Aggregator (Flink / Spark)"] --> FreqDB["Frequency Store (DB)"]
+        FreqDB --> Builder["Trie Builder (Periodic Job)"] --> Snap["Trie Snapshot Store (S3 / HDFS)"]
+        Snap -->|"push / pull"| Nodes["Trie Service Nodes (Load new snapshot into memory)"]
+    end
 ```
 
 ### 组件职责
@@ -553,58 +525,15 @@ Trie 快照二进制格式:
 
 ### 管道概览
 
-```
-  ┌───────────────┐
-  │  用户搜索      │
-  │  （前端）      │
-  └───────┬───────┘
-          │ 1. 记录搜索事件
-          ▼
-  ┌───────────────┐     ┌──────────────┐     ┌──────────────────┐
-  │  搜索 API     │────>│    Kafka     │────>│  流处理器         │
-  │  服务器       │     │  (Topic:     │     │  (Flink / Spark  │
-  │               │     │   searches)  │     │   Streaming)     │
-  └───────────────┘     └──────────────┘     └────────┬─────────┘
-                                                       │
-                                    2. 按时间窗口聚合    │
-                                                       │
-                                                       ▼
-                                             ┌──────────────────┐
-                                             │  时间窗口         │
-                                             │  聚合器           │
-                                             │                  │
-                                             │  1 小时桶:        │
-                                             │  {query: count}  │
-                                             └────────┬─────────┘
-                                                      │
-                                    3. 计算加权频率      │
-                                                       │
-                                                      ▼
-                                             ┌──────────────────┐
-                                             │  频率             │
-                                             │  计算器           │
-                                             │                  │
-                                             │  应用时间衰减     │
-                                             │  + 权重           │
-                                             └────────┬─────────┘
-                                                      │
-                                    4. 过滤             │
-                                       不适当内容       │
-                                                      ▼
-                                             ┌──────────────────┐
-                                             │  内容过滤器       │
-                                             │                  │
-                                             │  黑名单 +         │
-                                             │  ML 分类器        │
-                                             └────────┬─────────┘
-                                                      │
-                                    5. 写入             │
-                                       频率存储         │
-                                                      ▼
-                                             ┌──────────────────┐
-                                             │  频率             │
-                                             │  存储（数据库）    │
-                                             └──────────────────┘
+```mermaid
+flowchart TD
+    FE["User Search (Frontend)"] -->|"1. Log search event"| API["Search API Server"]
+    API --> Kafka["Kafka (Topic: searches)"]
+    Kafka --> Stream["Stream Processor (Flink / Spark Streaming)"]
+    Stream -->|"2. Aggregate by time window"| Window["Time-Window Aggregator<br/>(1-hour buckets: {query: count})"]
+    Window -->|"3. Compute weighted frequency"| Calc["Frequency Calculator<br/>(Apply time decay + weights)"]
+    Calc -->|"4. Filter inappropriate"| Filter["Content Filter<br/>(Blocklist + ML classifier)"]
+    Filter -->|"5. Write to frequency store"| DB["Frequency Store (DB)"]
 ```
 
 ### 逐步详解
@@ -697,26 +626,13 @@ weighted_score = 对所有时间窗口求和:
 
 Trie 定期重建（例如每 15 分钟到 1 小时）：
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│ 1. 从频率    │────>│ 2. 构建      │────>│ 3. 序列化为  │────>│ 4. 上传      │
-│ 存储读取     │     │ 优化的       │     │ 二进制格式   │     │ 快照到       │
-│              │     │ Trie         │     │              │     │ S3 / HDFS    │
-└──────────────┘     └──────────────┘     └──────────────┘     └──────┬───────┘
-                                                                      │
-                                                              ┌───────▼───────┐
-                                                              │ 5. 通知       │
-                                                              │ Trie 服务器   │
-                                                              │ 拉取新快照    │
-                                                              │               │
-                                                              └───────┬───────┘
-                                                                      │
-                                                              ┌───────▼───────┐
-                                                              │ 6. Trie       │
-                                                              │ 服务器加载    │
-                                                              │ 新 Trie 到    │
-                                                              │ 内存          │
-                                                              └───────────────┘
+```mermaid
+flowchart LR
+    S1["1. Read from<br/>Frequency Store"] --> S2["2. Build<br/>Optimized Trie"]
+    S2 --> S3["3. Serialize to<br/>Binary Format"]
+    S3 --> S4["4. Upload Snapshot<br/>to S3 / HDFS"]
+    S4 --> S5["5. Notify Trie Servers<br/>to pull new snapshot"]
+    S5 --> S6["6. Trie Servers load<br/>new Trie into memory"]
 ```
 
 **构建伪代码：**
@@ -942,32 +858,11 @@ def personalize(global_results, user_id, limit):
 
 ### 四层缓存架构
 
-```
-  ┌─────────────────┐
-  │  第 1 层:        │  命中率: ~30%
-  │  浏览器缓存      │  延迟: 0 ms
-  │  (sessionStorage │  TTL: 会话时长
-  │   + HTTP 缓存)   │
-  └────────┬────────┘
-           │ 未命中
-  ┌────────▼────────┐
-  │  第 2 层:        │  命中率: 剩余的 ~40%
-  │  CDN / 边缘      │  延迟: 5-20 ms
-  │  缓存            │  TTL: 5-15 分钟
-  │  (CloudFront)    │
-  └────────┬────────┘
-           │ 未命中
-  ┌────────▼────────┐
-  │  第 3 层:        │  命中率: 剩余的 ~20%
-  │  Redis 缓存      │  延迟: 1-5 ms
-  │  （应用层）       │  TTL: 5 分钟
-  └────────┬────────┘
-           │ 未命中
-  ┌────────▼────────┐
-  │  第 4 层:        │  命中率: 100%（权威源）
-  │  内存 Trie       │  延迟: < 1 ms
-  │  (Trie 服务)     │
-  └─────────────────┘
+```mermaid
+flowchart TD
+    L1["Layer 1: Browser Cache (sessionStorage + HTTP cache)<br/>Hit rate: ~30% | Latency: 0 ms | TTL: session"] -->|"miss"| L2["Layer 2: CDN / Edge Cache (CloudFront)<br/>Hit rate: ~40% of rem | Latency: 5-20 ms | TTL: 5-15 min"]
+    L2 -->|"miss"| L3["Layer 3: Redis Cache (Application)<br/>Hit rate: ~20% of rem | Latency: 1-5 ms | TTL: 5 min"]
+    L3 -->|"miss"| L4["Layer 4: In-Memory Trie (Trie Service)<br/>Hit rate: 100% (authoritative) | Latency: &lt; 1 ms"]
 ```
 
 ### 第 1 层：浏览器缓存
@@ -1202,55 +1097,24 @@ Arabic       Arabic script  从右到左          RTL 感知 Trie
 
 ### 多区域部署图
 
-```
-                          ┌─────────────────────────┐
-                          │      全局 DNS            │
-                          │   (Route53 / GeoDNS)    │
-                          └────────────┬────────────┘
-                                       │
-                    ┌──────────────────┬┴──────────────────┐
-                    │                  │                    │
-           ┌────────▼───────┐ ┌────────▼───────┐  ┌────────▼───────┐
-           │   CDN 边缘     │ │   CDN 边缘     │  │   CDN 边缘     │
-           │   美国区域     │ │   欧洲区域     │  │   亚太区域     │
-           └────────┬───────┘ └────────┬───────┘  └────────┬───────┘
-                    │                  │                    │
-           ┌────────▼───────┐ ┌────────▼───────┐  ┌────────▼───────┐
-           │ us-east-1      │ │ eu-west-1      │  │ ap-southeast-1 │
-           │ ┌────────────┐ │ │ ┌────────────┐ │  │ ┌────────────┐ │
-           │ │    ALB     │ │ │ │    ALB     │ │  │ │    ALB     │ │
-           │ └──────┬─────┘ │ │ └──────┬─────┘ │  │ └──────┬─────┘ │
-           │   ┌────┴────┐  │ │   ┌────┴────┐  │  │   ┌────┴────┐  │
-           │   ▼         ▼  │ │   ▼         ▼  │  │   ▼         ▼  │
-           │ ┌───┐    ┌───┐ │ │ ┌───┐    ┌───┐ │  │ ┌───┐    ┌───┐ │
-           │ │API│    │API│ │ │ │API│    │API│ │  │ │API│    │API│ │
-           │ │ 1 │    │ 2 │ │ │ │ 1 │    │ 2 │ │  │ │ 1 │    │ 2 │ │
-           │ └─┬─┘    └─┬─┘ │ │ └─┬─┘    └─┬─┘ │  │ └─┬─┘    └─┬─┘ │
-           │   └────┬────┘  │ │   └────┬────┘  │  │   └────┬────┘  │
-           │   ┌────▼────┐  │ │   ┌────▼────┐  │  │   ┌────▼────┐  │
-           │   │  Redis   │  │ │   │  Redis   │  │  │   │  Redis   │  │
-           │   │  Cluster │  │ │   │  Cluster │  │  │   │  Cluster │  │
-           │   └────┬────┘  │ │   └────┬────┘  │  │   └────┬────┘  │
-           │   ┌────▼────┐  │ │   ┌────▼────┐  │  │   ┌────▼────┐  │
-           │   │  Trie    │  │ │   │  Trie    │  │  │   │  Trie    │  │
-           │   │  Service │  │ │   │  Service │  │  │   │  Service │  │
-           │   │  Nodes   │  │ │   │  Nodes   │  │  │   │  Nodes   │  │
-           │   │ (3x 副本)│  │ │   │ (3x 副本)│  │  │   │ (3x 副本)│  │
-           │   └──────────┘  │ │   └──────────┘  │  │   └──────────┘  │
-           └─────────────────┘ └─────────────────┘  └─────────────────┘
-                    │
-           ┌────────▼───────────────────────────────────────────┐
-           │              中心数据管道                            │
-           │  ┌──────────┐  ┌───────────┐  ┌───────────────┐   │
-           │  │  Kafka   │─>│ 聚合器    │─>│ Trie 构建器   │   │
-           │  │  Cluster │  │(Flink)    │  │ （定期任务）   │   │
-           │  └──────────┘  └───────────┘  └───────┬───────┘   │
-           │                                       │            │
-           │                               ┌───────▼───────┐   │
-           │                               │  快照           │   │
-           │                               │  存储 (S3)     │   │
-           │                               └───────────────┘   │
-           └────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    DNS["Global DNS<br/>(Route53 / GeoDNS)"] --> CDN_US["CDN Edge (US)"] & CDN_EU["CDN Edge (EU)"] & CDN_AP["CDN Edge (APAC)"]
+
+    subgraph US["us-east-1"]
+        CDN_US --> ALB_US["ALB"] --> API_US["API 1 &amp; API 2"] --> Redis_US["Redis Cluster"] --> Trie_US["Trie Service Nodes (3x repl)"]
+    end
+    subgraph EU["eu-west-1"]
+        CDN_EU --> ALB_EU["ALB"] --> API_EU["API 1 &amp; API 2"] --> Redis_EU["Redis Cluster"] --> Trie_EU["Trie Service Nodes (3x repl)"]
+    end
+    subgraph AP["ap-southeast-1"]
+        CDN_AP --> ALB_AP["ALB"] --> API_AP["API 1 &amp; API 2"] --> Redis_AP["Redis Cluster"] --> Trie_AP["Trie Service Nodes (3x repl)"]
+    end
+
+    subgraph Pipeline["Central Data Pipeline"]
+        Kafka["Kafka Cluster"] --> Agg["Aggregator (Flink)"] --> Builder["Trie Builder (Periodic)"] --> S3["Snapshot Store (S3)"]
+    end
+    S3 -.->|"push / pull snapshots"| Trie_US & Trie_EU & Trie_AP
 ```
 
 ### CDN + 边缘缓存详情
