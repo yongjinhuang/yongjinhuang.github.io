@@ -82,10 +82,10 @@ type HeadingNode = { position?: { start?: { line?: number } } };
 type HeadingProps = { node?: HeadingNode; children?: ReactNode };
 
 const HEADING_CLASSES = {
-  h1: 'text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-6 scroll-mt-20',
-  h2: 'text-2xl font-bold mt-10 mb-4 border-b border-gray-200 dark:border-white/10 pb-2 text-gray-900 dark:text-white tracking-tight scroll-mt-20',
-  h3: 'text-xl font-bold mt-6 mb-3 text-gray-900 dark:text-white scroll-mt-20',
-  h4: 'text-lg font-bold mt-4 mb-2 text-gray-900 dark:text-white scroll-mt-20',
+  h1: 'text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight text-balance mb-6 scroll-mt-20',
+  h2: 'text-2xl font-bold mt-10 mb-4 border-b border-gray-200 dark:border-white/10 pb-2 text-gray-900 dark:text-white tracking-tight text-balance scroll-mt-20',
+  h3: 'text-xl font-bold mt-6 mb-3 text-gray-900 dark:text-white text-balance scroll-mt-20',
+  h4: 'text-lg font-bold mt-4 mb-2 text-gray-900 dark:text-white text-balance scroll-mt-20',
 } as const;
 
 const STYLED_TAGS = {
@@ -252,14 +252,18 @@ export function MarkdownContent({
       <button
         type="button"
         onClick={() => onFileSelect?.(item.slug)}
-        className={`group p-4 rounded-xl border border-gray-200 dark:border-white/10 hover:border-accent/60 hover:bg-accent/5 transition-all duration-200 ${isNext ? 'text-right' : 'text-left'}`}
+        className={`group p-4 rounded-xl border border-gray-200 dark:border-white/10 hover:border-accent/60 hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors duration-200 ${isNext ? 'text-right' : 'text-left'}`}
       >
         <span
           className={`flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 group-hover:text-accent mb-1 ${isNext ? 'justify-end' : ''}`}
         >
-          {!isNext && <HiChevronLeft className="w-3.5 h-3.5" />}
+          {!isNext && (
+            <HiChevronLeft aria-hidden="true" className="w-3.5 h-3.5" />
+          )}
           {isNext ? 'Next' : 'Previous'}
-          {isNext && <HiChevronRight className="w-3.5 h-3.5" />}
+          {isNext && (
+            <HiChevronRight aria-hidden="true" className="w-3.5 h-3.5" />
+          )}
         </span>
         <span className="block text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-accent truncate">
           {item.title}

@@ -77,15 +77,42 @@ export function SplitPaneViewer({
       {/* Divider */}
       <div
         onPointerDown={handlePointerDown}
+        onDoubleClick={() => setLeftPct(DEFAULT_PCT)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            setLeftPct((p) => Math.max(MIN_PANE_PCT, p - 5));
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            setLeftPct((p) => Math.min(MAX_PANE_PCT, p + 5));
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            setLeftPct(MIN_PANE_PCT);
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            setLeftPct(MAX_PANE_PCT);
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            setLeftPct(DEFAULT_PCT);
+          }
+        }}
         role="separator"
+        tabIndex={0}
         aria-orientation="vertical"
-        aria-label="Resize split panes"
+        aria-valuemin={MIN_PANE_PCT}
+        aria-valuemax={MAX_PANE_PCT}
+        aria-valuenow={Math.round(leftPct)}
+        aria-label="Resize split panes (use Left/Right arrow keys or double-click to reset)"
+        title="Drag or use Left/Right arrow keys to resize (double-click to reset)"
         className={cn(
           'w-1.5 shrink-0 cursor-col-resize flex flex-col items-center justify-center',
-          'bg-gray-200/80 dark:bg-white/10 hover:bg-accent/40 transition-colors'
+          'bg-gray-200/80 dark:bg-white/10 hover:bg-accent/40 focus-visible:outline-none focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-accent transition-colors'
         )}
       >
-        <div className="w-0.5 h-8 bg-gray-400 dark:bg-gray-500 rounded-full" />
+        <div
+          aria-hidden="true"
+          className="w-0.5 h-8 bg-gray-400 dark:bg-gray-500 rounded-full"
+        />
       </div>
 
       {/* Right pane */}
@@ -97,11 +124,11 @@ export function SplitPaneViewer({
           <button
             type="button"
             onClick={onCloseSplit}
-            className="pointer-events-auto p-1.5 rounded-md bg-gray-200/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-500 transition-colors shadow-sm"
+            className="pointer-events-auto p-1.5 rounded-md bg-gray-200/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors shadow-sm"
             title="Close split view"
             aria-label="Close split view"
           >
-            <HiXMark className="w-4 h-4" />
+            <HiXMark aria-hidden="true" className="w-4 h-4" />
           </button>
         </div>
         <MarkdownContent

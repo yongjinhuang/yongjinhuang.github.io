@@ -137,14 +137,18 @@ export function TableOfContents({
           On this page
         </h3>
       )}
-      <nav className="space-y-0.5 border-l border-gray-200 dark:border-white/10">
+      <nav
+        aria-label="On this page"
+        className="space-y-0.5 border-l border-gray-200 dark:border-white/10"
+      >
         {items.map((item, index) => (
           <button
             key={`${item.slug}-${index}`}
             type="button"
             onClick={() => handleClick(item.slug)}
+            aria-current={activeSlug === item.slug ? 'location' : undefined}
             className={cn(
-              'block w-full text-left text-xs leading-relaxed py-1 transition-colors duration-150 border-l-2 -ml-[1px]',
+              'block w-full text-left text-xs leading-relaxed py-1 transition-colors duration-150 border-l-2 -ml-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent rounded-r',
               activeSlug === item.slug
                 ? 'border-accent text-accent font-medium'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-white/20'

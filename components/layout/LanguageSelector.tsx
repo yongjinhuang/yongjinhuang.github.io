@@ -68,7 +68,7 @@ export function LanguageSelector() {
             aria-label={
               locale === 'zh' ? 'Switch to Chinese' : 'Switch to English'
             }
-            className={`px-2.5 py-1 rounded-md text-xs font-mono leading-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            className={`px-2.5 py-1 rounded-md text-xs font-mono leading-none transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               isActive
                 ? 'bg-accent text-[var(--accent-foreground,#000)] font-bold'
                 : 'font-medium text-gray-600 dark:text-gray-300 hover:text-accent dark:hover:text-accent'

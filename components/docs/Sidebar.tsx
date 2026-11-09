@@ -252,15 +252,23 @@ export function Sidebar({
           <button
             type="button"
             onClick={() => toggleCategory(category.name)}
-            className="flex-1 min-w-0 flex items-center gap-1.5 text-left cursor-pointer"
+            aria-expanded={isExpanded}
+            className="flex-1 min-w-0 flex items-center gap-1.5 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
           >
             {isExpanded ? (
-              <HiChevronDown className="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-gray-500" />
+              <HiChevronDown
+                aria-hidden="true"
+                className="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-gray-500"
+              />
             ) : (
-              <HiChevronRight className="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-gray-500" />
+              <HiChevronRight
+                aria-hidden="true"
+                className="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-gray-500"
+              />
             )}
             {isExpanded ? (
               <HiFolderOpen
+                aria-hidden="true"
                 className={cn(
                   'w-3.5 h-3.5 shrink-0',
                   isHighlighted
@@ -270,6 +278,7 @@ export function Sidebar({
               />
             ) : (
               <HiFolder
+                aria-hidden="true"
                 className={cn(
                   'w-3.5 h-3.5 shrink-0',
                   isHighlighted
@@ -284,6 +293,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={(e) => toggleHighlightFolder(category.name, e)}
+            aria-pressed={isHighlighted}
             aria-label={
               isHighlighted
                 ? `Remove highlight from ${category.label}`
@@ -295,20 +305,20 @@ export function Sidebar({
                 : 'Highlight & pin folder to top'
             }
             className={cn(
-              'p-0.5 rounded transition-opacity cursor-pointer shrink-0',
+              'p-0.5 rounded transition-opacity cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:opacity-100',
               isHighlighted
                 ? 'opacity-100 text-amber-500 dark:text-amber-400 hover:text-amber-600'
                 : 'opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-400 hover:text-amber-500 dark:hover:text-amber-400'
             )}
           >
             {isHighlighted ? (
-              <HiStar className="w-3.5 h-3.5" />
+              <HiStar aria-hidden="true" className="w-3.5 h-3.5" />
             ) : (
-              <HiOutlineStar className="w-3.5 h-3.5" />
+              <HiOutlineStar aria-hidden="true" className="w-3.5 h-3.5" />
             )}
           </button>
 
-          <span className="text-[10px] font-mono font-normal text-gray-400 dark:text-gray-500 shrink-0 min-w-[16px] text-right">
+          <span className="text-[10px] font-mono tabular-nums font-normal text-gray-400 dark:text-gray-500 shrink-0 min-w-[16px] text-right">
             {category.files.length}
           </span>
         </div>
@@ -344,14 +354,22 @@ export function Sidebar({
         {vaults && vaults.length > 1 && onVaultChange && (
           <div>
             <div className="flex items-center gap-1.5 mb-1 px-1">
-              <HiArchiveBox className="w-3.5 h-3.5 text-accent" />
-              <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              <HiArchiveBox
+                aria-hidden="true"
+                className="w-3.5 h-3.5 text-accent"
+              />
+              <label
+                htmlFor="docs-vault-select"
+                className="text-[10px] font-mono font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500"
+              >
                 Vault
-              </span>
+              </label>
             </div>
             <select
+              id="docs-vault-select"
               value={currentVault}
               onChange={(e) => onVaultChange(e.target.value)}
+              aria-label="Select documentation vault"
               className={cn(
                 'w-full px-2.5 py-1.5 text-xs font-semibold rounded-md',
                 'bg-gray-100 dark:bg-white/5',
@@ -362,7 +380,11 @@ export function Sidebar({
               )}
             >
               {vaults.map((v) => (
-                <option key={v.name} value={v.name}>
+                <option
+                  key={v.name}
+                  value={v.name}
+                  className="bg-white dark:bg-[#121218] text-gray-900 dark:text-gray-100"
+                >
                   {v.label}
                 </option>
               ))}
@@ -372,10 +394,16 @@ export function Sidebar({
 
         {/* Search input */}
         <div className="relative">
-          <HiMagnifyingGlass className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 dark:text-gray-500 pointer-events-none" />
+          <HiMagnifyingGlass
+            aria-hidden="true"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 dark:text-gray-500 pointer-events-none"
+          />
           <input
             ref={searchInputRef}
-            type="text"
+            type="search"
+            name="docs-search"
+            autoComplete="off"
+            spellCheck={false}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -384,7 +412,7 @@ export function Sidebar({
                 searchInputRef.current?.blur();
               }
             }}
-            placeholder="Search docs..."
+            placeholder="Search docs…"
             aria-label="Search files"
             className={cn(
               'w-full pl-8 pr-10 py-1.5 text-xs rounded-md',
@@ -401,12 +429,15 @@ export function Sidebar({
               type="button"
               onClick={() => setQuery('')}
               aria-label="Clear search"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded transition-colors"
             >
-              <HiXMark className="w-3.5 h-3.5" />
+              <HiXMark aria-hidden="true" className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 bg-gray-200/70 dark:bg-white/10 rounded border border-gray-300/60 dark:border-white/10 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+            <kbd
+              aria-hidden="true"
+              className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 bg-gray-200/70 dark:bg-white/10 rounded border border-gray-300/60 dark:border-white/10 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+            >
               ⌘K
             </kbd>
           )}
@@ -414,7 +445,10 @@ export function Sidebar({
 
         {/* Explorer Header + Quick Actions */}
         <div className="flex items-center justify-between px-1 pt-0.5">
-          <span className="text-[11px] font-mono font-medium text-gray-500 dark:text-gray-400">
+          <span
+            aria-live="polite"
+            className="text-[11px] font-mono tabular-nums font-medium text-gray-500 dark:text-gray-400"
+          >
             {isSearching
               ? `${totalResults} match${totalResults !== 1 ? 'es' : ''}`
               : showHighlightedOnly
@@ -425,8 +459,9 @@ export function Sidebar({
             <button
               type="button"
               onClick={() => setShowHighlightedOnly((prev) => !prev)}
+              aria-pressed={showHighlightedOnly}
               className={cn(
-                'px-1.5 py-1 rounded text-[11px] font-mono inline-flex items-center gap-1 transition-colors cursor-pointer',
+                'px-1.5 py-1 rounded text-[11px] font-mono inline-flex items-center gap-1 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
                 showHighlightedOnly
                   ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40'
                   : highlightedCount > 0
@@ -441,27 +476,29 @@ export function Sidebar({
               aria-label="Filter highlighted folders"
             >
               {showHighlightedOnly || highlightedCount > 0 ? (
-                <HiStar className="w-3.5 h-3.5" />
+                <HiStar aria-hidden="true" className="w-3.5 h-3.5" />
               ) : (
-                <HiOutlineStar className="w-3.5 h-3.5" />
+                <HiOutlineStar aria-hidden="true" className="w-3.5 h-3.5" />
               )}
               {highlightedCount > 0 && <span>{highlightedCount}</span>}
             </button>
             <button
               type="button"
               onClick={expandAll}
-              className="p-1 rounded text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              aria-label="Expand all folders"
+              className="p-1 rounded text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
               title="Expand all folders"
             >
-              <HiBars3BottomLeft className="w-3.5 h-3.5" />
+              <HiBars3BottomLeft aria-hidden="true" className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
               onClick={collapseAll}
-              className="p-1 rounded text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              aria-label="Collapse all folders"
+              className="p-1 rounded text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
               title="Collapse all folders"
             >
-              <HiMinus className="w-3.5 h-3.5" />
+              <HiMinus aria-hidden="true" className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
@@ -477,10 +514,11 @@ export function Sidebar({
                 }
                 setLocateTrigger((prev) => prev + 1);
               }}
-              className="p-1 rounded text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              aria-label="Locate active file"
+              className="p-1 rounded text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
               title="Locate active file"
             >
-              <HiMapPin className="w-3.5 h-3.5" />
+              <HiMapPin aria-hidden="true" className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

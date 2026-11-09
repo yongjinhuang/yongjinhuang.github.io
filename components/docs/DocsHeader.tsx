@@ -49,57 +49,65 @@ export function DocsHeader({
         <button
           type="button"
           onClick={onToggleMobileSidebar}
-          className="lg:hidden p-1.5 rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-accent hover:text-accent transition-colors"
+          aria-expanded={mobileSidebarOpen}
+          className="lg:hidden p-1.5 rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
           aria-label={mobileSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
         >
           {mobileSidebarOpen ? (
-            <HiXMark className="w-4 h-4" />
+            <HiXMark aria-hidden="true" className="w-4 h-4" />
           ) : (
-            <HiBars3 className="w-4 h-4" />
+            <HiBars3 aria-hidden="true" className="w-4 h-4" />
           )}
         </button>
 
         <button
           type="button"
           onClick={onToggleLeftPanel}
-          className="hidden lg:inline-flex p-1.5 rounded-md border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-accent hover:text-accent transition-colors"
+          aria-expanded={leftPanelOpen}
+          className="hidden lg:inline-flex p-1.5 rounded-md border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
           title={leftPanelOpen ? 'Hide sidebar' : 'Show sidebar'}
           aria-label={leftPanelOpen ? 'Hide sidebar' : 'Show sidebar'}
         >
           {leftPanelOpen ? (
-            <HiChevronLeft className="w-3.5 h-3.5" />
+            <HiChevronLeft aria-hidden="true" className="w-3.5 h-3.5" />
           ) : (
-            <HiChevronRight className="w-3.5 h-3.5" />
+            <HiChevronRight aria-hidden="true" className="w-3.5 h-3.5" />
           )}
         </button>
 
         <Link
           href="/en"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:border-accent hover:text-accent transition-colors shrink-0"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors shrink-0"
           title="Back to Portfolio"
         >
-          <HiArrowLeft className="w-3.5 h-3.5" />
+          <HiArrowLeft aria-hidden="true" className="w-3.5 h-3.5" />
           <span>Portfolio</span>
         </Link>
 
         <div className="h-4 w-px bg-gray-200 dark:bg-white/10 hidden sm:block" />
 
         <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-gray-900 dark:text-white shrink-0">
-          <HiBookOpen className="w-4 h-4 text-accent" />
+          <HiBookOpen aria-hidden="true" className="w-4 h-4 text-accent" />
           <span>Docs</span>
         </div>
 
         {activeFileTitle && (
-          <div className="hidden md:flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 min-w-0 font-mono">
-            <span>/</span>
+          <nav
+            aria-label="Breadcrumb"
+            className="hidden md:flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 min-w-0 font-mono"
+          >
+            <span aria-hidden="true">/</span>
             <span className="truncate max-w-[160px] text-gray-500 dark:text-gray-400">
               {activeCategoryLabel}
             </span>
-            <span>/</span>
-            <span className="truncate max-w-[240px] text-gray-800 dark:text-gray-200 font-sans font-medium">
+            <span aria-hidden="true">/</span>
+            <span
+              aria-current="page"
+              className="truncate max-w-[240px] text-gray-800 dark:text-gray-200 font-sans font-medium"
+            >
               {activeFileTitle}
             </span>
-          </div>
+          </nav>
         )}
       </div>
 
@@ -110,10 +118,11 @@ export function DocsHeader({
         <button
           type="button"
           onClick={onExportPdf}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-accent hover:bg-accent/10 transition-colors"
+          aria-label="Export current document to PDF"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-accent hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
           title="Export current document to PDF"
         >
-          <HiArrowDownTray className="w-3.5 h-3.5" />
+          <HiArrowDownTray aria-hidden="true" className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">PDF</span>
         </button>
 
@@ -125,8 +134,9 @@ export function DocsHeader({
         <button
           type="button"
           onClick={onToggleRightPanel}
+          aria-expanded={rightPanelOpen}
           className={cn(
-            'hidden lg:inline-flex p-1.5 rounded-md border transition-colors',
+            'hidden lg:inline-flex p-1.5 rounded-md border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors',
             rightPanelOpen
               ? 'border-accent/40 bg-accent/10 text-accent'
               : 'border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-accent hover:text-accent'
@@ -138,7 +148,7 @@ export function DocsHeader({
             rightPanelOpen ? 'Hide table of contents' : 'Show table of contents'
           }
         >
-          <HiListBullet className="w-4 h-4" />
+          <HiListBullet aria-hidden="true" className="w-4 h-4" />
         </button>
       </div>
     </header>

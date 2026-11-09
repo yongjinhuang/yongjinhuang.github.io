@@ -141,7 +141,10 @@ export function Navbar({ nav }: NavbarProps) {
   }, [mobileMenuOpen]);
 
   return (
-    <nav className="fixed w-full top-0 z-50 transition-all duration-300">
+    <nav
+      aria-label={lang === 'zh' ? '主导航' : 'Primary navigation'}
+      className="fixed w-full top-0 z-50 transition-colors duration-300"
+    >
       <div ref={navRef} className="max-w-6xl mx-auto px-4 sm:px-6 pt-3 md:pt-4">
         <div className="glass-card glass-card-static rounded-xl hover:!translate-x-0 hover:!translate-y-0 relative px-4 py-2.5 md:px-5 md:py-3">
           {/* Top Scroll Progress Bar */}
@@ -150,8 +153,8 @@ export function Navbar({ nav }: NavbarProps) {
             className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] rounded-t-xl overflow-hidden"
           >
             <div
-              className="h-full bg-accent transition-[width] duration-150 ease-out"
-              style={{ width: `${scrollProgress}%` }}
+              className="h-full bg-accent transition-transform duration-150 ease-out origin-left"
+              style={{ transform: `scaleX(${scrollProgress / 100})` }}
             />
           </div>
 
@@ -160,7 +163,8 @@ export function Navbar({ nav }: NavbarProps) {
             <div className="flex items-center gap-3 md:gap-4">
               <Link
                 href={`/${lang}`}
-                className="brutal-btn brutal-btn-accent rounded-lg px-3 py-1 text-base md:text-lg font-extrabold tracking-tight"
+                aria-label={lang === 'zh' ? '返回首页' : 'Back to home'}
+                className="brutal-btn brutal-btn-accent rounded-lg px-3 py-1 text-base md:text-lg font-extrabold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 YH
               </Link>
@@ -180,7 +184,7 @@ export function Navbar({ nav }: NavbarProps) {
                       key={item.id}
                       href={item.href}
                       aria-current={isActive ? 'page' : undefined}
-                      className={`relative px-3 py-1.5 rounded-md text-sm font-semibold transition-colors duration-200 ${
+                      className={`relative px-3 py-1.5 rounded-md text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                         isActive
                           ? 'text-accent bg-accent/10'
                           : 'text-gray-800 dark:text-gray-100 hover:text-accent hover:bg-gray-100/70 dark:hover:bg-white/5'
@@ -203,7 +207,7 @@ export function Navbar({ nav }: NavbarProps) {
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen((prev) => !prev)}
-                  className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-white/15 text-gray-700 dark:text-gray-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-200"
+                  className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-white/15 text-gray-700 dark:text-gray-200 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors duration-200"
                   aria-label={
                     mobileMenuOpen
                       ? 'Close navigation menu'
@@ -212,9 +216,9 @@ export function Navbar({ nav }: NavbarProps) {
                   aria-expanded={mobileMenuOpen}
                 >
                   {mobileMenuOpen ? (
-                    <XMarkIcon className="h-5 w-5" />
+                    <XMarkIcon aria-hidden="true" className="h-5 w-5" />
                   ) : (
-                    <Bars3Icon className="h-5 w-5" />
+                    <Bars3Icon aria-hidden="true" className="h-5 w-5" />
                   )}
                 </button>
               </div>
@@ -229,7 +233,7 @@ export function Navbar({ nav }: NavbarProps) {
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="md:hidden overflow-hidden"
+                className="md:hidden overflow-hidden overscroll-contain"
               >
                 <div className="pt-3 mt-3 border-t border-gray-200 dark:border-white/10 flex flex-col gap-1">
                   {navItems.map((item) => {
@@ -244,7 +248,7 @@ export function Navbar({ nav }: NavbarProps) {
                         key={item.id}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-semibold transition-colors ${
+                        className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                           isActive
                             ? 'bg-accent/15 text-accent'
                             : 'text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-accent'
@@ -252,7 +256,10 @@ export function Navbar({ nav }: NavbarProps) {
                       >
                         <span>{item.label}</span>
                         {isActive && (
-                          <span className="w-2 h-2 rounded-full bg-accent" />
+                          <span
+                            aria-hidden="true"
+                            className="w-2 h-2 rounded-full bg-accent"
+                          />
                         )}
                       </Link>
                     );

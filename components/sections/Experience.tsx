@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import ReactMarkdown, { type Components } from 'react-markdown';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { FiExternalLink } from 'react-icons/fi';
 import { HiChevronDown } from 'react-icons/hi2';
 import { CollapsibleSection, Card } from '@/components/ui';
@@ -39,15 +39,19 @@ const markdownComponents: Components = {
 };
 
 function ExperienceCard({
+  id,
   exp,
   isCurrent,
   currentLabel,
 }: {
+  readonly id: string;
   readonly exp: CompanyExperienceTranslations;
   readonly isCurrent: boolean;
   readonly currentLabel: string;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const prefersReducedMotion = useReducedMotion();
+  const detailsId = `experience-${id}-details`;
   const techItems = exp.techStack
     .split(',')
     .map((t) => t.trim())
@@ -78,7 +82,10 @@ function ExperienceCard({
               </time>
               {isCurrent && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold bg-accent/15 text-accent border border-accent/30 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                  <span
+                    aria-hidden="true"
+                    className="w-1.5 h-1.5 rounded-full bg-accent"
+                  />
                   {currentLabel}
                 </span>
               )}
@@ -88,15 +95,17 @@ function ExperienceCard({
               type="button"
               onClick={() => setIsExpanded((prev) => !prev)}
               aria-expanded={isExpanded}
+              aria-controls={detailsId}
               aria-label={
                 isExpanded
                   ? `Collapse ${exp.name} details`
                   : `Expand ${exp.name} details`
               }
               title={isExpanded ? 'Collapse details' : 'Expand details'}
-              className="w-7 h-7 rounded-md border border-gray-200 dark:border-white/15 bg-white/80 dark:bg-white/5 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-accent hover:text-accent transition-colors shrink-0"
+              className="w-7 h-7 rounded-md border border-gray-200 dark:border-white/15 bg-white/80 dark:bg-white/5 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors shrink-0"
             >
               <HiChevronDown
+                aria-hidden="true"
                 className={cn(
                   'w-3.5 h-3.5 transition-transform duration-200',
                   !isExpanded && '-rotate-90'
@@ -116,15 +125,18 @@ function ExperienceCard({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white leading-snug tracking-[-0.015em]">
+              <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white leading-snug tracking-[-0.015em] text-balance">
                 <a
                   href={exp.linkUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 break-words transition-colors hover:text-accent group/link"
+                  className="inline-flex items-center gap-1.5 break-words transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded group/link"
                 >
                   <span>{exp.name}</span>
-                  <FiExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 group-hover/link:text-accent group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+                  <FiExternalLink
+                    aria-hidden="true"
+                    className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 group-hover/link:text-accent group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5"
+                  />
                 </a>
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-0.5">
@@ -149,10 +161,18 @@ function ExperienceCard({
         <AnimatePresence initial={false}>
           {isExpanded && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
+              id={detailsId}
+              initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              exit={
+                prefersReducedMotion
+                  ? { opacity: 0 }
+                  : { height: 0, opacity: 0 }
+              }
+              transition={{
+                duration: prefersReducedMotion ? 0 : 0.2,
+                ease: 'easeInOut',
+              }}
               className="md:col-span-8 overflow-hidden"
             >
               <ul className="space-y-3">
@@ -161,7 +181,10 @@ function ExperienceCard({
                     key={respIndex}
                     className="flex items-start gap-3 text-[14.5px] md:text-[15px] leading-[1.7] text-gray-700 dark:text-gray-200 max-w-[68ch]"
                   >
-                    <span className="flex-shrink-0 w-1.5 h-1.5 mt-2.5 bg-accent rounded-full" />
+                    <span
+                      aria-hidden="true"
+                      className="flex-shrink-0 w-1.5 h-1.5 mt-2.5 bg-accent rounded-full"
+                    />
                     <div className="min-w-0 flex-1">
                       <ReactMarkdown components={markdownComponents}>
                         {responsibility}
@@ -196,6 +219,7 @@ export function Experience({ experience }: ExperienceProps) {
         {experiences.map(({ id, data: exp }) => (
           <ExperienceCard
             key={id}
+            id={id}
             exp={exp}
             isCurrent={/present|至今/i.test(exp.period)}
             currentLabel={experience.currentBadge ?? defaultCurrentLabel}

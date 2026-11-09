@@ -161,6 +161,12 @@ export function DocsViewer({ vaults, vaultData }: DocsViewerProps) {
 
   return (
     <div className="h-dvh w-screen flex flex-col overflow-hidden bg-gray-50 dark:bg-[#0a0a0f] text-gray-900 dark:text-gray-100">
+      <a
+        href="#docs-main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-3.5 focus:py-1.5 focus:rounded-lg focus:bg-accent focus:text-[var(--accent-foreground,#000)] focus:font-bold focus:text-xs focus:shadow-lg focus:outline-none"
+      >
+        Skip to document content
+      </a>
       <DocsHeader
         mobileSidebarOpen={mobileSidebarOpen}
         onToggleMobileSidebar={() => setMobileSidebarOpen((p) => !p)}
@@ -186,13 +192,15 @@ export function DocsViewer({ vaults, vaultData }: DocsViewerProps) {
       <div className="flex-1 flex min-h-0 relative overflow-hidden">
         {mobileSidebarOpen && (
           <div
+            aria-hidden="true"
             className="fixed inset-0 top-12 z-30 bg-black/50 lg:hidden"
             onClick={() => setMobileSidebarOpen(false)}
           />
         )}
         <aside
+          aria-label="Documentation navigation"
           className={cn(
-            'fixed top-12 left-0 bottom-0 z-40 w-72 lg:hidden border-r border-gray-200 dark:border-white/10 transition-transform duration-200',
+            'fixed top-12 left-0 bottom-0 z-40 w-72 lg:hidden border-r border-gray-200 dark:border-white/10 transition-transform duration-200 overscroll-contain',
             mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
@@ -200,7 +208,10 @@ export function DocsViewer({ vaults, vaultData }: DocsViewerProps) {
         </aside>
 
         {leftPanelOpen && (
-          <aside className="hidden lg:block w-68 xl:w-72 shrink-0 h-full border-r border-gray-200/80 dark:border-white/10">
+          <aside
+            aria-label="Documentation navigation"
+            className="hidden lg:block w-68 xl:w-72 shrink-0 h-full border-r border-gray-200/80 dark:border-white/10"
+          >
             <Sidebar {...sidebarProps} />
           </aside>
         )}
@@ -224,13 +235,14 @@ export function DocsViewer({ vaults, vaultData }: DocsViewerProps) {
                 type="button"
                 onClick={() => setMobileTocOpen((p) => !p)}
                 aria-expanded={mobileTocOpen}
-                className="w-full flex items-center justify-between text-xs font-mono font-semibold text-accent"
+                className="w-full flex items-center justify-between text-xs font-mono font-semibold text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
               >
                 <span className="flex items-center gap-1.5">
-                  <HiListBullet className="w-3.5 h-3.5" />
+                  <HiListBullet aria-hidden="true" className="w-3.5 h-3.5" />
                   On this page
                 </span>
                 <HiChevronDown
+                  aria-hidden="true"
                   className={cn(
                     'w-3.5 h-3.5 transition-transform duration-200',
                     mobileTocOpen && 'rotate-180'
@@ -238,7 +250,7 @@ export function DocsViewer({ vaults, vaultData }: DocsViewerProps) {
                 />
               </button>
               {mobileTocOpen && (
-                <div className="mt-1.5 max-h-56 overflow-y-auto border-t border-gray-200/70 dark:border-white/10 pt-1">
+                <div className="mt-1.5 max-h-56 overflow-y-auto overscroll-contain border-t border-gray-200/70 dark:border-white/10 pt-1">
                   <TableOfContents
                     content={selectedFile.content}
                     scrollContainerRef={contentRef}
@@ -250,7 +262,11 @@ export function DocsViewer({ vaults, vaultData }: DocsViewerProps) {
             </div>
           )}
 
-          <div className="flex-1 min-h-0 relative">
+          <main
+            id="docs-main-content"
+            tabIndex={-1}
+            className="flex-1 min-h-0 relative focus:outline-none"
+          >
             {files.length === 0 ? (
               <div className="p-10 text-center text-sm text-gray-500 dark:text-gray-400">
                 No files found in this vault.
@@ -302,11 +318,14 @@ export function DocsViewer({ vaults, vaultData }: DocsViewerProps) {
                 </button>
               </div>
             )}
-          </div>
+          </main>
         </div>
 
         {rightPanelOpen && selectedFile && hasTocItems && (
-          <aside className="hidden lg:block w-56 2xl:w-64 shrink-0 h-full border-l border-gray-200/80 dark:border-white/10 bg-gray-50/60 dark:bg-[#0d0d12]">
+          <aside
+            aria-label="Table of contents"
+            className="hidden lg:block w-56 2xl:w-64 shrink-0 h-full border-l border-gray-200/80 dark:border-white/10 bg-gray-50/60 dark:bg-[#0d0d12]"
+          >
             <TableOfContents
               content={selectedFile.content}
               scrollContainerRef={contentRef}

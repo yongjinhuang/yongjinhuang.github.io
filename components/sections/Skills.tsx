@@ -50,7 +50,10 @@ export function Skills({ skills }: SkillsProps) {
               className="py-3.5 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-6"
             >
               <dt className="sm:w-48 md:w-56 shrink-0 flex items-center gap-2.5 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <CategoryIcon className="w-4 h-4 text-accent shrink-0" />
+                <CategoryIcon
+                  aria-hidden="true"
+                  className="w-4 h-4 text-accent shrink-0"
+                />
                 <span>{category.title}</span>
               </dt>
               <dd className="flex flex-wrap gap-1.5 flex-1">
@@ -59,7 +62,9 @@ export function Skills({ skills }: SkillsProps) {
                   return (
                     <SkillTag
                       key={skill}
-                      icon={<SkillIcon className="w-3.5 h-3.5" />}
+                      icon={
+                        <SkillIcon aria-hidden="true" className="w-3.5 h-3.5" />
+                      }
                     >
                       {skill}
                     </SkillTag>

@@ -29,7 +29,7 @@ export function IconButton({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        'rounded-lg flex items-center justify-center transition-all duration-200',
+        'rounded-lg flex items-center justify-center transition-[transform,box-shadow,border-color,background-color,color] duration-200',
         'bg-white dark:bg-surface-dark border-2',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         variant === 'default' &&

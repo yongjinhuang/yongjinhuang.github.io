@@ -52,17 +52,29 @@ export function CodeBlock({ language, rawCode, children }: CodeBlockProps) {
         <button
           type="button"
           onClick={handleCopy}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium hover:bg-black/5 dark:hover:bg-white/10 hover:text-accent transition-colors"
+          aria-label={
+            copied ? 'Copied code to clipboard' : 'Copy code to clipboard'
+          }
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium hover:bg-black/5 dark:hover:bg-white/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
           title="Copy code"
         >
           {copied ? (
             <>
-              <HiCheck className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="text-emerald-500">Copied</span>
+              <HiCheck
+                aria-hidden="true"
+                className="w-3.5 h-3.5 text-emerald-500"
+              />
+              <span
+                role="status"
+                aria-live="polite"
+                className="text-emerald-500"
+              >
+                Copied
+              </span>
             </>
           ) : (
             <>
-              <HiClipboardDocument className="w-3.5 h-3.5" />
+              <HiClipboardDocument aria-hidden="true" className="w-3.5 h-3.5" />
               <span>Copy</span>
             </>
           )}

@@ -43,16 +43,19 @@ export function CopyButton({
       type="button"
       aria-label={copied ? copiedLabel : copyLabel}
       className={cn(
-        'shrink-0 p-1 rounded text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-accent/10 transition-colors',
+        'shrink-0 p-1 rounded text-gray-400 dark:text-gray-500 hover:text-accent hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors',
         className
       )}
       title={copied ? copiedLabel : copyLabel}
     >
       {copied ? (
-        <HiCheck className="w-3.5 h-3.5 text-green-500" />
+        <HiCheck aria-hidden="true" className="w-3.5 h-3.5 text-green-500" />
       ) : (
-        <HiClipboard className="w-3.5 h-3.5" />
+        <HiClipboard aria-hidden="true" className="w-3.5 h-3.5" />
       )}
+      <span className="sr-only" role="status" aria-live="polite">
+        {copied ? copiedLabel : ''}
+      </span>
     </button>
   );
 }

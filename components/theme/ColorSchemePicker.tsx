@@ -23,13 +23,16 @@ function SchemeOption({
   return (
     <button
       type="button"
+      role="menuitemradio"
+      aria-checked={isActive}
       onClick={onClick}
-      className={`flex items-center gap-2 w-full px-2.5 py-2 text-xs font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 ${
+      className={`flex items-center gap-2 w-full px-2.5 py-2 text-xs font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
         isActive ? 'text-accent font-semibold bg-accent/10' : ''
       }`}
       aria-label={`Set color scheme to ${name}`}
     >
       <span
+        aria-hidden="true"
         className="w-3.5 h-3.5 rounded-full border-2 shrink-0"
         style={{
           backgroundColor: color,
@@ -39,7 +42,9 @@ function SchemeOption({
       />
       <span className="capitalize truncate">{name}</span>
       {isActive && (
-        <span className="ml-auto text-[11px] text-accent">&#10003;</span>
+        <span aria-hidden="true" className="ml-auto text-[11px] text-accent">
+          &#10003;
+        </span>
       )}
     </button>
   );
@@ -87,7 +92,7 @@ export function ColorSchemePicker() {
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="relative w-9 h-9 rounded-lg flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-white/15 hover:border-accent hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[2px_2px_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-200"
+        className="relative w-9 h-9 rounded-lg flex items-center justify-center bg-white dark:bg-surface-dark border-2 border-gray-200 dark:border-white/15 hover:border-accent hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[2px_2px_0_var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-[transform,box-shadow,border-color] duration-200"
         aria-label="Change color scheme"
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -127,18 +132,28 @@ export function ColorSchemePicker() {
             {/* Auto option */}
             <button
               type="button"
+              role="menuitemradio"
+              aria-checked={isAuto}
               onClick={() => {
                 setAuto();
                 setIsOpen(false);
               }}
-              className={`flex items-center gap-2 w-full px-2.5 py-2 text-xs font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 ${
+              className={`flex items-center gap-2 w-full px-2.5 py-2 text-xs font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                 isAuto ? 'text-accent font-semibold bg-accent/10' : ''
               }`}
             >
-              <span className="w-3.5 h-3.5 rounded-full shrink-0 border-2 border-dashed border-gray-400 dark:border-white/40" />
+              <span
+                aria-hidden="true"
+                className="w-3.5 h-3.5 rounded-full shrink-0 border-2 border-dashed border-gray-400 dark:border-white/40"
+              />
               <span>Auto (Hourly)</span>
               {isAuto && (
-                <span className="ml-auto text-xs text-accent">&#10003;</span>
+                <span
+                  aria-hidden="true"
+                  className="ml-auto text-xs text-accent"
+                >
+                  &#10003;
+                </span>
               )}
             </button>
 

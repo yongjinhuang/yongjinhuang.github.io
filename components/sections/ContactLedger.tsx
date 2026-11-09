@@ -71,7 +71,10 @@ export function ContactLedger({
         {/* Education Row */}
         <div className="pb-2 flex items-start justify-between gap-4">
           <dt className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 shrink-0 mt-0.5">
-            <FaGraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
+            <FaGraduationCap
+              aria-hidden="true"
+              className="w-3.5 h-3.5 text-accent shrink-0"
+            />
             <span>{education.title}</span>
           </dt>
           <dd className="flex flex-col items-end text-right min-w-0">
@@ -105,7 +108,10 @@ export function ContactLedger({
               className="py-1.5 last:pb-0 flex items-center justify-between gap-3"
             >
               <dt className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 shrink-0">
-                <Icon className="w-3.5 h-3.5 text-accent shrink-0" />
+                <Icon
+                  aria-hidden="true"
+                  className="w-3.5 h-3.5 text-accent shrink-0"
+                />
                 <span>{detail.label}</span>
               </dt>
               <dd className="flex items-center justify-end gap-1 text-gray-900 dark:text-white font-medium text-xs min-w-0">
@@ -118,7 +124,8 @@ export function ContactLedger({
                         [detail.key]: true,
                       }))
                     }
-                    className="text-xs font-mono font-medium text-accent hover:underline"
+                    aria-label={`${details.clickToReveal} (${detail.label})`}
+                    className="text-xs font-mono font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded px-1 -mx-1"
                   >
                     {details.clickToReveal}
                   </button>
@@ -127,7 +134,7 @@ export function ContactLedger({
                     {detail.href ? (
                       <a
                         href={detail.href}
-                        className="truncate hover:text-accent transition-colors font-mono"
+                        className="truncate hover:text-accent transition-colors font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
                       >
                         {detail.value}
                       </a>

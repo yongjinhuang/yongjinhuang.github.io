@@ -31,8 +31,9 @@ export function SidebarItem({
       ref={ref}
       type="button"
       onClick={() => onSelect(file.slug)}
+      aria-current={isSelected ? 'page' : undefined}
       className={cn(
-        'w-full text-left px-2.5 py-1.5 rounded-md flex items-center gap-2 transition-colors duration-150',
+        'w-full text-left px-2.5 py-1.5 rounded-md flex items-center gap-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
         'text-xs font-medium',
         isSelected
           ? 'bg-accent/15 text-accent font-semibold'
@@ -40,6 +41,7 @@ export function SidebarItem({
       )}
     >
       <HiDocumentText
+        aria-hidden="true"
         className={cn(
           'w-3.5 h-3.5 shrink-0',
           isSelected ? 'text-accent' : 'text-gray-400 dark:text-gray-500'

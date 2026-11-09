@@ -40,10 +40,15 @@ export function TabBar({
     files.find((f) => f.slug === slug)?.title ?? slug;
 
   return (
-    <div className="flex items-center overflow-x-auto scrollbar-thin bg-gray-100/80 dark:bg-[#0d0d12] border-b border-gray-200/80 dark:border-white/10 px-2 shrink-0 h-9">
+    <div
+      role="tablist"
+      aria-label="Open documents"
+      className="flex items-center overflow-x-auto scrollbar-thin bg-gray-100/80 dark:bg-[#0d0d12] border-b border-gray-200/80 dark:border-white/10 px-2 shrink-0 h-9"
+    >
       {tabs.map((slug) => {
         const isActive = slug === activeTab;
         const isSplit = slug === splitSlug;
+        const title = getTitle(slug);
 
         return (
           <div
@@ -59,16 +64,21 @@ export function TabBar({
             )}
           >
             {isActive && (
-              <span className="absolute top-0 left-0 right-0 h-[2px] bg-accent" />
+              <span
+                aria-hidden="true"
+                className="absolute top-0 left-0 right-0 h-[2px] bg-accent"
+              />
             )}
             <button
               ref={isActive ? activeRef : undefined}
               type="button"
+              role="tab"
+              aria-selected={isActive}
               onClick={() => onSelectTab(slug)}
-              className="pl-3 pr-1 h-full flex items-center truncate"
-              title={getTitle(slug)}
+              className="pl-3 pr-1 h-full flex items-center truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+              title={title}
             >
-              {getTitle(slug)}
+              {title}
             </button>
             <button
               type="button"
@@ -76,14 +86,20 @@ export function TabBar({
                 e.stopPropagation();
                 onSplitTab(slug);
               }}
+              aria-label={
+                isSplit
+                  ? `Close split view for ${title}`
+                  : `Open ${title} in split view`
+              }
+              aria-pressed={isSplit}
               className={cn(
-                'hidden md:inline-flex p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity',
+                'hidden md:inline-flex p-1 rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-opacity',
                 'hover:bg-black/10 dark:hover:bg-white/10',
                 isSplit && 'opacity-100 text-accent'
               )}
               title={isSplit ? 'Close split' : 'Open in split view'}
             >
-              <HiArrowsPointingOut className="w-3 h-3" />
+              <HiArrowsPointingOut aria-hidden="true" className="w-3 h-3" />
             </button>
             {tabs.length > 1 && (
               <button
@@ -92,14 +108,15 @@ export function TabBar({
                   e.stopPropagation();
                   onCloseTab(slug);
                 }}
+                aria-label={`Close ${title} tab`}
                 className={cn(
-                  'p-1 mr-1.5 rounded transition-opacity hover:bg-black/10 dark:hover:bg-white/10',
+                  'p-1 mr-1.5 rounded transition-opacity hover:bg-black/10 dark:hover:bg-white/10 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
                   'opacity-100 lg:opacity-0 lg:group-hover:opacity-100',
                   isActive && 'lg:opacity-100'
                 )}
                 title="Close tab"
               >
-                <HiXMark className="w-3 h-3" />
+                <HiXMark aria-hidden="true" className="w-3 h-3" />
               </button>
             )}
           </div>
