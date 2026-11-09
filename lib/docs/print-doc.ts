@@ -11,10 +11,17 @@ export function printArticleHtml(title: string, bodyHtml: string): void {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
 
+  const stylesheetLinks = Array.from(
+    document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')
+  )
+    .map((link) => `<link rel="stylesheet" href="${escapeHtml(link.href)}" />`)
+    .join('\n  ');
+
   printWindow.document.write(`<!DOCTYPE html>
 <html>
 <head>
   <title>${escapeHtml(title)}</title>
+  ${stylesheetLinks}
   <style>
     * { box-sizing: border-box; }
     body {
@@ -44,6 +51,9 @@ export function printArticleHtml(title: string, bodyHtml: string): void {
     strong { color: #111; }
     a { color: #2563eb; }
     img { max-width: 100%; }
+    .katex { font-size: 1em !important; }
+    .katex-display > .katex { font-size: 1.05em !important; }
+    .katex-display { overflow-x: auto; overflow-y: hidden; margin: 12px 0 !important; }
     @media print {
       body { padding: 0; }
       pre { white-space: pre-wrap; word-break: break-all; }

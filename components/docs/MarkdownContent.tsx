@@ -8,8 +8,11 @@ import {
 } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
+import 'katex/dist/katex.min.css';
 import './hljs-themes.css';
 import type { InterviewFile } from '@/types';
 import * as md from '@/lib/docs';
@@ -17,9 +20,60 @@ import type { CodeThemeId } from './CodeThemePicker';
 import { CodeBlock } from './CodeBlock';
 import { MermaidDiagram } from './MermaidDiagram';
 
+interface MathAstNode {
+  type?: string;
+  value?: string;
+  position?: {
+    start?: { offset?: number };
+    end?: { offset?: number };
+  };
+  data?: {
+    hProperties?: { className?: string[] };
+    hChildren?: Array<{ type?: string; value?: string }>;
+  };
+  children?: MathAstNode[];
+}
+
+function remarkMathNormalize() {
+  const walk = (node: MathAstNode) => {
+    if (
+      (node.type === 'math' || node.type === 'inlineMath') &&
+      typeof node.value === 'string'
+    ) {
+      const rawLen = node.value.length;
+      const spanLen =
+        (node.position?.end?.offset ?? 0) - (node.position?.start?.offset ?? 0);
+      const isDisplay = node.type === 'math' || spanLen - rawLen >= 4;
+
+      if (node.value.includes(md.ESCAPED_DOLLAR_TOKEN)) {
+        node.value = node.value.replaceAll(md.ESCAPED_DOLLAR_TOKEN, '\\$');
+        if (node.data?.hChildren?.[0]?.type === 'text') {
+          node.data.hChildren[0].value = node.value;
+        }
+      }
+
+      if (isDisplay && node.data?.hProperties) {
+        node.data.hProperties.className = ['language-math', 'math-display'];
+      }
+    }
+    node.children?.forEach(walk);
+  };
+
+  return (tree: MathAstNode) => {
+    walk(tree);
+  };
+}
+
+type RemarkPlugins = ComponentProps<typeof ReactMarkdown>['remarkPlugins'];
 type RehypePlugins = ComponentProps<typeof ReactMarkdown>['rehypePlugins'];
-const REMARK_PLUGINS = [remarkGfm];
+
+const REMARK_PLUGINS: RemarkPlugins = [
+  remarkGfm,
+  remarkMath,
+  remarkMathNormalize,
+];
 const REHYPE_PLUGINS: RehypePlugins = [
+  [rehypeKatex, { strict: false }],
   [rehypeHighlight, { ignoreMissing: true }],
 ];
 
@@ -177,6 +231,11 @@ export function MarkdownContent({
   prevFile,
   nextFile,
 }: MarkdownContentProps) {
+  const normalizedContent = useMemo(
+    () => md.normalizeMarkdownMath(file.content),
+    [file.content]
+  );
+
   const components = useMemo(
     () =>
       createMarkdownComponents(
@@ -221,7 +280,7 @@ export function MarkdownContent({
           rehypePlugins={REHYPE_PLUGINS}
           components={components}
         >
-          {file.content}
+          {normalizedContent}
         </ReactMarkdown>
         {(prevFile || nextFile) && onFileSelect && (
           <nav

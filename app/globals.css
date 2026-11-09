@@ -495,3 +495,21 @@ body {
     transform: none;
   }
 }
+
+/* ================================
+   KATEX MATH DISPLAY
+   ================================ */
+.katex {
+  font-size: 1em !important;
+}
+
+.katex-display > .katex {
+  font-size: 1.05em !important;
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+  margin: 0.75em 0 !important;
+}

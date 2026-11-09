@@ -1,5 +1,42 @@
 import { isValidElement, type ReactNode } from 'react';
 
+export const ESCAPED_DOLLAR_TOKEN = 'KATEXESCAPEDDOLLAR';
+
+const CODE_OR_MATH_RE =
+  /(```[\s\S]*?```|`[^`\n]+`)|(\$\$[\s\S]+?\$\$|(?<!\\)\$(?!\s)(?:\\.|[^$\\\n])+?(?<![\s(\[{])(?<!\\)\$(?![\d\\]))/g;
+
+/**
+ * Escapes standalone currency `$` signs outside code and valid `$...$` / `$$...$$`
+ * math expressions so `remark-math` does not pair two currency amounts as LaTeX,
+ * and protects `\$` inside math spans so `micromark-extension-math` does not
+ * prematurely close the math span at an inner escaped dollar sign.
+ */
+export function normalizeMarkdownMath(markdown: string): string {
+  const placeholders: string[] = [];
+  const masked = markdown.replace(
+    CODE_OR_MATH_RE,
+    (match, _code: string | undefined, math: string | undefined) => {
+      const idx = placeholders.length;
+      if (math) {
+        const repaired = math
+          .replace(/\times\b/g, '\\times')
+          .replace(/\text\{/g, '\\text{')
+          .replace(/\\\$/g, ESCAPED_DOLLAR_TOKEN);
+        placeholders.push(repaired);
+      } else {
+        placeholders.push(match);
+      }
+      return `\x00MATH_OR_CODE_${idx}\x00`;
+    }
+  );
+
+  const escaped = masked.replace(/(?<!\\)\$/g, '\\$');
+  return escaped.replace(
+    /\x00MATH_OR_CODE_(\d+)\x00/g,
+    (_, idx) => placeholders[Number(idx)]
+  );
+}
+
 export function stripMarkdownFormatting(text: string): string {
   return text
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
@@ -8,6 +45,8 @@ export function stripMarkdownFormatting(text: string): string {
     .replace(/(\*|_)(.*?)\1/g, '$2')
     .replace(/~~(.*?)~~/g, '$1')
     .replace(/`([^`]+)`/g, '$1')
+    .replace(/\$\$([^$]+)\$\$/g, '$1')
+    .replace(/(?<!\\)\$(?!\s)([^$\n]+?)(?<!\s)\$(?!\d)/g, '$1')
     .replace(/<[^>]+>/g, '')
     .trim();
 }
