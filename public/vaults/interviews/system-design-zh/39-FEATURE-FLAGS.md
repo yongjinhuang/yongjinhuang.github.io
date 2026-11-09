@@ -546,53 +546,15 @@ TTL:     无（通过 score 清理过期条目）
 
 ## 4. 高层架构
 
-```
-                                   ┌──────────────────────┐
-                                   │   Management Web UI  │
-                                   │  (React Dashboard)   │
-                                   └──────────┬───────────┘
-                                              │ REST API
-                                              ▼
-                  ┌────────────────────────────────────────────────────┐
-                  │              API Gateway / Load Balancer           │
-                  └──────────┬───────────────────────┬────────────────┘
-                             │                       │
-                   ┌─────────▼──────────┐  ┌────────▼─────────────┐
-                   │   Flag Management  │  │   SDK Service        │
-                   │   Service          │  │   (Evaluation +      │
-                   │   (CRUD, Rules,    │  │    Streaming)        │
-                   │    Segments)       │  │                      │
-                   └────────┬───────────┘  └───┬──────────┬───────┘
-                            │                  │          │
-                   ┌────────▼──────────────────▼──┐      │
-                   │        PostgreSQL             │      │
-                   │   (Flags, Rules, Segments,    │      │
-                   │    Audit Log, Experiments)    │      │
-                   └──────────────────────────┬────┘      │
-                                              │           │
-                   ┌──────────────────────────▼───────────▼───────┐
-                   │              Redis Cluster                    │
-                   │  (Config Cache, Pub/Sub, Eval Cache)         │
-                   └──────┬──────────────────────┬───────────────┘
-                          │                      │
-            ┌─────────────▼────┐     ┌───────────▼──────────┐
-            │  SSE/Streaming   │     │   Event Collector    │
-            │  Gateway         │     │   Service            │
-            │  (Flag Updates)  │     │   (Batch Ingest)     │
-            └──┬─────────┬────┘     └──────────┬───────────┘
-               │         │                     │
-    ┌──────────▼──┐  ┌───▼──────────┐   ┌─────▼─────────────┐
-    │ Server SDK  │  │ Client SDK   │   │  Analytics /       │
-    │ (Node, Go,  │  │ (JS, React,  │   │  ClickHouse        │
-    │  Python,    │  │  iOS,        │   │  (Experiment       │
-    │  Java)      │  │  Android)    │   │   Results)         │
-    │             │  │              │   └────────────────────┘
-    │ ┌─────────┐ │  │ ┌─────────┐ │
-    │ │ Local   │ │  │ │ Local   │ │
-    │ │ Rule    │ │  │ │ Flag    │ │
-    │ │ Engine  │ │  │ │ Cache   │ │
-    │ └─────────┘ │  │ └─────────┘ │
-    └─────────────┘  └─────────────┘
+```mermaid
+flowchart TD
+    UI["Management Web UI<br/>(React Dashboard)"] -->|"REST API"| GW["API Gateway / Load Balancer"]
+    GW --> FlagSvc["Flag Management Service<br/>(CRUD, Rules, Segments)"] & SDKSvc["SDK Service<br/>(Evaluation + Streaming)"]
+    FlagSvc & SDKSvc --> PG["PostgreSQL<br/>(Flags, Rules, Segments, Audit Log, Experiments)"]
+    PG & SDKSvc --> Redis["Redis Cluster<br/>(Config Cache, Pub/Sub, Eval Cache)"]
+    Redis --> SSEGW["SSE / Streaming Gateway<br/>(Flag Updates)"] & EventCol["Event Collector Service<br/>(Batch Ingest)"]
+    SSEGW --> SrvSDK["Server SDK (Node, Go, Python, Java)<br/>[Local Rule Engine]"] & CliSDK["Client SDK (JS, React, iOS, Android)<br/>[Local Flag Cache]"]
+    EventCol --> CH["Analytics / ClickHouse<br/>(Experiment Results)"]
 ```
 
 ### 数据流
@@ -831,33 +793,16 @@ def _apply_rollout(
 
 ### 规则评估顺序
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    开关评估流水线                              │
-│                                                             │
-│  1. 开关禁用？ ──是──▶ 返回 offVariation                     │
-│         │ 否                                                │
-│         ▼                                                   │
-│  2. 前置条件满足？ ──否──▶ 返回 offVariation                  │
-│         │ 是                                                │
-│         ▼                                                   │
-│  3. 个体定向                                                 │
-│     用户在显式包含列表中？ ──是──▶ 返回目标变体                 │
-│         │ 否                                                │
-│         ▼                                                   │
-│  4. 规则 1（最高优先级）                                      │
-│     所有子句匹配？ ──是──▶ 应用灰度 ──▶ 返回                  │
-│         │ 否                                                │
-│         ▼                                                   │
-│  5. 规则 2                                                   │
-│     所有子句匹配？ ──是──▶ 应用灰度 ──▶ 返回                  │
-│         │ 否                                                │
-│         ▼                                                   │
-│  6. ...（剩余规则）                                           │
-│         │                                                   │
-│         ▼                                                   │
-│  7. Fallthrough ──▶ 应用默认灰度 ──▶ 返回                    │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    S1{"1. Flag Disabled?"} -->|"yes"| Off1["Return offVariation"]
+    S1 -->|"no"| S2{"2. Prerequisites Met?"}
+    S2 -->|"no"| Off2["Return offVariation"]
+    S2 -->|"yes"| S3{"3. User in Individual<br/>Target List?"}
+    S3 -->|"yes"| Targ["Return target variation"]
+    S3 -->|"no"| S4{"4. Rule 1..N:<br/>All clauses match?"}
+    S4 -->|"yes"| RuleRoll["Apply rule rollout -> Return"]
+    S4 -->|"no"| S7["7. Fallthrough -> Apply default rollout -> Return"]
 ```
 
 ### 支持的运算符
@@ -2043,69 +1988,20 @@ Browser/App ──▶ CDN Edge ──▶ SDK Service ──▶ Redis ──▶ P
 
 ## 13. 部署架构
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                          区域：US-East                               │
-│                                                                     │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │                    Kubernetes Cluster                          │  │
-│  │                                                               │  │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────┐ │  │
-│  │  │ Ingress /   │  │ Management  │  │  SDK Service          │ │  │
-│  │  │ API Gateway │  │ API         │  │  (bootstrap +         │ │  │
-│  │  │ (NGINX)     │──│ (3 pods)    │  │   client eval)        │ │  │
-│  │  │             │  │             │  │  (6 pods)             │ │  │
-│  │  │  Rate limit │  └──────┬──────┘  └──────────┬───────────┘ │  │
-│  │  │  TLS term   │         │                    │             │  │
-│  │  │  Auth       │         │                    │             │  │
-│  │  └──────┬──────┘         │                    │             │  │
-│  │         │                │                    │             │  │
-│  │  ┌──────▼──────────────────────────────────────────────────┐ │  │
-│  │  │                SSE Gateway (StatefulSet)                 │ │  │
-│  │  │                                                         │ │  │
-│  │  │  Pod 1         Pod 2         Pod 3        Pod 4         │ │  │
-│  │  │  50K conns     50K conns     50K conns    50K conns     │ │  │
-│  │  │                                                         │ │  │
-│  │  │  按环境 SDK key 分片（consistent hashing）                │ │  │
-│  │  └──────────────────────┬──────────────────────────────────┘ │  │
-│  │                         │                                    │  │
-│  │  ┌──────────────────────▼──────────────────────────────────┐ │  │
-│  │  │                Redis Cluster                             │ │  │
-│  │  │  Shard 1    Shard 2    Shard 3    （每个 3 副本）         │ │  │
-│  │  │  Config     Config     Pub/Sub                          │ │  │
-│  │  │  Cache      Cache      Channels                         │ │  │
-│  │  └─────────────────────────────────────────────────────────┘ │  │
-│  │                                                               │  │
-│  │  ┌──────────────────────┐  ┌────────────────────────────┐    │  │
-│  │  │   PostgreSQL         │  │  事件流水线                  │    │  │
-│  │  │   Primary            │  │                             │    │  │
-│  │  │   + 2 只读副本       │  │  Event Collector → Kafka    │    │  │
-│  │  │                      │  │  → ClickHouse               │    │  │
-│  │  │   Flags, Rules,      │  │                             │    │  │
-│  │  │   Segments, Audit    │  │  实验结果、                  │    │  │
-│  │  │                      │  │  开关使用分析               │    │  │
-│  │  └──────────────────────┘  └────────────────────────────┘    │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-│                                                                     │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │              CDN (CloudFront / Fastly)                         │  │
-│  │                                                               │  │
-│  │  边缘缓存客户端 SDK 引导响应                                    │  │
-│  │  缓存 key：env_client_id + user_context_hash                  │  │
-│  │  TTL: 60s, stale-while-revalidate: 300s                      │  │
-│  │  开关更新时清除缓存（通过 API）                                  │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│                          区域：EU-West                               │
-│                    （相同架构，已复制）                                 │
-│                                                                     │
-│  PostgreSQL：只读副本（从 US-East 主节点异步复制）                      │
-│  Redis：独立集群（通过开关服务在写入时同步）                             │
-│  SSE Gateway：独立集群（订阅本地 Redis）                               │
-│  SDK 连接：通过 GeoDNS 路由到最近区域                                  │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph East["Region: US-East (Primary)"]
+        Ing["Ingress / API Gateway (NGINX)<br/>Rate limit, TLS term, Auth"] --> Mgmt["Management API (3 pods)"] & SDKSvc["SDK Service (6 pods)"]
+        Ing & Mgmt & SDKSvc --> SSE["SSE Gateway (StatefulSet)<br/>4 pods x 50K conns, sharded by env SDK key"]
+        Mgmt & SDKSvc & SSE --> Redis["Redis Cluster (3 shards x 3 replicas)<br/>Config Cache + Pub/Sub Channels"]
+        Mgmt & SDKSvc --> PG["PostgreSQL Primary + 2 Read Replicas<br/>Flags, Rules, Segments, Audit"]
+        SDKSvc --> Pipe["Event Pipeline: Event Collector -> Kafka -> ClickHouse"]
+        CDN["CDN (CloudFront / Fastly)<br/>Edge caching for client SDK bootstrap (TTL 60s, SWR 300s)"] --> SDKSvc
+    end
+    subgraph West["Region: EU-West (Replicated)"]
+        EU_Info["PostgreSQL Read Replica (async from US-East) | Independent Redis &amp; SSE Gateway<br/>SDK connections routed to nearest region via GeoDNS"]
+    end
+    East -->|"Async Replication"| West
 ```
 
 ### 灾难恢复

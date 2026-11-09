@@ -689,50 +689,13 @@ CREATE INDEX idx_idem_expiry ON idempotency_keys(expires_at);
 
 ## 4. High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              CLIENT LAYER                                       │
-│   Mobile App    │    Web App    │   POS Terminal   │   Partner System            │
-└────────┬────────┴───────┬───────┴────────┬─────────┴──────────┬─────────────────┘
-         │                │                │                    │
-         ▼                ▼                ▼                    ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            API GATEWAY                                          │
-│   Rate Limiting  │  Auth (JWT/API Key)  │  Request Routing  │  Idempotency      │
-└────────┬────────┬───────┬───────┬───────┬────────┬──────────┬───────────────────┘
-         │        │       │       │       │        │          │
-         ▼        │       ▼       │       ▼        │          ▼
-┌────────────┐    │ ┌──────────┐  │ ┌──────────┐   │  ┌──────────────┐
-│   Points   │    │ │   Tier   │  │ │ Rewards  │   │  │   Partner    │
-│   Engine   │    │ │  Engine  │  │ │ Catalog  │   │  │   Gateway    │
-│            │    │ │          │  │ │ Service  │   │  │              │
-│ - Earn     │    │ │ - Calc   │  │ │ - Browse │   │  │ - Earn/Burn  │
-│ - Redeem   │    │ │ - Up/Down│  │ │ - Avail  │   │  │ - Transfer   │
-│ - Balance  │    │ │ - Grace  │  │ │ - Invent │   │  │ - Settlement │
-│ - Expire   │    │ │ - Status │  │ │          │   │  │              │
-└─────┬──────┘    │ └────┬─────┘  │ └────┬─────┘   │  └──────┬───────┘
-      │           │      │        │      │         │         │
-      ▼           ▼      ▼        ▼      ▼         ▼         ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          EVENT BUS (Kafka)                                       │
-│  points.earned │ points.redeemed │ points.expired │ tier.changed │ partner.txn   │
-└────────┬────────┬───────┬────────┬───────┬────────┬─────────┬───────────────────┘
-         │        │       │        │       │        │         │
-         ▼        │       ▼        │       ▼        │         ▼
-┌────────────┐    │ ┌──────────┐   │ ┌──────────┐   │  ┌──────────────┐
-│   Fraud    │    │ │Notifica- │   │ │Settlement│   │  │  Earning     │
-│ Detection  │    │ │  tion    │   │ │  Engine  │   │  │  Rules       │
-│  Service   │    │ │ Service  │   │ │          │   │  │  Engine      │
-└────────────┘    │ └──────────┘   │ └──────────┘   │  └──────────────┘
-                  │                │                │
-                  ▼                ▼                ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          DATA LAYER                                             │
-│  PostgreSQL     │    Redis        │    S3            │   Elasticsearch           │
-│  (Points Ledger │  (Balances,     │  (Audit Archive, │  (Transaction Search,     │
-│   Tiers, Rules) │   Rules Cache,  │   Ledger Archive)│   Reward Catalog Search)  │
-│                 │   Session)      │                  │                           │
-└─────────────────┴─────────────────┴──────────────────┴───────────────────────────┘
+```mermaid
+flowchart TD
+    Clients["CLIENT LAYER<br/>Mobile App | Web App | POS Terminal | Partner System"] --> GW["API GATEWAY<br/>Rate Limiting | Auth (JWT/API Key) | Request Routing | Idempotency"]
+    GW --> Pts["Points Engine<br/>Earn, Redeem, Balance, Expire"] & Tier["Tier Engine<br/>Calc, Up/Down, Grace, Status"] & Cat["Rewards Catalog Service<br/>Browse, Avail, Inventory"] & Part["Partner Gateway<br/>Earn/Burn, Transfer, Settlement"]
+    Pts & Tier & Cat & Part --> Kafka["EVENT BUS (Kafka)<br/>points.earned | points.redeemed | points.expired | tier.changed | partner.txn"]
+    Kafka --> Fraud["Fraud Detection Service"] & Notif["Notification Service"] & Settle["Settlement Engine"] & Rules["Earning Rules Engine"]
+    Pts & Tier & Cat & Part & Fraud & Notif & Settle & Rules --> Data["DATA LAYER<br/>PostgreSQL (Points Ledger, Tiers, Rules) | Redis (Balances, Rules Cache, Session)<br/>S3 (Audit &amp; Ledger Archive) | Elasticsearch (Txn &amp; Catalog Search)"]
 ```
 
 ### Service Responsibilities
@@ -1120,42 +1083,15 @@ class TierEngine:
 
 ### Tier State Machine
 
-```
-                    ┌──────────────────┐
-         ┌─────────│     GREEN        │
-         │         │  (0 pts)         │
-         │         └────────┬─────────┘
-         │                  │ qualify >= 2,000 pts
-         │                  ▼
-         │         ┌──────────────────┐
-         │  ┌──────│     SILVER       │──────┐
-         │  │      │  (2,000 pts)     │      │
-         │  │      └────────┬─────────┘      │
-         │  │               │ qualify >= 5,000│ retention < 1,500
-         │  │               ▼                │ (after grace)
-         │  │      ┌──────────────────┐      │
-         │  │ ┌────│      GOLD        │────┐ │
-         │  │ │    │  (5,000 pts)     │    │ │
-         │  │ │    └────────┬─────────┘    │ │
-         │  │ │             │ >= 10,000    │ │ retention < 4,000
-         │  │ │             ▼              │ │ (after grace)
-         │  │ │    ┌──────────────────┐    │ │
-         │  │ │    │   PLATINUM       │    │ │
-         │  │ │    │  (10,000 pts)    │    │ │
-         │  │ │    └──────────────────┘    │ │
-         │  │ │             │              │ │
-         │  │ │             │ retention    │ │
-         │  │ │             │ < 8,000      │ │
-         │  │ │             │ (after grace)│ │
-         │  │ │             ▼              │ │
-         │  │ │        DOWNGRADE           │ │
-         │  │ │      to highest            │ │
-         │  │ │     qualifying tier ◄──────┘ │
-         │  │ └──────────────────────────────┘
-         │  │             │
-         │  └──── DOWNGRADE to Green
-         │                │
-         └────────────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> GREEN : 0 pts
+    GREEN --> SILVER : qualify >= 2,000 pts
+    SILVER --> GOLD : qualify >= 5,000 pts
+    SILVER --> GREEN : retention < 1,500 pts (after 60d grace)
+    GOLD --> PLATINUM : qualify >= 10,000 pts
+    GOLD --> SILVER : retention < 4,000 pts (after 90d grace)
+    PLATINUM --> GOLD : retention < 8,000 pts (after 90d grace)
 ```
 
 ### Tier Benefits Application
@@ -1183,41 +1119,24 @@ class TierEngine:
 
 For high-value or physical rewards, use a two-phase redemption to prevent race conditions and handle fulfillment failures.
 
-```
-Member                Points Engine              Rewards Service          Fulfillment
-  │                        │                          │                      │
-  │  1. Request Redeem     │                          │                      │
-  ├───────────────────────>│                          │                      │
-  │                        │  2. Check balance        │                      │
-  │                        │     (SELECT FOR UPDATE)  │                      │
-  │                        │                          │                      │
-  │                        │  3. Check reward avail   │                      │
-  │                        ├─────────────────────────>│                      │
-  │                        │  4. Reward available     │                      │
-  │                        │<─────────────────────────┤                      │
-  │                        │                          │                      │
-  │                        │  5. Place HOLD on points │                      │
-  │                        │  (debit available,       │                      │
-  │                        │   credit held)           │                      │
-  │                        │                          │                      │
-  │  6. Hold confirmed     │                          │                      │
-  │  (holdId, expiresAt)   │                          │                      │
-  │<───────────────────────┤                          │                      │
-  │                        │                          │                      │
-  │  7. Confirm redemption │                          │                      │
-  ├───────────────────────>│                          │                      │
-  │                        │  8. Convert hold         │                      │
-  │                        │     to confirmed         │                      │
-  │                        │                          │                      │
-  │                        │  9. Trigger fulfillment  │                      │
-  │                        ├──────────────────────────┼─────────────────────>│
-  │                        │                          │                      │
-  │                        │  10. Fulfillment done    │                      │
-  │                        │<─────────────────────────┼──────────────────────┤
-  │                        │                          │                      │
-  │  11. Redemption complete│                         │                      │
-  │  (voucher/tracking)    │                          │                      │
-  │<───────────────────────┤                          │                      │
+```mermaid
+sequenceDiagram
+    participant M as "Member"
+    participant PE as "Points Engine"
+    participant RS as "Rewards Service"
+    participant F as "Fulfillment"
+
+    M->>PE: 1. Request Redeem
+    PE->>PE: 2. Check balance (SELECT FOR UPDATE)
+    PE->>RS: 3. Check reward availability
+    RS-->>PE: 4. Reward available
+    PE->>PE: 5. Place HOLD on points (debit available, credit held)
+    PE-->>M: 6. Hold confirmed (holdId, expiresAt)
+    M->>PE: 7. Confirm redemption
+    PE->>PE: 8. Convert hold to confirmed
+    PE->>F: 9. Trigger fulfillment
+    F-->>PE: 10. Fulfillment done
+    PE-->>M: 11. Redemption complete (voucher / tracking)
 ```
 
 ### FIFO Point Consumption (Oldest Points First)

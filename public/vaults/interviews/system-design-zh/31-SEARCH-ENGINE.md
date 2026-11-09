@@ -411,120 +411,38 @@ Segment（一旦写入即不可变）:
 
 ## 4. 高层架构
 
-```
-+--------------------------------------------------+
-|                    客户端层                        |
-|  Web 应用 | 移动应用 | 内部服务                    |
-+--------------------------------------------------+
-                         |
-                         v
-+--------------------------------------------------+
-|              负载均衡器 / API 网关                 |
-|        (限流、认证、路由)                          |
-+--------------------------------------------------+
-           |                          |
-           v                          v
-+---------------------+    +---------------------+
-|  协调节点            |    |   Ingest 节点        |
-|  (查询扇出)          |    |   (文档处理)          |
-|  10 个节点           |    |   5 个节点            |
-+---------------------+    +---------------------+
-           |                          |
-           v                          v
-+--------------------------------------------------+
-|            数据节点集群（100 个节点）                |
-|                                                  |
-|  +----------+  +----------+  +----------+        |
-|  | Shard P0 |  | Shard P1 |  | Shard P2 |  ...  |
-|  | (主分片)  |  | (主分片)  |  | (主分片)  |        |
-|  +----------+  +----------+  +----------+        |
-|  +----------+  +----------+  +----------+        |
-|  | Shard R0 |  | Shard R1 |  | Shard R2 |  ...  |
-|  | (副本)    |  | (副本)    |  | (副本)    |        |
-|  +----------+  +----------+  +----------+        |
-+--------------------------------------------------+
-           |
-           v
-+--------------------------------------------------+
-|            Master 节点集群（3 个节点）               |
-|   集群状态 | Shard 分配 | 选举                      |
-+--------------------------------------------------+
-
-支撑基础设施:
-+------------------+  +------------------+  +------------------+
-|   消息队列        |  |   对象存储        |  |   配置存储        |
-|   (Kafka)        |  |   (S3 / MinIO)   |  |   (ZooKeeper /   |
-|   文档摄取        |  |   快照存储        |  |    etcd)         |
-+------------------+  +------------------+  +------------------+
+```mermaid
+flowchart TD
+    Clients["Client Layer<br/>Web App | Mobile App | Internal Services"] --> LB["Load Balancer / API Gateway<br/>(rate limiting, auth, routing)"]
+    LB --> Coord["Coordinating Nodes<br/>(Query Fan-out, 10 nodes)"] & Ingest["Ingest Nodes<br/>(Doc Processing, 5 nodes)"]
+    Coord & Ingest --> Data["Data Node Cluster (100 nodes)<br/>Primary Shards (P0, P1, P2...) + Replica Shards (R0, R1, R2...)"]
+    Data --> Master["Master Node Cluster (3 nodes)<br/>Cluster state | Shard allocation | Election"]
+    subgraph Support["Supporting Infrastructure"]
+        MQ["Message Queue (Kafka) - Doc ingestion"]
+        Obj["Object Store (S3 / MinIO) - Snapshot store"]
+        Cfg["Config Store (ZooKeeper / etcd)"]
+    end
 ```
 
 ### 写入路径（文档索引）
 
-```
-文档来源
-     |
-     v
-+-------------+     +------------------+     +------------------+
-|  生产者      | --> |  Kafka Topic     | --> |  Ingest 节点      |
-|  (API 调用   |     |  (doc-updates)   |     |  流水线           |
-|   或 CDC)    |     +------------------+     |  - 丰富           |
-+-------------+                              |  - 验证           |
-                                             |  - 转换           |
-                                             +------------------+
-                                                      |
-                                                      v
-                                             +------------------+
-                                             |  文本分析         |
-                                             |  流水线           |
-                                             |  (按字段)         |
-                                             +------------------+
-                                                      |
-                                                      v
-                                             +------------------+
-                                             |  主分片           |
-                                             |  - 写入 WAL      |
-                                             |  - 添加到缓冲区   |
-                                             |  - Refresh ->    |
-                                             |    新 segment     |
-                                             +------------------+
-                                                      |
-                                                      v
-                                             +------------------+
-                                             |  副本分片         |
-                                             |  (并行写入)       |
-                                             +------------------+
+```mermaid
+flowchart TD
+    Src["Document Source"] --> Prod["Producer (API call or CDC)"] --> Kafka["Kafka Topic (doc-updates)"]
+    Kafka --> Ingest["Ingest Node Pipeline<br/>- Enrich, Validate, Transform"]
+    Ingest --> Text["Text Analysis Pipeline<br/>(per field)"]
+    Text --> Pri["Primary Shard<br/>- Write to WAL<br/>- Add to buffer<br/>- Refresh -> new segment"]
+    Pri --> Rep["Replica Shards<br/>(parallel write)"]
 ```
 
 ### 读取路径（查询执行）
 
-```
-客户端查询
-     |
-     v
-+------------------+
-|  协调节点         |  1. 解析并验证查询
-|                  |  2. 确定目标 shard
-|                  |  3. 扇出到 N 个 shard
-+------------------+
-     |   (scatter)
-     +----------+----------+----------+
-     v          v          v          v
- Shard 0    Shard 1    Shard 2    Shard N
-  本地        本地        本地        本地
-  搜索        搜索        搜索        搜索
-  Top-K       Top-K       Top-K       Top-K
-     |          |          |          |
-     +----------+----------+----------+
-                   | (gather)
-                   v
-            +------------------+
-            |  协调节点         |  4. 合并并重新排名 top-K
-            |                  |  5. 获取 top hits 的 _source
-            |                  |  6. 运行聚合
-            +------------------+
-                   |
-                   v
-              响应结果
+```mermaid
+flowchart TD
+    Q["Client Query"] --> Coord1["Coordinating Node<br/>1. Parse &amp; validate query<br/>2. Determine target shards<br/>3. Fan out (scatter) to N shards"]
+    Coord1 --> S0["Shard 0<br/>Local Search Top-K"] & S1["Shard 1<br/>Local Search Top-K"] & S2["Shard 2<br/>Local Search Top-K"] & SN["Shard N<br/>Local Search Top-K"]
+    S0 & S1 & S2 & SN -->|"gather"| Coord2["Coordinating Node<br/>4. Merge &amp; re-rank top-K<br/>5. Fetch _source for top hits<br/>6. Run aggregations"]
+    Coord2 --> Resp["Response"]
 ```
 
 ---
@@ -627,52 +545,14 @@ FST 示例，词项: ["cat", "cats", "car", "cars", "bar"]
 
 ### 流水线概览
 
-```
-原始输入: "The Quick-Brown Foxes are RUNNING fast!"
-               |
-               v
-     +------------------+
-     |    Tokenizer     |  按空白/标点分词
-     +------------------+
-               |
-               v
-     ["The", "Quick", "Brown", "Foxes", "are", "RUNNING", "fast"]
-               |
-               v
-     +------------------+
-     |  小写过滤器       |  统一大小写
-     +------------------+
-               |
-               v
-     ["the", "quick", "brown", "foxes", "are", "running", "fast"]
-               |
-               v
-     +------------------+
-     | 停用词过滤器      |  移除高频词
-     +------------------+  (按语言可配置)
-               |
-               v
-     ["quick", "brown", "foxes", "running", "fast"]
-               |
-               v
-     +------------------+
-     |  词干提取/词形还原 |  还原为词根形式
-     +------------------+  (英语使用 Snowball/Porter)
-               |
-               v
-     ["quick", "brown", "fox", "run", "fast"]
-               |
-               v
-     +------------------+
-     | 同义词扩展器      |  扩展同义词（可选）
-     +------------------+
-               |
-               v
-     ["quick", "brown", "fox", "run", "fast",
-      "rapid", "swift"]          // "fast" -> 也索引同义词
-               |
-               v
-     最终 Token -> 写入 Inverted Index
+```mermaid
+flowchart TD
+    Raw["Raw Input: 'The Quick-Brown Foxes are RUNNING fast!'"] --> Tok["Tokenizer (Split on whitespace/punctuation)<br/>['The', 'Quick', 'Brown', 'Foxes', 'are', 'RUNNING', 'fast']"]
+    Tok --> Lower["Lowercase Filter<br/>['the', 'quick', 'brown', 'foxes', 'are', 'running', 'fast']"]
+    Lower --> Stop["Stop Word Filter<br/>['quick', 'brown', 'foxes', 'running', 'fast']"]
+    Stop --> Stem["Stemmer / Lemmatizer (Snowball/Porter)<br/>['quick', 'brown', 'fox', 'run', 'fast']"]
+    Stem --> Syn["Synonym Expander<br/>['quick', 'brown', 'fox', 'run', 'fast', 'rapid', 'swift']"]
+    Syn --> Out["Final Tokens -> Written to Inverted Index"]
 ```
 
 ### 分析器类型

@@ -398,93 +398,38 @@ CREATE INDEX idx_pm_user ON payment_methods(user_id);
 
 ## 4. 高层架构
 
-```
-+------------------+     +------------------+     +------------------+
-|   移动端应用      |     |   Web 客户端      |     |  商户 SDK         |
-+--------+---------+     +--------+---------+     +--------+---------+
-         |                        |                        |
-         +------------------------+------------------------+
-                                  |
-                          +-------v--------+
-                          |  API Gateway   |
-                          | (认证, TLS,     |
-                          |  限流)          |
-                          +-------+--------+
-                                  |
-              +-------------------+-------------------+
-              |                   |                   |
-    +---------v------+  +---------v------+  +---------v------+
-    | 钱包服务        |  | 转账服务        |  | 充值/提现       |
-    | (余额读取,      |  | (P2P, 支付)    |  |    服务         |
-    |  KYC 检查)      |  |                |  | (ACH, 银行卡)   |
-    +--------+-------+  +--------+-------+  +--------+-------+
-             |                   |                   |
-             +-------------------+-------------------+
-                                  |
-                     +------------v-----------+
-                     |    账本服务             |
-                     | (double-entry 写入,     |
-                     |  余额变更,              |
-                     |  幂等性检查)            |
-                     +------------+-----------+
-                                  |
-               +------------------+------------------+
-               |                  |                  |
-     +---------v------+  +--------v-------+  +-------v--------+
-     |  主数据库       |  |   只读副本      |  |  账本归档       |
-     | (PostgreSQL,   |  | (PostgreSQL    |  |  (冷存储,       |
-     |  同步复制)      |  |  流式副本)      |  |  S3/Parquet,   |
-     |                |  |                |  |  7年保留)       |
-     +----------------+  +----------------+  +----------------+
-                                  |
-               +------------------+------------------+
-               |                  |                  |
-     +---------v------+  +--------v-------+  +-------v--------+
-     |  Redis 集群    |  |  Kafka 集群    |  |  欺诈引擎       |
-     | (余额缓存,     |  | (事件流:       |  | (ML 评分,       |
-     |  幂等性,       |  |  交易事件,      |  |  速率检查,      |
-     |  限流)         |  |  审计流)        |  |  设备指纹)      |
-     +----------------+  +----------------+  +----------------+
-                                  |
-               +------------------+------------------+
-               |                  |                  |
-     +---------v------+  +--------v-------+  +-------v--------+
-     | 通知服务        |  | 对账服务        |  |  合规服务       |
-     | (推送/邮件/     |  | (每日批处理,    |  |  (KYC,         |
-     |  短信)          |  |  银行对账单)    |  |  AML, SAR      |
-     |                |  |                |  |  报告)          |
-     +----------------+  +----------------+  +----------------+
+```mermaid
+flowchart TD
+    Mob["Mobile App"] & Web["Web Client"] & SDK["Merchant SDK"] --> GW["API Gateway<br/>(Auth, TLS, Rate Limit)"]
+    GW --> WalletSvc["Wallet Service<br/>(balance read, KYC checks)"] & TransSvc["Transfer Service<br/>(P2P, payments)"] & TopupSvc["Topup/Withdraw Service<br/>(ACH, cards)"]
+    WalletSvc & TransSvc & TopupSvc --> LedgerSvc["Ledger Service<br/>(double-entry writes, balance mutations, idempotency)"]
+    LedgerSvc --> PriDB["Primary DB (PostgreSQL sync repl)"] & RepDB["Read Replica (PostgreSQL)"] & Arch["Ledger Archive (S3/Parquet, 7-yr retain)"]
+    LedgerSvc --> Redis["Redis Cluster (balance cache, idempotency)"] & Kafka["Kafka Cluster (txn &amp; audit events)"] & Fraud["Fraud Engine (ML, velocity, device fp)"]
+    Kafka --> Notif["Notification Service"] & Recon["Reconciliation Service (daily batch)"] & Comp["Compliance Service (KYC, AML, SAR)"]
 ```
 
 ### 转账流程时序图
 
-```
-Client              API Gateway         Transfer Svc        Ledger Svc          DB
-  |                      |                   |                   |               |
-  |-- POST /transfers --> |                   |                   |               |
-  |                      |-- 认证 + 限流 ---->|                   |               |
-  |                      |                   |-- 幂等性检查 ------>|               |
-  |                      |                   |                   |-- SELECT key ->|
-  |                      |                   |                   |<-- 未找到 ------|
-  |                      |                   |-- 欺诈评分 ------> Fraud Engine    |
-  |                      |                   |<-- 评分: 12 ----|                   |
-  |                      |                   |-- 开始事务 ------->|               |
-  |                      |                   |                   |-- BEGIN ------>|
-  |                      |                   |                   |-- 锁定 from_wallet (SELECT FOR UPDATE)
-  |                      |                   |                   |-- 锁定 to_wallet (SELECT FOR UPDATE)
-  |                      |                   |                   |-- 检查余额     |
-  |                      |                   |                   |-- INSERT 交易 --|
-  |                      |                   |                   |-- INSERT 2条账本条目
-  |                      |                   |                   |-- UPDATE from_balance
-  |                      |                   |                   |-- UPDATE to_balance
-  |                      |                   |                   |-- INSERT 幂等键
-  |                      |                   |                   |-- INSERT 审计日志
-  |                      |                   |                   |-- COMMIT ------>|
-  |                      |                   |<-- 已提交 -------- |               |
-  |                      |                   |-- 发布事件 ------> Kafka           |
-  |<-- 201 响应 --------- |<-- 响应 ----------|                   |               |
-  |                      |                   |                   通知服务          |
-  |                      |                   |                   (异步, 推送)     |
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant GW as "API Gateway"
+    participant TS as "Transfer Svc"
+    participant LS as "Ledger Svc"
+    participant DB as "Database"
+
+    C->>GW: POST /transfers
+    GW->>TS: Auth + rate limit check
+    TS->>LS: Idempotency check
+    LS->>DB: SELECT idempotency key (not found)
+    TS->>TS: Fraud Engine score check (score: 12)
+    TS->>LS: Begin transfer transaction
+    LS->>DB: BEGIN -> SELECT FOR UPDATE (from_wallet, to_wallet) -> check balance -> INSERT txn & 2 ledger entries -> UPDATE balances -> INSERT idempotency & audit_log -> COMMIT
+    DB-->>LS: Committed
+    LS-->>TS: Committed
+    TS->>TS: Publish event to Kafka (async push notification)
+    TS-->>GW: 201 Created
+    GW-->>C: 201 Response
 ```
 
 ---

@@ -151,7 +151,7 @@ stateDiagram-v2
     CHECKED_IN --> CHECKED_OUT : guest departs (full payment)
     CHECKED_OUT --> [*]
     CANCELLED --> [*]
-````
+```
 
 **Transitions:**
 

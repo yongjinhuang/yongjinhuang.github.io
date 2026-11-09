@@ -550,123 +550,35 @@ CREATE TABLE articles (
 
 ### 实体关系图
 
-```
-+------------------+       +------------------+       +------------------+
-| organizations    |       | agents           |       | teams            |
-|------------------|       |------------------|       |------------------|
-| id (PK)          |<------| org_id (FK)      |       | id (PK)          |
-| name             |       | email            |   +-->| org_id (FK)      |
-| subdomain        |       | name             |   |   | name             |
-| plan             |       | role             |   |   | assignment_mode  |
-| timezone         |       | status           |   |   +------------------+
-| business_hours   |       | skills[]         |   |          |
-+------------------+       | max_capacity     |   |   +------+-------+
-        |                  +------------------+   |   | team_members   |
-        |                         |               |   |----------------|
-        v                         v               |   | team_id (FK)   |
-+------------------+       +------------------+   |   | agent_id (FK)  |
-| sla_policies     |       | tickets          |   |   +----------------+
-|------------------|       |------------------|   |
-| id (PK)          |<------| sla_policy_id    |   |
-| org_id (FK)      |       | org_id (FK)      |---+
-| conditions       |       | subject          |
-| first_resp_*     |       | status           |
-| resolution_*     |       | priority         |
-+------------------+       | requester_id (FK)|----->+------------------+
-                           | assignee_id (FK) |----->| customers        |
-                           | team_id (FK)     |      |------------------|
-                           | channel          |      | id (PK)          |
-                           | tags[]           |      | org_id (FK)      |
-                           | custom_fields    |      | email            |
-                           +------------------+      +------------------+
-                                  |
-                    +-------------+-------------+
-                    |             |             |
-             +------+---+  +-----+------+  +---+--------+
-             | comments  |  | audit_logs |  | sla_breaches|
-             |-----------|  |------------|  |-------------|
-             | ticket_id |  | ticket_id  |  | ticket_id   |
-             | author_id |  | actor_id   |  | breach_type |
-             | body      |  | action     |  | target_min  |
-             | is_internal| | changes    |  | actual_min  |
-             +-----------+  +------------+  +-------------+
+```mermaid
+erDiagram
+    ORGANIZATIONS ||--o{ AGENTS : "employs"
+    ORGANIZATIONS ||--o{ TEAMS : "has"
+    ORGANIZATIONS ||--o{ SLA_POLICIES : "defines"
+    ORGANIZATIONS ||--o{ CUSTOMERS : "serves"
+    ORGANIZATIONS ||--o{ TICKETS : "owns"
+    TEAMS ||--o{ TEAM_MEMBERS : "includes"
+    AGENTS ||--o{ TEAM_MEMBERS : "belongs to"
+    SLA_POLICIES ||--o{ TICKETS : "governs"
+    CUSTOMERS ||--o{ TICKETS : "requests"
+    AGENTS ||--o{ TICKETS : "assigned to"
+    TICKETS ||--o{ COMMENTS : "has"
+    TICKETS ||--o{ AUDIT_LOGS : "records"
+    TICKETS ||--o{ SLA_BREACHES : "tracks"
 ```
 
 ---
 
 ## 高层架构
 
-```
-                         ┌──────────────────────────────────────────────────┐
-                         │              全渠道接入                          │
-                         │                                                  │
-                         │  ┌─────┐ ┌──────┐ ┌───────┐ ┌─────┐ ┌───────┐ │
-                         │  │邮件 │ │ 聊天 │ │Web    │ │ API │ │社交   │ │
-                         │  │     │ │      │ │表单   │ │     │ │媒体   │ │
-                         │  └──┬──┘ └──┬───┘ └──┬────┘ └──┬──┘ └──┬────┘ │
-                         └─────┼───────┼────────┼─────────┼───────┼──────┘
-                               │       │        │         │       │
-                               v       v        v         v       v
-                         ┌──────────────────────────────────────────────────┐
-                         │              API 网关 / 负载均衡器               │
-                         │         （限流、认证、租户 ID）                  │
-                         └──────────────────────┬───────────────────────────┘
-                                                │
-                    ┌───────────────────────────┼───────────────────────────┐
-                    │                           │                           │
-                    v                           v                           v
-          ┌─────────────────┐      ┌─────────────────────┐    ┌────────────────────┐
-          │  工单服务        │      │  评论服务            │    │  客户服务           │
-          │                  │      │                      │    │                     │
-          │ - CRUD           │      │ - 添加/编辑评论      │    │ - 客户档案          │
-          │ - 状态管理       │      │ - 内部备注           │    │ - 联系人合并        │
-          │ - 字段更新       │      │ - 附件               │    │ - 历史查询          │
-          └───────┬──────────┘      └──────────┬───────────┘    └────────────────────┘
-                  │                             │
-                  v                             v
-          ┌──────────────────────────────────────────────┐
-          │              事件总线 (Kafka)                 │
-          │   ticket.created | ticket.updated |          │
-          │   comment.added  | sla.breached   |          │
-          └───┬───────┬──────────┬──────────┬────────────┘
-              │       │          │          │
-              v       v          v          v
-    ┌──────────┐ ┌─────────┐ ┌──────────┐ ┌───────────────┐
-    │ 路由     │ │  SLA    │ │通知      │ │  搜索         │
-    │ 引擎     │ │ 监控器  │ │服务      │ │  索引器       │
-    │          │ │         │ │          │ │               │
-    │ - 规则   │ │ - 计时  │ │ - 邮件   │ │ - Elastic-    │
-    │ - 技能   │ │ - 违规  │ │ - 推送   │ │   search      │
-    │ - 负载   │ │ - 暂停  │ │ - WS     │ │ - 全文        │
-    │   均衡   │ │ - 升级  │ │ - Slack  │ │ - 分面        │
-    └──────────┘ └─────────┘ └──────────┘ └───────────────┘
-              │       │          │
-              v       v          v
-    ┌──────────┐ ┌─────────┐ ┌──────────┐ ┌───────────────┐
-    │自动化    │ │AI / ML  │ │分析      │ │ 知识          │
-    │引擎      │ │服务     │ │服务      │ │ 库            │
-    │          │ │         │ │          │ │               │
-    │ - 触发器 │ │ - 分类  │ │ - CSAT   │ │ - 文章        │
-    │ - 定时   │ │ - 情感  │ │ - 客服   │ │ - 搜索        │
-    │   任务   │ │ - 建议  │ │   绩效   │ │ - 建议        │
-    │ - 规则   │ │ - 机器人│ │ - SLA    │ │ - 分流        │
-    └──────────┘ └─────────┘ └──────────┘ └───────────────┘
-              │       │          │              │
-              v       v          v              v
-    ┌────────────────────────────────────────────────────────┐
-    │                    数据层                               │
-    │                                                        │
-    │  ┌──────────┐  ┌───────────┐  ┌──────┐  ┌──────────┐ │
-    │  │PostgreSQL│  │Elastic-   │  │Redis │  │对象      │ │
-    │  │(分片)    │  │search     │  │缓存  │  │存储      │ │
-    │  │          │  │集群       │  │      │  │(S3)      │ │
-    │  │- 工单    │  │- 全文     │  │- 热  │  │- 附件    │ │
-    │  │- 评论    │  │  搜索     │  │  数据│  │- 导出    │ │
-    │  │- 客服    │  │- 分析     │  │- WS  │  │          │ │
-    │  │- SLA     │  │- 建议     │  │  发布│  │          │ │
-    │  │- 审计    │  │           │  │  /订阅│  │          │ │
-    │  └──────────┘  └───────────┘  └──────┘  └──────────┘ │
-    └────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Intake["OMNICHANNEL INTAKE<br/>Email | Chat | Web Form | API | Social Media"] --> GW["API GATEWAY / LOAD BALANCER<br/>(Rate Limiting, Auth, Tenant ID)"]
+    GW --> TktSvc["TICKET SERVICE<br/>CRUD, Status mgmt, Field updates"] & CmtSvc["COMMENT SERVICE<br/>Add/edit comments, Internal notes, Attachments"] & CustSvc["CUSTOMER SERVICE<br/>Profiles, Contact merge, History"]
+    TktSvc & CmtSvc --> Kafka["EVENT BUS (Kafka)<br/>ticket.created | ticket.updated | comment.added | sla.breached"]
+    Kafka --> Route["ROUTING ENGINE<br/>Rules, Skills, Load balance"] & SLA["SLA MONITOR<br/>Timer, Breach, Pause, Escal."] & Notif["NOTIFICATION SVC<br/>Email, Push, WS, Slack"] & Search["SEARCH INDEXER<br/>Elasticsearch, Full-text, Faceted"]
+    Kafka --> Auto["AUTOMATION ENGINE<br/>Triggers, Time-based rules"] & AI["AI / ML SERVICE<br/>Classify, Sentiment, Suggest, Chatbot"] & Ana["ANALYTICS SERVICE<br/>CSAT, Agent perf, SLA"] & KB["KNOWLEDGE BASE<br/>Articles, Search, Deflection"]
+    Route & SLA & Notif & Search & Auto & AI & Ana & KB --> Data["DATA LAYER<br/>PostgreSQL (sharded) | Elasticsearch Cluster | Redis Cache | Object Storage (S3)"]
 ```
 
 ---
@@ -675,57 +587,18 @@ CREATE TABLE articles (
 
 ### 状态机
 
-```
-                          ┌─────────────────────────┐
-                          │    工单生命周期           │
-                          │      状态机              │
-                          └─────────────────────────┘
-
-    ┌───────┐    客服接手           ┌───────┐
-    │  新建  │ ──────────────────>   │ 处理中│
-    │       │    或自动分配         │       │
-    └───┬───┘                       └───┬───┘
-        │                               │
-        │  自动路由                      │  客服回复，等待
-        │  （无可用客服）                │  客户响应
-        │                               │
-        │         ┌─────────────────────v───────┐
-        │         │         等待中               │
-        │         │  （SLA 计时器已暂停）        │
-        │         └────────────┬────────────────┘
-        │                      │
-        │                      │  客户响应
-        │                      │  （SLA 计时器恢复）
-        │                      │
-        │         ┌────────────v────────────────┐
-        │         │         处理中               │
-        │         │  （返回客服）                │◄─────────────────┐
-        │         └────────────┬────────────────┘                  │
-        │                      │                                    │
-        │         ┌────────────v────────────────┐                  │
-        │         │        暂挂                  │                  │
-        │         │  （等待第三方）              │                  │
-        │         │  （SLA 计时器已暂停）        │──────────────────┘
-        │         └─────────────────────────────┘   第三方响应
-        │
-        │         ┌─────────────────────────────┐
-        └────────>│        已解决                │
-                  │  （客服标记为已解决）         │
-                  └────────────┬────────────────┘
-                               │
-                               │  X 天后自动关闭
-                               │  （可配置）
-                               │
-                  ┌────────────v────────────────┐
-                  │        已关闭                │
-                  │  （最终状态，不可变）         │
-                  └─────────────────────────────┘
-
-    重新打开规则：
-    ──────────────────
-    已解决 → 处理中  ：客户在自动关闭窗口内回复
-    已关闭 → 新建    ：创建后续工单（关联原工单）
-    任意   → 处理中  ：客服手动重新打开（记录审计日志）
+```mermaid
+stateDiagram-v2
+    [*] --> NEW
+    NEW --> OPEN : Agent picks up or auto-assigned
+    NEW --> SOLVED : Auto-resolved
+    OPEN --> PENDING : Agent replies, awaiting customer (SLA timer PAUSED)
+    PENDING --> OPEN : Customer responds (SLA timer RESUMES)
+    OPEN --> ON_HOLD : Waiting on 3rd party (SLA timer PAUSED)
+    ON_HOLD --> OPEN : 3rd party responds
+    OPEN --> SOLVED : Agent marks resolved
+    SOLVED --> OPEN : Customer replies within auto-close window
+    SOLVED --> CLOSED : Auto-close after X days (final, immutable)
 ```
 
 ### 状态转换规则（代码中强制执行）
@@ -813,46 +686,16 @@ def handle_customer_reply(ticket, comment):
 
 ### 路由架构
 
-```
-                    新工单创建
-                          │
-                          v
-                ┌─────────────────────┐
-                │  路由引擎           │
-                └─────────┬───────────┘
-                          │
-              ┌───────────┼───────────────┐
-              │           │               │
-              v           v               v
-     ┌──────────────┐ ┌────────────┐ ┌─────────────┐
-     │ 基于规则的   │ │ 基于技能的 │ │ AI 预测     │
-     │ 路由         │ │ 匹配       │ │ 路由         │
-     │              │ │            │ │              │
-     │ IF category= │ │ 将工单     │ │ ML 模型     │
-     │ "billing"    │ │ 技能与     │ │ 从内容      │
-     │ THEN team=   │ │ 客服技能   │ │ 预测最佳    │
-     │ "billing"    │ │ 匹配       │ │ 团队        │
-     │              │ │            │ │              │
-     └──────┬───────┘ └─────┬──────┘ └──────┬──────┘
-            │               │               │
-            └───────────────┼───────────────┘
-                            │
-                            v
-                 ┌──────────────────────┐
-                 │  分配引擎            │
-                 └──────────┬───────────┘
-                            │
-              ┌─────────────┼────────────────┐
-              │             │                │
-              v             v                v
-     ┌──────────────┐ ┌─────────────┐ ┌──────────────┐
-     │ 轮询分配     │ │ 负载均衡    │ │ 优先级       │
-     │              │ │             │ │ 队列         │
-     │ 在可用       │ │ 分配给      │ │              │
-     │ 客服间       │ │ 当前负载    │ │ 紧急优先     │
-     │ 循环轮转     │ │ 最低的      │ │ 同优先级     │
-     │              │ │ 客服        │ │ 内 FIFO      │
-     └──────────────┘ └─────────────┘ └──────────────┘
+```mermaid
+flowchart TD
+    New["New Ticket Created"] --> RE["ROUTING ENGINE"]
+    RE --> Rule["Rule-Based Routing<br/>(IF category='billing' THEN team='billing')"]
+    RE --> Skill["Skill-Based Matching<br/>(Match ticket skills to agent skills)"]
+    RE --> AI["AI-Predicted Routing<br/>(ML model predicts best team)"]
+    Rule & Skill & AI --> AE["ASSIGNMENT ENGINE"]
+    AE --> RR["Round-Robin<br/>(Circular rotation across available agents)"]
+    AE --> LB["Load-Balanced<br/>(Assign to agent with lowest current_load)"]
+    AE --> PQ["Priority Queue<br/>(Urgent first, then FIFO within priority)"]
 ```
 
 ### 路由规则评估
@@ -1744,43 +1587,13 @@ def track_deflection(customer_id, article_id, org_id):
 
 ### 工单处理的 AI 流水线
 
-```
-                    新工单
-                        │
-                        v
-              ┌─────────────────────┐
-              │  AI 增强             │
-              │  流水线              │
-              └─────────┬───────────┘
-                        │
-          ┌─────────────┼─────────────────┐
-          │             │                 │
-          v             v                 v
-   ┌────────────┐ ┌──────────────┐ ┌────────────────┐
-   │ 分类器     │ │  情感        │ │  语言          │
-   │            │ │  分析器      │ │  检测器        │
-   │ 优先级：   │ │              │ │                │
-   │  urgent/   │ │  positive/   │ │  en/es/fr/     │
-   │  high/     │ │  neutral/    │ │  de/ja/zh/...  │
-   │  normal/   │ │  negative/   │ │                │
-   │  low       │ │  angry       │ │                │
-   │            │ │              │ │                │
-   │ 类别：     │ │  置信度：    │ │                │
-   │  billing/  │ │  0.0 - 1.0   │ │                │
-   │  technical/│ │              │ │                │
-   │  account/  │ │              │ │                │
-   │  feature/  │ │              │ │                │
-   └──────┬─────┘ └──────┬───────┘ └───────┬────────┘
-          │              │                  │
-          v              v                  v
-   ┌────────────────────────────────────────────────┐
-   │          建议回复引擎                           │
-   │                                                │
-   │  1. 检索类似的已解决工单                       │
-   │  2. 匹配知识库文章                             │
-   │  3. 通过 LLM 生成草稿回复                     │
-   │  4. 客服审核后发送（人在回路中）               │
-   └────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    New["New Ticket"] --> Pipe["AI ENRICHMENT PIPELINE"]
+    Pipe --> Class["CLASSIFIER<br/>Priority: urgent/high/normal/low<br/>Category: billing/technical/account/feature"]
+    Pipe --> Sent["SENTIMENT ANALYZER<br/>positive/neutral/negative/angry<br/>Confidence: 0.0 - 1.0"]
+    Pipe --> Lang["LANGUAGE DETECTOR<br/>en/es/fr/de/ja/zh/..."]
+    Class & Sent & Lang --> Sugg["SUGGESTED RESPONSE ENGINE<br/>1. Retrieve similar resolved tickets<br/>2. Match knowledge base articles<br/>3. Generate draft response via LLM<br/>4. Agent reviews and sends (human-in-loop)"]
 ```
 
 ### 自动分类
@@ -2292,63 +2105,15 @@ Kafka Topic 设计：
 
 ## 部署架构
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        部署架构                                         │
-│                                                                        │
-│  区域: 美东                          区域: 欧西                        │
-│  ┌────────────────────────────────┐   ┌────────────────────────────┐  │
-│  │         Cloudflare CDN         │   │       Cloudflare CDN       │  │
-│  └──────────────┬─────────────────┘   └──────────────┬─────────────┘  │
-│                 │                                     │                │
-│  ┌──────────────v─────────────────┐   ┌──────────────v─────────────┐  │
-│  │     ALB（应用负载均衡器）       │   │     ALB（应用负载均衡器）  │  │
-│  └──────────────┬─────────────────┘   └──────────────┬─────────────┘  │
-│                 │                                     │                │
-│  ┌──────────────v─────────────────┐   ┌──────────────v─────────────┐  │
-│  │   Kubernetes 集群 (EKS)        │   │   Kubernetes 集群 (EKS)    │  │
-│  │                                │   │                            │  │
-│  │  ┌───────────────────────────┐ │   │  ┌───────────────────────┐ │  │
-│  │  │ API 网关 (Kong)           │ │   │  │ API 网关 (Kong)       │ │  │
-│  │  │ - 认证、限流              │ │   │  │ - 认证、限流          │ │  │
-│  │  │ - 租户识别                │ │   │  │ - 租户识别            │ │  │
-│  │  └───────────┬───────────────┘ │   │  └───────────┬───────────┘ │  │
-│  │              │                  │   │              │              │  │
-│  │  ┌───────────v───────────────┐ │   │  （与美东相同的                │
-│  │  │ 微服务                    │ │   │   服务拓扑）                   │
-│  │  │                           │ │   │                            │  │
-│  │  │ ticket-service   (6 pods) │ │   └────────────────────────────┘  │
-│  │  │ comment-service  (4 pods) │ │                                   │
-│  │  │ routing-engine   (3 pods) │ │   共享服务:                       │
-│  │  │ sla-monitor      (2 pods) │ │   ┌────────────────────────────┐  │
-│  │  │ notification-svc (4 pods) │ │   │  Kafka 集群                │  │
-│  │  │ search-indexer   (3 pods) │ │   │  （3 broker，跨区域）      │  │
-│  │  │ email-processor  (4 pods) │ │   └────────────────────────────┘  │
-│  │  │ ai-service       (3 pods) │ │                                   │
-│  │  │ analytics-svc    (2 pods) │ │   ┌────────────────────────────┐  │
-│  │  │ automation-engine(2 pods) │ │   │  对象存储 (S3)             │  │
-│  │  │ websocket-gw     (4 pods) │ │   │  （附件、导出）            │  │
-│  │  └───────────────────────────┘ │   └────────────────────────────┘  │
-│  │                                │                                   │
-│  │  数据层:                       │                                   │
-│  │  ┌───────────────────────────┐ │                                   │
-│  │  │ PostgreSQL (Citus)        │ │                                   │
-│  │  │ - 1 协调器 + 8 工作节点   │ │                                   │
-│  │  │ - 只读副本 (2x)           │ │                                   │
-│  │  │                           │ │                                   │
-│  │  │ Redis 集群（6 节点）      │ │                                   │
-│  │  │ - 缓存 + Pub/Sub + 队列  │ │                                   │
-│  │  │                           │ │                                   │
-│  │  │ Elasticsearch（9 节点）   │ │                                   │
-│  │  │ - 3 主节点 + 6 数据节点   │ │                                   │
-│  │  └───────────────────────────┘ │                                   │
-│  └────────────────────────────────┘                                   │
-│                                                                        │
-│  监控:                                                                 │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │ Datadog（指标 + 链路追踪）| PagerDuty（告警）| Sentry（错误）   │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph US["Region: US-East"]
+        CF_US["Cloudflare CDN"] --> ALB_US["ALB (Application LB)"] --> EKS_US["Kubernetes Cluster (EKS)<br/>API Gateway (Kong) -> Microservices (ticket, comment, routing, sla, notif, search, email, ai, analytics, automation, ws-gw)<br/>Data Layer: PostgreSQL (Citus 1 coord + 8 workers + 2x replicas) | Redis (6 nodes) | Elasticsearch (9 nodes)"]
+    end
+    subgraph EU["Region: EU-West"]
+        CF_EU["Cloudflare CDN"] --> ALB_EU["ALB (Application LB)"] --> EKS_EU["Kubernetes Cluster (EKS)<br/>(Same service topology as US-East)"]
+    end
+    EKS_US & EKS_EU --> Shared["Shared Services &amp; Monitoring:<br/>Kafka Cluster (3 brokers, cross-region) | Object Storage (S3)<br/>Datadog (metrics + traces) | PagerDuty (alerts) | Sentry (errors)"]
 ```
 
 ---

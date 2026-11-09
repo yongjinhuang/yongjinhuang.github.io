@@ -465,69 +465,39 @@ CREATE TABLE messages (
 
 ## 4. 高层架构
 
-```
-+-------------------------------------------------------------------+
-|                        客户端层                                     |
-|  +------------+   +----------------+   +----------------------+  |
-|  | Web (Next) |   | iOS / Android  |   | 卖家后台              |  |
-|  +-----+------+   +-------+--------+   +-----------+----------+  |
-+--------|------------------|-------------------------|-------------+
-         |                  |                         |
-         v                  v                         v
-+-------------------------------------------------------------------+
-|                     CDN / API Gateway                             |
-|    (Cloudflare / AWS CloudFront + API Gateway)                   |
-|    - TLS 终止、DDoS 防护、限流                                     |
-|    - Auth token 验证 (JWT)、请求路由                                |
-+-------------------------------------------------------------------+
-         |
-         v
-+-------------------------------------------------------------------+
-|                    负载均衡器 (第 7 层)                              |
-+----------+----------+----------+----------+----------+-----------+
-           |          |          |          |          |
-+----------v-+  +-----v----+  +-v--------+ +v--------+ +v---------+
-| Listing    |  | Search   |  |Transaction| |Messaging| |User/Auth |
-| Service    |  | Service  |  | Service   | |Service  | |Service   |
-+----------+-+  +-----+----+  +-+--------+ +---------+ +----------+
-           |          |          |
-           |          |          |
-+----------v----------v----------v---------------------------------+
-|                     消息总线 (Kafka)                               |
-|  Topics: listing-events, order-events, review-events,           |
-|          payment-events, fraud-signals, analytics-events         |
-+------------------------------------------------------------------+
-     |          |          |          |          |
-     v          v          v          v          v
-+--------+ +-------+ +--------+ +--------+ +----------+
-|Listing | |Search | |Payment | |Fraud   | |Analytics |
-|Worker  | |Indexer| |Service | |Service | |Processor |
-+---+----+ +---+---+ +---+----+ +--------+ +----------+
-    |           |         |
-+---v---+   +---v---+  +--v----------+
-|Listing|   |Elastic|  |Stripe /     |
-|DB     |   |search |  |Payment GW   |
-|(Postgres) +-------+  +-------------+
-+-------+
+```mermaid
+flowchart TD
+    Web["Web (Next.js)"] & App["iOS / Android"] & Dash["Seller Dashboard"] --> CDN["CDN / API Gateway<br/>TLS termination, DDoS, rate limiting, JWT auth"]
+    CDN --> LB["Load Balancer (Layer 7)"]
+    LB --> ListSvc["Listing Service"] & SearchSvc["Search Service"] & TxnSvc["Transaction Service"] & MsgSvc["Messaging Service"] & AuthSvc["User / Auth Service"]
+    ListSvc & SearchSvc & TxnSvc --> Kafka["Message Bus (Kafka)<br/>Topics: listing-events, order-events, review-events, payment-events, fraud-signals, analytics-events"]
+    Kafka --> LW["Listing Worker"] --> ListDB["Listing DB (Postgres)"]
+    Kafka --> SI["Search Indexer"] --> ES["Elasticsearch"]
+    Kafka --> PS["Payment Service"] --> Stripe["Stripe / Payment GW"]
+    Kafka --> FS["Fraud Service"] & AP["Analytics Processor"]
 ```
 
 ### 购买流程中的服务交互
 
-```
-买家            API Gateway       Transaction Svc    Payment Svc     Escrow Svc
-  |                 |                   |                 |               |
-  |-- POST /orders->|                   |                 |               |
-  |                 |--- 验证 ---------> |                 |               |
-  |                 |                   |-- 欺诈检查 ----> |               |
-  |                 |                   |<- 欺诈通过 ----- |               |
-  |                 |                   |-- 创建订单 ----> |               |
-  |                 |                   |                 |-- 扣款 --->( )
-  |                 |                   |                 |<- 成功 ---|
-  |                 |                   |-- escrow 持有 ----------------->|
-  |                 |                   |<- 已持有 ----------------------|
-  |                 |<-- 200 orderId ---|                  |               |
-  |<-- 订单响应 ----|                   |                  |               |
-  |                 |                   |--发布 order-event 到 Kafka----->|
+```mermaid
+sequenceDiagram
+    participant B as "Buyer"
+    participant GW as "API Gateway"
+    participant TS as "Transaction Svc"
+    participant PS as "Payment Svc"
+    participant ES as "Escrow Svc"
+
+    B->>GW: POST /orders
+    GW->>TS: Validate request
+    TS->>PS: Check fraud
+    PS-->>TS: Fraud OK
+    TS->>PS: Create order & charge payment
+    PS-->>TS: Charge success
+    TS->>ES: Escrow hold
+    ES-->>TS: Held
+    TS-->>GW: 200 orderId
+    GW-->>B: Order response
+    TS->>ES: Publish order-event to Kafka
 ```
 
 ---
@@ -623,27 +593,14 @@ Listing 质量分数（0-100）决定搜索排名和卖家等级。每次更新�
 
 **Listing 生命周期状态机:**
 
-```
-            +--------+
-  卖家      | DRAFT  |
-  创建      +---+----+
-                |  publish()
-                v
-           +--------+    out_of_stock()    +---------+
-           | ACTIVE +-------------------->| PAUSED  |
-           +---+----+                     +----+----+
-               |  售罄 / 手动                  |  restock()
-               |                               |
-               v                               v
-           +--------+                     +--------+
-           |  SOLD  |                     | ACTIVE |
-           +--------+                     +--------+
-               |
-               | admin_remove() / seller_delete()
-               v
-           +---------+
-           | DELETED |
-           +---------+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT : Seller creates
+    DRAFT --> ACTIVE : publish()
+    ACTIVE --> PAUSED : out_of_stock()
+    PAUSED --> ACTIVE : restock()
+    ACTIVE --> SOLD : sold out / manual
+    SOLD --> DELETED : admin_remove() / seller_delete()
 ```
 
 **Listing 创建流水线:**
@@ -683,56 +640,13 @@ Listing 质量分数（0-100）决定搜索排名和卖家等级。每次更新�
 
 ### 搜索架构
 
-```
-+-------------------------------+
-|       搜索查询                 |
-+-------------+-----------------+
-              |
-              v
-+-------------+------------------+
-|       查询解析器                |
-|  - 分词                        |
-|  - 拼写纠正                    |
-|  - 同义词扩展                  |
-|  - 意图分类                    |
-|    （导航型 vs 探索型）         |
-+-------------+------------------+
-              |
-     +--------+--------+
-     |                 |
-     v                 v
-+----+------+    +-----+------+
-| 关键词     |    | 语义       |
-| 搜索       |    | 搜索       |
-|(BM25 在    |    |(Embedding  |
-|Elasticsearch)  |向量 ANN)   |
-+----+------+    +-----+------+
-     |                 |
-     +--------+--------+
-              |
-              v
-+-------------+------------------+
-|       排序 / 打分               |
-|  base_score = BM25 + semantic  |
-|  * quality_score_boost         |
-|  * seller_reputation_boost     |
-|  * recency_decay               |
-|  * personalization_boost       |
-|  * promoted_listing_boost      |
-+-------------+------------------+
-              |
-              v
-+-------------+------------------+
-|     后过滤 / 分面统计           |
-|  - 价格区间                    |
-|  - 类别                        |
-|  - 成色                        |
-|  - 配送：免运费 / 快速          |
-|  - 位置 / 半径                 |
-+-------------+------------------+
-              |
-              v
-           结果
+```mermaid
+flowchart TD
+    Q["Search Query"] --> Parser["Query Parser<br/>Tokenization, Spell correction, Synonym expansion, Intent classification"]
+    Parser --> KW["Keyword Search<br/>(BM25 in Elasticsearch)"] & Sem["Semantic Search<br/>(Embedding vectors ANN)"]
+    KW & Sem --> Rank["Ranking / Scoring<br/>base_score = (BM25 + semantic) * quality_boost * seller_rep * recency * personal * promoted"]
+    Rank --> Filter["Post-Filter / Faceting<br/>Price range, Category, Condition, Shipping, Location/radius"]
+    Filter --> Res["Results"]
 ```
 
 ### 排名算法

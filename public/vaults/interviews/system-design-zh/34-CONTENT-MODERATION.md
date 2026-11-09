@@ -467,56 +467,16 @@ CREATE TABLE policies (
 
 ## 高层架构
 
-```
-+------------------+     +------------------+     +------------------+
-|   移动端/Web      |     |   上传服务        |     |   CDN / 存储      |
-|   客户端          +---->+   （预筛查         +---->+   （S3 / GCS）    |
-|                  |     |    触发器）        |     |                  |
-+------------------+     +--------+---------+     +------------------+
-                                  |
-                    +-------------v--------------+
-                    |      API Gateway / LB       |
-                    +-------------+--------------+
-                                  |
-          +-----------+-----------+-----------+-----------+
-          |           |           |           |           |
-          v           v           v           v           v
-  +-------+--+  +----+-----+  +--+------+  +-+--------+  +----------+
-  | 内容     |  | 举报     |  | Hash   |  | Policy  |  | 申诉     |
-  | 提交     |  | 服务     |  | 匹配    |  | Engine  |  | 服务     |
-  | 服务     |  |          |  | 服务    |  |          |  |          |
-  +----+-----+  +----+-----+  +--+------+  +-+--------+  +----+-----+
-       |              |          |            |                |
-       v              v          v            v                v
-  +----+---------------------------------------------+--------+-----+
-  |                     Kafka Event Bus                              |
-  | Topics: content.submitted, report.created, hash.matched,        |
-  |         decision.made, appeal.filed, policy.updated             |
-  +--+-------------------+------------------+-------------------+---+
-     |                   |                  |                   |
-     v                   v                  v                   v
-+----+------+   +--------+-------+  +-------+------+  +--------+-----+
-| ML        |   | Hash Matching  |  | 人工审核     |  | Action       |
-| Pipeline  |   | 服务           |  | 队列         |  | Executor     |
-| Orchestr. |   | (Redis Bloom + |  | 服务         |  | 服务         |
-|           |   |  Exact DB)     |  |              |  |              |
-+----+------+   +----------------+  +-------+------+  +------+-------+
-     |                                      |                 |
-     v                                      v                 v
-+----+------+   +----------------+  +-------+------+  +------+-------+
-| Text      |   | Image          |  | 审核员       |  | Content DB   |
-| Classifier|   | Classifier     |  | 仪表板       |  | (PostgreSQL) |
-| (BERT/    |   | (ResNet/CLIP)  |  | （分配       |  |              |
-|  Persp.)  |   |                |  |  + 工具）    |  +------+-------+
-+----+------+   +----+-----------+  +--------------+         |
-     |               |                                        v
-     v               v                               +--------+-----+
-+----+---------------+---+                           | 审计日志      |
-| Video/Audio            |                           | (ClickHouse) |
-| Classifier             |                           |              |
-| (Frame Sample +        |                           +--------------+
-|  Audio Transcribe)     |
-+------------------------+
+```mermaid
+flowchart TD
+    Clients["Mobile / Web Clients"] --> Upload["Upload Service (pre-screen trigger)"] --> CDN["CDN / Storage (S3 / GCS)"]
+    Upload --> GW["API Gateway / LB"]
+    GW --> SubSvc["Content Submit Service"] & RepSvc["Report Service"] & HashSvc["Hash Match Service"] & PolEngine["Policy Engine"] & AppSvc["Appeals Service"]
+    SubSvc & RepSvc & HashSvc & PolEngine & AppSvc --> Kafka["Kafka Event Bus<br/>Topics: content.submitted, report.created, hash.matched, decision.made, appeal.filed, policy.updated"]
+    Kafka --> MLOrch["ML Pipeline Orchestrator"] --> TextC["Text Classifier (BERT)"] & ImgC["Image Classifier (ResNet/CLIP)"] & VidC["Video/Audio Classifier"]
+    Kafka --> HashMatch["Hash Matching Service (Redis Bloom + Exact DB)"]
+    Kafka --> HRQueue["Human Review Queue Service"] --> RevDash["Reviewer Dashboard"]
+    Kafka --> ActExec["Action Executor Service"] --> ContentDB["Content DB (PostgreSQL)"] --> Audit["Audit Log (ClickHouse)"]
 ```
 
 ---
@@ -525,62 +485,18 @@ CREATE TABLE policies (
 
 审核流水线是系统的核心。每一条内容在发布或拒绝之前都会经过多个阶段的处理。
 
-```
-内容已提交
-      |
-      v
-+-----+--------+     发现匹配
-| Hash-Based   +-----------------------------> 自动拒绝（CSAM/恐怖主义）
-| Matching     |                               + 执法机构报告
-+-----+--------+
-      | 无匹配
-      v
-+-----+--------+
-| Policy 规则  +----> 黑名单关键词？ -----> 自动拒绝
-| 预过滤       |
-+-----+--------+
-      |
-      v
-+-----+---------------+
-| ML Classification   |
-|                     |
-|  Text Classifier    |
-|  Image Classifier   |
-|  Video Classifier   |
-|  Audio Classifier   |
-+-----+---------------+
-      |
-      v
-+-----+--------------------------------------------+
-|          Confidence Tier 路由                     |
-|                                                   |
-|  Safe Score > 0.95   -----> 自动通过               |
-|                                                   |
-|  Violation Score > 0.99 --> 自动拒绝               |
-|                                                   |
-|  灰色地带 (0.05-0.95) --> 人工审核队列             |
-+---------------------------------------------------+
-      |                           |
-      v                           v
-+-----+-------+           +-------+------+
-| Action      |           | 人工审核     |
-| Executor    |           | 队列         |
-| - 通过      |           | - 优先级     |
-| - 拒绝      |           |   评分       |
-| - 标签      |           | - 分配       |
-| - 年龄限制  |           | - 决定       |
-| - 取消变现  |           | - 审计       |
-+-----+-------+           +-------+------+
-      |                           |
-      v                           v
-+-----+---------------------------+------+
-|              结果                      |
-|  - 通知创作者                          |
-|  - 更新内容状态                        |
-|  - 执行 Feed 层处置                    |
-|  - 发出审计事件                        |
-|  - 更新举报人（如果由举报触发）          |
-+----------------------------------------+
+```mermaid
+flowchart TD
+    Sub["Content Submitted"] --> Hash{"Hash-Based Matching"}
+    Hash -->|"Match Found"| AutoRej1["AUTO-REJECT (CSAM/terrorism)<br/>+ Law enforcement reporting"]
+    Hash -->|"No Match"| Pre{"Policy Rule Pre-filter"}
+    Pre -->|"Blocklist keyword"| AutoRej2["AUTO-REJECT"]
+    Pre -->|"Pass"| ML["ML Classification<br/>(Text, Image, Video, Audio Classifiers)"]
+    ML --> Tier{"Confidence Tier Routing"}
+    Tier -->|"Safe Score &gt; 0.95"| Act["Action Executor<br/>(Approve / Reject / Label / Age-gate)"]
+    Tier -->|"Violation Score &gt; 0.99"| Act
+    Tier -->|"Gray zone (0.05-0.95)"| HR["Human Review Queue<br/>(Priority Scoring, Assignment, Decision)"]
+    Act & HR --> Out["Outcome: Notify creator, Update status, Emit audit event"]
 ```
 
 ### 流水线阶段详情

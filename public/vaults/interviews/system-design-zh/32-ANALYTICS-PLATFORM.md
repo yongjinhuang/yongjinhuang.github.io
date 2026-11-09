@@ -453,94 +453,18 @@ ORDER BY (project_id, experiment_id, distinct_id);
 
 ## 4. 高层架构
 
-```
-+------------------+     +------------------+     +------------------+
-|   Web 浏览器     |     |   移动应用       |     |   服务端         |
-|   (JS SDK)       |     |  (iOS/Android)   |     |   (HTTP API)     |
-+--------+---------+     +--------+---------+     +--------+---------+
-         |                        |                        |
-         +------------------------+------------------------+
-                                  |
-                          HTTPS / TLS 1.3
-                                  |
-                    +-------------v--------------+
-                    |     负载均衡器 (L7)         |
-                    |   (AWS ALB / Nginx/Envoy)  |
-                    +-------------+--------------+
-                                  |
-              +-------------------+-------------------+
-              |                   |                   |
-   +----------v-----+  +----------v-----+  +----------v-----+
-   | Collector Pod  |  | Collector Pod  |  | Collector Pod  |
-   | (无状态)       |  | (无状态)       |  | (无状态)       |
-   |                |  |                |  |                |
-   | - 认证/验证    |  | - 认证/验证    |  | - 认证/验证    |
-   | - 解压缩       |  | - 解压缩       |  | - 解压缩       |
-   | - 基础富化     |  | - 基础富化     |  | - 基础富化     |
-   | - Geo-IP 查找  |  | - Geo-IP 查找  |  | - Geo-IP 查找  |
-   +-------+--------+  +-------+--------+  +-------+--------+
-           |                   |                   |
-           +-------------------+-------------------+
-                               |
-                    +----------v-----------+
-                    |    Apache Kafka      |
-                    |  (raw-events topic)  |
-                    |  40+ 分区            |
-                    |  3x 副本             |
-                    +-----+----------+-----+
-                          |          |
-            +-------------+          +------------------+
-            |                                           |
-   +--------v---------+                      +---------v--------+
-   |  流处理器        |                      | 流处理器         |
-   |  (Flink / Spark  |                      | (身份关联)       |
-   |   Streaming)     |                      |                  |
-   |                  |                      | - 匿名->用户映射|
-   | - 会话化         |                      | - 跨设备识别     |
-   | - 去重           |                      | - 合并画像       |
-   | - 富化           |                      +---------+--------+
-   | - Schema 校验    |                                |
-   +--------+---------+                      +---------v--------+
-            |                                | 身份图谱         |
-            |                                | (Redis Cluster)  |
-            |                                +------------------+
-            |
-   +--------v------------------------------------------+
-   |              Kafka (enriched-events topic)         |
-   +-----+-------------------+------------------+-------+
-         |                   |                  |
-+--------v------+  +---------v-----+  +--------v-------+
-| ClickHouse    |  | 实时           |  | 数据仓库       |
-| 集群          |  | 聚合器         |  | 同步 (Spark)   |
-| (热数据: 30天)|  | (Druid /      |  |                |
-|               |  |  Redis)       |  | - BigQuery     |
-| - 原始事件    |  |               |  | - Snowflake    |
-| - 物化视图    |  | - 分钟级      |  | - Redshift     |
-|               |  |   计数器      |  +----------------+
-| - OLAP 查询   |  | - 实时图表    |
-+--------+------+  +---------+-----+
-         |                   |
-         +--------+----------+
-                  |
-         +--------v---------+
-         |   查询服务       |
-         | (Go / Java API)  |
-         |                  |
-         | - Funnel 引擎    |
-         | - 留存计算       |
-         | - Cohort 构建器  |
-         | - 分群评估       |
-         +--------+---------+
-                  |
-         +--------v---------+
-         |   缓存层         |
-         |   (Redis / CDN)  |
-         +--------+---------+
-                  |
-         +--------v---------+
-         |   仪表盘 UI      |
-         | (React 前端)     |
-         +------------------+
+```mermaid
+flowchart TD
+    Web["Web Browser (JS SDK)"] & Mob["Mobile App (iOS/Android)"] & Srv["Server-Side (HTTP API)"] -->|"HTTPS / TLS 1.3"| LB["Load Balancer (L7)<br/>(AWS ALB / Nginx / Envoy)"]
+    LB --> C1["Collector Pod 1 (Stateless)"] & C2["Collector Pod 2 (Stateless)"] & C3["Collector Pod 3 (Stateless)"]
+    C1 & C2 & C3 --> RawKafka["Apache Kafka (raw-events topic)<br/>40+ partitions, 3x replication"]
+    RawKafka --> Flink["Stream Processor (Flink / Spark)<br/>Sessionize, Deduplicate, Enrich, Schema valid."]
+    RawKafka --> IdJoin["Stream Processor (Identity Join)<br/>Anon->User map, Cross-device, Merge profiles"] --> IdGraph["Identity Graph (Redis Cluster)"]
+    Flink --> EnrKafka["Kafka (enriched-events topic)"]
+    EnrKafka --> CH["ClickHouse Cluster (Hot: 30 days)<br/>Raw events, Materialized views, OLAP"]
+    EnrKafka --> RT["Real-Time Aggregator (Druid / Redis)<br/>Minute-level counters, Live charts"]
+    EnrKafka --> DW["Data Warehouse Sync (Spark)<br/>BigQuery / Snowflake / Redshift"]
+    CH & RT --> Qry["Query Service (Go / Java API)<br/>Funnel, Retention, Cohort, Segment"] --> Cache["Cache Layer (Redis / CDN)"] --> UI["Dashboard UI (React)"]
 ```
 
 ---

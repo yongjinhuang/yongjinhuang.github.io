@@ -130,7 +130,7 @@ stateDiagram-v2
     DOOR_OPEN --> MOVING_DOWN : more DOWN requests
     DOOR_OPEN --> IDLE : queue empty
     DOOR_OPEN --> MAINTENANCE : emergency
-````
+```
 
 **Transitions:**
 

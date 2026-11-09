@@ -491,65 +491,19 @@ guardrail_configs
 
 ## 高层架构
 
-```
-+---------------------------------------------------+
-|                   客户端层                         |
-|  Web 应用 / SDK / API 客户端 / Webhook 接收器       |
-+---------------------------------------------------+
-                         |
-                    HTTPS / WSS
-                         |
-+---------------------------------------------------+
-|              API Gateway + 认证                    |
-|  速率限制 | JWT 验证 | 组织路由                     |
-+---------------------------------------------------+
-          |              |              |
-    +-----+------+ +-----+------+ +----+-------+
-    | Agent API  | | Task API   | | Tool API   |
-    | 服务       | | 服务       | | 服务       |
-    +-----+------+ +-----+------+ +----+-------+
-          |              |              |
-          +------+--------+------+------+
-                         |
-              +----------+-----------+
-              |   编排核心            |
-              |                      |
-              | +------------------+ |
-              | | 任务调度器       | |
-              | +------------------+ |
-              | | Agent 运行器     | |
-              | +------------------+ |
-              | | ReAct 循环控制器 | |
-              | +------------------+ |
-              | | Multi-Agent 管理 | |
-              | +------------------+ |
-              +----------+-----------+
-                /    |    |    \
-               /     |    |     \
-    +---------+  +---+--+ +--+----+ +----------+
-    |  模型   |  |Guard-| |工具   | |  Memory  |
-    | 路由器  |  | rail | |执行   | |  层      |
-    +---------+  +------+ |引擎   | +----------+
-         |                +-------+      |
-    +----+----+                     +----+----+
-    |  LLM   |                     | Redis   |
-    | 代理   |                     | (短期)  |
-    +----+---+                     | pgvect  |
-         |                         | (长期)  |
-    +----+----------------+        +---------+
-    | Claude | GPT | Gem  |
-    | Sonnet | 4o  | Pro  |
-    +--------+-----+------+
-
-    +------------------------------------------+
-    |           可观测性栈                      |
-    |  Token 追踪 | 追踪 | 成本 | 评估         |
-    +------------------------------------------+
-
-    +------------------------------------------+
-    |           数据存储                        |
-    |  PostgreSQL | Redis | S3 | Vector DB     |
-    +------------------------------------------+
+```mermaid
+flowchart TD
+    Clients["Client Layer<br/>Web App / SDK / API Clients / Webhook Receivers"] -->|"HTTPS / WSS"| GW["API Gateway + Auth<br/>Rate limiting | JWT validation | Org routing"]
+    GW --> AgentAPI["Agent API Service"] & TaskAPI["Task API Service"] & ToolAPI["Tool API Service"]
+    AgentAPI & TaskAPI & ToolAPI --> Core["Orchestration Core<br/>Task Scheduler | Agent Runner | ReAct Loop Ctrl | Multi-Agent Mgr"]
+    Core --> Router["Model Router"] --> Proxy["LLM Proxy"] --> Models["Claude Sonnet | GPT-4o | Gemini Pro"]
+    Core --> Guard["Guardrail"]
+    Core --> ToolExec["Tool Exec Engine"]
+    Core --> Mem["Memory Layer"] --> MemStores["Redis (short-term) | pgvector (long-term)"]
+    subgraph Infra["Observability &amp; Data Stores"]
+        Obs["Observability Stack: Token Tracker | Trace | Cost | Eval"]
+        DS["Data Stores: PostgreSQL | Redis | S3 | Vector DB"]
+    end
 ```
 
 ### 请求流程概览
@@ -608,25 +562,11 @@ AI agent 是一种软件系统，它感知环境、推理下一步行动、采�
 
 ### 感知-推理-行动循环
 
-```
-+----------------------------------------------------------+
-|                    AGENT 核心循环                          |
-|                                                          |
-|  +-----------+     +------------+     +------------+     |
-|  |           |     |            |     |            |     |
-|  |  感知     +---->+   推理     +---->+   行动     |     |
-|  |           |     |            |     |            |     |
-|  | - 输入    |     | - LLM 调用 |     | - 工具     |     |
-|  | - Memory  |     | - 规划     |     |   调用     |     |
-|  | - 上下文  |     | - 决策     |     | - API 调用 |     |
-|  |           |     |            |     | - 响应     |     |
-|  +-----+-----+     +------------+     +------+-----+     |
-|        ^                                     |           |
-|        |                                     |           |
-|        +-------------观察-------------------+           |
-|                                                          |
-|         （循环持续直到目标达成）                           |
-+----------------------------------------------------------+
+```mermaid
+flowchart LR
+    P["PERCEIVE<br/>- Input<br/>- Memory<br/>- Context"] --> R["REASON<br/>- LLM call<br/>- Planning<br/>- Decision"]
+    R --> A["ACT<br/>- Tool invoc.<br/>- API call<br/>- Response"]
+    A -->|"OBSERVE (Loop until goal achieved)"| P
 ```
 
 ### 关键特征
@@ -794,35 +734,12 @@ Agent 对自己的输出进行批评并迭代改进。
 
 一个 supervisor agent 协调专门的子 agent。Supervisor 维护整体目标并委派给专家。
 
-```
-+------------------------------------------------------------+
-|                  Supervisor 模式                            |
-|                                                            |
-|                  +-----------+                             |
-|                  | SUPERVISOR|                             |
-|                  |   AGENT   |                             |
-|                  | (规划器,  |                             |
-|                  |  路由器)  |                             |
-|                  +-----+-----+                             |
-|                        |                                   |
-|         +--------------+---------------+                   |
-|         |              |               |                   |
-|  +------+------+ +-----+------+ +------+------+            |
-|  |  研究       | |   代码     | |  写作       |            |
-|  |    AGENT    | |   AGENT    | |    AGENT    |            |
-|  |             | |            | |             |            |
-|  | web_search  | | code_exec  | | format_text |            |
-|  | pdf_reader  | | debugger   | | cite_source |            |
-|  +------+------+ +-----+------+ +------+------+            |
-|         |              |               |                   |
-|         +--------------+---------------+                   |
-|                        |                                   |
-|                  最终结果                                   |
-+------------------------------------------------------------+
-
-通信协议：
-  Supervisor --> 子 agent：{task, context, constraints, deadline}
-  子 agent --> Supervisor：{result, status, confidence, tool_log}
+```mermaid
+flowchart TD
+    Sup["SUPERVISOR AGENT<br/>(Planner, Router)"] --> Res["RESEARCH AGENT<br/>web_search, pdf_reader"]
+    Sup --> Code["CODE AGENT<br/>code_exec, debugger"]
+    Sup --> Write["WRITING AGENT<br/>format_text, cite_source"]
+    Res & Code & Write --> Out["Final Result"]
 ```
 
 ### Peer-to-Peer（协作）模式
@@ -949,38 +866,10 @@ Agent 之间直接通信，无需中央协调器。每个 agent 可以将其他 
 
 ### 工具注册表架构
 
-```
-+--------------------------------------------------------------+
-|                    工具注册表                                  |
-|                                                              |
-|  +------------------+    +---------------------------+       |
-|  |  工具目录 DB     |    |   工具元数据存储           |       |
-|  |                  |    |                           |       |
-|  | - 工具规范       |    | - 版本管理                 |       |
-|  | - Schema         |    | - 弃用管理                 |       |
-|  | - 认证配置       |    | - 使用统计                 |       |
-|  | - 速率限制       |    | - SLA 指标                 |       |
-|  +------------------+    +---------------------------+       |
-|           |                           |                      |
-|           +----------+----------------+                      |
-|                      |                                       |
-|           +----------v-----------+                           |
-|           |   工具执行器 API     |                           |
-|           |                      |                           |
-|           | validate_input()     |                           |
-|           | route_to_sandbox()   |                           |
-|           | execute()            |                           |
-|           | validate_output()    |                           |
-|           | record_execution()   |                           |
-|           +----------+-----------+                           |
-|                      |                                       |
-|       +--------------+--------------+                        |
-|       |              |              |                        |
-|  +----+----+   +-----+----+  +------+----+                   |
-|  |  HTTP   |   |  代码    |  |  MCP      |                   |
-|  | 沙箱    |   |  沙箱    |  | 连接器    |                   |
-|  +---------+   +----------+  +-----------+                   |
-+--------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Cat["Tool Catalog DB<br/>Tool specs, Schemas, Auth configs, Rate limits"] & Meta["Tool Metadata Store<br/>Versioning, Deprecation, Usage stats, SLA metrics"] --> API["Tool Executor API<br/>validate_input() -> route_to_sandbox() -> execute() -> validate_output() -> record_execution()"]
+    API --> HTTP["HTTP Sandbox"] & Code["Code Sandbox"] & MCP["MCP Connector"]
 ```
 
 ### 沙箱执行架构
@@ -1272,68 +1161,14 @@ LLM 响应包含并行 tool call：
 
 ### Guardrail 流水线
 
-```
-+--------------------------------------------------------------+
-|                    Guardrail 流水线                            |
-|                                                              |
-|  用户输入                                                     |
-|      |                                                       |
-|      v                                                       |
-|  +---+-------------------------------------------+           |
-|  |           输入 GUARDRAIL                      |           |
-|  |                                               |           |
-|  | [1] Prompt Injection 检测器                    |           |
-|  |     模式匹配 + LLM 分类器                      |           |
-|  |     阻止："Ignore previous instructions..."    |           |
-|  |                                               |           |
-|  | [2] 毒性 / 有害内容分类器                      |           |
-|  |     模型: 微调分类器                           |           |
-|  |     阈值: > 0.8 = 阻止                        |           |
-|  |                                               |           |
-|  | [3] PII 检测器                                |           |
-|  |     检测: SSN、信用卡、邮箱、电话、地址         |           |
-|  |     动作: 脱敏或拒绝                           |           |
-|  |                                               |           |
-|  | [4] 话题过滤（被阻止的话题列表）               |           |
-|  |     例如：武器、非法活动                       |           |
-|  |                                               |           |
-|  | [5] 长度 / 格式验证器                          |           |
-|  |     最大输入: 50,000 tokens                   |           |
-|  +---+-------------------------------------------+           |
-|      |                                                       |
-|  被阻止？--> 返回拒绝响应                                     |
-|      |                                                       |
-|      v                                                       |
-|  +---+------+                                                |
-|  |   LLM    |                                                |
-|  | 推理     |                                                |
-|  +---+------+                                                |
-|      |                                                       |
-|      v                                                       |
-|  +---+-------------------------------------------+           |
-|  |           输出 GUARDRAIL                      |           |
-|  |                                               |           |
-|  | [1] 毒性 / 有害内容分类器                      |           |
-|  |     与输入相同的模型，更严格的阈值              |           |
-|  |                                               |           |
-|  | [2] 输出中的 PII 检测器                        |           |
-|  |     脱敏泄露的任何 PII                         |           |
-|  |                                               |           |
-|  | [3] 幻觉 / 事实依据检查                        |           |
-|  |     对于 RAG 任务：输出是否有事实依据？         |           |
-|  |                                               |           |
-|  | [4] 格式验证器                                 |           |
-|  |     JSON schema、代码语法检查                  |           |
-|  |                                               |           |
-|  | [5] 拒绝检测                                   |           |
-|  |     模型是否拒绝了？如果意外则升级              |           |
-|  +---+-------------------------------------------+           |
-|      |                                                       |
-|  被阻止？--> 脱敏、拒绝或加入人工审核队列                      |
-|      |                                                       |
-|      v                                                       |
-|  最终响应返回客户端                                            |
-+--------------------------------------------------------------+
+```mermaid
+flowchart TD
+    In["User Input"] --> InGuard["INPUT GUARDRAIL<br/>[1] Prompt Injection Detector<br/>[2] Toxicity / Harm Classifier (&gt;0.8 block)<br/>[3] PII Detector (SSN, CC, email, phone)<br/>[4] Topic Filter (blocked topics)<br/>[5] Length / Format Validator (max 50K tokens)"]
+    InGuard -->|"BLOCKED"| RejIn["Return Rejection Response"]
+    InGuard -->|"PASSED"| LLM["LLM Inference"]
+    LLM --> OutGuard["OUTPUT GUARDRAIL<br/>[1] Toxicity / Harm Classifier<br/>[2] PII in Output Detector<br/>[3] Hallucination / Grounding Check<br/>[4] Format Validator (JSON/syntax)<br/>[5] Refusal Detection"]
+    OutGuard -->|"BLOCKED"| RejOut["Redact, Reject, or Human Review Queue"]
+    OutGuard -->|"PASSED"| Final["Final Response to Client"]
 ```
 
 ### Prompt Injection 防御策略
@@ -1458,49 +1293,15 @@ TOKEN 预算分配算法：
 
 ### 审批工作流架构
 
-```
-+--------------------------------------------------------------+
-|               Human-in-the-Loop 工作流                        |
-|                                                              |
-|  Agent 执行运行中...                                          |
-|       |                                                      |
-|       v                                                      |
-|  +----+------------------------------------------+           |
-|  |  审批触发条件                                  |           |
-|  |                                               |           |
-|  | - Tool call 超过风险阈值                       |           |
-|  |   （例如 send_email、delete_file、transfer$）  |           |
-|  | - 任务置信度低于阈值 (< 0.7)                   |           |
-|  | - 显式调用 approval_required 工具              |           |
-|  | - 每任务成本超过软限制                          |           |
-|  | - 检测到新型/未见过的任务模式                   |           |
-|  +----+------------------------------------------+           |
-|       |                                                      |
-|       v                                                      |
-|  Agent 暂停，状态持久化到数据库                                |
-|       |                                                      |
-|       v                                                      |
-|  +----+------------------------------------------+           |
-|  |  审批请求发送给人类                            |           |
-|  |                                               |           |
-|  | 渠道：邮件、Slack、应用内通知                    |           |
-|  | 载荷：任务上下文、建议的行动、                   |           |
-|  |       风险评估、置信度分数                      |           |
-|  +----+------------------------------------------+           |
-|       |                                                      |
-|       v                                                      |
-|  人类通过审批 UI 审核（< 可配置的超时时间）                     |
-|       |                                                      |
-|  +----+----+------------+                                     |
-|  |         |            |                                     |
-|  v         v            v                                     |
-|批准      拒绝        超时                                     |
-|  |         |            |                                     |
-|  v         v            v                                     |
-| 恢复     任务失败    自动拒绝                                  |
-| agent    附带        （安全默认）                               |
-|          原因                                                 |
-+--------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Run["Agent execution running..."] --> Trig["APPROVAL TRIGGER CONDITIONS<br/>- Tool call exceeds risk threshold (send_email, delete_file, transfer$)<br/>- Task confidence &lt; 0.7<br/>- Explicit approval_required tool called<br/>- Cost exceeds soft limit / Novel pattern"]
+    Trig --> Pause["Agent pauses, state persisted to DB"]
+    Pause --> Req["APPROVAL REQUEST sent to human<br/>(Email, Slack, In-app with context, action, risk, confidence)"]
+    Req --> Rev{"Human Reviews<br/>(&lt; timeout)"}
+    Rev -->|"APPROVE"| Resume["Resume agent"]
+    Rev -->|"REJECT"| Fail["Fail task with reason"]
+    Rev -->|"TIMEOUT"| AutoRej["Auto-reject (safe default)"]
 ```
 
 ### 升级级别

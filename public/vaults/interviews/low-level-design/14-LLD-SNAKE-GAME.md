@@ -132,7 +132,7 @@ stateDiagram-v2
     PAUSED --> PLAYING : resume()
     PLAYING --> GAME_OVER : collision (wall or self)
     GAME_OVER --> PLAYING : restart()
-````
+```
 
 **Transitions:**
 

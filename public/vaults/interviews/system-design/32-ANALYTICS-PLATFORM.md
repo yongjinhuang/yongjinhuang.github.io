@@ -453,94 +453,18 @@ ORDER BY (project_id, experiment_id, distinct_id);
 
 ## 4. High-Level Architecture
 
-```
-+------------------+     +------------------+     +------------------+
-|   Web Browser    |     |   Mobile App     |     |   Server-Side    |
-|   (JS SDK)       |     |  (iOS/Android)   |     |   (HTTP API)     |
-+--------+---------+     +--------+---------+     +--------+---------+
-         |                        |                        |
-         +------------------------+------------------------+
-                                  |
-                          HTTPS / TLS 1.3
-                                  |
-                    +-------------v--------------+
-                    |     Load Balancer (L7)     |
-                    |   (AWS ALB / Nginx/Envoy)  |
-                    +-------------+--------------+
-                                  |
-              +-------------------+-------------------+
-              |                   |                   |
-   +----------v-----+  +----------v-----+  +----------v-----+
-   | Collector Pod  |  | Collector Pod  |  | Collector Pod  |
-   | (Stateless)    |  | (Stateless)    |  | (Stateless)    |
-   |                |  |                |  |                |
-   | - Auth/validate|  | - Auth/validate|  | - Auth/validate|
-   | - Decompress   |  | - Decompress   |  | - Decompress   |
-   | - Basic enrich |  | - Basic enrich |  | - Basic enrich |
-   | - Geo-IP lookup|  | - Geo-IP lookup|  | - Geo-IP lookup|
-   +-------+--------+  +-------+--------+  +-------+--------+
-           |                   |                   |
-           +-------------------+-------------------+
-                               |
-                    +----------v-----------+
-                    |    Apache Kafka      |
-                    |  (raw-events topic)  |
-                    |  40+ partitions      |
-                    |  3x replication      |
-                    +-----+----------+-----+
-                          |          |
-            +-------------+          +------------------+
-            |                                           |
-   +--------v---------+                      +---------v--------+
-   |  Stream Processor|                      | Stream Processor |
-   |  (Flink / Spark  |                      | (Identity Join)  |
-   |   Streaming)     |                      |                  |
-   |                  |                      | - Anon->User map |
-   | - Sessionize     |                      | - Cross-device   |
-   | - Deduplicate    |                      | - Merge profiles |
-   | - Enrich         |                      +---------+--------+
-   | - Schema valid.  |                                |
-   +--------+---------+                      +---------v--------+
-            |                                | Identity Graph   |
-            |                                | (Redis Cluster)  |
-            |                                +------------------+
-            |
-   +--------v------------------------------------------+
-   |              Kafka (enriched-events topic)         |
-   +-----+-------------------+------------------+-------+
-         |                   |                  |
-+--------v------+  +---------v-----+  +--------v-------+
-| ClickHouse    |  | Real-Time     |  | Data Warehouse |
-| Cluster       |  | Aggregator    |  | Sync (Spark)   |
-| (Hot: 30 days)|  | (Druid /      |  |                |
-|               |  |  Redis)       |  | - BigQuery     |
-| - Raw events  |  |               |  | - Snowflake    |
-| - Materialized|  | - Minute-lvl  |  | - Redshift     |
-|   views       |  |   counters    |  +----------------+
-| - OLAP queries|  | - Live charts |
-+--------+------+  +---------+-----+
-         |                   |
-         +--------+----------+
-                  |
-         +--------v---------+
-         |   Query Service  |
-         | (Go / Java API)  |
-         |                  |
-         | - Funnel engine  |
-         | - Retention calc |
-         | - Cohort builder |
-         | - Segment eval   |
-         +--------+---------+
-                  |
-         +--------v---------+
-         |   Cache Layer    |
-         |   (Redis / CDN)  |
-         +--------+---------+
-                  |
-         +--------v---------+
-         |   Dashboard UI   |
-         | (React frontend) |
-         +------------------+
+```mermaid
+flowchart TD
+    Web["Web Browser (JS SDK)"] & Mob["Mobile App (iOS/Android)"] & Srv["Server-Side (HTTP API)"] -->|"HTTPS / TLS 1.3"| LB["Load Balancer (L7)<br/>(AWS ALB / Nginx / Envoy)"]
+    LB --> C1["Collector Pod 1 (Stateless)"] & C2["Collector Pod 2 (Stateless)"] & C3["Collector Pod 3 (Stateless)"]
+    C1 & C2 & C3 --> RawKafka["Apache Kafka (raw-events topic)<br/>40+ partitions, 3x replication"]
+    RawKafka --> Flink["Stream Processor (Flink / Spark)<br/>Sessionize, Deduplicate, Enrich, Schema valid."]
+    RawKafka --> IdJoin["Stream Processor (Identity Join)<br/>Anon->User map, Cross-device, Merge profiles"] --> IdGraph["Identity Graph (Redis Cluster)"]
+    Flink --> EnrKafka["Kafka (enriched-events topic)"]
+    EnrKafka --> CH["ClickHouse Cluster (Hot: 30 days)<br/>Raw events, Materialized views, OLAP"]
+    EnrKafka --> RT["Real-Time Aggregator (Druid / Redis)<br/>Minute-level counters, Live charts"]
+    EnrKafka --> DW["Data Warehouse Sync (Spark)<br/>BigQuery / Snowflake / Redshift"]
+    CH & RT --> Qry["Query Service (Go / Java API)<br/>Funnel, Retention, Cohort, Segment"] --> Cache["Cache Layer (Redis / CDN)"] --> UI["Dashboard UI (React)"]
 ```
 
 ---

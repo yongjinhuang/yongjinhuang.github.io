@@ -933,71 +933,15 @@ WHERE fields->'tags' @> '["entry_tag_arch"]'::jsonb;
 
 ## High-Level Architecture
 
-```
-+-------------------------------------------------------------------+
-|                         CLIENTS                                    |
-|  +----------+  +----------+  +--------+  +---------+  +---------+ |
-|  | Admin UI |  | Web App  |  | Mobile |  |   SSG   |  |   IoT   | |
-|  | (React)  |  | (Next.js)|  |  App   |  | (Gatsby)|  | Device  | |
-|  +----+-----+  +----+-----+  +---+----+  +----+----+  +----+----+ |
-+-------|-------------|-------------|-------------|-------------|-----+
-        |             |             |             |             |
-        v             v             v             v             v
-+-------+-------------+-------------+-------------+-------------+---+
-|                          CDN / Edge Layer                          |
-|  (CloudFront / Fastly / Cloudflare)                               |
-|  - Cache delivery API responses (TTL-based + surrogate keys)      |
-|  - Image transformation at edge (Cloudflare Images / imgproxy)    |
-|  - Serve static assets (media files)                              |
-+--+------------------------------+--+------------------------------+
-   |                              |  |
-   | Cache Miss                   |  | Always (no cache for writes)
-   v                              |  v
-+--+---------------------------+  |  +------------------------------+
-|   Content Delivery API       |  |  |   Content Management API     |
-|   (Read-only, high-perf)     |  |  |   (CRUD, auth, validation)   |
-|                              |  |  |                              |
-|   - REST + GraphQL           |  |  |   - REST endpoints           |
-|   - Response caching (Redis) |  |  |   - Schema validation        |
-|   - Reference resolution     |  |  |   - Versioning               |
-|   - Locale negotiation       |  |  |   - Permission enforcement   |
-|   - Query optimization       |  |  |   - Audit logging            |
-+--+---------------------------+  |  +--+--+--+---------------------+
-   |                              |     |  |  |
-   |                              |     |  |  +-----> Webhook Service
-   |                              |     |  |         (async delivery,
-   |                              |     |  |          retry, signing)
-   |                              |     |  |
-   |  +---------------------------+     |  +-----> Scheduled Action
-   |  |                                 |          Worker (cron-based,
-   |  |                                 |          publish/unpublish)
-   v  v                                 v
-+--+--+--+     +------------------+  +--+------------------+
-| Read   |     | Search Index     |  | Media Asset         |
-| Replicas|<---| (Elasticsearch)  |  | Pipeline            |
-| (PG)   |    |                  |  |                     |
-+--+-----+    | - Full-text      |  | - Upload service    |
-   |          | - Faceted filter |  | - Image processor   |
-   |          | - Autocomplete   |  |   (Sharp/imgproxy)  |
-   v          +------------------+  | - Video transcoder  |
-+--+-----+                         |   (FFmpeg/MediaConvert)
-| Primary |                         | - CDN invalidation  |
-| DB (PG) |                         +--+------------------+
-| - Entries|                            |
-| - Types  |                            v
-| - Users  |                         +--+------------------+
-| - Audit  |                         | Object Storage      |
-+----------+                         | (S3 / GCS)          |
-                                     | - Original files    |
-   +-------------------+             | - Derived variants  |
-   | Cache Layer        |             +---------------------+
-   | (Redis Cluster)    |
-   |                    |
-   | - Delivery cache   |            +---------------------+
-   | - Session store    |            | Preview Service     |
-   | - Rate limiting    |            | - Draft rendering   |
-   | - CDN tag mapping  |            | - Token-gated access|
-   +-------------------+             +---------------------+
+```mermaid
+flowchart TD
+    Clients["CLIENTS<br/>Admin UI (React) | Web App (Next.js) | Mobile App | SSG (Gatsby) | IoT Device"] --> CDN["CDN / Edge Layer (CloudFront / Fastly / Cloudflare)<br/>Cache delivery API responses (TTL + surrogate keys) | Edge image transform"]
+    CDN -->|"Cache Miss"| CDA["Content Delivery API (Read-only, high-perf)<br/>REST + GraphQL, Redis cache, Reference resolution, Locale negotiation"]
+    CDN -->|"Always (writes)"| CMA["Content Management API (CRUD, auth, validation)<br/>Schema validation, Versioning, Permissions, Audit logging"]
+    CMA --> WH["Webhook Service<br/>(async delivery, retry, signing)"] & Sched["Scheduled Action Worker<br/>(cron publish/unpublish)"] & Media["Media Asset Pipeline<br/>Upload, Sharp/imgproxy, FFmpeg/MediaConvert"]
+    Media --> S3["Object Storage (S3 / GCS)<br/>Original files + Derived variants"]
+    CDA & CMA --> Rep["Read Replicas (PG)"] & ES["Search Index (Elasticsearch)<br/>Full-text, Faceted filter, Autocomplete"] & Redis["Cache Layer (Redis Cluster)<br/>Delivery cache, Session, Rate limit, CDN tags"] & Prev["Preview Service<br/>Draft rendering, Token-gated"]
+    Rep --> Pri["Primary DB (PG)<br/>Entries, Types, Users, Audit"]
 ```
 
 ### Request Flow: Content Delivery
@@ -1275,44 +1219,18 @@ Example: Add required field "category" with default value:
 
 ### Entry Lifecycle State Machine
 
-```
-                    +---> [in_review] ---+
-                    |         |          |
-                    |    reject|     approve
-                    |         v          |
-[new] --create--> [draft] <--+          |
-                    |                    |
-                    +----publish---------+----> [published]
-                    |                              |
-                    |                         unpublish
-                    |                              |
-                    +<-----------------------------+
-                    |
-                archive
-                    |
-                    v
-               [archived]
-                    |
-                 delete
-                    |
-                    v
-               [deleted] (soft, recoverable for 30 days)
-
-State Transitions:
-+-------------------+-------------------+----------------------+
-| From              | To                | Required Role        |
-+-------------------+-------------------+----------------------+
-| (new)             | draft             | author, editor, admin|
-| draft             | in_review         | author, editor, admin|
-| draft             | published         | editor, admin        |
-| in_review         | draft (rejected)  | editor, admin        |
-| in_review         | published         | editor, admin        |
-| published         | draft (unpublish) | editor, admin        |
-| published         | archived          | admin                |
-| draft/published   | archived          | admin                |
-| archived          | draft             | admin                |
-| any               | deleted           | admin                |
-+-------------------+-------------------+----------------------+
+```mermaid
+stateDiagram-v2
+    [*] --> draft : create
+    draft --> in_review : submit
+    in_review --> draft : reject
+    in_review --> published : approve
+    draft --> published : publish
+    published --> draft : unpublish
+    published --> archived : archive
+    draft --> archived : archive
+    archived --> draft : restore
+    archived --> deleted : delete (soft, recoverable 30d)
 ```
 
 ### Version Management
@@ -1639,45 +1557,21 @@ Notification System:
 
 ### Upload Flow
 
-```
-Upload Architecture (Direct-to-Storage):
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant API as "API Server"
+    participant S3 as "Object Storage (S3)"
 
-Client                  API Server             Object Storage (S3)
-  |                        |                        |
-  |  1. Request upload URL |                        |
-  |  POST /v1/assets/upload|                        |
-  |  { filename, size,     |                        |
-  |    content_type }      |                        |
-  |----------------------->|                        |
-  |                        |  2. Generate presigned  |
-  |                        |     PUT URL             |
-  |                        |----------------------->|
-  |                        |  3. Return presigned URL|
-  |                        |<-----------------------|
-  |  4. Presigned URL +    |                        |
-  |     asset_id           |                        |
-  |<-----------------------|                        |
-  |                                                 |
-  |  5. Upload file directly to S3                  |
-  |  PUT presigned_url     |                        |
-  |------------------------------------------------>|
-  |                        |                        |
-  |  6. Upload complete    |                        |
-  |  POST /v1/assets/{id}/ |                        |
-  |    confirm             |                        |
-  |----------------------->|                        |
-  |                        |  7. Verify file exists  |
-  |                        |----------------------->|
-  |                        |  8. Enqueue processing  |
-  |                        |---> [Processing Queue]  |
-  |  9. Asset confirmed    |                        |
-  |<-----------------------|                        |
-
-Benefits of direct-to-storage:
-  - API server never handles large file bytes
-  - S3 handles multipart upload for large files (> 100MB)
-  - Client shows upload progress bar
-  - Reduces API server bandwidth and memory pressure
+    C->>API: 1. POST /v1/assets/upload {filename, size, content_type}
+    API->>S3: 2. Generate presigned PUT URL
+    S3-->>API: 3. Return presigned URL
+    API-->>C: 4. Presigned URL + asset_id
+    C->>S3: 5. PUT file directly to S3
+    C->>API: 6. POST /v1/assets/{id}/confirm
+    API->>S3: 7. Verify file exists
+    API->>API: 8. Enqueue processing job [Processing Queue]
+    API-->>C: 9. Asset confirmed
 ```
 
 ### Image Processing Pipeline

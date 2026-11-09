@@ -83,29 +83,12 @@ RTB 拍卖:            ~60% 的请求进入公开 RTB = 6B 拍卖/天
 
 ### 参与者和角色
 
-```
-+------------------+         +------------------+         +------------------+
-|   ADVERTISER     |         |    AD EXCHANGE   |         |    PUBLISHER     |
-|   广告主          |         |    广告交易平台    |         |    发布商         |
-|                  |         |                  |         |                  |
-| 希望向用户展示    |         | 运行 RTB 拍卖的   |         | 出售广告位的      |
-| 广告             |         | 市场              |         | 网站/应用         |
-|                  |         |                  |         |                  |
-| 使用 DSP 出价    |         | 连接 DSP          |         | 使用 SSP 出售    |
-+--------+---------+         | 和 SSP            |         +--------+---------+
-         |                   +--------+---------+                  |
-         |                            |                            |
-         v                            |                            v
-+--------+---------+         +--------+---------+         +--------+---------+
-|       DSP        |         |       DMP        |         |       SSP        |
-| (Demand-Side     |         | (Data Management |         | (Supply-Side     |
-|  Platform)       |         |  Platform)       |         |  Platform)       |
-|  需求方平台       |         |  数据管理平台     |         |  供给方平台       |
-|                  |         |                  |         |                  |
-| 代表广告主       |         | 聚合用户数据、    |         | 管理发布商的      |
-| 进行出价         |         | 人群细分、        |         | 库存收益          |
-|                  |         | 相似模型          |         |                  |
-+------------------+         +------------------+         +------------------+
+```mermaid
+flowchart TD
+    Adv["ADVERTISER<br/>Wants to show ads to users"] -->|"Uses DSP to bid"| DSP["DSP (Demand-Side Platform)<br/>Places bids on behalf of advertisers"]
+    Pub["PUBLISHER<br/>Website/App that sells ad space"] -->|"Uses SSP to sell"| SSP["SSP (Supply-Side Platform)<br/>Manages inventory yield for publishers"]
+    DSP & SSP <--> Ex["AD EXCHANGE<br/>Marketplace that runs RTB auction"]
+    Ex <--> DMP["DMP (Data Management Platform)<br/>Aggregates user data, segments, lookalike models"]
 ```
 
 ### 完整 RTB 流程
@@ -471,66 +454,22 @@ Value: { "spend": 98234.12, "impressions": 25000000 }
 
 ## 5. 高层架构
 
-```
-                         +-----------------------+
-                         |  发布商 / 浏览器       |
-                         +-----------+-----------+
-                                     |
-                              广告请求 (HTTP)
-                                     |
-                         +-----------v-----------+
-                         |    负载均衡器 /        |
-                         |    边缘（Anycast）     |
-                         +-----------+-----------+
-                                     |
-                  +------------------+------------------+
-                  |                                     |
-      +-----------v-----------+           +------------v-----------+
-      |   广告投放 API         |           |  RTB 网关               |
-      |   （无状态）           |           |  （扇出到 DSP）          |
-      |   - 认证、同意检查     |           |  - OpenRTB 协议          |
-      |   - 速率限制           |           |  - 超时: 80ms            |
-      +----+----------+-------+           +------------+-----------+
-           |          |                                |
-           |          |                    +-----------v-----------+
-           |          |                    |   拍卖引擎             |
-           |          |                    |   - 第一/第二价格       |
-           |          |                    |   - 底价执行            |
-           |          |                    +----------+------------+
-           |          |                               |
-  +--------v---+  +---v--------+           +----------v-----------+
-  | 定向服务    |  | CTR/排名   |           |  中标通知服务          |
-  |            |  | 预测器     |           |  - 计费事件            |
-  |            |  |            |           |  - 素材 URL            |
-  | - 人群细分  |  | - ML 模型  |           +----------+-----------+
-  |   查找     |  | - 特征     |                      |
-  | - 频次控制  |  |   工程     |             [中标 DSP]
-  | - 同意检查  |  +------------+
-  +--------+---+
-           |
-  +--------v---+
-  | 候选广告    |
-  | 获取器     |
-  | （索引）    |
-  +------------+
+```mermaid
+flowchart TD
+    Pub["Publisher / Browser"] -->|"Ad Request (HTTP)"| LB["Load Balancer / Edge (Anycast)"]
+    LB --> AdAPI["Ad Serving API (Stateless)<br/>Auth, consent, rate limiting"]
+    LB --> RTBGW["RTB Gateway (Fan-out to DSPs)<br/>OpenRTB protocol, timeout: 80ms"]
 
-共享服务:
-  +--------------------+     +--------------------+     +--------------------+
-  |  用户画像           |     |  预算节奏            |     |  素材 CDN           |
-  |  存储 (Aerospike)  |     |  服务 (Redis)        |     |  (CloudFront/S3)   |
-  +--------------------+     +--------------------+     +--------------------+
+    AdAPI --> Targ["Targeting Service<br/>Segment lookup, Freq cap, Consent"] --> Fetch["Candidate Ad Fetcher (Index)"]
+    AdAPI --> CTR["CTR / Rank Predictor<br/>ML model, Feature eng."]
+    RTBGW --> Auction["Auction Engine<br/>1st / 2nd price, Floor enforcement"]
+    Auction --> Win["Win Notice Service<br/>Billing event, Creative URL"] --> DSP["Winning DSP"]
 
-跟踪管道:
-  +--------------------+     +--------------------+     +--------------------+
-  |  展示 /             |     |  Kafka             |     |  Clickhouse        |
-  |  点击跟踪器         +---->|  （事件总线）        +---->|  （分析数据库）     |
-  +--------------------+     +--------------------+     +--------------------+
-                                        |
-                              +---------v---------+
-                              |  归因与             |
-                              |  欺诈检测管道       |
-                              |  (Flink/Spark)     |
-                              +-------------------+
+    subgraph Shared["Shared &amp; Tracking Pipeline"]
+        S1["User Profile Store (Aerospike) | Budget Pacing Service (Redis) | Creative CDN (CloudFront/S3)"]
+        Track["Impression / Click Tracker"] --> Kafka["Kafka (Event Bus)"] --> CH["ClickHouse (Analytics DB)"]
+        Kafka --> Fraud["Attribution &amp; Fraud Pipeline (Flink / Spark)"]
+    end
 ```
 
 ---

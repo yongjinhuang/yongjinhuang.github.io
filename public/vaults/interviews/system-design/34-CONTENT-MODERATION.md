@@ -467,56 +467,16 @@ CREATE TABLE policies (
 
 ## High-Level Architecture
 
-```
-+------------------+     +------------------+     +------------------+
-|   Mobile/Web     |     |   Upload Service  |     |   CDN / Storage  |
-|   Clients        +---->+   (pre-screen     +---->+   (S3 / GCS)     |
-|                  |     |    trigger)       |     |                  |
-+------------------+     +--------+---------+     +------------------+
-                                  |
-                    +-------------v--------------+
-                    |      API Gateway / LB       |
-                    +-------------+--------------+
-                                  |
-          +-----------+-----------+-----------+-----------+
-          |           |           |           |           |
-          v           v           v           v           v
-  +-------+--+  +----+-----+  +--+------+  +-+--------+  +----------+
-  | Content  |  | Report   |  | Hash    |  | Policy   |  | Appeals  |
-  | Submit   |  | Service  |  | Match   |  | Engine   |  | Service  |
-  | Service  |  |          |  | Service |  |          |  |          |
-  +----+-----+  +----+-----+  +--+------+  +-+--------+  +----+-----+
-       |              |          |            |                |
-       v              v          v            v                v
-  +----+---------------------------------------------+--------+-----+
-  |                     Kafka Event Bus                              |
-  | Topics: content.submitted, report.created, hash.matched,        |
-  |         decision.made, appeal.filed, policy.updated             |
-  +--+-------------------+------------------+-------------------+---+
-     |                   |                  |                   |
-     v                   v                  v                   v
-+----+------+   +--------+-------+  +-------+------+  +--------+-----+
-| ML        |   | Hash Matching  |  | Human Review |  | Action       |
-| Pipeline  |   | Service        |  | Queue        |  | Executor     |
-| Orchestr. |   | (Redis Bloom + |  | Service      |  | Service      |
-|           |   |  Exact DB)     |  |              |  |              |
-+----+------+   +----------------+  +-------+------+  +------+-------+
-     |                                      |                 |
-     v                                      v                 v
-+----+------+   +----------------+  +-------+------+  +------+-------+
-| Text      |   | Image          |  | Reviewer     |  | Content DB   |
-| Classifier|   | Classifier     |  | Dashboard    |  | (PostgreSQL) |
-| (BERT/    |   | (ResNet/CLIP)  |  | (Assignment  |  |              |
-|  Persp.)  |   |                |  |  + Tools)    |  +------+-------+
-+----+------+   +----+-----------+  +--------------+         |
-     |               |                                        v
-     v               v                               +--------+-----+
-+----+---------------+---+                           | Audit Log    |
-| Video/Audio            |                           | (ClickHouse) |
-| Classifier             |                           |              |
-| (Frame Sample +        |                           +--------------+
-|  Audio Transcribe)     |
-+------------------------+
+```mermaid
+flowchart TD
+    Clients["Mobile / Web Clients"] --> Upload["Upload Service (pre-screen trigger)"] --> CDN["CDN / Storage (S3 / GCS)"]
+    Upload --> GW["API Gateway / LB"]
+    GW --> SubSvc["Content Submit Service"] & RepSvc["Report Service"] & HashSvc["Hash Match Service"] & PolEngine["Policy Engine"] & AppSvc["Appeals Service"]
+    SubSvc & RepSvc & HashSvc & PolEngine & AppSvc --> Kafka["Kafka Event Bus<br/>Topics: content.submitted, report.created, hash.matched, decision.made, appeal.filed, policy.updated"]
+    Kafka --> MLOrch["ML Pipeline Orchestrator"] --> TextC["Text Classifier (BERT)"] & ImgC["Image Classifier (ResNet/CLIP)"] & VidC["Video/Audio Classifier"]
+    Kafka --> HashMatch["Hash Matching Service (Redis Bloom + Exact DB)"]
+    Kafka --> HRQueue["Human Review Queue Service"] --> RevDash["Reviewer Dashboard"]
+    Kafka --> ActExec["Action Executor Service"] --> ContentDB["Content DB (PostgreSQL)"] --> Audit["Audit Log (ClickHouse)"]
 ```
 
 ---
@@ -525,62 +485,18 @@ CREATE TABLE policies (
 
 The moderation pipeline is the core of the system. Every piece of content flows through multiple stages before being published or rejected.
 
-```
-Content Submitted
-      |
-      v
-+-----+--------+     Match Found
-| Hash-Based   +-----------------------------> AUTO-REJECT (CSAM/terrorism)
-| Matching     |                               + Law enforcement reporting
-+-----+--------+
-      | No Match
-      v
-+-----+--------+
-| Policy Rule  +----> Blocklist keyword? -----> AUTO-REJECT
-| Pre-filter   |
-+-----+--------+
-      |
-      v
-+-----+---------------+
-| ML Classification   |
-|                     |
-|  Text Classifier    |
-|  Image Classifier   |
-|  Video Classifier   |
-|  Audio Classifier   |
-+-----+---------------+
-      |
-      v
-+-----+--------------------------------------------+
-|          Confidence Tier Routing                  |
-|                                                   |
-|  Safe Score > 0.95   -----> AUTO-APPROVE          |
-|                                                   |
-|  Violation Score > 0.99 --> AUTO-REJECT           |
-|                                                   |
-|  Gray zone (0.05-0.95) --> HUMAN REVIEW QUEUE     |
-+---------------------------------------------------+
-      |                           |
-      v                           v
-+-----+-------+           +-------+------+
-| Action      |           | Human Review |
-| Executor    |           | Queue        |
-| - Approve   |           | - Priority   |
-| - Reject    |           |   Scoring    |
-| - Label     |           | - Assignment |
-| - Age-gate  |           | - Decision   |
-| - Demonetize|           | - Audit      |
-+-----+-------+           +-------+------+
-      |                           |
-      v                           v
-+-----+---------------------------+------+
-|              Outcome                   |
-|  - Notify creator                      |
-|  - Update content status               |
-|  - Feed enforcement actions            |
-|  - Emit audit event                    |
-|  - Update reporter (if report-driven)  |
-+----------------------------------------+
+```mermaid
+flowchart TD
+    Sub["Content Submitted"] --> Hash{"Hash-Based Matching"}
+    Hash -->|"Match Found"| AutoRej1["AUTO-REJECT (CSAM/terrorism)<br/>+ Law enforcement reporting"]
+    Hash -->|"No Match"| Pre{"Policy Rule Pre-filter"}
+    Pre -->|"Blocklist keyword"| AutoRej2["AUTO-REJECT"]
+    Pre -->|"Pass"| ML["ML Classification<br/>(Text, Image, Video, Audio Classifiers)"]
+    ML --> Tier{"Confidence Tier Routing"}
+    Tier -->|"Safe Score &gt; 0.95"| Act["Action Executor<br/>(Approve / Reject / Label / Age-gate)"]
+    Tier -->|"Violation Score &gt; 0.99"| Act
+    Tier -->|"Gray zone (0.05-0.95)"| HR["Human Review Queue<br/>(Priority Scoring, Assignment, Decision)"]
+    Act & HR --> Out["Outcome: Notify creator, Update status, Emit audit event"]
 ```
 
 ### Pipeline Stage Details

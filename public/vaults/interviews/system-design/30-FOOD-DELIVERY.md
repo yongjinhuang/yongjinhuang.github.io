@@ -423,68 +423,20 @@ CREATE TABLE promotions (
 
 ## 4. High-Level Architecture
 
-```
-+------------------------------------------------------------------------------------+
-|                              CLIENTS                                               |
-|  +------------------+   +--------------------+   +--------------------+            |
-|  |  Customer App    |   |  Driver App        |   |  Restaurant KDS    |            |
-|  |  (iOS/Android/   |   |  (iOS/Android)     |   |  (Tablet/POS)      |            |
-|  |   Web)           |   |                    |   |                    |            |
-|  +--------+---------+   +----------+---------+   +---------+----------+            |
-+-----------|------------------------|------------------------|----------------------+
-            |                        |                        |
-            |         HTTPS + WSS    |                        |
-            v                        v                        v
-+------------------------------------------------------------------------------------+
-|                           API GATEWAY / LOAD BALANCER                              |
-|            (Rate Limiting, Auth, SSL Termination, Routing)                         |
-+---+----------------------------+---------------------------+------------------------+
-    |                            |                           |
-    v                            v                           v
-+----------+            +------------------+         +------------------+
-| Order    |            | Driver Location  |         | Restaurant       |
-| Service  |            | Service          |         | Service          |
-+----+-----+            +--------+---------+         +--------+---------+
-     |                           |                            |
-     |                     +-----+-----+                      |
-     |                     | Redis Geo |                      |
-     v                     | (H3 Grid) |                      v
-+----------+               +-----------+            +------------------+
-| Dispatch |<-pulls driver               push      | Menu Service     |
-| Service  |  locations                 events     +------------------+
-+----+-----+                                                  |
-     |                                                        v
-     |                    +------------------+     +------------------+
-     +------------------->| ETA Service      |     | Search / Browse  |
-     |                    | (ML model)       |     | Service          |
-     |                    +------------------+     | (Elasticsearch)  |
-     v                                             +------------------+
-+----------+
-| Payment  |
-| Service  |
-+----------+
-     |
-     v
-+----------+    +------------------+    +------------------+
-| Stripe / |    | Notification     |    | Promotions       |
-| Processor|    | Service          |    | Engine           |
-+----------+    | (Push/SMS/Email) |    +------------------+
-                +------------------+
-
-+------------------------------------------------------------------------------------+
-|                           MESSAGE BUS (Kafka)                                      |
-|  Topics: order.events | driver.location | payment.events | notification.events     |
-+------------------------------------------------------------------------------------+
-
-+------------------------------------------------------------------------------------+
-|                            DATA STORES                                             |
-|  +-------------+  +-------------+  +------------------+  +--------------------+   |
-|  | PostgreSQL  |  | Redis        |  | Elasticsearch    |  | ClickHouse         |   |
-|  | (Orders,    |  | (Sessions,   |  | (Restaurant /    |  | (Analytics,        |   |
-|  |  Payments,  |  |  Driver Loc, |  |  Menu Search)    |  |  Reporting)        |   |
-|  |  Ratings)   |  |  Order Cache)|  |                  |  |                    |   |
-|  +-------------+  +-------------+  +------------------+  +--------------------+   |
-+------------------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Cust["Customer App (iOS/Android/Web)"] & Drv["Driver App (iOS/Android)"] & KDS["Restaurant KDS (Tablet/POS)"] -->|"HTTPS + WSS"| GW["API Gateway / Load Balancer<br/>(Rate Limiting, Auth, SSL Termination, Routing)"]
+    GW --> OrdSvc["Order Service"] & LocSvc["Driver Location Service"] & RestSvc["Restaurant Service"]
+    LocSvc --> Geo["Redis Geo (H3 Grid)"]
+    OrdSvc --> DispSvc["Dispatch Service"]
+    Geo -->|"Pulls driver locations"| DispSvc
+    DispSvc --> ETASvc["ETA Service (ML model)"] & PaySvc["Payment Service"]
+    PaySvc --> Stripe["Stripe / Processor"] & NotifSvc["Notification Service"] & Promo["Promotions Engine"]
+    RestSvc --> MenuSvc["Menu Service"] --> SearchSvc["Search / Browse Service (Elasticsearch)"]
+    subgraph Infra["Message Bus &amp; Data Stores"]
+        Kafka["Kafka: order.events | driver.location | payment.events | notification.events"]
+        Stores["PostgreSQL (Orders, Payments, Ratings) | Redis | Elasticsearch | ClickHouse"]
+    end
 ```
 
 ---
@@ -530,51 +482,17 @@ The food delivery platform must balance three distinct parties with conflicting 
 
 ## 6. Deep Dive: Order Lifecycle State Machine
 
-```
-                       +----------+
-              Customer |  PLACED  |
-              places   +----+-----+
-              order         |
-                            | Restaurant accepts (or auto-accepts)
-                            v
-                      +-----------+
-                      | ACCEPTED  |
-                      +-----+-----+
-                            |
-                            | Restaurant starts cooking
-                            v
-                      +-----------+
-                      | PREPARING |
-                      +-----+-----+
-                            |
-                            | Restaurant marks ready
-                            v
-                        +-------+
-                        | READY |  <--- KDS screen update
-                        +---+---+
-                            |
-                            | Driver arrives and picks up
-                            v
-                      +----------+
-                      | PICKED UP|
-                      +----+-----+
-                            |
-                            | Driver starts driving to customer
-                            v
-                       +----------+
-                       | EN ROUTE |
-                       +----+-----+
-                            |
-                            | Driver marks delivered (proof photo)
-                            v
-                      +-----------+
-                      | DELIVERED |
-                      +-----------+
-
-  Exception flows:
-  PLACED ------> CANCELLED (by customer before acceptance, full refund)
-  ACCEPTED ----> CANCELLED (by restaurant, full refund + apology credit)
-  PREPARING ---> CANCELLED (rare, partial or full refund, platform discretion)
+```mermaid
+stateDiagram-v2
+    [*] --> PLACED : Customer places order
+    PLACED --> ACCEPTED : Restaurant accepts
+    PLACED --> CANCELLED : Cancelled before acceptance
+    ACCEPTED --> PREPARING : Restaurant starts cooking
+    ACCEPTED --> CANCELLED : Cancelled by restaurant
+    PREPARING --> READY : Restaurant marks ready (KDS)
+    READY --> PICKED_UP : Driver arrives & picks up
+    PICKED_UP --> EN_ROUTE : Driver drives to customer
+    EN_ROUTE --> DELIVERED : Driver marks delivered (proof photo)
 ```
 
 **State Transition Rules:**
@@ -1374,61 +1292,17 @@ A: Order state machine uses strong consistency (PostgreSQL with optimistic locki
 
 ## 22. System Architecture — Detailed Component View
 
-```
-+-------------------------------------------------------------------------------------------+
-|                                   CUSTOMER JOURNEY                                        |
-|                                                                                           |
-|  Browse -> Add to Cart -> Checkout -> Track -> Receive -> Rate                            |
-+-------------------------------------------------------------------------------------------+
-
-+------------------+    +-------------------+    +------------------+    +------------------+
-|  Browse &        |    |  Order Service    |    |  Dispatch        |    |  Tracking        |
-|  Search          |    |                  |    |  Service         |    |  Service         |
-|  Service         |    |  - Order CRUD    |    |                  |    |                  |
-|                  |    |  - State machine |    |  - Driver match  |    |  - WebSocket hub |
-|  - Elasticsearch |    |  - Capacity gate |    |  - Batch orders  |    |  - Location fan  |
-|  - Geo query     |    |  - Kafka publish |    |  - H3 geo query  |    |    -out          |
-|  - Redis cache   |    |                  |    |  - Surge aware   |    |  - SSE fallback  |
-+------+-----------+    +--------+---------+    +--------+---------+    +--------+---------+
-       |                         |                       |                       |
-       |                         v                       v                       v
-       |              +----------+--------+   +----------+--------+   +----------+--------+
-       |              |  PostgreSQL       |   |  Redis Cluster    |   |  Kafka             |
-       |              |  (Orders, Users,  |   |  - Driver GEO     |   |  - order.events    |
-       |              |   Payments,       |   |  - Sessions       |   |  - driver.location |
-       |              |   Restaurants)    |   |  - Menu cache     |   |  - notifications   |
-       |              |  Replica Set +    |   |  - Surge mults    |   |  - payment.events  |
-       |              |  Read Replicas    |   |  - Promo cache    |   +--------------------+
-       |              +-------------------+   +-------------------+
-       |
-       v
-+------------------+
-|  CDN             |
-|  (Menu pages,    |
-|   Map tiles,     |
-|   Restaurant     |
-|   images)        |
-+------------------+
-
-+------------------+    +-------------------+    +------------------+    +------------------+
-|  ETA Service     |    |  Payment Service  |    |  Promotions      |    |  Notification    |
-|                  |    |                  |    |  Engine          |    |  Service         |
-|  - ML model      |    |  - Stripe API    |    |                  |    |                  |
-|  - Traffic API   |    |  - Auth/capture  |    |  - Code validate |    |  - Push (FCM)    |
-|  - Prep estimate |    |  - Payout queue  |    |  - Abuse detect  |    |  - SMS (Twilio)  |
-|  - Real-time     |    |  - Idempotency   |    |  - Usage atomic  |    |  - Email (SES)   |
-|    reroute       |    |  - Refund flow   |    |    counter       |    |  - In-app        |
-+------------------+    +-------------------+    +------------------+    +------------------+
-
-+------------------+    +-------------------+    +------------------+
-|  Fraud Detection |    |  Restaurant KDS   |    |  Analytics       |
-|  Service         |    |  Gateway          |    |  (ClickHouse)    |
-|                  |    |                  |    |                  |
-|  - GPS spoof     |    |  - WebSocket/SSE |    |  - Order funnel  |
-|  - Promo abuse   |    |  - Order queue   |    |  - Driver perf   |
-|  - Fake orders   |    |  - Prep timer    |    |  - ETA accuracy  |
-|  - ML scoring    |    |  - Capacity mgmt |    |  - Revenue       |
-+------------------+    +-------------------+    +------------------+
+```mermaid
+flowchart TD
+    Journey["CUSTOMER JOURNEY<br/>Browse -> Add to Cart -> Checkout -> Track -> Receive -> Rate"] --> Browse["Browse &amp; Search Service<br/>Elasticsearch, Geo query, Redis cache"] & Order["Order Service<br/>CRUD, State machine, Capacity gate, Kafka"] & Disp["Dispatch Service<br/>Driver match, Batch orders, H3 geo, Surge"] & Track["Tracking Service<br/>WebSocket hub, Location fan-out, SSE"]
+    Browse --> CDN["CDN<br/>(Menu pages, Map tiles, Restaurant images)"]
+    Order --> PG["PostgreSQL<br/>(Orders, Users, Payments, Restaurants)"]
+    Disp --> Redis["Redis Cluster<br/>(Driver GEO, Sessions, Menu, Surge, Promo)"]
+    Track --> Kafka["Kafka<br/>(order.events, driver.location, notifications, payment.events)"]
+    subgraph Supporting["Supporting Services"]
+        S1["ETA Service (ML + Traffic API) | Payment Service (Stripe) | Promotions Engine | Notification Service"]
+        S2["Fraud Detection Service | Restaurant KDS Gateway | Analytics (ClickHouse)"]
+    end
 ```
 
 ---

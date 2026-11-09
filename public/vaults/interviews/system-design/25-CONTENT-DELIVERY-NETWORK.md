@@ -283,85 +283,24 @@ TABLE origins (
 
 ### 4.1 Overall CDN Architecture
 
-```
-+------------------+     DNS Query      +------------------------+
-|                  | -----------------> |  Authoritative DNS     |
-|   End Client     |                    |  (GeoDNS / Anycast)    |
-|  (Browser/App)   | <----------------- |                        |
-+------------------+  IP of nearest POP +------------------------+
-         |
-         | HTTPS Request
-         v
-+----------------------------------+
-|        Edge POP (L1)             |
-|  +----------------------------+  |
-|  |   TLS Termination          |  |
-|  |   HTTP/2 or HTTP/3 (QUIC)  |  |
-|  +----------------------------+  |
-|  |   WAF / DDoS Filter        |  |
-|  +----------------------------+  |
-|  |   Edge Compute (Workers)   |  |
-|  +----------------------------+  |
-|  |   L1 Cache (SSD, hot)      |  |  Cache HIT -> Return response
-|  |   ~67 GB per POP           |  |
-|  +----------------------------+  |
-+----------------------------------+
-         |  Cache MISS
-         v
-+----------------------------------+
-|     Regional POP (L2)            |
-|  +----------------------------+  |
-|  |   L2 Cache (SSD, warm)     |  |  Cache HIT -> Return + populate L1
-|  |   ~500 GB per region       |  |
-|  +----------------------------+  |
-+----------------------------------+
-         |  Cache MISS
-         v
-+----------------------------------+
-|       Origin Shield              |
-|  +----------------------------+  |
-|  |   Large Cache (HDD/SSD)    |  |  Cache HIT -> Return + populate L2
-|  |   ~5 TB per shield node    |  |
-|  +----------------------------+  |
-+----------------------------------+
-         |  Cache MISS
-         v
-+----------------------------------+
-|          Origin Server           |
-|  (Customer's Web Server / S3)    |
-+----------------------------------+
+```mermaid
+flowchart TD
+    Client["End Client<br/>(Browser / App)"] <-->|"DNS Query / IP of nearest PoP"| DNS["Authoritative DNS<br/>(GeoDNS / Anycast)"]
+    Client -->|"HTTPS Request"| L1["Edge PoP (L1)<br/>TLS Termination | HTTP/2 or HTTP/3 (QUIC)<br/>WAF / DDoS Filter | Edge Compute (Workers)<br/>L1 Cache (SSD, ~67 GB/PoP)"]
+    L1 -->|"Cache MISS"| L2["Regional PoP (L2)<br/>L2 Cache (SSD, ~500 GB/region)"]
+    L2 -->|"Cache MISS"| Shield["Origin Shield<br/>Large Cache (HDD/SSD, ~5 TB/shield node)"]
+    Shield -->|"Cache MISS"| Origin["Origin Server<br/>(Customer's Web Server / S3)"]
 ```
 
 ### 4.2 Control Plane Architecture
 
-```
-+------------------+      API Calls      +------------------------+
-|  Customer Portal |  ----------------> |   CDN Control Plane    |
-|  (Dashboard/CLI) |                    |   (REST API Gateway)   |
-+------------------+                    +------------------------+
-                                                   |
-                    +------------------------------+------------------------------+
-                    |                              |                             |
-                    v                              v                             v
-         +-------------------+        +-------------------+        +-------------------+
-         |  Config Service   |        |  Purge Service    |        |  Analytics Service|
-         |  (routing rules,  |        |  (invalidation,   |        |  (metrics, logs,  |
-         |   cache policies) |        |   propagation)    |        |   dashboards)     |
-         +-------------------+        +-------------------+        +-------------------+
-                    |                              |                             |
-                    v                              v                             v
-         +-------------------+        +-------------------+        +-------------------+
-         |  Config Store     |        |  Message Broker   |        |  Time Series DB   |
-         |  (distributed KV) |        |  (Kafka / NATS)   |        |  (ClickHouse /    |
-         |                   |        |                   |        |   InfluxDB)       |
-         +-------------------+        +-------------------+        +-------------------+
-                    |                              |
-                    v                              v
-         +------------------------------------------------------+
-         |              All Edge POPs (300+ globally)            |
-         |  Config sync via pull (polling or push via stream)   |
-         |  Purge signals via pub/sub fan-out                   |
-         +------------------------------------------------------+
+```mermaid
+flowchart TD
+    Portal["Customer Portal<br/>(Dashboard / CLI)"] -->|"API Calls"| CP["CDN Control Plane<br/>(REST API Gateway)"]
+    CP --> CfgSvc["Config Service<br/>(routing rules, cache policies)"] --> CfgStore["Config Store<br/>(distributed KV)"]
+    CP --> PurgeSvc["Purge Service<br/>(invalidation, propagation)"] --> Broker["Message Broker<br/>(Kafka / NATS)"]
+    CP --> AnaSvc["Analytics Service<br/>(metrics, logs, dashboards)"] --> TSDB["Time Series DB<br/>(ClickHouse / InfluxDB)"]
+    CfgStore & Broker --> PoPs["All Edge PoPs (300+ globally)<br/>Config sync + Purge pub/sub fan-out"]
 ```
 
 ---
@@ -1428,67 +1367,12 @@ Recommendation:
 
 ## 10. Summary Architecture Diagram
 
-```
-+==============================================================================+
-|                    Content Delivery Network (CDN)                            |
-+==============================================================================+
-
-  CLIENTS                    EDGE NETWORK               ORIGIN INFRASTRUCTURE
-  -------                    ------------               ----------------------
-
-+----------+   DNS    +---------------+
-|  Browser |--------> | GeoDNS /      |
-|  Mobile  |          | Anycast DNS   |
-|  IoT     |<-------- | Returns POP   |
-+----------+   IP     +---------------+
-     |
-     | HTTPS (HTTP/3 QUIC or HTTP/2)
-     |
-     v
-+----------------------------------+       +----------------------------------+
-|          L1 Edge POP             |       |        Control Plane             |
-|  +----------------------------+  |       |  +----------------------------+  |
-|  | WAF / DDoS / Rate Limiter  |  |       |  | Config Service             |  |
-|  +----------------------------+  |       |  | Purge Service              |  |
-|  | TLS Termination (TLS 1.3)  |  | <---> |  | Analytics Service         |  |
-|  | OCSP Stapling              |  | sync  |  | Certificate Manager       |  |
-|  +----------------------------+  |       |  +----------------------------+  |
-|  | Edge Compute (V8 Isolates) |  |       +----------------------------------+
-|  | A/B test, auth, rewrites   |  |
-|  +----------------------------+  |
-|  | L1 Cache (NVMe SSD)        |  |---> CACHE HIT: Return to client
-|  | ~67 GB, hot data           |  |
-|  +----------------------------+  |
-|  | Cache Miss Handler         |  |---> CACHE MISS: fetch from L2
-+----------------------------------+
-
-     |  L1 Cache Miss
-     v
-+----------------------------------+
-|       L2 Regional Cache POP      |
-|  +----------------------------+  |
-|  | L2 Cache (SATA SSD)        |  |---> CACHE HIT: Return, populate L1
-|  | ~500 GB, warm data         |  |
-|  +----------------------------+  |
-+----------------------------------+
-
-     |  L2 Cache Miss
-     v
-+----------------------------------+       +----------------------------------+
-|         Origin Shield            |       |           Origin Server          |
-|  +----------------------------+  |       |  +----------------------------+  |
-|  | Request Coalescing         |  |       |  | Web Server / S3 / CDN Src  |  |
-|  | Large Cache (HDD+SSD)      |  | ----> |  | Customer Infrastructure    |  |
-|  | ~5 TB, all unique objects  |  |       |  +----------------------------+  |
-|  +----------------------------+  |       +----------------------------------+
-+----------------------------------+
-
-ANALYTICS PIPELINE:
-  Every POP -> Kafka -> Stream Processor -> ClickHouse -> Dashboard
-  Every POP -> Kafka -> Raw Logs -> S3 (long-term retention, billing)
-
-PURGE PROPAGATION:
-  Customer API -> Purge Service -> Kafka -> 300 POP consumers -> < 5 seconds
-
-+==============================================================================+
+```mermaid
+flowchart TD
+    Client["Browser / Mobile / IoT"] <-->|"DNS / IP"| DNS["GeoDNS / Anycast DNS"]
+    Client -->|"HTTPS (HTTP/3 QUIC or HTTP/2)"| L1["L1 Edge PoP<br/>WAF/DDoS/Rate Limiter | TLS 1.3 + OCSP Stapling<br/>Edge Compute (V8 Isolates) | L1 Cache (NVMe SSD, ~67 GB)"]
+    L1 <-->|"sync"| CP["Control Plane<br/>Config | Purge | Analytics | Cert Mgr"]
+    L1 -->|"L1 Cache Miss"| L2["L2 Regional Cache PoP<br/>L2 Cache (SATA SSD, ~500 GB)"]
+    L2 -->|"L2 Cache Miss"| Shield["Origin Shield<br/>Request Coalescing + Large Cache (~5 TB)"]
+    Shield --> Origin["Origin Server<br/>Web Server / S3 / Customer Infra"]
 ```

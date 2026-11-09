@@ -323,60 +323,20 @@ CREATE TABLE multipart_parts (
 
 ## 4. 高层架构
 
-```
-+------------------------------- Client ---------------------------------+
-|  Web Browser / SDK / CLI                                               |
-+------------------------------------------------------------------------+
-          |                                           |
-          | HTTPS                                     | HTTPS (pre-signed URL)
-          v                                           v
-+--------------------+                    +----------------------+
-|   Load Balancer    |                    |  Transfer Accel Edge |
-|  (Anycast / Route  |                    |  (CloudFront POP /   |
-|   53 GeoDNS)       |                    |   AWS Global Accel)  |
-+--------------------+                    +----------------------+
-          |                                           |
-          v                                           v
-+------------------------------------------------------------------+
-|                        API Gateway Layer                         |
-|  +----------------+  +----------------+  +------------------+   |
-|  | Auth / AuthZ   |  | Rate Limiter   |  |  Request Router  |   |
-|  | (SigV4 verify) |  | (token bucket) |  |  (bucket -> shard|   |
-|  +----------------+  +----------------+  +------------------+   |
-+------------------------------------------------------------------+
-          |                           |
-          | metadata ops              | data ops
-          v                           v
-+---------------------+    +---------------------------+
-|   Metadata Service  |    |       Data Service        |
-|  +---------------+  |    |  +--------------------+   |
-|  | Metadata DB   |  |    |  | Data Node Manager  |   |
-|  | (sharded,     |  |    |  +--------------------+   |
-|  |  consistent   |  |    |  | Erasure Coding Svc |   |
-|  |  hashing)     |  |    |  +--------------------+   |
-|  +---------------+  |    |  | Replication Ctrl   |   |
-|  | Version Store |  |    |  +--------------------+   |
-|  +---------------+  |    +---------------------------+
-|  | Namespace Svc |  |              |
-|  +---------------+  |    +---------+---------+
-+---------------------+    |                   |
-                           v                   v
-                  +----------------+  +----------------+
-                  |  Data Node 1   |  |  Data Node N   |
-                  |  (10 TB HDDs)  |  |  (10 TB HDDs)  |
-                  |  chunk store   |  |  chunk store   |
-                  +----------------+  +----------------+
-
-Supporting Services:
-+------------------+  +------------------+  +------------------+
-| Garbage Collector|  |  Scrubbing Svc   |  |  Lifecycle Svc   |
-| (async delete    |  |  (bitrot detect) |  |  (expire/tier)   |
-|  orphaned chunks)|  |                  |  |                  |
-+------------------+  +------------------+  +------------------+
-+------------------+  +------------------+
-|  Event Bus       |  |  CRR Replicator  |
-|  (SNS/SQS/Lambda)|  |  (cross-region)  |
-+------------------+  +------------------+
+```mermaid
+flowchart TD
+    Client["Client (Web Browser / SDK / CLI)"] -->|"HTTPS"| LB["Load Balancer<br/>(Anycast / Route 53 GeoDNS)"]
+    Client -->|"HTTPS (pre-signed URL)"| Edge["Transfer Accel Edge<br/>(CloudFront PoP / Global Accel)"]
+    LB & Edge --> GW["API Gateway Layer<br/>Auth/AuthZ (SigV4) | Rate Limiter (token bucket) | Request Router"]
+    GW -->|"metadata ops"| Meta["Metadata Service<br/>Metadata DB (sharded) | Version Store | Namespace Svc"]
+    GW -->|"data ops"| Data["Data Service<br/>Data Node Manager | Erasure Coding Svc | Replication Ctrl"]
+    Data --> DN1["Data Node 1<br/>(10 TB HDDs, chunk store)"] & DNN["Data Node N<br/>(10 TB HDDs, chunk store)"]
+    subgraph Support["Supporting Services"]
+        S1["Garbage Collector (async orphan delete)"]
+        S2["Scrubbing Svc (bitrot detect)"]
+        S3["Lifecycle Svc (expire/tier)"]
+        S4["Event Bus (SNS/SQS/Lambda) &amp; CRR Replicator"]
+    end
 ```
 
 ---
@@ -405,29 +365,22 @@ Supporting Services:
 
 ### 6.1 写入路径
 
-```
-Client                API Gateway         Metadata Svc       Data Nodes
-  |                        |                   |                  |
-  |-- PUT /bucket/key ---> |                   |                  |
-  |   (with body)          |                   |                  |
-  |                        |-- AuthZ check ---> |                  |
-  |                        |<-- OK + quota ---- |                  |
-  |                        |                   |                  |
-  |                        |-- pick placement --+                  |
-  |                        |   (consistent hash on bucket+key)    |
-  |                        |                                      |
-  |                        |-- stream chunks --> Data Node 1      |
-  |                        |-- stream chunks --> Data Node 5      |
-  |                        |-- stream chunks --> Data Node 9      |
-  |                        |   (EC shards written in parallel)    |
-  |                        |                                      |
-  |                        |<---------- acks from all nodes ------+
-  |                        |                   |                  |
-  |                        |-- write metadata -+                  |
-  |                        |   (location, ETag, size, version)   |
-  |                        |<-- metadata committed -----------    |
-  |                        |                                      |
-  |<-- 200 OK + ETag --    |                                      |
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant GW as "API Gateway"
+    participant M as "Metadata Svc"
+    participant DN as "Data Nodes (1, 5, 9...)"
+
+    C->>GW: PUT /bucket/key (with body)
+    GW->>M: AuthZ check
+    M-->>GW: OK + quota
+    Note over GW: Pick placement (consistent hash on bucket+key)
+    GW->>DN: Stream EC shards in parallel to Data Nodes 1, 5, 9
+    DN-->>GW: ACKs from all nodes
+    GW->>M: Write metadata (location, ETag, size, version)
+    M-->>GW: Metadata committed
+    GW-->>C: 200 OK + ETag
 ```
 
 **大对象分块**：
@@ -439,19 +392,19 @@ Client                API Gateway         Metadata Svc       Data Nodes
 
 ### 6.2 读取路径
 
-```
-Client                API Gateway         Metadata Svc       Data Nodes
-  |                        |                   |                  |
-  |-- GET /bucket/key ---> |                   |                  |
-  |                        |-- lookup -------> |                  |
-  |                        |<-- location map --+                  |
-  |                        |   { nodes: [1,5,9,...], chunk_map }  |
-  |                        |                                      |
-  |                        |-- read from Data Node 1 (primary) -->|
-  |                        |<-- chunk data ----------------------- |
-  |                        |   (reconstruct from k shards if needed)
-  |                        |                                      |
-  |<-- stream response --- |                                      |
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant GW as "API Gateway"
+    participant M as "Metadata Svc"
+    participant DN as "Data Nodes"
+
+    C->>GW: GET /bucket/key
+    GW->>M: Lookup key metadata
+    M-->>GW: Location map {nodes: [1, 5, 9, ...], chunk_map}
+    GW->>DN: Read from Data Node 1 (or reconstruct from k EC shards)
+    DN-->>GW: Chunk data
+    GW-->>C: Stream response
 ```
 
 **Range request 优化**：

@@ -550,123 +550,35 @@ CREATE TABLE articles (
 
 ### Entity Relationship Diagram
 
-```
-+------------------+       +------------------+       +------------------+
-| organizations    |       | agents           |       | teams            |
-|------------------|       |------------------|       |------------------|
-| id (PK)          |<------| org_id (FK)      |       | id (PK)          |
-| name             |       | email            |   +-->| org_id (FK)      |
-| subdomain        |       | name             |   |   | name             |
-| plan             |       | role             |   |   | assignment_mode  |
-| timezone         |       | status           |   |   +------------------+
-| business_hours   |       | skills[]         |   |          |
-+------------------+       | max_capacity     |   |   +------+-------+
-        |                  +------------------+   |   | team_members   |
-        |                         |               |   |----------------|
-        v                         v               |   | team_id (FK)   |
-+------------------+       +------------------+   |   | agent_id (FK)  |
-| sla_policies     |       | tickets          |   |   +----------------+
-|------------------|       |------------------|   |
-| id (PK)          |<------| sla_policy_id    |   |
-| org_id (FK)      |       | org_id (FK)      |---+
-| conditions       |       | subject          |
-| first_resp_*     |       | status           |
-| resolution_*     |       | priority         |
-+------------------+       | requester_id (FK)|----->+------------------+
-                           | assignee_id (FK) |----->| customers        |
-                           | team_id (FK)     |      |------------------|
-                           | channel          |      | id (PK)          |
-                           | tags[]           |      | org_id (FK)      |
-                           | custom_fields    |      | email            |
-                           +------------------+      +------------------+
-                                  |
-                    +-------------+-------------+
-                    |             |             |
-             +------+---+  +-----+------+  +---+--------+
-             | comments  |  | audit_logs |  | sla_breaches|
-             |-----------|  |------------|  |-------------|
-             | ticket_id |  | ticket_id  |  | ticket_id   |
-             | author_id |  | actor_id   |  | breach_type |
-             | body      |  | action     |  | target_min  |
-             | is_internal| | changes    |  | actual_min  |
-             +-----------+  +------------+  +-------------+
+```mermaid
+erDiagram
+    ORGANIZATIONS ||--o{ AGENTS : "employs"
+    ORGANIZATIONS ||--o{ TEAMS : "has"
+    ORGANIZATIONS ||--o{ SLA_POLICIES : "defines"
+    ORGANIZATIONS ||--o{ CUSTOMERS : "serves"
+    ORGANIZATIONS ||--o{ TICKETS : "owns"
+    TEAMS ||--o{ TEAM_MEMBERS : "includes"
+    AGENTS ||--o{ TEAM_MEMBERS : "belongs to"
+    SLA_POLICIES ||--o{ TICKETS : "governs"
+    CUSTOMERS ||--o{ TICKETS : "requests"
+    AGENTS ||--o{ TICKETS : "assigned to"
+    TICKETS ||--o{ COMMENTS : "has"
+    TICKETS ||--o{ AUDIT_LOGS : "records"
+    TICKETS ||--o{ SLA_BREACHES : "tracks"
 ```
 
 ---
 
 ## High-Level Architecture
 
-```
-                         ┌──────────────────────────────────────────────────┐
-                         │              OMNICHANNEL INTAKE                  │
-                         │                                                  │
-                         │  ┌─────┐ ┌──────┐ ┌───────┐ ┌─────┐ ┌───────┐ │
-                         │  │Email│ │ Chat │ │Web    │ │ API │ │Social │ │
-                         │  │     │ │      │ │Form   │ │     │ │Media  │ │
-                         │  └──┬──┘ └──┬───┘ └──┬────┘ └──┬──┘ └──┬────┘ │
-                         └─────┼───────┼────────┼─────────┼───────┼──────┘
-                               │       │        │         │       │
-                               v       v        v         v       v
-                         ┌──────────────────────────────────────────────────┐
-                         │              API GATEWAY / LOAD BALANCER         │
-                         │         (Rate Limiting, Auth, Tenant ID)        │
-                         └──────────────────────┬───────────────────────────┘
-                                                │
-                    ┌───────────────────────────┼───────────────────────────┐
-                    │                           │                           │
-                    v                           v                           v
-          ┌─────────────────┐      ┌─────────────────────┐    ┌────────────────────┐
-          │  TICKET SERVICE  │      │  COMMENT SERVICE     │    │  CUSTOMER SERVICE   │
-          │                  │      │                      │    │                     │
-          │ - CRUD           │      │ - Add/edit comments  │    │ - Customer profiles │
-          │ - Status mgmt    │      │ - Internal notes     │    │ - Contact merge     │
-          │ - Field updates  │      │ - Attachments        │    │ - History lookup    │
-          └───────┬──────────┘      └──────────┬───────────┘    └────────────────────┘
-                  │                             │
-                  v                             v
-          ┌──────────────────────────────────────────────┐
-          │              EVENT BUS (Kafka)                │
-          │   ticket.created | ticket.updated |          │
-          │   comment.added  | sla.breached   |          │
-          └───┬───────┬──────────┬──────────┬────────────┘
-              │       │          │          │
-              v       v          v          v
-    ┌──────────┐ ┌─────────┐ ┌──────────┐ ┌───────────────┐
-    │ ROUTING  │ │  SLA    │ │NOTIFICA- │ │  SEARCH       │
-    │ ENGINE   │ │ MONITOR │ │TION SVC  │ │  INDEXER      │
-    │          │ │         │ │          │ │               │
-    │ - Rules  │ │ - Timer │ │ - Email  │ │ - Elastic-    │
-    │ - Skills │ │ - Breach│ │ - Push   │ │   search      │
-    │ - Load   │ │ - Pause │ │ - WS     │ │ - Full-text   │
-    │   balance│ │ - Escal.│ │ - Slack  │ │ - Faceted     │
-    └──────────┘ └─────────┘ └──────────┘ └───────────────┘
-              │       │          │
-              v       v          v
-    ┌──────────┐ ┌─────────┐ ┌──────────┐ ┌───────────────┐
-    │AUTOMATION│ │AI / ML  │ │ANALYTICS │ │ KNOWLEDGE     │
-    │ENGINE    │ │SERVICE  │ │SERVICE   │ │ BASE          │
-    │          │ │         │ │          │ │               │
-    │ - Trigger│ │ - Class.│ │ - CSAT   │ │ - Articles    │
-    │ - Time-  │ │ - Senti.│ │ - Agent  │ │ - Search      │
-    │   based  │ │ - Suggest│ │  perf   │ │ - Suggestions │
-    │ - Rules  │ │ - Chatbot│ │ - SLA   │ │ - Deflection  │
-    └──────────┘ └─────────┘ └──────────┘ └───────────────┘
-              │       │          │              │
-              v       v          v              v
-    ┌────────────────────────────────────────────────────────┐
-    │                    DATA LAYER                          │
-    │                                                        │
-    │  ┌──────────┐  ┌───────────┐  ┌──────┐  ┌──────────┐ │
-    │  │PostgreSQL│  │Elastic-   │  │Redis │  │Object    │ │
-    │  │(sharded) │  │search     │  │Cache │  │Storage   │ │
-    │  │          │  │Cluster    │  │      │  │(S3)      │ │
-    │  │- Tickets │  │- Full-text│  │- Hot │  │- Attach- │ │
-    │  │- Comments│  │  search   │  │  data│  │  ments   │ │
-    │  │- Agents  │  │- Analytics│  │- WS  │  │- Exports │ │
-    │  │- SLA     │  │- Suggest  │  │  pub/│  │          │ │
-    │  │- Audit   │  │           │  │  sub │  │          │ │
-    │  └──────────┘  └───────────┘  └──────┘  └──────────┘ │
-    └────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Intake["OMNICHANNEL INTAKE<br/>Email | Chat | Web Form | API | Social Media"] --> GW["API GATEWAY / LOAD BALANCER<br/>(Rate Limiting, Auth, Tenant ID)"]
+    GW --> TktSvc["TICKET SERVICE<br/>CRUD, Status mgmt, Field updates"] & CmtSvc["COMMENT SERVICE<br/>Add/edit comments, Internal notes, Attachments"] & CustSvc["CUSTOMER SERVICE<br/>Profiles, Contact merge, History"]
+    TktSvc & CmtSvc --> Kafka["EVENT BUS (Kafka)<br/>ticket.created | ticket.updated | comment.added | sla.breached"]
+    Kafka --> Route["ROUTING ENGINE<br/>Rules, Skills, Load balance"] & SLA["SLA MONITOR<br/>Timer, Breach, Pause, Escal."] & Notif["NOTIFICATION SVC<br/>Email, Push, WS, Slack"] & Search["SEARCH INDEXER<br/>Elasticsearch, Full-text, Faceted"]
+    Kafka --> Auto["AUTOMATION ENGINE<br/>Triggers, Time-based rules"] & AI["AI / ML SERVICE<br/>Classify, Sentiment, Suggest, Chatbot"] & Ana["ANALYTICS SERVICE<br/>CSAT, Agent perf, SLA"] & KB["KNOWLEDGE BASE<br/>Articles, Search, Deflection"]
+    Route & SLA & Notif & Search & Auto & AI & Ana & KB --> Data["DATA LAYER<br/>PostgreSQL (sharded) | Elasticsearch Cluster | Redis Cache | Object Storage (S3)"]
 ```
 
 ---
@@ -675,57 +587,18 @@ CREATE TABLE articles (
 
 ### State Machine
 
-```
-                          ┌─────────────────────────┐
-                          │    TICKET LIFECYCLE      │
-                          │      STATE MACHINE       │
-                          └─────────────────────────┘
-
-    ┌───────┐    Agent picks up     ┌───────┐
-    │  NEW  │ ──────────────────>   │ OPEN  │
-    │       │    or auto-assigned   │       │
-    └───┬───┘                       └───┬───┘
-        │                               │
-        │  Auto-route                   │  Agent replies, awaiting
-        │  (no agent available)         │  customer response
-        │                               │
-        │         ┌─────────────────────v───────┐
-        │         │         PENDING             │
-        │         │  (SLA timer PAUSED)         │
-        │         └────────────┬────────────────┘
-        │                      │
-        │                      │  Customer responds
-        │                      │  (SLA timer RESUMES)
-        │                      │
-        │         ┌────────────v────────────────┐
-        │         │         OPEN                │
-        │         │  (back to agent)            │◄─────────────────┐
-        │         └────────────┬────────────────┘                  │
-        │                      │                                    │
-        │         ┌────────────v────────────────┐                  │
-        │         │        ON_HOLD              │                  │
-        │         │  (waiting on 3rd party)     │                  │
-        │         │  (SLA timer PAUSED)         │──────────────────┘
-        │         └─────────────────────────────┘   3rd party responds
-        │
-        │         ┌─────────────────────────────┐
-        └────────>│        SOLVED               │
-                  │  (agent marks resolved)      │
-                  └────────────┬────────────────┘
-                               │
-                               │  Auto-close after
-                               │  X days (configurable)
-                               │
-                  ┌────────────v────────────────┐
-                  │        CLOSED               │
-                  │  (final, immutable)          │
-                  └─────────────────────────────┘
-
-    Re-opening Rules:
-    ──────────────────
-    SOLVED → OPEN   : Customer replies within auto-close window
-    CLOSED → NEW    : Creates a follow-up ticket (linked to original)
-    Any    → OPEN   : Agent manually re-opens (audit logged)
+```mermaid
+stateDiagram-v2
+    [*] --> NEW
+    NEW --> OPEN : Agent picks up or auto-assigned
+    NEW --> SOLVED : Auto-resolved
+    OPEN --> PENDING : Agent replies, awaiting customer (SLA timer PAUSED)
+    PENDING --> OPEN : Customer responds (SLA timer RESUMES)
+    OPEN --> ON_HOLD : Waiting on 3rd party (SLA timer PAUSED)
+    ON_HOLD --> OPEN : 3rd party responds
+    OPEN --> SOLVED : Agent marks resolved
+    SOLVED --> OPEN : Customer replies within auto-close window
+    SOLVED --> CLOSED : Auto-close after X days (final, immutable)
 ```
 
 ### Transition Rules (Enforced in Code)
@@ -813,47 +686,16 @@ def handle_customer_reply(ticket, comment):
 
 ### Routing Architecture
 
-```
-                    New Ticket Created
-                          │
-                          v
-                ┌─────────────────────┐
-                │  ROUTING ENGINE     │
-                └─────────┬───────────┘
-                          │
-              ┌───────────┼───────────────┐
-              │           │               │
-              v           v               v
-     ┌──────────────┐ ┌────────────┐ ┌─────────────┐
-     │ Rule-Based   │ │ Skill-Based│ │ AI-Predicted │
-     │ Routing      │ │ Matching   │ │ Routing      │
-     │              │ │            │ │              │
-     │ IF category= │ │ Match      │ │ ML model     │
-     │ "billing"    │ │ ticket     │ │ predicts     │
-     │ THEN team=   │ │ skills to  │ │ best team    │
-     │ "billing"    │ │ agent      │ │ from content │
-     │              │ │ skills     │ │              │
-     └──────┬───────┘ └─────┬──────┘ └──────┬──────┘
-            │               │               │
-            └───────────────┼───────────────┘
-                            │
-                            v
-                 ┌──────────────────────┐
-                 │  ASSIGNMENT ENGINE   │
-                 └──────────┬───────────┘
-                            │
-              ┌─────────────┼────────────────┐
-              │             │                │
-              v             v                v
-     ┌──────────────┐ ┌─────────────┐ ┌──────────────┐
-     │ Round-Robin  │ │ Load-       │ │ Priority     │
-     │              │ │ Balanced    │ │ Queue        │
-     │ Circular     │ │             │ │              │
-     │ rotation     │ │ Assign to   │ │ Urgent first │
-     │ across       │ │ agent with  │ │ then FIFO    │
-     │ available    │ │ lowest      │ │ within same  │
-     │ agents       │ │ current_load│ │ priority     │
-     └──────────────┘ └─────────────┘ └──────────────┘
+```mermaid
+flowchart TD
+    New["New Ticket Created"] --> RE["ROUTING ENGINE"]
+    RE --> Rule["Rule-Based Routing<br/>(IF category='billing' THEN team='billing')"]
+    RE --> Skill["Skill-Based Matching<br/>(Match ticket skills to agent skills)"]
+    RE --> AI["AI-Predicted Routing<br/>(ML model predicts best team)"]
+    Rule & Skill & AI --> AE["ASSIGNMENT ENGINE"]
+    AE --> RR["Round-Robin<br/>(Circular rotation across available agents)"]
+    AE --> LB["Load-Balanced<br/>(Assign to agent with lowest current_load)"]
+    AE --> PQ["Priority Queue<br/>(Urgent first, then FIFO within priority)"]
 ```
 
 ### Routing Rules Evaluation
@@ -1746,43 +1588,13 @@ Knowledge Base Effectiveness:
 
 ### AI Pipeline for Ticket Processing
 
-```
-                    New Ticket
-                        │
-                        v
-              ┌─────────────────────┐
-              │  AI ENRICHMENT      │
-              │  PIPELINE           │
-              └─────────┬───────────┘
-                        │
-          ┌─────────────┼─────────────────┐
-          │             │                 │
-          v             v                 v
-   ┌────────────┐ ┌──────────────┐ ┌────────────────┐
-   │ CLASSIFIER │ │  SENTIMENT   │ │  LANGUAGE      │
-   │            │ │  ANALYZER    │ │  DETECTOR      │
-   │ Priority:  │ │              │ │                │
-   │  urgent/   │ │  positive/   │ │  en/es/fr/     │
-   │  high/     │ │  neutral/    │ │  de/ja/zh/...  │
-   │  normal/   │ │  negative/   │ │                │
-   │  low       │ │  angry       │ │                │
-   │            │ │              │ │                │
-   │ Category:  │ │  Confidence: │ │                │
-   │  billing/  │ │  0.0 - 1.0   │ │                │
-   │  technical/│ │              │ │                │
-   │  account/  │ │              │ │                │
-   │  feature/  │ │              │ │                │
-   └──────┬─────┘ └──────┬───────┘ └───────┬────────┘
-          │              │                  │
-          v              v                  v
-   ┌────────────────────────────────────────────────┐
-   │          SUGGESTED RESPONSE ENGINE             │
-   │                                                │
-   │  1. Retrieve similar resolved tickets          │
-   │  2. Match knowledge base articles              │
-   │  3. Generate draft response via LLM            │
-   │  4. Agent reviews and sends (human-in-loop)    │
-   └────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    New["New Ticket"] --> Pipe["AI ENRICHMENT PIPELINE"]
+    Pipe --> Class["CLASSIFIER<br/>Priority: urgent/high/normal/low<br/>Category: billing/technical/account/feature"]
+    Pipe --> Sent["SENTIMENT ANALYZER<br/>positive/neutral/negative/angry<br/>Confidence: 0.0 - 1.0"]
+    Pipe --> Lang["LANGUAGE DETECTOR<br/>en/es/fr/de/ja/zh/..."]
+    Class & Sent & Lang --> Sugg["SUGGESTED RESPONSE ENGINE<br/>1. Retrieve similar resolved tickets<br/>2. Match knowledge base articles<br/>3. Generate draft response via LLM<br/>4. Agent reviews and sends (human-in-loop)"]
 ```
 
 ### Auto-Classification
@@ -2294,63 +2106,15 @@ Cache Layers:
 
 ## Deployment Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        DEPLOYMENT ARCHITECTURE                         │
-│                                                                        │
-│  Region: US-East                       Region: EU-West                 │
-│  ┌────────────────────────────────┐   ┌────────────────────────────┐  │
-│  │         Cloudflare CDN         │   │       Cloudflare CDN       │  │
-│  └──────────────┬─────────────────┘   └──────────────┬─────────────┘  │
-│                 │                                     │                │
-│  ┌──────────────v─────────────────┐   ┌──────────────v─────────────┐  │
-│  │     ALB (Application LB)       │   │     ALB (Application LB)   │  │
-│  └──────────────┬─────────────────┘   └──────────────┬─────────────┘  │
-│                 │                                     │                │
-│  ┌──────────────v─────────────────┐   ┌──────────────v─────────────┐  │
-│  │   Kubernetes Cluster (EKS)     │   │   Kubernetes Cluster (EKS) │  │
-│  │                                │   │                            │  │
-│  │  ┌───────────────────────────┐ │   │  ┌───────────────────────┐ │  │
-│  │  │ API Gateway (Kong)        │ │   │  │ API Gateway (Kong)    │ │  │
-│  │  │ - Auth, Rate Limit        │ │   │  │ - Auth, Rate Limit    │ │  │
-│  │  │ - Tenant Identification   │ │   │  │ - Tenant Ident.       │ │  │
-│  │  └───────────┬───────────────┘ │   │  └───────────┬───────────┘ │  │
-│  │              │                  │   │              │              │  │
-│  │  ┌───────────v───────────────┐ │   │  (Same service topology    │  │
-│  │  │ Microservices             │ │   │   as US-East)              │  │
-│  │  │                           │ │   │                            │  │
-│  │  │ ticket-service   (6 pods) │ │   └────────────────────────────┘  │
-│  │  │ comment-service  (4 pods) │ │                                   │
-│  │  │ routing-engine   (3 pods) │ │   Shared Services:               │
-│  │  │ sla-monitor      (2 pods) │ │   ┌────────────────────────────┐  │
-│  │  │ notification-svc (4 pods) │ │   │  Kafka Cluster             │  │
-│  │  │ search-indexer   (3 pods) │ │   │  (3 brokers, cross-region) │  │
-│  │  │ email-processor  (4 pods) │ │   └────────────────────────────┘  │
-│  │  │ ai-service       (3 pods) │ │                                   │
-│  │  │ analytics-svc    (2 pods) │ │   ┌────────────────────────────┐  │
-│  │  │ automation-engine(2 pods) │ │   │  Object Storage (S3)       │  │
-│  │  │ websocket-gw     (4 pods) │ │   │  (attachments, exports)    │  │
-│  │  └───────────────────────────┘ │   └────────────────────────────┘  │
-│  │                                │                                   │
-│  │  Data Layer:                   │                                   │
-│  │  ┌───────────────────────────┐ │                                   │
-│  │  │ PostgreSQL (Citus)        │ │                                   │
-│  │  │ - 1 coordinator + 8 workers│ │                                   │
-│  │  │ - Read replicas (2x)      │ │                                   │
-│  │  │                           │ │                                   │
-│  │  │ Redis Cluster (6 nodes)   │ │                                   │
-│  │  │ - Cache + Pub/Sub + Queues│ │                                   │
-│  │  │                           │ │                                   │
-│  │  │ Elasticsearch (9 nodes)   │ │                                   │
-│  │  │ - 3 master + 6 data       │ │                                   │
-│  │  └───────────────────────────┘ │                                   │
-│  └────────────────────────────────┘                                   │
-│                                                                        │
-│  Monitoring:                                                           │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │ Datadog (metrics + traces) | PagerDuty (alerts) | Sentry (errors)│  │
-│  └──────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph US["Region: US-East"]
+        CF_US["Cloudflare CDN"] --> ALB_US["ALB (Application LB)"] --> EKS_US["Kubernetes Cluster (EKS)<br/>API Gateway (Kong) -> Microservices (ticket, comment, routing, sla, notif, search, email, ai, analytics, automation, ws-gw)<br/>Data Layer: PostgreSQL (Citus 1 coord + 8 workers + 2x replicas) | Redis (6 nodes) | Elasticsearch (9 nodes)"]
+    end
+    subgraph EU["Region: EU-West"]
+        CF_EU["Cloudflare CDN"] --> ALB_EU["ALB (Application LB)"] --> EKS_EU["Kubernetes Cluster (EKS)<br/>(Same service topology as US-East)"]
+    end
+    EKS_US & EKS_EU --> Shared["Shared Services &amp; Monitoring:<br/>Kafka Cluster (3 brokers, cross-region) | Object Storage (S3)<br/>Datadog (metrics + traces) | PagerDuty (alerts) | Sentry (errors)"]
 ```
 
 ---

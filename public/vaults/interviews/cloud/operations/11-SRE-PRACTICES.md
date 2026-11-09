@@ -608,7 +608,7 @@ stateDiagram-v2
     OPEN --> HALF_OPEN : Wait duration elapsed (30s)
     HALF_OPEN --> CLOSED : Probe requests succeed
     HALF_OPEN --> OPEN : Any probe request fails
-````
+```
 
 ### Retry with Exponential Backoff and Jitter
 

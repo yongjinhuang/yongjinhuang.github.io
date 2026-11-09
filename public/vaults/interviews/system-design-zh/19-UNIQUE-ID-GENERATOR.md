@@ -271,104 +271,44 @@ CREATE INDEX idx_generated_id ON id_generation_events(generated_id);
 
 ### 4.1 库嵌入式生成（推荐）
 
-```
-+------------------------------------------------------------------+
-|                         客户端服务                                 |
-|                                                                  |
-|  +-----------------+    +-----------------+    +-------------+   |
-|  | Order Service   |    | User Service    |    | Feed Service|   |
-|  | [Snowflake Lib] |    | [Snowflake Lib] |    |[Snowflake L]|   |
-|  | node_id=5       |    | node_id=6       |    | node_id=7   |   |
-|  +-----------------+    +-----------------+    +-------------+   |
-|         |                      |                     |           |
-+---------|----------------------|---------------------|-----------|+
-          |                      |                     |
-          +----------------------+---------------------+
-                                 |
-                    (Worker ID 分配协调器)
-                                 |
-                    +------------+------------+
-                    |                         |
-             +------+------+         +--------+------+
-             |   ZooKeeper  |         |  etcd Cluster |
-             |   Cluster    |         |  (备选方案)    |
-             |              |         |               |
-             | /id-gen/     |         | /id-gen/      |
-             | workers/dc1  |         | workers/dc2   |
-             |   machine-0  |         |   machine-0   |
-             |   machine-1  |         |   machine-1   |
-             +--------------+         +---------------+
+```mermaid
+flowchart TD
+    subgraph Clients["Client Services"]
+        O["Order Service<br/>[Snowflake Lib, node_id=5]"]
+        U["User Service<br/>[Snowflake Lib, node_id=6]"]
+        F["Feed Service<br/>[Snowflake Lib, node_id=7]"]
+    end
+    O & U & F -->|"Coordinator for worker ID assignment"| ZK["ZooKeeper Cluster<br/>/id-gen/workers/dc1/machine-0..1"] & Etcd["etcd Cluster (alternative)<br/>/id-gen/workers/dc2/machine-0..1"]
 ```
 
 ### 4.2 集中式生成器服务（备选 / HTTP API）
 
-```
-+------------------+    +------------------+    +------------------+
-|   Service A      |    |   Service B      |    |   Service C      |
-|  (无法嵌入库)     |    |  (移动端后台)     |    |  (lambda 函数)    |
-+--------+---------+    +--------+---------+    +---------+--------+
-         |                       |                        |
-         +----------+------------+------------------------+
-                    |
-            +-------+--------+
-            |   Load Balancer |
-            |  (L4 / L7)     |
-            +-------+--------+
-                    |
-         +----------+----------+
-         |                     |
-+--------+--------+   +--------+--------+
-| ID Generator    |   | ID Generator    |
-| Node A          |   | Node B          |
-| dc=1, machine=0 |   | dc=1, machine=1 |
-|                 |   |                 |
-| [Snowflake Lib] |   | [Snowflake Lib] |
-| In-memory state |   | In-memory state |
-| last_ts=1709... |   | last_ts=1709... |
-| sequence=42     |   | sequence=7      |
-+--------+--------+   +--------+--------+
-         |                     |
-         +---------+-----------+
-                   |
-         +---------+-----------+
-         |    ZooKeeper        |
-         |    (Worker ID       |
-         |     分配)           |
-         +---------------------+
+```mermaid
+flowchart TD
+    SA["Service A<br/>(cannot embed library)"] & SB["Service B<br/>(mobile app backend)"] & SC["Service C<br/>(lambda func)"] --> LB["Load Balancer (L4 / L7)"]
+    LB --> NA["ID Generator Node A<br/>dc=1, machine=0<br/>[Snowflake Lib] last_ts, sequence=42"]
+    LB --> NB["ID Generator Node B<br/>dc=1, machine=1<br/>[Snowflake Lib] last_ts, sequence=7"]
+    NA & NB --> ZK["ZooKeeper<br/>(Worker ID Assignment)"]
 ```
 
 ### 4.3 多数据中心部署
 
-```
-+==============================================================+
-||                 全局 ID 生成集群                              ||
-+==============================================================+
-
- US-EAST 数据中心 (DC 0)         EU-WEST 数据中心 (DC 1)
-+----------------------------+  +----------------------------+
-| +--------+  +--------+     |  | +--------+  +--------+     |
-| |IDGen M0|  |IDGen M1|     |  | |IDGen M0|  |IDGen M1|     |
-| |dc=0 m=0|  |dc=0 m=1|     |  | |dc=1 m=0|  |dc=1 m=1|     |
-| +--------+  +--------+     |  | +--------+  +--------+     |
-|                             |  |                             |
-| ZooKeeper (dc0-zk)          |  | ZooKeeper (dc1-zk)          |
-+----------------------------+  +----------------------------+
-
- AP-SOUTHEAST 数据中心 (DC 2)    US-WEST 数据中心 (DC 3)
-+----------------------------+  +----------------------------+
-| +--------+  +--------+     |  | +--------+  +--------+     |
-| |IDGen M0|  |IDGen M1|     |  | |IDGen M0|  |IDGen M1|     |
-| |dc=2 m=0|  |dc=2 m=1|     |  | |dc=3 m=0|  |dc=3 m=1|     |
-| +--------+  +--------+     |  | +--------+  +--------+     |
-|                             |  |                             |
-| ZooKeeper (dc2-zk)          |  | ZooKeeper (dc3-zk)          |
-+----------------------------+  +----------------------------+
-
-关键特性：
-  - 每个数据中心管理自己的 ZooKeeper 用于 worker ID 租约
-  - 数据中心完全独立；ID 生成无需跨数据中心协调
-  - ID 中的 datacenter_id 部分保证了全局唯一性
-  - 热路径中无跨数据中心网络调用
+```mermaid
+flowchart TD
+    subgraph Fleet["GLOBAL ID GENERATION FLEET (Independent Datacenters, Zero Cross-DC Hot-Path Calls)"]
+        subgraph DC0["US-EAST Datacenter (DC 0)"]
+            DC0_N["IDGen M0 (dc=0 m=0) | IDGen M1 (dc=0 m=1)"] --> ZK0["ZooKeeper (dc0-zk)"]
+        end
+        subgraph DC1["EU-WEST Datacenter (DC 1)"]
+            DC1_N["IDGen M0 (dc=1 m=0) | IDGen M1 (dc=1 m=1)"] --> ZK1["ZooKeeper (dc1-zk)"]
+        end
+        subgraph DC2["AP-SOUTHEAST Datacenter (DC 2)"]
+            DC2_N["IDGen M0 (dc=2 m=0) | IDGen M1 (dc=2 m=1)"] --> ZK2["ZooKeeper (dc2-zk)"]
+        end
+        subgraph DC3["US-WEST Datacenter (DC 3)"]
+            DC3_N["IDGen M0 (dc=3 m=0) | IDGen M1 (dc=3 m=1)"] --> ZK3["ZooKeeper (dc3-zk)"]
+        end
+    end
 ```
 
 ---
@@ -390,21 +330,14 @@ CREATE INDEX idx_generated_id ON id_generation_events(generated_id);
 
 ### 5.2 面试决策矩阵
 
-```
-ID 是否需要适合 64 位？
-  |
-  +-- 是 --> 是否需要保证全局唯一（非概率性）？
-  |             |
-  |             +-- 是 --> Twitter Snowflake 或 TSID
-  |             |
-  |             +-- 否 --> 数据库自增（单分片时）
-  |                         或 Ticket Server（可接受多分片时）
-  |
-  +-- 否 --> 是否需要时间排序？
-                |
-                +-- 是 --> ULID 或 UUID v7
-                |
-                +-- 否 --> UUID v4（最简单，零协调）
+```mermaid
+flowchart TD
+    Q1{"Are IDs required to<br/>fit in 64 bits?"} -->|"YES"| Q2{"Is global uniqueness<br/>guaranteed required?"}
+    Q2 -->|"YES"| Snow["Twitter Snowflake or TSID"]
+    Q2 -->|"NO"| DB["Database Auto-Increment (single shard)<br/>or Ticket Server (multi-shard)"]
+    Q1 -->|"NO"| Q3{"Is time-ordering<br/>required?"}
+    Q3 -->|"YES"| ULID["ULID or UUID v7"]
+    Q3 -->|"NO"| UUID4["UUID v4 (simplest, zero coordination)"]
 ```
 
 ---

@@ -423,68 +423,20 @@ CREATE TABLE promotions (
 
 ## 4. 高层架构
 
-```
-+------------------------------------------------------------------------------------+
-|                              客户端                                                 |
-|  +------------------+   +--------------------+   +--------------------+            |
-|  |  顾客 App        |   |  骑手 App          |   |  餐厅 KDS          |            |
-|  |  (iOS/Android/   |   |  (iOS/Android)     |   |  (平板/POS)        |            |
-|  |   Web)           |   |                    |   |                    |            |
-|  +--------+---------+   +----------+---------+   +---------+----------+            |
-+-----------|------------------------|------------------------|----------------------+
-            |                        |                        |
-            |         HTTPS + WSS    |                        |
-            v                        v                        v
-+------------------------------------------------------------------------------------+
-|                           API Gateway / 负载均衡器                                   |
-|            (限流、认证、SSL 终止、路由)                                               |
-+---+----------------------------+---------------------------+------------------------+
-    |                            |                           |
-    v                            v                           v
-+----------+            +------------------+         +------------------+
-| Order    |            | Driver Location  |         | Restaurant       |
-| Service  |            | Service          |         | Service          |
-+----+-----+            +--------+---------+         +--------+---------+
-     |                           |                            |
-     |                     +-----+-----+                      |
-     |                     | Redis Geo |                      |
-     v                     | (H3 Grid) |                      v
-+----------+               +-----------+            +------------------+
-| Dispatch |<-拉取骑手                   推送       | Menu Service     |
-| Service  |  位置                      事件       +------------------+
-+----+-----+                                                  |
-     |                                                        v
-     |                    +------------------+     +------------------+
-     +------------------->| ETA Service      |     | Search / Browse  |
-     |                    | (ML 模型)        |     | Service          |
-     |                    +------------------+     | (Elasticsearch)  |
-     v                                             +------------------+
-+----------+
-| Payment  |
-| Service  |
-+----------+
-     |
-     v
-+----------+    +------------------+    +------------------+
-| Stripe / |    | Notification     |    | Promotions       |
-| Processor|    | Service          |    | Engine           |
-+----------+    | (推送/SMS/邮件)  |    +------------------+
-                +------------------+
-
-+------------------------------------------------------------------------------------+
-|                           消息总线 (Kafka)                                           |
-|  Topics: order.events | driver.location | payment.events | notification.events     |
-+------------------------------------------------------------------------------------+
-
-+------------------------------------------------------------------------------------+
-|                            数据存储                                                  |
-|  +-------------+  +-------------+  +------------------+  +--------------------+   |
-|  | PostgreSQL  |  | Redis        |  | Elasticsearch    |  | ClickHouse         |   |
-|  | (订单、     |  | (会话、      |  | (餐厅/           |  | (分析、            |   |
-|  |  支付、     |  |  骑手位置、  |  |  菜单搜索)       |  |  报表)             |   |
-|  |  评分)      |  |  订单缓存)   |  |                  |  |                    |   |
-|  +-------------+  +-------------+  +------------------+  +--------------------+   |
-+------------------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Cust["Customer App (iOS/Android/Web)"] & Drv["Driver App (iOS/Android)"] & KDS["Restaurant KDS (Tablet/POS)"] -->|"HTTPS + WSS"| GW["API Gateway / Load Balancer<br/>(Rate Limiting, Auth, SSL Termination, Routing)"]
+    GW --> OrdSvc["Order Service"] & LocSvc["Driver Location Service"] & RestSvc["Restaurant Service"]
+    LocSvc --> Geo["Redis Geo (H3 Grid)"]
+    OrdSvc --> DispSvc["Dispatch Service"]
+    Geo -->|"Pulls driver locations"| DispSvc
+    DispSvc --> ETASvc["ETA Service (ML model)"] & PaySvc["Payment Service"]
+    PaySvc --> Stripe["Stripe / Processor"] & NotifSvc["Notification Service"] & Promo["Promotions Engine"]
+    RestSvc --> MenuSvc["Menu Service"] --> SearchSvc["Search / Browse Service (Elasticsearch)"]
+    subgraph Infra["Message Bus &amp; Data Stores"]
+        Kafka["Kafka: order.events | driver.location | payment.events | notification.events"]
+        Stores["PostgreSQL (Orders, Payments, Ratings) | Redis | Elasticsearch | ClickHouse"]
+    end
 ```
 
 ---
@@ -530,51 +482,17 @@ CREATE TABLE promotions (
 
 ## 6. 深入探讨：订单生命周期状态机
 
-```
-                       +----------+
-              顾客     |  PLACED  |
-              下单     +----+-----+
-                            |
-                            | 餐厅接单（或自动接单）
-                            v
-                      +-----------+
-                      | ACCEPTED  |
-                      +-----+-----+
-                            |
-                            | 餐厅开始烹饪
-                            v
-                      +-----------+
-                      | PREPARING |
-                      +-----+-----+
-                            |
-                            | 餐厅标记已备好
-                            v
-                        +-------+
-                        | READY |  <--- KDS 屏幕更新
-                        +---+---+
-                            |
-                            | 骑手到达并取餐
-                            v
-                      +----------+
-                      | PICKED UP|
-                      +----+-----+
-                            |
-                            | 骑手开始配送到顾客
-                            v
-                       +----------+
-                       | EN ROUTE |
-                       +----+-----+
-                            |
-                            | 骑手标记已送达（拍照凭证）
-                            v
-                      +-----------+
-                      | DELIVERED |
-                      +-----------+
-
-  异常流程：
-  PLACED ------> CANCELLED（顾客在接单前取消，全额退款）
-  ACCEPTED ----> CANCELLED（餐厅取消，全额退款 + 致歉优惠券）
-  PREPARING ---> CANCELLED（罕见，部分或全额退款，由平台裁定）
+```mermaid
+stateDiagram-v2
+    [*] --> PLACED : Customer places order
+    PLACED --> ACCEPTED : Restaurant accepts
+    PLACED --> CANCELLED : Cancelled before acceptance
+    ACCEPTED --> PREPARING : Restaurant starts cooking
+    ACCEPTED --> CANCELLED : Cancelled by restaurant
+    PREPARING --> READY : Restaurant marks ready (KDS)
+    READY --> PICKED_UP : Driver arrives & picks up
+    PICKED_UP --> EN_ROUTE : Driver drives to customer
+    EN_ROUTE --> DELIVERED : Driver marks delivered (proof photo)
 ```
 
 **状态转换规则：**
@@ -1372,61 +1290,17 @@ WebSocket（Tracking）Service：
 
 ## 22. 系统架构 — 详细组件视图
 
-```
-+-------------------------------------------------------------------------------------------+
-|                                   顾客旅程                                                 |
-|                                                                                           |
-|  浏览 -> 加入购物车 -> 结账 -> 追踪 -> 收餐 -> 评价                                        |
-+-------------------------------------------------------------------------------------------+
-
-+------------------+    +-------------------+    +------------------+    +------------------+
-|  Browse &        |    |  Order Service    |    |  Dispatch        |    |  Tracking        |
-|  Search          |    |                  |    |  Service         |    |  Service         |
-|  Service         |    |  - Order CRUD    |    |                  |    |                  |
-|                  |    |  - 状态机        |    |  - 骑手匹配      |    |  - WebSocket hub |
-|  - Elasticsearch |    |  - 容量控制      |    |  - 订单 batch    |    |  - 位置扇出      |
-|  - 地理查询      |    |  - Kafka 发布    |    |  - H3 地理查询   |    |  - SSE 降级      |
-|  - Redis 缓存    |    |                  |    |  - Surge 感知    |    |                  |
-+------+-----------+    +--------+---------+    +--------+---------+    +--------+---------+
-       |                         |                       |                       |
-       |                         v                       v                       v
-       |              +----------+--------+   +----------+--------+   +----------+--------+
-       |              |  PostgreSQL       |   |  Redis Cluster    |   |  Kafka             |
-       |              |  (订单、用户、    |   |  - Driver GEO     |   |  - order.events    |
-       |              |   支付、         |   |  - 会话           |   |  - driver.location |
-       |              |   餐厅)          |   |  - 菜单缓存       |   |  - notifications   |
-       |              |  Replica Set +    |   |  - Surge mults    |   |  - payment.events  |
-       |              |  Read Replicas    |   |  - 优惠缓存       |   +--------------------+
-       |              +-------------------+   +-------------------+
-       |
-       v
-+------------------+
-|  CDN             |
-|  (菜单页面、     |
-|   地图瓦片、     |
-|   餐厅           |
-|   图片)          |
-+------------------+
-
-+------------------+    +-------------------+    +------------------+    +------------------+
-|  ETA Service     |    |  Payment Service  |    |  Promotions      |    |  Notification    |
-|                  |    |                  |    |  Engine          |    |  Service         |
-|  - ML 模型       |    |  - Stripe API    |    |                  |    |                  |
-|  - Traffic API   |    |  - 授权/扣款     |    |  - 优惠码验证    |    |  - 推送 (FCM)    |
-|  - 备餐预估      |    |  - 结算队列      |    |  - 滥用检测      |    |  - SMS (Twilio)  |
-|  - 实时          |    |  - 幂等性        |    |  - 使用次数      |    |  - 邮件 (SES)    |
-|    重新路由      |    |  - 退款流程      |    |    原子计数器    |    |  - 应用内        |
-+------------------+    +-------------------+    +------------------+    +------------------+
-
-+------------------+    +-------------------+    +------------------+
-|  Fraud Detection |    |  Restaurant KDS   |    |  Analytics       |
-|  Service         |    |  Gateway          |    |  (ClickHouse)    |
-|                  |    |                  |    |                  |
-|  - GPS spoof     |    |  - WebSocket/SSE |    |  - 订单漏斗      |
-|  - 优惠滥用      |    |  - 订单队列      |    |  - 骑手表现      |
-|  - 虚假订单      |    |  - 备餐计时器    |    |  - ETA 准确度    |
-|  - ML 评分       |    |  - 容量管理      |    |  - 营收          |
-+------------------+    +-------------------+    +------------------+
+```mermaid
+flowchart TD
+    Journey["CUSTOMER JOURNEY<br/>Browse -> Add to Cart -> Checkout -> Track -> Receive -> Rate"] --> Browse["Browse &amp; Search Service<br/>Elasticsearch, Geo query, Redis cache"] & Order["Order Service<br/>CRUD, State machine, Capacity gate, Kafka"] & Disp["Dispatch Service<br/>Driver match, Batch orders, H3 geo, Surge"] & Track["Tracking Service<br/>WebSocket hub, Location fan-out, SSE"]
+    Browse --> CDN["CDN<br/>(Menu pages, Map tiles, Restaurant images)"]
+    Order --> PG["PostgreSQL<br/>(Orders, Users, Payments, Restaurants)"]
+    Disp --> Redis["Redis Cluster<br/>(Driver GEO, Sessions, Menu, Surge, Promo)"]
+    Track --> Kafka["Kafka<br/>(order.events, driver.location, notifications, payment.events)"]
+    subgraph Supporting["Supporting Services"]
+        S1["ETA Service (ML + Traffic API) | Payment Service (Stripe) | Promotions Engine | Notification Service"]
+        S2["Fraud Detection Service | Restaurant KDS Gateway | Analytics (ClickHouse)"]
+    end
 ```
 
 ---

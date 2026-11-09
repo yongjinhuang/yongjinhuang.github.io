@@ -341,94 +341,15 @@ CREATE TABLE namespaces (
 
 ## 4. 高层架构
 
-```
-+------------------------------------------------------------------------------------------------------------------+
-|                                         DISTRIBUTED TASK SCHEDULER                                               |
-+------------------------------------------------------------------------------------------------------------------+
-
-  客户端层
-  +----------------+   +----------------+   +----------------+   +----------------+
-  |   Web UI       |   |  CLI / SDK     |   |  REST API      |   |  gRPC API      |
-  | (仪表盘)        |   | (Python/Go/JS) |   |  客户端         |   |  客户端         |
-  +-------+--------+   +-------+--------+   +-------+--------+   +-------+--------+
-          |                    |                     |                    |
-          +--------------------+---------------------+--------------------+
-                                         |
-                                         v
-  API 网关 / 负载均衡器
-  +------------------------------------------------------------------+
-  |                        API Gateway                               |
-  |   认证 (JWT/OIDC) | 限流 | 路由 | Namespace 分发                   |
-  +--------+------------------------------------+--------------------+
-           |                                    |
-           v                                    v
-  +------------------+               +--------------------+
-  |  前端服务         |               | 后端服务             |
-  |  (workflow CRUD,  |               | (worker 轮询,       |
-  |   调度管理)        |               |  任务分发)           |
-  +--------+---------+               +----------+---------+
-           |                                    |
-           +------------------------------------+
-                          |
-                          v
-  调度器核心
-  +------------------------------------------------------------------+
-  |                    调度器服务（高可用集群）                            |
-  |  +------------------+  +--------------------+  +--------------+  |
-  |  | Cron 触发器       |  | 依赖解析器          |  |Leader 选举    |  |
-  |  | (解析并触发)       |  | (DAG 评估器)        |  |(基于 etcd)    |  |
-  |  +------------------+  +--------------------+  +--------------+  |
-  |  +------------------+  +--------------------+                    |
-  |  | 超时监控器        |  | 心跳监控器           |                    |
-  |  | (检测过期任务)     |  | (检测宕机 worker)   |                    |
-  |  +------------------+  +--------------------+                    |
-  +------------------------------------------------------------------+
-                          |
-          +---------------+---------------+
-          |               |               |
-          v               v               v
-  任务队列（按任务类型/优先级）
-  +----------------+  +----------------+  +----------------+
-  |  高优先级       |  | 普通队列        |  |  低优先级       |
-  |  队列           |  |                |  |  队列           |
-  | (Redis/Kafka)  |  | (Redis/Kafka)  |  | (Redis/Kafka)  |
-  +-------+--------+  +-------+--------+  +-------+--------+
-          |                   |                    |
-          +-------------------+--------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-              v               v               v
-  Worker 池
-  +----------------+  +----------------+  +----------------+
-  | Worker 池 A    |  | Worker 池 B    |  | Worker 池 C    |
-  | (Python 任务)   |  | (Go 任务)      |  | (Java 任务)    |
-  | [W1][W2][W3]   |  | [W4][W5][W6]   |  | [W7][W8][W9]  |
-  +----------------+  +----------------+  +----------------+
-              |               |               |
-              +---------------+---------------+
-                              |
-                              v
-  持久化层
-  +------------------------------------------------------------------+
-  |  +------------------+  +------------------+  +--------------+   |
-  |  | PostgreSQL       |  |  Redis           |  | 对象存储      |   |
-  |  | (workflow 状态,   |  |  (任务队列,       |  | (S3/GCS)     |   |
-  |  |  事件历史,        |  |   缓存, 锁,      |  | (大型 I/O    |   |
-  |  |  调度)            |  |   限流)           |  |  负载数据)    |   |
-  |  +------------------+  +------------------+  +--------------+   |
-  |  +------------------+                                            |
-  |  |  Elasticsearch   |                                            |
-  |  | (workflow 搜索,   |                                            |
-  |  |  可见性)          |                                            |
-  |  +------------------+                                            |
-  +------------------------------------------------------------------+
-                              |
-                              v
-  可观测性
-  +------------------------------------------------------------------+
-  |  Prometheus (指标)  |  Jaeger (链路追踪)  |  Grafana (仪表盘)      |
-  +------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    UI["Web UI (Dashboard)"] & CLI["CLI / SDK (Python/Go/JS)"] & REST["REST API Clients"] & GRPC["gRPC API Clients"] --> GW["API Gateway<br/>Auth (JWT/OIDC) | Rate Limiting | Routing | Namespace Dispatch"]
+    GW --> FE["Frontend Service<br/>(workflow CRUD, schedule mgmt)"] & BE["Backend Service<br/>(worker polling, task dispatch)"]
+    FE & BE --> Sched["Scheduler Service (HA Cluster)<br/>Cron Trigger | Dependency Resolver (DAG) | Leader Elector (etcd)<br/>Timeout Monitor | Heartbeat Monitor"]
+    Sched --> QHigh["High Priority Queue<br/>(Redis/Kafka)"] & QNorm["Normal Queue<br/>(Redis/Kafka)"] & QLow["Low Priority Queue<br/>(Redis/Kafka)"]
+    QHigh & QNorm & QLow --> WPA["Worker Pool A (Python)<br/>[W1][W2][W3]"] & WPB["Worker Pool B (Go)<br/>[W4][W5][W6]"] & WPC["Worker Pool C (Java)<br/>[W7][W8][W9]"]
+    WPA & WPB & WPC --> Persist["Persistence Layer<br/>PostgreSQL (state, history, schedules) | Redis (queues, locks)<br/>Object Store (S3/GCS) | Elasticsearch (visibility)"]
+    Persist --> Obs["Observability<br/>Prometheus (metrics) | Jaeger (traces) | Grafana (dashboards)"]
 ```
 
 ### 调度器服务基于 Leader 选举的高可用
@@ -459,37 +380,11 @@ Workflow 被建模为有向无环图（DAG），其中：
 - **节点** = 单个任务/活动
 - **边** = 依赖关系（A -> B 表示 B 依赖于 A）
 
-```
-示例：订单履行 DAG
-
-     +----------------+
-     | validate_order |  （无依赖）
-     +-------+--------+
-             |
-      +-------+-------+
-      |               |
-      v               v
-+----------+    +------------+
-|charge_   |    |reserve_    |
-|customer  |    |inventory   |
-+----+-----+    +-----+------+
-     |                |
-     +------+  +------+
-            |  |
-            v  v
-       +----------+
-       | ship_    |
-       | order    |
-       +----+-----+
-            |
-     +------+------+
-     |             |
-     v             v
-+--------+   +----------+
-|send_   |   |update_   |
-|confirm |   |analytics |
-|email   |   |          |
-+--------+   +----------+
+```mermaid
+flowchart TD
+    Val["validate_order<br/>(no dependencies)"] --> Charge["charge_customer"] & Res["reserve_inventory"]
+    Charge & Res --> Ship["ship_order"]
+    Ship --> Email["send_confirm_email"] & Analytics["update_analytics"]
 ```
 
 ### 拓扑排序算法（Kahn 算法）
@@ -653,36 +548,11 @@ with DAG(
 
 ### 队列设计
 
-```
-+-----------------------------------------------------------------------+
-|                    任务队列系统                                          |
-+-----------------------------------------------------------------------+
-
-  调度器
-     |
-     | enqueue(task, priority, delay)
-     v
-+--------------------+
-|   队列路由器        |  -- 按 task_type、租户、优先级路由
-+----+---+---+-------+
-     |   |   |
-     v   v   v
-+--------+ +--------+ +--------+
-|优先级   | |优先级   | |优先级   |
-| 高      | | 普通   | | 低     |
-| 队列    | | 队列   | | 队列   |
-+--------+ +--------+ +--------+
-  Redis ZSET（score = 优先级 + 时间戳）
-
-  +-- 延迟任务队列（Redis ZSET，score = execute_at 纪元时间）--+
-  |  execute_at 在未来的任务在此等待直到时间到达               |
-  +------+--------------------------------------------------------+
-         |
-         | （当 score <= now() 时移动到主队列）
-         v
-+-------------------+
-|  调度器循环        |  -- 每 100ms 轮询延迟队列
-+-------------------+
+```mermaid
+flowchart TD
+    Sched["Scheduler"] -->|"enqueue(task, priority, delay)"| Router["Queue Router<br/>(routes by task_type, tenant, priority)"]
+    Router --> High["Priority HIGH Queue<br/>(Redis ZSET)"] & Norm["Priority NORMAL Queue<br/>(Redis ZSET)"] & Low["Priority LOW Queue<br/>(Redis ZSET)"]
+    Delayed["Delayed Task Queue<br/>(Redis ZSET, score = execute_at epoch)"] -->|"Moved to main queue when score &lt;= now()"| Loop["Scheduler Loop<br/>(polls delayed queue every 100ms)"]
 ```
 
 ### 基于 Redis 的优先级队列
@@ -1191,56 +1061,15 @@ class HeartbeatMonitor:
 
 ### 状态转换
 
-```
-                        +----------------------------+
-                        |         PENDING            |
-                        | (已创建，等待依赖)           |
-                        +-----------+----------------+
-                                    |
-                         所有前置条件已满足
-                                    |
-                                    v
-                        +----------------------------+
-                        |        SCHEDULED           |
-                        | (已入队到任务队列)           |
-                        +-----------+----------------+
-                                    |
-                            worker 轮询到任务
-                                    |
-                                    v
-                   +------------------------------+
-                   |          RUNNING              |
-                   |  (worker 执行中，发送          |
-                   |   心跳)                       |
-                   +---+-------+----------+--------+
-                       |       |          |
-           任务成功     |  任务失败       | 心跳超时
-                        |       |        | 或 worker 崩溃
-                        v       v        |
-             +---------+   +--------+   |
-             | SUCCESS |   | FAILED |   |
-             +---------+   +----+---+   |
-                                |       |
-                      +---------v-------v---+
-                      |    TIMED_OUT /       |
-                      |    FAILED            |
-                      +----------+-----------+
-                                 |
-                    attempt < max_attempts?
-                    /                       \
-                  是                         否
-                   |                          |
-                   v                          v
-          +----------------+        +-------------------+
-          |   SCHEDULED    |        |  DEAD_LETTER_QUEUE |
-          | (带退避延迟     |        |  (终态，            |
-          |  的重试)        |        |   已触发告警)       |
-          +----------------+        +-------------------+
-
-特殊状态：
-  CANCELLED   -- workflow 被手动取消
-  SKIPPED     -- 条件分支未执行（Airflow 风格）
-  DEFERRED    -- 任务等待外部信号/审批
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : Created, waiting for deps
+    PENDING --> SCHEDULED : All prerequisites met (enqueued)
+    SCHEDULED --> RUNNING : Worker polls task
+    RUNNING --> SUCCESS : Task success
+    RUNNING --> TIMED_OUT_OR_FAILED : Task failure / Heartbeat timeout
+    TIMED_OUT_OR_FAILED --> SCHEDULED : attempt < max_attempts (backoff retry)
+    TIMED_OUT_OR_FAILED --> DEAD_LETTER_QUEUE : attempt >= max_attempts (alert fired)
 ```
 
 ### 状态机实现
@@ -1383,17 +1212,20 @@ class OrderFulfillmentWorkflow:
 
 ### 基于编排的 Saga
 
-```
-  OrderService          PaymentService        InventoryService       ShippingService
-      |                       |                      |                     |
-      |--order.created------->|                      |                     |
-      |                       |--payment.processed-->|                     |
-      |                       |                      |--inventory.reserved>|
-      |                       |                      |                  失败
-      |                       |                      |<-shipping.failed----|
-      |                       |<--inventory.released-|
-      |                       |<--payment.refunded---|
-      |<---order.failed-------|
+```mermaid
+sequenceDiagram
+    participant OS as "OrderService"
+    participant PS as "PaymentService"
+    participant IS as "InventoryService"
+    participant SS as "ShippingService"
+
+    OS->>PS: order.created
+    PS->>IS: payment.processed
+    IS->>SS: inventory.reserved
+    Note over SS: FAIL
+    SS-->>IS: shipping.failed
+    IS-->>PS: inventory.released
+    PS-->>OS: payment.refunded / order.failed
 ```
 
 ### 基于协调器的 Saga（推荐与 Temporal 配合使用）

@@ -582,7 +582,7 @@ sequenceDiagram
     S-->>D: Stream firmware chunks into inactive OTA_1 partition
     Note over D: Verify SHA-256 + ECDSA/RSA signature,<br/>mark OTA_1 pending, reboot & run self-test
     D->>O: 4. Confirm boot health & report update success
-````
+```
 
 ---
 

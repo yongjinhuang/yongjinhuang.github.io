@@ -633,7 +633,7 @@ stateDiagram-v2
     failed --> closed
     connected --> closed : close()
     completed --> closed : close()
-````
+```
 
 ### ICE Restart
 

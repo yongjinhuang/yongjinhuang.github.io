@@ -434,84 +434,27 @@ CREATE TABLE social_identities (
 
 ## 5. High-Level Architecture
 
-```
-                          +------------------+
-                          |   DNS / CDN      |
-                          |  (Cloudflare)    |
-                          +--------+---------+
-                                   |
-                          +--------+---------+
-                          |   Global Load    |
-                          |   Balancer       |
-                          | (Anycast IP,     |
-                          |  GeoDNS routing) |
-                          +---+---+---+------+
-                              |   |   |
-              +---------------+   |   +---------------+
-              |                   |                   |
-     +--------+--------+  +-------+-------+  +--------+--------+
-     | Region: US-EAST |  | Region: EU    |  | Region: AP-EAST |
-     | Auth Service    |  | Auth Service  |  | Auth Service    |
-     | Cluster         |  | Cluster       |  | Cluster         |
-     +-----------------+  +---------------+  +-----------------+
-              |                   |                   |
-     +--------+---------+---------+---------+---------+-------+
-     |                                                        |
-     |                    Shared Infrastructure               |
-     |                                                        |
-     |  +-------------------+       +----------------------+  |
-     |  | Redis Cluster     |       | PostgreSQL Cluster   |  |
-     |  | (Session Store)   |       | (Users, Sessions,    |  |
-     |  | Primary + 2 Read  |       | Roles, Audit)        |  |
-     |  | Replicas          |       | Primary + Replicas   |  |
-     |  +-------------------+       +----------------------+  |
-     |                                                        |
-     |  +-------------------+       +----------------------+  |
-     |  | Message Queue     |       | Secrets Manager      |  |
-     |  | (Kafka)           |       | (HashiCorp Vault /   |  |
-     |  | Audit events,     |       |  AWS KMS)            |  |
-     |  | Email triggers    |       | JWT signing keys,    |  |
-     |  +-------------------+       | DB credentials       |  |
-     |                              +----------------------+  |
-     +--------------------------------------------------------+
+```mermaid
+flowchart TD
+    DNS["DNS / CDN (Cloudflare)"] --> GLB["Global Load Balancer<br/>(Anycast IP, GeoDNS routing)"]
+    GLB --> US["Region: US-EAST<br/>Auth Service Cluster"] & EU["Region: EU<br/>Auth Service Cluster"] & AP["Region: AP-EAST<br/>Auth Service Cluster"]
+    US & EU & AP --> Shared
+    subgraph Shared["Shared Infrastructure"]
+        Redis["Redis Cluster (Session Store)<br/>Primary + 2 Read Replicas"]
+        PG["PostgreSQL Cluster (Users, Sessions, Roles, Audit)<br/>Primary + Replicas"]
+        Kafka["Message Queue (Kafka)<br/>Audit events, Email triggers"]
+        Vault["Secrets Manager (HashiCorp Vault / AWS KMS)<br/>JWT signing keys, DB credentials"]
+    end
 ```
 
 ### Auth Service Internal Architecture
 
-```
-+-------------------------------------------------------+
-|                   Auth Service Pod                    |
-|                                                       |
-|  +-------------+  +-----------+  +-----------------+ |
-|  | REST API    |  | OAuth 2.0 |  | SAML 2.0        | |
-|  | Handler     |  | Handler   |  | Handler         | |
-|  +------+------+  +-----+-----+  +--------+--------+ |
-|         |               |                 |           |
-|         +---------------+-----------------+           |
-|                         |                             |
-|              +----------+----------+                  |
-|              |   Auth Core Logic   |                  |
-|              |                     |                  |
-|    +---------+---+   +----------+  |                  |
-|    | Password    |   | Token    |  |                  |
-|    | Verifier    |   | Issuer / |  |                  |
-|    | (Argon2id)  |   | Verifier |  |                  |
-|    +-------------+   +----------+  |                  |
-|    +---------+---+   +----------+  |                  |
-|    | MFA         |   | Session  |  |                  |
-|    | Validator   |   | Manager  |  |                  |
-|    | (TOTP/FIDO2)|   |          |  |                  |
-|    +-------------+   +----------+  |                  |
-|              |                     |                  |
-|              +----------+----------+                  |
-|                         |                             |
-|     +---------+---------+---------+---------+         |
-|     |         |         |         |         |         |
-|  +--+---+ +---+---+ +---+---+ +---+---+ +--+----+    |
-|  |Redis | |Postgres| |Kafka | |Vault  | |Rate   |    |
-|  |Client| |Client  | |Prod. | |Client | |Limiter|    |
-|  +------+ +--------+ +------+ +-------+ +-------+    |
-+-------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Pod["Auth Service Pod"]
+        REST["REST API Handler"] & OAuth["OAuth 2.0 Handler"] & SAML["SAML 2.0 Handler"] --> Core["Auth Core Logic<br/>Password Verifier (Argon2id) | Token Issuer/Verifier<br/>MFA Validator (TOTP/FIDO2) | Session Manager"]
+        Core --> RC["Redis Client"] & PGC["Postgres Client"] & KC["Kafka Producer"] & VC["Vault Client"] & RL["Rate Limiter"]
+    end
 ```
 
 ---
@@ -609,38 +552,18 @@ ES256 is preferred: smaller tokens, faster verification, stronger security per b
 
 ### Token Rotation Strategy
 
-```
-Client                           Auth Server
-  |                                   |
-  |-- POST /auth/refresh ------------>|
-  |   { refresh_token: "rt_OLD" }     |
-  |                                   |
-  |                   +---------------+
-  |                   | 1. Verify rt_OLD hash in DB
-  |                   | 2. Check session not revoked
-  |                   | 3. Check session not expired
-  |                   | 4. Issue new access_token (JWT)
-  |                   | 5. Issue new rt_NEW
-  |                   | 6. ATOMICALLY:
-  |                   |    - Mark rt_OLD as used/rotated
-  |                   |    - Store rt_NEW hash in DB
-  |                   +---------------+
-  |                                   |
-  |<-- 200 OK -----------------------|
-  |   { access_token: "...",          |
-  |     refresh_token: "rt_NEW" }     |
-  |                                   |
-  | [If rt_OLD used AGAIN later:]     |
-  |-- POST /auth/refresh ------------>|
-  |   { refresh_token: "rt_OLD" }     |
-  |                                   |
-  |                   +---------------+
-  |                   | rt_OLD already used!
-  |                   | REUSE DETECTED:
-  |                   | -> Revoke entire session (rt_NEW too)
-  |                   | -> Alert user of possible token theft
-  |                   +---------------+
-  |<-- 401 Unauthorized --------------|
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant S as "Auth Server"
+
+    C->>S: POST /auth/refresh {refresh_token: "rt_OLD"}
+    Note over S: 1. Verify rt_OLD hash in DB<br/>2. Check session not revoked/expired<br/>3. Issue new access_token + rt_NEW<br/>4. Atomically mark rt_OLD rotated & store rt_NEW
+    S-->>C: 200 OK {access_token, refresh_token: "rt_NEW"}
+    Note over C,S: If rt_OLD is used AGAIN later:
+    C->>S: POST /auth/refresh {refresh_token: "rt_OLD"}
+    Note over S: REUSE DETECTED!<br/>Revoke entire session (including rt_NEW) & alert user
+    S-->>C: 401 Unauthorized
 ```
 
 Refresh token rotation with reuse detection prevents refresh token theft: if a stolen token is used, the legitimate user's next refresh attempt triggers detection and revokes the whole session.
@@ -694,51 +617,23 @@ This system uses a hybrid approach:
 
 ### Authorization Code + PKCE (Recommended for web & mobile)
 
-```
-Browser / App                 Auth Server              Resource Server (API)
-     |                             |                           |
-     | 1. Generate code_verifier   |                           |
-     |    code_challenge = S256(verifier)                      |
-     |                             |                           |
-     | 2. GET /oauth/authorize     |                           |
-     |    ?client_id=app_123       |                           |
-     |    &response_type=code      |                           |
-     |    &redirect_uri=...        |                           |
-     |    &scope=openid+profile    |                           |
-     |    &state=csrf_token        |                           |
-     |    &code_challenge=...      |                           |
-     |    &code_challenge_method=S256                          |
-     +----------------------------->                           |
-     |                             |                           |
-     |          [Login UI shown]   |                           |
-     |          [User authenticates]                           |
-     |                             |                           |
-     | 3. Redirect to             |                           |
-     |    redirect_uri?code=AUTH_CODE&state=csrf_token         |
-     <-----------------------------+                           |
-     |                             |                           |
-     | 4. Verify state == csrf_token                          |
-     |                             |                           |
-     | 5. POST /oauth/token        |                           |
-     |    grant_type=authorization_code                        |
-     |    &code=AUTH_CODE          |                           |
-     |    &code_verifier=VERIFIER  |                           |
-     +----------------------------->                           |
-     |                             |                           |
-     |          [Server verifies:  |                           |
-     |           S256(verifier) == |                           |
-     |           stored challenge] |                           |
-     |                             |                           |
-     | 6. { access_token, id_token, refresh_token }           |
-     <-----------------------------+                           |
-     |                             |                           |
-     | 7. GET /api/resource        |                           |
-     |    Authorization: Bearer access_token                   |
-     +----------------------------------------------->        |
-     |                             |    [Verify JWT locally]  |
-     |                             |    [No network call]     |
-     | 8. Resource data            |                           |
-     <-----------------------------------------------+        |
+```mermaid
+sequenceDiagram
+    participant App as "Browser / App"
+    participant AS as "Auth Server"
+    participant RS as "Resource Server (API)"
+
+    Note over App: 1. Generate code_verifier & code_challenge = S256(verifier)
+    App->>AS: 2. GET /oauth/authorize (client_id, response_type=code, state, code_challenge, S256)
+    Note over App,AS: Login UI shown -> User authenticates
+    AS-->>App: 3. Redirect to redirect_uri?code=AUTH_CODE&state=csrf_token
+    Note over App: 4. Verify state == csrf_token
+    App->>AS: 5. POST /oauth/token (grant_type=authorization_code, code, code_verifier)
+    Note over AS: Verify S256(verifier) == stored challenge
+    AS-->>App: 6. {access_token, id_token, refresh_token}
+    App->>RS: 7. GET /api/resource (Authorization: Bearer access_token)
+    Note over RS: Verify JWT locally (no network call)
+    RS-->>App: 8. Resource data
 ```
 
 ### Client Credentials (Machine-to-Machine)
@@ -900,40 +795,20 @@ Key rotation: generate new key, publish both old + new in JWKS. Services cache J
 
 ### SP-Initiated Flow (Most Common)
 
-```
-Browser                    SP (Your App)          IdP (Okta/Azure)
-  |                             |                       |
-  | 1. GET /app/dashboard       |                       |
-  +----------------------------->                       |
-  |                             |                       |
-  | 2. 302 to IdP with SAML     |                       |
-  |    AuthnRequest (encoded)   |                       |
-  <-----------------------------+                       |
-  |                             |                       |
-  | 3. GET /idp/sso?SAMLRequest=...                     |
-  +---------------------------------------------------->|
-  |                             |                       |
-  |          [IdP shows login UI, user authenticates]   |
-  |                             |                       |
-  | 4. POST /sp/acs (assertion consumer service)        |
-  |    SAMLResponse (SAML Assertion, signed by IdP)     |
-  <----------------------------------------------------+|
-  |                             |                       |
-  | 5. POST /sp/acs             |                       |
-  |    with SAMLResponse        |                       |
-  +----------------------------->                       |
-  |                             |                       |
-  |          [SP validates:     |                       |
-  |           - IdP signature   |                       |
-  |           - Issuer matches  |                       |
-  |           - NotBefore/      |                       |
-  |             NotOnOrAfter    |                       |
-  |           - InResponseTo ID |                       |
-  |           - Recipient URI]  |                       |
-  |                             |                       |
-  | 6. 302 to /app/dashboard    |                       |
-  |   (with session cookie)     |                       |
-  <-----------------------------+                       |
+```mermaid
+sequenceDiagram
+    participant B as "Browser"
+    participant SP as "SP (Your App)"
+    participant IdP as "IdP (Okta / Azure)"
+
+    B->>SP: 1. GET /app/dashboard
+    SP-->>B: 2. 302 to IdP with SAML AuthnRequest
+    B->>IdP: 3. GET /idp/sso?SAMLRequest=...
+    Note over B,IdP: IdP shows login UI, user authenticates
+    IdP-->>B: 4. Signed SAMLResponse (SAML Assertion)
+    B->>SP: 5. POST /sp/acs with SAMLResponse
+    Note over SP: Validate IdP signature, Issuer, NotBefore/NotOnOrAfter, InResponseTo, Recipient
+    SP-->>B: 6. 302 to /app/dashboard (with session cookie)
 ```
 
 ### SAML Assertion Structure
@@ -1283,61 +1158,21 @@ Cache consistency:
 
 ### Federation Architecture
 
-```
-+----------+     +-----------+     +------------------+
-| Your App |     | Auth      |     | Google / GitHub  |
-|          |     | Service   |     | / Apple          |
-+----+-----+     +-----+-----+     +--------+---------+
-     |                 |                    |
-     | 1. User clicks  |                    |
-     |    "Login with  |                    |
-     |    Google"      |                    |
-     |                 |                    |
-     | 2. Redirect to  |                    |
-     |    /auth/social/|                    |
-     |    google/begin |                    |
-     +---------------->|                    |
-     |                 |                    |
-     |                 | 3. Redirect to     |
-     |                 |    Google OAuth    |
-     <-----------------+                    |
-     |                                      |
-     | 4. User authenticates on Google      |
-     |                                      |
-     |                 | 5. Callback with   |
-     |                 |    code            |
-     +---------------->|                    |
-     |                 |                    |
-     |                 | 6. Exchange code   |
-     |                 |    for id_token    |
-     |                 +------------------->|
-     |                 | 7. id_token + user |
-     |                 |    profile         |
-     |                 <-------------------+|
-     |                 |                    |
-     |                 | 8. Verify id_token |
-     |                 |    (Google's JWK)  |
-     |                 |                    |
-     |                 | 9. Link or create  |
-     |                 |    local user:     |
-     |                 |    - Look up       |
-     |                 |      social_identities
-     |                 |    - If found:     |
-     |                 |      return user   |
-     |                 |    - If not found  |
-     |                 |      by provider_id:|
-     |                 |      check email   |
-     |                 |      in users table|
-     |                 |    - If email match:|
-     |                 |      link accounts |
-     |                 |    - Else create   |
-     |                 |      new user      |
-     |                 |                    |
-     | 10. Issue       |                    |
-     |     access +    |                    |
-     |     refresh     |                    |
-     |     tokens      |                    |
-     <-----------------+                    |
+```mermaid
+sequenceDiagram
+    participant App as "Your App"
+    participant AS as "Auth Service"
+    participant G as "Google / GitHub / Apple"
+
+    Note over App: 1. User clicks "Login with Google"
+    App->>AS: 2. Redirect to /auth/social/google/begin
+    AS-->>App: 3. Redirect to Google OAuth
+    Note over App,G: 4. User authenticates on Google
+    App->>AS: 5. Callback with authorization code
+    AS->>G: 6. Exchange code for id_token
+    G-->>AS: 7. id_token + user profile
+    Note over AS: 8. Verify id_token (Google JWK)<br/>9. Link or create local user in social_identities/users
+    AS-->>App: 10. Issue access + refresh tokens
 ```
 
 ### Account Linking Security

@@ -131,7 +131,7 @@ stateDiagram-v2
     PLAYING --> PAUSED : Pause clock
     PAUSED --> READY : Close stream
     READY --> NULL : Free all resources
-````
+```
 
 | State       | Description                                                                    |
 | ----------- | ------------------------------------------------------------------------------ |

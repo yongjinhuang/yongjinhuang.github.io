@@ -933,71 +933,15 @@ WHERE fields->'tags' @> '["entry_tag_arch"]'::jsonb;
 
 ## 高层架构
 
-```
-+-------------------------------------------------------------------+
-|                         客户端                                      |
-|  +----------+  +----------+  +--------+  +---------+  +---------+ |
-|  | 管理 UI  |  | Web 应用  |  | 移动   |  |   SSG   |  |   IoT   | |
-|  | (React)  |  | (Next.js)|  |  应用   |  | (Gatsby)|  |  设备   | |
-|  +----+-----+  +----+-----+  +---+----+  +----+----+  +----+----+ |
-+-------|-------------|-------------|-------------|-------------|-----+
-        |             |             |             |             |
-        v             v             v             v             v
-+-------+-------------+-------------+-------------+-------------+---+
-|                          CDN / 边缘层                               |
-|  (CloudFront / Fastly / Cloudflare)                               |
-|  - 缓存分发 API 响应（基于 TTL + surrogate keys）                  |
-|  - 边缘图片转换（Cloudflare Images / imgproxy）                    |
-|  - 提供静态资产（媒体文件）                                        |
-+--+------------------------------+--+------------------------------+
-   |                              |  |
-   | 缓存未命中                   |  | 始终（写入不缓存）
-   v                              |  v
-+--+---------------------------+  |  +------------------------------+
-|   内容分发 API               |  |  |   内容管理 API               |
-|   （只读，高性能）            |  |  |   （CRUD、认证、验证）        |
-|                              |  |  |                              |
-|   - REST + GraphQL           |  |  |   - REST 端点                |
-|   - 响应缓存 (Redis)         |  |  |   - Schema 验证              |
-|   - 引用解析                 |  |  |   - 版本控制                 |
-|   - 语言环境协商             |  |  |   - 权限执行                 |
-|   - 查询优化                 |  |  |   - 审计日志                 |
-+--+---------------------------+  |  +--+--+--+---------------------+
-   |                              |     |  |  |
-   |                              |     |  |  +-----> Webhook 服务
-   |                              |     |  |         （异步投递、
-   |                              |     |  |          重试、签名）
-   |                              |     |  |
-   |  +---------------------------+     |  +-----> 定时操作
-   |  |                                 |          Worker（基于 cron、
-   |  |                                 |          发布/取消发布）
-   v  v                                 v
-+--+--+--+     +------------------+  +--+------------------+
-| 只读   |     | 搜索索引         |  | 媒体资产            |
-| 副本   |<---| (Elasticsearch)  |  | 管道                |
-| (PG)   |    |                  |  |                     |
-+--+-----+    | - 全文搜索       |  | - 上传服务          |
-   |          | - 分面过滤       |  | - 图片处理器        |
-   |          | - 自动补全       |  |   (Sharp/imgproxy)  |
-   v          +------------------+  | - 视频转码器        |
-+--+-----+                         |   (FFmpeg/MediaConvert)
-| 主数据库|                         | - CDN 失效          |
-| (PG)   |                         +--+------------------+
-| - 条目  |                            |
-| - 类型  |                            v
-| - 用户  |                         +--+------------------+
-| - 审计  |                         | 对象存储            |
-+----------+                         | (S3 / GCS)          |
-                                     | - 原始文件          |
-   +-------------------+             | - 派生变体          |
-   | 缓存层            |             +---------------------+
-   | (Redis Cluster)    |
-   |                    |
-   | - 分发缓存         |            +---------------------+
-   | - 会话存储         |            | 预览服务            |
-   | - 速率限制         |            | - 草稿渲染          |
-   | - CDN 标签映射     |            | - 令牌门控访问      |
-   +-------------------+             +---------------------+
+```mermaid
+flowchart TD
+    Clients["CLIENTS<br/>Admin UI (React) | Web App (Next.js) | Mobile App | SSG (Gatsby) | IoT Device"] --> CDN["CDN / Edge Layer (CloudFront / Fastly / Cloudflare)<br/>Cache delivery API responses (TTL + surrogate keys) | Edge image transform"]
+    CDN -->|"Cache Miss"| CDA["Content Delivery API (Read-only, high-perf)<br/>REST + GraphQL, Redis cache, Reference resolution, Locale negotiation"]
+    CDN -->|"Always (writes)"| CMA["Content Management API (CRUD, auth, validation)<br/>Schema validation, Versioning, Permissions, Audit logging"]
+    CMA --> WH["Webhook Service<br/>(async delivery, retry, signing)"] & Sched["Scheduled Action Worker<br/>(cron publish/unpublish)"] & Media["Media Asset Pipeline<br/>Upload, Sharp/imgproxy, FFmpeg/MediaConvert"]
+    Media --> S3["Object Storage (S3 / GCS)<br/>Original files + Derived variants"]
+    CDA & CMA --> Rep["Read Replicas (PG)"] & ES["Search Index (Elasticsearch)<br/>Full-text, Faceted filter, Autocomplete"] & Redis["Cache Layer (Redis Cluster)<br/>Delivery cache, Session, Rate limit, CDN tags"] & Prev["Preview Service<br/>Draft rendering, Token-gated"]
+    Rep --> Pri["Primary DB (PG)<br/>Entries, Types, Users, Audit"]
 ```
 
 ### 请求流程：内容分发
@@ -1275,44 +1219,18 @@ WHERE fields->'tags' @> '["entry_tag_arch"]'::jsonb;
 
 ### 条目生命周期状态机
 
-```
-                    +---> [in_review] ---+
-                    |         |          |
-                    |    reject|     approve
-                    |         v          |
-[new] --create--> [draft] <--+          |
-                    |                    |
-                    +----publish---------+----> [published]
-                    |                              |
-                    |                         unpublish
-                    |                              |
-                    +<-----------------------------+
-                    |
-                archive
-                    |
-                    v
-               [archived]
-                    |
-                 delete
-                    |
-                    v
-               [deleted]（软删除，30 天内可恢复）
-
-状态转换：
-+-------------------+-------------------+----------------------+
-| 从                | 到                | 所需角色             |
-+-------------------+-------------------+----------------------+
-| （新建）          | draft             | author, editor, admin|
-| draft             | in_review         | author, editor, admin|
-| draft             | published         | editor, admin        |
-| in_review         | draft（拒绝）     | editor, admin        |
-| in_review         | published         | editor, admin        |
-| published         | draft（取消发布） | editor, admin        |
-| published         | archived          | admin                |
-| draft/published   | archived          | admin                |
-| archived          | draft             | admin                |
-| any               | deleted           | admin                |
-+-------------------+-------------------+----------------------+
+```mermaid
+stateDiagram-v2
+    [*] --> draft : create
+    draft --> in_review : submit
+    in_review --> draft : reject
+    in_review --> published : approve
+    draft --> published : publish
+    published --> draft : unpublish
+    published --> archived : archive
+    draft --> archived : archive
+    archived --> draft : restore
+    archived --> deleted : delete (soft, recoverable 30d)
 ```
 
 ### 版本管理
@@ -1639,45 +1557,21 @@ CREATE TABLE entry_comments (
 
 ### 上传流程
 
-```
-上传架构（直传存储）：
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant API as "API Server"
+    participant S3 as "Object Storage (S3)"
 
-Client                  API Server             Object Storage (S3)
-  |                        |                        |
-  |  1. 请求上传 URL       |                        |
-  |  POST /v1/assets/upload|                        |
-  |  { filename, size,     |                        |
-  |    content_type }      |                        |
-  |----------------------->|                        |
-  |                        |  2. 生成预签名          |
-  |                        |     PUT URL             |
-  |                        |----------------------->|
-  |                        |  3. 返回预签名 URL      |
-  |                        |<-----------------------|
-  |  4. 预签名 URL +       |                        |
-  |     asset_id           |                        |
-  |<-----------------------|                        |
-  |                                                 |
-  |  5. 直接上传文件到 S3                            |
-  |  PUT presigned_url     |                        |
-  |------------------------------------------------>|
-  |                        |                        |
-  |  6. 上传完成           |                        |
-  |  POST /v1/assets/{id}/ |                        |
-  |    confirm             |                        |
-  |----------------------->|                        |
-  |                        |  7. 验证文件存在        |
-  |                        |----------------------->|
-  |                        |  8. 加入处理队列        |
-  |                        |---> [Processing Queue]  |
-  |  9. 资产已确认         |                        |
-  |<-----------------------|                        |
-
-直传存储的优势：
-  - API 服务器永远不处理大文件字节
-  - S3 处理大文件（> 100MB）的分片上传
-  - 客户端可显示上传进度条
-  - 减少 API 服务器的带宽和内存压力
+    C->>API: 1. POST /v1/assets/upload {filename, size, content_type}
+    API->>S3: 2. Generate presigned PUT URL
+    S3-->>API: 3. Return presigned URL
+    API-->>C: 4. Presigned URL + asset_id
+    C->>S3: 5. PUT file directly to S3
+    C->>API: 6. POST /v1/assets/{id}/confirm
+    API->>S3: 7. Verify file exists
+    API->>API: 8. Enqueue processing job [Processing Queue]
+    API-->>C: 9. Asset confirmed
 ```
 
 ### 图片处理管道

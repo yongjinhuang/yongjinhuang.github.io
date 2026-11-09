@@ -162,7 +162,7 @@ stateDiagram-v2
     RUNNING --> SUSPENDED : vTaskSuspend()
     BLOCKED --> SUSPENDED : vTaskSuspend()
     SUSPENDED --> READY : vTaskResume()
-````
+```
 
 **Ready**: The task can run but a higher-priority task is currently running.
 **Running**: The task is executing on the CPU. Only one task can be in this state per core.
