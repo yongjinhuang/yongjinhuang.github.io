@@ -47,16 +47,6 @@ export function Navbar({ nav }: NavbarProps) {
       href: `${sectionPrefix}#skills`,
     },
     {
-      id: 'education',
-      label: nav.education,
-      href: `${sectionPrefix}#education`,
-    },
-    {
-      id: 'contact',
-      label: nav.contact,
-      href: `${sectionPrefix}#contact`,
-    },
-    {
       id: 'docs',
       label: docsLabel,
       href: '/docs',
@@ -89,7 +79,7 @@ export function Navbar({ nav }: NavbarProps) {
       return;
     }
 
-    const sectionIds = ['experience', 'skills', 'education', 'contact'];
+    const sectionIds = ['experience', 'skills'];
     const elements = sectionIds
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
