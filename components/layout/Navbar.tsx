@@ -17,7 +17,6 @@ interface NavItem {
   id: string;
   label: string;
   href: string;
-  isRoute?: boolean;
 }
 
 export function Navbar({ nav }: NavbarProps) {
@@ -25,7 +24,6 @@ export function Navbar({ nav }: NavbarProps) {
   const segments = pathname.split('/').filter(Boolean);
   const lang = segments[0] === 'zh' ? 'zh' : 'en';
   const isHomePage = segments.length <= 1;
-  const isDocsPage = segments[1] === 'docs';
 
   const [activeSection, setActiveSection] = useState<string>('');
   const [scrollProgress, setScrollProgress] = useState<number>(0);
@@ -33,7 +31,6 @@ export function Navbar({ nav }: NavbarProps) {
   const navRef = useRef<HTMLDivElement>(null);
 
   const sectionPrefix = isHomePage ? '' : `/${lang}`;
-  const docsLabel = lang === 'zh' ? '文档' : 'Docs';
 
   const navItems: NavItem[] = [
     {
@@ -45,12 +42,6 @@ export function Navbar({ nav }: NavbarProps) {
       id: 'skills',
       label: nav.skills,
       href: `${sectionPrefix}#skills`,
-    },
-    {
-      id: 'docs',
-      label: docsLabel,
-      href: '/docs',
-      isRoute: true,
     },
   ];
 
@@ -75,7 +66,7 @@ export function Navbar({ nav }: NavbarProps) {
   // Scroll-spy for home page sections
   useEffect(() => {
     if (!isHomePage) {
-      setActiveSection(isDocsPage ? 'docs' : '');
+      setActiveSection('');
       return;
     }
 
@@ -104,7 +95,7 @@ export function Navbar({ nav }: NavbarProps) {
 
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [isHomePage, isDocsPage, pathname]);
+  }, [isHomePage, pathname]);
 
   // Close mobile menu on Escape or outside click
   useEffect(() => {
@@ -165,9 +156,7 @@ export function Navbar({ nav }: NavbarProps) {
             <div className="flex items-center gap-2 md:gap-5">
               <div className="hidden md:flex items-center gap-1 lg:gap-2">
                 {navItems.map((item) => {
-                  const isActive =
-                    (item.isRoute && isDocsPage) ||
-                    (!item.isRoute && isHomePage && activeSection === item.id);
+                  const isActive = isHomePage && activeSection === item.id;
 
                   return (
                     <Link
@@ -227,11 +216,7 @@ export function Navbar({ nav }: NavbarProps) {
               >
                 <div className="pt-3 mt-3 border-t border-gray-200 dark:border-white/10 flex flex-col gap-1">
                   {navItems.map((item) => {
-                    const isActive =
-                      (item.isRoute && isDocsPage) ||
-                      (!item.isRoute &&
-                        isHomePage &&
-                        activeSection === item.id);
+                    const isActive = isHomePage && activeSection === item.id;
 
                     return (
                       <Link

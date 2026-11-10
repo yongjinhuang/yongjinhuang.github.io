@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FaDownload, FaGithub, FaLinkedin, FaBookOpen } from 'react-icons/fa';
+import { FaDownload, FaGithub, FaLinkedin } from 'react-icons/fa';
 import { SiLeetcode } from 'react-icons/si';
 import { IconButton } from '@/components/ui';
 import { useColorScheme } from '@/components/theme';
@@ -93,17 +93,6 @@ export function Intro({
                     : intro.viewResume}
                 </span>
               </button>
-
-              <Link
-                href="/docs"
-                className="brutal-btn rounded-lg px-4 py-2 text-xs sm:text-sm bg-white dark:bg-surface-dark text-gray-900 dark:text-white border-gray-900 dark:border-white/30 hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              >
-                <FaBookOpen
-                  aria-hidden="true"
-                  className="w-3.5 h-3.5 text-accent"
-                />
-                <span>{locale === 'zh' ? '技术文档库' : 'Tech Docs'}</span>
-              </Link>
 
               <div className="h-5 w-px bg-gray-200 dark:bg-white/10 mx-1 hidden sm:block" />
 
