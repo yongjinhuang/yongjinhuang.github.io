@@ -123,55 +123,28 @@ Media egress (with CDN):    Distributed, ~10 GB/s at origin
 
 ### WebSocket Handshake Flow
 
-```
-Client                                         Server
-  |                                               |
-  |  HTTP GET /chat                               |
-  |  Upgrade: websocket                           |
-  |  Connection: Upgrade                          |
-  |  Sec-WebSocket-Key: dGhlIHNhbXBsZQ==          |
-  |  Sec-WebSocket-Version: 13                    |
-  |---------------------------------------------->|
-  |                                               |
-  |  HTTP 101 Switching Protocols                 |
-  |  Upgrade: websocket                           |
-  |  Connection: Upgrade                          |
-  |  Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGz...  |
-  |<----------------------------------------------|
-  |                                               |
-  |  ============================================ |
-  |  |      Full-duplex WebSocket Channel       | |
-  |  ============================================ |
-  |                                               |
-  |  Frame: {"type":"msg","to":"U2","text":"Hi"}  |
-  |---------------------------------------------->|
-  |                                               |
-  |  Frame: {"type":"msg","from":"U2","text":"Hey"}|
-  |<----------------------------------------------|
-  |                                               |
-  |  Frame: {"type":"ack","msg_id":"M123"}        |
-  |<----------------------------------------------|
-  |                                               |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+
+    Client->>Server: HTTP GET /chat (Upgrade: websocket, Connection: Upgrade, Sec-WebSocket-Key, Version: 13)
+    Server-->>Client: HTTP 101 Switching Protocols (Upgrade: websocket, Sec-WebSocket-Accept)
+    Note over Client,Server: Full-Duplex WebSocket Channel Established
+    Client->>Server: Frame: {"type":"msg","to":"U2","text":"Hi"}
+    Server-->>Client: Frame: {"type":"msg","from":"U2","text":"Hey"}
+    Server-->>Client: Frame: {"type":"ack","msg_id":"M123"}
 ```
 
 ### Fallback Strategy
 
-```
-1. Attempt WebSocket connection
-   |
-   ├── Success -> Use WebSocket (preferred)
-   |
-   └── Failure (corporate proxy, firewall)
-       |
-       ├── Attempt SSE + HTTP POST combo
-       |   |
-       |   ├── Success -> Use SSE for receive, HTTP POST for send
-       |   |
-       |   └── Failure
-       |       |
-       |       └── Fall back to Long Polling
-       |
-       └── Mobile: Use platform push (APNs/FCM) as last resort
+```mermaid
+flowchart TD
+    WS["1. Attempt WebSocket Connection"] -->|"Success"| UseWS["Use WebSocket (Preferred)"]
+    WS -->|"Failure (corporate proxy, firewall)"| SSE["Attempt SSE + HTTP POST Combo"]
+    SSE -->|"Success"| UseSSE["Use SSE for receive, HTTP POST for send"]
+    SSE -->|"Failure"| LP["Fall back to Long Polling"]
+    WS -->|"Mobile Last Resort"| Push["Use Platform Push (APNs / FCM)"]
 ```
 
 ### Protocol Usage by Feature
@@ -195,84 +168,29 @@ Client                                         Server
 
 ## 3. High-Level Architecture
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                              CLIENTS                                     │
-│   ┌─────────┐  ┌─────────┐  ┌──────────┐  ┌──────────┐                 │
-│   │  iOS    │  │ Android │  │  Web     │  │ Desktop  │                 │
-│   │  App    │  │  App    │  │  App     │  │  App     │                 │
-│   └────┬────┘  └────┬────┘  └────┬─────┘  └────┬─────┘                 │
-│        │            │            │              │                        │
-└────────┼────────────┼────────────┼──────────────┼────────────────────────┘
-         │            │            │              │
-         └────────────┼────────────┼──────────────┘
-                      │            │
-              ┌───────▼────────────▼───────┐
-              │      Load Balancer (L4)     │
-              │   (TCP/WebSocket-aware)     │
-              └───────┬───────────┬────────┘
-                      │           │
-         ┌────────────┘           └──────────────┐
-         │                                       │
-┌────────▼──────────┐                  ┌─────────▼─────────┐
-│   Chat Servers    │                  │   API Servers     │
-│   (WebSocket)     │                  │   (REST/HTTP)     │
-│                   │                  │                   │
-│ - Message relay   │                  │ - Auth/Login      │
-│ - Connection mgmt │                  │ - User profiles   │
-│ - Typing events   │                  │ - Group CRUD      │
-│ - Presence events │                  │ - Media upload    │
-│                   │                  │ - Search          │
-└────────┬──────────┘                  └─────────┬─────────┘
-         │                                       │
-         │    ┌──────────────────────────┐        │
-         │    │   Service Discovery      │        │
-         │    │   (ZooKeeper / etcd)     │        │
-         │    │                          │        │
-         │    │ - Chat server registry   │        │
-         │    │ - User->server mapping   │        │
-         │    └──────────────────────────┘        │
-         │                                       │
-┌────────▼───────────────────────────────────────▼──────────┐
-│                    Message Queue (Kafka)                   │
-│                                                           │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐ │
-│  │ msg.send │ │ msg.grp  │ │ presence │ │ notification │ │
-│  │  topic   │ │  topic   │ │  topic   │ │    topic     │ │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────────┘ │
-└──────────┬──────────┬──────────┬──────────┬───────────────┘
-           │          │          │          │
-     ┌─────┘    ┌─────┘    ┌────┘    ┌─────┘
-     │          │          │         │
-┌────▼────┐ ┌──▼───┐ ┌────▼────┐ ┌──▼──────────────┐
-│ Message │ │ Group │ │Presence │ │ Push             │
-│ Storage │ │ Fan-  │ │ Service │ │ Notification     │
-│ Service │ │ Out   │ │         │ │ Service          │
-│         │ │Service│ │         │ │                  │
-└────┬────┘ └──────┘ └────┬────┘ │ ┌──────┐┌──────┐│
-     │                    │      │ │ APNs ││ FCM  ││
-     │                    │      │ └──────┘└──────┘│
-┌────▼─────────┐   ┌─────▼────┐ └──────────────────┘
-│   Cassandra  │   │  Redis   │
-│   Cluster    │   │  Cluster │
-│              │   │          │
-│ - Messages   │   │- Online  │
-│ - Msg status │   │  status  │
-│ - Channels   │   │- Last    │
-│              │   │  seen    │
-└──────────────┘   │- Session │
-                   │  cache   │
-┌──────────────┐   └──────────┘
-│  Media Store │
-│              │
-│  ┌────────┐  │   ┌─────────────┐
-│  │   S3   │──┼──>│     CDN     │
-│  └────────┘  │   │ (CloudFront)│
-│  ┌────────┐  │   └─────────────┘
-│  │Thumbs  │  │
-│  │Generator│  │
-│  └────────┘  │
-└──────────────┘
+```mermaid
+flowchart TD
+    subgraph Clients["CLIENTS"]
+        iOS["iOS App"]
+        Android["Android App"]
+        Web["Web App"]
+        Desktop["Desktop App"]
+    end
+
+    iOS & Android & Web & Desktop --> LB["Load Balancer (L4)<br/>(TCP / WebSocket-aware)"]
+    LB --> ChatSrv["Chat Servers (WebSocket)<br/>- Message relay<br/>- Connection mgmt<br/>- Typing &amp; Presence events"]
+    LB --> APISrv["API Servers (REST/HTTP)<br/>- Auth/Login, User profiles<br/>- Group CRUD, Media upload, Search"]
+    ChatSrv <--> SD["Service Discovery (ZooKeeper / etcd)<br/>- Chat server registry<br/>- User-to-server mapping"]
+
+    ChatSrv & APISrv --> Kafka["Message Queue (Kafka)<br/>Topics: msg.send | msg.grp | presence | notification"]
+    Kafka --> MsgStore["Message Storage Service"]
+    Kafka --> FanOut["Group Fan-Out Service"]
+    Kafka --> PresSvc["Presence Service"]
+    Kafka --> PushSvc["Push Notification Service<br/>(APNs / FCM)"]
+
+    MsgStore --> Cass["Cassandra Cluster<br/>- Messages, Msg status, Channels"]
+    PresSvc --> Redis["Redis Cluster<br/>- Online status, Last seen, Session cache"]
+    APISrv --> Media["Media Store<br/>(S3 + Thumbnail Generator)"] --> CDN["CDN (CloudFront)"]
 ```
 
 ### Component Responsibilities
@@ -423,18 +341,12 @@ CREATE TABLE user_conversations (
 
 ### Entity Relationship Overview
 
-```
-┌──────────┐     ┌─────────────────────┐     ┌──────────────┐
-│  users   │────<│ conversation_members│>────│conversations │
-└──────────┘     └─────────────────────┘     └──────┬───────┘
-                                                    │
-                                             ┌──────▼───────┐
-                                             │   messages   │
-                                             └──────┬───────┘
-                                                    │
-                                             ┌──────▼───────┐
-                                             │message_status│
-                                             └──────────────┘
+```mermaid
+erDiagram
+    USERS ||--o{ CONVERSATION_MEMBERS : "joins"
+    CONVERSATIONS ||--o{ CONVERSATION_MEMBERS : "has"
+    CONVERSATIONS ||--o{ MESSAGES : "contains"
+    MESSAGES ||--o{ MESSAGE_STATUS : "tracks"
 ```
 
 ---
@@ -443,54 +355,29 @@ CREATE TABLE user_conversations (
 
 ### 5.1 One-on-One Message Sending Flow
 
-```
-User A (Sender)        Chat Server A       Kafka       Chat Server B       User B (Receiver)
-     |                      |                |               |                    |
-     | 1. WS Frame:         |                |               |                    |
-     |    {msg, to:B,       |                |               |                    |
-     |     text:"Hello"}    |                |               |                    |
-     |--------------------->|                |               |                    |
-     |                      |                |               |                    |
-     | 2. ACK (msg_id,      |                |               |                    |
-     |    status:sent)       |                |               |                    |
-     |<---------------------|                |               |                    |
-     |                      |                |               |                    |
-     |                      | 3. Publish to  |               |                    |
-     |                      |    msg.send    |               |                    |
-     |                      |    topic       |               |                    |
-     |                      |--------------->|               |                    |
-     |                      |                |               |                    |
-     |                      |                | 4. Consume    |                    |
-     |                      |                |    message    |                    |
-     |                      |                |-------------->|                    |
-     |                      |                |               |                    |
-     |                      |                |    5. Lookup: Is User B connected  |
-     |                      |                |       to this server?              |
-     |                      |                |               |                    |
-     |                      |                |               | 6. YES: Forward   |
-     |                      |                |               |    via WebSocket  |
-     |                      |                |               |------------------->|
-     |                      |                |               |                    |
-     |                      |                |               | 7. Delivery ACK   |
-     |                      |                |               |<-------------------|
-     |                      |                |               |                    |
-     |                      |                |<--------------|                    |
-     |                      |<---------------|               |                    |
-     | 8. Status update:    |                |               |                    |
-     |    delivered          |                |               |                    |
-     |<---------------------|                |               |                    |
-     |                      |                |               |                    |
+```mermaid
+sequenceDiagram
+    participant UA as "User A (Sender)"
+    participant CSA as "Chat Server A"
+    participant Kafka
+    participant CSB as "Chat Server B"
+    participant UB as "User B (Receiver)"
 
-     If User B is OFFLINE at step 5:
-     |                      |                |               |                    |
-     |                      |                | 4b. Store in  |                    |
-     |                      |                |     offline   |                    |
-     |                      |                |     queue     |                    |
-     |                      |                |               |                    |
-     |                      |                | 4c. Send push |                    |
-     |                      |                |     notification                   |
-     |                      |                |------------------------------------>|
-     |                      |                |               |           (phone)  |
+    UA->>CSA: 1. WS Frame {msg, to: B, text: "Hello"}
+    CSA-->>UA: 2. ACK (msg_id, status: sent)
+    CSA->>Kafka: 3. Publish to msg.send topic
+    Kafka->>CSB: 4. Consume message
+    Note over CSB: 5. Lookup: Is User B connected to this server?
+    alt User B is ONLINE
+        CSB->>UB: 6. Forward via WebSocket
+        UB-->>CSB: 7. Delivery ACK
+        CSB-->>Kafka: Delivery event
+        Kafka-->>CSA: Route delivery ACK
+        CSA-->>UA: 8. Status update: delivered
+    else User B is OFFLINE
+        Kafka->>Kafka: 4b. Store in offline queue
+        Kafka->>UB: 4c. Send push notification (phone)
+    end
 ```
 
 **Step-by-step explanation:**
@@ -506,210 +393,93 @@ User A (Sender)        Chat Server A       Kafka       Chat Server B       User 
 
 ### 5.2 Group Message Sending Flow
 
-```
-User A            Chat Server      Kafka        Fan-Out         Chat Servers
-(Sender)                                        Service         (Recipients)
-  |                   |              |              |                 |
-  | 1. Send msg       |              |              |                 |
-  |    to Group G     |              |              |                 |
-  |------------------>|              |              |                 |
-  |                   |              |              |                 |
-  | 2. ACK (sent)     |              |              |                 |
-  |<------------------|              |              |                 |
-  |                   |              |              |                 |
-  |                   | 3. Publish   |              |                 |
-  |                   |    msg.grp   |              |                 |
-  |                   |    topic     |              |                 |
-  |                   |------------->|              |                 |
-  |                   |              |              |                 |
-  |                   |              | 4. Consume   |                 |
-  |                   |              |------------->|                 |
-  |                   |              |              |                 |
-  |                   |              |    5. Lookup group members     |
-  |                   |              |       (cache in Redis)         |
-  |                   |              |              |                 |
-  |                   |              |    6. For each member:         |
-  |                   |              |       - Find their chat server|
-  |                   |              |       - Route message          |
-  |                   |              |              |                 |
-  |                   |              |              | 7. Deliver to   |
-  |                   |              |              |    each online  |
-  |                   |              |              |    member       |
-  |                   |              |              |---------------->|
-  |                   |              |              |                 | --> User B
-  |                   |              |              |                 | --> User C
-  |                   |              |              |                 | --> User D
-  |                   |              |              |                 |
-  |                   |              |    8. Queue for offline members|
-  |                   |              |       + push notifications     |
-  |                   |              |              |                 |
+```mermaid
+sequenceDiagram
+    participant UA as "User A (Sender)"
+    participant CS as "Chat Server"
+    participant Kafka
+    participant FO as "Fan-Out Service"
+    participant CSR as "Chat Servers (Recipients: User B, C, D)"
+
+    UA->>CS: 1. Send msg to Group G
+    CS-->>UA: 2. ACK (sent)
+    CS->>Kafka: 3. Publish to msg.grp topic
+    Kafka->>FO: 4. Consume group message
+    Note over FO: 5. Lookup group members (Redis cache)<br/>6. Find each member's chat server and route
+    FO->>CSR: 7. Deliver to each online member (User B, User C, User D)
+    Note over FO: 8. Queue for offline members + push notifications
 ```
 
 ### 5.3 Online/Offline Presence Detection
 
-```
-User A              Chat Server        Presence          Redis         Contacts of A
-  |                     |              Service             |               |
-  |                     |                 |                |               |
-  | === GOING ONLINE ===                  |                |               |
-  |                     |                 |                |               |
-  | 1. WS Connect       |                 |                |               |
-  |-------------------->|                 |                |               |
-  |                     |                 |                |               |
-  |                     | 2. Register     |                |               |
-  |                     |    connection   |                |               |
-  |                     |---------------->|                |               |
-  |                     |                 |                |               |
-  |                     |                 | 3. SET         |               |
-  |                     |                 |  presence:A    |               |
-  |                     |                 |  = online      |               |
-  |                     |                 |--------------->|               |
-  |                     |                 |                |               |
-  |                     |                 | 4. Publish     |               |
-  |                     |                 |    presence    |               |
-  |                     |                 |    event       |               |
-  |                     |                 |------------------------------->|
-  |                     |                 |                |               |
-  | === HEARTBEAT ===   |                 |                |               |
-  |                     |                 |                |               |
-  | 5. Ping (every 30s) |                 |                |               |
-  |-------------------->|                 |                |               |
-  |     Pong            |                 |                |               |
-  |<--------------------|                 |                |               |
-  |                     | 6. Refresh TTL  |                |               |
-  |                     |---------------->|                |               |
-  |                     |                 | 7. EXPIRE      |               |
-  |                     |                 |  presence:A    |               |
-  |                     |                 |  TTL=60s       |               |
-  |                     |                 |--------------->|               |
-  |                     |                 |                |               |
-  | === GOING OFFLINE (graceful) ===      |                |               |
-  |                     |                 |                |               |
-  | 8. WS Close         |                 |                |               |
-  |-------------------->|                 |                |               |
-  |                     | 9. Unregister   |                |               |
-  |                     |---------------->|                |               |
-  |                     |                 | 10. DEL        |               |
-  |                     |                 |  presence:A    |               |
-  |                     |                 |--------------->|               |
-  |                     |                 |                |               |
-  |                     |                 | 11. Publish    |               |
-  |                     |                 |     offline    |               |
-  |                     |                 |     event      |               |
-  |                     |                 |------------------------------->|
-  |                     |                 |                |               |
-  | === CRASH (ungraceful) ===            |                |               |
-  |                     |                 |                |               |
-  |  (no heartbeat for 60s)              |                |               |
-  |                     |                 | 12. Redis TTL  |               |
-  |                     |                 |     expires    |               |
-  |                     |                 |     presence:A |               |
-  |                     |                 |<---------------|               |
-  |                     |                 |                |               |
-  |                     |                 | 13. Publish    |               |
-  |                     |                 |     offline    |               |
-  |                     |                 |     event      |               |
-  |                     |                 |------------------------------->|
+```mermaid
+sequenceDiagram
+    participant UA as "User A"
+    participant CS as "Chat Server"
+    participant PS as "Presence Service"
+    participant Redis
+    participant Contacts as "Contacts of A"
+
+    Note over UA,Contacts: GOING ONLINE
+    UA->>CS: 1. WS Connect
+    CS->>PS: 2. Register connection
+    PS->>Redis: 3. SET presence:A = online
+    PS->>Contacts: 4. Publish presence event (online)
+
+    Note over UA,Contacts: HEARTBEAT
+    UA->>CS: 5. Ping (every 30s)
+    CS-->>UA: Pong
+    CS->>PS: 6. Refresh TTL
+    PS->>Redis: 7. EXPIRE presence:A TTL=60s
+
+    Note over UA,Contacts: GOING OFFLINE (graceful)
+    UA->>CS: 8. WS Close
+    CS->>PS: 9. Unregister
+    PS->>Redis: 10. DEL presence:A
+    PS->>Contacts: 11. Publish offline event
+
+    Note over UA,Contacts: CRASH (ungraceful - no heartbeat for 60s)
+    Redis-->>PS: 12. Redis TTL expires presence:A
+    PS->>Contacts: 13. Publish offline event
 ```
 
 ### 5.4 Message Synchronization (User Comes Online)
 
-```
-User A            Chat Server        Message          Offline
-(reconnecting)                       Storage          Queue
-     |                 |                |                |
-     | 1. Connect +    |                |                |
-     |    last_seen_   |                |                |
-     |    msg_id       |                |                |
-     |---------------->|                |                |
-     |                 |                |                |
-     |                 | 2. Query       |                |
-     |                 |    offline     |                |
-     |                 |    messages    |                |
-     |                 |    for user A  |                |
-     |                 |------------------------------->|
-     |                 |                |                |
-     |                 |                |  3. Return     |
-     |                 |                |     queued     |
-     |                 |                |     messages   |
-     |                 |<-------------------------------|
-     |                 |                |                |
-     |                 | 4. Also query  |                |
-     |                 |    messages    |                |
-     |                 |    after       |                |
-     |                 |    last_seen   |                |
-     |                 |--------------->|                |
-     |                 |                |                |
-     |                 |<---------------|                |
-     |                 |                |                |
-     | 5. Batch send   |                |                |
-     |    missed msgs  |                |                |
-     |    (paginated,  |                |                |
-     |     50 at a     |                |                |
-     |     time)       |                |                |
-     |<----------------|                |                |
-     |                 |                |                |
-     | 6. ACK received |                |                |
-     |---------------->|                |                |
-     |                 |                |                |
-     |                 | 7. Clear       |                |
-     |                 |    offline     |                |
-     |                 |    queue       |                |
-     |                 |------------------------------->|
-     |                 |                |                |
-     | 8. Request next |                |                |
-     |    page...      |                |                |
-     |---------------->|                |                |
+```mermaid
+sequenceDiagram
+    participant UA as "User A (reconnecting)"
+    participant CS as "Chat Server"
+    participant MS as "Message Storage"
+    participant OQ as "Offline Queue"
+
+    UA->>CS: 1. Connect + last_seen_msg_id
+    CS->>OQ: 2. Query offline messages for user A
+    OQ-->>CS: 3. Return queued messages
+    CS->>MS: 4. Query messages after last_seen
+    MS-->>CS: Return messages
+    CS-->>UA: 5. Batch send missed msgs (paginated, 50 at a time)
+    UA->>CS: 6. ACK received
+    CS->>OQ: 7. Clear offline queue
+    UA->>CS: 8. Request next page...
 ```
 
 ### 5.5 Read Receipt Flow
 
-```
-User B              Chat Server B      Kafka        Chat Server A      User A
-(Reader)                                                               (Sender)
-  |                      |               |               |               |
-  | 1. User B reads      |               |               |               |
-  |    message M123      |               |               |               |
-  |    in conversation C  |               |               |               |
-  |                      |               |               |               |
-  | 2. Send read event   |               |               |               |
-  |    {conv:C,          |               |               |               |
-  |     msg_id:M123,     |               |               |               |
-  |     type:read}       |               |               |               |
-  |--------------------->|               |               |               |
-  |                      |               |               |               |
-  |                      | 3. Update     |               |               |
-  |                      |    message_   |               |               |
-  |                      |    status     |               |               |
-  |                      |    table      |               |               |
-  |                      |    (Cassandra)|               |               |
-  |                      |               |               |               |
-  |                      | 4. Publish    |               |               |
-  |                      |    read       |               |               |
-  |                      |    receipt    |               |               |
-  |                      |    event      |               |               |
-  |                      |-------------->|               |               |
-  |                      |               |               |               |
-  |                      |               | 5. Route to   |               |
-  |                      |               |    sender's   |               |
-  |                      |               |    server     |               |
-  |                      |               |-------------->|               |
-  |                      |               |               |               |
-  |                      |               |               | 6. Forward   |
-  |                      |               |               |    read      |
-  |                      |               |               |    receipt   |
-  |                      |               |               |------------->|
-  |                      |               |               |               |
-  |                      |               |               |    7. UI:    |
-  |                      |               |               |    Blue      |
-  |                      |               |               |    checks    |
-  |                      |               |               |               |
+```mermaid
+sequenceDiagram
+    participant UB as "User B (Reader)"
+    participant CSB as "Chat Server B"
+    participant Kafka
+    participant CSA as "Chat Server A"
+    participant UA as "User A (Sender)"
 
-  Optimization for group chats:
-  - Batch read receipts: instead of sending one event per message,
-    send "read up to msg_id M123" -- marks all prior as read.
-  - Do NOT fan out individual read receipts in large groups (>50 members).
-    Instead, show read count on demand.
+    Note over UB: 1. User B reads message M123 in conversation C
+    UB->>CSB: 2. Send read event {conv: C, msg_id: M123, type: read}
+    CSB->>CSB: 3. Update message_status table (Cassandra)
+    CSB->>Kafka: 4. Publish read receipt event
+    Kafka->>CSA: 5. Route to sender's server
+    CSA->>UA: 6. Forward read receipt
+    Note over UA: 7. UI: Blue checks (Groups: batch "read up to M123")
 ```
 
 ---
@@ -764,42 +534,21 @@ Example:
 
 ### Idempotency Mechanism
 
-```
-Client                    Chat Server                  Storage
-  |                           |                           |
-  | 1. Send message           |                           |
-  |    client_msg_id: "abc"   |                           |
-  |-------------------------->|                           |
-  |                           |                           |
-  |                           | 2. Check dedup cache      |
-  |                           |    (Redis SET NX)         |
-  |                           |    key: dedup:abc         |
-  |                           |    TTL: 24h               |
-  |                           |                           |
-  |                           | 3a. Key NOT exists:       |
-  |                           |     -> Process message    |
-  |                           |     -> Store in DB        |
-  |                           |     -> SET dedup:abc      |
-  |                           |-------------------------->|
-  |                           |                           |
-  | 4. ACK (msg_id: M456)    |                           |
-  |<--------------------------|                           |
-  |                           |                           |
-  | === Network timeout, client retries ===               |
-  |                           |                           |
-  | 5. Resend message         |                           |
-  |    client_msg_id: "abc"   |                           |
-  |-------------------------->|                           |
-  |                           |                           |
-  |                           | 6. Check dedup cache      |
-  |                           |    key: dedup:abc EXISTS   |
-  |                           |                           |
-  |                           | 7. Return existing msg_id |
-  |                           |    (skip re-processing)   |
-  |                           |                           |
-  | 8. ACK (msg_id: M456)    |                           |
-  |<--------------------------|                           |
-  |    (same as before, no dup)                           |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant CS as "Chat Server"
+    participant Storage as "Storage & Redis Dedup"
+
+    Client->>CS: 1. Send message (client_msg_id: "abc")
+    CS->>Storage: 2. Check dedup cache (Redis SET NX dedup:abc, TTL: 24h)
+    CS->>Storage: 3a. Key NOT exists -> Process, store in DB, SET dedup:abc
+    CS-->>Client: 4. ACK (msg_id: M456)
+    Note over Client,CS: Network timeout, client retries
+    Client->>CS: 5. Resend message (client_msg_id: "abc")
+    CS->>Storage: 6. Check dedup cache (dedup:abc EXISTS)
+    Note over CS: 7. Return existing msg_id (skip re-processing)
+    CS-->>Client: 8. ACK (msg_id: M456 - no duplicate)
 ```
 
 ### Message Ordering
@@ -834,28 +583,12 @@ Server-side ordering:
 
 ### Delivery Status State Machine
 
-```
-                    ┌──────────┐
-                    │ PENDING  │  (client has composed but not sent)
-                    └────┬─────┘
-                         │ Client sends via WebSocket
-                         ▼
-                    ┌──────────┐
-                    │  SENT    │  (server received and persisted)
-                    │    ✓     │
-                    └────┬─────┘
-                         │ Recipient's device receives message
-                         ▼
-                    ┌──────────┐
-                    │DELIVERED │  (recipient's device ACKed)
-                    │   ✓✓     │
-                    └────┬─────┘
-                         │ Recipient opens conversation / views message
-                         ▼
-                    ┌──────────┐
-                    │  READ    │  (recipient's app sent read receipt)
-                    │   ✓✓     │  (blue)
-                    └──────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : Client composed message
+    PENDING --> SENT : Client sends via WebSocket (server persisted ✓)
+    SENT --> DELIVERED : Recipient device ACKed (✓✓)
+    DELIVERED --> READ : Recipient views message / read receipt (blue ✓✓)
 ```
 
 ---
@@ -927,44 +660,16 @@ Cons:
 
 ### Group Message Queue Architecture
 
-```
-                    ┌───────────────────┐
-                    │   Group Message   │
-                    │   from User A     │
-                    └────────┬──────────┘
-                             │
-                             ▼
-                    ┌───────────────────┐
-                    │   Kafka Topic:    │
-                    │   msg.group       │
-                    │   partition by    │
-                    │   group_id        │
-                    └────────┬──────────┘
-                             │
-                    ┌────────▼──────────┐
-                    │   Fan-Out Worker  │
-                    │                   │
-                    │ 1. Read group     │
-                    │    members from   │
-                    │    Redis cache    │
-                    │                   │
-                    │ 2. For each       │
-                    │    member:        │
-                    └────────┬──────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              │              │              │
-              ▼              ▼              ▼
-     ┌────────────┐ ┌────────────┐ ┌────────────┐
-     │ Kafka      │ │ Kafka      │ │ Kafka      │
-     │ Partition  │ │ Partition  │ │ Partition  │
-     │ for User B │ │ for User C │ │ for User D │
-     └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
-           │              │              │
-           ▼              ▼              ▼
-     Chat Server 1   Chat Server 2   Chat Server 3
-     (User B online) (User C online) (User D offline
-                                       -> push notif)
+```mermaid
+flowchart TD
+    Msg["Group Message from User A"] --> Topic["Kafka Topic: msg.group<br/>(partition by group_id)"]
+    Topic --> Worker["Fan-Out Worker<br/>1. Read group members from Redis cache<br/>2. Route to each member"]
+    Worker --> PB["Kafka Partition for User B"]
+    Worker --> PC["Kafka Partition for User C"]
+    Worker --> PD["Kafka Partition for User D"]
+    PB --> CS1["Chat Server 1<br/>(User B online)"]
+    PC --> CS2["Chat Server 2<br/>(User C online)"]
+    PD --> CS3["Chat Server 3<br/>(User D offline -> push notif)"]
 ```
 
 ### Group Metadata Caching
@@ -1063,24 +768,12 @@ Implementation:
 
 ### Presence State Machine
 
-```
-                    ┌──────────┐
-       ┌───────────>│  ONLINE  │<──────────────┐
-       │            └────┬─────┘               │
-       │                 │                     │
-       │                 │ No activity         │ User activity
-       │                 │ for 5 min           │ detected
-       │                 ▼                     │
-       │            ┌──────────┐               │
-       │            │   AWAY   │───────────────┘
-       │            └────┬─────┘
-       │                 │
-  WS Connect             │ No heartbeat
-       │                 │ for 60s
-       │                 ▼
-       │            ┌──────────┐
-       └────────────│  OFFLINE │
-                    └──────────┘
+```mermaid
+stateDiagram-v2
+    ONLINE --> AWAY : No activity for 5 min
+    AWAY --> ONLINE : User activity detected
+    AWAY --> OFFLINE : No heartbeat for 60s
+    OFFLINE --> ONLINE : WS Connect
 ```
 
 ---
@@ -1089,97 +782,38 @@ Implementation:
 
 ### Upload Flow (Pre-signed URL)
 
-```
-User A              API Server           S3              CDN          Thumbnail
-                                                                     Service
-  |                     |                 |               |              |
-  | 1. POST /upload     |                 |               |              |
-  |    {type:"image",   |                 |               |              |
-  |     size: 2MB,      |                 |               |              |
-  |     mime:"jpeg"}    |                 |               |              |
-  |-------------------->|                 |               |              |
-  |                     |                 |               |              |
-  |                     | 2. Validate     |               |              |
-  |                     |    (size limit, |               |              |
-  |                     |     mime type)  |               |              |
-  |                     |                 |               |              |
-  |                     | 3. Generate     |               |              |
-  |                     |    pre-signed   |               |              |
-  |                     |    PUT URL      |               |              |
-  |                     |    (expires 15m)|               |              |
-  |                     |---------------->|               |              |
-  |                     |                 |               |              |
-  | 4. Return:          |                 |               |              |
-  |    {upload_url,     |                 |               |              |
-  |     media_id}       |                 |               |              |
-  |<--------------------|                 |               |              |
-  |                     |                 |               |              |
-  | 5. PUT directly     |                 |               |              |
-  |    to S3            |                 |               |              |
-  |    (binary upload)  |                 |               |              |
-  |-------------------------------------->|               |              |
-  |                     |                 |               |              |
-  |    6. 200 OK        |                 |               |              |
-  |<--------------------------------------|               |              |
-  |                     |                 |               |              |
-  | 7. POST /upload/    |                 |               |              |
-  |    complete          |                 |               |              |
-  |    {media_id}       |                 |               |              |
-  |-------------------->|                 |               |              |
-  |                     |                 |               |              |
-  |                     | 8. Trigger      |               |              |
-  |                     |    thumbnail    |               |              |
-  |                     |    generation   |               |              |
-  |                     |------------------------------------------>|
-  |                     |                 |               |              |
-  |                     |                 |               |  9. Generate |
-  |                     |                 |               |     thumb    |
-  |                     |                 |<-----------------------------|
-  |                     |                 |               |              |
-  |                     | 10. Return CDN  |               |              |
-  |                     |     URL for     |               |              |
-  |                     |     media       |               |              |
-  |                     |<----------------|               |              |
-  |                     |                 |               |              |
-  | 11. {media_url,     |                 |               |              |
-  |      thumb_url}     |                 |               |              |
-  |<--------------------|                 |               |              |
-  |                     |                 |               |              |
-  | 12. Send message    |                 |               |              |
-  |     with media_url  |                 |               |              |
-  |     via WebSocket   |                 |               |              |
-  |---> (normal msg flow)                 |               |              |
+```mermaid
+sequenceDiagram
+    participant UA as "User A"
+    participant API as "API Server"
+    participant S3
+    participant CDN
+    participant Thumb as "Thumbnail Service"
+
+    UA->>API: 1. POST /upload {type: "image", size: 2MB, mime: "jpeg"}
+    API->>API: 2. Validate (size limit, mime type)
+    API->>S3: 3. Generate pre-signed PUT URL (expires 15m)
+    API-->>UA: 4. Return {upload_url, media_id}
+    UA->>S3: 5. PUT directly to S3 (binary upload)
+    S3-->>UA: 6. 200 OK
+    UA->>API: 7. POST /upload/complete {media_id}
+    API->>Thumb: 8. Trigger thumbnail generation
+    Thumb->>S3: 9. Store generated thumbnail
+    S3-->>API: 10. Return CDN URL for media
+    API-->>UA: 11. {media_url, thumb_url}
+    Note over UA: 12. Send message with media_url via WebSocket
 ```
 
 ### Media Processing Pipeline
 
-```
-┌─────────────┐     ┌──────────────────────────────────────────────┐
-│  Raw Upload │     │          Processing Pipeline                  │
-│  (S3 raw/)  │     │                                              │
-└──────┬──────┘     │  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
-       │            │  │  Virus   │  │  Resize  │  │  Format  │  │
-       └───────────>│  │  Scan    │─>│  /Thumb  │─>│  Convert │  │
-                    │  │          │  │  Generate │  │  (WebP)  │  │
-                    │  └──────────┘  └──────────┘  └──────────┘  │
-                    │                                              │
-                    └──────────────────────┬───────────────────────┘
-                                           │
-                                           ▼
-                                  ┌──────────────┐
-                                  │ S3 processed/ │
-                                  │               │
-                                  │ original.jpg  │
-                                  │ thumb_200.jpg │
-                                  │ medium_800.jpg│
-                                  └───────┬───────┘
-                                          │
-                                          ▼
-                                  ┌──────────────┐
-                                  │     CDN      │
-                                  │  (global     │
-                                  │   edge cache)│
-                                  └──────────────┘
+```mermaid
+flowchart LR
+    Raw["Raw Upload<br/>(S3 raw/)"] --> Scan["Virus Scan"]
+    subgraph Pipeline["Processing Pipeline"]
+        Scan --> Resize["Resize / Thumb Generate"] --> Convert["Format Convert (WebP)"]
+    end
+    Convert --> Proc["S3 processed/<br/>original.jpg, thumb_200.jpg, medium_800.jpg"]
+    Proc --> CDN["CDN<br/>(Global Edge Cache)"]
 ```
 
 ### Media Size Limits and Compression
@@ -1435,65 +1069,22 @@ Strategy: Active-Active Multi-Region
 
 ### Multi-Data-Center Setup
 
-```
-                         ┌───────────────────┐
-                         │    Global DNS     │
-                         │   (GeoDNS /       │
-                         │    Anycast)       │
-                         └────────┬──────────┘
-                                  │
-                    Route to nearest data center
-                                  │
-           ┌──────────────────────┼──────────────────────┐
-           │                      │                      │
-           ▼                      ▼                      ▼
-┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-│   US-EAST DC     │  │   EU-WEST DC     │  │   AP-SOUTH DC    │
-│                  │  │                  │  │                  │
-│ ┌──────────────┐ │  │ ┌──────────────┐ │  │ ┌──────────────┐ │
-│ │   Edge /     │ │  │ │   Edge /     │ │  │ │   Edge /     │ │
-│ │   CDN PoP    │ │  │ │   CDN PoP    │ │  │ │   CDN PoP    │ │
-│ └──────┬───────┘ │  │ └──────┬───────┘ │  │ └──────┬───────┘ │
-│        │         │  │        │         │  │        │         │
-│ ┌──────▼───────┐ │  │ ┌──────▼───────┐ │  │ ┌──────▼───────┐ │
-│ │  L4 Load     │ │  │ │  L4 Load     │ │  │ │  L4 Load     │ │
-│ │  Balancer    │ │  │ │  Balancer    │ │  │ │  Balancer    │ │
-│ └──┬────────┬──┘ │  │ └──┬────────┬──┘ │  │ └──┬────────┬──┘ │
-│    │        │    │  │    │        │    │  │    │        │    │
-│ ┌──▼──┐ ┌──▼──┐ │  │ ┌──▼──┐ ┌──▼──┐ │  │ ┌──▼──┐ ┌──▼──┐ │
-│ │Chat │ │API  │ │  │ │Chat │ │API  │ │  │ │Chat │ │API  │ │
-│ │Srvrs│ │Srvrs│ │  │ │Srvrs│ │Srvrs│ │  │ │Srvrs│ │Srvrs│ │
-│ │(WS) │ │(REST│ │  │ │(WS) │ │(REST│ │  │ │(WS) │ │(REST│ │
-│ └──┬──┘ └──┬──┘ │  │ └──┬──┘ └──┬──┘ │  │ └──┬──┘ └──┬──┘ │
-│    │        │    │  │    │        │    │  │    │        │    │
-│ ┌──▼────────▼──┐ │  │ ┌──▼────────▼──┐ │  │ ┌──▼────────▼──┐ │
-│ │   Kafka      │ │  │ │   Kafka      │ │  │ │   Kafka      │ │
-│ │   Cluster    │ │  │ │   Cluster    │ │  │ │   Cluster    │ │
-│ └──────┬───────┘ │  │ └──────┬───────┘ │  │ └──────┬───────┘ │
-│        │         │  │        │         │  │        │         │
-│ ┌──────▼───────┐ │  │ ┌──────▼───────┐ │  │ ┌──────▼───────┐ │
-│ │  Cassandra   │ │  │ │  Cassandra   │ │  │ │  Cassandra   │ │
-│ │  (3 replicas)│ │  │ │  (3 replicas)│ │  │ │  (3 replicas)│ │
-│ └──────────────┘ │  │ └──────────────┘ │  │ └──────────────┘ │
-│                  │  │                  │  │                  │
-│ ┌──────────────┐ │  │ ┌──────────────┐ │  │ ┌──────────────┐ │
-│ │ Redis Cluster│ │  │ │ Redis Cluster│ │  │ │ Redis Cluster│ │
-│ └──────────────┘ │  │ └──────────────┘ │  │ └──────────────┘ │
-│                  │  │                  │  │                  │
-│ ┌──────────────┐ │  │ ┌──────────────┐ │  │ ┌──────────────┐ │
-│ │  S3 Bucket   │ │  │ │  S3 Bucket   │ │  │ │  S3 Bucket   │ │
-│ └──────────────┘ │  │ └──────────────┘ │  │ └──────────────┘ │
-│                  │  │                  │  │                  │
-└──────────────────┘  └──────────────────┘  └──────────────────┘
-         │                     │                     │
-         │     Cross-Region Replication              │
-         │                     │                     │
-         │  ┌──────────────────┼───────────────┐     │
-         └──┤ Kafka MirrorMaker│               ├─────┘
-            │ Cassandra Async  │               │
-            │ S3 Cross-Region  │               │
-            │ Replication      │               │
-            └──────────────────┘
+```mermaid
+flowchart TD
+    DNS["Global DNS<br/>(GeoDNS / Anycast)"] -->|"Route to nearest DC"| US & EU & AP
+
+    subgraph US["US-EAST DC"]
+        US_Stack["Edge/CDN PoP -> L4 LB -> Chat Servers (WS) &amp; API Servers (REST)<br/>-> Kafka Cluster -> Cassandra (RF=3), Redis Cluster, S3 Bucket"]
+    end
+    subgraph EU["EU-WEST DC"]
+        EU_Stack["Edge/CDN PoP -> L4 LB -> Chat Servers (WS) &amp; API Servers (REST)<br/>-> Kafka Cluster -> Cassandra (RF=3), Redis Cluster, S3 Bucket"]
+    end
+    subgraph AP["AP-SOUTH DC"]
+        AP_Stack["Edge/CDN PoP -> L4 LB -> Chat Servers (WS) &amp; API Servers (REST)<br/>-> Kafka Cluster -> Cassandra (RF=3), Redis Cluster, S3 Bucket"]
+    end
+
+    US <-->|"Cross-Region Replication (Kafka MirrorMaker, Cassandra Async, S3 CRR)"| EU
+    EU <-->|"Cross-Region Replication (Kafka MirrorMaker, Cassandra Async, S3 CRR)"| AP
 ```
 
 ### Capacity Per Data Center

@@ -433,90 +433,55 @@ CREATE TABLE projection_checkpoints (
 
 ### 整体系统架构
 
-```
-+------------------+      Commands      +------------------+
-|                  | -----------------> |                  |
-|   Client Apps    |                    |  Command Service  |
-|  (Web / Mobile)  |                    |  (Write Side)    |
-|                  | <----------------- |                  |
-+------------------+    202 Accepted    +--------+---------+
-         |                                       |
-         |        Queries                        | Validate + Apply
-         |                                       | Invariants
-         v                                       v
-+------------------+              +-----------------------------+
-|                  |              |                             |
-|   Query Service  |              |       Event Store           |
-|  (Read Side)     |              |  (Append-Only Log)          |
-|                  |              |  PostgreSQL / EventStoreDB  |
-+--------+---------+              |  / Apache Kafka             |
-         |                        +-------------+---------------+
-         |                                      |
-         v                                      | Events Published
-+------------------+                            v
-|  Read Models /   |           +----------------+----------------+
-|  Projections     | <-------- |     Event Bus / Message Broker  |
-|  (PostgreSQL /   |           |     (Kafka / RabbitMQ)          |
-|   Redis /        |           +----------------+----------------+
-|   Elasticsearch) |                            |
-+------------------+                            |
-                               +----------------+--------------+
-                               |                               |
-                    +----------+--------+          +-----------+---------+
-                    |                   |          |                     |
-                    |  Projection       |          |  Saga Coordinator   |
-                    |  Builders         |          |  (Process Manager)  |
-                    |  (Subscriptions)  |          |                     |
-                    +-------------------+          +---------------------+
+```mermaid
+flowchart TD
+    Client["Client Apps<br/>(Web / Mobile)"] -->|"Commands"| Cmd["Command Service<br/>(Write Side)"]
+    Cmd -->|"202 Accepted"| Client
+    Cmd -->|"Validate + Apply Invariants"| ES["Event Store (Append-Only Log)<br/>PostgreSQL / EventStoreDB / Apache Kafka"]
+    ES -->|"Events Published"| Bus["Event Bus / Message Broker<br/>(Kafka / RabbitMQ)"]
+    Bus --> Proj["Projection Builders<br/>(Subscriptions)"] & Saga["Saga Coordinator<br/>(Process Manager)"]
+    Bus --> RM["Read Models / Projections<br/>(PostgreSQL / Redis / Elasticsearch)"]
+    Client -->|"Queries"| Qry["Query Service<br/>(Read Side)"] --> RM
 ```
 
 ### Command 处理流程
 
-```
-Client                Command Service           Event Store           Event Bus
-  |                         |                        |                    |
-  |--[POST /commands/]----->|                        |                    |
-  |                         |                        |                    |
-  |                         |--[Load Snapshot]------>|                    |
-  |                         |<--[Snapshot v=50]------|                    |
-  |                         |                        |                    |
-  |                         |--[Load Events v51+]--->|                    |
-  |                         |<--[Events 51..55]------|                    |
-  |                         |                        |                    |
-  |                         |--[Reconstruct State]   |                    |
-  |                         |  (apply events to      |                    |
-  |                         |   snapshot)            |                    |
-  |                         |                        |                    |
-  |                         |--[Validate Command]    |                    |
-  |                         |  (check invariants)    |                    |
-  |                         |                        |                    |
-  |                         |--[Append Event]------->|                    |
-  |                         |  version=56            |                    |
-  |                         |<--[OK, position=N]-----|                    |
-  |                         |                        |                    |
-  |                         |                        |--[Publish Event]-->|
-  |                         |                        |                    |
-  |<--[202 Accepted]--------|                        |                    |
-  |   {version: 56}         |                        |                    |
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant CS as "Command Service"
+    participant ES as "Event Store"
+    participant EB as "Event Bus"
+
+    C->>CS: POST /commands/
+    CS->>ES: Load Snapshot
+    ES-->>CS: Snapshot v=50
+    CS->>ES: Load Events v51+
+    ES-->>CS: Events 51..55
+    CS->>CS: Reconstruct State & Validate Command (check invariants)
+    CS->>ES: Append Event (version=56)
+    ES-->>CS: OK, position=N
+    ES->>EB: Publish Event
+    CS-->>C: 202 Accepted {version: 56}
 ```
 
 ### 读侧 / Projection 流程
 
-```
-Event Store          Event Bus           Projection Builder      Read Model DB
-    |                    |                       |                     |
-    |--[New Event]------>|                       |                     |
-    |                    |--[Deliver to subs]--->|                     |
-    |                    |                       |                     |
-    |                    |                       |--[Load checkpoint]->|
-    |                    |                       |<--[position=N-1]----|
-    |                    |                       |                     |
-    |                    |                       |--[Handle Event]-    |
-    |                    |                       |  Update read model  |
-    |                    |                       |--[Upsert rows]----->|
-    |                    |                       |--[Save checkpoint]->|
-    |                    |                       |<--[ACK]-------------|
-    |                    |<--[ACK to bus]--------|                     |
+```mermaid
+sequenceDiagram
+    participant ES as "Event Store"
+    participant EB as "Event Bus"
+    participant PB as "Projection Builder"
+    participant DB as "Read Model DB"
+
+    ES->>EB: New Event
+    EB->>PB: Deliver to subscribers
+    PB->>DB: Load checkpoint
+    DB-->>PB: position = N-1
+    PB->>PB: Handle Event & update read model
+    PB->>DB: Upsert rows & Save checkpoint
+    DB-->>PB: ACK
+    PB-->>EB: ACK to bus
 ```
 
 ---
@@ -623,40 +588,16 @@ class Order:
 
 CQRS（Command Query Responsibility Segregation，命令查询职责分离）将写模型（command）与读模型（query）分离。这允许每一端独立优化。
 
-```
-+============================================================+
-|                   CQRS 架构                                 |
-+============================================================+
-
-  写侧 (Command)                     读侧 (Query)
-  +----------------------+          +----------------------+
-  |                      |          |                      |
-  |  Command Handlers    |          |  Query Handlers      |
-  |  - 验证输入           |          |  - 无业务逻辑         |
-  |  - 加载 aggregate    |          |  - 简单 DB 查询       |
-  |  - 检查不变量         |          |  - 优化索引           |
-  |  - 发出 event        |          |  - 缓存结果           |
-  |                      |          |                      |
-  +----------+-----------+          +----------+-----------+
-             |                                 ^
-             | Events                          | Read Model
-             v                                 |
-  +----------+-----------+          +----------+-----------+
-  |                      |          |                      |
-  |    Event Store       +--------->+  Projection Engine   |
-  |  (唯一真相来源)       | Events   |  (Event Handlers)    |
-  |                      |          |                      |
-  +----------------------+          +----------+-----------+
-                                               |
-                                               | Upserts
-                                               v
-                                    +----------+-----------+
-                                    |                      |
-                                    |   Read Database      |
-                                    |  (反规范化，           |
-                                    |   查询优化)           |
-                                    |                      |
-                                    +----------------------+
+```mermaid
+flowchart TD
+    subgraph WriteSide["WRITE SIDE (Command)"]
+        CH["Command Handlers<br/>- Validate input<br/>- Load aggregate<br/>- Check invariants<br/>- Emit events"] -->|"Events"| ES["Event Store<br/>(Source of Truth)"]
+    end
+    subgraph ReadSide["READ SIDE (Query)"]
+        ES -->|"Events"| PE["Projection Engine<br/>(Event Handlers)"]
+        PE -->|"Upserts"| RDB["Read Database<br/>(Denormalized, Query-Optimized)"]
+        RDB -->|"Read Model"| QH["Query Handlers<br/>- No business logic<br/>- Simple DB selects<br/>- Cached results"]
+    end
 ```
 
 **Command Model（为一致性而规范化）**
@@ -1084,44 +1025,14 @@ Read model 落后于 write model。这对大多数场景是可接受的，但需
 
 Saga 使用 event 在 aggregate 边界或服务之间协调多步骤业务流程。
 
-```
-+=========================================================+
-|              订单履行 SAGA                                |
-+=========================================================+
-
-   OrderCreated
-        |
-        v
-   [1. 预留库存]
-        |
-   +----+----+
-   |         |
-  成功      失败
-   |         |
-   v         v
-[2. 扣款]  [补偿：取消订单]
-   |
-   +----+----+
-   |         |
-  成功      失败
-   |         |
-   v         v
-[3. 发货]  [补偿：退款 + 释放库存]
-   |
-   v
-[4. 完成]
-
-
-SAGA 状态机：
-  STARTED
-    -> INVENTORY_RESERVED (收到 InventoryReserved)
-    -> PAYMENT_CHARGED (收到 PaymentCharged)
-    -> SHIPPED (收到 OrderShipped)
-    -> COMPLETED (收到 ShipmentDelivered)
-
-补偿状态（失败时）：
-  INVENTORY_RESERVED -> CANCELLING -> CANCELLED
-  PAYMENT_CHARGED -> REFUNDING -> INVENTORY_RELEASING -> CANCELLED
+```mermaid
+flowchart TD
+    OC["OrderCreated"] --> Res["1. Reserve Inventory"]
+    Res -->|"OK"| Chg["2. Charge Payment"]
+    Res -->|"FAIL"| Comp1["Compensate: Cancel Order"]
+    Chg -->|"OK"| Ship["3. Ship Order"]
+    Chg -->|"FAIL"| Comp2["Compensate: Refund + Release Inventory"]
+    Ship --> Done["4. Complete"]
 ```
 
 **Saga Coordinator 实现**
@@ -2019,54 +1930,18 @@ GDPR / 被遗忘权：
 
 ## 10. 总结图：完整系统
 
-```
-+==============================================================================+
-|                    EVENT SOURCING + CQRS 系统                                 |
-+==============================================================================+
-
-  写侧                                    读侧
-  +------------------+                       +------------------+
-  |  Command API     |                       |  Query API       |
-  |  POST /commands/ |                       |  GET /queries/   |
-  +--------+---------+                       +--------+---------+
-           |                                          |
-           v                                          v
-  +------------------+                       +------------------+
-  |  Command Handler |                       |  Query Handler   |
-  |  1. 加载 agg     |                       |  简单 DB 读取    |
-  |  2. 验证         |                       |  无业务          |
-  |  3. 应用 cmd     |                       |  逻辑            |
-  |  4. 发出 event   |                       +--------+---------+
-  +--------+---------+                                |
-           |                                          |
-           v                                          |
-  +------------------+        Events         +--------+---------+
-  |  Event Store     +---------------------->+ Read Model DB    |
-  |  (Append-Only)   |                       |  (PostgreSQL/    |
-  |  - Order events  |        +------------> |   Redis/ES)      |
-  |  - Snapshots     |        |              +------------------+
-  +------------------+        |
-           |                  |        +------------------+
-           |  Publish         |        | Projection       |
-           v                  +--------+ Builder          |
-  +------------------+                |  - 订阅           |
-  |  Event Bus       |                |  - 处理 event     |
-  |  (Kafka)         +--------------->+  - 更新 DB        |
-  +------------------+                |  - Checkpoint     |
-           |                          +------------------+
-           |
-           v
-  +------------------+
-  |  Saga Coordinator|
-  |  - 状态机        |
-  |  - 补偿          |
-  |  - 跨服务        |
-  +------------------+
-
-  技术选型：
-    Event Store:    EventStoreDB | Apache Kafka | PostgreSQL
-    Event Bus:      Apache Kafka | RabbitMQ
-    Read Models:    PostgreSQL | Redis | Elasticsearch | ClickHouse
-    编排框架:       Axon Framework | 自定义实现
-    监控:           Prometheus + Grafana (延迟、吞吐量、错误)
+```mermaid
+flowchart TD
+    subgraph Write["WRITE SIDE"]
+        CmdAPI["Command API (POST /commands/)"] --> CmdH["Command Handler<br/>1. Load agg, 2. Validate, 3. Apply cmd, 4. Emit events"]
+        CmdH --> ES["Event Store (Append-Only)<br/>Order events + Snapshots"]
+        ES -->|"Publish"| Bus["Event Bus (Kafka)"]
+        Bus --> Saga["Saga Coordinator<br/>State machine, Compensation, Cross-service"]
+    end
+    subgraph Read["READ SIDE"]
+        QryAPI["Query API (GET /queries/)"] --> QryH["Query Handler<br/>Simple DB reads, no business logic"]
+        QryH --> RDB["Read Model DB<br/>(PostgreSQL / Redis / ES)"]
+        Bus --> PB["Projection Builder<br/>Subscribes, handles events, updates DB, checkpoints"]
+        PB --> RDB
+    end
 ```

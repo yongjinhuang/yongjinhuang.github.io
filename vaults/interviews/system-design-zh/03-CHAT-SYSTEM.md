@@ -123,55 +123,28 @@
 
 ### WebSocket 握手流程
 
-```
-Client                                         Server
-  |                                               |
-  |  HTTP GET /chat                               |
-  |  Upgrade: websocket                           |
-  |  Connection: Upgrade                          |
-  |  Sec-WebSocket-Key: dGhlIHNhbXBsZQ==          |
-  |  Sec-WebSocket-Version: 13                    |
-  |---------------------------------------------->|
-  |                                               |
-  |  HTTP 101 Switching Protocols                 |
-  |  Upgrade: websocket                           |
-  |  Connection: Upgrade                          |
-  |  Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGz...  |
-  |<----------------------------------------------|
-  |                                               |
-  |  ============================================ |
-  |  |      Full-duplex WebSocket Channel       | |
-  |  ============================================ |
-  |                                               |
-  |  Frame: {"type":"msg","to":"U2","text":"Hi"}  |
-  |---------------------------------------------->|
-  |                                               |
-  |  Frame: {"type":"msg","from":"U2","text":"Hey"}|
-  |<----------------------------------------------|
-  |                                               |
-  |  Frame: {"type":"ack","msg_id":"M123"}        |
-  |<----------------------------------------------|
-  |                                               |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+
+    Client->>Server: HTTP GET /chat (Upgrade: websocket, Connection: Upgrade, Sec-WebSocket-Key, Version: 13)
+    Server-->>Client: HTTP 101 Switching Protocols (Upgrade: websocket, Sec-WebSocket-Accept)
+    Note over Client,Server: Full-Duplex WebSocket Channel Established
+    Client->>Server: Frame: {"type":"msg","to":"U2","text":"Hi"}
+    Server-->>Client: Frame: {"type":"msg","from":"U2","text":"Hey"}
+    Server-->>Client: Frame: {"type":"ack","msg_id":"M123"}
 ```
 
 ### 回退策略
 
-```
-1. 尝试 WebSocket 连接
-   |
-   ├── 成功 -> 使用 WebSocket（首选）
-   |
-   └── 失败（企业代理、防火墙）
-       |
-       ├── 尝试 SSE + HTTP POST 组合
-       |   |
-       |   ├── 成功 -> 使用 SSE 接收，HTTP POST 发送
-       |   |
-       |   └── 失败
-       |       |
-       |       └── 回退到 Long Polling
-       |
-       └── 移动端：使用平台推送（APNs/FCM）作为最后手段
+```mermaid
+flowchart TD
+    WS["1. Attempt WebSocket Connection"] -->|"Success"| UseWS["Use WebSocket (Preferred)"]
+    WS -->|"Failure (corporate proxy, firewall)"| SSE["Attempt SSE + HTTP POST Combo"]
+    SSE -->|"Success"| UseSSE["Use SSE for receive, HTTP POST for send"]
+    SSE -->|"Failure"| LP["Fall back to Long Polling"]
+    WS -->|"Mobile Last Resort"| Push["Use Platform Push (APNs / FCM)"]
 ```
 
 ### 各功能使用的协议
@@ -195,84 +168,29 @@ Client                                         Server
 
 ## 3. 高层架构
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                              客户端                                       │
-│   ┌─────────┐  ┌─────────┐  ┌──────────┐  ┌──────────┐                 │
-│   │  iOS    │  │ Android │  │  Web     │  │ Desktop  │                 │
-│   │  App    │  │  App    │  │  App     │  │  App     │                 │
-│   └────┬────┘  └────┬────┘  └────┬─────┘  └────┬─────┘                 │
-│        │            │            │              │                        │
-└────────┼────────────┼────────────┼──────────────┼────────────────────────┘
-         │            │            │              │
-         └────────────┼────────────┼──────────────┘
-                      │            │
-              ┌───────▼────────────▼───────┐
-              │      Load Balancer (L4)     │
-              │   (TCP/WebSocket 感知)      │
-              └───────┬───────────┬────────┘
-                      │           │
-         ┌────────────┘           └──────────────┐
-         │                                       │
-┌────────▼──────────┐                  ┌─────────▼─────────┐
-│   Chat Servers    │                  │   API Servers     │
-│   (WebSocket)     │                  │   (REST/HTTP)     │
-│                   │                  │                   │
-│ - 消息中继        │                  │ - 认证/登录       │
-│ - 连接管理        │                  │ - 用户资料        │
-│ - 输入事件        │                  │ - 群组 CRUD       │
-│ - 在线状态事件    │                  │ - 媒体上传        │
-│                   │                  │ - 搜索            │
-└────────┬──────────┘                  └─────────┬─────────┘
-         │                                       │
-         │    ┌──────────────────────────┐        │
-         │    │   服务发现               │        │
-         │    │   (ZooKeeper / etcd)     │        │
-         │    │                          │        │
-         │    │ - Chat server 注册表     │        │
-         │    │ - 用户->服务器映射       │        │
-         │    └──────────────────────────┘        │
-         │                                       │
-┌────────▼───────────────────────────────────────▼──────────┐
-│                    消息队列 (Kafka)                        │
-│                                                           │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐ │
-│  │ msg.send │ │ msg.grp  │ │ presence │ │ notification │ │
-│  │  topic   │ │  topic   │ │  topic   │ │    topic     │ │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────────┘ │
-└──────────┬──────────┬──────────┬──────────┬───────────────┘
-           │          │          │          │
-     ┌─────┘    ┌─────┘    ┌────┘    ┌─────┘
-     │          │          │         │
-┌────▼────┐ ┌──▼───┐ ┌────▼────┐ ┌──▼──────────────┐
-│ 消息    │ │ 群组 │ │ 在线   │ │ 推送             │
-│ 存储    │ │ 扇出 │ │ 状态   │ │ 通知             │
-│ 服务    │ │ 服务 │ │ 服务   │ │ 服务             │
-│         │ │      │ │        │ │                  │
-└────┬────┘ └──────┘ └────┬────┘ │ ┌──────┐┌──────┐│
-     │                    │      │ │ APNs ││ FCM  ││
-     │                    │      │ └──────┘└──────┘│
-┌────▼─────────┐   ┌─────▼────┐ └──────────────────┘
-│   Cassandra  │   │  Redis   │
-│   Cluster    │   │  Cluster │
-│              │   │          │
-│ - 消息       │   │- 在线    │
-│ - 消息状态   │   │  状态    │
-│ - 频道       │   │- 最后    │
-│              │   │  上线    │
-└──────────────┘   │- 会话    │
-                   │  缓存    │
-┌──────────────┐   └──────────┘
-│  媒体存储    │
-│              │
-│  ┌────────┐  │   ┌─────────────┐
-│  │   S3   │──┼──>│     CDN     │
-│  └────────┘  │   │ (CloudFront)│
-│  ┌────────┐  │   └─────────────┘
-│  │缩略图  │  │
-│  │生成器  │  │
-│  └────────┘  │
-└──────────────┘
+```mermaid
+flowchart TD
+    subgraph Clients["CLIENTS"]
+        iOS["iOS App"]
+        Android["Android App"]
+        Web["Web App"]
+        Desktop["Desktop App"]
+    end
+
+    iOS & Android & Web & Desktop --> LB["Load Balancer (L4)<br/>(TCP / WebSocket-aware)"]
+    LB --> ChatSrv["Chat Servers (WebSocket)<br/>- Message relay<br/>- Connection mgmt<br/>- Typing &amp; Presence events"]
+    LB --> APISrv["API Servers (REST/HTTP)<br/>- Auth/Login, User profiles<br/>- Group CRUD, Media upload, Search"]
+    ChatSrv <--> SD["Service Discovery (ZooKeeper / etcd)<br/>- Chat server registry<br/>- User-to-server mapping"]
+
+    ChatSrv & APISrv --> Kafka["Message Queue (Kafka)<br/>Topics: msg.send | msg.grp | presence | notification"]
+    Kafka --> MsgStore["Message Storage Service"]
+    Kafka --> FanOut["Group Fan-Out Service"]
+    Kafka --> PresSvc["Presence Service"]
+    Kafka --> PushSvc["Push Notification Service<br/>(APNs / FCM)"]
+
+    MsgStore --> Cass["Cassandra Cluster<br/>- Messages, Msg status, Channels"]
+    PresSvc --> Redis["Redis Cluster<br/>- Online status, Last seen, Session cache"]
+    APISrv --> Media["Media Store<br/>(S3 + Thumbnail Generator)"] --> CDN["CDN (CloudFront)"]
 ```
 
 ### 组件职责
@@ -423,18 +341,12 @@ CREATE TABLE user_conversations (
 
 ### 实体关系概览
 
-```
-┌──────────┐     ┌─────────────────────┐     ┌──────────────┐
-│  users   │────<│ conversation_members│>────│conversations │
-└──────────┘     └─────────────────────┘     └──────┬───────┘
-                                                    │
-                                             ┌──────▼───────┐
-                                             │   messages   │
-                                             └──────┬───────┘
-                                                    │
-                                             ┌──────▼───────┐
-                                             │message_status│
-                                             └──────────────┘
+```mermaid
+erDiagram
+    USERS ||--o{ CONVERSATION_MEMBERS : "joins"
+    CONVERSATIONS ||--o{ CONVERSATION_MEMBERS : "has"
+    CONVERSATIONS ||--o{ MESSAGES : "contains"
+    MESSAGES ||--o{ MESSAGE_STATUS : "tracks"
 ```
 
 ---
@@ -443,54 +355,29 @@ CREATE TABLE user_conversations (
 
 ### 5.1 一对一消息发送流程
 
-```
-用户 A (发送方)       Chat Server A       Kafka       Chat Server B       用户 B (接收方)
-     |                      |                |               |                    |
-     | 1. WS Frame:         |                |               |                    |
-     |    {msg, to:B,       |                |               |                    |
-     |     text:"Hello"}    |                |               |                    |
-     |--------------------->|                |               |                    |
-     |                      |                |               |                    |
-     | 2. ACK (msg_id,      |                |               |                    |
-     |    status:sent)       |                |               |                    |
-     |<---------------------|                |               |                    |
-     |                      |                |               |                    |
-     |                      | 3. 发布到      |               |                    |
-     |                      |    msg.send    |               |                    |
-     |                      |    topic       |               |                    |
-     |                      |--------------->|               |                    |
-     |                      |                |               |                    |
-     |                      |                | 4. 消费       |                    |
-     |                      |                |    消息       |                    |
-     |                      |                |-------------->|                    |
-     |                      |                |               |                    |
-     |                      |                |    5. 查找：用户 B 是否连接       |
-     |                      |                |       到此服务器？                 |
-     |                      |                |               |                    |
-     |                      |                |               | 6. 是：通过       |
-     |                      |                |               |    WebSocket 转发  |
-     |                      |                |               |------------------->|
-     |                      |                |               |                    |
-     |                      |                |               | 7. 投递 ACK       |
-     |                      |                |               |<-------------------|
-     |                      |                |               |                    |
-     |                      |                |<--------------|                    |
-     |                      |<---------------|               |                    |
-     | 8. 状态更新：         |                |               |                    |
-     |    已送达             |                |               |                    |
-     |<---------------------|                |               |                    |
-     |                      |                |               |                    |
+```mermaid
+sequenceDiagram
+    participant UA as "User A (Sender)"
+    participant CSA as "Chat Server A"
+    participant Kafka
+    participant CSB as "Chat Server B"
+    participant UB as "User B (Receiver)"
 
-     如果用户 B 在第 5 步时离线：
-     |                      |                |               |                    |
-     |                      |                | 4b. 存入      |                    |
-     |                      |                |     离线      |                    |
-     |                      |                |     队列      |                    |
-     |                      |                |               |                    |
-     |                      |                | 4c. 发送推送  |                    |
-     |                      |                |     通知      |                    |
-     |                      |                |------------------------------------>|
-     |                      |                |               |           (手机)   |
+    UA->>CSA: 1. WS Frame {msg, to: B, text: "Hello"}
+    CSA-->>UA: 2. ACK (msg_id, status: sent)
+    CSA->>Kafka: 3. Publish to msg.send topic
+    Kafka->>CSB: 4. Consume message
+    Note over CSB: 5. Lookup: Is User B connected to this server?
+    alt User B is ONLINE
+        CSB->>UB: 6. Forward via WebSocket
+        UB-->>CSB: 7. Delivery ACK
+        CSB-->>Kafka: Delivery event
+        Kafka-->>CSA: Route delivery ACK
+        CSA-->>UA: 8. Status update: delivered
+    else User B is OFFLINE
+        Kafka->>Kafka: 4b. Store in offline queue
+        Kafka->>UB: 4c. Send push notification (phone)
+    end
 ```
 
 **逐步说明：**
@@ -506,207 +393,93 @@ CREATE TABLE user_conversations (
 
 ### 5.2 群组消息发送流程
 
-```
-用户 A          Chat Server      Kafka        扇出             Chat Servers
-(发送方)                                      服务             (接收方)
-  |                   |              |              |                 |
-  | 1. 发送消息       |              |              |                 |
-  |    到群组 G       |              |              |                 |
-  |------------------>|              |              |                 |
-  |                   |              |              |                 |
-  | 2. ACK (已发送)   |              |              |                 |
-  |<------------------|              |              |                 |
-  |                   |              |              |                 |
-  |                   | 3. 发布      |              |                 |
-  |                   |    msg.grp   |              |                 |
-  |                   |    topic     |              |                 |
-  |                   |------------->|              |                 |
-  |                   |              |              |                 |
-  |                   |              | 4. 消费      |                 |
-  |                   |              |------------->|                 |
-  |                   |              |              |                 |
-  |                   |              |    5. 查找群组成员             |
-  |                   |              |       (Redis 缓存)            |
-  |                   |              |              |                 |
-  |                   |              |    6. 对每个成员：             |
-  |                   |              |       - 查找其 chat server    |
-  |                   |              |       - 路由消息              |
-  |                   |              |              |                 |
-  |                   |              |              | 7. 投递给       |
-  |                   |              |              |    每个在线     |
-  |                   |              |              |    成员         |
-  |                   |              |              |---------------->|
-  |                   |              |              |                 | --> 用户 B
-  |                   |              |              |                 | --> 用户 C
-  |                   |              |              |                 | --> 用户 D
-  |                   |              |              |                 |
-  |                   |              |    8. 为离线成员排队          |
-  |                   |              |       + 推送通知              |
-  |                   |              |              |                 |
+```mermaid
+sequenceDiagram
+    participant UA as "User A (Sender)"
+    participant CS as "Chat Server"
+    participant Kafka
+    participant FO as "Fan-Out Service"
+    participant CSR as "Chat Servers (Recipients: User B, C, D)"
+
+    UA->>CS: 1. Send msg to Group G
+    CS-->>UA: 2. ACK (sent)
+    CS->>Kafka: 3. Publish to msg.grp topic
+    Kafka->>FO: 4. Consume group message
+    Note over FO: 5. Lookup group members (Redis cache)<br/>6. Find each member's chat server and route
+    FO->>CSR: 7. Deliver to each online member (User B, User C, User D)
+    Note over FO: 8. Queue for offline members + push notifications
 ```
 
 ### 5.3 在线/离线状态检测
 
-```
-用户 A             Chat Server        在线状态          Redis         A 的联系人
-  |                     |              服务               |               |
-  |                     |                 |                |               |
-  | === 上线 ===                         |                |               |
-  |                     |                 |                |               |
-  | 1. WS 连接          |                 |                |               |
-  |-------------------->|                 |                |               |
-  |                     |                 |                |               |
-  |                     | 2. 注册         |                |               |
-  |                     |    连接         |                |               |
-  |                     |---------------->|                |               |
-  |                     |                 |                |               |
-  |                     |                 | 3. SET         |               |
-  |                     |                 |  presence:A    |               |
-  |                     |                 |  = online      |               |
-  |                     |                 |--------------->|               |
-  |                     |                 |                |               |
-  |                     |                 | 4. 发布        |               |
-  |                     |                 |    在线状态    |               |
-  |                     |                 |    事件        |               |
-  |                     |                 |------------------------------->|
-  |                     |                 |                |               |
-  | === 心跳 ===        |                 |                |               |
-  |                     |                 |                |               |
-  | 5. Ping (每 30 秒)  |                 |                |               |
-  |-------------------->|                 |                |               |
-  |     Pong            |                 |                |               |
-  |<--------------------|                 |                |               |
-  |                     | 6. 刷新 TTL     |                |               |
-  |                     |---------------->|                |               |
-  |                     |                 | 7. EXPIRE      |               |
-  |                     |                 |  presence:A    |               |
-  |                     |                 |  TTL=60s       |               |
-  |                     |                 |--------------->|               |
-  |                     |                 |                |               |
-  | === 离线 (正常断开) ===              |                |               |
-  |                     |                 |                |               |
-  | 8. WS 关闭          |                 |                |               |
-  |-------------------->|                 |                |               |
-  |                     | 9. 注销         |                |               |
-  |                     |---------------->|                |               |
-  |                     |                 | 10. DEL        |               |
-  |                     |                 |  presence:A    |               |
-  |                     |                 |--------------->|               |
-  |                     |                 |                |               |
-  |                     |                 | 11. 发布       |               |
-  |                     |                 |     离线       |               |
-  |                     |                 |     事件       |               |
-  |                     |                 |------------------------------->|
-  |                     |                 |                |               |
-  | === 崩溃 (异常断开) ===              |                |               |
-  |                     |                 |                |               |
-  |  (60 秒无心跳)                       |                |               |
-  |                     |                 | 12. Redis TTL  |               |
-  |                     |                 |     过期       |               |
-  |                     |                 |     presence:A |               |
-  |                     |                 |<---------------|               |
-  |                     |                 |                |               |
-  |                     |                 | 13. 发布       |               |
-  |                     |                 |     离线       |               |
-  |                     |                 |     事件       |               |
-  |                     |                 |------------------------------->|
+```mermaid
+sequenceDiagram
+    participant UA as "User A"
+    participant CS as "Chat Server"
+    participant PS as "Presence Service"
+    participant Redis
+    participant Contacts as "Contacts of A"
+
+    Note over UA,Contacts: GOING ONLINE
+    UA->>CS: 1. WS Connect
+    CS->>PS: 2. Register connection
+    PS->>Redis: 3. SET presence:A = online
+    PS->>Contacts: 4. Publish presence event (online)
+
+    Note over UA,Contacts: HEARTBEAT
+    UA->>CS: 5. Ping (every 30s)
+    CS-->>UA: Pong
+    CS->>PS: 6. Refresh TTL
+    PS->>Redis: 7. EXPIRE presence:A TTL=60s
+
+    Note over UA,Contacts: GOING OFFLINE (graceful)
+    UA->>CS: 8. WS Close
+    CS->>PS: 9. Unregister
+    PS->>Redis: 10. DEL presence:A
+    PS->>Contacts: 11. Publish offline event
+
+    Note over UA,Contacts: CRASH (ungraceful - no heartbeat for 60s)
+    Redis-->>PS: 12. Redis TTL expires presence:A
+    PS->>Contacts: 13. Publish offline event
 ```
 
 ### 5.4 消息同步（用户上线）
 
-```
-用户 A          Chat Server        消息             离线
-(重新连接)                         存储             队列
-     |                 |                |                |
-     | 1. 连接 +       |                |                |
-     |    last_seen_   |                |                |
-     |    msg_id       |                |                |
-     |---------------->|                |                |
-     |                 |                |                |
-     |                 | 2. 查询        |                |
-     |                 |    用户 A 的   |                |
-     |                 |    离线消息    |                |
-     |                 |------------------------------->|
-     |                 |                |                |
-     |                 |                |  3. 返回       |
-     |                 |                |     排队的     |
-     |                 |                |     消息       |
-     |                 |<-------------------------------|
-     |                 |                |                |
-     |                 | 4. 同时查询    |                |
-     |                 |    last_seen   |                |
-     |                 |    之后的      |                |
-     |                 |    消息        |                |
-     |                 |--------------->|                |
-     |                 |                |                |
-     |                 |<---------------|                |
-     |                 |                |                |
-     | 5. 批量发送     |                |                |
-     |    错过的消息   |                |                |
-     |    (分页，      |                |                |
-     |     每次 50 条) |                |                |
-     |<----------------|                |                |
-     |                 |                |                |
-     | 6. ACK 已收到   |                |                |
-     |---------------->|                |                |
-     |                 |                |                |
-     |                 | 7. 清除        |                |
-     |                 |    离线        |                |
-     |                 |    队列        |                |
-     |                 |------------------------------->|
-     |                 |                |                |
-     | 8. 请求下一页...|                |                |
-     |---------------->|                |                |
+```mermaid
+sequenceDiagram
+    participant UA as "User A (reconnecting)"
+    participant CS as "Chat Server"
+    participant MS as "Message Storage"
+    participant OQ as "Offline Queue"
+
+    UA->>CS: 1. Connect + last_seen_msg_id
+    CS->>OQ: 2. Query offline messages for user A
+    OQ-->>CS: 3. Return queued messages
+    CS->>MS: 4. Query messages after last_seen
+    MS-->>CS: Return messages
+    CS-->>UA: 5. Batch send missed msgs (paginated, 50 at a time)
+    UA->>CS: 6. ACK received
+    CS->>OQ: 7. Clear offline queue
+    UA->>CS: 8. Request next page...
 ```
 
 ### 5.5 已读回执流程
 
-```
-用户 B             Chat Server B      Kafka        Chat Server A      用户 A
-(阅读方)                                                              (发送方)
-  |                      |               |               |               |
-  | 1. 用户 B 阅读       |               |               |               |
-  |    消息 M123         |               |               |               |
-  |    在对话 C 中       |               |               |               |
-  |                      |               |               |               |
-  | 2. 发送已读事件      |               |               |               |
-  |    {conv:C,          |               |               |               |
-  |     msg_id:M123,     |               |               |               |
-  |     type:read}       |               |               |               |
-  |--------------------->|               |               |               |
-  |                      |               |               |               |
-  |                      | 3. 更新       |               |               |
-  |                      |    message_   |               |               |
-  |                      |    status     |               |               |
-  |                      |    表         |               |               |
-  |                      |    (Cassandra)|               |               |
-  |                      |               |               |               |
-  |                      | 4. 发布       |               |               |
-  |                      |    已读       |               |               |
-  |                      |    回执       |               |               |
-  |                      |    事件       |               |               |
-  |                      |-------------->|               |               |
-  |                      |               |               |               |
-  |                      |               | 5. 路由到     |               |
-  |                      |               |    发送方的   |               |
-  |                      |               |    服务器     |               |
-  |                      |               |-------------->|               |
-  |                      |               |               |               |
-  |                      |               |               | 6. 转发       |
-  |                      |               |               |    已读       |
-  |                      |               |               |    回执       |
-  |                      |               |               |------------->|
-  |                      |               |               |               |
-  |                      |               |               |    7. UI：   |
-  |                      |               |               |    蓝色      |
-  |                      |               |               |    双勾      |
-  |                      |               |               |               |
+```mermaid
+sequenceDiagram
+    participant UB as "User B (Reader)"
+    participant CSB as "Chat Server B"
+    participant Kafka
+    participant CSA as "Chat Server A"
+    participant UA as "User A (Sender)"
 
-  群聊优化：
-  - 批量已读回执：不为每条消息发送一个事件，
-    而是发送"已读到 msg_id M123"——标记之前所有消息为已读。
-  - 在大群组（>50 名成员）中不要扇出单独的已读回执。
-    而是按需显示已读数量。
+    Note over UB: 1. User B reads message M123 in conversation C
+    UB->>CSB: 2. Send read event {conv: C, msg_id: M123, type: read}
+    CSB->>CSB: 3. Update message_status table (Cassandra)
+    CSB->>Kafka: 4. Publish read receipt event
+    Kafka->>CSA: 5. Route to sender's server
+    CSA->>UA: 6. Forward read receipt
+    Note over UA: 7. UI: Blue checks (Groups: batch "read up to M123")
 ```
 
 ---
@@ -761,42 +534,21 @@ CREATE TABLE user_conversations (
 
 ### 幂等性机制
 
-```
-客户端                    Chat Server                  存储
-  |                           |                           |
-  | 1. 发送消息               |                           |
-  |    client_msg_id: "abc"   |                           |
-  |-------------------------->|                           |
-  |                           |                           |
-  |                           | 2. 检查去重缓存           |
-  |                           |    (Redis SET NX)         |
-  |                           |    key: dedup:abc         |
-  |                           |    TTL: 24h               |
-  |                           |                           |
-  |                           | 3a. Key 不存在：          |
-  |                           |     -> 处理消息           |
-  |                           |     -> 存入数据库         |
-  |                           |     -> SET dedup:abc      |
-  |                           |-------------------------->|
-  |                           |                           |
-  | 4. ACK (msg_id: M456)    |                           |
-  |<--------------------------|                           |
-  |                           |                           |
-  | === 网络超时，客户端重试 ===                          |
-  |                           |                           |
-  | 5. 重发消息               |                           |
-  |    client_msg_id: "abc"   |                           |
-  |-------------------------->|                           |
-  |                           |                           |
-  |                           | 6. 检查去重缓存           |
-  |                           |    key: dedup:abc 已存在   |
-  |                           |                           |
-  |                           | 7. 返回已有 msg_id        |
-  |                           |    (跳过重复处理)         |
-  |                           |                           |
-  | 8. ACK (msg_id: M456)    |                           |
-  |<--------------------------|                           |
-  |    (与之前相同，无重复)                               |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant CS as "Chat Server"
+    participant Storage as "Storage & Redis Dedup"
+
+    Client->>CS: 1. Send message (client_msg_id: "abc")
+    CS->>Storage: 2. Check dedup cache (Redis SET NX dedup:abc, TTL: 24h)
+    CS->>Storage: 3a. Key NOT exists -> Process, store in DB, SET dedup:abc
+    CS-->>Client: 4. ACK (msg_id: M456)
+    Note over Client,CS: Network timeout, client retries
+    Client->>CS: 5. Resend message (client_msg_id: "abc")
+    CS->>Storage: 6. Check dedup cache (dedup:abc EXISTS)
+    Note over CS: 7. Return existing msg_id (skip re-processing)
+    CS-->>Client: 8. ACK (msg_id: M456 - no duplicate)
 ```
 
 ### 消息排序
@@ -831,28 +583,12 @@ CREATE TABLE user_conversations (
 
 ### 投递状态状态机
 
-```
-                    ┌──────────┐
-                    │ PENDING  │  (客户端已编写但未发送)
-                    └────┬─────┘
-                         │ 客户端通过 WebSocket 发送
-                         ▼
-                    ┌──────────┐
-                    │  SENT    │  (服务器已接收并持久化)
-                    │    ✓     │
-                    └────┬─────┘
-                         │ 接收方设备收到消息
-                         ▼
-                    ┌──────────┐
-                    │DELIVERED │  (接收方设备已 ACK)
-                    │   ✓✓     │
-                    └────┬─────┘
-                         │ 接收方打开对话/查看消息
-                         ▼
-                    ┌──────────┐
-                    │  READ    │  (接收方应用发送已读回执)
-                    │   ✓✓     │  (蓝色)
-                    └──────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : Client composed message
+    PENDING --> SENT : Client sends via WebSocket (server persisted ✓)
+    SENT --> DELIVERED : Recipient device ACKed (✓✓)
+    DELIVERED --> READ : Recipient views message / read receipt (blue ✓✓)
 ```
 
 ---
@@ -924,43 +660,16 @@ CREATE TABLE user_conversations (
 
 ### 群组消息队列架构
 
-```
-                    ┌───────────────────┐
-                    │   来自用户 A 的   │
-                    │   群组消息        │
-                    └────────┬──────────┘
-                             │
-                             ▼
-                    ┌───────────────────┐
-                    │   Kafka Topic:    │
-                    │   msg.group       │
-                    │   按 group_id     │
-                    │   分区            │
-                    └────────┬──────────┘
-                             │
-                    ┌────────▼──────────┐
-                    │   扇出 Worker     │
-                    │                   │
-                    │ 1. 从 Redis 缓存  │
-                    │    读取群组成员   │
-                    │                   │
-                    │ 2. 对每个成员：   │
-                    │                   │
-                    └────────┬──────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              │              │              │
-              ▼              ▼              ▼
-     ┌────────────┐ ┌────────────┐ ┌────────────┐
-     │ Kafka      │ │ Kafka      │ │ Kafka      │
-     │ Partition  │ │ Partition  │ │ Partition  │
-     │ 用户 B     │ │ 用户 C     │ │ 用户 D     │
-     └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
-           │              │              │
-           ▼              ▼              ▼
-     Chat Server 1   Chat Server 2   Chat Server 3
-     (用户 B 在线)   (用户 C 在线)   (用户 D 离线
-                                       -> 推送通知)
+```mermaid
+flowchart TD
+    Msg["Group Message from User A"] --> Topic["Kafka Topic: msg.group<br/>(partition by group_id)"]
+    Topic --> Worker["Fan-Out Worker<br/>1. Read group members from Redis cache<br/>2. Route to each member"]
+    Worker --> PB["Kafka Partition for User B"]
+    Worker --> PC["Kafka Partition for User C"]
+    Worker --> PD["Kafka Partition for User D"]
+    PB --> CS1["Chat Server 1<br/>(User B online)"]
+    PC --> CS2["Chat Server 2<br/>(User C online)"]
+    PD --> CS3["Chat Server 3<br/>(User D offline -> push notif)"]
 ```
 
 ### 群组元数据缓存
@@ -1059,24 +768,12 @@ Redis 中的群组元数据结构：
 
 ### 在线状态状态机
 
-```
-                    ┌──────────┐
-       ┌───────────>│  ONLINE  │<──────────────┐
-       │            └────┬─────┘               │
-       │                 │                     │
-       │                 │ 5 分钟无活动        │ 检测到用户活动
-       │                 │                     │
-       │                 ▼                     │
-       │            ┌──────────┐               │
-       │            │   AWAY   │───────────────┘
-       │            └────┬─────┘
-       │                 │
-  WS 连接               │ 60 秒无心跳
-       │                 │
-       │                 ▼
-       │            ┌──────────┐
-       └────────────│  OFFLINE │
-                    └──────────┘
+```mermaid
+stateDiagram-v2
+    ONLINE --> AWAY : No activity for 5 min
+    AWAY --> ONLINE : User activity detected
+    AWAY --> OFFLINE : No heartbeat for 60s
+    OFFLINE --> ONLINE : WS Connect
 ```
 
 ---
@@ -1085,97 +782,38 @@ Redis 中的群组元数据结构：
 
 ### 上传流程（预签名 URL）
 
-```
-用户 A             API Server           S3              CDN          缩略图
-                                                                     服务
-  |                     |                 |               |              |
-  | 1. POST /upload     |                 |               |              |
-  |    {type:"image",   |                 |               |              |
-  |     size: 2MB,      |                 |               |              |
-  |     mime:"jpeg"}    |                 |               |              |
-  |-------------------->|                 |               |              |
-  |                     |                 |               |              |
-  |                     | 2. 验证         |               |              |
-  |                     |    (大小限制，  |               |              |
-  |                     |     MIME 类型)  |               |              |
-  |                     |                 |               |              |
-  |                     | 3. 生成         |               |              |
-  |                     |    预签名       |               |              |
-  |                     |    PUT URL      |               |              |
-  |                     |    (15 分钟过期)|               |              |
-  |                     |---------------->|               |              |
-  |                     |                 |               |              |
-  | 4. 返回：           |                 |               |              |
-  |    {upload_url,     |                 |               |              |
-  |     media_id}       |                 |               |              |
-  |<--------------------|                 |               |              |
-  |                     |                 |               |              |
-  | 5. 直接 PUT         |                 |               |              |
-  |    到 S3            |                 |               |              |
-  |    (二进制上传)     |                 |               |              |
-  |-------------------------------------->|               |              |
-  |                     |                 |               |              |
-  |    6. 200 OK        |                 |               |              |
-  |<--------------------------------------|               |              |
-  |                     |                 |               |              |
-  | 7. POST /upload/    |                 |               |              |
-  |    complete          |                 |               |              |
-  |    {media_id}       |                 |               |              |
-  |-------------------->|                 |               |              |
-  |                     |                 |               |              |
-  |                     | 8. 触发         |               |              |
-  |                     |    缩略图       |               |              |
-  |                     |    生成         |               |              |
-  |                     |------------------------------------------>|
-  |                     |                 |               |              |
-  |                     |                 |               |  9. 生成     |
-  |                     |                 |               |     缩略图   |
-  |                     |                 |<-----------------------------|
-  |                     |                 |               |              |
-  |                     | 10. 返回 CDN    |               |              |
-  |                     |     媒体 URL    |               |              |
-  |                     |                 |               |              |
-  |                     |<----------------|               |              |
-  |                     |                 |               |              |
-  | 11. {media_url,     |                 |               |              |
-  |      thumb_url}     |                 |               |              |
-  |<--------------------|                 |               |              |
-  |                     |                 |               |              |
-  | 12. 通过 WebSocket  |                 |               |              |
-  |     发送带有        |                 |               |              |
-  |     media_url 的消息|                 |               |              |
-  |---> (正常消息流程)                    |               |              |
+```mermaid
+sequenceDiagram
+    participant UA as "User A"
+    participant API as "API Server"
+    participant S3
+    participant CDN
+    participant Thumb as "Thumbnail Service"
+
+    UA->>API: 1. POST /upload {type: "image", size: 2MB, mime: "jpeg"}
+    API->>API: 2. Validate (size limit, mime type)
+    API->>S3: 3. Generate pre-signed PUT URL (expires 15m)
+    API-->>UA: 4. Return {upload_url, media_id}
+    UA->>S3: 5. PUT directly to S3 (binary upload)
+    S3-->>UA: 6. 200 OK
+    UA->>API: 7. POST /upload/complete {media_id}
+    API->>Thumb: 8. Trigger thumbnail generation
+    Thumb->>S3: 9. Store generated thumbnail
+    S3-->>API: 10. Return CDN URL for media
+    API-->>UA: 11. {media_url, thumb_url}
+    Note over UA: 12. Send message with media_url via WebSocket
 ```
 
 ### 媒体处理流水线
 
-```
-┌─────────────┐     ┌──────────────────────────────────────────────┐
-│  原始上传   │     │          处理流水线                            │
-│  (S3 raw/)  │     │                                              │
-└──────┬──────┘     │  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
-       │            │  │  病毒   │  │  缩放   │  │  格式   │  │
-       └───────────>│  │  扫描   │─>│  /缩略图│─>│  转换   │  │
-                    │  │          │  │  生成    │  │  (WebP)  │  │
-                    │  └──────────┘  └──────────┘  └──────────┘  │
-                    │                                              │
-                    └──────────────────────┬───────────────────────┘
-                                           │
-                                           ▼
-                                  ┌──────────────┐
-                                  │ S3 processed/ │
-                                  │               │
-                                  │ original.jpg  │
-                                  │ thumb_200.jpg │
-                                  │ medium_800.jpg│
-                                  └───────┬───────┘
-                                          │
-                                          ▼
-                                  ┌──────────────┐
-                                  │     CDN      │
-                                  │  (全球       │
-                                  │   边缘缓存) │
-                                  └──────────────┘
+```mermaid
+flowchart LR
+    Raw["Raw Upload<br/>(S3 raw/)"] --> Scan["Virus Scan"]
+    subgraph Pipeline["Processing Pipeline"]
+        Scan --> Resize["Resize / Thumb Generate"] --> Convert["Format Convert (WebP)"]
+    end
+    Convert --> Proc["S3 processed/<br/>original.jpg, thumb_200.jpg, medium_800.jpg"]
+    Proc --> CDN["CDN<br/>(Global Edge Cache)"]
 ```
 
 ### 媒体大小限制与压缩
@@ -1431,65 +1069,22 @@ Cassandra 环与虚拟节点：
 
 ### 多数据中心配置
 
-```
-                         ┌───────────────────┐
-                         │    全球 DNS       │
-                         │   (GeoDNS /       │
-                         │    Anycast)       │
-                         └────────┬──────────┘
-                                  │
-                    路由到最近的数据中心
-                                  │
-           ┌──────────────────────┼──────────────────────┐
-           │                      │                      │
-           ▼                      ▼                      ▼
-┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-│   美东 DC        │  │   欧西 DC        │  │   亚太南 DC      │
-│                  │  │                  │  │                  │
-│ ┌──────────────┐ │  │ ┌──────────────┐ │  │ ┌──────────────┐ │
-│ │   Edge /     │ │  │ │   Edge /     │ │  │ │   Edge /     │ │
-│ │   CDN PoP    │ │  │ │   CDN PoP    │ │  │ │   CDN PoP    │ │
-│ └──────┬───────┘ │  │ └──────┬───────┘ │  │ └──────┬───────┘ │
-│        │         │  │        │         │  │        │         │
-│ ┌──────▼───────┐ │  │ ┌──────▼───────┐ │  │ ┌──────▼───────┐ │
-│ │  L4 Load     │ │  │ │  L4 Load     │ │  │ │  L4 Load     │ │
-│ │  Balancer    │ │  │ │  Balancer    │ │  │ │  Balancer    │ │
-│ └──┬────────┬──┘ │  │ └──┬────────┬──┘ │  │ └──┬────────┬──┘ │
-│    │        │    │  │    │        │    │  │    │        │    │
-│ ┌──▼──┐ ┌──▼──┐ │  │ ┌──▼──┐ ┌──▼──┐ │  │ ┌──▼──┐ ┌──▼──┐ │
-│ │Chat │ │API  │ │  │ │Chat │ │API  │ │  │ │Chat │ │API  │ │
-│ │Srvrs│ │Srvrs│ │  │ │Srvrs│ │Srvrs│ │  │ │Srvrs│ │Srvrs│ │
-│ │(WS) │ │(REST│ │  │ │(WS) │ │(REST│ │  │ │(WS) │ │(REST│ │
-│ └──┬──┘ └──┬──┘ │  │ └──┬──┘ └──┬──┘ │  │ └──┬──┘ └──┬──┘ │
-│    │        │    │  │    │        │    │  │    │        │    │
-│ ┌──▼────────▼──┐ │  │ ┌──▼────────▼──┐ │  │ ┌──▼────────▼──┐ │
-│ │   Kafka      │ │  │ │   Kafka      │ │  │ │   Kafka      │ │
-│ │   Cluster    │ │  │ │   Cluster    │ │  │ │   Cluster    │ │
-│ └──────┬───────┘ │  │ └──────┬───────┘ │  │ └──────┬───────┘ │
-│        │         │  │        │         │  │        │         │
-│ ┌──────▼───────┐ │  │ ┌──────▼───────┐ │  │ ┌──────▼───────┐ │
-│ │  Cassandra   │ │  │ │  Cassandra   │ │  │ │  Cassandra   │ │
-│ │  (3 副本)    │ │  │ │  (3 副本)    │ │  │ │  (3 副本)    │ │
-│ └──────────────┘ │  │ └──────────────┘ │  │ └──────────────┘ │
-│                  │  │                  │  │                  │
-│ ┌──────────────┐ │  │ ┌──────────────┐ │  │ ┌──────────────┐ │
-│ │ Redis Cluster│ │  │ │ Redis Cluster│ │  │ │ Redis Cluster│ │
-│ └──────────────┘ │  │ └──────────────┘ │  │ └──────────────┘ │
-│                  │  │                  │  │                  │
-│ ┌──────────────┐ │  │ ┌──────────────┐ │  │ ┌──────────────┐ │
-│ │  S3 Bucket   │ │  │ │  S3 Bucket   │ │  │ │  S3 Bucket   │ │
-│ └──────────────┘ │  │ └──────────────┘ │  │ └──────────────┘ │
-│                  │  │                  │  │                  │
-└──────────────────┘  └──────────────────┘  └──────────────────┘
-         │                     │                     │
-         │     跨区域复制                            │
-         │                     │                     │
-         │  ┌──────────────────┼───────────────┐     │
-         └──┤ Kafka MirrorMaker│               ├─────┘
-            │ Cassandra 异步   │               │
-            │ S3 跨区域        │               │
-            │ 复制             │               │
-            └──────────────────┘
+```mermaid
+flowchart TD
+    DNS["Global DNS<br/>(GeoDNS / Anycast)"] -->|"Route to nearest DC"| US & EU & AP
+
+    subgraph US["US-EAST DC"]
+        US_Stack["Edge/CDN PoP -> L4 LB -> Chat Servers (WS) &amp; API Servers (REST)<br/>-> Kafka Cluster -> Cassandra (RF=3), Redis Cluster, S3 Bucket"]
+    end
+    subgraph EU["EU-WEST DC"]
+        EU_Stack["Edge/CDN PoP -> L4 LB -> Chat Servers (WS) &amp; API Servers (REST)<br/>-> Kafka Cluster -> Cassandra (RF=3), Redis Cluster, S3 Bucket"]
+    end
+    subgraph AP["AP-SOUTH DC"]
+        AP_Stack["Edge/CDN PoP -> L4 LB -> Chat Servers (WS) &amp; API Servers (REST)<br/>-> Kafka Cluster -> Cassandra (RF=3), Redis Cluster, S3 Bucket"]
+    end
+
+    US <-->|"Cross-Region Replication (Kafka MirrorMaker, Cassandra Async, S3 CRR)"| EU
+    EU <-->|"Cross-Region Replication (Kafka MirrorMaker, Cassandra Async, S3 CRR)"| AP
 ```
 
 ### 每个数据中心的容量

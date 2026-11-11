@@ -411,120 +411,38 @@ Segment (immutable once written):
 
 ## 4. High-Level Architecture
 
-```
-+--------------------------------------------------+
-|                   Client Layer                   |
-|  Web App | Mobile App | Internal Services        |
-+--------------------------------------------------+
-                         |
-                         v
-+--------------------------------------------------+
-|              Load Balancer / API Gateway         |
-|        (rate limiting, auth, routing)            |
-+--------------------------------------------------+
-           |                          |
-           v                          v
-+---------------------+    +---------------------+
-|  Coordinating Nodes |    |   Ingest Nodes       |
-|  (Query Fan-out)    |    |   (Doc Processing)   |
-|  10 nodes           |    |   5 nodes            |
-+---------------------+    +---------------------+
-           |                          |
-           v                          v
-+--------------------------------------------------+
-|            Data Node Cluster (100 nodes)         |
-|                                                  |
-|  +----------+  +----------+  +----------+        |
-|  | Shard P0 |  | Shard P1 |  | Shard P2 |  ...  |
-|  | (primary)|  | (primary)|  | (primary)|        |
-|  +----------+  +----------+  +----------+        |
-|  +----------+  +----------+  +----------+        |
-|  | Shard R0 |  | Shard R1 |  | Shard R2 |  ...  |
-|  | (replica)|  | (replica)|  | (replica)|        |
-|  +----------+  +----------+  +----------+        |
-+--------------------------------------------------+
-           |
-           v
-+--------------------------------------------------+
-|            Master Node Cluster (3 nodes)         |
-|   Cluster state | Shard allocation | Election    |
-+--------------------------------------------------+
-
-Supporting Infrastructure:
-+------------------+  +------------------+  +------------------+
-|   Message Queue  |  |   Object Store   |  |   Config Store   |
-|   (Kafka)        |  |   (S3 / MinIO)   |  |   (ZooKeeper /   |
-|   Doc ingestion  |  |   Snapshot store |  |    etcd)         |
-+------------------+  +------------------+  +------------------+
+```mermaid
+flowchart TD
+    Clients["Client Layer<br/>Web App | Mobile App | Internal Services"] --> LB["Load Balancer / API Gateway<br/>(rate limiting, auth, routing)"]
+    LB --> Coord["Coordinating Nodes<br/>(Query Fan-out, 10 nodes)"] & Ingest["Ingest Nodes<br/>(Doc Processing, 5 nodes)"]
+    Coord & Ingest --> Data["Data Node Cluster (100 nodes)<br/>Primary Shards (P0, P1, P2...) + Replica Shards (R0, R1, R2...)"]
+    Data --> Master["Master Node Cluster (3 nodes)<br/>Cluster state | Shard allocation | Election"]
+    subgraph Support["Supporting Infrastructure"]
+        MQ["Message Queue (Kafka) - Doc ingestion"]
+        Obj["Object Store (S3 / MinIO) - Snapshot store"]
+        Cfg["Config Store (ZooKeeper / etcd)"]
+    end
 ```
 
 ### Write Path (Document Indexing)
 
-```
-Document Source
-     |
-     v
-+-------------+     +------------------+     +------------------+
-|  Producer   | --> |  Kafka Topic     | --> |  Ingest Node     |
-|  (API call  |     |  (doc-updates)   |     |  Pipeline        |
-|   or CDC)   |     +------------------+     |  - Enrich        |
-+-------------+                              |  - Validate      |
-                                             |  - Transform     |
-                                             +------------------+
-                                                      |
-                                                      v
-                                             +------------------+
-                                             |  Text Analysis   |
-                                             |  Pipeline        |
-                                             |  (per field)     |
-                                             +------------------+
-                                                      |
-                                                      v
-                                             +------------------+
-                                             |  Primary Shard   |
-                                             |  - Write to WAL  |
-                                             |  - Add to buffer |
-                                             |  - Refresh ->    |
-                                             |    new segment   |
-                                             +------------------+
-                                                      |
-                                                      v
-                                             +------------------+
-                                             |  Replica Shards  |
-                                             |  (parallel write)|
-                                             +------------------+
+```mermaid
+flowchart TD
+    Src["Document Source"] --> Prod["Producer (API call or CDC)"] --> Kafka["Kafka Topic (doc-updates)"]
+    Kafka --> Ingest["Ingest Node Pipeline<br/>- Enrich, Validate, Transform"]
+    Ingest --> Text["Text Analysis Pipeline<br/>(per field)"]
+    Text --> Pri["Primary Shard<br/>- Write to WAL<br/>- Add to buffer<br/>- Refresh -> new segment"]
+    Pri --> Rep["Replica Shards<br/>(parallel write)"]
 ```
 
 ### Read Path (Query Execution)
 
-```
-Client Query
-     |
-     v
-+------------------+
-|  Coordinating    |  1. Parse & validate query
-|  Node            |  2. Determine target shards
-|                  |  3. Fan out to N shards
-+------------------+
-     |   (scatter)
-     +----------+----------+----------+
-     v          v          v          v
- Shard 0    Shard 1    Shard 2    Shard N
-  Local       Local       Local       Local
-  Search      Search      Search      Search
-  Top-K       Top-K       Top-K       Top-K
-     |          |          |          |
-     +----------+----------+----------+
-                   | (gather)
-                   v
-            +------------------+
-            |  Coordinating    |  4. Merge & re-rank top-K
-            |  Node            |  5. Fetch _source for top hits
-            |                  |  6. Run aggregations
-            +------------------+
-                   |
-                   v
-              Response
+```mermaid
+flowchart TD
+    Q["Client Query"] --> Coord1["Coordinating Node<br/>1. Parse &amp; validate query<br/>2. Determine target shards<br/>3. Fan out (scatter) to N shards"]
+    Coord1 --> S0["Shard 0<br/>Local Search Top-K"] & S1["Shard 1<br/>Local Search Top-K"] & S2["Shard 2<br/>Local Search Top-K"] & SN["Shard N<br/>Local Search Top-K"]
+    S0 & S1 & S2 & SN -->|"gather"| Coord2["Coordinating Node<br/>4. Merge &amp; re-rank top-K<br/>5. Fetch _source for top hits<br/>6. Run aggregations"]
+    Coord2 --> Resp["Response"]
 ```
 
 ---
@@ -627,52 +545,14 @@ The analysis pipeline transforms raw text into indexable tokens.
 
 ### Pipeline Overview
 
-```
-Raw Input: "The Quick-Brown Foxes are RUNNING fast!"
-               |
-               v
-     +------------------+
-     |    Tokenizer     |  Split on whitespace/punctuation
-     +------------------+
-               |
-               v
-     ["The", "Quick", "Brown", "Foxes", "are", "RUNNING", "fast"]
-               |
-               v
-     +------------------+
-     |  Lowercase Filter|  Normalize case
-     +------------------+
-               |
-               v
-     ["the", "quick", "brown", "foxes", "are", "running", "fast"]
-               |
-               v
-     +------------------+
-     | Stop Word Filter |  Remove high-frequency words
-     +------------------+  (configurable per language)
-               |
-               v
-     ["quick", "brown", "foxes", "running", "fast"]
-               |
-               v
-     +------------------+
-     |  Stemmer/Lemma   |  Reduce to root form
-     +------------------+  (Snowball/Porter for English)
-               |
-               v
-     ["quick", "brown", "fox", "run", "fast"]
-               |
-               v
-     +------------------+
-     | Synonym Expander |  Expand synonyms (optional)
-     +------------------+
-               |
-               v
-     ["quick", "brown", "fox", "run", "fast",
-      "rapid", "swift"]          // "fast" -> also index synonyms
-               |
-               v
-     Final Tokens -> Written to Inverted Index
+```mermaid
+flowchart TD
+    Raw["Raw Input: 'The Quick-Brown Foxes are RUNNING fast!'"] --> Tok["Tokenizer (Split on whitespace/punctuation)<br/>['The', 'Quick', 'Brown', 'Foxes', 'are', 'RUNNING', 'fast']"]
+    Tok --> Lower["Lowercase Filter<br/>['the', 'quick', 'brown', 'foxes', 'are', 'running', 'fast']"]
+    Lower --> Stop["Stop Word Filter<br/>['quick', 'brown', 'foxes', 'running', 'fast']"]
+    Stop --> Stem["Stemmer / Lemmatizer (Snowball/Porter)<br/>['quick', 'brown', 'fox', 'run', 'fast']"]
+    Stem --> Syn["Synonym Expander<br/>['quick', 'brown', 'fox', 'run', 'fast', 'rapid', 'swift']"]
+    Syn --> Out["Final Tokens -> Written to Inverted Index"]
 ```
 
 ### Analyzer Types

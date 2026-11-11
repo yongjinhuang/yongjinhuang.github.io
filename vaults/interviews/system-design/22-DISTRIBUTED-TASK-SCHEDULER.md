@@ -341,94 +341,15 @@ CREATE TABLE namespaces (
 
 ## 4. High-Level Architecture
 
-```
-+------------------------------------------------------------------------------------------------------------------+
-|                                         DISTRIBUTED TASK SCHEDULER                                               |
-+------------------------------------------------------------------------------------------------------------------+
-
-  CLIENT LAYER
-  +----------------+   +----------------+   +----------------+   +----------------+
-  |   Web UI       |   |  CLI / SDK     |   |  REST API      |   |  gRPC API      |
-  | (Dashboard)    |   | (Python/Go/JS) |   |  Clients       |   |  Clients       |
-  +-------+--------+   +-------+--------+   +-------+--------+   +-------+--------+
-          |                    |                     |                    |
-          +--------------------+---------------------+--------------------+
-                                         |
-                                         v
-  API GATEWAY / LOAD BALANCER
-  +------------------------------------------------------------------+
-  |                        API Gateway                               |
-  |   Auth (JWT/OIDC) | Rate Limiting | Routing | Namespace Dispatch |
-  +--------+------------------------------------+--------------------+
-           |                                    |
-           v                                    v
-  +------------------+               +--------------------+
-  |  Frontend Service|               | Backend Service    |
-  |  (workflow CRUD, |               | (worker polling,   |
-  |   schedule mgmt) |               |  task dispatch)    |
-  +--------+---------+               +----------+---------+
-           |                                    |
-           +------------------------------------+
-                          |
-                          v
-  SCHEDULER CORE
-  +------------------------------------------------------------------+
-  |                    Scheduler Service (HA cluster)                 |
-  |  +------------------+  +--------------------+  +--------------+  |
-  |  | Cron Trigger     |  | Dependency Resolver|  |Leader Elector|  |
-  |  | (parse & fire)   |  | (DAG evaluator)    |  |(etcd-based)  |  |
-  |  +------------------+  +--------------------+  +--------------+  |
-  |  +------------------+  +--------------------+                    |
-  |  | Timeout Monitor  |  | Heartbeat Monitor  |                    |
-  |  | (detect expired) |  | (detect dead wkrs) |                    |
-  |  +------------------+  +--------------------+                    |
-  +------------------------------------------------------------------+
-                          |
-          +---------------+---------------+
-          |               |               |
-          v               v               v
-  TASK QUEUES (per task type / priority)
-  +----------------+  +----------------+  +----------------+
-  |  High Priority |  | Normal Queue   |  |  Low Priority  |
-  |  Queue         |  |                |  |  Queue         |
-  | (Redis/Kafka)  |  | (Redis/Kafka)  |  | (Redis/Kafka)  |
-  +-------+--------+  +-------+--------+  +-------+--------+
-          |                   |                    |
-          +-------------------+--------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-              v               v               v
-  WORKER POOLS
-  +----------------+  +----------------+  +----------------+
-  | Worker Pool A  |  | Worker Pool B  |  | Worker Pool C  |
-  | (Python tasks) |  | (Go tasks)     |  | (Java tasks)   |
-  | [W1][W2][W3]   |  | [W4][W5][W6]   |  | [W7][W8][W9]  |
-  +----------------+  +----------------+  +----------------+
-              |               |               |
-              +---------------+---------------+
-                              |
-                              v
-  PERSISTENCE LAYER
-  +------------------------------------------------------------------+
-  |  +------------------+  +------------------+  +--------------+   |
-  |  | PostgreSQL       |  |  Redis           |  | Object Store |   |
-  |  | (workflow state, |  |  (task queues,   |  | (S3/GCS)     |   |
-  |  |  event history,  |  |   cache, locks,  |  | (large I/O   |   |
-  |  |  schedules)      |  |   rate limits)   |  |  payloads)   |   |
-  |  +------------------+  +------------------+  +--------------+   |
-  |  +------------------+                                            |
-  |  |  Elasticsearch   |                                            |
-  |  | (workflow search,|                                            |
-  |  |  visibility)     |                                            |
-  |  +------------------+                                            |
-  +------------------------------------------------------------------+
-                              |
-                              v
-  OBSERVABILITY
-  +------------------------------------------------------------------+
-  |  Prometheus (metrics)  |  Jaeger (traces)  |  Grafana (dashboards) |
-  +------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    UI["Web UI (Dashboard)"] & CLI["CLI / SDK (Python/Go/JS)"] & REST["REST API Clients"] & GRPC["gRPC API Clients"] --> GW["API Gateway<br/>Auth (JWT/OIDC) | Rate Limiting | Routing | Namespace Dispatch"]
+    GW --> FE["Frontend Service<br/>(workflow CRUD, schedule mgmt)"] & BE["Backend Service<br/>(worker polling, task dispatch)"]
+    FE & BE --> Sched["Scheduler Service (HA Cluster)<br/>Cron Trigger | Dependency Resolver (DAG) | Leader Elector (etcd)<br/>Timeout Monitor | Heartbeat Monitor"]
+    Sched --> QHigh["High Priority Queue<br/>(Redis/Kafka)"] & QNorm["Normal Queue<br/>(Redis/Kafka)"] & QLow["Low Priority Queue<br/>(Redis/Kafka)"]
+    QHigh & QNorm & QLow --> WPA["Worker Pool A (Python)<br/>[W1][W2][W3]"] & WPB["Worker Pool B (Go)<br/>[W4][W5][W6]"] & WPC["Worker Pool C (Java)<br/>[W7][W8][W9]"]
+    WPA & WPB & WPC --> Persist["Persistence Layer<br/>PostgreSQL (state, history, schedules) | Redis (queues, locks)<br/>Object Store (S3/GCS) | Elasticsearch (visibility)"]
+    Persist --> Obs["Observability<br/>Prometheus (metrics) | Jaeger (traces) | Grafana (dashboards)"]
 ```
 
 ### Scheduler Service HA with Leader Election
@@ -459,37 +380,11 @@ A workflow is modeled as a Directed Acyclic Graph (DAG) where:
 - **Nodes** = individual tasks/activities
 - **Edges** = dependencies (A -> B means B depends on A)
 
-```
-Example: Order Fulfillment DAG
-
-     +----------------+
-     | validate_order |  (no dependencies)
-     +-------+--------+
-             |
-      +-------+-------+
-      |               |
-      v               v
-+----------+    +------------+
-|charge_   |    |reserve_    |
-|customer  |    |inventory   |
-+----+-----+    +-----+------+
-     |                |
-     +------+  +------+
-            |  |
-            v  v
-       +----------+
-       | ship_    |
-       | order    |
-       +----+-----+
-            |
-     +------+------+
-     |             |
-     v             v
-+--------+   +----------+
-|send_   |   |update_   |
-|confirm |   |analytics |
-|email   |   |          |
-+--------+   +----------+
+```mermaid
+flowchart TD
+    Val["validate_order<br/>(no dependencies)"] --> Charge["charge_customer"] & Res["reserve_inventory"]
+    Charge & Res --> Ship["ship_order"]
+    Ship --> Email["send_confirm_email"] & Analytics["update_analytics"]
 ```
 
 ### Topological Sort Algorithm (Kahn's Algorithm)
@@ -653,36 +548,11 @@ with DAG(
 
 ### Queue Design
 
-```
-+-----------------------------------------------------------------------+
-|                    TASK QUEUE SYSTEM                                   |
-+-----------------------------------------------------------------------+
-
-  Scheduler
-     |
-     | enqueue(task, priority, delay)
-     v
-+--------------------+
-|   Queue Router     |  -- routes by task_type, tenant, priority
-+----+---+---+-------+
-     |   |   |
-     v   v   v
-+--------+ +--------+ +--------+
-|Priority| |Priority| |Priority|
-| HIGH   | | NORMAL | | LOW    |
-| Queue  | | Queue  | | Queue  |
-+--------+ +--------+ +--------+
-  Redis ZSET (score = priority + timestamp)
-
-  +-- Delayed Task Queue (Redis ZSET, score = execute_at epoch) --+
-  |  Tasks with future execute_at sit here until time arrives     |
-  +------+--------------------------------------------------------+
-         |
-         | (moved to main queue when score <= now())
-         v
-+-------------------+
-|  Scheduler Loop   |  -- polls delayed queue every 100ms
-+-------------------+
+```mermaid
+flowchart TD
+    Sched["Scheduler"] -->|"enqueue(task, priority, delay)"| Router["Queue Router<br/>(routes by task_type, tenant, priority)"]
+    Router --> High["Priority HIGH Queue<br/>(Redis ZSET)"] & Norm["Priority NORMAL Queue<br/>(Redis ZSET)"] & Low["Priority LOW Queue<br/>(Redis ZSET)"]
+    Delayed["Delayed Task Queue<br/>(Redis ZSET, score = execute_at epoch)"] -->|"Moved to main queue when score &lt;= now()"| Loop["Scheduler Loop<br/>(polls delayed queue every 100ms)"]
 ```
 
 ### Redis-backed Priority Queue
@@ -1191,56 +1061,15 @@ class HeartbeatMonitor:
 
 ### State Transitions
 
-```
-                        +----------------------------+
-                        |         PENDING            |
-                        | (created, waiting for deps)|
-                        +-----------+----------------+
-                                    |
-                         all prerequisites met
-                                    |
-                                    v
-                        +----------------------------+
-                        |        SCHEDULED           |
-                        | (enqueued in task queue)   |
-                        +-----------+----------------+
-                                    |
-                            worker polls task
-                                    |
-                                    v
-                   +------------------------------+
-                   |          RUNNING              |
-                   |  (worker executing, sending   |
-                   |   heartbeats)                 |
-                   +---+-------+----------+--------+
-                       |       |          |
-           task success |  task failure  | heartbeat timeout
-                        |       |        | or worker crash
-                        v       v        |
-             +---------+   +--------+   |
-             | SUCCESS |   | FAILED |   |
-             +---------+   +----+---+   |
-                                |       |
-                      +---------v-------v---+
-                      |    TIMED_OUT /       |
-                      |    FAILED            |
-                      +----------+-----------+
-                                 |
-                    attempt < max_attempts?
-                    /                       \
-                  YES                        NO
-                   |                          |
-                   v                          v
-          +----------------+        +-------------------+
-          |   SCHEDULED    |        |  DEAD_LETTER_QUEUE |
-          | (retry with    |        |  (terminal state,  |
-          |  backoff delay)|        |   alerts fired)    |
-          +----------------+        +-------------------+
-
-Special states:
-  CANCELLED   -- workflow was manually cancelled
-  SKIPPED     -- conditional branch not taken (Airflow-style)
-  DEFERRED    -- task waiting for external signal/approval
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : Created, waiting for deps
+    PENDING --> SCHEDULED : All prerequisites met (enqueued)
+    SCHEDULED --> RUNNING : Worker polls task
+    RUNNING --> SUCCESS : Task success
+    RUNNING --> TIMED_OUT_OR_FAILED : Task failure / Heartbeat timeout
+    TIMED_OUT_OR_FAILED --> SCHEDULED : attempt < max_attempts (backoff retry)
+    TIMED_OUT_OR_FAILED --> DEAD_LETTER_QUEUE : attempt >= max_attempts (alert fired)
 ```
 
 ### State Machine Implementation
@@ -1383,17 +1212,20 @@ Solution: SAGA with compensating transactions.
 
 ### Choreography-based Saga
 
-```
-  OrderService          PaymentService        InventoryService       ShippingService
-      |                       |                      |                     |
-      |--order.created------->|                      |                     |
-      |                       |--payment.processed-->|                     |
-      |                       |                      |--inventory.reserved>|
-      |                       |                      |                  FAIL
-      |                       |                      |<-shipping.failed----|
-      |                       |<--inventory.released-|
-      |                       |<--payment.refunded---|
-      |<---order.failed-------|
+```mermaid
+sequenceDiagram
+    participant OS as "OrderService"
+    participant PS as "PaymentService"
+    participant IS as "InventoryService"
+    participant SS as "ShippingService"
+
+    OS->>PS: order.created
+    PS->>IS: payment.processed
+    IS->>SS: inventory.reserved
+    Note over SS: FAIL
+    SS-->>IS: shipping.failed
+    IS-->>PS: inventory.released
+    PS-->>OS: payment.refunded / order.failed
 ```
 
 ### Orchestration-based Saga (Recommended with Temporal)

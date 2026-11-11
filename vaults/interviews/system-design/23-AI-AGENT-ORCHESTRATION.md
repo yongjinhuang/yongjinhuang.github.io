@@ -491,65 +491,19 @@ guardrail_configs
 
 ## High-Level Architecture
 
-```
-+---------------------------------------------------+
-|                   Client Layer                    |
-|  Web App / SDK / API Clients / Webhook Receivers  |
-+---------------------------------------------------+
-                         |
-                    HTTPS / WSS
-                         |
-+---------------------------------------------------+
-|              API Gateway + Auth                   |
-|  Rate limiting | JWT validation | Org routing     |
-+---------------------------------------------------+
-          |              |              |
-    +-----+------+ +-----+------+ +----+-------+
-    | Agent API  | | Task API   | | Tool API   |
-    | Service    | | Service    | | Service    |
-    +-----+------+ +-----+------+ +----+-------+
-          |              |              |
-          +------+--------+------+------+
-                         |
-              +----------+-----------+
-              |   Orchestration Core  |
-              |                      |
-              | +------------------+ |
-              | | Task Scheduler   | |
-              | +------------------+ |
-              | | Agent Runner     | |
-              | +------------------+ |
-              | | ReAct Loop Ctrl  | |
-              | +------------------+ |
-              | | Multi-Agent Mgr  | |
-              | +------------------+ |
-              +----------+-----------+
-                /    |    |    \
-               /     |    |     \
-    +---------+  +---+--+ +--+----+ +----------+
-    |  Model  |  |Guard-| |Tool   | |  Memory  |
-    | Router  |  | rail | |Exec   | |  Layer   |
-    +---------+  +------+ |Engine | +----------+
-         |                +-------+      |
-    +----+----+                     +----+----+
-    |  LLM   |                     | Redis   |
-    | Proxy  |                     | (short) |
-    +----+---+                     | pgvect  |
-         |                         | (long)  |
-    +----+----------------+        +---------+
-    | Claude | GPT | Gem  |
-    | Sonnet | 4o  | Pro  |
-    +--------+-----+------+
-
-    +------------------------------------------+
-    |           Observability Stack             |
-    |  Token Tracker | Trace | Cost | Eval     |
-    +------------------------------------------+
-
-    +------------------------------------------+
-    |           Data Stores                    |
-    |  PostgreSQL | Redis | S3 | Vector DB     |
-    +------------------------------------------+
+```mermaid
+flowchart TD
+    Clients["Client Layer<br/>Web App / SDK / API Clients / Webhook Receivers"] -->|"HTTPS / WSS"| GW["API Gateway + Auth<br/>Rate limiting | JWT validation | Org routing"]
+    GW --> AgentAPI["Agent API Service"] & TaskAPI["Task API Service"] & ToolAPI["Tool API Service"]
+    AgentAPI & TaskAPI & ToolAPI --> Core["Orchestration Core<br/>Task Scheduler | Agent Runner | ReAct Loop Ctrl | Multi-Agent Mgr"]
+    Core --> Router["Model Router"] --> Proxy["LLM Proxy"] --> Models["Claude Sonnet | GPT-4o | Gemini Pro"]
+    Core --> Guard["Guardrail"]
+    Core --> ToolExec["Tool Exec Engine"]
+    Core --> Mem["Memory Layer"] --> MemStores["Redis (short-term) | pgvector (long-term)"]
+    subgraph Infra["Observability &amp; Data Stores"]
+        Obs["Observability Stack: Token Tracker | Trace | Cost | Eval"]
+        DS["Data Stores: PostgreSQL | Redis | S3 | Vector DB"]
+    end
 ```
 
 ### Request Flow Overview
@@ -608,25 +562,11 @@ An AI agent is a software system that perceives its environment, reasons about w
 
 ### The Perception-Reasoning-Action Loop
 
-```
-+----------------------------------------------------------+
-|                    AGENT CORE LOOP                       |
-|                                                          |
-|  +-----------+     +------------+     +------------+     |
-|  |           |     |            |     |            |     |
-|  | PERCEIVE  +---->+  REASON    +---->+   ACT      |     |
-|  |           |     |            |     |            |     |
-|  | - Input   |     | - LLM call |     | - Tool     |     |
-|  | - Memory  |     | - Planning |     |   invoc.   |     |
-|  | - Context |     | - Decision |     | - API call |     |
-|  |           |     |            |     | - Response |     |
-|  +-----+-----+     +------------+     +------+-----+     |
-|        ^                                     |           |
-|        |                                     |           |
-|        +-------------OBSERVE----------------+           |
-|                                                          |
-|         (Loop continues until goal achieved)             |
-+----------------------------------------------------------+
+```mermaid
+flowchart LR
+    P["PERCEIVE<br/>- Input<br/>- Memory<br/>- Context"] --> R["REASON<br/>- LLM call<br/>- Planning<br/>- Decision"]
+    R --> A["ACT<br/>- Tool invoc.<br/>- API call<br/>- Response"]
+    A -->|"OBSERVE (Loop until goal achieved)"| P
 ```
 
 ### Key Characteristics
@@ -794,35 +734,12 @@ The agent critiques its own output and iteratively improves it.
 
 A supervisor agent coordinates specialized sub-agents. The supervisor maintains the overall goal and delegates to specialists.
 
-```
-+------------------------------------------------------------+
-|                  Supervisor Pattern                        |
-|                                                            |
-|                  +-----------+                             |
-|                  | SUPERVISOR|                             |
-|                  |   AGENT   |                             |
-|                  | (Planner, |                             |
-|                  |  Router)  |                             |
-|                  +-----+-----+                             |
-|                        |                                   |
-|         +--------------+---------------+                   |
-|         |              |               |                   |
-|  +------+------+ +-----+------+ +------+------+            |
-|  |  RESEARCH   | |   CODE     | |  WRITING    |            |
-|  |    AGENT    | |   AGENT    | |    AGENT    |            |
-|  |             | |            | |             |            |
-|  | web_search  | | code_exec  | | format_text |            |
-|  | pdf_reader  | | debugger   | | cite_source |            |
-|  +------+------+ +-----+------+ +------+------+            |
-|         |              |               |                   |
-|         +--------------+---------------+                   |
-|                        |                                   |
-|                  Final Result                              |
-+------------------------------------------------------------+
-
-Communication Protocol:
-  Supervisor --> Sub-agent: {task, context, constraints, deadline}
-  Sub-agent --> Supervisor: {result, status, confidence, tool_log}
+```mermaid
+flowchart TD
+    Sup["SUPERVISOR AGENT<br/>(Planner, Router)"] --> Res["RESEARCH AGENT<br/>web_search, pdf_reader"]
+    Sup --> Code["CODE AGENT<br/>code_exec, debugger"]
+    Sup --> Write["WRITING AGENT<br/>format_text, cite_source"]
+    Res & Code & Write --> Out["Final Result"]
 ```
 
 ### Peer-to-Peer (Collaborative) Pattern
@@ -949,38 +866,10 @@ Tools are exposed to the LLM as JSON Schema-defined functions. The LLM generates
 
 ### Tool Registry Architecture
 
-```
-+--------------------------------------------------------------+
-|                    Tool Registry                             |
-|                                                              |
-|  +------------------+    +---------------------------+       |
-|  |  Tool Catalog DB |    |   Tool Metadata Store     |       |
-|  |                  |    |                           |       |
-|  | - Tool specs     |    | - Versioning              |       |
-|  | - Schemas        |    | - Deprecation             |       |
-|  | - Auth configs   |    | - Usage stats             |       |
-|  | - Rate limits    |    | - SLA metrics             |       |
-|  +------------------+    +---------------------------+       |
-|           |                           |                      |
-|           +----------+----------------+                      |
-|                      |                                       |
-|           +----------v-----------+                           |
-|           |   Tool Executor API  |                           |
-|           |                      |                           |
-|           | validate_input()     |                           |
-|           | route_to_sandbox()   |                           |
-|           | execute()            |                           |
-|           | validate_output()    |                           |
-|           | record_execution()   |                           |
-|           +----------+-----------+                           |
-|                      |                                       |
-|       +--------------+--------------+                        |
-|       |              |              |                        |
-|  +----+----+   +-----+----+  +------+----+                   |
-|  |  HTTP   |   |  Code    |  |  MCP      |                   |
-|  | Sandbox |   | Sandbox  |  | Connector |                   |
-|  +---------+   +----------+  +-----------+                   |
-+--------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Cat["Tool Catalog DB<br/>Tool specs, Schemas, Auth configs, Rate limits"] & Meta["Tool Metadata Store<br/>Versioning, Deprecation, Usage stats, SLA metrics"] --> API["Tool Executor API<br/>validate_input() -> route_to_sandbox() -> execute() -> validate_output() -> record_execution()"]
+    API --> HTTP["HTTP Sandbox"] & Code["Code Sandbox"] & MCP["MCP Connector"]
 ```
 
 ### Sandboxed Execution Architecture
@@ -1272,68 +1161,14 @@ ROUTING SIGNALS:
 
 ### Guardrail Pipeline
 
-```
-+--------------------------------------------------------------+
-|                    Guardrail Pipeline                        |
-|                                                              |
-|  User Input                                                  |
-|      |                                                       |
-|      v                                                       |
-|  +---+-------------------------------------------+           |
-|  |           INPUT GUARDRAIL                     |           |
-|  |                                               |           |
-|  | [1] Prompt Injection Detector                 |           |
-|  |     Pattern matching + LLM classifier         |           |
-|  |     Block: "Ignore previous instructions..."  |           |
-|  |                                               |           |
-|  | [2] Toxicity / Harm Classifier                |           |
-|  |     Model: fine-tuned classifier              |           |
-|  |     Threshold: > 0.8 = block                  |           |
-|  |                                               |           |
-|  | [3] PII Detector                              |           |
-|  |     Detect: SSN, CC, email, phone, address    |           |
-|  |     Action: redact or reject                  |           |
-|  |                                               |           |
-|  | [4] Topic Filter (blocked topics list)        |           |
-|  |     e.g., weapons, illegal activity           |           |
-|  |                                               |           |
-|  | [5] Length / Format Validator                 |           |
-|  |     Max input: 50,000 tokens                  |           |
-|  +---+-------------------------------------------+           |
-|      |                                                       |
-|  BLOCKED? --> Return rejection response                      |
-|      |                                                       |
-|      v                                                       |
-|  +---+------+                                                |
-|  |   LLM    |                                                |
-|  | Inference|                                                |
-|  +---+------+                                                |
-|      |                                                       |
-|      v                                                       |
-|  +---+-------------------------------------------+           |
-|  |           OUTPUT GUARDRAIL                    |           |
-|  |                                               |           |
-|  | [1] Toxicity / Harm Classifier                |           |
-|  |     Same model as input, tighter threshold    |           |
-|  |                                               |           |
-|  | [2] PII in Output Detector                    |           |
-|  |     Redact any PII that leaked through        |           |
-|  |                                               |           |
-|  | [3] Hallucination / Grounding Check           |           |
-|  |     For RAG tasks: is output grounded?        |           |
-|  |                                               |           |
-|  | [4] Format Validator                          |           |
-|  |     JSON schema, code syntax check            |           |
-|  |                                               |           |
-|  | [5] Refusal Detection                         |           |
-|  |     Did model refuse? Escalate if unexpected  |           |
-|  +---+-------------------------------------------+           |
-|      |                                                       |
-|  BLOCKED? --> Redact, reject, or human review queue          |
-|      |                                                       |
-|      v                                                       |
-|  Final Response to Client                                    |
-+--------------------------------------------------------------+
+```mermaid
+flowchart TD
+    In["User Input"] --> InGuard["INPUT GUARDRAIL<br/>[1] Prompt Injection Detector<br/>[2] Toxicity / Harm Classifier (&gt;0.8 block)<br/>[3] PII Detector (SSN, CC, email, phone)<br/>[4] Topic Filter (blocked topics)<br/>[5] Length / Format Validator (max 50K tokens)"]
+    InGuard -->|"BLOCKED"| RejIn["Return Rejection Response"]
+    InGuard -->|"PASSED"| LLM["LLM Inference"]
+    LLM --> OutGuard["OUTPUT GUARDRAIL<br/>[1] Toxicity / Harm Classifier<br/>[2] PII in Output Detector<br/>[3] Hallucination / Grounding Check<br/>[4] Format Validator (JSON/syntax)<br/>[5] Refusal Detection"]
+    OutGuard -->|"BLOCKED"| RejOut["Redact, Reject, or Human Review Queue"]
+    OutGuard -->|"PASSED"| Final["Final Response to Client"]
 ```
 
 ### Prompt Injection Defense Strategies
@@ -1458,49 +1293,15 @@ COST BUDGET:
 
 ### Approval Workflow Architecture
 
-```
-+--------------------------------------------------------------+
-|               Human-in-the-Loop Workflow                     |
-|                                                              |
-|  Agent execution running...                                  |
-|       |                                                      |
-|       v                                                      |
-|  +----+------------------------------------------+           |
-|  |  APPROVAL TRIGGER CONDITIONS                  |           |
-|  |                                               |           |
-|  | - Tool call exceeds risk threshold            |           |
-|  |   (e.g., send_email, delete_file, transfer$)  |           |
-|  | - Task confidence below threshold (< 0.7)     |           |
-|  | - Explicit approval_required tool called      |           |
-|  | - Cost per task exceeds soft limit            |           |
-|  | - Novel/unseen task pattern detected          |           |
-|  +----+------------------------------------------+           |
-|       |                                                      |
-|       v                                                      |
-|  Agent pauses, state persisted to DB                         |
-|       |                                                      |
-|       v                                                      |
-|  +----+------------------------------------------+           |
-|  |  APPROVAL REQUEST sent to human               |           |
-|  |                                               |           |
-|  | Channels: Email, Slack, In-app notification   |           |
-|  | Payload: task context, proposed action,       |           |
-|  |          risk assessment, confidence score    |           |
-|  +----+------------------------------------------+           |
-|       |                                                      |
-|       v                                                      |
-|  Human reviews via approval UI (< configurable timeout)      |
-|       |                                                      |
-|  +----+----+------------+                                     |
-|  |         |            |                                     |
-|  v         v            v                                     |
-|APPROVE   REJECT      TIMEOUT                                  |
-|  |         |            |                                     |
-|  v         v            v                                     |
-| Resume   Fail task  Auto-reject                               |
-| agent    with       (safe default)                           |
-|          reason                                              |
-+--------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Run["Agent execution running..."] --> Trig["APPROVAL TRIGGER CONDITIONS<br/>- Tool call exceeds risk threshold (send_email, delete_file, transfer$)<br/>- Task confidence &lt; 0.7<br/>- Explicit approval_required tool called<br/>- Cost exceeds soft limit / Novel pattern"]
+    Trig --> Pause["Agent pauses, state persisted to DB"]
+    Pause --> Req["APPROVAL REQUEST sent to human<br/>(Email, Slack, In-app with context, action, risk, confidence)"]
+    Req --> Rev{"Human Reviews<br/>(&lt; timeout)"}
+    Rev -->|"APPROVE"| Resume["Resume agent"]
+    Rev -->|"REJECT"| Fail["Fail task with reason"]
+    Rev -->|"TIMEOUT"| AutoRej["Auto-reject (safe default)"]
 ```
 
 ### Escalation Levels

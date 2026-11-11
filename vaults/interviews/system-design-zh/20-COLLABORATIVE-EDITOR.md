@@ -328,95 +328,25 @@ named_revisions (
 
 ### 系统组件
 
-```
-+------------------+       +------------------+       +------------------+
-|   浏览器 /       |       |   浏览器 /       |       |   浏览器 /       |
-|   客户端 A       |       |   客户端 B       |       |   客户端 C       |
-|                  |       |                  |       |                  |
-|  本地文档状态    |       |  本地文档状态    |       |  本地文档状态    |
-|  OT/CRDT 引擎   |       |  OT/CRDT 引擎   |       |  OT/CRDT 引擎   |
-|  待发送操作队列  |       |  待发送操作队列  |       |  待发送操作队列  |
-+--------+---------+       +--------+---------+       +--------+---------+
-         |  WebSocket                |  WebSocket                | WebSocket
-         |                          |                           |
-+--------v--------------------------v---------------------------v---------+
-|                           负载均衡器（L7）                              |
-|                     按 doc_id 粘性会话                                  |
-+--------+----------------------------------+---------------------------+-+
-         |                                  |                           |
-+--------v---------+              +---------v--------+       +----------v-------+
-|  协同服务器 1    |              |  协同服务器 2    |       |  协同服务器 N    |
-|                  |              |                  |       |                  |
-| - WS 管理器     |              | - WS 管理器     |       | - WS 管理器     |
-| - OT 转换       |              | - OT 转换       |       | - OT 转换       |
-| - 操作排序器    |              | - 操作排序器    |       | - 操作排序器    |
-| - 在线状态管理  |              | - 在线状态管理  |       | - 在线状态管理  |
-+--------+---------+              +---------+--------+       +----------+-------+
-         |                                  |                           |
-         +----------------------------------+---------------------------+
-                                            |
-              +-----------------------------+-----------------------------+
-              |                             |                             |
-   +----------v----------+    +-------------v-----------+   +------------v--------+
-   |    消息代理          |    |    操作存储（数据库）   |   |   快照存储          |
-   |    (Kafka/Redis Pub) |    |    (PostgreSQL /        |   |   (S3 / GCS)        |
-   |                     |    |     Spanner)             |   |                     |
-   | 主题：              |    |                         |   | - doc_snapshots/    |
-   | - doc.{docId}.ops   |    | - document_ops          |   |   {docId}/{rev}.json|
-   | - doc.{docId}.cursor|    | - document_snapshots    |   |                     |
-   +---------------------+    | - named_revisions       |   +---------------------+
-                              +-------------+-----------+
-                                            |
-                              +-------------v-----------+
-                              |    搜索 / 分析          |
-                              |    (Elasticsearch)      |
-                              |                         |
-                              | - 全文文档搜索          |
-                              | - 活动分析              |
-                              +-------------------------+
+```mermaid
+flowchart TD
+    CA["Browser / Client A<br/>Local Doc State | OT/CRDT Engine | Pending Op Queue"] & CB["Browser / Client B<br/>Local Doc State | OT/CRDT Engine | Pending Op Queue"] & CC["Browser / Client C<br/>Local Doc State | OT/CRDT Engine | Pending Op Queue"] -->|"WebSocket"| LB["Load Balancer (L7)<br/>Sticky sessions by doc_id"]
+    LB --> CS1["Collab Server 1<br/>WS Manager | OT Transform | Op Sequencer | Presence Mgr"]
+    LB --> CS2["Collab Server 2<br/>WS Manager | OT Transform | Op Sequencer | Presence Mgr"]
+    LB --> CSN["Collab Server N<br/>WS Manager | OT Transform | Op Sequencer | Presence Mgr"]
+    CS1 & CS2 & CSN --> Broker["Message Broker (Kafka / Redis Pub/Sub)<br/>Topics: doc.{docId}.ops, doc.{docId}.cursor"]
+    CS1 & CS2 & CSN --> OpDB["Op Storage DB (PostgreSQL / Spanner)<br/>document_ops, document_snapshots, named_revisions"]
+    CS1 & CS2 & CSN --> Snap["Snapshot Store (S3 / GCS)<br/>doc_snapshots/{docId}/{rev}.json"]
+    OpDB --> ES["Search / Analytics (Elasticsearch)<br/>Full-text doc search, activity analytics"]
 ```
 
 ### 编辑操作的请求流程
 
-```
-客户端 A 输入 "H"
-       |
-       | 1. 本地应用（乐观，立即执行）
-       v
-  本地文档 = "Hello H"   （即时，0ms）
-       |
-       | 2. 通过 WebSocket 发送操作
-       v
-  { type:"op", rev:42, ops:[{type:"insert",pos:6,chars:"H"}] }
-       |
-       v
-+------+-------+
-| 协同服务器   |
-|              |
-| 3. 锁定文档  |  （分布式锁或每文档单写入器）
-|    修订版本  |
-|              |
-| 4. 转换      |  对自 rev=42 以来提交的所有操作进行转换
-|    传入的    |
-|    操作      |
-|              |
-| 5. 分配      |  rev = 43
-|    新修订号  |
-|              |
-| 6. 持久化    |  写入 document_ops（rev=43）
-|    到数据库  |  （同步，在确认之前）
-|              |
-| 7. 确认      |  { type:"ack", rev:43 }
-|    客户端 A  |
-|              |
-| 8. 扇出      |  将转换后的操作广播给客户端 B、C
-|    到对等端  |
-+--------------+
-
-客户端 B 和 C 收到：
-  { type:"op", authorId:"A", rev:43, ops:[...已转换...] }
-  -> 应用到本地状态
-  -> 将本地修订版本更新到 43
+```mermaid
+flowchart TD
+    Type["Client A types 'H'"] -->|"1. Apply locally (optimistic, 0ms)"| Local["Local doc = 'Hello H'"]
+    Local -->|"2. Send op over WebSocket {type:'op', rev:42}"| CS["Collab Server:<br/>3. Lock doc revision<br/>4. Transform incoming op against ops since rev=42<br/>5. Assign new rev = 43<br/>6. Persist to document_ops (sync)<br/>7. Ack {type:'ack', rev:43} to Client A<br/>8. Fan out transformed op to Clients B, C"]
+    CS --> Peers["Clients B and C receive transformed op -> Apply locally &amp; update rev to 43"]
 ```
 
 ### 文档加载流程
@@ -773,42 +703,21 @@ Google Docs 使用基于 Jupiter 协议的中央服务器 OT。关键方面：
 
 ### WebSocket 连接管理
 
-```
-+----------+                +-------------+             +----------+
-|  客户端  |                | 负载均衡器  |             |  协同    |
-|          |                | （粘性）    |             |  服务器  |
-+----+-----+                +------+-------+             +----+-----+
-     |                             |                          |
-     | HTTP 升级到 WebSocket       |                          |
-     +----------------------------->                          |
-     |                             | 路由到服务器             |
-     |                             | 按 docId 亲和性         |
-     |                             +------------------------->|
-     |                             |                          |
-     |<=========== WS 已连接 ================================ |
-     |                             |                          |
-     | 发送：{ type:"join",        |                          |
-     |   docId, rev:543, token }   |                          |
-     +=============================================>          |
-     |                             |                          |
-     |                             |         验证 token       |
-     |                             |         检查权限         |
-     |                             |         加载文档状态     |
-     |                             |                          |
-     |<====== { type:"welcome",    |                          |
-     |   users:[...], rev:543 } ===|                          |
-     |                             |                          |
-     |  [编辑开始]                 |                          |
-     |                             |                          |
-     | 每 30 秒心跳 ping           |                          |
-     +=============================================>          |
-     |<============================================ pong      |
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant LB as "Load Balancer (sticky)"
+    participant S as "Collab Server"
 
-重连处理：
-  - 客户端存储 lastKnownRev
-  - 重连时：使用 ?rev=lastKnownRev 连接
-  - 服务器发送从 lastKnownRev+1 到当前的操作
-  - 如果间隔太大（> 阈值）：服务器发送快照
+    C->>LB: HTTP Upgrade to WebSocket
+    LB->>S: Route to server with docId affinity
+    S-->>C: WS Connected
+    C->>S: Send {type: "join", docId, rev: 543, token}
+    Note over S: Validate token, check permission, load doc state
+    S-->>C: {type: "welcome", users: [...], rev: 543}
+    Note over C,S: EDITING BEGINS
+    C->>S: Heartbeat ping (every 30s)
+    S-->>C: pong
 ```
 
 ### 连接亲和性和扇出
@@ -1613,34 +1522,9 @@ Redis 集群缓存：
 
 ### 多区域全球架构
 
-```
-+------------------+         +------------------+         +------------------+
-| 区域：US-East    |         | 区域：EU-West    |         | 区域：AP-East    |
-|                  |         |                  |         |                  |
-| 负载均衡器       |         | 负载均衡器       |         | 负载均衡器       |
-| 协同服务器       |         | 协同服务器       |         | 协同服务器       |
-| Redis（在线状态）|         | Redis（在线状态）|         | Redis（在线状态）|
-|                  |         |                  |         |                  |
-| 主数据库分片     |         |                  |         |                  |
-|（用于 US 文档）  |         |                  |         |                  |
-+--------+---------+         +--------+---------+         +--------+---------+
-         |                            |                            |
-         |     跨区域同步             |                            |
-         +----------------------------+----------------------------+
-                                      |
-                          +-----------v----------+
-                          | 全局操作日志         |
-                          | (Spanner / CockroachDB|
-                          |  具有全局强           |
-                          |  一致性)              |
-                          +----------------------+
-
-文档归属于某个区域。
-  - 如果文档所有者在美国，文档归属到 US-East。
-  - 编辑美国文档的欧盟用户：他们的 WS 连接到欧盟服务器，
-    欧盟服务器代理到 US-East 进行操作排序。
-  - 欧盟用户在美国归属文档上增加约 100ms 延迟。
-  - 对于全球协作：接受延迟或使用异步 CRDT 同步。
+```mermaid
+flowchart TD
+    US["Region: US-East<br/>Load Balancer | Collab Servers | Redis (presence)<br/>Primary DB shard (for US docs)"] & EU["Region: EU-West<br/>Load Balancer | Collab Servers | Redis (presence)"] & AP["Region: AP-East<br/>Load Balancer | Collab Servers | Redis (presence)"] <-->|"Cross-region sync"| Global["Global Op Log<br/>(Spanner / CockroachDB with global strong consistency)"]
 ```
 
 ---

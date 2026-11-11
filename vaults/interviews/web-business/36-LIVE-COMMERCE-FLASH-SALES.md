@@ -76,7 +76,7 @@ flowchart TD
     WaitingRoom -->|Selected Winner / Admitted| LuaReserve["Atomic Redis Lua Reservation<br/>(Check User Quota -> DECR Stock -> Set Cart-Hold TTL=90s)"]
 
     LuaReserve -->|Stock == 0| Waitlist
-    LuaReserve -->|Lease Granted (reservation_id)| AsyncOrder["Enqueue Order Creation &<br/>Immediate Pre-Auth Payment Capture"]
+    LuaReserve -->|"Lease Granted (reservation_id)"| AsyncOrder["Enqueue Order Creation &<br/>Immediate Pre-Auth Payment Capture"]
 
     AsyncOrder -->|Capture Success within TTL| CommitDB["Commit Order to RDBMS &<br/>Burn Reservation Lease"]
     AsyncOrder -->|Card Decline or 90s TTL Expired| ExpirySweeper["TTL Expiry Sweeper Reclaims Unit<br/>(INCR Stock -> Trigger Next Restock Wave)"]

@@ -30,7 +30,7 @@ flowchart TB
         BuyerA["海外买家<br/>支付 €120 (含 €20 VAT)"] -->|1. 结账| MerchA["你的公司<br/>(账单与税票上的法定卖家)"]
         MerchA -->|2. 实时计税| TaxEngine["税务引擎 (Stripe Tax / Avalara)<br/>屋顶级地理编码 + VIES 校验"]
         MerchA -->|3. 本地收单路由| PSP["全球网关 (Adyen / Stripe)<br/>走欧盟/英国/巴西本地收单主体"]
-        PSP -->|4. 净额清算 (€116.50)| MerchBank["你的多币种资金池"]
+        PSP -->|"4. 净额清算 (€116.50)"| MerchBank["你的多币种资金池"]
         MerchBank -->|5. 自行在 40+ 税区申报| TaxAuth["美国各州 / 欧盟 OSS / 英国税局<br/>(自行承担税务稽查与罚款风险!)"]
     end
 
@@ -38,7 +38,7 @@ flowchart TB
         BuyerB["海外买家<br/>支付 €120 (含 €20 VAT)"] -->|1. 向 MoR 购买| MoREntity["名义商户 (MoR)<br/>(账单与发票上的法定转售卖家)"]
         MoREntity -->|2. MoR 自持全球主体、<br/>LPM、反欺诈与计税| MoRAcq["MoR 本地收单与全球税号矩阵"]
         MoREntity -->|3. MoR 申报缴纳 €20 VAT<br/>并兜底税务审计责任| TaxAuthB["全球各国税务局"]
-        MoREntity -->|4. 批发价结算 (€93.00)<br/>每月单笔 B2B 汇款| YourCo["你的公司<br/>(零海外报税、零海外主体维护)"]
+        MoREntity -->|"4. 批发价结算 (€93.00)<br/>每月单笔 B2B 汇款"| YourCo["你的公司<br/>(零海外报税、零海外主体维护)"]
     end
 ```
 

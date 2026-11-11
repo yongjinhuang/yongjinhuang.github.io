@@ -237,65 +237,15 @@ tenant_initech_db -> PostgreSQL Instance 3 (us-east-1)
 
 ## 4. High-Level Architecture
 
-```
-+------------------------------------------------------------------+
-|                         CLIENTS                                    |
-|  [Web App]    [Mobile App]    [API Clients]    [Admin Console]    |
-+----------|-----------|-------------|----------------|-------------+
-           |           |             |                |
-           v           v             v                v
-+------------------------------------------------------------------+
-|                    API GATEWAY / LOAD BALANCER                     |
-|  - TLS termination                                                |
-|  - Tenant identification (subdomain / header / JWT)               |
-|  - Rate limiting (per-tenant)                                     |
-|  - Request routing                                                |
-+------------------------------------------------------------------+
-           |
-           v
-+------------------------------------------------------------------+
-|                     TENANT CONTEXT MIDDLEWARE                      |
-|  - Extract tenant_id from request                                 |
-|  - Validate tenant status (active / suspended)                    |
-|  - Set database connection / schema                               |
-|  - Inject tenant context into request                             |
-+------------------------------------------------------------------+
-           |
-           +------------------+------------------+
-           |                  |                  |
-           v                  v                  v
-+------------------+ +------------------+ +------------------+
-|   AUTH SERVICE   | |   APP SERVICES   | |  CONFIG SERVICE  |
-| - JWT issuance   | | - Business logic | | - Feature flags  |
-| - SSO / SAML     | | - CRUD ops       | | - Branding       |
-| - RBAC           | | - Domain logic   | | - Plan limits    |
-| - Session mgmt   | | - Webhooks       | | - Custom fields  |
-+------------------+ +------------------+ +------------------+
-           |                  |                  |
-           v                  v                  v
-+------------------------------------------------------------------+
-|                      DATA ACCESS LAYER                            |
-|  - Tenant-aware query builder (auto-inject tenant_id)            |
-|  - Connection pool management (per-tenant or shared)              |
-|  - Read replica routing                                           |
-+------------------------------------------------------------------+
-           |                  |                  |
-           v                  v                  v
-+------------------+ +------------------+ +------------------+
-|   PostgreSQL     | |     Redis        | |  Elasticsearch   |
-| (tenant data)    | | (cache, sessions)| | (search, logs)   |
-+------------------+ +------------------+ +------------------+
-           |
-           v
-+------------------------------------------------------------------+
-|                      EVENT BUS (Kafka)                            |
-+------------------------------------------------------------------+
-     |              |               |              |
-     v              v               v              v
-+-----------+ +------------+ +------------+ +-------------+
-| Usage     | | Audit Log  | | Webhook    | | Analytics   |
-| Metering  | | Processor  | | Dispatcher | | Pipeline    |
-+-----------+ +------------+ +------------+ +-------------+
+```mermaid
+flowchart TD
+    Clients["CLIENTS<br/>[Web App] | [Mobile App] | [API Clients] | [Admin Console]"] --> GW["API GATEWAY / LOAD BALANCER<br/>TLS termination, Tenant ID (subdomain/header/JWT), Per-tenant rate limit"]
+    GW --> Ctx["TENANT CONTEXT MIDDLEWARE<br/>Extract tenant_id, Validate status (active/suspended), Set DB connection/schema"]
+    Ctx --> Auth["AUTH SERVICE<br/>JWT issuance, SSO/SAML, RBAC, Session mgmt"] & App["APP SERVICES<br/>Business logic, CRUD ops, Domain logic, Webhooks"] & Cfg["CONFIG SERVICE<br/>Feature flags, Branding, Plan limits, Custom fields"]
+    Auth & App & Cfg --> DAL["DATA ACCESS LAYER<br/>Tenant-aware query builder (auto-inject tenant_id), Connection pool mgmt, Read replica routing"]
+    DAL --> PG["PostgreSQL (tenant data)"] & Redis["Redis (cache, sessions)"] & ES["Elasticsearch (search, logs)"]
+    PG --> Kafka["EVENT BUS (Kafka)"]
+    Kafka --> M1["Usage Metering"] & M2["Audit Log Processor"] & M3["Webhook Dispatcher"] & M4["Analytics Pipeline"]
 ```
 
 ---
@@ -461,44 +411,15 @@ class TenantAwareRepository:
 
 ### Tenant Identification Flow
 
-```
-Request arrives
-       |
-       v
-+------+--------+
-| Extract tenant |
-| identifier     |
-+------+---------+
-       |
-       +-------- Subdomain? ---> acme.app.com --> lookup slug "acme"
-       |
-       +-------- JWT claim? ---> decode token --> extract tenant_id
-       |
-       +-------- Header? ------> X-Tenant-ID --> validate format
-       |
-       v
-+------+---------+
-| Lookup tenant  |  <-- Redis cache (TTL: 5 min)
-| metadata       |  <-- Fallback: PostgreSQL
-+------+---------+
-       |
-       v
-+------+---------+
-| Validate       |
-| - Status=active|
-| - Plan limits  |
-| - Region match |
-+------+---------+
-       |
-       v
-+------+---------+
-| Route to data  |
-| source         |
-+------+---------+
-       |
-       +----> Shared pool (free/starter)
-       +----> Schema-specific pool (professional)
-       +----> Dedicated connection (enterprise)
+```mermaid
+flowchart TD
+    Req["Request arrives"] --> Ext["Extract tenant identifier<br/>- Subdomain (acme.app.com)<br/>- JWT claim (tenant_id)<br/>- Header (X-Tenant-ID)"]
+    Ext --> Lookup["Lookup tenant metadata<br/>(Redis cache TTL 5m -> Fallback PostgreSQL)"]
+    Lookup --> Val["Validate<br/>- Status = active<br/>- Plan limits<br/>- Region match"]
+    Val --> Route["Route to data source"]
+    Route --> Shared["Shared pool (free/starter)"]
+    Route --> Schema["Schema-specific pool (professional)"]
+    Route --> Ded["Dedicated connection (enterprise)"]
 ```
 
 ### Connection Pool Management
@@ -1029,45 +950,21 @@ class HotTenantDetector:
 
 ## 13. Deployment Architecture
 
-```
-+------------------------------------------------------------------+
-|                    MULTI-REGION DEPLOYMENT                         |
-+------------------------------------------------------------------+
-|                                                                    |
-|  Region: US-East-1 (Primary)                                      |
-|  ┌──────────────────────────────────────────────────────────────┐ |
-|  │  Kubernetes Cluster                                          │ |
-|  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │ |
-|  │  │ API GW   │ │ App Pods │ │ Auth Pods│ │ Config   │      │ |
-|  │  │ (Nginx)  │ │ (x20)   │ │ (x5)    │ │ Pods (x3)│      │ |
-|  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │ |
-|  │  ┌──────────┐ ┌──────────┐ ┌──────────┐                    │ |
-|  │  │ Worker   │ │ Billing  │ │ Export   │                    │ |
-|  │  │ Pods(x10)│ │ Pods (x3)│ │ Pods(x3) │                    │ |
-|  │  └──────────┘ └──────────┘ └──────────┘                    │ |
-|  └──────────────────────────────────────────────────────────────┘ |
-|  ┌──────────────────────────────────────────────────────────────┐ |
-|  │  Data Layer                                                  │ |
-|  │  ┌──────────────┐ ┌──────────┐ ┌───────────┐ ┌──────────┐ │ |
-|  │  │ PostgreSQL   │ │ Redis    │ │ Elastic-  │ │ Kafka    │ │ |
-|  │  │ Primary +    │ │ Cluster  │ │ search    │ │ Cluster  │ │ |
-|  │  │ 3 Replicas   │ │ (6 nodes)│ │ (3 nodes) │ │ (6 nodes)│ │ |
-|  │  └──────────────┘ └──────────┘ └───────────┘ └──────────┘ │ |
-|  └──────────────────────────────────────────────────────────────┘ |
-|                                                                    |
-|  Region: EU-West-1 (Data Residency)                               |
-|  ┌──────────────────────────────────────────────────────────────┐ |
-|  │  Same topology for EU tenants (GDPR data residency)          │ |
-|  │  Cross-region replication for platform-level data only       │ |
-|  └──────────────────────────────────────────────────────────────┘ |
-|                                                                    |
-|  Enterprise Tenants (Dedicated)                                    |
-|  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             |
-|  │ Tenant A     │ │ Tenant B     │ │ Tenant C     │             |
-|  │ Dedicated DB │ │ Dedicated DB │ │ Dedicated DB │             |
-|  │ (us-east-1)  │ │ (eu-west-1)  │ │ (ap-south-1) │             |
-|  └──────────────┘ └──────────────┘ └──────────────┘             |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph US["Region: US-East-1 (Primary)"]
+        US_K8s["Kubernetes Cluster:<br/>API GW (Nginx) | App Pods (x20) | Auth Pods (x5) | Config Pods (x3)<br/>Worker Pods (x10) | Billing Pods (x3) | Export Pods (x3)"]
+        US_Data["Data Layer:<br/>PostgreSQL (Primary + 3 Replicas) | Redis (6 nodes) | Elasticsearch (3 nodes) | Kafka (6 nodes)"]
+        US_K8s --> US_Data
+    end
+    subgraph EU["Region: EU-West-1 (Data Residency)"]
+        EU_Topo["Same topology for EU tenants (GDPR data residency)<br/>Cross-region replication for platform-level data only"]
+    end
+    subgraph Ent["Enterprise Tenants (Dedicated)"]
+        E1["Tenant A: Dedicated DB (us-east-1)"]
+        E2["Tenant B: Dedicated DB (eu-west-1)"]
+        E3["Tenant C: Dedicated DB (ap-south-1)"]
+    end
 ```
 
 ---

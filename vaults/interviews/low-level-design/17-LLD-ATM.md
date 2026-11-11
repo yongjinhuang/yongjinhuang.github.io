@@ -148,7 +148,7 @@ stateDiagram-v2
     PIN_VALIDATED --> IDLE : cancel()
     PIN_VALIDATED --> TXN_SELECTED : select_transaction()
     TXN_SELECTED --> IDLE : cancel() / execute_transaction() complete
-````
+```
 
 **Transitions:**
 

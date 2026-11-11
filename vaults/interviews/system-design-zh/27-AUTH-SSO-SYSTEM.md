@@ -434,84 +434,27 @@ CREATE TABLE social_identities (
 
 ## 5. 高层架构
 
-```
-                          +------------------+
-                          |   DNS / CDN      |
-                          |  (Cloudflare)    |
-                          +--------+---------+
-                                   |
-                          +--------+---------+
-                          |   全局负载        |
-                          |   均衡器          |
-                          | (Anycast IP,     |
-                          |  GeoDNS 路由)    |
-                          +---+---+---+------+
-                              |   |   |
-              +---------------+   |   +---------------+
-              |                   |                   |
-     +--------+--------+  +-------+-------+  +--------+--------+
-     | 区域：US-EAST   |  | 区域：EU      |  | 区域：AP-EAST   |
-     | 认证服务        |  | 认证服务       |  | 认证服务         |
-     | 集群            |  | 集群          |  | 集群             |
-     +-----------------+  +---------------+  +-----------------+
-              |                   |                   |
-     +--------+---------+---------+---------+---------+-------+
-     |                                                        |
-     |                    共享基础设施                          |
-     |                                                        |
-     |  +-------------------+       +----------------------+  |
-     |  | Redis 集群         |       | PostgreSQL 集群       |  |
-     |  | （会话存储）        |       | （用户、会话、         |  |
-     |  | 主节点 + 2 个读     |       | 角色、审计）          |  |
-     |  | 副本               |       | 主节点 + 副本         |  |
-     |  +-------------------+       +----------------------+  |
-     |                                                        |
-     |  +-------------------+       +----------------------+  |
-     |  | 消息队列           |       | 密钥管理器            |  |
-     |  | (Kafka)           |       | (HashiCorp Vault /   |  |
-     |  | 审计事件、          |       |  AWS KMS)            |  |
-     |  | 邮件触发           |       | JWT 签名密钥、        |  |
-     |  +-------------------+       | 数据库凭证            |  |
-     |                              +----------------------+  |
-     +--------------------------------------------------------+
+```mermaid
+flowchart TD
+    DNS["DNS / CDN (Cloudflare)"] --> GLB["Global Load Balancer<br/>(Anycast IP, GeoDNS routing)"]
+    GLB --> US["Region: US-EAST<br/>Auth Service Cluster"] & EU["Region: EU<br/>Auth Service Cluster"] & AP["Region: AP-EAST<br/>Auth Service Cluster"]
+    US & EU & AP --> Shared
+    subgraph Shared["Shared Infrastructure"]
+        Redis["Redis Cluster (Session Store)<br/>Primary + 2 Read Replicas"]
+        PG["PostgreSQL Cluster (Users, Sessions, Roles, Audit)<br/>Primary + Replicas"]
+        Kafka["Message Queue (Kafka)<br/>Audit events, Email triggers"]
+        Vault["Secrets Manager (HashiCorp Vault / AWS KMS)<br/>JWT signing keys, DB credentials"]
+    end
 ```
 
 ### 认证服务内部架构
 
-```
-+-------------------------------------------------------+
-|                   认证服务 Pod                          |
-|                                                       |
-|  +-------------+  +-----------+  +-----------------+ |
-|  | REST API    |  | OAuth 2.0 |  | SAML 2.0        | |
-|  | 处理器       |  | 处理器     |  | 处理器           | |
-|  +------+------+  +-----+-----+  +--------+--------+ |
-|         |               |                 |           |
-|         +---------------+-----------------+           |
-|                         |                             |
-|              +----------+----------+                  |
-|              |   认证核心逻辑       |                  |
-|              |                     |                  |
-|    +---------+---+   +----------+  |                  |
-|    | 密码         |   | 令牌     |  |                  |
-|    | 验证器       |   | 签发器 / |  |                  |
-|    | (Argon2id)  |   | 验证器   |  |                  |
-|    +-------------+   +----------+  |                  |
-|    +---------+---+   +----------+  |                  |
-|    | MFA         |   | 会话     |  |                  |
-|    | 验证器       |   | 管理器   |  |                  |
-|    | (TOTP/FIDO2)|   |          |  |                  |
-|    +-------------+   +----------+  |                  |
-|              |                     |                  |
-|              +----------+----------+                  |
-|                         |                             |
-|     +---------+---------+---------+---------+         |
-|     |         |         |         |         |         |
-|  +--+---+ +---+---+ +---+---+ +---+---+ +--+----+    |
-|  |Redis | |Postgres| |Kafka | |Vault  | |速率   |    |
-|  |客户端| |客户端   | |生产者 | |客户端  | |限制器 |    |
-|  +------+ +--------+ +------+ +-------+ +-------+    |
-+-------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Pod["Auth Service Pod"]
+        REST["REST API Handler"] & OAuth["OAuth 2.0 Handler"] & SAML["SAML 2.0 Handler"] --> Core["Auth Core Logic<br/>Password Verifier (Argon2id) | Token Issuer/Verifier<br/>MFA Validator (TOTP/FIDO2) | Session Manager"]
+        Core --> RC["Redis Client"] & PGC["Postgres Client"] & KC["Kafka Producer"] & VC["Vault Client"] & RL["Rate Limiter"]
+    end
 ```
 
 ---
@@ -610,38 +553,18 @@ ES256 是首选：更小的令牌、更快的验证、每比特更强的安全�
 
 ### 令牌轮换策略
 
-```
-客户端                             认证服务器
-  |                                   |
-  |-- POST /auth/refresh ------------>|
-  |   { refresh_token: "rt_OLD" }     |
-  |                                   |
-  |                   +---------------+
-  |                   | 1. 在数据库中验证 rt_OLD 的哈希
-  |                   | 2. 检查会话未被撤销
-  |                   | 3. 检查会话未过期
-  |                   | 4. 签发新的 access_token（JWT）
-  |                   | 5. 签发新的 rt_NEW
-  |                   | 6. 原子操作：
-  |                   |    - 将 rt_OLD 标记为已使用/已轮换
-  |                   |    - 将 rt_NEW 的哈希存储到数据库
-  |                   +---------------+
-  |                                   |
-  |<-- 200 OK -----------------------|
-  |   { access_token: "...",          |
-  |     refresh_token: "rt_NEW" }     |
-  |                                   |
-  | [如果 rt_OLD 之后再次被使用：]      |
-  |-- POST /auth/refresh ------------>|
-  |   { refresh_token: "rt_OLD" }     |
-  |                                   |
-  |                   +---------------+
-  |                   | rt_OLD 已经被使用过！
-  |                   | 检测到重用：
-  |                   | -> 撤销整个会话（包括 rt_NEW）
-  |                   | -> 警告用户可能存在令牌被盗
-  |                   +---------------+
-  |<-- 401 Unauthorized --------------|
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant S as "Auth Server"
+
+    C->>S: POST /auth/refresh {refresh_token: "rt_OLD"}
+    Note over S: 1. Verify rt_OLD hash in DB<br/>2. Check session not revoked/expired<br/>3. Issue new access_token + rt_NEW<br/>4. Atomically mark rt_OLD rotated & store rt_NEW
+    S-->>C: 200 OK {access_token, refresh_token: "rt_NEW"}
+    Note over C,S: If rt_OLD is used AGAIN later:
+    C->>S: POST /auth/refresh {refresh_token: "rt_OLD"}
+    Note over S: REUSE DETECTED!<br/>Revoke entire session (including rt_NEW) & alert user
+    S-->>C: 401 Unauthorized
 ```
 
 刷新令牌轮换配合重用检测可以防止刷新令牌被盗：如果被盗的令牌被使用，合法用户的下一次刷新尝试将触发检测并撤销整个会话。
@@ -695,51 +618,23 @@ ES256 是首选：更小的令牌、更快的验证、每比特更强的安全�
 
 ### 授权码 + PKCE（推荐用于 Web 和移动端）
 
-```
-浏览器 / 应用                   认证服务器                资源服务器（API）
-     |                             |                           |
-     | 1. 生成 code_verifier       |                           |
-     |    code_challenge = S256(verifier)                      |
-     |                             |                           |
-     | 2. GET /oauth/authorize     |                           |
-     |    ?client_id=app_123       |                           |
-     |    &response_type=code      |                           |
-     |    &redirect_uri=...        |                           |
-     |    &scope=openid+profile    |                           |
-     |    &state=csrf_token        |                           |
-     |    &code_challenge=...      |                           |
-     |    &code_challenge_method=S256                          |
-     +----------------------------->                           |
-     |                             |                           |
-     |          [显示登录界面]       |                           |
-     |          [用户进行认证]       |                           |
-     |                             |                           |
-     | 3. 重定向到                  |                           |
-     |    redirect_uri?code=AUTH_CODE&state=csrf_token         |
-     <-----------------------------+                           |
-     |                             |                           |
-     | 4. 验证 state == csrf_token                             |
-     |                             |                           |
-     | 5. POST /oauth/token        |                           |
-     |    grant_type=authorization_code                        |
-     |    &code=AUTH_CODE          |                           |
-     |    &code_verifier=VERIFIER  |                           |
-     +----------------------------->                           |
-     |                             |                           |
-     |          [服务器验证：       |                           |
-     |           S256(verifier) == |                           |
-     |           存储的 challenge]  |                           |
-     |                             |                           |
-     | 6. { access_token, id_token, refresh_token }           |
-     <-----------------------------+                           |
-     |                             |                           |
-     | 7. GET /api/resource        |                           |
-     |    Authorization: Bearer access_token                   |
-     +----------------------------------------------->        |
-     |                             |    [本地验证 JWT]         |
-     |                             |    [无网络调用]           |
-     | 8. 资源数据                  |                           |
-     <-----------------------------------------------+        |
+```mermaid
+sequenceDiagram
+    participant App as "Browser / App"
+    participant AS as "Auth Server"
+    participant RS as "Resource Server (API)"
+
+    Note over App: 1. Generate code_verifier & code_challenge = S256(verifier)
+    App->>AS: 2. GET /oauth/authorize (client_id, response_type=code, state, code_challenge, S256)
+    Note over App,AS: Login UI shown -> User authenticates
+    AS-->>App: 3. Redirect to redirect_uri?code=AUTH_CODE&state=csrf_token
+    Note over App: 4. Verify state == csrf_token
+    App->>AS: 5. POST /oauth/token (grant_type=authorization_code, code, code_verifier)
+    Note over AS: Verify S256(verifier) == stored challenge
+    AS-->>App: 6. {access_token, id_token, refresh_token}
+    App->>RS: 7. GET /api/resource (Authorization: Bearer access_token)
+    Note over RS: Verify JWT locally (no network call)
+    RS-->>App: 8. Resource data
 ```
 
 ### 客户端凭证（机器对机器）
@@ -901,40 +796,20 @@ Response:
 
 ### SP 发起的流程（最常见）
 
-```
-浏览器                      SP（你的应用）            IdP（Okta/Azure）
-  |                             |                       |
-  | 1. GET /app/dashboard       |                       |
-  +----------------------------->                       |
-  |                             |                       |
-  | 2. 302 重定向到 IdP 并携带    |                       |
-  |    SAML AuthnRequest（编码） |                       |
-  <-----------------------------+                       |
-  |                             |                       |
-  | 3. GET /idp/sso?SAMLRequest=...                     |
-  +---------------------------------------------------->|
-  |                             |                       |
-  |          [IdP 显示登录界面，用户进行认证]               |
-  |                             |                       |
-  | 4. POST /sp/acs（断言消费服务）                        |
-  |    SAMLResponse（SAML 断言，由 IdP 签名）              |
-  <----------------------------------------------------+|
-  |                             |                       |
-  | 5. POST /sp/acs             |                       |
-  |    携带 SAMLResponse        |                       |
-  +----------------------------->                       |
-  |                             |                       |
-  |          [SP 验证：          |                       |
-  |           - IdP 签名        |                       |
-  |           - 签发者匹配       |                       |
-  |           - NotBefore/      |                       |
-  |             NotOnOrAfter    |                       |
-  |           - InResponseTo ID |                       |
-  |           - 接收方 URI]      |                       |
-  |                             |                       |
-  | 6. 302 重定向到 /app/dashboard|                      |
-  |   （携带会话 cookie）         |                       |
-  <-----------------------------+                       |
+```mermaid
+sequenceDiagram
+    participant B as "Browser"
+    participant SP as "SP (Your App)"
+    participant IdP as "IdP (Okta / Azure)"
+
+    B->>SP: 1. GET /app/dashboard
+    SP-->>B: 2. 302 to IdP with SAML AuthnRequest
+    B->>IdP: 3. GET /idp/sso?SAMLRequest=...
+    Note over B,IdP: IdP shows login UI, user authenticates
+    IdP-->>B: 4. Signed SAMLResponse (SAML Assertion)
+    B->>SP: 5. POST /sp/acs with SAMLResponse
+    Note over SP: Validate IdP signature, Issuer, NotBefore/NotOnOrAfter, InResponseTo, Recipient
+    SP-->>B: 6. 302 to /app/dashboard (with session cookie)
 ```
 
 ### SAML 断言结构
@@ -1285,62 +1160,21 @@ Pepper = 32 字节密钥存储在 Vault 中（不在数据库中）
 
 ### 联合架构
 
-```
-+----------+     +-----------+     +------------------+
-| 你的应用  |     | 认证       |     | Google / GitHub  |
-|          |     | 服务       |     | / Apple          |
-+----+-----+     +-----+-----+     +--------+---------+
-     |                 |                    |
-     | 1. 用户点击     |                    |
-     |    "使用        |                    |
-     |    Google 登录" |                    |
-     |                 |                    |
-     | 2. 重定向到     |                    |
-     |    /auth/social/|                    |
-     |    google/begin |                    |
-     +---------------->|                    |
-     |                 |                    |
-     |                 | 3. 重定向到         |
-     |                 |    Google OAuth    |
-     <-----------------+                    |
-     |                                      |
-     | 4. 用户在 Google 上认证               |
-     |                                      |
-     |                 | 5. 携带 code        |
-     |                 |    回调             |
-     +---------------->|                    |
-     |                 |                    |
-     |                 | 6. 用 code 交换     |
-     |                 |    id_token        |
-     |                 +------------------->|
-     |                 | 7. id_token + 用户  |
-     |                 |    资料             |
-     |                 <-------------------+|
-     |                 |                    |
-     |                 | 8. 验证 id_token    |
-     |                 |    （Google 的 JWK）|
-     |                 |                    |
-     |                 | 9. 关联或创建        |
-     |                 |    本地用户：        |
-     |                 |    - 查找           |
-     |                 |      social_identities
-     |                 |    - 如果找到：      |
-     |                 |      返回用户       |
-     |                 |    - 如果按          |
-     |                 |      provider_id   |
-     |                 |      未找到：       |
-     |                 |      检查 users    |
-     |                 |      表中的邮箱     |
-     |                 |    - 如果邮箱匹配：  |
-     |                 |      关联账户       |
-     |                 |    - 否则创建       |
-     |                 |      新用户         |
-     |                 |                    |
-     | 10. 签发        |                    |
-     |     access +    |                    |
-     |     refresh     |                    |
-     |     令牌         |                    |
-     <-----------------+                    |
+```mermaid
+sequenceDiagram
+    participant App as "Your App"
+    participant AS as "Auth Service"
+    participant G as "Google / GitHub / Apple"
+
+    Note over App: 1. User clicks "Login with Google"
+    App->>AS: 2. Redirect to /auth/social/google/begin
+    AS-->>App: 3. Redirect to Google OAuth
+    Note over App,G: 4. User authenticates on Google
+    App->>AS: 5. Callback with authorization code
+    AS->>G: 6. Exchange code for id_token
+    G-->>AS: 7. id_token + user profile
+    Note over AS: 8. Verify id_token (Google JWK)<br/>9. Link or create local user in social_identities/users
+    AS-->>App: 10. Issue access + refresh tokens
 ```
 
 ### 账户关联安全

@@ -316,31 +316,15 @@ CREATE TABLE clicks (
 
 ## 4. 高层架构
 
-```
-                                    +------------------+
-                                    |   监控           |
-                                    |  (Prometheus +   |
-                                    |   Grafana)       |
-                                    +--------+---------+
-                                             |
-                                             v
-+----------+     +-----------+     +-------------------+     +-------------+
-|          |     |           |     |                   |     |             |
-|  客户端  +---->+    DNS    +---->+  负载均衡器        +---->+  应用服务器  |
-| (浏览器) |     | (Route53) |     |  (Nginx / ALB)    |     |  (集群)     |
-|          |     |           |     |                   |     |             |
-+----------+     +-----------+     +-------------------+     +------+------+
-                                                                    |
-                                          +-------------------------+----------+
-                                          |                         |          |
-                                          v                         v          v
-                                   +------+------+          +------+---+ +----+------+
-                                   |             |          |          | |           |
-                                   |    缓存     |          | 数据库   | | 分析      |
-                                   |   (Redis    |          | (主库    | | (Kafka +  |
-                                   |   Cluster)  |          | + 副本)  | | ClickHouse|
-                                   |             |          |          | |           |
-                                   +-------------+          +----------+ +-----------+
+```mermaid
+flowchart LR
+    Client["Client<br/>(Browser)"] --> DNS["DNS<br/>(Route53)"]
+    DNS --> LB["Load Balancer<br/>(Nginx / ALB)"]
+    Mon["Monitoring<br/>(Prometheus + Grafana)"] --> LB
+    LB --> App["App Server<br/>(Cluster)"]
+    App --> Cache["Cache<br/>(Redis Cluster)"]
+    App --> DB["Database<br/>(Primary + Replicas)"]
+    App --> Analytics["Analytics<br/>(Kafka + ClickHouse)"]
 ```
 
 ### 组件职责
@@ -473,17 +457,11 @@ def base62_decode(s):
 3. 当应用服务器需要 key 时，从 pool 中批量获取（例如 1000 个 key）。
 4. 获取的 key 被原子地标记为 `used`。
 
-```
-+------------+         +-----------+         +------------+
-|            |  批量   |           |  获取    |            |
-|    KGS     +-------->+ Key Pool  +--------->+ 应用服务器 |
-| (生成器)   |  插入   | (数据库表)|  1000    | (内存      |
-|            |         |           |  个 key  |   缓冲区)  |
-+------------+         +-----------+         +------------+
-                                                   |
-                                                   v
-                                            从本地缓冲区
-                                            分配下一个 key
+```mermaid
+flowchart LR
+    KGS["KGS<br/>(Generator)"] -->|"batch insert"| Pool["Key Pool<br/>(DB Table)"]
+    Pool -->|"fetch 1000 keys"| App["App Server<br/>(in-memory buffer)"]
+    App --> Assign["Assign next key<br/>from local buffer"]
 ```
 
 **Key Pool Schema：**
@@ -529,39 +507,24 @@ CREATE TABLE key_pool (
 
 ### 6.1 URL 缩短流程
 
-```
-客户端                应用服务器              缓存           数据库           KGS
-  |                       |                     |                |               |
-  |  POST /api/v1/shorten |                     |                |               |
-  |---------------------> |                     |                |               |
-  |                       |                     |                |               |
-  |                       | 验证 long_url       |                |               |
-  |                       |--+                  |                |               |
-  |                       |  | (格式, 长度,     |                |               |
-  |                       |  |  黑名单检查)     |                |               |
-  |                       |<-+                  |                |               |
-  |                       |                     |                |               |
-  |                       | 检查去重: 通过 long_url_hash 查找   |               |
-  |                       |------------------------------------>|               |
-  |                       |                     |                |               |
-  |                       |  (如果存在, 返回已有的 short_key)    |               |
-  |                       |<------------------------------------|               |
-  |                       |                     |                |               |
-  |                       | 如果是新的: 从本地缓冲区获取下一个 key              |
-  |                       |--+                  |                |               |
-  |                       |  | (如果缓冲区为空) |                |               |
-  |                       |  |  批量获取 -------|----------------|------>|       |
-  |                       |  |  <---------------|----------------|-------|       |
-  |                       |<-+                  |                |               |
-  |                       |                     |                |               |
-  |                       | INSERT 到 urls 表   |                |               |
-  |                       |------------------------------------>|               |
-  |                       |                     |                |               |
-  |                       | 写入缓存            |                |               |
-  |                       |-------------------->|                |               |
-  |                       |                     |                |               |
-  |  201 Created          |                     |                |               |
-  |<--------------------- |                     |                |               |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant App as "App Server"
+    participant Cache
+    participant DB as "Database"
+    participant KGS
+
+    Client->>App: POST /api/v1/shorten
+    App->>App: Validate long_url (format, length, blocklist check)
+    App->>DB: Check dedup: lookup by long_url_hash
+    DB-->>App: Return existing short_key if exists
+    Note over App,KGS: If new: get next key from local buffer (fetch batch from KGS if empty)
+    App->>KGS: Fetch batch (if buffer empty)
+    KGS-->>App: Return key batch
+    App->>DB: INSERT into urls
+    App->>Cache: Write to cache
+    App-->>Client: 201 Created
 ```
 
 **步骤详解：**
@@ -581,33 +544,21 @@ CREATE TABLE key_pool (
 
 ### 6.2 URL 重定向流程
 
-```
-客户端                应用服务器              缓存           数据库
-  |                       |                     |                |
-  |  GET /abc1234         |                     |                |
-  |---------------------> |                     |                |
-  |                       |                     |                |
-  |                       | 在缓存中查找        |                |
-  |                       |-------------------->|                |
-  |                       |                     |                |
-  |                       |    (缓存命中?)      |                |
-  |                       |<--------------------|                |
-  |                       |                     |                |
-  |                       | 如果未命中: 查询数据库               |
-  |                       |------------------------------------>|
-  |                       |                     |                |
-  |                       |   long_url          |                |
-  |                       |<------------------------------------|
-  |                       |                     |                |
-  |                       | 填充缓存            |                |
-  |                       |-------------------->|                |
-  |                       |                     |                |
-  |                       | 发送点击事件到 Kafka (异步)          |
-  |                       |--+                  |                |
-  |                       |  |                  |                |
-  |  302 Found            |<-+                  |                |
-  |  Location: long_url   |                     |                |
-  |<--------------------- |                     |                |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant App as "App Server"
+    participant Cache
+    participant DB as "Database"
+
+    Client->>App: GET /abc1234
+    App->>Cache: Lookup in cache
+    Cache-->>App: Cache hit or miss
+    App->>DB: If miss: query DB
+    DB-->>App: Return long_url
+    App->>Cache: Populate cache
+    App->>App: Emit click event to Kafka (async)
+    App-->>Client: 302 Found (Location: long_url)
 ```
 
 **步骤详解：**
@@ -739,22 +690,14 @@ shard_id  = hash("abc1234") % NUM_SHARDS
 - 基于 hash 的分片均匀分布数据（没有因字母顺序聚集导致的热点分片）。
 - short_key 是重定向的主查找 key，使其成为理想的分片 key。
 
-```
-                        +-------------------+
-                        |  分片路由器       |
-                        |  (hash % N)      |
-                        +---+---+---+---+---+
-                            |   |   |   |
-              +-------------+   |   |   +-------------+
-              |                 |   |                 |
-         +----+----+      +----+----+           +----+----+
-         | Shard 0 |      | Shard 1 |    ...    | Shard N |
-         | 主库    |      | 主库    |           | 主库    |
-         +----+----+      +----+----+           +----+----+
-              |                 |                     |
-         +----+----+      +----+----+           +----+----+
-         | 副本    |      | 副本    |           | 副本    |
-         +---------+      +---------+           +---------+
+```mermaid
+flowchart TD
+    Router["Shard Router<br/>(hash % N)"] --> S0["Shard 0 Primary"]
+    Router --> S1["Shard 1 Primary"]
+    Router --> SN["Shard N Primary"]
+    S0 --> R0["Replica"]
+    S1 --> R1["Replica"]
+    SN --> RN["Replica"]
 ```
 
 **分片数量规划：**
@@ -785,20 +728,13 @@ shard_id  = hash("abc1234") % NUM_SHARDS
 
 ### 7.3 缓存层扩展
 
-```
-Redis Cluster 拓扑:
-
-  +----------+  +----------+  +----------+
-  | Master 1 |  | Master 2 |  | Master 3 |
-  | 0-5460   |  | 5461-10922| |10923-16383|  (hash slots)
-  +----+-----+  +----+-----+  +----+-----+
-       |              |              |
-  +----+-----+  +----+-----+  +----+-----+
-  | Replica 1|  | Replica 2|  | Replica 3|
-  +----------+  +----------+  +----------+
-
-总计: 6 个节点, ~70 GB 分布在 3 个 master 上
-每个 master: ~23 GB
+```mermaid
+flowchart TD
+    subgraph Redis["Redis Cluster Topology (6 nodes, ~70 GB across 3 masters, ~23 GB/master)"]
+        M1["Master 1<br/>Slots 0-5460"] --> R1["Replica 1"]
+        M2["Master 2<br/>Slots 5461-10922"] --> R2["Replica 2"]
+        M3["Master 3<br/>Slots 10923-16383"] --> R3["Replica 3"]
+    end
 ```
 
 **Redis Cluster** 使用 16384 个 hash slot 分布在各 master 节点上。添加更多 master
@@ -810,19 +746,16 @@ Redis Cluster 拓扑:
 
 点击追踪不能给重定向路径增加延迟。
 
-```
-应用服务器              Kafka               消费者             ClickHouse
-    |                       |                     |                  |
-    | 发布点击事件          |                     |                  |
-    | (即发即忘)            |                     |                  |
-    |---------------------->|                     |                  |
-    |                       |  消费批次           |                  |
-    |                       |-------------------->|                  |
-    |                       |                     | 批量插入         |
-    |                       |                     |----------------->|
-    |                       |                     |                  |
-    |                       |                     | (每 5 秒或       |
-    |                       |                     |  1000 个事件)    |
+```mermaid
+sequenceDiagram
+    participant App as "App Server"
+    participant Kafka
+    participant Consumer
+    participant CH as "ClickHouse"
+
+    App->>Kafka: Publish click event (fire-and-forget)
+    Kafka->>Consumer: Consume batch
+    Consumer->>CH: Batch insert (every 5 sec or 1000 events)
 ```
 
 **管道详情：**
@@ -859,53 +792,26 @@ Redis Cluster 拓扑:
 
 ### 8.1 多区域部署
 
-```
-                           +------------------+
-                           |   全局 DNS       |
-                           |   (Route53 /     |
-                           |    Cloudflare)   |
-                           +--------+---------+
-                                    |
-                          +---------+---------+
-                          |                   |
-                   +------+------+     +------+------+
-                   |  CDN 边缘   |     |  CDN 边缘   |
-                   | (US-East)   |     | (EU-West)   |
-                   +------+------+     +------+------+
-                          |                   |
-              +-----------+-----------+       |
-              |                       |       |
-      +-------+--------+   +---------+-------+--------+
-      |  US-East-1     |   |  EU-West-1               |
-      |  数据中心      |   |  数据中心                |
-      |                |   |                           |
-      | +------------+ |   | +------------+            |
-      | | LB (ALB)   | |   | | LB (ALB)   |           |
-      | +-----+------+ |   | +-----+------+           |
-      |       |         |   |       |                  |
-      | +-----+------+ |   | +-----+------+           |
-      | | 应用服务器  | |   | | 应用服务器  |          |
-      | | (ECS/K8s)  | |   | | (ECS/K8s)  |          |
-      | | 10 个实例  | |   | | 10 个实例  |          |
-      | +-----+------+ |   | +-----+------+           |
-      |       |         |   |       |                  |
-      | +-----+------+ |   | +-----+------+           |
-      | | Redis      | |   | | Redis      |           |
-      | | Cluster    | |   | | Cluster    |           |
-      | +-----+------+ |   | +-----+------+           |
-      |       |         |   |       |                  |
-      | +-----+------+ |   | +-----+------+           |
-      | | 数据库主库  | |   | | 数据库副本  |           |
-      | | + 副本     | |   | | (只读)     |           |
-      | +------------+ |   | +------------+           |
-      +----------------+   +--------------------------+
-              |                        |
-              +----------+-------------+
-                         |
-                  +------+------+
-                  | 跨区域      |
-                  | 复制        |
-                  +-------------+
+```mermaid
+flowchart TD
+    DNS["Global DNS<br/>(Route53 / Cloudflare)"] --> CDN_US["CDN Edge (US-East)"]
+    DNS --> CDN_EU["CDN Edge (EU-West)"]
+
+    subgraph US["US-East-1 Data Center"]
+        LB_US["LB (ALB)"] --> App_US["App Servers (ECS/K8s)<br/>10 instances"]
+        App_US --> Redis_US["Redis Cluster"]
+        Redis_US --> DB_US["DB Primary + Replicas"]
+    end
+
+    subgraph EU["EU-West-1 Data Center"]
+        LB_EU["LB (ALB)"] --> App_EU["App Servers (ECS/K8s)<br/>10 instances"]
+        App_EU --> Redis_EU["Redis Cluster"]
+        Redis_EU --> DB_EU["DB Replica (read-only)"]
+    end
+
+    CDN_US --> LB_US
+    CDN_EU --> LB_EU
+    DB_US <-->|"Cross-Region Replication"| DB_EU
 ```
 
 ### 8.2 部署策略
@@ -1041,18 +947,13 @@ Redis Cluster 拓扑:
 
 **实时分析管道：**
 
-```
-点击事件 -> Kafka topic "clicks"
-                    |
-            +-------+-------+
-            |               |
-     流处理器            批处理器
-     (Flink / Kafka     (Spark, 每小时)
-      Streams)                |
-            |                 v
-            v           数据仓库
-     实时仪表板          (聚合后)
-     (最近 5 分钟)
+```mermaid
+flowchart TD
+    Click["Click Event"] --> Kafka["Kafka topic: clicks"]
+    Kafka --> Stream["Stream Processor<br/>(Flink / Kafka Streams)"]
+    Kafka --> Batch["Batch Processor<br/>(Spark, hourly)"]
+    Stream --> Dash["Real-Time Dashboard<br/>(last 5 min)"]
+    Batch --> DW["Data Warehouse<br/>(aggregated)"]
 ```
 
 **ClickHouse 中的分析数据模型：**
@@ -1205,38 +1106,24 @@ ORDER BY clicks DESC;
 
 ## 附录 A：完整系统概览
 
-```
-+-------------------------------------------------------------------+
-|                     URL 短链接服务架构                              |
-+-------------------------------------------------------------------+
-|                                                                   |
-|  写入路径 (1,200 请求/秒)                                         |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     |
-|  客户端 -> LB -> 应用服务器 -> 验证 URL                           |
-|                             -> 检查去重 (SHA-256 hash)            |
-|                             -> 从 KGS 缓冲区获取 key              |
-|                             -> INSERT 到数据库 (分片)             |
-|                             -> SET 到 Redis 缓存                  |
-|                             <- 返回短 URL                         |
-|                                                                   |
-|  读取路径 (120,000 请求/秒)                                       |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     |
-|  客户端 -> CDN (仅 301) -> LB -> 应用服务器                       |
-|                                -> GET 从 Redis (80-90% 命中)      |
-|                                -> GET 从数据库副本 (回退)         |
-|                                -> 发布点击事件到 Kafka             |
-|                                <- 302 重定向                      |
-|                                                                   |
-|  分析路径 (异步)                                                   |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     |
-|  Kafka -> 消费者 -> 批量 INSERT 到 ClickHouse                     |
-|                   -> 实时聚合 (物化视图)                           |
-|                                                                   |
-|  清理 (定期)                                                       |
-|  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     |
-|  定时任务 -> DELETE 过期 URL -> 将 key 返还 KGS pool              |
-|                                                                   |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph Write["WRITE PATH (1,200 req/s)"]
+        W1["Client -> LB -> App Server"] --> W2["Validate URL &amp; Check Dedup (SHA-256)"]
+        W2 --> W3["Get key from KGS buffer"]
+        W3 --> W4["INSERT into Sharded DB &amp; SET in Redis"]
+        W4 --> W5["Return short URL"]
+    end
+    subgraph Read["READ PATH (120,000 req/s)"]
+        R1["Client -> CDN (301 only) -> LB -> App Server"] --> R2["GET from Redis (80-90% hit) or DB Replica fallback"]
+        R2 --> R3["Publish click to Kafka &amp; Return 302 Redirect"]
+    end
+    subgraph Analytics["ANALYTICS PATH (async)"]
+        A1["Kafka -> Consumer"] --> A2["Batch INSERT into ClickHouse &amp; Real-time Materialized Views"]
+    end
+    subgraph Cleanup["CLEANUP (periodic)"]
+        C1["Cron -> DELETE expired URLs -> Return keys to KGS pool"]
+    end
 ```
 
 ## 附录 B：需要监控的关键指标

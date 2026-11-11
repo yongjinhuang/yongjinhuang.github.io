@@ -186,91 +186,48 @@ Fallback chain:
 
 ### 系统架构图
 
-```
-                              ┌──────────────────────────────────────────────────────────┐
-                              │                    TRIGGER LAYER                         │
-                              │                                                          │
-                              │  ┌─────────┐ ┌─────────┐ ┌──────────┐ ┌─────────────┐  │
-                              │  │ Payment │ │ Social  │ │ Messaging│ │  Scheduled  │  │
-                              │  │ Service │ │ Service │ │  Service │ │    Jobs     │  │
-                              │  └────┬────┘ └────┬────┘ └─────┬────┘ └──────┬──────┘  │
-                              │       │           │            │             │          │
-                              └───────┼───────────┼────────────┼─────────────┼──────────┘
-                                      │           │            │             │
-                                      ▼           ▼            ▼             ▼
-                              ┌──────────────────────────────────────────────────────────┐
-                              │              NOTIFICATION SERVICE (API)                  │
-                              │                                                          │
-                              │  ┌──────────┐  ┌────────────┐  ┌──────────────────────┐ │
-                              │  │ Validate │  │  Template  │  │   User Preference    │ │
-                              │  │ & Dedup  │  │   Engine   │  │       Check          │ │
-                              │  └──────────┘  └────────────┘  └──────────────────────┘ │
-                              │                                                          │
-                              │  ┌──────────────────────────────────────────────────┐    │
-                              │  │           Priority Router / Classifier           │    │
-                              │  └──────────────────────────────────────────────────┘    │
-                              └──────────────────────────┬───────────────────────────────┘
-                                                         │
-                              ┌───────────────────────────┼───────────────────────────────┐
-                              │            MESSAGE QUEUE LAYER (Kafka)                    │
-                              │                                                           │
-                              │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐ │
-                              │  │ P0 Queue │ │ P1 Queue │ │ P2 Queue │ │   P3 Queue   │ │
-                              │  │(Critical)│ │ (High)   │ │ (Medium) │ │    (Low)     │ │
-                              │  └────┬─────┘ └────┬─────┘ └────┬─────┘ └──────┬───────┘ │
-                              │       │            │            │              │          │
-                              └───────┼────────────┼────────────┼──────────────┼──────────┘
-                                      │            │            │              │
-                              ┌───────┼────────────┼────────────┼──────────────┼──────────┐
-                              │       │       WORKER LAYER      │              │          │
-                              │       ▼            ▼            ▼              ▼          │
-                              │  ┌──────────────────────────────────────────────────────┐ │
-                              │  │              Channel Dispatcher                     │ │
-                              │  └──────┬──────────┬──────────┬──────────┬─────────────┘ │
-                              │         │          │          │          │               │
-                              │    ┌────▼───┐ ┌────▼───┐ ┌───▼────┐ ┌──▼─────────┐     │
-                              │    │  Push  │ │  SMS   │ │ Email  │ │  In-App    │     │
-                              │    │ Worker │ │ Worker │ │ Worker │ │  Worker    │     │
-                              │    └────┬───┘ └────┬───┘ └───┬────┘ └──┬─────────┘     │
-                              │         │          │         │         │               │
-                              └─────────┼──────────┼─────────┼─────────┼───────────────┘
-                                        │          │         │         │
-                              ┌─────────┼──────────┼─────────┼─────────┼───────────────┐
-                              │         │   THIRD-PARTY      │         │               │
-                              │         │   PROVIDERS        │         │               │
-                              │    ┌────▼───┐ ┌────▼───┐ ┌───▼────┐   │               │
-                              │    │  APNs  │ │ Twilio │ │SendGrid│   │               │
-                              │    │  FCM   │ │AWS SNS │ │  SES   │   │               │
-                              │    └────────┘ └────────┘ └────────┘   │               │
-                              └───────────────────────────────────────┼───────────────┘
-                                                                      │
-                              ┌───────────────────────────────────────┼───────────────┐
-                              │         REAL-TIME DELIVERY            │               │
-                              │                                  ┌────▼──────────┐    │
-                              │                                  │   WebSocket   │    │
-                              │                                  │    Server     │    │
-                              │                                  └───────────────┘    │
-                              └───────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Trigger["TRIGGER LAYER"]
+        T1["Payment Service"]
+        T2["Social Service"]
+        T3["Messaging Service"]
+        T4["Scheduled Jobs"]
+    end
 
-                              ┌───────────────────────────────────────────────────────┐
-                              │                   DATA STORES                         │
-                              │                                                       │
-                              │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
-                              │  │PostgreSQL│ │  Redis   │ │  S3/Blob │ │ Time-    │ │
-                              │  │(metadata)│ │ (cache,  │ │(templates│ │ Series   │ │
-                              │  │          │ │  prefs)  │ │  assets) │ │  (metrics)│ │
-                              │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ │
-                              └───────────────────────────────────────────────────────┘
+    T1 & T2 & T3 & T4 --> NotifAPI
 
-                              ┌───────────────────────────────────────────────────────┐
-                              │              ANALYTICS & MONITORING                   │
-                              │                                                       │
-                              │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
-                              │  │Delivery  │ │  Open/   │ │ Error    │ │ Dashboard│ │
-                              │  │ Tracker  │ │  Click   │ │ Tracker  │ │  & Alerts│ │
-                              │  │          │ │ Tracker  │ │          │ │          │ │
-                              │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ │
-                              └───────────────────────────────────────────────────────┘
+    subgraph NotifAPI["NOTIFICATION SERVICE (API)"]
+        Val["Validate &amp; Dedup"] --> Tpl["Template Engine"] --> Pref["User Preference Check"] --> Router["Priority Router / Classifier"]
+    end
+
+    Router --> P0 & P1 & P2 & P3
+
+    subgraph MQ["MESSAGE QUEUE LAYER (Kafka)"]
+        P0["P0 Queue (Critical)"]
+        P1["P1 Queue (High)"]
+        P2["P2 Queue (Medium)"]
+        P3["P3 Queue (Low)"]
+    end
+
+    P0 & P1 & P2 & P3 --> Disp["Channel Dispatcher"]
+
+    subgraph Workers["WORKER LAYER"]
+        Disp --> PushW["Push Worker"]
+        Disp --> SMSW["SMS Worker"]
+        Disp --> EmailW["Email Worker"]
+        Disp --> InAppW["In-App Worker"]
+    end
+
+    PushW --> APNs["APNs / FCM"]
+    SMSW --> Twilio["Twilio / AWS SNS"]
+    EmailW --> SendGrid["SendGrid / SES"]
+    InAppW --> WS["WebSocket Server"]
+
+    subgraph Stores["DATA STORES &amp; ANALYTICS"]
+        DS["PostgreSQL (metadata) | Redis (cache, prefs) | S3/Blob (templates) | Time-Series (metrics)"]
+        Mon["Delivery Tracker | Open/Click Tracker | Error Tracker | Dashboard &amp; Alerts"]
+    end
 ```
 
 ### 组件职责
@@ -291,52 +248,78 @@ Fallback chain:
 
 ### 实体关系
 
-```
-┌───────────────┐       ┌───────────────────┐       ┌──────────────────┐
-│     users     │       │  user_preferences │       │  device_tokens   │
-│───────────────│       │───────────────────│       │──────────────────│
-│ id (PK)       │──┐    │ id (PK)           │       │ id (PK)          │
-│ email         │  ├───>│ user_id (FK)      │       │ user_id (FK)     │◄──┐
-│ phone         │  │    │ channel           │       │ platform         │   │
-│ locale        │  │    │ enabled           │       │ token            │   │
-│ timezone      │  │    │ quiet_start       │       │ is_active        │   │
-│ created_at    │  │    │ quiet_end         │       │ last_used_at     │   │
-└───────────────┘  │    │ frequency_cap     │       │ created_at       │   │
-                   │    │ updated_at        │       └──────────────────┘   │
-                   │    └───────────────────┘                              │
-                   │                                                       │
-                   │    ┌───────────────────┐       ┌──────────────────┐   │
-                   │    │  notifications    │       │  delivery_log    │   │
-                   │    │───────────────────│       │──────────────────│   │
-                   └───>│ id (PK)           │──────>│ id (PK)          │   │
-                        │ user_id (FK)      │       │ notification_id  │   │
-                        │ template_id (FK)  │       │ channel          │   │
-                        │ channel           │       │ status           │   │
-                        │ priority          │       │ provider         │   │
-                        │ status            │       │ provider_msg_id  │   │
-                        │ idempotency_key   │       │ attempt_number   │   │
-                        │ payload           │       │ error_message    │   │
-                        │ scheduled_at      │       │ sent_at          │   │
-                        │ sent_at           │       │ delivered_at     │   │
-                        │ created_at        │       │ opened_at        │   │
-                        └───────────────────┘       │ clicked_at       │   │
-                                                    │ created_at       │   │
-                        ┌───────────────────┐       └──────────────────┘   │
-                        │notification_      │                              │
-                        │  templates        │                              │
-                        │───────────────────│                              │
-                        │ id (PK)           │                              │
-                        │ name              │       ┌──────────────────┐   │
-                        │ channel           │       │ user_devices     │   │
-                        │ locale            │       │  (view joining   │   │
-                        │ version           │       │   users +        │───┘
-                        │ subject_template  │       │   device_tokens) │
-                        │ body_template     │       └──────────────────┘
-                        │ variables_schema  │
-                        │ is_active         │
-                        │ created_at        │
-                        │ updated_at        │
-                        └───────────────────┘
+```mermaid
+erDiagram
+    USERS ||--o{ USER_PREFERENCES : "configures"
+    USERS ||--o{ DEVICE_TOKENS : "registers"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    NOTIFICATION_TEMPLATES ||--o{ NOTIFICATIONS : "renders"
+    NOTIFICATIONS ||--o{ DELIVERY_LOG : "logs"
+    USERS {
+        uuid id PK
+        string email
+        string phone
+        string locale
+        string timezone
+        timestamp created_at
+    }
+    USER_PREFERENCES {
+        uuid id PK
+        uuid user_id FK
+        string channel
+        boolean enabled
+        time quiet_start
+        time quiet_end
+        int frequency_cap
+        timestamp updated_at
+    }
+    DEVICE_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        string platform
+        string token
+        boolean is_active
+        timestamp last_used_at
+        timestamp created_at
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        uuid template_id FK
+        string channel
+        string priority
+        string status
+        string idempotency_key
+        json payload
+        timestamp scheduled_at
+        timestamp sent_at
+        timestamp created_at
+    }
+    DELIVERY_LOG {
+        uuid id PK
+        uuid notification_id FK
+        string channel
+        string status
+        string provider
+        string provider_msg_id
+        int attempt_number
+        string error_message
+        timestamp sent_at
+        timestamp delivered_at
+        timestamp opened_at
+        timestamp clicked_at
+    }
+    NOTIFICATION_TEMPLATES {
+        uuid id PK
+        string name
+        string channel
+        string locale
+        int version
+        string subject_template
+        string body_template
+        json variables_schema
+        boolean is_active
+    }
 ```
 
 ### SQL Schema 定义
@@ -534,60 +517,31 @@ CREATE INDEX idx_delivery_log_status ON delivery_log(status, created_at);
 
 #### 时序图
 
-```
-Trigger       Notification      Preference     Template      Kafka       Channel      Third-Party
-Service          Service          Store         Engine        Queue       Worker        Provider
-  │                │                │              │            │            │              │
-  │  POST /notify  │                │              │            │            │              │
-  │───────────────>│                │              │            │            │              │
-  │                │                │              │            │            │              │
-  │                │ Check idemp.   │              │            │            │              │
-  │                │ key (Redis)    │              │            │            │              │
-  │                │──────┐         │              │            │            │              │
-  │                │      │         │              │            │            │              │
-  │                │<─────┘         │              │            │            │              │
-  │                │                │              │            │            │              │
-  │                │ Get prefs      │              │            │            │              │
-  │                │───────────────>│              │            │            │              │
-  │                │    prefs       │              │            │            │              │
-  │                │<───────────────│              │            │            │              │
-  │                │                │              │            │            │              │
-  │                │ Check quiet hours, caps       │            │            │              │
-  │                │──────┐                        │            │            │              │
-  │                │      │                        │            │            │              │
-  │                │<─────┘                        │            │            │              │
-  │                │                │              │            │            │              │
-  │                │ Render template│              │            │            │              │
-  │                │──────────────────────────────>│            │            │              │
-  │                │     rendered content          │            │            │              │
-  │                │<─────────────────────────────│            │            │              │
-  │                │                │              │            │            │              │
-  │                │ Produce to priority queue     │            │            │              │
-  │                │──────────────────────────────────────────>│            │              │
-  │                │                │              │            │            │              │
-  │  202 Accepted  │                │              │            │            │              │
-  │<───────────────│                │              │            │            │              │
-  │  {id: notif_x} │               │              │            │            │              │
-  │                │                │              │            │            │              │
-  │                │                │              │            │ Consume    │              │
-  │                │                │              │            │──────────>│              │
-  │                │                │              │            │            │              │
-  │                │                │              │            │            │ Send payload │
-  │                │                │              │            │            │─────────────>│
-  │                │                │              │            │            │              │
-  │                │                │              │            │            │  200 OK      │
-  │                │                │              │            │            │<─────────────│
-  │                │                │              │            │            │              │
-  │                │                │              │            │ Log result │              │
-  │                │                │              │            │<──────────│              │
-  │                │                │              │            │            │              │
-  │                │           Delivery webhook    │            │            │              │
-  │                │<──────────────────────────────────────────────────────────────────────│
-  │                │                │              │            │            │              │
-  │                │ Update status  │              │            │            │              │
-  │                │──────┐         │              │            │            │              │
-  │                │      │         │              │            │            │              │
-  │                │<─────┘         │              │            │            │              │
+```mermaid
+sequenceDiagram
+    participant TS as "Trigger Service"
+    participant NS as "Notification Service"
+    participant PS as "Preference Store"
+    participant TE as "Template Engine"
+    participant KQ as "Kafka Queue"
+    participant CW as "Channel Worker"
+    participant TP as "Third-Party Provider"
+
+    TS->>NS: POST /notify
+    NS->>NS: Check idempotency key (Redis)
+    NS->>PS: Get user preferences
+    PS-->>NS: Return prefs
+    NS->>NS: Check quiet hours & frequency caps
+    NS->>TE: Render template
+    TE-->>NS: Rendered content
+    NS->>KQ: Produce to priority queue
+    NS-->>TS: 202 Accepted {id: notif_x}
+    KQ->>CW: Consume notification
+    CW->>TP: Send payload
+    TP-->>CW: 200 OK
+    CW-->>KQ: Log delivery result
+    TP-->>NS: Delivery webhook
+    NS->>NS: Update status
 ```
 
 #### API 契约
@@ -1045,36 +999,14 @@ function calculateRetryDelay(
 
 ### 死信队列
 
-```
-失败通知流程：
-
-  Main Queue ──► Worker ──► Provider
-                   │
-              所有重试
-              已耗尽？
-                   │
-              ┌────┴────┐
-              │  是      │ 否 → 重试
-              ▼          │
-  ┌──────────────────┐   │
-  │ Dead Letter Queue│   │
-  │ (notifications.  │   │
-  │  dlq)            │   │
-  └────────┬─────────┘   │
-           │              │
-           ▼              │
-  ┌──────────────────┐    │
-  │ DLQ Processor    │    │
-  │ (人工审查        │    │
-  │  + 告警)         │    │
-  └──────────────────┘    │
-
-DLQ 包含：
-  - 原始通知载荷
-  - 所有尝试的错误信息
-  - 每次尝试的时间戳
-  - 提供商响应码
-  - Worker 实例 ID
+```mermaid
+flowchart TD
+    MQ["Main Queue"] --> Worker["Worker"]
+    Worker --> Provider["Provider"]
+    Worker --> Exhausted{"All retries<br/>exhausted?"}
+    Exhausted -->|"No"| Worker
+    Exhausted -->|"Yes"| DLQ["Dead Letter Queue<br/>(notifications.dlq)<br/>- Original payload &amp; error messages<br/>- Attempt timestamps &amp; provider codes"]
+    DLQ --> Proc["DLQ Processor<br/>(manual review + alerting)"]
 ```
 
 ### 投递追踪与回执
@@ -1607,68 +1539,19 @@ A/B 测试框架：
 
 ### 多区域部署
 
-```
-                    ┌───────────────────────────────────────┐
-                    │           GLOBAL LOAD BALANCER         │
-                    │          (Route53 / CloudFlare)        │
-                    └─────────────┬─────────────────────────┘
-                                  │
-                    ┌─────────────┼─────────────────────────┐
-                    │             │                          │
-              ┌─────▼─────┐ ┌────▼──────┐ ┌───────────────▼┐
-              │  US-EAST   │ │  EU-WEST  │ │   AP-SOUTH     │
-              │  Region    │ │  Region   │ │   Region       │
-              └─────┬──────┘ └─────┬─────┘ └───────┬────────┘
-                    │              │                │
-        ┌───────────┼──────────────┼────────────────┼──────────────┐
-        │           │              │                │              │
-        │     每个区域包含：                        │              │
-        │                                           │              │
-        │  ┌─────────────────────────────────────┐  │              │
-        │  │   Notification Service (API)        │  │              │
-        │  │   ├── ALB 后 3+ 实例                │  │              │
-        │  │   └── Auto-scaling group            │  │              │
-        │  └─────────────────────────────────────┘  │              │
-        │                                           │              │
-        │  ┌─────────────────────────────────────┐  │              │
-        │  │   Kafka Cluster                     │  │              │
-        │  │   ├── 6 brokers                     │  │              │
-        │  │   ├── 跨区域复制                     │  │              │
-        │  │   │   (MirrorMaker 2)               │  │              │
-        │  │   └── 3 天保留期                     │  │              │
-        │  └─────────────────────────────────────┘  │              │
-        │                                           │              │
-        │  ┌─────────────────────────────────────┐  │              │
-        │  │   Worker Fleet                      │  │              │
-        │  │   ├── Push workers (8-64)           │  │              │
-        │  │   ├── Email workers (4-32)          │  │              │
-        │  │   ├── SMS workers (4-16)            │  │              │
-        │  │   └── In-app workers (4-32)         │  │              │
-        │  └─────────────────────────────────────┘  │              │
-        │                                           │              │
-        │  ┌─────────────────────────────────────┐  │              │
-        │  │   数据存储                           │  │              │
-        │  │   ├── PostgreSQL (主/副本)           │  │              │
-        │  │   ├── Redis cluster (6 nodes)       │  │              │
-        │  │   └── S3/GCS (模板、归档)            │  │              │
-        │  └─────────────────────────────────────┘  │              │
-        │                                           │              │
-        └───────────────────────────────────────────┘              │
-                                                                   │
-                              跨区域复制                            │
-                    ┌─────────────────────────────────────────────┘
-                    │
-                    ▼
-        ┌─────────────────────────────────────┐
-        │   跨区域同步                         │
-        │   ├── Kafka MirrorMaker 2           │
-        │   │   （异步复制）                   │
-        │   ├── PostgreSQL 逻辑               │
-        │   │   复制（用户偏好）               │
-        │   ├── Redis cluster 跨区域同步      │
-        │   └── 模板通过 S3                    │
-        │       跨区域复制同步                 │
-        └─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    GLB["GLOBAL LOAD BALANCER<br/>(Route53 / CloudFlare)"] --> US["US-EAST Region"] & EU["EU-WEST Region"] & AP["AP-SOUTH Region"]
+
+    subgraph Region["Each Region Contains"]
+        API["Notification Service (API)<br/>3+ instances behind ALB, Auto-scaling"]
+        Kafka["Kafka Cluster<br/>6 brokers, MirrorMaker 2, 3-day retention"]
+        Fleet["Worker Fleet<br/>Push (8-64), Email (4-32), SMS (4-16), In-app (4-32)"]
+        Stores["Data Stores<br/>PostgreSQL (primary/replica), Redis (6 nodes), S3/GCS"]
+        API --> Kafka --> Fleet --> Stores
+    end
+
+    US & EU & AP <--> Sync["Cross-Region Sync<br/>- Kafka MirrorMaker 2 (async)<br/>- PostgreSQL logical replication (user prefs)<br/>- Redis cross-region sync &amp; S3 CRR"]
 ```
 
 ### 故障切换策略
@@ -1794,60 +1677,14 @@ A/B 测试框架：
 
 ### 如何实现摘要/批量处理？
 
-```
-摘要系统：将多条通知聚合为一条摘要。
-
-摘要类型：
-  - 基于时间：每 15 分钟 / 1 小时 / 每天
-  - 基于数量：累计 5 条未读通知后
-  - 混合型：    以先到者为准
-
-架构：
-
-  ┌───────────────────────────────────────────────────────┐
-  │                  DIGEST SYSTEM                        │
-  │                                                       │
-  │  通知到达                                             │
-  │       │                                               │
-  │       ▼                                               │
-  │  该用户是否符合摘要条件？                              │
-  │  （偏好 + 类别检查）                                   │
-  │       │                                               │
-  │  ┌────┴────┐                                          │
-  │  │  是     │  否 → 立即发送                            │
-  │  ▼         │                                          │
-  │  添加到摘要缓冲区（Redis sorted set）                  │
-  │  Key: digest:{user_id}:{category}                     │
-  │  Score: timestamp                                     │
-  │  Value: notification payload                          │
-  │       │                                               │
-  │  检查触发条件：                                        │
-  │  ┌────┴────────────────────┐                          │
-  │  │ 数量 >= 阈值？          │ ──是──► 刷新摘要          │
-  │  │ 距首条的时间            │                          │
-  │  │   >= 间隔？             │ ──是──► 刷新摘要          │
-  │  │ 两者都不满足？          │ ──否──► 等待              │
-  │  └────────────────────────┘                           │
-  │                                                       │
-  │  刷新摘要：                                            │
-  │    1. 读取缓冲区中所有项目                              │
-  │    2. 渲染摘要模板                                      │
-  │    3. 作为单条通知发送                                  │
-  │    4. 清空缓冲区                                        │
-  └───────────────────────────────────────────────────────┘
-
-  定时任务（每 5 分钟）：
-    - 扫描所有年龄 > max_interval 的摘要缓冲区
-    - 刷新任何超出时间阈值的缓冲区
-
-  摘要模板示例（邮件）：
-    Subject: "5 new activities on your post"
-    Body:
-      - Alice liked your post (2 min ago)
-      - Bob commented: "Great!" (5 min ago)
-      - Carol shared your post (10 min ago)
-      - 2 more activities...
-      [View all activity →]
+```mermaid
+flowchart TD
+    Arr["Notification arrives"] --> Elig{"Is user eligible for digest?<br/>(preference + category check)"}
+    Elig -->|"No"| Imm["Send immediately"]
+    Elig -->|"Yes"| Buf["Add to digest buffer (Redis ZSET)<br/>Key: digest:{user_id}:{category}"]
+    Buf --> Cond{"Count &gt;= threshold OR<br/>Time &gt;= interval?"}
+    Cond -->|"No"| Wait["Wait (Cron scans every 5 min)"]
+    Cond -->|"Yes"| Flush["Flush Digest:<br/>1. Read all items from buffer<br/>2. Render digest template<br/>3. Send as single notification<br/>4. Clear buffer"]
 ```
 
 ### 如何追踪通知效果？

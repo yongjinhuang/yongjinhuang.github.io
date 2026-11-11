@@ -696,110 +696,39 @@ CREATE INDEX idx_reviews_course ON reviews(course_id, status);
 
 ### 实体关系图
 
-```
-  +--------------+       +---------------+       +----------------+
-  |  instructors |──1:N──|    courses    |──1:N──|   sections     |
-  +--------------+       +---------------+       +----------------+
-                               │                       │
-                               │ 1:N                   │ 1:N
-                               ▼                       ▼
-                         +---------------+       +----------------+
-                         |   reviews     |       |    lessons     |
-                         +---------------+       +----------------+
-                               ▲                   │       │
-                               │                   │       │ 1:1
-                               │              1:1  │       ▼
-  +--------------+       +---------------+    +----+---+ +--------+
-  |   users      |──1:N──| enrollments  |    | quizzes| | video  |
-  +--------------+       +---------------+    +--------+ | assets |
-                               │                  │      +--------+
-                               │ 1:N              │ 1:N
-                               ▼                  ▼
-                         +---------------+  +----------------+
-                         |lesson_progress|  | quiz_attempts  |
-                         +---------------+  +----------------+
-                               │
-                          (completion)
-                               ▼
-                         +---------------+
-                         | certificates  |
-                         +---------------+
+```mermaid
+erDiagram
+    INSTRUCTORS ||--o{ COURSES : "teaches"
+    COURSES ||--o{ SECTIONS : "contains"
+    COURSES ||--o{ REVIEWS : "receives"
+    SECTIONS ||--o{ LESSONS : "contains"
+    LESSONS ||--o| QUIZZES : "has"
+    LESSONS ||--o| VIDEO_ASSETS : "streams"
+    USERS ||--o{ ENROLLMENTS : "enrolls"
+    USERS ||--o{ REVIEWS : "writes"
+    COURSES ||--o{ ENROLLMENTS : "has"
+    ENROLLMENTS ||--o{ LESSON_PROGRESS : "tracks"
+    ENROLLMENTS ||--o| CERTIFICATES : "earns"
+    QUIZZES ||--o{ QUIZ_ATTEMPTS : "records"
 ```
 
 ---
 
 ## 高层架构
 
-```
-+-------------------+    +-------------------+    +---------------------+
-|  Learner Web/App  |    | Instructor Portal |    |   Admin Dashboard   |
-+--------+----------+    +--------+----------+    +----------+----------+
-         |                        |                          |
-         +------------------------+--------------------------+
-                                  |
-                          HTTPS / WebSocket
-                                  |
-                    +-------------v--------------+
-                    |        API Gateway         |
-                    |  (Auth, Rate Limit, Route, |
-                    |   SSL Term, Geo-routing)   |
-                    +-------------+--------------+
-                                  |
-     +----------+---------+-------+-------+---------+----------+
-     |          |         |               |         |          |
-+----v---+ +---v----+ +--v--------+ +----v----+ +--v------+ +-v--------+
-| Course | | Video  | | Progress  | |  Quiz   | | Certif. | | Search & |
-| Service| | Service| | Service   | | Engine  | | Service | | Recommend|
-|        | |        | |           | |         | |         | |          |
-| CRUD   | | Upload | | Track     | | Grade   | | Generate| | ES Index |
-| Publish| | Trans- | | Video pos | | Code    | | Verify  | | Collab.  |
-| Price  | | code   | | Complete  | | Execute | | PDF     | | Filter   |
-| Review | | Stream | | Streaks   | | Bank    | | Chain   | | Personal.|
-+---+----+ +---+----+ +----+------+ +----+----+ +----+----+ +----+-----+
-    |          |            |             |           |            |
-    |     +----v-------+    |             |           |            |
-    |     | Transcode  |    |             |           |            |
-    |     | Pipeline   |    |             |           |            |
-    |     | (FFmpeg    |    |             |           |            |
-    |     |  Workers)  |    |             |           |            |
-    |     +----+-------+    |             |           |            |
-    |          |            |             |           |            |
-+---v----------v------------v-------------v-----------v------------v----+
-|                          Event Bus (Kafka)                            |
-|  Topics: course.published, video.transcoded, progress.updated,       |
-|          quiz.graded, enrollment.created, certificate.issued,        |
-|          review.submitted, payment.completed                         |
-+---+------------+-------------+-------------+------------+-----------+
-    |            |             |             |            |
-+---v----+  +---v--------+ +--v--------+ +--v-------+ +-v---------+
-| Notif. |  | Analytics  | | Payment   | | Live     | | Recommend |
-| Service|  | Service    | | Service   | | Class    | | Engine    |
-|        |  |            | |           | | Service  | |           |
-| Email  |  | Instructor | | Stripe    | | WebRTC   | | CF + CBF  |
-| Push   |  | Dashboards | | Revenue   | | Chat     | | ML Models |
-| In-app |  | Engagement | | Payout    | | Record   | | User      |
-+--------+  +------------+ +-----------+ +----------+ | Vectors   |
-                                                       +-----------+
-
-+--------------------+    +--------------------+    +------------------+
-|  Primary DB        |    |  Cache Layer       |    |  Search Engine   |
-|  (PostgreSQL)      |    |  (Redis Cluster)   |    |  (Elasticsearch) |
-|                    |    |                    |    |                  |
-|  - Courses         |    |  - Course metadata |    |  - Course index  |
-|  - Enrollments     |    |  - Progress cache  |    |  - Full-text     |
-|  - Quizzes         |    |  - Session tokens  |    |  - Faceted       |
-|  - Certificates    |    |  - Leaderboards    |    |  - Autocomplete  |
-+--------------------+    |  - Rate limits     |    +------------------+
-                          +--------------------+
-+--------------------+    +--------------------+
-|  Object Storage    |    |  CDN (CloudFront)  |
-|  (S3)              |    |                    |
-|                    |    |  - Video HLS/DASH  |
-|  - Raw uploads     |    |  - Thumbnails      |
-|  - Transcoded video|    |  - Static assets   |
-|  - Certificates    |    |  - Cert PDFs       |
-|  - Subtitles       |    +--------------------+
-+--------------------+
+```mermaid
+flowchart TD
+    Learn["Learner Web/App"] & Inst["Instructor Portal"] & Admin["Admin Dashboard"] -->|"HTTPS / WebSocket"| GW["API Gateway<br/>(Auth, Rate Limit, Route, SSL Term, Geo-routing)"]
+    GW --> CourseSvc["Course Service<br/>CRUD, Publish, Price, Review"] & VideoSvc["Video Service<br/>Upload, Transcode, Stream"] & ProgSvc["Progress Service<br/>Track, Video pos, Complete, Streaks"] & QuizEng["Quiz Engine<br/>Grade, Code Execute, Bank"] & CertSvc["Certificate Service<br/>Generate, Verify, PDF"] & SearchSvc["Search &amp; Recommend<br/>ES Index, Collab Filter, Personal."]
+    VideoSvc --> TransPipe["Transcode Pipeline (FFmpeg Workers)"]
+    CourseSvc & VideoSvc & TransPipe & ProgSvc & QuizEng & CertSvc & SearchSvc --> Kafka["Event Bus (Kafka)<br/>Topics: course.published, video.transcoded, progress.updated, quiz.graded, enrollment.created, certificate.issued"]
+    Kafka --> NotifSvc["Notification Service"] & AnaSvc["Analytics Service"] & PaySvc["Payment Service (Stripe)"] & LiveSvc["Live Class Service (WebRTC)"] & RecEng["Recommend Engine (CF + CBF)"]
+    subgraph Data["Data Stores &amp; CDN"]
+        PG["Primary DB (PostgreSQL): Courses, Enrollments, Quizzes, Certificates"]
+        Redis["Cache Layer (Redis Cluster): Metadata, Progress, Sessions, Leaderboards"]
+        ES["Search Engine (Elasticsearch): Course index, Full-text, Faceted"]
+        S3["Object Storage (S3) + CDN (CloudFront): Video HLS/DASH, Thumbnails, Cert PDFs"]
+    end
 ```
 
 ---
@@ -808,29 +737,20 @@ CREATE INDEX idx_reviews_course ON reviews(course_id, status);
 
 ### 上传流程
 
-```
-Instructor                API Gateway            Video Service          Object Storage
-    |                         |                       |                       |
-    |  1. Request upload URL  |                       |                       |
-    |------------------------>|                       |                       |
-    |                         |  2. Generate presigned|                       |
-    |                         |------ URL ----------->|                       |
-    |                         |                       |  3. Create presigned  |
-    |                         |                       |       S3 PUT URL      |
-    |                         |                       |---------------------->|
-    |  4. Return presigned URL|                       |                       |
-    |<------------------------|                       |                       |
-    |                                                                         |
-    |  5. Upload video directly to S3 (multipart)                            |
-    |----------------------------------------------------------------------->|
-    |                                                                         |
-    |                         |  6. S3 Event triggers |                       |
-    |                         |     Lambda/SNS        |                       |
-    |                         |<----------------------|                       |
-    |                         |                       |                       |
-    |                         |  7. Enqueue transcode |                       |
-    |                         |     job               |                       |
-    |                         |---------------------->|                       |
+```mermaid
+sequenceDiagram
+    participant I as "Instructor"
+    participant GW as "API Gateway"
+    participant VS as "Video Service"
+    participant S3 as "Object Storage (S3)"
+
+    I->>GW: 1. Request upload URL
+    GW->>VS: 2. Generate presigned URL
+    VS->>S3: 3. Create presigned S3 PUT URL
+    GW-->>I: 4. Return presigned URL
+    I->>S3: 5. Upload video directly to S3 (multipart)
+    S3-->>VS: 6. S3 Event triggers Lambda/SNS
+    VS->>VS: 7. Enqueue transcode job
 ```
 
 ### 转码管道
@@ -963,46 +883,14 @@ CDN caching strategy:
 
 ### 字幕与标题管道
 
-```
-                  +------------------+
-                  |  Raw Video File  |
-                  +--------+---------+
-                           |
-              +------------v-------------+
-              |  Extract Audio Track     |
-              |  (FFmpeg -vn -acodec pcm)|
-              +-----------+--------------+
-                          |
-              +-----------v--------------+
-              |  Speech-to-Text (ASR)    |
-              |  Whisper / Google STT    |
-              |  Output: timestamped     |
-              |  word-level transcript   |
-              +-----------+--------------+
-                          |
-              +-----------v--------------+
-              |  Generate WebVTT         |
-              |  Segment into lines      |
-              |  (~42 chars, 2 lines max)|
-              +-----------+--------------+
-                          |
-              +-----------v--------------+
-              |  Machine Translation     |
-              |  (Optional: to 10+ langs)|
-              |  Preserve timestamps     |
-              +-----------+--------------+
-                          |
-              +-----------v--------------+
-              |  Human Review Queue      |
-              |  (for popular courses)   |
-              |  Fix ASR errors          |
-              +-----------+--------------+
-                          |
-              +-----------v--------------+
-              |  Store & Serve via CDN   |
-              |  /v/{asset_id}/subs/     |
-              |  en.vtt, zh.vtt, es.vtt  |
-              +--------------------------+
+```mermaid
+flowchart TD
+    Raw["Raw Video File"] --> Audio["Extract Audio Track<br/>(FFmpeg -vn -acodec pcm)"]
+    Audio --> ASR["Speech-to-Text (ASR)<br/>Whisper / Google STT -> timestamped word-level transcript"]
+    ASR --> VTT["Generate WebVTT<br/>Segment into lines (~42 chars, 2 lines max)"]
+    VTT --> MT["Machine Translation<br/>(Optional: to 10+ langs, preserve timestamps)"]
+    MT --> Rev["Human Review Queue<br/>(for popular courses, fix ASR errors)"]
+    Rev --> CDN["Store &amp; Serve via CDN<br/>/v/{asset_id}/subs/en.vtt, zh.vtt, es.vtt"]
 ```
 
 ---
@@ -1278,51 +1166,18 @@ def grade_quiz_attempt(attempt):
 
 ### 沙箱代码执行
 
-```
-Code execution architecture:
+```mermaid
+sequenceDiagram
+    participant QE as "Quiz Engine"
+    participant CE as "Code Executor Service"
+    participant SC as "Sandbox Container (gVisor / ephemeral)"
 
-+------------------+    +-------------------+    +---------------------+
-| Quiz Engine      |    | Code Executor     |    | Sandbox Container   |
-| (submits code)   |    | Service           |    | (ephemeral)         |
-+--------+---------+    +--------+----------+    +----------+----------+
-         |                       |                          |
-         | 1. Submit code        |                          |
-         |  + test cases         |                          |
-         +---------------------->|                          |
-                                 | 2. Spin up sandboxed     |
-                                 |    container (gVisor)    |
-                                 +------------------------->|
-                                 |                          |
-                                 | 3. Write code to /tmp    |
-                                 | 4. Execute with limits:  |
-                                 |    - CPU: 2 cores        |
-                                 |    - Memory: 256 MB      |
-                                 |    - Time: 5 seconds     |
-                                 |    - No network access   |
-                                 |    - Read-only FS        |
-                                 |                          |
-                                 | 5. Run test cases        |
-                                 |    stdin -> program      |
-                                 |    stdout -> compare     |
-                                 |<-------------------------+
-                                 |                          |
-                                 | 6. Destroy container     |
-                                 +------------------------->|
-         | 7. Return results     |
-         |<----------------------+
-         |
-
-Supported languages:
-  Python 3.11, Java 21, C++ 20, JavaScript (Node 22),
-  Go 1.22, Rust 1.76, SQL (SQLite sandbox)
-
-Security measures:
-  - gVisor (application kernel) or Firecracker microVM
-  - No network access inside sandbox
-  - Resource limits enforced by cgroups
-  - Process count limited (max 10)
-  - Container destroyed after each execution (no state persistence)
-  - Syscall allowlist (seccomp profile)
+    QE->>CE: 1. Submit code + test cases
+    CE->>SC: 2. Spin up sandboxed container (gVisor)
+    Note over CE,SC: 3. Write code to /tmp<br/>4. Execute with limits (2 CPU, 256MB RAM, 5s timeout, no network, RO FS)<br/>5. Run test cases (stdin -> program -> compare stdout)
+    SC-->>CE: Execution output & test results
+    CE->>SC: 6. Destroy container
+    CE-->>QE: 7. Return results
 ```
 
 ### 题库与随机化
@@ -1810,49 +1665,21 @@ def build_search_query(query, filters, page, page_size):
 
 ### 实时视频架构
 
-```
-+----------------+     +------------------+     +------------------+
-|  Instructor    |     |  Signaling       |     |  Learners        |
-|  (broadcaster) |     |  Server (WS)     |     |  (viewers)       |
-+-------+--------+     +--------+---------+     +--------+---------+
-        |                       |                         |
-        | 1. Create session     |                         |
-        +---------------------->|                         |
-        |                       |                         |
-        | 2. SDP offer          |                         |
-        +---------------------->|                         |
-        |                       | 3. Relay offer          |
-        |                       +------------------------>|
-        |                       |                         |
-        |                       | 4. SDP answer           |
-        |                       |<------------------------+
-        | 5. Relay answer       |                         |
-        |<----------------------+                         |
-        |                       |                         |
-        | 6. ICE candidates     |                         |
-        |<--------------------->|<----------------------->|
-        |                       |                         |
-        |  7. Media flows via SFU (Selective Forwarding Unit)
-        |                       |                         |
-+-------v-----------------------v-------------------------v--------+
-|                     SFU (mediasoup / Janus)                      |
-|                                                                   |
-|  Instructor stream → SFU → fan-out to N learners                |
-|  - Simulcast: instructor sends 3 quality layers                  |
-|  - SFU selects appropriate layer per viewer bandwidth            |
-|  - No transcoding at SFU (low CPU, high scalability)            |
-|                                                                   |
-|  For > 500 viewers: SFU cascading                                |
-|  - Primary SFU receives instructor stream                        |
-|  - Secondary SFUs pull from primary                              |
-|  - Each secondary serves ~500 viewers                            |
-+------------------------------------------------------------------+
+```mermaid
+sequenceDiagram
+    participant I as "Instructor (broadcaster)"
+    participant SS as "Signaling Server (WS)"
+    participant L as "Learners (viewers)"
+    participant SFU as "SFU (mediasoup / Janus)"
 
-直播课堂扩展：
-  < 50 名参与者：      单个 SFU，完整 WebRTC（亚秒级延迟）
-  50-500 名参与者：    SFU 配合 simulcast，观众仅接收
-  500-10K 名参与者：   级联 SFU，RTMP 采集 + 低延迟 HLS 回退
-  > 10K 名参与者：     RTMP 采集 → 实时转码 → 通过 CDN 的 LL-HLS（约 3-5 秒延迟）
+    I->>SS: 1. Create session
+    I->>SS: 2. SDP offer
+    SS->>L: 3. Relay offer
+    L-->>SS: 4. SDP answer
+    SS-->>I: 5. Relay answer
+    I->>L: 6. Exchange ICE candidates via Signaling Server
+    I->>SFU: 7. Publish simulcast stream (3 quality layers)
+    SFU->>L: Fan-out appropriate layer per viewer bandwidth (cascaded SFUs for >500 viewers)
 ```
 
 ### 直播聊天与互动
@@ -2422,68 +2249,21 @@ CDN 拓扑：
 
 ## 部署架构
 
-```
-+------------------------------------------------------------------------+
-|                         Cloud Provider (AWS)                            |
-|                                                                        |
-|  +---------------------------+    +----------------------------------+ |
-|  |    Region: US-East-1      |    |    Region: EU-West-1             | |
-|  |                           |    |                                  | |
-|  |  +---------------------+  |    |  +---------------------+        | |
-|  |  | ALB (Application    |  |    |  | ALB                 |        | |
-|  |  | Load Balancer)      |  |    |  +----------+----------+        | |
-|  |  +----------+----------+  |    |             |                    | |
-|  |             |              |    |  +----------v----------+        | |
-|  |  +----------v----------+  |    |  | EKS Cluster         |        | |
-|  |  | EKS Cluster         |  |    |  | (read replicas of   |        | |
-|  |  | (Kubernetes)        |  |    |  |  all services)      |        | |
-|  |  |                     |  |    |  +---------------------+        | |
-|  |  | +------+ +--------+ |  |    |                                  | |
-|  |  | |Course| |Video   | |  |    |  +---------------------+        | |
-|  |  | |Svc   | |Svc     | |  |    |  | RDS Read Replica    |        | |
-|  |  | +------+ +--------+ |  |    |  +---------------------+        | |
-|  |  | +------+ +--------+ |  |    +----------------------------------+ |
-|  |  | |Progr.| |Quiz    | |  |                                        |
-|  |  | |Svc   | |Engine  | |  |    +----------------------------------+ |
-|  |  | +------+ +--------+ |  |    |    Region: AP-Southeast-1       | |
-|  |  | +------+ +--------+ |  |    |                                  | |
-|  |  | |Cert  | |Search  | |  |    |  (same pattern as EU)            | |
-|  |  | |Svc   | |Svc     | |  |    +----------------------------------+ |
-|  |  | +------+ +--------+ |  |                                        |
-|  |  | +------+ +--------+ |  |                                        |
-|  |  | |Notif.| |Recomm. | |  |    +----------------------------------+ |
-|  |  | |Svc   | |Engine  | |  |    |  Shared Services                 | |
-|  |  | +------+ +--------+ |  |    |                                  | |
-|  |  +---------------------+  |    |  +-------------+ +-------------+ | |
-|  |                           |    |  | CloudFront  | | Route 53    | | |
-|  |  +---------------------+  |    |  | (CDN)       | | (DNS +      | | |
-|  |  | Data Layer          |  |    |  | 200+ PoPs   | |  latency    | | |
-|  |  |                     |  |    |  +-------------+ |  routing)   | | |
-|  |  | +------+ +--------+ |  |    |                  +-------------+ | |
-|  |  | | RDS  | | Redis  | |  |    |  +-------------+ +-------------+ | |
-|  |  | | (PG) | |Cluster | |  |    |  | S3          | | SES/SNS     | | |
-|  |  | |Primary| |       | |  |    |  | (Video +    | | (Email +    | | |
-|  |  | +------+ +--------+ |  |    |  |  Assets)    | |  Push)      | | |
-|  |  | +------+ +--------+ |  |    |  +-------------+ +-------------+ | |
-|  |  | | ES   | | Kafka  | |  |    |                                  | |
-|  |  | |Cluster| |Cluster | |  |    |  +-------------+               | |
-|  |  | +------+ +--------+ |  |    |  | MediaConvert|               | |
-|  |  +---------------------+  |    |  | (Transcoding|               | |
-|  +---------------------------+    |  |  Pipeline)  |               | |
-|                                   |  +-------------+               | |
-|                                   +----------------------------------+ |
-+------------------------------------------------------------------------+
-
-CI/CD Pipeline:
-  GitHub → GitHub Actions → Build Docker images → ECR →
-  ArgoCD (GitOps) → EKS rolling deployment
-
-Monitoring:
-  - Prometheus + Grafana (metrics)
-  - ELK Stack (logs)
-  - Jaeger (distributed tracing)
-  - PagerDuty (alerting)
-  - Custom dashboards: video start time, buffer ratio, enrollment funnel
+```mermaid
+flowchart TD
+    subgraph US["Region: US-East-1 (Primary)"]
+        ALB_US["ALB (Application Load Balancer)"] --> EKS_US["EKS Cluster (Kubernetes)<br/>Course Svc | Video Svc | Progress Svc | Quiz Engine<br/>Cert Svc | Search Svc | Notif Svc | Recommend Engine"]
+        EKS_US --> Data_US["Data Layer:<br/>RDS (PG Primary) | Redis Cluster | ES Cluster | Kafka Cluster"]
+    end
+    subgraph EU["Region: EU-West-1"]
+        ALB_EU["ALB"] --> EKS_EU["EKS Cluster (read replicas of all services)"] --> RDS_EU["RDS Read Replica"]
+    end
+    subgraph AP["Region: AP-Southeast-1"]
+        AP_Topo["Same read-replica pattern as EU-West-1"]
+    end
+    subgraph Shared["Shared Global Services"]
+        Global["CloudFront (CDN, 200+ PoPs) | Route 53 (DNS + latency routing)<br/>S3 (Video + Assets) | SES/SNS (Email + Push) | MediaConvert (Transcoding Pipeline)"]
+    end
 ```
 
 ---

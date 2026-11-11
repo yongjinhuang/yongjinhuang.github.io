@@ -330,7 +330,7 @@ stateDiagram-v2
     Inactive --> Finalized : on_shutdown()
     Active --> Finalized : on_shutdown()
     Finalized --> [*]
-````
+```
 
 ```cpp
 #include <rclcpp_lifecycle/lifecycle_node.hpp>

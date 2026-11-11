@@ -565,7 +565,7 @@ stateDiagram-v2
     ErrorPassive --> ErrorActive : TEC and REC < 128
     ErrorPassive --> BusOff : TEC >= 256
     BusOff --> ErrorActive : 128 x 11 recessive bits / software reset
-````
+```
 
 ### 4.5 CAN Code Example (STM32F4, bxCAN)
 

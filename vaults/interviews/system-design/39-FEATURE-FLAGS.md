@@ -546,53 +546,15 @@ TTL:     None (entries expire via score-based cleanup)
 
 ## 4. High-Level Architecture
 
-```
-                                   ┌──────────────────────┐
-                                   │   Management Web UI  │
-                                   │  (React Dashboard)   │
-                                   └──────────┬───────────┘
-                                              │ REST API
-                                              ▼
-                  ┌────────────────────────────────────────────────────┐
-                  │              API Gateway / Load Balancer           │
-                  └──────────┬───────────────────────┬────────────────┘
-                             │                       │
-                   ┌─────────▼──────────┐  ┌────────▼─────────────┐
-                   │   Flag Management  │  │   SDK Service        │
-                   │   Service          │  │   (Evaluation +      │
-                   │   (CRUD, Rules,    │  │    Streaming)        │
-                   │    Segments)       │  │                      │
-                   └────────┬───────────┘  └───┬──────────┬───────┘
-                            │                  │          │
-                   ┌────────▼──────────────────▼──┐      │
-                   │        PostgreSQL             │      │
-                   │   (Flags, Rules, Segments,    │      │
-                   │    Audit Log, Experiments)    │      │
-                   └──────────────────────────┬────┘      │
-                                              │           │
-                   ┌──────────────────────────▼───────────▼───────┐
-                   │              Redis Cluster                    │
-                   │  (Config Cache, Pub/Sub, Eval Cache)         │
-                   └──────┬──────────────────────┬───────────────┘
-                          │                      │
-            ┌─────────────▼────┐     ┌───────────▼──────────┐
-            │  SSE/Streaming   │     │   Event Collector    │
-            │  Gateway         │     │   Service            │
-            │  (Flag Updates)  │     │   (Batch Ingest)     │
-            └──┬─────────┬────┘     └──────────┬───────────┘
-               │         │                     │
-    ┌──────────▼──┐  ┌───▼──────────┐   ┌─────▼─────────────┐
-    │ Server SDK  │  │ Client SDK   │   │  Analytics /       │
-    │ (Node, Go,  │  │ (JS, React,  │   │  ClickHouse        │
-    │  Python,    │  │  iOS,        │   │  (Experiment       │
-    │  Java)      │  │  Android)    │   │   Results)         │
-    │             │  │              │   └────────────────────┘
-    │ ┌─────────┐ │  │ ┌─────────┐ │
-    │ │ Local   │ │  │ │ Local   │ │
-    │ │ Rule    │ │  │ │ Flag    │ │
-    │ │ Engine  │ │  │ │ Cache   │ │
-    │ └─────────┘ │  │ └─────────┘ │
-    └─────────────┘  └─────────────┘
+```mermaid
+flowchart TD
+    UI["Management Web UI<br/>(React Dashboard)"] -->|"REST API"| GW["API Gateway / Load Balancer"]
+    GW --> FlagSvc["Flag Management Service<br/>(CRUD, Rules, Segments)"] & SDKSvc["SDK Service<br/>(Evaluation + Streaming)"]
+    FlagSvc & SDKSvc --> PG["PostgreSQL<br/>(Flags, Rules, Segments, Audit Log, Experiments)"]
+    PG & SDKSvc --> Redis["Redis Cluster<br/>(Config Cache, Pub/Sub, Eval Cache)"]
+    Redis --> SSEGW["SSE / Streaming Gateway<br/>(Flag Updates)"] & EventCol["Event Collector Service<br/>(Batch Ingest)"]
+    SSEGW --> SrvSDK["Server SDK (Node, Go, Python, Java)<br/>[Local Rule Engine]"] & CliSDK["Client SDK (JS, React, iOS, Android)<br/>[Local Flag Cache]"]
+    EventCol --> CH["Analytics / ClickHouse<br/>(Experiment Results)"]
 ```
 
 ### Data Flow
@@ -831,33 +793,16 @@ Key property: Changing the rollout from 30% → 50% only ADDS users.
 
 ### Rule Evaluation Order
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Flag Evaluation Pipeline                  │
-│                                                             │
-│  1. Flag Disabled? ──yes──▶ Return offVariation             │
-│         │ no                                                │
-│         ▼                                                   │
-│  2. Prerequisites Met? ──no──▶ Return offVariation          │
-│         │ yes                                               │
-│         ▼                                                   │
-│  3. Individual Targets                                      │
-│     User in explicit include list? ──yes──▶ Return target   │
-│         │ no                                    variation    │
-│         ▼                                                   │
-│  4. Rule 1 (highest priority)                               │
-│     All clauses match? ──yes──▶ Apply rollout ──▶ Return    │
-│         │ no                                                │
-│         ▼                                                   │
-│  5. Rule 2                                                  │
-│     All clauses match? ──yes──▶ Apply rollout ──▶ Return    │
-│         │ no                                                │
-│         ▼                                                   │
-│  6. ... (remaining rules)                                   │
-│         │                                                   │
-│         ▼                                                   │
-│  7. Fallthrough ──▶ Apply default rollout ──▶ Return        │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    S1{"1. Flag Disabled?"} -->|"yes"| Off1["Return offVariation"]
+    S1 -->|"no"| S2{"2. Prerequisites Met?"}
+    S2 -->|"no"| Off2["Return offVariation"]
+    S2 -->|"yes"| S3{"3. User in Individual<br/>Target List?"}
+    S3 -->|"yes"| Targ["Return target variation"]
+    S3 -->|"no"| S4{"4. Rule 1..N:<br/>All clauses match?"}
+    S4 -->|"yes"| RuleRoll["Apply rule rollout -> Return"]
+    S4 -->|"no"| S7["7. Fallthrough -> Apply default rollout -> Return"]
 ```
 
 ### Supported Operators
@@ -2044,69 +1989,20 @@ Optimization Strategy:
 
 ## 13. Deployment Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                          Region: US-East                             │
-│                                                                     │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │                    Kubernetes Cluster                          │  │
-│  │                                                               │  │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────┐ │  │
-│  │  │ Ingress /   │  │ Management  │  │  SDK Service          │ │  │
-│  │  │ API Gateway │  │ API         │  │  (bootstrap +         │ │  │
-│  │  │ (NGINX)     │──│ (3 pods)    │  │   client eval)        │ │  │
-│  │  │             │  │             │  │  (6 pods)             │ │  │
-│  │  │  Rate limit │  └──────┬──────┘  └──────────┬───────────┘ │  │
-│  │  │  TLS term   │         │                    │             │  │
-│  │  │  Auth       │         │                    │             │  │
-│  │  └──────┬──────┘         │                    │             │  │
-│  │         │                │                    │             │  │
-│  │  ┌──────▼──────────────────────────────────────────────────┐ │  │
-│  │  │                SSE Gateway (StatefulSet)                 │ │  │
-│  │  │                                                         │ │  │
-│  │  │  Pod 1         Pod 2         Pod 3        Pod 4         │ │  │
-│  │  │  50K conns     50K conns     50K conns    50K conns     │ │  │
-│  │  │                                                         │ │  │
-│  │  │  Sharded by environment SDK key (consistent hashing)    │ │  │
-│  │  └──────────────────────┬──────────────────────────────────┘ │  │
-│  │                         │                                    │  │
-│  │  ┌──────────────────────▼──────────────────────────────────┐ │  │
-│  │  │                Redis Cluster                             │ │  │
-│  │  │  Shard 1    Shard 2    Shard 3    (3 replicas each)     │ │  │
-│  │  │  Config     Config     Pub/Sub                          │ │  │
-│  │  │  Cache      Cache      Channels                         │ │  │
-│  │  └─────────────────────────────────────────────────────────┘ │  │
-│  │                                                               │  │
-│  │  ┌──────────────────────┐  ┌────────────────────────────┐    │  │
-│  │  │   PostgreSQL         │  │  Event Pipeline             │    │  │
-│  │  │   Primary            │  │                             │    │  │
-│  │  │   + 2 Read Replicas  │  │  Event Collector → Kafka    │    │  │
-│  │  │                      │  │  → ClickHouse               │    │  │
-│  │  │   Flags, Rules,      │  │                             │    │  │
-│  │  │   Segments, Audit    │  │  Experiment results,        │    │  │
-│  │  │                      │  │  flag usage analytics       │    │  │
-│  │  └──────────────────────┘  └────────────────────────────┘    │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-│                                                                     │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │              CDN (CloudFront / Fastly)                         │  │
-│  │                                                               │  │
-│  │  Edge caching for client-side SDK bootstrap responses         │  │
-│  │  Cache key: env_client_id + user_context_hash                 │  │
-│  │  TTL: 60s, stale-while-revalidate: 300s                      │  │
-│  │  Purge on flag update (via API)                               │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│                          Region: EU-West                             │
-│                    (Same architecture, replicated)                    │
-│                                                                     │
-│  PostgreSQL: Read replica (async replication from US-East primary)   │
-│  Redis: Independent cluster (synced via flag service on write)       │
-│  SSE Gateway: Independent cluster (subscribes to local Redis)        │
-│  SDK connections: Routed to nearest region via GeoDNS                │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph East["Region: US-East (Primary)"]
+        Ing["Ingress / API Gateway (NGINX)<br/>Rate limit, TLS term, Auth"] --> Mgmt["Management API (3 pods)"] & SDKSvc["SDK Service (6 pods)"]
+        Ing & Mgmt & SDKSvc --> SSE["SSE Gateway (StatefulSet)<br/>4 pods x 50K conns, sharded by env SDK key"]
+        Mgmt & SDKSvc & SSE --> Redis["Redis Cluster (3 shards x 3 replicas)<br/>Config Cache + Pub/Sub Channels"]
+        Mgmt & SDKSvc --> PG["PostgreSQL Primary + 2 Read Replicas<br/>Flags, Rules, Segments, Audit"]
+        SDKSvc --> Pipe["Event Pipeline: Event Collector -> Kafka -> ClickHouse"]
+        CDN["CDN (CloudFront / Fastly)<br/>Edge caching for client SDK bootstrap (TTL 60s, SWR 300s)"] --> SDKSvc
+    end
+    subgraph West["Region: EU-West (Replicated)"]
+        EU_Info["PostgreSQL Read Replica (async from US-East) | Independent Redis &amp; SSE Gateway<br/>SDK connections routed to nearest region via GeoDNS"]
+    end
+    East -->|"Async Replication"| West
 ```
 
 ### Disaster Recovery

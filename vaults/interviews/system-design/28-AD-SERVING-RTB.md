@@ -83,27 +83,12 @@ Ad metadata (campaigns, targeting rules):
 
 ### Participants and Roles
 
-```
-+------------------+         +------------------+         +------------------+
-|   ADVERTISER     |         |    AD EXCHANGE   |         |    PUBLISHER     |
-|                  |         |                  |         |                  |
-| Wants to show    |         | Marketplace that |         | Website/App that |
-| ads to users     |         | runs RTB auction |         | sells ad space   |
-|                  |         |                  |         |                  |
-| Uses DSP to bid  |         | Connects DSPs    |         | Uses SSP to sell |
-+--------+---------+         | and SSPs         |         +--------+---------+
-         |                   +--------+---------+                  |
-         |                            |                            |
-         v                            |                            v
-+--------+---------+         +--------+---------+         +--------+---------+
-|       DSP        |         |       DMP        |         |       SSP        |
-| (Demand-Side     |         | (Data Management |         | (Supply-Side     |
-|  Platform)       |         |  Platform)       |         |  Platform)       |
-|                  |         |                  |         |                  |
-| Places bids on   |         | Aggregates user  |         | Manages inventory|
-| behalf of        |         | data, segments,  |         | yield for        |
-| advertisers      |         | lookalike models |         | publishers       |
-+------------------+         +------------------+         +------------------+
+```mermaid
+flowchart TD
+    Adv["ADVERTISER<br/>Wants to show ads to users"] -->|"Uses DSP to bid"| DSP["DSP (Demand-Side Platform)<br/>Places bids on behalf of advertisers"]
+    Pub["PUBLISHER<br/>Website/App that sells ad space"] -->|"Uses SSP to sell"| SSP["SSP (Supply-Side Platform)<br/>Manages inventory yield for publishers"]
+    DSP & SSP <--> Ex["AD EXCHANGE<br/>Marketplace that runs RTB auction"]
+    Ex <--> DMP["DMP (Data Management Platform)<br/>Aggregates user data, segments, lookalike models"]
 ```
 
 ### Full RTB Flow
@@ -468,66 +453,22 @@ Value: { "spend": 98234.12, "impressions": 25000000 }
 
 ## 5. High-Level Architecture
 
-```
-                         +-----------------------+
-                         |   Publisher / Browser |
-                         +-----------+-----------+
-                                     |
-                              Ad Request (HTTP)
-                                     |
-                         +-----------v-----------+
-                         |    Load Balancer /    |
-                         |    Edge (Anycast)     |
-                         +-----------+-----------+
-                                     |
-                  +------------------+------------------+
-                  |                                     |
-      +-----------v-----------+           +------------v-----------+
-      |   Ad Serving API      |           |  RTB Gateway           |
-      |   (Stateless)         |           |  (Fan-out to DSPs)     |
-      |   - Auth, consent     |           |  - OpenRTB protocol    |
-      |   - Rate limiting     |           |  - Timeout: 80ms       |
-      +----+----------+-------+           +------------+-----------+
-           |          |                                |
-           |          |                    +-----------v-----------+
-           |          |                    |   Auction Engine      |
-           |          |                    |   - 1st / 2nd price  |
-           |          |                    |   - Floor enforcement |
-           |          |                    +----------+------------+
-           |          |                               |
-  +--------v---+  +---v--------+           +----------v-----------+
-  | Targeting  |  | CTR/Rank   |           |  Win Notice Service  |
-  | Service    |  | Predictor  |           |  - Billing event     |
-  |            |  |            |           |  - Creative URL      |
-  | - Segment  |  | - ML model |           +----------+-----------+
-  |   lookup   |  | - Feature  |                      |
-  | - Freq cap |  |   eng.     |             [Winning DSP]
-  | - Consent  |  +------------+
-  +--------+---+
-           |
-  +--------v---+
-  | Candidate  |
-  | Ad Fetcher |
-  | (Index)    |
-  +------------+
+```mermaid
+flowchart TD
+    Pub["Publisher / Browser"] -->|"Ad Request (HTTP)"| LB["Load Balancer / Edge (Anycast)"]
+    LB --> AdAPI["Ad Serving API (Stateless)<br/>Auth, consent, rate limiting"]
+    LB --> RTBGW["RTB Gateway (Fan-out to DSPs)<br/>OpenRTB protocol, timeout: 80ms"]
 
-Shared Services:
-  +--------------------+     +--------------------+     +--------------------+
-  |  User Profile      |     |  Budget Pacing     |     |  Creative CDN      |
-  |  Store (Aerospike) |     |  Service (Redis)   |     |  (CloudFront/S3)   |
-  +--------------------+     +--------------------+     +--------------------+
+    AdAPI --> Targ["Targeting Service<br/>Segment lookup, Freq cap, Consent"] --> Fetch["Candidate Ad Fetcher (Index)"]
+    AdAPI --> CTR["CTR / Rank Predictor<br/>ML model, Feature eng."]
+    RTBGW --> Auction["Auction Engine<br/>1st / 2nd price, Floor enforcement"]
+    Auction --> Win["Win Notice Service<br/>Billing event, Creative URL"] --> DSP["Winning DSP"]
 
-Tracking Pipeline:
-  +--------------------+     +--------------------+     +--------------------+
-  |  Impression /      |     |  Kafka             |     |  Clickhouse        |
-  |  Click Tracker     +---->|  (Event Bus)       +---->|  (Analytics DB)    |
-  +--------------------+     +--------------------+     +--------------------+
-                                        |
-                              +---------v---------+
-                              |  Attribution &    |
-                              |  Fraud Pipeline   |
-                              |  (Flink/Spark)    |
-                              +-------------------+
+    subgraph Shared["Shared &amp; Tracking Pipeline"]
+        S1["User Profile Store (Aerospike) | Budget Pacing Service (Redis) | Creative CDN (CloudFront/S3)"]
+        Track["Impression / Click Tracker"] --> Kafka["Kafka (Event Bus)"] --> CH["ClickHouse (Analytics DB)"]
+        Kafka --> Fraud["Attribution &amp; Fraud Pipeline (Flink / Spark)"]
+    end
 ```
 
 ---

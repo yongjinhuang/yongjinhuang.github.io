@@ -398,93 +398,38 @@ CREATE INDEX idx_pm_user ON payment_methods(user_id);
 
 ## 4. High-Level Architecture
 
-```
-+------------------+     +------------------+     +------------------+
-|   Mobile App     |     |   Web Client     |     |  Merchant SDK    |
-+--------+---------+     +--------+---------+     +--------+---------+
-         |                        |                        |
-         +------------------------+------------------------+
-                                  |
-                          +-------v--------+
-                          |  API Gateway   |
-                          | (Auth, TLS,    |
-                          |  Rate Limit)   |
-                          +-------+--------+
-                                  |
-              +-------------------+-------------------+
-              |                   |                   |
-    +---------v------+  +---------v------+  +---------v------+
-    | Wallet Service |  |Transfer Service|  |  Topup/Withdraw|
-    | (balance read, |  |(P2P, payments) |  |    Service     |
-    |  KYC checks)   |  |                |  | (ACH, cards)   |
-    +--------+-------+  +--------+-------+  +--------+-------+
-             |                   |                   |
-             +-------------------+-------------------+
-                                  |
-                     +------------v-----------+
-                     |    Ledger Service      |
-                     | (double-entry writes,  |
-                     |  balance mutations,    |
-                     |  idempotency check)    |
-                     +------------+-----------+
-                                  |
-               +------------------+------------------+
-               |                  |                  |
-     +---------v------+  +--------v-------+  +-------v--------+
-     |  Primary DB    |  |   Read Replica |  |  Ledger Archive|
-     | (PostgreSQL,   |  | (PostgreSQL    |  |  (Cold store,  |
-     |  synchronous   |  |  streaming     |  |  S3/Parquet,   |
-     |  replication)  |  |  replica)      |  |  7-year retain)|
-     +----------------+  +----------------+  +----------------+
-                                  |
-               +------------------+------------------+
-               |                  |                  |
-     +---------v------+  +--------v-------+  +-------v--------+
-     |  Redis Cluster |  |  Kafka Cluster |  |  Fraud Engine  |
-     | (balance cache,|  | (event stream: |  | (ML scoring,   |
-     |  idempotency,  |  |  txn events,   |  |  velocity chk, |
-     |  rate limits)  |  |  audit stream) |  |  device fp)    |
-     +----------------+  +----------------+  +----------------+
-                                  |
-               +------------------+------------------+
-               |                  |                  |
-     +---------v------+  +--------v-------+  +-------v--------+
-     | Notification   |  | Reconciliation |  |  Compliance    |
-     | Service        |  | Service (daily |  |  Service (KYC, |
-     | (push/email/   |  |  batch, bank   |  |  AML, SAR      |
-     |  SMS)          |  |  statement)    |  |  reporting)    |
-     +----------------+  +----------------+  +----------------+
+```mermaid
+flowchart TD
+    Mob["Mobile App"] & Web["Web Client"] & SDK["Merchant SDK"] --> GW["API Gateway<br/>(Auth, TLS, Rate Limit)"]
+    GW --> WalletSvc["Wallet Service<br/>(balance read, KYC checks)"] & TransSvc["Transfer Service<br/>(P2P, payments)"] & TopupSvc["Topup/Withdraw Service<br/>(ACH, cards)"]
+    WalletSvc & TransSvc & TopupSvc --> LedgerSvc["Ledger Service<br/>(double-entry writes, balance mutations, idempotency)"]
+    LedgerSvc --> PriDB["Primary DB (PostgreSQL sync repl)"] & RepDB["Read Replica (PostgreSQL)"] & Arch["Ledger Archive (S3/Parquet, 7-yr retain)"]
+    LedgerSvc --> Redis["Redis Cluster (balance cache, idempotency)"] & Kafka["Kafka Cluster (txn &amp; audit events)"] & Fraud["Fraud Engine (ML, velocity, device fp)"]
+    Kafka --> Notif["Notification Service"] & Recon["Reconciliation Service (daily batch)"] & Comp["Compliance Service (KYC, AML, SAR)"]
 ```
 
 ### Transfer Flow Sequence
 
-```
-Client              API Gateway         Transfer Svc        Ledger Svc          DB
-  |                      |                   |                   |               |
-  |-- POST /transfers --> |                   |                   |               |
-  |                      |-- auth + rate lim->|                   |               |
-  |                      |                   |-- idempotency chk->|               |
-  |                      |                   |                   |-- SELECT key ->|
-  |                      |                   |                   |<-- not found --|
-  |                      |                   |-- fraud score ---> Fraud Engine    |
-  |                      |                   |<-- score: 12 --|                   |
-  |                      |                   |-- begin txn ------>|               |
-  |                      |                   |                   |-- BEGIN ------>|
-  |                      |                   |                   |-- lock from_wallet (SELECT FOR UPDATE)
-  |                      |                   |                   |-- lock to_wallet (SELECT FOR UPDATE)
-  |                      |                   |                   |-- check balance|
-  |                      |                   |                   |-- INSERT txn --|
-  |                      |                   |                   |-- INSERT 2 ledger entries
-  |                      |                   |                   |-- UPDATE from_balance
-  |                      |                   |                   |-- UPDATE to_balance
-  |                      |                   |                   |-- INSERT idempotency key
-  |                      |                   |                   |-- INSERT audit_log
-  |                      |                   |                   |-- COMMIT ------>|
-  |                      |                   |<-- committed ---- |               |
-  |                      |                   |-- publish event -> Kafka           |
-  |<-- 201 response ---- |<-- response ------|                   |               |
-  |                      |                   |                   Notification Svc|
-  |                      |                   |                   (async, push)   |
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant GW as "API Gateway"
+    participant TS as "Transfer Svc"
+    participant LS as "Ledger Svc"
+    participant DB as "Database"
+
+    C->>GW: POST /transfers
+    GW->>TS: Auth + rate limit check
+    TS->>LS: Idempotency check
+    LS->>DB: SELECT idempotency key (not found)
+    TS->>TS: Fraud Engine score check (score: 12)
+    TS->>LS: Begin transfer transaction
+    LS->>DB: BEGIN -> SELECT FOR UPDATE (from_wallet, to_wallet) -> check balance -> INSERT txn & 2 ledger entries -> UPDATE balances -> INSERT idempotency & audit_log -> COMMIT
+    DB-->>LS: Committed
+    LS-->>TS: Committed
+    TS->>TS: Publish event to Kafka (async push notification)
+    TS-->>GW: 201 Created
+    GW-->>C: 201 Response
 ```
 
 ---

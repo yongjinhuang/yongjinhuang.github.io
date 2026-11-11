@@ -200,7 +200,7 @@ In corporate compliance training, continuing education (CEU/CME), and accredited
 ```mermaid
 flowchart LR
     HB["Player Heartbeat (Every 10s)<br/>{bucket: 14, speed: 1.5x}"] --> Guard{"Wall-Clock Delta >=<br/>10s / max_speed (2.0x)?"}
-    Guard -->|Rejected (Scrubbed / 16x Speed)| Drop["Update resume_pos only<br/>(Do not mark bucket watched)"]
+    Guard -->|"Rejected (Scrubbed / 16x Speed)"| Drop["Update resume_pos only<br/>(Do not mark bucket watched)"]
     Guard -->|Valid| Bit["Set Bit 14 = 1 in User Video Bitmask"]
     Bit --> Calc["popcount(bitmask) / 360 >= 90%?<br/>-> Unlock Quiz / Certificate"]
 ```

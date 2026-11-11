@@ -665,46 +665,16 @@ R-tree 在 PostGIS（PostgreSQL + GIS 扩展）中表现优异，是大多数关
 
 ## 4. 高层架构
 
-```
-                              +-----------+
-                              |   客户端   |
-                              | (移动端/  |
-                              |   Web)    |
-                              +-----+-----+
-                                    |
-                                    v
-                             +------+------+
-                             |    CDN /    |
-                             | API Gateway |
-                             |   + 认证    |
-                             +------+------+
-                                    |
-                    +---------------+---------------+
-                    |                               |
-                    v                               v
-        +-----------+----------+       +-----------+-----------+
-        |  基于位置的服务       |       |   商家服务             |
-        |  (LBS)               |       |   (CRUD 操作)          |
-        |  (只读, 高            |       |   (低 QPS, 写操作)     |
-        |   QPS, 无状态)        |       |                       |
-        +-----------+----------+       +-----------+-----------+
-                    |                               |
-          +---------+---------+                     |
-          |                   |                     v
-          v                   v             +-------+-------+
-  +-------+-------+  +-------+------+      |   商家        |
-  | 地理空间       |  | 商家         |      |   数据库      |
-  | 索引           |  | 缓存         |      |   (主库)      |
-  | (Redis 中的    |  | (Redis)      |      |  (MySQL /     |
-  |  Geohash 或    |  |              |      |   PostgreSQL) |
-  |  内存)         |  +--------------+      +-------+-------+
-  +---------------+                                |
-                                                   v
-                                           +-------+-------+
-                                           |  只读副本     |
-                                           |  (用于 LBS    |
-                                           |   查询)       |
-                                           +---------------+
+```mermaid
+flowchart TD
+    Clients["Clients (Mobile / Web)"] --> GW["CDN / API Gateway + Auth"]
+    GW --> LBS["Location-Based Service (LBS)<br/>(Read-only, high QPS, stateless)"]
+    GW --> BizSvc["Business Service<br/>(CRUD operations, low QPS, writes)"]
+    LBS --> GeoIdx["Geospatial Index<br/>(Geohash in Redis or in-memory)"]
+    LBS --> BizCache["Business Cache<br/>(Redis)"]
+    BizSvc --> PrimaryDB["Business Database (Primary)<br/>(MySQL / PostgreSQL)"]
+    PrimaryDB --> Replicas["Read Replicas<br/>(for LBS queries)"]
+    LBS -.-> Replicas
 ```
 
 ### 架构原则
@@ -869,46 +839,29 @@ CREATE TABLE business_photos (
 
 ### 6.1 读路径（搜索流程）
 
-```
- 客户端                 LBS                  地理索引          缓存           数据库
-   |                      |                      |                  |             |
-   |  GET /search/nearby  |                      |                  |             |
-   |  lat, lng, radius    |                      |                  |             |
-   |--------------------->|                      |                  |             |
-   |                      |                      |                  |             |
-   |                 [1. 将半径转换              |                  |             |
-   |                  为 geohash 精度]           |                  |             |
-   |                      |                      |                  |             |
-   |                 [2. 计算中心 geohash         |                  |             |
-   |                  + 8 个邻居 geohash]         |                  |             |
-   |                      |                      |                  |             |
-   |                      |  查询 geohash 单元    |                  |             |
-   |                      |--------------------->|                  |             |
-   |                      |                      |                  |             |
-   |                      |  单元中的商家 ID      |                  |             |
-   |                      |<---------------------|                  |             |
-   |                      |                      |                  |             |
-   |                 [3. 后过滤:                 |                  |             |
-   |                  精确 haversine 距离]        |                  |             |
-   |                      |                      |                  |             |
-   |                      |  获取商家详情         |                  |             |
-   |                      |------------------------------------>|             |
-   |                      |                      |     缓存命中     |             |
-   |                      |<------------------------------------|             |
-   |                      |                      |                  |             |
-   |                      |  (缓存未命中)         |  查询数据库      |             |
-   |                      |------------------------------------------------------>|
-   |                      |                      |                  |             |
-   |                      |<------------------------------------------------------|
-   |                      |  [填充缓存]           |                  |             |
-   |                      |------------------------------------>|             |
-   |                      |                      |                  |             |
-   |                 [4. 结果排名:               |                  |             |
-   |                  距离 + 评分 + 等]           |                  |             |
-   |                      |                      |                  |             |
-   |                 [5. 分页并返回]              |                  |             |
-   |  JSON 响应           |                      |                  |             |
-   |<---------------------|                      |                  |             |
+```mermaid
+sequenceDiagram
+    participant Client
+    participant LBS
+    participant Geo as "Geo Index"
+    participant Cache
+    participant DB
+
+    Client->>LBS: GET /search/nearby (lat, lng, radius)
+    Note over LBS: 1. Convert radius to geohash precision<br/>2. Compute center geohash + 8 neighbor geohashes
+    LBS->>Geo: Query 9 geohash cells
+    Geo-->>LBS: Business IDs in cells
+    Note over LBS: 3. Post-filter by exact Haversine distance
+    LBS->>Cache: Get business details
+    alt Cache HIT
+        Cache-->>LBS: Return cached business details
+    else Cache MISS
+        LBS->>DB: Query DB for missing business IDs
+        DB-->>LBS: Return business details
+        LBS->>Cache: Populate cache
+    end
+    Note over LBS: 4. Rank results (distance + rating)<br/>5. Paginate and return
+    LBS-->>Client: JSON Response
 ```
 
 #### 逐步分解
@@ -1015,33 +968,22 @@ def rank_results(results, sort_by='relevance'):
 
 ### 6.2 写路径（商家 CRUD）
 
-```
- 所有者             API Gateway        商家服务              数据库           异步 Worker
-   |                     |                    |                  |                |
-   |  POST /businesses   |                    |                  |                |
-   |  {name, lat, lng..} |                    |                  |                |
-   |-------------------->|                    |                  |                |
-   |                     |  认证 + 校验       |                  |                |
-   |                     |------------------->|                  |                |
-   |                     |                    |                  |                |
-   |                     |               [从 lat/lng            |                |
-   |                     |                计算 geohash]          |                |
-   |                     |                    |                  |                |
-   |                     |                    |  INSERT 商家     |                |
-   |                     |                    |----------------->|                |
-   |                     |                    |  成功             |                |
-   |                     |                    |<-----------------|                |
-   |                     |                    |                  |                |
-   |                     |                    |  发布事件         |                |
-   |                     |                    |  到消息队列       |                |
-   |                     |                    |-------------------------------> |
-   |                     |                    |                  |                |
-   |  201 Created        |                    |                  |    更新        |
-   |<--------------------|                    |                  |    地理空间    |
-   |                     |                    |                  |    索引        |
-   |                     |                    |                  |                |
-   |                     |                    |                  |    使缓存      |
-   |                     |                    |                  |    失效        |
+```mermaid
+sequenceDiagram
+    participant Owner
+    participant GW as "API Gateway"
+    participant BS as "Business Service"
+    participant DB as "Database"
+    participant Worker as "Async Worker (Kafka)"
+
+    Owner->>GW: POST /businesses {name, lat, lng, ...}
+    GW->>BS: Auth + validate
+    BS->>BS: Compute geohash from lat/lng
+    BS->>DB: INSERT business
+    DB-->>BS: Success
+    BS->>Worker: Publish event to message queue
+    GW-->>Owner: 201 Created
+    Worker->>Worker: Update geospatial index & invalidate cache
 ```
 
 #### 索引重建策略
@@ -1081,61 +1023,15 @@ def rank_results(results, sort_by='relevance'):
 
 #### 多因素排名系统
 
-```
-                    +------------------+
-                    |  原始候选项      |
-                    |  (来自地理索引)  |
-                    +--------+---------+
-                             |
-                             v
-                    +--------+---------+
-                    |  距离过滤        |  <-- 精确 haversine
-                    |  (在半径内)      |
-                    +--------+---------+
-                             |
-                             v
-                    +--------+---------+
-                    |  评分引擎        |
-                    +--------+---------+
-                             |
-              +--------------+--------------+
-              |              |              |
-              v              v              v
-        +-----+----+  +-----+----+  +------+-----+
-        | 距离      |  | 质量     |  | 商家       |
-        | 分数      |  | 分数     |  | 加权       |
-        | (35%)     |  | (45%)    |  | (20%)      |
-        +-----------+  +----------+  +------------+
-              |              |              |
-              |    +----+    |    +----+    |    +----+
-              +--->|    |<---+--->|    |<---+--->|    |
-                   +--+-+        +--+-+        +--+-+
-                      |             |             |
-                      v             v             v
-                   +--+-------------+-------------+--+
-                   |       加权最终分数                |
-                   +----------------+-----------------+
-                                    |
-                                    v
-                           +--------+--------+
-                           |  排序和分页      |
-                           +-----------------+
-
-距离分数:
-  - 反向距离衰减: 1 / (1 + d/1000)
-  - 越近 = 分数越高
-
-质量分数:
-  - 评分（归一化）:       rating / 5.0         * 0.5
-  - 评价数量（对数）:     log(review_count+1)/10 * 0.3
-  - 照片数量:             min(photos/10, 1)    * 0.1
-  - 回复率:               response_rate         * 0.1
-
-商家加权:
-  - 赞助（付费）:         +0.2 加权（标记"广告"）
-  - 最近更新:             +0.05 加权
-  - 已认领并验证:         +0.05 加权
-  - 类别匹配:             +0.1 如果精确类别匹配
+```mermaid
+flowchart TD
+    Raw["Raw Candidates<br/>(from geo index)"] --> Filter["Distance Filter<br/>(Exact Haversine within radius)"]
+    Filter --> Engine["Scoring Engine"]
+    Engine --> Dist["Distance Score (35%)<br/>1 / (1 + d/1000)"]
+    Engine --> Qual["Quality Score (45%)<br/>Rating, Review count, Photos, Response rate"]
+    Engine --> Boost["Business Boost (20%)<br/>Sponsored, Updated, Verified, Category match"]
+    Dist & Qual & Boost --> Final["Weighted Final Score"]
+    Final --> Sort["Sort &amp; Paginate"]
 ```
 
 ---
@@ -1191,26 +1087,12 @@ Geohash 单元缓存:
 
 ### 7.3 缓存失效
 
-```
-商家已更新
-       |
-       v
-+------+-------+
-| 发布事件      |
-| 到 Kafka      |
-+------+-------+
-       |
-       +-------------------+-------------------+
-       |                   |                   |
-       v                   v                   v
-+------+-------+  +--------+------+  +--------+------+
-| 使            |  | 更新地理     |  | 使            |
-| biz:{id}     |  | 索引条目     |  | search:*      |
-| 缓存键失效   |  | (如果位置    |  | 缓存键失效    |
-|              |  |  发生变化     |  | 对受影响的    |
-|              |  |  则重新计算   |  | geohash 单元  |
-|              |  |  geohash)    |  |               |
-+--------------+  +---------------+  +---------------+
+```mermaid
+flowchart TD
+    Upd["Business Updated"] --> Pub["Publish event to Kafka"]
+    Pub --> InvBiz["Invalidate biz:{id} cache key"]
+    Pub --> UpdGeo["Update geo index entry<br/>(re-geohash if location changed)"]
+    Pub --> InvSearch["Invalidate search:* cache keys<br/>for affected geohash cells"]
 ```
 
 ### 7.4 Redis 地理空间命令
@@ -1446,42 +1328,24 @@ GEOSEARCH biz:restaurant FROMLONLAT -122.4194 37.7749 BYRADIUS 2 km ASC
 
 ### 10.1 多区域部署
 
-```
-                          +-------------------+
-                          |    全局 DNS       |
-                          | (GeoDNS 路由)     |
-                          +--------+----------+
-                                   |
-                 +-----------------+-----------------+
-                 |                 |                 |
-                 v                 v                 v
-        +--------+------+  +------+--------+  +-----+---------+
-        |  美国区域     |  |  欧洲区域     |  | 亚太区域      |
-        |  us-east-1    |  |  eu-west-1    |  | ap-northeast-1|
-        +--------+------+  +------+--------+  +-----+---------+
-                 |                 |                 |
-           +-----+-----+    +-----+-----+    +-----+-----+
-           |           |    |           |    |           |
-           v           v    v           v    v           v
-      +----+---+  +---+----+---+  +---+----+---+  +---+----+
-      |  LBS   |  | 商家   |  |  |  LBS   |  |  |  LBS   |
-      | 集群   |  | 服务   |  |  | 集群   |  |  | 集群   |
-      +----+---+  +---+----+  |  +---+----+  |  +---+----+
-           |           |      |      |        |      |
-           v           v      |      v        |      v
-      +----+---+  +---+----+  | +---+----+   | +---+----+
-      | Redis  |  |  MySQL  |  | | Redis  |   | | Redis  |
-      | 集群   |  | 主库    |  | | 集群   |   | | 集群   |
-      +--------+  +---+----+  | +--------+   | +--------+
-                       |       |              |
-                  复制         |         复制
-                       |       |              |
-                       v       v              v
-                  +----+-------+----+   +-----+------+
-                  | MySQL 只读       |   | MySQL 只读 |
-                  | 副本 (欧洲)      |   | 副本       |
-                  +-----------------+   | (亚太)     |
-                                        +------------+
+```mermaid
+flowchart TD
+    DNS["Global DNS<br/>(GeoDNS routing)"] --> US["US Region (us-east-1)"] & EU["EU Region (eu-west-1)"] & APAC["APAC Region (ap-northeast-1)"]
+
+    subgraph US_Group["US Region (Primary Writes)"]
+        US --> LBS_US["LBS Cluster"] --> Redis_US["Redis Cluster"]
+        US --> Biz_US["Business Service"] --> MySQL_Pri["MySQL Primary"]
+    end
+    subgraph EU_Group["EU Region"]
+        EU --> LBS_EU["LBS Cluster"] --> Redis_EU["Redis Cluster"]
+        LBS_EU --> MySQL_EU["MySQL Read Replicas (EU)"]
+    end
+    subgraph APAC_Group["APAC Region"]
+        APAC --> LBS_AP["LBS Cluster"] --> Redis_AP["Redis Cluster"]
+        LBS_AP --> MySQL_AP["MySQL Read Replicas (APAC)"]
+    end
+
+    MySQL_Pri -->|"Cross-Region Replication"| MySQL_EU & MySQL_AP
 ```
 
 ### 10.2 热门地点的边缘缓存
@@ -1672,41 +1536,12 @@ GEOSEARCH biz:restaurant FROMLONLAT -122.4194 37.7749 BYRADIUS 2 km ASC
 
 ### Q4: 如何实现商家推荐？
 
-```
-  推荐系统架构:
-
-  +------------------+     +------------------+     +------------------+
-  | 用户画像         |     | 协同过滤         |     | 基于内容的       |
-  | - 过去的搜索     |     |                  |     | 过滤             |
-  | - 过去的访问     |---->| "和你类似的用户  |     | "与你喜欢的      |
-  | - 给出的评分     |     |  也喜欢..."      |     |  相似的商家..."  |
-  | - 类别           |     +--------+---------+     +--------+---------+
-  +------------------+              |                        |
-                                    |                        |
-                                    v                        v
-                           +--------+------------------------+---------+
-                           |           推荐混合器                       |
-                           |  - 组合协同过滤 + 内容分数                 |
-                           |  - 应用位置加权（偏好附近的）              |
-                           |  - 应用多样性（避免全是同类型）            |
-                           |  - 应用新鲜度（新商家加权）               |
-                           +-------------------+-----------------------+
-                                               |
-                                               v
-                                    +----------+---------+
-                                    | 个性化             |
-                                    | 排名结果           |
-                                    +--------------------+
-
-  每个商家的特征向量:
-  [类别, 价格等级, 平均评分, 评价数量, 距离,
-   菜系类型, 是否有户外座位, 是否提供配送, ...]
-
-  实时信号:
-  - 时段（早餐 vs 晚餐餐厅）
-  - 星期几（工作日 vs 周末活动）
-  - 天气（雨天推荐室内活动）
-  - 当前事件（比赛日推荐体育场周边餐厅）
+```mermaid
+flowchart TD
+    Prof["User Profile<br/>- Past searches &amp; visits<br/>- Ratings given &amp; Categories"] --> CF["Collaborative Filtering<br/>'Users like you also liked...'"]
+    Prof --> CBF["Content-Based Filtering<br/>'Businesses similar to ones you liked...'"]
+    CF & CBF --> Mixer["Recommendation Mixer<br/>- Combine collaborative + content scores<br/>- Apply location boost (nearby preferred)<br/>- Apply diversity &amp; freshness boost"]
+    Mixer --> Out["Personalized Ranked Results"]
 ```
 
 ### Q5: 如何处理位置精度问题？

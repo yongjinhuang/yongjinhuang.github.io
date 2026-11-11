@@ -313,52 +313,16 @@ CREATE TABLE order_status_history (
 
 ## 4. 高层架构
 
-```
-+------------------+     +------------------+     +------------------+
-|   Web / Mobile   |     |   Seller Portal  |     |  Admin Console   |
-|     Clients      |     |                  |     |                  |
-+--------+---------+     +--------+---------+     +--------+---------+
-         |                        |                        |
-         +------------------------+------------------------+
-                                  |
-                         +--------v---------+
-                         |   API Gateway    |
-                         | (Auth, Rate Lim, |
-                         |  Route, TLS)     |
-                         +--------+---------+
-                                  |
-          +-----------+-----------+-----------+-----------+
-          |           |           |           |           |
-+---------v-+ +-------v---+ +-----v-----+ +--v--------+ +-v----------+
-|  Product  | |   Cart    | |  Order    | | Inventory | |Notification|
-|  Service  | |  Service  | |  Service  | |  Service  | |  Service   |
-+-----------+ +-----------+ +-----------+ +-----------+ +------------+
-     |               |            |              |
-     |         +-----v-----+      |         +----v----+
-     |         | Redis Cart|      |         |Inventory|
-     |         |   Cache   |      |         |  Cache  |
-     |         +-----------+      |         | (Redis) |
-     |                            |         +---------+
-+----v----+              +--------v--------+
-| Product |              | Order DB        |
-| DB      |              | (PostgreSQL)    |
-|(Postgres|              +-----------------+
-|+ ES)    |
-+---------+              +------------------+
-                         | Inventory DB     |
-+------------------+     | (PostgreSQL)     |
-| Search Engine    |     +------------------+
-| (Elasticsearch)  |
-+------------------+     +------------------+
-                         |  Message Broker  |
-+------------------+     | (Kafka / SQS)    |
-| CDN / Object     |     +------------------+
-| Storage (S3)     |           |
-+------------------+    +------v-------+
-                        | Event        |
-                        | Consumers    |
-                        | (Saga Steps) |
-                        +--------------+
+```mermaid
+flowchart TD
+    Web["Web / Mobile Clients"] & Seller["Seller Portal"] & Admin["Admin Console"] --> GW["API Gateway<br/>(Auth, Rate Limit, Route, TLS)"]
+    GW --> ProdSvc["Product Service"] & CartSvc["Cart Service"] & OrdSvc["Order Service"] & InvSvc["Inventory Service"] & NotifSvc["Notification Service"]
+
+    ProdSvc --> ProdDB["Product DB (Postgres + ES)"] & Search["Search Engine (Elasticsearch)"] & CDN["CDN / Object Storage (S3)"]
+    CartSvc --> CartRedis["Redis Cart Cache"] & CartDB["Cart DB (PostgreSQL)"]
+    OrdSvc --> OrdDB["Order DB (PostgreSQL)"] & Broker["Message Broker (Kafka / SQS)"]
+    InvSvc --> InvRedis["Inventory Cache (Redis)"] & InvDB["Inventory DB (PostgreSQL)"]
+    Broker --> Saga["Event Consumers (Saga Steps)"]
 ```
 
 ### 内部服务通信
@@ -421,40 +385,29 @@ Invariant: available_qty + reserved_qty + sold_qty = initial_stock - damaged/los
 
 ### 5.2 Stock Reservation 模式（基于 TTL 的持有）
 
-```
-Customer                 Order Service            Inventory Service
-    |                         |                          |
-    |--- POST /checkout/      |                          |
-    |    reserve ------------>|                          |
-    |                         |--- reserveInventory() -->|
-    |                         |   (atomically decrement  |
-    |                         |    available, increment  |
-    |                         |    reserved)             |
-    |                         |<-- reservationId --------|
-    |                         |   expires in 15 min      |
-    |<-- reservationId -------|                          |
-    |    expiresAt: T+15min   |                          |
-    |                         |                          |
-    |  [Customer fills payment details - up to 15 min]  |
-    |                         |                          |
-    |--- POST /checkout/      |                          |
-    |    confirm ------------>|                          |
-    |                         |--- confirmPayment() ---->|
-    |                         |   (Payment Service)      |
-    |                         |<-- paymentIntentId ------|
-    |                         |                          |
-    |                         |--- confirmReservation -->|
-    |                         |   (reserved -> sold)     |
-    |                         |<-- success --------------|
-    |<-- orderId, status -----|                          |
+```mermaid
+sequenceDiagram
+    participant C as "Customer"
+    participant OS as "Order Service"
+    participant IS as "Inventory Service"
+    participant PS as "Payment Service"
 
-If customer never confirms:
-    [At T+15 min]             |                          |
-                              |<-- TTL expiry event ----|
-                              |   (background job or    |
-                              |    Kafka scheduled msg) |
-                              |--- releaseReservation ->|
-                              |   (reserved -> available)|
+    C->>OS: POST /checkout/reserve
+    OS->>IS: reserveInventory() (decrement available, increment reserved)
+    IS-->>OS: reservationId (expires in 15 min)
+    OS-->>C: reservationId, expiresAt: T+15min
+    Note over C: Customer fills payment details (up to 15 min)
+    alt Customer confirms within 15 min
+        C->>OS: POST /checkout/confirm
+        OS->>PS: confirmPayment()
+        PS-->>OS: paymentIntentId
+        OS->>IS: confirmReservation() (reserved -> sold)
+        IS-->>OS: success
+        OS-->>C: orderId, status
+    else Customer never confirms (At T+15 min)
+        IS-->>OS: TTL expiry event
+        OS->>IS: releaseReservation() (reserved -> available)
+    end
 ```
 
 通过后台清理任务进行基于 TTL 的释放：
@@ -610,43 +563,16 @@ Order Service                Inventory Service       Payment Service      Shippi
 
 #### 协调模式（集中式协调器）
 
-```
-+------------------+
-|  Order Saga      |
-|  Orchestrator    |
-+--------+---------+
-         |
-         |  Step 1: Reserve Inventory
-         +----------------------------> Inventory Service
-         |                                    |
-         |<-- InventoryReserved --------------+
-         |
-         |  Step 2: Charge Payment
-         +----------------------------> Payment Service
-         |                                    |
-         |<-- PaymentCharged ----------------+
-         |
-         |  Step 3: Create Shipment
-         +----------------------------> Shipping Service
-         |                                    |
-         |<-- ShipmentCreated ---------------+
-         |
-         |  Step 4: Update Order Status -> PAID/SHIPPED
-         +----------------------------> Order DB
-
-支付失败时：
-         |<-- PaymentFailed -----------------+
-         |
-         |  补偿：释放库存
-         +----------------------------> Inventory Service
-         |                                    |
-         |<-- InventoryReleased -------------+
-         |
-         |  更新订单状态 -> CANCELLED
-         +----------------------------> Order DB
-
-优点：职责清晰，易于监控 saga 状态，可测试
-缺点：Orchestrator 可能成为瓶颈，单点故障（通过高可用缓解）
+```mermaid
+flowchart TD
+    Orch["Order Saga Orchestrator"] -->|"Step 1: Reserve Inventory"| Inv["Inventory Service"]
+    Inv -->|"InventoryReserved"| Orch
+    Orch -->|"Step 2: Charge Payment"| Pay["Payment Service"]
+    Pay -->|"PaymentCharged"| Orch
+    Orch -->|"Step 3: Create Shipment"| Ship["Shipping Service"]
+    Ship -->|"ShipmentCreated"| Orch
+    Orch -->|"Step 4: Update Status -> PAID/SHIPPED"| DB["Order DB"]
+    Pay -.->|"On PaymentFailed: Release Inventory &amp; Cancel Order"| Inv
 ```
 
 Saga 状态持久化：
@@ -667,60 +593,22 @@ CREATE TABLE order_sagas (
 
 ### 5.6 订单状态机
 
-```
-                          +----------+
-              +-----------| CREATED  |----------+
-              |           +----+-----+          |
-              |                |                |
-              | (cancel)       | (payment init) |
-              v                v                |
-         +----------+   +--------------+        |
-         |CANCELLED |   |PAYMENT_PENDING|       |
-         +----------+   +------+-------+        |
-              ^                |                |
-              |                | (payment ok)   | (payment fail)
-              | (cancel)       v                v
-              |           +--------+       +----------+
-              +-----------|  PAID  |       | PAYMENT_ |
-              |           +---+----+       | FAILED   |
-              |               |           +----------+
-              |               | (warehouse picks)
-              |               v
-              |          +---------+
-              +----------| PICKING |
-              |          +----+----+
-              |               |
-              |               | (items packed)
-              |               v
-              |          +---------+
-              +----------| PACKED  |
-              |          +----+----+
-              |               |
-              |               | (shipped)
-              |               v
-              |          +---------+
-              |          | SHIPPED |
-              |          +----+----+
-              |               |
-              |               | (delivered)
-              |               v
-              |          +-----------+
-              |          | DELIVERED |
-              |          +-----+-----+
-              |                |
-              |                | (return request within window)
-              |                v
-              |     +------------------+
-              |     | RETURN_REQUESTED |
-              |     +--------+---------+
-              |              |
-              |              | (return received, refund issued)
-              |              v
-              |         +---------+
-              +-------> | RETURNED|
-                        +---------+
-
-终态：CANCELLED, PAYMENT_FAILED, DELIVERED, RETURNED
+```mermaid
+stateDiagram-v2
+    [*] --> CREATED
+    CREATED --> CANCELLED : cancel
+    CREATED --> PAYMENT_PENDING : payment init
+    PAYMENT_PENDING --> PAID : payment ok
+    PAYMENT_PENDING --> PAYMENT_FAILED : payment fail
+    PAID --> CANCELLED : cancel
+    PAID --> PICKING : warehouse picks
+    PICKING --> CANCELLED : cancel
+    PICKING --> PACKED : items packed
+    PACKED --> CANCELLED : cancel
+    PACKED --> SHIPPED : shipped
+    SHIPPED --> DELIVERED : delivered
+    DELIVERED --> RETURN_REQUESTED : return request within window
+    RETURN_REQUESTED --> RETURNED : return received, refund issued
 ```
 
 状态转换规则：
@@ -819,53 +707,15 @@ Guest User                    Logged-In User
 
 #### Flash Sale 架构
 
-```
-         Millions of Users
-               |
-               v
-    +----------+----------+
-    |       CDN           |
-    | (product page cache)|
-    | Cache product info  |
-    | until sale starts   |
-    +----------+----------+
-               |
-               v
-    +----------+----------+
-    |    Rate Limiter     |
-    | (token bucket/      |
-    |  sliding window)    |
-    | Max 50K req/sec     |
-    +----------+----------+
-               |
-          +-----------+
-          | Eligible? |-- NO --> 429 Too Many Requests
-          +-----------+
-               | YES
-               v
-    +----------+----------+
-    |  Virtual Queue      |
-    | (Kafka / SQS FIFO)  |
-    | Position token to   |
-    | user: "You are #N"  |
-    +----------+----------+
-               |
-               v (dequeue at controlled rate)
-    +----------+----------+
-    |  Flash Sale Worker  |
-    |  Pool               |
-    | - Deduct Redis qty  |
-    | - If success: create|
-    |   reservation       |
-    | - If 0 stock: stop  |
-    +----------+----------+
-               |
-               v
-    +----------+----------+
-    |  Order Service      |
-    | (finalize order     |
-    |  after payment)     |
-    +---------------------+
+```mermaid
+flowchart TD
+    Users["Millions of Users"] --> CDN["CDN (product page cache)"]
+    CDN --> RL["Rate Limiter (token bucket / sliding window, max 50K req/s)"]
+    RL --> Elig{"Eligible?"}
+    Elig -->|"NO"| Rej["429 Too Many Requests"]
+    Elig -->|"YES"| VQ["Virtual Queue (Kafka / SQS FIFO)<br/>Position token: 'You are #N'"]
+    VQ -->|"Dequeue at controlled rate"| Pool["Flash Sale Worker Pool<br/>- Deduct Redis qty<br/>- Create reservation or stop at 0"]
+    Pool --> Order["Order Service<br/>(finalize order after payment)"]
 ```
 
 #### Pre-Deduction 策略
@@ -1112,35 +962,21 @@ POST /v1/checkout/preview
 
 ### 5.13 退货与退款
 
-```
-Customer             Order Service          Inventory Service    Payment Service
-    |                     |                       |                    |
-    |-- POST /orders/{id}/return                  |                    |
-    |   { items, reason }->|                      |                    |
-    |                      |-- validate return    |                    |
-    |                      |   window (30 days)   |                    |
-    |                      |-- create ReturnRequest                    |
-    |<-- returnId, label---|                      |                    |
-    |   (prepaid label)    |                      |                    |
-    |                      |                      |                    |
-    |  [Ships item back]   |                      |                    |
-    |                      |                      |                    |
-    |  [Carrier delivers]  |                      |                    |
-    |                      |                      |                    |
-    |         Warehouse confirms receipt           |                    |
-    |                      |-- restockInventory ->|                    |
-    |                      |   (if not damaged)   |                    |
-    |                      |                      |-- processRefund -->|
-    |                      |                      |                    |
-    |                      |<-- refundId, amount --|<-- refundId ------|
-    |<-- refund confirmed--|                      |                    |
-    |   (3-5 business days)|                      |                    |
+```mermaid
+sequenceDiagram
+    participant C as "Customer"
+    participant OS as "Order Service"
+    participant IS as "Inventory Service"
+    participant PS as "Payment Service"
 
-部分退款示例：
-  订单：2x product_A + 1x product_B = 总计 $100
-  退货：1x product_A（$30）
-  退款：$30（部分）
-  状态：订单变为 PARTIALLY_RETURNED
+    C->>OS: POST /orders/{id}/return {items, reason}
+    OS->>OS: Validate return window (30 days) & create ReturnRequest
+    OS-->>C: returnId + prepaid shipping label
+    Note over C,OS: Customer ships item back -> Carrier delivers -> Warehouse confirms receipt
+    OS->>IS: restockInventory (if not damaged)
+    OS->>PS: processRefund
+    PS-->>OS: refundId, amount
+    OS-->>C: Refund confirmed (3-5 business days)
 ```
 
 库存重新入库决策：

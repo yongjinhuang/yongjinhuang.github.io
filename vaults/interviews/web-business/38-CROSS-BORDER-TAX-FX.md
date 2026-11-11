@@ -32,7 +32,7 @@ flowchart TB
         BuyerA["Global Buyer<br/>Pays €120 (incl. €20 VAT)"] -->|1. Checkout| MerchA["Your Company<br/>(Legal Seller on Receipt & Card Statement)"]
         MerchA -->|2. Real-Time Rate Lookup| TaxEngine["Tax Engine (Stripe Tax / Avalara)<br/>Geocodes Address + Validates VIES VAT ID"]
         MerchA -->|3. Local Acquiring Route| PSP["Global PSP (Adyen / Stripe)<br/>Routes to Local EU/UK/BR Acquiring Entity"]
-        PSP -->|4. Net Settlement (€116.50)| MerchBank["Your Multi-Currency Treasury"]
+        PSP -->|"4. Net Settlement (€116.50)"| MerchBank["Your Multi-Currency Treasury"]
         MerchBank -->|5. You File & Remit Taxes<br/> Across 40+ Jurisdictions| TaxAuth["US States / EU OSS / UK HMRC<br/>(You Bear Audit & Penalty Liability!)"]
     end
 
@@ -40,7 +40,7 @@ flowchart TB
         BuyerB["Global Buyer<br/>Pays €120 (incl. €20 VAT)"] -->|1. Buys From MoR| MoREntity["Merchant of Record (MoR)<br/>(Legal Seller on Card Statement & Invoice)"]
         MoREntity -->|2. MoR Owns Local Entities,<br/>LPMs, Fraud & Tax Calculation| MoRAcq["MoR Local Acquirers & Tax Registrations"]
         MoREntity -->|3. MoR Remits €20 VAT<br/>& Absorbs Tax Audit Liability| TaxAuthB["Global Tax Authorities"]
-        MoREntity -->|4. Wholesale Payout (€93.00)<br/>Single Monthly B2B Wire / Invoice| YourCo["Your Company<br/>(Zero Tax Filings, Zero Local Entities)"]
+        MoREntity -->|"4. Wholesale Payout (€93.00)<br/>Single Monthly B2B Wire / Invoice"| YourCo["Your Company<br/>(Zero Tax Filings, Zero Local Entities)"]
     end
 ```
 

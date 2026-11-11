@@ -98,63 +98,20 @@
 
 ## 2. 高层架构
 
-```
-+------------------+     +------------------+     +------------------+
-|   Guest Web/App  |     |   Host Web/App   |     |  Admin Dashboard |
-+--------+---------+     +--------+---------+     +--------+---------+
-         |                        |                         |
-         +------------------------+-------------------------+
-                                  |
-                          HTTPS / WebSocket
-                                  |
-                    +-------------v--------------+
-                    |        API Gateway         |
-                    |  (Auth, Rate Limit, Route, |
-                    |   SSL Termination, CORS)   |
-                    +-------------+--------------+
-                                  |
-      +-----------+---------------+---------------+-----------+
-      |           |               |               |           |
-+-----v-----+ +---v--------+ +---v--------+ +----v-----+ +---v-------+
-|  Search   | |  Listing   | |  Booking   | |  Pricing | | Calendar  |
-|  Service  | |  Service   | |  Service   | |  Service | |  Service  |
-|           | |            | |            | |          | |           |
-| Avail.    | | CRUD       | | Hold/TTL   | | Dynamic  | | iCal sync |
-| Filter    | | Calendar   | | Confirm    | | Pricing  | | GCal sync |
-| Ranking   | | Mgmt       | | State Mach | | Yield    | | Webhooks  |
-+-----+-----+ +-----+------+ +-----+------+ +----+-----+ +-----+-----+
-      |               |             |             |              |
-      |        +------+------+      |             |              |
-      |        |  Inventory  |      |             |              |
-      |        |  (Avail DB) |<-----+             |              |
-      |        +------+------+      |             |              |
-      |               |            |             |              |
-+-----v---------------v------------v-------------v--------------v-----+
-|                            Event Bus (Kafka)                        |
-|  Topics: booking.created, booking.cancelled, hold.expired,         |
-|          availability.changed, payment.captured, review.requested  |
-+----+------------------+------------------+------------------+-------+
-     |                  |                  |                  |
-+----v----+      +-------v------+   +------v-----+   +-------v------+
-| Notif.  |      |  Waitlist    |   |  Analytics |   |  Calendar    |
-| Service |      |  Service     |   |  Service   |   |  Sync Worker |
-|         |      |              |   |            |   |              |
-| Email   |      | Priority Q   |   | Metrics    |   | iCal export  |
-| SMS     |      | Auto-promote |   | Reports    |   | GCal push    |
-| Push    |      | Expiry mgmt  |   | Revenue    |   | Conflict det.|
-+---------+      +--------------+   +------------+   +--------------+
+```mermaid
+flowchart TD
+    Guest["Guest Web/App"] & Host["Host Web/App"] & Admin["Admin Dashboard"] -->|"HTTPS / WebSocket"| GW["API Gateway<br/>(Auth, Rate Limit, Route, SSL, CORS)"]
+    GW --> SearchSvc["Search Service<br/>Avail Filter, Ranking"]
+    GW --> ListSvc["Listing Service<br/>CRUD, Calendar Mgmt"]
+    GW --> BookSvc["Booking Service<br/>Hold/TTL, Confirm, State Machine"]
+    GW --> PriceSvc["Pricing Service<br/>Dynamic Pricing, Yield"]
+    GW --> CalSvc["Calendar Service<br/>iCal sync, GCal sync, Webhooks"]
 
-+--------------------+    +--------------------+    +------------------+
-|  Primary DB        |    |  Cache Layer       |    |  Search Engine   |
-|  (PostgreSQL       |    |  (Redis Cluster)   |    |  (Elasticsearch) |
-|   Multi-region     |    |                    |    |                  |
-|   write leader)    |    |  - Avail bitmaps   |    |  - Listing index |
-|                    |    |  - Hold TTL keys   |    |  - Geo search    |
-|  - Listings        |    |  - Session cache   |    |  - Faceted filter|
-|  - Bookings        |    |  - Price cache     |    |  - Full-text     |
-|  - Availability    |    |  - Rate limits     |    |    search        |
-|  - Users           |    |  - Idempotency keys|    +------------------+
-+--------------------+    +--------------------+
+    ListSvc & BookSvc --> InvDB["Inventory (Avail DB)"]
+    SearchSvc & ListSvc & BookSvc & PriceSvc & CalSvc --> Kafka["Event Bus (Kafka)<br/>Topics: booking.created, booking.cancelled, hold.expired, availability.changed"]
+    Kafka --> Notif["Notification Service"] & Waitlist["Waitlist Service"] & Analytics["Analytics Service"] & CalWorker["Calendar Sync Worker"]
+    BookSvc --> PG["Primary DB (PostgreSQL Multi-region)"] & Redis["Cache Layer (Redis Cluster)"]
+    SearchSvc --> ES["Search Engine (Elasticsearch)"]
 ```
 
 ---
@@ -703,54 +660,17 @@ Guest B（并发，相同日期）：
 
 ## 7. 预订状态机
 
-```
-                        +-------------+
-                        |  AVAILABLE  |
-                        +------+------+
-                               |
-                    [房客下单锁定]
-                               |
-                        +------v------+
-                        |    HELD     |<---------+
-                        +--+----+----+           |
-                           |    |                |
-                 [TTL 过期] |    | [房客确认]      |
-                           |    |                |
-              +------------v+  +v------------+   |
-              |  AVAILABLE  |  |  CONFIRMED  |   |
-              | (已释放)     |  +--+--+--+---+   |
-              +-------------+     |  |  |       |
-                                   |  |  |       |
-               [房客到达] ---------+  |  |       |
-                                      |  |       |
-                  +-------------------+  |       |
-                  |  CHECKED_IN          |       |
-                  +---+---------+        |       |
-                      |         |        |       |
-          [入住结束]   |         | [提前   |       |
-                      |         |  离开]          |
-               +------v------+  |               |
-               | COMPLETED   |  |               |
-               +------+------+  |               |
-                      |         |               |
-               [请求评价]                        |
-                                                |
-               [房客取消] ---------------------+
-               (在 CONFIRMED 状态时)
-               +-------------+
-               |  CANCELLED  |
-               +------+------+
-                      |
-               [按政策执行退款]
-                      |
-               +------v------+
-               |  REFUNDED   |
-               +-------------+
-
-               [房客未到]
-               +-------------+
-               |   NO_SHOW   |  ← 入住窗口过后由房东触发
-               +-------------+
+```mermaid
+stateDiagram-v2
+    [*] --> AVAILABLE
+    AVAILABLE --> HELD : Guest places hold
+    HELD --> AVAILABLE : TTL expires (released)
+    HELD --> CONFIRMED : Guest confirms
+    CONFIRMED --> CHECKED_IN : Guest arrives
+    CONFIRMED --> CANCELLED : Guest cancels
+    CONFIRMED --> NO_SHOW : Guest no-show
+    CANCELLED --> REFUNDED : Refund applied per policy
+    CHECKED_IN --> COMPLETED : Stay ends / Early depart
 ```
 
 ### 状态转换事件 (Kafka Topics)
@@ -771,36 +691,24 @@ booking.no_show           → 通知房东，按未到政策释放付款
 
 ### 锁定生命周期与 TTL
 
-```
-     Guest                Booking Service              Redis             PostgreSQL
-       |                        |                        |                    |
-       |-- POST /hold ---------->|                        |                    |
-       |                        |-- SETNX hold_lock ---->|                    |
-       |                        |<- OK ------------------|                    |
-       |                        |                        |                    |
-       |                        |-- BEGIN TX --------------------------------->|
-       |                        |   SELECT FOR UPDATE (avail rows)            |
-       |                        |   INSERT holds(id, expires_at=+15min)       |
-       |                        |   UPDATE availability SET status='HELD'     |
-       |                        |-- COMMIT ----------------------------------->|
-       |                        |                        |                    |
-       |                        |-- SET hold:{id} EX 900 ->|                  |
-       |                        |   (与数据库 expires_at 镜像)|                  |
-       |                        |                        |                    |
-       |<-- 201 hold_id, expires_at --|                  |                    |
-       |    (15 分钟倒计时)       |                        |                    |
-       |                        |                        |                    |
-  [14 分钟后：房客仍在填写支付表单]                          |                    |
-       |                        |-- TTL 过期事件 ---------|                    |
-       |                        |   (Redis keyspace notification)             |
-       |                        |                        |                    |
-       |                        |-- BEGIN TX --------------------------------->|
-       |                        |   UPDATE holds SET status='EXPIRED'         |
-       |                        |   UPDATE availability SET status='AVAILABLE'|
-       |                        |-- COMMIT ----------------------------------->|
-       |                        |                        |                    |
-       |                        |-- 发布 hold.expired 事件 (Kafka) ----------->|
-       |<-- WebSocket: "锁定已过期，请重新搜索" ------------|                    |
+```mermaid
+sequenceDiagram
+    participant G as "Guest"
+    participant BS as "Booking Service"
+    participant R as "Redis"
+    participant PG as "PostgreSQL"
+
+    G->>BS: POST /hold
+    BS->>R: SETNX hold_lock
+    R-->>BS: OK
+    BS->>PG: BEGIN TX -> SELECT FOR UPDATE -> INSERT holds(+15m) -> UPDATE availability='HELD' -> COMMIT
+    BS->>R: SET hold:{id} EX 900
+    BS-->>G: 201 {hold_id, expires_at} (15 min countdown)
+    Note over G,PG: 14+ min later: hold TTL expires before payment completes
+    R-->>BS: TTL expiry event (Redis keyspace notification)
+    BS->>PG: BEGIN TX -> UPDATE holds='EXPIRED', availability='AVAILABLE' -> COMMIT
+    BS->>PG: Publish hold.expired event (Kafka)
+    BS-->>G: WebSocket: "Hold expired, please re-search"
 ```
 
 ### TTL 过期处理

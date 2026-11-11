@@ -137,7 +137,7 @@ stateDiagram-v2
     DISPENSING --> IDLE : dispense complete + return change
     IDLE --> OUT_OF_SERVICE : admin maintenance / all slots empty
     OUT_OF_SERVICE --> IDLE : restock / repair
-````
+```
 
 **Transitions:**
 

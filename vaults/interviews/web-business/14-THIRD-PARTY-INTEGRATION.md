@@ -166,7 +166,7 @@ sequenceDiagram
     participant Svc as Your Webhook Worker
     participant DB as Primary DB
     Stripe->>Svc: Webhook: customer.subscription.updated (id: sub_99, created: 1731100001) [Stale Retry!]
-    Note over Svc: Option A (Thin-Event Pull): Ignore payload body;<br/>Fetch canonical truth directly from Stripe API!
+    Note over Svc: Option A (Thin-Event Pull): Ignore payload body -<br/>Fetch canonical truth directly from Stripe API!
     Svc->>Stripe: GET /v1/subscriptions/sub_99
     Stripe-->>Svc: Returns latest state (plan: "enterprise", updated: 1731100005)
     Svc->>DB: UPSERT subscriptions ... WHERE last_synced_at <= 1731100005

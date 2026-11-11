@@ -530,99 +530,27 @@ ORDER BY (org_id, rule_id, triggered_at);
 
 ## 4. High-Level Architecture
 
-```
-  +--------------------------------------------------------------------------+
-  |                              APPLICATION LAYER                            |
-  |                                                                           |
-  |  +----------+  +----------+  +----------+  +----------+  +----------+   |
-  |  | Service A|  | Service B|  | Service C|  |  Infra   |  | Cloud    |   |
-  |  |  (Java)  |  |  (Go)    |  | (Python) |  | (syslog) |  | (Lambda) |   |
-  |  +----+-----+  +----+-----+  +----+-----+  +----+-----+  +----+-----+   |
-  |       |              |              |              |              |        |
-  +-------+--------------+--------------+--------------+--------------+-------+
-          |              |              |              |              |
-          v              v              v              v              v
-  +--------------------------------------------------------------------------+
-  |                           COLLECTION LAYER                                |
-  |                                                                           |
-  |  +---------------+  +---------------+  +---------------+  +------------+ |
-  |  |  OTel Agent   |  |  Fluentd /    |  |  Prometheus   |  |  StatsD /  | |
-  |  |  (sidecar)    |  |  Vector       |  |  Node Export  |  |  DogStatsD | |
-  |  |               |  |  (DaemonSet)  |  |               |  |            | |
-  |  | Logs+Traces   |  |  Logs         |  |  Metrics      |  | Custom Met.| |
-  |  | +Metrics      |  |               |  |               |  |            | |
-  |  +-------+-------+  +-------+-------+  +-------+-------+  +------+-----+ |
-  |          |                  |                   |                 |        |
-  +----------+------------------+-------------------+-----------------+-------+
-             |                  |                   |                 |
-             v                  v                   v                 v
-  +--------------------------------------------------------------------------+
-  |                    MESSAGE QUEUE / BUFFER LAYER                            |
-  |                                                                           |
-  |  +-------------------------------------------------------------------+   |
-  |  |                         Apache Kafka                               |   |
-  |  |                                                                    |   |
-  |  |   Topic: logs          Topic: metrics       Topic: traces          |   |
-  |  |   (100 partitions)     (50 partitions)      (50 partitions)        |   |
-  |  |                                                                    |   |
-  |  |   Retention: 24h       Retention: 6h        Retention: 12h         |   |
-  |  +-------------------------------------------------------------------+   |
-  |                                                                           |
-  +-----------+--------------------+--------------------+---------------------+
-              |                    |                    |
-              v                    v                    v
-  +--------------------------------------------------------------------------+
-  |                   PROCESSING / ENRICHMENT LAYER                           |
-  |                                                                           |
-  |  +------------------+  +------------------+  +------------------+        |
-  |  |  Log Processor    |  |  Metrics Agg.    |  |  Trace Assembler |        |
-  |  |                   |  |                   |  |                  |        |
-  |  |  - Parse / grok   |  |  - Pre-aggregate  |  |  - Span linking  |        |
-  |  |  - Enrich (geo,   |  |  - Downsample     |  |  - Service graph |        |
-  |  |    k8s metadata)  |  |  - Tag normalize  |  |  - Error flagging|        |
-  |  |  - PII redaction  |  |  - Rate/counter   |  |  - Tail sampling |        |
-  |  |  - Severity map   |  |    conversion     |  |    decisions     |        |
-  |  |  - Deduplication  |  |                   |  |                  |        |
-  |  +--------+----------+  +--------+----------+  +--------+---------+        |
-  |           |                      |                      |                  |
-  +-----------+----------------------+----------------------+------------------+
-              |                      |                      |
-              v                      v                      v
-  +--------------------------------------------------------------------------+
-  |                            STORAGE LAYER                                  |
-  |                                                                           |
-  |  +------------------+  +------------------+  +------------------+        |
-  |  |  Elasticsearch   |  |  ClickHouse /    |  |  ClickHouse /    |        |
-  |  |  (Log Storage)   |  |  Mimir / VicMet  |  |  Tempo / Jaeger  |        |
-  |  |                  |  |  (Metrics TSDB)  |  |  (Trace Store)   |        |
-  |  |  Hot:  NVMe SSD  |  |                  |  |                  |        |
-  |  |  Warm: SSD       |  |  Raw: 15-sec res |  |  Recent: 14 days |        |
-  |  |  Cold: HDD       |  |  1m rollup: 90d  |  |  Archive: S3     |        |
-  |  |  Frozen: S3      |  |  1h rollup: 1yr  |  |                  |        |
-  |  +------------------+  +------------------+  +------------------+        |
-  |                                                                           |
-  |  +-------------------------------------------------------------------+   |
-  |  |                    Object Storage (S3 / GCS)                       |   |
-  |  |              Long-term archive, compliance, frozen tier            |   |
-  |  +-------------------------------------------------------------------+   |
-  |                                                                           |
-  +----------+---------------------+---------------------+-------------------+
-             |                     |                     |
-             v                     v                     v
-  +--------------------------------------------------------------------------+
-  |                    QUERY & PRESENTATION LAYER                             |
-  |                                                                           |
-  |  +--------------+  +--------------+  +--------------+  +--------------+  |
-  |  |  Query API   |  |  Alerting    |  |  Dashboard   |  |  CLI / SDK   |  |
-  |  |  Gateway     |  |  Engine      |  |  (Grafana /  |  |              |  |
-  |  |              |  |              |  |   Kibana)    |  |              |  |
-  |  |  Unified     |  |  Rules eval  |  |              |  |  Log tail    |  |
-  |  |  query lang  |  |  Anomaly det |  |  Realtime    |  |  Metric push |  |
-  |  |  Fan-out     |  |  PagerDuty   |  |  charts      |  |  Trace query |  |
-  |  |  Caching     |  |  Slack/Email |  |  Templates   |  |              |  |
-  |  +--------------+  +--------------+  +--------------+  +--------------+  |
-  |                                                                           |
-  +--------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph App["APPLICATION LAYER"]
+        A1["Service A (Java)"] & A2["Service B (Go)"] & A3["Service C (Python)"] & A4["Infra (syslog)"] & A5["Cloud (Lambda)"]
+    end
+    subgraph Coll["COLLECTION LAYER"]
+        C1["OTel Agent (sidecar)<br/>Logs + Traces + Metrics"]
+        C2["Fluentd / Vector (DaemonSet)<br/>Logs"]
+        C3["Prometheus Node Exporter<br/>Metrics"]
+        C4["StatsD / DogStatsD<br/>Custom Metrics"]
+    end
+    App --> Coll
+    Coll --> Kafka["MESSAGE QUEUE / BUFFER LAYER (Apache Kafka)<br/>Topic: logs (100p, 24h) | Topic: metrics (50p, 6h) | Topic: traces (50p, 12h)"]
+    Kafka --> ProcL["Log Processor<br/>Parse/grok, Enrich, PII redaction, Dedup"]
+    Kafka --> ProcM["Metrics Aggregator<br/>Pre-aggregate, Downsample, Tag normalize"]
+    Kafka --> ProcT["Trace Assembler<br/>Span linking, Service graph, Tail sampling"]
+    ProcL --> StoreES["Elasticsearch (Log Storage)<br/>Hot (NVMe) -> Warm (SSD) -> Cold (HDD) -> Frozen (S3)"]
+    ProcM --> StoreTS["ClickHouse / Mimir / VictoriaMetrics<br/>Raw: 15s | 1m rollup: 90d | 1h rollup: 1yr"]
+    ProcT --> StoreTr["ClickHouse / Tempo / Jaeger<br/>Recent: 14 days | Archive: S3"]
+    StoreES & StoreTS & StoreTr --> S3["Object Storage (S3 / GCS)<br/>Long-term archive, compliance, frozen tier"]
+    StoreES & StoreTS & StoreTr --> Query["QUERY &amp; PRESENTATION LAYER<br/>Query API Gateway | Alerting Engine | Dashboard (Grafana/Kibana) | CLI/SDK"]
 ```
 
 ### Three Pillars of Observability
@@ -1268,38 +1196,11 @@ predict_linear(node_filesystem_avail_bytes{mountpoint="/"}[6h], 24*3600)
 
 ### 9.1 Alert Rules Engine
 
-```
-  +--------------------------------------------------------------+
-  |                    Alerting Engine                             |
-  |                                                               |
-  |  +--------------+    +---------------+    +--------------+    |
-  |  |  Rule Store   |    |  Evaluator    |    |  State Store |    |
-  |  |               |    |               |    |              |    |
-  |  |  2000 rules   |--->|  Every 60s:   |--->|  Current     |    |
-  |  |  per org      |    |  - Fetch data |    |  alert state |    |
-  |  |               |    |  - Eval rules |    |  (firing,    |    |
-  |  |  Partitioned  |    |  - Compare to |    |   pending,   |    |
-  |  |  across eval  |    |    thresholds |    |   resolved)  |    |
-  |  |  workers      |    |  - Update     |    |              |    |
-  |  |               |    |    state      |    |  Redis +     |    |
-  |  |               |    |               |    |  PostgreSQL  |    |
-  |  +--------------+    +-------+-------+    +--------------+    |
-  |                              |                                 |
-  |                              v                                 |
-  |                    +------------------+                        |
-  |                    |  Notification    |                        |
-  |                    |  Router          |                        |
-  |                    |                  |                        |
-  |                    |  +------------+  |                        |
-  |                    |  | PagerDuty  |  |                        |
-  |                    |  | Slack      |  |                        |
-  |                    |  | Email      |  |                        |
-  |                    |  | Webhook    |  |                        |
-  |                    |  | OpsGenie   |  |                        |
-  |                    |  | MS Teams   |  |                        |
-  |                    |  +------------+  |                        |
-  |                    +------------------+                        |
-  +--------------------------------------------------------------+
+```mermaid
+flowchart LR
+    Rules["Rule Store<br/>2000 rules/org<br/>Partitioned across workers"] --> Eval["Evaluator (Every 60s)<br/>- Fetch data &amp; eval rules<br/>- Compare to thresholds<br/>- Update state"]
+    Eval --> State["State Store (Redis + PostgreSQL)<br/>firing | pending | resolved"]
+    Eval --> Router["Notification Router<br/>PagerDuty | Slack | Email | Webhook | OpsGenie | MS Teams"]
 ```
 
 ### 9.2 Alert Types
@@ -1581,79 +1482,22 @@ RETENTION_POLICIES = {
 
 ### 11.1 Multi-Region Deployment
 
-```
-  +---------------------------------------------------------------------+
-  |                        REGION: US-EAST-1                             |
-  |                                                                      |
-  |  +-------------+  +--------------+  +---------------------------+   |
-  |  | 50K Servers |  | Collection   |  | Kafka Cluster (Primary)   |   |
-  |  | + Containers|->| Agents       |->| 30 brokers                |   |
-  |  |             |  | (Vector)     |  | Topics: logs, metrics,    |   |
-  |  +-------------+  +--------------+  |         traces            |   |
-  |                                     +------------+--------------+   |
-  |                                                  |                   |
-  |                    +-----------------------------+                   |
-  |                    |  Processing Pipeline         |                   |
-  |                    |  (50 workers, k8s)           |                   |
-  |                    +-----------------------------+                   |
-  |                                  |                                    |
-  |                                  v                                    |
-  |  +------------------------------------------------------+           |
-  |  |  Storage                                              |           |
-  |  |  +------------+ +------------+ +----------+           |           |
-  |  |  | ES Cluster | | ClickHouse | | S3       |           |           |
-  |  |  | (Hot+Warm) | | (Metrics+  | | (Archive)|           |           |
-  |  |  | 50 nodes   | |  Traces)   | |          |           |           |
-  |  |  |            | | 20 nodes   | |          |           |           |
-  |  |  +------------+ +------------+ +----------+           |           |
-  |  +------------------------------------------------------+           |
-  |                                                                      |
-  |  +------------------------------------------------------+           |
-  |  |  Query + UI Layer                                     |           |
-  |  |  +----------+ +----------+ +----------+              |           |
-  |  |  |Query API | |Alerting  | |Grafana   |              |           |
-  |  |  |(10 pods) | |Engine    | |Dashboards|              |           |
-  |  |  +----------+ +----------+ +----------+              |           |
-  |  +------------------------------------------------------+           |
-  |                                                                      |
-  +--------------------------------------+-------------------------------+
-                                         |
-                Cross-region replication  |  (critical alerts + config)
-                (Kafka MirrorMaker 2.0)  |
-                                         |
-  +--------------------------------------v-------------------------------+
-  |                        REGION: EU-WEST-1                              |
-  |                                                                       |
-  |  +-------------+  +--------------+  +---------------------------+    |
-  |  | 50K Servers |  | Collection   |  | Kafka Cluster (Primary)   |    |
-  |  | + Containers|->| Agents       |->| 30 brokers                |    |
-  |  |             |  | (Vector)     |  | (independent cluster)     |    |
-  |  +-------------+  +--------------+  +------------+--------------+    |
-  |                                                   |                   |
-  |                    +------------------------------+                   |
-  |                    |  Storage + Processing         |                   |
-  |                    |  (mirrors US-EAST-1 arch)     |                   |
-  |                    +------------------------------+                   |
-  |                                                                       |
-  |  GDPR Compliance:                                                     |
-  |  - EU logs stay in EU region                                          |
-  |  - PII redaction before cross-region replication                      |
-  |  - Data residency controls per org/tenant                             |
-  |                                                                       |
-  +-----------------------------------------------------------------------+
-
-  +-----------------------------------------------------------------------+
-  |                    GLOBAL CONTROL PLANE                                 |
-  |                                                                        |
-  |  +---------------+  +---------------+  +---------------+              |
-  |  |  Config Store  |  |  Alert Rules  |  |  User/Org     |              |
-  |  |  (etcd/Consul) |  |  (PostgreSQL) |  |  Management   |              |
-  |  |  Replicated    |  |  Multi-master |  |  (PostgreSQL) |              |
-  |  +---------------+  +---------------+  +---------------+              |
-  |                                                                        |
-  |  DNS-based routing: logs.us.example.com / logs.eu.example.com          |
-  |  Global dashboard: dashboard.example.com (reads from both regions)     |
-  +-----------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph East["REGION: US-EAST-1"]
+        E_Src["50K Servers + Containers"] --> E_Vec["Collection Agents (Vector)"] --> E_Kafka["Kafka Cluster (Primary, 30 brokers)<br/>Topics: logs, metrics, traces"]
+        E_Kafka --> E_Proc["Processing Pipeline (50 workers, K8s)"]
+        E_Proc --> E_Store["Storage: ES Cluster (50 nodes) | ClickHouse (20 nodes) | S3 (Archive)"]
+        E_Store --> E_UI["Query + UI Layer: Query API (10 pods) | Alerting Engine | Grafana"]
+    end
+    subgraph West["REGION: EU-WEST-1 (GDPR Compliant)"]
+        W_Src["50K Servers + Containers"] --> W_Vec["Collection Agents (Vector)"] --> W_Kafka["Kafka Cluster (Primary, 30 brokers)"]
+        W_Kafka --> W_Store["Storage + Processing (mirrors US-EAST-1, EU data residency)"]
+    end
+    E_Kafka <-->|"Kafka MirrorMaker 2.0 (critical alerts + config)"| W_Kafka
+    subgraph Control["GLOBAL CONTROL PLANE"]
+        CP["Config Store (etcd/Consul) | Alert Rules (PostgreSQL Multi-master) | User/Org Mgmt"]
+    end
 ```
 
 ### 11.2 Disaster Recovery

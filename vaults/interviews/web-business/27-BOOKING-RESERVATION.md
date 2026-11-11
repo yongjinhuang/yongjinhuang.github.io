@@ -176,8 +176,8 @@ Beginners model hotel or car-rental availability as a list of `bookings(resource
 flowchart LR
     Req["Book June 1 Check-In -> June 4 Check-Out<br/>(3 Stay Nights)"] --> Sort["Lock Nights in Chronological Order<br/>2026-06-01, 2026-06-02, 2026-06-03"]
     Sort --> Check{"All 3 rows decremented<br/>with available_count >= 0?"}
-    Check -->|Yes (3 rows)| Hold["Create 10-min Checkout Hold"]
-    Check -->|No (< 3 rows)| Rollback["Rollback Transaction & Return Sold Out"]
+    Check -->|"Yes (3 rows)"| Hold["Create 10-min Checkout Hold"]
+    Check -->|"No (< 3 rows)"| Rollback["Rollback Transaction & Return Sold Out"]
 ```
 
 ### 2. Category-Level Selling vs. Physical Room Assignment ("Run of House" Yield Optimization)

@@ -465,69 +465,39 @@ CREATE TABLE messages (
 
 ## 4. High-Level Architecture
 
-```
-+-------------------------------------------------------------------+
-|                        Client Layer                               |
-|  +------------+   +----------------+   +----------------------+  |
-|  | Web (Next) |   | iOS / Android  |   | Seller Dashboard     |  |
-|  +-----+------+   +-------+--------+   +-----------+----------+  |
-+--------|------------------|-------------------------|-------------+
-         |                  |                         |
-         v                  v                         v
-+-------------------------------------------------------------------+
-|                     CDN / API Gateway                             |
-|    (Cloudflare / AWS CloudFront + API Gateway)                   |
-|    - TLS termination, DDoS protection, rate limiting             |
-|    - Auth token validation (JWT), request routing                 |
-+-------------------------------------------------------------------+
-         |
-         v
-+-------------------------------------------------------------------+
-|                    Load Balancer (Layer 7)                        |
-+----------+----------+----------+----------+----------+-----------+
-           |          |          |          |          |
-+----------v-+  +-----v----+  +-v--------+ +v--------+ +v---------+
-| Listing    |  | Search   |  |Transaction| |Messaging| |User/Auth |
-| Service    |  | Service  |  | Service   | |Service  | |Service   |
-+----------+-+  +-----+----+  +-+--------+ +---------+ +----------+
-           |          |          |
-           |          |          |
-+----------v----------v----------v---------------------------------+
-|                     Message Bus (Kafka)                          |
-|  Topics: listing-events, order-events, review-events,           |
-|          payment-events, fraud-signals, analytics-events         |
-+------------------------------------------------------------------+
-     |          |          |          |          |
-     v          v          v          v          v
-+--------+ +-------+ +--------+ +--------+ +----------+
-|Listing | |Search | |Payment | |Fraud   | |Analytics |
-|Worker  | |Indexer| |Service | |Service | |Processor |
-+---+----+ +---+---+ +---+----+ +--------+ +----------+
-    |           |         |
-+---v---+   +---v---+  +--v----------+
-|Listing|   |Elastic|  |Stripe /     |
-|DB     |   |search |  |Payment GW   |
-|(Postgres) +-------+  +-------------+
-+-------+
+```mermaid
+flowchart TD
+    Web["Web (Next.js)"] & App["iOS / Android"] & Dash["Seller Dashboard"] --> CDN["CDN / API Gateway<br/>TLS termination, DDoS, rate limiting, JWT auth"]
+    CDN --> LB["Load Balancer (Layer 7)"]
+    LB --> ListSvc["Listing Service"] & SearchSvc["Search Service"] & TxnSvc["Transaction Service"] & MsgSvc["Messaging Service"] & AuthSvc["User / Auth Service"]
+    ListSvc & SearchSvc & TxnSvc --> Kafka["Message Bus (Kafka)<br/>Topics: listing-events, order-events, review-events, payment-events, fraud-signals, analytics-events"]
+    Kafka --> LW["Listing Worker"] --> ListDB["Listing DB (Postgres)"]
+    Kafka --> SI["Search Indexer"] --> ES["Elasticsearch"]
+    Kafka --> PS["Payment Service"] --> Stripe["Stripe / Payment GW"]
+    Kafka --> FS["Fraud Service"] & AP["Analytics Processor"]
 ```
 
 ### Service Interaction for a Purchase Flow
 
-```
-Buyer           API Gateway       Transaction Svc    Payment Svc     Escrow Svc
-  |                 |                   |                 |               |
-  |-- POST /orders->|                   |                 |               |
-  |                 |--- validate ------>|                 |               |
-  |                 |                   |-- check fraud-->|               |
-  |                 |                   |<- fraud OK -----|               |
-  |                 |                   |-- create order->|               |
-  |                 |                   |                 |-- charge --->( )
-  |                 |                   |                 |<- success ---|
-  |                 |                   |-- escrow hold ----------------->|
-  |                 |                   |<- held ------------------------|
-  |                 |<-- 200 orderId ----|                 |               |
-  |<-- order resp --|                   |                 |               |
-  |                 |                   |--publish order-event to Kafka-->|
+```mermaid
+sequenceDiagram
+    participant B as "Buyer"
+    participant GW as "API Gateway"
+    participant TS as "Transaction Svc"
+    participant PS as "Payment Svc"
+    participant ES as "Escrow Svc"
+
+    B->>GW: POST /orders
+    GW->>TS: Validate request
+    TS->>PS: Check fraud
+    PS-->>TS: Fraud OK
+    TS->>PS: Create order & charge payment
+    PS-->>TS: Charge success
+    TS->>ES: Escrow hold
+    ES-->>TS: Held
+    TS-->>GW: 200 orderId
+    GW-->>B: Order response
+    TS->>ES: Publish order-event to Kafka
 ```
 
 ---
@@ -623,27 +593,14 @@ Quality Score Components:
 
 **Listing lifecycle state machine:**
 
-```
-            +--------+
-  Seller    | DRAFT  |
-  creates   +---+----+
-                |  publish()
-                v
-           +--------+    out_of_stock()    +---------+
-           | ACTIVE +-------------------->| PAUSED  |
-           +---+----+                     +----+----+
-               |  sold out / manual            |  restock()
-               |                               |
-               v                               v
-           +--------+                     +--------+
-           |  SOLD  |                     | ACTIVE |
-           +--------+                     +--------+
-               |
-               | admin_remove() / seller_delete()
-               v
-           +---------+
-           | DELETED |
-           +---------+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT : Seller creates
+    DRAFT --> ACTIVE : publish()
+    ACTIVE --> PAUSED : out_of_stock()
+    PAUSED --> ACTIVE : restock()
+    ACTIVE --> SOLD : sold out / manual
+    SOLD --> DELETED : admin_remove() / seller_delete()
 ```
 
 **Listing creation pipeline:**
@@ -683,56 +640,13 @@ Seller submits listing
 
 ### Search Architecture
 
-```
-+-------------------------------+
-|       Search Query            |
-+-------------+-----------------+
-              |
-              v
-+-------------+------------------+
-|       Query Parser             |
-|  - Tokenization                |
-|  - Spell correction            |
-|  - Synonym expansion           |
-|  - Intent classification       |
-|    (navigational vs exploratory)|
-+-------------+------------------+
-              |
-     +--------+--------+
-     |                 |
-     v                 v
-+----+------+    +-----+------+
-| Keyword   |    | Semantic   |
-| Search    |    | Search     |
-|(BM25 in   |    |(Embedding  |
-|Elasticsearch)  |vectors ANN)|
-+----+------+    +-----+------+
-     |                 |
-     +--------+--------+
-              |
-              v
-+-------------+------------------+
-|       Ranking / Scoring        |
-|  base_score = BM25 + semantic  |
-|  * quality_score_boost         |
-|  * seller_reputation_boost     |
-|  * recency_decay               |
-|  * personalization_boost       |
-|  * promoted_listing_boost      |
-+-------------+------------------+
-              |
-              v
-+-------------+------------------+
-|     Post-Filter / Faceting     |
-|  - Price range                 |
-|  - Category                    |
-|  - Condition                   |
-|  - Shipping: free / fast       |
-|  - Location / radius           |
-+-------------+------------------+
-              |
-              v
-           Results
+```mermaid
+flowchart TD
+    Q["Search Query"] --> Parser["Query Parser<br/>Tokenization, Spell correction, Synonym expansion, Intent classification"]
+    Parser --> KW["Keyword Search<br/>(BM25 in Elasticsearch)"] & Sem["Semantic Search<br/>(Embedding vectors ANN)"]
+    KW & Sem --> Rank["Ranking / Scoring<br/>base_score = (BM25 + semantic) * quality_boost * seller_rep * recency * personal * promoted"]
+    Rank --> Filter["Post-Filter / Faceting<br/>Price range, Category, Condition, Shipping, Location/radius"]
+    Filter --> Res["Results"]
 ```
 
 ### Ranking Algorithm

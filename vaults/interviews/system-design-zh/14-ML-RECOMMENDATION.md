@@ -224,60 +224,28 @@ U (用户 embeddings):     V (内容 embeddings):
 
 ## 3. 高层架构
 
-```
-+------------------------------------------------------------------+
-|                        客户端层                                    |
-|   [移动应用]    [网页浏览器]    [智能电视]    [API 客户端]          |
-+--------|--------------------|-------------|-------------|--------+
-         |                    |             |             |
-         v                    v             v             v
-+------------------------------------------------------------------+
-|                       API Gateway / CDN                           |
-|            (限流, 认证, 负载均衡)                                  |
-+------------------------------------------------------------------+
-         |                                        |
-         v                                        v
-+------------------------+          +----------------------------+
-| 在线服务路径           |          | 事件采集路径               |
-|                        |          |                            |
-| +--------------------+ |          | +------------------------+ |
-| | Feature Store      | |          | | Kafka / Kinesis        | |
-| | (Redis Cluster)    | |          | | (事件流)               | |
-| +--------------------+ |          | +------------------------+ |
-|          |              |          |      |            |        |
-|          v              |          |      v            v        |
-| +--------------------+ |          | +---------+ +-----------+  |
-| | 候选               | |          | | Flink   | | Spark     |  |
-| | 生成               | |          | | (实时   | | Streaming |  |
-| | (ANN Index)        | |          | | 特征    | | (批量     |  |
-| +--------------------+ |          | | 更新)   | | 特征)     |  |
-|          |              |          | +---------+ +-----------+  |
-|          v              |          +----------------------------+
-| +--------------------+ |                     |
-| | 排序模型           | |                     v
-| | (GPU Serving)      | |          +----------------------------+
-| +--------------------+ |          | 离线训练路径               |
-|          |              |          |                            |
-|          v              |          | +------------------------+ |
-| +--------------------+ |          | | Data Lake (S3/HDFS)    | |
-| | 重排序 &           | |          | | - 原始事件             | |
-| | 业务逻辑           | |          | | - 训练数据集           | |
-| +--------------------+ |          | | - 特征快照             | |
-|          |              |          | +------------------------+ |
-|          v              |          |          |                 |
-| +--------------------+ |          | +------------------------+ |
-| | 响应组装           | |          | | 训练 Pipeline          | |
-| +--------------------+ |          | | (GPU 集群)             | |
-+------------------------+          | | - 特征工程             | |
-                                    | | - 模型训练             | |
-                                    | | - 评估                 | |
-                                    | +------------------------+ |
-                                    |          |                 |
-                                    | +------------------------+ |
-                                    | | Model Registry         | |
-                                    | | (MLflow / SageMaker)   | |
-                                    | +------------------------+ |
-                                    +----------------------------+
+```mermaid
+flowchart TD
+    Clients["CLIENT LAYER<br/>[Mobile App] | [Web Browser] | [Smart TV] | [API Clients]"] --> GW["API GATEWAY / CDN<br/>(Rate Limiting, Auth, Load Balancing)"]
+    GW --> Online & Ingest
+
+    subgraph Online["ONLINE SERVING PATH"]
+        FS["Feature Store (Redis Cluster)"] --> CG["Candidate Generation (ANN Index)"]
+        CG --> RM["Ranking Model (GPU Serving)"]
+        RM --> RR["Re-ranking &amp; Business Logic"]
+        RR --> RA["Response Assembly"]
+    end
+
+    subgraph Ingest["EVENT INGESTION PATH"]
+        Kafka["Kafka / Kinesis (Event Stream)"] --> Flink["Flink (RT Feature Update)"] & Spark["Spark Streaming (Batch Features)"]
+    end
+
+    Ingest --> Offline
+
+    subgraph Offline["OFFLINE TRAINING PATH"]
+        Lake["Data Lake (S3/HDFS)<br/>Raw events, training datasets, feature snapshots"] --> Train["Training Pipeline (GPU Cluster)<br/>Feature eng, model training, evaluation"]
+        Train --> Reg["Model Registry (MLflow / SageMaker)"]
+    end
 ```
 
 ### 三条处理路径
@@ -301,29 +269,15 @@ U (用户 embeddings):     V (内容 embeddings):
 
 **目标**: 在 < 10ms 内从 1亿内容缩小到 500-1000 个候选。
 
-```
-                    1亿总内容
-                          |
-          +---------------+---------------+
-          |               |               |
-    +-----v-----+  +-----v-----+  +------v------+
-    | 基于 ANN  |  | 基于 CF   |  | 基于规则    |
-    | 检索      |  | 检索      |  | 检索        |
-    | (200)     |  | (200)     |  | (200)       |
-    +-----------+  +-----------+  +-------------+
-          |               |               |
-          +-------+-------+-------+-------+
-                  |               |
-           +------v------+ +-----v--------+
-           | 基于热度    | | 基于趋势     |
-           | (100)       | | (100)        |
-           +-------------+ +--------------+
-                  |               |
-                  +-------+-------+
-                          |
-                    合并 & 去重
-                          |
-                  ~500-1000 个候选
+```mermaid
+flowchart TD
+    Total["100M Total Items"] --> ANN["ANN-Based Retrieval (200)"]
+    Total --> CF["CF-Based Retrieval (200)"]
+    Total --> Rule["Rule-Based Retrieval (200)"]
+    Total --> Pop["Popularity-Based (100)"]
+    Total --> Trend["Trending-Based (100)"]
+    ANN & CF & Rule & Pop & Trend --> Merge["Merge &amp; Deduplicate"]
+    Merge --> Out["~500-1000 Candidates"]
 ```
 
 #### ANN (Approximate Nearest Neighbor) 检索
@@ -366,43 +320,12 @@ ANN 索引结构 (HNSW):
 
 **目标**: 使用丰富的特征集对 500-1000 个候选精确打分。延迟预算: ~50ms。
 
-```
-对每个候选内容:
-
-  +------------------+------------------+-------------------+
-  |   用户特征       |  内容特征        | 上下文特征        |
-  +------------------+------------------+-------------------+
-  | - user_id embed  | - item_id embed  | - time_of_day     |
-  | - age, gender    | - category       | - day_of_week     |
-  | - watch history  | - duration       | - device_type     |
-  | - avg watch time | - upload_date    | - location        |
-  | - click rate     | - view_count     | - session_length  |
-  | - genre prefs    | - like_ratio     | - previous_item   |
-  +------------------+------------------+-------------------+
-            |                 |                   |
-            v                 v                   v
-  +----------------------------------------------------------+
-  |              特征交互层                                    |
-  |  (交叉特征: user_genre x item_genre,                      |
-  |   user_avg_duration x item_duration, 等)                   |
-  +----------------------------------------------------------+
-                          |
-                          v
-  +----------------------------------------------------------+
-  |              深度神经网络                                   |
-  |  输入 (拼接): 1024维                                       |
-  |  隐藏层: 1024 -> 512 -> 256 -> 128                         |
-  |  激活函数: ReLU + BatchNorm + Dropout                      |
-  +----------------------------------------------------------+
-                          |
-                          v
-  +----------------------------------------------------------+
-  |              多任务输出头                                   |
-  |  P(click)  |  P(watch>50%)  |  P(like)  |  P(share)       |
-  +----------------------------------------------------------+
-                          |
-                          v
-  综合分数 = w1*P(click) + w2*P(watch) + w3*P(like) + w4*P(share)
+```mermaid
+flowchart TD
+    UF["User Features<br/>user_id embed, age, gender,<br/>watch history, avg watch time,<br/>click rate, genre prefs"] & IF["Item Features<br/>item_id embed, category, duration,<br/>upload_date, view_count, like_ratio"] & CF["Context Features<br/>time_of_day, day_of_week,<br/>device_type, location,<br/>session_length, previous_item"] --> Cross["Feature Interaction Layer<br/>(Cross features: user_genre x item_genre, user_avg_duration x item_duration)"]
+    Cross --> DNN["Deep Neural Network<br/>Input: 1024-dim -> Hidden: 1024 -> 512 -> 256 -> 128<br/>(ReLU + BatchNorm + Dropout)"]
+    DNN --> Heads["Multi-Task Heads<br/>P(click) | P(watch&gt;50%) | P(like) | P(share)"]
+    Heads --> Score["Combined Score = w1*P(click) + w2*P(watch) + w3*P(like) + w4*P(share)"]
 ```
 
 #### 特征工程深入
@@ -445,37 +368,14 @@ ANN 索引结构 (HNSW):
 
 **目标**: 在排序结果之上应用业务规则、多样性和探索。延迟: ~10ms。
 
-```
-排序后的候选（按分数排名前 100）
-         |
-         v
-+---------------------+
-| 多样性注入          |  -- 确保前 20 个结果中每个类别不超过 3 个
-+---------------------+
-         |
-         v
-+---------------------+
-| 新鲜度加权          |  -- < 24h 的内容分数提升 1.2x
-+---------------------+     < 1h 的内容分数提升 1.5x
-         |
-         v
-+---------------------+
-| 业务规则            |  -- 在位置 3, 7 插入推广内容
-+---------------------+     过滤年龄限制内容
-         |                   抑制已观看内容
-         v
-+---------------------+
-| 探索                |  -- 保留 10% 的位置用于探索
-+---------------------+     对新内容使用 Thompson Sampling
-         |
-         v
-+---------------------+
-| 位置偏差            |  -- 校准位置偏差的分数
-| 校正                |     （顶部位置的内容无论如何都会获得更多点击）
-+---------------------+
-         |
-         v
-  最终排序列表（前 50）
+```mermaid
+flowchart TD
+    In["Ranked candidates (top 100 by score)"] --> Div["Diversity Injection<br/>Max 3 items per category in top 20"]
+    Div --> Fresh["Freshness Boost<br/>&lt;24h old: 1.2x | &lt;1h old: 1.5x"]
+    Fresh --> Biz["Business Rules<br/>Promoted at pos 3 &amp; 7, filter age-restricted, suppress watched"]
+    Biz --> Exp["Exploration<br/>Reserve 10% slots via Thompson Sampling"]
+    Exp --> Pos["Position Bias Correction<br/>Calibrate scores for position bias"]
+    Pos --> Out["Final ordered list (top 50)"]
 ```
 
 #### 探索与利用策略
@@ -507,39 +407,12 @@ ANN 索引结构 (HNSW):
 
 ## 5. Feature Store 设计
 
-```
-+-------------------------------------------------------------------+
-|                       FEATURE STORE                                |
-|                                                                    |
-|  +--------------------+          +--------------------+            |
-|  | 在线存储           |          | 离线存储           |            |
-|  | (Redis Cluster)    |          | (S3 + Hive/Iceberg)|            |
-|  |                    |          |                    |             |
-|  | - 用户特征         |          | - 历史             |            |
-|  |   (1TB, <1ms)      |          |   特征             |            |
-|  | - 内容特征         |          | - 训练数据         |            |
-|  |   (100GB, <1ms)    |          |   (300TB)          |            |
-|  | - 实时             |          | - 特征             |            |
-|  |   计数器           |          |   快照             |            |
-|  +--------^-----------+          +--------^-----------+            |
-|           |                               |                        |
-|  +--------+-----------+          +--------+-----------+            |
-|  | 流处理 Pipeline    |          | 批处理 Pipeline    |            |
-|  | (Flink)            |          | (Spark)            |            |
-|  |                    |          |                    |             |
-|  | - 实时             |          | - 每日特征         |            |
-|  |   聚合             |          |   计算             |            |
-|  | - 滑动窗口         |          | - 历史             |            |
-|  |   特征             |          |   聚合             |            |
-|  | - 会话特征         |          | - 训练数据         |            |
-|  |                    |          |   生成             |            |
-|  +--------^-----------+          +--------^-----------+            |
-|           |                               |                        |
-|  +--------+-------------------------------+-----------+            |
-|  |               事件流 (Kafka)                       |            |
-|  |  Topics: clicks, views, watch_time, likes, shares  |            |
-|  +----------------------------------------------------+            |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart BT
+    Kafka["EVENT STREAM (Kafka)<br/>Topics: clicks, views, watch_time, likes, shares"] --> Stream["STREAMING PIPELINE (Flink)<br/>Real-time aggregations, sliding windows, session features"]
+    Kafka --> Batch["BATCH PIPELINE (Spark)<br/>Daily feature computation, historical aggregations, training data"]
+    Stream --> Online["ONLINE STORE (Redis Cluster)<br/>User features (1TB, &lt;1ms), Item features (100GB, &lt;1ms), RT counters"]
+    Batch --> Offline["OFFLINE STORE (S3 + Hive/Iceberg)<br/>Historical features, Training data (300TB), Feature snapshots"]
 ```
 
 ### 特征计算 Pipeline
@@ -618,41 +491,14 @@ ANN 索引结构 (HNSW):
 
 ## 6. 训练 Pipeline
 
-```
-+-------------------------------------------------------------------+
-|                     训练 PIPELINE                                  |
-|                                                                    |
-|  +------------------+     +------------------+                     |
-|  | 数据收集         |     | 特征              |                     |
-|  | & 采样           |---->| 工程              |                     |
-|  | (Spark)          |     | (Spark + Flink)  |                     |
-|  +------------------+     +------------------+                     |
-|                                    |                               |
-|                                    v                               |
-|  +------------------+     +------------------+                     |
-|  | 负采样           |     | 训练数据          |                     |
-|  |                  |---->| 验证              |                     |
-|  +------------------+     +------------------+                     |
-|                                    |                               |
-|                                    v                               |
-|  +------------------+     +------------------+                     |
-|  | 分布式           |     | 超参数            |                     |
-|  | 训练             |<--->| 调优              |                     |
-|  | (GPU 集群)       |     | (Optuna/Ray)     |                     |
-|  +------------------+     +------------------+                     |
-|           |                                                        |
-|           v                                                        |
-|  +------------------+     +------------------+                     |
-|  | 离线             |     | Model Registry   |                     |
-|  | 评估             |---->| (MLflow)         |                     |
-|  +------------------+     +------------------+                     |
-|                                    |                               |
-|                                    v                               |
-|  +------------------+     +------------------+                     |
-|  | Shadow / Canary  |     | 生产环境          |                     |
-|  | 部署             |---->| 发布              |                     |
-|  +------------------+     +------------------+                     |
-+-------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    DC["Data Collection &amp; Sampling (Spark)"] --> FE["Feature Engineering (Spark + Flink)"]
+    FE --> NS["Negative Sampling"] --> Val["Training Data Validation"]
+    Val --> DT["Distributed Training (GPU Cluster)"]
+    DT <--> HPO["Hyperparameter Tuning (Optuna / Ray)"]
+    DT --> Eval["Offline Evaluation"] --> Reg["Model Registry (MLflow)"]
+    Reg --> Canary["Shadow / Canary Deployment"] --> Prod["Production Rollout"]
 ```
 
 ### 隐式反馈 vs 显式反馈
@@ -769,53 +615,12 @@ ANN 索引结构 (HNSW):
 
 ### 基于 Embedding 的服务架构
 
-```
-+----------------------------------------------------------------+
-|                    模型服务层                                    |
-|                                                                |
-|  +-------------------+     +-----------------------------+     |
-|  | 用户 Embedding    |     | ANN 索引服务                |     |
-|  | 缓存 (Redis)      |     | (FAISS / ScaNN)             |     |
-|  |                   |     |                             |     |
-|  | user_id -> 256d   |     | 1亿内容 embeddings          |     |
-|  | TTL: 6 小时       |     | HNSW 索引                   |     |
-|  | 命中率: ~95%      |     | 分片至 10 个节点            |     |
-|  +-------------------+     +-----------------------------+     |
-|           |                          |                         |
-|           v                          v                         |
-|  +---------------------------------------------------+        |
-|  | 候选生成服务                                       |        |
-|  | - 查找用户 embedding（缓存或计算）                 |        |
-|  | - 查询 ANN 索引获取 top-200 候选                   |        |
-|  | - 与 CF、热度、趋势候选合并                        |        |
-|  | - 输出: ~500-1000 个候选内容 ID                    |        |
-|  +---------------------------------------------------+        |
-|                          |                                     |
-|                          v                                     |
-|  +---------------------------------------------------+        |
-|  | 特征组装服务                                       |        |
-|  | - 从 Redis 批量查找用户特征                        |        |
-|  | - 批量查找所有候选的内容特征                       |        |
-|  | - 计算交叉特征                                     |        |
-|  | - 为排序模型组装特征向量                           |        |
-|  +---------------------------------------------------+        |
-|                          |                                     |
-|                          v                                     |
-|  +---------------------------------------------------+        |
-|  | 排序模型服务 (TF Serving / Triton)                 |        |
-|  | - GPU 加速推理                                     |        |
-|  | - 批量打分: 单次前向传播处理 500 个内容            |        |
-|  | - 多任务输出: P(click), P(watch), P(like)          |        |
-|  | - 使用业务权重的综合分数                           |        |
-|  +---------------------------------------------------+        |
-|                          |                                     |
-|                          v                                     |
-|  +---------------------------------------------------+        |
-|  | 重排序服务                                         |        |
-|  | - 应用多样性、新鲜度、业务规则                     |        |
-|  | - 最终排序的 50 个内容列表                         |        |
-|  +---------------------------------------------------+        |
-+----------------------------------------------------------------+
+```mermaid
+flowchart TD
+    UE["User Embedding Cache (Redis)<br/>user_id -> 256d | TTL: 6h | Hit rate: ~95%"] & ANN["ANN Index Service (FAISS / ScaNN)<br/>100M item embeddings, HNSW index, 10 shards"] --> CG["Candidate Generation Service<br/>Query ANN top-200 + merge CF, popularity, trending -> ~500-1000 IDs"]
+    CG --> FA["Feature Assembly Service<br/>Batch lookup user &amp; item features from Redis + compute cross features"]
+    FA --> RM["Ranking Model Service (TF Serving / Triton)<br/>GPU batch scoring (500 items), Multi-task: P(click), P(watch), P(like)"]
+    RM --> RR["Re-ranking Service<br/>Apply diversity, freshness, business rules -> Final 50 items"]
 ```
 
 ### ANN 搜索对比
@@ -1130,38 +935,14 @@ CREATE TABLE experiment_assignments (
 
 ### 冷启动架构
 
-```
-+------------------------------------------------------------------+
-|                    冷启动系统                                      |
-|                                                                  |
-|  用户请求                                                        |
-|      |                                                           |
-|      v                                                           |
-|  +------------------+                                            |
-|  | 用户画像         |                                            |
-|  | 检查             |                                            |
-|  +------------------+                                            |
-|      |           |                                               |
-|  有历史      无历史                                              |
-|      |           |                                               |
-|      v           v                                               |
-|  标准        +------------------+                                |
-|  Pipeline    | 冷启动           |                                |
-|               | 路由器          |                                |
-|               +------------------+                               |
-|                  |       |       |                                |
-|                  v       v       v                                |
-|            基于热度  基于人口  入门                               |
-|                      统计     问卷                               |
-|                  |       |       |                                |
-|                  +---+---+---+---+                                |
-|                      |                                           |
-|                      v                                           |
-|              与探索混合                                           |
-|                      |                                           |
-|                      v                                           |
-|              返回推荐结果                                        |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Req["User Request"] --> Check{"User Profile Check"}
+    Check -->|"Has history"| Std["Standard Pipeline"]
+    Check -->|"No history"| Router["Cold Start Router"]
+    Router --> Pop["Popularity-Based"] & Demo["Demographic-Based"] & Quiz["Onboarding Quiz"]
+    Pop & Demo & Quiz --> Blend["Blend with Exploration"]
+    Std & Blend --> Ret["Return Recommendations"]
 ```
 
 ---
@@ -1170,37 +951,14 @@ CREATE TABLE experiment_assignments (
 
 ### 事件流架构
 
-```
-+------------------------------------------------------------------+
-|                 实时个性化                                         |
-|                                                                  |
-|  用户行为（点击、观看、点赞）                                    |
-|      |                                                           |
-|      v                                                           |
-|  +-----------------+     +------------------+                    |
-|  | 事件收集器      |---->| Kafka            |                    |
-|  | (API Gateway)   |     | (按 user_id      |                    |
-|  +-----------------+     |  分区)            |                    |
-|                          +------------------+                    |
-|                            |        |       |                    |
-|                            v        v       v                    |
-|  +-------------------+  +------+ +------+ +------+              |
-|  | 会话服务          |  |Flink | |Flink | |Flink |              |
-|  | (内存中)          |  |Job 1 | |Job 2 | |Job 3 |              |
-|  |                   |  |实时  | |在线  | |用户  |              |
-|  | - 当前会话        |  |聚合  | |特征  | |Embed |              |
-|  |   浏览内容        |  |      | |更新  | |更新  |              |
-|  | - 会话上下文      |  +------+ +------+ +------+              |
-|  +-------------------+     |        |         |                  |
-|                            v        v         v                  |
-|                   +----------------------------+                 |
-|                   | Redis (在线 Feature Store)  |                |
-|                   +----------------------------+                 |
-|                              |                                   |
-|                              v                                   |
-|                   下次推荐请求                                    |
-|                   使用更新后的特征                                |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    Act["User Action (click, watch, like)"] --> EC["Event Collector (API Gateway)"]
+    EC --> Kafka["Kafka (Partitioned by user_id)"]
+    EC --> Sess["Session Service (In-memory)<br/>Current session items viewed &amp; context"]
+    Kafka --> F1["Flink Job 1: RT Agg"] & F2["Flink Job 2: Online Feature Update"] & F3["Flink Job 3: User Embed Update"]
+    Sess & F1 & F2 & F3 --> Redis["Redis (Online Feature Store)"]
+    Redis --> Next["Next recommendation request uses updated features"]
 ```
 
 ### 基于会话的推荐
@@ -1533,67 +1291,23 @@ Redis Cluster 用于在线 Feature Store:
 
 ## 13. 部署架构
 
-```
-+===================================================================+
-||                    全球部署                                        ||
-||                                                                  ||
-||   区域: US-East              区域: EU-West                       ||
-||   +-----------------------+   +-----------------------+          ||
-||   |  +-------+ +-------+ |   |  +-------+ +-------+ |          ||
-||   |  | API   | | API   | |   |  | API   | | API   | |          ||
-||   |  | GW 1  | | GW 2  | |   |  | GW 1  | | GW 2  | |          ||
-||   |  +---+---+ +---+---+ |   |  +---+---+ +---+---+ |          ||
-||   |      |         |     |   |      |         |     |           ||
-||   |  +---v---------v---+ |   |  +---v---------v---+ |          ||
-||   |  | 推荐            | |   |  | 推荐            | |          ||
-||   |  | 服务集群        | |   |  | 服务集群        | |          ||
-||   |  | (K8s)           | |   |  | (K8s)           | |          ||
-||   |  |                 | |   |  |                 | |          ||
-||   |  | - 候选生成      | |   |  | - 候选生成      | |          ||
-||   |  | - 排序 (GPU)    | |   |  | - 排序 (GPU)    | |          ||
-||   |  | - 重排序        | |   |  | - 重排序        | |          ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   |                      |   |                      |           ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   |  | Feature Store   | |   |  | Feature Store   | |          ||
-||   |  | (Redis Cluster) | |   |  | (Redis Cluster) | |          ||
-||   |  | 10 个分片       | |   |  | 10 个分片       | |          ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   |                      |   |                      |           ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   |  | ANN 索引        | |   |  | ANN 索引        | |          ||
-||   |  | (FAISS/ScaNN)   | |   |  | (FAISS/ScaNN)   | |          ||
-||   |  | 10 个分片       | |   |  | 10 个分片       | |          ||
-||   |  +-----------------+ |   |  +-----------------+ |          ||
-||   +-----------------------+   +-----------------------+          ||
-||                                                                  ||
-||   +----------------------------------------------------------+   ||
-||   |              共享基础设施                                  |   ||
-||   |                                                          |   ||
-||   |  +----------------+  +----------------+  +------------+  |   ||
-||   |  | Kafka 集群     |  | Data Lake      |  | Model      |  |   ||
-||   |  | (事件流)       |  | (S3/HDFS)      |  | Registry   |  |   ||
-||   |  | 跨区域         |  | 中心化         |  | (MLflow)   |  |   ||
-||   |  | 复制           |  | 仓库           |  |            |  |   ||
-||   |  +----------------+  +----------------+  +------------+  |   ||
-||   |                                                          |   ||
-||   |  +----------------+  +----------------+  +------------+  |   ||
-||   |  | GPU 训练       |  | Spark 集群     |  | 监控       |  |   ||
-||   |  | 集群           |  | (特征工程)     |  | (Grafana + |  |   ||
-||   |  | (32x A100)     |  |                |  |  PagerDuty)|  |   ||
-||   |  +----------------+  +----------------+  +------------+  |   ||
-||   +----------------------------------------------------------+   ||
-||                                                                  ||
-||   模型部署流程:                                                  ||
-||   训练集群 -> Model Registry -> Canary (5% 流量)                 ||
-||   -> Shadow（与生产对比）-> 全量发布                             ||
-||                                                                  ||
-||   跨区域同步:                                                    ||
-||   - 模型产物: 通过 S3 跨区域复制                                 ||
-||   - Feature Store: 异步复制，延迟 < 1 分钟                      ||
-||   - ANN 索引: 中心化构建，分发到各区域                           ||
-||   - 事件: Kafka MirrorMaker 跨区域流式传输                       ||
-+===================================================================+
+```mermaid
+flowchart TD
+    subgraph East["Region: US-East"]
+        E_GW["API GW 1 &amp; GW 2"] --> E_Rec["Recommendation Service Cluster (K8s)<br/>Candidate Gen | Ranking (GPU) | Re-ranking"]
+        E_Rec --> E_FS["Feature Store (Redis, 10 shards)"] & E_ANN["ANN Index (FAISS/ScaNN, 10 shards)"]
+    end
+    subgraph West["Region: EU-West"]
+        W_GW["API GW 1 &amp; GW 2"] --> W_Rec["Recommendation Service Cluster (K8s)<br/>Candidate Gen | Ranking (GPU) | Re-ranking"]
+        W_Rec --> W_FS["Feature Store (Redis, 10 shards)"] & W_ANN["ANN Index (FAISS/ScaNN, 10 shards)"]
+    end
+    subgraph Shared["SHARED INFRASTRUCTURE"]
+        S1["Kafka Cluster (Cross-region MirrorMaker)"]
+        S2["Data Lake (S3/HDFS) &amp; Spark Cluster (Feature Eng)"]
+        S3["GPU Training Cluster (32x A100) -> Model Registry (MLflow)"]
+        S4["Monitoring (Grafana + PagerDuty)"]
+    end
+    Shared --> East & West
 ```
 
 ### 部署检查清单

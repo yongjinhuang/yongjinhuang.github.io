@@ -129,20 +129,11 @@ class SingleServerKVStore:
 
 **预写日志（WAL）** 在将变更应用到内存之前，先将每次变更追加写入磁盘。在崩溃恢复时，重放 WAL 以重建状态。
 
-```
-Client Request
-      │
-      ▼
-┌─────────────┐     ┌────────────────────────┐
-│  Append to  │────►│  WAL on Disk           │
-│  WAL first  │     │  [PUT k1 v1]           │
-└─────┬───────┘     │  [PUT k2 v2]           │
-      │             │  [DEL k1]              │
-      ▼             │  [PUT k3 v3]           │
-┌─────────────┐     │  ...                   │
-│  Apply to   │     └────────────────────────┘
-│  Hash Map   │
-└─────────────┘
+```mermaid
+flowchart TD
+    Req["Client Request"] --> WAL["Append to WAL first"]
+    WAL --> Disk["WAL on Disk<br/>[PUT k1 v1], [PUT k2 v2], [DEL k1], [PUT k3 v3]"]
+    WAL --> Map["Apply to Hash Map"]
 ```
 
 ### 2.4 为什么需要分布式
@@ -407,30 +398,25 @@ Vector clock 是一个 `(node, counter)` 对的列表。每个节点在每次写
 
 **Vector Clock 演进图：**
 
-```
-  Client A              Node A              Node B              Node C
-     │                    │                    │                    │
-     │── put(k, v1) ────►│                    │                    │
-     │                    │ clock: [A:1]       │                    │
-     │                    │── replicate ──────►│                    │
-     │                    │── replicate ───────────────────────────►│
-     │                    │                    │                    │
-     │                    │                    │                    │
-  Client B                │                    │                    │
-     │                    │                    │                    │
-     │── get(k) ─────────────────────────────►│                    │
-     │◄─ v1 [A:1] ───────────────────────────│                    │
-     │── put(k, v2) ─────────────────────────►│                    │
-     │                    │                    │ clock: [A:1, B:1]  │
-     │                    │                    │                    │
-  Client C                │                    │                    │
-     │                    │                    │                    │
-     │── get(k) ──────────────────────────────────────────────────►│
-     │◄─ v1 [A:1] ────────────────────────────────────────────────│
-     │── put(k, v3) ──────────────────────────────────────────────►│
-     │                    │                    │  clock: [A:1, C:1] │
-     │                    │                    │                    │
-  CONFLICT: [A:1, B:1] vs [A:1, C:1]  — neither dominates
+```mermaid
+sequenceDiagram
+    participant CA as "Client A"
+    participant CB as "Client B"
+    participant CC as "Client C"
+    participant NA as "Node A"
+    participant NB as "Node B"
+    participant NC as "Node C"
+
+    CA->>NA: put(k, v1) -> clock: [A:1]
+    NA->>NB: replicate v1 [A:1]
+    NA->>NC: replicate v1 [A:1]
+    CB->>NB: get(k)
+    NB-->>CB: v1 [A:1]
+    CB->>NB: put(k, v2) -> clock: [A:1, B:1]
+    CC->>NC: get(k)
+    NC-->>CC: v1 [A:1]
+    CC->>NC: put(k, v3) -> clock: [A:1, C:1]
+    Note over NB,NC: CONFLICT: [A:1, B:1] vs [A:1, C:1] (neither dominates)
 ```
 
 **支配规则：**
@@ -499,25 +485,12 @@ def compare(clock_a, clock_b):
 5. 如果某节点的心跳在**阈值**时间内（例如 10 秒）没有增加，则将其标记为**可疑**。
 6. 经过更长的超时后，可疑节点被标记为**故障**。
 
-```
-┌─────────┐  gossip   ┌─────────┐  gossip   ┌─────────┐
-│ Node A  │◄─────────►│ Node B  │◄─────────►│ Node C  │
-│         │           │         │           │         │
-│ Members:│           │ Members:│           │ Members:│
-│ A: 42   │           │ A: 40   │           │ A: 38   │
-│ B: 30   │           │ B: 31   │           │ B: 29   │
-│ C: 55   │           │ C: 53   │           │ C: 56   │
-│ D: 18   │           │ D: 18   │           │ D: 18   │
-└─────────┘           └─────────┘           └─────────┘
-     │                                           │
-     │              gossip                       │
-     └───────────────────────────────────────────┘
-
-After gossip round, each node converges:
-  A: 42, B: 31, C: 56, D: 18
-
-If D's counter stays at 18 for > 10 seconds:
-  → D is suspected, then marked failed.
+```mermaid
+flowchart LR
+    NA["Node A<br/>Members: A:42, B:30, C:55, D:18"] <-->|"gossip"| NB["Node B<br/>Members: A:40, B:31, C:53, D:18"]
+    NB <-->|"gossip"| NC["Node C<br/>Members: A:38, B:29, C:56, D:18"]
+    NA <-->|"gossip"| NC
+    NB --> Conv["After gossip round, each node converges:<br/>A:42, B:31, C:56, D:18<br/>(If D stays at 18 for &gt;10s -> suspected -> failed)"]
 ```
 
 **Gossip 收敛时间：** 需要 O(log N) 轮才能将信息传播到所有 N 个节点。
@@ -546,19 +519,15 @@ Merkle tree 是一棵二叉树，其中：
 - **内部节点**包含其子节点的哈希值。
 - **根哈希**概括了整个数据集。
 
-```
-                    Root: H(AB+CD)
-                   /              \
-              H(AB)                H(CD)
-             /     \              /     \
-          H(A)    H(B)         H(C)    H(D)
-           │       │            │       │
-        ┌──┴──┐ ┌──┴──┐    ┌──┴──┐ ┌──┴──┐
-        │ k1  │ │ k2  │    │ k3  │ │ k4  │
-        │ k5  │ │ k6  │    │ k7  │ │ k8  │
-        │ k9  │ │ k10 │    │ k11 │ │ k12 │
-        └─────┘ └─────┘    └─────┘ └─────┘
-        Range A  Range B    Range C  Range D
+```mermaid
+flowchart TD
+    Root["Root: H(AB+CD)"] --> HAB["H(AB)"] & HCD["H(CD)"]
+    HAB --> HA["H(A)"] & HB["H(B)"]
+    HCD --> HC["H(C)"] & HD["H(D)"]
+    HA --> RA["Range A<br/>k1, k5, k9"]
+    HB --> RB["Range B<br/>k2, k6, k10"]
+    HC --> RC["Range C<br/>k3, k7, k11"]
+    HD --> RD["Range D<br/>k4, k8, k12"]
 ```
 
 **比较树以发现不一致：**
@@ -609,62 +578,11 @@ LSM tree 是写入密集型键值存储的主流存储引擎（Cassandra、Rocks
 
 **架构：**
 
-```
-                       Write Path
-                          │
-                          ▼
-┌──────────────────────────────────────────────────────────┐
-│                      MemTable                            │
-│                (In-Memory Sorted Tree)                   │
-│                  e.g., Red-Black Tree                    │
-│                                                          │
-│   ┌────┐  ┌────┐  ┌────┐  ┌────┐  ┌────┐              │
-│   │ a  │──│ d  │──│ f  │──│ k  │──│ z  │              │
-│   │ =1 │  │ =4 │  │ =6 │  │ =11│  │ =26│              │
-│   └────┘  └────┘  └────┘  └────┘  └────┘              │
-│                                                          │
-│   When MemTable reaches threshold (e.g., 64 MB):        │
-│   → Freeze as Immutable MemTable                        │
-│   → Create new MemTable for incoming writes             │
-│   → Flush Immutable MemTable to disk as SSTable         │
-└──────────────────────────────────────────────────────────┘
-                          │
-                          │ flush
-                          ▼
-┌──────────────────────────────────────────────────────────┐
-│                    SSTable (Level 0)                      │
-│            (Sorted String Table on Disk)                 │
-│                                                          │
-│   ┌──────────────────────────────────────┐              │
-│   │  Index Block  │  Data Blocks (sorted) │              │
-│   │  a → offset 0 │  [a=1][d=4][f=6]     │              │
-│   │  k → offset 48│  [k=11][z=26]        │              │
-│   └──────────────────────────────────────┘              │
-│                                                          │
-│   ┌──────────────────────────────────────┐              │
-│   │  Bloom Filter (in memory)            │              │
-│   │  Quickly answers: "Is key X in this  │              │
-│   │  SSTable?" with no false negatives   │              │
-│   └──────────────────────────────────────┘              │
-└──────────────────────────────────────────────────────────┘
-                          │
-                          │ compaction
-                          ▼
-┌──────────────────────────────────────────────────────────┐
-│                SSTables (Levels 1, 2, ...)               │
-│                                                          │
-│   Level 0:  [SST-1] [SST-2] [SST-3]  (may overlap)     │
-│                  │       │       │                        │
-│                  └───────┼───────┘                        │
-│                     compaction                            │
-│                          │                                │
-│   Level 1:  [SST-A]──[SST-B]──[SST-C]  (no overlap)    │
-│                          │                                │
-│                     compaction                            │
-│                          │                                │
-│   Level 2:  [SST-X]─[SST-Y]─[SST-Z]─[SST-W]           │
-│             (10x larger than Level 1)                    │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Write["Write Path"] --> Mem["MemTable (In-Memory Sorted Red-Black Tree)<br/>[a=1] -> [d=4] -> [f=6] -> [k=11] -> [z=26]<br/>When >= 64 MB: Freeze as Immutable MemTable &amp; Flush"]
+    Mem -->|"flush"| L0["SSTable (Level 0 - Sorted String Table on Disk)<br/>- Index Block (a->0, k->48) + Sorted Data Blocks<br/>- In-Memory Bloom Filter (no false negatives)"]
+    L0 -->|"compaction"| L12["SSTables (Levels 1, 2, ...)<br/>Level 0: [SST-1, SST-2, SST-3] (may overlap)<br/>Level 1: [SST-A, SST-B, SST-C] (no overlap)<br/>Level 2: [SST-X, SST-Y, SST-Z, SST-W] (10x larger)"]
 ```
 
 **写入路径：**
@@ -726,50 +644,20 @@ B-Tree 是读取密集型工作负载的传统存储引擎（MySQL InnoDB、Post
 
 ### 8.1 写入路径（详细）
 
-```
-  Client
-    │
-    │  put(key, value)
-    │
-    ▼
-┌────────────────┐
-│  Coordinator   │  (any node can be coordinator)
-│  Node          │
-└───────┬────────┘
-        │
-        │  1. Determine replica nodes via consistent hashing
-        │
-        ├──────────────────────────┬──────────────────────────┐
-        ▼                          ▼                          ▼
-┌──────────────┐          ┌──────────────┐          ┌──────────────┐
-│  Replica 1   │          │  Replica 2   │          │  Replica 3   │
-│              │          │              │          │              │
-│ ┌──────────┐ │          │ ┌──────────┐ │          │ ┌──────────┐ │
-│ │1. Append │ │          │ │1. Append │ │          │ │1. Append │ │
-│ │   WAL    │ │          │ │   WAL    │ │          │ │   WAL    │ │
-│ └────┬─────┘ │          │ └────┬─────┘ │          │ └────┬─────┘ │
-│      │       │          │      │       │          │      │       │
-│ ┌────▼─────┐ │          │ ┌────▼─────┐ │          │ ┌────▼─────┐ │
-│ │2. Write  │ │          │ │2. Write  │ │          │ │2. Write  │ │
-│ │ MemTable │ │          │ │ MemTable │ │          │ │ MemTable │ │
-│ └────┬─────┘ │          │ └────┬─────┘ │          │ └────┬─────┘ │
-│      │       │          │      │       │          │      │       │
-│ ┌────▼─────┐ │          │ ┌────▼─────┐ │          │ ┌────▼─────┐ │
-│ │3. Send   │ │          │ │3. Send   │ │          │ │3. Send   │ │
-│ │   ACK    │ │          │ │   ACK    │ │          │ │   ACK    │ │
-│ └──────────┘ │          │ └──────────┘ │          │ └──────────┘ │
-│              │          │              │          │              │
-│ (Background) │          │ (Background) │          │ (Background) │
-│ 4. Flush to  │          │ 4. Flush to  │          │ 4. Flush to  │
-│    SSTable   │          │    SSTable   │          │    SSTable   │
-└──────────────┘          └──────────────┘          └──────────────┘
-        │                          │                          │
-        │         ACK              │          ACK             │
-        └──────────┬───────────────┘──────────────────────────┘
-                   │
-                   ▼
-           Coordinator waits for W ACKs (e.g., W=2 of 3)
-           Then responds SUCCESS to client
+```mermaid
+flowchart TD
+    Client["Client"] -->|"put(key, value)"| Coord["Coordinator Node<br/>(1. Determine replica nodes via consistent hashing)"]
+    Coord --> R1 & R2 & R3
+    subgraph R1["Replica 1"]
+        R1S["1. Append WAL -> 2. Write MemTable -> 3. Send ACK<br/>(Background: 4. Flush to SSTable)"]
+    end
+    subgraph R2["Replica 2"]
+        R2S["1. Append WAL -> 2. Write MemTable -> 3. Send ACK<br/>(Background: 4. Flush to SSTable)"]
+    end
+    subgraph R3["Replica 3"]
+        R3S["1. Append WAL -> 2. Write MemTable -> 3. Send ACK<br/>(Background: 4. Flush to SSTable)"]
+    end
+    R1 & R2 & R3 -->|"ACK"| Quorum["Coordinator waits for W ACKs (e.g. W=2 of 3)<br/>Then responds SUCCESS to client"]
 ```
 
 **步骤：**
@@ -786,51 +674,20 @@ B-Tree 是读取密集型工作负载的传统存储引擎（MySQL InnoDB、Post
 
 ### 8.2 读取路径（详细）
 
-```
-  Client
-    │
-    │  get(key)
-    │
-    ▼
-┌────────────────┐
-│  Coordinator   │
-│  Node          │
-└───────┬────────┘
-        │
-        │  Send read request to R replicas
-        │
-        ├──────────────────────────┬──────────────────┐
-        ▼                          ▼                  ▼
-┌──────────────┐          ┌──────────────┐    ┌──────────────┐
-│  Replica 1   │          │  Replica 2   │    │  Replica 3   │
-│              │          │              │    │              │
-│ 1. MemTable  │          │ 1. MemTable  │    │ 1. MemTable  │
-│    found? ───┼─► Yes    │    found? ───┼─►  │    found? ── │
-│    return    │  No ↓    │    return    │    │    return    │
-│              │          │              │    │              │
-│ 2. Bloom     │          │ 2. Bloom     │    │ 2. Bloom     │
-│    filter    │          │    filter    │    │    filter    │
-│    check     │          │    check     │    │    check     │
-│    SST-1: No │          │              │    │              │
-│    SST-2: Yes│          │              │    │              │
-│         ↓    │          │              │    │              │
-│ 3. Binary    │          │              │    │              │
-│    search    │          │              │    │              │
-│    SST-2     │          │              │    │              │
-│    index     │          │              │    │              │
-│         ↓    │          │              │    │              │
-│ 4. Read data │          │              │    │              │
-│    block     │          │              │    │              │
-└──────┬───────┘          └──────┬───────┘    └──────┬───────┘
-       │                         │                    │
-       │     value + clock       │                    │
-       └─────────┬───────────────┘────────────────────┘
-                 │
-                 ▼
-         Coordinator collects R responses
-         Picks value with highest vector clock
-         (Triggers read repair if values differ)
-         Returns value to client
+```mermaid
+flowchart TD
+    Client["Client"] -->|"get(key)"| Coord["Coordinator Node<br/>(Send read request to R replicas)"]
+    Coord --> R1 & R2 & R3
+    subgraph R1["Replica 1"]
+        R1S["1. MemTable found? Yes -> return<br/>2. Bloom filter check (SST-1: No, SST-2: Yes)<br/>3. Binary search SST-2 index<br/>4. Read data block"]
+    end
+    subgraph R2["Replica 2"]
+        R2S["1. MemTable -> 2. Bloom filter -> 3. Index -> 4. Data block"]
+    end
+    subgraph R3["Replica 3"]
+        R3S["1. MemTable -> 2. Bloom filter -> 3. Index -> 4. Data block"]
+    end
+    R1 & R2 & R3 -->|"value + vector clock"| Quorum["Coordinator collects R responses<br/>Picks highest vector clock (triggers read repair if stale)<br/>Returns value to client"]
 ```
 
 **步骤：**
@@ -851,47 +708,22 @@ B-Tree 是读取密集型工作负载的传统存储引擎（MySQL InnoDB、Post
 
 ### 9.1 完整架构图
 
-```
-                              ┌──────────┐
-                              │  Client  │
-                              └────┬─────┘
-                                   │
-                          ┌────────▼─────────┐
-                          │   Load Balancer   │
-                          └────────┬─────────┘
-                                   │
-            ┌──────────────────────┼──────────────────────┐
-            │                      │                      │
-     ┌──────▼──────┐       ┌──────▼──────┐       ┌──────▼──────┐
-     │   Node A    │       │   Node B    │       │   Node C    │
-     │ (Coord.)    │       │ (Coord.)    │       │ (Coord.)    │
-     ├─────────────┤       ├─────────────┤       ├─────────────┤
-     │ Request     │       │ Request     │       │ Request     │
-     │ Handler     │       │ Handler     │       │ Handler     │
-     ├─────────────┤       ├─────────────┤       ├─────────────┤
-     │ Consistent  │       │ Consistent  │       │ Consistent  │
-     │ Hash Ring   │       │ Hash Ring   │       │ Hash Ring   │
-     ├─────────────┤       ├─────────────┤       ├─────────────┤
-     │ Storage     │       │ Storage     │       │ Storage     │
-     │ Engine      │       │ Engine      │       │ Engine      │
-     │ (LSM Tree)  │       │ (LSM Tree)  │       │ (LSM Tree)  │
-     ├─────────────┤       ├─────────────┤       ├─────────────┤
-     │ Replication  │       │ Replication  │       │ Replication  │
-     │ Manager     │       │ Manager     │       │ Manager     │
-     ├─────────────┤       ├─────────────┤       ├─────────────┤
-     │ Failure     │       │ Failure     │       │ Failure     │
-     │ Detector    │       │ Detector    │       │ Detector    │
-     │ (Gossip)    │       │ (Gossip)    │       │ (Gossip)    │
-     └──────┬──────┘       └──────┬──────┘       └──────┬──────┘
-            │                      │                      │
-            │    Gossip Protocol   │    Gossip Protocol    │
-            ◄──────────────────────►──────────────────────►
-            │                      │                      │
-     ┌──────▼──────┐       ┌──────▼──────┐       ┌──────▼──────┐
-     │   Node D    │       │   Node E    │       │   Node F    │
-     │   (same     │       │   (same     │       │   (same     │
-     │   structure)│       │   structure)│       │   structure)│
-     └─────────────┘       └─────────────┘       └─────────────┘
+```mermaid
+flowchart TD
+    Client["Client"] --> LB["Load Balancer"]
+    LB --> NA & NB & NC
+    subgraph Ring["Peer-to-Peer Cluster (Gossip Protocol)"]
+        NA["Node A (Coordinator)<br/>Request Handler | Consistent Hash Ring<br/>Storage Engine (LSM) | Replication Mgr | Gossip Detector"]
+        NB["Node B (Coordinator)<br/>Request Handler | Consistent Hash Ring<br/>Storage Engine (LSM) | Replication Mgr | Gossip Detector"]
+        NC["Node C (Coordinator)<br/>Request Handler | Consistent Hash Ring<br/>Storage Engine (LSM) | Replication Mgr | Gossip Detector"]
+        ND["Node D"]
+        NE["Node E"]
+        NF["Node F"]
+        NA <-->|"Gossip"| NB <-->|"Gossip"| NC
+        NA <--> ND
+        NB <--> NE
+        NC <--> NF
+    end
 ```
 
 ### 9.2 关键设计特性
@@ -1002,19 +834,15 @@ N = 3, W = 1, R = 3
 
 ### 10.3 一致性决策树
 
-```
-Is strong consistency required?
-  │
-  ├── YES → Set W + R > N
-  │         │
-  │         ├── Read-heavy?  → W = N, R = 1
-  │         ├── Write-heavy? → W = 1, R = N
-  │         └── Balanced?    → W = ⌈(N+1)/2⌉, R = ⌈(N+1)/2⌉
-  │
-  └── NO  → Eventual consistency acceptable
-            │
-            ├── Maximize availability → W = 1, R = 1
-            └── Best-effort fresh    → W = 1, R = 2
+```mermaid
+flowchart TD
+    Start{"Is strong consistency required?"} -->|"YES (Set W + R &gt; N)"| Workload{"Workload type?"}
+    Workload -->|"Read-heavy"| RH["W = N, R = 1"]
+    Workload -->|"Write-heavy"| WH["W = 1, R = N"]
+    Workload -->|"Balanced"| Bal["W = ceil((N+1)/2), R = ceil((N+1)/2)"]
+    Start -->|"NO (Eventual consistency)"| Avail{"Priority?"}
+    Avail -->|"Maximize availability"| MaxA["W = 1, R = 1"]
+    Avail -->|"Best-effort fresh"| Fresh["W = 1, R = 2"]
 ```
 
 ---
@@ -1023,42 +851,21 @@ Is strong consistency required?
 
 ### 11.1 多数据中心部署
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Global Load Balancer                        │
-│                    (Route to nearest DC)                            │
-└───────────────┬────────────────────────────┬────────────────────────┘
-                │                            │
-     ┌──────────▼──────────┐      ┌──────────▼──────────┐
-     │   Data Center 1     │      │   Data Center 2     │
-     │   (US-East)         │      │   (EU-West)         │
-     │                     │      │                     │
-     │  ┌───┐ ┌───┐ ┌───┐ │      │  ┌───┐ ┌───┐ ┌───┐ │
-     │  │N1 │ │N2 │ │N3 │ │      │  │N4 │ │N5 │ │N6 │ │
-     │  └─┬─┘ └─┬─┘ └─┬─┘ │      │  └─┬─┘ └─┬─┘ └─┬─┘ │
-     │    │     │     │    │      │    │     │     │    │
-     │    └─────┼─────┘    │      │    └─────┼─────┘    │
-     │     Gossip/Repl.    │      │     Gossip/Repl.    │
-     │                     │      │                     │
-     └──────────┬──────────┘      └──────────┬──────────┘
-                │                            │
-                │   Cross-DC Async           │
-                │   Replication              │
-                └────────────────────────────┘
-
-     ┌──────────────────────────────────────────────────┐
-     │          Data Center 3 (AP-Tokyo)                │
-     │                                                   │
-     │  ┌───┐ ┌───┐ ┌───┐                              │
-     │  │N7 │ │N8 │ │N9 │                              │
-     │  └─┬─┘ └─┬─┘ └─┬─┘                              │
-     │    └─────┼─────┘                                  │
-     │     Gossip/Repl.                                  │
-     │                                                   │
-     └──────────────────┬───────────────────────────────┘
-                        │
-           Cross-DC Async Replication
-           to DC1 and DC2
+```mermaid
+flowchart TD
+    GLB["Global Load Balancer<br/>(Route to nearest DC)"] --> DC1 & DC2 & DC3
+    subgraph DC1["Data Center 1 (US-East)"]
+        N123["Nodes N1, N2, N3<br/>(Local Gossip / Replication)"]
+    end
+    subgraph DC2["Data Center 2 (EU-West)"]
+        N456["Nodes N4, N5, N6<br/>(Local Gossip / Replication)"]
+    end
+    subgraph DC3["Data Center 3 (AP-Tokyo)"]
+        N789["Nodes N7, N8, N9<br/>(Local Gossip / Replication)"]
+    end
+    DC1 <-->|"Cross-DC Async Replication"| DC2
+    DC2 <-->|"Cross-DC Async Replication"| DC3
+    DC1 <-->|"Cross-DC Async Replication"| DC3
 ```
 
 ### 11.2 跨数据中心复制

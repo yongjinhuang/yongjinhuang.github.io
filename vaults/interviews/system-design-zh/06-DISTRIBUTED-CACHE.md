@@ -82,29 +82,18 @@
 4. 将结果写回缓存。
 5. 写入时，更新数据库并失效/删除缓存条目。
 
-```
-  ┌────────────┐          ┌────────────┐          ┌────────────┐
-  │            │  1. GET   │            │          │            │
-  │   Client   │ -------> │   Cache    │          │  Database  │
-  │            │ <------- │            │          │            │
-  │            │  2. HIT   │            │          │            │
-  └────────────┘          └────────────┘          └────────────┘
-
-          --- 缓存未命中流程 ---
-
-  ┌────────────┐          ┌────────────┐          ┌────────────┐
-  │            │  1. GET   │            │          │            │
-  │   Client   │ -------> │   Cache    │          │  Database  │
-  │            │ <------- │  (MISS)    │          │            │
-  │            │          └────────────┘          │            │
-  │            │  3. Query                        │            │
-  │            │ ------------------------------> │            │
-  │            │ <------------------------------ │            │
-  │            │  4. Result                       │            │
-  │            │          ┌────────────┐          │            │
-  │            │  5. SET   │            │          │            │
-  │            │ -------> │   Cache    │          │            │
-  └────────────┘          └────────────┘          └────────────┘
+```mermaid
+flowchart LR
+    subgraph Hit["Cache Hit Flow"]
+        C1["Client"] -->|"1. GET"| Ca1["Cache"]
+        Ca1 -->|"2. HIT"| C1
+    end
+    subgraph Miss["Cache Miss Flow"]
+        C2["Client"] -->|"1. GET / 5. SET"| Ca2["Cache"]
+        Ca2 -->|"2. MISS"| C2
+        C2 -->|"3. Query"| DB2["Database"]
+        DB2 -->|"4. Result"| C2
+    end
 ```
 
 **适用场景：**
@@ -155,14 +144,12 @@ def get_user(user_id):
 2. 命中时，缓存返回数据。
 3. 未命中时，缓存从数据库加载数据，存储后返回给应用程序。
 
-```
-  ┌────────────┐          ┌────────────────┐          ┌────────────┐
-  │            │  1. GET   │                │  2. Load  │            │
-  │   Client   │ -------> │  Cache Layer   │ -------> │  Database  │
-  │            │          │  (with loader) │ <------- │            │
-  │            │ <------- │                │  3. Data  │            │
-  │            │  4. Data  │   (stores it)  │          │            │
-  └────────────┘          └────────────────┘          └────────────┘
+```mermaid
+flowchart LR
+    Client["Client"] -->|"1. GET"| Cache["Cache Layer<br/>(with loader &amp; stores data)"]
+    Cache -->|"2. Load"| DB["Database"]
+    DB -->|"3. Data"| Cache
+    Cache -->|"4. Data"| Client
 ```
 
 **适用场景：**
@@ -193,14 +180,12 @@ def get_user(user_id):
 2. 缓存同步写入数据库。
 3. 两者都更新完毕后返回成功。
 
-```
-  ┌────────────┐          ┌────────────┐          ┌────────────┐
-  │            │  1. SET   │            │  2. Write │            │
-  │   Client   │ -------> │   Cache    │ -------> │  Database  │
-  │            │          │            │ <------- │            │
-  │            │ <------- │            │  3. ACK   │            │
-  │            │  4. ACK   │            │          │            │
-  └────────────┘          └────────────┘          └────────────┘
+```mermaid
+flowchart LR
+    Client["Client"] -->|"1. SET"| Cache["Cache"]
+    Cache -->|"2. Sync Write"| DB["Database"]
+    DB -->|"3. ACK"| Cache
+    Cache -->|"4. ACK"| Client
 ```
 
 **适用场景：**
@@ -230,14 +215,11 @@ def get_user(user_id):
 2. 缓存立即确认。
 3. 缓存异步写入数据库（批量、延迟）。
 
-```
-  ┌────────────┐          ┌────────────┐   async   ┌────────────┐
-  │            │  1. SET   │            │  ......>  │            │
-  │   Client   │ -------> │   Cache    │  3. Batch │  Database  │
-  │            │ <------- │  (buffer)  │  write    │            │
-  │            │  2. ACK   │            │  ......>  │            │
-  │            │ (instant) │            │           │            │
-  └────────────┘          └────────────┘           └────────────┘
+```mermaid
+flowchart LR
+    Client["Client"] -->|"1. SET"| Cache["Cache (buffer)"]
+    Cache -->|"2. Instant ACK"| Client
+    Cache -.->|"3. Async batch write"| DB["Database"]
 ```
 
 **适用场景：**
@@ -270,18 +252,10 @@ def get_user(user_id):
 2. 在键的 TTL 过期前，如果最近被访问过，缓存会在后台从数据库刷新。
 3. 客户端始终能从缓存获取新鲜数据，无需承受未命中的延迟。
 
-```
-  ┌────────────┐          ┌────────────┐          ┌────────────┐
-  │            │   GET     │            │          │            │
-  │   Client   │ -------> │   Cache    │          │  Database  │
-  │            │ <------- │            │          │            │
-  │            │  (fast!)  │            │          │            │
-  └────────────┘          │            │          │            │
-                          │  TTL at    │ refresh  │            │
-                          │  80%?      │ -------> │            │
-                          │  Recently  │ <------- │            │
-                          │  accessed? │          │            │
-                          └────────────┘          └────────────┘
+```mermaid
+flowchart LR
+    Client["Client"] <-->|"GET (fast!)"| Cache["Cache<br/>(TTL at 80%? Recently accessed?)"]
+    Cache <-->|"Proactive refresh"| DB["Database"]
 ```
 
 **适用场景：**
@@ -316,51 +290,23 @@ def get_user(user_id):
 
 ## 3. 高层架构
 
-```
-                              ┌─────────────────────────┐
-                              │     协调服务             │
-                              │   (etcd /               │
-                              │    ZooKeeper)           │
-                              │                         │
-                              │  - 集群拓扑             │
-                              │  - Leader 选举          │
-                              │  - 配置管理             │
-                              └────────┬────────────────┘
-                                       │ watches/updates
-        ┌──────────────────────────────┼──────────────────────────────┐
-        │                              │                              │
-  ┌─────▼──────┐               ┌──────▼─────┐               ┌───────▼────┐
-  │   Client   │               │   Client   │               │   Client   │
-  │  Library   │               │  Library   │               │  Library   │
-  │ (Jedis /   │               │ (Jedis /   │               │ (Jedis /   │
-  │  Lettuce)  │               │  Lettuce)  │               │  Lettuce)  │
-  └─────┬──────┘               └──────┬─────┘               └──────┬─────┘
-        │                              │                            │
-        │         Consistent Hashing / Hash Slot 路由               │
-        │                              │                            │
-  ┌─────▼──────────────────────────────▼────────────────────────────▼─────┐
-  │                         缓存集群                                      │
-  │                                                                       │
-  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐              │
-  │  │  Shard 0    │    │  Shard 1    │    │  Shard 2    │   ...        │
-  │  │             │    │             │    │             │              │
-  │  │  ┌───────┐  │    │  ┌───────┐  │    │  ┌───────┐  │              │
-  │  │  │Master │  │    │  │Master │  │    │  │Master │  │              │
-  │  │  │ Node  │  │    │  │ Node  │  │    │  │ Node  │  │              │
-  │  │  └───┬───┘  │    │  └───┬───┘  │    │  └───┬───┘  │              │
-  │  │      │      │    │      │      │    │      │      │              │
-  │  │  ┌───▼───┐  │    │  ┌───▼───┐  │    │  ┌───▼───┐  │              │
-  │  │  │Replica│  │    │  │Replica│  │    │  │Replica│  │              │
-  │  │  │  (1)  │  │    │  │  (1)  │  │    │  │  (1)  │  │              │
-  │  │  └───────┘  │    │  └───────┘  │    │  └───────┘  │              │
-  │  │  ┌───────┐  │    │  ┌───────┐  │    │  ┌───────┐  │              │
-  │  │  │Replica│  │    │  │Replica│  │    │  │Replica│  │              │
-  │  │  │  (2)  │  │    │  │  (2)  │  │    │  │  (2)  │  │              │
-  │  │  └───────┘  │    │  └───────┘  │    │  └───────┘  │              │
-  │  └─────────────┘    └─────────────┘    └─────────────┘              │
-  │                                                                       │
-  │  Hash Slots: 0-5460       5461-10922      10923-16383               │
-  └───────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Coord["Coordination Service (etcd / ZooKeeper)<br/>- Cluster topology<br/>- Leader election<br/>- Config management"] -->|"watches / updates"| CL1 & CL2 & CL3
+
+    CL1["Client Library 1<br/>(Jedis / Lettuce)"] & CL2["Client Library 2<br/>(Jedis / Lettuce)"] & CL3["Client Library 3<br/>(Jedis / Lettuce)"] -->|"Consistent Hashing / Hash Slot Routing"| S0 & S1 & S2
+
+    subgraph Cluster["Cache Cluster (Hash Slots 0-16383)"]
+        subgraph S0["Shard 0 (Slots 0-5460)"]
+            M0["Master Node"] --> R0A["Replica (1)"] & R0B["Replica (2)"]
+        end
+        subgraph S1["Shard 1 (Slots 5461-10922)"]
+            M1["Master Node"] --> R1A["Replica (1)"] & R1B["Replica (2)"]
+        end
+        subgraph S2["Shard 2 (Slots 10923-16383)"]
+            M2["Master Node"] --> R2A["Replica (1)"] & R2B["Replica (2)"]
+        end
+    end
 ```
 
 ### 关键架构组件
@@ -762,41 +708,14 @@ WAIT 1 100
 
 Redis Sentinel 提供自动故障转移和监控。
 
-```
-  ┌──────────┐    ┌──────────┐    ┌──────────┐
-  │Sentinel 1│    │Sentinel 2│    │Sentinel 3│
-  │          │<-->│          │<-->│          │
-  └────┬─────┘    └────┬─────┘    └────┬─────┘
-       │               │               │
-       │  监控          │  监控          │  监控
-       │               │               │
-  ┌────▼─────┐    ┌────▼─────┐    ┌────▼─────┐
-  │  Master  │───>│ Replica 1│    │ Replica 2│
-  │  (6379)  │───>│  (6380)  │    │  (6381)  │
-  └──────────┘    └──────────┘    └──────────┘
-
-  故障转移流程：
-  ─────────────────────────────────────────────────────
-
-  1. Sentinel 检测到 Master 宕机（SDOWN - 主观下线）。
-  2. 多个 Sentinel 达成共识（ODOWN - 客观下线，达到法定人数）。
-  3. 选举一个 Sentinel 作为 Leader（类 Raft 共识）。
-  4. Leader 选择最佳 Replica：
-     - 最高优先级（最低的 replica-priority）
-     - 最多已复制数据（最高复制偏移量）
-     - 最小 runid（平局时决胜）
-  5. 被选中的 Replica 提升为 Master（REPLICAOF NO ONE）。
-  6. 其他 Replica 被重新配置为从新 Master 复制。
-  7. Sentinel 更新配置。客户端收到通知。
-
-  时间线：
-  [0s] Master 故障
-  [5s] Sentinel SDOWN（在 down-after-milliseconds 之后）
-  [6s] ODOWN 共识达成
-  [7s] Sentinel Leader 选举完成
-  [8s] 新 Master 提升
-  [9s] 客户端重定向
-  总计：典型故障转移时间约 10 秒
+```mermaid
+flowchart TD
+    subgraph Sentinels["Sentinel Quorum (Raft-like Consensus)"]
+        S1["Sentinel 1"] <--> S2["Sentinel 2"] <--> S3["Sentinel 3"]
+    end
+    S1 & S2 & S3 -->|"monitors (SDOWN -> ODOWN -> Failover ~10s)"| Master["Master (6379)"]
+    Master --> Rep1["Replica 1 (6380)"]
+    Master --> Rep2["Replica 2 (6381)"]
 ```
 
 ### 6.4 Redis Cluster 模式架构
@@ -1266,18 +1185,12 @@ def cache_refresh_worker():
 
 **替代方案：通过消息队列延迟删除**
 
-```
-  ┌────────┐ 1.Delete ┌───────┐ 2.Update ┌────────┐
-  │ Service│ ───────> │ Cache │          │   DB   │
-  │        │ ──────────────────────────> │        │
-  │        │ 3.Publish delayed delete    │        │
-  │        │ ───────> ┌─────────────┐    │        │
-  └────────┘          │ 消息队列     │    └────────┘
-                      │             │
-                      │（500ms      │    ┌───────┐
-                      │  延迟）     │──> │ Cache │
-                      └─────────────┘    │DELETE │
-                                         └───────┘
+```mermaid
+flowchart LR
+    Svc["Service"] -->|"1. Delete"| Cache["Cache"]
+    Svc -->|"2. Update"| DB["DB"]
+    Svc -->|"3. Publish delayed delete"| MQ["Message Queue<br/>(500ms delay)"]
+    MQ -->|"4. Cache DELETE"| Cache
 ```
 
 ---
@@ -1435,129 +1348,49 @@ MGET user:1:name user:1:age user:1:city
 
 ### 11.1 单区域生产部署
 
-```
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │                        负载均衡器 / DNS                              │
-  └─────────────────────────┬───────────────────────────────────────────┘
-                            │
-  ┌─────────────────────────▼───────────────────────────────────────────┐
-  │                    应用层                                           │
-  │                                                                     │
-  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
-  │  │ App Svc  │  │ App Svc  │  │ App Svc  │  │ App Svc  │           │
-  │  │ + L1     │  │ + L1     │  │ + L1     │  │ + L1     │           │
-  │  │ （本地   │  │ （本地   │  │ （本地   │  │ （本地   │           │
-  │  │  缓存）  │  │  缓存）  │  │  缓存）  │  │  缓存）  │           │
-  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘           │
-  │       │              │              │              │                │
-  └───────┼──────────────┼──────────────┼──────────────┼────────────────┘
-          │              │              │              │
-  ┌───────▼──────────────▼──────────────▼──────────────▼────────────────┐
-  │                      Redis Cluster（L2 缓存）                       │
-  │                                                                     │
-  │  AZ-1                    AZ-2                    AZ-3               │
-  │  ┌────────────┐          ┌────────────┐          ┌────────────┐    │
-  │  │ Master A   │          │ Master B   │          │ Master C   │    │
-  │  │ Replica B' │          │ Replica C' │          │ Replica A' │    │
-  │  └────────────┘          └────────────┘          └────────────┘    │
-  │                                                                     │
-  │  跨 AZ 复制确保即使一个 AZ 故障也能保持高可用。                      │
-  │  Master 及其 Replica 位于不同的 AZ 中。                              │
-  └─────────────────────────────────────────────────────────────────────┘
-          │
-  ┌───────▼─────────────────────────────────────────────────────────────┐
-  │                      数据库层（真实数据源）                          │
-  │  ┌──────────┐  ┌──────────┐  ┌──────────┐                         │
-  │  │ Primary  │  │ Replica  │  │ Replica  │                         │
-  │  │   DB     │  │   DB     │  │   DB     │                         │
-  │  └──────────┘  └──────────┘  └──────────┘                         │
-  └─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    LB["Load Balancer / DNS"] --> AppTier
+    subgraph AppTier["Application Tier"]
+        A1["App Svc 1 + L1 (local cache)"]
+        A2["App Svc 2 + L1 (local cache)"]
+        A3["App Svc 3 + L1 (local cache)"]
+        A4["App Svc 4 + L1 (local cache)"]
+    end
+    AppTier --> RedisTier
+    subgraph RedisTier["Redis Cluster (L2 Cache - Cross-AZ Placement)"]
+        AZ1["AZ-1: Master A + Replica B'"]
+        AZ2["AZ-2: Master B + Replica C'"]
+        AZ3["AZ-3: Master C + Replica A'"]
+    end
+    RedisTier --> DBTier["Database Tier (Source of Truth)<br/>Primary DB + 2 Replica DBs"]
 ```
 
 ### 11.2 多区域部署
 
-```
-  ┌────────────────────────────────────────────────────────────────────┐
-  │                      区域：US-East                                 │
-  │                                                                    │
-  │  ┌─────────────┐         ┌──────────────────────────┐             │
-  │  │ App Servers │────────>│  本地 Redis Cluster       │             │
-  │  │ + L1 Cache  │         │  （Master + Replica）     │             │
-  │  └─────────────┘         └────────────┬─────────────┘             │
-  │                                        │                          │
-  └────────────────────────────────────────┼──────────────────────────┘
-                                           │ 跨区域
-                                           │ 复制
-                                           │ （异步）
-  ┌────────────────────────────────────────┼──────────────────────────┐
-  │                      区域：EU-West     │                          │
-  │                                        │                          │
-  │  ┌─────────────┐         ┌─────────────▼────────────┐             │
-  │  │ App Servers │────────>│  本地 Redis Cluster       │             │
-  │  │ + L1 Cache  │         │  （US-East Master 的      │             │
-  │  └─────────────┘         │   读副本）                │             │
-  │                          └──────────────────────────┘             │
-  └────────────────────────────────────────────────────────────────────┘
-
-                                           │
-  ┌────────────────────────────────────────┼──────────────────────────┐
-  │                      区域：AP-South    │                          │
-  │                                        │                          │
-  │  ┌─────────────┐         ┌─────────────▼────────────┐             │
-  │  │ App Servers │────────>│  本地 Redis Cluster       │             │
-  │  │ + L1 Cache  │         │  （US-East Master 的      │             │
-  │  └─────────────┘         │   读副本）                │             │
-  │                          └──────────────────────────┘             │
-  └────────────────────────────────────────────────────────────────────┘
-
-  Active-Active 替代方案：
-  - 每个区域拥有独立的 Master。
-  - 基于 CRDT 的冲突解决（Redis Enterprise Active-Active）。
-  - 写入发送到本地 Master；双向同步。
-  - 冲突采用 Last-Write-Wins 或自定义合并函数。
+```mermaid
+flowchart TD
+    subgraph US["Region: US-East (Primary)"]
+        AppUS["App Servers + L1 Cache"] --> RedisUS["Local Redis Cluster<br/>(Masters + Replicas)"]
+    end
+    subgraph EU["Region: EU-West"]
+        AppEU["App Servers + L1 Cache"] --> RedisEU["Local Redis Cluster<br/>(Read replicas of US-East masters)"]
+    end
+    subgraph AP["Region: AP-South"]
+        AppAP["App Servers + L1 Cache"] --> RedisAP["Local Redis Cluster<br/>(Read replicas of US-East masters)"]
+    end
+    RedisUS -->|"Cross-region async replication"| RedisEU
+    RedisUS -->|"Cross-region async replication"| RedisAP
 ```
 
 ### 11.3 多层缓存
 
-```
-  请求流程：
-
-  ┌──────────┐
-  │ Client   │
-  └────┬─────┘
-       │
-  ┌────▼─────────────────────────────┐
-  │  L1：进程内缓存                  │
-  │  (Caffeine / Guava / dict)       │
-  │  - 延迟：约 100 纳秒             │
-  │  - 大小：每实例 100 MB           │
-  │  - TTL：10-60 秒                 │
-  │  - 命中率：约 80%                │
-  └────┬─────────────────────────────┘
-       │ L1 未命中
-  ┌────▼─────────────────────────────┐
-  │  L2：分布式缓存（Redis）          │
-  │  - 延迟：约 0.5 毫秒             │
-  │  - 大小：跨集群 TB 级            │
-  │  - TTL：分钟到小时               │
-  │  - 命中率：约 95%（L1 之后）     │
-  └────┬─────────────────────────────┘
-       │ L2 未命中
-  ┌────▼─────────────────────────────┐
-  │  L3：CDN / 边缘缓存              │
-  │  （用于静态/半静态数据）          │
-  │  - 延迟：1-50 ms                 │
-  │  - 地理分布式                    │
-  └────┬─────────────────────────────┘
-       │ L3 未命中
-  ┌────▼─────────────────────────────┐
-  │  数据库（真实数据源）             │
-  │  - 延迟：5-50 毫秒               │
-  │  - 始终一致                      │
-  └──────────────────────────────────┘
-
-  总体缓存命中率：1 - (1-0.80) * (1-0.95) = 99%
-  只有 1% 的请求到达数据库。
+```mermaid
+flowchart TD
+    Client["Client"] --> L1["L1: In-Process Cache (Caffeine / Guava)<br/>Latency: ~100ns | Size: 100 MB/inst | TTL: 10-60s | Hit rate: ~80%"]
+    L1 -->|"L1 Miss"| L2["L2: Distributed Cache (Redis)<br/>Latency: ~0.5ms | Size: TBs | TTL: min-hrs | Hit rate: ~95%"]
+    L2 -->|"L2 Miss"| L3["L3: CDN / Edge Cache<br/>Latency: 1-50ms | Geographically distributed"]
+    L3 -->|"L3 Miss (1% of total)"| DB["Database (Source of Truth)<br/>Latency: 5-50ms | Always consistent"]
 ```
 
 ---
@@ -1798,22 +1631,12 @@ def release_lock(lock_name, token):
 
 **Redis Pub/Sub：**
 
-```
-  ┌──────────┐  PUBLISH ch1 "msg"  ┌──────────┐
-  │Publisher │ ──────────────────> │  Redis   │
-  └──────────┘                     │          │
-                                   │  将消息  │
-                                   │  路由到  │
-                                   │  所有    │
-                                   │  订阅者  │
-                                   └────┬─────┘
-                            ┌───────────┼───────────┐
-                            ▼           ▼           ▼
-                      ┌──────────┐ ┌──────────┐ ┌──────────┐
-                      │ Sub 1   │ │ Sub 2   │ │ Sub 3   │
-                      │SUBSCRIBE│ │SUBSCRIBE│ │SUBSCRIBE│
-                      │ ch1     │ │ ch1     │ │ ch1     │
-                      └──────────┘ └──────────┘ └──────────┘
+```mermaid
+flowchart LR
+    Pub["Publisher"] -->|"PUBLISH ch1 'msg'"| Redis["Redis<br/>(Routes message to all subscribers)"]
+    Redis --> Sub1["Sub 1 (SUBSCRIBE ch1)"]
+    Redis --> Sub2["Sub 2 (SUBSCRIBE ch1)"]
+    Redis --> Sub3["Sub 3 (SUBSCRIBE ch1)"]
 ```
 
 **命令：**
@@ -1829,30 +1652,12 @@ PSUBSCRIBE user:*:events    # 基于模式的订阅
 
 **Redis Streams（持久化、消费者组）：**
 
-```
-  ┌──────────┐  XADD stream  ┌────────────────────────────┐
-  │Producer │ ──────────────> │  Redis Stream              │
-  └──────────┘                │                            │
-                              │  ID: 1678901234567-0       │
-                              │  {"event":"order","id":42} │
-                              │                            │
-                              │  ID: 1678901234568-0       │
-                              │  {"event":"payment","ok":1}│
-                              └───────────┬────────────────┘
-                                          │
-                     ┌────────────────────┼────────────────────┐
-                     ▼                    ▼                    ▼
-              ┌────────────┐       ┌────────────┐       ┌────────────┐
-              │ Consumer   │       │ Consumer   │       │ Consumer   │
-              │ Group A    │       │ Group A    │       │ Group B    │
-              │ Worker 1   │       │ Worker 2   │       │ Worker 1   │
-              └────────────┘       └────────────┘       └────────────┘
-
-  与 Pub/Sub 的关键区别：
-  - 消息被持久化（可在重启后存活）。
-  - 消费者组实现工作分配（每条消息在每个组中只处理一次）。
-  - 确认机制（XACK）确保至少一次投递。
-  - 可以从任意时间点重放消息。
+```mermaid
+flowchart TD
+    Prod["Producer"] -->|"XADD stream"| Stream["Redis Stream<br/>ID: 1678901234567-0 {event: order, id: 42}<br/>ID: 1678901234568-0 {event: payment, ok: 1}"]
+    Stream --> CGA1["Consumer Group A - Worker 1"]
+    Stream --> CGA2["Consumer Group A - Worker 2"]
+    Stream --> CGB1["Consumer Group B - Worker 1"]
 ```
 
 **Redis Streams 命令：**

@@ -73,64 +73,20 @@ URL 元数据存储：       1B * 500 字节 = 500 GB / 月
 
 ## 2. 高层架构
 
-```
-                            +------------------+
-                            |    Seed URLs     |
-                            +--------+---------+
-                                     |
-                                     v
-                    +----------------+----------------+
-                    |          URL Frontier            |
-                    |  (Priority Queue + Politeness)   |
-                    +----------------+----------------+
-                                     |
-                          +----------+----------+
-                          |                     |
-                          v                     v
-                 +--------+--------+   +--------+--------+
-                 | Robots.txt Cache|   |  DNS Resolver    |
-                 |   (per domain)  |   |    Cache         |
-                 +--------+--------+   +--------+--------+
-                          |                     |
-                          +----------+----------+
-                                     |
-                                     v
-                    +----------------+----------------+
-                    |        HTML Downloader           |
-                    |  (HTTP client + retry + timeout) |
-                    +----------------+----------------+
-                                     |
-                                     v
-                    +----------------+----------------+
-                    |         Content Parser           |
-                    | (HTML parse, link extract, etc.) |
-                    +----------------+----------------+
-                                     |
-                       +-------------+-------------+
-                       |                           |
-                       v                           v
-            +----------+----------+    +-----------+-----------+
-            |   Content Seen?     |    |     URL Extractor     |
-            | (SimHash / MinHash) |    | (normalize + extract) |
-            +----------+----------+    +-----------+-----------+
-                       |                           |
-                  +----+----+                      v
-                  |         |           +----------+----------+
-                  v         v           |      URL Filter     |
-              Discard   +---+---+       | (blacklist, scope)  |
-                        | Store |       +----------+----------+
-                        +---+---+                  |
-                            |                      v
-                            v           +----------+----------+
-                    +-------+-------+   |     URL Seen?       |
-                    | Content Store |   |  (Bloom Filter)     |
-                    | (S3 / HDFS)   |   +----------+----------+
-                    +---------------+              |
-                                          +--------+--------+
-                                          |                 |
-                                          v                 v
-                                       Discard         URL Frontier
-                                                      (enqueue new)
+```mermaid
+flowchart TD
+    Seeds["Seed URLs"] --> Frontier["URL Frontier<br/>(Priority Queue + Politeness)"]
+    Frontier --> Robots["Robots.txt Cache<br/>(per domain)"] & DNS["DNS Resolver Cache"]
+    Robots & DNS --> Downloader["HTML Downloader<br/>(HTTP client + retry + timeout)"]
+    Downloader --> Parser["Content Parser<br/>(HTML parse, link extract)"]
+    Parser --> ContentSeen{"Content Seen?<br/>(SimHash / MinHash)"}
+    ContentSeen -->|"Yes"| DiscardC["Discard"]
+    ContentSeen -->|"No"| Store["Content Store<br/>(S3 / HDFS)"]
+    Parser --> Extractor["URL Extractor<br/>(normalize + extract)"]
+    Extractor --> Filter["URL Filter<br/>(blacklist, scope)"]
+    Filter --> URLSeen{"URL Seen?<br/>(Bloom Filter)"}
+    URLSeen -->|"Yes"| DiscardU["Discard"]
+    URLSeen -->|"No"| Frontier
 ```
 
 ### 数据流概要
@@ -217,62 +173,18 @@ URL Frontier 是最关键的组件。它决定下一个抓取哪个 URL，同时
 
 #### 架构
 
-```
-                        Incoming URLs
-                              |
-                              v
-                   +----------+----------+
-                   |   Prioritizer       |
-                   |  (PageRank, fresh-  |
-                   |   ness, depth)      |
-                   +----------+----------+
-                              |
-              +---------------+---------------+
-              |               |               |
-              v               v               v
-        +-----------+   +-----------+   +-----------+
-        | Priority  |   | Priority  |   | Priority  |
-        | Queue P1  |   | Queue P2  |   | Queue P3  |
-        | (High)    |   | (Medium)  |   | (Low)     |
-        +-----+-----+   +-----+-----+   +-----+-----+
-              |               |               |
-              +-------+-------+-------+-------+
-                      |               |
-                      v               v
-               +------+------+  +-----+------+
-               |  Selector   |  | Selector   |
-               | (weighted   |  | (round     |
-               |  random)    |  |  robin)    |
-               +------+------+  +-----+------+
-                      |               |
-                      +-------+-------+
-                              |
-                              v
-            +-----------------+-----------------+
-            |        Politeness Router          |
-            |  (assign URL to host queue)       |
-            +-----------------+-----------------+
-                              |
-          +-------------------+-------------------+
-          |         |         |         |         |
-          v         v         v         v         v
-     +--------+ +--------+ +--------+ +--------+ +--------+
-     |host    | |host    | |host    | |host    | |host    |
-     |queue   | |queue   | |queue   | |queue   | |queue   |
-     |cnn.com | |bbc.com | |nyt.com | |*.edu   | |*.gov   |
-     +---+----+ +---+----+ +---+----+ +---+----+ +---+----+
-         |           |           |           |           |
-         v           v           v           v           v
-     +--------+ +--------+ +--------+ +--------+ +--------+
-     |Timer   | |Timer   | |Timer   | |Timer   | |Timer   |
-     |1s delay| |2s delay| |1s delay| |3s delay| |1s delay|
-     +---+----+ +---+----+ +---+----+ +---+----+ +---+----+
-         |           |           |           |           |
-         +-----+-----+-----+-----+-----+-----+-----+----+
-                                 |
-                                 v
-                        Worker Thread Pool
-                        (HTML Downloaders)
+```mermaid
+flowchart TD
+    In["Incoming URLs"] --> Prio["Prioritizer<br/>(PageRank, freshness, depth)"]
+    Prio --> P1["Priority Queue P1 (High)"] & P2["Priority Queue P2 (Medium)"] & P3["Priority Queue P3 (Low)"]
+    P1 & P2 & P3 --> Sel["Front Queue Selector<br/>(Weighted random / Round robin)"]
+    Sel --> Router["Politeness Router<br/>(Assign URL to host queue)"]
+    Router --> HQ1["Host Queue: cnn.com<br/>(Timer: 1s delay)"]
+    Router --> HQ2["Host Queue: bbc.com<br/>(Timer: 2s delay)"]
+    Router --> HQ3["Host Queue: nyt.com<br/>(Timer: 1s delay)"]
+    Router --> HQ4["Host Queue: *.edu<br/>(Timer: 3s delay)"]
+    Router --> HQ5["Host Queue: *.gov<br/>(Timer: 1s delay)"]
+    HQ1 & HQ2 & HQ3 & HQ4 & HQ5 --> Pool["Worker Thread Pool<br/>(HTML Downloaders)"]
 ```
 
 #### 礼貌性队列实现
@@ -1398,38 +1310,14 @@ JS 渲染决策矩阵：
 
 ### 架构
 
-```
-                        +-------------------+
-                        |  Coordination     |
-                        |  Service          |
-                        |  (ZooKeeper)      |
-                        +--------+----------+
-                                 |
-              +------------------+------------------+
-              |                  |                   |
-              v                  v                   v
-    +---------+------+  +--------+-------+  +--------+-------+
-    | Crawler Node 1 |  | Crawler Node 2 |  | Crawler Node N |
-    | (domains A-H)  |  | (domains I-P)  |  | (domains Q-Z)  |
-    +-------+--------+  +-------+--------+  +-------+--------+
-            |                    |                   |
-            v                    v                   v
-    +-------+--------+  +-------+--------+  +-------+--------+
-    | Local Frontier  |  | Local Frontier  |  | Local Frontier  |
-    | (per-domain    |  | (per-domain    |  | (per-domain    |
-    |  queues)       |  |  queues)       |  |  queues)       |
-    +-------+--------+  +-------+--------+  +-------+--------+
-            |                    |                   |
-            +--------------------+-------------------+
-                                 |
-                    +------------+------------+
-                    |                         |
-                    v                         v
-           +-------+--------+       +--------+-------+
-           | Shared Bloom   |       | Content Store  |
-           | Filter Cluster |       | (S3 / HDFS)    |
-           | (Redis)        |       |                |
-           +----------------+       +----------------+
+```mermaid
+flowchart TD
+    ZK["Coordination Service<br/>(ZooKeeper)"] --> CN1["Crawler Node 1<br/>(domains A-H)"] & CN2["Crawler Node 2<br/>(domains I-P)"] & CNN["Crawler Node N<br/>(domains Q-Z)"]
+    CN1 --> LF1["Local Frontier<br/>(per-domain queues)"]
+    CN2 --> LF2["Local Frontier<br/>(per-domain queues)"]
+    CNN --> LFN["Local Frontier<br/>(per-domain queues)"]
+    LF1 & LF2 & LFN --> Bloom["Shared Bloom Filter Cluster<br/>(Redis)"]
+    LF1 & LF2 & LFN --> Store["Content Store<br/>(S3 / HDFS)"]
 ```
 
 ### URL 空间分区
@@ -1868,59 +1756,21 @@ Kafka Topics:
 
 ### 生产环境部署
 
-```
-                         +----------------------------+
-                         |     Control Plane          |
-                         |  +--------+ +-----------+  |
-                         |  |ZooKeeper| |Monitoring |  |
-                         |  |Cluster  | |(Prometheus|  |
-                         |  |(coord)  | | + Grafana)|  |
-                         |  +--------+ +-----------+  |
-                         +-------------+--------------+
-                                       |
-          +----------------------------+----------------------------+
-          |                            |                            |
-          v                            v                            v
-+---------+----------+  +--------------+-----------+  +-------------+----------+
-|  Region: US-East   |  |  Region: EU-West        |  |  Region: AP-Southeast  |
-|                    |  |                          |  |                        |
-| +----------------+ |  | +----------------------+ |  | +--------------------+ |
-| |Crawler Cluster | |  | |Crawler Cluster       | |  | |Crawler Cluster     | |
-| |(8-16 nodes)    | |  | |(8-16 nodes)          | |  | |(8-16 nodes)        | |
-| +-------+--------+ |  | +----------+-----------+ |  | +--------+-----------+ |
-|         |          |  |            |              |  |          |             |
-| +-------+--------+ |  | +----------+-----------+ |  | +--------+-----------+ |
-| |Kafka Cluster   | |  | |Kafka Cluster         | |  | |Kafka Cluster       | |
-| |(URL frontier)  | |  | |(URL frontier)        | |  | |(URL frontier)      | |
-| +-------+--------+ |  | +----------+-----------+ |  | +--------+-----------+ |
-|         |          |  |            |              |  |          |             |
-| +-------+--------+ |  | +----------+-----------+ |  | +--------+-----------+ |
-| |Redis Cluster   | |  | |Redis Cluster         | |  | |Redis Cluster       | |
-| |(Bloom filter + | |  | |(Bloom filter +       | |  | |(Bloom filter +     | |
-| | DNS cache)     | |  | | DNS cache)           | |  | | DNS cache)         | |
-| +----------------+ |  | +----------------------+ |  | +--------------------+ |
-+--------+-----------+  +------------+-------------+  +----------+-------------+
-         |                           |                           |
-         +---------------------------+---------------------------+
-                                     |
-                        +------------+------------+
-                        |   Global Storage        |
-                        |                         |
-                        | +---------------------+ |
-                        | | S3 / HDFS           | |
-                        | | (raw HTML content)  | |
-                        | +---------------------+ |
-                        |                         |
-                        | +---------------------+ |
-                        | | Elasticsearch       | |
-                        | | (parsed content)    | |
-                        | +---------------------+ |
-                        |                         |
-                        | +---------------------+ |
-                        | | Cassandra           | |
-                        | | (URL metadata)      | |
-                        | +---------------------+ |
-                        +-------------------------+
+```mermaid
+flowchart TD
+    CP["Control Plane<br/>ZooKeeper Cluster (coord) + Monitoring (Prometheus + Grafana)"] --> US & EU & AP
+
+    subgraph US["Region: US-East"]
+        US_S["Crawler Cluster (8-16 nodes) -> Kafka Cluster (URL frontier) -> Redis Cluster (Bloom filter + DNS cache)"]
+    end
+    subgraph EU["Region: EU-West"]
+        EU_S["Crawler Cluster (8-16 nodes) -> Kafka Cluster (URL frontier) -> Redis Cluster (Bloom filter + DNS cache)"]
+    end
+    subgraph AP["Region: AP-Southeast"]
+        AP_S["Crawler Cluster (8-16 nodes) -> Kafka Cluster (URL frontier) -> Redis Cluster (Bloom filter + DNS cache)"]
+    end
+
+    US & EU & AP --> GS["Global Storage<br/>- S3 / HDFS (raw HTML content)<br/>- Elasticsearch (parsed content)<br/>- Cassandra (URL metadata)"]
 ```
 
 ### 多区域抓取优势
@@ -2290,40 +2140,14 @@ class CrawlerHealthCheck:
 
 ### 如何从抓取数据构建搜索索引？
 
-```
-抓取数据 -> 搜索索引管道：
-
-+-----------+     +-------------+     +----------------+     +----------+
-| Raw HTML  | --> | Text Extract| --> | Tokenize +     | --> | Inverted |
-| (S3/HDFS) |     | + Clean     |     | Normalize      |     | Index    |
-+-----------+     +-------------+     +----------------+     +----------+
-                        |                    |                     |
-                        v                    v                     v
-                  +-----------+      +--------------+     +-----------+
-                  | Language  |      | Stop word    |     | Posting   |
-                  | Detection |      | Removal +    |     | Lists     |
-                  +-----------+      | Stemming     |     +-----------+
-                                     +--------------+
-
-索引步骤：
-  1. 从 HTML 中提取干净文本（移除脚本、样式、导航）
-  2. 检测语言
-  3. 分词
-  4. 规范化：小写、词干提取、移除停用词
-  5. 构建倒排索引：词项 -> [(doc_id, tf, positions), ...]
-  6. 计算 TF-IDF 或 BM25 分数
-  7. 存储到 Elasticsearch 或自定义搜索引擎
-
-规模：
-  10 亿文档 * 每文档约 1000 个唯一词项 = 1 万亿个 posting
-  压缩后：倒排索引约 10-50 TB
-
-用于排名的额外信号：
-  - 链接图的 PageRank
-  - 内容质量分数
-  - 新鲜度时间戳
-  - 域名权威度
-  - 入链的锚文本
+```mermaid
+flowchart LR
+    Raw["Raw HTML<br/>(S3 / HDFS)"] --> Extract["Text Extract + Clean"]
+    Extract --> Lang["Language Detection"]
+    Extract --> Tok["Tokenize + Normalize"]
+    Tok --> Stop["Stop Word Removal + Stemming"]
+    Tok --> Inv["Inverted Index"]
+    Inv --> Post["Posting Lists<br/>term -> [(doc_id, tf, positions)]"]
 ```
 
 ---

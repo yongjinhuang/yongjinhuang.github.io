@@ -369,7 +369,7 @@ stateDiagram-v2
     STOP --> RUN : EXTI / RTC Wakeup
     STOP --> STANDBY : PDDS bit set
     STANDBY --> RUN : WKUP Pin / RTC Reset
-````
+```
 
 ### 7.3 MicroPython Deep Sleep Example (ESP32)
 

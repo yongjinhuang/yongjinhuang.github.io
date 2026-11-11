@@ -414,46 +414,18 @@ The system has two major data flows:
 1. **Query path** (online, latency-critical): user types prefix -> get suggestions
 2. **Data collection path** (offline/near-real-time): collect search logs -> build trie
 
-```
-                         QUERY PATH (Online)
-  ┌──────────┐     ┌──────────────┐     ┌───────────────────┐
-  │  Client   │────>│ Load Balancer │────>│   API Servers     │
-  │ (Browser) │<────│  (L7 / CDN)  │<────│  (Stateless)      │
-  └──────────┘     └──────────────┘     └─────────┬─────────┘
-                                                   │
-                                          ┌────────▼────────┐
-                                          │  Trie Service    │
-                                          │  (In-Memory      │
-                                          │   Trie Cache)    │
-                                          └────────┬────────┘
-                                                   │ fallback
-                                          ┌────────▼────────┐
-                                          │  Redis Cache     │
-                                          │  (L2 Cache)      │
-                                          └─────────────────┘
-
-
-                    DATA COLLECTION PATH (Offline / Near-Real-Time)
-  ┌──────────┐     ┌──────────┐     ┌─────────────┐     ┌─────────────┐
-  │  Search   │────>│  Kafka   │────>│  Aggregator │────>│  Frequency  │
-  │  Logs     │     │  Queue   │     │  (Flink /   │     │  Store      │
-  │           │     │          │     │   Spark)    │     │  (DB)       │
-  └──────────┘     └──────────┘     └─────────────┘     └──────┬──────┘
-                                                                │
-                                                       ┌────────▼────────┐
-                                                       │  Trie Builder   │
-                                                       │  (Periodic Job) │
-                                                       └────────┬────────┘
-                                                                │
-                                               ┌────────────────▼────────────────┐
-                                               │      Trie Snapshot Store        │
-                                               │  (S3 / HDFS serialized tries)  │
-                                               └────────────────┬────────────────┘
-                                                                │ push / pull
-                                               ┌────────────────▼────────────────┐
-                                               │      Trie Service Nodes         │
-                                               │  (Load new snapshot into memory)│
-                                               └────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Online["QUERY PATH (Online)"]
+        Client["Client (Browser)"] <--> LB["Load Balancer (L7 / CDN)"] <--> API["API Servers (Stateless)"]
+        API --> TrieSvc["Trie Service (In-Memory Trie Cache)"]
+        TrieSvc -->|"fallback"| Redis["Redis Cache (L2 Cache)"]
+    end
+    subgraph Offline["DATA COLLECTION PATH (Offline / Near-Real-Time)"]
+        Logs["Search Logs"] --> Kafka["Kafka Queue"] --> Agg["Aggregator (Flink / Spark)"] --> FreqDB["Frequency Store (DB)"]
+        FreqDB --> Builder["Trie Builder (Periodic Job)"] --> Snap["Trie Snapshot Store (S3 / HDFS)"]
+        Snap -->|"push / pull"| Nodes["Trie Service Nodes (Load new snapshot into memory)"]
+    end
 ```
 
 ### Component Responsibilities
@@ -562,58 +534,15 @@ Typical snapshot size for 5M queries: ~300-500 MB compressed
 
 ### Pipeline Overview
 
-```
-  ┌───────────────┐
-  │  User Search  │
-  │  (Frontend)   │
-  └───────┬───────┘
-          │ 1. Log search event
-          ▼
-  ┌───────────────┐     ┌──────────────┐     ┌──────────────────┐
-  │  Search API   │────>│    Kafka     │────>│  Stream Processor│
-  │  Server       │     │  (Topic:     │     │  (Flink / Spark  │
-  │               │     │   searches)  │     │   Streaming)     │
-  └───────────────┘     └──────────────┘     └────────┬─────────┘
-                                                       │
-                                    2. Aggregate by     │
-                                       time window      │
-                                                       ▼
-                                             ┌──────────────────┐
-                                             │  Time-Window     │
-                                             │  Aggregator      │
-                                             │                  │
-                                             │  1-hour buckets: │
-                                             │  {query: count}  │
-                                             └────────┬─────────┘
-                                                      │
-                                    3. Compute weighted │
-                                       frequency        │
-                                                      ▼
-                                             ┌──────────────────┐
-                                             │  Frequency       │
-                                             │  Calculator      │
-                                             │                  │
-                                             │  Apply time      │
-                                             │  decay + weights │
-                                             └────────┬─────────┘
-                                                      │
-                                    4. Filter          │
-                                       inappropriate   │
-                                                      ▼
-                                             ┌──────────────────┐
-                                             │  Content Filter  │
-                                             │                  │
-                                             │  Blocklist +     │
-                                             │  ML classifier   │
-                                             └────────┬─────────┘
-                                                      │
-                                    5. Write to        │
-                                       frequency store │
-                                                      ▼
-                                             ┌──────────────────┐
-                                             │  Frequency       │
-                                             │  Store (DB)      │
-                                             └──────────────────┘
+```mermaid
+flowchart TD
+    FE["User Search (Frontend)"] -->|"1. Log search event"| API["Search API Server"]
+    API --> Kafka["Kafka (Topic: searches)"]
+    Kafka --> Stream["Stream Processor (Flink / Spark Streaming)"]
+    Stream -->|"2. Aggregate by time window"| Window["Time-Window Aggregator<br/>(1-hour buckets: {query: count})"]
+    Window -->|"3. Compute weighted frequency"| Calc["Frequency Calculator<br/>(Apply time decay + weights)"]
+    Calc -->|"4. Filter inappropriate"| Filter["Content Filter<br/>(Blocklist + ML classifier)"]
+    Filter -->|"5. Write to frequency store"| DB["Frequency Store (DB)"]
 ```
 
 ### Step-by-Step Details
@@ -707,26 +636,13 @@ Layer 2: ML Classifier
 
 The Trie is rebuilt periodically (e.g., every 15 minutes to 1 hour):
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│ 1. Read from │────>│ 2. Build     │────>│ 3. Serialize │────>│ 4. Upload    │
-│ Frequency    │     │ Optimized    │     │ to Binary    │     │ Snapshot to  │
-│ Store        │     │ Trie         │     │ Format       │     │ S3 / HDFS    │
-└──────────────┘     └──────────────┘     └──────────────┘     └──────┬───────┘
-                                                                      │
-                                                              ┌───────▼───────┐
-                                                              │ 5. Notify     │
-                                                              │ Trie Servers  │
-                                                              │ to pull new   │
-                                                              │ snapshot      │
-                                                              └───────┬───────┘
-                                                                      │
-                                                              ┌───────▼───────┐
-                                                              │ 6. Trie       │
-                                                              │ Servers load  │
-                                                              │ new Trie into │
-                                                              │ memory        │
-                                                              └───────────────┘
+```mermaid
+flowchart LR
+    S1["1. Read from<br/>Frequency Store"] --> S2["2. Build<br/>Optimized Trie"]
+    S2 --> S3["3. Serialize to<br/>Binary Format"]
+    S3 --> S4["4. Upload Snapshot<br/>to S3 / HDFS"]
+    S4 --> S5["5. Notify Trie Servers<br/>to pull new snapshot"]
+    S5 --> S6["6. Trie Servers load<br/>new Trie into memory"]
 ```
 
 **Build pseudocode:**
@@ -953,32 +869,11 @@ Autocomplete is extremely cache-friendly because:
 
 ### Four-Layer Caching Architecture
 
-```
-  ┌─────────────────┐
-  │  Layer 1:       │  Hit rate: ~30%
-  │  Browser Cache  │  Latency: 0 ms
-  │  (sessionStorage│  TTL: session duration
-  │   + HTTP cache) │
-  └────────┬────────┘
-           │ miss
-  ┌────────▼────────┐
-  │  Layer 2:       │  Hit rate: ~40% of remaining
-  │  CDN / Edge     │  Latency: 5-20 ms
-  │  Cache          │  TTL: 5-15 minutes
-  │  (CloudFront)   │
-  └────────┬────────┘
-           │ miss
-  ┌────────▼────────┐
-  │  Layer 3:       │  Hit rate: ~20% of remaining
-  │  Redis Cache    │  Latency: 1-5 ms
-  │  (Application)  │  TTL: 5 minutes
-  └────────┬────────┘
-           │ miss
-  ┌────────▼────────┐
-  │  Layer 4:       │  Hit rate: 100% (authoritative)
-  │  In-Memory Trie │  Latency: < 1 ms
-  │  (Trie Service) │
-  └─────────────────┘
+```mermaid
+flowchart TD
+    L1["Layer 1: Browser Cache (sessionStorage + HTTP cache)<br/>Hit rate: ~30% | Latency: 0 ms | TTL: session"] -->|"miss"| L2["Layer 2: CDN / Edge Cache (CloudFront)<br/>Hit rate: ~40% of rem | Latency: 5-20 ms | TTL: 5-15 min"]
+    L2 -->|"miss"| L3["Layer 3: Redis Cache (Application)<br/>Hit rate: ~20% of rem | Latency: 1-5 ms | TTL: 5 min"]
+    L3 -->|"miss"| L4["Layer 4: In-Memory Trie (Trie Service)<br/>Hit rate: 100% (authoritative) | Latency: &lt; 1 ms"]
 ```
 
 ### Layer 1: Browser Cache
@@ -1215,55 +1110,24 @@ Character-level Trie for Chinese:
 
 ### Multi-Region Deployment Diagram
 
-```
-                          ┌─────────────────────────┐
-                          │      Global DNS         │
-                          │   (Route53 / GeoDNS)    │
-                          └────────────┬────────────┘
-                                       │
-                    ┌──────────────────┬┴──────────────────┐
-                    │                  │                    │
-           ┌────────▼───────┐ ┌────────▼───────┐  ┌────────▼───────┐
-           │   CDN Edge     │ │   CDN Edge     │  │   CDN Edge     │
-           │   US Regions   │ │   EU Regions   │  │   APAC Regions │
-           └────────┬───────┘ └────────┬───────┘  └────────┬───────┘
-                    │                  │                    │
-           ┌────────▼───────┐ ┌────────▼───────┐  ┌────────▼───────┐
-           │ us-east-1      │ │ eu-west-1      │  │ ap-southeast-1 │
-           │ ┌────────────┐ │ │ ┌────────────┐ │  │ ┌────────────┐ │
-           │ │    ALB     │ │ │ │    ALB     │ │  │ │    ALB     │ │
-           │ └──────┬─────┘ │ │ └──────┬─────┘ │  │ └──────┬─────┘ │
-           │   ┌────┴────┐  │ │   ┌────┴────┐  │  │   ┌────┴────┐  │
-           │   ▼         ▼  │ │   ▼         ▼  │  │   ▼         ▼  │
-           │ ┌───┐    ┌───┐ │ │ ┌───┐    ┌───┐ │  │ ┌───┐    ┌───┐ │
-           │ │API│    │API│ │ │ │API│    │API│ │  │ │API│    │API│ │
-           │ │ 1 │    │ 2 │ │ │ │ 1 │    │ 2 │ │  │ │ 1 │    │ 2 │ │
-           │ └─┬─┘    └─┬─┘ │ │ └─┬─┘    └─┬─┘ │  │ └─┬─┘    └─┬─┘ │
-           │   └────┬────┘  │ │   └────┬────┘  │  │   └────┬────┘  │
-           │   ┌────▼────┐  │ │   ┌────▼────┐  │  │   ┌────▼────┐  │
-           │   │  Redis   │  │ │   │  Redis   │  │  │   │  Redis   │  │
-           │   │  Cluster │  │ │   │  Cluster │  │  │   │  Cluster │  │
-           │   └────┬────┘  │ │   └────┬────┘  │  │   └────┬────┘  │
-           │   ┌────▼────┐  │ │   ┌────▼────┐  │  │   ┌────▼────┐  │
-           │   │  Trie    │  │ │   │  Trie    │  │  │   │  Trie    │  │
-           │   │  Service │  │ │   │  Service │  │  │   │  Service │  │
-           │   │  Nodes   │  │ │   │  Nodes   │  │  │   │  Nodes   │  │
-           │   │ (3x repl)│  │ │   │ (3x repl)│  │  │   │ (3x repl)│  │
-           │   └──────────┘  │ │   └──────────┘  │  │   └──────────┘  │
-           └─────────────────┘ └─────────────────┘  └─────────────────┘
-                    │
-           ┌────────▼───────────────────────────────────────────┐
-           │              Central Data Pipeline                  │
-           │  ┌──────────┐  ┌───────────┐  ┌───────────────┐   │
-           │  │  Kafka   │─>│Aggregator │─>│ Trie Builder  │   │
-           │  │  Cluster │  │(Flink)    │  │ (Periodic)    │   │
-           │  └──────────┘  └───────────┘  └───────┬───────┘   │
-           │                                       │            │
-           │                               ┌───────▼───────┐   │
-           │                               │  Snapshot      │   │
-           │                               │  Store (S3)    │   │
-           │                               └───────────────┘   │
-           └────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    DNS["Global DNS<br/>(Route53 / GeoDNS)"] --> CDN_US["CDN Edge (US)"] & CDN_EU["CDN Edge (EU)"] & CDN_AP["CDN Edge (APAC)"]
+
+    subgraph US["us-east-1"]
+        CDN_US --> ALB_US["ALB"] --> API_US["API 1 &amp; API 2"] --> Redis_US["Redis Cluster"] --> Trie_US["Trie Service Nodes (3x repl)"]
+    end
+    subgraph EU["eu-west-1"]
+        CDN_EU --> ALB_EU["ALB"] --> API_EU["API 1 &amp; API 2"] --> Redis_EU["Redis Cluster"] --> Trie_EU["Trie Service Nodes (3x repl)"]
+    end
+    subgraph AP["ap-southeast-1"]
+        CDN_AP --> ALB_AP["ALB"] --> API_AP["API 1 &amp; API 2"] --> Redis_AP["Redis Cluster"] --> Trie_AP["Trie Service Nodes (3x repl)"]
+    end
+
+    subgraph Pipeline["Central Data Pipeline"]
+        Kafka["Kafka Cluster"] --> Agg["Aggregator (Flink)"] --> Builder["Trie Builder (Periodic)"] --> S3["Snapshot Store (S3)"]
+    end
+    S3 -.->|"push / pull snapshots"| Trie_US & Trie_EU & Trie_AP
 ```
 
 ### CDN + Edge Caching Details

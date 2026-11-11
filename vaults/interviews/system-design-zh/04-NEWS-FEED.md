@@ -303,47 +303,24 @@ CREATE TABLE media (
 
 ## 4. 高层设计
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              客户端                                         │
-│                    (移动应用, Web 浏览器)                                    │
-└───────────────────────────────┬─────────────────────────────────────────────┘
-                                │
-                        ┌───────▼───────┐
-                        │  API Gateway  │  (限流, 认证, 路由)
-                        │  + Load       │
-                        │  Balancer     │
-                        └───┬───────┬───┘
-                            │       │
-              ┌─────────────▼─┐   ┌─▼──────────────┐
-              │  写入路径      │   │   读取路径      │
-              │               │   │                  │
-              │ ┌───────────┐ │   │ ┌────────────┐  │
-              │ │   Post    │ │   │ │   Feed     │  │
-              │ │  Service  │ │   │ │  Service   │  │
-              │ └─────┬─────┘ │   │ └──────┬─────┘  │
-              │       │       │   │        │         │
-              │ ┌─────▼─────┐ │   │ ┌──────▼─────┐  │
-              │ │  Fan-out  │ │   │ │ Feed Cache  │  │
-              │ │  Service  │ │   │ │  (Redis)    │  │
-              │ └─────┬─────┘ │   │ └──────┬─────┘  │
-              │       │       │   │        │         │
-              └───────┼───────┘   └────────┼─────────┘
-                      │                    │
-          ┌───────────▼────────────────────▼──────────┐
-          │              消息队列                       │
-          │               (Kafka)                       │
-          └──┬──────────┬──────────┬──────────┬───────┘
-             │          │          │          │
-        ┌────▼───┐ ┌────▼───┐ ┌───▼────┐ ┌──▼───────┐
-        │Post DB │ │Feed    │ │通知     │ │分析      │
-        │(PG)    │ │Cache   │ │Service │ │Service   │
-        └────────┘ │(Redis) │ └────────┘ └──────────┘
-                   └────────┘
-          ┌───────────────────────────────────────────┐
-          │                CDN (媒体)                  │
-          │         S3 / CloudFront / Akamai           │
-          └───────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Clients["CLIENTS<br/>(Mobile Apps, Web Browsers)"] --> GW["API Gateway + Load Balancer<br/>(Rate limiting, Auth, Routing)"]
+    GW --> WritePath & ReadPath
+
+    subgraph WritePath["WRITE PATH"]
+        PostSvc["Post Service"] --> FanoutSvc["Fan-out Service"]
+    end
+    subgraph ReadPath["READ PATH"]
+        FeedSvc["Feed Service"] --> FeedCache["Feed Cache (Redis)"]
+    end
+
+    FanoutSvc & FeedCache --> Kafka["MESSAGE QUEUE (Kafka)"]
+    Kafka --> PostDB["Post DB (PostgreSQL)"]
+    Kafka --> RedisCache["Feed Cache (Redis)"]
+    Kafka --> NotifSvc["Notification Service"]
+    Kafka --> AnalyticsSvc["Analytics Service"]
+    Clients -.-> CDN["CDN (Media)<br/>S3 / CloudFront / Akamai"]
 ```
 
 ### 两个主要流程
@@ -386,31 +363,13 @@ CREATE TABLE media (
 当用户发布帖子时，立即将 post_id 推送到
 每个粉丝的动态缓存中。
 
-```
-               用户 A 发布帖子 P
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  Post Service   │
-              │  (存储帖子)      │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  Fan-out Worker │
-              │  (通过 Kafka    │
-              │   异步处理)      │
-              └────────┬────────┘
-                       │
-          ┌────────────┼────────────┐
-          │            │            │
-          ▼            ▼            ▼
-   ┌────────────┐ ┌────────────┐ ┌────────────┐
-   │feed:userB  │ │feed:userC  │ │feed:userD  │
-   │ + post P   │ │ + post P   │ │ + post P   │
-   │(Redis ZADD)│ │(Redis ZADD)│ │(Redis ZADD)│
-   └────────────┘ └────────────┘ └────────────┘
-        ...对用户 A 的所有 N 个粉丝执行
+```mermaid
+flowchart TD
+    Pub["User A publishes post P"] --> PostSvc["Post Service<br/>(store post)"]
+    PostSvc --> Worker["Fan-out Worker<br/>(async via Kafka)"]
+    Worker --> FB["feed:userB + post P<br/>(Redis ZADD)"]
+    Worker --> FC["feed:userC + post P<br/>(Redis ZADD)"]
+    Worker --> FD["feed:userD + post P<br/>(Redis ZADD)"]
 ```
 
 **步骤：**
@@ -426,33 +385,14 @@ CREATE TABLE media (
 发布时不做任何操作。当用户打开动态时，
 实时查询其关注的所有人的帖子。
 
-```
-               用户 B 请求动态
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  Feed Service   │
-              └────────┬────────┘
-                       │
-           ┌───────────┼───────────┐
-           │           │           │
-           ▼           ▼           ▼
-    ┌────────────┐ ┌────────────┐ ┌────────────┐
-    │ 用户 A 的  │ │ 用户 C 的  │ │ 用户 D 的  │
-    │ 帖子       │ │ 帖子       │ │ 帖子       │
-    │ (查询 DB)  │ │ (查询 DB)  │ │ (查询 DB)  │
-    └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
-          │              │              │
-          └──────────────┼──────────────┘
-                         │
-                         ▼
-                ┌─────────────────┐
-                │   合并 + 排序   │
-                │   + 分页        │
-                └─────────────────┘
-                         │
-                         ▼
-                   返回动态
+```mermaid
+flowchart TD
+    Req["User B requests feed"] --> FeedSvc["Feed Service"]
+    FeedSvc --> PA["Posts by User A<br/>(query DB)"]
+    FeedSvc --> PC["Posts by User C<br/>(query DB)"]
+    FeedSvc --> PD["Posts by User D<br/>(query DB)"]
+    PA & PC & PD --> Merge["Merge + Rank + Paginate"]
+    Merge --> Ret["Return feed"]
 ```
 
 **步骤：**
@@ -465,41 +405,17 @@ CREATE TABLE media (
 
 对普通用户使用**写时 Fan-out**，对名人使用**读时 Fan-out**。
 
-```
-                用户发布帖子
-                        │
-                        ▼
-                ┌───────────────┐
-                │ Post Service  │
-                └───────┬───────┘
-                        │
-                        ▼
-               ┌─────────────────┐
-               │ 作者是否为       │
-               │ 名人？           │
-               │ (>50 万粉丝)    │
-               └──┬───────────┬──┘
-                  │           │
-              否  │           │  是
-                  ▼           ▼
-         ┌──────────────┐  ┌──────────────────┐
-         │ 写时 Fan-out │  │ 仅存储帖子。      │
-         │ 到所有粉丝的 │  │ 不执行 Fan-out。  │
-         │ 动态缓存     │  │ 帖子将在读取时    │
-         └──────────────┘  │ 合并。            │
-                           └──────────────────┘
-
-                    --- 读取时 ---
-
-         ┌──────────────────────────────────┐
-         │ Feed Service 读取用户的动态      │
-         │                                  │
-         │ 1. 获取预计算的动态（缓存）      │
-         │ 2. 获取用户关注的名人列表        │
-         │ 3. 获取每个名人的最新帖子        │
-         │ 4. 合并 + 重新排序               │
-         │ 5. 返回分页结果                  │
-         └──────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph WriteTime["AT WRITE TIME"]
+        Pub["User publishes post"] --> PostSvc["Post Service"]
+        PostSvc --> Check{"Is author a celebrity?<br/>(&gt;500K followers)"}
+        Check -->|"NO"| FOW["Fan-out on Write to all followers' feed caches"]
+        Check -->|"YES"| NoFOW["Store post only (Do NOT fan-out; merge at read time)"]
+    end
+    subgraph ReadTime["AT READ TIME"]
+        Read["Feed Service reads user's feed:<br/>1. Get pre-computed feed (cache)<br/>2. Get list of celebrities user follows<br/>3. Fetch latest posts from each celebrity<br/>4. Merge + Re-rank<br/>5. Return paginated result"]
+    end
 ```
 
 ### 5.4 策略对比
@@ -609,40 +525,13 @@ QualityScore = normalize(
 
 对于生产系统，排序是一个多阶段的 ML 流水线：
 
-```
-    所有候选帖子 (~2000)
-              │
-              ▼
-    ┌──────────────────┐
-    │  阶段 1：        │   轻量级模型，缩减到 ~500 个候选
-    │  候选筛选        │   特征：作者亲密度、帖子年龄、帖子类型
-    │                  │
-    └────────┬─────────┘
-             │
-             ▼
-    ┌──────────────────┐
-    │  阶段 2：        │   中等模型，为每个候选评分
-    │  粗排序          │   特征：互动预测、内容质量
-    │  (评分 ~500)     │
-    └────────┬─────────┘
-             │
-             ▼
-    ┌──────────────────┐
-    │  阶段 3：        │   重型模型（深度神经网络）
-    │  精排序          │   特征：完整特征集、交叉特征
-    │  (排序前 ~100)   │   输出：P(点赞), P(评论), P(分享), P(点击)
-    └────────┬─────────┘
-             │
-             ▼
-    ┌──────────────────┐
-    │  阶段 4：        │   业务规则、多样性注入
-    │  重新排序 /      │   - 同一作者不超过 2 条帖子
-    │  策略层          │   - 在位置 3, 8, 15... 插入广告
-    └────────┬─────────┘   - 提升新内容类型
-             │             - 降权标题党
-             ▼
-      最终排序的动态
-        (返回前 20 条)
+```mermaid
+flowchart TD
+    Cand["All candidate posts (~2000)"] --> S1["Stage 1: Candidate Filtering<br/>Lightweight model -> ~500 candidates<br/>Features: author affinity, post age, post type"]
+    S1 --> S2["Stage 2: Coarse Ranking (Score ~500)<br/>Medium model: engagement prediction, content quality"]
+    S2 --> S3["Stage 3: Fine Ranking (Rank top ~100)<br/>Heavy DNN: full features + cross-features<br/>Output: P(like), P(comment), P(share), P(click)"]
+    S3 --> S4["Stage 4: Re-ranking / Policy Layer<br/>- Max 2 posts from same author<br/>- Insert ads at positions 3, 8, 15...<br/>- Boost new content, demote clickbait"]
+    S4 --> Out["Final ranked feed (return top 20)"]
 ```
 
 **ML 模型的特征类别：**
@@ -662,56 +551,16 @@ QualityScore = normalize(
 
 ### 7.1 读取路径流程
 
-```
-    用户打开应用
-         │
-         ▼
-  ┌──────────────┐
-  │ API Gateway  │
-  └──────┬───────┘
-         │
-         ▼
-  ┌──────────────┐     ┌────────────────────┐
-  │ Feed Service │────>│ Feed Cache (Redis)  │
-  └──────┬───────┘     └─────────┬──────────┘
-         │                       │
-         │    ┌──────────────────┘
-         │    │
-         ▼    ▼
-  ┌─────────────────────────────────────┐
-  │         缓存命中？                  │
-  │                                     │
-  │  是：                               │
-  │    1. 从 Sorted Set 读取 post_id    │
-  │    2. 获取名人帖子                  │
-  │    3. 合并并重新排序                │
-  │                                     │
-  │  否（缓存未命中）：                 │
-  │    1. 查询关注表                    │
-  │    2. 对每个被关注者：              │
-  │       获取最新 50 条帖子            │
-  │    3. 合并所有帖子                  │
-  │    4. 用评分函数排序                │
-  │    5. 缓存前 800 条 post_id         │
-  │    6. 设置 TTL = 7 天               │
-  └─────────────┬───────────────────────┘
-                │
-                ▼
-  ┌──────────────────────────────┐
-  │  填充 post_id                │
-  │  (从 Post 数据库或帖子缓存   │
-  │   批量获取)                  │
-  │                              │
-  │  post_id -> 完整帖子对象     │
-  │  包含作者信息、媒体 URL、    │
-  │  互动计数、liked_by_me 标记  │
-  └──────────────┬───────────────┘
-                 │
-                 ▼
-  ┌──────────────────────────────┐
-  │  返回带 next_cursor 的       │
-  │  分页响应                    │
-  └──────────────────────────────┘
+```mermaid
+flowchart TD
+    Open["User opens app"] --> GW["API Gateway"]
+    GW --> FS["Feed Service"]
+    FS <--> FC["Feed Cache (Redis)"]
+    FS --> Hit{"Cache HIT?"}
+    Hit -->|"YES"| HitSteps["1. Read post_ids from sorted set<br/>2. Fetch celebrity posts<br/>3. Merge and re-rank"]
+    Hit -->|"NO (cache miss)"| MissSteps["1. Query follows table<br/>2. Fetch latest 50 posts per followee<br/>3. Merge &amp; rank with scoring function<br/>4. Cache top 800 post_ids (TTL = 7 days)"]
+    HitSteps & MissSteps --> Hydrate["Hydrate post_ids<br/>(Batch fetch full post objects, author info, media URLs, engagement counts, liked_by_me)"]
+    Hydrate --> Ret["Return paginated response with next_cursor"]
 ```
 
 ### 7.2 动态缓存结构（Redis 详情）
@@ -878,47 +727,11 @@ Member: post_id
 
 ### 9.1 多级缓存架构
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    缓存层级                               │
-│                                                          │
-│  第 1 级：CDN 缓存（边缘）                               │
-│  ┌─────────────────────────────────────────────┐         │
-│  │ - 静态媒体（图片、视频、缩略图）            │         │
-│  │ - 头像                                      │         │
-│  │ - TTL：数小时到数天                          │         │
-│  │ - 命中率：媒体 80-90%                        │         │
-│  └─────────────────────────────────────────────┘         │
-│                         │ 未命中                         │
-│                         ▼                                │
-│  第 2 级：应用缓存（进程内）                              │
-│  ┌─────────────────────────────────────────────┐         │
-│  │ - 热门用户配置文件（LRU，10 万条记录）       │         │
-│  │ - Feature flag、配置                         │         │
-│  │ - TTL：30-60 秒                              │         │
-│  │ - 命中率：70-80%                             │         │
-│  └─────────────────────────────────────────────┘         │
-│                         │ 未命中                         │
-│                         ▼                                │
-│  第 3 级：动态缓存（Redis 集群）                         │
-│  ┌─────────────────────────────────────────────┐         │
-│  │ - 每用户动态 Sorted Set                      │         │
-│  │ - 帖子数据 Hash                              │         │
-│  │ - 名人帖子列表                               │         │
-│  │ - 用户关系缓存                               │         │
-│  │ - TTL：7 天（动态），1 小时（帖子）           │         │
-│  │ - 命中率：活跃用户 95%+                      │         │
-│  └─────────────────────────────────────────────┘         │
-│                         │ 未命中                         │
-│                         ▼                                │
-│  第 4 级：数据库（PostgreSQL + 只读副本）                 │
-│  ┌─────────────────────────────────────────────┐         │
-│  │ - 数据真实来源                               │         │
-│  │ - 只读副本用于动态生成查询                   │         │
-│  │ - 连接池（PgBouncer）                        │         │
-│  └─────────────────────────────────────────────┘         │
-│                                                          │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["Level 1: CDN Cache (Edge)<br/>Static media, profile pictures | TTL: hours-days | Hit rate: 80-90%"] -->|"MISS"| L2["Level 2: Application Cache (In-Process)<br/>Hot user profiles (LRU, 100K), feature flags | TTL: 30-60s | Hit rate: 70-80%"]
+    L2 -->|"MISS"| L3["Level 3: Feed Cache (Redis Cluster)<br/>Per-user feed ZSETs, post hashes, celebrity lists | TTL: 7d/1h | Hit rate: 95%+"]
+    L3 -->|"MISS"| L4["Level 4: Database (PostgreSQL + Read Replicas)<br/>Source of truth + PgBouncer connection pooling"]
 ```
 
 ### 9.2 缓存失效策略
@@ -1050,30 +863,11 @@ Member: post_id
 
 ### 10.3 只读副本
 
-```
-┌───────────────────────────────────────────────────┐
-│              只读副本拓扑                           │
-│                                                    │
-│           ┌─────────────┐                          │
-│           │   主节点     │  (仅写入)                │
-│           │  PostgreSQL │                          │
-│           └──┬──┬──┬────┘                          │
-│     流式    │  │  │复制                            │
-│              │  │  │                               │
-│     ┌────────▼┐ │ ┌▼────────┐                     │
-│     │副本 1   │ │ │副本 3   │  (动态生成)          │
-│     │(区域 A) │ │ │(区域 B) │                      │
-│     └─────────┘ │ └─────────┘                     │
-│            ┌────▼────┐                             │
-│            │副本 2   │  (分析/搜索)                │
-│            │(区域 A) │                              │
-│            └─────────┘                             │
-│                                                    │
-│  复制延迟：< 100ms（对于最终一致的动态是可接受的） │
-│                                                    │
-│  读写比：~95% 读取，~5% 写入                       │
-│  3 个副本处理 ~3 倍的读取吞吐量                    │
-└───────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Pri["Primary PostgreSQL<br/>(Writes only)"] -->|"Streaming Replication (&lt;100ms lag)"| R1["Replica 1 (Region A)<br/>Feed generation"]
+    Pri -->|"Streaming Replication"| R2["Replica 2 (Region A)<br/>Analytics / Search"]
+    Pri -->|"Streaming Replication"| R3["Replica 3 (Region B)<br/>Feed generation"]
 ```
 
 ### 10.4 媒体 CDN
@@ -1102,77 +896,31 @@ CDN 配置：
 
 ### 11.1 多区域部署
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    多区域部署                                      │
-│                                                                  │
-│   ┌──────────────── US-EAST-1 ───────────────────┐              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ API GW +  │  │ Feed      │  │ Fan-out   │ │              │
-│   │  │ Web Svrs  │  │ Service   │  │ Workers   │ │              │
-│   │  │ (ECS x20) │  │ (ECS x10) │  │ (ECS x50)│ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ Redis     │  │PostgreSQL │  │  Kafka    │ │              │
-│   │  │ Cluster   │  │ Primary   │  │  Cluster  │ │              │
-│   │  │ (384GB)   │  │ + 2 Read  │  │ (128 part)│ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   └───────────────────────┬───────────────────────┘              │
-│                           │                                      │
-│              跨区域       │ 复制                                  │
-│                           │                                      │
-│   ┌──────────────── EU-WEST-1 ───────────────────┐              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ API GW +  │  │ Feed      │  │ Fan-out   │ │              │
-│   │  │ Web Svrs  │  │ Service   │  │ Workers   │ │              │
-│   │  │ (ECS x15) │  │ (ECS x8)  │  │ (ECS x30)│ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ Redis     │  │PostgreSQL │  │  Kafka    │ │              │
-│   │  │ Cluster   │  │ Read      │  │  Cluster  │ │              │
-│   │  │ (256GB)   │  │ Replicas  │  │ (Mirror)  │ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   └───────────────────────┬───────────────────────┘              │
-│                           │                                      │
-│              跨区域       │ 复制                                  │
-│                           │                                      │
-│   ┌──────────────── AP-SOUTHEAST-1 ──────────────┐              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ API GW +  │  │ Feed      │  │ Fan-out   │ │              │
-│   │  │ Web Svrs  │  │ Service   │  │ Workers   │ │              │
-│   │  │ (ECS x15) │  │ (ECS x8)  │  │ (ECS x30)│ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ Redis     │  │PostgreSQL │  │  Kafka    │ │              │
-│   │  │ Cluster   │  │ Read      │  │  Cluster  │ │              │
-│   │  │ (256GB)   │  │ Replicas  │  │ (Mirror)  │ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   └───────────────────────────────────────────────┘              │
-│                                                                  │
-│   ┌──────────────────── 全球 ──────────────────────┐            │
-│   │                                               │              │
-│   │  ┌──────────────────────────────────────┐     │              │
-│   │  │  CloudFront CDN (200+ 边缘节点)      │     │              │
-│   │  └──────────────────────────────────────┘     │              │
-│   │  ┌──────────────────────────────────────┐     │              │
-│   │  │  Route53 (基于延迟的路由)             │     │              │
-│   │  └──────────────────────────────────────┘     │              │
-│   │  ┌──────────────────────────────────────┐     │              │
-│   │  │  S3 (跨区域复制的媒体)               │     │              │
-│   │  └──────────────────────────────────────┘     │              │
-│   │                                               │              │
-│   └───────────────────────────────────────────────┘              │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Global["GLOBAL LAYER"]
+        CF["CloudFront CDN (200+ edge locations)"]
+        R53["Route53 (latency-based routing)"]
+        S3["S3 (cross-region replicated media)"]
+    end
+
+    R53 --> US & EU & AP
+
+    subgraph US["US-EAST-1"]
+        US_Compute["API GW + Web Svrs (ECS x20) | Feed Service (ECS x10) | Fan-out Workers (ECS x50)"]
+        US_Data["Redis Cluster (384GB) | PostgreSQL Primary + 2 Read | Kafka Cluster (128 part)"]
+    end
+    subgraph EU["EU-WEST-1"]
+        EU_Compute["API GW + Web Svrs (ECS x15) | Feed Service (ECS x8) | Fan-out Workers (ECS x30)"]
+        EU_Data["Redis Cluster (256GB) | PostgreSQL Read Replicas | Kafka Cluster (Mirror)"]
+    end
+    subgraph AP["AP-SOUTHEAST-1"]
+        AP_Compute["API GW + Web Svrs (ECS x15) | Feed Service (ECS x8) | Fan-out Workers (ECS x30)"]
+        AP_Data["Redis Cluster (256GB) | PostgreSQL Read Replicas | Kafka Cluster (Mirror)"]
+    end
+
+    US -->|"Cross-region replication"| EU
+    EU -->|"Cross-region replication"| AP
 ```
 
 ### 11.2 跨区域一致性挑战

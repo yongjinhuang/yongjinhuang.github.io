@@ -237,65 +237,15 @@ tenant_initech_db -> PostgreSQL Instance 3 (us-east-1)
 
 ## 4. 高层架构
 
-```
-+------------------------------------------------------------------+
-|                         客户端                                     |
-|  [Web 应用]    [移动应用]    [API 客户端]    [管理控制台]           |
-+----------|-----------|-------------|----------------|-------------+
-           |           |             |                |
-           v           v             v                v
-+------------------------------------------------------------------+
-|                    API 网关 / 负载均衡器                            |
-|  - TLS 终止                                                       |
-|  - 租户标识（子域名 / 请求头 / JWT）                                |
-|  - 限流（每租户）                                                  |
-|  - 请求路由                                                       |
-+------------------------------------------------------------------+
-           |
-           v
-+------------------------------------------------------------------+
-|                     租户上下文中间件                                 |
-|  - 从请求中提取 tenant_id                                          |
-|  - 验证租户状态（活跃 / 已暂停）                                    |
-|  - 设置数据库连接 / schema                                         |
-|  - 将租户上下文注入请求                                             |
-+------------------------------------------------------------------+
-           |
-           +------------------+------------------+
-           |                  |                  |
-           v                  v                  v
-+------------------+ +------------------+ +------------------+
-|   认证服务       | |   应用服务       | |  配置服务        |
-| - JWT 签发       | | - 业务逻辑       | | - 功能开关       |
-| - SSO / SAML     | | - CRUD 操作      | | - 品牌定制       |
-| - RBAC           | | - 领域逻辑       | | - 套餐限制       |
-| - 会话管理       | | - Webhooks       | | - 自定义字段     |
-+------------------+ +------------------+ +------------------+
-           |                  |                  |
-           v                  v                  v
-+------------------------------------------------------------------+
-|                      数据访问层                                     |
-|  - 租户感知查询构建器（自动注入 tenant_id）                         |
-|  - 连接池管理（每租户或共享）                                       |
-|  - 读副本路由                                                      |
-+------------------------------------------------------------------+
-           |                  |                  |
-           v                  v                  v
-+------------------+ +------------------+ +------------------+
-|   PostgreSQL     | |     Redis        | |  Elasticsearch   |
-| （租户数据）      | | （缓存、会话）    | | （搜索、日志）    |
-+------------------+ +------------------+ +------------------+
-           |
-           v
-+------------------------------------------------------------------+
-|                      事件总线 (Kafka)                               |
-+------------------------------------------------------------------+
-     |              |               |              |
-     v              v               v              v
-+-----------+ +------------+ +------------+ +-------------+
-| 使用量    | | 审计日志   | | Webhook    | | 分析        |
-| 计量      | | 处理器     | | 分发器     | | 管道        |
-+-----------+ +------------+ +------------+ +-------------+
+```mermaid
+flowchart TD
+    Clients["CLIENTS<br/>[Web App] | [Mobile App] | [API Clients] | [Admin Console]"] --> GW["API GATEWAY / LOAD BALANCER<br/>TLS termination, Tenant ID (subdomain/header/JWT), Per-tenant rate limit"]
+    GW --> Ctx["TENANT CONTEXT MIDDLEWARE<br/>Extract tenant_id, Validate status (active/suspended), Set DB connection/schema"]
+    Ctx --> Auth["AUTH SERVICE<br/>JWT issuance, SSO/SAML, RBAC, Session mgmt"] & App["APP SERVICES<br/>Business logic, CRUD ops, Domain logic, Webhooks"] & Cfg["CONFIG SERVICE<br/>Feature flags, Branding, Plan limits, Custom fields"]
+    Auth & App & Cfg --> DAL["DATA ACCESS LAYER<br/>Tenant-aware query builder (auto-inject tenant_id), Connection pool mgmt, Read replica routing"]
+    DAL --> PG["PostgreSQL (tenant data)"] & Redis["Redis (cache, sessions)"] & ES["Elasticsearch (search, logs)"]
+    PG --> Kafka["EVENT BUS (Kafka)"]
+    Kafka --> M1["Usage Metering"] & M2["Audit Log Processor"] & M3["Webhook Dispatcher"] & M4["Analytics Pipeline"]
 ```
 
 ---
@@ -461,44 +411,15 @@ class TenantAwareRepository:
 
 ### 租户标识流程
 
-```
-请求到达
-       |
-       v
-+------+--------+
-| 提取租户      |
-| 标识符        |
-+------+---------+
-       |
-       +-------- 子域名? ---> acme.app.com --> 查找 slug "acme"
-       |
-       +-------- JWT 声明? ---> 解码令牌 --> 提取 tenant_id
-       |
-       +-------- 请求头? ------> X-Tenant-ID --> 验证格式
-       |
-       v
-+------+---------+
-| 查找租户      |  <-- Redis 缓存（TTL: 5 分钟）
-| 元数据        |  <-- 降级：PostgreSQL
-+------+---------+
-       |
-       v
-+------+---------+
-| 验证           |
-| - 状态=活跃    |
-| - 套餐限制     |
-| - 区域匹配     |
-+------+---------+
-       |
-       v
-+------+---------+
-| 路由到数据     |
-| 源             |
-+------+---------+
-       |
-       +----> 共享池（免费/入门版）
-       +----> Schema 特定池（专业版）
-       +----> 专用连接（企业版）
+```mermaid
+flowchart TD
+    Req["Request arrives"] --> Ext["Extract tenant identifier<br/>- Subdomain (acme.app.com)<br/>- JWT claim (tenant_id)<br/>- Header (X-Tenant-ID)"]
+    Ext --> Lookup["Lookup tenant metadata<br/>(Redis cache TTL 5m -> Fallback PostgreSQL)"]
+    Lookup --> Val["Validate<br/>- Status = active<br/>- Plan limits<br/>- Region match"]
+    Val --> Route["Route to data source"]
+    Route --> Shared["Shared pool (free/starter)"]
+    Route --> Schema["Schema-specific pool (professional)"]
+    Route --> Ded["Dedicated connection (enterprise)"]
 ```
 
 ### 连接池管理
@@ -1029,45 +950,21 @@ class HotTenantDetector:
 
 ## 13. 部署架构
 
-```
-+------------------------------------------------------------------+
-|                    多区域部署                                       |
-+------------------------------------------------------------------+
-|                                                                    |
-|  区域：US-East-1（主要）                                           |
-|  ┌──────────────────────────────────────────────────────────────┐ |
-|  │  Kubernetes 集群                                              │ |
-|  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │ |
-|  │  │ API 网关 │ │ 应用 Pod │ │ 认证 Pod │ │ 配置     │      │ |
-|  │  │ (Nginx)  │ │ (x20)   │ │ (x5)    │ │ Pod (x3) │      │ |
-|  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │ |
-|  │  ┌──────────┐ ┌──────────┐ ┌──────────┐                    │ |
-|  │  │ 工作线程 │ │ 计费     │ │ 导出     │                    │ |
-|  │  │ Pod(x10) │ │ Pod (x3) │ │ Pod(x3)  │                    │ |
-|  │  └──────────┘ └──────────┘ └──────────┘                    │ |
-|  └──────────────────────────────────────────────────────────────┘ |
-|  ┌──────────────────────────────────────────────────────────────┐ |
-|  │  数据层                                                      │ |
-|  │  ┌──────────────┐ ┌──────────┐ ┌───────────┐ ┌──────────┐ │ |
-|  │  │ PostgreSQL   │ │ Redis    │ │ Elastic-  │ │ Kafka    │ │ |
-|  │  │ 主库 +       │ │ 集群     │ │ search    │ │ 集群     │ │ |
-|  │  │ 3 副本       │ │ (6 节点) │ │ (3 节点)  │ │ (6 节点) │ │ |
-|  │  └──────────────┘ └──────────┘ └───────────┘ └──────────┘ │ |
-|  └──────────────────────────────────────────────────────────────┘ |
-|                                                                    |
-|  区域：EU-West-1（数据驻留）                                       |
-|  ┌──────────────────────────────────────────────────────────────┐ |
-|  │  为欧盟租户提供相同拓扑（GDPR 数据驻留）                       │ |
-|  │  仅平台级数据进行跨区域复制                                    │ |
-|  └──────────────────────────────────────────────────────────────┘ |
-|                                                                    |
-|  企业租户（专用）                                                  |
-|  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             |
-|  │ 租户 A       │ │ 租户 B       │ │ 租户 C       │             |
-|  │ 专用数据库   │ │ 专用数据库   │ │ 专用数据库   │             |
-|  │ (us-east-1)  │ │ (eu-west-1)  │ │ (ap-south-1) │             |
-|  └──────────────┘ └──────────────┘ └──────────────┘             |
-+------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph US["Region: US-East-1 (Primary)"]
+        US_K8s["Kubernetes Cluster:<br/>API GW (Nginx) | App Pods (x20) | Auth Pods (x5) | Config Pods (x3)<br/>Worker Pods (x10) | Billing Pods (x3) | Export Pods (x3)"]
+        US_Data["Data Layer:<br/>PostgreSQL (Primary + 3 Replicas) | Redis (6 nodes) | Elasticsearch (3 nodes) | Kafka (6 nodes)"]
+        US_K8s --> US_Data
+    end
+    subgraph EU["Region: EU-West-1 (Data Residency)"]
+        EU_Topo["Same topology for EU tenants (GDPR data residency)<br/>Cross-region replication for platform-level data only"]
+    end
+    subgraph Ent["Enterprise Tenants (Dedicated)"]
+        E1["Tenant A: Dedicated DB (us-east-1)"]
+        E2["Tenant B: Dedicated DB (eu-west-1)"]
+        E3["Tenant C: Dedicated DB (ap-south-1)"]
+    end
 ```
 
 ---

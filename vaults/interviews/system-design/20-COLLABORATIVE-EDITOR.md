@@ -328,95 +328,25 @@ This is Delta format (used by Quill.js / ProseMirror), which encodes an operatio
 
 ### System Components
 
-```
-+------------------+       +------------------+       +------------------+
-|   Browser /      |       |   Browser /      |       |   Browser /      |
-|   Client A       |       |   Client B       |       |   Client C       |
-|                  |       |                  |       |                  |
-|  Local Doc State |       |  Local Doc State |       |  Local Doc State |
-|  OT/CRDT Engine  |       |  OT/CRDT Engine  |       |  OT/CRDT Engine  |
-|  Pending Op Queue|       |  Pending Op Queue|       |  Pending Op Queue|
-+--------+---------+       +--------+---------+       +--------+---------+
-         |  WebSocket                |  WebSocket                | WebSocket
-         |                          |                           |
-+--------v--------------------------v---------------------------v---------+
-|                           Load Balancer (L7)                           |
-|                     Sticky sessions by doc_id                          |
-+--------+----------------------------------+---------------------------+-+
-         |                                  |                           |
-+--------v---------+              +---------v--------+       +----------v-------+
-|  Collab Server 1 |              |  Collab Server 2 |       |  Collab Server N |
-|                  |              |                  |       |                  |
-| - WS Manager     |              | - WS Manager     |       | - WS Manager     |
-| - OT Transform   |              | - OT Transform   |       | - OT Transform   |
-| - Op Sequencer   |              | - Op Sequencer   |       | - Op Sequencer   |
-| - Presence Mgr   |              | - Presence Mgr   |       | - Presence Mgr   |
-+--------+---------+              +---------+--------+       +----------+-------+
-         |                                  |                           |
-         +----------------------------------+---------------------------+
-                                            |
-              +-----------------------------+-----------------------------+
-              |                             |                             |
-   +----------v----------+    +-------------v-----------+   +------------v--------+
-   |    Message Broker   |    |    Op Storage (DB)      |   |   Snapshot Store    |
-   |    (Kafka/Redis Pub) |    |    (PostgreSQL /        |   |   (S3 / GCS)        |
-   |                     |    |     Spanner)             |   |                     |
-   | Topics:             |    |                         |   | - doc_snapshots/    |
-   | - doc.{docId}.ops   |    | - document_ops          |   |   {docId}/{rev}.json|
-   | - doc.{docId}.cursor|    | - document_snapshots    |   |                     |
-   +---------------------+    | - named_revisions       |   +---------------------+
-                              +-------------+-----------+
-                                            |
-                              +-------------v-----------+
-                              |    Search / Analytics   |
-                              |    (Elasticsearch)      |
-                              |                         |
-                              | - Full-text doc search  |
-                              | - Activity analytics    |
-                              +-------------------------+
+```mermaid
+flowchart TD
+    CA["Browser / Client A<br/>Local Doc State | OT/CRDT Engine | Pending Op Queue"] & CB["Browser / Client B<br/>Local Doc State | OT/CRDT Engine | Pending Op Queue"] & CC["Browser / Client C<br/>Local Doc State | OT/CRDT Engine | Pending Op Queue"] -->|"WebSocket"| LB["Load Balancer (L7)<br/>Sticky sessions by doc_id"]
+    LB --> CS1["Collab Server 1<br/>WS Manager | OT Transform | Op Sequencer | Presence Mgr"]
+    LB --> CS2["Collab Server 2<br/>WS Manager | OT Transform | Op Sequencer | Presence Mgr"]
+    LB --> CSN["Collab Server N<br/>WS Manager | OT Transform | Op Sequencer | Presence Mgr"]
+    CS1 & CS2 & CSN --> Broker["Message Broker (Kafka / Redis Pub/Sub)<br/>Topics: doc.{docId}.ops, doc.{docId}.cursor"]
+    CS1 & CS2 & CSN --> OpDB["Op Storage DB (PostgreSQL / Spanner)<br/>document_ops, document_snapshots, named_revisions"]
+    CS1 & CS2 & CSN --> Snap["Snapshot Store (S3 / GCS)<br/>doc_snapshots/{docId}/{rev}.json"]
+    OpDB --> ES["Search / Analytics (Elasticsearch)<br/>Full-text doc search, activity analytics"]
 ```
 
 ### Request Flow for an Edit Operation
 
-```
-Client A types "H"
-       |
-       | 1. Apply locally (optimistic, immediate)
-       v
-  Local doc = "Hello H"   (instant, 0ms)
-       |
-       | 2. Send op over WebSocket
-       v
-  { type:"op", rev:42, ops:[{type:"insert",pos:6,chars:"H"}] }
-       |
-       v
-+------+-------+
-| Collab Server|
-|              |
-| 3. Lock doc  |  (distributed lock or single-writer per doc)
-|    revision  |
-|              |
-| 4. Transform |  against any ops submitted since rev=42
-|    incoming  |
-|    op        |
-|              |
-| 5. Assign    |  rev = 43
-|    new rev   |
-|              |
-| 6. Persist   |  write to document_ops (rev=43)
-|    to DB     |  (synchronous, before ack)
-|              |
-| 7. Ack to    |  { type:"ack", rev:43 }
-|    Client A  |
-|              |
-| 8. Fan out   |  broadcast transformed op to Clients B, C
-|    to peers  |
-+--------------+
-
-Client B and C receive:
-  { type:"op", authorId:"A", rev:43, ops:[...transformed...] }
-  -> Apply to local state
-  -> Update local rev to 43
+```mermaid
+flowchart TD
+    Type["Client A types 'H'"] -->|"1. Apply locally (optimistic, 0ms)"| Local["Local doc = 'Hello H'"]
+    Local -->|"2. Send op over WebSocket {type:'op', rev:42}"| CS["Collab Server:<br/>3. Lock doc revision<br/>4. Transform incoming op against ops since rev=42<br/>5. Assign new rev = 43<br/>6. Persist to document_ops (sync)<br/>7. Ack {type:'ack', rev:43} to Client A<br/>8. Fan out transformed op to Clients B, C"]
+    CS --> Peers["Clients B and C receive transformed op -> Apply locally &amp; update rev to 43"]
 ```
 
 ### Document Loading Flow
@@ -773,42 +703,21 @@ Google Docs uses OT with a central server based on the Jupiter protocol. Key asp
 
 ### WebSocket Connection Management
 
-```
-+----------+                +-------------+             +----------+
-|  Client  |                | Load Balancer|             |  Collab  |
-|          |                | (sticky)     |             |  Server  |
-+----+-----+                +------+-------+             +----+-----+
-     |                             |                          |
-     | HTTP Upgrade to WebSocket   |                          |
-     +----------------------------->                          |
-     |                             | Route to server          |
-     |                             | with docId affinity      |
-     |                             +------------------------->|
-     |                             |                          |
-     |<=========== WS Connected ========================== ---|
-     |                             |                          |
-     | Send: { type:"join",        |                          |
-     |   docId, rev:543, token }   |                          |
-     +=============================================>          |
-     |                             |                          |
-     |                             |         Validate token   |
-     |                             |         Check permission |
-     |                             |         Load doc state   |
-     |                             |                          |
-     |<====== { type:"welcome",    |                          |
-     |   users:[...], rev:543 } ===|                          |
-     |                             |                          |
-     |  [EDITING BEGINS]           |                          |
-     |                             |                          |
-     | Heartbeat ping every 30s    |                          |
-     +=============================================>          |
-     |<============================================ pong      |
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant LB as "Load Balancer (sticky)"
+    participant S as "Collab Server"
 
-Reconnect handling:
-  - Client stores lastKnownRev
-  - On reconnect: connect with ?rev=lastKnownRev
-  - Server sends ops from lastKnownRev+1 to current
-  - If gap too large (> threshold): server sends snapshot
+    C->>LB: HTTP Upgrade to WebSocket
+    LB->>S: Route to server with docId affinity
+    S-->>C: WS Connected
+    C->>S: Send {type: "join", docId, rev: 543, token}
+    Note over S: Validate token, check permission, load doc state
+    S-->>C: {type: "welcome", users: [...], rev: 543}
+    Note over C,S: EDITING BEGINS
+    C->>S: Heartbeat ping (every 30s)
+    S-->>C: pong
 ```
 
 ### Connection Affinity and Fan-out
@@ -1613,34 +1522,9 @@ Background job (runs every hour):
 
 ### Global Architecture with Multiple Regions
 
-```
-+------------------+         +------------------+         +------------------+
-| Region: US-East  |         | Region: EU-West  |         | Region: AP-East  |
-|                  |         |                  |         |                  |
-| Load Balancer    |         | Load Balancer    |         | Load Balancer    |
-| Collab Servers   |         | Collab Servers   |         | Collab Servers   |
-| Redis (presence) |         | Redis (presence) |         | Redis (presence) |
-|                  |         |                  |         |                  |
-| Primary DB shard |         |                  |         |                  |
-| (for US docs)    |         |                  |         |                  |
-+--------+---------+         +--------+---------+         +--------+---------+
-         |                            |                            |
-         |     Cross-region sync      |                            |
-         +----------------------------+----------------------------+
-                                      |
-                          +-----------v----------+
-                          | Global Op Log        |
-                          | (Spanner / CockroachDB|
-                          |  with global strong   |
-                          |  consistency)         |
-                          +----------------------+
-
-Documents are "homed" to a region.
-  - If document owner is in US, doc is homed to US-East.
-  - EU users editing a US doc: their WS connects to EU servers,
-    which proxy to US-East for op ordering.
-  - Added ~100ms latency for EU users on US-homed docs.
-  - For global collaboration: accept the latency or use async CRDT sync.
+```mermaid
+flowchart TD
+    US["Region: US-East<br/>Load Balancer | Collab Servers | Redis (presence)<br/>Primary DB shard (for US docs)"] & EU["Region: EU-West<br/>Load Balancer | Collab Servers | Redis (presence)"] & AP["Region: AP-East<br/>Load Balancer | Collab Servers | Redis (presence)"] <-->|"Cross-region sync"| Global["Global Op Log<br/>(Spanner / CockroachDB with global strong consistency)"]
 ```
 
 ---

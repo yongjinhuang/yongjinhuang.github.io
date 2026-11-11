@@ -171,7 +171,7 @@ sequenceDiagram
 
 ### 2. The "Large Group Read-Receipt & Presence Amplification" Storm
 
-In a 1-on-1 chat, sending a `"read"` receipt or `"online"` presence event notifies 1 peer. In a 10,000-member Discord server or enterprise Slack channel, if 3,000 people view a newly posted announcement at the same second and you broadcast each person's read receipt to all 10,000 members, a single message triggers $3,000 	imes 10,000 = 30,000,000$ WebSocket frames—instantly melting your gateway cluster.
+In a 1-on-1 chat, sending a `"read"` receipt or `"online"` presence event notifies 1 peer. In a 10,000-member Discord server or enterprise Slack channel, if 3,000 people view a newly posted announcement at the same second and you broadcast each person's read receipt to all 10,000 members, a single message triggers $3,000 \times 10,000 = 30,000,000$ WebSocket frames—instantly melting your gateway cluster.
 - **Battle-Tested Threshold Rules**:
   - **Read Receipts**: Above a strict group size threshold (typically 50–100 members), switch from pushing per-user read events to **lazy pull aggregation** (only track a single `unread_watermark_seq_id` per user, and compute the "Read by N people" list only when the sender explicitly opens the message info drawer).
   - **Presence Subscriptions**: Never push full guild/workspace presence on connect. Use **Viewport-Scoped Presence Subscriptions**—the client only subscribes to real-time status changes for the ~30 user avatars currently visible inside the scroll viewport.

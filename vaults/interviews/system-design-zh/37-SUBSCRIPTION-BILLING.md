@@ -695,76 +695,21 @@ subscriptions  1---*  subscription_events (audit log)
 
 ## 4. 高层架构
 
-```
-                           ┌─────────────────────────────┐
-                           │      Load Balancer / CDN     │
-                           └──────────────┬──────────────┘
-                                          │
-                           ┌──────────────▼──────────────┐
-                           │        API Gateway           │
-                           │  (Auth, Rate Limit, Routing) │
-                           └──┬───┬───┬───┬───┬───┬──────┘
-                              │   │   │   │   │   │
-          ┌───────────────────┘   │   │   │   │   └───────────────────┐
-          │                       │   │   │   │                       │
-          ▼                       ▼   │   ▼   │                       ▼
-  ┌───────────────┐   ┌──────────────┐│ ┌─────────────┐   ┌──────────────────┐
-  │  Plan Service │   │ Subscription ││ │   Invoice    │   │  Webhook Service │
-  │               │   │   Service    ││ │  Generator   │   │                  │
-  │ CRUD plans,   │   │              ││ │              │   │ Deliver events   │
-  │ prices, tiers │   │ Lifecycle    ││ │ Line items,  │   │ to merchant      │
-  │               │   │ management   ││ │ tax, discount│   │ endpoints        │
-  └───────┬───────┘   └──────┬───────┘│ └──────┬──────┘   └────────┬─────────┘
-          │                  │        │        │                    │
-          │                  │        │        │                    │
-          │           ┌──────▼────┐   │  ┌─────▼──────┐            │
-          │           │  Billing  │   │  │  Payment   │            │
-          │           │  Engine   │◄──┘  │  Gateway   │            │
-          │           │           │      │  Adapter   │            │
-          │           │ Proration,│      │            │            │
-          │           │ metering  │      │ Stripe,    │            │
-          │           │ calc      │      │ Adyen,     │            │
-          │           └─────┬─────┘      │ Braintree  │            │
-          │                 │            └─────┬──────┘            │
-          │           ┌─────▼─────┐            │                   │
-          │           │  Dunning  │            │                   │
-          │           │  Engine   │◄───────────┘                   │
-          │           │           │  (payment failed callback)     │
-          │           │ Retry     │                                │
-          │           │ schedule, │                                │
-          │           │ grace     │                                │
-          │           │ periods   │                                │
-          │           └───────────┘                                │
-          │                                                        │
-          │    ┌────────────────┐                                   │
-          │    │ Usage Metering │                                   │
-          │    │    Service     │                                   │
-          │    │                │                                   │
-          │    │ Ingest events, │                                   │
-          │    │ aggregate,     │                                   │
-          │    │ deduplicate    │                                   │
-          │    └───────┬────────┘                                   │
-          │            │                                            │
-    ┌─────▼────────────▼────────────────────────────────────────────▼──┐
-    │                        Message Bus (Kafka)                       │
-    │                                                                  │
-    │  Topics: subscription.events, invoice.events, payment.events,    │
-    │          usage.events, webhook.delivery, dunning.schedule         │
-    └──────────────────────────┬───────────────────────────────────────┘
-                               │
-    ┌──────────────────────────▼───────────────────────────────────────┐
-    │                         Data Layer                                │
-    │                                                                  │
-    │  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌────────────────┐  │
-    │  │PostgreSQL │  │   Redis   │  │ ClickHouse│  │  Object Store │  │
-    │  │(Primary)  │  │  (Cache,  │  │ (Usage    │  │  (S3: Invoice │  │
-    │  │           │  │  Locks,   │  │  Events,  │  │   PDFs, Cold  │  │
-    │  │ Plans,    │  │  Idempot- │  │  Aggre-   │  │   Archive)    │  │
-    │  │ Subs,     │  │  ency)    │  │  gates)   │  │               │  │
-    │  │ Invoices, │  │           │  │           │  │               │  │
-    │  │ Payments  │  │           │  │           │  │               │  │
-    │  └──────────┘  └───────────┘  └──────────┘  └────────────────┘  │
-    └─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    LB["Load Balancer / CDN"] --> GW["API Gateway<br/>(Auth, Rate Limit, Routing)"]
+    GW --> PlanSvc["Plan Service<br/>CRUD plans, prices, tiers"]
+    GW --> SubSvc["Subscription Service<br/>Lifecycle management"]
+    GW --> InvGen["Invoice Generator<br/>Line items, tax, discount"]
+    GW --> WHSvc["Webhook Service<br/>Deliver events to merchant endpoints"]
+    GW --> UseSvc["Usage Metering Service<br/>Ingest events, aggregate, deduplicate"]
+
+    SubSvc & InvGen --> BillEng["Billing Engine<br/>Proration, metering calc"]
+    InvGen --> PayGW["Payment Gateway Adapter<br/>Stripe, Adyen, Braintree"]
+    BillEng & PayGW --> DunEng["Dunning Engine<br/>Retry schedule, grace periods"]
+
+    PlanSvc & SubSvc & InvGen & WHSvc & UseSvc & BillEng & DunEng --> Kafka["Message Bus (Kafka)<br/>Topics: subscription.events, invoice.events, payment.events, usage.events, webhook.delivery, dunning.schedule"]
+    Kafka --> PG["PostgreSQL (Primary)<br/>Plans, Subs, Invoices, Payments"] & Redis["Redis<br/>(Cache, Locks, Idempotency)"] & CH["ClickHouse<br/>(Usage Events, Aggregates)"] & S3["Object Store (S3)<br/>Invoice PDFs, Cold Archive"]
 ```
 
 ### 组件职责
@@ -792,54 +737,21 @@ subscriptions  1---*  subscription_events (audit log)
 
 ### 状态机
 
-```
-                         create (with trial)
-                    ┌──────────────────────────┐
-                    │                          ▼
-                    │                    ┌───────────┐
-                    │                    │  TRIALING  │
-                    │                    └─────┬─────┘
-                    │                          │
-                    │              trial ends   │   trial ends
-                    │            + payment OK   │   + payment fails
-                    │                 │         │        │
-          create    │                 ▼         │        ▼
-        (no trial)  │           ┌──────────┐   │  ┌────────────┐
-           ─────────┘           │  ACTIVE   │   │  │ INCOMPLETE │
-                                └────┬─────┘   │  └──────┬─────┘
-                                     │         │         │
-                       ┌─────────────┤         │   payment succeeds
-                       │             │         │         │
-             payment   │   cancel    │         │         ▼
-              fails    │  (immediate)│         │    ┌──────────┐
-                       │             │         └───►│  ACTIVE   │
-                       ▼             │              └──────────┘
-                 ┌──────────┐        │
-                 │ PAST_DUE │        │         pause
-                 └────┬─────┘        │     ┌──────────┐
-                      │              │     │  PAUSED   │◄──── pause from ACTIVE
-           payment    │              │     └─────┬────┘
-           succeeds   │              │           │
-              │       │              │     resume │
-              ▼       │              │           ▼
-         ┌──────────┐ │              │     ┌──────────┐
-         │  ACTIVE   │ │              │     │  ACTIVE   │
-         └──────────┘ │              │     └──────────┘
-                      │              │
-           grace      │              │
-           period     │              │
-           expires    │              │
-              │       │              │
-              ▼       ▼              ▼
-         ┌──────────────────────────────┐
-         │          CANCELED            │
-         └──────────────┬───────────────┘
-                        │
-                        │  period end reached
-                        ▼
-                  ┌───────────┐
-                  │  EXPIRED   │
-                  └───────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> TRIALING : create (with trial)
+    [*] --> ACTIVE : create (no trial)
+    TRIALING --> ACTIVE : trial ends + payment OK
+    TRIALING --> INCOMPLETE : trial ends + payment fails
+    INCOMPLETE --> ACTIVE : payment succeeds
+    INCOMPLETE --> CANCELED : grace period expires
+    ACTIVE --> PAST_DUE : payment fails
+    PAST_DUE --> ACTIVE : payment succeeds
+    PAST_DUE --> CANCELED : grace period expires
+    ACTIVE --> PAUSED : pause
+    PAUSED --> ACTIVE : resume
+    ACTIVE --> CANCELED : cancel (immediate)
+    CANCELED --> EXPIRED : period end reached
 ```
 
 ### 状态转换规则
@@ -1226,24 +1138,15 @@ def calculate_proration(
 
 ### 账单生成流水线
 
-```
- ┌──────────────────────────────────────────────────────────────────┐
- │                     Invoice Generation Pipeline                  │
- └──────────────────────────────────────────────────────────────────┘
-
-  Step 1            Step 2           Step 3           Step 4
- ┌──────────┐    ┌────────────┐   ┌────────────┐   ┌────────────┐
- │ Identify  │───►│ Calculate  │──►│ Apply      │──►│ Calculate  │
- │ billable  │    │ line items │   │ discounts  │   │ tax        │
- │ subs      │    │            │   │ & credits  │   │            │
- └──────────┘    └────────────┘   └────────────┘   └─────┬──────┘
-                                                         │
-  Step 8            Step 7           Step 6           Step 5
- ┌──────────┐    ┌────────────┐   ┌────────────┐   ┌────────────┐
- │ Emit     │◄───│ Attempt    │◄──│ Finalize   │◄──│ Generate   │
- │ webhook  │    │ payment    │   │ invoice    │   │ PDF        │
- │ event    │    │            │   │            │   │            │
- └──────────┘    └────────────┘   └────────────┘   └────────────┘
+```mermaid
+flowchart LR
+    S1["Step 1: Identify<br/>billable subs"] --> S2["Step 2: Calculate<br/>line items"]
+    S2 --> S3["Step 3: Apply<br/>discounts &amp; credits"]
+    S3 --> S4["Step 4: Calculate<br/>tax"]
+    S4 --> S5["Step 5: Generate<br/>PDF"]
+    S5 --> S6["Step 6: Finalize<br/>invoice"]
+    S6 --> S7["Step 7: Attempt<br/>payment"]
+    S7 --> S8["Step 8: Emit<br/>webhook event"]
 ```
 
 ### 账单逐步生成过程
@@ -1433,41 +1336,15 @@ def billing_cycle_job():
 
 ### 支付流程
 
-```
-Invoice finalized
-       │
-       ▼
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│ Check         │     │ Create       │     │ Call Payment  │
-│ idempotency  │────►│ payment      │────►│ Gateway      │
-│ key          │     │ record       │     │ (Stripe,     │
-└──────────────┘     │ (status:     │     │  Adyen)      │
-  (duplicate?        │  pending)    │     └──────┬───────┘
-   return cached     └──────────────┘            │
-   result)                                       │
-                              ┌───────────────────┤
-                              │                   │
-                         Success              Failure
-                              │                   │
-                              ▼                   ▼
-                    ┌──────────────┐     ┌──────────────┐
-                    │ Mark payment │     │ Mark payment │
-                    │ succeeded    │     │ failed       │
-                    │              │     │              │
-                    │ Mark invoice │     │ Enqueue      │
-                    │ paid         │     │ dunning      │
-                    │              │     │ retry        │
-                    │ Advance sub  │     │              │
-                    │ period       │     │ Mark sub     │
-                    └──────┬───────┘     │ past_due     │
-                           │             └──────┬───────┘
-                           │                    │
-                           ▼                    ▼
-                    ┌──────────────┐     ┌──────────────┐
-                    │ Emit webhook │     │ Emit webhook │
-                    │ invoice.paid │     │ payment      │
-                    │              │     │ .failed      │
-                    └──────────────┘     └──────────────┘
+```mermaid
+flowchart TD
+    Fin["Invoice finalized"] --> Idem["Check idempotency key<br/>(duplicate -> return cached result)"]
+    Idem --> Create["Create payment record<br/>(status: pending)"]
+    Create --> Call["Call Payment Gateway<br/>(Stripe, Adyen)"]
+    Call -->|"Success"| Succ["Mark payment succeeded<br/>Mark invoice paid<br/>Advance sub period"]
+    Call -->|"Failure"| Fail["Mark payment failed<br/>Enqueue dunning retry<br/>Mark sub past_due"]
+    Succ --> WH1["Emit webhook: invoice.paid"]
+    Fail --> WH2["Emit webhook: payment.failed"]
 ```
 
 ### Idempotent 支付处理
@@ -2115,76 +1992,15 @@ def generate_revenue_schedule(invoice: Invoice, line_items: list):
 
 ## 14. 部署架构
 
-```
-                        ┌─────────────────────────────────────────────┐
-                        │               Kubernetes Cluster             │
-                        │                                              │
-                        │  ┌─────────────────────────────────────────┐ │
-                        │  │           Ingress Controller             │ │
-                        │  │       (NGINX / AWS ALB Controller)       │ │
-                        │  └────────────────────┬────────────────────┘ │
-                        │                       │                      │
-                        │  ┌────────────────────▼────────────────────┐ │
-                        │  │              API Gateway Pod             │ │
-                        │  │  (Kong / custom, 3-10 replicas, HPA)    │ │
-                        │  └───┬────┬────┬────┬────┬────┬───────────┘ │
-                        │      │    │    │    │    │    │              │
-                        │  ┌───▼──┐┌▼───┐┌▼───┐┌──▼──┐┌▼───┐┌──▼──┐ │
-                        │  │Plan  ││Sub  ││Inv  ││Pay  ││Use ││Web  │ │
-                        │  │Svc   ││Svc  ││Gen  ││Svc  ││Mtr ││hook │ │
-                        │  │      ││     ││     ││     ││Svc ││Svc  │ │
-                        │  │2 rep ││5 rep││3 rep││3 rep││4rep││3rep │ │
-                        │  └──────┘└─────┘└─────┘└─────┘└────┘└─────┘ │
-                        │                                              │
-                        │  ┌─────────────────────────────────────────┐ │
-                        │  │         Background Workers               │ │
-                        │  │                                          │ │
-                        │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ │ │
-                        │  │  │ Billing  │ │ Dunning  │ │ Usage    │ │ │
-                        │  │  │ Cycle    │ │ Retry    │ │ Agg      │ │ │
-                        │  │  │ Worker   │ │ Worker   │ │ Worker   │ │ │
-                        │  │  │ (3 rep)  │ │ (2 rep)  │ │ (8 rep)  │ │ │
-                        │  │  └──────────┘ └──────────┘ └──────────┘ │ │
-                        │  │                                          │ │
-                        │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ │ │
-                        │  │  │ Webhook  │ │ PDF      │ │ Revenue  │ │ │
-                        │  │  │ Delivery │ │ Generator│ │ Recog    │ │ │
-                        │  │  │ Worker   │ │ Worker   │ │ Worker   │ │ │
-                        │  │  │ (3 rep)  │ │ (2 rep)  │ │ (1 rep)  │ │ │
-                        │  │  └──────────┘ └──────────┘ └──────────┘ │ │
-                        │  └─────────────────────────────────────────┘ │
-                        │                                              │
-                        │  ┌─────────────────────────────────────────┐ │
-                        │  │            CronJobs                      │ │
-                        │  │                                          │ │
-                        │  │  billing-cycle-scanner  (every 15 min)   │ │
-                        │  │  dunning-evaluator      (every 1 hour)   │ │
-                        │  │  usage-reconciliation   (daily 02:00)    │ │
-                        │  │  revenue-recognition    (daily 03:00)    │ │
-                        │  │  invoice-archival       (weekly)         │ │
-                        │  │  stale-draft-cleanup    (daily 04:00)    │ │
-                        │  └─────────────────────────────────────────┘ │
-                        └──────────────────────────────────────────────┘
-
-外部依赖：
-  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-  │ PostgreSQL   │  │    Redis     │  │    Kafka     │  │  ClickHouse  │
-  │ (RDS / self- │  │  (Elasticache│  │  (MSK /      │  │  (Usage      │
-  │  managed,    │  │   / self-    │  │   Confluent) │  │   events,    │
-  │  multi-AZ)   │  │   managed)   │  │              │  │   analytics) │
-  │              │  │              │  │  3 brokers,  │  │              │
-  │  Primary +   │  │  3-node     │  │  128 part.   │  │  3-node      │
-  │  2 replicas  │  │  cluster    │  │              │  │  cluster     │
-  │  per shard   │  │              │  │              │  │              │
-  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
-
-  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-  │  S3          │  │  Payment     │  │  Tax Engine  │
-  │  (Invoice    │  │  Gateways    │  │  (Avalara /  │
-  │   PDFs,      │  │  (Stripe,    │  │   TaxJar)    │
-  │   archives,  │  │   Adyen,     │  │              │
-  │   cold data) │  │   Braintree) │  │              │
-  └──────────────┘  └──────────────┘  └──────────────┘
+```mermaid
+flowchart TD
+    subgraph K8s["Kubernetes Cluster"]
+        Ing["Ingress Controller (NGINX / AWS ALB)"] --> GW["API Gateway Pod (Kong / custom, 3-10 replicas, HPA)"]
+        GW --> Services["Core Services:<br/>Plan Svc (2) | Sub Svc (5) | Inv Gen (3) | Pay Svc (3) | Use Mtr Svc (4) | Webhook Svc (3)"]
+        Services --> Workers["Background Workers:<br/>Billing Cycle (3) | Dunning Retry (2) | Usage Agg (8) | Webhook Delivery (3) | PDF Gen (2) | Revenue Recog (1)"]
+        Cron["CronJobs:<br/>billing-cycle-scanner (15m) | dunning-evaluator (1h) | usage-reconciliation (02:00)<br/>revenue-recognition (03:00) | invoice-archival (weekly) | stale-draft-cleanup (04:00)"] --> Workers
+    end
+    K8s --> Ext["External Dependencies:<br/>PostgreSQL (Primary + 2 Replicas/shard) | Redis (3-node) | Kafka (3 brokers, 128p)<br/>ClickHouse (3-node) | S3 (PDFs, archive) | Payment Gateways (Stripe/Adyen) | Tax Engine (Avalara)"]
 ```
 
 ### 部署策略

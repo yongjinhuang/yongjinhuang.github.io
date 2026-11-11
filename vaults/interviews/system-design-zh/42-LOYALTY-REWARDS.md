@@ -689,50 +689,13 @@ CREATE INDEX idx_idem_expiry ON idempotency_keys(expires_at);
 
 ## 4. 高层架构
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              客户端层                                            │
-│   移动应用    │    Web 应用    │   POS 终端    │   合作伙伴系统                    │
-└────────┬────────┴───────┬───────┴────────┬─────────┴──────────┬─────────────────┘
-         │                │                │                    │
-         ▼                ▼                ▼                    ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            API 网关                                              │
-│   限流        │  认证 (JWT/API Key)  │  请求路由    │  幂等性                      │
-└────────┬────────┬───────┬───────┬───────┬────────┬──────────┬───────────────────┘
-         │        │       │       │       │        │          │
-         ▼        │       ▼       │       ▼        │          ▼
-┌────────────┐    │ ┌──────────┐  │ ┌──────────┐   │  ┌──────────────┐
-│   积分     │    │ │   等级   │  │ │ 奖励     │   │  │   合作伙伴   │
-│   引擎     │    │ │   引擎   │  │ │ 目录     │   │  │   网关       │
-│            │    │ │          │  │ │ 服务     │   │  │              │
-│ - 赚取     │    │ │ - 计算   │  │ │ - 浏览   │   │  │ - 赚取/消费  │
-│ - 兑换     │    │ │ - 升/降  │  │ │ - 可用性 │   │  │ - 转移       │
-│ - 余额     │    │ │ - 宽限   │  │ │ - 库存   │   │  │ - 结算       │
-│ - 过期     │    │ │ - 状态   │  │ │          │   │  │              │
-└─────┬──────┘    │ └────┬─────┘  │ └────┬─────┘   │  └──────┬───────┘
-      │           │      │        │      │         │         │
-      ▼           ▼      ▼        ▼      ▼         ▼         ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          事件总线 (Kafka)                                         │
-│  points.earned │ points.redeemed │ points.expired │ tier.changed │ partner.txn   │
-└────────┬────────┬───────┬────────┬───────┬────────┬─────────┬───────────────────┘
-         │        │       │        │       │        │         │
-         ▼        │       ▼        │       ▼        │         ▼
-┌────────────┐    │ ┌──────────┐   │ ┌──────────┐   │  ┌──────────────┐
-│   欺诈     │    │ │ 通知     │   │ │  结算    │   │  │  赚取        │
-│   检测     │    │ │ 服务     │   │ │  引擎    │   │  │  规则        │
-│   服务     │    │ │          │   │ │          │   │  │  引擎        │
-└────────────┘    │ └──────────┘   │ └──────────┘   │  └──────────────┘
-                  │                │                │
-                  ▼                ▼                ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          数据层                                                  │
-│  PostgreSQL     │    Redis        │    S3            │   Elasticsearch           │
-│  (积分账本      │  (余额,         │  (审计归档,       │  (交易搜索,               │
-│   等级, 规则)   │   规则缓存,     │   账本归档)       │   奖励目录搜索)            │
-│                 │   会话)         │                  │                           │
-└─────────────────┴─────────────────┴──────────────────┴───────────────────────────┘
+```mermaid
+flowchart TD
+    Clients["CLIENT LAYER<br/>Mobile App | Web App | POS Terminal | Partner System"] --> GW["API GATEWAY<br/>Rate Limiting | Auth (JWT/API Key) | Request Routing | Idempotency"]
+    GW --> Pts["Points Engine<br/>Earn, Redeem, Balance, Expire"] & Tier["Tier Engine<br/>Calc, Up/Down, Grace, Status"] & Cat["Rewards Catalog Service<br/>Browse, Avail, Inventory"] & Part["Partner Gateway<br/>Earn/Burn, Transfer, Settlement"]
+    Pts & Tier & Cat & Part --> Kafka["EVENT BUS (Kafka)<br/>points.earned | points.redeemed | points.expired | tier.changed | partner.txn"]
+    Kafka --> Fraud["Fraud Detection Service"] & Notif["Notification Service"] & Settle["Settlement Engine"] & Rules["Earning Rules Engine"]
+    Pts & Tier & Cat & Part & Fraud & Notif & Settle & Rules --> Data["DATA LAYER<br/>PostgreSQL (Points Ledger, Tiers, Rules) | Redis (Balances, Rules Cache, Session)<br/>S3 (Audit &amp; Ledger Archive) | Elasticsearch (Txn &amp; Catalog Search)"]
 ```
 
 ### 服务职责
@@ -1120,42 +1083,15 @@ class TierEngine:
 
 ### 等级状态机
 
-```
-                    ┌──────────────────┐
-         ┌─────────│     GREEN        │
-         │         │  (0 pts)         │
-         │         └────────┬─────────┘
-         │                  │ 资格 >= 2,000 pts
-         │                  ▼
-         │         ┌──────────────────┐
-         │  ┌──────│     SILVER       │──────┐
-         │  │      │  (2,000 pts)     │      │
-         │  │      └────────┬─────────┘      │
-         │  │               │ 资格 >= 5,000  │ 保留 < 1,500
-         │  │               ▼                │ （宽限期后）
-         │  │      ┌──────────────────┐      │
-         │  │ ┌────│      GOLD        │────┐ │
-         │  │ │    │  (5,000 pts)     │    │ │
-         │  │ │    └────────┬─────────┘    │ │
-         │  │ │             │ >= 10,000    │ │ 保留 < 4,000
-         │  │ │             ▼              │ │ （宽限期后）
-         │  │ │    ┌──────────────────┐    │ │
-         │  │ │    │   PLATINUM       │    │ │
-         │  │ │    │  (10,000 pts)    │    │ │
-         │  │ │    └──────────────────┘    │ │
-         │  │ │             │              │ │
-         │  │ │             │ 保留         │ │
-         │  │ │             │ < 8,000      │ │
-         │  │ │             │ （宽限期后）  │ │
-         │  │ │             ▼              │ │
-         │  │ │        降级               │ │
-         │  │ │      至最高              │ │
-         │  │ │     符合条件等级 ◄──────┘ │
-         │  │ └──────────────────────────────┘
-         │  │             │
-         │  └──── 降级至 Green
-         │                │
-         └────────────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> GREEN : 0 pts
+    GREEN --> SILVER : qualify >= 2,000 pts
+    SILVER --> GOLD : qualify >= 5,000 pts
+    SILVER --> GREEN : retention < 1,500 pts (after 60d grace)
+    GOLD --> PLATINUM : qualify >= 10,000 pts
+    GOLD --> SILVER : retention < 4,000 pts (after 90d grace)
+    PLATINUM --> GOLD : retention < 8,000 pts (after 90d grace)
 ```
 
 ### 等级权益应用
@@ -1183,41 +1119,24 @@ class TierEngine:
 
 对于高价值或实物奖励，使用两阶段兑换来防止竞态条件并处理履约失败。
 
-```
-会员                  积分引擎                  奖励服务              履约
-  │                        │                          │                      │
-  │  1. 请求兑换           │                          │                      │
-  ├───────────────────────>│                          │                      │
-  │                        │  2. 检查余额             │                      │
-  │                        │     (SELECT FOR UPDATE)  │                      │
-  │                        │                          │                      │
-  │                        │  3. 检查奖励可用性       │                      │
-  │                        ├─────────────────────────>│                      │
-  │                        │  4. 奖励可用             │                      │
-  │                        │<─────────────────────────┤                      │
-  │                        │                          │                      │
-  │                        │  5. 冻结积分             │                      │
-  │                        │  （从可用借记,           │                      │
-  │                        │   贷记至冻结）           │                      │
-  │                        │                          │                      │
-  │  6. 冻结已确认         │                          │                      │
-  │  (holdId, expiresAt)   │                          │                      │
-  │<───────────────────────┤                          │                      │
-  │                        │                          │                      │
-  │  7. 确认兑换           │                          │                      │
-  ├───────────────────────>│                          │                      │
-  │                        │  8. 将冻结               │                      │
-  │                        │     转为已确认           │                      │
-  │                        │                          │                      │
-  │                        │  9. 触发履约             │                      │
-  │                        ├──────────────────────────┼─────────────────────>│
-  │                        │                          │                      │
-  │                        │  10. 履约完成            │                      │
-  │                        │<─────────────────────────┼──────────────────────┤
-  │                        │                          │                      │
-  │  11. 兑换完成          │                          │                      │
-  │  （优惠券/追踪号）     │                          │                      │
-  │<───────────────────────┤                          │                      │
+```mermaid
+sequenceDiagram
+    participant M as "Member"
+    participant PE as "Points Engine"
+    participant RS as "Rewards Service"
+    participant F as "Fulfillment"
+
+    M->>PE: 1. Request Redeem
+    PE->>PE: 2. Check balance (SELECT FOR UPDATE)
+    PE->>RS: 3. Check reward availability
+    RS-->>PE: 4. Reward available
+    PE->>PE: 5. Place HOLD on points (debit available, credit held)
+    PE-->>M: 6. Hold confirmed (holdId, expiresAt)
+    M->>PE: 7. Confirm redemption
+    PE->>PE: 8. Convert hold to confirmed
+    PE->>F: 9. Trigger fulfillment
+    F-->>PE: 10. Fulfillment done
+    PE-->>M: 11. Redemption complete (voucher / tracking)
 ```
 
 ### FIFO 积分消费（最旧积分优先）

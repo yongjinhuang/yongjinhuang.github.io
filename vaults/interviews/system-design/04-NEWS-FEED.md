@@ -303,47 +303,24 @@ CREATE TABLE media (
 
 ## 4. High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              CLIENTS                                        │
-│                    (Mobile Apps, Web Browsers)                               │
-└───────────────────────────────┬─────────────────────────────────────────────┘
-                                │
-                        ┌───────▼───────┐
-                        │  API Gateway  │  (Rate limiting, Auth, Routing)
-                        │  + Load       │
-                        │  Balancer     │
-                        └───┬───────┬───┘
-                            │       │
-              ┌─────────────▼─┐   ┌─▼──────────────┐
-              │  WRITE PATH   │   │   READ PATH     │
-              │               │   │                  │
-              │ ┌───────────┐ │   │ ┌────────────┐  │
-              │ │   Post    │ │   │ │   Feed     │  │
-              │ │  Service  │ │   │ │  Service   │  │
-              │ └─────┬─────┘ │   │ └──────┬─────┘  │
-              │       │       │   │        │         │
-              │ ┌─────▼─────┐ │   │ ┌──────▼─────┐  │
-              │ │  Fan-out  │ │   │ │ Feed Cache  │  │
-              │ │  Service  │ │   │ │  (Redis)    │  │
-              │ └─────┬─────┘ │   │ └──────┬─────┘  │
-              │       │       │   │        │         │
-              └───────┼───────┘   └────────┼─────────┘
-                      │                    │
-          ┌───────────▼────────────────────▼──────────┐
-          │              MESSAGE QUEUE                  │
-          │               (Kafka)                       │
-          └──┬──────────┬──────────┬──────────┬───────┘
-             │          │          │          │
-        ┌────▼───┐ ┌────▼───┐ ┌───▼────┐ ┌──▼───────┐
-        │Post DB │ │Feed    │ │Notif.  │ │Analytics │
-        │(PG)    │ │Cache   │ │Service │ │Service   │
-        └────────┘ │(Redis) │ └────────┘ └──────────┘
-                   └────────┘
-          ┌───────────────────────────────────────────┐
-          │                CDN (Media)                 │
-          │         S3 / CloudFront / Akamai           │
-          └───────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Clients["CLIENTS<br/>(Mobile Apps, Web Browsers)"] --> GW["API Gateway + Load Balancer<br/>(Rate limiting, Auth, Routing)"]
+    GW --> WritePath & ReadPath
+
+    subgraph WritePath["WRITE PATH"]
+        PostSvc["Post Service"] --> FanoutSvc["Fan-out Service"]
+    end
+    subgraph ReadPath["READ PATH"]
+        FeedSvc["Feed Service"] --> FeedCache["Feed Cache (Redis)"]
+    end
+
+    FanoutSvc & FeedCache --> Kafka["MESSAGE QUEUE (Kafka)"]
+    Kafka --> PostDB["Post DB (PostgreSQL)"]
+    Kafka --> RedisCache["Feed Cache (Redis)"]
+    Kafka --> NotifSvc["Notification Service"]
+    Kafka --> AnalyticsSvc["Analytics Service"]
+    Clients -.-> CDN["CDN (Media)<br/>S3 / CloudFront / Akamai"]
 ```
 
 ### Two Main Flows
@@ -386,31 +363,13 @@ do we distribute a new post to the feeds of all followers?
 When a user publishes a post, immediately push the post_id into the feed cache of
 every follower.
 
-```
-               User A publishes post P
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  Post Service   │
-              │  (store post)   │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  Fan-out Worker │
-              │  (async via     │
-              │   Kafka)        │
-              └────────┬────────┘
-                       │
-          ┌────────────┼────────────┐
-          │            │            │
-          ▼            ▼            ▼
-   ┌────────────┐ ┌────────────┐ ┌────────────┐
-   │feed:userB  │ │feed:userC  │ │feed:userD  │
-   │ + post P   │ │ + post P   │ │ + post P   │
-   │(Redis ZADD)│ │(Redis ZADD)│ │(Redis ZADD)│
-   └────────────┘ └────────────┘ └────────────┘
-        ...for all N followers of User A
+```mermaid
+flowchart TD
+    Pub["User A publishes post P"] --> PostSvc["Post Service<br/>(store post)"]
+    PostSvc --> Worker["Fan-out Worker<br/>(async via Kafka)"]
+    Worker --> FB["feed:userB + post P<br/>(Redis ZADD)"]
+    Worker --> FC["feed:userC + post P<br/>(Redis ZADD)"]
+    Worker --> FD["feed:userD + post P<br/>(Redis ZADD)"]
 ```
 
 **Steps:**
@@ -426,33 +385,14 @@ every follower.
 Do nothing at publish time. When a user opens their feed, query the posts of
 everyone they follow in real time.
 
-```
-               User B requests feed
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  Feed Service   │
-              └────────┬────────┘
-                       │
-           ┌───────────┼───────────┐
-           │           │           │
-           ▼           ▼           ▼
-    ┌────────────┐ ┌────────────┐ ┌────────────┐
-    │ Posts by   │ │ Posts by   │ │ Posts by   │
-    │ User A     │ │ User C     │ │ User D     │
-    │ (query DB) │ │ (query DB) │ │ (query DB) │
-    └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
-          │              │              │
-          └──────────────┼──────────────┘
-                         │
-                         ▼
-                ┌─────────────────┐
-                │   Merge + Rank  │
-                │   + Paginate    │
-                └─────────────────┘
-                         │
-                         ▼
-                   Return feed
+```mermaid
+flowchart TD
+    Req["User B requests feed"] --> FeedSvc["Feed Service"]
+    FeedSvc --> PA["Posts by User A<br/>(query DB)"]
+    FeedSvc --> PC["Posts by User C<br/>(query DB)"]
+    FeedSvc --> PD["Posts by User D<br/>(query DB)"]
+    PA & PC & PD --> Merge["Merge + Rank + Paginate"]
+    Merge --> Ret["Return feed"]
 ```
 
 **Steps:**
@@ -465,44 +405,17 @@ everyone they follow in real time.
 
 Use **fan-out on write** for normal users and **fan-out on read** for celebrities.
 
-```
-                User publishes post
-                        │
-                        ▼
-                ┌───────────────┐
-                │ Post Service  │
-                └───────┬───────┘
-                        │
-                        ▼
-               ┌─────────────────┐
-               │ Is author a     │
-               │ celebrity?      │
-               │ (>500K followers)│
-               └──┬───────────┬──┘
-                  │           │
-              NO  │           │  YES
-                  ▼           ▼
-         ┌──────────────┐  ┌──────────────────┐
-         │ Fan-out on   │  │ Store post only.  │
-         │ Write to all │  │ Do NOT fan-out.   │
-         │ followers'   │  │ Post will be      │
-         │ feed caches  │  │ merged at read    │
-         └──────────────┘  │ time.             │
-                           └──────────────────┘
-
-                    --- AT READ TIME ---
-
-         ┌──────────────────────────────────┐
-         │ Feed Service reads user's feed   │
-         │                                  │
-         │ 1. Get pre-computed feed (cache) │
-         │ 2. Get list of celebrities user  │
-         │    follows                       │
-         │ 3. Fetch latest posts from each  │
-         │    celebrity                     │
-         │ 4. Merge + Re-rank              │
-         │ 5. Return paginated result       │
-         └──────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph WriteTime["AT WRITE TIME"]
+        Pub["User publishes post"] --> PostSvc["Post Service"]
+        PostSvc --> Check{"Is author a celebrity?<br/>(&gt;500K followers)"}
+        Check -->|"NO"| FOW["Fan-out on Write to all followers' feed caches"]
+        Check -->|"YES"| NoFOW["Store post only (Do NOT fan-out; merge at read time)"]
+    end
+    subgraph ReadTime["AT READ TIME"]
+        Read["Feed Service reads user's feed:<br/>1. Get pre-computed feed (cache)<br/>2. Get list of celebrities user follows<br/>3. Fetch latest posts from each celebrity<br/>4. Merge + Re-rank<br/>5. Return paginated result"]
+    end
 ```
 
 ### 5.4 Strategy Comparison
@@ -612,40 +525,13 @@ QualityScore = normalize(
 
 For a production system, ranking is a multi-stage ML pipeline:
 
-```
-    All candidate posts (~2000)
-              │
-              ▼
-    ┌──────────────────┐
-    │  Stage 1:        │   Lightweight model, reduces to ~500 candidates
-    │  Candidate       │   Features: author affinity, post age, post type
-    │  Filtering       │
-    └────────┬─────────┘
-             │
-             ▼
-    ┌──────────────────┐
-    │  Stage 2:        │   Medium model, scores each candidate
-    │  Coarse Ranking  │   Features: engagement prediction, content quality
-    │  (Score ~500)    │
-    └────────┬─────────┘
-             │
-             ▼
-    ┌──────────────────┐
-    │  Stage 3:        │   Heavy model (deep neural network)
-    │  Fine Ranking    │   Features: full feature set, cross-features
-    │  (Rank top ~100) │   Output: P(like), P(comment), P(share), P(click)
-    └────────┬─────────┘
-             │
-             ▼
-    ┌──────────────────┐
-    │  Stage 4:        │   Business rules, diversity injection
-    │  Re-ranking /    │   - No more than 2 posts from same author
-    │  Policy Layer    │   - Insert ads at positions 3, 8, 15...
-    └────────┬─────────┘   - Boost new content types
-             │             - Demote clickbait
-             ▼
-      Final ranked feed
-        (return top 20)
+```mermaid
+flowchart TD
+    Cand["All candidate posts (~2000)"] --> S1["Stage 1: Candidate Filtering<br/>Lightweight model -> ~500 candidates<br/>Features: author affinity, post age, post type"]
+    S1 --> S2["Stage 2: Coarse Ranking (Score ~500)<br/>Medium model: engagement prediction, content quality"]
+    S2 --> S3["Stage 3: Fine Ranking (Rank top ~100)<br/>Heavy DNN: full features + cross-features<br/>Output: P(like), P(comment), P(share), P(click)"]
+    S3 --> S4["Stage 4: Re-ranking / Policy Layer<br/>- Max 2 posts from same author<br/>- Insert ads at positions 3, 8, 15...<br/>- Boost new content, demote clickbait"]
+    S4 --> Out["Final ranked feed (return top 20)"]
 ```
 
 **Feature Categories for ML Model:**
@@ -665,57 +551,16 @@ For a production system, ranking is a multi-stage ML pipeline:
 
 ### 7.1 Read Path Flow
 
-```
-    User opens app
-         │
-         ▼
-  ┌──────────────┐
-  │ API Gateway  │
-  └──────┬───────┘
-         │
-         ▼
-  ┌──────────────┐     ┌────────────────────┐
-  │ Feed Service │────>│ Feed Cache (Redis)  │
-  └──────┬───────┘     └─────────┬──────────┘
-         │                       │
-         │    ┌──────────────────┘
-         │    │
-         ▼    ▼
-  ┌─────────────────────────────────────┐
-  │         Cache HIT?                  │
-  │                                     │
-  │  YES:                               │
-  │    1. Read post_ids from sorted set │
-  │    2. Fetch celebrity posts         │
-  │    3. Merge and re-rank             │
-  │                                     │
-  │  NO (cache miss):                   │
-  │    1. Query follows table           │
-  │    2. For each followee:            │
-  │       fetch latest 50 posts         │
-  │    3. Merge all posts               │
-  │    4. Rank with scoring function    │
-  │    5. Cache top 800 post_ids        │
-  │    6. Set TTL = 7 days              │
-  └─────────────┬───────────────────────┘
-                │
-                ▼
-  ┌──────────────────────────────┐
-  │  Hydrate post_ids            │
-  │  (batch fetch from Post DB   │
-  │   or post cache)             │
-  │                              │
-  │  post_ids -> full post       │
-  │  objects with author info,   │
-  │  media URLs, engagement      │
-  │  counts, liked_by_me flag    │
-  └──────────────┬───────────────┘
-                 │
-                 ▼
-  ┌──────────────────────────────┐
-  │  Return paginated response   │
-  │  with next_cursor            │
-  └──────────────────────────────┘
+```mermaid
+flowchart TD
+    Open["User opens app"] --> GW["API Gateway"]
+    GW --> FS["Feed Service"]
+    FS <--> FC["Feed Cache (Redis)"]
+    FS --> Hit{"Cache HIT?"}
+    Hit -->|"YES"| HitSteps["1. Read post_ids from sorted set<br/>2. Fetch celebrity posts<br/>3. Merge and re-rank"]
+    Hit -->|"NO (cache miss)"| MissSteps["1. Query follows table<br/>2. Fetch latest 50 posts per followee<br/>3. Merge &amp; rank with scoring function<br/>4. Cache top 800 post_ids (TTL = 7 days)"]
+    HitSteps & MissSteps --> Hydrate["Hydrate post_ids<br/>(Batch fetch full post objects, author info, media URLs, engagement counts, liked_by_me)"]
+    Hydrate --> Ret["Return paginated response with next_cursor"]
 ```
 
 ### 7.2 Feed Cache Structure (Redis Detail)
@@ -882,47 +727,11 @@ Member: post_id
 
 ### 9.1 Multi-Level Cache Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    CACHE HIERARCHY                        │
-│                                                          │
-│  Level 1: CDN Cache (edge)                               │
-│  ┌─────────────────────────────────────────────┐         │
-│  │ - Static media (images, videos, thumbnails)  │         │
-│  │ - Profile pictures                           │         │
-│  │ - TTL: hours to days                         │         │
-│  │ - Hit rate: 80-90% for media                 │         │
-│  └─────────────────────────────────────────────┘         │
-│                         │ MISS                           │
-│                         ▼                                │
-│  Level 2: Application Cache (in-process)                 │
-│  ┌─────────────────────────────────────────────┐         │
-│  │ - Hot user profiles (LRU, 100K entries)      │         │
-│  │ - Feature flags, config                      │         │
-│  │ - TTL: 30-60 seconds                         │         │
-│  │ - Hit rate: 70-80%                           │         │
-│  └─────────────────────────────────────────────┘         │
-│                         │ MISS                           │
-│                         ▼                                │
-│  Level 3: Feed Cache (Redis cluster)                     │
-│  ┌─────────────────────────────────────────────┐         │
-│  │ - Per-user feed sorted sets                  │         │
-│  │ - Post data hashes                           │         │
-│  │ - Celebrity post lists                       │         │
-│  │ - User relationship caches                   │         │
-│  │ - TTL: 7 days (feed), 1 hour (posts)         │         │
-│  │ - Hit rate: 95%+ for active users            │         │
-│  └─────────────────────────────────────────────┘         │
-│                         │ MISS                           │
-│                         ▼                                │
-│  Level 4: Database (PostgreSQL + read replicas)          │
-│  ┌─────────────────────────────────────────────┐         │
-│  │ - Source of truth                            │         │
-│  │ - Read replicas for feed generation queries  │         │
-│  │ - Connection pooling (PgBouncer)             │         │
-│  └─────────────────────────────────────────────┘         │
-│                                                          │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["Level 1: CDN Cache (Edge)<br/>Static media, profile pictures | TTL: hours-days | Hit rate: 80-90%"] -->|"MISS"| L2["Level 2: Application Cache (In-Process)<br/>Hot user profiles (LRU, 100K), feature flags | TTL: 30-60s | Hit rate: 70-80%"]
+    L2 -->|"MISS"| L3["Level 3: Feed Cache (Redis Cluster)<br/>Per-user feed ZSETs, post hashes, celebrity lists | TTL: 7d/1h | Hit rate: 95%+"]
+    L3 -->|"MISS"| L4["Level 4: Database (PostgreSQL + Read Replicas)<br/>Source of truth + PgBouncer connection pooling"]
 ```
 
 ### 9.2 Cache Invalidation Strategies
@@ -1054,31 +863,11 @@ Cache warming strategy:
 
 ### 10.3 Read Replicas
 
-```
-┌───────────────────────────────────────────────────┐
-│              READ REPLICA TOPOLOGY                  │
-│                                                    │
-│           ┌─────────────┐                          │
-│           │   Primary   │  (Writes only)           │
-│           │  PostgreSQL │                          │
-│           └──┬──┬──┬────┘                          │
-│     Streaming│  │  │Replication                    │
-│              │  │  │                               │
-│     ┌────────▼┐ │ ┌▼────────┐                     │
-│     │Replica 1│ │ │Replica 3│  (Feed generation)  │
-│     │(Region A)│ │ │(Region B)│                    │
-│     └─────────┘ │ └─────────┘                     │
-│            ┌────▼────┐                             │
-│            │Replica 2│  (Analytics/Search)         │
-│            │(Region A)│                            │
-│            └─────────┘                             │
-│                                                    │
-│  Replication lag: < 100ms (acceptable for          │
-│  eventually consistent feed)                       │
-│                                                    │
-│  Read ratio: ~95% reads, ~5% writes                │
-│  3 replicas handle ~3x the read throughput         │
-└───────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Pri["Primary PostgreSQL<br/>(Writes only)"] -->|"Streaming Replication (&lt;100ms lag)"| R1["Replica 1 (Region A)<br/>Feed generation"]
+    Pri -->|"Streaming Replication"| R2["Replica 2 (Region A)<br/>Analytics / Search"]
+    Pri -->|"Streaming Replication"| R3["Replica 3 (Region B)<br/>Feed generation"]
 ```
 
 ### 10.4 CDN for Media
@@ -1107,77 +896,31 @@ CDN configuration:
 
 ### 11.1 Multi-Region Deployment
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    MULTI-REGION DEPLOYMENT                        │
-│                                                                  │
-│   ┌──────────────── US-EAST-1 ───────────────────┐              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ API GW +  │  │ Feed      │  │ Fan-out   │ │              │
-│   │  │ Web Svrs  │  │ Service   │  │ Workers   │ │              │
-│   │  │ (ECS x20) │  │ (ECS x10) │  │ (ECS x50)│ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ Redis     │  │PostgreSQL │  │  Kafka    │ │              │
-│   │  │ Cluster   │  │ Primary   │  │  Cluster  │ │              │
-│   │  │ (384GB)   │  │ + 2 Read  │  │ (128 part)│ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   └───────────────────────┬───────────────────────┘              │
-│                           │                                      │
-│              Cross-region │ replication                           │
-│                           │                                      │
-│   ┌──────────────── EU-WEST-1 ───────────────────┐              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ API GW +  │  │ Feed      │  │ Fan-out   │ │              │
-│   │  │ Web Svrs  │  │ Service   │  │ Workers   │ │              │
-│   │  │ (ECS x15) │  │ (ECS x8)  │  │ (ECS x30)│ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ Redis     │  │PostgreSQL │  │  Kafka    │ │              │
-│   │  │ Cluster   │  │ Read      │  │  Cluster  │ │              │
-│   │  │ (256GB)   │  │ Replicas  │  │ (Mirror)  │ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   └───────────────────────┬───────────────────────┘              │
-│                           │                                      │
-│              Cross-region │ replication                           │
-│                           │                                      │
-│   ┌──────────────── AP-SOUTHEAST-1 ──────────────┐              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ API GW +  │  │ Feed      │  │ Fan-out   │ │              │
-│   │  │ Web Svrs  │  │ Service   │  │ Workers   │ │              │
-│   │  │ (ECS x15) │  │ (ECS x8)  │  │ (ECS x30)│ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   │  ┌───────────┐  ┌───────────┐  ┌───────────┐ │              │
-│   │  │ Redis     │  │PostgreSQL │  │  Kafka    │ │              │
-│   │  │ Cluster   │  │ Read      │  │  Cluster  │ │              │
-│   │  │ (256GB)   │  │ Replicas  │  │ (Mirror)  │ │              │
-│   │  └───────────┘  └───────────┘  └───────────┘ │              │
-│   │                                               │              │
-│   └───────────────────────────────────────────────┘              │
-│                                                                  │
-│   ┌──────────────────── GLOBAL ──────────────────┐              │
-│   │                                               │              │
-│   │  ┌──────────────────────────────────────┐     │              │
-│   │  │  CloudFront CDN (200+ edge locations) │     │              │
-│   │  └──────────────────────────────────────┘     │              │
-│   │  ┌──────────────────────────────────────┐     │              │
-│   │  │  Route53 (latency-based routing)      │     │              │
-│   │  └──────────────────────────────────────┘     │              │
-│   │  ┌──────────────────────────────────────┐     │              │
-│   │  │  S3 (cross-region replicated media)   │     │              │
-│   │  └──────────────────────────────────────┘     │              │
-│   │                                               │              │
-│   └───────────────────────────────────────────────┘              │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Global["GLOBAL LAYER"]
+        CF["CloudFront CDN (200+ edge locations)"]
+        R53["Route53 (latency-based routing)"]
+        S3["S3 (cross-region replicated media)"]
+    end
+
+    R53 --> US & EU & AP
+
+    subgraph US["US-EAST-1"]
+        US_Compute["API GW + Web Svrs (ECS x20) | Feed Service (ECS x10) | Fan-out Workers (ECS x50)"]
+        US_Data["Redis Cluster (384GB) | PostgreSQL Primary + 2 Read | Kafka Cluster (128 part)"]
+    end
+    subgraph EU["EU-WEST-1"]
+        EU_Compute["API GW + Web Svrs (ECS x15) | Feed Service (ECS x8) | Fan-out Workers (ECS x30)"]
+        EU_Data["Redis Cluster (256GB) | PostgreSQL Read Replicas | Kafka Cluster (Mirror)"]
+    end
+    subgraph AP["AP-SOUTHEAST-1"]
+        AP_Compute["API GW + Web Svrs (ECS x15) | Feed Service (ECS x8) | Fan-out Workers (ECS x30)"]
+        AP_Data["Redis Cluster (256GB) | PostgreSQL Read Replicas | Kafka Cluster (Mirror)"]
+    end
+
+    US -->|"Cross-region replication"| EU
+    EU -->|"Cross-region replication"| AP
 ```
 
 ### 11.2 Cross-Region Consistency Challenges

@@ -267,142 +267,77 @@ resume after network failure is critical for user experience.
 
 ### Upload Flow
 
-```
-                              Upload Flow
- ============================================================================
+```mermaid
+flowchart TD
+    Client["Client (Web/App)"] --> GW["API Gateway / Load Balancer"]
+    GW --> Auth["Auth Service"]
+    GW --> UploadSvc["Upload Service<br/>- Validate<br/>- Generate pre-signed URL"]
+    UploadSvc --> MetaDB["Metadata DB (PostgreSQL)"]
 
- +--------+     +----------------+     +------------------+
- | Client |---->| API Gateway /  |---->| Upload Service   |
- | (Web/  |     | Load Balancer  |     | - Validate       |
- |  App)  |     +----------------+     | - Generate URL   |
- +--------+            |               +------------------+
-     |                 |                        |
-     |                 v                        v
-     |          +-------------+         +---------------+
-     |          | Auth Service|         | Metadata DB   |
-     |          +-------------+         | (PostgreSQL)  |
-     |                                  +---------------+
-     |
-     |  (Direct upload via pre-signed URL)
-     |
-     v
- +-------------------+     +---------------------+     +----------------+
- | Object Storage    |---->| Message Queue       |---->| Transcoding    |
- | (S3 / GCS)       |     | (Kafka / SQS)       |     | Workers        |
- | - Raw video       |     | - upload.completed  |     | - FFmpeg       |
- +-------------------+     | - transcode.request |     | - GPU-accel    |
-                           +---------------------+     +----------------+
-                                                              |
-                                    +-------------------------+
-                                    |           |             |
-                                    v           v             v
-                              +---------+ +---------+ +-------------+
-                              | 360p    | | 720p    | | 1080p / 4K  |
-                              | encode  | | encode  | | encode      |
-                              +---------+ +---------+ +-------------+
-                                    |           |             |
-                                    v           v             v
-                           +------------------------------------------+
-                           |        Object Storage (Transcoded)       |
-                           |  /v_abc123/360p/segment_001.ts           |
-                           |  /v_abc123/720p/segment_001.ts           |
-                           |  /v_abc123/1080p/segment_001.ts          |
-                           |  /v_abc123/manifest.m3u8                 |
-                           +------------------------------------------+
-                                              |
-                                              v
-                                    +------------------+
-                                    | CDN (CloudFront  |
-                                    | / Akamai / own)  |
-                                    +------------------+
+    Client -->|"Direct upload via pre-signed URL"| RawS3["Object Storage (S3 / GCS)<br/>- Raw video"]
+    RawS3 --> MQ["Message Queue (Kafka / SQS)<br/>- upload.completed<br/>- transcode.request"]
+    MQ --> Workers["Transcoding Workers<br/>- FFmpeg / GPU-accel"]
+    Workers --> E360["360p encode"] & E720["720p encode"] & E1080["1080p / 4K encode"]
+    E360 & E720 & E1080 --> OutS3["Object Storage (Transcoded)<br/>/v_abc123/{360p,720p,1080p}/segment_001.ts<br/>/v_abc123/manifest.m3u8"]
+    OutS3 --> CDN["CDN (CloudFront / Akamai / own)"]
 ```
 
 ### Streaming Flow
 
-```
-                             Streaming Flow
- ============================================================================
+```mermaid
+sequenceDiagram
+    participant Client as "Client Player"
+    participant Edge as "CDN Edge PoP (closest)"
+    participant Reg as "CDN Regional PoP"
+    participant Origin as "Origin Server + Object Store"
 
- +--------+                                              +-----------------+
- | Client |----(1) GET /manifest.m3u8------------------->| CDN Edge PoP   |
- | Player |                                              | (closest to    |
- |        |<---(2) Return master playlist----------------|  user)         |
- |        |                                              +-----------------+
- |        |                                                  |  Cache Miss?
- |        |                                                  v
- |        |                                              +-----------------+
- |        |                                              | CDN Regional   |
- |        |                                              | PoP            |
- |        |                                              +-----------------+
- |        |                                                  |  Cache Miss?
- |        |                                                  v
- |        |                                              +-----------------+
- |        |                                              | Origin Server  |
- |        |                                              | + Object Store |
- |        |                                              +-----------------+
- |        |
- |        |----(3) GET /720p/playlist.m3u8-------------->| CDN Edge       |
- |        |<---(4) Return resolution playlist------------|                |
- |        |                                              |                |
- |        |----(5) GET /720p/segment_001.ts------------->|                |
- |        |<---(6) Return video segment------------------|                |
- |        |                                              |                |
- |        |----(7) GET /720p/segment_002.ts------------->|                |
- |        |<---(8) Return video segment------------------|                |
- +--------+                                              +----------------+
-
-     ABR: Client measures bandwidth and switches resolution dynamically
-     e.g., step 9 might request /480p/segment_003.ts if bandwidth drops
+    Client->>Edge: (1) GET /manifest.m3u8
+    opt Cache Miss at Edge
+        Edge->>Reg: Fetch from Regional PoP
+        opt Cache Miss at Regional
+            Reg->>Origin: Fetch from Origin
+            Origin-->>Reg: Return manifest/segments
+        end
+        Reg-->>Edge: Populate Edge Cache
+    end
+    Edge-->>Client: (2) Return master playlist
+    Client->>Edge: (3) GET /720p/playlist.m3u8
+    Edge-->>Client: (4) Return resolution playlist
+    Client->>Edge: (5) GET /720p/segment_001.ts
+    Edge-->>Client: (6) Return video segment
+    Client->>Edge: (7) GET /720p/segment_002.ts
+    Edge-->>Client: (8) Return video segment
+    Note over Client,Edge: ABR dynamically switches resolution (e.g. /480p/segment_003.ts) on bandwidth changes
 ```
 
 ### Full System Overview
 
-```
- +-----------------------------------------------------------------------+
- |                          CLIENT LAYER                                 |
- |  +----------+  +-----------+  +------------+  +------------------+   |
- |  | Web App  |  | iOS App   |  | Android    |  | Smart TV / OTT   |   |
- |  | (React)  |  | (Swift)   |  | (Kotlin)   |  | (Roku, Fire TV)  |   |
- |  +----------+  +-----------+  +------------+  +------------------+   |
- +-----------------------------------------------------------------------+
-              |                    |                       |
-              v                    v                       v
- +-----------------------------------------------------------------------+
- |                      CDN LAYER (Global)                               |
- |  200+ PoPs worldwide, edge caching, TLS termination                  |
- +-----------------------------------------------------------------------+
-              |
-              v
- +-----------------------------------------------------------------------+
- |                     API GATEWAY / LOAD BALANCER                       |
- |  Rate limiting, authentication, routing, request logging              |
- +-----------------------------------------------------------------------+
-              |
-     +--------+--------+--------+--------+--------+
-     v        v        v        v        v        v
- +------+ +------+ +------+ +------+ +------+ +--------+
- |Upload| |Stream| |Search| |Recom-| |User  | |Comment |
- |Svc   | |Svc   | |Svc   | |mend  | |Svc   | |Svc     |
- +------+ +------+ +------+ +------+ +------+ +--------+
-     |        |        |        |        |        |
-     v        v        v        v        v        v
- +-----------------------------------------------------------------------+
- |                        DATA LAYER                                     |
- |  +----------+  +----------+  +----------+  +-----+  +----------+    |
- |  |PostgreSQL|  |Cassandra |  |Elastic-  |  |Redis|  |Object    |    |
- |  |(metadata)|  |(views,   |  |search    |  |(cache| |Storage   |    |
- |  |          |  | history) |  |(search)  |  | sess)| |(S3/GCS)  |    |
- |  +----------+  +----------+  +----------+  +-----+  +----------+    |
- +-----------------------------------------------------------------------+
-              |
-              v
- +-----------------------------------------------------------------------+
- |                    ASYNC PROCESSING LAYER                             |
- |  +----------+  +-------------+  +----------+  +------------------+   |
- |  | Kafka    |  | Transcoding |  | ML Pipe- |  | Notification     |   |
- |  | (events) |  | Workers     |  | line     |  | Service          |   |
- |  +----------+  +-------------+  +----------+  +------------------+   |
- +-----------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph ClientLayer["CLIENT LAYER"]
+        C1["Web App (React)"]
+        C2["iOS App (Swift)"]
+        C3["Android (Kotlin)"]
+        C4["Smart TV / OTT (Roku, Fire TV)"]
+    end
+    ClientLayer --> CDN["CDN LAYER (Global)<br/>200+ PoPs worldwide, edge caching, TLS termination"]
+    CDN --> GW["API GATEWAY / LOAD BALANCER<br/>Rate limiting, authentication, routing, request logging"]
+    GW --> Up["Upload Svc"] & St["Stream Svc"] & Sr["Search Svc"] & Rec["Recommend Svc"] & Usr["User Svc"] & Cmt["Comment Svc"]
+    Up & St & Sr & Rec & Usr & Cmt --> DataLayer
+    subgraph DataLayer["DATA LAYER"]
+        D1["PostgreSQL (metadata)"]
+        D2["Cassandra (views, history)"]
+        D3["Elasticsearch (search)"]
+        D4["Redis (cache, sessions)"]
+        D5["Object Storage (S3/GCS)"]
+    end
+    DataLayer --> AsyncLayer
+    subgraph AsyncLayer["ASYNC PROCESSING LAYER"]
+        A1["Kafka (events)"]
+        A2["Transcoding Workers"]
+        A3["ML Pipeline"]
+        A4["Notification Service"]
+    end
 ```
 
 ---
@@ -565,23 +500,15 @@ CREATE INDEX idx_jobs_video ON video_processing_jobs(video_id);
 
 ### Data Model Relationships
 
-```
- +----------+       +----------+       +-----------+
- | users    |1----*>| channels |1----*>| videos    |
- +----------+       +----------+       +-----------+
-      |                   ^                  |
-      |                   |                  |
-      |  +----------------+            +-----+-----+
-      |  |                             |           |
-      v  v                             v           v
- +---------------+              +-----------+ +----------+
- | subscriptions |              | comments  | |video_stats|
- +---------------+              +-----------+ +----------+
-                                     |
-                                     v
-                                +-----------+
-                                | (replies) |
-                                +-----------+
+```mermaid
+erDiagram
+    USERS ||--o{ CHANNELS : "owns"
+    CHANNELS ||--o{ VIDEOS : "publishes"
+    USERS ||--o{ SUBSCRIPTIONS : "subscribes"
+    CHANNELS ||--o{ SUBSCRIPTIONS : "has subscribers"
+    VIDEOS ||--o{ COMMENTS : "has"
+    VIDEOS ||--|| VIDEO_STATS : "tracks"
+    COMMENTS ||--o{ COMMENTS : "replies"
 ```
 
 ---
@@ -658,81 +585,19 @@ CREATE INDEX idx_jobs_video ON video_processing_jobs(video_id);
 
 ### Transcoding Pipeline (DAG)
 
-```
-                      Transcoding DAG for a Single Video
- ============================================================================
-
-                          +------------------+
-                          | 1. Probe Video   |
-                          |    (FFprobe)     |
-                          |    - codec info  |
-                          |    - resolution  |
-                          |    - duration    |
-                          |    - audio info  |
-                          +--------+---------+
-                                   |
-                          +--------v---------+
-                          | 2. Split into    |
-                          |    Segments      |
-                          |    (10 sec each) |
-                          +--------+---------+
-                                   |
-              +--------------------+--------------------+
-              |                    |                    |
-     +--------v-------+  +--------v-------+  +--------v-------+
-     | 3a. Transcode  |  | 3b. Transcode  |  | 3c. Transcode  |
-     |     240p       |  |     360p       |  |     480p       |
-     |     H.264      |  |     H.264      |  |     H.264      |
-     +--------+-------+  +--------+-------+  +--------+-------+
-              |                    |                    |
-              |    +---------------+----+              |
-              |    |               |    |              |
-              |    |  +--------v--+--v-+--v-------+   |
-              |    |  | 3d. Transcode  | 3e.      |   |
-              |    |  |     720p       |  1080p   |   |
-              |    |  |     H.264     |  H.264   |   |
-              |    |  +-------+-------+ +----+---+   |
-              |    |          |              |        |
-              +----+----------+--------------+--------+
-                              |
-                   +----------+----------+
-                   |                     |
-          +--------v-------+   +--------v--------+
-          | 4. Generate    |   | 5. Extract      |
-          |    Thumbnails  |   |    Audio Tracks |
-          |    - sprite    |   |    - AAC 128k   |
-          |    - poster    |   |    - AAC 256k   |
-          |    - timeline  |   +--------+--------+
-          +--------+-------+            |
-                   |                    |
-                   +----------+---------+
-                              |
-                   +----------v----------+
-                   | 6. Generate         |
-                   |    Manifest Files   |
-                   |    - master.m3u8    |
-                   |    - per-resolution |
-                   |      playlists      |
-                   +----------+----------+
-                              |
-                   +----------v----------+
-                   | 7. Upload to S3     |
-                   |    /videos/v_abc123/|
-                   |      /240p/         |
-                   |      /360p/         |
-                   |      /480p/         |
-                   |      /720p/         |
-                   |      /1080p/        |
-                   |      manifest.m3u8  |
-                   +----------+----------+
-                              |
-                   +----------v----------+
-                   | 8. Publish Event    |
-                   |    - Update status  |
-                   |      to 'ready'     |
-                   |    - Notify user    |
-                   |    - Invalidate CDN |
-                   +---------------------+
+```mermaid
+flowchart TD
+    S1["1. Probe Video (FFprobe)<br/>codec info, resolution, duration, audio"] --> S2["2. Split into Segments<br/>(10 sec each)"]
+    S2 --> T240["3a. Transcode 240p H.264"]
+    S2 --> T360["3b. Transcode 360p H.264"]
+    S2 --> T480["3c. Transcode 480p H.264"]
+    S2 --> T720["3d. Transcode 720p H.264"]
+    S2 --> T1080["3e. Transcode 1080p H.264"]
+    T240 & T360 & T480 & T720 & T1080 --> S4["4. Generate Thumbnails<br/>sprite, poster, timeline"]
+    T240 & T360 & T480 & T720 & T1080 --> S5["5. Extract Audio Tracks<br/>AAC 128k, AAC 256k"]
+    S4 & S5 --> S6["6. Generate Manifest Files<br/>master.m3u8 + per-resolution playlists"]
+    S6 --> S7["7. Upload to S3<br/>/videos/v_abc123/{240p..1080p}/ + manifest.m3u8"]
+    S7 --> S8["8. Publish Event<br/>Update status to 'ready', notify user, invalidate CDN"]
 ```
 
 ### Transcoding Configuration Matrix
@@ -986,52 +851,28 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### CDN Topology
 
-```
- CDN Hierarchy (3-Tier)
- ============================================================================
-
- Tier 1: Edge PoPs (200+ locations worldwide)
- ============================================================================
- +-------+ +-------+ +-------+ +-------+ +-------+ +-------+
- |Tokyo  | |Seoul  | |Mumbai | |London | |NYC    | |SP     |
- |Edge   | |Edge   | |Edge   | |Edge   | |Edge   | |Edge   |
- |       | |       | |       | |       | |       | |       |
- |Cache: | |Cache: | |Cache: | |Cache: | |Cache: | |Cache: |
- |50TB   | |50TB   | |50TB   | |50TB   | |50TB   | |50TB   |
- +---+---+ +---+---+ +---+---+ +---+---+ +---+---+ +---+---+
-     |         |         |         |         |         |
-     +----+----+         |    +----+----+    |         |
-          |              |    |         |    |         |
-          v              v    v         v    v         v
-
- Tier 2: Regional PoPs (20-30 locations)
- ============================================================================
-     +-----------+    +-----------+    +-----------+
-     | Asia-Pac  |    | Europe    |    | Americas  |
-     | Regional  |    | Regional  |    | Regional  |
-     |           |    |           |    |           |
-     | Cache:    |    | Cache:    |    | Cache:    |
-     | 500TB     |    | 500TB     |    | 500TB     |
-     +-----+-----+    +-----+-----+    +-----+-----+
-           |                |                |
-           +----------------+----------------+
-                            |
-
- Tier 3: Origin Shield + Object Storage
- ============================================================================
-                   +------------------+
-                   | Origin Shield    |
-                   | (collapse multi  |
-                   |  edge requests   |
-                   |  into one)       |
-                   | Cache: 5PB      |
-                   +--------+---------+
-                            |
-                   +--------v---------+
-                   | Object Storage   |
-                   | (S3 / GCS)       |
-                   | All video data   |
-                   +------------------+
+```mermaid
+flowchart TD
+    subgraph T1["Tier 1: Edge PoPs (200+ locations worldwide, 50TB cache each)"]
+        E1["Tokyo Edge"]
+        E2["Seoul Edge"]
+        E3["Mumbai Edge"]
+        E4["London Edge"]
+        E5["NYC Edge"]
+        E6["Sao Paulo Edge"]
+    end
+    subgraph T2["Tier 2: Regional PoPs (20-30 locations, 500TB cache each)"]
+        R1["Asia-Pac Regional"]
+        R2["Europe Regional"]
+        R3["Americas Regional"]
+    end
+    subgraph T3["Tier 3: Origin Shield + Object Storage"]
+        Shield["Origin Shield (Cache: 5PB)<br/>Collapses multiple edge requests into one"] --> S3["Object Storage (S3 / GCS)<br/>All video data"]
+    end
+    E1 & E2 & E3 --> R1
+    E4 --> R2
+    E5 & E6 --> R3
+    R1 & R2 & R3 --> Shield
 ```
 
 ### Cache Strategy
@@ -1088,30 +929,13 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### Architecture Overview
 
-```
- Recommendation Pipeline
- ============================================================================
-
- +------------------+     +------------------+     +------------------+
- | Data Collection  |---->| Feature          |---->| Model Training   |
- |                  |     | Engineering      |     |                  |
- | - Watch history  |     | - User features  |     | - Collaborative  |
- | - Search queries |     | - Video features |     |   filtering      |
- | - Likes/dislikes |     | - Context (time, |     | - Content-based  |
- | - Watch time     |     |   device, loc)   |     | - Deep learning  |
- | - Subscriptions  |     | - Interaction    |     |   (two-tower)    |
- +------------------+     +------------------+     +------------------+
-                                                          |
-                                                          v
-                                                   +------------------+
- +------------------+     +------------------+     | Candidate        |
- | Final Ranking    |<----| Re-Ranking       |<----| Generation       |
- |                  |     |                  |     |                  |
- | - Top N videos   |     | - Diversity      |     | - 1000 candidate |
- | - Personalized   |     | - Freshness      |     |   videos         |
- |   feed           |     | - Business rules |     | - From multiple  |
- | - Cached 5 min   |     | - Filter seen    |     |   sources        |
- +------------------+     +------------------+     +------------------+
+```mermaid
+flowchart LR
+    DC["Data Collection<br/>- Watch history, Search queries<br/>- Likes/dislikes, Watch time<br/>- Subscriptions"] --> FE["Feature Engineering<br/>- User &amp; Video features<br/>- Context (time, device, loc)<br/>- Interactions"]
+    FE --> MT["Model Training<br/>- Collaborative filtering<br/>- Content-based<br/>- Deep learning (two-tower)"]
+    MT --> CG["Candidate Generation<br/>- 1000 candidate videos<br/>- Multiple sources"]
+    CG --> RR["Re-Ranking<br/>- Diversity &amp; Freshness<br/>- Business rules, Filter seen"]
+    RR --> FR["Final Ranking<br/>- Top N personalized feed<br/>- Cached 5 min"]
 ```
 
 ### Collaborative Filtering
@@ -1160,43 +984,15 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### Two-Tower Deep Learning Model (Production Approach)
 
-```
- Two-Tower Architecture
- ============================================================================
-
-    User Tower                              Video Tower
- +-----------------+                    +-----------------+
- | User ID (embed) |                    | Video ID (embed)|
- | Watch history   |                    | Title (BERT)    |
- | Demographics    |                    | Category        |
- | Device/context  |                    | Tags            |
- +-----------------+                    | Duration        |
-         |                              | Upload date     |
-    +----v----+                         | Engagement stats|
-    | Dense   |                         +-----------------+
-    | Layers  |                                  |
-    | (256)   |                             +----v----+
-    | (128)   |                             | Dense   |
-    | (64)    |                             | Layers  |
-    +----+----+                             | (256)   |
-         |                                  | (128)   |
-    +----v----+                             | (64)    |
-    | User    |                             +----+----+
-    | Embed-  |                                  |
-    | ding    |                             +----v----+
-    | (64-dim)|                             | Video   |
-    +----+----+                             | Embed-  |
-         |                                  | ding    |
-         |                                  | (64-dim)|
-         |                                  +----+----+
-         |                                       |
-         +---> dot product / cosine sim <--------+
-                        |
-                   Score (0-1)
-
- Training: Optimize for watch time prediction
- Serving: Pre-compute video embeddings, compute user embedding in real-time
- ANN (Approximate Nearest Neighbor): Use FAISS/ScaNN for fast retrieval
+```mermaid
+flowchart TD
+    subgraph UT["User Tower"]
+        UIn["User ID (embed), Watch history,<br/>Demographics, Device/context"] --> UDense["Dense Layers<br/>(256 -> 128 -> 64)"] --> UEmb["User Embedding<br/>(64-dim)"]
+    end
+    subgraph VT["Video Tower"]
+        VIn["Video ID (embed), Title (BERT), Category,<br/>Tags, Duration, Upload date, Engagement"] --> VDense["Dense Layers<br/>(256 -> 128 -> 64)"] --> VEmb["Video Embedding<br/>(64-dim)"]
+    end
+    UEmb & VEmb --> Sim["Dot Product / Cosine Similarity<br/>(FAISS / ScaNN ANN Retrieval)"] --> Score["Score (0-1)<br/>Optimized for watch time prediction"]
 ```
 
 ### Feature Engineering Summary
@@ -1218,25 +1014,15 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### Search Architecture
 
-```
- Search Pipeline
- ============================================================================
-
- +--------+     +-----------+     +----------------+     +-------------+
- | Client |---->| API       |---->| Query          |---->| Elastic-    |
- | Query  |     | Gateway   |     | Understanding  |     | search      |
- |        |     |           |     | - Tokenize     |     | Cluster     |
- |        |     |           |     | - Spell check  |     |             |
- |        |     |           |     | - Synonyms     |     | Sharded by  |
- |        |     |           |     | - Expand query |     | video_id    |
- +--------+     +-----------+     +----------------+     +------+------+
-                                                                |
-                                                         +------v------+
- +--------+     +---------------+     +-------------+   | Raw Results |
- | Final  |<----| Personalized  |<----| Relevance   |<--| (top 1000)  |
- | Results|     | Re-ranking    |     | Scoring     |   |             |
- | (top20)|     |               |     |             |   +-------------+
- +--------+     +---------------+     +-------------+
+```mermaid
+flowchart LR
+    Client["Client Query"] --> GW["API Gateway"]
+    GW --> QU["Query Understanding<br/>- Tokenize, Spell check<br/>- Synonyms, Expand query"]
+    QU --> ES["Elasticsearch Cluster<br/>(Sharded by video_id)"]
+    ES --> Raw["Raw Results<br/>(top 1000)"]
+    Raw --> Rel["Relevance Scoring"]
+    Rel --> Pers["Personalized Re-ranking"]
+    Pers --> Final["Final Results<br/>(top 20)"]
 ```
 
 ### Elasticsearch Index Mapping
@@ -1418,50 +1204,12 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### View Counting at Scale
 
-```
- View Count Pipeline (handling 1B+ views/day)
- ============================================================================
-
- Problem: Direct database increment for each view = DB meltdown
-
- Solution: Multi-layer aggregation
-
- Layer 1: Client-side deduplication
- +--------+     Client debounces view events (1 per video per 30 seconds)
- | Client |     Filter out bot-like patterns
- +---+----+
-     |
- Layer 2: Edge aggregation
-     v
- +---+----------+     Count views per video per edge server
- | Edge Counter |     Flush every 10 seconds
- | (in-memory)  |     Local HyperLogLog for unique viewer estimation
- +---+----------+
-     |
- Layer 3: Kafka stream processing
-     v
- +---+----------+     Aggregate view events from all edges
- | Kafka Streams|     Windowed aggregation (1-minute tumbling windows)
- | / Flink      |     Deduplication using probabilistic data structures
- +---+----------+
-     |
- Layer 4: Batch update to database
-     v
- +---+----------+     Batch UPDATE every 1 minute
- | Cassandra    |     UPDATE video_stats SET view_count = view_count + delta
- | (counters)   |     Approximate count (within 2% accuracy)
- +---+----------+
-     |
- Layer 5: Cache for reads
-     v
- +---+----------+     Cache view counts in Redis (TTL: 60 seconds)
- | Redis Cache  |     Serve read requests from cache
- +---+----------+     Only go to Cassandra on cache miss
-
- Accuracy vs Performance Tradeoff:
- - Real-time display: approximate count (within ~2%), updated every minute
- - Analytics dashboard: exact count from batch processing (hourly)
- - Monetization: exact count from audited batch pipeline (daily)
+```mermaid
+flowchart TD
+    L1["Layer 1: Client-side Deduplication<br/>Debounce view events (1/video/30s), filter bot patterns"] --> L2["Layer 2: Edge Aggregation<br/>In-memory counter per edge server, flush every 10s, HyperLogLog unique viewers"]
+    L2 --> L3["Layer 3: Kafka Stream Processing<br/>Kafka Streams / Flink 1-min tumbling windows, deduplication"]
+    L3 --> L4["Layer 4: Batch Update to Database<br/>Cassandra counter update every 1 min (~2% accuracy)"]
+    L4 --> L5["Layer 5: Cache for Reads<br/>Redis Cache (TTL: 60s), fallback to Cassandra on miss"]
 ```
 
 ---
@@ -1579,58 +1327,21 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### Global Infrastructure
 
-```
- Global Deployment Architecture
- ============================================================================
+```mermaid
+flowchart TD
+    DNS["Global DNS (Route 53)<br/>GeoDNS / Latency-based"] --> US & EU & APAC
 
-                           +---------------------------+
-                           |    Global DNS (Route 53)  |
-                           |    GeoDNS / Latency-based |
-                           +-----+-----+-----+--------+
-                                 |     |     |
-                +----------------+     |     +----------------+
-                |                      |                      |
-                v                      v                      v
- +==========================+ +==========================+ +==========================+
- |    US-EAST Region        | |    EU-WEST Region        | |    APAC Region           |
- |                          | |                          | |                          |
- | +----+ +----+ +----+    | | +----+ +----+ +----+    | | +----+ +----+ +----+    |
- | |Edge| |Edge| |Edge|    | | |Edge| |Edge| |Edge|    | | |Edge| |Edge| |Edge|    |
- | |NYC | |ATL | |CHI |    | | |LON | |PAR | |FRA |    | | |TYO | |SIN | |SYD |    |
- | +----+ +----+ +----+    | | +----+ +----+ +----+    | | +----+ +----+ +----+    |
- |          |               | |          |               | |          |               |
- | +--------v----------+   | | +--------v----------+   | | +--------v----------+   |
- | | Regional CDN PoP  |   | | | Regional CDN PoP  |   | | | Regional CDN PoP  |   |
- | +--------+----------+   | | +--------+----------+   | | +--------+----------+   |
- |          |               | |          |               | |          |               |
- | +--------v----------+   | | +--------v----------+   | | +--------v----------+   |
- | | API Gateway + LB  |   | | | API Gateway + LB  |   | | | API Gateway + LB  |   |
- | +----+----+----+----+   | | +----+----+----+----+   | | +----+----+----+----+   |
- |      |    |    |    |    | |      |    |    |    |    | |      |    |    |    |    |
- | +--+ +--+ +--+ +--+    | | +--+ +--+ +--+ +--+    | | +--+ +--+ +--+ +--+    |
- | |Up| |St| |Sr| |Rc|    | | |Up| |St| |Sr| |Rc|    | | |Up| |St| |Sr| |Rc|    |
- | +--+ +--+ +--+ +--+    | | +--+ +--+ +--+ +--+    | | +--+ +--+ +--+ +--+    |
- |                          | |                          | |                          |
- | +--------------------+  | | +--------------------+  | | +--------------------+  |
- | | PostgreSQL Primary |  | | | PostgreSQL Replica  |  | | | PostgreSQL Replica  |  |
- | | + Cassandra        |  | | | + Cassandra         |  | | | + Cassandra         |  |
- | | + Redis Cluster    |  | | | + Redis Cluster     |  | | | + Redis Cluster     |  |
- | | + Elasticsearch    |  | | | + Elasticsearch     |  | | | + Elasticsearch     |  |
- | +--------------------+  | | +--------------------+  | | +--------------------+  |
- |                          | |                          | |                          |
- | +--------------------+  | | +--------------------+  | | +--------------------+  |
- | | S3 (Primary)       |  | | | S3 (Cross-Region   |  | | | S3 (Cross-Region   |  |
- | | + Transcode Fleet  |  | | |    Replication)     |  | | |    Replication)     |  |
- | +--------------------+  | | +--------------------+  | | +--------------------+  |
- +==========================+ +==========================+ +==========================+
-                                         |
-                                         v
-                              +---------------------+
-                              | Cross-Region Sync   |
-                              | - DB replication    |
-                              | - S3 CRR            |
-                              | - Event bus (Kafka) |
-                              +---------------------+
+    subgraph US["US-EAST Region (Primary)"]
+        US_Stack["Edge PoPs (NYC, ATL, CHI) -> Regional CDN PoP -> API GW + LB<br/>-> Services (Upload, Stream, Search, Rec) -> PostgreSQL Primary, Cassandra, Redis, ES<br/>-> S3 Primary + Transcode Fleet"]
+    end
+    subgraph EU["EU-WEST Region"]
+        EU_Stack["Edge PoPs (LON, PAR, FRA) -> Regional CDN PoP -> API GW + LB<br/>-> Services (Upload, Stream, Search, Rec) -> PostgreSQL Replica, Cassandra, Redis, ES<br/>-> S3 Cross-Region Replication"]
+    end
+    subgraph APAC["APAC Region"]
+        AP_Stack["Edge PoPs (TYO, SIN, SYD) -> Regional CDN PoP -> API GW + LB<br/>-> Services (Upload, Stream, Search, Rec) -> PostgreSQL Replica, Cassandra, Redis, ES<br/>-> S3 Cross-Region Replication"]
+    end
+
+    US & EU & APAC <--> Sync["Cross-Region Sync<br/>DB replication, S3 CRR, Event bus (Kafka)"]
 ```
 
 ### Deployment Strategy
@@ -1650,88 +1361,25 @@ device support (iOS, Android, smart TVs) and works seamlessly with HTTP-based CD
 
 ### How to handle live streaming?
 
-```
- Live Streaming Architecture
- ============================================================================
-
- +----------+     +----------------+     +------------------+
- | Streamer |---->| Ingest Server  |---->| Transcoding      |
- | (OBS/    |RTMP | (accept RTMP/  |     | (real-time)      |
- |  mobile) |SRT  |  SRT streams)  |     | - Lower latency  |
- +----------+     +----------------+     | - Fewer quality   |
-                                          |   levels (3-4)   |
-                                          +--------+---------+
-                                                   |
-                                          +--------v---------+
-                                          | Packager          |
-                                          | - Segment into    |
-                                          |   2-6 sec chunks |
-                                          | - Generate live   |
-                                          |   m3u8 manifest  |
-                                          +--------+---------+
-                                                   |
-                                          +--------v---------+
-                                          | CDN (LL-HLS)     |
-                                          | - Low-latency HLS|
-                                          | - 2-5 sec delay  |
-                                          | - Partial segment|
-                                          |   delivery       |
-                                          +--------+---------+
-                                                   |
-                                          +--------v---------+
-                                          | Viewers (millions)|
-                                          +------------------+
-
- Key Differences from VOD:
- - Real-time transcoding (no time to optimize encoding)
- - Sliding window manifest (not full playlist)
- - Lower segment duration (2-6 sec vs 10 sec for VOD)
- - DVR functionality: keep last 2-4 hours for rewind
- - Chat service running alongside (WebSocket-based)
- - After stream ends: create VOD from recording
+```mermaid
+flowchart LR
+    Streamer["Streamer<br/>(OBS / Mobile)"] -->|"RTMP / SRT"| Ingest["Ingest Server<br/>(Accept RTMP/SRT)"]
+    Ingest --> Trans["Real-Time Transcoding<br/>- Lower latency<br/>- 3-4 quality levels"]
+    Trans --> Pkg["Packager<br/>- 2-6s chunks<br/>- Live m3u8 manifest"]
+    Pkg --> CDN["CDN (LL-HLS)<br/>- 2-5s delay<br/>- Partial segment delivery"]
+    CDN --> Viewers["Viewers (millions)"]
 ```
 
 ### How to implement video copyright detection?
 
-```
- Copyright Detection Pipeline
- ============================================================================
-
- 1. Content ID System (like YouTube's):
-    - Rights holders upload reference files (audio + video fingerprints)
-    - Every uploaded video is fingerprinted and compared against reference DB
-
- 2. Detection Flow:
-
- +----------+     +------------------+     +------------------+
- | Uploaded |---->| Audio Finger-    |---->| Video Finger-    |
- | Video    |     | printing         |     | printing         |
- +----------+     | (Chromaprint/    |     | (perceptual hash,|
-                  |  Dejavu)         |     |  scene detection)|
-                  +--------+---------+     +--------+---------+
-                           |                        |
-                  +--------v------------------------v---------+
-                  |           Matching Engine                  |
-                  |  Compare against reference DB              |
-                  |  (billions of fingerprints)                |
-                  |  Locality-Sensitive Hashing for speed      |
-                  +---------------------+---------------------+
-                                        |
-                            +-----------v-----------+
-                            |   Match Found?        |
-                            +---+---------------+---+
-                                |               |
-                            YES |               | NO
-                                v               v
-                  +------------------+  +------------------+
-                  | Apply Policy:    |  | Allow video      |
-                  | - Block upload   |  | (continue normal |
-                  | - Monetize for   |  |  processing)     |
-                  |   rights holder  |  +------------------+
-                  | - Allow with ads |
-                  +------------------+
-
- 3. Ongoing monitoring: periodic re-scan as reference DB grows
+```mermaid
+flowchart TD
+    Up["Uploaded Video"] --> Audio["Audio Fingerprinting<br/>(Chromaprint / Dejavu)"]
+    Audio --> Video["Video Fingerprinting<br/>(Perceptual hash, scene detection)"]
+    Audio & Video --> Match["Matching Engine<br/>Compare against reference DB (billions of fingerprints via LSH)"]
+    Match --> Found{"Match Found?"}
+    Found -->|"YES"| Policy["Apply Policy:<br/>- Block upload<br/>- Monetize for rights holder<br/>- Allow with ads"]
+    Found -->|"NO"| Allow["Allow video<br/>(continue normal processing)"]
 ```
 
 ### How to handle viral videos (sudden traffic spike)?

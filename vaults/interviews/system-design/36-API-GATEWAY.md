@@ -390,126 +390,33 @@ TTL:          5 seconds
 
 ## 4. High-Level Architecture
 
-```
-+------------------+         +------------------+         +------------------+
-|   Client Apps    |         |   Partner APIs   |         |  Internal Tools  |
-| (Web/Mobile/CLI) |         | (3rd Party OAuth)|         |  (Admin Portal)  |
-+--------+---------+         +--------+---------+         +--------+---------+
-         |                            |                            |
-         |    HTTPS / WebSocket       |    HTTPS                   |  HTTPS
-         +----------------------------+----------------------------+
-                                      |
-              +------------------------+------------------------+
-              |       Global Load Balancer / Anycast DNS        |
-              |     (AWS Route 53 / Cloudflare / GeoDNS)        |
-              +------------------------+------------------------+
-                                       |
-         +-----------------------------+-----------------------------+
-         |                             |                             |
-+--------+--------+          +---------+-------+          +---------+-------+
-|  API Gateway    |          |  API Gateway    |          |  API Gateway    |
-|  Region US-E    |          |  Region EU-W    |          |  Region AP-SE   |
-|  (Kong/Nginx)   |          |  (Kong/Nginx)   |          |  (Kong/Nginx)   |
-|  10 nodes       |          |  10 nodes       |          |  10 nodes       |
-+--------+--------+          +---------+-------+          +---------+-------+
-         |                             |                             |
-         |  Plugin Chain per Request   |                             |
-         |  [AuthN] --> [AuthZ]        |                             |
-         |  --> [RateLimit]            |                             |
-         |  --> [Transform]            |                             |
-         |  --> [Route]                |                             |
-         |  --> [LoadBalance]          |                             |
-         +-----------------------------+-----------------------------+
-                                       |
-              +------------------------+------------------------+
-              |         Internal Service Mesh (Istio)           |
-              |         Data Plane: Envoy Sidecars              |
-              +---+-----------+-----------+-----------+---------+
-                  |           |           |           |
-         +--------+--+ +------+----+ +----+------+ +--+--------+
-         | Orders    | | Payments  | | Users     | | Catalog   |
-         | Service   | | Service   | | Service   | | Service   |
-         | [Envoy]   | | [Envoy]   | | [Envoy]   | | [Envoy]   |
-         | [App :80] | | [App :80] | | [App :80] | | [App :80] |
-         +-----------+ +-----------+ +-----------+ +-----------+
-                  |           |           |           |
-              +---+-----------+-----------+-----------+---------+
-              |          Shared Infrastructure                   |
-              |                                                  |
-         +----+----+   +----------+   +---------+   +---------+ |
-         |  Redis  |   |PostgreSQL|   |  Kafka  |   |  SPIRE  | |
-         | Cluster |   | (Config) |   |(Events) |   |(Certs)  | |
-         +---------+   +----------+   +---------+   +---------+ |
-              +---------------------------------------------------+
-
-Control Plane (separate cluster):
-+--------------------------------------------------+
-|  Istio Control Plane                            |
-|  +-----------+  +----------+  +------------+   |
-|  |  Pilot    |  |  Citadel |  |  Galley    |   |
-|  | (xDS/LDS/ |  | (mTLS    |  | (Config    |   |
-|  |  RDS/CDS) |  |  certs)  |  |  Validate) |   |
-|  +-----------+  +----------+  +------------+   |
-|                                                  |
-|  Kong Control Plane                             |
-|  +-----------+  +----------+  +------------+   |
-|  |  Manager  |  |  Portal  |  |  Analytics |   |
-|  | (Admin    |  | (Dev     |  | (Vitals)   |   |
-|  |  API)     |  |  Portal) |  |            |   |
-|  +-----------+  +----------+  +------------+   |
-+--------------------------------------------------+
+```mermaid
+flowchart TD
+    Clients["Client Apps<br/>(Web/Mobile/CLI)"] & Partners["Partner APIs<br/>(3rd Party OAuth)"] & Internal["Internal Tools<br/>(Admin Portal)"] -->|"HTTPS / WebSocket"| GLB["Global Load Balancer / Anycast DNS<br/>(AWS Route 53 / Cloudflare / GeoDNS)"]
+    GLB --> GW_US["API Gateway Region US-E<br/>(Kong/Nginx, 10 nodes)"] & GW_EU["API Gateway Region EU-W<br/>(Kong/Nginx, 10 nodes)"] & GW_AP["API Gateway Region AP-SE<br/>(Kong/Nginx, 10 nodes)"]
+    GW_US & GW_EU & GW_AP -->|"Plugin Chain: [AuthN] -> [AuthZ] -> [RateLimit] -> [Transform] -> [Route] -> [LoadBalance]"| Mesh["Internal Service Mesh (Istio)<br/>Data Plane: Envoy Sidecars"]
+    Mesh --> Ord["Orders Service<br/>[Envoy + App :80]"] & Pay["Payments Service<br/>[Envoy + App :80]"] & Usr["Users Service<br/>[Envoy + App :80]"] & Cat["Catalog Service<br/>[Envoy + App :80]"]
+    Ord & Pay & Usr & Cat --> Shared["Shared Infrastructure<br/>Redis Cluster | PostgreSQL (Config) | Kafka (Events) | SPIRE (Certs)"]
+    subgraph CP["Control Plane (Separate Cluster)"]
+        IstioCP["Istio Control Plane: Pilot (xDS) | Citadel (mTLS certs) | Galley (Config Validate)"]
+        KongCP["Kong Control Plane: Manager (Admin API) | Portal (Dev Portal) | Analytics (Vitals)"]
+    end
 ```
 
 ### Request Flow Through Gateway
 
-```
-Client                Gateway Node             Upstream Service
-  |                        |                         |
-  |--- HTTPS request ------>|                         |
-  |                        |                         |
-  |                   [1] TLS Termination             |
-  |                   [2] Connection Pooling          |
-  |                   [3] Request Parsing             |
-  |                        |                         |
-  |                   +----+----+                    |
-  |                   | Plugin  |                    |
-  |                   |  Chain  |                    |
-  |                   +----+----+                    |
-  |                        |                         |
-  |               [4] AuthN (API Key / JWT)           |
-  |                        |                         |
-  |               [5] Rate Limit Check               |
-  |                   (Redis INCR + TTL)             |
-  |                        |                         |
-  |               [6] Request Transform              |
-  |                   (Add headers, rewrite)         |
-  |                        |                         |
-  |               [7] Route Matching                 |
-  |                   (Trie lookup O(k))             |
-  |                        |                         |
-  |               [8] Load Balance                   |
-  |                   (pick target)                  |
-  |                        |                         |
-  |               [9] Circuit Breaker Check          |
-  |                        |                         |
-  |                        |--- HTTP/2 + mTLS ------->|
-  |                        |                         |
-  |                        |<-- Response ------------|
-  |                        |                         |
-  |              [10] Response Transform             |
-  |              [11] Metrics Emit                   |
-  |              [12] Trace Span Close               |
-  |                        |                         |
-  |<--- HTTPS response -----|                         |
-  |                        |                         |
+```mermaid
+sequenceDiagram
+    participant C as "Client"
+    participant GW as "Gateway Node"
+    participant US as "Upstream Service"
 
-Typical timing budget (p99 < 5ms gateway overhead):
-  TLS resume:           ~0.1ms (session ticket)
-  Plugin chain:         ~1.0ms (auth + rate limit)
-  Route match:          ~0.1ms (trie)
-  Upstream connect:     ~0.2ms (connection pool, reuse)
-  Response processing:  ~0.1ms
-  Total overhead:       ~1.5ms p50 / ~4ms p99
+    C->>GW: HTTPS Request
+    Note over GW: [1] TLS Termination<br/>[2] Connection Pooling<br/>[3] Request Parsing<br/>[4] AuthN (API Key / JWT)<br/>[5] Rate Limit Check (Redis INCR + TTL)<br/>[6] Request Transform (Add headers, rewrite)<br/>[7] Route Matching (Trie lookup O(k))<br/>[8] Load Balance (pick target)<br/>[9] Circuit Breaker Check
+    GW->>US: HTTP/2 + mTLS
+    US-->>GW: Response
+    Note over GW: [10] Response Transform<br/>[11] Metrics Emit<br/>[12] Trace Span Close
+    GW-->>C: HTTPS Response (~1.5ms p50 / ~4ms p99 overhead)
 ```
 
 ---
@@ -1012,70 +919,13 @@ gRPC Status → HTTP Status Mapping:
 
 ### State Machine
 
-```
-Circuit Breaker State Machine:
-
-       All requests pass through
-            (monitoring)
-+-----------------------------------+
-|                                   |
-|           CLOSED                  |
-|     (Normal Operation)            |
-|                                   |
-+-----------------------------------+
-          |           ^
-          |           |
-   failure_threshold  | success in
-   exceeded           | HALF_OPEN
-          |           |
-          v           |
-+-----------------------------------+
-|                                   |
-|            OPEN                   |
-|  (Fail Fast - reject all          |
-|   requests immediately)           |
-|                                   |
-+-----------------------------------+
-          |
-          | reset_timeout elapsed
-          | (e.g., 30 seconds)
-          |
-          v
-+-----------------------------------+
-|                                   |
-|          HALF-OPEN                |
-|  (Allow 1 probe request;          |
-|   success → CLOSED                |
-|   failure → OPEN again)           |
-|                                   |
-+-----------------------------------+
-
-Configuration Parameters:
-  failure_threshold: 50%      -- error rate to open
-  min_requests:      20       -- minimum requests before checking
-  evaluation_window: 10s      -- rolling window for error rate
-  open_duration:     30s      -- how long to stay open
-  half_open_probes:  3        -- requests to allow in half-open
-
-Circuit Breaker per Target:
-  service: orders
-  instances:
-    10.0.1.5:8080  → CLOSED  (errors: 2/100 = 2%)
-    10.0.1.6:8080  → OPEN    (errors: 60/100 = 60%) ← isolated!
-    10.0.1.7:8080  → CLOSED  (errors: 1/100 = 1%)
-
-When target is OPEN:
-  → Remove from load balancer pool
-  → Route to remaining healthy instances
-  → Probe every 30s
-  → Re-add on success
-
-Bulkhead Pattern (companion to circuit breaker):
-  Limit concurrent connections per upstream:
-    orders-service: max 500 concurrent requests
-    payments-service: max 100 concurrent requests
-  If limit exceeded: return 503 immediately (fail fast)
-  Prevents one slow service from exhausting all gateway threads
+```mermaid
+stateDiagram-v2
+    [*] --> CLOSED
+    CLOSED --> OPEN : failure_threshold exceeded (50% over 10s, min 20 reqs)
+    OPEN --> HALF_OPEN : reset_timeout elapsed (30s)
+    HALF_OPEN --> CLOSED : probe requests succeed (3 probes)
+    HALF_OPEN --> OPEN : probe request fails
 ```
 
 ---
@@ -1347,55 +1197,24 @@ Gateway Consul Integration:
 
 ### Data Plane vs. Control Plane
 
-```
-Service Mesh Architecture:
-
-+======================================================================+
-|                         CONTROL PLANE                               |
-|                                                                      |
-|  +----------------+  +------------------+  +--------------------+   |
-|  | Pilot (xDS)    |  | Citadel (certs)  |  | Galley (config)    |   |
-|  |                |  |                  |  |                    |   |
-|  | Pushes:        |  | Issues SVID      |  | Validates and      |   |
-|  |  - LDS         |  | (SPIFFE certs)   |  | ingests config     |   |
-|  |  - RDS         |  | to every         |  | from k8s API       |   |
-|  |  - CDS         |  | workload         |  |                    |   |
-|  |  - EDS         |  |                  |  |                    |   |
-|  +-------+--------+  +--------+---------+  +--------------------+   |
-|          | xDS over gRPC      | cert push                           |
-+======================================================================+
-           |                    |
-           | xDS stream         | cert delivery (SDS)
-           |                    |
-+======================================================================+
-|                          DATA PLANE                                 |
-|                                                                      |
-|  Pod A                         Pod B                                |
-|  +-------------------------+   +-------------------------+          |
-|  |  +-------------------+  |   |  +-------------------+  |          |
-|  |  |   App Container   |  |   |  |   App Container   |  |          |
-|  |  |   :8080           |  |   |  |   :8080           |  |          |
-|  |  +---+--+------------+  |   |  +---+--+------------+  |          |
-|  |      |  ^               |   |      |  ^               |          |
-|  |  loopback (iptables     |   |  loopback (iptables     |          |
-|  |  redirects all traffic) |   |  redirects all traffic) |          |
-|  |      |  |               |   |      |  |               |          |
-|  |  +---v--+------------+  |   |  +---v--+------------+  |          |
-|  |  | Envoy Sidecar     |  |   |  | Envoy Sidecar     |  |          |
-|  |  | :15001 (outbound) |  |   |  | :15001 (outbound) |  |          |
-|  |  | :15006 (inbound)  |  |   |  | :15006 (inbound)  |  |          |
-|  |  | :15090 (metrics)  |  |   |  | :15090 (metrics)  |  |          |
-|  |  +---+---------------+  |   |  +---+---------------+  |          |
-|  +------|------------------+   +------|------------------+          |
-|         |  mTLS (SPIFFE)              |                             |
-|         +-----------------------------+                             |
-+======================================================================+
-
-Traffic interception (iptables):
-  All outbound traffic redirected to Envoy :15001
-  All inbound traffic redirected to Envoy :15006
-  Envoy applies policy BEFORE forwarding to app
-  App never touches the network directly
+```mermaid
+flowchart TD
+    subgraph Control["CONTROL PLANE"]
+        Pilot["Pilot (xDS)<br/>Pushes LDS, RDS, CDS, EDS"]
+        Citadel["Citadel (certs)<br/>Issues SPIFFE SVID certs"]
+        Galley["Galley (config)<br/>Validates &amp; ingests K8s config"]
+    end
+    subgraph Data["DATA PLANE (iptables redirects all traffic via loopback)"]
+        subgraph PodA["Pod A"]
+            AppA["App Container (:8080)"] <-->|"loopback"| EnvA["Envoy Sidecar<br/>:15001 (out) | :15006 (in) | :15090 (metrics)"]
+        end
+        subgraph PodB["Pod B"]
+            AppB["App Container (:8080)"] <-->|"loopback"| EnvB["Envoy Sidecar<br/>:15001 (out) | :15006 (in) | :15090 (metrics)"]
+        end
+        EnvA <-->|"mTLS (SPIFFE)"| EnvB
+    end
+    Pilot -->|"xDS over gRPC"| EnvA & EnvB
+    Citadel -->|"SDS cert delivery"| EnvA & EnvB
 ```
 
 ### Envoy xDS API

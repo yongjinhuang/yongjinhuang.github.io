@@ -73,7 +73,7 @@ flowchart TD
     WaitingRoom -->|中签获准购买| LuaReserve["Redis Lua 原子预占库存<br/>(校验限购 -> DECR 库存 -> 设 Cart-Hold TTL=90s)"]
 
     LuaReserve -->|可用库存 == 0| Waitlist
-    LuaReserve -->|锁定成功 (reservation_id)| AsyncOrder["写入异步订单队列 & 立即执行预授权实扣"]
+    LuaReserve -->|"锁定成功 (reservation_id)"| AsyncOrder["写入异步订单队列 & 立即执行预授权实扣"]
 
     AsyncOrder -->|TTL内扣款成功| CommitDB["异步落盘关系型数据库 & 核销租约"]
     AsyncOrder -->|扣款失败 或 90秒超时| ExpirySweeper["TTL 巡检器回收超时库存<br/>(INCR 回滚库存 -> 触发下一轮定波补货)"]
