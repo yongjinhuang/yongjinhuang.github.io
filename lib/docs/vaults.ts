@@ -10,9 +10,10 @@ const VAULT_META: Record<string, { label: string; order: number }> = {
   'backend-cloud': { label: 'Backend, Cloud & Infra', order: 3 },
   'product-growth': { label: 'Product, Frontend & Career', order: 4 },
   'frontier-tech': { label: 'Frontier & Specialized Tech', order: 5 },
-  'life-wellness': { label: 'Life OS: Health, Mind & Living', order: 6 },
-  'creator-studio': { label: 'Creator Studio: Camera & Vlog', order: 7 },
-  blog: { label: 'Blog & Notes', order: 8 },
+  'sciences-and-arts': { label: 'Science, Math & Music Foundations', order: 6 },
+  'life-wellness': { label: 'Life OS: Health, Mind & Living', order: 7 },
+  'creator-studio': { label: 'Creator Studio: Camera & Vlog', order: 8 },
+  blog: { label: 'Blog & Notes', order: 9 },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -76,10 +77,22 @@ const CATEGORY_LABELS: Record<string, string> = {
   web3: 'Web3 & Smart Contracts',
   'web-game-dev': 'Web Game Development',
 
+  // Science, Math & Music Foundations
+  'mathematics-for-engineers': 'Applied Mathematics & Probability',
+  'physics-of-everyday-world': 'Physics of the Everyday & Digital World',
+  'chemistry-of-daily-life': 'Chemistry of Materials, Food & Life',
+  'biology-genetics-and-evolution': 'Biology, Genetics, Immunity & Evolution',
+  'music-theory-and-hiphop-science':
+    'Music Theory, Acoustics & Hip-Hop Science',
+  'economics-logic-and-world-models': 'Economics, Game Theory & World Models',
+
   // Life OS: Health, Mind & Living
+  'live-younger-enjoy-life': 'Live Younger & Enjoy Life (32+ 少年感)',
+  'smart-life-hacks-and-deals': 'Smart Flights, Deals & Money-Saving Apps',
   'body-health-longevity': 'Human Body, Health & Longevity (32+)',
   'intimacy-and-reproductive-health': 'Intimacy, Female Anatomy & Sex Ed',
   'psychology-positive-mindset': 'Psychology, Resilience & Mindset',
+  'mens-ootd-style-guide': "Men's OOTD, Hip-Hop & Style System",
   'chinese-cooking': 'Chinese Cooking Mastery (中餐烹饪)',
   'self-care-smart-buying': 'Self-Care & High-ROI Buying Guide',
   'going-abroad-guide': 'Going Abroad Guide (中国人出国全攻略)',

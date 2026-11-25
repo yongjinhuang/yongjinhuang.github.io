@@ -190,6 +190,7 @@ flowchart TD
     Start["00-README.md<br/>2027 Anti-Fragile Career Strategy"] --> M1["01-GLOBAL-MNC-AND-USD-REMOTE-PLAYBOOK.md<br/>Foreign MNCs, USD Remote Sourcing, Tax/FX and Tech Visas"]
     M1 --> M2["02-STAFF-ENGLISH-COMMUNICATION-AND-RFCS.md<br/>2-Page RFCs, Trade-off Pushback, BLUF and Cross-Timezone Leadership"]
     M2 --> M3["03-AI-SOLOPRENEUR-GLOBAL-SAAS-MONETIZATION.md<br/>B2B Niche Selection, Lean AI Stack, Global Payments and SaaS Math"]
+    M1 --> M4["04-WORKING-ABROAD-OPPORTUNITY-RADAR.md<br/>6 Overseas Hiring Waves, EU/UAE/SG/JP Geo-Fit and Age-32 Window"]
 ```
 
 ### Complete Vault Table of Contents
@@ -202,3 +203,5 @@ flowchart TD
    - Eliminating seniority leaks in engineering English, complete 2-page production RFC/ADR template, exact phrasebooks for architectural disagreement and scope pushback, Minto Pyramid / BLUF executive updates, and Shanghai-to-US/EU async collaboration protocols.
 4. **[03-AI-SOLOPRENEUR-GLOBAL-SAAS-MONETIZATION.md](03-AI-SOLOPRENEUR-GLOBAL-SAAS-MONETIZATION.md) — AI-Native Solopreneurship: Global Micro-SaaS & Monetization**
    - B2B workflow niche validation vs wrapper traps, lean Next.js + Supabase + FastAPI zero-ops architecture, idempotent LLM credit ledger code, cross-border entity & payment setup (Lemon Squeezy / Paddle MoR vs HK Limited vs Stripe Atlas US LLC + Form 5472 compliance), pSEO + Reddit/X launch loops, and SaaS churn/LTV mathematics.
+5. **[04-WORKING-ABROAD-OPPORTUNITY-RADAR.md](04-WORKING-ABROAD-OPPORTUNITY-RADAR.md) — Working Abroad as a Chinese Engineer: 2027–2030 Opportunity Radar & Geo-Strategy**
+   - Your 4 unfair profile cards (Top-100 SYSU degree, ex-Shopee + Apple AI infra pedigree), age 32–34 visa clocks, the 6 real overseas hiring waves (Globalizing Chinese Tech, UAE Tax-Free Sovereign AI & 10-Yr Golden Visa, Amsterdam/EU Sponsor Hubs near Morocco, Remote -> Spain DNV, MNC L-1B, Tokyo English-Track), and monthly job-board radar.

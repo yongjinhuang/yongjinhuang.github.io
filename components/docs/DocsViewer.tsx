@@ -146,12 +146,21 @@ export function DocsViewer({ vaults, vaultData }: DocsViewerProps) {
     [activeTab, splitSlug, setActiveTab, setSplitSlug]
   );
 
+  const vaultDocCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        vaults.map((v) => [v.name, vaultData[v.name]?.files.length ?? 0])
+      ),
+    [vaults, vaultData]
+  );
+
   const sidebarProps = {
     categories,
     selectedSlug: activeTab,
     onSelect: handleFileSelect,
     vaults,
     currentVault: vault,
+    vaultDocCounts,
     onVaultChange: (vaultName: string) => {
       const firstSlug = vaultData[vaultName]?.files[0]?.slug ?? '';
       setVault(vaultName, firstSlug);

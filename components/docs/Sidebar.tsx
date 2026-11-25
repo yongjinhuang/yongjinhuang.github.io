@@ -4,8 +4,8 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import type { InterviewCategory, VaultInfo } from '@/types';
 import { SidebarItem } from './SidebarItem';
+import { VaultPicker } from './VaultPicker';
 import {
-  HiArchiveBox,
   HiChevronDown,
   HiChevronRight,
   HiFolder,
@@ -27,6 +27,7 @@ interface SidebarProps {
   readonly onSelect: (slug: string) => void;
   readonly vaults?: readonly VaultInfo[];
   readonly currentVault?: string;
+  readonly vaultDocCounts?: Readonly<Record<string, number>>;
   readonly onVaultChange?: (vault: string) => void;
 }
 
@@ -36,6 +37,7 @@ export function Sidebar({
   onSelect,
   vaults,
   currentVault = 'interviews',
+  vaultDocCounts,
   onVaultChange,
 }: SidebarProps) {
   // Default: ONLY expand the category that contains the active file!
@@ -352,44 +354,12 @@ export function Sidebar({
       {/* Fixed Top Controls: Vault + Search + Actions */}
       <div className="p-3 border-b border-gray-200/80 dark:border-white/10 space-y-2.5 shrink-0">
         {vaults && vaults.length > 1 && onVaultChange && (
-          <div>
-            <div className="flex items-center gap-1.5 mb-1 px-1">
-              <HiArchiveBox
-                aria-hidden="true"
-                className="w-3.5 h-3.5 text-accent"
-              />
-              <label
-                htmlFor="docs-vault-select"
-                className="text-[10px] font-mono font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500"
-              >
-                Vault
-              </label>
-            </div>
-            <select
-              id="docs-vault-select"
-              value={currentVault}
-              onChange={(e) => onVaultChange(e.target.value)}
-              aria-label="Select documentation vault"
-              className={cn(
-                'w-full px-2.5 py-1.5 text-xs font-semibold rounded-md',
-                'bg-gray-100 dark:bg-white/5',
-                'border border-gray-200 dark:border-white/10',
-                'text-gray-800 dark:text-gray-200',
-                'focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent',
-                'transition-colors duration-200 cursor-pointer'
-              )}
-            >
-              {vaults.map((v) => (
-                <option
-                  key={v.name}
-                  value={v.name}
-                  className="bg-white dark:bg-[#121218] text-gray-900 dark:text-gray-100"
-                >
-                  {v.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <VaultPicker
+            vaults={vaults}
+            currentVault={currentVault}
+            vaultDocCounts={vaultDocCounts}
+            onChange={onVaultChange}
+          />
         )}
 
         {/* Search input */}
