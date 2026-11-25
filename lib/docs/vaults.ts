@@ -4,15 +4,49 @@ import type { InterviewFile, InterviewCategory, VaultInfo } from '@/types';
 
 const VAULTS_DIR = path.join(process.cwd(), 'public', 'vaults');
 
+const VAULT_META: Record<string, { label: string; order: number }> = {
+  interviews: { label: 'Technical Interviews', order: 1 },
+  'ai-agents': { label: 'AI, LLM & Agent Systems', order: 2 },
+  'backend-cloud': { label: 'Backend, Cloud & Infra', order: 3 },
+  'product-growth': { label: 'Product, Frontend & Career', order: 4 },
+  'frontier-tech': { label: 'Frontier & Specialized Tech', order: 5 },
+  'life-wellness': { label: 'Life OS: Health, Mind & Living', order: 6 },
+  'creator-studio': { label: 'Creator Studio: Camera & Vlog', order: 7 },
+  blog: { label: 'Blog & Notes', order: 8 },
+};
+
 const CATEGORY_LABELS: Record<string, string> = {
-  general: 'General',
+  // Technical Interviews
+  'ai-staff-interview-prep': '2027 AI & Staff Interview Prep',
+  general: 'Project Deep-Dives & HR Prep',
   'system-design': 'System Design',
-  'web-business': 'Web Business',
   'system-design-zh': 'System Design (中文)',
-  'web-business-zh': 'Web Business (中文)',
-  frontend: 'Frontend',
-  fullstack: 'Full-Stack',
-  behavioral: 'Behavioral',
+  'data-model': 'System Design Data Models',
+  'low-level-design': 'Low-Level Design',
+  dsa: 'DSA (Python)',
+  'leetcode-hot-100': 'LeetCode Hot 100',
+  behavioral: 'Behavioral (STAR)',
+  'staff-leadership': 'Staff+ Leadership',
+  shopback: 'Company Prep - ShopBack',
+  'shopback-zh': 'Company Prep - ShopBack (中文)',
+  whatnot: 'Company Prep - Whatnot',
+
+  // AI, LLM & Agent Systems
+  'llm-inference-gateway': 'LLM Inference, Gateways & FinOps',
+  'agent-sandboxes-evals-security': 'Durable Agents, MCP, Sandboxes & Security',
+  'agentic-engineering': 'Agentic Engineering',
+  'ai-engineering': 'AI/ML Engineering',
+  'ai-coding-tools': 'AI Coding Agents & Workflows',
+  'doc-processing': 'Document Processing & Multimodal RAG',
+
+  // Backend, Cloud & Infra
+  'database-runtime-internals': 'DB Internals, pgvector & Runtime Perf',
+  'modern-backend': 'Modern Backend Architecture',
+  concurrency: 'Concurrency & Multithreading',
+  'observability-monitoring': 'Observability & OpenTelemetry',
+  'platform-engineering': 'Platform Engineering & IDPs',
+  'data-engineering': 'Data & Streaming Engineering',
+  fullstack: 'Full-Stack Foundations',
   'cloud/aws': 'Cloud - AWS',
   'cloud/terraform': 'Cloud - Terraform',
   'cloud/cloudflare': 'Cloud - Cloudflare',
@@ -22,30 +56,38 @@ const CATEGORY_LABELS: Record<string, string> = {
   'cloud/gcp': 'Cloud - GCP',
   'cloud/azure': 'Cloud - Azure',
   'cloud/operations': 'Cloud - Operations',
-  dsa: 'DSA (Python)',
-  'ai-engineering': 'AI/ML Engineering',
-  'low-level-design': 'Low-Level Design',
-  'modern-frontend': 'Modern Frontend 2026',
-  'staff-leadership': 'Staff+ Leadership',
-  concurrency: 'Concurrency & Multithreading',
   'cloud/docker': 'Cloud - Docker',
   'cloud/kubernetes': 'Cloud - Kubernetes',
-  'modern-backend': 'Modern Backend 2026',
+
+  // Product, Frontend & Career
+  'career-global-solopreneur': '2027 Career Moat, Global & Solopreneur',
+  frontend: 'Frontend Core',
+  'modern-frontend': 'Modern Frontend',
+  'ui-ux-design': 'UI/UX & Design Systems',
+  'web-business': 'Web Business Domains',
+  'web-business-zh': 'Web Business Domains (中文)',
+
+  // Frontier & Specialized Tech
+  'cpu-gpu-programming': 'CPU/GPU & CUDA Programming',
   'quant-trading': 'Quantitative Trading',
-  'cpu-gpu-programming': 'CPU/GPU Programming',
-  web3: 'Web3 Development',
-  lifestyle: 'Lifestyle & Content Creation',
-  'doc-processing': 'Document Processing',
+  'audio-video-rtc': 'Audio/Video & WebRTC',
   robotics: 'Robotics & Control Systems',
   'embedded-iot': 'Embedded Systems & IoT',
-  'data-model': 'Data Model',
+  web3: 'Web3 & Smart Contracts',
   'web-game-dev': 'Web Game Development',
-  'agentic-engineering': 'Agentic Engineering',
-  'audio-video-rtc': 'Audio/Video/RTC',
-  'leetcode-hot-100': 'LeetCode Hot 100',
-  'ui-ux-design': 'UI/UX Design',
-  shopback: 'ShopBack',
-  whatnot: 'Whatnot',
+
+  // Life OS: Health, Mind & Living
+  'body-health-longevity': 'Human Body, Health & Longevity (32+)',
+  'intimacy-and-reproductive-health': 'Intimacy, Female Anatomy & Sex Ed',
+  'psychology-positive-mindset': 'Psychology, Resilience & Mindset',
+  'chinese-cooking': 'Chinese Cooking Mastery (中餐烹饪)',
+  'self-care-smart-buying': 'Self-Care & High-ROI Buying Guide',
+  'going-abroad-guide': 'Going Abroad Guide (中国人出国全攻略)',
+
+  // Creator Studio: Camera & Vlog
+  'iphone-osmo-pocket3': 'iPhone Pro & Osmo Pocket 3 Tricks',
+  'personal-vlog-editing': 'Personal Vlogging, Editing & Archive',
+  lifestyle: 'Video Production & Creator Craft',
 };
 
 function formatLabel(slug: string): string {
@@ -107,9 +149,15 @@ export function getAvailableVaults(): readonly VaultInfo[] {
       .filter((e) => e.isDirectory())
       .map((e) => ({
         name: e.name,
-        label: formatLabel(e.name),
+        label: VAULT_META[e.name]?.label ?? formatLabel(e.name),
       }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+      .sort((a, b) => {
+        const orderA = VAULT_META[a.name]?.order ?? 999;
+        const orderB = VAULT_META[b.name]?.order ?? 999;
+        return orderA !== orderB
+          ? orderA - orderB
+          : a.label.localeCompare(b.label);
+      });
   } catch {
     return [];
   }
@@ -125,7 +173,9 @@ export function getVaultFiles(vaultName: string): readonly InterviewFile[] {
     // Top-level .md files (flat vault structure)
     const topLevelFiles = readMarkdownFiles(vaultDir, vaultName);
 
-    const entries = fs.readdirSync(vaultDir, { withFileTypes: true });
+    const entries = fs
+      .readdirSync(vaultDir, { withFileTypes: true })
+      .sort((a, b) => a.name.localeCompare(b.name));
     const subdirFiles = entries
       .filter((entry) => entry.isDirectory() && entry.name !== 'imgs')
       .flatMap((entry) => {
@@ -136,7 +186,8 @@ export function getVaultFiles(vaultName: string): readonly InterviewFile[] {
         try {
           const nestedEntries = fs
             .readdirSync(subDir, { withFileTypes: true })
-            .filter((e) => e.isDirectory());
+            .filter((e) => e.isDirectory())
+            .sort((a, b) => a.name.localeCompare(b.name));
           nestedFiles = nestedEntries.flatMap((nested) => {
             const nestedDir = path.join(subDir, nested.name);
             const category = `${entry.name}/${nested.name}`;
