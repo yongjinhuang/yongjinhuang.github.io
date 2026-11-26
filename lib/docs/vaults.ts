@@ -95,9 +95,15 @@ const CATEGORY_LABELS: Record<string, string> = {
     'Character, Kindness & Life Philosophy (修身)',
   'deep-love-and-cross-cultural-partnership':
     'Deep Love & Cross-Cultural Partnership',
+  'future-marriage-pregnancy-and-parenting':
+    'Cross-Border Marriage, Pregnancy & Parenting',
   'social-warmth-charisma-and-humor': 'Social Warmth, Deep Listening & Humor',
+  'personal-wealth-investing-and-housing':
+    'Personal Wealth, Index Investing & Housing',
   'family-stewardship-and-legal-literacy':
     'Aging Parents Care & Adult Legal Shield',
+  'home-maintenance-and-living-craft':
+    'Apartment Hunting, Decluttering & DIY Fixes',
   'live-younger-enjoy-life': 'Live Younger & Enjoy Life (32+ 少年感)',
   'smart-life-hacks-and-deals': 'Smart Flights, Deals & Money-Saving Apps',
   'body-health-longevity': 'Human Body, Health & Longevity (32+)',
@@ -111,6 +117,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 
   // Creator Studio: Camera & Vlog
   'iphone-osmo-pocket3': 'iPhone Pro & Osmo Pocket 3 Tricks',
+  'portrait-photography-for-partner':
+    'Photographing Your Partner (给女友拍照指南)',
   'personal-vlog-editing': 'Personal Vlogging, Editing & Archive',
   lifestyle: 'Video Production & Creator Craft',
 };
