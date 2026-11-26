@@ -85,11 +85,23 @@ const CATEGORY_LABELS: Record<string, string> = {
   'music-theory-and-hiphop-science':
     'Music Theory, Acoustics & Hip-Hop Science',
   'economics-logic-and-world-models': 'Economics, Game Theory & World Models',
+  'world-history-civilizations-and-art':
+    'World History, Civilizations & Art Literacy',
+  'global-languages-english-french-darija':
+    'Global Languages: English, French & Darija',
 
   // Life OS: Health, Mind & Living
+  'character-ethics-and-life-philosophy':
+    'Character, Kindness & Life Philosophy (修身)',
+  'deep-love-and-cross-cultural-partnership':
+    'Deep Love & Cross-Cultural Partnership',
+  'social-warmth-charisma-and-humor': 'Social Warmth, Deep Listening & Humor',
+  'family-stewardship-and-legal-literacy':
+    'Aging Parents Care & Adult Legal Shield',
   'live-younger-enjoy-life': 'Live Younger & Enjoy Life (32+ 少年感)',
   'smart-life-hacks-and-deals': 'Smart Flights, Deals & Money-Saving Apps',
   'body-health-longevity': 'Human Body, Health & Longevity (32+)',
+  'lean-muscle-and-physique': 'Lean Muscle & V-Taper Physique (薄肌塑形)',
   'intimacy-and-reproductive-health': 'Intimacy, Female Anatomy & Sex Ed',
   'psychology-positive-mindset': 'Psychology, Resilience & Mindset',
   'mens-ootd-style-guide': "Men's OOTD, Hip-Hop & Style System",

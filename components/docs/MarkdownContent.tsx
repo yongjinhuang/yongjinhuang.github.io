@@ -185,11 +185,21 @@ function createMarkdownComponents(
     ),
     a: ({ href, children }) => {
       if (href?.endsWith('.md') && !href.startsWith('http') && onFileSelect) {
-        const slug = href.replace(/^\.\//, '').replace(/\.md$/, '');
-        const fullSlug =
-          fileCategory && fileCategory !== 'general'
-            ? `${fileCategory}/${slug}`
-            : slug;
+        const raw = href.replace(/^\.\//, '').replace(/\.md$/, '');
+        const parts = [
+          ...(fileCategory ? fileCategory.split('/') : []),
+          ...raw.split('/'),
+        ];
+        const resolved: string[] = [];
+        for (const part of parts) {
+          if (!part || part === '.') continue;
+          if (part === '..') {
+            resolved.pop();
+          } else {
+            resolved.push(part);
+          }
+        }
+        const fullSlug = resolved.join('/');
         return (
           <button
             type="button"
